@@ -1,0 +1,7 @@
+  1.	Use existing tools for visualization/import (R, python)
+	2.	low barrier to entry (no code, easy to install)
+	3.	able to visualize data in biologist-friendly format
+	4.	cross-platform
+	5.	extensible
+	6.	handle big data sets (lots of cells, lots of files)
+	7.	sharable/savable workflows
