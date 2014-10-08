@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- FCM transforms XML File -->
+    <transforms:Transformation-ML 
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:transforms="http://www.isac-net.org/std/Transformation-ML/v1.0/"
+        xmlns:mml="http://www.w3.org/1998/Math/MathML"
+        xsi:schemaLocation="
+            http://www.isac-net.org/std/Transformation-ML/v1.0/  ../../Transformation-ML.v1.0/schema/Transformation-ML.v1.0.xsd
+            http://www.w3.org/1998/Math/MathML ../../Transformation-ML.v1.0/mathml2/mathml2.xsd">
+ 
+	<!-- Two Universal Transformations in one transformation -->
+
+    <transforms:transformation transforms:newName="CD24-FITC-530nm.t1">
+        <transforms:universal transforms:MathML-version="2.0">
+            <mml:math>
+                <mml:apply>
+                    <mml:times/>
+                    <mml:cn>2500</mml:cn>
+                    <mml:apply>
+                        <mml:log/>
+                        <mml:logbase>
+                            <mml:cn>10</mml:cn>
+                        </mml:logbase>
+                        <mml:ci>PE-565nm</mml:ci>
+                    </mml:apply>
+                </mml:apply>
+            </mml:math>
+        </transforms:universal>
+        <transforms:universal transforms:MathML-version="2.0">
+            <mml:math>
+                <mml:apply>
+                    <mml:power/>
+                    <mml:apply>
+                        <mml:plus/>
+                        <mml:ci>CD1a-FITC-514nm</mml:ci>
+                        <mml:apply>
+                            <mml:sin/>
+                            <mml:ci>CD8-PerCP-633nm</mml:ci>
+                        </mml:apply>
+                    </mml:apply>
+                    <mml:cn>2</mml:cn>
+                </mml:apply>
+            </mml:math>
+        </transforms:universal>
+    </transforms:transformation>
+    
+
+</transforms:Transformation-ML>

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<comp:Compensation-ML 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:comp="http://www.isac-net.org/std/Compensation-ML/v1.0/"
+    xsi:schemaLocation="http://www.isac-net.org/std/Compensation-ML/v1.0/ ../schema/Compensation-ML.v1.0.xsd">   
+    
+    <!-- 
+        Will compensate all data sets in int-4_ds_2_events_2_parameters.fcs
+        with parameters (AS, BS)
+
+        Compensation Matrix:
+        
+           AS   BS
+        AS 1.0  0.10
+        BS 0.05 1.0
+        
+        Results after compensation:
+        
+        Data Set 1:
+        
+        (170.0, 180.0) -> (152.7638190955, 172.3618090452)
+		(190.0, 200.0) -> (170.8542713568, 191.4572864322)
+
+		Data Set 2
+
+		(210.0, 220.0) -> (188.9447236181, 210.5527638191)
+		(230.0, 240.0) -> (207.0351758794, 229.648241206)
+
+		Data Set 3
+
+		(250.0, 260.0) -> (225.1256281407, 248.743718593)
+		(270.0, 280.0) -> (243.216080402,  267.8391959799)
+		
+		Data Set 4
+
+		(290.0, 300.0) -> (261.3065326633, 286.9346733668)
+		(310.0, 320.0) -> (279.3969849246, 306.0301507538)
+    -->
+    
+    <comp:spilloverMatrix comp:id="ASBSMatrix">
+        
+        <comp:spillover comp:parameter="AS">
+            <comp:coefficient comp:parameter="BS" comp:value="0.10"/>
+        </comp:spillover>
+        
+        <comp:spillover comp:parameter="BS">
+            <comp:coefficient comp:parameter="AS" comp:value="0.05"/>
+        </comp:spillover>
+        
+    </comp:spilloverMatrix>
+    
+    
+</comp:Compensation-ML>
+    
+    

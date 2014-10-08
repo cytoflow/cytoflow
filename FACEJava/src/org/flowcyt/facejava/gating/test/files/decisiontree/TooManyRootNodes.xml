@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<gating:Gating-ML 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:gating="http://www.isac-net.org/std/Gating-ML/v1.1/"
+    xsi:schemaLocation="http://www.isac-net.org/std/Gating-ML/v1.1/ ../schema/Gating-ML.v1.1.xsd" >
+    
+    <!-- 2 Root Nodes -->
+    
+    <gating:DecisionTreeGate gating:id="Decision_Tree_Gate">
+        <gating:rootNode gating:parameter="SSC" gating:threshold="50">
+            <gating:nodeLT gating:parameter="FSC" gating:threshold="50"> 
+                <gating:nodeLT gating:parameter="FSC" gating:threshold="80">
+                    <gating:leafLT gating:inside="true"/>
+                    <gating:leafGTE gating:inside="false"/>
+                </gating:nodeLT>
+                <gating:nodeGTE gating:parameter="SSC" gating:threshold="30">
+                    <gating:leafLT gating:inside="false"/>
+                    <gating:leafGTE gating:inside="true"/>
+                </gating:nodeGTE>
+            </gating:nodeLT>
+            <gating:nodeGTE gating:parameter="FSC" gating:threshold="90">
+                <gating:leafLT gating:inside="true"/>
+                <gating:leafGTE gating:inside="false"/>
+            </gating:nodeGTE>
+        </gating:rootNode>
+         <gating:rootNode gating:parameter="FSC-H" gating:threshold="10">
+            <gating:leafLT gating:inside="false"/>
+            <gating:nodeGTE gating:parameter="SSC-H" gating:threshold="10">
+                <gating:leafLT gating:inside="false"/>
+                <gating:nodeGTE gating:parameter="CD3-FITC-477nm" gating:threshold="10">
+                    <gating:leafLT gating:inside="false"/>
+                    <gating:leafGTE gating:inside="true"/>
+                </gating:nodeGTE>
+            </gating:nodeGTE>
+        </gating:rootNode>
+    </gating:DecisionTreeGate>
+    
+</gating:Gating-ML>

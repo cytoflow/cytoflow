@@ -1,0 +1,649 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project default="build" basedir=".">
+
+	<target name="init" depends="">
+		<tstamp/>
+
+		<property name="ProjectName"        value="FACEJava"/>
+		<property name="project"            value="facejava"/>
+		<property name="version"            value="1.0"/>
+		<property name="revisionType"       value="B"/>		<!-- e.g., BETA -->
+		<property name="revisionNumber"     value="1"/>		<!-- e.g., [BETA]2 -->
+		<property name="releaseName"        value="${project}-${version}${revisionType}${revisionNumber}"/>
+
+		<property name="debug"              value="on"/>
+        <property name="debuglevel"         value="source,lines,vars"/>
+		<property name="optimize"           value="on"/>
+		<property name="deprecation"        value="on"/>
+
+		<!-- Input -->
+		<property name="src"                value="src"/>
+		<property name="resources"          value="resources"/>
+		<property name="lib"                value="lib"/>
+        <property name="common.schemaDir"   value="schemas/common"/>
+        <property name="faceflow.readme"    value="FACEFlow.README.txt"/>
+        <property name="project.readme"     value="README.txt"/>
+        <property name="project.license"    value="LICENSE.txt"/>       
+
+		<!-- Output
+             - build is the working directory (for the current release) that holds the 
+               generated files (e.g., docs, .class files, FACEJava JARs).
+             - dist will hold final output whenever a dist* target is called.
+                - each invocation will create a folder under called {current_date}-{current-time}
+                - in the folder will be archives (if created) and the facejava-{version} folder
+                  which contains whichever final jars and docs were created.
+        -->
+		<property name="build"              value="build/${releaseName}"/>
+		<property name="dest"               value="${build}/classes"/>
+		<property name="docs"               value="${build}/docs"/>
+		<property name="javadoc"            value="${build}/docs/api"/>
+		<property name="jarDest"            value="${build}/lib"/>
+		<property name="resourceDest"       value="${build}/resource"/>
+
+		<property name="distBase"           value="dist"/>
+		<property name="currentDist"        value="${distBase}/${releaseName}"/>
+		<property name="distLib"            value="${currentDist}/lib"/>
+		<property name="distDocs"           value="${currentDist}/docs"/>
+        <property name="distSrc"            value="${currentDist}/src"/>      
+
+		<property name="jdk.javadoc"        value="http://java.sun.com/j2se/1.5.0/docs/api/"/>
+
+		<property name="package-prefix"     value="org/flowcyt/${project}"/>
+		<property name="class-prefix"       value="org.flowcyt.${project}"/>
+
+		<!-- Third-party libraries -->
+  
+        <!-- We don't use Xerces directly but some of the other libraries do. Since multiple
+             libraries use Xerces, we'll move it out to its own separate folder and share
+             the copy among all the libraries that need it.
+        -->
+        <path id="xerces.libs">
+            <fileset dir="${lib}">
+                <include name="xerces/*.jar" />
+            </fileset>
+        </path>            
+        
+		<path id="args4j.libs">
+			<fileset dir="${lib}">
+				<include name="args4j/*.jar"/>
+			</fileset>
+		</path>
+		<path id="jaxb.libs">
+			<fileset dir="${lib}">
+				<include name="jaxb/*.jar"/>
+			</fileset>
+		</path>
+		<path id="jena.libs">
+			<fileset dir="${lib}">
+				<include name="jena/*.jar" />
+			</fileset>
+            <path refid="xerces.libs"/>         
+		</path>
+		<path id="jts.libs">
+			<fileset dir="${lib}">
+				<include name="jts/*.jar" />
+			</fileset>
+            <path refid="xerces.libs"/>         
+		</path>
+		<path id="lp.libs">
+			<fileset dir="${lib}">
+				<include name="lp/*.jar" />
+			</fileset>
+		</path>
+		<path id="math.libs">
+			<fileset dir="${lib}">
+				<include name="math/*.jar" />
+			</fileset>
+		</path>
+		<path id="mathml.libs">
+			<fileset dir="${lib}">
+				<include name="mathml/*.jar" />
+			</fileset>
+            <path refid="xerces.libs"/>         
+		</path>
+  
+        <path id="all.libs">
+            <path refid="args4j.libs"/>   
+            <path refid="jaxb.libs"/>
+            <path refid="jena.libs"/>
+            <path refid="jts.libs"/>
+            <path refid="lp.libs"/>
+            <path refid="math.libs"/>
+            <path refid="mathml.libs"/>   
+        </path>   
+  
+		<!-- CFCS -->
+		<property name="cfcs-path"                  value="../CFCS" />
+		<property name="cfcs-jarname"               value="cfcs.jar" />
+		<property name="cfcs-external-jar-location" value="${cfcs-path}/build/lib/${cfcs-jarname}" />
+		<property name="cfcs-local-jar"             value="${jarDest}/${cfcs-jarname}" />
+
+		<!-- utils properties -->
+		<property name="utils.jarname"              value="${project}-utils.jar" />
+		<path id="utils.compileClasspath">
+			<path refid="jaxb.libs" />
+		</path>
+		<pathconvert dirsep="/" pathsep=" " property="utils.manifestClasspath">
+			<map from="${basedir}${file.separator}${lib}${file.separator}" to=""/>
+            <path>
+				<path refid="utils.compileClasspath" />
+			</path>
+		</pathconvert>
+
+		<!-- fcsdata properties -->
+		<property name="fcsdata.jarname"            value="${project}-fcsdata.jar" />
+		<path id="fcsdata.compileClasspath">
+			<path refid="math.libs" />
+			<pathelement location="${cfcs-local-jar}" />
+		</path>
+		<pathconvert dirsep="/" pathsep=" " property="fcsdata.manifestClasspath">
+            <map from="${basedir}${file.separator}${lib}${file.separator}" to=""/>
+            <map from="${basedir}${file.separator}" to=""/>         
+            <path>
+				<path refid="math.libs" />
+                <pathelement location="${cfcs-jarname}" />
+			</path>
+		</pathconvert>
+
+		<!-- gating properties -->
+		<property name="gating.standardVersion"     value="1.1" />
+		<property name="gating.schemaDir"           value="schemas/Gating-ML.v${gating.standardVersion}" />
+		<property name="gating.jarname"             value="${project}-gating-ml.jar" />
+		<path id="gating.compileClasspath">
+			<path refid="jaxb.libs" />
+			<path refid="lp.libs" />
+			<path refid="jts.libs" />
+		</path>
+		<pathconvert dirsep="/" pathsep=" " property="gating.manifestClasspath">
+            <map from="${basedir}${file.separator}${lib}${file.separator}" to=""/>
+            <map from="${basedir}${file.separator}" to=""/>         
+            <path>
+				<path refid="gating.compileClasspath" />
+				<pathelement location="${fcsdata.jarname}" />
+				<pathelement location="${utils.jarname}" />
+			</path>
+		</pathconvert>
+
+		<!-- transformation properties -->
+		<property name="transformation.standardVersion" value="1.0" />
+		<property name="transformation.schemaDir"       value="schemas/Transformation-ML.v${transformation.standardVersion}" />
+		<property name="transformation.jarname"         value="${project}-transformation-ml.jar" />
+		<path id="transformation.compileClasspath">
+			<path refid="jaxb.libs" />
+			<path refid="mathml.libs" />
+			<path refid="math.libs" />
+		</path>
+		<pathconvert dirsep="/" pathsep=" " property="transformation.manifestClasspath">
+            <map from="${basedir}${file.separator}${lib}${file.separator}" to=""/>
+            <map from="${basedir}${file.separator}" to=""/>         
+            <path>
+				<path refid="transformation.compileClasspath" />
+				<pathelement location="${fcsdata.jarname}" />
+				<pathelement location="${utils.jarname}" />
+			</path>
+
+		</pathconvert>
+
+		<!-- compensation properties -->
+		<property name="compensation.standardVersion" value="1.0" />
+		<property name="compensation.schemaDir"       value="schemas/Compensation-ML.v${compensation.standardVersion}" />
+		<property name="compensation.jarname"         value="${project}-compensation-ml.jar" />
+		<path id="compensation.compileClasspath">
+			<path refid="jaxb.libs" />
+			<path refid="math.libs" />
+		</path>
+		<pathconvert dirsep="/" pathsep=" " property="compensation.manifestClasspath">
+            <map from="${basedir}${file.separator}${lib}${file.separator}" to=""/>
+            <map from="${basedir}${file.separator}" to=""/>         
+            <path>
+				<path refid="compensation.compileClasspath" />
+				<pathelement location="${fcsdata.jarname}" />
+				<pathelement location="${utils.jarname}" />
+			</path>
+		</pathconvert>
+
+		<!-- faceflow-lib properties -->
+		<property name="faceflow-lib.standardVersion" value="1.0" />
+		<property name="faceflow-lib.schemaDir"       value="schemas/RDFFlow" />
+		<property name="faceflow-lib.jarname"         value="${project}-faceflow-lib.jar" />
+		<path id="faceflow-lib.compileClasspath">
+			<path refid="jaxb.libs" />
+			<path refid="jena.libs" />
+		</path>
+		<pathconvert dirsep="/" pathsep=" " property="faceflow-lib.manifestClasspath">
+            <map from="${basedir}${file.separator}${lib}${file.separator}" to=""/>
+            <map from="${basedir}${file.separator}" to=""/>         
+            <path>
+				<path refid="faceflow-lib.compileClasspath" />
+				<pathelement location="${gating.jarname}" />
+				<pathelement location="${compensation.jarname}" />
+				<pathelement location="${transformation.jarname}" />
+				<pathelement location="${fcsdata.jarname}" />
+			</path>
+		</pathconvert>
+        
+		<!-- faceflow-app properties -->
+		<property name="faceflow-app.main-class"    value="${class-prefix}.faceflow.application.FACEFlow" />
+		<property name="faceflow-app.jarname"       value="faceflow.jar" />
+		<path id="faceflow-app.compileClasspath">
+			<path refid="args4j.libs" />
+		</path>
+		<pathconvert dirsep="/" pathsep=" " property="faceflow-app.manifestClasspath">
+            <map from="${basedir}${file.separator}" to=""/>
+            <path>
+				<path refid="faceflow-app.compileClasspath" />
+				<pathelement location="${lib}/${faceflow-lib.jarname}" />
+			</path>
+		</pathconvert>
+
+	</target>
+
+	<target name="dist-archives" depends="dist-zip, dist-tgz" 
+            description="Builds both zips and tarballs for FACEJava"/>
+
+	<target name="dist-zip" depends="dist" 
+            description="Builds zips of the binary distribution, the javadoc and the source distribution">
+		<zip destfile="${distBase}/${releaseName}.zip" 
+            basedir="${distBase}" 
+            includes="${releaseName}/**"/>      
+
+		<zip destfile="${distBase}/${releaseName}-docs.zip"
+            basedir="${distBase}" 
+            includes="${releaseName}/docs/api/**" />
+  
+        <zip destfile="${distBase}/${releaseName}-src.zip">
+            <zipfileset dir="." prefix="${ProjectName}">
+                <include name="src/**"/>
+                <include name="lib/**"/>
+                <exclude name="lib/mathml/*.jar"/>  <!-- !!! MathJ is non-redistributable -->
+                <exclude name="lib/mathml/*.txt"/>  <!-- !!! MathJ is non-redistributable -->
+                <include name="resources/**"/>   
+                <include name=".classpath"/>   
+                <include name=".project"/>   
+                <include name="build.xml"/>   
+                <include name="*README.txt"/>
+                <include name="${project.license}"/>   
+            </zipfileset>
+        </zip>   
+	</target>
+
+	<target name="dist-tgz" depends="dist"
+            description="Builds tarballs of the binary distribution, the javadoc and the source distribution">
+		<tar destfile="${distBase}/${releaseName}.tar.gz"
+            compression="gzip"         
+            basedir="${distBase}"
+            includes="${releaseName}/**"/>
+		
+		<tar destfile="${distBase}/${releaseName}-docs.tar.gz"
+             compression="gzip"
+             basedir="${distBase}"
+             includes="${releaseName}/docs/api/**"/>
+  
+        <tar destfile="${distBase}/${releaseName}-src.tar.gz"
+            compression="gzip">
+            <tarfileset dir="." prefix="${ProjectName}">
+                <include name="src/**"/>
+                <include name="lib/**"/>
+                <exclude name="lib/mathml/*.jar"/>  <!-- !!! MathJ is non-redistributable -->
+                <exclude name="lib/mathml/*.txt"/>  <!-- !!! MathJ is non-redistributable -->
+                <include name="resources/**"/>   
+                <include name=".classpath"/>   
+                <include name=".project"/>   
+                <include name="build.xml"/>   
+                <include name="*README.txt"/>
+                <include name="${project.license}"/>   
+            </tarfileset>
+        </tar> 
+               
+	</target>
+
+	<target name="dist" depends="build"
+            description="Creates a folder containing all the files in a binary distribution.">
+	    <delete dir="${currentDist}"/> <!-- Blow away the entire old dsitribution -->	
+        <mkdir dir="${currentDist}"/>
+
+		<copy todir="${distLib}">
+			<fileset dir="${jarDest}"/>
+		</copy>
+  
+        <!-- !!! MathJ is non-redistributable -->      
+        <delete>
+            <fileset dir="${distLib}">
+                <include name="mathml/*.jar" />  
+                <include name="mathml/*.txt" />     
+            </fileset>   
+        </delete>      
+  
+        <copy todir="${currentDist}">
+            <fileset file="${build}/${faceflow-app.jarname}"/>
+        </copy>      
+       
+        <copy todir="${distDocs}">
+			<fileset dir="${docs}"/>
+		</copy>
+  
+        <copy todir="${distDocs}">
+            <fileset file="${project.readme}"/>
+        </copy>
+  
+        <copy todir="${currentDist}">
+            <fileset file="${faceflow.readme}"/>
+            <fileset file="${project.license}"/>   
+        </copy>
+	</target>
+
+	<target name="clean" depends="clean-jars, clean-compile, clean-docs"
+            description="Deletes the build directory.">
+        <delete dir="${build}"/>      
+    </target>
+    
+    <target name="build" depends="jars, javadoc"
+            description="Compiles ths source, generates FACEJava JARs and javadoc. The build directory will contain a working version of FACEFlow."/>
+        
+	<target name="build-prepare" depends="init">
+		<mkdir dir="${jarDest}"/>
+	</target>      
+ 
+    <target name="jars" depends="init, build-prepare, facejava-jars"
+            description="Generates all FACEJava jars and copies over all third-party libraries.">
+        <copy todir="${jarDest}">
+            <fileset dir="${lib}" />   
+        </copy>   
+    </target>   
+
+	<target name="facejava-jars" depends="faceflow-app-jar,
+                                 faceflow-lib-jar,
+  			                     gating-jar,
+                                 compensation-jar,
+                                 transformation-jar,
+                                 fcsdata-jar,
+                                 utils-jar,
+                                 cfcs-jar"
+            description="Generates all the FACEJava jars."/>   
+
+	<target name="faceflow-app-jar" depends="build-prepare, 
+                                             compile-faceflow-app, 
+                                             faceflow-lib-jar"
+            description="Generates the FACEFlow application JAR and all its FACEJava dependencies.">
+		<jar destfile="${build}/${faceflow-app.jarname}">
+			<fileset dir="${dest}">
+				<include name="${package-prefix}/faceflow/application/**"/>
+				<exclude name="${package-prefix}/faceflow/application/test/**"/>
+				<exclude name="${package-prefix}/faceflow/application/runner/**"/>
+			</fileset>
+			<manifest>
+				<attribute name="Main-Class" value="${faceflow-app.main-class}"/>
+				<attribute name="Class-Path" value="${faceflow-app.manifestClasspath}"/>
+			</manifest>
+		</jar>
+	</target>
+
+	<target name="faceflow-lib-jar" depends="build-prepare,
+                                             compile-faceflow-lib, 
+                                             gating-jar, 
+                                             transformation-jar, 
+                                             compensation-jar, 
+                                             fcsdata-jar"
+            description="Generates the FACEFlow library JAR and all its FACEJava dependencies.">
+		<jar destfile="${jarDest}/${faceflow-lib.jarname}">
+			<fileset dir="${dest}">
+				<include name="${package-prefix}/faceflow/**/*.class"/>
+				<exclude name="${package-prefix}/faceflow/application/**"/>
+				<exclude name="${package-prefix}/faceflow/test/**"/>
+				<exclude name="${package-prefix}/faceflow/runner/**"/>
+			</fileset>
+			<fileset dir="${resources}">
+				<include name="${faceflow-lib.schemaDir}/**"/>
+            </fileset>
+			<manifest>
+				<attribute name="Flow-RDF-Version" value="${faceflow-lib.standardVersion}"/>
+				<attribute name="Class-Path" value="${faceflow-lib.manifestClasspath}"/>
+			</manifest>
+		</jar>
+	</target>
+
+	<target name="gating-jar" depends="build-prepare, 
+                                       compile-gating,
+                                       utils-jar,
+                                       fcsdata-jar"
+            description="Generates the Gating-ML library JAR and all its FACEJava dependencies.">
+		<jar destfile="${jarDest}/${gating.jarname}">
+			<fileset dir="${dest}">
+				<include name="${package-prefix}/gating/**/*.class"/>
+				<exclude name="${package-prefix}/gating/test/**"/>
+				<exclude name="${package-prefix}/gating/runner/**"/>
+			</fileset>
+			<fileset dir="${resources}">
+				<include name="${gating.schemaDir}/**"/>
+                <include name="${common.schemaDir}/**"/>            
+            </fileset>
+			<manifest>
+				<attribute name="Gating-ML-Version" value="${gating.standardVersion}"/>
+				<attribute name="Class-Path" value="${gating.manifestClasspath}"/>
+			</manifest>
+		</jar>
+	</target>
+
+	<target name="transformation-jar" depends="build-prepare,
+                                               compile-transformation, 
+                                               utils-jar,
+                                               fcsdata-jar"
+            description="Generates the Transformation-ML library JAR and all its FACEJava dependencies.">
+		<jar destfile="${jarDest}/${transformation.jarname}">
+			<fileset dir="${dest}">
+				<include name="${package-prefix}/transformation/**/*.class"/>
+				<exclude name="${package-prefix}/transformation/test/**"/>
+				<exclude name="${package-prefix}/transformation/runner/**"/>
+			</fileset>
+			<fileset dir="${resources}">
+				<include name="${transformation.schemaDir}/**"/>
+                <include name="${common.schemaDir}/**"/>            
+            </fileset>
+			<manifest>
+				<attribute name="Transformation-ML-Version" value="${transformation.standardVersion}"/>
+				<attribute name="Class-Path" value="${transformation.manifestClasspath}"/>
+			</manifest>
+		</jar>
+	</target>
+
+	<target name="compensation-jar" depends="build-prepare,
+                                             compile-compensation,
+                                             utils-jar, 
+                                             fcsdata-jar"
+            description="Generates the Compensation-ML library JAR and all its FACEJava dependencies.">
+		<jar destfile="${jarDest}/${compensation.jarname}">
+			<fileset dir="${dest}">
+				<include name="${package-prefix}/compensation/**/*.class"/>
+				<exclude name="${package-prefix}/compensation/test/**"/>
+				<exclude name="${package-prefix}/compensation/runner/**"/>
+			</fileset>
+			<fileset dir="${resources}">
+				<include name="${compensation.schemaDir}/**"/>
+                <include name="${common.schemaDir}/**"/>            
+            </fileset>
+			<manifest>
+				<attribute name="Compensation-ML-Version" value="${compensation.standardVersion}"/>
+				<attribute name="Class-Path" value="${transformation.manifestClasspath}"/>
+			</manifest>
+		</jar>
+	</target>
+
+	<target name="fcsdata-jar" depends="build-prepare, 
+                                        compile-fcsdata,
+                                        cfcs-jar"
+            description="Generates the FCS library JAR and all its FACEJava dependencies.">
+		<jar destfile="${jarDest}/${fcsdata.jarname}">
+			<fileset dir="${dest}">
+				<include name="${package-prefix}/fcsdata/**/*.class"/>
+				<exclude name="${package-prefix}/fcsdata/test/**"/>
+				<exclude name="${package-prefix}/fcsdata/runner/**"/>
+			</fileset>
+			<manifest>
+				<attribute name="Class-Path" value="${fcsdata.manifestClasspath}"/>
+			</manifest>
+		</jar>
+	</target>
+
+	<target name="utils-jar" depends="build-prepare, 
+                                      compile-utils"
+            description="Generates the FACEJava utils library JAR.">
+		<jar destfile="${jarDest}/${utils.jarname}">
+			<fileset dir="${dest}">
+				<include name="${package-prefix}/utils/**/*.class"/>
+			</fileset>
+			<manifest>
+				<attribute name="Class-Path" value="${utils.manifestClasspath}"/>
+			</manifest>
+		</jar>
+	</target>
+
+	<target name="cfcs-jar" depends="build-prepare"
+            description="Obtains a copy of the CFCS JAR.">
+		<ant dir="${cfcs-path}" target="build" inheritAll="false"/>
+		<copy todir="${jarDest}">
+			<fileset file="${cfcs-external-jar-location}"/>
+		</copy>
+	</target>
+
+	<target name="clean-jars" depends="init"
+            description="Deletes all JAR files.">
+		<delete dir="${jarDest}"/>
+		<delete file="${build}/${faceflow-app.jarname}"/>
+	</target>
+
+	<target name="compile-prepare" depends="init">
+		<mkdir dir="${dest}"/>
+	</target>
+
+	<target name="compile" depends="compile-faceflow-app,
+                                    compile-faceflow-lib,
+                                    compile-gating,
+                                    compile-transformation,
+                                    compile-compensation,
+                                    compile-fcsdata,
+                                    compile-utils"
+            description="Compiles all FACEJava source code."/>
+
+	<target name="compile-faceflow-app" depends="compile-prepare,
+                                                 compile-faceflow-lib"
+            description="Compiles FACEFlow application code and all the FACEJava code it depends on.">
+		<javac debug="${debug}" debuglevel="${debuglevel}" optimize="${optimize}" deprecation="${deprecation}"
+               srcdir="${src}" destdir="${dest}" source="1.5" target="1.5">
+			<classpath refid="faceflow-app.compileClasspath"/>
+			<include name="${package-prefix}/faceflow/application/**"/>
+			<exclude name="${package-prefix}/faceflow/application/test/**"/>
+		</javac>
+	</target>
+
+	<target name="compile-faceflow-lib" depends="compile-prepare,
+                                                 compile-gating, 
+                                                 compile-transformation, 
+                                                 compile-compensation, 
+                                                 compile-fcsdata"
+            description="Compiles FACEFlow library code and all the FACEJava code it depends on.">
+		<javac debug="${debug}" debuglevel="${debuglevel}" optimize="${optimize}" deprecation="${deprecation}"
+               srcdir="${src}" destdir="${dest}" source="1.5" target="1.5">
+			<classpath refid="faceflow-lib.compileClasspath"/>
+			<include name="${package-prefix}/faceflow/**"/>
+			<exclude name="${package-prefix}/faceflow/test/**"/>
+			<exclude name="${package-prefix}/faceflow/application/**"/>
+		</javac>
+	</target>
+
+	<target name="compile-gating" depends="compile-prepare, 
+                                           compile-utils, 
+                                           compile-fcsdata"
+            description="Compiles Gating-ML library code and all the FACEJava code it depends on.">
+		<javac debug="${debug}" debuglevel="${debuglevel}" optimize="${optimize}" deprecation="${deprecation}"
+               srcdir="${src}" destdir="${dest}" source="1.5" target="1.5">
+			<classpath refid="gating.compileClasspath"/>
+			<include name="${package-prefix}/gating/**"/>
+			<exclude name="${package-prefix}/gating/test/**"/>
+		</javac>
+	</target>
+
+	<target name="compile-transformation" depends="compile-prepare, 
+                                                   compile-utils, 
+                                                   compile-fcsdata"
+            description="Compiles Transformation-ML library code and all the FACEJava code it depends on.">
+		<javac debug="${debug}" debuglevel="${debuglevel}" optimize="${optimize}" deprecation="${deprecation}"
+               srcdir="${src}" destdir="${dest}" source="1.5" target="1.5">
+			<include name="${package-prefix}/transformation/**"/>
+			<classpath refid="transformation.compileClasspath"/>
+			<exclude name="${package-prefix}/transformation/test/**"/>
+		</javac>
+	</target>
+
+	<target name="compile-compensation" depends="compile-prepare, 
+                                                 compile-utils, 
+                                                 compile-fcsdata"
+            description="Compiles Compensation-ML library code and all the FACEJava code it depends on.">
+		<javac debug="${debug}" debuglevel="${debuglevel}" optimize="${optimize}" deprecation="${deprecation}"
+               srcdir="${src}" destdir="${dest}" source="1.5" target="1.5">
+			<classpath refid="compensation.compileClasspath"/>
+			<include name="${package-prefix}/compensation/**"/>
+			<exclude name="${package-prefix}/compensation/test/**"/>
+		</javac>
+	</target>
+
+	<!-- Needs the CFCS jar since CFCS is in a different project -->
+	<target name="compile-fcsdata" depends="compile-prepare, 
+                                            cfcs-jar"
+            description="Compiles FCS library code.">
+		<javac debug="${debug}" debuglevel="${debuglevel}" optimize="${optimize}" deprecation="${deprecation}"
+               srcdir="${src}" destdir="${dest}" source="1.5" target="1.5">
+			<classpath refid="fcsdata.compileClasspath"/>
+			<include name="${package-prefix}/fcsdata/**"/>
+			<exclude name="${package-prefix}/fcsdata/test/**"/>
+		</javac>
+	</target>
+
+	<target name="compile-utils" depends="compile-prepare"
+        description="Compiles FACEJava utility code and all the FACEJava code it depends on.">
+		<javac debug="${debug}" debuglevel="${debuglevel}" optimize="${optimize}" deprecation="${deprecation}"
+               srcdir="${src}" destdir="${dest}" source="1.5" target="1.5">
+			<classpath refid="utils.compileClasspath"/>
+			<include name="${package-prefix}/utils"/>
+		</javac>
+	</target>
+
+	<target name="clean-compile" depends="init"
+            description="Deletes all compiled class files.">
+		<delete dir="${dest}"/>
+	</target>
+
+	<target name="docs-prepare" depends="init">
+        <mkdir dir="${javadoc}"/>
+	</target>
+
+	<target name="javadoc" depends="docs-prepare"
+            description="Generates the javadoc for all of FACEJava.">
+		<javadoc access="package"
+            author="true"
+            classpathref="all.libs"   
+            destdir="${javadoc}"
+            nodeprecated="false"
+            nodeprecatedlist="false" 
+            noindex="false" 
+            nonavbar="false"
+            notree="false"
+            source="1.5"
+            splitindex="true" 
+            use="true"
+            version="true">
+            <packageset dir="${src}">
+                <include name="${package-prefix}/**"/>
+                <exclude name="${package-prefix}/**/jaxb/**"/>
+                <exclude name="${package-prefix}/**/test/**"/>
+                <exclude name="${package-prefix}/**/runner/**"/>   
+            </packageset>   
+            <link href="${jdk.javadoc}" />
+        </javadoc>         
+	</target>
+
+	<target name="clean-docs" depends="init"
+            description="Deletes the generated documentaion.">
+		<delete dir="${docs}"/>
+	</target>
+
+</project>

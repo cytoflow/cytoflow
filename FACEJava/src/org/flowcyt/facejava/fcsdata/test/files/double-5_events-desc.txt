@@ -1,0 +1,60 @@
+******************************
+* doubles.fcs -- Actual Data *
+******************************
+
+Actual Data:
+
+$TOT: 5
+$PAR: 4
+$DATATYPE: D
+
+Parameter 1
+$P1N: AS
+$P1R: 1024
+$P1B: 64
+$P1E: 0,0
+
+Parameter 2
+$P2N: BS
+$P2R: 1024
+$P2B: 64
+$P2E: 0,0
+
+Parameter 3
+$P3N: CS
+$P3R: 1024
+$P3B: 64
+$P3E: 0,0
+
+Parameter 4
+$P4N: DS
+$P4R: 1024
+$P4B: 64
+$P4E: 0,0
+
+Events (in order of appearance):
+
+(100,             200,             300,             400)
+(550.5,           670.3,           730.7,           890.1)
+(123.456789,      345.678912,      678.912345,      912.345678)
+(326.8498654313,  269.8765432135,  468.7973216549,  843.1549265195)
+(0.8213456498421, 0.0003463842624, 0.0000006422416, 0.0000000000042)
+
+Events in hex (big endian, IEEE 754):
+(0x4059000000000000, 0x4069000000000000, 0x4072C00000000000, 0x4079000000000000)
+(0x4081340000000000, 0x4084F26666666666, 0x4086D5999999999A, 0x408BD0CCCCCCCCCD)
+(0x405EDD3C07EE0B0B, 0x40759ADCD2D44DCB, 0x4085374C7B890D5A, 0x408C82C3F2D3C793)
+(0x40746D990C7E96F3, 0x4070DE06522D3836, 0x407D4CC1D45A0302, 0x408A593D4A1D7449)
+(0x3FEA4876AC1913F7, 0x3F36B35D142FFA4E, 0x3EA58CD036CE237B, 0x3D9278C7947035C5)
+
+Converted from IEEE 754 hex to decimal and vice-versa using:
+http://babbage.cs.qc.edu/courses/cs341/IEEE-754.html
+
+Expected Statistics:
+
+           P1 (AS)              P2 (BS)              P3 (CS)              P4 (DS)
+Mean:      220.32560001622842   297.17116031955248   435.68193405942832   609.12012090390084
+Median:    123.456789           269.8765432135       468.7973216549       843.1549265195
+Std. Dev.: 219.3208197          244.9876814          298.1281835          400.1331865
+
+Standard Deviation is unbiased SD (over N-1 instead of over N).

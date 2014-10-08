@@ -1,0 +1,198 @@
+*** FACEFlow ******************************************************************
+*******************************************************************************
+
+FACEFlow is a command-line tool which performs data analysis of FCS files using
+Compensation-ML, Transformation-ML and Gating-ML files. It accepts relations
+between FCS files and the other analysis files through either command-line 
+arguments or in Flow Relations RDF (FlowRDF) files. It processes the relations
+and outputs new FCS files for each of the final analysis results.
+
+More information about the file standards can be found at:
+
+    http://www.flowcyt.org
+    
+# Usage
+########
+
+For FlowRDF files, use:
+
+    java -jar faceflow.jar [options] path_to_rdf_files
+
+More than one RDF file can be given and each will be processed in turn. Note
+that each file is considered to be totally separate and relations in different
+files will *not* be merged together.
+
+More information about the options is contained in the "Command-Line Options"
+section and more information about what is outputted by FACEFlow is in the
+"FACEFlow Output" section.
+
+For example,
+
+    java -jar faceflow.jar rdf/FlowRDFExample.rdf
+
+To manually specify the relations, use:
+ 
+    java -jar faceflow.jar [options] -f path_to_fcs_file
+   
+Only one FCS file may be given. Use the -g, -gate, -t, -c and -m options to
+specify a Gating-ML file, an optional gate within the Gating-ML file, a 
+Transformation-ML file, a Compensation-ML file and the id of the
+spilloverMatrix element in the Compensation-ML file, respectively, to be
+related to the FCS file. If -c is given, -m must be also given. If no -gate
+option is given, all gates within a given Gating-ML will be used.
+
+Note that the -f, -g, -gate, -t, -c and -m options will be ignored if an RDF
+file is given. Extra relations cannot be manually added to those in an RDF
+file.
+
+For example,
+
+    java -jar faceflow.jar -f fcs/FCSExample.fcs -c comp/compensation.xml
+                           -m matrix1 -g gating/gating.xml   
+
+# RDF vs. Manual relations
+###########################
+
+Using an RDF file for the relations allows the user to specify relations for
+more than one data file while manual relations only allow one FCS file. RDF
+files also allow the user to specify relations for specific data sets within
+a FCS file, while manual relations are always applied to all data sets in the
+given FCS file. However, manual relations are convenient for one-off use
+when creating the RDF file would be too much overhead.
+
+# Command-Line Options
+#######################
+
+FACEFlow takes as arguments, one or more RDF files whose relations will be 
+processed (separately). 
+
+Alternatively, it can be given an FCS file through the -f option. With the -f 
+option, the:
+
+  -g        option can be used to relate a Gating-ML file
+  -gate     option can be used to specify the id of the only gate within the
+            Gating-ML file to be used. If -gate is not given, all gates within
+            the file are used. -gate is ignored if -g is not given.
+  -t        option can be used to relate a Transformation-ML file
+  -c and -m can be used to relate a Compensation-ML file and the id of the
+            spilloverMatrix element within it to use for compensation,
+            respectively. Note that if -c is given, -m must also be given.
+   
+Only one of each of the -f, -g, -gate, -t, -c and -m options may be given. 
+    
+If at least one RDF file is given as an argument, only those relations are
+processed and all given -f, -g, -gate, -t, -c and -m options are ignored.
+
+If no RDF file is given, an FCS file must be specified through -f (or else
+there would be nothing to relate things to).
+
+The other optional options are:
+
+  -d which is used to specify which directory the outputted FCS files should
+     be written to. FACEFlow defaults to the current directory for FCS file
+     output.
+     
+  -q which will suppress all the logging output normally made by FACEFlow to
+     the console as it processes the Relations.
+     
+  -r which will perform a test run, where all relations are processed (i.e.,
+     files are loaded and analysis is performed), but no new FCS files are
+     outputted. This option can be used to find errors in the specified
+     relations or the related files (e.g., they don't match the schema).
+
+  -double which will write FCS files which contain double (IEEE 754
+          double-precision) values instead of the default float (IEEE 754 
+          single-precision) values.
+          
+# FACEFlow Output
+##################
+
+FACEFlow outputs the results of processing the relations as a new FCS file.
+Data Sets are processed individually so each new FCS file contains only one
+data set. Thus, if the source FCS file contains multiple data sets, it will be
+split up into multiple files, one for each data set.
+
+The analysis will be performed as follows and the resulting data sets in the
+new FCS files will contain the final results. Let there be a data set X. If X
+is related to ...
+
+... a matrix within a Compensation-ML file, the new FCS file will contain X's
+parameters but with its event data changed to the values after compensation
+with the matrix.
+
+... a Transformation-ML file, the new FCS file will contain the original events
+and parameters of X but in addition, each of the Transformations are added as
+FCS parameters with all events updated to include the transformed data values.
+
+... a Gating-ML file, new FCS files will be created for each gate used, where
+each new file will contain the events in X that are inside that gate. If -gate
+is given, one new FCS file will be created for that gate. If -gate is not
+given, all gates within the file are used. Thus, if there are 5 gates in the
+file, 5 FCS files will be outputted.
+
+... any other type of relation, it's information is not processed but the
+relation is logged to the console.
+
+These Relations can be stacked, so if X is related to all three types of files,
+it will be compensated, then have the transformations applied, then be gated
+using the specified gates. Any one of those steps are left out if that relation
+is not there. Relations are *always* applied in the order above (Compensation,
+then Transformation, then Gating).
+
+The file names for the new FCS files will be of the form:
+
+{orig_fcs_file_name}-DS{data_set_number}[-C{matrix_id}][-G{gate_id}][({n})].fcs
+
+where portions of the name between a '[' and a ']' are only included if
+applicable and:
+
+ - {orig_fcs_file_name} is the name of the FCS file that contained the source
+                        data set (i.e., X) minus the ".fcs" extension, if
+                        present.
+ - {data_set_number} is the source data set's number within the data file
+                     (starting from 1).
+ - {matrix_id} is the id of the spilloverMatrix element within the
+               Compensation-ML file that was used to compensate the data set.
+               (Only included if a compensation was applied.)
+ - {gate_id} is the id of the gate used to gate the source data set. (Only
+             included if a gate was applied.)
+ - {n} is a number starting from 1 added to make sure an existing file is not
+       overwritten. (Only included if there is already a file with the same
+       name.)
+       
+*** Java Runtime **************************************************************
+*******************************************************************************
+
+FACEFlow requires Java Runtime Environment (JRE) 5.0, which is sometimes
+referred to as 1.5, or later. It is not compatible with previous JREs. The
+latest JRE from Sun can be obtained from http://java.com/en/download/index.jsp.
+
+*** External Libraries ********************************************************
+*******************************************************************************
+
+FACEFlow makes use of the following third-party libraries developed elsewhere.
+
+ - JAXB 2.0.2 RI -- https://jaxb.dev.java.net/
+ - Commons-Math 1.1 -- http://jakarta.apache.org/commons/math/
+ - Jena 2.4 -- http://jena.sourceforge.net/
+ - Archimedes MathJ 0.5 -- http://www.abcwebdesign.com/archimedes/
+ - JTS Topology Suite 1.7 -- http://www.jump-project.org/project.php?PID=JTS&SID=OVER
+ - QSopt 0.5 Beta -- http://www2.isye.gatech.edu/~wcook/qsopt/
+ - args4j 2.0.6 -- https://args4j.dev.java.net/
+ - Xerces 2.8 -- http://xerces.apache.org/xerces2-j/
+ 
+FACEFlow will, by default, look for these libraries in the lib folder included
+in the distribution. If the directory structure is changed, these libraries
+must be in the CLASSPATH when FACEFlow is run.
+
+This product includes software developed by the Apache Software Foundation
+(http://www.apache.org/).
+
+ *** Archimedes MathJ is non-redistributable and only for non-commercial use.
+     FACEFlow uses it to perform universal transformations in
+     Transformation-ML. A copy of the library must be downloaded by the user
+     and all jars it contains must be in the classpath for universal
+     transformations to work. By default, FACEFlow will look for the jars in 
+     the lib/mathml folder so all JARs in the MathJ distribution can be
+     placed there.
+          

@@ -1,0 +1,20 @@
+Data Set 1
+
+# Events: 1; # Parameters: 2
+
+FCS Parameter Number 1 (AS)
+FCS Parameter Number 2 (BS)
+
+Events:
+(90.0, 100.0)
+(110.0, 120.0)
+
+Data Set 2
+
+# Events: 1; # Parameters: 2
+
+FCS Parameter Number 1 (AS)
+FCS Parameter Number 2 (BS)
+
+(130.0, 140.0)
+(150.0, 160.0)

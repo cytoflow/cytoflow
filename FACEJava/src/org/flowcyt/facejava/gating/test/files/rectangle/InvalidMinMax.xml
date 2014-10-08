@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<gating:Gating-ML 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:gating="http://www.isac-net.org/std/Gating-ML/v1.1/"
+    xsi:schemaLocation="http://www.isac-net.org/std/Gating-ML/v1.1/ ../schema/Gating-ML.v1.1.xsd" >
+   
+    <gating:RectangleGate gating:id="CD3">
+        <gating:dimension gating:parameter="FSC-H" gating:min="100" />
+    </gating:RectangleGate>
+      
+    <!-- Dimension 3 is missing both min and max -->   
+    <gating:RectangleGate gating:id="RectGate1">
+        <gating:dimension gating:parameter="CD" gating:min="90" gating:max="200" />
+        <gating:dimension gating:parameter="FSC-H" gating:min="90" gating:max="-10" />
+        <gating:dimension gating:parameter="SSC-H" />
+        <gating:dimension gating:parameter="CD3" gating:max="100" />
+    </gating:RectangleGate>
+       
+</gating:Gating-ML>

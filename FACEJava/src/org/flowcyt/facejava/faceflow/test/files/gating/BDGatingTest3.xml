@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<gating:Gating-ML 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:gating="http://www.isac-net.org/std/Gating-ML/v1.1/"
+    xsi:schemaLocation="http://www.isac-net.org/std/Gating-ML/v1.1/ ../schema/Gating-ML.v1.1.xsd" >
+  
+    <gating:PolygonGate gating:id="R1">
+        <gating:dimension gating:parameter="SSC-H" />
+        <gating:dimension gating:parameter="linToLog FL3-H" />
+        <gating:vertex>
+        	<gating:coordinate gating:value="0.0" />
+        	<gating:coordinate gating:value="0.027343750000000003" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="1012.0" />
+        	<gating:coordinate gating:value="0.027343750000000003" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="1012.0" />
+        	<gating:coordinate gating:value="1.69140625" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="0.0" />
+        	<gating:coordinate gating:value="1.69140625" />
+        </gating:vertex>
+    </gating:PolygonGate>
+            
+    <gating:PolygonGate gating:id="R2">
+        <gating:dimension gating:parameter="SSC-H" />
+        <gating:dimension gating:parameter="FSC-H" />
+        <gating:vertex>
+        	<gating:coordinate gating:value="1067.0" />
+        	<gating:coordinate gating:value="367.0" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="1006.0" />
+        	<gating:coordinate gating:value="457.0" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="902.0" />
+        	<gating:coordinate gating:value="463.0" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="853.0" />
+        	<gating:coordinate gating:value="394.0" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="810.0" />
+        	<gating:coordinate gating:value="222.0" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="840.0" />
+        	<gating:coordinate gating:value="111.0" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="938.0" />
+        	<gating:coordinate gating:value="118.0" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="1085.0" />
+        	<gating:coordinate gating:value="242.0" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="1140.0" />
+        	<gating:coordinate gating:value="339.0" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="1140.0" />
+        	<gating:coordinate gating:value="422.0" />
+        </gating:vertex>
+    </gating:PolygonGate>
+
+	<gating:PolygonGate gating:id="R3">
+        <gating:dimension gating:parameter="SSC-H" />
+        <gating:dimension gating:parameter="FSC-H" />
+        <gating:vertex>
+        	<gating:coordinate gating:value="602.0" />
+        	<gating:coordinate gating:value="634.0" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="419.0" />
+        	<gating:coordinate gating:value="634.0" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="119.0" />
+        	<gating:coordinate gating:value="527.0" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="67.0" />
+        	<gating:coordinate gating:value="404.0" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="184.0" />
+        	<gating:coordinate gating:value="266.0" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="354.0" />
+        	<gating:coordinate gating:value="235.0" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="602.0" />
+        	<gating:coordinate gating:value="320.0" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="681.0" />
+        	<gating:coordinate gating:value="404.0" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="720.0" />
+        	<gating:coordinate gating:value="527.0" />
+        </gating:vertex>
+    </gating:PolygonGate>
+	
+	<gating:PolygonGate gating:id="R4">
+        <gating:dimension gating:parameter="FSC-H" />
+        <gating:dimension gating:parameter="linToLog FL3-H" />
+        <gating:vertex>
+        	<gating:coordinate gating:value="317.0" />
+        	<gating:coordinate gating:value="2.6210937499999996" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="537.0" />
+        	<gating:coordinate gating:value="2.6210937499999996" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="537.0" />
+        	<gating:coordinate gating:value="3.49609375" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="317.0" />
+        	<gating:coordinate gating:value="3.49609375" />
+        </gating:vertex>
+    </gating:PolygonGate>
+
+	<gating:PolygonGate gating:id="R5">
+        <gating:dimension gating:parameter="FSC-H" />
+        <gating:dimension gating:parameter="SSC-H" />
+        <gating:vertex>
+        	<gating:coordinate gating:value="87.0" />
+        	<gating:coordinate gating:value="402.0" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="480.0" />
+        	<gating:coordinate gating:value="402.0" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="480.0" />
+        	<gating:coordinate gating:value="883.0" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="87.0" />
+        	<gating:coordinate gating:value="883.0" />
+        </gating:vertex>
+    </gating:PolygonGate>
+    
+	<gating:PolygonGate gating:id="R6">
+        <gating:dimension gating:parameter="FSC-H" />
+        <gating:dimension gating:parameter="SSC-H" />
+        <gating:vertex>
+        	<gating:coordinate gating:value="189.0" />
+        	<gating:coordinate gating:value="578.0" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="747.0" />
+        	<gating:coordinate gating:value="578.0" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="747.0" />
+        	<gating:coordinate gating:value="780.0" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="189.0" />
+        	<gating:coordinate gating:value="780.0" />
+        </gating:vertex>
+    </gating:PolygonGate>
+
+	<gating:PolygonGate gating:id="R7">
+        <gating:dimension gating:parameter="FSC-H" />
+        <gating:dimension gating:parameter="SSC-H" />
+        <gating:vertex>
+        	<gating:coordinate gating:value="621.0" />
+        	<gating:coordinate gating:value="818.0" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="671.0" />
+        	<gating:coordinate gating:value="818.0" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="671.0" />
+        	<gating:coordinate gating:value="868.0" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="621.0" />
+        	<gating:coordinate gating:value="868.0" />
+        </gating:vertex>
+    </gating:PolygonGate>
+
+    <gating:PolygonGate gating:id="R8">
+        <gating:dimension gating:parameter="FSC-H" />
+        <gating:dimension gating:parameter="SSC-H" />
+        <gating:vertex>
+        	<gating:coordinate gating:value="767.0" />
+        	<gating:coordinate gating:value="0.0" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="1020.0" />
+        	<gating:coordinate gating:value="0.0" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="1020.0" />
+        	<gating:coordinate gating:value="466.0" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="767.0" />
+        	<gating:coordinate gating:value="466.0" />
+        </gating:vertex>
+    </gating:PolygonGate>
+
+    <gating:PolygonGate gating:id="R9">
+        <gating:dimension gating:parameter="FSC-H" />
+        <gating:dimension gating:parameter="SSC-H" />
+        <gating:vertex>
+        	<gating:coordinate gating:value="895.0" />
+        	<gating:coordinate gating:value="304.0" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="945.0" />
+        	<gating:coordinate gating:value="304.0" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="945.0" />
+        	<gating:coordinate gating:value="354.0" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="895.0" />
+        	<gating:coordinate gating:value="354.0" />
+        </gating:vertex>
+    </gating:PolygonGate>
+
+    <gating:PolygonGate gating:id="R10">
+        <gating:dimension gating:parameter="FSC-H" />
+        <gating:dimension gating:parameter="SSC-H" />
+        <gating:vertex>
+        	<gating:coordinate gating:value="735.0" />
+        	<gating:coordinate gating:value="593.0" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="785.0" />
+        	<gating:coordinate gating:value="593.0" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="785.0" />
+        	<gating:coordinate gating:value="643.0" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="735.0" />
+        	<gating:coordinate gating:value="643.0" />
+        </gating:vertex>
+    </gating:PolygonGate>
+
+    <gating:PolygonGate gating:id="R11">
+        <gating:dimension gating:parameter="linToLog P4" />
+        <gating:dimension gating:parameter="SSC-H" />
+        <gating:vertex>
+        	<gating:coordinate gating:value="1.0820312499999998" />
+        	<gating:coordinate gating:value="-7.0" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="3.9960937499999996" />
+        	<gating:coordinate gating:value="-7.0" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="3.9960937499999996" />
+        	<gating:coordinate gating:value="680.0" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="1.0820312499999998" />
+        	<gating:coordinate gating:value="680.0" />
+        </gating:vertex>
+    </gating:PolygonGate>
+    
+    <gating:BooleanGate gating:id="R3-filtered-R4">
+        <gating:and>
+            <gating:gateReference gating:ref="R3"/>
+            <gating:gateReference gating:ref="R4"/>
+        </gating:and>
+    </gating:BooleanGate>
+        
+</gating:Gating-ML>

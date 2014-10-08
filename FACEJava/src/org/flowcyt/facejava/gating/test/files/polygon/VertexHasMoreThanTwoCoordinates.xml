@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<gating:Gating-ML 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:gating="http://www.isac-net.org/std/Gating-ML/v1.1/"
+    xsi:schemaLocation="http://www.isac-net.org/std/Gating-ML/v1.1/ ../schema/Gating-ML.v1.1.xsd" >
+    
+    <!-- < 2 Dimensions -->
+    
+    <gating:PolygonGate gating:id="PolyGate1">
+        <gating:dimension gating:parameter="FS" />
+        <gating:dimension gating:parameter="SS" />
+        <gating:vertex>
+        	<gating:coordinate gating:value="10" />
+        	<gating:coordinate gating:value="10" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="20" />
+        	<gating:coordinate gating:value="10" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="15" />
+        	<gating:coordinate gating:value="15" />
+        	<gating:coordinate gating:value="5000" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="20" />
+        	<gating:coordinate gating:value="20" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="10" />
+        	<gating:coordinate gating:value="20" />
+        </gating:vertex>
+    </gating:PolygonGate>
+    
+</gating:Gating-ML>

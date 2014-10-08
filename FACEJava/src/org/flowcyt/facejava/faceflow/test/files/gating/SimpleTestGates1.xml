@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<gating:Gating-ML 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:gating="http://www.isac-net.org/std/Gating-ML/v1.1/"
+    xsi:schemaLocation="http://www.isac-net.org/std/Gating-ML/v1.1/ ../schema/Gating-ML.v1.1.xsd" >
+	 
+    
+    <!-- 
+        Gate on raw data set #2 in int-2_ds_2_events_2_parameters-1.fcs
+    -->    
+    
+    <gating:RectangleGate gating:id="ASGate">
+        <gating:dimension gating:parameter="AS" gating:min="60" />
+    </gating:RectangleGate>
+    
+    <gating:BooleanGate gating:id="NotASGate">
+        <gating:not>
+            <gating:gateReference gating:ref="ASGate"/>
+        </gating:not>
+    </gating:BooleanGate>
+
+</gating:Gating-ML>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<gating:Gating-ML 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:gating="http://www.isac-net.org/std/Gating-ML/v1.1/"
+    xsi:schemaLocation="http://www.isac-net.org/std/Gating-ML/v1.1/ ../schema/Gating-ML.v1.1.xsd" >
+
+    <!-- Second Focus has # coordinates > # dimensions -->
+    
+	<gating:EllipsoidGate gating:id="ellipse">
+        <gating:dimension gating:parameter="FSC-H" />
+        <gating:dimension gating:parameter="SSC-H" />
+        <gating:focus>
+            <gating:coordinate gating:value="400"/>
+            <gating:coordinate gating:value="180"/>            
+        </gating:focus>
+        <gating:focus>
+            <gating:coordinate gating:value="560"/>
+            <gating:coordinate gating:value="230"/>
+            <gating:coordinate gating:value="200"/>            
+        </gating:focus>
+        <gating:distance>278.74</gating:distance>
+    </gating:EllipsoidGate>
+
+ </gating:Gating-ML>
+ 

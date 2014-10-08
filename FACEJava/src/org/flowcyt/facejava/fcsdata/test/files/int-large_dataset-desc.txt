@@ -1,0 +1,12 @@
+Large Data Set
+
+Parameters
+1: FSC-H
+2: SSC-H
+3: FL1-H
+4: FL2-H
+5: FL3-H
+6: FL3-A
+7: FL4-H
+
+Number of Events: 809850

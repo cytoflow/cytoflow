@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="resources"/>
+	<classpathentry kind="lib" path="lib/jaxb/activation.jar"/>
+	<classpathentry kind="lib" path="lib/jts/jts-1.7.2.jar"/>
+	<classpathentry kind="lib" path="lib/jts/jtsio-1.7.2.jar"/>
+	<classpathentry kind="lib" path="lib/xerces/xercesImpl.jar"/>
+	<classpathentry kind="lib" path="lib/xerces/xml-apis.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/CFCS"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
+	<classpathentry kind="lib" path="lib/args4j/args4j-2.0.6.jar"/>
+	<classpathentry kind="lib" path="lib/jaxb/jaxb-api.jar"/>
+	<classpathentry kind="lib" path="lib/jena/antlr-2.7.5.jar"/>
+	<classpathentry kind="lib" path="lib/jts/acme.jar"/>
+	<classpathentry kind="lib" path="lib/lp/qsopt.jar"/>
+	<classpathentry kind="lib" path="lib/math/commons-math-1.1.jar"/>
+	<classpathentry kind="lib" path="lib/mathml/castor.jar"/>
+	<classpathentry kind="lib" path="lib/jaxb/jaxb-impl.jar"/>
+	<classpathentry kind="lib" path="lib/jaxb/jsr173_1.0_api.jar"/>
+	<classpathentry kind="lib" path="lib/jena/arq.jar"/>
+	<classpathentry kind="lib" path="lib/jena/commons-logging.jar"/>
+	<classpathentry kind="lib" path="lib/jena/concurrent.jar"/>
+	<classpathentry kind="lib" path="lib/jena/icu4j_3_4.jar"/>
+	<classpathentry kind="lib" path="lib/jena/iri.jar"/>
+	<classpathentry kind="lib" path="lib/jena/jena.jar"/>
+	<classpathentry kind="lib" path="lib/jena/json.jar"/>
+	<classpathentry kind="lib" path="lib/jena/log4j-1.2.12.jar"/>
+	<classpathentry kind="lib" path="lib/jena/stax-api-1.0.jar"/>
+	<classpathentry kind="lib" path="lib/jena/wstx-asl-2.8.jar"/>
+	<classpathentry kind="lib" path="lib/jts/jdom.jar"/>
+	<classpathentry kind="lib" path="lib/mathml/jargs.jar"/>
+	<classpathentry kind="lib" path="lib/mathml/mathj.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

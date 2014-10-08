@@ -1,0 +1,7 @@
+Ascii data
+
+4 parameters (FSC, no name, SSC, no name)
+
+2 events
+(125,150,175,150)
+(150,125,150,175)

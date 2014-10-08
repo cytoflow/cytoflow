@@ -1,0 +1,18 @@
+Integer Data
+
+None of the other test files need conversion from channel to scale (i.e., $PnG = 1 or is not given and $PnE = 0,0)
+So this file tests conversion of both linear and log parameters.
+
+2 Parameters - FS, LOG
+FS: is linear with gain of 10
+LOG: is logarithmic with $PnE: 4,0; $PnR: 1024; and $PnG: 10 (which should be ignored during conversion)
+
+3 events - Channel Values in the FCS files are
+(256, 256)
+(512, 512)
+(768, 768)
+
+Converted to scale, these events should be:
+(25.6, 10)
+(51.2, 100)
+(76.8, 1000)

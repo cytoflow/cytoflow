@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<gating:Gating-ML 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:gating="http://www.isac-net.org/std/Gating-ML/v1.1/"
+    xsi:schemaLocation="http://www.isac-net.org/std/Gating-ML/v1.1/ ../schema/Gating-ML.v1.1.xsd" >
+  
+    <gating:PolygonGate gating:id="R1">
+        <gating:dimension gating:parameter="linToLog FL3-H" />
+        <gating:dimension gating:parameter="SSC-H" />
+        <gating:vertex>
+        	<gating:coordinate gating:value="1.5781249999999998" />
+        	<gating:coordinate gating:value="141.0" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="1.55859375" />
+        	<gating:coordinate gating:value="47.0" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="2.6328124999999996" />
+        	<gating:coordinate gating:value="38.0" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="2.6328124999999996" />
+        	<gating:coordinate gating:value="300.0" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="2.1484374999999996" />
+        	<gating:coordinate gating:value="291.0" />
+        </gating:vertex>
+    </gating:PolygonGate>
+    
+    <gating:PolygonGate gating:id="R2">
+        <gating:dimension gating:parameter="FSC-H" />
+        <gating:dimension gating:parameter="SSC-H" />
+        <gating:vertex>
+        	<gating:coordinate gating:value="223.0" />
+        	<gating:coordinate gating:value="160.0" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="223.0" />
+        	<gating:coordinate gating:value="44.0" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="339.0" />
+        	<gating:coordinate gating:value="44.0" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="495.0" />
+        	<gating:coordinate gating:value="125.0" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="495.0" />
+        	<gating:coordinate gating:value="276.0" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="291.0" />
+        	<gating:coordinate gating:value="267.0" />
+        </gating:vertex>
+    </gating:PolygonGate>  
+    
+    <gating:PolygonGate gating:id="R3">
+        <gating:dimension gating:parameter="linToLog FL1-H" />
+        <gating:dimension gating:parameter="linToLog FL2-H" />
+        <gating:vertex>
+        	<gating:coordinate gating:value="1.01953125" />
+        	<gating:coordinate gating:value="1.234375" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="1.09375" />
+        	<gating:coordinate gating:value="1.015625" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="2.3007812499999996" />
+        	<gating:coordinate gating:value="2.125" />
+        </gating:vertex>
+        <gating:vertex>
+        	<gating:coordinate gating:value="2.15234375" />
+        	<gating:coordinate gating:value="2.2656249999999996" />
+        </gating:vertex>
+    </gating:PolygonGate>
+    
+ 	<gating:RectangleGate gating:id="M1">
+        <gating:dimension gating:parameter="linToLog FL1-H" gating:min="0" gating:max="1.5742187499999998" />
+    </gating:RectangleGate>
+    
+    <gating:RectangleGate gating:id="Q1.UL">
+        <gating:dimension gating:parameter="linToLog FL1-H" gating:max="1.4843749999999998"  />
+        <gating:dimension gating:parameter="linToLog FL2-H" gating:min="2.5390624999999996" />
+    </gating:RectangleGate>
+    
+    <gating:DecisionTreeGate gating:id="Q1.UR">
+        <gating:rootNode gating:parameter="linToLog FL1-H" gating:threshold="1.4843749999999998">
+            <gating:leafLT gating:inside="false"/>
+             <gating:nodeGTE gating:parameter="linToLog FL2-H" gating:threshold="2.5390624999999996">
+                <gating:leafLT gating:inside="false"/>
+                <gating:leafGTE gating:inside="true"/>
+            </gating:nodeGTE>
+        </gating:rootNode>
+    </gating:DecisionTreeGate>
+    
+    <!-- G1, G2, G3 are just R1, R2, R3, respectively -->
+    
+    <gating:BooleanGate gating:id="G4">
+        <gating:and>
+            <gating:gateReference gating:ref="R1"/>
+            <gating:gateReference gating:ref="R2"/>
+            <gating:gateReference gating:ref="G8"/>
+        </gating:and>
+    </gating:BooleanGate>
+    
+    <gating:BooleanGate gating:id="G5">
+        <gating:and>
+            <gating:gateReference gating:ref="R1"/>
+            <gating:gateReference gating:ref="R2"/>
+        </gating:and>
+    </gating:BooleanGate>
+    
+    <gating:BooleanGate gating:id="G6">
+        <gating:and>
+            <gating:gateReference gating:ref="R2"/>
+            <gating:gateReference gating:ref="R3"/>
+        </gating:and>
+    </gating:BooleanGate>
+    
+    <gating:BooleanGate gating:id="G7">
+        <gating:and>
+            <gating:gateReference gating:ref="R1"/>
+            <gating:gateReference gating:ref="R3"/>
+        </gating:and>
+    </gating:BooleanGate>
+    
+    <gating:BooleanGate gating:id="G8">
+        <gating:not>
+            <gating:gateReference gating:ref="R3"/>
+        </gating:not>
+    </gating:BooleanGate>
+    
+    <gating:BooleanGate gating:id="G9">
+        <gating:and>
+            <gating:gateReference gating:ref="G8"/>
+            <gating:gateReference gating:ref="R1"/>
+        </gating:and>
+    </gating:BooleanGate>
+    
+    <gating:BooleanGate gating:id="G10">
+        <gating:and>
+            <gating:gateReference gating:ref="G8"/>
+            <gating:gateReference gating:ref="R2"/>
+        </gating:and>
+    </gating:BooleanGate>
+    
+    <gating:BooleanGate gating:id="G11">
+        <gating:and>
+            <gating:gateReference gating:ref="G8"/>
+            <gating:gateReference gating:ref="R1"/>
+            <gating:gateReference gating:ref="R2"/>
+        </gating:and>
+    </gating:BooleanGate>
+    
+    <gating:BooleanGate gating:id="G4-filtered-M1">
+        <gating:and>
+            <gating:gateReference gating:ref="G4"/>
+            <gating:gateReference gating:ref="M1"/>
+        </gating:and>
+    </gating:BooleanGate>
+    
+    <gating:BooleanGate gating:id="G4-filtered-Q1.UL">
+        <gating:and>
+            <gating:gateReference gating:ref="G4"/>
+            <gating:gateReference gating:ref="Q1.UL"/>
+        </gating:and>
+    </gating:BooleanGate>
+    
+    <gating:BooleanGate gating:id="G4-filtered-Q1.UR">
+        <gating:and>
+            <gating:gateReference gating:ref="G4"/>
+            <gating:gateReference gating:ref="Q1.UR"/>
+        </gating:and>
+    </gating:BooleanGate>
+        
+</gating:Gating-ML>

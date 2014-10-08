@@ -1,0 +1,930 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- FCM Gating XML File -->
+<!-- Contains all the sample gates defined in the gating standard package 
+     
+     Note: Some Gate ids from the sample Boolean gates file have been renamed to avoid
+           duplicate ids.
+-->
+
+
+<gating:Gating-ML 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:gating="http://www.isac-net.org/std/Gating-ML/v1.1/"
+    xsi:schemaLocation="http://www.isac-net.org/std/Gating-ML/v1.1/ ../schema/Gating-ML.v1.1.xsd" >
+    
+    <!--
+    
+    Used to test that all Gate types specified in the standard are being loaded
+    correctly without any errors. This file is not meant to be used to gate the data
+    in an FCS file.
+
+    All gates in this file are valid.
+    
+    -->
+    
+    
+    <!-- 
+    
+    The Gates in the file are as follows (from the sample gates in the standard):
+    - Boolean Gates (56)
+        - Referenced, Non-Boolean Gates (22)
+            - Ellipsoid Gates (5)
+            	- Lymphocytes_1
+            	- x7
+           		- x9
+            	- x21
+   				- xb3
+            - Polytope Gates (1)
+            	- PolyGate11
+            - Rectangle Gates (16)
+            	- FS-P
+            	- SS-P
+            	- SS-
+	            - FS1-P
+	            - SS1-P
+            	- GG3
+            	- RectGate11
+            	- Lymphocytes33
+          	  	- x6
+            	- x11
+            	- FSC-H-plus
+            	- G3x
+           		- SSC-H-plus
+    			- SSC-H-minus
+        	    - FSC-H-pluss
+            	- SSC-H-pluss
+        - Boolean Gates (34)
+            - FS-
+            - GG1
+            - GG2
+            - GG4
+            - g1
+            - g2
+            - x1
+            - g3
+            - xx2
+            - x3
+            - g4
+            - x4
+            - BoolSample_1
+            - BoolSample2
+            - x5
+            - BoolSample_2
+            - Bool_Sample_2
+            - Bool_Sample_3
+            - x8
+            - BoolSample1
+            - BoolSample3
+            - BoolSample3a
+            - FSC-H-minus
+            - G1x
+            - G2x
+            - G4x
+            - G1y
+            - G2y
+            - just_random_1
+            - G3y
+            - just_random_2
+            - just_random_3
+            - G4y
+            - just_random_4
+    - Decision Trees (9) 
+        - Decision_Tree_Gate
+        - Polygon_as_a_Decision_Tree_1
+        - Polygon_as_a_Decision_Tree_2
+        - simple_DST
+        - Polygon_as_a_Decision_Tree
+        - AlternativeDST
+        - Polygon_as_a_Decision_Tree_from_Doc
+        - polygon_as_a_Decision_Tree_from_Doc2
+        - DST_with_Redundant_Node
+    - Ellipsoid (9)
+        - Lymphocytes
+        - x2
+        - ellipse
+        - ellipsoid_3D
+        - ellipsoid3D
+        - ball3D
+        - ellipse1
+        - ellipse2
+        - ellipse1.1
+    - Rectangle (11)
+        - CD3_Positive
+        - CD3
+        - CD5
+        - G1
+        - G2
+        - G3
+        - G4
+        - CD4
+        - CD4_test
+        - gate
+        - RectGate1
+    - Polygon (3)
+        - PolyGate1
+        - PolyGate2
+        - Triangle
+    - Polytope (3)
+        - PolyGate
+        - cube
+        - OneDPolytope
+    
+    Total: 91
+     
+    -->
+    
+    <!-- 4 Quadrants in a Plane  -->
+    <gating:RectangleGate gating:id="FS-P">
+        <gating:dimension gating:parameter="FS" gating:min="20" />
+    </gating:RectangleGate>
+
+    <gating:BooleanGate gating:id="FS-">
+        <gating:not>
+            <gating:gateReference gating:ref="FS-P"/>
+        </gating:not>
+    </gating:BooleanGate>
+    <gating:RectangleGate gating:id="SS-P">
+        <gating:dimension gating:parameter="SS" gating:min="10" />
+    </gating:RectangleGate>
+    <gating:BooleanGate gating:id="GG1">
+        <gating:and>
+            <gating:gateReference gating:ref="FS-P"/>
+            <gating:gateReference gating:ref="SS-P"/>
+        </gating:and>
+    </gating:BooleanGate>
+    <gating:BooleanGate gating:id="GG2">
+        <gating:and>
+            <gating:gateReference gating:ref="FS-"/>
+            <gating:gateReference gating:ref="SS-P"/>
+        </gating:and>
+    </gating:BooleanGate>
+    <gating:RectangleGate gating:id="GG3">
+        <gating:dimension gating:parameter="FS" gating:max="20" />
+        <gating:dimension gating:parameter="SS" gating:max="10" />
+    </gating:RectangleGate>
+    <gating:BooleanGate gating:id="GG4">
+        <gating:and>
+            <gating:gateReference gating:ref="FS-P"/>
+            <gating:RectangleGate gating:id="SS-">
+                <gating:dimension gating:parameter="SS" gating:max="10" />
+            </gating:RectangleGate>
+        </gating:and>
+    </gating:BooleanGate>
+  
+    
+    <!-- The same 4 Quadrants others  -->
+    <gating:RectangleGate gating:id="FS1-P">
+        <gating:dimension gating:parameter="FS1" gating:min="20" />
+    </gating:RectangleGate>
+    <gating:RectangleGate gating:id="SS1-P">
+        <gating:dimension gating:parameter="SS1" gating:min="10" />
+    </gating:RectangleGate>
+    <gating:BooleanGate gating:id="g1">
+        <gating:and>
+            <gating:gateReference gating:ref="FS1-P"/>
+            <gating:gateReference gating:ref="SS1-P"/>
+        </gating:and>
+    </gating:BooleanGate>
+    <gating:BooleanGate gating:id="g2">
+        <gating:and>
+            <gating:BooleanGate gating:id="x1">
+                <gating:not><gating:gateReference gating:ref="FS1-P"/></gating:not>
+            </gating:BooleanGate>
+            <gating:gateReference gating:ref="SS1-P"/>
+        </gating:and>
+    </gating:BooleanGate>
+    <gating:BooleanGate gating:id="g3">
+        <gating:and>
+            <gating:BooleanGate gating:id="xx2">
+                <gating:not><gating:gateReference gating:ref="FS1-P"/></gating:not>
+            </gating:BooleanGate>
+            <gating:BooleanGate gating:id="x3">
+                <gating:not><gating:gateReference gating:ref="SS1-P"/></gating:not>
+            </gating:BooleanGate>
+        </gating:and>
+    </gating:BooleanGate>
+    <gating:BooleanGate gating:id="g4">
+        <gating:and>
+            <gating:gateReference gating:ref="FS1-P"/>
+            <gating:BooleanGate gating:id="x4">
+                <gating:not><gating:gateReference gating:ref="SS1-P"/></gating:not>
+            </gating:BooleanGate>
+        </gating:and>
+    </gating:BooleanGate>
+    
+    
+    <!-- Example of a Boolean Gate -->
+    <gating:BooleanGate gating:id="BoolSample_1">
+        <gating:not>
+            <gating:BooleanGate gating:id="BoolSample2">
+                <gating:and>
+                    <gating:gateReference gating:ref="RectGate1" />
+                    <gating:EllipsoidGate gating:id="Lymphocytes_1">
+                        <gating:dimension gating:parameter="FS" /><gating:dimension gating:parameter="SS" />
+                        <gating:focus>
+                            <gating:coordinate gating:value="25.1"/>
+                            <gating:coordinate gating:value="19.3"/>
+                        </gating:focus>
+                        <gating:focus>
+                            <gating:coordinate gating:value="14"/>
+                            <gating:coordinate gating:value="80"/>
+                        </gating:focus>
+                        <gating:distance>114.4</gating:distance>
+                    </gating:EllipsoidGate>
+                    <gating:BooleanGate gating:id="x5">
+                        <gating:or>
+                            <gating:gateReference gating:ref="PolyGate1" />
+                            <gating:gateReference gating:ref="Lymphocytes" />
+                        </gating:or>
+                    </gating:BooleanGate>
+                </gating:and>
+            </gating:BooleanGate>
+        </gating:not>
+    </gating:BooleanGate>
+    
+    
+    <!-- Referenced Gates -->
+    <!-- RectGate1 -->
+    <gating:RectangleGate  gating:id="RectGate11">
+        <gating:dimension gating:parameter="FS" gating:min="20"/>
+        <gating:dimension gating:parameter="SS" gating:min="10"/>
+    </gating:RectangleGate>
+    <!-- Lymphocytes -->
+    <gating:RectangleGate  gating:id="Lymphocytes33">
+        <gating:dimension gating:parameter="FS" gating:min="100"/>
+        <gating:dimension gating:parameter="SS" gating:min="300"/>
+    </gating:RectangleGate>
+    <!-- PolyGate1 -->
+    <gating:PolytopeGate gating:id="PolyGate11">
+        <gating:dimension gating:parameter="FS" />
+        <gating:dimension gating:parameter="SS" />
+        <gating:point><gating:coordinate gating:value="1" /><gating:coordinate gating:value="10" /></gating:point>
+        <gating:point><gating:coordinate gating:value="3" /><gating:coordinate gating:value="30" /></gating:point>
+        <gating:point><gating:coordinate gating:value="1" /><gating:coordinate gating:value="13" /></gating:point>
+    </gating:PolytopeGate>
+    
+    
+    <!-- Example of a Boolean Gate -->
+    <gating:BooleanGate gating:id="BoolSample_2">
+        <gating:not>
+            <gating:BooleanGate gating:id="Bool_Sample_2">
+                <gating:or>
+                    <gating:RectangleGate  gating:id="x6">
+                        <gating:dimension gating:parameter="FS" gating:min="10" gating:max="30" />
+                        <gating:dimension gating:parameter="SS" gating:min="10" gating:max="20" />
+                    </gating:RectangleGate>
+                    <gating:EllipsoidGate gating:id="x7">
+                        <gating:dimension gating:parameter="FS" /><gating:dimension gating:parameter="SS" />
+                        <gating:focus>
+                            <gating:coordinate gating:value="30"/>
+                            <gating:coordinate gating:value="15"/>
+                        </gating:focus>
+                        <gating:focus>
+                            <gating:coordinate gating:value="10"/>
+                            <gating:coordinate gating:value="0"/>
+                        </gating:focus>
+                        <gating:distance>32</gating:distance>
+                    </gating:EllipsoidGate>
+                </gating:or>
+            </gating:BooleanGate>
+        </gating:not>
+    </gating:BooleanGate>
+    
+    
+    <!-- Example of a Boolean Gate -->
+    <gating:BooleanGate gating:id="Bool_Sample_3">
+        <gating:not>
+            <gating:BooleanGate gating:id="x8">
+                <gating:or>
+                    <gating:gateReference gating:ref="Bool_Sample_2" />
+                    <gating:EllipsoidGate gating:id="x9">
+                        <gating:dimension gating:parameter="FS" /><gating:dimension gating:parameter="SS" />
+                        <gating:focus>
+                            <gating:coordinate gating:value="10"/>
+                            <gating:coordinate gating:value="20"/>
+                        </gating:focus>
+                        <gating:focus>
+                            <gating:coordinate gating:value="5"/>
+                            <gating:coordinate gating:value="65"/>
+                        </gating:focus>
+                        <gating:distance>85</gating:distance>
+                    </gating:EllipsoidGate>
+                </gating:or>
+            </gating:BooleanGate>
+        </gating:not>
+    </gating:BooleanGate>
+    
+    <gating:BooleanGate gating:id="BoolSample1">
+        <gating:or>
+            <gating:RectangleGate gating:id="x11">
+                <gating:dimension gating:parameter="FSC-H" gating:min="10" gating:max="30" />
+                <gating:dimension gating:parameter="SSC-H" gating:min="10" gating:max="20" />
+            </gating:RectangleGate>
+            <gating:EllipsoidGate gating:id="x21">
+                <gating:dimension gating:parameter="FSC-H" />
+                <gating:dimension gating:parameter="SSC-H" />
+                <gating:focus>
+                    <gating:coordinate gating:value="30"/>
+                    <gating:coordinate gating:value="15"/>            
+                </gating:focus>
+                <gating:focus>
+                    <gating:coordinate gating:value="77"/>
+                    <gating:coordinate gating:value="45.78"/>
+                </gating:focus>
+                <gating:distance>94</gating:distance>
+            </gating:EllipsoidGate>
+        </gating:or>
+    </gating:BooleanGate>
+    
+    <gating:BooleanGate gating:id="BoolSample3">
+        <gating:not>
+            <gating:BooleanGate gating:id="BoolSample3a">
+                <gating:or>
+                    <gating:gateReference gating:ref="BoolSample1" />
+                    <gating:EllipsoidGate gating:id="xb3">
+                        <gating:dimension gating:parameter="FSC-H" />
+                        <gating:dimension gating:parameter="SSC-H" />
+                        <gating:focus>
+                            <gating:coordinate gating:value="100"/>
+                            <gating:coordinate gating:value="200"/>            
+                        </gating:focus>
+                        <gating:focus>
+                            <gating:coordinate gating:value="180"/>
+                            <gating:coordinate gating:value="180"/>            
+                        </gating:focus>
+                        <gating:distance>130</gating:distance>
+                    </gating:EllipsoidGate>
+                </gating:or>
+            </gating:BooleanGate>
+        </gating:not>
+    </gating:BooleanGate>
+    
+    <gating:RectangleGate gating:id="FSC-H-plus">
+        <gating:dimension gating:parameter="FSC-H" gating:min="20" />
+    </gating:RectangleGate>
+    <gating:BooleanGate gating:id="FSC-H-minus">
+        <gating:not><gating:gateReference gating:ref="FSC-H-plus"/></gating:not>
+    </gating:BooleanGate>
+    <gating:RectangleGate gating:id="SSC-H-plus">
+        <gating:dimension gating:parameter="SSC-H" gating:min="10" />
+    </gating:RectangleGate>
+    
+    <gating:BooleanGate gating:id="G1x">
+        <gating:and>
+            <gating:gateReference gating:ref="FSC-H-plus" />
+            <gating:gateReference gating:ref="SSC-H-plus" />
+        </gating:and>
+    </gating:BooleanGate>
+    
+    <gating:BooleanGate gating:id="G2x">
+        <gating:and>
+            <gating:gateReference gating:ref="FSC-H-minus" />
+            <gating:gateReference gating:ref="SSC-H-plus" />
+        </gating:and>
+    </gating:BooleanGate>
+    
+    <gating:RectangleGate gating:id="G3x">
+        <gating:dimension gating:parameter="FSC-H" gating:max="20" />
+        <gating:dimension gating:parameter="SSC-H" gating:max="10" />
+    </gating:RectangleGate>
+    
+    <gating:BooleanGate gating:id="G4x">
+        <gating:and>
+            <gating:gateReference gating:ref="FSC-H-plus"/>
+            <gating:RectangleGate gating:id="SSC-H-minus">
+                <gating:dimension gating:parameter="SSC-H" gating:max="10" />
+            </gating:RectangleGate>
+        </gating:and>
+    </gating:BooleanGate>
+    
+    <gating:RectangleGate gating:id="FSC-H-pluss">
+        <gating:dimension gating:parameter="FSC-H" gating:min="20" />
+    </gating:RectangleGate>
+    <gating:RectangleGate gating:id="SSC-H-pluss">
+        <gating:dimension gating:parameter="SSC-H" gating:min="10" />
+    </gating:RectangleGate>
+    
+    <gating:BooleanGate gating:id="G1y">
+        <gating:and>
+            <gating:gateReference gating:ref="FSC-H-plus" />
+            <gating:gateReference gating:ref="SSC-H-plus" />
+        </gating:and>
+    </gating:BooleanGate>
+    <gating:BooleanGate gating:id="G2y">
+        <gating:and>
+            <gating:BooleanGate gating:id="just_random_1">
+                <gating:not><gating:gateReference gating:ref="FSC-H-plus"/></gating:not>
+            </gating:BooleanGate>
+            <gating:gateReference gating:ref="SSC-H-plus"/>
+        </gating:and>
+    </gating:BooleanGate>
+    
+    <gating:BooleanGate gating:id="G3y">
+        <gating:and>
+            <gating:BooleanGate gating:id="just_random_2">
+                <gating:not><gating:gateReference gating:ref="FSC-H-plus"/></gating:not>
+            </gating:BooleanGate>
+            <gating:BooleanGate gating:id="just_random_3">
+                <gating:not><gating:gateReference gating:ref="SSC-H-plus"/></gating:not>
+            </gating:BooleanGate>
+        </gating:and>
+    </gating:BooleanGate>
+    
+    <gating:BooleanGate gating:id="G4y">
+        <gating:and>
+            <gating:gateReference gating:ref="FSC-H-plus"/>
+            <gating:BooleanGate gating:id="just_random_4">
+                <gating:not><gating:gateReference gating:ref="SSC-H-plus"/></gating:not>
+            </gating:BooleanGate>
+        </gating:and>
+    </gating:BooleanGate>
+    
+    <!-- Example of a Decision Tree Gate -->
+    <gating:DecisionTreeGate gating:id="Decision_Tree_Gate">
+        <gating:rootNode gating:parameter="SSC" gating:threshold="50">
+            <gating:nodeLT gating:parameter="FSC" gating:threshold="50"> 
+                <gating:nodeLT gating:parameter="FSC" gating:threshold="80">
+                    <gating:leafLT gating:inside="true"/><gating:leafGTE gating:inside="false"/>
+                </gating:nodeLT>
+                <gating:nodeGTE gating:parameter="SSC" gating:threshold="30">
+                    <gating:leafLT gating:inside="false"/><gating:leafGTE gating:inside="true"/>
+                </gating:nodeGTE>
+            </gating:nodeLT>
+            <gating:nodeGTE gating:parameter="FSC" gating:threshold="90">
+                <gating:leafLT gating:inside="true"/><gating:leafGTE gating:inside="false"/>
+            </gating:nodeGTE>
+        </gating:rootNode>
+    </gating:DecisionTreeGate>
+    
+    <!-- Example of a Decision Tree Gate -->
+    <gating:DecisionTreeGate gating:id="Polygon_as_a_Decision_Tree_1">
+        <gating:rootNode gating:parameter="SSC" gating:threshold="20">
+            <gating:nodeLT gating:parameter="SSC" gating:threshold="10"><!-- n1 -->
+                <gating:leafLT gating:inside="false"/>
+                <gating:nodeGTE gating:parameter="FSC" gating:threshold="30"><!-- n2 -->
+                    <gating:nodeLT gating:parameter="FSC" gating:threshold="10"><!-- n3 -->
+                        <gating:leafLT gating:inside="false"/><gating:leafGTE gating:inside="true"/>
+                    </gating:nodeLT>
+                    <gating:leafGTE gating:inside="false"/>
+                </gating:nodeGTE>
+            </gating:nodeLT>
+            <gating:nodeGTE gating:parameter="SSC" gating:threshold="40"><!-- n4 -->
+                <gating:nodeLT gating:parameter="FSC" gating:threshold="30"><!-- n5 -->
+                    <gating:nodeLT gating:parameter="FSC" gating:threshold="20"><!-- n6 -->
+                        <gating:leafLT gating:inside="false"/><gating:leafGTE gating:inside="true"/>
+                    </gating:nodeLT>
+                    <gating:leafGTE gating:inside="false"/>
+                </gating:nodeLT>
+                <gating:leafGTE gating:inside="false"/>
+            </gating:nodeGTE>
+        </gating:rootNode>
+    </gating:DecisionTreeGate>
+    
+    
+    <!-- Example of a Decision Tree Gate -->
+    <gating:DecisionTreeGate gating:id="Polygon_as_a_Decision_Tree_2">
+        <gating:rootNode gating:parameter="FSC" gating:threshold="30">
+            <gating:nodeLT gating:parameter="SSC" gating:threshold="10">
+                <gating:leafLT gating:inside="false"/>
+                <gating:nodeGTE gating:parameter="FSC" gating:threshold="10">
+                    <gating:leafLT gating:inside="false"/>
+                    <gating:nodeGTE gating:parameter="SSC" gating:threshold="40">
+                        <gating:nodeLT gating:parameter="FSC" gating:threshold="20">
+                            <gating:nodeLT gating:parameter="SSC" gating:threshold="20">
+                                <gating:leafLT gating:inside="true"/><gating:leafGTE gating:inside="false"/>
+                            </gating:nodeLT>
+                            <gating:leafGTE gating:inside="true"/>
+                        </gating:nodeLT>
+                        <gating:leafGTE gating:inside="false"/>
+                    </gating:nodeGTE>
+                </gating:nodeGTE>
+            </gating:nodeLT>
+            <gating:leafGTE gating:inside="false"/>
+        </gating:rootNode>
+    </gating:DecisionTreeGate>
+    
+    <!-- Example of a Decision Tree Gate -->
+    <gating:DecisionTreeGate gating:id="simple_DST">
+        <gating:rootNode gating:parameter="FSC-H" gating:threshold="10">
+            <gating:leafLT gating:inside="false"/>
+            <gating:nodeGTE gating:parameter="SSC-H" gating:threshold="10">
+                <gating:leafLT gating:inside="false"/>
+                <gating:nodeGTE gating:parameter="CD3-FITC-477nm" gating:threshold="10">
+                    <gating:leafLT gating:inside="false"/>
+                    <gating:leafGTE gating:inside="true"/>
+                </gating:nodeGTE>
+            </gating:nodeGTE>
+        </gating:rootNode>
+    </gating:DecisionTreeGate>
+    
+    
+    
+    
+    <!-- Example of a Decision Tree Gate -->
+    <gating:DecisionTreeGate gating:id="Polygon_as_a_Decision_Tree">
+        <gating:rootNode gating:parameter="FSC-H" gating:threshold="20">
+            <gating:nodeLT gating:parameter="FSC-H" gating:threshold="10">
+                <gating:leafLT gating:inside="false"/>
+                <gating:nodeGTE gating:parameter="SSC-H" gating:threshold="30">
+                    <gating:nodeLT gating:parameter="SSC-H" gating:threshold="10">
+                        <gating:leafLT gating:inside="true"/><gating:leafGTE gating:inside="false"/>
+                    </gating:nodeLT>
+                    <gating:leafGTE gating:inside="false"/>
+                </gating:nodeGTE>
+            </gating:nodeLT>
+            <gating:nodeGTE gating:parameter="FSC-H" gating:threshold="40">
+                <gating:nodeLT gating:parameter="SSC-H" gating:threshold="30">
+                    <gating:nodeLT gating:parameter="SSC-H" gating:threshold="20">
+                        <gating:leafLT gating:inside="false"/><gating:leafGTE gating:inside="true"/>
+                    </gating:nodeLT>
+                    <gating:leafGTE gating:inside="false"/>
+                </gating:nodeLT>
+                <gating:leafGTE gating:inside="false"/>
+            </gating:nodeGTE>
+        </gating:rootNode>
+    </gating:DecisionTreeGate>
+    
+
+    
+    <!-- Example of a Decision Tree Gate -->
+    <gating:DecisionTreeGate gating:id="AlternativeDST">
+        <gating:rootNode gating:parameter="FSC" gating:threshold="200">
+            <gating:nodeLT gating:parameter="SSC" gating:threshold="150">
+                <gating:nodeLT gating:parameter="SSC" gating:threshold="50">
+                    <gating:leafLT gating:inside="true" />
+                    <gating:leafGTE gating:inside="false" />
+                </gating:nodeLT>
+                <gating:leafGTE gating:inside="true" />
+            </gating:nodeLT>
+            <gating:nodeGTE gating:parameter="SSC" gating:threshold="500">
+                <gating:nodeLT gating:parameter="PE-543nm" gating:threshold="756">
+                    <gating:leafLT gating:inside="false" />
+                    <gating:leafGTE gating:inside="true" />
+                </gating:nodeLT>
+                <gating:leafGTE gating:inside="true" />
+            </gating:nodeGTE>
+        </gating:rootNode>
+    </gating:DecisionTreeGate>
+    
+    <!-- Example from doc -->
+    <gating:DecisionTreeGate gating:id="Polygon_as_a_Decision_Tree_from_Doc">
+        <gating:rootNode gating:parameter="FSC-H" gating:threshold="20">
+            <gating:nodeLT gating:parameter="FSC-H" gating:threshold="10">
+                <gating:leafLT gating:inside="false"/>
+                <gating:nodeGTE gating:parameter="SSC-H" gating:threshold="30">
+                    <gating:nodeLT gating:parameter="SSC-H" gating:threshold="10">
+                        <gating:leafLT gating:inside="false"/>
+                        <gating:leafGTE gating:inside="true"/>
+                    </gating:nodeLT>
+                    <gating:leafGTE gating:inside="false"/>
+                </gating:nodeGTE>
+            </gating:nodeLT>
+            <gating:nodeGTE gating:parameter="FSC-H" gating:threshold="40">
+                <gating:nodeLT gating:parameter="SSC-H" gating:threshold="30">
+                    <gating:nodeLT gating:parameter="SSC-H" gating:threshold="20">
+                        <gating:leafLT gating:inside="false"/>
+                        <gating:leafGTE gating:inside="true"/>
+                    </gating:nodeLT>
+                    <gating:leafGTE gating:inside="false"/>
+                </gating:nodeLT>
+                <gating:leafGTE gating:inside="false"/>
+            </gating:nodeGTE>
+        </gating:rootNode>
+    </gating:DecisionTreeGate>
+    
+    <!-- Example from doc2 -->
+    <gating:DecisionTreeGate gating:id="polygon_as_a_Decision_Tree_from_Doc2">
+        <gating:rootNode gating:parameter="SSC-H" gating:threshold="30">
+            <gating:nodeLT gating:parameter="FSC-H" gating:threshold="10">
+                <gating:leafLT gating:inside="false"/>
+                <gating:nodeGTE gating:parameter="SSC-H" gating:threshold="10">
+                    <gating:leafLT gating:inside="false"/>
+                    <gating:nodeGTE gating:parameter="FSC-H" gating:threshold="40">
+                        <gating:nodeLT gating:parameter="SSC-H" gating:threshold="20">
+                            <gating:nodeLT gating:parameter="FSC-H" gating:threshold="20">
+                                <gating:leafLT gating:inside="true"/>
+                                <gating:leafGTE gating:inside="false"/>
+                            </gating:nodeLT>
+                            <gating:leafGTE gating:inside="true"/>
+                        </gating:nodeLT>
+                        <gating:leafGTE gating:inside="false"/>
+                    </gating:nodeGTE>
+                </gating:nodeGTE>
+            </gating:nodeLT>
+            <gating:leafGTE gating:inside="false"/>
+        </gating:rootNode>
+    </gating:DecisionTreeGate>
+    
+    <!-- Example from doc3 -->
+    <gating:DecisionTreeGate gating:id="DST_with_Redundant_Node">
+        <gating:rootNode gating:parameter="SSC-H" gating:threshold="10">
+            <gating:nodeLT gating:parameter="FSC-H" gating:threshold="20">
+                <gating:leafLT gating:inside="true"/>
+                <gating:leafGTE gating:inside="false"/>
+            </gating:nodeLT>
+            <gating:nodeGTE gating:parameter="FSC-H" gating:threshold="50">
+                <gating:leafLT gating:inside="false"/>
+                <gating:leafGTE gating:inside="false"/>
+            </gating:nodeGTE>
+        </gating:rootNode>
+    </gating:DecisionTreeGate>
+    
+       
+    <!-- Example of a 2D Ellipse Gate -->
+    <gating:EllipsoidGate gating:id="Lymphocytes">
+        <gating:dimension gating:parameter="FSC-H" /><gating:dimension gating:parameter="SSC-H" />
+        <gating:focus>
+            <gating:coordinate gating:value="320.1"/>
+            <gating:coordinate gating:value="270.7"/>            
+        </gating:focus>
+        <gating:focus>
+            <gating:coordinate gating:value="224.7"/>
+            <gating:coordinate gating:value="155"/>            
+        </gating:focus>
+        <gating:distance>176.78</gating:distance>
+    </gating:EllipsoidGate>
+    
+    <!-- Example of a 2D Ellipse Gate -->
+    <gating:EllipsoidGate gating:id="x2">
+        <gating:dimension gating:parameter="FSC-H" /><gating:dimension gating:parameter="SSC-H" />
+        <gating:focus>
+            <gating:coordinate gating:value="30"/>
+            <gating:coordinate gating:value="15"/>            
+        </gating:focus>
+        <gating:focus>
+            <gating:coordinate gating:value="40"/>
+            <gating:coordinate gating:value="20"/>            
+        </gating:focus>
+        <gating:distance>45</gating:distance>
+    </gating:EllipsoidGate>
+    
+    
+    <!-- Example of a 2D Ellipse Gate -->
+    <gating:EllipsoidGate gating:id="ellipse">
+        <gating:dimension gating:parameter="FSC-H" /><gating:dimension gating:parameter="SSC-H" />
+        <gating:focus>
+            <gating:coordinate gating:value="400"/>
+            <gating:coordinate gating:value="180"/>            
+        </gating:focus>
+        <gating:focus>
+            <gating:coordinate gating:value="560"/>
+            <gating:coordinate gating:value="230"/>            
+        </gating:focus>
+        <gating:distance>278.74</gating:distance>
+    </gating:EllipsoidGate>
+    
+    
+    <!-- Example of a 3D Ellipsoid Gate -->
+    <gating:EllipsoidGate gating:id="ellipsoid_3D">
+        <gating:dimension gating:parameter="FSC-H" />
+        <gating:dimension gating:parameter="SSC-H" />
+        <gating:dimension gating:parameter="CD3-FITC-477nm" />
+        <gating:focus>
+            <gating:coordinate gating:value="50"/>
+            <gating:coordinate gating:value="75"/>
+            <gating:coordinate gating:value="95"/>            
+        </gating:focus>
+        <gating:focus>
+            <gating:coordinate gating:value="80"/>
+            <gating:coordinate gating:value="50"/>
+            <gating:coordinate gating:value="78"/>            
+        </gating:focus>
+        <gating:distance>54</gating:distance>
+    </gating:EllipsoidGate>
+    
+    <!-- Example of a 3D Ellipsoid Gate -->
+    <gating:EllipsoidGate gating:id="ellipsoid3D">
+        <gating:dimension gating:parameter="FSC-H" />
+        <gating:dimension gating:parameter="SSC-H" />
+        <gating:dimension gating:parameter="CD3-FITC-477nm" />
+        <gating:focus>
+            <gating:coordinate gating:value="380"/>
+            <gating:coordinate gating:value="430"/>
+            <gating:coordinate gating:value="350"/>            
+        </gating:focus>
+        <gating:focus>
+            <gating:coordinate gating:value="404"/>
+            <gating:coordinate gating:value="470"/>
+            <gating:coordinate gating:value="300"/>            
+        </gating:focus>
+        <gating:distance>274</gating:distance>
+    </gating:EllipsoidGate>
+    
+    <!-- Example of a 3D Ellipsoid Gate -->
+    <gating:EllipsoidGate gating:id="ball3D">
+        <gating:dimension gating:parameter="FSC-H" />
+        <gating:dimension gating:parameter="SSC-H" />
+        <gating:dimension gating:parameter="CD8-PERCP-633nm" />
+        <gating:focus>
+            <gating:coordinate gating:value="200"/>
+            <gating:coordinate gating:value="300"/>
+            <gating:coordinate gating:value="250"/>            
+        </gating:focus>
+        <gating:focus>
+            <gating:coordinate gating:value="300"/>
+            <gating:coordinate gating:value="250"/>
+            <gating:coordinate gating:value="280"/>            
+        </gating:focus>
+        <gating:distance>212</gating:distance>
+    </gating:EllipsoidGate>
+    
+    <!-- Example of a 2D Ellipse Gate -->
+    <!-- The two foci are the same - it is an circle, the distance is it's radius -->
+    <gating:EllipsoidGate gating:id="ellipse1">
+        <gating:dimension gating:parameter="FSC-H" />
+        <gating:dimension gating:parameter="SSC-H" />
+        <gating:focus>
+            <gating:coordinate gating:value="40"/>
+            <gating:coordinate gating:value="25"/>
+        </gating:focus>
+        <gating:focus>
+            <gating:coordinate gating:value="40"/>
+            <gating:coordinate gating:value="25"/>
+        </gating:focus>
+        <gating:distance>15</gating:distance>
+        
+
+    </gating:EllipsoidGate>
+    
+    <!-- Example of a 2D Ellipse Gate -->
+    <gating:EllipsoidGate gating:id="ellipse2">
+        <gating:dimension gating:parameter="FSC-H" />
+        <gating:dimension gating:parameter="SSC-H" />
+        <gating:focus>
+            <gating:coordinate gating:value="40"/>
+            <gating:coordinate gating:value="25"/>
+        </gating:focus>
+        <gating:focus>
+            <gating:coordinate gating:value="60"/>
+            <gating:coordinate gating:value="40"/>
+        </gating:focus>
+        <gating:distance>40</gating:distance>
+    </gating:EllipsoidGate>
+    
+    <gating:EllipsoidGate gating:id="ellipse1.1">
+        <gating:dimension gating:parameter="FSC-H" />
+        <gating:dimension gating:parameter="SSC-H" />
+        <gating:focus>
+            <gating:coordinate gating:value="30"/>
+            <gating:coordinate gating:value="20"/>
+        </gating:focus>
+        <gating:focus>
+            <gating:coordinate gating:value="50"/>
+            <gating:coordinate gating:value="20"/>
+        </gating:focus>
+        <gating:distance>40</gating:distance>
+    </gating:EllipsoidGate>
+    
+    <!-- Example of a 2D Concave Polygon Gate -->
+    <gating:PolygonGate gating:id="PolyGate1">
+        <gating:dimension gating:parameter="FSC" />
+        <gating:dimension gating:parameter="SSC" />
+        <gating:vertex><gating:coordinate gating:value="10" /><gating:coordinate gating:value="10" /></gating:vertex>
+        <gating:vertex><gating:coordinate gating:value="20" /><gating:coordinate gating:value="10" /></gating:vertex>
+        <gating:vertex><gating:coordinate gating:value="15" /><gating:coordinate gating:value="15" /></gating:vertex>
+        <gating:vertex><gating:coordinate gating:value="20" /><gating:coordinate gating:value="20" /></gating:vertex>
+        <gating:vertex><gating:coordinate gating:value="10" /><gating:coordinate gating:value="20" /></gating:vertex>
+    </gating:PolygonGate>
+
+    <!-- The same gate could be described as follows -->
+    <!-- Just the relative order is important, not the numbers  -->
+    <!-- Coordinates can be switched while maintaining the parameter  -->
+    <gating:PolygonGate gating:id="PolyGate2">
+        <gating:dimension gating:parameter="FSC" />
+        <gating:dimension gating:parameter="SSC" />
+        <gating:vertex><gating:coordinate gating:value="10"/><gating:coordinate gating:value="10"/></gating:vertex>
+        <gating:vertex><gating:coordinate gating:value="20"/><gating:coordinate gating:value="10"/></gating:vertex>
+        <gating:vertex><gating:coordinate gating:value="15"/><gating:coordinate gating:value="15"/></gating:vertex>
+        <gating:vertex><gating:coordinate gating:value="20"/><gating:coordinate gating:value="20"/></gating:vertex>
+        <gating:vertex><gating:coordinate gating:value="20"/><gating:coordinate gating:value="10"/></gating:vertex>
+    </gating:PolygonGate>
+    
+    <!-- Example of a Triangle Gate -->
+    <gating:PolygonGate gating:id="Triangle">
+        <gating:dimension gating:parameter="FSC"  />
+        <gating:dimension gating:parameter="SSC" />
+        <gating:vertex><gating:coordinate gating:value="0"/><gating:coordinate gating:value="0"/></gating:vertex>
+        <gating:vertex><gating:coordinate gating:value="4"/><gating:coordinate gating:value="0"/></gating:vertex>
+        <gating:vertex><gating:coordinate gating:value="4"/><gating:coordinate gating:value="3"/></gating:vertex>
+    </gating:PolygonGate>
+    
+     <gating:PolytopeGate gating:id="OneDPolytope">
+        <gating:dimension gating:parameter="FS" />
+        <gating:point>
+            <gating:coordinate gating:value="150" />
+        </gating:point>
+    </gating:PolytopeGate>
+    
+    <!-- Example of a 2D Polytope Gate -->
+    <gating:PolytopeGate gating:id="PolyGate">
+        <gating:dimension  gating:parameter="FSC" />
+        <gating:dimension gating:parameter="SSC" />
+        <gating:point><gating:coordinate gating:value="11.3"/><gating:coordinate gating:value="12"/></gating:point>
+        <gating:point><gating:coordinate gating:value="12.8"/><gating:coordinate gating:value="13"/></gating:point>
+        <gating:point><gating:coordinate gating:value="15"/><gating:coordinate gating:value="19.7"/></gating:point>
+        <gating:point><gating:coordinate gating:value="10.1"/><gating:coordinate gating:value="22"/></gating:point>
+    </gating:PolytopeGate>
+    
+    
+    <!-- Example of a 3D Polytope Gate (a cube) -->
+    <gating:PolytopeGate gating:id="cube">
+        <gating:dimension gating:parameter="FSC" />
+        <gating:dimension gating:parameter="SSC" />
+        <gating:dimension gating:parameter="PE-565nm" />
+        <gating:point>
+            <gating:coordinate gating:value="50" /><gating:coordinate gating:value="30" /><gating:coordinate gating:value="20" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="50" /><gating:coordinate gating:value="30" /><gating:coordinate gating:value="50" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="50"  /><gating:coordinate gating:value="60" /><gating:coordinate gating:value="20" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="50"  /><gating:coordinate gating:value="60" /><gating:coordinate gating:value="50" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="80"  /><gating:coordinate gating:value="30" /><gating:coordinate gating:value="20" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="80"  /><gating:coordinate gating:value="30" /><gating:coordinate gating:value="50" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="80" /><gating:coordinate gating:value="60" /><gating:coordinate gating:value="20" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="80" /><gating:coordinate gating:value="60" /><gating:coordinate gating:value="50" />
+        </gating:point>
+    </gating:PolytopeGate>
+    
+    <!--  Range Gate -->
+    <gating:RectangleGate gating:id="CD3_Positive">
+        <gating:dimension gating:parameter="FSC-H" gating:min="100" gating:max="250" />
+    </gating:RectangleGate>
+    
+    
+    <!-- Unlimited Range Gate, FL2 > 100 -->
+    <gating:RectangleGate gating:id="CD3">
+        <gating:dimension gating:parameter="FSC-H" gating:min="100" />
+    </gating:RectangleGate>
+    
+    
+    <!-- 2D rectangle Gate -->
+    <gating:RectangleGate  gating:id="CD5">
+        <gating:dimension gating:parameter="FSC-H" gating:min="100" gating:max="250" />
+        <gating:dimension gating:parameter="SSC-H" gating:min="150" gating:max="300" />
+    </gating:RectangleGate>
+    
+    
+    <!-- A "quad" gate -->
+    <gating:RectangleGate  gating:id="G1">
+        <gating:dimension gating:parameter="FSC-H" gating:min="20"/>
+        <gating:dimension gating:parameter="SSC-H" gating:min="10"/>
+    </gating:RectangleGate>
+    <gating:RectangleGate  gating:id="G2">
+        <gating:dimension gating:parameter="FSC-H" gating:max="20"/>
+        <gating:dimension gating:parameter="SSC-H" gating:min="10"/>
+    </gating:RectangleGate>
+    <gating:RectangleGate  gating:id="G3">
+        <gating:dimension gating:parameter="FSC-H" gating:max="20"/>
+        <gating:dimension gating:parameter="SSC-H" gating:max="10"/>
+    </gating:RectangleGate>
+    <gating:RectangleGate  gating:id="G4">
+        <gating:dimension gating:parameter="FSC-H" gating:min="20"/>
+        <gating:dimension gating:parameter="SSC-H" gating:max="10"/>
+    </gating:RectangleGate>
+    
+    
+    <!-- 3D rectangle Gate -->
+    <gating:RectangleGate  gating:id="CD4">
+        <gating:dimension gating:parameter="FSC-H" gating:min="100" gating:max="250" />
+        <gating:dimension gating:parameter="SSC-H" gating:min="150" gating:max="300" />
+        <gating:dimension gating:parameter="CD3-FITC-477nm" gating:min="200" gating:max="300" />
+    </gating:RectangleGate>
+    
+    
+    <!-- 3D rectangle Gate with one unbounded parameter -->
+    <gating:RectangleGate  gating:id="CD4_test">
+        <gating:dimension gating:parameter="FSC-H" gating:min="100" gating:max="250" />
+        <gating:dimension gating:parameter="SSC-H" gating:min="150" gating:max="300" />
+        <gating:dimension gating:parameter="CD1a-FITC-514nm" gating:max="300" />
+    </gating:RectangleGate>
+    
+    
+    <!-- 3D rectangle gate -->
+    <gating:RectangleGate gating:id="gate">
+        <gating:dimension gating:parameter="FSC-H" gating:min="30" gating:max="80" />
+        <gating:dimension gating:parameter="SSC-H" gating:min="10" gating:max="30" />
+        <gating:dimension gating:parameter="CD3-FITC-477nm" gating:min="0" gating:max="20" />
+  </gating:RectangleGate>
+    
+    
+    <!-- Example of a 4D "block" two unbounded parameter-->
+    <gating:RectangleGate gating:id="RectGate1">
+        <gating:dimension gating:parameter="CD1a-FITC-514nm" gating:min="90" gating:max="200" />
+        <gating:dimension gating:parameter="FSC-H" gating:min="90" gating:max="-10" />
+        <gating:dimension gating:parameter="SSC-H" gating:min="30" />
+        <gating:dimension gating:parameter="CD3-FITC-477nm" gating:max="100" />
+    </gating:RectangleGate>
+
+</gating:Gating-ML>

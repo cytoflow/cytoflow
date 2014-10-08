@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- FCM transforms XML File -->
+    <transforms:Transformation-ML 
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:transforms="http://www.isac-net.org/std/Transformation-ML/v1.0/"
+        xmlns:mml="http://www.w3.org/1998/Math/MathML"
+        xsi:schemaLocation="
+            http://www.isac-net.org/std/Transformation-ML/v1.0/  ../../Transformation-ML.v1.0/schema/Transformation-ML.v1.0.xsd
+            http://www.w3.org/1998/Math/MathML ../../Transformation-ML.v1.0/mathml2/mathml2.xsd">
+ 
+	<!-- Large Dependency Cycle
+	    _________________________
+	    v                        |
+		A -> B -> E -> F -> H -> J
+		     ^         ^
+		     |         |
+		     C <- D    G   
+	              ^
+	              |
+	              I
+	 -->
+
+    <transforms:transformation transforms:newName="A">
+        <transforms:pre-defined>
+            <transforms:linear transforms:a="3.0" transforms:b="0" transforms:parameter="B"/>
+        </transforms:pre-defined>
+    </transforms:transformation>
+    
+    <transforms:transformation transforms:newName="B">
+        <transforms:pre-defined>
+            <transforms:hyperlog transforms:b="35" transforms:r="1000" transforms:d="3" transforms:parameter="E"/>
+        </transforms:pre-defined>
+    </transforms:transformation>
+    
+    <transforms:transformation transforms:newName="C">
+        <transforms:pre-defined>
+            <transforms:bi-exponential transforms:a="0.5" transforms:b="1" transforms:c="0.5" transforms:d="1" transforms:f="0" transforms:parameter="B" />
+        </transforms:pre-defined>
+    </transforms:transformation>
+    
+    <transforms:transformation transforms:newName="D">
+        <transforms:pre-defined>
+            <transforms:logicle transforms:T="262144" transforms:w="50" transforms:m="10.36" transforms:parameter="C" />
+        </transforms:pre-defined>
+    </transforms:transformation>
+    
+    <transforms:transformation transforms:newName="E">
+        <transforms:pre-defined>
+            <transforms:split-scale transforms:r="192" transforms:maxValue="262144" transforms:transitionChannel="64" transforms:parameter="F"/>
+        </transforms:pre-defined>
+    </transforms:transformation>
+    
+    <transforms:transformation transforms:newName="F">
+        <transforms:pre-defined>
+            <transforms:ln transforms:parameter="H" transforms:r="1000" transforms:d="3"/>
+        </transforms:pre-defined>
+    </transforms:transformation>
+    
+    <transforms:transformation transforms:newName="G">
+        <transforms:pre-defined>
+            <transforms:linear transforms:a="3.0" transforms:b="0" transforms:parameter="F"/>
+        </transforms:pre-defined>
+    </transforms:transformation>
+    
+    <transforms:transformation transforms:newName="H">
+        <transforms:pre-defined>
+            <transforms:quadratic transforms:parameter="J" transforms:a="1" transforms:b="1" transforms:c="0"/>
+        </transforms:pre-defined>
+    </transforms:transformation>
+    
+    <transforms:transformation transforms:newName="I">
+        <transforms:pre-defined>
+            <transforms:log transforms:logbase="10" transforms:parameter="D"  transforms:r="1000" transforms:d="3"/>
+        </transforms:pre-defined>
+    </transforms:transformation>
+    
+    <transforms:transformation transforms:newName="J">
+        <transforms:pre-defined>
+            <transforms:log transforms:parameter="A" transforms:d="4" transforms:r="10000"/>
+        </transforms:pre-defined>
+    </transforms:transformation>
+    
+</transforms:Transformation-ML>

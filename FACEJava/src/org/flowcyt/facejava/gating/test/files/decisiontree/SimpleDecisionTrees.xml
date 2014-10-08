@@ -1,0 +1,903 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<gating:Gating-ML 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:gating="http://www.isac-net.org/std/Gating-ML/v1.1/"
+    xsi:schemaLocation="http://www.isac-net.org/std/Gating-ML/v1.1/ ../schema/Gating-ML.v1.1.xsd" >
+    
+    <!-- Test with a single event in the int-gating_test_file_4D.fcs FCS file 
+             * Event: (100, 200, 300, 400) with parameters (FS, SS, FL4, FL6)
+    -->
+   
+    <!-- We'll use trees where we know the event can only appear in one leaf, and that leaf
+         is the only one that is true or the only one that is false). Thus, we'll know if
+         the wrong branch was taken.
+    -->
+    
+    <!-- Gates with a tree height of 1 -->
+    
+    <!-- Outside -->
+    <gating:DecisionTreeGate gating:id="G1D-L">
+        <gating:rootNode gating:parameter="FS" gating:threshold="110">
+            <gating:leafLT gating:inside="false"/>
+            <gating:leafGTE gating:inside="true"/>
+        </gating:rootNode>
+    </gating:DecisionTreeGate>
+    
+    <!-- Inside -->
+    <gating:DecisionTreeGate gating:id="G1D-G">
+        <gating:rootNode gating:parameter="FS" gating:threshold="50">
+            <gating:leafLT gating:inside="false"/>
+            <gating:leafGTE gating:inside="true"/>
+        </gating:rootNode>
+    </gating:DecisionTreeGate>
+    
+    <!-- Inside -->
+    <gating:DecisionTreeGate gating:id="G1D-E">
+        <gating:rootNode gating:parameter="FS" gating:threshold="100">
+            <gating:leafLT gating:inside="false"/>
+            <gating:leafGTE gating:inside="true"/>
+        </gating:rootNode>
+    </gating:DecisionTreeGate>
+    
+    <!-- Gates with a tree height of 2 -->
+    
+    <!-- Inside -->
+    <gating:DecisionTreeGate gating:id="G2D-LL">
+     	<gating:rootNode gating:parameter="FS" gating:threshold="150">
+            <gating:nodeLT gating:parameter="SS" gating:threshold="200.001"> 
+                <gating:leafLT gating:inside="true"/>
+                <gating:leafGTE gating:inside="false"/>
+            </gating:nodeLT>
+            <gating:nodeGTE gating:parameter="SS" gating:threshold="30">
+                <gating:leafLT gating:inside="false"/>
+                <gating:leafGTE gating:inside="false"/>
+            </gating:nodeGTE>
+        </gating:rootNode>
+     </gating:DecisionTreeGate>
+     
+     <!-- Outside -->
+    <gating:DecisionTreeGate gating:id="G2D-LG">
+     	<gating:rootNode gating:parameter="FS" gating:threshold="125">
+            <gating:nodeLT gating:parameter="SS" gating:threshold="175"> 
+                <gating:leafLT gating:inside="true"/>
+                <gating:leafGTE gating:inside="false"/>
+            </gating:nodeLT>
+            <gating:nodeGTE gating:parameter="SS" gating:threshold="30">
+                <gating:leafLT gating:inside="true"/>
+                <gating:leafGTE gating:inside="true"/>
+            </gating:nodeGTE>
+        </gating:rootNode>
+     </gating:DecisionTreeGate>
+     
+     <!-- Inside -->
+    <gating:DecisionTreeGate gating:id="G2D-GL">
+     	<gating:rootNode gating:parameter="FS" gating:threshold="100">
+            <gating:nodeLT gating:parameter="SS" gating:threshold="50"> 
+                <gating:leafLT gating:inside="false"/>
+                <gating:leafGTE gating:inside="false"/>
+            </gating:nodeLT>
+            <gating:nodeGTE gating:parameter="SS" gating:threshold="205">
+                <gating:leafLT gating:inside="true"/>
+                <gating:leafGTE gating:inside="false"/>                
+            </gating:nodeGTE>
+        </gating:rootNode>
+     </gating:DecisionTreeGate>
+     
+     <!-- Outside -->
+    <gating:DecisionTreeGate gating:id="G2D-GG">
+     	<gating:rootNode gating:parameter="FS" gating:threshold="95">
+            <gating:nodeLT gating:parameter="SS" gating:threshold="50"> 
+                <gating:leafLT gating:inside="true"/>
+                <gating:leafGTE gating:inside="true"/>
+            </gating:nodeLT>
+            <gating:nodeGTE gating:parameter="SS" gating:threshold="200">
+                <gating:leafLT gating:inside="true"/>
+                <gating:leafGTE gating:inside="false"/>
+            </gating:nodeGTE>
+        </gating:rootNode>
+     </gating:DecisionTreeGate>
+     
+     <!-- Finally, Gates with a tree height of 4 -->
+     
+     <!-- Inside -->
+     <gating:DecisionTreeGate gating:id="G4D-LLLL">
+     	<gating:rootNode gating:parameter="FS" gating:threshold="105">
+            <gating:nodeLT gating:parameter="SS" gating:threshold="210"> 
+                <gating:nodeLT gating:parameter="FL4" gating:threshold="30000">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="400.0001"> 
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeGTE>
+		        </gating:nodeLT>
+		        <gating:nodeGTE gating:parameter="FL4" gating:threshold="95">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeGTE>
+		        </gating:nodeGTE>
+            </gating:nodeLT>
+            <gating:nodeGTE gating:parameter="SS" gating:threshold="200">
+                <gating:nodeLT gating:parameter="FL4" gating:threshold="95">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeGTE>
+		        </gating:nodeLT>
+		        <gating:nodeGTE gating:parameter="FL4" gating:threshold="95">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeGTE>
+		        </gating:nodeGTE>
+            </gating:nodeGTE>
+        </gating:rootNode>
+     </gating:DecisionTreeGate>
+     
+     <!-- Outside -->
+     <gating:DecisionTreeGate gating:id="G4D-LLLG">
+     	<gating:rootNode gating:parameter="FS" gating:threshold="150">
+            <gating:nodeLT gating:parameter="SS" gating:threshold="201"> 
+                <gating:nodeLT gating:parameter="FL4" gating:threshold="399">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeGTE>
+		        </gating:nodeLT>
+		        <gating:nodeGTE gating:parameter="FL4" gating:threshold="95">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeGTE>
+		        </gating:nodeGTE>
+            </gating:nodeLT>
+            <gating:nodeGTE gating:parameter="SS" gating:threshold="200">
+                <gating:nodeLT gating:parameter="FL4" gating:threshold="95">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeGTE>
+		        </gating:nodeLT>
+		        <gating:nodeGTE gating:parameter="FL4" gating:threshold="95">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeGTE>
+		        </gating:nodeGTE>
+            </gating:nodeGTE>
+        </gating:rootNode>
+     </gating:DecisionTreeGate>
+     
+     <!-- Inside -->
+     <gating:DecisionTreeGate gating:id="G4D-LLGL">
+     	<gating:rootNode gating:parameter="FS" gating:threshold="102">
+            <gating:nodeLT gating:parameter="SS" gating:threshold="233"> 
+                <gating:nodeLT gating:parameter="FL4" gating:threshold="300">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="405">
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeGTE>
+		        </gating:nodeLT>
+		        <gating:nodeGTE gating:parameter="FL4" gating:threshold="95">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeGTE>
+		        </gating:nodeGTE>
+            </gating:nodeLT>
+            <gating:nodeGTE gating:parameter="SS" gating:threshold="200">
+                <gating:nodeLT gating:parameter="FL4" gating:threshold="95">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeGTE>
+		        </gating:nodeLT>
+		        <gating:nodeGTE gating:parameter="FL4" gating:threshold="95">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeGTE>
+		        </gating:nodeGTE>
+            </gating:nodeGTE>
+        </gating:rootNode>
+     </gating:DecisionTreeGate>
+     
+     <!-- Outside -->
+     <gating:DecisionTreeGate gating:id="G4D-LLGG">
+     	<gating:rootNode gating:parameter="FS" gating:threshold="199">
+            <gating:nodeLT gating:parameter="SS" gating:threshold="800"> 
+                <gating:nodeLT gating:parameter="FL4" gating:threshold="95">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="400">
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeGTE>
+		        </gating:nodeLT>
+		        <gating:nodeGTE gating:parameter="FL4" gating:threshold="95">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeGTE>
+		        </gating:nodeGTE>
+            </gating:nodeLT>
+            <gating:nodeGTE gating:parameter="SS" gating:threshold="200">
+                <gating:nodeLT gating:parameter="FL4" gating:threshold="95">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeGTE>
+		        </gating:nodeLT>
+		        <gating:nodeGTE gating:parameter="FL4" gating:threshold="95">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeGTE>
+		        </gating:nodeGTE>
+            </gating:nodeGTE>
+        </gating:rootNode>
+     </gating:DecisionTreeGate>
+     
+     <!-- Inside -->
+     <gating:DecisionTreeGate gating:id="G4D-LGLL">
+     	<gating:rootNode gating:parameter="FS" gating:threshold="1002">
+            <gating:nodeLT gating:parameter="SS" gating:threshold="156"> 
+                <gating:nodeLT gating:parameter="FL4" gating:threshold="95">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeGTE>
+		        </gating:nodeLT>
+		        <gating:nodeGTE gating:parameter="FL4" gating:threshold="395">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="495"> 
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeGTE>
+		        </gating:nodeGTE>
+            </gating:nodeLT>
+            <gating:nodeGTE gating:parameter="SS" gating:threshold="200">
+                <gating:nodeLT gating:parameter="FL4" gating:threshold="95">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeGTE>
+		        </gating:nodeLT>
+		        <gating:nodeGTE gating:parameter="FL4" gating:threshold="95">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeGTE>
+		        </gating:nodeGTE>
+            </gating:nodeGTE>
+        </gating:rootNode>
+     </gating:DecisionTreeGate>
+     
+     <!-- Outside -->
+     <gating:DecisionTreeGate gating:id="G4D-LGLG">
+     	<gating:rootNode gating:parameter="FS" gating:threshold="100.00001">
+            <gating:nodeLT gating:parameter="SS" gating:threshold="200"> 
+                <gating:nodeLT gating:parameter="FL4" gating:threshold="95">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeGTE>
+		        </gating:nodeLT>
+		        <gating:nodeGTE gating:parameter="FL4" gating:threshold="305">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="305"> 
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeGTE>
+		        </gating:nodeGTE>
+            </gating:nodeLT>
+            <gating:nodeGTE gating:parameter="SS" gating:threshold="200">
+                <gating:nodeLT gating:parameter="FL4" gating:threshold="95">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeGTE>
+		        </gating:nodeLT>
+		        <gating:nodeGTE gating:parameter="FL4" gating:threshold="95">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeGTE>
+		        </gating:nodeGTE>
+            </gating:nodeGTE>
+        </gating:rootNode>
+     </gating:DecisionTreeGate>
+     
+     <!-- Inside -->
+     <gating:DecisionTreeGate gating:id="G4D-LGGL">
+     	<gating:rootNode gating:parameter="FS" gating:threshold="150">
+            <gating:nodeLT gating:parameter="SS" gating:threshold="150"> 
+                <gating:nodeLT gating:parameter="FL4" gating:threshold="95">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeGTE>
+		        </gating:nodeLT>
+		        <gating:nodeGTE gating:parameter="FL4" gating:threshold="300">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="406">
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeGTE>
+		        </gating:nodeGTE>
+            </gating:nodeLT>
+            <gating:nodeGTE gating:parameter="SS" gating:threshold="200">
+                <gating:nodeLT gating:parameter="FL4" gating:threshold="95">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeGTE>
+		        </gating:nodeLT>
+		        <gating:nodeGTE gating:parameter="FL4" gating:threshold="95">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeGTE>
+		        </gating:nodeGTE>
+            </gating:nodeGTE>
+        </gating:rootNode>
+     </gating:DecisionTreeGate>
+     
+     <!-- Outside -->
+     <gating:DecisionTreeGate gating:id="G4D-LGGG">
+     	<gating:rootNode gating:parameter="FS" gating:threshold="455">
+            <gating:nodeLT gating:parameter="SS" gating:threshold="200"> 
+                <gating:nodeLT gating:parameter="FL4" gating:threshold="95">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeGTE>
+		        </gating:nodeLT>
+		        <gating:nodeGTE gating:parameter="FL4" gating:threshold="300">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="400">
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeGTE>
+		        </gating:nodeGTE>
+            </gating:nodeLT>
+            <gating:nodeGTE gating:parameter="SS" gating:threshold="200">
+                <gating:nodeLT gating:parameter="FL4" gating:threshold="95">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeGTE>
+		        </gating:nodeLT>
+		        <gating:nodeGTE gating:parameter="FL4" gating:threshold="95">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeGTE>
+		        </gating:nodeGTE>
+            </gating:nodeGTE>
+        </gating:rootNode>
+     </gating:DecisionTreeGate>
+     
+     <!-- Inside -->
+     <gating:DecisionTreeGate gating:id="G4D-GLLL">
+     	<gating:rootNode gating:parameter="FS" gating:threshold="90">
+            <gating:nodeLT gating:parameter="SS" gating:threshold="50"> 
+                <gating:nodeLT gating:parameter="FL4" gating:threshold="95">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeGTE>
+		        </gating:nodeLT>
+		        <gating:nodeGTE gating:parameter="FL4" gating:threshold="95">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeGTE>
+		        </gating:nodeGTE>
+            </gating:nodeLT>
+            <gating:nodeGTE gating:parameter="SS" gating:threshold="205">
+                <gating:nodeLT gating:parameter="FL4" gating:threshold="306">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="407"> 
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeGTE>
+		        </gating:nodeLT>
+		        <gating:nodeGTE gating:parameter="FL4" gating:threshold="95">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeGTE>
+		        </gating:nodeGTE>
+            </gating:nodeGTE>
+        </gating:rootNode>
+     </gating:DecisionTreeGate>
+     
+     <!-- Outside -->
+     <gating:DecisionTreeGate gating:id="G4D-GLLG">
+     	<gating:rootNode gating:parameter="FS" gating:threshold="95">
+            <gating:nodeLT gating:parameter="SS" gating:threshold="50"> 
+                <gating:nodeLT gating:parameter="FL4" gating:threshold="95">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeGTE>
+		        </gating:nodeLT>
+		        <gating:nodeGTE gating:parameter="FL4" gating:threshold="95">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeGTE>
+		        </gating:nodeGTE>
+            </gating:nodeLT>
+            <gating:nodeGTE gating:parameter="SS" gating:threshold="260">
+                <gating:nodeLT gating:parameter="FL4" gating:threshold="320">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="400"> 
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeGTE>
+		        </gating:nodeLT>
+		        <gating:nodeGTE gating:parameter="FL4" gating:threshold="95">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeGTE>
+		        </gating:nodeGTE>
+            </gating:nodeGTE>
+        </gating:rootNode>
+     </gating:DecisionTreeGate>
+     
+     <!-- Inside -->
+     <gating:DecisionTreeGate gating:id="G4D-GLGL">
+     	<gating:rootNode gating:parameter="FS" gating:threshold="95">
+            <gating:nodeLT gating:parameter="SS" gating:threshold="50"> 
+                <gating:nodeLT gating:parameter="FL4" gating:threshold="95">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeGTE>
+		        </gating:nodeLT>
+		        <gating:nodeGTE gating:parameter="FL4" gating:threshold="95">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeGTE>
+		        </gating:nodeGTE>
+            </gating:nodeLT>
+            <gating:nodeGTE gating:parameter="SS" gating:threshold="205">
+                <gating:nodeLT gating:parameter="FL4" gating:threshold="300">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="400.00001">
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeGTE>
+		        </gating:nodeLT>
+		        <gating:nodeGTE gating:parameter="FL4" gating:threshold="95">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeGTE>
+		        </gating:nodeGTE>
+            </gating:nodeGTE>
+        </gating:rootNode>
+     </gating:DecisionTreeGate>
+     
+     <!-- Outside -->
+     <gating:DecisionTreeGate gating:id="G4D-GLGG">
+     	<gating:rootNode gating:parameter="FS" gating:threshold="1">
+            <gating:nodeLT gating:parameter="SS" gating:threshold="50"> 
+                <gating:nodeLT gating:parameter="FL4" gating:threshold="95">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeGTE>
+		        </gating:nodeLT>
+		        <gating:nodeGTE gating:parameter="FL4" gating:threshold="95">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeGTE>
+		        </gating:nodeGTE>
+            </gating:nodeLT>
+            <gating:nodeGTE gating:parameter="SS" gating:threshold="209987456">
+                <gating:nodeLT gating:parameter="FL4" gating:threshold="300">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="0">
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeGTE>
+		        </gating:nodeLT>
+		        <gating:nodeGTE gating:parameter="FL4" gating:threshold="95">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeGTE>
+		        </gating:nodeGTE>
+            </gating:nodeGTE>
+        </gating:rootNode>
+     </gating:DecisionTreeGate>
+     
+     <!-- Inside -->
+     <gating:DecisionTreeGate gating:id="G4D-GGLL">
+     	<gating:rootNode gating:parameter="FS" gating:threshold="100">
+            <gating:nodeLT gating:parameter="SS" gating:threshold="50"> 
+                <gating:nodeLT gating:parameter="FL4" gating:threshold="95">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeGTE>
+		        </gating:nodeLT>
+		        <gating:nodeGTE gating:parameter="FL4" gating:threshold="95">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeGTE>
+		        </gating:nodeGTE>
+            </gating:nodeLT>
+            <gating:nodeGTE gating:parameter="SS" gating:threshold="20">
+                <gating:nodeLT gating:parameter="FL4" gating:threshold="95">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeGTE>
+		        </gating:nodeLT>
+		        <gating:nodeGTE gating:parameter="FL4" gating:threshold="300.00000001">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="400.000000001"> 
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeGTE>
+		        </gating:nodeGTE>
+            </gating:nodeGTE>
+        </gating:rootNode>
+     </gating:DecisionTreeGate>
+     
+     <!-- Outside -->
+     <gating:DecisionTreeGate gating:id="G4D-GGLG">
+     	<gating:rootNode gating:parameter="FS" gating:threshold="95">
+            <gating:nodeLT gating:parameter="SS" gating:threshold="50"> 
+                <gating:nodeLT gating:parameter="FL4" gating:threshold="95">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeGTE>
+		        </gating:nodeLT>
+		        <gating:nodeGTE gating:parameter="FL4" gating:threshold="95">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeGTE>
+		        </gating:nodeGTE>
+            </gating:nodeLT>
+            <gating:nodeGTE gating:parameter="SS" gating:threshold="200">
+                <gating:nodeLT gating:parameter="FL4" gating:threshold="95">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeGTE>
+		        </gating:nodeLT>
+		        <gating:nodeGTE gating:parameter="FL4" gating:threshold="665469781232">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="223.013"> 
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeGTE>
+		        </gating:nodeGTE>
+            </gating:nodeGTE>
+        </gating:rootNode>
+     </gating:DecisionTreeGate>
+     
+     <!-- Inside -->
+     <gating:DecisionTreeGate gating:id="G4D-GGGL">
+     	<gating:rootNode gating:parameter="FS" gating:threshold="95">
+            <gating:nodeLT gating:parameter="SS" gating:threshold="50"> 
+                <gating:nodeLT gating:parameter="FL4" gating:threshold="95">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeGTE>
+		        </gating:nodeLT>
+		        <gating:nodeGTE gating:parameter="FL4" gating:threshold="95">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeGTE>
+		        </gating:nodeGTE>
+            </gating:nodeLT>
+            <gating:nodeGTE gating:parameter="SS" gating:threshold="150">
+                <gating:nodeLT gating:parameter="FL4" gating:threshold="95">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeGTE>
+		        </gating:nodeLT>
+		        <gating:nodeGTE gating:parameter="FL4" gating:threshold="235">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="false"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="4665">
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeGTE>
+		        </gating:nodeGTE>
+            </gating:nodeGTE>
+        </gating:rootNode>
+     </gating:DecisionTreeGate>
+     
+     <!-- Outside -->
+     <gating:DecisionTreeGate gating:id="G4D-GGGG">
+     	<gating:rootNode gating:parameter="FS" gating:threshold="100">
+            <gating:nodeLT gating:parameter="SS" gating:threshold="50"> 
+                <gating:nodeLT gating:parameter="FL4" gating:threshold="95">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeGTE>
+		        </gating:nodeLT>
+		        <gating:nodeGTE gating:parameter="FL4" gating:threshold="95">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeGTE>
+		        </gating:nodeGTE>
+            </gating:nodeLT>
+            <gating:nodeGTE gating:parameter="SS" gating:threshold="200">
+                <gating:nodeLT gating:parameter="FL4" gating:threshold="95">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="200">
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeGTE>
+		        </gating:nodeLT>
+		        <gating:nodeGTE gating:parameter="FL4" gating:threshold="300">
+		            <gating:nodeLT gating:parameter="FL6" gating:threshold="50"> 
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="true"/>
+		            </gating:nodeLT>
+		            <gating:nodeGTE gating:parameter="FL6" gating:threshold="400">
+		                <gating:leafLT gating:inside="true"/>
+		                <gating:leafGTE gating:inside="false"/>
+		            </gating:nodeGTE>
+		        </gating:nodeGTE>
+            </gating:nodeGTE>
+        </gating:rootNode>
+     </gating:DecisionTreeGate>
+     
+</gating:Gating-ML>

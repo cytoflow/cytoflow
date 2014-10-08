@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<gating:Gating-ML 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:gating="http://www.isac-net.org/std/Gating-ML/v1.1/"
+    xsi:schemaLocation="http://www.isac-net.org/std/Gating-ML/v1.1/ ../schema/Gating-ML.v1.1.xsd" >
+
+    <!-- Test with 10000 points in int-10000_events_random.fcs
+     	 Parameters are: AS, BS, CS, DS, ES, FS.
+     	 
+     	 Expected results from Matlab.
+     -->
+    
+    <!-- Ellipse! -->
+    <!-- 4612 iniside -->
+	<gating:EllipsoidGate gating:id="ellipse">
+        <gating:dimension gating:parameter="BS" />
+        <gating:dimension gating:parameter="ES" />
+        <gating:focus>
+            <gating:coordinate gating:value="341193.57"/>
+            <gating:coordinate gating:value="727113.22"/>            
+        </gating:focus>
+        <gating:focus>
+            <gating:coordinate gating:value="534079.02"/>
+            <gating:coordinate gating:value="309290.16"/>            
+        </gating:focus>
+        <gating:distance>838496.045</gating:distance>
+    </gating:EllipsoidGate>
+    
+    <!-- Ellipsoid! -->
+    <!-- 7921 iniside -->
+	<gating:EllipsoidGate gating:id="ellipsoid">
+        <gating:dimension gating:parameter="FS" />
+        <gating:dimension gating:parameter="CS" />
+        <gating:dimension gating:parameter="DS" />
+        <gating:focus>
+            <gating:coordinate gating:value="934236.519"/>
+            <gating:coordinate gating:value="160300.339"/>            
+            <gating:coordinate gating:value="237880.308"/>
+        </gating:focus>
+        <gating:focus>
+            <gating:coordinate gating:value="264449.166"/>
+            <gating:coordinate gating:value="872855.257"/>
+            <gating:coordinate gating:value="645831.25"/>            
+        </gating:focus>
+        <gating:distance>1556125.76</gating:distance>
+    </gating:EllipsoidGate>
+    
+    <!-- Hyper-Ellipsoid! -->
+    <!-- 422 iniside -->
+	<gating:EllipsoidGate gating:id="hyper-ellipsoid">
+        <gating:dimension gating:parameter="AS" />
+        <gating:dimension gating:parameter="BS" />
+        <gating:dimension gating:parameter="CS" />
+        <gating:dimension gating:parameter="DS" />
+        <gating:dimension gating:parameter="ES" />
+        <gating:dimension gating:parameter="FS" />
+        <gating:focus>
+            <gating:coordinate gating:value="474041.450"/>
+            <gating:coordinate gating:value="596247.138"/>            
+            <gating:coordinate gating:value="478194.426"/>
+            <gating:coordinate gating:value="161448.755"/>
+            <gating:coordinate gating:value="956122.406"/>
+            <gating:coordinate gating:value="28748.213"/>
+        </gating:focus>
+        <gating:focus>
+            <gating:coordinate gating:value="908989.349"/>
+            <gating:coordinate gating:value="328955.302"/>
+            <gating:coordinate gating:value="597170.779"/>
+            <gating:coordinate gating:value="829474.251"/>
+            <gating:coordinate gating:value="595547.995"/>
+            <gating:coordinate gating:value="812117.819"/>            
+        </gating:focus>
+        <gating:distance>1471532.36</gating:distance>
+    </gating:EllipsoidGate>
+    
+
+ </gating:Gating-ML>
+ 

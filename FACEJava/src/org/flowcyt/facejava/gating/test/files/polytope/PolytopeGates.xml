@@ -1,0 +1,754 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<gating:Gating-ML 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:gating="http://www.isac-net.org/std/Gating-ML/v1.1/"
+    xsi:schemaLocation="http://www.isac-net.org/std/Gating-ML/v1.1/ ../schema/Gating-ML.v1.1.xsd" >
+    
+    <!-- Test with a single event in the int-gating_test_file_4D.fcs FCS file 
+             * Event: (100, 200, 300, 400) with parameters (FS, SS, FL4, FL6)
+    -->
+     
+    <!-- First test in a single dimension. We'll test with one point, two points, then
+         two points with redundancy -->
+    
+    <!-- Outside -->
+    <gating:PolytopeGate gating:id="OnePtLessThan">
+        <gating:dimension gating:parameter="FS" />
+        <gating:point>
+            <gating:coordinate gating:value="150" />
+        </gating:point>
+    </gating:PolytopeGate>
+    
+    <!-- Inside -->
+    <gating:PolytopeGate gating:id="OnePtEqual">
+        <gating:dimension gating:parameter="FS" />
+        <gating:point>
+            <gating:coordinate gating:value="100" />
+        </gating:point>
+    </gating:PolytopeGate>
+    
+    <!-- Outside -->
+    <gating:PolytopeGate gating:id="OnePtGreaterThan">
+        <gating:dimension gating:parameter="FS" />
+        <gating:point>
+            <gating:coordinate gating:value="50" />
+        </gating:point>
+    </gating:PolytopeGate>
+    
+    <!-- Outside -->
+    <gating:PolytopeGate gating:id="TwoPtLessThan">
+        <gating:dimension gating:parameter="FS" />
+        <gating:point>
+            <gating:coordinate gating:value="150" />
+        </gating:point>
+        <gating:point>
+            <gating:coordinate gating:value="175" />
+        </gating:point>
+    </gating:PolytopeGate>
+    
+    <!-- Inside -->
+    <gating:PolytopeGate gating:id="TwoPtRightBoundary">
+        <gating:dimension gating:parameter="FS" />
+        <gating:point>
+            <gating:coordinate gating:value="75" />
+        </gating:point>
+        <gating:point>
+            <gating:coordinate gating:value="100" />
+        </gating:point>
+    </gating:PolytopeGate>
+    
+    <!-- Inside -->
+    <gating:PolytopeGate gating:id="TwoPtWithin">
+        <gating:dimension gating:parameter="FS" />
+        <gating:point>
+            <gating:coordinate gating:value="75" />
+        </gating:point>
+        <gating:point>
+            <gating:coordinate gating:value="110" />
+        </gating:point>
+    </gating:PolytopeGate>
+    
+    <!-- Inside -->
+    <gating:PolytopeGate gating:id="TwoPtLeftBoundary">
+        <gating:dimension gating:parameter="FS" />
+        <gating:point>
+            <gating:coordinate gating:value="100" />
+        </gating:point>
+        <gating:point>
+            <gating:coordinate gating:value="150" />
+        </gating:point>
+    </gating:PolytopeGate>
+    
+    <!-- Outside -->
+    <gating:PolytopeGate gating:id="TwoPtGreaterThan">
+        <gating:dimension gating:parameter="FS" />
+        <gating:point>
+            <gating:coordinate gating:value="75" />
+        </gating:point>
+        <gating:point>
+            <gating:coordinate gating:value="50" />
+        </gating:point>
+    </gating:PolytopeGate>
+    
+    <!-- Outside -->
+    <gating:PolytopeGate gating:id="TwoPtLessThanWithRedundancy">
+        <gating:dimension gating:parameter="FS" />
+        <gating:point>
+            <gating:coordinate gating:value="160" />
+        </gating:point>
+        <gating:point>
+            <gating:coordinate gating:value="150" />
+        </gating:point>
+        <gating:point>
+            <gating:coordinate gating:value="175" />
+        </gating:point>
+        <gating:point>
+            <gating:coordinate gating:value="170" />
+        </gating:point>
+    </gating:PolytopeGate>
+    
+    <!-- Inside -->
+    <gating:PolytopeGate gating:id="TwoPtRightBoundaryWithRedundancy">
+        <gating:dimension gating:parameter="FS" />
+        <gating:point>
+            <gating:coordinate gating:value="75" />
+        </gating:point>
+        <gating:point>
+            <gating:coordinate gating:value="85" />
+        </gating:point>
+        <gating:point>
+            <gating:coordinate gating:value="90" />
+        </gating:point>
+        <gating:point>
+            <gating:coordinate gating:value="100" />
+        </gating:point>
+    </gating:PolytopeGate>
+    
+    <!-- Inside -->
+    <gating:PolytopeGate gating:id="TwoPtWithinWithRedundancy">
+        <gating:dimension gating:parameter="FS" />
+        <gating:point>
+            <gating:coordinate gating:value="75" />
+        </gating:point>
+        <gating:point>
+            <gating:coordinate gating:value="90" />
+        </gating:point>
+        <gating:point>
+            <gating:coordinate gating:value="105" />
+        </gating:point>
+        <gating:point>
+            <gating:coordinate gating:value="110" />
+        </gating:point>
+    </gating:PolytopeGate>
+    
+    <!-- Inside -->
+    <gating:PolytopeGate gating:id="TwoPtLeftBoundaryWithRedundancy">
+        <gating:dimension gating:parameter="FS" />
+        <gating:point>
+            <gating:coordinate gating:value="100" />
+        </gating:point>
+        <gating:point>
+            <gating:coordinate gating:value="139" />
+        </gating:point>
+        <gating:point>
+            <gating:coordinate gating:value="120" />
+        </gating:point>
+        <gating:point>
+            <gating:coordinate gating:value="150" />
+        </gating:point>
+    </gating:PolytopeGate>
+    
+    <!-- Outside -->
+    <gating:PolytopeGate gating:id="TwoPtGreaterThanWithRedundancy">
+        <gating:dimension gating:parameter="FS" />
+        <gating:point>
+            <gating:coordinate gating:value="50" />
+        </gating:point>
+        <gating:point>
+            <gating:coordinate gating:value="60" />
+        </gating:point>
+        <gating:point>
+            <gating:coordinate gating:value="70" />
+        </gating:point>
+        <gating:point>
+            <gating:coordinate gating:value="75" />
+        </gating:point>
+    </gating:PolytopeGate>
+    
+    <!-- Test with some 2D polytopes (polygons). For each test we'll add a copy of the
+         gate but with some redundant points. -->
+   
+    <!-- Inside -->
+    <gating:PolytopeGate gating:id="TriangleInside">
+        <gating:dimension gating:parameter="FS" />
+        <gating:dimension gating:parameter="SS" />
+        <gating:point>
+            <gating:coordinate gating:value="50" />
+            <gating:coordinate gating:value="150" />
+        </gating:point>
+        <gating:point>
+            <gating:coordinate gating:value="120" />
+            <gating:coordinate gating:value="185" />
+        </gating:point>
+        <gating:point>
+            <gating:coordinate gating:value="110" />
+            <gating:coordinate gating:value="330" />
+        </gating:point>
+    </gating:PolytopeGate>
+    
+    <!-- Inside -->
+    <gating:PolytopeGate gating:id="TriangleInsideWithRedundancy">
+        <gating:dimension gating:parameter="FS" />
+        <gating:dimension gating:parameter="SS" />
+        <gating:point>
+            <gating:coordinate gating:value="50" />
+            <gating:coordinate gating:value="150" />
+        </gating:point>
+        <gating:point>
+            <gating:coordinate gating:value="80" />
+            <gating:coordinate gating:value="200" />
+        </gating:point>
+        <gating:point>
+            <gating:coordinate gating:value="110" />
+            <gating:coordinate gating:value="330" />
+        </gating:point>
+        <gating:point>
+            <gating:coordinate gating:value="105" />
+            <gating:coordinate gating:value="180" />
+        </gating:point>
+        <gating:point>
+            <gating:coordinate gating:value="115" />
+            <gating:coordinate gating:value="240" />
+        </gating:point>
+        <gating:point>
+            <gating:coordinate gating:value="120" />
+            <gating:coordinate gating:value="185" />
+        </gating:point>
+    </gating:PolytopeGate>
+    
+    <!-- Outside -->
+    <gating:PolytopeGate gating:id="TriangleOutside">
+        <gating:dimension gating:parameter="FS" />
+        <gating:dimension gating:parameter="SS" />
+        <gating:point>
+            <gating:coordinate gating:value="50" />
+            <gating:coordinate gating:value="150" />
+        </gating:point>
+        <gating:point>
+            <gating:coordinate gating:value="120" />
+            <gating:coordinate gating:value="50" />
+        </gating:point>
+        <gating:point>
+            <gating:coordinate gating:value="200" />
+            <gating:coordinate gating:value="250" />
+        </gating:point>            
+    </gating:PolytopeGate>
+    
+    <!-- Outside -->
+    <gating:PolytopeGate gating:id="TriangleOutsideWithRedundancy">
+        <gating:dimension gating:parameter="FS" />
+        <gating:dimension gating:parameter="SS" />
+        <gating:point>
+            <gating:coordinate gating:value="50" />
+            <gating:coordinate gating:value="150" />
+        </gating:point>
+        <gating:point>
+            <gating:coordinate gating:value="125" />
+            <gating:coordinate gating:value="120" />
+        </gating:point>
+        <gating:point>
+            <gating:coordinate gating:value="100" />
+            <gating:coordinate gating:value="170" />
+        </gating:point>
+        <gating:point>
+            <gating:coordinate gating:value="110" />
+            <gating:coordinate gating:value="190" />
+        </gating:point>
+        <gating:point>
+            <gating:coordinate gating:value="120" />
+            <gating:coordinate gating:value="50" />
+        </gating:point>
+        <gating:point>
+            <gating:coordinate gating:value="200" />
+            <gating:coordinate gating:value="250" />
+        </gating:point>            
+    </gating:PolytopeGate>
+    
+    <!-- Inside -->
+    <gating:PolytopeGate gating:id="TriangleBoundary">
+        <gating:dimension gating:parameter="FS" />
+        <gating:dimension gating:parameter="SS" />
+        <gating:point>
+            <gating:coordinate gating:value="75" />
+            <gating:coordinate gating:value="250" />
+        </gating:point>
+        <gating:point>
+            <gating:coordinate gating:value="125" />
+            <gating:coordinate gating:value="150" />
+        </gating:point>
+        <gating:point>
+            <gating:coordinate gating:value="50" />
+            <gating:coordinate gating:value="50" />
+        </gating:point>
+    </gating:PolytopeGate>
+    
+    <!-- Inside -->
+    <gating:PolytopeGate gating:id="TriangleBoundaryWithRedundancy">
+        <gating:dimension gating:parameter="FS" />
+        <gating:dimension gating:parameter="SS" />
+        <gating:point>
+            <gating:coordinate gating:value="75" />
+            <gating:coordinate gating:value="250" />
+        </gating:point>
+        <gating:point>
+            <gating:coordinate gating:value="125" />
+            <gating:coordinate gating:value="150" />
+        </gating:point>
+        <gating:point>
+            <gating:coordinate gating:value="105" />
+            <gating:coordinate gating:value="180" />
+        </gating:point>
+        <gating:point>
+            <gating:coordinate gating:value="115" />
+            <gating:coordinate gating:value="240" />
+        </gating:point>
+        <gating:point>
+            <gating:coordinate gating:value="120" />
+            <gating:coordinate gating:value="185" />
+        </gating:point>
+        <gating:point>
+            <gating:coordinate gating:value="50" />
+            <gating:coordinate gating:value="50" />
+        </gating:point>
+    </gating:PolytopeGate>
+    
+    <!-- We'll test polytopes with 3D cubes. For each test we'll add a copy of the
+         gate but with some redundant points. -->
+    
+    <!-- First, all coordinates in the cube are less than the event -->
+    
+    <!-- Outside -->
+    <gating:PolytopeGate gating:id="cube">
+        <gating:dimension gating:parameter="FS" />
+        <gating:dimension gating:parameter="SS" />
+        <gating:dimension gating:parameter="FL4" />
+        <gating:point>
+            <gating:coordinate gating:value="30" />
+            <gating:coordinate gating:value="10" />
+            <gating:coordinate gating:value="0" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="80" />
+            <gating:coordinate gating:value="10" />
+            <gating:coordinate gating:value="0" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="80"  />
+            <gating:coordinate gating:value="30" />
+            <gating:coordinate gating:value="0" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="30"  />
+            <gating:coordinate gating:value="30" />
+            <gating:coordinate gating:value="0" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="30"  />
+            <gating:coordinate gating:value="10" />
+            <gating:coordinate gating:value="20" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="80"  />
+            <gating:coordinate gating:value="10" />
+            <gating:coordinate gating:value="20" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="80" />
+            <gating:coordinate gating:value="30" />
+            <gating:coordinate gating:value="20" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="30" />
+            <gating:coordinate gating:value="30" />
+            <gating:coordinate gating:value="20" />
+        </gating:point>
+    </gating:PolytopeGate>
+    
+    <!-- Outside -->
+    <gating:PolytopeGate gating:id="cubeWithRedundancy">
+        <gating:dimension gating:parameter="FS" />
+        <gating:dimension gating:parameter="SS" />
+        <gating:dimension gating:parameter="FL4" />
+        <gating:point>
+            <gating:coordinate gating:value="30" />
+            <gating:coordinate gating:value="10" />
+            <gating:coordinate gating:value="0" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="80" />
+            <gating:coordinate gating:value="10" />
+            <gating:coordinate gating:value="0" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="80"  />
+            <gating:coordinate gating:value="30" />
+            <gating:coordinate gating:value="0" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="30"  />
+            <gating:coordinate gating:value="30" />
+            <gating:coordinate gating:value="0" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="30"  />
+            <gating:coordinate gating:value="10" />
+            <gating:coordinate gating:value="20" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="80"  />
+            <gating:coordinate gating:value="10" />
+            <gating:coordinate gating:value="20" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="80" />
+            <gating:coordinate gating:value="30" />
+            <gating:coordinate gating:value="20" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="30" />
+            <gating:coordinate gating:value="30" />
+            <gating:coordinate gating:value="20" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="50" />
+            <gating:coordinate gating:value="20" />
+            <gating:coordinate gating:value="10" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="60" />
+            <gating:coordinate gating:value="25" />
+            <gating:coordinate gating:value="5" />
+        </gating:point>
+    </gating:PolytopeGate>
+    
+    <!-- The event is right in the middle -->
+    
+    <!-- Inside -->
+    <gating:PolytopeGate gating:id="cube2">
+        <gating:dimension gating:parameter="FS" />
+        <gating:dimension gating:parameter="SS" />
+        <gating:dimension gating:parameter="FL4" />
+        <gating:point>
+            <gating:coordinate gating:value="50" />
+            <gating:coordinate gating:value="150" />
+            <gating:coordinate gating:value="250" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="150" />
+            <gating:coordinate gating:value="150" />
+            <gating:coordinate gating:value="250" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="150"  />
+            <gating:coordinate gating:value="250" />
+            <gating:coordinate gating:value="250" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="50"  />
+            <gating:coordinate gating:value="250" />
+            <gating:coordinate gating:value="250" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="50"  />
+            <gating:coordinate gating:value="150" />
+            <gating:coordinate gating:value="350" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="150"  />
+            <gating:coordinate gating:value="150" />
+            <gating:coordinate gating:value="350" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="150" />
+            <gating:coordinate gating:value="250" />
+            <gating:coordinate gating:value="350" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="50" />
+            <gating:coordinate gating:value="250" />
+            <gating:coordinate gating:value="350" />
+        </gating:point>
+    </gating:PolytopeGate>
+    
+    <!-- Inside -->
+    <gating:PolytopeGate gating:id="cube2WithRedundancy">
+        <gating:dimension gating:parameter="FS" />
+        <gating:dimension gating:parameter="SS" />
+        <gating:dimension gating:parameter="FL4" />
+        <gating:point>
+            <gating:coordinate gating:value="50" />
+            <gating:coordinate gating:value="150" />
+            <gating:coordinate gating:value="250" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="150" />
+            <gating:coordinate gating:value="150" />
+            <gating:coordinate gating:value="250" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="150"  />
+            <gating:coordinate gating:value="250" />
+            <gating:coordinate gating:value="250" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="50"  />
+            <gating:coordinate gating:value="250" />
+            <gating:coordinate gating:value="250" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="50"  />
+            <gating:coordinate gating:value="150" />
+            <gating:coordinate gating:value="350" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="150"  />
+            <gating:coordinate gating:value="150" />
+            <gating:coordinate gating:value="350" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="150" />
+            <gating:coordinate gating:value="250" />
+            <gating:coordinate gating:value="350" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="50" />
+            <gating:coordinate gating:value="250" />
+            <gating:coordinate gating:value="350" />
+        </gating:point>
+         <gating:point>        
+            <gating:coordinate gating:value="125" />
+            <gating:coordinate gating:value="225" />
+            <gating:coordinate gating:value="275" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="99" />
+            <gating:coordinate gating:value="201" />
+            <gating:coordinate gating:value="299" />
+        </gating:point>
+    </gating:PolytopeGate>
+    
+    <!-- Now all coordinates are greater than the event -->
+    
+    <!-- Outside -->
+    <gating:PolytopeGate gating:id="cube3">
+        <gating:dimension gating:parameter="FS" />
+        <gating:dimension gating:parameter="SS" />
+        <gating:dimension gating:parameter="FL4" />
+        <gating:point>
+            <gating:coordinate gating:value="150" />
+            <gating:coordinate gating:value="250" />
+            <gating:coordinate gating:value="350" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="250" />
+            <gating:coordinate gating:value="250" />
+            <gating:coordinate gating:value="350" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="250"  />
+            <gating:coordinate gating:value="350" />
+            <gating:coordinate gating:value="350" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="150"  />
+            <gating:coordinate gating:value="350" />
+            <gating:coordinate gating:value="350" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="150"  />
+            <gating:coordinate gating:value="250" />
+            <gating:coordinate gating:value="450" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="250"  />
+            <gating:coordinate gating:value="250" />
+            <gating:coordinate gating:value="450" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="250" />
+            <gating:coordinate gating:value="350" />
+            <gating:coordinate gating:value="450" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="150" />
+            <gating:coordinate gating:value="350" />
+            <gating:coordinate gating:value="450" />
+        </gating:point>
+    </gating:PolytopeGate>
+
+	<!-- Outside -->
+    <gating:PolytopeGate gating:id="cube3WithRedundancy">
+        <gating:dimension gating:parameter="FS" />
+        <gating:dimension gating:parameter="SS" />
+        <gating:dimension gating:parameter="FL4" />
+        <gating:point>
+            <gating:coordinate gating:value="150" />
+            <gating:coordinate gating:value="250" />
+            <gating:coordinate gating:value="350" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="250" />
+            <gating:coordinate gating:value="250" />
+            <gating:coordinate gating:value="350" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="250"  />
+            <gating:coordinate gating:value="350" />
+            <gating:coordinate gating:value="350" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="150"  />
+            <gating:coordinate gating:value="350" />
+            <gating:coordinate gating:value="350" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="150"  />
+            <gating:coordinate gating:value="250" />
+            <gating:coordinate gating:value="450" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="250"  />
+            <gating:coordinate gating:value="250" />
+            <gating:coordinate gating:value="450" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="250" />
+            <gating:coordinate gating:value="350" />
+            <gating:coordinate gating:value="450" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="150" />
+            <gating:coordinate gating:value="350" />
+            <gating:coordinate gating:value="450" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="200" />
+            <gating:coordinate gating:value="300" />
+            <gating:coordinate gating:value="400" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="175" />
+            <gating:coordinate gating:value="325" />
+            <gating:coordinate gating:value="375" />
+        </gating:point>
+    </gating:PolytopeGate>
+   
+    <!-- Now put the event on the boundary of the convex hull (on the face of the cube) -->
+   
+    <!-- Inside -->   
+    <gating:PolytopeGate gating:id="cube4">
+        <gating:dimension gating:parameter="FS" />
+        <gating:dimension gating:parameter="SS" />
+        <gating:dimension gating:parameter="FL4" />
+        <gating:point>
+            <gating:coordinate gating:value="100" />
+            <gating:coordinate gating:value="200" />
+            <gating:coordinate gating:value="250" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="150" />
+            <gating:coordinate gating:value="200" />
+            <gating:coordinate gating:value="250" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="150"  />
+            <gating:coordinate gating:value="250" />
+            <gating:coordinate gating:value="250" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="100"  />
+            <gating:coordinate gating:value="250" />
+            <gating:coordinate gating:value="250" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="100"  />
+            <gating:coordinate gating:value="200" />
+            <gating:coordinate gating:value="350" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="150"  />
+            <gating:coordinate gating:value="200" />
+            <gating:coordinate gating:value="350" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="150" />
+            <gating:coordinate gating:value="250" />
+            <gating:coordinate gating:value="350" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="100" />
+            <gating:coordinate gating:value="250" />
+            <gating:coordinate gating:value="350" />
+        </gating:point>
+    </gating:PolytopeGate> 
+    
+    <!-- Inside -->
+    <gating:PolytopeGate gating:id="cube4WithRedundancy">
+        <gating:dimension gating:parameter="FS" />
+        <gating:dimension gating:parameter="SS" />
+        <gating:dimension gating:parameter="FL4" />
+        <gating:point>        
+            <gating:coordinate gating:value="125" />
+            <gating:coordinate gating:value="225" />
+            <gating:coordinate gating:value="300" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="101" />
+            <gating:coordinate gating:value="249" />
+            <gating:coordinate gating:value="251" />
+        </gating:point>
+        <gating:point>
+            <gating:coordinate gating:value="100" />
+            <gating:coordinate gating:value="200" />
+            <gating:coordinate gating:value="250" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="150" />
+            <gating:coordinate gating:value="200" />
+            <gating:coordinate gating:value="250" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="150"  />
+            <gating:coordinate gating:value="250" />
+            <gating:coordinate gating:value="250" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="100"  />
+            <gating:coordinate gating:value="250" />
+            <gating:coordinate gating:value="250" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="100"  />
+            <gating:coordinate gating:value="200" />
+            <gating:coordinate gating:value="350" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="150"  />
+            <gating:coordinate gating:value="200" />
+            <gating:coordinate gating:value="350" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="150" />
+            <gating:coordinate gating:value="250" />
+            <gating:coordinate gating:value="350" />
+        </gating:point>
+        <gating:point>        
+            <gating:coordinate gating:value="100" />
+            <gating:coordinate gating:value="250" />
+            <gating:coordinate gating:value="350" />
+        </gating:point>
+    </gating:PolytopeGate> 
+    
+   
+</gating:Gating-ML>

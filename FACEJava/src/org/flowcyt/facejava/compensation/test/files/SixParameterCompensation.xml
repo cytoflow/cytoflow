@@ -1,0 +1,464 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<comp:Compensation-ML 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:comp="http://www.isac-net.org/std/Compensation-ML/v1.0/"
+    xsi:schemaLocation="http://www.isac-net.org/std/Compensation-ML/v1.0/ ../schema/Compensation-ML.v1.0.xsd">
+    
+    <!-- Let D be the set of parameters in the DataSet and S be the set of parameters in a
+         spilloverMatrix.
+         
+         All the resulting compensators (when applied to the appropriate fcs data set should
+         result in 6 parameters being compensated (except for the last matrix where we test
+         that what happens when D {intersection} S = {empty set} (i.e., no compensation should
+         be applied). 
+    -->
+    
+    <!-- 
+    	FCS File: int-10_events_6_parameters.fcs    	
+     	
+     	Case: S = D
+     	
+     	Compensation Matrix:
+     	
+     	   AS      BS      CS      DS      ES      FS
+     	AS 0.99999 0.88888 0.77777 0.66666 0.55555 0.44444
+     	BS 0.12121 1.0     0.0     0.21212 0.31313 0.13131
+     	CS 0.12    0.34    1.0     0.56    0.78    0.90
+     	DS 0.0     0.0     0.0     1.0     0.0     0.0
+     	ES 0.8765  0.0     0.0     0.0     1.0     0.4321
+     	FS 0.00001 0.0001  0.001   0.01    0.1     1.0
+     	
+     	Compensated Events:
+     	(10.0, 20.0, 30.0, 40.0, 50.0, 60.0)		-> (-4.13219024912192, -4.54790289250433, -64.1337111534546, 40.0, 29.0981074286812, 56.7548190804771)
+		(70.0, 80.0, 90.0, 100.0, 110.0, 120.0)		-> (-6.42042413511828, 23.8087237286069, -126.801803407471, 100.0, 67.0510892959567, 112.41937620568)
+		(130.0, 140.0, 150.0, 160.0, 170.0, 180.0)	-> (-8.70865802111462, 52.1653503497181, -189.469895661487, 160.0, 105.004071163232, 168.083933330883)
+		(190.0, 200.0, 210.0, 220.0, 230.0, 240.0)	-> (-10.9968919071109, 80.5219769708293, -252.137987915503, 220.0, 142.957053030508, 223.748490456087)
+		(250.0, 260.0, 270.0, 280.0, 290.0, 300.0)	-> (-13.2851257931073, 108.87860359194, -314.806080169519, 280.0, 180.910034897783, 279.41304758129)
+		(310.0, 320.0, 330.0, 340.0, 350.0, 360.0)	-> (-15.5733596791036, 137.235230213052, -377.474172423535, 340.0, 218.863016765059, 335.077604706493)
+		(370.0, 380.0, 390.0, 400.0, 410.0, 420.0)	-> (-17.8615935651, 165.591856834163, -440.142264677551, 400.0, 256.815998632334, 390.742161831696)
+		(430.0, 440.0, 450.0, 460.0, 470.0, 480.0)	-> (-20.1498274510964, 193.948483455274, -502.810356931567, 460.0, 294.76898049961, 446.4067189569)
+		(490.0, 500.0, 510.0, 520.0, 530.0, 540.0)	-> (-22.4380613370927, 222.305110076385, -565.478449185583, 520.0, 332.721962366885, 502.071276082103)
+		(550.0, 560.0, 570.0, 580.0, 590.0, 600.0)	-> (-24.7262952230892, 250.661736697497, -628.146541439599, 580.0, 370.674944234161, 557.735833207306)
+    -->
+    
+    <comp:spilloverMatrix comp:id="Equal">
+      
+        <comp:spillover comp:parameter="AS">
+            <comp:coefficient comp:parameter="AS" comp:value="0.99999"/>
+            <comp:coefficient comp:parameter="BS" comp:value="0.88888"/>
+            <comp:coefficient comp:parameter="CS" comp:value="0.77777"/>
+            <comp:coefficient comp:parameter="DS" comp:value="0.66666"/>
+            <comp:coefficient comp:parameter="ES" comp:value="0.55555"/>
+            <comp:coefficient comp:parameter="FS" comp:value="0.44444"/>
+        </comp:spillover>
+ 
+        <comp:spillover comp:parameter="BS">
+            <comp:coefficient comp:parameter="AS" comp:value="0.12121"/>
+            <comp:coefficient comp:parameter="DS" comp:value="0.21212"/>
+            <comp:coefficient comp:parameter="ES" comp:value="0.31313"/>
+            <comp:coefficient comp:parameter="FS" comp:value="0.13131"/>
+        </comp:spillover>
+        
+        <comp:spillover comp:parameter="CS">
+            <comp:coefficient comp:parameter="AS" comp:value="0.12"/>
+            <comp:coefficient comp:parameter="BS" comp:value="0.34"/>
+            <comp:coefficient comp:parameter="DS" comp:value="0.56"/>
+            <comp:coefficient comp:parameter="ES" comp:value="0.78"/>
+            <comp:coefficient comp:parameter="FS" comp:value="0.90"/>
+        </comp:spillover>
+        
+        <comp:spillover comp:parameter="ES">
+            <comp:coefficient comp:parameter="AS" comp:value="0.8765"/>
+            <comp:coefficient comp:parameter="FS" comp:value="0.4321"/>
+        </comp:spillover>
+        
+        <comp:spillover comp:parameter="FS">
+            <comp:coefficient comp:parameter="AS" comp:value="0.00001"/>
+            <comp:coefficient comp:parameter="BS" comp:value="0.0001"/>
+            <comp:coefficient comp:parameter="CS" comp:value="0.001"/>
+            <comp:coefficient comp:parameter="DS" comp:value="0.01"/>
+            <comp:coefficient comp:parameter="ES" comp:value="0.1"/>
+        </comp:spillover>
+        
+    </comp:spilloverMatrix>
+    
+    <!-- 
+        FCS File: int-10_events_8_parameters.fcs    	
+     	
+     	Case: S {proper subset of} D
+     	
+     	Compensation Matrix:
+     	
+     	   AS     BS     CS     ES     FS     HS
+     	AS 1.0    0.0    0.0    0.0    0.0    0.1234
+     	BS 0.0    1.0    0.0    0.3456 0.0    0.0 
+     	CS 0.0    0.4567 1.0    0.0    0.0    0.0
+     	ES 0.0    0.0    0.0    1.0    0.9123 0.0
+     	FS 0.8912 0.0    0.0    0.0    1.0    0.0
+     	HS 0.0    0.0    0.5678 0.0    0.0    1.0
+     	
+     	Compensated Events:
+        (10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0)			-> (1.5515612670147, 21.2014838939059, 20.3172823056532, 40, -3.47651589671854, 58.6172485988365, 70, 68.4638471068501)
+		(90.0, 100.0, 110.0, 120.0, 130.0, 140.0, 150.0, 160.0)		-> (75.4671280286476, 78.0074237689211, 74.3740095647337, 120, 63.635926594557, 72.7436955008693, 150, 117.770437369144)
+		(170.0, 180.0, 190.0, 200.0, 210.0, 220.0, 230.0, 240.0)	-> (149.382694790281, 134.813363643936, 128.430736823814, 200, 130.748369085833, 86.870142402902, 230, 167.077027631438)
+		(250.0, 260.0, 270.0, 280.0, 290.0, 300.0, 310.0, 320.0)	-> (223.298261551913, 191.619303518951, 182.487464082895, 280, 197.860811577108, 100.996589304935, 310, 216.383617893732)
+		(330.0, 340.0, 350.0, 360.0, 370.0, 380.0, 390.0, 400.0)	-> (297.213828313546, 248.425243393967, 236.544191341975, 360, 264.973254068384, 115.123036206968, 390, 265.690208156026)
+		(410.0, 420.0, 430.0, 440.0, 450.0, 460.0, 470.0, 480.0)	-> (371.129395075179, 305.231183268982, 290.600918601056, 440, 332.085696559659, 129.249483109, 470, 314.99679841832)
+		(490.0, 500.0, 510.0, 520.0, 530.0, 540.0, 550.0, 560.0)	-> (445.044961836812, 362.037123143997, 344.657645860137, 520, 399.198139050935, 143.375930011033, 550, 364.303388680614)
+		(570.0, 580.0, 590.0, 600.0, 610.0, 620.0, 630.0, 640.0)	-> (518.960528598445, 418.843063019012, 398.714373119217, 600, 466.31058154221, 157.502376913066, 630, 413.609978942909)
+		(650.0, 660.0, 670.0, 680.0, 690.0, 700.0, 710.0, 720.0)	-> (592.876095360078, 475.649002894027, 452.771100378298, 680, 533.423024033486, 171.628823815098, 710, 462.916569205203)
+		(730.0, 740.0, 750.0, 760.0, 770.0, 780.0, 790.0, 800.0)	-> (666.791662121711, 532.454942769043, 506.827827637378, 760, 600.535466524761, 185.755270717131, 790, 512.223159467497)
+    -->
+    
+    <comp:spilloverMatrix comp:id="S-Sub-D">
+        
+        <comp:spillover comp:parameter="AS">
+            <comp:coefficient comp:parameter="HS" comp:value="0.1234"/>
+        </comp:spillover>
+ 
+        <comp:spillover comp:parameter="HS">
+            <comp:coefficient comp:parameter="CS" comp:value="0.5678"/>
+        </comp:spillover>
+        
+        <comp:spillover comp:parameter="ES">
+            <comp:coefficient comp:parameter="FS" comp:value="0.9123"/>
+        </comp:spillover>
+        
+        <comp:spillover comp:parameter="CS">
+            <comp:coefficient comp:parameter="BS" comp:value="0.4567"/>
+        </comp:spillover>
+        
+        <comp:spillover comp:parameter="FS">
+            <comp:coefficient comp:parameter="AS" comp:value="0.8912"/>
+        </comp:spillover>
+        
+        <comp:spillover comp:parameter="BS">
+            <comp:coefficient comp:parameter="ES" comp:value="0.3456"/>
+        </comp:spillover>
+        
+    </comp:spilloverMatrix>
+    
+    <!-- 
+        FCS File: int-10_events_6_parameters.fcs    	
+     	
+     	Case: D {proper subset of} S
+     	
+     	Compensation Matrix:
+     	
+     	   AS       BS       CS       DS       ES       FS
+     	AS 0.777777 0.888888 0.999999 0.101010 0.111111 0.121212
+     	BS 0.666666 1.0      0.0      0.0      0.0      0.0
+     	CS 0.444444 0.0      1.0      0.0      0.0      0.0
+     	DS 0.555555 0.0      0.0      1.0      0.0      0.0
+     	ES 0.333333 0.0      0.0      0.0      1.0      0.0
+     	FS 0.222222 0.0      0.0      0.0      0.0      1.0
+     	
+     	Compensated Events:
+     	(10.0, 20.0, 30.0, 40.0, 50.0, 60.0)		-> (114.028381268801, -56.0188448269466, -33.3490373557889, -10.6792298846311, 11.9905775865267, 34.6603850576845)
+		(70.0, 80.0, 90.0, 100.0, 110.0, 120.0)		-> (267.04973472047, -98.0329784471566, -58.3608153726305, -18.6886522981044, 20.9835107764217, 60.6556738509478)
+		(130.0, 140.0, 150.0, 160.0, 170.0, 180.0)	-> (420.071088172138, -140.047112067367, -83.3725933894721, -26.6980747115777, 29.9764439663168, 86.6509626442112)
+		(190.0, 200.0, 210.0, 220.0, 230.0, 240.0)	-> (573.092441623806, -182.061245687577, -108.384371406314, -34.707497125051, 38.9693771562118, 112.646251437475)
+		(250.0, 260.0, 270.0, 280.0, 290.0, 300.0)	-> (726.113795075475, -224.075379307786, -133.396149423155, -42.7169195385243, 47.9623103461068, 138.641540230738)
+		(310.0, 320.0, 330.0, 340.0, 350.0, 360.0)	-> (879.135148527143, -266.089512927996, -158.407927439997, -50.7263419519977, 56.9552435360019, 164.636829024001)
+		(370.0, 380.0, 390.0, 400.0, 410.0, 420.0)	-> (1032.15650197881, -308.103646548206, -183.419705456839, -58.7357643654709, 65.9481767258968, 190.632117817265)
+		(430.0, 440.0, 450.0, 460.0, 470.0, 480.0)	-> (1185.17785543048, -350.117780168416, -208.43148347368, -66.7451867789443, 74.9411099157919, 216.627406610528)
+		(490.0, 500.0, 510.0, 520.0, 530.0, 540.0)	-> (1338.19920888215, -392.131913788626, -233.443261490522, -74.7546091924175, 83.934043105687, 242.622695403791)
+		(550.0, 560.0, 570.0, 580.0, 590.0, 600.0)	-> (1491.22056233382, -434.146047408836, -258.455039507364, -82.7640316058909, 92.926976295582, 268.617984197055)
+    -->
+    
+    <comp:spilloverMatrix comp:id="D-Sub-S">
+        
+        <comp:spillover comp:parameter="AS">
+            <comp:coefficient comp:parameter="HS" comp:value="0.01"/>
+            <comp:coefficient comp:parameter="GS" comp:value="0.02"/>
+            <comp:coefficient comp:parameter="FS" comp:value="0.121212"/>
+            <comp:coefficient comp:parameter="ES" comp:value="0.111111"/>
+            <comp:coefficient comp:parameter="DS" comp:value="0.101010"/>
+            <comp:coefficient comp:parameter="CS" comp:value="0.999999"/>
+            <comp:coefficient comp:parameter="BS" comp:value="0.888888"/>
+            <comp:coefficient comp:parameter="AS" comp:value="0.777777"/>
+        </comp:spillover>
+ 
+        <comp:spillover comp:parameter="BS">
+            <comp:coefficient comp:parameter="IS" comp:value="0.21212"/>
+            <comp:coefficient comp:parameter="AS" comp:value="0.666666"/>
+            <comp:coefficient comp:parameter="JS" comp:value="0.31313"/>
+            <comp:coefficient comp:parameter="KS" comp:value="0.13131"/>
+        </comp:spillover>
+        
+        <comp:spillover comp:parameter="CS">
+            <comp:coefficient comp:parameter="LS" comp:value="0.34"/>
+            <comp:coefficient comp:parameter="MS" comp:value="0.56"/>
+            <comp:coefficient comp:parameter="NS" comp:value="0.78"/>
+            <comp:coefficient comp:parameter="AS" comp:value="0.555555"/>
+            <comp:coefficient comp:parameter="OS" comp:value="0.90"/>
+        </comp:spillover>
+        
+        <comp:spillover comp:parameter="DS">
+            <comp:coefficient comp:parameter="AS" comp:value="0.444444"/>
+            <comp:coefficient comp:parameter="PS" comp:value="0.4321"/>
+        </comp:spillover>
+        
+        <comp:spillover comp:parameter="ES">
+            <comp:coefficient comp:parameter="QS" comp:value="0.0001"/>
+            <comp:coefficient comp:parameter="AS" comp:value="0.333333"/>
+            <comp:coefficient comp:parameter="RS" comp:value="0.001"/>
+            <comp:coefficient comp:parameter="SS" comp:value="0.01"/>
+            <comp:coefficient comp:parameter="TS" comp:value="0.1"/>
+        </comp:spillover>
+        
+        <comp:spillover comp:parameter="FS">
+            <comp:coefficient comp:parameter="US" comp:value="0.88888"/>
+            <comp:coefficient comp:parameter="VS" comp:value="0.77777"/>
+            <comp:coefficient comp:parameter="WS" comp:value="0.66666"/>
+            <comp:coefficient comp:parameter="XS" comp:value="0.55555"/>
+            <comp:coefficient comp:parameter="YS" comp:value="0.44444"/>
+            <comp:coefficient comp:parameter="AS" comp:value="0.222222"/>
+        </comp:spillover>
+ 
+        <comp:spillover comp:parameter="GS">
+            <comp:coefficient comp:parameter="AS" comp:value="0.12121"/>
+            <comp:coefficient comp:parameter="DS" comp:value="0.21212"/>
+            <comp:coefficient comp:parameter="ES" comp:value="0.31313"/>
+            <comp:coefficient comp:parameter="FS" comp:value="0.13131"/>
+        </comp:spillover>
+        
+        <comp:spillover comp:parameter="HS">
+            <comp:coefficient comp:parameter="AS" comp:value="0.12"/>
+            <comp:coefficient comp:parameter="BS" comp:value="0.34"/>
+            <comp:coefficient comp:parameter="DS" comp:value="0.56"/>
+            <comp:coefficient comp:parameter="ES" comp:value="0.78"/>
+            <comp:coefficient comp:parameter="FS" comp:value="0.90"/>
+        </comp:spillover>
+        
+        <comp:spillover comp:parameter="IS">
+            <comp:coefficient comp:parameter="AS" comp:value="0.8765"/>
+            <comp:coefficient comp:parameter="FS" comp:value="0.4321"/>
+        </comp:spillover>
+        
+        <comp:spillover comp:parameter="JS">
+            <comp:coefficient comp:parameter="AS" comp:value="0.00001"/>
+            <comp:coefficient comp:parameter="BS" comp:value="0.0001"/>
+            <comp:coefficient comp:parameter="CS" comp:value="0.001"/>
+            <comp:coefficient comp:parameter="DS" comp:value="0.01"/>
+            <comp:coefficient comp:parameter="ES" comp:value="0.1"/>
+        </comp:spillover>
+        
+        <comp:spillover comp:parameter="KS">
+            <comp:coefficient comp:parameter="BS" comp:value="0.1234"/>
+            <comp:coefficient comp:parameter="DS" comp:value="0.5678"/>
+        </comp:spillover>
+        
+        <comp:spillover comp:parameter="LS">
+            <comp:coefficient comp:parameter="AS" comp:value="0.1"/>
+            <comp:coefficient comp:parameter="BS" comp:value="0.01"/>
+            <comp:coefficient comp:parameter="CS" comp:value="0.001"/>
+            <comp:coefficient comp:parameter="DS" comp:value="0.0001"/>
+            <comp:coefficient comp:parameter="ES" comp:value="0.00001"/>
+        </comp:spillover>
+        
+    </comp:spilloverMatrix>
+    
+    <!-- 
+        FCS File: int-10_events_8_parameters.fcs    	
+     	
+     	Case: D {intersection} S != {empty set} and 
+     	      D {not subset of} S and
+     	      S {not subset of} D and
+     	      |D {intersection} S| = 2
+     	
+     	Compensation Matrix:
+     	
+     	   BS    CS    DS    ES    GS    HS
+     	BS 0.99  0.098 0.97  0.096 0.95  0.094
+     	CS 0.082 1.0   0.084 0.85  0.086 0.87
+     	DS 0.76  0.075 1.0   0.073 0.72  0.071
+     	ES 0.093 0.94  0.095 1.0   0.097 0.98
+     	GS 0.89  0.088 0.87  0.086 1.0   0.084
+     	HS 0.074 0.75  0.076 0.77  0.078 1.0
+     	
+     	Compensated Events:
+     	(10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0)			-> (10, -435.281052500873, -96.5953245798187, 110.17806614089, -37.9497104560753, 60, 358.395064338063, 177.55022032603)
+		(90.0, 100.0, 110.0, 120.0, 130.0, 140.0, 150.0, 160.0)		-> (90, -489.735568899072, -51.0113239305754, 185.274046458205, -75.9857140266698, 140, 414.989136461256, 246.557944672197)
+		(170.0, 180.0, 190.0, 200.0, 210.0, 220.0, 230.0, 240.0)	-> (170, -544.190085297272, -5.42732328133212, 260.370026775519, -114.021717597264, 220, 471.583208584449, 315.565669018364)
+		(250.0, 260.0, 270.0, 280.0, 290.0, 300.0, 310.0, 320.0)	-> (250, -598.644601695471, 40.1566773679111, 335.466007092833, -152.057721167858, 300, 528.177280707643, 384.573393364531)
+		(330.0, 340.0, 350.0, 360.0, 370.0, 380.0, 390.0, 400.0)	-> (330, -653.09911809367, 85.7406780171543, 410.561987410148, -190.093724738453, 380, 584.771352830837, 453.581117710698)
+		(410.0, 420.0, 430.0, 440.0, 450.0, 460.0, 470.0, 480.0)	-> (410, -707.55363449187, 131.324678666398, 485.657967727462, -228.129728309047, 460, 641.365424954031, 522.588842056865)
+		(490.0, 500.0, 510.0, 520.0, 530.0, 540.0, 550.0, 560.0)	-> (490, -762.008150890069, 176.908679315641, 560.753948044777, -266.165731879642, 540, 697.959497077224, 591.596566403033)
+		(570.0, 580.0, 590.0, 600.0, 610.0, 620.0, 630.0, 640.0)	-> (570, -816.462667288268, 222.492679964884, 635.849928362091, -304.201735450236, 620, 754.553569200417, 660.604290749199)
+		(650.0, 660.0, 670.0, 680.0, 690.0, 700.0, 710.0, 720.0)	-> (650, -870.917183686468, 268.076680614127, 710.945908679406, -342.237739020831, 700, 811.147641323611, 729.612015095366)
+		(730.0, 740.0, 750.0, 760.0, 770.0, 780.0, 790.0, 800.0)	-> (730, -925.371700084667, 313.66068126337, 786.04188899672, -380.273742591425, 780, 867.741713446803, 798.619739441533)
+    -->
+    
+    <comp:spilloverMatrix comp:id="D-Int-S">
+
+        <comp:spillover comp:parameter="BS">
+        	<comp:coefficient comp:parameter="BS" comp:value="0.99"/>
+            <comp:coefficient comp:parameter="CS" comp:value="0.098"/>
+            <comp:coefficient comp:parameter="DS" comp:value="0.97"/>
+            <comp:coefficient comp:parameter="ES" comp:value="0.096"/>
+            <comp:coefficient comp:parameter="GS" comp:value="0.95"/>
+            <comp:coefficient comp:parameter="HS" comp:value="0.094"/>
+            <comp:coefficient comp:parameter="JS" comp:value="0.00001"/>
+            <comp:coefficient comp:parameter="KS" comp:value="0.00002"/>
+            <comp:coefficient comp:parameter="LS" comp:value="0.00003"/>
+        </comp:spillover>
+        
+        <comp:spillover comp:parameter="CS">
+            <comp:coefficient comp:parameter="BS" comp:value="0.082"/>
+            <comp:coefficient comp:parameter="DS" comp:value="0.084"/>
+            <comp:coefficient comp:parameter="ES" comp:value="0.85"/>
+            <comp:coefficient comp:parameter="GS" comp:value="0.086"/>
+            <comp:coefficient comp:parameter="HS" comp:value="0.87"/>
+            <comp:coefficient comp:parameter="JS" comp:value="0.00004"/>
+            <comp:coefficient comp:parameter="KS" comp:value="0.00005"/>
+            <comp:coefficient comp:parameter="LS" comp:value="0.00006"/>
+        </comp:spillover>
+        
+        <comp:spillover comp:parameter="DS">
+            <comp:coefficient comp:parameter="BS" comp:value="0.76"/>
+            <comp:coefficient comp:parameter="CS" comp:value="0.075"/>
+            <comp:coefficient comp:parameter="ES" comp:value="0.073"/>
+            <comp:coefficient comp:parameter="GS" comp:value="0.72"/>
+            <comp:coefficient comp:parameter="HS" comp:value="0.071"/>
+            <comp:coefficient comp:parameter="JS" comp:value="0.00007"/>
+            <comp:coefficient comp:parameter="KS" comp:value="0.00008"/>
+            <comp:coefficient comp:parameter="LS" comp:value="0.00009"/>
+        </comp:spillover>
+ 
+        <comp:spillover comp:parameter="ES">
+            <comp:coefficient comp:parameter="BS" comp:value="0.093"/>
+            <comp:coefficient comp:parameter="CS" comp:value="0.94"/>
+            <comp:coefficient comp:parameter="DS" comp:value="0.095"/>
+            <comp:coefficient comp:parameter="GS" comp:value="0.097"/>
+            <comp:coefficient comp:parameter="HS" comp:value="0.98"/>
+            <comp:coefficient comp:parameter="JS" comp:value="0.000010"/>
+            <comp:coefficient comp:parameter="KS" comp:value="0.000011"/>
+            <comp:coefficient comp:parameter="LS" comp:value="0.000012"/>
+        </comp:spillover>
+        
+        <comp:spillover comp:parameter="GS">
+            <comp:coefficient comp:parameter="BS" comp:value="0.89"/>
+            <comp:coefficient comp:parameter="CS" comp:value="0.088"/>
+            <comp:coefficient comp:parameter="DS" comp:value="0.87"/>
+            <comp:coefficient comp:parameter="ES" comp:value="0.086"/>
+            <comp:coefficient comp:parameter="HS" comp:value="0.084"/>
+            <comp:coefficient comp:parameter="JS" comp:value="0.000013"/>
+            <comp:coefficient comp:parameter="KS" comp:value="0.000014"/>
+            <comp:coefficient comp:parameter="LS" comp:value="0.000015"/>
+        </comp:spillover>
+ 
+        <comp:spillover comp:parameter="HS">
+            <comp:coefficient comp:parameter="BS" comp:value="0.074"/>
+            <comp:coefficient comp:parameter="CS" comp:value="0.75"/>
+            <comp:coefficient comp:parameter="DS" comp:value="0.076"/>
+            <comp:coefficient comp:parameter="ES" comp:value="0.77"/>
+            <comp:coefficient comp:parameter="GS" comp:value="0.078"/>
+            <comp:coefficient comp:parameter="JS" comp:value="0.000016"/>
+            <comp:coefficient comp:parameter="KS" comp:value="0.000017"/>
+            <comp:coefficient comp:parameter="LS" comp:value="0.000018"/>
+        </comp:spillover>
+        
+        <comp:spillover comp:parameter="JS">
+            <comp:coefficient comp:parameter="BS" comp:value="0.37"/>
+            <comp:coefficient comp:parameter="CS" comp:value="0.38"/>
+            <comp:coefficient comp:parameter="DS" comp:value="0.39"/>
+            <comp:coefficient comp:parameter="ES" comp:value="0.40"/>
+            <comp:coefficient comp:parameter="GS" comp:value="0.41"/>
+            <comp:coefficient comp:parameter="HS" comp:value="0.42"/>
+            <comp:coefficient comp:parameter="JS" comp:value="0.000019"/>
+            <comp:coefficient comp:parameter="KS" comp:value="0.000020"/>
+            <comp:coefficient comp:parameter="LS" comp:value="0.000021"/>
+        </comp:spillover>
+        
+        <comp:spillover comp:parameter="KS">
+            <comp:coefficient comp:parameter="BS" comp:value="0.43"/>
+            <comp:coefficient comp:parameter="CS" comp:value="0.44"/>
+            <comp:coefficient comp:parameter="DS" comp:value="0.45"/>
+            <comp:coefficient comp:parameter="ES" comp:value="0.46"/>
+            <comp:coefficient comp:parameter="GS" comp:value="0.47"/>
+            <comp:coefficient comp:parameter="HS" comp:value="0.48"/>
+            <comp:coefficient comp:parameter="JS" comp:value="0.000022"/>
+            <comp:coefficient comp:parameter="KS" comp:value="0.000023"/>
+            <comp:coefficient comp:parameter="LS" comp:value="0.000024"/>
+        </comp:spillover>
+        
+        <comp:spillover comp:parameter="LS">
+            <comp:coefficient comp:parameter="BS" comp:value="0.49"/>
+            <comp:coefficient comp:parameter="CS" comp:value="0.50"/>
+            <comp:coefficient comp:parameter="DS" comp:value="0.51"/>
+            <comp:coefficient comp:parameter="ES" comp:value="0.52"/>
+            <comp:coefficient comp:parameter="GS" comp:value="0.53"/>
+            <comp:coefficient comp:parameter="HS" comp:value="0.54"/>
+            <comp:coefficient comp:parameter="JS" comp:value="0.000025"/>
+            <comp:coefficient comp:parameter="KS" comp:value="0.000026"/>
+            <comp:coefficient comp:parameter="LS" comp:value="0.000027"/>
+        </comp:spillover>
+        
+    </comp:spilloverMatrix>
+    
+    <!-- 
+        FCS File: int-10_events_8_parameters.fcs    	
+     	
+     	Case: D {intersection} S = {empty set} 
+     	
+     	Compensation Matrix:
+     	
+     	Empty
+     	
+     	Compensated Events:
+     	
+     	No change in events
+    -->
+    
+    <comp:spilloverMatrix comp:id="NoParams">
+
+        <comp:spillover comp:parameter="JS">
+            <comp:coefficient comp:parameter="NS" comp:value="0.0000001"/>
+            <comp:coefficient comp:parameter="OS" comp:value="0.000001"/>
+            <comp:coefficient comp:parameter="PS" comp:value="0.00001"/>
+        </comp:spillover>
+        
+        <comp:spillover comp:parameter="KS">
+            <comp:coefficient comp:parameter="QS" comp:value="0.0001"/>
+            <comp:coefficient comp:parameter="RS" comp:value="0.001"/>
+            <comp:coefficient comp:parameter="SS" comp:value="0.01"/>
+        </comp:spillover>
+        
+        <comp:spillover comp:parameter="LS">
+            <comp:coefficient comp:parameter="TS" comp:value="0.1"/>
+            <comp:coefficient comp:parameter="US" comp:value="0.01"/>
+            <comp:coefficient comp:parameter="VS" comp:value="0.001"/>
+        </comp:spillover>
+ 
+        <comp:spillover comp:parameter="MS">
+            <comp:coefficient comp:parameter="WS" comp:value="0.0001"/>
+            <comp:coefficient comp:parameter="XS" comp:value="0.00001"/>
+            <comp:coefficient comp:parameter="YS" comp:value="0.000001"/>
+        </comp:spillover>
+        
+        <comp:spillover comp:parameter="LS">
+            <comp:coefficient comp:parameter="IS" comp:value="0.0000001"/>
+            <comp:coefficient comp:parameter="US" comp:value="0.000001"/>
+            <comp:coefficient comp:parameter="VS" comp:value="0.00001"/>
+        </comp:spillover>
+        
+        <comp:spillover comp:parameter="LS">
+            <comp:coefficient comp:parameter="TS" comp:value="0.0001"/>
+            <comp:coefficient comp:parameter="YS" comp:value="0.001"/>
+            <comp:coefficient comp:parameter="VS" comp:value="0.01"/>
+        </comp:spillover>
+        
+        <comp:spillover comp:parameter="LS">
+            <comp:coefficient comp:parameter="TS" comp:value="0.1"/>
+            <comp:coefficient comp:parameter="US" comp:value="0.01"/>
+            <comp:coefficient comp:parameter="ZS" comp:value="0.001"/>
+        </comp:spillover>
+        
+    </comp:spilloverMatrix>
+    
+    
+</comp:Compensation-ML>
+    
+    

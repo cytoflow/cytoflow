@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<comp:Compensation-ML 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:comp="http://www.isac-net.org/std/Compensation-ML/v1.0/"
+    xsi:schemaLocation="http://www.isac-net.org/std/Compensation-ML/v1.0/ ../schema/Compensation-ML.v1.0.xsd">
+    
+    <!-- Let D be the set of parameters in the DataSet and S be the set of parameters in a
+         spilloverMatrix.
+         
+         All the resulting compensators (when applied to the appropriate fcs data set should
+         result in 1 parameters being compensated. 
+    -->
+      
+    <!-- 
+        FCS File: int-10_events_2_parameters.fcs    	
+     	
+     	Case: S {proper subset of} D
+     	
+     	Compensation Matrix:
+     	
+     	   AS  
+     	AS 1.0
+     	
+     	Compensated Events:
+     	(10.0, 20.0)	-> (10.0, 20.0)
+		(30.0, 40.0)	-> (30.0, 40.0)
+		(50.0, 60.0)	-> (50.0, 60.0)
+		(70.0, 80.0)	-> (70.0, 80.0)
+		(90.0, 100.0)	-> (90.0, 100.0)
+		(110.0, 120.0)	-> (110.0, 120.0)
+		(130.0, 140.0)	-> (130.0, 140.0)
+		(150.0, 160.0)	-> (150.0, 160.0)
+		(170.0, 180.0)	-> (170.0, 180.0)
+		(190.0, 200.0)	-> (190.0, 200.0)
+    -->
+    
+    <comp:spilloverMatrix comp:id="S-Sub-D">
+        
+        <comp:spillover comp:parameter="AS">
+            <comp:coefficient comp:parameter="AS" comp:value="1.0"/>
+        </comp:spillover>
+        
+    </comp:spilloverMatrix>
+    
+    <!-- 
+        FCS File: int-10_events_2_parameters.fcs    	
+     	
+     	Case: D {intersection} S != {empty set} and 
+     	      D {not subset of} S and
+     	      S {not subset of} D and
+     	      |D {intersection} S| = 2
+     	
+     	Compensation Matrix:
+     	
+     	   BS  
+     	BS 0.987
+     	
+     	Compensated Events:
+     	(10.0, 20.0)	-> (10.0, 20.2634245187437)
+		(30.0, 40.0)	-> (30.0, 40.5268490374873)
+		(50.0, 60.0)	-> (50.0, 60.790273556231)
+		(70.0, 80.0)	-> (70.0, 81.0536980749747)
+		(90.0, 100.0)	-> (90.0, 101.317122593718)
+		(110.0, 120.0)	-> (110.0, 121.580547112462)
+		(130.0, 140.0)	-> (130.0, 141.843971631206)
+		(150.0, 160.0)	-> (150.0, 162.107396149949)
+		(170.0, 180.0)	-> (170.0, 182.370820668693)
+		(190.0, 200.0)	-> (190.0, 202.634245187437)
+    -->
+    
+    <comp:spilloverMatrix comp:id="D-Int-S">
+
+        <comp:spillover comp:parameter="ES">
+            <comp:coefficient comp:parameter="DS" comp:value="0.55555"/>
+            <comp:coefficient comp:parameter="BS" comp:value="0.66666"/>
+            <comp:coefficient comp:parameter="FS" comp:value="0.77777"/>
+        </comp:spillover>
+        
+        <comp:spillover comp:parameter="FS">
+            <comp:coefficient comp:parameter="DS" comp:value="0.88888"/>
+            <comp:coefficient comp:parameter="BS" comp:value="0.99999"/>
+            <comp:coefficient comp:parameter="ES" comp:value="0.10101"/>
+        </comp:spillover>
+        
+        <comp:spillover comp:parameter="DS">
+            <comp:coefficient comp:parameter="ES" comp:value="0.33333"/>
+            <comp:coefficient comp:parameter="FS" comp:value="0.11111"/>
+            <comp:coefficient comp:parameter="BS" comp:value="0.12345"/>
+        </comp:spillover>
+ 
+        <comp:spillover comp:parameter="BS">
+            <comp:coefficient comp:parameter="ES" comp:value="0.22222"/>
+            <comp:coefficient comp:parameter="BS" comp:value="0.987"/>
+            <comp:coefficient comp:parameter="FS" comp:value="0.44444"/>
+        </comp:spillover>
+        
+    </comp:spilloverMatrix>
+    
+</comp:Compensation-ML>
+    
+    

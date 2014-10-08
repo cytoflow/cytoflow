@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bindings xmlns="http://java.sun.com/xml/ns/jaxb"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    version="2.0">
+
+	<bindings schemaLocation="mathml2/common/common-attribs.xsd"
+		node="/xsd:schema/xsd:attributeGroup[@name='Common.attrib']/xsd:attribute[@name='class']">
+		<property name="clazz" />
+	</bindings>
+	
+	<bindings schemaLocation="mathml2/presentation/scripts.xsd"
+		node="/xsd:schema/xsd:group[@name='mmultiscripts.content']">
+		<property name="content" />
+	</bindings>
+</bindings>

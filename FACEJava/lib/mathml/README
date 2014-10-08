@@ -1,0 +1,3 @@
+Archmides MathJ is non-redistributable. So users must download their own copy
+if  they meet with the MathJ library license restrictions. The MathJ JARs
+should be placed here, where FACEFlow will automatically look for them.

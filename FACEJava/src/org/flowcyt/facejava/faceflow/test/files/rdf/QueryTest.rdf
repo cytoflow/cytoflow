@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- 
+	Simple Tests. We know gating, compensation and transformation work from their unit tests.
+	So here we only need to test that the relations will get processed properly.
+	
+	In this test case, we apply to 8 different data sets one of the 8 different possible 
+	combinations of compensation, transformation and gating.
+	
+	Each test file contains multiple data sets each with 2 events and 2 parameters. We
+	use the same compensation and transformation files whenever needed since they are applicable
+	in all cases. However, four different gating files are used since the events have been changed.
+	Each gating file contains two gates and is tailored for the data set it operates on. One gate
+	will contain one events, the other gate	will contain the other event.
+-->
+
+<rdf:RDF
+  xmlns:flow="http://www.isac-net.org/std/rdf/meta-relations/1.0/flow#" 
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#">
+  
+    <!-- Expected Relations
+    
+        file:datafile.fcs:
+          Data set #1: 
+            Transformation: file:transformation.xml
+            Gating: file:gating.xml
+          
+          Data set #2:
+            Transformation: file:transformation.xml
+            Gating: file:override-gating.xml
+            Compensation: file:compensation.xml (with matrix id: matrix)
+        
+          Data set #3:
+            Transformation: file:transformation.xml
+            Gating: file:gating.xml
+        
+        file:datafile2.fcs:
+          Data set #1:
+            None.
+            
+          Data set #2:
+            None.
+   
+          Data set #3:
+            Gating: file:standalone-gating.xml (with gate id: gate).
+          
+          Data set #4:
+            None.
+            
+       file:datafile3.fcs
+          Data set #1:
+            Exception because of duplicate.
+            
+          Data set #2:
+            Exception because of duplicate.
+            
+      file:datafile3.fcs
+          Data set #1:
+            Transformation: file:transformation123.xml
+            
+          Data set #2:
+            Exception because of duplicate.
+     -->
+		
+	<flow:datafile rdf:about="file:datafile.fcs">
+	
+	    <!-- Test #1: Regular data file relation not overriden.
+	                  All data sets in file will have this relation -->
+		<flow:transformed_by>
+			<flow:transformation rdf:about="file:transformation.xml"/>
+		</flow:transformed_by> 
+		
+		<!-- Test #2: Data file relation that will be overriden.
+		              All data sets except #2 will contain this relation -->
+		<flow:gated_by>
+			<flow:gating rdf:about="file:gating.xml"/>
+		</flow:gated_by> 
+		
+	</flow:datafile>
+	
+	<flow:dataset rdf:about="file:datafile.fcs#2">
+		<!-- Test #2: Overriding data file relation.
+		              Only data set #2 will contain this relation -->
+		<flow:gated_by>
+			<flow:gating rdf:about="file:override-gating.xml"/>
+		</flow:gated_by>
+		
+		<!-- Test #3: Regular data set relation.
+		              Only data set #2 will contain a compensation relation. -->
+		<flow:compensated_by>
+		    <flow:compensation rdf:about="file:compensation.xml#matrix"/>
+		</flow:compensated_by>
+	</flow:dataset>
+	
+	<flow:dataset rdf:about="file:datafile2.fcs#3">
+	    <!-- Test #4: Regular data set relation for a dataset whose datafile is not in the rdf.
+	                  No other datasets in datafile2 should contain any relations -->
+		<flow:gated_by>
+			<flow:gating rdf:about="file:standalone-gating.xml#gate"/>
+		</flow:gated_by>
+	</flow:dataset>
+	
+	<flow:datafile rdf:about="file:datafile3.fcs">
+	
+	    <!-- Test #5: All datasets have a duplicate relation. Exception thrown. -->
+		<flow:gated_by>
+			<flow:gating rdf:about="file:gating456.xml"/>
+		</flow:gated_by> 
+		
+		<flow:gated_by>
+			<flow:gating rdf:about="file:gating123.xml"/>
+		</flow:gated_by> 
+		
+	</flow:datafile>
+	
+	<flow:dataset rdf:about="file:datafile4.fcs#2">
+	    <!-- Test #6: Only data set #2 has a duplicate, others will be fine. -->
+		<flow:transformed_by>
+			<flow:transformation rdf:about="file:transformation123.xml"/>
+		</flow:transformed_by>
+		
+		<flow:transformed_by>
+			<flow:transformation rdf:about="file:transformation456.xml"/>
+		</flow:transformed_by>
+	</flow:dataset>
+	
+	<flow:dataset rdf:about="file:datafile4.fcs#1">
+	    <!-- Part of #6:  should be fine. -->
+	    <flow:transformed_by>
+			<flow:transformation rdf:about="file:transformation123.xml"/>
+		</flow:transformed_by>
+		
+	</flow:dataset>
+	
+</rdf:RDF>

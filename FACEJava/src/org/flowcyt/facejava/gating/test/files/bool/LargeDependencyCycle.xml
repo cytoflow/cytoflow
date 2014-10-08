@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<gating:Gating-ML 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:gating="http://www.isac-net.org/std/Gating-ML/v1.1/"
+    xsi:schemaLocation="http://www.isac-net.org/std/Gating-ML/v1.1/ ../schema/Gating-ML.v1.1.xsd" >
+
+	<!-- Large Dependency Cycle
+	
+	     A->B
+	      ->F
+	      ->G
+	      ->I
+	      
+	     B->C
+
+	     C->D
+	     
+	     D->E
+	      ->L
+	     
+	     E->K
+	      ->M
+	     
+	     F->B
+	      ->L
+	      ->M
+	     
+	     G->H
+	     
+	     H->F
+	     
+	     I->J
+	      ->L
+	     
+	     J->K
+	      ->M
+	      
+	     K->G
+	      
+	 -->
+	
+    <gating:RectangleGate gating:id="L">
+        <gating:dimension gating:parameter="FS" gating:min="20" />
+    </gating:RectangleGate>
+    
+    <gating:RectangleGate gating:id="M">
+        <gating:dimension gating:parameter="FS" gating:min="20" />
+    </gating:RectangleGate>
+
+    <gating:BooleanGate gating:id="A">
+        <gating:and>
+            <gating:gateReference gating:ref="B"/>
+            <gating:gateReference gating:ref="F"/>
+            <gating:gateReference gating:ref="G"/>
+            <gating:gateReference gating:ref="I"/>
+        </gating:and>
+    </gating:BooleanGate>
+    
+    <gating:BooleanGate gating:id="B">
+        <gating:not>
+            <gating:gateReference gating:ref="C"/>
+        </gating:not>
+    </gating:BooleanGate>
+    
+    <gating:BooleanGate gating:id="C">
+        <gating:not>
+            <gating:gateReference gating:ref="D"/>
+        </gating:not>
+    </gating:BooleanGate>
+    
+    <gating:BooleanGate gating:id="D">
+        <gating:or>
+        	<gating:gateReference gating:ref="L"/>
+            <gating:gateReference gating:ref="E"/>
+        </gating:or>
+    </gating:BooleanGate>
+    
+    <gating:BooleanGate gating:id="E">
+        <gating:and>
+            <gating:gateReference gating:ref="K"/>
+            <gating:gateReference gating:ref="M"/>
+        </gating:and>
+    </gating:BooleanGate>
+    
+    <gating:BooleanGate gating:id="F">
+        <gating:and>
+        	<gating:gateReference gating:ref="L"/>
+            <gating:gateReference gating:ref="B"/>
+            <gating:gateReference gating:ref="M"/>
+        </gating:and>
+    </gating:BooleanGate>
+    
+    <gating:BooleanGate gating:id="G">
+        <gating:not>
+            <gating:gateReference gating:ref="H"/>
+        </gating:not>
+    </gating:BooleanGate>
+    
+    <gating:BooleanGate gating:id="H">
+        <gating:not>
+            <gating:gateReference gating:ref="F"/>
+        </gating:not>
+    </gating:BooleanGate>
+    
+    <gating:BooleanGate gating:id="I">
+        <gating:or>
+            <gating:gateReference gating:ref="J"/>
+            <gating:gateReference gating:ref="L"/>
+        </gating:or>
+    </gating:BooleanGate>
+    
+    <gating:BooleanGate gating:id="J">
+        <gating:and>
+            <gating:gateReference gating:ref="K"/>
+            <gating:gateReference gating:ref="M"/>
+        </gating:and>
+    </gating:BooleanGate>
+    
+    <gating:BooleanGate gating:id="K">
+        <gating:not>
+            <gating:gateReference gating:ref="G"/>
+        </gating:not>
+    </gating:BooleanGate>
+    
+
+</gating:Gating-ML>

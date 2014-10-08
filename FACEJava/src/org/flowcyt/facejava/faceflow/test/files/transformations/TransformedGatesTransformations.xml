@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- FCM transforms XML File -->
+<transforms:Transformation-ML 
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:transforms="http://www.isac-net.org/std/Transformation-ML/v1.0/"
+        xmlns:mml="http://www.w3.org/1998/Math/MathML"
+        xsi:schemaLocation="
+            http://www.isac-net.org/std/Transformation-ML/v1.0/  ../../Transformation-ML.v1.0/schema/Transformation-ML.v1.0.xsd
+            http://www.w3.org/1998/Math/MathML ../../Transformation-ML.v1.0/mathml2/mathml2.xsd">
+
+	<transforms:transformation transforms:newName="LogAS">
+        <transforms:pre-defined>
+            <transforms:log transforms:logbase="10" transforms:parameter="AS"  transforms:r="1000" transforms:d="3"/>
+        </transforms:pre-defined>
+    </transforms:transformation>
+    
+    <transforms:transformation transforms:newName="LinearBS">
+        <transforms:pre-defined>
+            <transforms:linear transforms:a="0.05" transforms:b="253" transforms:parameter="BS"/>
+        </transforms:pre-defined>
+    </transforms:transformation>
+    
+    <transforms:transformation transforms:newName="QuadraticCS">
+        <transforms:pre-defined>
+            <transforms:quadratic transforms:parameter="CS" transforms:a="0.0000001" transforms:b="0.002" transforms:c="1.332"/>
+        </transforms:pre-defined>
+    </transforms:transformation>
+    
+    <transforms:transformation transforms:newName="LnDS">
+        <transforms:pre-defined>
+            <transforms:ln transforms:parameter="DS" transforms:r="1500" transforms:d="4.5"/>
+        </transforms:pre-defined>
+    </transforms:transformation>
+    
+    <transforms:transformation transforms:newName="LnLnDS">
+        <transforms:pre-defined>
+            <transforms:ln transforms:parameter="LnDS" transforms:r="3000" transforms:d="5.6"/>
+        </transforms:pre-defined>
+    </transforms:transformation>
+    
+    <transforms:transformation transforms:newName="LnLnLnDS">
+        <transforms:pre-defined>
+            <transforms:ln transforms:parameter="LnLnDS" transforms:r="4458" transforms:d="2.2"/>
+        </transforms:pre-defined>
+    </transforms:transformation>
+    
+    <transforms:transformation transforms:newName="LogFS">
+        <transforms:pre-defined>
+            <transforms:log transforms:logbase="16" transforms:parameter="FS"  transforms:r="5000" transforms:d="9"/>
+        </transforms:pre-defined>
+    </transforms:transformation>
+    
+    <transforms:transformation transforms:newName="LinLogFS">
+        <transforms:pre-defined>
+            <transforms:linear transforms:a="0.00055" transforms:b="26.3" transforms:parameter="LogFS"/>
+        </transforms:pre-defined>
+    </transforms:transformation>
+    
+    <transforms:transformation transforms:newName="QuadLinLogFS">
+        <transforms:pre-defined>
+            <transforms:quadratic transforms:parameter="LinLogFS" transforms:a="0.00000125" transforms:b="3" transforms:c="0.2"/>
+        </transforms:pre-defined>
+    </transforms:transformation>
+    
+    <transforms:transformation transforms:newName="LnQuadLinLogFS">
+        <transforms:pre-defined>
+            <transforms:ln transforms:parameter="QuadLinLogFS" transforms:r="10" transforms:d="4.5"/>
+        </transforms:pre-defined>
+    </transforms:transformation>
+    
+    <transforms:transformation transforms:newName="LnLnQuadLinLogFS">
+        <transforms:pre-defined>
+            <transforms:ln transforms:parameter="LnQuadLinLogFS" transforms:r="100" transforms:d="2.2"/>
+        </transforms:pre-defined>
+    </transforms:transformation>
+    
+    <transforms:transformation transforms:newName="QuadLnLnQuadLinLogFS">
+        <transforms:pre-defined>
+            <transforms:quadratic transforms:parameter="LnLnQuadLinLogFS" transforms:a="0.00000053" transforms:b="0.02" transforms:c="2.1"/>
+        </transforms:pre-defined>
+    </transforms:transformation>
+    
+    <transforms:transformation transforms:newName="LinQuadLnLnQuadLinLogFS">
+        <transforms:pre-defined>
+            <transforms:linear transforms:a="1235.2" transforms:b="5.6" transforms:parameter="QuadLnLnQuadLinLogFS"/>
+        </transforms:pre-defined>
+    </transforms:transformation>
+    
+    <transforms:transformation transforms:newName="LogLinQuadLnLnQuadLinLogFS">
+        <transforms:pre-defined>
+            <transforms:log transforms:logbase="7" transforms:parameter="LinQuadLnLnQuadLinLogFS" transforms:r="1000" transforms:d="3"/>
+        </transforms:pre-defined>
+    </transforms:transformation>
+
+</transforms:Transformation-ML>
