@@ -29,5 +29,6 @@
 	<classpathentry kind="lib" path="FACEJava/lib/xerces/xercesImpl.jar"/>
 	<classpathentry kind="lib" path="FACEJava/lib/xerces/xml-apis.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/org.eclipse.swt"/>
 	<classpathentry kind="output" path="CFCS/bin"/>
 </classpath>

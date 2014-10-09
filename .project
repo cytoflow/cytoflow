@@ -3,6 +3,9 @@
 	<name>synbio-flowtools</name>
 	<comment></comment>
 	<projects>
+		<project>CFCS</project>
+		<project>FACEJava</project>
+		<project>org.eclipse.swt</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
