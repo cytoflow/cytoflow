@@ -1,9 +1,0 @@
-Integer Data
-
-2 parameters named:
-1: FS
-2: SS
-
-
-1 Event:
-(100, 200)

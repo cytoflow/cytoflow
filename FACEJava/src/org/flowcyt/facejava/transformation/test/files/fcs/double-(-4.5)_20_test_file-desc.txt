@@ -1,8 +1,0 @@
-Double data
-
-Parameters
-1: FS
-2: SS
-
-1 Event:
-(-4.5, 20)
