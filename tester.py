@@ -10,11 +10,14 @@ testSample = FlowCytometryTools.FCMeasurement(ID= "testsample", datafile = datad
 #plot1 = testSample.plot(['EYFP-A', 'mKate-A'], kind='scatter')
 
 expTest = Experiment([testSample])
-#print expTest.getFiles()
+print expTest.get_channels()
+expTest.set_channel_name('EYFP-A', 'yellow')
+print expTest.get_channels()
 logtrans = Transform('hlog')
-logtrans.run_operation(expTest)
+logtrans.set_parameter('channels', ['yellow', 'mKate-A'])
+newexp = logtrans.run_operation(expTest)
 figure();
-expTest.get_files()[0].plot(['EYFP-A', 'mKate-A'], kind='scatter')
+newexp.get_files()[0].plot(['EYFP-A', 'mKate-A'], kind='scatter')
 
 transformed = testSample.transform('hlog', channels=['EYFP-A', 'mKate-A'])
 figure();
