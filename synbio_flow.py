@@ -35,7 +35,7 @@ class Experiment:
         newexp.predecessor = self
         for operation in self.ops_performed:
             newexp.add_op(operation)
-        for channel in self.channels:
+        for channel in self.channel_map.keys():
             newexp.set_channel_name(self.channel_map[channel], channel)
         return newexp
         
@@ -43,14 +43,19 @@ class Experiment:
         return copy.copy(self.channels)
         
     def set_channel_name(self, old_name, new_name):
-        index = self.channels.index(old_name)
-        self.channels.remove(old_name)
-        self.channels.insert(index, new_name)
-        self.channel_map[new_name] = self.channel_map[old_name]
-        del self.channel_map[old_name]
+        if old_name != new_name:
+            index = self.channels.index(old_name)
+            self.channels.remove(old_name)
+            self.channels.insert(index, new_name)
+            self.channel_map[new_name] = self.channel_map[old_name]
+            del self.channel_map[old_name]
+            print self.channel_map
 
-    def find_orig_channel(self, new_name):
-        return self.channel_map[new_name]
+    def find_orig_channels(self, new_names):
+        return_names = []
+        for name in new_names:
+            return_names.append(self.channel_map[name])
+        return return_names
         
     def add_op(self, operation):
         self.ops_performed.append(operation)
