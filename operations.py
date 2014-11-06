@@ -1,4 +1,5 @@
 import FlowCytometryTools
+import sklearn.mixture as mix
 import numpy as np
 import scipy as sp
 from pandas import *
@@ -148,3 +149,66 @@ class ChangeOneGate(Operation):
         
     def __repr__(self):
         return self.gate_name + " on " + self.fcs_id
+        
+class OneDimMix(Operation):
+    
+    '''Fits data to a 1D Gaussian mixture model using EM. Returns numComp new 
+    experiments, each containing data from one component of the 1D mixture model.
+    If the data cannot be adequately fit using the specified number of components, 
+    returns a warning.
+    '''
+    
+    def __init__(self, channel, num_comp = 2):
+        Operation.__init__(self)
+        self.channel = channel
+        self.parameters['num_comp'] = num_comp
+        
+    def run_operation(self, experiment):
+        pops = experiment.get_populations()
+        channel = experiment.find_orig_channels([self.channel])
+        wrong_comp_num = []
+        alpha_list = []
+        new_populations = [[] for i in xrange(self.parameters['num_comp'])]
+        all_thresholds = []
+        new_experiments = []
+        for population in pops:
+            bic_list = []
+            gmm_list = []
+            data = population.get_file().data[channel].values
+            for num_comp in xrange(1,self.parameters['num_comp']+1):
+                gmm = mix.GMM(n_components = num_comp)
+                gmm.fit(data)
+                print gmm.bic(data), num_comp
+                bic_list.append(gmm.bic(data))
+                gmm_list.append(gmm)
+            best_num_comp = bic_list.index(min(bic_list))+1
+            print best_num_comp
+            best_gmm = gmm_list[best_num_comp-1]
+            if best_num_comp != self.parameters['num_comp']:
+                wrong_comp_num.append([population, best_num_comp, best_gmm])
+            else:
+                gate_thresholds = sorted(gmm_thresholds(best_gmm, min(data)[0], max(data)[0], best_num_comp))
+                all_thresholds.append(gate_thresholds)
+                for i in xrange(len(gate_thresholds)-1):
+                    gate = FlowCytometryTools.ThresholdGate(gate_thresholds[i], channel, 'above')
+                    gate2 = FlowCytometryTools.ThresholdGate(gate_thresholds[i+1], channel, 'below')
+                    population.get_file().plot(channel, gates=[gate2], bins=100)
+                    new_populations[i].append(population.new_updated_pop(population.get_file().gate(gate).gate(gate2)))
+        for pop_set in new_populations:
+            new_experiments.append(experiment.new_updated_exp(pop_set))
+        return new_experiments    
+            
+def gmm_thresholds(gmm, low_lim, upp_lim, num_comp):
+    tolerance = 10
+    results = [low_lim]*num_comp
+    curr_probs=gmm.predict_proba([low_lim])
+    curr_top = np.argmax(curr_probs)
+    for i in xrange(low_lim, upp_lim, tolerance):
+        curr_probs=gmm.predict_proba([[i]])
+        next_top = np.argmax(curr_probs)
+        if next_top != curr_top:
+            print results
+            curr_top = next_top
+            results[curr_top] = i
+    results.append(upp_lim)
+    return results
