@@ -118,7 +118,8 @@ class CellPopulation:
             return self.fcs.plot(params)
         else:
             return self.fcs.plot(params[0])
-            
+
+#load data from the specified file and return a cell population.            
 def load_file(filename, ID_string):
     datadir = os.path.abspath(filename)
     return CellPopulation(FlowCytometryTools.FCMeasurement(ID= ID_string, datafile = datadir), {}, [], ID_string)
