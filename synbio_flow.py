@@ -1,4 +1,4 @@
-import FlowCytometryTools, copy
+import FlowCytometryTools, copy, os
 import matplotlib as plt
 
 class Experiment:
@@ -72,16 +72,16 @@ class CellPopulation:
     Populations are identified by their ID, which is currently the well ID.
     '''
     
-    def __init__(self, fcsfile, parameters, gate_list):
+    def __init__(self, fcsfile, parameters, gate_list, ID):
         self.fcs = fcsfile
         self.parameters = parameters
         self.channels = fcsfile.channel_names
         self.gate_list = copy.copy(gate_list)
         self.original = fcsfile
-        self.ID = fcsfile.get_meta_fields('$FIL')['$FIL']
+        self.ID = ID
         
     def new_updated_pop(self, new_file):
-        new_pop =CellPopulation(new_file, self.parameters, self.gate_list)
+        new_pop =CellPopulation(new_file, self.parameters, self.gate_list, self.ID)
         new_pop.original = self.original
         return new_pop
         
@@ -103,10 +103,22 @@ class CellPopulation:
     def add_gate(self, gate):
         self.gate_list.append(gate)
         
+    def get_ID(self):
+        return self.ID
+        
+    def get_data(self, params):
+        #print self.parameters
+        #new_params = [self.get_parameter(x) for x in params]
+        return self.fcs.data[params]
+        
     #returns an matplotlib figure of the population, with the specified parameters.
-    #if the second parameter is False, returns a histogram
-    def get_plot(self, param1, param2):
-        if param2:
-            return self.fcs.plot([param1, param2])
+    #if there is only 1 parameter given, returns a histogram
+    def get_plot(self, params):
+        if len(params)==2:
+            return self.fcs.plot(params)
         else:
-            return self.fcs.plot(param1)
+            return self.fcs.plot(params[0])
+            
+def load_file(filename, ID_string):
+    datadir = os.path.abspath(filename)
+    return CellPopulation(FlowCytometryTools.FCMeasurement(ID= ID_string, datafile = datadir), {}, [], ID_string)

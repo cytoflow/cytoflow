@@ -47,7 +47,11 @@ class Transform(Operation):
         self.parameters['channels'] = None
     
     def run_operation(self, experiment):
-        channel_corr_names = experiment.find_orig_channels(self.parameters['channels'])
+        if self.parameters['channels']==None:
+            channels = experiment.get_channels()
+        else:
+            channels = self.parameters['channels']
+        channel_corr_names = experiment.find_orig_channels(channels)
         new_populations = []
         for fcs in experiment.get_populations():
             new_populations.append(fcs.new_updated_pop(fcs.get_file().transform(self.trans_type, \

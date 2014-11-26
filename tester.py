@@ -14,7 +14,7 @@ testSample2 = FlowCytometryTools.FCMeasurement(ID= "testsample2", datafile = dat
 #figure();
 #plot1 = testSample2.plot(['FSC-A', 'EYFP-A'], kind='scatter')
 
-expTest = Experiment([CellPopulation(testSample, {},[]), CellPopulation(testSample2, {},[])])
+expTest = Experiment([CellPopulation(testSample, {},[], ""), CellPopulation(testSample2, {},[],"")])
 #print expTest.get_channels()
 expTest.set_channel_name('EYFP-A', 'yellow')
 #print expTest.get_channels()
