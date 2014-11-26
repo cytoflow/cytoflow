@@ -1,4 +1,5 @@
 import FlowCytometryTools, copy
+import matplotlib as plt
 
 class Experiment:
     
@@ -101,3 +102,11 @@ class CellPopulation:
     
     def add_gate(self, gate):
         self.gate_list.append(gate)
+        
+    #returns an matplotlib figure of the population, with the specified parameters.
+    #if the second parameter is False, returns a histogram
+    def get_plot(self, param1, param2):
+        if param2:
+            return self.fcs.plot([param1, param2])
+        else:
+            return self.fcs.plot(param1)

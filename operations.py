@@ -152,10 +152,11 @@ class ChangeOneGate(Operation):
         
 class OneDimMix(Operation):
     
-    '''Fits data to a 1D Gaussian mixture model using EM. Returns numComp new 
+    '''Fits data to a 1D Gaussian mixture model using EM. Returns num_exp <= num_comp new 
     experiments, each containing data from one component of the 1D mixture model.
     If the data cannot be adequately fit using the specified number of components, 
-    returns a warning.
+    returns a warning. Attempts to fit all data to num_comp populations, but may
+    fit some populations to less than num_comp components.
     '''
     
     def __init__(self, channel, num_comp = 2):
@@ -170,6 +171,7 @@ class OneDimMix(Operation):
         alpha_list = []
         new_populations = [[] for i in xrange(self.parameters['num_comp'])]
         all_thresholds = []
+        all_orders = []
         new_experiments = []
         for population in pops:
             bic_list = []
@@ -182,33 +184,53 @@ class OneDimMix(Operation):
                 bic_list.append(gmm.bic(data))
                 gmm_list.append(gmm)
             best_num_comp = bic_list.index(min(bic_list))+1
-            print best_num_comp
             best_gmm = gmm_list[best_num_comp-1]
             if best_num_comp != self.parameters['num_comp']:
                 wrong_comp_num.append([population, best_num_comp, best_gmm])
             else:
-                gate_thresholds = sorted(gmm_thresholds(best_gmm, min(data)[0], max(data)[0], best_num_comp))
-                all_thresholds.append(gate_thresholds)
-                for i in xrange(len(gate_thresholds)-1):
-                    gate = FlowCytometryTools.ThresholdGate(gate_thresholds[i], channel, 'above')
-                    gate2 = FlowCytometryTools.ThresholdGate(gate_thresholds[i+1], channel, 'below')
+                gate_thresholds = gmm_thresholds(best_gmm, min(data)[0], max(data)[0], best_num_comp)
+                sorted_order = sorted(gate_thresholds[1], key = lambda x: gate_thresholds[0][gate_thresholds[1].index(x)])
+                all_orders.append(sorted_order)
+                print sorted_order
+                sorted_thresholds = sorted(gate_thresholds[0])
+                all_thresholds.append(sorted_thresholds)
+                for i in xrange(len(sorted_thresholds)-1):
+                    gate = FlowCytometryTools.ThresholdGate(sorted_thresholds[i], channel, 'above')
+                    gate2 = FlowCytometryTools.ThresholdGate(sorted_thresholds[i+1], channel, 'below')
                     population.get_file().plot(channel, gates=[gate2], bins=100)
-                    new_populations[i].append(population.new_updated_pop(population.get_file().gate(gate).gate(gate2)))
+                    new_populations[sorted_order[i]].append(population.new_updated_pop(population.get_file().gate(gate).gate(gate2)))
+        '''avg_thresholds = np.mean(np.array(all_thresholds), axis = 0)
+        for data in wrong_comp_num:
+            
+            for i in xrange(len(avg_thresholds)-1):
+                gate = FlowCytometryTools.ThresholdGate(avg_thresholds[i], channel, 'above')
+                gate2 = FlowCytometryTools.ThresholdGate(avg_thresholds[i+1], channel, 'below')
+                data[0].get_file().plot(channel, gates=[gate2], bins=100)
+                new_populations[comp_num[i]].append(data[0].new_updated_pop(data[0].get_file().gate(gate).gate(gate2)))
+              '''      
         for pop_set in new_populations:
             new_experiments.append(experiment.new_updated_exp(pop_set))
         return new_experiments    
             
 def gmm_thresholds(gmm, low_lim, upp_lim, num_comp):
+    
+    ''' Returns 1D gate thresholds for a GMM.
+    '''
+    
     tolerance = 10
-    results = [low_lim]*num_comp
+    results = []
+    
     curr_probs=gmm.predict_proba([low_lim])
     curr_top = np.argmax(curr_probs)
+    comp_num = [curr_top]
     for i in xrange(low_lim, upp_lim, tolerance):
         curr_probs=gmm.predict_proba([[i]])
         next_top = np.argmax(curr_probs)
         if next_top != curr_top:
-            print results
             curr_top = next_top
-            results[curr_top] = i
+            results.append(i)
+            comp_num.append(curr_top)
     results.append(upp_lim)
-    return results
+    results = [low_lim]+results
+    print [results, comp_num]
+    return [results, comp_num]
