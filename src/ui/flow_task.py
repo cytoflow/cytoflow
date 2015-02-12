@@ -13,7 +13,7 @@ class FlowTask(Task):
     """
     
     id = "edu.mit.synbiocenter.flow_task"
-    name = "Flow Cytometry Analysis"
+    name = "Flow cytometry analysis pane"
     
     def create_central_pane(self):
         return FlowViewPane()

@@ -6,6 +6,7 @@ Created on Feb 11, 2015
 from pyface.tasks.task_pane import TaskPane
 from matplotlib_editor import MPLFigureEditor
 from traits.api import Instance
+from pyface.api import PythonEditor
 
 class FlowViewPane(TaskPane):
     """
@@ -18,9 +19,9 @@ class FlowViewPane(TaskPane):
     editor = Instance(MPLFigureEditor)
     
     def create(self, parent):
-        self.editor = MPLFigureEditor()
-        #self.control = self.editor.control
+        self.editor = MPLFigureEditor(parent)
+        self.control = self.editor.control
 
     def destroy(self):
         self.editor.destroy()
-        #self.control = self.editor = None
+        self.control = self.editor = None
