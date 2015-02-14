@@ -34,11 +34,12 @@ class MPLFigureEditor(Widget):
     name = 'TraitsUI editor for matplotlib plots'
  
     scrollable = True
+    
+    figure = Instance(Figure)
  
     def __init__(self, parent, **traits):
         super(MPLFigureEditor, self).__init__(**traits)
         self.control = self._create_canvas(parent)
-        #self.set_tooltip()
  
     def update_editor(self):
         pass
@@ -46,10 +47,8 @@ class MPLFigureEditor(Widget):
     def _create_canvas(self, parent):
         """ Create the MPL canvas. """
         # matplotlib commands to create a canvas
-        fig = plt.figure()
-        ax = fig.add_axes([0.15, 0.1, 0.7, 0.3])
-        ax.set_ylabel('volts')
-        ax.set_title('a sine wave')
-        mpl_canvas = FigureCanvas(fig)
+        figure = plt.figure()
+        
+        mpl_canvas = FigureCanvas(figure)
         return mpl_canvas
     
