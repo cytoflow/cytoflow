@@ -7,7 +7,10 @@ Created on Feb 9, 2015
 from ..experiment import Experiment
 from traits.api import HasTraits, CFloat, Str
 import pandas as pd
+from traits.has_traits import provides
+from synbio_flowtools.operations.i_operation import IOperation
 
+@provides(IOperation)
 class ThresholdOp(HasTraits):
     '''
     classdocs
@@ -18,15 +21,14 @@ class ThresholdOp(HasTraits):
     channel = Str()
     threshold = CFloat()
 
-    def __init__(self, name="", channel = "", threshold = 0):
+    def __init__(self, name="", channel = "", threshold = None):
         '''
         Builds a threshold operation instance.
         
-        Parameters
-        ----------
-        name : a String naming the operation.
-        channel : the channel to which the threshold should be applied
-        threshold : a float64 defining the threshold
+        Args:
+            name(string) : name of the operation.
+            channel(string) : the channel to which the threshold should be applied
+            threshold(float) : a float defining the threshold
         '''
     
         self.name = name
@@ -37,12 +39,14 @@ class ThresholdOp(HasTraits):
         '''
         Applies the threshold to an experiment.
         
-        Returns a new experiment, the same as old_experiment but with a new
-        column the same as the operation name.  The bool is True if the
-        event's measurement in self.channel is greater than self.threshold;
-        it is False otherwise.
-         
-        self._ex = Experiment(old_experiment)
+        Args:
+            old_experiment(Experiment): the experiment to which this op is applied
+            
+        Returns:
+            a new experiment, the same as old_experiment but with a new
+            column the same as the operation name.  The bool is True if the
+            event's measurement in self.channel is greater than self.threshold;
+            it is False otherwise.
         '''
         
         # make sure old_experiment doesn't already have a column named self.name

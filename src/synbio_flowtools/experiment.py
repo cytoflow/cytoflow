@@ -86,6 +86,7 @@ class Experiment(object):
         self.channel_metadata = {}
         self.tubes = []
         self.tube_conditions = {}
+        self.tube_keywords = {}
         self.successor = None
         self.data = pd.DataFrame()
             
@@ -132,18 +133,17 @@ class Experiment(object):
         self.conditions.update(conditions)
         
              
-    def add_tube(self, tube, conditions, keep_tube_data = False):
+    def add_tube(self, tube, conditions):
         """
         Add an FCMeasurement, and its experimental conditions, to this Experiment.
+        
+        Remember: because add_tube COPIES the data into this Experiment, you can
+        DELETE the tube after you add it (and save memory)
         
         Args:
             tube(FCMeasurement): a single tube or well's worth of data
             conditions(dict) : the tube's experimental conditions, 
                 (condition:value pairs)
-            keep_tube_data(bool) : if True then don't delete the FCMeasurement's
-                         internal DataFrame.  the default, to delete the
-                         data frame, saves memory because we're going to copy
-                         all the data into self.data anyways.
         """
     
         if(self.tubes):

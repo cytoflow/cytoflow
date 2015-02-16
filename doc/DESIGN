@@ -12,6 +12,10 @@ a few design notes:
    * apply operations to data
    * view / plot data
    
+ - this probably means that the "internal" API is the same as the "external"
+   API - ie, we're writing a package/library to analyze flow data, and then
+   a nice UI around it.
+   
  - in a perfect world, the execution of the analysis pipeline would be exactly
    the same python code (via exec()) as what's outputted to the notebook.
    

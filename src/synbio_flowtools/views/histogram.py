@@ -6,7 +6,7 @@ Created on Feb 10, 2015
 
 
 from ..experiment import Experiment
-from traits.api import HasTraits, CFloat, Str
+from traits.api import HasTraits, Str, Instance
 import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -28,24 +28,35 @@ class HistogramView(HasTraits):
     """
     
     # traits    
-    name = Str()
-    channel = Str()
-    xfacet = Str()
-    yfacet = Str()
-    huefacet = Str()
-    subset = Str()
+    name = Str
+    channel = Str
+    xfacet = Str
+    yfacet = Str
+    huefacet = Str
+    subset = Str
+    
+    def plot(self, experiment, axes = None, **kwargs):
+        """
+        Plot a faceted histogram view of a channel
+        """
+        
+        kwargs.setdefault('histtype', 'stepfilled')
+        kwargs.setdefault('alpha', 0.5)
+        kwargs.setdefault('bins', 200) # Do not move above
+        
+        if not self.subset:
+            x = experiment.data
+        else:
+            x = experiment.query(self.subset)
 
-    def __init__(self, experiment):
-        """
-        Builds a new Histogram view.
+        g = sns.FacetGrid(x, 
+                          col = (self.xfacet if self.xfacet else None),
+                          row = (self.yfacet if self.yfacet else None),
+                          hue = (self.huefacet if self.huefacet else None))
         
-        Args:
-            experiment: an Experiment instance.
-        """
+        g.map(plt.hist, self.channel, **kwargs)
         
-    def plot(self):
-        """
-        Plot a faceted histogram view of 
-        """
-        pass
+        
+            
+        
     

@@ -11,34 +11,27 @@ http://markmail.org/message/z3hnoqruk56g2bje
 adapted and tested to work with PySide from Anaconda in March 2014
 """
 
-from traits.etsconfig.api import ETSConfig
-ETSConfig.toolkit = 'qt4'
-
 import matplotlib
 
 # We want matplotlib to use a QT backend
 matplotlib.use('Qt4Agg')
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.figure import Figure
+
 import matplotlib.pyplot as plt
- 
-from traits.api import Instance
-from traitsui.editor import Editor
-from traitsui.basic_editor_factory import BasicEditorFactory
+import numpy as np
 
 from pyface.widget import Widget
 
 class MPLFigureEditor(Widget):
  
     id = 'edu.mit.synbio.matplotlib_editor'
-    name = 'TraitsUI editor for matplotlib plots'
+    name = 'QT widget to display matplotlib plots'
  
     scrollable = True
  
     def __init__(self, parent, **traits):
         super(MPLFigureEditor, self).__init__(**traits)
         self.control = self._create_canvas(parent)
-        #self.set_tooltip()
  
     def update_editor(self):
         pass
@@ -47,9 +40,15 @@ class MPLFigureEditor(Widget):
         """ Create the MPL canvas. """
         # matplotlib commands to create a canvas
         fig = plt.figure()
-        ax = fig.add_axes([0.15, 0.1, 0.7, 0.3])
-        ax.set_ylabel('volts')
-        ax.set_title('a sine wave')
+        
+        def f(t):
+            return np.exp(-t) * np.cos(2*np.pi*t)
+
+        t1 = np.arange(0.0, 5.0, 0.1)
+        t2 = np.arange(0.0, 5.0, 0.02)
+        plt.plot(t1, f(t1), 'bo', t2, f(t2), 'k')
+
         mpl_canvas = FigureCanvas(fig)
         return mpl_canvas
     
+
