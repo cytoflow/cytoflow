@@ -6,7 +6,7 @@ Created on Feb 15, 2015
 from FlowCytometryTools.core.transforms import Transformation
 from traits.api import Instance, HasTraits, Str, ListStr, provides
 from ..experiment import Experiment
-from synbio_flowtools.operations.i_operation import IOperation
+from .i_operation import IOperation
 
 @provides(IOperation)
 class HlogTransformOp(HasTraits):

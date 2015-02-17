@@ -16,11 +16,4 @@
 	<natures>
 		<nature>org.python.pydev.pythonNature</nature>
 	</natures>
-	<linkedResources>
-		<link>
-			<name>src/synbio_flowtools/views/histogram.py</name>
-			<type>1</type>
-			<location>/home/brian/src/synbio-flowtools/src/synbio_flowtools/views/histogram.py</location>
-		</link>
-	</linkedResources>
 </projectDescription>

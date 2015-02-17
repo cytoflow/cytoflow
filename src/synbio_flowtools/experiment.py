@@ -219,6 +219,7 @@ class Experiment(object):
         
         self.tubes.append(tube)
         self.tube_conditions[tube] = conditions
+        self.tube_keywords[tube] = tube.channels
         self.data = self.data.append(new_data)
         del new_data
         

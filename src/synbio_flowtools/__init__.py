@@ -16,3 +16,4 @@ from experiment import Experiment
 from operations.threshold import ThresholdOp
 from operations.hlog import HlogTransformOp
 from views.histogram import HistogramView
+from operations.logicle import LogicleTransformOp
