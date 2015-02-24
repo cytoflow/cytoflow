@@ -6,13 +6,14 @@ Created on Feb 10, 2015
 
 
 from ..experiment import Experiment
-from traits.api import HasTraits, Str, Instance
+from traits.api import HasTraits, Str, Instance, provides
 import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import seaborn as sns
+from synbio_flowtools.views.i_view import IView
 
-
+@provides(IView)
 class HistogramView(HasTraits):
     """
     Plots a one-channel histogram
