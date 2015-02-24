@@ -5,15 +5,18 @@ Created on Feb 11, 2015
 """
 from pyface.tasks.task_pane import TaskPane
 from matplotlib_editor import MPLFigureEditor
-from traits.api import Instance
-from pyface.api import PythonEditor
+from traits.api import Instance, provides
+from pyface.tasks.i_task_pane import ITaskPane
 
-class FlowViewPane(TaskPane):
+@provides(ITaskPane)
+class FlowTaskPane(TaskPane):
     """
-    classdocs
+    The center pane for the UI; contains the matplotlib canvas for plotting
+    data views.  eventually, this will allow multiple views; for now, it's
+    just one matplotlib canvas.
     """
     
-    id = 'edu.mit.synbio.flow_view_pane'
+    id = 'edu.mit.synbio.flow_task_pane'
     name = 'Cytometry Data Viewer'
     
     editor = Instance(MPLFigureEditor)
