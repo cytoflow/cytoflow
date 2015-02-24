@@ -20,6 +20,22 @@ class IView(Interface):
     name = Str
     subset = Str
     
+    def validate(self, experiment):
+        """
+        Validate the parameters of this view, given a test Experiment.
+        
+        For example, make sure that all the channels this op asks for 
+        exist; or that the subset string for a data-driven op is valid.
+        
+        Args:
+            experiment(Experiment): the Experiment to validate this op against
+            
+        Returns:
+            True if this op will work; False otherwise.
+        """
+        
+        return False   # make sure this gets implemented.
+    
     def plot(self, experiment, axes = None, **kwargs):
         """
         Plot a visualization of flow data.
