@@ -177,7 +177,12 @@ class Experiment(object):
                 if("$PnV" in tube.channels):
                     self.channel_metadata[channel_name]["voltage"] = \
                         tube.channels["$PnV"]
-                    
+                        
+                # add an empty list for channel transforms.  a transform must
+                # be an object with scale(float) and inverse(float) methods,
+                # each of which applies or inverts the transformation.
+                # required to draw tic marks, etc.
+                self.channel_metadata[channel_name]["xforms"] = []
                     
         # validate the conditions
         
