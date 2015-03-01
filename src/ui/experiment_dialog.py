@@ -70,7 +70,7 @@ class ExperimentSetup(HasTraits):
     
     tubes = List(Tube)
 
-    col_clicked = TabularEditorEvent
+    col_clicked = Instance('TabularEditorEvent')
 
     view = View(
         Group(
@@ -87,10 +87,18 @@ class ExperimentSetup(HasTraits):
     )
     
 class ExperimentHandler(Controller):
+    
+    def init(self, info):
+        # connect the model trait change events to the controller methods
+        self.model.on_trait_change(self._on_col_clicked, 'col_clicked')
+        return True
         
     def _on_add(self, experiment, column, uiinfo):
         print "add handled"
         print column
+        
+    def _on_col_clicked(self, object, name, old, new):
+        print "trait changed"
         
 @provides(IDialog)
 class ExperimentSetupDialog(Dialog):
@@ -107,7 +115,6 @@ class ExperimentSetupDialog(Dialog):
     model = Instance(ExperimentSetup)
     handler = Instance(Handler)
     ui = Instance(UI)
-        
         
     def _create_buttons(self, parent):
         """ 
@@ -158,8 +165,9 @@ class ExperimentSetupDialog(Dialog):
     def _create_dialog_area(self, parent):
         
         self.model = ExperimentSetup()
-        self.handler = ExperimentHandler()
-        self.ui = self.model.edit_traits(kind='subpanel', parent=parent, 
+        self.handler = ExperimentHandler(model = self.model)
+        self.ui = self.model.edit_traits(kind='subpanel', 
+                                         parent=parent, 
                                          handler = self.handler)       
         return self.ui.control
     
