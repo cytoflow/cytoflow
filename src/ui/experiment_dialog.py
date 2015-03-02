@@ -64,6 +64,7 @@ class ExperimentSetup(HasTraits):
     # traits to communicate with the TabularEditor
     col_clicked = Instance('TabularEditorEvent')
     update = Bool
+    refresh = Bool
     
     tube_metadata = {}
     
@@ -79,7 +80,8 @@ class ExperimentSetup(HasTraits):
                                         auto_update = True,
                                         auto_resize = True,
                                         column_clicked = "col_clicked",
-                                        update = "update")),
+                                        update = "update",
+                                        refresh = "refresh")),
             show_labels = False
         ),
         title     = 'Experiment Setup',
@@ -107,8 +109,13 @@ class ExperimentHandler(Controller):
         print "add handled"
         print column
         
-    def _on_col_clicked(self, object, name, old, new):
-        print "column clicked"
+    def _on_col_clicked(self, click_event): 
+        """
+        When a column is clicked, sort the table values by that column.
+        """
+        
+        sort_trait = self.model.adapter.columns[click_event.column][1]
+        self.model.tubes.sort(key = lambda x: x.trait_get([sort_trait]))
         
     def _on_add_tubes(self):
         """
@@ -162,8 +169,12 @@ class ExperimentHandler(Controller):
         if not meta_name in self.model.tube_metadata:
             Tube.add_class_trait(meta_name, meta_type)
             self.model.tube_metadata[meta_name] = meta_type
+            
+            # should be able to do this....
+            #self.model.adapter.columns.append( (meta_name, meta_name))
+            #self.model.refresh = True
 
-            # force the adapter to update label_map
+            # ...but instead have to force the adapter to update label_map
             c = self.model.adapter.columns
             c.append( (meta_name, meta_name) )
             self.model.adapter.columns = c
