@@ -91,10 +91,17 @@ class ExperimentSetup(HasTraits):
     
 class ExperimentHandler(Controller):
     
+    dialog = Instance(IDialog)
+    
     def init(self, info):
         # connect the model trait change events to the controller methods
         self.model.on_trait_change(self._on_col_clicked, 'col_clicked')
         return True
+    
+    def _on_ok(self):
+        print "clicked okay"
+        # TODO - validate input
+        self.dialog.control.accept()
         
     def _on_add(self, experiment, column, uiinfo):
         print "add handled"
@@ -135,6 +142,7 @@ class ExperimentHandler(Controller):
         self._add_metadata("Col", Int)
         
         # TODO - error handling!
+        # TODO - allow for different file name prototypes or manufacturers
         plate = FCPlate.from_dir(ID='new plate', 
                                  path=dir_dialog.path,
                                  parser = 'name',
@@ -152,13 +160,15 @@ class ExperimentHandler(Controller):
     def _add_metadata(self, meta_name, meta_type):
         
         if not meta_name in self.model.tube_metadata:
-            Tube.add_class_trait(meta_name, type)
-            self.model.tube_metadata[meta_name] = True
+            Tube.add_class_trait(meta_name, meta_type)
+            self.model.tube_metadata[meta_name] = meta_type
 
             # force the adapter to update label_map
             c = self.model.adapter.columns
             c.append( (meta_name, meta_name) )
             self.model.adapter.columns = c
+            
+            # TODO - fix the column width weirdness.
         
 @provides(IDialog)
 class ExperimentSetupDialog(Dialog):
@@ -171,16 +181,20 @@ class ExperimentSetupDialog(Dialog):
     name = 'Cytometry Experiment Setup'
     style = 'modal'
     
-    experiment = Instance(sf.Experiment)
     model = Instance(ExperimentSetup)
     handler = Instance(Handler)
     ui = Instance(UI)
     
     def _create(self):
-        """ Creates the window's widget hierarchy. """
+        """ 
+        Creates the window's widget hierarchy. 
+        
+        Need to override this protected interface so we can instantiate the
+        model and controller.
+        """
         
         self.model = ExperimentSetup()
-        self.handler = ExperimentHandler(model = self.model)
+        self.handler = ExperimentHandler(model = self.model, dialog = self)
 
         super(ExperimentSetupDialog, self)._create()
     
@@ -221,7 +235,8 @@ class ExperimentSetupDialog(Dialog):
         btn_ok.setDefault(True)
         layout.addWidget(btn_ok)
         QtCore.QObject.connect(btn_ok, QtCore.SIGNAL('clicked()'),
-                               self.control, QtCore.SLOT('accept()'))
+                               self.handler._on_ok)
+                               #self.control, QtCore.SLOT('accept()'))
 
         # 'Cancel' button.
         btn_cancel = QtGui.QPushButton("Cancel")
@@ -237,7 +252,7 @@ class ExperimentSetupDialog(Dialog):
         
         self.ui = self.model.edit_traits(kind='subpanel', 
                                          parent=parent, 
-                                         handler = self.handler)       
+                                         handler=self.handler)       
         return self.ui.control
     
     def destroy(self):
