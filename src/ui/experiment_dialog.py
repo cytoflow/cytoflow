@@ -5,6 +5,7 @@ Created on Feb 26, 2015
 """
 
 from traits.etsconfig.api import ETSConfig
+from FlowCytometryTools.core.containers import FCMeasurement, FCPlate
 ETSConfig.toolkit = 'qt4'
 
 import os
@@ -24,6 +25,7 @@ from pyface.api import Dialog
 
 from pyface.qt import QtCore, QtGui
 from pyface.qt.QtCore import pyqtSlot
+from pyface.constant import OK as PyfaceOK
 
 from pyface.api import GUI, FileDialog, DirectoryDialog
 
@@ -35,23 +37,12 @@ class ExperimentSetupAdapter(TabularAdapter):
     being displayed. For more details, please refer to the traitsUI user guide. 
     """
     # List of (Column labels, Column ID).
-    columns = [ ('Name',  'name')]
+    columns = [ ('Name',  'Name')]
     
     column_menu = Menu(Action(name = "Add...", 
                               action = 'handler._on_add(object, column, info)',
                               enabled_when = 'column == 0'))
     
-# The tabular editor works in conjunction with an adapter class, derived from 
-# TabularAdapter. 
-tabular_editor = TabularEditor(
-    adapter    = ExperimentSetupAdapter(),
-    operations = ['edit'],
-    multi_select = True,
-    auto_update = True,
-    auto_resize = True,
-    column_clicked = "col_clicked"
-)
-
 class Tube(HasTraits):
     """
     The model for a tube in an experiment.
@@ -60,8 +51,8 @@ class Tube(HasTraits):
     # these are the traits that every tube has.  every other trait is
     # dynamically created.
     
-    file = Str
-    name = Str
+    File = Str
+    Name = Str
 
 class ExperimentSetup(HasTraits):
     """
@@ -70,13 +61,25 @@ class ExperimentSetup(HasTraits):
     
     tubes = List(Tube)
 
+    # traits to communicate with the TabularEditor
     col_clicked = Instance('TabularEditorEvent')
+    update = Bool
+    
+    tube_metadata = {}
+    
+    adapter = ExperimentSetupAdapter()
 
     view = View(
         Group(
             Item('tubes', 
                  id = 'table', 
-                 editor = tabular_editor),
+                 editor = TabularEditor(adapter = adapter,
+                                        operations = ['edit'],
+                                        multi_select = True,
+                                        auto_update = True,
+                                        auto_resize = True,
+                                        column_clicked = "col_clicked",
+                                        update = "update")),
             show_labels = False
         ),
         title     = 'Experiment Setup',
@@ -98,13 +101,70 @@ class ExperimentHandler(Controller):
         print column
         
     def _on_col_clicked(self, object, name, old, new):
-        print "trait changed"
+        print "column clicked"
+        
+    def _on_add_tubes(self):
+        """
+        Handle "Add tubes..." button.  Add tubes to the experiment.
+        """
+        
+        file_dialog = FileDialog()
+        file_dialog.wildcard = "Flow cytometry files (*.fcs)|*.fcs|"
+        file_dialog.action = 'open files'
+        file_dialog.open()
+        
+        if file_dialog.return_code != PyfaceOK:
+            return
+        
+        for path in file_dialog.paths:
+            tube = Tube(file = path)
+            fcs = FCMeasurement(ID='new tube', datafile = path)
+            tube.Name = fcs.meta['$SRC']
+            self.model.tubes.append(tube)
+    
+    def _on_add_plate(self):
+
+        dir_dialog = DirectoryDialog()
+        dir_dialog.new_directory = False
+        dir_dialog.open()
+        
+        if dir_dialog.return_code != PyfaceOK:
+            return
+                
+        self._add_metadata("Row", Str)
+        self._add_metadata("Col", Int)
+        
+        # TODO - error handling!
+        plate = FCPlate.from_dir(ID='new plate', 
+                                 path=dir_dialog.path,
+                                 parser = 'name',
+                                 ID_kwargs={'pre':'_',
+                                            'post':'_'} )
+        
+        for well_name in plate.data:
+            well_data = plate[well_name]
+            tube = Tube(file = well_data.datafile,
+                        Row = well_data.position['new plate'][0],
+                        Col = well_data.position['new plate'][1],
+                        Name = well_data.meta['$SRC'])
+            self.model.tubes.append(tube)
+        
+    def _add_metadata(self, meta_name, meta_type):
+        
+        if not meta_name in self.model.tube_metadata:
+            Tube.add_class_trait(meta_name, type)
+            self.model.tube_metadata[meta_name] = True
+
+            # force the adapter to update label_map
+            c = self.model.adapter.columns
+            c.append( (meta_name, meta_name) )
+            self.model.adapter.columns = c
         
 @provides(IDialog)
 class ExperimentSetupDialog(Dialog):
     """
-    Another center pane; this one for setting up an experiment: loading
-    FCS files and specifying metadata.  Centered around a table editor.
+    A dialog for setting up an experiment: loading FCS files and specifying 
+    metadata.  Centered around a table editor.
     """
 
     id = 'edu.mit.synbio.experiment_setup_dialog'
@@ -115,6 +175,15 @@ class ExperimentSetupDialog(Dialog):
     model = Instance(ExperimentSetup)
     handler = Instance(Handler)
     ui = Instance(UI)
+    
+    def _create(self):
+        """ Creates the window's widget hierarchy. """
+        
+        self.model = ExperimentSetup()
+        self.handler = ExperimentHandler(model = self.model)
+
+        super(ExperimentSetupDialog, self)._create()
+    
         
     def _create_buttons(self, parent):
         """ 
@@ -128,20 +197,22 @@ class ExperimentSetupDialog(Dialog):
         buttons = QtGui.QWidget()
         layout = QtGui.QHBoxLayout()
         
+        '''
         btn_condition = QtGui.QPushButton("Add condition...")
         layout.addWidget(btn_condition)
         QtCore.QObject.connect(btn_condition, QtCore.SIGNAL('clicked()'),
-                               self._add_condition)
+                               handler._add_condition)
+        '''
         
         btn_tube = QtGui.QPushButton("Add tubes...")
         layout.addWidget(btn_tube)
         QtCore.QObject.connect(btn_tube, QtCore.SIGNAL('clicked()'),
-                               self._add_tube)
+                               self.handler._on_add_tubes)
         
         btn_plate = QtGui.QPushButton("Add plate...")
         layout.addWidget(btn_plate)
         QtCore.QObject.connect(btn_plate, QtCore.SIGNAL('clicked()'),
-                               self._add_plate)
+                               self.handler._on_add_plate)
         
         layout.addStretch()
 
@@ -164,8 +235,6 @@ class ExperimentSetupDialog(Dialog):
     
     def _create_dialog_area(self, parent):
         
-        self.model = ExperimentSetup()
-        self.handler = ExperimentHandler(model = self.model)
         self.ui = self.model.edit_traits(kind='subpanel', 
                                          parent=parent, 
                                          handler = self.handler)       
@@ -176,43 +245,6 @@ class ExperimentSetupDialog(Dialog):
         self.ui = None
         
         super(Dialog, self).destroy()
-        
-        
-    class AddConditionDialog(Dialog):
-        
-        ok_label = "OK"
-        cancel_label = "Cancel"
-        
-        new_condition_name = Str
-        
-        
-        def _create_content(self, parent):
-            pass
-    
-    def _add_condition(self):
-        pass
-    
-    def _add_tube(self):
-        
-        print self.model.col_clicked
-        return
-        
-        fd = FileDialog()
-        fd.wildcard = "Flow cytometry files (*.fcs)|*.fcs|"
-        fd.action = 'open files'
-        fd.open()
-        
-        print fd.paths
-        
-    def _add_plate(self):
-        print "add plate"
-        print type(tabular_editor)
-        
-        Tube.add_class_trait('Dox', Bool)
-        
-        c2 = list(tabular_editor.adapter.columns)
-        c2.append(('Dox',  'dox'))
-        tabular_editor.adapter.columns = c2
     
 if __name__ == '__main__':
 
