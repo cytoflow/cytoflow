@@ -27,7 +27,7 @@ class IOperation(Interface):
             True if this op will work; False otherwise.
         """
         
-        return False   # make sure this gets implemented.
+        raise NotImplementedError
             
     
     def apply(self, experiment):
@@ -40,5 +40,6 @@ class IOperation(Interface):
         Returns:
             A new Experiment: the old Experiment with this operation applied
         """
-        return None   # make sure this gets implemented
+        
+        raise NotImplementedError
     
