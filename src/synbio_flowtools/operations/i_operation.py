@@ -43,3 +43,14 @@ class IOperation(Interface):
         
         raise NotImplementedError
     
+    def getDefaultView(self, experiment):
+        """
+        Return the View best suited to viewing the results of this operation.
+        
+        Args:
+            experiment(Experiment): the Experiment we're viewing
+            
+        Returns:
+            a new View, suitable for calling plot(experiment) on.
+        """
+    

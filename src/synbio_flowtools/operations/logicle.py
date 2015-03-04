@@ -25,7 +25,7 @@ from traits.api import HasTraits, provides, Str, ListStr, Float, DictStrFloat
 from logicle_ext.Logicle import Logicle
 from .i_operation import IOperation
 from ..experiment import Experiment
-import math
+import math, copy
 
 @provides(IOperation)
 class LogicleTransformOp(HasTraits):
@@ -115,7 +115,6 @@ class LogicleTransformOp(HasTraits):
                          self.A[channel])
             
             new_experiment[channel] = old_experiment[channel].apply(el.scale)
-            new_experiment.channel_metadata[channel]["xforms"] =\
-                new_experiment.channel_metadata[channel]["xforms"].append(el)
+            new_experiment.channel_metadata[channel]["xforms"].append(el)
             
         return new_experiment

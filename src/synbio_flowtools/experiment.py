@@ -1,5 +1,6 @@
 import pandas as pd
 import FlowCytometryTools as fc
+import copy
 
 class Experiment(object):
     """ 
@@ -93,11 +94,13 @@ class Experiment(object):
         if(prev_experiment != None):
             self.version = prev_experiment.version + 1
 
-            self.conditions = prev_experiment.conditions
-            self.channels = prev_experiment.channels
-            self.channel_metadata = prev_experiment.channel_metadata
-            self.tubes = prev_experiment.tubes
-            self.tube_conditions = prev_experiment.tube_conditions
+            # copy most of the metadata so if the op needs to change the
+            # new experiment it won't affect the old experiment.
+            self.conditions = copy.deepcopy(prev_experiment.conditions)
+            self.channels = copy.deepcopy(prev_experiment.channels)
+            self.channel_metadata = copy.deepcopy(prev_experiment.channel_metadata)
+            self.tubes = prev_experiment.tubes # no copy, just reference
+            self.tube_conditions = copy.deepcopy(prev_experiment.tube_conditions)
             prev_experiment.successor = self 
             self.data = prev_experiment.data.copy()  # shallow copy!
             
@@ -173,7 +176,7 @@ class Experiment(object):
             
             for channel_name in tube.channel_names:
                 if(channel_name not in self.channel_metadata):
-                    self.channel_metadata["channel_name"] = {}
+                    self.channel_metadata[channel_name] = {}
                 if("$PnV" in tube.channels):
                     self.channel_metadata[channel_name]["voltage"] = \
                         tube.channels["$PnV"]
@@ -181,7 +184,7 @@ class Experiment(object):
                 # add an empty list for channel transforms.  a transform must
                 # be an object with scale(float) and inverse(float) methods,
                 # each of which applies or inverts the transformation.
-                # required to draw tic marks, etc.
+                # required to draw tic marks, etc.                    
                 self.channel_metadata[channel_name]["xforms"] = []
                     
         # validate the conditions

@@ -40,7 +40,7 @@ class MPLFigureEditor(Widget):
         """ Create the MPL canvas. """
         # matplotlib commands to create a canvas
 
-        fig = plt.figure()
+        self.figure = plt.figure()
         
         def f(t):
             return np.exp(-t) * np.cos(2*np.pi*t)
@@ -49,7 +49,7 @@ class MPLFigureEditor(Widget):
         t2 = np.arange(0.0, 5.0, 0.02)
         plt.plot(t1, f(t1), 'bo', t2, f(t2), 'k')
 
-        mpl_canvas = FigureCanvas(fig)
+        mpl_canvas = FigureCanvas(self.figure)
 
         return mpl_canvas
     

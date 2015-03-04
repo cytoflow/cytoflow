@@ -36,7 +36,7 @@ class HistogramView(HasTraits):
     huefacet = Str
     subset = Str
     
-    def plot(self, experiment, axes = None, **kwargs):
+    def plot(self, experiment, **kwargs):
         """
         Plot a faceted histogram view of a channel
         """
@@ -50,6 +50,7 @@ class HistogramView(HasTraits):
         else:
             x = experiment.query(self.subset)
 
+        # FacetGrid makes its own figure
         g = sns.FacetGrid(x, 
                           col = (self.xfacet if self.xfacet else None),
                           row = (self.yfacet if self.yfacet else None),
