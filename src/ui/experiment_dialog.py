@@ -125,7 +125,7 @@ class ExperimentSetup(HasTraits):
                                       selected = 'selected',
                                       columns = [ObjectColumn(name = 'Name')],
                                       ),
-                 visible_when = "object.tubes"),
+                 enabled_when = "object.tubes"),
             show_labels = False
         ),
         title     = 'Experiment Setup',
@@ -202,8 +202,8 @@ class ExperimentHandler(Controller):
         if file_dialog.return_code != PyfaceOK:
             return
         
-        if not self.model.tubes:
-            self.dialog.size = (550, 300)
+        #if not self.model.tubes:
+        #    self.dialog.size = (550, 300)
         
         for path in file_dialog.paths:
             tube = Tube(file = path)
@@ -223,8 +223,8 @@ class ExperimentHandler(Controller):
         if dir_dialog.return_code != PyfaceOK:
             return
         
-        if not self.model.tubes:
-            self.dialog.size = (550, 300)
+        #if not self.model.tubes:
+        #    self.dialog.size = (550, 300)
                 
         self._add_metadata("Row", "Row", Str)
         self._add_metadata("Col", "Col", Int)
@@ -279,7 +279,9 @@ class ExperimentSetupDialog(Dialog):
 
     id = 'edu.mit.synbio.experiment_setup_dialog'
     name = 'Cytometry Experiment Setup'
+    
     style = 'modal'
+    title = 'Experiment setup'
     
     model = Instance(ExperimentSetup)
     handler = Instance(Handler)
@@ -379,7 +381,7 @@ if __name__ == '__main__':
     
     # create a Task and add it to a TaskWindow
     d = ExperimentSetupDialog()
-    #d.size = (550, 100)
+    d.size = (550, 500)
     d.open()
     
     gui.start_event_loop()        
