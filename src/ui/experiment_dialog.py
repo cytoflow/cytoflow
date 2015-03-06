@@ -30,9 +30,7 @@ from pyface.constant import OK as PyfaceOK
 
 from pyface.api import GUI, FileDialog, DirectoryDialog
 
-from synbio_flowtools.utility.util import LogFloat
-
-import synbio_flowtools as sf 
+from cytoflow.utility.util import LogFloat
 
 from pyface.ui.qt4.directory_dialog import DirectoryDialog as QtDirectoryDialog
 
