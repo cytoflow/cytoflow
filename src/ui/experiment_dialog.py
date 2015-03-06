@@ -30,7 +30,30 @@ from pyface.constant import OK as PyfaceOK
 
 from pyface.api import GUI, FileDialog, DirectoryDialog
 
-import synbio_flowtools as sf
+from synbio_flowtools.utility.util import LogFloat
+
+import synbio_flowtools as sf 
+
+from pyface.ui.qt4.directory_dialog import DirectoryDialog as QtDirectoryDialog
+
+class PlateDirectoryDialog(QtDirectoryDialog):
+    """
+    A custom open file dialog for opening plates, so we can 
+    """
+    
+    def _create_control(self, parent):
+        self.dlg = QtGui.QFileDialog(parent, self.title, self.default_path)
+    
+        self.dlg.setViewMode(QtGui.QFileDialog.Detail | QtGui.QFileDialog.ShowDirsOnly)
+        self.dlg.setFileMode(QtGui.QFileDialog.Directory)
+    
+        self.dlg.setNameFilters(["one", "two"])
+        self.dlg.setReadOnly(True)
+    
+        return self.dlg
+    
+    def selectedNameFilter(self):
+        return self.dlg.selectedNameFilter()
     
 class Tube(HasTraits):
     """
@@ -78,6 +101,7 @@ class ExperimentSetup(HasTraits):
     The model for the TabularEditor in the dialog
     """
     
+    # this is the actual model; the rest is a built-in view.
     tubes = List(Tube)
 
     # traits to communicate with the TabularEditor
@@ -100,7 +124,8 @@ class ExperimentSetup(HasTraits):
                                       selection_mode = 'cells',
                                       selected = 'selected',
                                       columns = [ObjectColumn(name = 'Name')],
-                                      )),
+                                      ),
+                 visible_when = "object.tubes"),
             show_labels = False
         ),
         title     = 'Experiment Setup',
@@ -139,7 +164,7 @@ class ExperimentHandler(Controller):
         
         class NewTrait(HasTraits):    
             condition_name = Str
-            condition_type = Enum(["String", "Number", "True/False"])
+            condition_type = Enum(["String", "Number", "Number (Log)", "True/False"])
     
             view = View(Item(name = 'condition_name'),
                         Item(name = 'condition_type'),
@@ -153,13 +178,16 @@ class ExperimentHandler(Controller):
         if not new_trait.condition_name: 
             return
         
-        if new_trait.condition_type == "String":
-            self._add_metadata(new_trait.condition_name, Str)
-        elif new_trait.condition_type == "Number":
-            self._add_metadata(new_trait.condition_name, Float)
-        else:
-            self._add_metadata(new_trait.condition_name, Bool)
+        name = new_trait.condition_name
         
+        if new_trait.condition_type == "String":
+            self._add_metadata(name, name + " (String)", Str)
+        elif new_trait.condition_type == "Number":
+            self._add_metadata(name, name + " (Number)", Float)
+        elif new_trait.condition_type == "Number (Log)":
+            self._add_metadata(name, name + " (Log)", LogFloat)
+        else:
+            self._add_metadata(name, name + " (T/F)", Bool)       
         
     def _on_add_tubes(self):
         """
@@ -174,6 +202,9 @@ class ExperimentHandler(Controller):
         if file_dialog.return_code != PyfaceOK:
             return
         
+        if not self.model.tubes:
+            self.dialog.size = (550, 300)
+        
         for path in file_dialog.paths:
             tube = Tube(file = path)
             fcs = FCMeasurement(ID='new tube', datafile = path)
@@ -182,16 +213,21 @@ class ExperimentHandler(Controller):
             self.model.tubes.append(tube)
     
     def _on_add_plate(self):
-
-        dir_dialog = DirectoryDialog()
-        dir_dialog.new_directory = False
+        # TODO - add alternate manufacturer's plate types (to the name filters)
+        
+        dir_dialog = PlateDirectoryDialog()
         dir_dialog.open()
+        
+        print dir_dialog.selectedNameFilter()
         
         if dir_dialog.return_code != PyfaceOK:
             return
+        
+        if not self.model.tubes:
+            self.dialog.size = (550, 300)
                 
-        self._add_metadata("Row", Str)
-        self._add_metadata("Col", Int)
+        self._add_metadata("Row", "Row", Str)
+        self._add_metadata("Col", "Col", Int)
         
         # TODO - error handling!
         # TODO - allow for different file name prototypes or manufacturers
@@ -210,16 +246,26 @@ class ExperimentHandler(Controller):
             tube.on_trait_change(self._try_multiedit, '+')
             self.model.tubes.append(tube)
             
-    def _try_multiedit(self, obj, name, old, new):        
+    def _try_multiedit(self, obj, name, old, new):
+        """
+        See if there are multiple elements selected when a tube's trait changes
+        
+        and if so, edit the same trait for all the selected tubes.
+        """
+                
         for tube, trait_name in self.model.selected:
             if tube != obj:
                 tube.trait_set( **dict([(trait_name, new)]))
         
-    def _add_metadata(self, meta_name, meta_type):
+    def _add_metadata(self, meta_name, column_name, meta_type):
+        """
+        Add a new condition
+        """
         
         if not meta_name in Tube.class_trait_names():
             Tube.add_class_trait(meta_name, meta_type)       
-            self.table_editor.columns.append(ObjectColumn(name = meta_name))
+            self.table_editor.columns.append(ObjectColumn(name = meta_name,
+                                                          label = column_name))
             
         for tube in self.model.tubes:
             tube.on_trait_change(self._try_multiedit, meta_name)
@@ -333,6 +379,7 @@ if __name__ == '__main__':
     
     # create a Task and add it to a TaskWindow
     d = ExperimentSetupDialog()
+    #d.size = (550, 100)
     d.open()
     
     gui.start_event_loop()        
