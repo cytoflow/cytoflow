@@ -5,20 +5,21 @@ Created on Feb 26, 2015
 """
 
 from traits.etsconfig.api import ETSConfig
-from FlowCytometryTools.core.containers import FCMeasurement, FCPlate
 ETSConfig.toolkit = 'qt4'
+
+from FlowCytometryTools.core.containers import FCMeasurement, FCPlate
+from traitsui.table_column import ObjectColumn
 
 import os
 os.environ['TRAITS_DEBUG'] = "1"
 
 from traits.api import HasTraits, provides, Instance, Str, Int, List, \
-                       Bool, Enum, Float
+                       Bool, Enum, Float, Any
 
-from traitsui.api import UI, Group, View, Item, TabularEditor
-from traitsui.tabular_adapter import TabularAdapter
+from traitsui.api import UI, Group, View, Item, TableEditor
 from traitsui.menu import Menu, Action, OKCancelButtons
 from traitsui.handler import Handler, Controller
-from traitsui.qt4.tabular_editor import TabularEditorEvent
+from traitsui.qt4.table_editor import TableEditor as TableEditorQt
 
 from pyface.i_dialog import IDialog
 from pyface.api import Dialog
@@ -30,21 +31,6 @@ from pyface.constant import OK as PyfaceOK
 from pyface.api import GUI, FileDialog, DirectoryDialog
 
 import synbio_flowtools as sf
-
-class ExperimentSetupAdapter(TabularAdapter):
-    """ 
-    The tabular adapter interfaces between the tabular editor and the data 
-    being displayed. For more details, please refer to the traitsUI user guide. 
-    """
-    # List of (Column labels, Column ID).
-    columns = [ ('Name',  'Name')]
-    
-    #column_menu = Menu(Action(name = "Add...", 
-    #                          action = 'handler._on_add(object, column, info)',
-    #                          enabled_when = 'column == 0'))
-    
-    column_menu = Menu(Action(name = "Delete",
-                              action = 'handler._on_delete_column(object, column, info)'))
     
 class Tube(HasTraits):
     """
@@ -95,29 +81,26 @@ class ExperimentSetup(HasTraits):
     tubes = List(Tube)
 
     # traits to communicate with the TabularEditor
-    col_clicked = Instance(TabularEditorEvent)
     update = Bool
     refresh = Bool
     selected = List
     
-    tube_metadata = {}
+    handler = Instance('ExperimentHandler')
     
-    adapter = ExperimentSetupAdapter()
+    #tube_metadata = {}
 
     view = View(
         Group(
             Item('tubes', 
                  id = 'table', 
-                 editor = TabularEditor(adapter = adapter,
-                                        operations = ['edit'],
-                                        multi_select = True,
-                                        auto_update = True,
-                                        auto_resize = True,
-                                        #auto_resize_rows = True,
-                                        column_clicked = "col_clicked",
-                                        update = "update",
-                                        refresh = "refresh",
-                                        selected = "selected")),
+                 editor = TableEditor(editable = True,
+                                      sortable = True,
+                                      auto_size = True,
+                                      configurable = False,
+                                      selection_mode = 'cells',
+                                      selected = 'selected',
+                                      columns = [ObjectColumn(name = 'Name')],
+                                      )),
             show_labels = False
         ),
         title     = 'Experiment Setup',
@@ -131,9 +114,13 @@ class ExperimentHandler(Controller):
     
     dialog = Instance(IDialog)
     
+    # keep around a ref to the underlying widget so we can add columns dynamically
+    table_editor = Instance(TableEditorQt)
+    
     def init(self, info):
         # connect the model trait change events to the controller methods
-        self.model.on_trait_change(self._on_col_clicked, 'col_clicked')
+        # self.model.on_trait_change(self._on_col_clicked, 'col_clicked')
+        self.model.handler = self
         return True
     
     def _on_ok(self):
@@ -144,14 +131,6 @@ class ExperimentHandler(Controller):
         
     def _on_delete_column(self, obj, column, info):
         pass
-        
-    def _on_col_clicked(self, click_event): 
-        """
-        When a column is clicked, sort the table values by that column.
-        """
-        
-        sort_trait = self.model.adapter.columns[click_event.column][1]
-        self.model.tubes.sort(key = lambda x: x.trait_get([sort_trait]))
         
     def _on_add_condition(self):
         """
@@ -231,27 +210,19 @@ class ExperimentHandler(Controller):
             tube.on_trait_change(self._try_multiedit, '+')
             self.model.tubes.append(tube)
             
-    def _try_multiedit(self, obj, name, old, new):
-        print "trait changed"
-        print "selected:"
-        print self.model.selected
+    def _try_multiedit(self, obj, name, old, new):        
+        for tube, trait_name in self.model.selected:
+            if tube != obj:
+                tube.trait_set( **dict([(trait_name, new)]))
         
     def _add_metadata(self, meta_name, meta_type):
         
-        if not meta_name in self.model.tube_metadata:
-            Tube.add_class_trait(meta_name, meta_type)
-            self.model.tube_metadata[meta_name] = meta_type
+        if not meta_name in Tube.class_trait_names():
+            Tube.add_class_trait(meta_name, meta_type)       
+            self.table_editor.columns.append(ObjectColumn(name = meta_name))
             
-            # should be able to do this....
-            #self.model.adapter.columns.append( (meta_name, meta_name))
-            #self.model.refresh = True
-
-            # ...but instead have to force the adapter to update label_map
-            c = self.model.adapter.columns
-            c.append( (meta_name, meta_name) )
-            self.model.adapter.columns = c
-            
-            # TODO - fix the column width weirdness.
+        for tube in self.model.tubes:
+            tube.on_trait_change(self._try_multiedit, meta_name)
         
 @provides(IDialog)
 class ExperimentSetupDialog(Dialog):
@@ -342,7 +313,7 @@ class ExperimentSetupDialog(Dialog):
                                          parent=parent, 
                                          handler=self.handler)   
         
-        #tab_control = self.ui.get_editors('tubes')[0].control
+        self.handler.table_editor = self.ui.get_editors('tubes')[0]
   
         # turn off row-only selection
         #tab_control.setSelectionBehavior(QtGui.QAbstractItemView.SelectItems)
