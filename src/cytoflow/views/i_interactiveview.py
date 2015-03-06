@@ -4,7 +4,7 @@ Created on Mar 3, 2015
 @author: brian
 """
 from traits.api import Interface, Instance, provides
-from synbio_flowtools.views.i_view import IView
+from cytoflow.views.i_view import IView
 
 class IInteractiveView(IView):
     """

@@ -4,11 +4,11 @@ Created on Feb 9, 2015
 @author: brian
 '''
 
-from ..experiment import Experiment
+from cytoflow import Experiment
 from traits.api import HasTraits, CFloat, Str
 import pandas as pd
 from traits.has_traits import provides
-from synbio_flowtools.operations.i_operation import IOperation
+from cytoflow.operations.i_operation import IOperation
 
 @provides(IOperation)
 class ThresholdOp(HasTraits):

@@ -6,8 +6,8 @@ Created on Mar 3, 2015
 
 from traits.api import provides, HasTraits, Instance, Float
 
-from synbio_flowtools.views.i_interactiveview import IInteractiveView
-from synbio_flowtools.views.i_view import IView
+from cytoflow.views.i_interactiveview import IInteractiveView
+from cytoflow.views.i_view import IView
 
 from matplotlib.widgets import SpanSelector
 import matplotlib.pyplot as plt
