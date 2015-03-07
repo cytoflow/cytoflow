@@ -1,36 +1,12 @@
-"""
-Created on Feb 16, 2015
-
-@author: brian
-
-
-Refs:
-A new "Logicle" display method avoids deceptive effects of logarithmic scaling 
-for low signals and compensated data.
-Parks DR, Roederer M, Moore WA.
-Cytometry A. 2006 Jun;69(6):541-51.
-PMID: 16604519
-http://onlinelibrary.wiley.com/doi/10.1002/cyto.a.20258/full
-
-and 
-
-Update for the logicle data scale including operational code implementations.
-Moore WA, Parks DR.
-Cytometry A. 2012 Apr;81(4):273-7. doi: 10.1002/cyto.a.22030. Epub 2012 Mar 12. 
-PMID: 22411901
-http://onlinelibrary.wiley.com/doi/10.1002/cyto.a.22030/full
-"""
-
 from traits.api import HasTraits, provides, Str, ListStr, Float, DictStrFloat
 from logicle_ext.Logicle import Logicle
 from .i_operation import IOperation
 from ..experiment import Experiment
-import math, copy
+import math
 
 @provides(IOperation)
 class LogicleTransformOp(HasTraits):
-    """
-    An implementation of the Logicle scaling method.
+    """An implementation of the Logicle scaling method.
     
     This scaling method implements a "linear-like" region around 0, and a
     "log-like" region for large values, with a very smooth transition between
@@ -38,26 +14,51 @@ class LogicleTransformOp(HasTraits):
     "negative" events (events with a fluorescence of ~0.)
     
     If you don't have any data around 0, you might be better of with a more
-    traditional log scale.
+    traditional log scale or a Hyperlog.
     
-    Attributes:
-        name(string): the name of this operation
-        channels(list of strings): the channels on which to apply the operation
-        T(dict str->float): for each channel, the maximum data value for this
-            channel.  On a BD instrument, 2^18.
-        W(dict str->float): for each channel, the width of the linear range,
-            in log10 decades.  can estimate, or use a fixed value like 0.5.
-        A(dict str->float): for each channel, additional decades of negative
-            data to include.  the display usually captures all the data, so 0
-            is fine to start.
-        r(float): if estimating W, the quantile of negative data used to estimate
-            W.  default 0.05 is a good choice.
-            
-    Functions:
-        estimate(experiment): after setting channels, M and r, choose 
-            parameters T, W and A for each channel.
-        apply(experiment): applies this transformation to experiment.
-            returns a new experiment.
+    .. warning: THIS CODE CURRENTLY CALLS A SWIG-WRAPPED C++ LIBRARY (from
+                the second reference, below.)  Because I haven't figured
+                out the distribution/packaging issues yet, it is currently
+                NOT imported when you `import cytoflow`.  If you want to
+                try it (it's cool!), edit __init__.py and uncomment the
+                `import Logicle....` line; and then you'll have to build the
+                C++ sources (included in the repo.)
+    
+    Attributes
+    ----------
+    name : Str 
+        the name of this operation
+    channels : ListStr 
+        the channels on which to apply the operation
+    T : dict(Str : float)
+        for each channel, the maximum data value for this channel.  
+        On a BD instrument, 2^18.
+    W : dict(Str : float)
+        for each channel, the width of the linear range, in log10 decades.  
+        can estimate, or use a fixed value like 0.5.
+    A : dict(Str : float) 
+        for each channel, additional decades of negative data to include.  
+        the display usually captures all the data, so 0 is fine to start.
+    r : Float
+        if estimating W, the quantile of negative data used to estimate W.  
+        default 0.05 is a good choice.
+        
+    References
+    ----------
+    [1] A new "Logicle" display method avoids deceptive effects of logarithmic 
+        scaling for low signals and compensated data.
+        Parks DR, Roederer M, Moore WA.
+        Cytometry A. 2006 Jun;69(6):541-51.
+        PMID: 16604519
+        http://onlinelibrary.wiley.com/doi/10.1002/cyto.a.20258/full
+        
+    [2] Update for the logicle data scale including operational code 
+        implementations.
+        Moore WA, Parks DR.
+        Cytometry A. 2012 Apr;81(4):273-7. 
+        doi: 10.1002/cyto.a.22030 
+        PMID: 22411901
+        http://onlinelibrary.wiley.com/doi/10.1002/cyto.a.22030/full
     """
     
     #traits
@@ -72,7 +73,25 @@ class LogicleTransformOp(HasTraits):
     r = Float(0.05,
               desc = "quantile to use for estimating the W parameter.")
     
-    def estimate(self, experiment):
+    def estimate(self, experiment, subset = None):
+        """Estimate T, A and W per-channel from the data (given r.)
+        
+        Actually, that's not quite right.  Set T based on the maximum value in
+        the FCS metadata; set A to 0.0; and estimate W given r.
+        
+        Parameters
+        ----------
+        experiment : Experiment
+            the Experiment to use when estimating T, A and W.
+        
+        subset : string
+            the subset of the Experiment to use; passed to 
+            pandas.DataFrame.query()
+        """
+        
+        if subset:
+            experiment = experiment.query(subset)
+        
         for channel in self.channels:
             # get the maximum range for T
             # should be the same for each tube, so we'll just suck it off
@@ -96,9 +115,7 @@ class LogicleTransformOp(HasTraits):
                                    "Try a regular log10 transform instead.")
     
     def apply(self, old_experiment):
-        """
-        Applies the Logicle transform to channels
-        """
+        """Applies the Logicle transform to channels"""
         
         # TODO - a little basic checking to make sure that T, W, M, A are
         # set for each channel, and okay (mirroring Logicle.cpp's initialize()
@@ -118,3 +135,7 @@ class LogicleTransformOp(HasTraits):
             new_experiment.channel_metadata[channel]["xforms"].append(el)
             
         return new_experiment
+    
+    def validate(self, experiment):
+        """ Validate this transformation against an experiment"""
+        raise NotImplementedError
