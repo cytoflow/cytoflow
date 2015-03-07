@@ -1,9 +1,9 @@
-####CytoFlow
-###Python tools for quantitative, reproducible flow cytometry analysis
+#CytoFlow
+##Python tools for quantitative, reproducible flow cytometry analysis
 
 Welcome to a different style of flow cytometry analysis.  
 
-## What's wrong with other packages?  
+### What's wrong with other packages?  
 
 Packages such as FACSDiva and FlowJo are focused on primarily on identifying
 and counting subpopulations of cells in a multi-channel flow cytometry
@@ -19,7 +19,7 @@ sum fluorescence of a population of cells, the cytometer shows you the
 and how those distributions change as you vary an experimental variable, is
 something existing packages don't handle gracefully.
 
-## What's different about CytoFlow?
+### What's different about CytoFlow?
 
 A few things.
 
