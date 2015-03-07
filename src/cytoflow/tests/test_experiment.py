@@ -7,7 +7,7 @@ Created on Feb 10, 2015
 import unittest
 
 import FlowCytometryTools as fc
-import synbio_flowtools as sf
+import cytoflow as flow
 
 class TestExperiment(unittest.TestCase):
     """
@@ -15,7 +15,7 @@ class TestExperiment(unittest.TestCase):
     """
 
     def setUp(self):
-        self.ex = sf.Experiment()
+        self.ex = flow.Experiment()
         self.ex.add_conditions({"time" : "float"})
         self.tube1 = fc.FCMeasurement(ID='Test 1',
                                       datafile='data/Plate01/RFP_Well_A3.fcs')

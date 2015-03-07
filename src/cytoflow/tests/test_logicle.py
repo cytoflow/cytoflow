@@ -1,12 +1,12 @@
 import unittest
 
 import FlowCytometryTools as fc
-import synbio_flowtools as sf
+import cytoflow as flow
 
 class TestLogicle(unittest.TestCase):
     
     def setUp(self):
-        self.ex = sf.Experiment()
+        self.ex = flow.Experiment()
         self.ex.add_conditions({"time" : "float"})
         self.tube1 = fc.FCMeasurement(ID='Test 1',
                                       datafile='data/Plate01/RFP_Well_A3.fcs')
@@ -20,7 +20,7 @@ class TestLogicle(unittest.TestCase):
         Test the parameter estimator against the R implementation
         """
                
-        el = sf.LogicleTransformOp()
+        el = flow.LogicleTransformOp()
         el.name = "Logicle"
         el.channels = ["Y2-A"]
         
@@ -38,7 +38,7 @@ class TestLogicle(unittest.TestCase):
         Make sure the function applies without segfaulting
         """
         
-        el = sf.LogicleTransformOp()
+        el = flow.LogicleTransformOp()
         el.name = "Logicle"
         el.channels = ['Y2-A']
         

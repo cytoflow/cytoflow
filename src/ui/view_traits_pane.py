@@ -1,6 +1,6 @@
 from traits.api import Instance
 from traitsui.api import UI
-from synbio_flowtools.views.i_view import IView
+from cytoflow.views.i_view import IView
 from pyface.tasks.dock_pane import DockPane
 
 class ViewTraitsDockPane(DockPane):
@@ -13,7 +13,7 @@ class ViewTraitsDockPane(DockPane):
     id = 'edu.mit.synbio.view_traits_pane'
     name = 'View Properties'
 
-    # the synbio_flowtools visualizer whose traits we're showing
+    # the cytoflow visualizer whose traits we're showing
     view = Instance(IView)
 
     # the UI object associated with the Traits view
