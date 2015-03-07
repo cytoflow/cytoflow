@@ -1,5 +1,23 @@
+Project Structure
+-----------------
 
-a few design notes:
+The source is organized into two main components.
+
+* The *cytoflow* package.  This package contains the actual tools for 
+  operating on cytometry data.  Key modules and subpackages:
+  * The *Experiment* class is the primary container for cytometry data.
+    See the module docstrings for its use.  Modify this class's API
+    only with care, please!
+  * The *operations* subpackage.  This is where operations on data go,
+    like transformations and gates.
+  * The *views* subpackage.  This is where visualizations go.  These can
+    be traditional visualizations (dotplots, histograms); or statistical
+    summary views (bar plots of population means).
+
+* The *gui* directory.  Implements the GUI.  (Duh.)
+
+A few design notes
+------------------
 
  - want to export an IPython notebook of the analysis.  both for easy human-
    readable record-keeping, and also because it's the ultimate in 
@@ -60,7 +78,7 @@ a few design notes:
      - Create a view of the result
      
  - views
-   * each view draws to either a WxAgg canvas or the IPython notebook
+   * each view draws to either a QtAgg canvas or the IPython notebook
    * for each view
      - plot-type specifies what to be done with channels 
        * ie, specify one channel for a histogram; two for an xy plot

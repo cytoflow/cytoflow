@@ -53,7 +53,32 @@ A few things.
   analysis, such as fitting 2-dimensional Gaussians for automated gating
   and mixture modelling.
 
-## 
+### Required packages
+
+This will soon go into a `setuptools` spec. (TODO!)
+
+For the core `cytotools` library, you need the following Python packages:
+```
+python >= 2.7
+pandas >= 0.15.0
+numexpr >= 2.1
+seaborn >= 0.5.0
+traits >= 4.0
+FlowCytometryTools  >= 0.4.0
+```
+
+For the GUI, you additionally need:
+```
+pyface >= 4.0
+```
+
+Note that many of these packages have additional dependencies, including
+but not limited to `matplotlib`, `numpy`, `traits`, `decorator`, etc.
+I'm pretty sure that they're all well-behaved PyPI packages; you should be
+able to install all the above with `pip install` or the Canopy package manager.
+
+**I am a Linux user, and installing these packages is quite easy for me.
+I think it may be harder for Mac and Windows users; please write an 
+install guide to help those that come after!**
 
 
- 
