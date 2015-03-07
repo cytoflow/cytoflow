@@ -1,31 +1,34 @@
-"""
-Created on Feb 10, 2015
-
-@author: brian
-"""
-
-
-from cytoflow import Experiment
-from traits.api import HasTraits, Str, Instance, provides
-import pandas as pd
-import matplotlib as mpl
+from traits.api import HasTraits, Str, provides
 import matplotlib.pyplot as plt
 import seaborn as sns
 from cytoflow.views.i_view import IView
 
 @provides(IView)
 class HistogramView(HasTraits):
-    """
-    Plots a one-channel histogram
+    """Plots a one-channel histogram
     
-    Traits:
-        name: The HistogramView name (for serialization, etc.)
-        channel: the flow channel we're plotting
-        xfacet: the conditioning variable for multiple plots (horizontal)
-        yfacet: the conditioning variable for multiple plots (vertical)
-        huefacet: the conditioning variable for multiple plots (color)
-        subset: a string passed to pandas.DataFrame.query() to subset the
-            data before we plot it.
+    Attributes
+    ----------
+    name : Str
+        The HistogramView name (for serialization, UI etc.)
+    
+    channel : Str
+        the name of the channel we're plotting
+    
+    xfacet : Str 
+        the conditioning variable for multiple plots (horizontal)
+    
+    yfacet : Str
+        the conditioning variable for multiple plots (vertical)
+    
+    huefacet : Str
+        the conditioning variable for multiple plots (color)
+        
+    subset : Str
+        a string passed to pandas.DataFrame.query() to subset the data before 
+        we plot it.
+        
+        .. note: Should this be a param instead?
     """
     
     # traits    
@@ -37,9 +40,7 @@ class HistogramView(HasTraits):
     subset = Str
     
     def plot(self, experiment, **kwargs):
-        """
-        Plot a faceted histogram view of a channel
-        """
+        """Plot a faceted histogram view of a channel"""
         
         kwargs.setdefault('histtype', 'stepfilled')
         kwargs.setdefault('alpha', 0.5)
@@ -50,7 +51,6 @@ class HistogramView(HasTraits):
         else:
             x = experiment.query(self.subset)
 
-        # FacetGrid makes its own figure
         g = sns.FacetGrid(x, 
                           col = (self.xfacet if self.xfacet else None),
                           row = (self.yfacet if self.yfacet else None),
@@ -59,6 +59,6 @@ class HistogramView(HasTraits):
         g.map(plt.hist, self.channel, **kwargs)
         
         
-            
-        
+    def validate(self, experiment):
+        """Validate this view against an experiment."""
     

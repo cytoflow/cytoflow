@@ -16,5 +16,9 @@ from experiment import Experiment
 from operations.threshold import ThresholdOp
 from operations.hlog import HlogTransformOp
 from views.histogram import HistogramView
-from views.range_selector import RangeSelector
-from operations.logicle import LogicleTransformOp
+from cytoflow.views.range_selection import RangeSelection
+
+try:
+    from operations.logicle import LogicleTransformOp
+except ImportError:
+    pass
