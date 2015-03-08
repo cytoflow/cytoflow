@@ -3,3 +3,4 @@ pandas>=0.15.0
 numexpr>=2.1
 seaborn>=0.5.0
 pyface>=4.0
+FlowCytometryTools>=0.4.0
