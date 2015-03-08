@@ -14,11 +14,11 @@ def read(*filenames, **kwargs):
             buf.append(f.read())
     return sep.join(buf)
 
-long_description = read('README.md')
+long_description = read('README.rst')
 
 setup(
     name = "cytoflow",
-    version = "0.1.0",
+    version = "0.1.2",
     packages = find_packages(),
     include_package_data=True,
     
@@ -31,7 +31,7 @@ setup(
                         'pyface>=4.0'],
                         
                         # ALSO requires PyQt4 >= 4.10, but that's not available
-                        # via distutils
+                        # via distutils.  Install it locally!
                         
     # try to build the Logicle extension
     ext_modules = [Extension("cytoflow.operations.logicle_ext.Logicle",
@@ -65,6 +65,4 @@ setup(
                  'Topic :: Scientific/Engineering :: Bio-Informatics'],
     
     entry_points={'gui_scripts' : ['cytoflow = cytoflowgui:run_gui']}
-    
-    # could also include long_description, download_url, classifiers, etc.
 )
