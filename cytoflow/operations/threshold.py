@@ -63,7 +63,7 @@ class ThresholdOp(HasTraits):
             
         return new_experiment
     
-    def getDefaultView(self, experiment):
+    def default_view(self, experiment):
         """Returns a histogram view with the threshold highlighted."""
         raise NotImplementedError
     

@@ -62,7 +62,7 @@ class IOperation(Interface):
                 the old Experiment with this operation applied
         """
     
-    def getDefaultView(self, experiment):
+    def default_view(self, experiment):
         """Get an IView suited to viewing the results of this operation.
         
         Parameters
