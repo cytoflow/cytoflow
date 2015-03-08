@@ -1,5 +1,5 @@
 from __future__ import print_function
-from setuptools import setup, find_packages
+from setuptools import setup, find_packages, Extension
 import io
 import os
 
@@ -32,11 +32,13 @@ setup(
                         
                         # ALSO requires PyQt4 >= 4.10, but that's not available
                         # via distutils
-      
-    #include_package_data = True,
-    #package_data = {
-    #    '': ['*.txt', '*.rst', '*.md', '*.fcs'],
-    #},
+                        
+    # try to build the Logicle extension
+    ext_modules = [Extension("cytoflow.operations.logicle_ext.Logicle",
+                            ["cytoflow/operations/logicle_ext/FastLogicle.cpp",
+                             "cytoflow/operations/logicle_ext/Logicle.cpp",
+                             "cytoflow/operations/logicle_ext/Logicle.i"],
+                             swig_opts=['-c++'])],
 
     # metadata for upload to PyPI
     author = "Brian Teague",

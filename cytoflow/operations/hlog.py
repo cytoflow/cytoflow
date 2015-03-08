@@ -1,6 +1,6 @@
 from FlowCytometryTools.core.transforms import Transformation
-from traits.api import Instance, HasTraits, Str, ListStr, provides
-from ..experiment import Experiment
+from traits.api import HasTraits, Str, ListStr, provides
+from ..experiment import Experiment 
 from .i_operation import IOperation
 
 @provides(IOperation)
