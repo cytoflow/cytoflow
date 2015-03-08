@@ -20,8 +20,8 @@ setup(
     name = "cytoflow",
     version = "0.1.0",
     packages = find_packages(),
-    #scripts = ['say_hello.py'],
-
+    include_package_data=True,
+    
     # Project uses reStructuredText, so ensure that the docutils get
     # installed or upgraded on the target machine
     install_requires = ['FlowCytometryTools>=0.4',
