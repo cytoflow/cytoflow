@@ -28,7 +28,10 @@ setup(
                         'pandas>=0.15.0',
                         'numexpr>=2.1',
                         'seaborn>=0.5.0',
-                        'traits>=4.0'],
+                        'pyface>=4.0'],
+                        
+                        # ALSO requires PyQt4 >= 4.10, but that's not available
+                        # via distutils
       
     #include_package_data = True,
     #package_data = {
@@ -43,6 +46,23 @@ setup(
     license = "GPLv3",
     keywords = "flow cytometry scipy",
     url = "https://github.com/bpteague/cytoflow", 
+    classifiers=[
+                 'Development Status :: 2 - Pre-Alpha',
+                 'Environment :: Console',
+                 'Environment :: MacOS X',
+                 'Environment :: Win32 (MS Windows)',
+                 'Environment :: X11 Applications :: Qt',
+                 'Intended Audience :: Science/Research',
+                 'License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)',
+                 'Natural Language :: English',
+                 'Operating System :: MacOS',
+                 'Operating System :: Microsoft :: Windows',
+                 'Operating System :: POSIX :: Linux',
+                 'Programming Language :: Python :: 2.7',
+                 'Programming Language :: Python :: Implementation :: CPython',
+                 'Topic :: Scientific/Engineering :: Bio-Informatics'],
+    
+    entry_points={'gui_scripts' : ['cytoflow = cytoflowgui:run_gui']}
     
     # could also include long_description, download_url, classifiers, etc.
 )

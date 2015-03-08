@@ -11,7 +11,7 @@ from pyface.api import GUI
 from pyface.tasks.api import TaskWindow
 from flow_task import FlowTask
 
-if __name__ == '__main__':
+def run_gui():
     gui = GUI()
     
     # create a Task and add it to a TaskWindow
@@ -21,4 +21,7 @@ if __name__ == '__main__':
     
     window.open()
     
-    gui.start_event_loop()
+    gui.start_event_loop()    
+
+if __name__ == '__main__':
+    run_gui()
