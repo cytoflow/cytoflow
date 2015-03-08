@@ -1,6 +1,5 @@
-from setuptools import setup, find_packages
-
 from __future__ import print_function
+from setuptools import setup, find_packages
 import io
 import os
 
