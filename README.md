@@ -1,7 +1,8 @@
 #CytoFlow
 ##Python tools for quantitative, reproducible flow cytometry analysis
 
-Welcome to a different style of flow cytometry analysis.  
+Welcome to a different style of flow cytometry analysis.  For a quick demo,
+check out [an example IPython notebook](http://nbviewer.ipython.org/github/bpteague/cytoflow/blob/master/doc/examples/Basic%20Cytometry.ipynb)
 
 ### What's wrong with other packages?  
 
@@ -43,15 +44,20 @@ A few things.
 * **Good visualization.**  I don't know about you, but I'm getting really
   tired of FACSDiva plots.
 
-* **Powerful and extensible.**  Built on Python, with a well-defined
+* **Versatile.**  Built on Python, with a well-defined
   library of operations and visualizations that are well separated from
-  the user interface.  Need new functionality?  Export your workflow to
-  an IPython notebook and use any Python module you want to complete
-  your analysis.
+  the user interface.  Need an analysis that CytoFlow doesn't have?  Export 
+  your workflow to an IPython notebook and use any Python module you want to 
+  complete your analysis.  Data is stored in a pandas.DataFrame, which is 
+  rapidly becoming the standard for Python data management (and will make R
+  users feel right at home.)
+  
+* **Extensible.**  Adding a new analysis module is simple; the interface to
+  implement is only four functions.
 
 * **Statistically sound.** Ready access to useful data-driven tools for
   analysis, such as fitting 2-dimensional Gaussians for automated gating
-  and mixture modelling.
+  and mixture modeling.
 
 ### Required packages
 
@@ -70,15 +76,16 @@ FlowCytometryTools  >= 0.4.0
 For the GUI, you additionally need:
 ```
 pyface >= 4.0
+pyqt >= 4.10
 ```
 
 Note that many of these packages have additional dependencies, including
-but not limited to `matplotlib`, `numpy`, `traits`, `decorator`, etc.
+but not limited to `matplotlib`, `numpy`, `traitsui`, `decorator`, etc.
 I'm pretty sure that they're all well-behaved PyPI packages; you should be
 able to install all the above with `pip install` or the Canopy package manager.
 
-**I am a Linux user, and installing these packages is quite easy for me.
-I think it may be harder for Mac and Windows users; please write an 
-install guide to help those that come after!**
+**Please note:** I am a Linux user, and installing these packages is quite easy 
+for me.  It may be harder for Mac and Windows users; please write an 
+install guide to help those that come after!
 
 

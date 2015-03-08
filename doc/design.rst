@@ -3,145 +3,45 @@ Project Structure
 
 The source is organized into two main components.
 
-* The *cytoflow* package.  This package contains the actual tools for 
-  operating on cytometry data.  Key modules and subpackages:
-  * The *Experiment* class is the primary container for cytometry data.
-    See the module docstrings for its use.  Modify this class's API
-    only with care, please!
-  * The *operations* subpackage.  This is where operations on data go,
-    like transformations and gates.
-  * The *views* subpackage.  This is where visualizations go.  These can
-    be traditional visualizations (dotplots, histograms); or statistical
-    summary views (bar plots of population means).
+* The *cytoflow* package.  This package contains the actual tools for operating on cytometry data.  Key modules and subpackages:
+
+  * The *Experiment* class is the primary container for cytometry data. See the module docstrings for its use.  Modify this class's API only with care, please!
+  * The *operations* subpackage.  This is where operations on data go, like transformations and gates.
+  * The *views* subpackage.  This is where visualizations go.  These can be traditional visualizations (dotplots, histograms); or statistical summary views (bar plots of population means).
+  * A *utility* subpackage.  Not much here at the moment; but if we move the FCS reading code etc. locally, then that will all go here.
 
 * The *gui* directory.  Implements the GUI.  (Duh.)
 
-A few design notes
-------------------
 
- - want to export an IPython notebook of the analysis.  both for easy human-
-   readable record-keeping, and also because it's the ultimate in 
-   extensibility: if the tool doesn't do what you want, use it for basic
-   setup and data transformation, then use pure IPython to do what you need.
-   
- - this makes the internal API really important: it has to be easy, intuitive
-   and "pythonic" to 
-   * get at data
-   * apply operations to data
-   * view / plot data
-   
- - this probably means that the "internal" API is the same as the "external"
-   API - ie, we're writing a package/library to analyze flow data, and then
-   a nice UI around it.
-   
- - in a perfect world, the execution of the analysis pipeline would be exactly
-   the same python code (via exec()) as what's outputted to the notebook.
-   
- - data representation:
-   * invariants:
-     - each tube or well was collected with the same channels and cytometer 
-       settings
-       (verify this on import!)
-     - the number of events in an experiment never changes size.
-   * an Experiment is a smart pandas DataFrame:
-     - an Experiment begins as a concatenation of all of the events 
-       in all of the tubes/wells
-       * each channel is a column of dtype=float64
-     - additional metadata is specified in additional columns
-       * metadata can be numeric: ie, ex[ex['Dox'] == 0.5]
-       * metadata can be categorical: ie, ex[ ex['Row'] == 'A' ]
-     - allows for easy subsetting and plotting.
-   * Experiments have operations applied to them; the application of an 
-     operation to one experiment returns a new experiment
-     - this allows Experiments to be smart about memory management:
-       * a gate returns an Experiment that looks like the old one, but with an
-         additional column of metadata describing population membership
-       * a transformation returns an Experiment the same as the old one, but 
-         with the transformed channels replacing the old columns (named the
-         same)
-   * Experiments are versioned
-     - print( ex.version() )   # 1
-       op = Transform(params)
-       ex = ex.apply(op)
-       print( ex.version() )  # 2
-     - version #1 keeps a link to version #2
-       * allows for invalidation; if #1 gets changed, #1 can invalidate #2
-   * experiments keep track of useful data for plotting
-     - ie, if you do a transformation, the experiment keeps track of the
-       transform parameters so a view can draw axes appropriately.
-       
- - basic workflow:
-   * data import; creation of Experiment ex.
-   * for each operation:
-     - Create and parameterize the operation
-     - Apply the operation
-     - Create a view of the result
-     
- - views
-   * each view draws to either a QtAgg canvas or the IPython notebook
-   * for each view
-     - plot-type specifies what to be done with channels 
-       * ie, specify one channel for a histogram; two for an xy plot
-     - for each metadata column (not including plate pos!)
-       * use to specify either a data subset or a plot grouping
-       * if subset
-         - if numerical, specify a range (with sliders)
-         - if categorical, draw on/off buttons for categories
-       * if plot grouping, use variable to specify plot params
-         - x and y trellis: multiple plots with different vars
-         - group: multiple lines or colors on a plot
-   * view parameters exposed as Traits (to make UI easy)
-   * Types of view:
-     - histogram
-       * param: channel for x axis; 
-       * param: x trellis (meta or off)
-       * param: y trellis (meta or off)
-       * param: color (meta or off)
-       * make sure to set a reasonable alpha transparency
-     - xy plot (sns hexplot)
-       * param: channel for x axis;
-       * param: channel for y axis; 
-       * param: x trellis (meta or off)
-       * param: y trellis (meta or off)
-       * param: color (meta or backgating or off)
-         - if "backgating" - uh ..... ?
-     - binned xy plot
-       * same as above
-     - bar graphs
-       * param: statistic you're measuring
-       * param: x axis (meta)
-       * param: group (meta or off)
-       * param: x trellis (meta or off)
-       * param: y trellis (meta or off)
-     - stats xy plot
-       * param: x statistic
-       * param: y statistic
-       * param: x axis (meta)
-       * param: y axis (meta)
-       * param: group (meta or off)
-       
- - operations
-   * an operation is instantiated with parameters, then applied to an Experiment
-     - an operation's parameters may include an Experiment, if it's data-driven
-       (eg, a data-driven gating, mixture modelling, etc.)
-   * an operation may return a default view based on the type of operation
-     - ie, a range gate may return a histogram; 
-       a poly or quad gate will return an xy plot
-     - if this view has additional visual elements, it will be a subclass
-       of the regular view.  this will also allow tighter integration with
-       the operation, ie. to fix particular parameters.
-     - for example, a 1D gate operation will have a default view with the
-       gate drawn on top of it
-   * interactivity
-     - interactive default views will have a transparent widget drawn on top
-       of them
-     - manipulating the widget will update the view and the parameterization
-       of the operation
-   * operations
-     - transformations
-     - gates (user-drawn)
-     - gates (data-driven)
-     - mixture models
-     - color model determination
-     - color model application
-     - bleedthrough correction  
+Design decisions & justifications
+---------------------------------
+* Cytometry analysis as a workflow.  I think this is kind of obvious; it just formalizes the way of doing things that everyone else pretty much already uses.
+
+* Instead of keeping "tubes" or "wells" as first-class objects, represent all the events from all the samples as a big long DataFrame, distinguising events from different tubes via their varying experimental conditions.  Most of my flow analysis experience is with the R Bioconductor package's flowCore, which treats tubes as first-class objects akin to separate microarrays.  That's fine if you've got just a few tubes (or a few microarrays), but it rapidly gets cumbersome if you've got multiple plates of samples, each plate of which has two or three experimental variables; I ended up spending more time and code specifying metadata than I did actually doing analysis.
+ 
+  Cytoflow pushes the metadata down to the event label, doing away entirely with the concept of tubes or wells (after you get your data imported, of course.)  This hews much more closely to Hadley Wickham's concept of `Tidy Data <http://vita.had.co.nz/papers/tidy-data.pdf>`_, and is also (!) much easier to vectorize computations on using ``pandas`` and ``numpy`` and ``numexpr``. Multicore FTW.  Now, you can access all the events that are, say Dox-induced, by just saying ``experiment['Dox']`` without having to keep track of which tubes are induced and which weren't.
+
+  (Note: if you have tubes that are replicates, just add another experimental condition, perhaps called "replicate".  You can specify that condition to the statistics views to get a standard error.)
+
+* Gates don't actually subset data (delete or copy it); they just add metadata. I struggled for a long time with the question of how to store and manipulate different subsets of data after gating.  Again, my own experience is with Bioconductor's flowCore, which defines a tree structure by data that is included or excluded by gates; if a node is a gate, then its children are the subpopulations produced by that gate. Navigating that tree, though, is really difficult, especially if you want to re-combine data after gating (for plotting, for example.)
+
+  Then there was the issue of how to track and manipulate this structure as additional operations were performed.  Keep just a single copy and operate on it in-place?  Or copy the output of one operation for the input of the next, with the space penalties that implies?
+
+  I finally realized I didn't have to choose; when you copy a pandas.DataFrame, you get a "shallow" copy, with the actual data just linked to by reference.  This was perfect; if I needed to transform the data from one copy to another, I could just replace the transformed channels; and "gating" events didn't have to create new subsets or containers, it could just add another column specifying the gate membership of each event.
+
+* As is made pretty clear in the example IPython notebook, the semantics for views and operations are
+
+  1. Instantiate a new operation or view 
+
+  2. Parameterize the operation or view (possibly by estimating parameters from a provided data set. 
+
+  3. Apply the operation or view to an Experiment. If applying an operation,
+     apply() returns a new Experiment. 
+
+  The justification for these semantics is that it makes the *state* of the interacting objects really obvious.  An operation or view's state doesn't depend on the data it's applied to; if its parameters do depend on data, those parameters' estimation is a separate operation.  
+
+  It also allows for ready separation of the workflow from the data it's applied to, allowing for easy sharing of workflows. (Maybe.  I think.)
+
+* The module attributes have (mostly) been replaced by Traits.  See the `Traits documentation <http://docs.enthought.com/traits/>`_ for a good overview, but in short they give Python some of the benefits of statically typed languages like Java, without much of the mess that a fully statically typed language incurs.  Their power doesn't see a whole lot of use internal to the cytoflow package, but they make writing the GUI layer a **whole** lot easier.
+
+* The design of the views are strongly influenced by best-in-class statistics visualization packages from R: lattice and ggplot.  If your data is `tidy <http://vita.had.co.nz/papers/tidy-data.pdf>`_, then each experimental variable you want to plot differently so you can compare them is called a "facet". For example, a facet might be a timepoint or an inducer level (ie an experimental condition); it might also be some metadata added by an operation (ie gate membership or bin).  Then, you plot the dataset broken down in various ways by its facets: for example, each timepoint might be put on its own subplot, while each Dox level might be represented by a different color.  (Check out `the example IPython notebook <http://nbviewer.ipython.org/github/bpteague/cytoflow/blob/master/doc/examples/Basic%20Cytometry.ipynb>`_ if this is confusing.
