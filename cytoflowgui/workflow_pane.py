@@ -1,5 +1,11 @@
-"""
-Created on Feb 23, 2015
+from pyface.tasks.api import DockPane, IDockPane
+from traits.has_traits import provides
 
-@author: brian
-"""
+@provides(IDockPane)
+class WorkflowPane(DockPane):
+    
+    id = 'edu.mit.synbio.workflow_pane'
+    name = 'Workflow Pane'
+    
+    def create_contents(self, parent):
+        return QtGiu.QWidget(parent)
