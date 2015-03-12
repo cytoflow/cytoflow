@@ -30,9 +30,9 @@ class VerticalNotebookPage(HasPrivateTraits):
     data = Any
 
     # The HasTraits object whose traits we're viewing
-    model = Instance(HasTraits)
+    object = Instance(HasTraits)
 
-    # The name of the model trait that signals a page name change [Set by
+    # The name of the object trait that signals a page name change [Set by
     # client]:
     trait_name = Str
 
@@ -42,7 +42,7 @@ class VerticalNotebookPage(HasPrivateTraits):
     #-- Traits for use by the Notebook/Sizer -----------------------------------
 
     # The current open status of the notebook page:
-    is_open = Bool( False )
+    is_open = Bool(False)
 
     # The minimum size for the page:
     min_size = Property
@@ -70,17 +70,17 @@ class VerticalNotebookPage(HasPrivateTraits):
         """ Closes the notebook page. """
 
         if self.object is not None:
-            self.model.on_trait_change( self._name_updated, self.trait_name,
+            self.object.on_trait_change( self._name_updated, self.trait_name,
                                         remove = True )
-            self.model = None
+            self.object = None
 
         if self.ui is not None:
             self.ui.dispose()
             self.ui = None
         
         if self.closed_page is not None:
-            self.closed_page.control.Destroy()
-            self.open_page.control.Destroy()
+            self.closed_page = None
+            self.open_page = None
             self.control = None
         
     def set_size (self, x, y, w, h):
@@ -95,10 +95,10 @@ class VerticalNotebookPage(HasPrivateTraits):
             change.
         """
         # Save the information, so we can unregister it later:
-        self.model, self.trait_name = model, trait_name
+        self.object, self.trait_name = model, trait_name
  
         # Register the listener:
-        object.on_trait_change( self._name_updated, trait_name )
+        self.object.on_trait_change( self._name_updated, trait_name )
  
         # Make sure the name gets initialized:
         self._name_updated()
@@ -123,7 +123,7 @@ class VerticalNotebookPage(HasPrivateTraits):
     def _get_closed_size ( self ):
         """ Returns the closed size for the page.
         """
-        return self.closed_page.best_size
+        return self.closed_page.size
 
     @cached_property
     def _get_closed_page ( self ):
@@ -135,14 +135,12 @@ class VerticalNotebookPage(HasPrivateTraits):
     def _get_open_page ( self ):
         """ Returns the 'open' form of the notebook page.
         """
-        self.ui = self.edit_traits(kind='subpanel', 
-                                   parent=self.notebook.control)
-        return self.ui.control
+        return QtGui.QWidget(self.notebook.control)
 
     def _get_parent ( self ):
         """ Returns the parent window for the client's window.
         """
-        return self.open_page.control
+        return self.notebook.control
 
     #-- Trait Event Handlers ---------------------------------------------------
 
@@ -162,18 +160,19 @@ class VerticalNotebookPage(HasPrivateTraits):
     def _is_open_changed ( self, is_open ):
         """ Handles the 'is_open' state of the page being changed.
         """
-        self.closed_page.control.setVisible(not is_open)
-        self.open_page.control.setVisible(is_open)
+        self.closed_page.setVisible(not is_open)
+        self.open_page.setVisible(is_open)
 
         if is_open:
-            self.closed_page.control.resize(0, 0)
+            self.closed_page.resize(0, 0)
         else:
-            self.open_page.control.resize(0, 0)
+            self.open_page.resize(0, 0)
 
     def _name_changed ( self, name ):
         """ Handles the name trait being changed.
         """
-        self.closed_page.text = self.open_page.text = name
+        self.closed_page.setText(name)
+        #self.open_page.text = name
 
     def _name_updated ( self ):
         """ Handles a signal that the associated object's page name has changed.
@@ -252,7 +251,7 @@ class VerticalNotebook(HasPrivateTraits):
     #-- Private Traits ---------------------------------------------------------
 
     # The Qt control used to represent the notebook:
-    control = Instance( QtGui.QWidget)
+    control = Instance(QtGui.QWidget)
     layout = Instance(QtGui.QVBoxLayout)
 
     #-- Public Methods ---------------------------------------------------------
@@ -261,18 +260,21 @@ class VerticalNotebook(HasPrivateTraits):
         """ Creates the underlying Qt window used for the notebook.
         """
         
-        self.control = QtGui.QWidget(parent)
+        self.layout = QtGui.QVBoxLayout()
+        
         # Create the correct type of window based on whether or not it should
         # be scrollable:
         if self.scrollable:
-            scroll_area = QtGui.QScrollArea(parent)
-            self.control = QtGui.QWidget(scroll_area)
-            scroll_area.setWidget(self.control)
-        else:
-            self.control = QtGui.QWidget(parent)
+            self.control = QtGui.QScrollArea()
+            self.control.setFrameShape(QtGui.QFrame.NoFrame)
+            self.control.setWidgetResizable(True)
             
-        self.layout = QtGui.QVBoxLayout()
-        self.control.setLayout(self.layout)
+            panel = QtGui.QWidget()
+            panel.setLayout(self.layout)
+            self.control.setWidget(panel)
+        else:
+            self.control = QtGui.QWidget()
+            self.control.setLayout(self.layout)
 
         return self.control
 
@@ -349,15 +351,19 @@ class VerticalNotebook(HasPrivateTraits):
     def _refresh ( self ):
         """ Refresh the layout and contents of the notebook.
         """
-        control = self.control
-        if control is not None:
-            # Set the virtual size of the canvas (so scroll bars work right):
-            sizer = control.GetSizer()
-            if control.GetSize()[0] == 0:
-                control.SetSize( sizer.CalcInit() )
-            control.SetVirtualSize( sizer.CalcMin() )
-            control.Layout()
-            control.Refresh()
+        while self.layout.count() > 0:
+            self.layout.takeAt(0)
+            
+        for page in self.pages:
+            self.layout.addWidget(page.control)
+#         if control is not None:
+#             # Set the virtual size of the canvas (so scroll bars work right):
+#             sizer = control.GetSizer()
+#             if control.GetSize()[0] == 0:
+#                 control.SetSize( sizer.CalcInit() )
+#             control.SetVirtualSize( sizer.CalcMin() )
+#             control.Layout()
+#             control.Refresh()
 
 #-------------------------------------------------------------------------------
 #  'ThemedVerticalNotebookSizer' class:
@@ -365,7 +371,7 @@ class VerticalNotebook(HasPrivateTraits):
 
 # class ThemedVerticalNotebookSizer ( wx.PySizer ):
 #     """ Defines a sizer that correctly sizes a themed vertical notebook's
-#         children to implement the vertical notebook UI model.
+#         children to implement the vertical notebook UI object.
 #     """
 # 
 #     def __init__ ( self, notebook ):

@@ -3,6 +3,17 @@ Created on Mar 8, 2015
 
 @author: brian
 """
+
+from traits.etsconfig.api import ETSConfig
+
+ETSConfig.toolkit = 'qt4'
+
+import os
+os.environ['TRAITS_DEBUG'] = "1"
+
+from traits.api import HasTraits
+from traitsui.editors.list_editor import ListEditor
+
 from traitsui.basic_editor_factory import BasicEditorFactory
 from traits.api \
     import Bool, Any, List, Instance, Undefined, on_trait_change, Str
@@ -127,7 +138,7 @@ class _VerticalNotebookEditor(Editor):
             traits.
         """
         # Create a new notebook page:
-        page = self.notebook.create_page().set( data = object )
+        page = self.notebook.create_page().set(object = object)
 
         # Create the Traits UI for the object to put in the notebook page:
         ui = object.edit_traits( parent = page.parent,
@@ -195,3 +206,34 @@ class VerticalNotebookEditor(BasicEditorFactory):
     # Name of the trait to synchronize notebook page
     # selection with:
     selected = Str
+    
+if __name__ == '__main__':
+    
+    from traitsui.api import View, Group, Item
+
+    class TestPageClass(HasTraits):
+        trait1 = Str
+        trait2 = Bool
+        
+        traits_view = View(Group(Item(name='trait1'),
+                                 Item(name='trait2')))
+        
+    class TestList(HasTraits):
+        el = List(TestPageClass)
+    
+        view = View( 
+                    Group( 
+                          Item(name = 'el', 
+                               id = 'table',
+                               #editor = ListEditor() 
+                               editor = VerticalNotebookEditor(page_name = '.trait1',
+                                                               view = 'traits_view')
+                               )
+                          )
+                    )
+        
+    test = TestList()
+    test.el.append(TestPageClass())
+    test.el.append(TestPageClass())
+    test.configure_traits()
+        

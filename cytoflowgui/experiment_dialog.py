@@ -7,9 +7,6 @@ Created on Feb 26, 2015
 from traits.etsconfig.api import ETSConfig
 ETSConfig.toolkit = 'qt4'
 
-from FlowCytometryTools.core.containers import FCMeasurement, FCPlate
-from traitsui.table_column import ObjectColumn
-
 import os
 os.environ['TRAITS_DEBUG'] = "1"
 
@@ -33,6 +30,9 @@ from pyface.api import GUI, FileDialog, DirectoryDialog
 from cytoflow.utility.util import LogFloat
 
 from pyface.ui.qt4.directory_dialog import DirectoryDialog as QtDirectoryDialog
+
+from FlowCytometryTools.core.containers import FCMeasurement, FCPlate
+from traitsui.table_column import ObjectColumn
 
 class PlateDirectoryDialog(QtDirectoryDialog):
     """
@@ -113,7 +113,7 @@ class ExperimentSetup(HasTraits):
 
     view = View(
         Group(
-            Item('tubes', 
+            Item(name = 'tubes', 
                  id = 'table', 
                  editor = TableEditor(editable = True,
                                       sortable = True,
@@ -143,7 +143,7 @@ class ExperimentHandler(Controller):
     def init(self, info):
         # connect the model trait change events to the controller methods
         # self.model.on_trait_change(self._on_col_clicked, 'col_clicked')
-        self.model.handler = self
+        self.object.handler = self
         return True
     
     def _on_ok(self):
@@ -208,7 +208,7 @@ class ExperimentHandler(Controller):
             fcs = FCMeasurement(ID='new tube', datafile = path)
             tube.Name = fcs.meta['$SRC']
             tube.on_trait_change(self._try_multiedit, '+')
-            self.model.tubes.append(tube)
+            self.object.tubes.append(tube)
     
     def _on_add_plate(self):
         # TODO - add alternate manufacturer's plate types (to the name filters)
@@ -242,7 +242,7 @@ class ExperimentHandler(Controller):
                         Col = well_data.position['new plate'][1],
                         Name = well_data.meta['$SRC'])
             tube.on_trait_change(self._try_multiedit, '+')
-            self.model.tubes.append(tube)
+            self.object.tubes.append(tube)
             
     def _try_multiedit(self, obj, name, old, new):
         """
@@ -251,7 +251,7 @@ class ExperimentHandler(Controller):
         and if so, edit the same trait for all the selected tubes.
         """
                 
-        for tube, trait_name in self.model.selected:
+        for tube, trait_name in self.object.selected:
             if tube != obj:
                 tube.trait_set( **dict([(trait_name, new)]))
         
@@ -265,7 +265,7 @@ class ExperimentHandler(Controller):
             self.table_editor.columns.append(ObjectColumn(name = meta_name,
                                                           label = column_name))
             
-        for tube in self.model.tubes:
+        for tube in self.object.tubes:
             tube.on_trait_change(self._try_multiedit, meta_name)
         
 @provides(IDialog)
@@ -281,7 +281,7 @@ class ExperimentSetupDialog(Dialog):
     style = 'modal'
     title = 'Experiment setup'
     
-    model = Instance(ExperimentSetup)
+    object = Instance(ExperimentSetup)
     handler = Instance(Handler)
     ui = Instance(UI)
     
@@ -293,8 +293,8 @@ class ExperimentSetupDialog(Dialog):
         model and controller.
         """
         
-        self.model = ExperimentSetup()
-        self.handler = ExperimentHandler(model = self.model, dialog = self)
+        self.object = ExperimentSetup()
+        self.handler = ExperimentHandler(model = self.object, dialog = self)
 
         super(ExperimentSetupDialog, self)._create()
     
@@ -355,7 +355,7 @@ class ExperimentSetupDialog(Dialog):
     
     def _create_dialog_area(self, parent):
         
-        self.ui = self.model.edit_traits(kind='subpanel', 
+        self.ui = self.object.edit_traits(kind='subpanel', 
                                          parent=parent, 
                                          handler=self.handler)   
         
