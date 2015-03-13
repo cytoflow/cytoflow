@@ -39,7 +39,7 @@ class _VerticalNotebookEditor(Editor):
     selected_item = Any
     selected_list = List
 
-    # The ThemedVerticalNotebook we use to manager the notebook:
+    # The ThemedVerticalNotebook we use to manage the notebook:
     notebook = Instance(VerticalNotebook)
 
     # Dictionary of page counts for all unique names:
@@ -52,9 +52,8 @@ class _VerticalNotebookEditor(Editor):
             widget.
         """
         factory = self.factory
-        self.notebook = VerticalNotebook( **factory.get(
-            'closed_theme', 'open_theme', 'multiple_open', 'scrollable',
-            'double_click' ) ).set( editor = self )
+        self.notebook = VerticalNotebook( **factory.get('multiple_open', 
+            'scrollable', 'double_click' ) ).set( editor = self )
         self.control = self.notebook.create_control( parent )
 
         # Set up the additional 'list items changed' event handler needed for
@@ -192,9 +191,6 @@ class VerticalNotebookEditor(BasicEditorFactory):
     # Should the notebook be scrollable?
     scrollable = Bool( False )
 
-    # Use double clicks (True) or single clicks (False) to open/close pages:
-    double_click = Bool( True )
-
     # Extended name to use for each notebook page. It can be either the actual
     # name or the name of an attribute on the object in the form:
     # '.name[.name...]'
@@ -214,9 +210,11 @@ if __name__ == '__main__':
     class TestPageClass(HasTraits):
         trait1 = Str
         trait2 = Bool
+        trait3 = Bool
         
         traits_view = View(Group(Item(name='trait1'),
-                                 Item(name='trait2')))
+                                 Item(name='trait2'),
+                                 Item(name='trait3')))
         
     class TestList(HasTraits):
         el = List(TestPageClass)
@@ -227,13 +225,14 @@ if __name__ == '__main__':
                                id = 'table',
                                #editor = ListEditor() 
                                editor = VerticalNotebookEditor(page_name = '.trait1',
-                                                               view = 'traits_view')
+                                                               view = 'traits_view',
+                                                               scrollable = True)
                                )
                           )
                     )
         
     test = TestList()
-    test.el.append(TestPageClass())
-    test.el.append(TestPageClass())
+    test.el.append(TestPageClass(trait1="one"))
+    test.el.append(TestPageClass(trait1="two"))
     test.configure_traits()
         

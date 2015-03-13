@@ -1,3 +1,6 @@
+from traits.etsconfig.api import ETSConfig
+ETSConfig.toolkit = 'qt4'
+
 from pyface.qt import QtCore, QtGui
 
 from pyface.widget import Widget
@@ -24,7 +27,7 @@ class VerticalNotebookPage(HasPrivateTraits):
     ui = Instance(UI)
     
     # The Qt window the page represents
-    control = Instance(QtGui.QWidget)
+    # control = Instance(QtGui.QWidget)
 
     # Optional client data associated with the page [Set/Get by client]:
     data = Any
@@ -48,10 +51,10 @@ class VerticalNotebookPage(HasPrivateTraits):
     min_size = Property
 
     # The open size property for the page:
-    open_size = Property
+    #open_size = Property
 
     # The closed size property for the page:
-    closed_size = Property
+    #closed_size = Property
 
     #-- Private Traits ---------------------------------------------------------
 
@@ -83,12 +86,12 @@ class VerticalNotebookPage(HasPrivateTraits):
             self.open_page = None
             self.control = None
         
-    def set_size (self, x, y, w, h):
-        """ Sets the size of the current active page. """
-        if self.is_open:
-            self.open_page.control.setGeometry(x, y, w, h)
-        else:
-            self.closed_page.control.setGeometry(x, y, w, h)
+#     def set_size (self, x, y, w, h):
+#         """ Sets the size of the current active page. """
+#         if self.is_open:
+#             self.open_page.control.setGeometry(x, y, w, h)
+#         else:
+#             self.closed_page.control.setGeometry(x, y, w, h)
             
     def register_name_listener ( self, model, trait_name ):
         """ Registers a listener on the specified object trait for a page name
@@ -105,37 +108,45 @@ class VerticalNotebookPage(HasPrivateTraits):
 
     #-- Property Implementations -----------------------------------------------
 
-    def _get_min_size ( self ):
-        """ Returns the minimum size for the page.
-        """
-        dxo, dyo = self.open_page.best_size
-        dxc, dyc = self.closed_page.best_size
-        if self.is_open:
-            return (max(dxo, dxc), dyo)
+#     def _get_min_size ( self ):
+#         """ Returns the minimum size for the page.
+#         """
+#         dxo, dyo = self.open_page.size
+#         dxc, dyc = self.closed_page.size
+#         if self.is_open:
+#             return (max(dxo, dxc), dyo)
+# 
+#         return (max(dxo, dxc), dyc)
+# 
+#     def _get_open_size ( self ):
+#         """ Returns the open size for the page.
+#         """
+#         return self.open_page.size
+# 
+#     def _get_closed_size ( self ):
+#         """ Returns the closed size for the page.
+#         """
+#         return self.closed_page.size
 
-        return (max(dxo, dxc), dyc)
-
-    def _get_open_size ( self ):
-        """ Returns the open size for the page.
-        """
-        return self.open_page.best_size
-
-    def _get_closed_size ( self ):
-        """ Returns the closed size for the page.
-        """
-        return self.closed_page.size
+    def _handle_page_open(self):
+        self.is_open = True
 
     @cached_property
     def _get_closed_page ( self ):
         """ Returns the 'closed' form of the notebook page.
         """
-        return QtGui.QPushButton(self.notebook.control)
+        new_button = QtGui.QPushButton(self.notebook.control)
+        new_button.setVisible(not self.is_open)
+        new_button.clicked.connect(self._handle_page_open)
+        return new_button
+        #return None
  
-    @cached_property
+    #@cached_property
     def _get_open_page ( self ):
         """ Returns the 'open' form of the notebook page.
         """
-        return QtGui.QWidget(self.notebook.control)
+        self.ui.control.setVisible(self.is_open)
+        return self.ui.control
 
     def _get_parent ( self ):
         """ Returns the parent window for the client's window.
@@ -144,29 +155,33 @@ class VerticalNotebookPage(HasPrivateTraits):
 
     #-- Trait Event Handlers ---------------------------------------------------
 
-    def _ui_changed ( self, ui ):
-        """ Handles the ui trait being changed.
-        """
-        if ui is not None:
-            self.control = ui.control
+#     def _ui_changed ( self, ui ):
+#         """ Handles the ui trait being changed.
+#         """
+#         if ui is not None:
+#             self.control = ui.control
 
-    def _control_changed ( self, control ):
-        """ Handles the control for the page being changed.
-        """
-        if control is not None:
-            #self.open_page.control.GetSizer().Add( control, 1, wx.EXPAND )
-            self._is_open_changed( self.is_open )
+#     def _control_changed ( self, control ):
+#         """ Handles the control for the page being changed.
+#         """
+#         if control is not None:
+#             #self.open_page.control.GetSizer().Add( control, 1, wx.EXPAND )
+#             self._is_open_changed( self.is_open )
 
     def _is_open_changed ( self, is_open ):
         """ Handles the 'is_open' state of the page being changed.
         """
+        
+        self.notebook.control.setUpdatesEnabled(False)
         self.closed_page.setVisible(not is_open)
         self.open_page.setVisible(is_open)
+        
+        self.notebook._refresh()
 
-        if is_open:
-            self.closed_page.resize(0, 0)
-        else:
-            self.open_page.resize(0, 0)
+#         if is_open:
+#             self.closed_page.resize(0, 0)
+#         else:
+#             self.open_page.resize(0, 0)
 
     def _name_changed ( self, name ):
         """ Handles the name trait being changed.
@@ -240,7 +255,7 @@ class VerticalNotebook(HasPrivateTraits):
     scrollable = Bool( False )
 
     # Use double clicks (True) or single clicks (False) to open/close pages:
-    double_click = Bool( False )
+    # double_click = Bool( False )
 
     # The pages contained in the notebook:
     pages = List( VerticalNotebookPage )
@@ -261,6 +276,7 @@ class VerticalNotebook(HasPrivateTraits):
         """
         
         self.layout = QtGui.QVBoxLayout()
+        self.layout.setSizeConstraint(QtGui.QLayout.SetFixedSize)
         
         # Create the correct type of window based on whether or not it should
         # be scrollable:
@@ -285,7 +301,7 @@ class VerticalNotebook(HasPrivateTraits):
         return VerticalNotebookPage(notebook = self)
 
     def open ( self, page ):
-        """ Handles opening a specified **ThemedPage** notebook page.
+        """ Handles opening a specified notebook page.
         """
         if (page is not None) and (not page.is_open):
             if not self.multiple_open:
@@ -296,8 +312,8 @@ class VerticalNotebook(HasPrivateTraits):
 
             self._refresh()
 
-    def close ( self, page ):
-        """ Handles closing a specified **ThemedPage** notebook page.
+    def close(self, page):
+        """ Handles closing a specified notebook page.
         """
         if (page is not None) and page.is_open:
             page.is_open = False
@@ -351,11 +367,19 @@ class VerticalNotebook(HasPrivateTraits):
     def _refresh ( self ):
         """ Refresh the layout and contents of the notebook.
         """
+        
+        self.control.setUpdatesEnabled(False)
+        
         while self.layout.count() > 0:
             self.layout.takeAt(0)
             
         for page in self.pages:
-            self.layout.addWidget(page.control)
+            self.layout.addWidget(page.closed_page)
+            #page.closed_page.setVisible(not page.is_open)
+            self.layout.addWidget(page.open_page)
+            #page.open_page.setVisible(page.is_open)
+            
+        self.control.setUpdatesEnabled(True)
 #         if control is not None:
 #             # Set the virtual size of the canvas (so scroll bars work right):
 #             sizer = control.GetSizer()
@@ -437,3 +461,36 @@ class VerticalNotebook(HasPrivateTraits):
 #                 dy   = ndy
 #             page.set_size( x, y, tdx, dy )
 #             y += dy
+
+if __name__ == '__main__':
+    
+    from traitsui.api import View, Group, Item
+    from vertical_notebook_editor import VerticalNotebookEditor
+
+    class TestPageClass(HasTraits):
+        trait1 = Str
+        trait2 = Bool
+        trait3 = Bool
+        
+        traits_view = View(Group(Item(name='trait1'),
+                                 Item(name='trait2'),
+                                 Item(name='trait3')))
+        
+    class TestList(HasTraits):
+        el = List(TestPageClass)
+    
+        view = View( 
+                    Group( 
+                          Item(name = 'el', 
+                               id = 'table',
+                               #editor = ListEditor() 
+                               editor = VerticalNotebookEditor(page_name = '.trait1',
+                                                               view = 'traits_view')
+                               )
+                          )
+                    )
+        
+    test = TestList()
+    test.el.append(TestPageClass(trait1="one"))
+    test.el.append(TestPageClass(trait1="two"))
+    test.configure_traits()
