@@ -228,7 +228,8 @@ if __name__ == '__main__':
                                                                view = 'traits_view',
                                                                scrollable = True)
                                )
-                          )
+                          ),
+                    resizable = True
                     )
         
     test = TestList()
