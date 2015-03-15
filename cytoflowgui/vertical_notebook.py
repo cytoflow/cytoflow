@@ -129,7 +129,7 @@ class VerticalNotebookPage(HasPrivateTraits):
 #         return self.closed_page.size
 
     def _handle_page_open(self):
-        self.is_open = True
+        self.notebook.open(self)
 
     @cached_property
     def _get_closed_page ( self ):
@@ -172,11 +172,11 @@ class VerticalNotebookPage(HasPrivateTraits):
         """ Handles the 'is_open' state of the page being changed.
         """
         
-        self.notebook.control.setUpdatesEnabled(False)
+        #self.notebook.control.setUpdatesEnabled(False)
         self.closed_page.setVisible(not is_open)
         self.open_page.setVisible(is_open)
         
-        self.notebook._refresh()
+        #self.notebook._refresh()
 
 #         if is_open:
 #             self.closed_page.resize(0, 0)
@@ -310,14 +310,14 @@ class VerticalNotebook(HasPrivateTraits):
 
             page.is_open = True
 
-            self._refresh()
+            #self._refresh()
 
     def close(self, page):
         """ Handles closing a specified notebook page.
         """
         if (page is not None) and page.is_open:
             page.is_open = False
-            self._refresh()
+            #self._refresh()
 
     #-- Trait Event Handlers ---------------------------------------------------
 
@@ -348,7 +348,7 @@ class VerticalNotebook(HasPrivateTraits):
                 else:
                     page.is_open = False
 
-        self._refresh()
+        #self._refresh()
 
     #-- wx.Python Event Handlers -----------------------------------------------
 # 
