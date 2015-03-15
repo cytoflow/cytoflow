@@ -137,7 +137,7 @@ class _VerticalNotebookEditor(Editor):
             traits.
         """
         # Create a new notebook page:
-        page = self.notebook.create_page().set(object = object)
+        page = self.notebook.create_page()
 
         # Create the Traits UI for the object to put in the notebook page:
         ui = object.edit_traits( parent = page.parent,
@@ -150,19 +150,32 @@ class _VerticalNotebookEditor(Editor):
         page_name = self.factory.page_name
         if page_name[0:1] == '.':
             if getattr( object, page_name[1:], Undefined ) is not Undefined:
-                page.register_name_listener( object, page_name[1:] )
+                page.register_name_listener(object, page_name[1:])
         else:
             name = page_name
 
         if name == '':
-            name = user_name_for( object.__class__.__name__ )
-
+            name = user_name_for(object.__class__.__name__)
+            
         # Make sure the name is not a duplicate, then save it in the page:
         if page.name == '':
             self.pages[ name ] = count = self.pages.get( name, 0 ) + 1
             if count > 1:
                 name += (' %d' % count)
             page.name = name
+            
+        # Get the page description
+        desc = ''
+        page_desc = self.factory.page_description
+        if page_desc[0:1] == '.':
+            if getattr(object, page_desc[1:], Undefined) is not Undefined:
+                page.register_description_listener(object, page_desc[1:])
+        else:
+            desc = page_desc
+            
+        # and save it to the page
+        if page.description == '':
+            page.description = desc
 
         # Save the Traits UI in the page so it can dispose of it later:
         page.ui = ui
@@ -191,10 +204,11 @@ class VerticalNotebookEditor(BasicEditorFactory):
     # Should the notebook be scrollable?
     scrollable = Bool( False )
 
-    # Extended name to use for each notebook page. It can be either the actual
-    # name or the name of an attribute on the object in the form:
-    # '.name[.name...]'
+    # List member trait to read the notebook page name from
     page_name = Str
+    
+    # List member trait to read the notebook page description from
+    page_description = Str
 
     # Name of the view to use for each page:
     view = AView
@@ -209,12 +223,14 @@ if __name__ == '__main__':
 
     class TestPageClass(HasTraits):
         trait1 = Str
-        trait2 = Bool
+        trait2 = Str
         trait3 = Bool
+        trait4 = Bool
         
         traits_view = View(Group(Item(name='trait1'),
                                  Item(name='trait2'),
-                                 Item(name='trait3')))
+                                 Item(name='trait3'),
+                                 Item(name='trait4')))
         
     class TestList(HasTraits):
         el = List(TestPageClass)
@@ -225,15 +241,17 @@ if __name__ == '__main__':
                                id = 'table',
                                #editor = ListEditor() 
                                editor = VerticalNotebookEditor(page_name = '.trait1',
+                                                               page_description = '.trait2',
                                                                view = 'traits_view',
-                                                               scrollable = True)
+                                                               scrollable = True,
+                                                               multiple_open = False)
                                )
                           ),
                     resizable = True
                     )
         
     test = TestList()
-    test.el.append(TestPageClass(trait1="one"))
-    test.el.append(TestPageClass(trait1="two"))
+    test.el.append(TestPageClass(trait1="one", trait2="two"))
+    test.el.append(TestPageClass(trait1="three", trait2="four"))
     test.configure_traits()
         

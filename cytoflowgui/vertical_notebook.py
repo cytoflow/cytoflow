@@ -22,6 +22,9 @@ class VerticalNotebookPage(HasPrivateTraits):
 
     # The name of the page (displayed on its 'tab') [Set by client]:
     name = Str
+    
+    # The description of the page (displayed in smaller text in the button):
+    description = Str
 
     # The Traits UI associated with this page [Set by client]:
     ui = Instance(UI)
@@ -32,12 +35,19 @@ class VerticalNotebookPage(HasPrivateTraits):
     # Optional client data associated with the page [Set/Get by client]:
     data = Any
 
-    # The HasTraits object whose traits we're viewing
-    object = Instance(HasTraits)
+    # The HasTraits object whose trait we look at to set the page name
+    name_object = Instance(HasTraits)
 
-    # The name of the object trait that signals a page name change [Set by
-    # client]:
-    trait_name = Str
+    # The name of the *name_object* trait that signals a page name change 
+    # [Set by client]:
+    name_object_trait = Str
+    
+    # The HasTraits object whose trait we look at to set the page description
+    description_object = Instance(HasTraits)
+    
+    # The name of the *description_object* trait that signals a page description 
+    # change [Set by client]
+    description_object_trait = Str
 
     # The parent window for the client page [Get by client]:
     parent = Property
@@ -61,30 +71,34 @@ class VerticalNotebookPage(HasPrivateTraits):
     # The notebook this page is associated with:
     notebook = Instance( 'VerticalNotebook' )
 
-    # The control representing the closed page:
-    closed_page = Property
-
     # The control representing the open page:
-    open_page = Property
+    control = Property
+    
+    # The control representing the button that opens and closes the control
+    button = Property
 
     #-- Public Methods ---------------------------------------------------------
 
     def close ( self ):
         """ Closes the notebook page. """
 
-        if self.object is not None:
-            self.object.on_trait_change( self._name_updated, self.trait_name,
-                                        remove = True )
-            self.object = None
+        if self.name_object is not None:
+            self.name_object.on_trait_change(self._name_updated, 
+                                             self.name_object_trait,
+                                             remove = True )
+            self.name_object = None
+            
+        if self.description_object is not None:
+            self.description_object.on_trait_change(self._description_updated,
+                                                    self.description_object_trait,
+                                                    remove = True)
 
         if self.ui is not None:
             self.ui.dispose()
             self.ui = None
         
-        if self.closed_page is not None:
-            self.closed_page = None
-            self.open_page = None
-            self.control = None
+        #if self.control is not None:
+        #    self.control = None
         
 #     def set_size (self, x, y, w, h):
 #         """ Sets the size of the current active page. """
@@ -93,18 +107,33 @@ class VerticalNotebookPage(HasPrivateTraits):
 #         else:
 #             self.closed_page.control.setGeometry(x, y, w, h)
             
-    def register_name_listener ( self, model, trait_name ):
+    def register_name_listener(self, model, trait):
         """ Registers a listener on the specified object trait for a page name
             change.
         """
         # Save the information, so we can unregister it later:
-        self.object, self.trait_name = model, trait_name
+        self.name_object, self.name_object_trait = model, trait
  
         # Register the listener:
-        self.object.on_trait_change( self._name_updated, trait_name )
+        self.name_object.on_trait_change(self._name_updated, trait)
  
         # Make sure the name gets initialized:
         self._name_updated()
+        
+    def register_description_listener(self, model, trait):
+        """
+        Registers a listener on the specified object trait for a page 
+        description change
+        """
+        
+        # save the info so we can unregister it later
+        self.description_object, self.description_object_trait = model, trait
+        
+        # register the listener
+        self.description_object.on_trait_change(self._description_updated, trait)
+        
+        # make sure the description gets initialized
+        self._description_updated()
 
     #-- Property Implementations -----------------------------------------------
 
@@ -128,24 +157,30 @@ class VerticalNotebookPage(HasPrivateTraits):
 #         """
 #         return self.closed_page.size
 
-    def _handle_page_open(self):
-        self.notebook.open(self)
-
+    def _handle_page_toggle(self):
+        if self.is_open:
+            self.notebook.close(self)
+        else:
+            self.notebook.open(self)
+            
     @cached_property
-    def _get_closed_page ( self ):
+    def _get_button ( self ):
         """ Returns the 'closed' form of the notebook page.
         """
-        new_button = QtGui.QPushButton(self.notebook.control)
-        new_button.setVisible(not self.is_open)
-        new_button.clicked.connect(self._handle_page_open)
+        new_button = QtGui.QCommandLinkButton(self.notebook.control)
+        new_button.setVisible(True)
+        new_button.setCheckable(True)
+        new_button.setFlat(False)
+        new_button.setAutoFillBackground(True)
+        new_button.clicked.connect(self._handle_page_toggle)
         return new_button
         #return None
  
     #@cached_property
-    def _get_open_page ( self ):
+    def _get_control ( self ):
         """ Returns the 'open' form of the notebook page.
         """
-        self.ui.control.setVisible(self.is_open)
+        #self.ui.control.setVisible(self.is_open)
         return self.ui.control
 
     def _get_parent ( self ):
@@ -173,8 +208,15 @@ class VerticalNotebookPage(HasPrivateTraits):
         """
         
         #self.notebook.control.setUpdatesEnabled(False)
-        self.closed_page.setVisible(not is_open)
-        self.open_page.setVisible(is_open)
+        self.control.setVisible(is_open)
+        self.button.setChecked(is_open)
+        if is_open:
+            self.button.setIcon(self.button.style().
+                                standardIcon(QtGui.QStyle.SP_ArrowDown))
+        else: 
+            self.button.setIcon(self.button.style().
+                                standardIcon(QtGui.QStyle.SP_ArrowRight))
+        #self.open_page.setVisible(is_open)
         
         #self.notebook._refresh()
 
@@ -186,11 +228,15 @@ class VerticalNotebookPage(HasPrivateTraits):
     def _name_changed ( self, name ):
         """ Handles the name trait being changed.
         """
-        self.closed_page.setText(name)
+        self.button.setText(name)
         #self.open_page.text = name
+        
+    def _description_changed(self, description):
+        self.button.setDescription(description)
 
     def _name_updated ( self ):
-        """ Handles a signal that the associated object's page name has changed.
+        """ 
+        Handles a signal that the associated object's page name has changed.
         """
         nb = self.notebook
         handler_name = None
@@ -201,12 +247,37 @@ class VerticalNotebookPage(HasPrivateTraits):
             method = getattr( editor.ui.handler,
                  '%s_%s_page_name' % ( editor.object_name, editor.name ), None )
         if method is not None:
-            handler_name = method( editor.ui.info, self.object )
+            handler_name = method( editor.ui.info, self.name_object )
 
         if handler_name is not None:
             self.name = handler_name
         else:
-            self.name = getattr( self.object, self.trait_name ) or '???'
+            self.name = getattr( self.name_object, 
+                                 self.name_object_trait ) or '???'
+            
+            
+    def _description_updated(self):
+        """
+        Handles the signal that the associated object's description has changed.
+        """
+        nb = self.notebook
+        handler_name = None
+        
+        method = None
+        editor = nb.editor
+        if editor is not None:
+            method = getattr(editor.ui.handler,
+                             '%s_%s_page_description' % 
+                                (editor.object_name, editor.name), 
+                             None)
+        if method is not None:
+            handler_name = method(editor.ui.info, self.description_object)
+        
+        if handler_name is not None:
+            self.description = handler_name
+        else:
+            self.description = getattr(self.description_object, 
+                                       self.description_object_trait) or ''
 
     #-- ThemedControl Mouse Event Handlers -------------------------------------
 # 
@@ -374,10 +445,10 @@ class VerticalNotebook(HasPrivateTraits):
             self.layout.takeAt(0)
             
         for page in self.pages:
-            self.layout.addWidget(page.closed_page)
+            self.layout.addWidget(page.button)
             #page.closed_page.setVisible(not page.is_open)
-            self.layout.addWidget(page.open_page)
-            #page.open_page.setVisible(page.is_open)
+            self.layout.addWidget(page.control)
+            page.control.setVisible(page.is_open)
             
         self.control.setUpdatesEnabled(True)
 #         if control is not None:
@@ -491,6 +562,6 @@ if __name__ == '__main__':
                     )
         
     test = TestList()
-    test.el.append(TestPageClass(trait1="one"))
-    test.el.append(TestPageClass(trait1="two"))
+    test.el.append(TestPageClass(trait1="one", trait2="two"))
+    test.el.append(TestPageClass(trait1="three", trait2="four"))
     test.configure_traits()
