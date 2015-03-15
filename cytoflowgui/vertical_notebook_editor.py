@@ -4,15 +4,14 @@ Created on Mar 8, 2015
 @author: brian
 """
 
-from traits.etsconfig.api import ETSConfig
+if __name__ == '__main__':
+    from traits.etsconfig.api import ETSConfig
+    ETSConfig.toolkit = 'qt4'
 
-ETSConfig.toolkit = 'qt4'
-
-import os
-os.environ['TRAITS_DEBUG'] = "1"
+    import os
+    os.environ['TRAITS_DEBUG'] = "1"
 
 from traits.api import HasTraits
-from traitsui.editors.list_editor import ListEditor
 
 from traitsui.basic_editor_factory import BasicEditorFactory
 from traits.api \

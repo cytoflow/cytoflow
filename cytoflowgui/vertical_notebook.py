@@ -1,14 +1,11 @@
 from traits.etsconfig.api import ETSConfig
 ETSConfig.toolkit = 'qt4'
 
-from pyface.qt import QtCore, QtGui
-
-from pyface.widget import Widget
-from pyface.tasks.dock_pane import DockPane
+from pyface.qt import QtGui
 
 from traits.api \
     import HasTraits, HasPrivateTraits, Instance, List, Str, Bool, Property, \
-           Event, Any, on_trait_change, cached_property
+           Any, cached_property
 
 from traitsui.api import UI
 
@@ -28,9 +25,6 @@ class VerticalNotebookPage(HasPrivateTraits):
 
     # The Traits UI associated with this page [Set by client]:
     ui = Instance(UI)
-    
-    # The Qt window the page represents
-    # control = Instance(QtGui.QWidget)
 
     # Optional client data associated with the page [Set/Get by client]:
     data = Any
@@ -52,19 +46,13 @@ class VerticalNotebookPage(HasPrivateTraits):
     # The parent window for the client page [Get by client]:
     parent = Property
 
-    #-- Traits for use by the Notebook/Sizer -----------------------------------
+    #-- Traits for use by the Notebook ----------------------------------------
 
     # The current open status of the notebook page:
     is_open = Bool(False)
 
     # The minimum size for the page:
     min_size = Property
-
-    # The open size property for the page:
-    #open_size = Property
-
-    # The closed size property for the page:
-    #closed_size = Property
 
     #-- Private Traits ---------------------------------------------------------
 
@@ -96,16 +84,6 @@ class VerticalNotebookPage(HasPrivateTraits):
         if self.ui is not None:
             self.ui.dispose()
             self.ui = None
-        
-        #if self.control is not None:
-        #    self.control = None
-        
-#     def set_size (self, x, y, w, h):
-#         """ Sets the size of the current active page. """
-#         if self.is_open:
-#             self.open_page.control.setGeometry(x, y, w, h)
-#         else:
-#             self.closed_page.control.setGeometry(x, y, w, h)
             
     def register_name_listener(self, model, trait):
         """ Registers a listener on the specified object trait for a page name
@@ -135,28 +113,6 @@ class VerticalNotebookPage(HasPrivateTraits):
         # make sure the description gets initialized
         self._description_updated()
 
-    #-- Property Implementations -----------------------------------------------
-
-#     def _get_min_size ( self ):
-#         """ Returns the minimum size for the page.
-#         """
-#         dxo, dyo = self.open_page.size
-#         dxc, dyc = self.closed_page.size
-#         if self.is_open:
-#             return (max(dxo, dxc), dyo)
-# 
-#         return (max(dxo, dxc), dyc)
-# 
-#     def _get_open_size ( self ):
-#         """ Returns the open size for the page.
-#         """
-#         return self.open_page.size
-# 
-#     def _get_closed_size ( self ):
-#         """ Returns the closed size for the page.
-#         """
-#         return self.closed_page.size
-
     def _handle_page_toggle(self):
         if self.is_open:
             self.notebook.close(self)
@@ -174,13 +130,10 @@ class VerticalNotebookPage(HasPrivateTraits):
         new_button.setAutoFillBackground(True)
         new_button.clicked.connect(self._handle_page_toggle)
         return new_button
-        #return None
  
-    #@cached_property
     def _get_control ( self ):
         """ Returns the 'open' form of the notebook page.
         """
-        #self.ui.control.setVisible(self.is_open)
         return self.ui.control
 
     def _get_parent ( self ):
@@ -188,26 +141,10 @@ class VerticalNotebookPage(HasPrivateTraits):
         """
         return self.notebook.control
 
-    #-- Trait Event Handlers ---------------------------------------------------
-
-#     def _ui_changed ( self, ui ):
-#         """ Handles the ui trait being changed.
-#         """
-#         if ui is not None:
-#             self.control = ui.control
-
-#     def _control_changed ( self, control ):
-#         """ Handles the control for the page being changed.
-#         """
-#         if control is not None:
-#             #self.open_page.control.GetSizer().Add( control, 1, wx.EXPAND )
-#             self._is_open_changed( self.is_open )
-
     def _is_open_changed ( self, is_open ):
         """ Handles the 'is_open' state of the page being changed.
         """
-        
-        #self.notebook.control.setUpdatesEnabled(False)
+
         self.control.setVisible(is_open)
         self.button.setChecked(is_open)
         if is_open:
@@ -216,20 +153,11 @@ class VerticalNotebookPage(HasPrivateTraits):
         else: 
             self.button.setIcon(self.button.style().
                                 standardIcon(QtGui.QStyle.SP_ArrowRight))
-        #self.open_page.setVisible(is_open)
-        
-        #self.notebook._refresh()
-
-#         if is_open:
-#             self.closed_page.resize(0, 0)
-#         else:
-#             self.open_page.resize(0, 0)
 
     def _name_changed ( self, name ):
         """ Handles the name trait being changed.
         """
         self.button.setText(name)
-        #self.open_page.text = name
         
     def _description_changed(self, description):
         self.button.setDescription(description)
@@ -279,36 +207,8 @@ class VerticalNotebookPage(HasPrivateTraits):
             self.description = getattr(self.description_object, 
                                        self.description_object_trait) or ''
 
-    #-- ThemedControl Mouse Event Handlers -------------------------------------
-# 
-#     def open_left_down ( self, x, y, event ):
-#         """ Handles the user clicking on an open notebook page to close it.
-#         """
-#         if not self.notebook.double_click:
-#             self.notebook.close(self)
-# 
-#     def open_left_dclick ( self, x, y, event ):
-#         """ Handles the user double clicking on an open notebook page to close
-#             it.
-#         """
-#         if self.notebook.double_click:
-#             self.notebook.close(self)
-# 
-#     def closed_left_down ( self, x, y, event ):
-#         """ Handles the user clicking on a closed notebook page to open it.
-#         """
-#         if not self.notebook.double_click:
-#             self.notebook.open(self)
-# 
-#     def closed_left_dclick ( self, x, y, event ):
-#         """ Handles the user double clicking on a closed notebook page to open
-#             it.
-#         """
-#         if self.notebook.double_click:
-#             self.notebook.open(self)
-
 #-------------------------------------------------------------------------------
-#  'ThemedVerticalNotebook' class:
+#  'VerticalNotebook' class:
 #-------------------------------------------------------------------------------
 
 class VerticalNotebook(HasPrivateTraits):
@@ -325,9 +225,6 @@ class VerticalNotebook(HasPrivateTraits):
     # Should the notebook be scrollable?
     scrollable = Bool( False )
 
-    # Use double clicks (True) or single clicks (False) to open/close pages:
-    # double_click = Bool( False )
-
     # The pages contained in the notebook:
     pages = List( VerticalNotebookPage )
 
@@ -338,6 +235,8 @@ class VerticalNotebook(HasPrivateTraits):
 
     # The Qt control used to represent the notebook:
     control = Instance(QtGui.QWidget)
+    
+    # The Qt layout containing the child widgets
     layout = Instance(QtGui.QVBoxLayout)
 
     #-- Public Methods ---------------------------------------------------------
@@ -381,14 +280,11 @@ class VerticalNotebook(HasPrivateTraits):
 
             page.is_open = True
 
-            #self._refresh()
-
     def close(self, page):
         """ Handles closing a specified notebook page.
         """
         if (page is not None) and page.is_open:
             page.is_open = False
-            #self._refresh()
 
     #-- Trait Event Handlers ---------------------------------------------------
 
@@ -419,20 +315,6 @@ class VerticalNotebook(HasPrivateTraits):
                 else:
                     page.is_open = False
 
-        #self._refresh()
-
-    #-- wx.Python Event Handlers -----------------------------------------------
-# 
-#     def _erase_background ( self, event ):
-#         """ Do not erase the background here (do it in the 'on_paint' handler).
-#         """
-#         pass
-
-#     def _paint ( self, event ):
-#         """ Paint the background using the associated ImageSlice object.
-#         """
-#         paint_parent( wx.PaintDC( self.control ), self.control )
-
     #-- Private Methods --------------------------------------------------------
 
     def _refresh ( self ):
@@ -451,87 +333,7 @@ class VerticalNotebook(HasPrivateTraits):
             page.control.setVisible(page.is_open)
             
         self.control.setUpdatesEnabled(True)
-#         if control is not None:
-#             # Set the virtual size of the canvas (so scroll bars work right):
-#             sizer = control.GetSizer()
-#             if control.GetSize()[0] == 0:
-#                 control.SetSize( sizer.CalcInit() )
-#             control.SetVirtualSize( sizer.CalcMin() )
-#             control.Layout()
-#             control.Refresh()
 
-#-------------------------------------------------------------------------------
-#  'ThemedVerticalNotebookSizer' class:
-#-------------------------------------------------------------------------------
-
-# class ThemedVerticalNotebookSizer ( wx.PySizer ):
-#     """ Defines a sizer that correctly sizes a themed vertical notebook's
-#         children to implement the vertical notebook UI object.
-#     """
-# 
-#     def __init__ ( self, notebook ):
-#         """ Initializes the object.
-#         """
-#         super( ThemedVerticalNotebookSizer, self ).__init__()
-# 
-#         # Save the notebook reference:
-#         self._notebook = notebook
-# 
-#     def CalcMin ( self ):
-#         """ Calculates the minimum size of the control by aggregating the
-#             sizes of the open and closed pages.
-#         """
-#         tdx, tdy = 0, 0
-#         for page in self._notebook.pages:
-#             dx, dy = page.min_size
-#             tdx    = max( tdx, dx )
-#             tdy   += dy
-# 
-#         return wx.Size( tdx, tdy )
-# 
-#     def CalcInit ( self ):
-#         """ Calculates a reasonable initial size of the control by aggregating
-#             the sizes of the open and closed pages.
-#         """
-#         tdx, tdy = 0, 0
-#         open_dy  = closed_dy = 0
-#         for page in self._notebook.pages:
-#             dxo, dyo = page.open_size
-#             dxc, dyc = page.closed_size
-#             tdx      = max( tdx, dxo, dxc )
-#             if dyo > open_dy:
-#                 tdy += (dyo - open_dy + closed_dy)
-#                 open_dy, closed_dy = dyo, dyc
-#             else:
-#                 tdy += dyc
-# 
-#         return wx.Size( tdx, min( tdy, screen_dy / 2 ) )
-# 
-#     def RecalcSizes ( self ):
-#         """ Layout the contents of the sizer based on the sizer's current size
-#             and position.
-#         """
-#         x, y     = self.GetPositionTuple()
-#         tdx, tdy = self.GetSizeTuple()
-#         cdy      = ody = 0
-#         for page in self._notebook.pages:
-#             dx, dy = page.min_size
-#             if page.is_open:
-#                 ody += dy
-#             else:
-#                 cdy += dy
-# 
-#         ady = max( 0, tdy - cdy )
-# 
-#         for page in self._notebook.pages:
-#             dx, dy = page.min_size
-#             if page.is_open:
-#                 ndy  = (ady * dy) / ody
-#                 ady -= ndy
-#                 ody -= dy
-#                 dy   = ndy
-#             page.set_size( x, y, tdx, dy )
-#             y += dy
 
 if __name__ == '__main__':
     
