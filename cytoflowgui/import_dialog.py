@@ -143,7 +143,7 @@ class ExperimentHandler(Controller):
     def init(self, info):
         # connect the model trait change events to the controller methods
         # self.model.on_trait_change(self._on_col_clicked, 'col_clicked')
-        self.object.handler = self
+        self.model.handler = self
         return True
     
     def _on_ok(self):

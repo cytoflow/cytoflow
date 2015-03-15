@@ -7,21 +7,24 @@ Created on Feb 11, 2015
 from traits.etsconfig.api import ETSConfig
 ETSConfig.toolkit = 'qt4'
 
-from pyface.api import GUI
-from pyface.tasks.api import TaskWindow
-from flow_task import FlowTask
+import logging
 
-def run_gui():
-    gui = GUI()
+from envisage.core_plugin import CorePlugin
+from envisage.ui.tasks.tasks_plugin import TasksPlugin
+
+from flow_task import FlowTaskPlugin
+from cytoflow_application import CytoflowApplication
+
+def run_gui(argv):
     
-    # create a Task and add it to a TaskWindow
-    task = FlowTask()
-    window = TaskWindow(size=(800, 600))
-    window.add_task(task)
+    logging.basicConfig(level=logging.DEBUG)
+
+    plugins = [CorePlugin(), TasksPlugin(), FlowTaskPlugin()]
+    app = CytoflowApplication(plugins = plugins)
+    app.run()
     
-    window.open()
-    
-    gui.start_event_loop()    
+    logging.shutdown()
 
 if __name__ == '__main__':
-    run_gui()
+    import sys
+    run_gui(sys.argv)

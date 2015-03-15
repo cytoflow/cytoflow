@@ -62,6 +62,7 @@ class LogicleTransformOp(HasTraits):
     """
     
     #traits
+    id = "Logicle Transformation"
     name = Str()
     channels = ListStr()
     

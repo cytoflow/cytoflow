@@ -1,7 +1,9 @@
-from traits.api import Instance
-from traitsui.api import UI
+from traits.api import HasTraits, Instance
+from traitsui.api import UI, View, Item, Group
 from cytoflow.views.i_view import IView
 from pyface.tasks.dock_pane import DockPane
+from pyface.qt import QtGui
+from cytoflowgui.workflow import Workflow
 
 class ViewTraitsDockPane(DockPane):
     """
@@ -16,8 +18,14 @@ class ViewTraitsDockPane(DockPane):
     # the cytoflow visualizer whose traits we're showing
     view = Instance(IView)
 
-    # the UI object associated with the Traits view
+    # the UI object associated with the TraitsUI view
     ui = Instance(UI)
+    
+    # an empty view
+    empty_view = View()
+    
+    # the main model instance
+    model = Instance(Workflow)
     
     ###########################################################################
     # 'ITaskPane' interface.
@@ -28,8 +36,9 @@ class ViewTraitsDockPane(DockPane):
         Destroy the toolkit-specific control that represents the pane.
         """
         # Destroy the Traits-generated control inside the dock control.
-        self.ui.dispose()
-        self.ui = None
+        if self.ui is not None:
+            self.ui.dispose()
+            self.ui = None
 
         # Destroy the dock control.
         super(ViewTraitsDockPane, self).destroy()
@@ -41,8 +50,12 @@ class ViewTraitsDockPane(DockPane):
     def create_contents(self, parent):
         """ Create and return the toolkit-specific contents of the dock pane.
         """
-        self.ui = self.view.edit_traits(kind='subpanel', parent=parent)
-        return self.ui.control
+        if self.view is not None:
+            self.ui = self.view.edit_traits(kind='subpanel', parent=parent)
+            return self.ui.control
+        else:
+            self.ui = self.edit_traits(kind='subpanel', parent=parent, view='empty_view')
+            return self.ui.control
     
     ### TODO - rebuild/refresh when self.view is changed.
     def _view_changed(self):

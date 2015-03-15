@@ -4,4 +4,3 @@ This is where the "ui adapter" bits go for the various views.  Each view gets
    the view on (channel names, subset editor, etc.)
  - a class derived from envisage.Plugin:
    a Envisage service plugin wrapping the view
- - maybe matplotlib interaction bits?   hmmm.

@@ -24,6 +24,7 @@ class HlogTransformOp(HasTraits):
     """
     
     # traits
+    id = "Hyperlog Transformation"
     name = Str()
     channels = ListStr()
     

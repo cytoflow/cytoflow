@@ -76,6 +76,7 @@ FlowCytometryTools  >= 0.4.0
 For the GUI, you additionally need:
 ```
 pyface >= 4.0
+envisage >= 4.0
 pyqt >= 4.10
 ```
 

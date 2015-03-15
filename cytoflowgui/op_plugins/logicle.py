@@ -4,7 +4,9 @@ Created on Feb 24, 2015
 @author: brian
 """
 
-class MyClass(object):
+from traitsui.api import ModelView
+
+class Logicle(ModelView):
     """
     classdocs
     """

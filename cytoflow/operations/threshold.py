@@ -22,6 +22,7 @@ class ThresholdOp(HasTraits):
     """
     
     # traits
+    id = "Threshold Gate"
     name = Str()
     channel = Str()
     threshold = CFloat()
