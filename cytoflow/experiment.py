@@ -36,8 +36,8 @@ class Experiment(object):
     channels : dict(string : any)
         A dict containing the channels that this experiment tracks.
         
-    channel_metadata : dict( str : dict(str : any) )
-        A dict whose keys are channel names and whose values are dicts of
+    metadata : dict( str : dict(str : any) )
+        A dict whose keys are column names and whose values are dicts of
         metadata.  Some of this is application-specific and still being
         determined.  Currently defined metadata:
         * xforms: a list of (parameterized!) transformations that have been 
@@ -45,6 +45,8 @@ class Experiment(object):
                   on plots, among other things.
         * voltage: the detector voltage used for this channel, from the FCS
                    keyword "$PnV".
+        * repr: for float conditions, whether to represent it linearly or on
+                a log scale.
     
     tubes : list(FCMeasurement)
         a list of the FCMeasurements that we're a container for.  
@@ -137,7 +139,7 @@ class Experiment(object):
         self.version = 1
         self.conditions = {}
         self.channels = {}
-        self.channel_metadata = {}
+        self.metadata = {}
         self.tubes = []
         self.tube_conditions = {}
         self.tube_keywords = {}
@@ -151,7 +153,7 @@ class Experiment(object):
             # new experiment it won't affect the old experiment.
             self.conditions = copy.deepcopy(prev_experiment.conditions)
             self.channels = copy.deepcopy(prev_experiment.channels)
-            self.channel_metadata = copy.deepcopy(prev_experiment.channel_metadata)
+            self.metadata = copy.deepcopy(prev_experiment.metadata)
             self.tubes = prev_experiment.tubes # no copy, just reference
             self.tube_conditions = copy.deepcopy(prev_experiment.tube_conditions)
             prev_experiment.successor = self 
@@ -193,6 +195,7 @@ class Experiment(object):
             
         for key, value in conditions.iteritems():
             self.data[key] = pd.Series(dtype = value)
+            self.metadata[key] = {}
         
         self.conditions.update(conditions)
              
@@ -236,17 +239,17 @@ class Experiment(object):
             self.channels = tube.channel_names
             
             for channel_name in tube.channel_names:
-                if(channel_name not in self.channel_metadata):
-                    self.channel_metadata[channel_name] = {}
+                if(channel_name not in self.metadata):
+                    self.metadata[channel_name] = {}
                 if("$PnV" in tube.channels):
-                    self.channel_metadata[channel_name]["voltage"] = \
+                    self.metadata[channel_name]["voltage"] = \
                         tube.channels["$PnV"]
                         
                 # add an empty list for channel transforms.  a transform must
                 # be an object with scale(float) and inverse(float) methods,
                 # each of which applies or inverts the transformation.
                 # required to draw tic marks, etc.                    
-                self.channel_metadata[channel_name]["xforms"] = []
+                self.metadata[channel_name]["xforms"] = []
                     
         # validate the conditions
         
@@ -278,7 +281,7 @@ class Experiment(object):
             try:
                 new_data[meta_name] = pd.Series([meta_value] * tube.data.size,
                                              dtype = meta_type)
-            except ValueError:
+            except ValueError, TypeError:
                 raise RuntimeError("Tube {0} had trouble converting conditions {1}"
                                    "(value = {2}) to type {3}" \
                                    .format(tube.datafile,

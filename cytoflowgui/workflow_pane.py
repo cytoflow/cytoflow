@@ -5,8 +5,6 @@ from cytoflowgui.workflow import Workflow
 from traitsui.api import View, UI
 from pyface.action.api import ToolBarManager
 
-
-
 @provides(IDockPane)
 class WorkflowDockPane(DockPane):
     

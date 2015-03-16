@@ -4,12 +4,13 @@ Created on Feb 26, 2015
 @author: brian
 """
 
-from traits.etsconfig.api import ETSConfig
-ETSConfig.toolkit = 'qt4'
+if __name__ == '__main__':
+    from traits.etsconfig.api import ETSConfig
+    ETSConfig.toolkit = 'qt4'
 
-import os
-os.environ['TRAITS_DEBUG'] = "1"
-
+    import os
+    os.environ['TRAITS_DEBUG'] = "1"
+    
 from traits.api import HasTraits, provides, Instance, Str, Int, List, \
                        Bool, Enum, Float, Any
 
@@ -36,7 +37,8 @@ from traitsui.table_column import ObjectColumn
 
 class PlateDirectoryDialog(QtDirectoryDialog):
     """
-    A custom open file dialog for opening plates, so we can 
+    A custom open file dialog for opening plates, so we can specify different
+    file name --> plate position mappings.
     """
     
     def _create_control(self, parent):
@@ -101,6 +103,7 @@ class ExperimentSetup(HasTraits):
     
     # this is the actual model; the rest is a built-in view.
     tubes = List(Tube)
+    tube_trait_names = List(Str)
 
     # traits to communicate with the TabularEditor
     update = Bool
@@ -144,12 +147,12 @@ class ExperimentHandler(Controller):
         # connect the model trait change events to the controller methods
         # self.model.on_trait_change(self._on_col_clicked, 'col_clicked')
         self.model.handler = self
+
         return True
     
     def _on_ok(self):
-        print "clicked okay"
+        # TODO - validate metadata so Experiment.add_tube doesn't barf
         
-        # this is kind of 
         self.dialog.control.accept()
         
     def _on_delete_column(self, obj, column, info):
@@ -204,11 +207,11 @@ class ExperimentHandler(Controller):
         #    self.dialog.size = (550, 300)
         
         for path in file_dialog.paths:
-            tube = Tube(file = path)
+            tube = Tube(File = path)
             fcs = FCMeasurement(ID='new tube', datafile = path)
             tube.Name = fcs.meta['$SRC']
             tube.on_trait_change(self._try_multiedit, '+')
-            self.object.tubes.append(tube)
+            self.model.tubes.append(tube)
     
     def _on_add_plate(self):
         # TODO - add alternate manufacturer's plate types (to the name filters)
@@ -237,12 +240,12 @@ class ExperimentHandler(Controller):
         
         for well_name in plate.data:
             well_data = plate[well_name]
-            tube = Tube(file = well_data.datafile,
+            tube = Tube(File = well_data.datafile,
                         Row = well_data.position['new plate'][0],
                         Col = well_data.position['new plate'][1],
                         Name = well_data.meta['$SRC'])
             tube.on_trait_change(self._try_multiedit, '+')
-            self.object.tubes.append(tube)
+            self.model.tubes.append(tube)
             
     def _try_multiedit(self, obj, name, old, new):
         """
@@ -251,7 +254,7 @@ class ExperimentHandler(Controller):
         and if so, edit the same trait for all the selected tubes.
         """
                 
-        for tube, trait_name in self.object.selected:
+        for tube, trait_name in self.model.selected:
             if tube != obj:
                 tube.trait_set( **dict([(trait_name, new)]))
         
@@ -265,8 +268,14 @@ class ExperimentHandler(Controller):
             self.table_editor.columns.append(ObjectColumn(name = meta_name,
                                                           label = column_name))
             
-        for tube in self.object.tubes:
-            tube.on_trait_change(self._try_multiedit, meta_name)
+            for tube in self.model.tubes:
+                tube.on_trait_change(self._try_multiedit, meta_name)
+             
+            self.model.tube_trait_names.append(meta_name)
+                
+    def _remove_metadata(self, meta_name, column_name, meta_type):
+        # TODO
+        pass
         
 @provides(IDialog)
 class ExperimentSetupDialog(Dialog):
@@ -307,16 +316,8 @@ class ExperimentSetupDialog(Dialog):
         order to add "Add tube.... " and "Add plate..." buttons.
         """
          
-        #buttons = QtGui.QDialogButtonBox()
         buttons = QtGui.QWidget()
         layout = QtGui.QHBoxLayout()
-        
-        '''
-        btn_condition = QtGui.QPushButton("Add condition...")
-        layout.addWidget(btn_condition)
-        QtCore.QObject.connect(btn_condition, QtCore.SIGNAL('clicked()'),
-                               handler._add_condition)
-        '''
         
         btn_tube = QtGui.QPushButton("Add tubes...")
         layout.addWidget(btn_tube)
@@ -360,10 +361,18 @@ class ExperimentSetupDialog(Dialog):
                                          handler=self.handler)   
         
         self.handler.table_editor = self.ui.get_editors('tubes')[0]
+        
+                
+        # and if the Tube class already has traits defined, add them to the 
+        # table editor
+        ext_traits = set(Tube.class_trait_names()) - \
+            set(["trait_added", "trait_modified", "Name", "File"])
+        print ext_traits
+        for trait in ext_traits:
+            self.handler.table_editor.columns.append(ObjectColumn(name = trait,
+                                                                  label = trait))
+            self.object.tube_trait_names.append(trait)
   
-        # turn off row-only selection
-        #tab_control.setSelectionBehavior(QtGui.QAbstractItemView.SelectItems)
- 
         return self.ui.control
     
     def destroy(self):

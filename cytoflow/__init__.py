@@ -18,6 +18,7 @@ from operations.hlog import HlogTransformOp
 from views.histogram import HistogramView
 from views.range_selection import RangeSelection
 
+from utility.util import LogFloat
 try:
     from operations.logicle import LogicleTransformOp
 except ImportError:

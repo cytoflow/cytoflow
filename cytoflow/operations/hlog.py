@@ -65,6 +65,6 @@ class HlogTransformOp(HasTraits):
         
         for channel in self.channels:
             new_experiment[channel] = transform(old_experiment[channel])
-            new_experiment.channel_metadata[channel]["xforms"].append(transform)
+            new_experiment.metadata[channel]["xforms"].append(transform)
 
         return new_experiment
