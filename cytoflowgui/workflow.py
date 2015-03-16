@@ -5,15 +5,12 @@ if __name__ == '__main__':
     import os
     os.environ['TRAITS_DEBUG'] = "1"
 
-from traits.api import HasTraits, Instance, ListInstance, List
-from traitsui.api import Handler, View, Item
+from traits.api import HasTraits, List
+from traitsui.api import View, Item
 
-from cytoflow import Experiment
-from cytoflow.operations.i_operation import IOperation
 from cytoflowgui.vertical_notebook_editor import VerticalNotebookEditor
-from cytoflow.views.i_view import IView
 from cytoflowgui.workflow_item import WorkflowItem
-from cytoflowgui.import_data import ImportWorkflowItem
+
 
 
 class Workflow(HasTraits):
@@ -25,19 +22,12 @@ class Workflow(HasTraits):
     
     traits_view = View(Item(name='workflow',
                             id='table',
-                            editor=VerticalNotebookEditor(page_name='.operation.name',
-                                                          page_description='.operation.id',
+                            editor=VerticalNotebookEditor(page_name='.name',
+                                                          page_description='.id',
                                                           view = 'traits_view',
                                                           scrollable = True,
-                                                          multiple_open = False)
+                                                          multiple_open = False),
+                            show_label = False
                             ),
-                       resizable = True
+                       #resizable = True
                        )
-    
-if __name__ == '__main__':
-    wf = Workflow()
-    i = ImportWorkflowItem()
-    j = ImportWorkflowItem()
-    wf.workflow.append(i)
-    wf.workflow.append(j)
-    wf.configure_traits()

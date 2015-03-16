@@ -6,15 +6,18 @@ Created on Feb 11, 2015
 
 import os.path
 
-from traits.api import List, Instance
+from traits.api import Instance, List
 from pyface.tasks.api import Task, TaskLayout, PaneItem
-from envisage.api import Plugin
+from envisage.api import Plugin, Application
 from envisage.ui.tasks.api import TaskFactory
-from example_panes import PythonScriptBrowserPane
 from flow_task_pane import FlowTaskPane
 from cytoflowgui.workflow_pane import WorkflowDockPane
 from cytoflowgui.view_traits_pane import ViewTraitsDockPane
 from cytoflowgui.workflow import Workflow
+from cytoflowgui.import_data import ImportWorkflowItem
+from envisage.extension_point import contributes_to
+from cytoflowgui.op_factory import OperationFactory
+from cytoflowgui.op_plugins.i_op_plugin import IOperationPlugin
 
 class FlowTask(Task):
     """
@@ -24,25 +27,31 @@ class FlowTask(Task):
     id = "edu.mit.synbio.cytoflow.flow_task"
     name = "Cytometry analysis"
     
-    # the main workflow instance
-    model = Instance(Workflow)
+    # the main workflow instance.
+    # THIS IS WHERE IT'S INITIALLY INSTANTIATED.
+    model = Instance(Workflow, args = ())
+    
+    application = Instance(Application)
+    
+    op_plugins = List(IOperationPlugin)
         
     def initialized(self):
-        pass
+        self.model.workflow.append(ImportWorkflowItem())
+        self.op_plugins = self.application.get_extensions("edu.mit.synbio.cytoflow.op_plugins")
+        print "ops"
+        print len(self.op_plugins)
     
     def prepare_destroy(self):
         self.model = None
     
     def _default_layout_default(self):
-        return TaskLayout( left = PaneItem("edu.mit.synbio.workflow_pane"),
-                           right = PaneItem("edu.mit.synbio.view_traits_pane"))
+        return TaskLayout(left = PaneItem("edu.mit.synbio.workflow_pane"),
+                          right = PaneItem("edu.mit.synbio.view_traits_pane"))
      
     def create_central_pane(self):
         return FlowTaskPane(model = self.model)
      
     def create_dock_panes(self):
-        if not self.model:
-            self.model = Workflow()
         return [WorkflowDockPane(model = self.model), 
                 ViewTraitsDockPane(model = self.model)]
         
@@ -63,27 +72,24 @@ class FlowTaskPlugin(Plugin):
     id = 'edu.mit.synbio.cytoflow'
 
     # The plugin's name (suitable for displaying to the user).
-    name = 'Attractors'
-
-    #### Contributions to extension points made by this plugin ################
-
-    preferences = List(contributes_to=PREFERENCES)
-    preferences_panes = List(contributes_to=PREFERENCES_PANES)
-    tasks = List(contributes_to=TASKS)
+    name = 'Cytoflow'
 
     ###########################################################################
     # Protected interface.
     ###########################################################################
 
-    def _preferences_default(self):
+    @contributes_to(PREFERENCES)
+    def _get_preferences(self):
         filename = os.path.join(os.path.dirname(__file__), 'preferences.ini')
         return [ 'file://' + filename ]
     
-    def _preferences_panes_default(self):
+    @contributes_to(PREFERENCES_PANES)
+    def _get_preferences_panes(self):
         from preferences import CytoflowPreferencesPane
-        return [ CytoflowPreferencesPane ]
+        return [CytoflowPreferencesPane]
 
-    def _tasks_default(self):
-        return [ TaskFactory(id = 'edu.mit.synbio.cytoflow.flow_task',
-                             name = 'Cytometry analysis',
-                             factory = FlowTask) ]
+    @contributes_to(TASKS)
+    def _get_tasks(self):
+        return [TaskFactory(id = 'edu.mit.synbio.cytoflow.flow_task',
+                            name = 'Cytometry analysis',
+                            factory = lambda **x: FlowTask(application = self.application, **x))]

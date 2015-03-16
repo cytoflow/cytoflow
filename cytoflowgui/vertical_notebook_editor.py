@@ -4,6 +4,7 @@ Created on Mar 8, 2015
 @author: brian
 """
 
+
 if __name__ == '__main__':
     from traits.etsconfig.api import ETSConfig
     ETSConfig.toolkit = 'qt4'
@@ -233,18 +234,21 @@ class VerticalNotebookEditor(BasicEditorFactory):
 if __name__ == '__main__':
 
     from traitsui.api import View, Group, Item
+    from traits.api import Button
 
     class TestPageClass(HasTraits):
         trait1 = Str
         trait2 = Str
         trait3 = Bool
         trait4 = Bool
+        trait5 = Button
 
         traits_view = View(Group(Item(name='trait1'),
                                  Item(name='trait2'),
                                  Item(name='trait3'),
-                                 Item(name='trait4')))
-
+                                 Item(name='trait4'),
+                                 Item(name='trait5')))
+        
     class TestList(HasTraits):
         el = List(TestPageClass)
 

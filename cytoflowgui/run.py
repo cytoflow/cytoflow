@@ -14,13 +14,17 @@ from envisage.ui.tasks.tasks_plugin import TasksPlugin
 
 from flow_task import FlowTaskPlugin
 from cytoflow_application import CytoflowApplication
+from op_factory import OperationFactory
+from op_plugins.threshold import ThresholdPlugin
 
 def run_gui(argv):
     
     logging.basicConfig(level=logging.DEBUG)
 
-    plugins = [CorePlugin(), TasksPlugin(), FlowTaskPlugin()]
-    app = CytoflowApplication(plugins = plugins)
+    plugins = [CorePlugin(), TasksPlugin(), FlowTaskPlugin(), OperationFactory(),
+               ThresholdPlugin()]
+    app = CytoflowApplication(id = 'edu.mit.synbio.cytoflow',
+                              plugins = plugins)
     app.run()
     
     logging.shutdown()

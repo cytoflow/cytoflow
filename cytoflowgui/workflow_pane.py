@@ -43,14 +43,11 @@ class WorkflowDockPane(DockPane):
     ###########################################################################
 
     def create_contents(self, parent):
-        """ Create and return the toolkit-specific contents of the dock pane.
+        """ 
+        Create and return the toolkit-specific contents of the dock pane.
         """
-        if self.model is not None:
-            self.ui = self.model.edit_traits(kind='subpanel', parent=parent)
-            return self.ui.control
-        else:
-            self.ui = self.edit_traits(kind='subpanel', parent=parent, view='empty_view')
-            return self.ui.control
+        self.ui = self.model.edit_traits(kind='subpanel', parent=parent)
+        return self.ui.control
     
     ### TODO - rebuild/refresh when self.view is changed.
     def _workflow_changed(self):
