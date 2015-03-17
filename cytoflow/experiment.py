@@ -127,7 +127,7 @@ class Experiment(object):
     data frame itself with Experiment.data
     """
 
-    def __init__(self, prev_experiment = None, *args, **kwargs):
+    def __init__(self, prev_experiment = None):
         """Initializes a new Experiment, possibly from an old Experiment.
         
         Parameters

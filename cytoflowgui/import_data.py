@@ -68,7 +68,7 @@ class ImportWorkflowItem(WorkflowItem):
         
         setup = d.object
         
-        self.canonical_experiment = Experiment()
+        experiment = Experiment()
 
         trait_to_dtype = {"Str" : "category",
                           "Float" : "float",
@@ -82,23 +82,20 @@ class ImportWorkflowItem(WorkflowItem):
             trait = Tube.class_traits()[trait_name]
             trait_type = trait.trait_type.__class__.__name__
         
-            self.canonical_experiment.add_conditions(
-                {trait_name : trait_to_dtype[trait_type]})
+            experiment.add_conditions({trait_name : trait_to_dtype[trait_type]})
             if trait_type == "LogFloat":
-                self.canonical_experiment.metadata[trait_name]["repr"] = "Log"
+                experiment.metadata[trait_name]["repr"] = "Log"
         
         # TODO - error checking.  yikes.
         for tube in setup.tubes:
-            tube_fc = fc.FCMeasurement(ID=tube.Name,
-                                       datafile=tube.File)
-            self.canonical_experiment.add_tube(tube_fc,
-                                               tube.trait_get(trait_names))
+            tube_fc = fc.FCMeasurement(ID=tube.Name, datafile=tube.File)
+            experiment.add_tube(tube_fc, tube.trait_get(trait_names))
             
-        self.experiment = self.canonical_experiment
+        self.canonical_experiment = experiment
+        self.experiment = Experiment(self.canonical_experiment)
         
     @cached_property
     def _get_samples(self):
-        # TODO - this doesn't work
         if self.canonical_experiment is not None:
             return len(self.canonical_experiment.tubes)
         else:
@@ -106,11 +103,19 @@ class ImportWorkflowItem(WorkflowItem):
     
     @cached_property
     def _get_events(self):
-        # TODO - this doesn't work.
         if self.canonical_experiment is not None:
-            return self.canonical_experiment.data.size
+            return self.canonical_experiment.data.shape[0]
         else:
             return 0
+        
+    def _coarse_mode_changed(self, coarse_mode):
+        if coarse_mode:
+            self.experiment.data = \
+                self.canonical_experiment.data.copy(deep=True)
+        else:
+            self.experiment.data = \
+                self.canonical_experiment.data.copy(deep=True)
+        
     
 if __name__ == '__main__':
     wf = ImportWorkflowItem()

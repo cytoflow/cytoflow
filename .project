@@ -3,8 +3,8 @@
 	<name>cytoflow</name>
 	<comment></comment>
 	<projects>
-		<project>flowcytometrytools</project>
-		<project>goreutilities</project>
+		<project>FlowCytometryTools</project>
+		<project>GoreUtilities</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
