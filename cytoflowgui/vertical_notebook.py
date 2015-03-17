@@ -45,6 +45,15 @@ class VerticalNotebookPage(HasPrivateTraits):
     # The name of the *description_object* trait that signals a page description
     # change [Set by client]
     description_object_trait = Str
+    
+    # The HasTraits object whose trait we look at to set the page icon
+    icon_object = Instance(HasTraits)
+    
+    # The name of the *icon_object* trait that signals an icon change
+    icon_object_trait = Str
+    
+    # The icon for the page open/closed button
+    icon = Instance(QtGui.QStyle.StandardPixmap)
 
     # The parent window for the client page [Get by client]:
     parent = Property
@@ -116,6 +125,21 @@ class VerticalNotebookPage(HasPrivateTraits):
 
         # make sure the description gets initialized
         self._description_updated()
+        
+    def register_icon_listener(self, model, trait):
+        """
+        Registers a listener on the specified object trait for a page icon
+        change
+        """
+        
+        # save the info so we can unregister it later
+        self.icon_object, self.icon_object_trait = model, trait
+        
+        # register the listener
+        self.icon_object.on_trait_change(self._icon_updated, trait)
+        
+        # make sure the icon gets initialized
+        self._icon_updated()
 
     def _handle_page_toggle(self):
         if self.is_open:
@@ -155,12 +179,12 @@ class VerticalNotebookPage(HasPrivateTraits):
 
         self.control.setVisible(is_open)
         self.button.setChecked(is_open)
-        if is_open:
-            self.button.setIcon(self.button.style().
-                                standardIcon(QtGui.QStyle.SP_ArrowDown))
-        else:
-            self.button.setIcon(self.button.style().
-                                standardIcon(QtGui.QStyle.SP_ArrowRight))
+        
+        if self.icon_object is None:
+            if is_open:
+                self.icon = QtGui.QStyle.SP_ArrowDown
+            else:
+                self.icon = QtGui.QStyle.SP_ArrowRight
 
     def _name_changed(self, name):
         """ 
@@ -171,6 +195,9 @@ class VerticalNotebookPage(HasPrivateTraits):
     def _description_changed(self, description):
         self.button.setDescription(description)
 
+    def _icon_changed(self, icon):
+        self.button.setIcon(self.button.style().standardIcon(icon))
+        
     def _name_updated(self):
         """ 
         Handles a signal that the associated object's page name has changed.
@@ -181,8 +208,11 @@ class VerticalNotebookPage(HasPrivateTraits):
         method = None
         editor = nb.editor
         if editor is not None:
+            # I don't 100% understand this magic.  looks like a handler redirect
             method = getattr(editor.ui.handler,
-                             '%s_%s_page_name' % (editor.object_name, editor.name), None)
+                             '%s_%s_page_name' % 
+                             (editor.object_name, editor.name), 
+                             None)
         if method is not None:
             handler_name = method(editor.ui.info, self.name_object)
 
@@ -197,23 +227,47 @@ class VerticalNotebookPage(HasPrivateTraits):
         Handles the signal that the associated object's description has changed.
         """
         nb = self.notebook
-        handler_name = None
+        handler_desc = None
 
         method = None
         editor = nb.editor
         if editor is not None:
+            # i don't 100% understand this magic.
             method = getattr(editor.ui.handler,
                              '%s_%s_page_description' %
                              (editor.object_name, editor.name),
                              None)
         if method is not None:
-            handler_name = method(editor.ui.info, self.description_object)
+            handler_desc = method(editor.ui.info, self.description_object)
 
-        if handler_name is not None:
-            self.description = handler_name
+        if handler_desc is not None:
+            self.description = handler_desc
         else:
             self.description = getattr(self.description_object,
                                        self.description_object_trait) or ''
+                                       
+    def _icon_updated(self):
+        """
+        Handles the signal that the associated object's icon has changed.
+        """
+        nb = self.notebook
+        handler_icon = None
+         
+        method = None
+        editor = nb.editor
+        if editor is not None:
+            method = getattr(editor.ui.handler,
+                             '%s_%s_page_icon' % 
+                             (editor.object_name, editor.name),
+                             None)
+         
+        if method is not None:
+            handler_icon = method(editor.ui.info, self.icon_object)
+             
+        if handler_icon is not None:
+            self.icon = handler_icon
+        else:
+            self.icon = getattr(self.icon_object, self.icon_object_trait, None)
 
 #-------------------------------------------------------------------------
 #  'VerticalNotebook' class:

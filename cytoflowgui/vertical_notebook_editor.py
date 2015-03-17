@@ -177,17 +177,16 @@ class _VerticalNotebookEditor(Editor):
             page.name = name
 
         # Get the page description
-        desc = ''
         page_desc = self.factory.page_description
         if page_desc[0:1] == '.':
             if getattr(object, page_desc[1:], Undefined) is not Undefined:
                 page.register_description_listener(object, page_desc[1:])
-        else:
-            desc = page_desc
-
-        # and save it to the page
-        if page.description == '':
-            page.description = desc
+            
+        # Get the page icon
+        page_icon = self.factory.page_icon
+        if page_icon[0:1] == '.':
+            if getattr(object, page_icon[1:], Undefined) is not Undefined:
+                page.register_icon_listener(object, page_icon[1:])
 
         # Save the Traits UI in the page so it can dispose of it later:
         page.ui = ui
@@ -223,6 +222,12 @@ class VerticalNotebookEditor(BasicEditorFactory):
 
     # List member trait to read the notebook page description from
     page_description = Str
+    
+    # List member trait to read the notebook page icon from
+    # If None, then use right-arrow for "closed" and down-arrow for "open"
+    # The type of this trait is toolkit-specific; for example, the pyface.qt
+    # type is a QtGui.QStyle.StandardPixmap
+    page_icon = Str
 
     # Name of the view to use for each page:
     view = AView
@@ -235,6 +240,7 @@ if __name__ == '__main__':
 
     from traitsui.api import View, Group, Item
     from traits.api import Button
+    from pyface.qt import QtGui
 
     class TestPageClass(HasTraits):
         trait1 = Str
@@ -242,6 +248,7 @@ if __name__ == '__main__':
         trait3 = Bool
         trait4 = Bool
         trait5 = Button
+        icon = Instance(QtGui.QStyle.StandardPixmap)
 
         traits_view = View(Group(Item(name='trait1'),
                                  Item(name='trait2'),
@@ -259,6 +266,7 @@ if __name__ == '__main__':
                      #editor = ListEditor()
                      editor=VerticalNotebookEditor(page_name='.trait1',
                                                    page_description='.trait2',
+                                                   page_icon='.icon',
                                                    view='traits_view',
                                                    scrollable=True,
                                                    multiple_open=False)
@@ -268,6 +276,6 @@ if __name__ == '__main__':
         )
 
     test = TestList()
-    test.el.append(TestPageClass(trait1="one", trait2="two"))
-    test.el.append(TestPageClass(trait1="three", trait2="four"))
+    test.el.append(TestPageClass(trait1="one", trait2="two", icon=QtGui.QStyle.SP_DialogOkButton))
+    test.el.append(TestPageClass(trait1="three", trait2="four", icon=QtGui.QStyle.SP_BrowserStop))
     test.configure_traits()
