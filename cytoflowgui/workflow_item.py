@@ -42,5 +42,6 @@ class WorkflowItem(HasTraits):
         return self.operation.validate(experiment)
     
     def apply(self, experiment):
+        # TODO - make this multithreaded.
         self.result = self.operation.apply(experiment)
     
