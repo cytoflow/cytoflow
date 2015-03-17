@@ -1,5 +1,5 @@
 import pandas as pd
-import FlowCytometryTools as fc 
+import FlowCytometryTools as fc
 import copy
 
 class Experiment(object):
@@ -35,19 +35,7 @@ class Experiment(object):
         
     channels : dict(string : any)
         A dict containing the channels that this experiment tracks.
-        
-    metadata : dict( str : dict(str : any) )
-        A dict whose keys are column names and whose values are dicts of
-        metadata.  Some of this is application-specific and still being
-        determined.  Currently defined metadata:
-        * xforms: a list of (parameterized!) transformations that have been 
-                  applied to this channel.  necessary for computing tic marks
-                  on plots, among other things.
-        * voltage: the detector voltage used for this channel, from the FCS
-                   keyword "$PnV".
-        * repr: for float conditions, whether to represent it linearly or on
-                a log scale.
-    
+
     tubes : list(FCMeasurement)
         a list of the FCMeasurements that we're a container for.  
         TODO - do we really need to keep these around?  i think we're sucking
@@ -75,6 +63,20 @@ class Experiment(object):
         is a row; each column is either a fluorescent channel or a piece of
         metadata, either supplied by the tube conditions or by further operations
         (like gates, etc.)
+        
+    metadata : dict( str : dict(str : any) )
+        A dict whose keys are column names (either channels or conditions)
+        and whose values are dicts of metadata.  Some of this is 
+        application-specific and still being determined.  Currently defined 
+        metadata:
+        * xforms: a list of (parameterized!) transformations that have been 
+                  applied to this channel.  necessary for computing tic marks
+                  on plots, among other things.
+        * voltage: the detector voltage used for this channel, from the FCS
+                   keyword "$PnV".
+        * repr: for float conditions, whether to represent it linearly or on
+                a log scale.
+    
         
     Notes
     -----              
@@ -136,19 +138,15 @@ class Experiment(object):
             the previous version of this experiment.
         """
     
-        self.version = 1
         self.conditions = {}
         self.channels = {}
         self.metadata = {}
         self.tubes = []
         self.tube_conditions = {}
         self.tube_keywords = {}
-        self.successor = None
         self.data = pd.DataFrame()
             
         if(prev_experiment != None):
-            self.version = prev_experiment.version + 1
-
             # copy most of the metadata so if the op needs to change the
             # new experiment it won't affect the old experiment.
             self.conditions = copy.deepcopy(prev_experiment.conditions)
@@ -156,7 +154,6 @@ class Experiment(object):
             self.metadata = copy.deepcopy(prev_experiment.metadata)
             self.tubes = prev_experiment.tubes # no copy, just reference
             self.tube_conditions = copy.deepcopy(prev_experiment.tube_conditions)
-            prev_experiment.successor = self 
             self.data = prev_experiment.data.copy()  # shallow copy!
             
     def __getitem__(self, key):

@@ -13,10 +13,10 @@ if __name__ == '__main__':
 from cytoflowgui.workflow_item import WorkflowItem
 from traitsui.api import View, Item
 from traits.api import \
-    Button, Str, Bool, Int, Instance, Property, Trait, cached_property
+    Button, Str, Bool, Int, Instance, Property, cached_property
 from import_dialog import ExperimentSetupDialog, Tube
 from pyface.api import OK as PyfaceOK
-from cytoflow import Experiment, LogFloat
+from cytoflow import Experiment
 import FlowCytometryTools as fc
 
 class ImportWorkflowItem(WorkflowItem):
@@ -76,7 +76,8 @@ class ImportWorkflowItem(WorkflowItem):
                           "Bool" : "bool"}
         
         # get rid of the name and path traits
-        trait_names = list(set(Tube.class_editable_traits()) - set(["Name", "File"]))
+        trait_names = \
+            list(set(Tube.class_editable_traits()) - set(["Name", "File"]))
     
         for trait_name in trait_names:
             trait = Tube.class_traits()[trait_name]
@@ -91,8 +92,7 @@ class ImportWorkflowItem(WorkflowItem):
             tube_fc = fc.FCMeasurement(ID=tube.Name, datafile=tube.File)
             experiment.add_tube(tube_fc, tube.trait_get(trait_names))
             
-        self.canonical_experiment = experiment
-        self.experiment = Experiment(self.canonical_experiment)
+        self.canonical_experiment = self.result = experiment
         
     @cached_property
     def _get_samples(self):
@@ -113,8 +113,7 @@ class ImportWorkflowItem(WorkflowItem):
             self.experiment.data = \
                 self.canonical_experiment.data.copy(deep=True)
         else:
-            self.experiment.data = \
-                self.canonical_experiment.data.copy(deep=True)
+            self.result = self.canonical_experiment
         
     
 if __name__ == '__main__':

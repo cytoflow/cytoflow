@@ -14,7 +14,7 @@ from flow_task_pane import FlowTaskPane
 from cytoflowgui.workflow_pane import WorkflowDockPane
 from cytoflowgui.view_traits_pane import ViewTraitsDockPane
 from cytoflowgui.workflow import Workflow
-from cytoflowgui.import_data import ImportWorkflowItem
+from cytoflowgui.import_workflow_item import ImportWorkflowItem
 from envisage.extension_point import contributes_to
 from cytoflowgui.op_factory import OperationFactory
 from cytoflowgui.op_plugins.i_op_plugin import IOperationPlugin

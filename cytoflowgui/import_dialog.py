@@ -28,12 +28,18 @@ from pyface.constant import OK as PyfaceOK
 
 from pyface.api import GUI, FileDialog, DirectoryDialog
 
-from cytoflow.utility.util import LogFloat
-
 from pyface.ui.qt4.directory_dialog import DirectoryDialog as QtDirectoryDialog
 
 from FlowCytometryTools.core.containers import FCMeasurement, FCPlate
 from traitsui.table_column import ObjectColumn
+
+class LogFloat(Float):
+    """
+    A trait to represent a numeric condition on a log scale.
+    
+    Since I can't figure out how to add metadata to a trait class (just an
+    instance), we'll subclass it instead.
+    """
 
 class PlateDirectoryDialog(QtDirectoryDialog):
     """
