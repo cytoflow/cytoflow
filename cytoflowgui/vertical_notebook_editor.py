@@ -149,7 +149,7 @@ class _VerticalNotebookEditor(Editor):
         Creates and returns a notebook page for a specified object with traits.
         """
         # Create a new notebook page:
-        page = self.notebook.create_page()
+        page = self.notebook.create_page().set(data = object)
 
         # Create the Traits UI for the object to put in the notebook page:
         ui = object.edit_traits(parent=page.parent,

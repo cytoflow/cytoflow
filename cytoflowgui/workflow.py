@@ -5,7 +5,7 @@ if __name__ == '__main__':
     import os
     os.environ['TRAITS_DEBUG'] = "1"
 
-from traits.api import HasTraits, List
+from traits.api import HasTraits, List, Any, Instance
 from traitsui.api import View, Item
 
 from cytoflowgui.vertical_notebook_editor import VerticalNotebookEditor
@@ -20,11 +20,14 @@ class Workflow(HasTraits):
 
     workflow = List(WorkflowItem)
     
+    selected = Any
+    
     traits_view = View(Item(name='workflow',
                             id='table',
                             editor=VerticalNotebookEditor(page_name='.name',
                                                           page_description='.id',
                                                           view = 'traits_view',
+                                                          selected = 'selected',
                                                           scrollable = True,
                                                           multiple_open = False),
                             show_label = False

@@ -1,9 +1,10 @@
 from traits.api import HasTraits, Instance
 from traitsui.api import UI, View, Item, Group
 from cytoflow.views.i_view import IView
-from pyface.tasks.dock_pane import DockPane
+from pyface.tasks.api import DockPane, Task
 from pyface.qt import QtGui
 from cytoflowgui.workflow import Workflow
+from envisage.api import Application
 
 class ViewTraitsDockPane(DockPane):
     """
@@ -20,6 +21,12 @@ class ViewTraitsDockPane(DockPane):
 
     # the UI object associated with the TraitsUI view
     ui = Instance(UI)
+    
+    # the application instance from which to get plugin instances
+    application = Instance(Application)
+    
+    # the Task that serves as the controller
+    task = Instance(Task)
     
     # an empty view
     empty_view = View()

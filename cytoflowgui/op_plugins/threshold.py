@@ -1,8 +1,9 @@
 from traitsui.api import ModelView
 
 from envisage.api import Plugin, contributes_to
-from traits.api import provides
-from cytoflowgui.op_plugins.i_op_plugin import IOperationPlugin
+from traits.api import provides, Property
+from cytoflowgui.op_plugins.i_op_plugin import IOperationPlugin,\
+    MOperationPlugin
 from cytoflow import ThresholdOp
 from pyface.qt import QtGui
 
@@ -13,13 +14,15 @@ class ThresholdHandler(ModelView):
     pass
 
 @provides(IOperationPlugin)
-class ThresholdPlugin(Plugin):
+class ThresholdPlugin(Plugin, MOperationPlugin):
     """
     class docs
     """
     
     id = 'edu.mit.synbio.cytoflow.op.threshold' 
     name = "Threshold Operation"
+    short_name = "Threshold"
+    menu_group = "Gates"
     
     def get_operation(self):
         return ThresholdOp()

@@ -18,6 +18,7 @@ from cytoflowgui.import_workflow_item import ImportWorkflowItem
 from envisage.extension_point import contributes_to
 from cytoflowgui.op_factory import OperationFactory
 from cytoflowgui.op_plugins.i_op_plugin import IOperationPlugin
+from cytoflowgui.workflow_item import WorkflowItem
 
 class FlowTask(Task):
     """
@@ -28,7 +29,7 @@ class FlowTask(Task):
     name = "Cytometry analysis"
     
     # the main workflow instance.
-    # THIS IS WHERE IT'S INITIALLY INSTANTIATED.
+    # THIS IS WHERE IT'S INITIALLY INSTANTIATED (note the args=())
     model = Instance(Workflow, args = ())
     
     application = Instance(Application)
@@ -37,7 +38,7 @@ class FlowTask(Task):
         
     def initialized(self):
         self.model.workflow.append(ImportWorkflowItem())
-        self.op_plugins = self.application.get_extensions("edu.mit.synbio.cytoflow.op_plugins")
+        #self.op_plugins = self.application.get_extensions("edu.mit.synbio.cytoflow.op_plugins")
         print "ops"
         print len(self.op_plugins)
     
@@ -52,8 +53,18 @@ class FlowTask(Task):
         return FlowTaskPane(model = self.model)
      
     def create_dock_panes(self):
-        return [WorkflowDockPane(model = self.model), 
-                ViewTraitsDockPane(model = self.model)]
+        return [WorkflowDockPane(model = self.model, 
+                                 application = self.application,
+                                 task = self), 
+                ViewTraitsDockPane(model = self.model,
+                                   application = self.application,
+                                   task = self)]
+        
+    def add_operation(self, plugin, after):
+        idx = self.model.workflow.index(after)
+        new_item = WorkflowItem(operation = plugin.get_operation(),
+                                handler = plugin.get_handler())
+        self.model.workflow.insert(idx+1, new_item)
         
         
 class FlowTaskPlugin(Plugin):
