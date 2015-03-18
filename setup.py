@@ -28,7 +28,8 @@ setup(
                         'pandas>=0.15.0',
                         'numexpr>=2.1',
                         'seaborn>=0.5.0',
-                        'pyface>=4.0'],
+                        'pyface>=4.0',
+                        'envisage>=4.0'],
                         
                         # ALSO requires PyQt4 >= 4.10, but that's not available
                         # via distutils.  Install it locally!
