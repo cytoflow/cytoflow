@@ -61,7 +61,7 @@ A few things.
 
 ### Required packages
 
-This will soon go into a `setuptools` spec. (TODO!)
+These are all in the `setuptools` spec.
 
 For the core `cytotools` library, you need the following Python packages:
 ```
@@ -76,12 +76,13 @@ FlowCytometryTools  >= 0.4.0
 For the GUI, you additionally need:
 ```
 pyface >= 4.0
-pyqt >= 4.10
+envisage >= 4.0
+pyqt >= 4.10 -- this must be installed separately!
 ```
 
 Note that many of these packages have additional dependencies, including
 but not limited to `matplotlib`, `numpy`, `traitsui`, `decorator`, etc.
-I'm pretty sure that they're all well-behaved PyPI packages; you should be
+Everything except PyQT should be a well well-behaved PyPI package; you should be
 able to install all the above with `pip install` or the Canopy package manager.
 
 **Please note:** I am a Linux user, and installing these packages is quite easy 
