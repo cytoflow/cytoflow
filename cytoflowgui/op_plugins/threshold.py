@@ -1,5 +1,5 @@
-from traitsui.api import ModelView
-
+from traitsui.api import ModelView, View, Item
+from traits.api import Bool
 from envisage.api import Plugin, contributes_to
 from traits.api import provides, Property
 from cytoflowgui.op_plugins.i_op_plugin import IOperationPlugin,\
@@ -11,7 +11,9 @@ class ThresholdHandler(ModelView):
     """
     class docs
     """
-    pass
+    b = Bool
+    
+    traits_view = View(Item(name='b'))
 
 @provides(IOperationPlugin)
 class ThresholdPlugin(Plugin, MOperationPlugin):

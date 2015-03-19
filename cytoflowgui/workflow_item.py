@@ -52,8 +52,7 @@ class WorkflowItem(HasTraits):
     # an event for the previous WorkflowItem to tell this one to update
     update = Event
     
-    traits_view = View('operation',
-                       handler = handler)
+    traits_view = View(handler = handler)
         
     def _valid_changed(self, old, new):
         if old == "valid" and new == "invalid" and self.next is not None:
