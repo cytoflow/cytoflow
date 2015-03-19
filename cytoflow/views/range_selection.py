@@ -56,7 +56,7 @@ class RangeSelection(HasTraits):
     
     @on_trait_change('min, max')
     def _draw_span(self):
-        if not (min and max):
+        if not (self.min and self.max):
             return
         
         if self._min_line:
