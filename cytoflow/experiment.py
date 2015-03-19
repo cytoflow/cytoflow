@@ -33,8 +33,8 @@ class Experiment(object):
     conditions : dict(string : any)
         A dict of the tube "conditions" that this experiment tracks.
         
-    channels : dict(string : any)
-        A dict containing the channels that this experiment tracks.
+    channels : list(string)
+        A list containing the channels that this experiment tracks.
 
     tubes : list(FCMeasurement)
         a list of the FCMeasurements that we're a container for.  
@@ -139,7 +139,7 @@ class Experiment(object):
         """
     
         self.conditions = {}
-        self.channels = {}
+        self.channels = ()
         self.metadata = {}
         self.tubes = []
         self.tube_conditions = {}
@@ -233,7 +233,7 @@ class Experiment(object):
                     
             # TODO check the delay -- and any other params?
         else:
-            self.channels = tube.channel_names
+            self.channels = list(tube.channel_names)
             
             for channel_name in tube.channel_names:
                 if(channel_name not in self.metadata):

@@ -18,7 +18,12 @@ class IOperationPlugin(Interface):
         doc
         """
             
-    def get_handler(self):
+    def get_wrapper(self):
+        """
+        doc
+        """
+        
+    def get_view(self):
         """
         doc
         """

@@ -4,12 +4,14 @@ Created on Mar 15, 2015
 @author: brian
 '''
 
-from traits.api import HasTraits, Instance, List, Str, DelegatesTo, Event, Enum
-from traitsui.api import View, Handler
+from traits.api import HasTraits, Instance, List, Str, DelegatesTo, Event, \
+                       Enum, Property
+from traitsui.api import View, Handler, Item
 
 from cytoflow import Experiment
 from cytoflow.operations.i_operation import IOperation
 from cytoflow.views.i_view import IView
+from traitsui.ui_traits import AView
 
 class WorkflowItem(HasTraits):
     """        
@@ -29,9 +31,6 @@ class WorkflowItem(HasTraits):
     # the operation this Item wraps
     operation = Instance(IOperation)
     
-    # a handler for constraining *operation*'s traitsui interface 
-    handler = Instance(Handler)
-    
     # the Experiment that is the result of applying *operation* to a 
     # previous Experiment
     result = Instance(Experiment)
@@ -43,6 +42,10 @@ class WorkflowItem(HasTraits):
     # self.result = self.apply(previous.result)
     previous = Instance('WorkflowItem')
     
+    # a Property wrapper around the previous.result.channels
+    # used to constrain the operation view (with an EnumEditor)
+    previous_channels = Property
+    
     # the next WorkflowItem in the workflow
     next = Instance('WorkflowItem')
     
@@ -52,7 +55,8 @@ class WorkflowItem(HasTraits):
     # an event for the previous WorkflowItem to tell this one to update
     update = Event
     
-    traits_view = View(handler = handler)
+    # the view, set by the plugin
+    view = Instance(View)
         
     def _valid_changed(self, old, new):
         if old == "valid" and new == "invalid" and self.next is not None:
@@ -70,4 +74,10 @@ class WorkflowItem(HasTraits):
         
         # tell the next WorkflowItem to go
         self.next.update = True
+        
+    def _get_previous_channels(self):
+        return self.previous.result.channels
+    
+    def default_traits_view(self):
+        return self.view
     

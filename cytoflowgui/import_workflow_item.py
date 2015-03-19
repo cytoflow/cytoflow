@@ -36,24 +36,32 @@ class ImportWorkflowItem(WorkflowItem):
     coarse_mode = Bool(False)
     coarse_mode_events = Int(1000)
     
-    traits_view = View(Item(name='import_event',
-                            show_label=False),
-                       Item(name='samples',
-                            label='Samples',
-                            style='readonly',
-                            visible_when='canonical_experiment is not None'),
-                       Item(name='events',
-                            label='Events',
-                            style='readonly',
-                            visible_when='canonical_experiment is not None'),
-                       Item(name='coarse_mode',
-                            label="Coarse mode?",
-                            visible_when='canonical_experiment is not None'),
-                       Item(name='coarse_mode_events',
-                            label="Events per\nsample",
-                            visible_when='(canonical_experiment is not None) and coarse_mode'),
-)
-    
+    def default_traits_view(self):
+        """
+        A view for the "import" workflow item
+        
+        I know this is a static view, but the parent class defines 
+        default_traits_view, so we need to override it.
+        """
+        
+        return View(Item(name='import_event',
+                         show_label=False),
+                    Item(name='samples',
+                         label='Samples',
+                         style='readonly',
+                         visible_when='canonical_experiment is not None'),
+                    Item(name='events',
+                         label='Events',
+                         style='readonly',
+                         visible_when='canonical_experiment is not None'),
+                    Item(name='coarse_mode',
+                         label="Coarse mode?",
+                         visible_when='canonical_experiment is not None'),
+                    Item(name='coarse_mode_events',
+                         label="Events per\nsample",
+                         visible_when='(canonical_experiment is not None) and coarse_mode'),
+    )
+        
     def _import_event_fired(self):
         """
         Import data; save as self.result
