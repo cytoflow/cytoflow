@@ -6,6 +6,7 @@ from traitsui.api import View, UI
 from pyface.action.api import ToolBarManager
 from envisage.api import Application
 from pyface.tasks.action.api import TaskAction
+from cytoflowgui.op_plugins.i_op_plugin import OP_PLUGIN_EXT
 
 
 @provides(IDockPane)
@@ -58,7 +59,7 @@ class WorkflowDockPane(DockPane):
         self.toolbar = ToolBarManager(orientation='vertical', 
                                       image_size = (32, 32))
          
-        op_plugins = self.application.get_extensions("edu.mit.synbio.cytoflow.op_plugins")
+        op_plugins = self.application.get_extensions(OP_PLUGIN_EXT)
                  
         for plugin in op_plugins:
             task_action = TaskAction(name=plugin.short_name,

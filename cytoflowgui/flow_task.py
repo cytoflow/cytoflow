@@ -65,7 +65,6 @@ class FlowTask(Task):
         item = WorkflowItem().set(operation = plugin.get_operation(),
                                   view = plugin.get_view())
 
-        #wrapper = plugin.get_wrapper().set(operation = operation)
         after.next = item
         item.previous = after
         self.model.workflow.insert(idx+1, item)

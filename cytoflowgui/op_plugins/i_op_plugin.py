@@ -5,6 +5,8 @@ Created on Mar 15, 2015
 """
 from traits.api import Interface, Str
 
+OP_PLUGIN_EXT = 'edu.mit.synbio.cytoflow.op_plugins'
+
 class IOperationPlugin(Interface):
     """
     classdocs
