@@ -17,6 +17,7 @@ from operations.threshold import ThresholdOp
 from operations.hlog import HlogTransformOp
 from views.histogram import HistogramView
 from views.range_selection import RangeSelection
+from views.threshold_selection import ThresholdSelection
 
 try:
     from operations.logicle import LogicleTransformOp

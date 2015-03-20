@@ -83,7 +83,7 @@ class RangeSelection(HasTraits):
     def _interactive(self):
         if self.interactive:
             ax = plt.gca()
-            self.span = SpanSelector(ax, 
+            self._span = SpanSelector(ax, 
                              onselect=self._onselect, 
                              direction='horizontal',
                              rectprops={'alpha':0.2,
@@ -91,7 +91,7 @@ class RangeSelection(HasTraits):
                              span_stays=False,
                              useblit = True)
         else:
-            self.span = None
+            self._span = None
         
     
     def _onselect(self, xmin, xmax): 
