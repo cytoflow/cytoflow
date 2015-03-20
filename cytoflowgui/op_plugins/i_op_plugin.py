@@ -19,15 +19,14 @@ class IOperationPlugin(Interface):
         """
         doc
         """
-            
-    def get_wrapper(self):
-        """
-        doc
-        """
         
     def get_view(self):
         """
-        doc
+        Return an instance of a traitsui View for the operation we wrap.
+        
+        There's a lot of logic you can stuff into a view (enums, visible_when,
+        etc.)  If you need more logic, though, feel free to define a Handler
+        (especially a ModelView) and use that to handle, eg, button presses.
         """
 
     def get_icon(self):

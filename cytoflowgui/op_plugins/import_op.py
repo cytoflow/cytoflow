@@ -3,6 +3,8 @@ Created on Mar 15, 2015
 
 @author: brian
 """
+
+
 if __name__ == '__main__':
     from traits.etsconfig.api import ETSConfig
     ETSConfig.toolkit = 'qt4'
@@ -11,56 +13,41 @@ if __name__ == '__main__':
     os.environ['TRAITS_DEBUG'] = "1"
 
 from cytoflowgui.workflow_item import WorkflowItem
-from traitsui.api import View, Item
+from traitsui.api import View, Item, Controller, ModelView, Handler
 from traits.api import \
-    Button, Str, Bool, Int, Instance, Property, cached_property
-from import_dialog import ExperimentSetupDialog, Tube
+    Button, Str, Bool, Int, Instance, Property, cached_property, provides, \
+    HasTraits, Event
+from cytoflowgui.import_dialog import ExperimentSetupDialog, Tube,\
+    ExperimentSetup
+from cytoflowgui.op_plugins.i_op_plugin import IOperationPlugin,\
+    MOperationPlugin
 from pyface.api import OK as PyfaceOK
 from cytoflow import Experiment
+from cytoflow.operations.i_operation import IOperation
+from envisage.api import Plugin
 import FlowCytometryTools as fc
 
-class ImportWorkflowItem(WorkflowItem):
+@provides(IOperation)
+class ImportOp(HasTraits):
+    """
+    class docs
+    """
+
+class ImportHandler(Handler):
     """
     A WorkflowItem that handles importing data and making a new Experiment
     """
-    name = Str("Import data")
-    id = Str("")
+    name = Str("Import data handler")
+    id = Str("import data handler id")
     
     import_event = Button(label="Import data...")
 
     canonical_experiment = Instance(Experiment)
 
-    samples = Property(depends_on = 'canonical_experiment')
-    events = Property(depends_on = 'canonical_experiment')
 
-    coarse_mode = Bool(False)
-    coarse_mode_events = Int(1000)
     
-    def default_traits_view(self):
-        """
-        A view for the "import" workflow item
-        
-        I know this is a static view, but the parent class defines 
-        default_traits_view, so we need to override it.
-        """
-        
-        return View(Item(name='import_event',
-                         show_label=False),
-                    Item(name='samples',
-                         label='Samples',
-                         style='readonly',
-                         visible_when='canonical_experiment is not None'),
-                    Item(name='events',
-                         label='Events',
-                         style='readonly',
-                         visible_when='canonical_experiment is not None'),
-                    Item(name='coarse_mode',
-                         label="Coarse mode?",
-                         visible_when='canonical_experiment is not None'),
-                    Item(name='coarse_mode_events',
-                         label="Events per\nsample",
-                         visible_when='(canonical_experiment is not None) and coarse_mode'),
-    )
+    def init(self, info):
+        pass
         
     def _import_event_fired(self):
         """
@@ -122,8 +109,37 @@ class ImportWorkflowItem(WorkflowItem):
                 self.canonical_experiment.data.copy(deep=True)
         else:
             self.result = self.canonical_experiment
-        
+            
+            
+@provides(IOperationPlugin)
+class ImportPlugin(Plugin, MOperationPlugin):
+    """
+    class docs
+    """
     
-if __name__ == '__main__':
-    wf = ImportWorkflowItem()
-    wf.configure_traits()
+    id = 'edu.mit.synbio.cytoflow.op.import'
+    name = "Import data"
+    short_name = "Import"
+    
+    def get_operation(self):
+        return ImportOp()
+    
+    def get_view(self):
+        return View(Item(name='handler.import_event',
+                         show_label=False),
+                    Item(name='handler.samples',
+                         label='Samples',
+                         style='readonly',
+                         visible_when='canonical_experiment is not None'),
+                    Item(name='handler.events',
+                         label='Events',
+                         style='readonly',
+                         visible_when='canonical_experiment is not None'),
+                    Item(name='handler.coarse_mode',
+                         label="Coarse mode?",
+                         visible_when='canonical_experiment is not None'),
+                    Item(name='handler.coarse_mode_events',
+                         label="Events per\nsample",
+                         visible_when='(canonical_experiment is not None) and coarse_mode'),
+                    handler = ImportHandler()
+    )

@@ -14,11 +14,11 @@ from flow_task_pane import FlowTaskPane
 from cytoflowgui.workflow_pane import WorkflowDockPane
 from cytoflowgui.view_traits_pane import ViewTraitsDockPane
 from cytoflowgui.workflow import Workflow
-from cytoflowgui.import_workflow_item import ImportWorkflowItem
 from envisage.extension_point import contributes_to
 from cytoflowgui.op_factory import OperationFactory
 from cytoflowgui.op_plugins.i_op_plugin import IOperationPlugin
 from cytoflowgui.workflow_item import WorkflowItem
+from cytoflowgui.op_plugins.import_op import ImportPlugin
 
 class FlowTask(Task):
     """
@@ -37,10 +37,10 @@ class FlowTask(Task):
     op_plugins = List(IOperationPlugin)
         
     def initialized(self):
-        self.model.workflow.append(ImportWorkflowItem())
-        #self.op_plugins = self.application.get_extensions("edu.mit.synbio.cytoflow.op_plugins")
-        print "ops"
-        print len(self.op_plugins)
+        plugin = ImportPlugin()
+        item = WorkflowItem().set(operation = plugin.get_operation(),
+                                  view = plugin.get_view())
+        self.model.workflow.append(item)
     
     def prepare_destroy(self):
         self.model = None
