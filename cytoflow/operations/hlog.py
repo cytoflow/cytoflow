@@ -59,7 +59,7 @@ class HlogTransformOp(HasTraits):
             transformed channels.
         """
         
-        new_experiment = old_experiment.clone_traits()
+        new_experiment = old_experiment.clone()
         
         transform = Transformation("hlog")
         

@@ -143,6 +143,10 @@ class Experiment(HasStrictTraits):
     def query(self, expr, **kwargs):
         """Expose pandas.DataFrame.query() to the outside world"""
         return self.data.query(expr, **kwargs)
+    
+    def clone(self):
+        """Clone this experiment"""
+        return self.clone_traits()
             
     def add_conditions(self, conditions):
         """Add one or more conditions as a dictionary. Call before adding tubes.
