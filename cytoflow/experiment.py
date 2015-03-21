@@ -1,8 +1,9 @@
 import pandas as pd
 import FlowCytometryTools as fc
-import copy
+from traits.api import HasStrictTraits, DictStrAny, ListStr, Instance, \
+                       Set, DictStrStr
 
-class Experiment(object):
+class Experiment(HasStrictTraits):
     """An Experiment manages all the data and metadata for a flow experiment.
     
     A flow cytometry experiment consists of:
@@ -26,37 +27,15 @@ class Experiment(object):
     
     Attributes
     ----------
-    version : small integer
-        The version of this Experiment (ie, how many predecessors does it
-        have?)
-        
-    conditions : dict(string : any)
-        A dict of the tube "conditions" that this experiment tracks.
-        
+
     channels : list(string)
         A list containing the channels that this experiment tracks.
-
-    tubes : list(FCMeasurement)
-        a list of the FCMeasurements that we're a container for.  
-        TODO - do we really need to keep these around?  i think we're sucking
-        all the relevant metadata out already, and we're certainly capturing
-        all the events.....  though at the moment we use them as keys for the
-        next two dicts.
-        
-    tube_keywords : dict(FCMeasurement : dict(string : string) )
-        a dictionary containing all the FCS metadata keywords for each tube.
-        things like channel name, maximum value, etc etc etc, but in a really
-        awful format.  See the FCS spec for details.
-        
-    tube_conditions : dict(FCMeasurement : dict(string : any) )
-        a dictionary mapping a tube reference to the experimental conditions
-        under which that sample was collected (provided by the experimenter.)
-        used to make sure that no two tubes have the same conditions.
-        
-    successor : Experiment
-        the Experiment derived from this one (or None, if there isn't one.)
-        useful for invalidating future versions if, say, a transformation's
-        parameters are changed.  TODO - this isn't yet implemented.
+    
+    conditions : dict(string : string)
+        A dict of the experimental conditions that this experiment tracks.  The
+        key is the name of the condition, and the value is the string
+        representation of the numpy dtype (usually one of "category", 
+        "float", "int" or "bool".
         
     data : pandas.DataFrame
         the DataFrame representing all the events and metadata.  Each event
@@ -78,11 +57,17 @@ class Experiment(object):
                keyword "$PnN"
         * repr: for float conditions, whether to represent it linearly or on
                 a log scale.
-    
+                
+    _tube_conditions : set( dict(string : string) )
+        a dictionary mapping a tube reference to the experimental conditions
+        under which that sample was collected (provided by the experimenter.)
+        used to make sure that no two tubes have the same conditions.  not used
+        after import is done.  
+        
         
     Notes
     -----              
-          
+      
     Note that nowhere do we mention filters or gates.  You can define gate,
     sure .... but applying that gate to an Experiment simply adds another
     piece of metadata for each event, indicating that the event is in the new
@@ -130,38 +115,27 @@ class Experiment(object):
     DataFrame API pieces (like query()); and of course, you can just get the
     data frame itself with Experiment.data
     """
-
-    def __init__(self, prev_experiment = None):
-        """Initializes a new Experiment, possibly from an old Experiment.
-        
-        Parameters
-        ----------
-        prev_experiment : Experiment
-            the previous version of this experiment.
-        """
     
-        self.conditions = {}
-        self.channels = ()
-        self.metadata = {}
-        self.tubes = []
-        self.tube_conditions = {}
-        self.tube_keywords = {}
-        self.data = pd.DataFrame()
-            
-        if(prev_experiment != None):
-            # copy most of the metadata so if the op needs to change the
-            # new experiment it won't affect the old experiment.
-            self.conditions = copy.deepcopy(prev_experiment.conditions)
-            self.channels = copy.deepcopy(prev_experiment.channels)
-            self.metadata = copy.deepcopy(prev_experiment.metadata)
-            self.tubes = prev_experiment.tubes # no copy, just reference
-            self.tube_conditions = copy.deepcopy(prev_experiment.tube_conditions)
-            self.data = prev_experiment.data.copy()  # shallow copy!
+    # potentially mutable.  deep copy required
+    conditions = DictStrStr(copy = "deep")
+    
+    # potentially mutable.  deep copy required
+    channels = ListStr(copy = "deep")
+    
+    # potentially mutable.  deep copy required
+    metadata = DictStrAny(copy = "deep")
+    
+    # shallow copy
+    data = Instance(pd.DataFrame, args=(), copy = "shallow")
+    
+    # don't really have to keep this one around at all
+    _tube_conditions = Set(transient = True)
+    
             
     def __getitem__(self, key):
         """Override __getitem__ so we can reference columns like ex.column"""
         return self.data.__getitem__(key)
-    
+     
     def __setitem__(self, key, value):
         """Override __setitem__ so we can assign columns like ex.column = ..."""
         return self.data.__setitem__(key, value)
@@ -188,13 +162,12 @@ class Experiment(object):
             tubes.                
         """
         
-        if(self.tubes):
+        if(self._tube_conditions):
             raise RuntimeError("You have to add all your conditions before "
                                "adding your tubes!")              
             
         for key, value in conditions.iteritems():
             self.data[key] = pd.Series(dtype = value)
-            self.metadata[key] = {}
         
         self.conditions.update(conditions)
              
@@ -213,47 +186,55 @@ class Experiment(object):
             the tube's experimental conditions in (condition:value) pairs
         """
     
-        if(self.tubes):
-            # first, make sure the new tube's channels match the rest of the channels
-            # in the Experiment
+        if(self.channels):
+            # first, make sure the new tube's channels match the rest of the 
+            # channels in the Experiment
             
-            if(tube.channel_names != self.tubes[0].channel_names):
+            if(list(tube.channel_names) != self.channels):
                 raise RuntimeError("Tube {0} doesn't have the same channels "
-                                   "as tube {1}".format(tube.datafile,
-                                                        self.tubes[0].datafile))
+                                   "as the first tube added".format(tube.datafile))
+                                            
              
-            # next check the voltage   
-            if("$PnV" in tube.channels or "$PnV" in self.tubes[0].channels):
-                old_v = self.tubes[0].channels["$PnV"]
-                new_v = tube.channels["$PnV"]
+            # next check the per-channel parameters
+            for channel in self.channels:
                 
-                if(not all(old_v[old_v.notnull()] == new_v[new_v.notnull()])):
-                    raise RuntimeError("Tube {0} doesn't have the same voltages "
-                                       "as tube {1}" \
-                                       .format(tube.datafile,
-                                               self.tubes[0].datafile))
+                # first check voltage
+                if "voltage" in self.metadata[channel]:
+                    
+                    if not "$PnV" in tube.channels:
+                        raise RuntimeError("Didn't find a voltage for channel {0}" \
+                                           "in tube {1}".format(channel, tube.datafile))
+                    
+                    old_v = self.metadata[channel]["voltage"]
+                    new_v = tube.channels[tube.channels['$PnN'] == channel]['$PnV'].iloc[0]
+                    
+                    if old_v != new_v:
+                        raise RuntimeError("Tube {0} doesn't have the same voltages "
+                                           "as the first tube" \
+                                           .format(tube.datafile))
+
                     
             # TODO check the delay -- and any other params?
         else:
             self.channels = list(tube.channel_names)
             
-            for channel_name in tube.channel_names:
-                if(channel_name not in self.metadata):
-                    self.metadata[channel_name] = {}
+            for channel in self.channels:
+                self.metadata[channel] = {}
                 if("$PnV" in tube.channels):
-                    self.metadata[channel_name]["voltage"] = \
-                        tube.channels["$PnV"]
+                    new_v = tube.channels[tube.channels['$PnN'] == channel]['$PnV'].iloc[0]
+                    if new_v: self.metadata[channel]["voltage"] = new_v
                         
                 # add an empty list for channel transforms.  a transform must
                 # be an object with scale(float) and inverse(float) methods,
                 # each of which applies or inverts the transformation.
                 # required to draw tic marks, etc.                    
-                self.metadata[channel_name]['xforms'] = []
+                self.metadata[channel]['xforms'] = []
                 
-                # add the maximum possible value.  TODO - what about time channels?
-                self.metadata[channel_name]['max'] = tube.channels["$PnN"]
+                # add the maximum possible value for this channel.
+                data_max = tube.channels[tube.channels['$PnN'] == channel]['$PnR'].iloc[0]
+                self.metadata[channel]['max'] = data_max
                     
-        # validate the conditions
+        # validate the experimental conditions
         
         # first, make sure that the keys in conditions are the same as self.conditions
         if( any(True for k in conditions if k not in self.conditions) or \
@@ -263,10 +244,8 @@ class Experiment(object):
             
         # next, make sure that this tube's conditions doesn't match any other
         # tube's conditions
-        for prev_tube, prev_meta in self.tube_conditions.iteritems():
-            if(cmp(prev_meta, conditions) == 0):
-                raise RuntimeError("Tube {0} has the same conditions as tube {1}"\
-                                   .format(tube.datafile, prev_tube.datafile))
+        if frozenset(conditions.iteritems()) in self._tube_conditions:
+            raise RuntimeError("Tube {0} has non-unique conditions".format(tube.datafile))
                 
         # add the conditions to tube's internal data frame.  specify the conditions
         # dtype using self.conditions.  check for errors as we do so.
@@ -283,7 +262,7 @@ class Experiment(object):
             try:
                 new_data[meta_name] = pd.Series([meta_value] * tube.data.size,
                                              dtype = meta_type)
-            except ValueError, TypeError:
+            except (ValueError, TypeError):
                 raise RuntimeError("Tube {0} had trouble converting conditions {1}"
                                    "(value = {2}) to type {3}" \
                                    .format(tube.datafile,
@@ -291,9 +270,7 @@ class Experiment(object):
                                            meta_value,
                                            meta_type))
         
-        self.tubes.append(tube)
-        self.tube_conditions[tube] = conditions
-        self.tube_keywords[tube] = tube.channels
+        self._tube_conditions.add(frozenset(conditions.iteritems()))
         self.data = self.data.append(new_data)
         del new_data
         
@@ -303,13 +280,14 @@ if __name__ == "__main__":
     ex = Experiment()
     ex.add_conditions({"time" : "float"})
     
-    tube1 = fc.FCMeasurement(ID='Test 1',
-                             datafile='/home/brian/RFP_Well_A3.fcs')
-    tube2 = fc.FCMeasurement(ID='Test 2', 
-                       datafile='/home/brian/CFP_Well_A4.fcs')
+    tube1 = fc.FCMeasurement(ID='Test 1', 
+                       datafile='/home/brian/tmp/zhen/TALER9-TRE/TALER9/Specimen_001_A1_A01.fcs')
     
-    ex = ex.add_tube(tube1, {"time" : 10.0})
-    ex = ex.add_tube(tube2, {"time" : 20.0})
+    tube2 = fc.FCMeasurement(ID='Test 2', 
+                       datafile='/home/brian/tmp/zhen/TALER9-TRE/TALER9/Specimen_001_B6_B06.fcs')
+    
+    ex.add_tube(tube1, {"time" : 10.0})
+    ex.add_tube(tube2, {"time" : 20.0})
     
     print(ex.data)
 

@@ -97,7 +97,8 @@ class WorkflowItem(HasStrictTraits):
 #     @on_trait_change('operation.+')
 #     def _on_operation_trait_change(self):
 #         self._update_fired()
-        
+    
+    @cached_property
     def _get_previous_channels(self):
         if (not self.previous) or (not self.previous.result):
             return []

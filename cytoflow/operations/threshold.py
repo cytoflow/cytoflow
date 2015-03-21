@@ -68,7 +68,7 @@ class ThresholdOp(HasTraits):
                                .format(self.name))
         
         
-        new_experiment = Experiment(old_experiment)
+        new_experiment = old_experiment.clone_traits()
         new_experiment[self.name] = \
             pd.Series(new_experiment[self.channel] > self.threshold)
             

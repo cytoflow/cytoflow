@@ -127,7 +127,7 @@ class LogicleTransformOp(HasTraits):
         #
         # or (and?) -- fix the SWIG error situation.
         
-        new_experiment = Experiment(old_experiment)
+        new_experiment = old_experiment.clone_traits()
         
         for channel in self.channels:
             el = Logicle(self.T[channel], 
