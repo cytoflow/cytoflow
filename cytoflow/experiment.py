@@ -125,12 +125,11 @@ class Experiment(HasStrictTraits):
     # potentially mutable.  deep copy required
     metadata = DictStrAny(copy = "deep")
     
-    # shallow copy
-    data = Instance(pd.DataFrame, args=(), copy = "shallow")
+    # this doesn't play nice with copy.copy(); clone it ourselves.
+    data = Instance(pd.DataFrame, args=())
     
     # don't really have to keep this one around at all
     _tube_conditions = Set(transient = True)
-    
             
     def __getitem__(self, key):
         """Override __getitem__ so we can reference columns like ex.column"""
@@ -146,7 +145,9 @@ class Experiment(HasStrictTraits):
     
     def clone(self):
         """Clone this experiment"""
-        return self.clone_traits()
+        new_exp = self.clone_traits()
+        new_exp.data = self.data.copy()
+        return new_exp
             
     def add_conditions(self, conditions):
         """Add one or more conditions as a dictionary. Call before adding tubes.

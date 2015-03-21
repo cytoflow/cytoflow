@@ -57,7 +57,7 @@ class ImportHandler(Controller):
     @cached_property
     def _get_samples(self):
         if self.model.result is not None:
-            return len(self.model.result.tubes)
+            return len(self.model.operation.tubes)
         else:
             return 0
      

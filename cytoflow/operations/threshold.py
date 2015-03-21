@@ -32,6 +32,9 @@ class ThresholdOp(HasTraits):
         if not experiment:
             return False
         
+        if not self.name:
+            return False
+        
         if self.channel not in experiment.channels:
             return False
         
