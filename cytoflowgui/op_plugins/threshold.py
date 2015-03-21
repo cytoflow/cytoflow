@@ -22,7 +22,7 @@ class ThresholdPlugin(Plugin, MOperationPlugin):
     def get_operation(self):
         return ThresholdOp()
     
-    def get_view(self):
+    def get_view(self, model):
         return View(Item('object.operation.name'),
                     Item('object.operation.channel',
                          editor=EnumEditor(name='previous_channels'),

@@ -38,8 +38,9 @@ class FlowTask(Task):
         
     def initialized(self):
         plugin = ImportPlugin()
-        item = WorkflowItem().set(operation = plugin.get_operation(),
-                                  view = plugin.get_view())
+        item = WorkflowItem()
+        item.operation = plugin.get_operation()
+        item.view = plugin.get_view(item)
         self.model.workflow.append(item)
     
     def prepare_destroy(self):
@@ -61,9 +62,15 @@ class FlowTask(Task):
                                    task = self)]
         
     def add_operation(self, plugin, after):
+        # default to inserting at the end of the list if none selected
+        if after is None:
+            after = self.model.workflow[-1]
+        
         idx = self.model.workflow.index(after)
-        item = WorkflowItem().set(operation = plugin.get_operation(),
-                                  view = plugin.get_view())
+        
+        item = WorkflowItem()
+        item.operation = plugin.get_operation()
+        item.view = plugin.get_view(item)
 
         after.next = item
         item.previous = after

@@ -20,13 +20,14 @@ class IOperationPlugin(Interface):
         doc
         """
         
-    def get_view(self):
+    def get_view(self, model):
         """
         Return an instance of a traitsui View for the operation we wrap.
         
         There's a lot of logic you can stuff into a view (enums, visible_when,
-        etc.)  If you need more logic, though, feel free to define a Handler
-        (especially a ModelView) and use that to handle, eg, button presses.
+        etc.)  If you need more logic, though, feel free to define a Controller
+        and use that to handle, eg, button presses or derived traits (eg,
+        with a Property trait)
         """
 
     def get_icon(self):

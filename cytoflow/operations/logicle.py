@@ -98,8 +98,11 @@ class LogicleTransformOp(HasTraits):
             # should be the same for each tube, so we'll just suck it off
             # the first one.
             # TODO - should this be experiment[channel].max()?
-            keywords = experiment.tube_keywords.itervalues().next()
-            self.T[channel] = float(keywords[keywords["$PnN"] == channel]["$PnR"].item())
+
+            self.T[channel] = experiment.metadata[channel]['max']
+            
+            #keywords = experiment.tube_keywords.itervalues().next()            
+            #float(keywords[keywords["$PnN"] == channel]["$PnR"].item())
             
             self.A[channel] = 0.0
             

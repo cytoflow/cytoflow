@@ -3,7 +3,6 @@ Created on Feb 26, 2015
 
 @author: brian
 """
-
 if __name__ == '__main__':
     from traits.etsconfig.api import ETSConfig
     ETSConfig.toolkit = 'qt4'
@@ -12,33 +11,33 @@ if __name__ == '__main__':
     os.environ['TRAITS_DEBUG'] = "1"
     
 from traits.api import HasTraits, provides, Instance, Str, Int, List, \
-                       Bool, Enum, Float, Any
+                       Bool, Enum, Float, DelegatesTo, Property
+                       
+from traitsui.api import UI, Group, View, Item, TableEditor, OKCancelButtons, \
+                         Controller
 
-from traitsui.api import UI, Group, View, Item, TableEditor
-from traitsui.menu import Menu, Action, OKCancelButtons
-from traitsui.handler import Handler, Controller
 from traitsui.qt4.table_editor import TableEditor as TableEditorQt
 
 from pyface.i_dialog import IDialog
-from pyface.api import Dialog
+from pyface.api import Dialog, GUI, FileDialog
 
 from pyface.qt import QtCore, QtGui
-from pyface.qt.QtCore import pyqtSlot
 from pyface.constant import OK as PyfaceOK
-
-from pyface.api import GUI, FileDialog, DirectoryDialog
 
 from pyface.ui.qt4.directory_dialog import DirectoryDialog as QtDirectoryDialog
 
 from FlowCytometryTools.core.containers import FCMeasurement, FCPlate
 from traitsui.table_column import ObjectColumn
+from collections import Counter
+from cytoflow.operations.import_op import Tube
 
 class LogFloat(Float):
     """
     A trait to represent a numeric condition on a log scale.
     
     Since I can't figure out how to add metadata to a trait class (just an
-    instance), we'll subclass it instead.
+    instance), we'll subclass it instead.  Don't need to override anything;
+    all we're really looking to change is the name.
     """
 
 class PlateDirectoryDialog(QtDirectoryDialog):
@@ -61,28 +60,69 @@ class PlateDirectoryDialog(QtDirectoryDialog):
     def selectedNameFilter(self):
         return self.dlg.selectedNameFilter()
     
+    
+class ExperimentColumn(ObjectColumn):
+    
+    # override ObjectColumn.get_cell_color
+    def get_cell_color(self, object):
+        if(object._parent.tubes_counter[object] > 1):
+            return QtGui.QColor('lightpink')
+        else:
+            return super(ObjectColumn, self).get_cell_color(object)
+        
+    
+class ExperimentDialogModel(HasTraits):
+ 
+    # the actual model; the rest is for communicating with the View
+    tubes = List(Tube)
+    
+    # a collections.Counter that keeps track of duplicates for us.  rebuilt
+    # whenever the Tube elements of self.tubes changes
+    tubes_counter = Property(depends_on = 'tubes[]')
+    
+    # traits to communicate with the TabularEditor
+    update = Bool
+    refresh = Bool
+    selected = List
+    
+    view = View(
+            Group(
+                Item(name = 'tubes', 
+                     id = 'table', 
+                     editor = TableEditor(editable = True,
+                                          sortable = True,
+                                          auto_size = True,
+                                          configurable = False,
+                                          selection_mode = 'cells',
+                                          selected = 'selected',
+                                          columns = [ExperimentColumn(name = 'Name')],
+                                          ),
+                     enabled_when = "object.tubes"),
+                show_labels = False
+            ),
+            title     = 'Experiment Setup',
+            id        = 'edu.mit.synbio.experiment_table_editor',
+            width     = 0.60,
+            height    = 0.75,
+            resizable = True
+        )
+    
+    ## i'd love to cache this, but it screws up the coloring stuff  :-/
+    def _get_tubes_counter(self):
+        return Counter(self.tubes)
 
-    
-class ExperimentHandler(Controller):
-    
-    dialog = Instance(IDialog)
-    
+
+class ExperimentDialogHandler(Controller):
+
     # keep around a ref to the underlying widget so we can add columns dynamically
     table_editor = Instance(TableEditorQt)
     
-    def init(self, info):
-        # connect the model trait change events to the controller methods
-        # self.model.on_trait_change(self._on_col_clicked, 'col_clicked')
-        self.model.handler = self
-
-        return True
-    
-    def _on_ok(self):
-        # TODO - validate metadata so Experiment.add_tube doesn't barf
-        
-        self.dialog.control.accept()
+    def closed(self, info, is_ok):
+        for tube in self.model.tubes:
+            tube.on_trait_change(self._try_multiedit, '+', remove = True)
         
     def _on_delete_column(self, obj, column, info):
+        # TODO - be able to remove traits..... ?
         pass
         
     def _on_add_condition(self):
@@ -130,11 +170,9 @@ class ExperimentHandler(Controller):
         if file_dialog.return_code != PyfaceOK:
             return
         
-        #if not self.model.tubes:
-        #    self.dialog.size = (550, 300)
-        
         for path in file_dialog.paths:
             tube = Tube(File = path)
+            tube._parent = self.model
             fcs = FCMeasurement(ID='new tube', datafile = path)
             tube.Name = fcs.meta['$SRC']
             tube.on_trait_change(self._try_multiedit, '+')
@@ -154,8 +192,8 @@ class ExperimentHandler(Controller):
         #if not self.model.tubes:
         #    self.dialog.size = (550, 300)
                 
-        self._add_metadata("Row", "Row", Str)
-        self._add_metadata("Col", "Col", Int)
+        self._add_metadata("Row", "Row", Str(transient = True))
+        self._add_metadata("Col", "Col", Int(transient = True))
         
         # TODO - error handling!
         # TODO - allow for different file name prototypes or manufacturers
@@ -171,6 +209,7 @@ class ExperimentHandler(Controller):
                         Row = well_data.position['new plate'][0],
                         Col = well_data.position['new plate'][1],
                         Name = well_data.meta['$SRC'])
+            tube._parent = self.model
             tube.on_trait_change(self._try_multiedit, '+')
             self.model.tubes.append(tube)
             
@@ -192,20 +231,18 @@ class ExperimentHandler(Controller):
         
         if not meta_name in Tube.class_trait_names():
             Tube.add_class_trait(meta_name, meta_type)       
-            self.table_editor.columns.append(ObjectColumn(name = meta_name,
-                                                          label = column_name))
+            self.table_editor.columns.append(ExperimentColumn(name = meta_name,
+                                                              label = column_name))
             
             for tube in self.model.tubes:
                 tube.on_trait_change(self._try_multiedit, meta_name)
-             
-            self.model.tube_trait_names.append(meta_name)
                 
     def _remove_metadata(self, meta_name, column_name, meta_type):
         # TODO
         pass
         
 @provides(IDialog)
-class ExperimentSetupDialog(Dialog):
+class ExperimentDialog(Dialog):
     """
     A dialog for setting up an experiment: loading FCS files and specifying 
     metadata.  Centered around a table editor.
@@ -216,24 +253,12 @@ class ExperimentSetupDialog(Dialog):
     
     style = 'modal'
     title = 'Experiment setup'
-    
-    object = Instance(ExperimentSetup)
-    handler = Instance(Handler)
-    ui = Instance(UI)
-    
-    def _create(self):
-        """ 
-        Creates the window's widget hierarchy. 
-        
-        Need to override this protected interface so we can instantiate the
-        model and controller.
-        """
-        
-        self.object = ExperimentSetup()
-        self.handler = ExperimentHandler(model = self.object, dialog = self)
 
-        super(ExperimentSetupDialog, self)._create()
-    
+    handler = Instance(ExperimentDialogHandler, 
+                       kw = {'model' : ExperimentDialogModel()})
+    model = DelegatesTo('handler')
+
+    ui = Instance(UI)
         
     def _create_buttons(self, parent):
         """ 
@@ -268,8 +293,7 @@ class ExperimentSetupDialog(Dialog):
         btn_ok.setDefault(True)
         layout.addWidget(btn_ok)
         QtCore.QObject.connect(btn_ok, QtCore.SIGNAL('clicked()'),
-                               self.handler._on_ok)  # so we can do some validation
-                               #self.control, QtCore.SLOT('accept()'))
+                               self.control, QtCore.SLOT('accept()'))
 
         # 'Cancel' button.
         btn_cancel = QtGui.QPushButton("Cancel")
@@ -283,22 +307,20 @@ class ExperimentSetupDialog(Dialog):
     
     def _create_dialog_area(self, parent):
         
-        self.ui = self.object.edit_traits(kind='subpanel', 
+        self.ui = self.model.edit_traits(kind='subpanel', 
                                          parent=parent, 
                                          handler=self.handler)   
         
+        # need to keep a reference to the table editor so we can dynamically
+        # add columns to it.
         self.handler.table_editor = self.ui.get_editors('tubes')[0]
-        
-                
+                        
         # and if the Tube class already has traits defined, add them to the 
         # table editor
-        ext_traits = set(Tube.class_trait_names()) - \
-            set(["trait_added", "trait_modified", "Name", "File"])
-        print ext_traits
+        ext_traits = Tube.class_trait_names(transient = lambda x: x is not True)
         for trait in ext_traits:
-            self.handler.table_editor.columns.append(ObjectColumn(name = trait,
-                                                                  label = trait))
-            self.object.tube_trait_names.append(trait)
+            self.handler.table_editor.columns.append(ExperimentColumn(name = trait,
+                                                                      label = trait))
   
         return self.ui.control
     
@@ -314,7 +336,7 @@ if __name__ == '__main__':
     gui = GUI()
     
     # create a Task and add it to a TaskWindow
-    d = ExperimentSetupDialog()
+    d = ExperimentDialog()
     d.size = (550, 500)
     d.open()
     

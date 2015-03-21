@@ -69,11 +69,13 @@ class Experiment(object):
         and whose values are dicts of metadata.  Some of this is 
         application-specific and still being determined.  Currently defined 
         metadata:
-        * xforms: a list of (parameterized!) transformations that have been 
-                  applied to this channel.  necessary for computing tic marks
-                  on plots, among other things.
-        * voltage: the detector voltage used for this channel, from the FCS
+        * xforms: for chanels, a list of (parameterized!) transformations that 
+                  have been applied.  necessary for computing tic marks on 
+                  plots, among other things.
+        * voltage: for channels, the detector voltage used. from the FCS
                    keyword "$PnV".
+        * max: for channels, the maximum possible value.  from the FCS
+               keyword "$PnN"
         * repr: for float conditions, whether to represent it linearly or on
                 a log scale.
     
@@ -246,7 +248,10 @@ class Experiment(object):
                 # be an object with scale(float) and inverse(float) methods,
                 # each of which applies or inverts the transformation.
                 # required to draw tic marks, etc.                    
-                self.metadata[channel_name]["xforms"] = []
+                self.metadata[channel_name]['xforms'] = []
+                
+                # add the maximum possible value.  TODO - what about time channels?
+                self.metadata[channel_name]['max'] = tube.channels["$PnN"]
                     
         # validate the conditions
         

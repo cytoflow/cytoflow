@@ -29,7 +29,17 @@ class ThresholdOp(HasTraits):
     
     def validate(self, experiment):
         """Validate this operation against an experiment."""
-        raise NotImplementedError("Need to implement this...")
+        if not experiment:
+            return False
+        
+        if self.channel not in experiment.channels:
+            return False
+        
+        if (self.threshold > experiment[self.channel].max() or
+            self.threshold < experiment[self.channel].min()):
+            return False
+        
+        return True
         
     def apply(self, old_experiment):
         """Applies the threshold to an experiment.

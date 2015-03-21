@@ -26,7 +26,7 @@ class Workflow(HasTraits):
                             id='table',
                             editor=VerticalNotebookEditor(page_name='.name',
                                                           page_description='.id',
-                                                          #view = 'traits_view',
+                                                          page_icon='.icon',
                                                           selected = 'selected',
                                                           scrollable = True,
                                                           multiple_open = False),
