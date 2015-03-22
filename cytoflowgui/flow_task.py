@@ -9,7 +9,7 @@ import os.path
 from traits.api import Instance, List
 from pyface.api import error 
 from pyface.tasks.api import Task, TaskLayout, PaneItem
-from envisage.api import Plugin, Application, ExtensionPoint, contributes_to
+from envisage.api import Plugin, ExtensionPoint, contributes_to
 from envisage.ui.tasks.api import TaskFactory
 from flow_task_pane import FlowTaskPane
 from cytoflowgui.workflow_pane import WorkflowDockPane
@@ -104,13 +104,22 @@ class FlowTask(Task):
         if wi.next:
             wi.next.update = True
         
-    def set_current_view(self, view_id):
+    def set_current_view(self, pane, view_id):
         
         wi = self.model.selected
         if wi is None:
             wi = self.model.workflow[-1]
             
         view = next((x for x in wi.views if x.id == view_id), None)
+        
+        if not view:
+            plugin = next((x for x in self.view_plugins if x.view_id == view_id))
+            view = plugin.get_view()
+            
+            # dynamically associate a traitsui View with this view.
+            view.ui = plugin.get_ui(view)
+
+        pane.view = view
     
         
 class FlowTaskPlugin(Plugin):

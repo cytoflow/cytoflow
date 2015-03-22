@@ -18,13 +18,14 @@ class ThresholdSelectionPlugin(Plugin, MViewPlugin):
     classdocs
     """
 
-    id = 'edu.mit.synbio.cytoflowgui.view.threshold_selection'
-    name = "Threshold"
+    id = 'edu.mit.synbio.cytoflowgui.view.threshold'
+    view_id = 'edu.mit.synbio.cytoflow.view.threshold'
+    short_name = "Threshold"
     
     def get_view(self):
         return ThresholdSelection()
     
-    def get_traitsui_view(self, model):
+    def get_ui(self, model):
         return View(Item('object.view.name'),
                     Item('object.view.channel'),
                     Item('object.view.xfacet'),

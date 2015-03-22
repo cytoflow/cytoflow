@@ -22,7 +22,7 @@ class WorkflowItem(HasStrictTraits):
     """
     
     # the operation's id
-    id = DelegatesTo('operation')
+    friendly_id = DelegatesTo('operation')
     
     # the operation's name
     name = DelegatesTo('operation')

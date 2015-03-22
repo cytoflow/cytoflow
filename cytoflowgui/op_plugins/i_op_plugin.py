@@ -9,20 +9,35 @@ OP_PLUGIN_EXT = 'edu.mit.synbio.cytoflow.op_plugins'
 
 class IOperationPlugin(Interface):
     """
-    classdocs
+    Attributes
+    ----------
+    
+    id : Str
+        The Envisage ID used to refer to this plugin
+        
+    operation_id : Str
+        Same as the "id" attribute of the IOperation this plugin wraps.
+        
+    short_name : Str
+        The operation's "short" name - for menus and toolbar tool tips
+        
+    menu_group : Str
+        If we were to put this op in a menu, what submenu to use?
+        Not currently used.
     """
     
+    operation_id = Str
     short_name = Str
     menu_group = Str
 
     def get_operation(self):
         """
-        doc
+        Return an instance of the IOperation that this plugin wraps
         """
         
     def get_ui(self, model):
         """
-        Return an instance of a traitsui View for the operation we wrap.
+        Return a traitsui View for the IOperation this plugin wraps
         
         There's a lot of logic you can stuff into a view (enums, visible_when,
         etc.)  If you need more logic, though, feel free to define a Controller

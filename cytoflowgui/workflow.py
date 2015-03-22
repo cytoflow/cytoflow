@@ -25,7 +25,7 @@ class Workflow(HasTraits):
     traits_view = View(Item(name='workflow',
                             id='table',
                             editor=VerticalNotebookEditor(page_name='.name',
-                                                          page_description='.id',
+                                                          page_description='.friendly_id',
                                                           page_icon='.icon',
                                                           selected = 'selected',
                                                           scrollable = True,

@@ -76,14 +76,15 @@ class ImportPlugin(Plugin, MOperationPlugin):
     """
     
     id = 'edu.mit.synbio.cytoflowgui.op.import'
-    name = "Import data"
-    short_name = "Import"
-    menu_group = ""
+    operation_id = 'edu.mit.synbio.cytoflow.op.import'
+
+    short_name = "Import data"
+    menu_group = "TOP"
     
     def get_operation(self):
         return ImportOp()
     
-    def get_ui(self, model):
+    def get_ui(self, operation):
         return View(Item('handler.import_event',
                          show_label=False),
                     Item('handler.samples',
@@ -100,5 +101,5 @@ class ImportPlugin(Plugin, MOperationPlugin):
                     Item('object.operation.coarse_events',
                          label="Events per\nsample",
                          visible_when='object.result is not None and object.operation.coarse is True'),
-                    handler = ImportHandler(model = model)
+                    handler = ImportHandler(model = operation)
     )

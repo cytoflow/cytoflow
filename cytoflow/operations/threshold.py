@@ -22,7 +22,9 @@ class ThresholdOp(HasTraits):
     """
     
     # traits
-    id = "Threshold Gate"
+    id = "edu.mit.synbio.cytoflow.op.threshold"
+    friendly_id = "Threshold"
+    
     name = Str()
     channel = Str()
     threshold = CFloat()

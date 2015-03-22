@@ -16,21 +16,23 @@ class IView(Interface):
     
     Attributes
     ----------
-    name : Str
-        The name of this view: for UI, etc.  NOT user-specified (like the
-        IOperation name is), but set by the programmer!
-        
     id : Str
-        A unique id for this view, for application logic etc.
+        A unique id for this view.  Prefix: "edu.mit.cytoflow.view"
+
+    friendly_id : Str
+        The human-readable id of this view: eg, "Histogram"
+        
+    name : Str
+        The name of this view (for serialization, UI, etc.)
         
     subset : Str
         A string specifying the subset of the data to be plotted.
         Passed to pandas.DataFrame.query().
     """
-    
 
     name = Str
-    id = Str       
+    id = Str      
+     
     subset = Str
     
     def validate(self, experiment):

@@ -31,7 +31,10 @@ class HistogramView(HasTraits):
         .. note: Should this be a param instead?
     """
     
-    # traits    
+    # traits   
+    id = "edu.mit.cytoflow.view.histogram"
+    friendly_id = "Histogram" 
+    
     name = Str
     channel = Str
     xfacet = Str

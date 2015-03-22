@@ -12,8 +12,9 @@ class ThresholdPlugin(Plugin, MOperationPlugin):
     class docs
     """
     
-    id = 'edu.mit.synbio.cytoflow.op.threshold' 
-    name = "Threshold Operation"
+    id = 'edu.mit.synbio.cytoflowgui.op.threshold'
+    operation_id = 'edu.mit.synbio.cytoflow.op.threshold'
+
     short_name = "Threshold"
     menu_group = "Gates"
     

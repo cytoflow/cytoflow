@@ -24,7 +24,8 @@ class HlogTransformOp(HasTraits):
     """
     
     # traits
-    id = "Hyperlog Transformation"
+    id = "edu.mit.synbio.cytoflow.op.hlog"
+    friendly_id = "Hyperlog"
     name = Str()
     channels = ListStr()
     

@@ -21,12 +21,13 @@ class ViewDockPane(DockPane):
 
     # the IViewPlugins that the user can possibly choose
     plugins = List(IViewPlugin)
-
-    # the UI object associated with the TraitsUI view
-    ui = Instance(UI)
     
-    # the view whose traits we're currently editing
+    # the IView we're currently editing
     view = Instance(IView)
+
+    # the UI object associated with the object we're editing.
+    # NOTE: we don't maintain a reference to the IView itself...
+    _ui = Instance(UI)
 
     # the plugin instance for the IView we're currently showing
     _current_plugin = Instance(IViewPlugin)
@@ -46,9 +47,9 @@ class ViewDockPane(DockPane):
         Destroy the toolkit-specific control that represents the pane.
         """
         # Destroy the Traits-generated control inside the dock control.
-        if self.ui is not None:
-            self.ui.dispose()
-            self.ui = None
+        if self._ui is not None:
+            self._ui.dispose()
+            self._ui = None
 
         # Destroy the dock control.
         super(ViewDockPane, self).destroy()
@@ -62,7 +63,7 @@ class ViewDockPane(DockPane):
         Create and return the toolkit-specific contents of the dock pane.
         """
 
-        plugins_dict = {p: p.name for p in self.plugins}
+        plugins_dict = {p: p.short_name for p in self.plugins}
         plugin_view = View(Item('_current_plugin',
                                 editor=EnumEditor(values=plugins_dict),
                                 show_label = False))
@@ -98,18 +99,17 @@ class ViewDockPane(DockPane):
 
     @on_trait_change('_current_plugin')
     def _current_plugin_changed(self, new):
-        self.task.set_current_view(new.id)
+        self.task.set_current_view(self, new.view_id)
         
     @on_trait_change('view')
     def _view_changed(self, old, new):
-        if isinstance(old, Plugin):
-            self.layout.takeAt(self.layout.count() - 1)
-            
-        self.view = new.get_view()
-        traitsui_view = new.get_traitsui_view(self.view)
-        
-        self.ui = self.view.edit_traits(kind='subpanel', 
-                                        parent=self.parent,
-                                        view=traitsui_view)
-        
-        self.layout.addWidget(self.ui.control)
+        if isinstance(old, IView):
+            self._layout.takeAt(self._layout.count() - 1)
+    
+        # note: the "ui" attribute isn't defined on IView; it's dynamically
+        # associated with these instances in flow_task.FlowTask.set_current_view
+        self._ui = new.edit_traits(kind='subpanel', 
+                                   parent=self._parent,
+                                   view=new.ui)
+                 
+        self._layout.addWidget(self._ui.control)

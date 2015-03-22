@@ -1,6 +1,6 @@
 This is where the "ui adapter" bits go for the various operations.  Each op
 gets
- - a class derived from traitsui.ModelView, which wraps the operations
+ - an optional class derived from traitsui.Controller, which wraps the operations
    parameters in traits that are appropriate for the Experiment we're applying
    the op on (channel names, subset editor, etc.)
  - a class derived from envisage.Plugin:

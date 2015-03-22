@@ -33,6 +33,9 @@ class RangeSelection(HasTraits):
         with a mouse drag?
     """
     
+    id = "edu.mit.synbio.cytoflow.view.range"
+    friendly_id = "Range Selection"
+    
     min = Float(None)
     max = Float(None)
     

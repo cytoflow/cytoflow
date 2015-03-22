@@ -10,15 +10,28 @@ VIEW_PLUGIN_EXT = 'edu.mit.synbio.cytoflow.view_plugins'
 
 class IViewPlugin(Interface):
     """
-    classdocs
+    
+    Attributes
+    ----------
+    
+    id : Str
+        The envisage ID used to refer to this plugin
+        
+    view_id : Str
+        Same as the "id" attribute of the IView this plugin wraps
+        Prefix: edu.mit.synbio.cytoflowgui.view
+        
+    short_name : Str
+        The view's "short" name - for menus, toolbar tips, etc.
     """
     
+    view_id = Str
     short_name = Str
 
     def get_view(self):
         pass
     
-    def get_traitsui_view(self, model):
+    def get_ui(self, view):
         """
         Return an instance of a traitsui View for the view we wrap.
         

@@ -6,8 +6,12 @@ class IOperation(Interface):
     Attributes
     ----------
     id : Str
+        a unique identifier for this class. prefix: edu.mit.synbio.cytoflow.op
+        
+    friendly_id : Str
         The operation's human-readable id (like "Logicle" or "Hyperlog").  Used
         for UI implementations.
+        
     name : Str
         The name of this IOperation instance (like "Debris Filter").  Useful for
         UI implementations; sometimes used for naming gates' metadata
@@ -15,6 +19,7 @@ class IOperation(Interface):
     
     # interface traits
     id = Str
+    friendly_id = Str
     name = Str
     
     def validate(self, experiment):

@@ -1,5 +1,5 @@
 This is where the "ui adapter" bits go for the various views.  Each view gets
- - a class derived from traitsui.ModelView, which wraps the view
+ - an optional class derived from traitsui.Controller, which wraps the view
    parameters in traits that are appropriate for the Experiment we're applying
    the view on (channel names, subset editor, etc.)
  - a class derived from envisage.Plugin:

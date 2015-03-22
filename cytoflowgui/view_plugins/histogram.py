@@ -19,12 +19,13 @@ class HistogramPlugin(Plugin, MViewPlugin):
     """
 
     id = 'edu.mit.synbio.cytoflowgui.view.histogram'
-    name = "Histogram"
+    view_id = 'edu.mit.synbio.cytoflow.view.histogram'
+    short_name = "Histogram"
     
     def get_view(self):
         return HistogramView()
     
-    def get_traitsui_view(self, model):
+    def get_ui(self, model):
         return View(Item('object.name'),
                     Item('object.channel'),
                     Item('object.xfacet'),
