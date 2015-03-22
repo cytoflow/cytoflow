@@ -7,7 +7,6 @@ from pyface.tasks.task_pane import TaskPane
 from matplotlib_editor import MPLFigureEditor
 from traits.api import Instance, provides
 from pyface.tasks.i_task_pane import ITaskPane
-from cytoflowgui.workflow import Workflow
 
 @provides(ITaskPane)
 class FlowTaskPane(TaskPane):
@@ -20,7 +19,6 @@ class FlowTaskPane(TaskPane):
     id = 'edu.mit.synbio.cytoflow.flow_task_pane'
     name = 'Cytometry Data Viewer'
     
-    model = Instance(Workflow)
     editor = Instance(MPLFigureEditor)
     
     def create(self, parent):

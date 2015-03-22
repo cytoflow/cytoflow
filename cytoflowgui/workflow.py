@@ -20,7 +20,7 @@ class Workflow(HasTraits):
 
     workflow = List(WorkflowItem)
     
-    selected = Any
+    selected = Instance(WorkflowItem)
     
     traits_view = View(Item(name='workflow',
                             id='table',

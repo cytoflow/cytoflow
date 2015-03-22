@@ -1,9 +1,8 @@
-from traits.api import Instance, Any, on_trait_change
+from traits.api import Instance, Any, List, on_trait_change
 from traitsui.api import UI, View, Item, EnumEditor
 from cytoflow.views.i_view import IView
 from pyface.tasks.api import DockPane, Task
 from pyface.qt import QtGui
-from cytoflowgui.workflow import Workflow
 from envisage.api import Application, Plugin
 from cytoflowgui.view_plugins import IViewPlugin, VIEW_PLUGIN_EXT
 
@@ -17,29 +16,26 @@ class ViewDockPane(DockPane):
     id = 'edu.mit.synbio.view_traits_pane'
     name = 'View Properties'
 
-    # the plugin instance for the IView we're currently showing
-    current_plugin = Instance(IViewPlugin)
-    
-    # the cytoflow visualizer whose traits we're showing
-    view = Instance(IView)
-    
-    # the layout that manages the pane
-    layout = Instance(QtGui.QVBoxLayout)
-    
-    # the parent of the layout
-    parent = Any
-    
+    # the Task that serves as the controller
+    task = Instance('flow_task.FlowTask')
+
+    # the IViewPlugins that the user can possibly choose
+    plugins = List(IViewPlugin)
+
     # the UI object associated with the TraitsUI view
     ui = Instance(UI)
     
-    # the application instance from which to get plugin instances
-    application = Instance(Application)
+    # the view whose traits we're currently editing
+    view = Instance(IView)
+
+    # the plugin instance for the IView we're currently showing
+    _current_plugin = Instance(IViewPlugin)
     
-    # the Task that serves as the controller
-    task = Instance(Task)
+    # the layout that manages the pane
+    _layout = Instance(QtGui.QVBoxLayout)
     
-    # the main model instance
-    model = Instance(Workflow)
+    # the parent of the layout
+    _parent = Any
     
     ###########################################################################
     # 'ITaskPane' interface.
@@ -66,9 +62,8 @@ class ViewDockPane(DockPane):
         Create and return the toolkit-specific contents of the dock pane.
         """
 
-        plugins = self.application.get_extensions(VIEW_PLUGIN_EXT)
-        plugins_dict = {p: p.name for p in plugins}
-        plugin_view = View(Item('current_plugin',
+        plugins_dict = {p: p.name for p in self.plugins}
+        plugin_view = View(Item('_current_plugin',
                                 editor=EnumEditor(values=plugins_dict),
                                 show_label = False))
         
@@ -84,26 +79,29 @@ class ViewDockPane(DockPane):
         panel = QtGui.QWidget()
     
         # the panel's layout manager
-        self.layout = QtGui.QVBoxLayout()
-        self.layout.setSizeConstraint(QtGui.QLayout.SetFixedSize)
-        panel.setLayout(self.layout)
+        self._layout = QtGui.QVBoxLayout()
+        self._layout.setSizeConstraint(QtGui.QLayout.SetFixedSize)
+        panel.setLayout(self._layout)
         control.setWidget(panel)
         
         # add the selector to the layout
-        self.layout.addWidget(picker_control)
+        self._layout.addWidget(picker_control)
         
         # and a separator
         line = QtGui.QFrame()
         line.setFrameShape(QtGui.QFrame.HLine)
         line.setFrameShadow(QtGui.QFrame.Sunken)
-        self.layout.addWidget(line)
+        self._layout.addWidget(line)
         
-        self.parent = parent
+        self._parent = parent
         return control
 
-
-    @on_trait_change('current_plugin')
-    def _plugin(self, old, new):
+    @on_trait_change('_current_plugin')
+    def _current_plugin_changed(self, new):
+        self.task.set_current_view(new.id)
+        
+    @on_trait_change('view')
+    def _view_changed(self, old, new):
         if isinstance(old, Plugin):
             self.layout.takeAt(self.layout.count() - 1)
             

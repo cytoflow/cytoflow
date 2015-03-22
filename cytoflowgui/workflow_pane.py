@@ -1,12 +1,12 @@
 from pyface.tasks.api import DockPane, IDockPane, Task
-from traits.api import provides, Instance
+from traits.api import provides, Instance, List
 from pyface.qt import QtGui
 from cytoflowgui.workflow import Workflow
 from traitsui.api import View, UI
 from pyface.action.api import ToolBarManager
 from envisage.api import Application
 from pyface.tasks.action.api import TaskAction
-from cytoflowgui.op_plugins.i_op_plugin import OP_PLUGIN_EXT
+from cytoflowgui.op_plugins import OP_PLUGIN_EXT, IOperationPlugin
 
 
 @provides(IDockPane)
@@ -22,7 +22,7 @@ class WorkflowDockPane(DockPane):
     ui = Instance(UI)
     
     # the application instance from which to get plugin instances
-    application = Instance(Application)
+    plugins = List(IOperationPlugin)
     
     # the task serving as the dock pane's controller
     task = Instance(Task)
@@ -58,12 +58,10 @@ class WorkflowDockPane(DockPane):
  
         self.toolbar = ToolBarManager(orientation='vertical', 
                                       image_size = (32, 32))
-         
-        op_plugins = self.application.get_extensions(OP_PLUGIN_EXT)
                  
-        for plugin in op_plugins:
+        for plugin in self.plugins:
             task_action = TaskAction(name=plugin.short_name,
-                                     on_perform = lambda: self.add_workflow_item(plugin))
+                                     on_perform = lambda: self.task.add_operation(plugin.id))
             self.toolbar.append(task_action)
              
         window = QtGui.QMainWindow()
@@ -76,10 +74,3 @@ class WorkflowDockPane(DockPane):
         parent.setWidget(window)
          
         return window
-    
-    def add_workflow_item(self, plugin):
-        self.task.add_operation(plugin, after = self.model.selected)
-    
-    ### TODO - rebuild/refresh when self.view is changed.
-    def _workflow_changed(self):
-        pass   

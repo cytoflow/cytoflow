@@ -7,12 +7,10 @@ Created on Mar 15, 2015
 from traits.api import HasStrictTraits, Instance, List, DelegatesTo, Event, \
                        Enum, Property, cached_property, on_trait_change
 from traitsui.api import View
-
 from cytoflow import Experiment
 from cytoflow.operations.i_operation import IOperation
 from cytoflow.views.i_view import IView
 from pyface.qt import QtGui
-from pyface.api import error 
 
 class WorkflowItem(HasStrictTraits):
     """        
@@ -29,15 +27,24 @@ class WorkflowItem(HasStrictTraits):
     # the operation's name
     name = DelegatesTo('operation')
     
+    # the Task instance that serves as controller for this model
+    task = Instance('flow_task.FlowTask')
+    
     # the operation this Item wraps
     operation = Instance(IOperation)
+    
+    # the traitsui View that displays this operation
+    ui = Instance(View)
     
     # the Experiment that is the result of applying *operation* to a 
     # previous Experiment
     result = Instance(Experiment)
     
-    # a list of IViews against the output of this operation
+    # the IViews against the output of this operation
     views = List(IView)
+    
+    # the view currently displayed (or selected) by the central pane
+    current_view = Instance(IView)
     
     # the previous WorkflowItem in the workflow
     # self.result = self.apply(previous.result)
@@ -59,9 +66,6 @@ class WorkflowItem(HasStrictTraits):
     
     # an event for the previous WorkflowItem to tell this one to update
     update = Event
-    
-    # the view, set by the plugin
-    view = Instance(View)
         
     @on_trait_change('operation.+')
     def _update_fired(self):
@@ -69,36 +73,13 @@ class WorkflowItem(HasStrictTraits):
         Called when the previous WorkflowItem has changed its result or
         self.operation changed its parameters
         """
-
-        self.valid = "updating"
         
-        prev_result = self.previous.result if self.previous else None
-        is_valid = self.operation.validate(prev_result)
-        
-        if not is_valid:
-            self.valid = "invalid"
-            return
-        
-        # re-run the operation
-        
-        try:
-            self.result = self.operation.apply(prev_result)
-        except RuntimeError as e:
-            error(None, e.strerror)
+        self.task.operation_parameters_updated(self)
             
-        
-        # update the views (TODO)
-
-        self.valid = "valid"
-        
-        # tell the next WorkflowItem to go        
-        if self.next:
-            self.next.update = True
-            
-    def _valid_changed(self, old, new):
-        if old == "valid" and new == "invalid" and self.next is not None:
-            self.next.valid = "invalid"
-    
+#     def _valid_changed(self, old, new):
+#         if old == "valid" and new == "invalid" and self.next is not None:
+#             self.next.valid = "invalid"
+#     
 #     @on_trait_change('operation.+')
 #     def _on_operation_trait_change(self):
 #         self._update_fired()
@@ -118,7 +99,7 @@ class WorkflowItem(HasStrictTraits):
             return QtGui.QStyle.SP_BrowserReload
         else: # self.valid == "invalid" or None
             return QtGui.QStyle.SP_BrowserStop
-    
+     
     def default_traits_view(self):
-        return self.view
+        return self.ui
     

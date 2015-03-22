@@ -83,7 +83,7 @@ class ImportPlugin(Plugin, MOperationPlugin):
     def get_operation(self):
         return ImportOp()
     
-    def get_traitsui_view(self, model):
+    def get_ui(self, model):
         return View(Item('handler.import_event',
                          show_label=False),
                     Item('handler.samples',

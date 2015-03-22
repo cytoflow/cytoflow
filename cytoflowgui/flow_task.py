@@ -7,6 +7,7 @@ Created on Feb 11, 2015
 import os.path
 
 from traits.api import Instance, List
+from pyface.api import error 
 from pyface.tasks.api import Task, TaskLayout, PaneItem
 from envisage.api import Plugin, Application, ExtensionPoint, contributes_to
 from envisage.ui.tasks.api import TaskFactory
@@ -31,15 +32,14 @@ class FlowTask(Task):
     # THIS IS WHERE IT'S INITIALLY INSTANTIATED (note the args=())
     model = Instance(Workflow, args = ())
     
-    application = Instance(Application)
-    
     op_plugins = List(IOperationPlugin)
+    view_plugins = List(IViewPlugin)
         
     def initialized(self):
         plugin = ImportPlugin()
-        item = WorkflowItem()
+        item = WorkflowItem(task = self)
         item.operation = plugin.get_operation()
-        item.view = plugin.get_traitsui_view(item)
+        item.ui = plugin.get_ui(item)
         self.model.workflow.append(item)
     
     def prepare_destroy(self):
@@ -54,26 +54,63 @@ class FlowTask(Task):
      
     def create_dock_panes(self):
         return [WorkflowDockPane(model = self.model, 
-                                 application = self.application,
+                                 plugins = self.op_plugins,
                                  task = self), 
                 ViewDockPane(model = self.model,
-                                   application = self.application,
-                                   task = self)]
+                             plugins = self.view_plugins,
+                             task = self)]
         
-    def add_operation(self, plugin, after):
+    def add_operation(self, op_id):
+        # first, find the matching plugin
+        plugin = next((x for x in self.op_plugins if x.id == op_id))
+        
         # default to inserting at the end of the list if none selected
+        after = self.model.selected
         if after is None:
             after = self.model.workflow[-1]
         
         idx = self.model.workflow.index(after)
         
-        item = WorkflowItem()
+        item = WorkflowItem(task = self)
         item.operation = plugin.get_operation()
-        item.view = plugin.get_traitsui_view(item)
+        item.ui = plugin.get_ui(item)
 
         after.next = item
         item.previous = after
         self.model.workflow.insert(idx+1, item)
+        
+    def operation_parameters_updated(self, wi): #wi == "WorkflowItem"
+        wi.valid = "updating"
+        
+        prev_result = wi.previous.result if wi.previous else None
+        is_valid = wi.operation.validate(prev_result)
+        
+        if not is_valid:
+            wi.valid = "invalid"
+            return
+        
+        # re-run the operation
+        
+        try:
+            wi.result = wi.operation.apply(prev_result)
+        except RuntimeError as e:
+            error(None, e.strerror)       
+        
+        # update the views (TODO)
+
+        wi.valid = "valid"
+        
+        # tell the next WorkflowItem to go        
+        if wi.next:
+            wi.next.update = True
+        
+    def set_current_view(self, view_id):
+        
+        wi = self.model.selected
+        if wi is None:
+            wi = self.model.workflow[-1]
+            
+        view = next((x for x in wi.views if x.id == view_id), None)
     
         
 class FlowTaskPlugin(Plugin):
@@ -117,4 +154,7 @@ class FlowTaskPlugin(Plugin):
     def _get_tasks(self):
         return [TaskFactory(id = 'edu.mit.synbio.cytoflow.flow_task',
                             name = 'Cytometry analysis',
-                            factory = lambda **x: FlowTask(application = self.application, **x))]
+                            factory = lambda **x: FlowTask(application = self.application,
+                                                           op_plugins = self.op_plugins,
+                                                           view_plugins = self.view_plugins,
+                                                           **x))]

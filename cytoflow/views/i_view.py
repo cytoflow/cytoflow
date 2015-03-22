@@ -17,7 +17,11 @@ class IView(Interface):
     Attributes
     ----------
     name : Str
-        The name of this view: for serialization, UI, etc.
+        The name of this view: for UI, etc.  NOT user-specified (like the
+        IOperation name is), but set by the programmer!
+        
+    id : Str
+        A unique id for this view, for application logic etc.
         
     subset : Str
         A string specifying the subset of the data to be plotted.
@@ -25,7 +29,8 @@ class IView(Interface):
     """
     
 
-    name = Str       
+    name = Str
+    id = Str       
     subset = Str
     
     def validate(self, experiment):

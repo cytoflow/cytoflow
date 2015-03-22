@@ -20,13 +20,12 @@ class ThresholdPlugin(Plugin, MOperationPlugin):
     def get_operation(self):
         return ThresholdOp()
     
-    def get_traitsui_view(self, model):
+    def get_ui(self, model):
         return View(Item('object.operation.name'),
                     Item('object.operation.channel',
                          editor=EnumEditor(name='previous_channels'),
                          label = "Channel"),
-                    Item('object.operation.threshold'))
-        
+                    Item('object.operation.threshold'))      
     
     def get_icon(self):
         return QtGui.QIcon()
