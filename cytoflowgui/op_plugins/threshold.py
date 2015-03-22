@@ -1,12 +1,10 @@
 from traitsui.api import View, Item, EnumEditor
-from traits.api import Property
 from envisage.api import Plugin, contributes_to
 from traits.api import provides
 from cytoflowgui.op_plugins.i_op_plugin import IOperationPlugin,\
     MOperationPlugin, OP_PLUGIN_EXT
 from cytoflow import ThresholdOp
 from pyface.qt import QtGui
-from cytoflowgui.workflow_item import WorkflowItem
 
 @provides(IOperationPlugin)
 class ThresholdPlugin(Plugin, MOperationPlugin):
@@ -22,7 +20,7 @@ class ThresholdPlugin(Plugin, MOperationPlugin):
     def get_operation(self):
         return ThresholdOp()
     
-    def get_view(self, model):
+    def get_traitsui_view(self, model):
         return View(Item('object.operation.name'),
                     Item('object.operation.channel',
                          editor=EnumEditor(name='previous_channels'),

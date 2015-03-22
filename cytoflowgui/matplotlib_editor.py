@@ -9,6 +9,9 @@ based on Qt-based code shared by Didrik Pinte, May 2012
 http://markmail.org/message/z3hnoqruk56g2bje
 
 adapted and tested to work with PySide from Anaconda in March 2014
+
+with some bits from
+http://matplotlib.org/examples/user_interfaces/embedding_in_qt4.html
 """
 
 import matplotlib
@@ -16,11 +19,15 @@ import matplotlib
 # We want matplotlib to use a QT backend
 matplotlib.use('Qt4Agg')
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
+from matplotlib.axes import Axes
+import matplotlib as mpl
 
-import matplotlib.pyplot as plt
 import numpy as np
+from traits.api import Float, Int, Any, Instance
 
 from pyface.widget import Widget
+from pyface.qt import QtGui
 
 class MPLFigureEditor(Widget):
  
@@ -28,6 +35,14 @@ class MPLFigureEditor(Widget):
     name = 'QT widget to display matplotlib plots'
  
     scrollable = True
+    
+    width = Float(5)
+    height = Float(4)
+    dpi = Int(100)
+    
+    control = Instance(FigureCanvas)
+    figure = Instance(Figure)
+    axes = Instance(Axes)
  
     def __init__(self, parent, **traits):
         super(MPLFigureEditor, self).__init__(**traits)
@@ -40,16 +55,23 @@ class MPLFigureEditor(Widget):
         """ Create the MPL canvas. """
         # matplotlib commands to create a canvas
 
-        self.figure = plt.figure()
+        self.figure = Figure(figsize=(self.width, self.height),  
+                             dpi=self.dpi)
+        
+        self.axes = self.figure.add_subplot(111)
+        self.axes.hold(False)
         
         def f(t):
             return np.exp(-t) * np.cos(2*np.pi*t)
 
         t1 = np.arange(0.0, 5.0, 0.1)
         t2 = np.arange(0.0, 5.0, 0.02)
-        plt.plot(t1, f(t1), 'bo', t2, f(t2), 'k')
+        self.axes.plot(t1, f(t1), 'bo', t2, f(t2), 'k')
 
         mpl_canvas = FigureCanvas(self.figure)
+        mpl_canvas.setSizePolicy(QtGui.QSizePolicy.Expanding,
+                                 QtGui.QSizePolicy.Expanding)
+        mpl_canvas.updateGeometry()
 
         return mpl_canvas
     

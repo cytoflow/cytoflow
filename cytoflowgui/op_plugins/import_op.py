@@ -75,7 +75,7 @@ class ImportPlugin(Plugin, MOperationPlugin):
     class docs
     """
     
-    id = 'edu.mit.synbio.cytoflow.op.import'
+    id = 'edu.mit.synbio.cytoflowgui.op.import'
     name = "Import data"
     short_name = "Import"
     menu_group = ""
@@ -83,7 +83,7 @@ class ImportPlugin(Plugin, MOperationPlugin):
     def get_operation(self):
         return ImportOp()
     
-    def get_view(self, model):
+    def get_traitsui_view(self, model):
         return View(Item('handler.import_event',
                          show_label=False),
                     Item('handler.samples',

@@ -20,7 +20,7 @@ class IOperationPlugin(Interface):
         doc
         """
         
-    def get_view(self, model):
+    def get_traitsui_view(self, model):
         """
         Return an instance of a traitsui View for the operation we wrap.
         

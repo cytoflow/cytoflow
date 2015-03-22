@@ -8,17 +8,16 @@ import os.path
 
 from traits.api import Instance, List
 from pyface.tasks.api import Task, TaskLayout, PaneItem
-from envisage.api import Plugin, Application
+from envisage.api import Plugin, Application, ExtensionPoint, contributes_to
 from envisage.ui.tasks.api import TaskFactory
 from flow_task_pane import FlowTaskPane
 from cytoflowgui.workflow_pane import WorkflowDockPane
-from cytoflowgui.view_traits_pane import ViewTraitsDockPane
+from cytoflowgui.view_pane import ViewDockPane
 from cytoflowgui.workflow import Workflow
-from envisage.extension_point import contributes_to
-from cytoflowgui.op_factory import OperationFactory
-from cytoflowgui.op_plugins.i_op_plugin import IOperationPlugin
+
+from cytoflowgui.op_plugins import IOperationPlugin, ImportPlugin, OP_PLUGIN_EXT
+from cytoflowgui.view_plugins import IViewPlugin, VIEW_PLUGIN_EXT
 from cytoflowgui.workflow_item import WorkflowItem
-from cytoflowgui.op_plugins.import_op import ImportPlugin
 
 class FlowTask(Task):
     """
@@ -40,7 +39,7 @@ class FlowTask(Task):
         plugin = ImportPlugin()
         item = WorkflowItem()
         item.operation = plugin.get_operation()
-        item.view = plugin.get_view(item)
+        item.view = plugin.get_traitsui_view(item)
         self.model.workflow.append(item)
     
     def prepare_destroy(self):
@@ -57,7 +56,7 @@ class FlowTask(Task):
         return [WorkflowDockPane(model = self.model, 
                                  application = self.application,
                                  task = self), 
-                ViewTraitsDockPane(model = self.model,
+                ViewDockPane(model = self.model,
                                    application = self.application,
                                    task = self)]
         
@@ -70,11 +69,12 @@ class FlowTask(Task):
         
         item = WorkflowItem()
         item.operation = plugin.get_operation()
-        item.view = plugin.get_view(item)
+        item.view = plugin.get_traitsui_view(item)
 
         after.next = item
         item.previous = after
         self.model.workflow.insert(idx+1, item)
+    
         
 class FlowTaskPlugin(Plugin):
     """
@@ -85,6 +85,11 @@ class FlowTaskPlugin(Plugin):
     PREFERENCES       = 'envisage.preferences'
     PREFERENCES_PANES = 'envisage.ui.tasks.preferences_panes'
     TASKS             = 'envisage.ui.tasks.tasks'
+    
+    # we don't actually use these lists in this plugin, but they have to 
+    # be declared somewhere....
+    op_plugins = ExtensionPoint(List(IOperationPlugin), OP_PLUGIN_EXT)
+    view_plugins = ExtensionPoint(List(IViewPlugin), VIEW_PLUGIN_EXT)
 
     #### 'IPlugin' interface ##################################################
 
