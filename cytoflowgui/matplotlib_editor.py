@@ -49,7 +49,8 @@ class MPLFigureEditor(Widget):
         """ Create the MPL canvas. """
         # matplotlib commands to create a canvas
 
-        self.figure = plt.figure()
+        plt.figure()
+        self.figure = plt.gcf()
         
         def f(t):
             return np.exp(-t) * np.cos(2*np.pi*t)
@@ -62,17 +63,20 @@ class MPLFigureEditor(Widget):
 
         return mpl_canvas
     
-    @on_trait_change('figure')
+    # MAGIC: listens for a change in the 'figure' trait.
     def _figure_changed(self, old, new):
         
         if not isinstance(new, Figure) or not self.control:
             return
-        
+
+        (w, h) = old.get_size_inches()
+        new.set_size_inches((w, h))        
         self.control.figure = new
-        self.control.draw()
         
-        if isinstance(old, Figure):
-            old.close()
+        self.control.draw()
+        self.control.update()
+        
+        plt.close(old)
         
         
     
