@@ -10,6 +10,7 @@ from traits.api import provides, Property, Instance
 
 from cytoflow import HistogramView
 from cytoflowgui.workflow_item import WorkflowItem
+from cytoflowgui.subset_editor import SubsetEditor
 from cytoflowgui.view_plugins.i_view_plugin \
     import IViewPlugin, MViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin
     
@@ -47,6 +48,9 @@ class HistogramPlugin(Plugin, MViewPlugin):
                     Item('object.huefacet',
                          editor=EnumEditor(name='handler.conditions'),
                          label="Color\nFacet"),
+                    Item('object.subset',
+                         editor=SubsetEditor(experiment = wi.result),
+                         label="Subset"),
                     handler = HistogramHandler(wi = wi))
 
     @contributes_to(VIEW_PLUGIN_EXT)
