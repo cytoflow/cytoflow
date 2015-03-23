@@ -76,6 +76,7 @@ class ThresholdOp(HasTraits):
         new_experiment = old_experiment.clone()
         new_experiment[self.name] = \
             pd.Series(new_experiment[self.channel] > self.threshold)
+        new_experiment.metadata[self.name] = "bool"
             
         return new_experiment
     

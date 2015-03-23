@@ -7,6 +7,7 @@ from pyface.tasks.task_pane import TaskPane
 from matplotlib_editor import MPLFigureEditor
 from traits.api import Instance, provides
 from pyface.tasks.i_task_pane import ITaskPane
+import matplotlib.pyplot as plt
 
 @provides(ITaskPane)
 class FlowTaskPane(TaskPane):
@@ -27,4 +28,23 @@ class FlowTaskPane(TaskPane):
 
     def destroy(self):
         self.editor.destroy()
-        self.control = self.editor = None
+        self.control = self.editor = None 
+        
+    def plot(self, experiment, view):
+        """
+        Plot the an experiment in the center pane.
+        
+        Arguments
+        ---------
+        experiment : cytoflow.Experiment
+            The data to plot
+            
+        view : cytoflow.IView
+            The view to use for the plotting
+        """
+        
+        print "plotting"
+        view.plot(experiment)
+        self.editor.figure = plt.gcf()
+        
+        

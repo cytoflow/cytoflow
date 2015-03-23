@@ -32,6 +32,9 @@ class FlowTask(Task):
     # THIS IS WHERE IT'S INITIALLY INSTANTIATED (note the args=())
     model = Instance(Workflow, args = ())
     
+    # the center pane
+    view = Instance(FlowTaskPane)
+    
     op_plugins = List(IOperationPlugin)
     view_plugins = List(IViewPlugin)
         
@@ -50,14 +53,14 @@ class FlowTask(Task):
                           right = PaneItem("edu.mit.synbio.view_traits_pane"))
      
     def create_central_pane(self):
-        return FlowTaskPane(model = self.model)
+        self.view = FlowTaskPane(model = self.model)
+        return self.view
      
     def create_dock_panes(self):
         return [WorkflowDockPane(model = self.model, 
                                  plugins = self.op_plugins,
                                  task = self), 
-                ViewDockPane(model = self.model,
-                             plugins = self.view_plugins,
+                ViewDockPane(plugins = self.view_plugins,
                              task = self)]
         
     def add_operation(self, op_id):
@@ -96,7 +99,10 @@ class FlowTask(Task):
         except RuntimeError as e:
             error(None, e.strerror)       
         
-        # update the views (TODO)
+        # update the center pane
+        
+        if wi.current_view and wi.current_view.validate(wi.result):
+            self.view.plot(wi.result, wi.current_view)
 
         wi.valid = "valid"
         
@@ -105,10 +111,14 @@ class FlowTask(Task):
             wi.next.update = True
         
     def set_current_view(self, pane, view_id):
-        
         wi = self.model.selected
         if wi is None:
             wi = self.model.workflow[-1]
+            
+        # remove the notifications from the current view
+        if wi.current_view:
+            wi.current_view.on_trait_change(self.view_parameters_updated, 
+                                            remove = True)
             
         view = next((x for x in wi.views if x.id == view_id), None)
         
@@ -119,8 +129,20 @@ class FlowTask(Task):
             # dynamically associate a traitsui View with this view.
             view.ui = plugin.get_ui(view)
 
+        view.on_trait_change(self.view_parameters_updated)
+        wi.current_view = view
         pane.view = view
-    
+        
+        if wi.current_view.validate(wi.result):
+            self.view.plot(wi.result, wi.current_view)
+        
+    def view_parameters_updated(self):
+        wi = self.model.selected
+        if wi is None:
+            wi = self.model.workflow[-1]
+            
+        if wi.current_view and wi.current_view.validate(wi.result):
+            self.view.plot(wi.result, wi.current_view)
         
 class FlowTaskPlugin(Plugin):
     """

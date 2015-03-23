@@ -64,4 +64,27 @@ class HistogramView(HasTraits):
         
     def validate(self, experiment):
         """Validate this view against an experiment."""
+        if not experiment:
+            return False
+        
+        if self.channel not in experiment.channels:
+            return False
+        
+        if self.xfacet and self.xfacet not in experiment.metadata:
+            return False
+        
+        if self.yfacet and self.yfacet not in experiment.metadata:
+            return False
+        
+        if self.huefacet and self.huefacet not in experiment.metadata:
+            return False
+        
+        if self.subset:
+            try:
+                experiment.query(self.subset)
+            except:
+                return False
+        
+        return True
+        
     

@@ -15,16 +15,16 @@ http://matplotlib.org/examples/user_interfaces/embedding_in_qt4.html
 """
 
 import matplotlib
+import new
 
 # We want matplotlib to use a QT backend
 matplotlib.use('Qt4Agg')
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt4agg import FigureCanvas
+import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
-from matplotlib.axes import Axes
-import matplotlib as mpl
 
 import numpy as np
-from traits.api import Float, Int, Any, Instance
+from traits.api import Float, Int, Any, Instance, on_trait_change
 
 from pyface.widget import Widget
 from pyface.qt import QtGui
@@ -36,13 +36,7 @@ class MPLFigureEditor(Widget):
  
     scrollable = True
     
-    width = Float(5)
-    height = Float(4)
-    dpi = Int(100)
-    
-    control = Instance(FigureCanvas)
     figure = Instance(Figure)
-    axes = Instance(Axes)
  
     def __init__(self, parent, **traits):
         super(MPLFigureEditor, self).__init__(**traits)
@@ -55,24 +49,31 @@ class MPLFigureEditor(Widget):
         """ Create the MPL canvas. """
         # matplotlib commands to create a canvas
 
-        self.figure = Figure(figsize=(self.width, self.height),  
-                             dpi=self.dpi)
-        
-        self.axes = self.figure.add_subplot(111)
-        self.axes.hold(False)
+        self.figure = plt.figure()
         
         def f(t):
             return np.exp(-t) * np.cos(2*np.pi*t)
 
         t1 = np.arange(0.0, 5.0, 0.1)
         t2 = np.arange(0.0, 5.0, 0.02)
-        self.axes.plot(t1, f(t1), 'bo', t2, f(t2), 'k')
+        plt.plot(t1, f(t1), 'bo', t2, f(t2), 'k')
 
         mpl_canvas = FigureCanvas(self.figure)
-        mpl_canvas.setSizePolicy(QtGui.QSizePolicy.Expanding,
-                                 QtGui.QSizePolicy.Expanding)
-        mpl_canvas.updateGeometry()
 
         return mpl_canvas
+    
+    @on_trait_change('figure')
+    def _figure_changed(self, old, new):
+        
+        if not isinstance(new, Figure) or not self.control:
+            return
+        
+        self.control.figure = new
+        self.control.draw()
+        
+        if isinstance(old, Figure):
+            old.close()
+        
+        
     
 
