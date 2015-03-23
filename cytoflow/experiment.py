@@ -32,10 +32,10 @@ class Experiment(HasStrictTraits):
         A list containing the channels that this experiment tracks.
     
     conditions : dict(string : string)
-        A dict of the experimental conditions that this experiment tracks.  The
-        key is the name of the condition, and the value is the string
-        representation of the numpy dtype (usually one of "category", 
-        "float", "int" or "bool".
+        A dict of the experimental conditions and analysis metadata (gate
+        membership, etc) and that this experiment tracks.  The key is the name
+        of the condition, and the value is the string representation of the 
+        numpy dtype (usually one of "category", "float", "int" or "bool".
         
     data : pandas.DataFrame
         the DataFrame representing all the events and metadata.  Each event
@@ -70,22 +70,9 @@ class Experiment(HasStrictTraits):
       
     Note that nowhere do we mention filters or gates.  You can define gate,
     sure .... but applying that gate to an Experiment simply adds another
-    piece of metadata for each event, indicating that the event is in the new
+    condition for each event, indicating that the event is in the new
     population or not.  This is in contrast to traditional cytometry tools,
     which allow you to define a tree-like gating "hierarchy."
-        
-    Also, an Experiment instance is *versioned*.  That is, when you apply a 
-    filter, gate or transformation, you get back a new Experiment with the 
-    version attribute incremented.  The old Experiment (version i) retains a
-    link to the new Experiment (version i+1), which allows for dynamic updating;
-    so if you change the parameters of the filter that created version i, 
-    version i+1 can recompute its gates etc.  This isn't an issue for 
-    user-defined gates, but if they're data-driven then they need to be updated
-    if the (meta)data changes.
-        
-    This versioning lets an Experiment be smart about data copying, too;
-    applying gates or transformations only creates the new columns that it has
-    to, and simply uses references to access unchanged data.
         
     Finally, all this is implemented on top of a pandas DataFrame.... which
     earns us all sorts of fun optimization, and lets us select subsets easily:
@@ -173,6 +160,7 @@ class Experiment(HasStrictTraits):
             
         for key, value in conditions.iteritems():
             self.data[key] = pd.Series(dtype = value)
+            self.metadata[key] = {}
         
         self.conditions.update(conditions)
              

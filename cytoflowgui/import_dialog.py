@@ -11,7 +11,7 @@ if __name__ == '__main__':
     os.environ['TRAITS_DEBUG'] = "1"
     
 from traits.api import HasTraits, provides, Instance, Str, Int, List, \
-                       Bool, Enum, Float, DelegatesTo, Property
+                       Bool, Enum, Float, DelegatesTo, Property, CStr
                        
 from traitsui.api import UI, Group, View, Item, TableEditor, OKCancelButtons, \
                          Controller
@@ -131,7 +131,7 @@ class ExperimentDialogHandler(Controller):
         """
         
         class NewTrait(HasTraits):    
-            condition_name = Str
+            condition_name = CStr
             condition_type = Enum(["String", "Number", "Number (Log)", "True/False"])
     
             view = View(Item(name = 'condition_name'),

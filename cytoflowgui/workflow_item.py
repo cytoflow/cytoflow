@@ -68,22 +68,13 @@ class WorkflowItem(HasStrictTraits):
     update = Event
         
     @on_trait_change('operation.+')
-    def _update_fired(self):
+    def update(self):
         """
-        Called when the previous WorkflowItem has changed its result or
-        self.operation changed its parameters
+        Called when self.operation changed its parameters.  also called by
+        the controller.
         """
-        
         self.task.operation_parameters_updated(self)
-            
-#     def _valid_changed(self, old, new):
-#         if old == "valid" and new == "invalid" and self.next is not None:
-#             self.next.valid = "invalid"
-#     
-#     @on_trait_change('operation.+')
-#     def _on_operation_trait_change(self):
-#         self._update_fired()
-    
+                
     @cached_property
     def _get_previous_channels(self):
         if (not self.previous) or (not self.previous.result):

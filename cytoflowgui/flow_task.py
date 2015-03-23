@@ -110,7 +110,7 @@ class FlowTask(Task):
         if wi.next:
             wi.next.update = True
         
-    def set_current_view(self, pane, view_id):
+    def set_current_view(self, view_pane, view_id):
         wi = self.model.selected
         if wi is None:
             wi = self.model.workflow[-1]
@@ -127,11 +127,11 @@ class FlowTask(Task):
             view = plugin.get_view()
             
             # dynamically associate a traitsui View with this view.
-            view.ui = plugin.get_ui(view)
+            view.ui = plugin.get_ui(wi)
 
         view.on_trait_change(self.view_parameters_updated)
         wi.current_view = view
-        pane.view = view
+        view_pane.view = view
         
         if wi.current_view.validate(wi.result):
             self.view.plot(wi.result, wi.current_view)

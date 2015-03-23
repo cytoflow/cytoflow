@@ -4,7 +4,6 @@ Created on Mar 15, 2015
 @author: brian
 """
 
-
 if __name__ == '__main__':
     from traits.etsconfig.api import ETSConfig
     ETSConfig.toolkit = 'qt4'
@@ -13,13 +12,14 @@ if __name__ == '__main__':
     os.environ['TRAITS_DEBUG'] = "1"
 
 from traitsui.api import View, Item, Controller
-from traits.api import Button, Property, cached_property, provides
+from traits.api import Button, Property, cached_property, provides, Instance
 from cytoflowgui.import_dialog import ExperimentDialog
 from cytoflowgui.op_plugins.i_op_plugin import IOperationPlugin,\
     MOperationPlugin
 from pyface.api import OK as PyfaceOK
 from cytoflow import ImportOp
 from envisage.api import Plugin
+from cytoflowgui.workflow_item import WorkflowItem
 
 class ImportHandler(Controller):
     """
@@ -27,8 +27,10 @@ class ImportHandler(Controller):
     """
     
     import_event = Button(label="Edit samples...")
-    samples = Property(depends_on = 'model.result')
-    events = Property(depends_on = 'model.result')
+    samples = Property(depends_on = 'wi.result')
+    events = Property(depends_on = 'wi.result')
+    
+    wi = Instance(WorkflowItem)
     
     def init(self, info):
         pass
@@ -40,8 +42,8 @@ class ImportHandler(Controller):
 
         d = ExperimentDialog()
 
-        if self.model.operation.tubes is not None:
-            d.model.tubes = self.model.operation.tubes
+        if self.wi.operation.tubes is not None:
+            d.model.tubes = self.wi.operation.tubes
             
         d.size = (550, 500)
         d.open()
@@ -49,22 +51,22 @@ class ImportHandler(Controller):
         if d.return_code is not PyfaceOK:
             return
         
-        self.model.operation.tubes = d.model.tubes
+        self.wi.operation.tubes = d.model.tubes
         d = None
         
         #self.model.update = True
         
     @cached_property
     def _get_samples(self):
-        if self.model.result is not None:
-            return len(self.model.operation.tubes)
+        if self.wi.result is not None:
+            return len(self.wi.operation.tubes)
         else:
             return 0
      
     @cached_property
     def _get_events(self):
-        if self.model.result is not None:
-            return self.model.result.data.shape[0]
+        if self.wi.result is not None:
+            return self.wi.result.data.shape[0]
         else:
             return 0
 
@@ -84,7 +86,7 @@ class ImportPlugin(Plugin, MOperationPlugin):
     def get_operation(self):
         return ImportOp()
     
-    def get_ui(self, operation):
+    def get_ui(self, wi):
         return View(Item('handler.import_event',
                          show_label=False),
                     Item('handler.samples',
@@ -101,5 +103,5 @@ class ImportPlugin(Plugin, MOperationPlugin):
                     Item('object.operation.coarse_events',
                          label="Events per\nsample",
                          visible_when='object.result is not None and object.operation.coarse is True'),
-                    handler = ImportHandler(model = operation)
+                    handler = ImportHandler(wi = wi)
     )

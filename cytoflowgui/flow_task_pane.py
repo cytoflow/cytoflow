@@ -43,7 +43,6 @@ class FlowTaskPane(TaskPane):
             The view to use for the plotting
         """
         
-        print "plotting"
         view.plot(experiment)
         self.editor.figure = plt.gcf()
         

@@ -35,7 +35,7 @@ class IOperationPlugin(Interface):
         Return an instance of the IOperation that this plugin wraps
         """
         
-    def get_ui(self, model):
+    def get_ui(self, wi):
         """
         Return a traitsui View for the IOperation this plugin wraps
         
@@ -43,6 +43,12 @@ class IOperationPlugin(Interface):
         etc.)  If you need more logic, though, feel free to define a Controller
         and use that to handle, eg, button presses or derived traits (eg,
         with a Property trait)
+        
+        Parameters
+        ----------
+        wi : WorkflowItem
+            the WorkflowItem that wraps this Operation; lets us access the 
+            previous and current operation results.
         """
 
     def get_icon(self):
