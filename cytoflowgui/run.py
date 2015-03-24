@@ -5,7 +5,6 @@ Created on Feb 11, 2015
 """
 
 from traits.etsconfig.api import ETSConfig
-
 ETSConfig.toolkit = 'qt4'
 
 import logging
@@ -21,10 +20,13 @@ from view_plugins import HistogramPlugin, ThresholdSelectionPlugin
 def run_gui(argv):
     
     logging.basicConfig(level=logging.DEBUG)
+    
+    debug = ("--debug" in argv)
 
-    plugins = [CorePlugin(), TasksPlugin(), FlowTaskPlugin(),
+    plugins = [CorePlugin(), TasksPlugin(), FlowTaskPlugin(debug = debug),
                ImportPlugin(), ThresholdPlugin(), HistogramPlugin(),
                ThresholdSelectionPlugin()]
+    
     app = CytoflowApplication(id = 'edu.mit.synbio.cytoflow',
                               plugins = plugins)
     app.run()

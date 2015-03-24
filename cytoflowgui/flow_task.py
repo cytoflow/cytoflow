@@ -6,7 +6,7 @@ Created on Feb 11, 2015
 
 import os.path
 
-from traits.api import Instance, List
+from traits.api import Instance, List, Bool
 from pyface.api import error 
 from pyface.tasks.api import Task, TaskLayout, PaneItem
 from envisage.api import Plugin, ExtensionPoint, contributes_to
@@ -19,6 +19,8 @@ from cytoflowgui.workflow import Workflow
 from cytoflowgui.op_plugins import IOperationPlugin, ImportPlugin, OP_PLUGIN_EXT
 from cytoflowgui.view_plugins import IViewPlugin, VIEW_PLUGIN_EXT
 from cytoflowgui.workflow_item import WorkflowItem
+
+from cytoflow import Tube
 
 class FlowTask(Task):
     """
@@ -35,8 +37,12 @@ class FlowTask(Task):
     # the center pane
     view = Instance(FlowTaskPane)
     
+    # plugin lists, to setup the interface
     op_plugins = List(IOperationPlugin)
     view_plugins = List(IViewPlugin)
+    
+    # are we debugging?  ie, do we need a default setup?
+    debug = Bool
         
     def initialized(self):
         plugin = ImportPlugin()
@@ -44,6 +50,21 @@ class FlowTask(Task):
         item.operation = plugin.get_operation()
         item.ui = plugin.get_ui(item)
         self.model.workflow.append(item)
+        
+        if self.debug:
+            Tube.add_class_trait("Dox", Bool)
+            tube1 = Tube(Name = "Tube 1",
+                         File = "../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs",
+                         Dox = False)
+            tube2 = Tube(Name = "Tube 2",
+                         File = "../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs",
+                         Dox = True)
+            
+            item.operation.tubes.append(tube1)
+            item.operation.tubes.append(tube2)
+            
+            item.update()
+            
     
     def prepare_destroy(self):
         self.model = None
@@ -154,10 +175,12 @@ class FlowTaskPlugin(Plugin):
     PREFERENCES_PANES = 'envisage.ui.tasks.preferences_panes'
     TASKS             = 'envisage.ui.tasks.tasks'
     
-    # we don't actually use these lists in this plugin, but they have to 
-    # be declared somewhere....
+    # these need to be declared in a Plugin instance; we pass them to h
+    # the task instance thru its factory, below.
     op_plugins = ExtensionPoint(List(IOperationPlugin), OP_PLUGIN_EXT)
     view_plugins = ExtensionPoint(List(IViewPlugin), VIEW_PLUGIN_EXT)
+    
+    debug = Bool(False)
 
     #### 'IPlugin' interface ##################################################
 
@@ -188,4 +211,5 @@ class FlowTaskPlugin(Plugin):
                             factory = lambda **x: FlowTask(application = self.application,
                                                            op_plugins = self.op_plugins,
                                                            view_plugins = self.view_plugins,
+                                                           debug = self.debug,
                                                            **x))]

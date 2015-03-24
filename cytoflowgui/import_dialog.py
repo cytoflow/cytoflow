@@ -117,6 +117,14 @@ class ExperimentDialogHandler(Controller):
     # keep around a ref to the underlying widget so we can add columns dynamically
     table_editor = Instance(TableEditorQt)
     
+    def init_info(self, info):
+        
+        # set the parent model object for any preexisting tubes
+        for tube in self.model.tubes:
+            tube._parent = self.model
+            
+        Controller.init_info(self, info)
+    
     def closed(self, info, is_ok):
         for tube in self.model.tubes:
             tube.on_trait_change(self._try_multiedit, '+', remove = True)

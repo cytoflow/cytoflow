@@ -12,7 +12,7 @@ from preferences import CytoflowPreferences, CytoflowPreferencesPane
 
 
 class CytoflowApplication(TasksApplication):
-    """ The chaotic attractors Tasks application.
+    """ The cytoflow Tasks application.
     """
 
     #### 'IApplication' interface #############################################
