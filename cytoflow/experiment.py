@@ -255,6 +255,9 @@ class Experiment(HasStrictTraits):
             try:
                 new_data[meta_name] = pd.Series([meta_value] * tube.data.size,
                                              dtype = meta_type)
+                
+                if meta_type == "category":
+                    self.data[meta_name].cat.add_categories([meta_value])
             except (ValueError, TypeError):
                 raise RuntimeError("Tube {0} had trouble converting conditions {1}"
                                    "(value = {2}) to type {3}" \

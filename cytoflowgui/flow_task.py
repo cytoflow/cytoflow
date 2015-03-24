@@ -6,8 +6,8 @@ Created on Feb 11, 2015
 
 import os.path
 
-from traits.api import Instance, List, Bool
-from pyface.api import error 
+from traits.api import Instance, List, Bool, Str
+from pyface.api import error
 from pyface.tasks.api import Task, TaskLayout, PaneItem
 from envisage.api import Plugin, ExtensionPoint, contributes_to
 from envisage.ui.tasks.api import TaskFactory
@@ -52,13 +52,13 @@ class FlowTask(Task):
         self.model.workflow.append(item)
         
         if self.debug:
-            Tube.add_class_trait("Dox", Bool)
+            Tube.add_class_trait("Dox", Str)
             tube1 = Tube(Name = "Tube 1",
                          File = "../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs",
-                         Dox = False)
+                         Dox = "one")
             tube2 = Tube(Name = "Tube 2",
                          File = "../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs",
-                         Dox = True)
+                         Dox = "two")
             
             item.operation.tubes.append(tube1)
             item.operation.tubes.append(tube2)
