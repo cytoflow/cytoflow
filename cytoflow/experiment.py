@@ -256,8 +256,11 @@ class Experiment(HasStrictTraits):
                 new_data[meta_name] = pd.Series([meta_value] * tube.data.size,
                                              dtype = meta_type)
                 
+                # if we're categorical, merge the categories
                 if meta_type == "category":
-                    self.data[meta_name].cat.add_categories([meta_value])
+                    cats = set(self.data[meta_name].cat.categories) | set(new_data[meta_name].cat.categories)
+                    self.data[meta_name] = self.data[meta_name].cat.set_categories(cats)
+                    new_data[meta_name] = new_data[meta_name].cat.set_categories(cats)
             except (ValueError, TypeError):
                 raise RuntimeError("Tube {0} had trouble converting conditions {1}"
                                    "(value = {2}) to type {3}" \
@@ -274,16 +277,16 @@ class Experiment(HasStrictTraits):
 
 if __name__ == "__main__":
     ex = Experiment()
-    ex.add_conditions({"time" : "float"})
+    ex.add_conditions({"time" : "category"})
     
     tube1 = fc.FCMeasurement(ID='Test 1', 
-                       datafile='/home/brian/tmp/zhen/TALER9-TRE/TALER9/Specimen_001_A1_A01.fcs')
+                       datafile='../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs')
     
     tube2 = fc.FCMeasurement(ID='Test 2', 
-                       datafile='/home/brian/tmp/zhen/TALER9-TRE/TALER9/Specimen_001_B6_B06.fcs')
+                       datafile='../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs')
     
-    ex.add_tube(tube1, {"time" : 10.0})
-    ex.add_tube(tube2, {"time" : 20.0})
+    ex.add_tube(tube1, {"time" : "one"})
+    ex.add_tube(tube2, {"time" : "two"})
     
     print(ex.data)
 
