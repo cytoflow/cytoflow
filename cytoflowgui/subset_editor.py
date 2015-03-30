@@ -14,8 +14,11 @@ if __name__ == '__main__':
 from traitsui.api import BasicEditorFactory, View, Group, UI, \
                          CheckListEditor, Item
 from traitsui.qt4.editor import Editor
-from traits.api import Instance, HasTraits, List
+from traits.api import Instance, HasTraits, List, Float, Int
 from cytoflow import Experiment
+from value_bounds_editor import ValuesBoundsEditor
+import pandas as pd
+import numpy as np
 
 class _SubsetEditor(Editor):
     
@@ -63,18 +66,44 @@ class _SubsetEditor(Editor):
                 obj.add_trait(name, List(editor = CheckListEditor(
                                                     values = values,
                                                     cols = 2)))
-                group.content.append(Item(name, style = 'custom'))
+                group.content.append(Item(name, 
+                                          style = 'custom'))
+                
             elif dtype == 'category':
-                values = self.experiment[name].cat.categories
+                values = list(self.experiment[name].cat.categories)
                 obj.add_trait(name, List(editor = CheckListEditor(
                                                     values = values,
                                                     cols = len(values))))
-                group.content.append(Item(name, style = 'custom'))
+                group.content.append(Item(name, 
+                                          style = 'custom'))
+                
             elif dtype == 'float':
-                pass
+                values = list(np.sort(pd.unique(self.experiment[name])))
+                obj.add_trait(name + "Min", Float(self.experiment[name].min()))
+                obj.add_trait(name + "Max", 
+                              Float(default_value = self.experiment[name].max(),
+                                    editor = ValuesBoundsEditor( 
+                                                values = values,
+                                                low_name = name + "Min",
+                                                high_name = name + "Max"))
+                            )
+                group.content.append(Item(name + "Max", 
+                                          label = name, 
+                                          style = 'custom'))
                 
             elif dtype == 'int':
-                pass
+                values = list(np.sort(pd.unique(self.experiment[name])))
+                obj.add_trait(name + "Min", Int(self.experiment[name].min()))
+                obj.add_trait(name + "Max", 
+                              Int(default_value = self.experiment[name].max(),
+                                  editor = ValuesBoundsEditor(
+                                                values = values,
+                                                low_name = name + "Min",
+                                                high_name = name + "Max"))
+                            )
+                group.content.append(Item(name + "Max", 
+                                          label = name, 
+                                          style = 'custom'))
         
         return obj, group
     

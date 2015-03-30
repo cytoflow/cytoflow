@@ -83,7 +83,8 @@ class ImportOp(HasTraits):
         trait_to_dtype = {"Str" : "category",
                           "Float" : "float",
                           "LogFloat" : "float",
-                          "Bool" : "bool"}
+                          "Bool" : "bool",
+                          "Int" : "int"}
         
         # get rid of the name and path traits
         trait_names = Tube.class_trait_names(transient = lambda x: x is not True)

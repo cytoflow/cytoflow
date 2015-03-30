@@ -9,6 +9,8 @@ class RangeSlider(QtGui.QSlider):
 
         This class emits the same signals as the QSlider base class, with the
         exception of valueChanged
+        
+        Adapted from traitsui.qt4.extras.range_slider
     """
     def __init__(self, *args):
         super(RangeSlider, self).__init__(*args)
