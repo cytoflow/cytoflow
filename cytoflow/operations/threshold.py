@@ -31,14 +31,13 @@ class ThresholdOp(HasTraits):
     
     def validate(self, experiment):
         """Validate this operation against an experiment."""
-
         if not experiment:
             return False
         
         if not self.name:
             return False
         
-        if not self.channel or self.channel not in experiment.channels:
+        if self.channel not in experiment.channels:
             return False
         
         if (self.threshold > experiment[self.channel].max() or
