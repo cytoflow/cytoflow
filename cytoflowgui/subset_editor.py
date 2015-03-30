@@ -65,9 +65,14 @@ class _SubsetEditor(Editor):
                                                     cols = 2)))
                 group.content.append(Item(name, style = 'custom'))
             elif dtype == 'category':
-                pass
+                values = self.experiment[name].cat.categories
+                obj.add_trait(name, List(editor = CheckListEditor(
+                                                    values = values,
+                                                    cols = len(values))))
+                group.content.append(Item(name, style = 'custom'))
             elif dtype == 'float':
                 pass
+                
             elif dtype == 'int':
                 pass
         
