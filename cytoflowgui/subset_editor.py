@@ -57,8 +57,8 @@ class _SubsetEditor(Editor):
         
     def _get_view(self):
         
-        obj = HasTraits()
-        group = Group()
+        obj = HasTraits()   # the underlying object whose traits we're viewing
+        group = Group()     # the TraitsUI Group with the editors in it
         
         for name, dtype in self.experiment.conditions.iteritems():
             if dtype == 'bool':
@@ -101,6 +101,7 @@ class _SubsetEditor(Editor):
                                                 low_name = name + "Min",
                                                 high_name = name + "Max"))
                             )
+                
                 group.content.append(Item(name + "Max", 
                                           label = name, 
                                           style = 'custom'))
@@ -110,6 +111,39 @@ class _SubsetEditor(Editor):
     def _view_changed(self, name, new, old):
         print "view changed"
         # update self.value from self._obj
+        
+        # we want to spit out a value in conjunctive normal form (CNF) so
+        # we can easily parse it back in.
+        
+        subsets = []
+        
+        for name, dtype in self.experiment.conditions.iteritems(): 
+            if dtype == 'bool':
+                val = self._obj.trait_get(name)[name]
+                if name + '+' in val and not name + '-' in val:
+                    subsets.append("{0} == True".format(name))
+                elif name + '+' not in val and name + '-' in val:
+                    subsets.append("{0} == False".format(name))
+                else:
+                    # "name" is any value; dont' include specifier
+                    pass
+                
+            elif dtype == 'category':
+                val = self._obj.trait_get(name)[name]
+                for cat in val:
+                    pass #subsets = 
+                print val
+                
+            elif dtype == 'float':
+                (min, max) = (self._obj.trait_get(name + "Min")[name + "Min"],
+                              self._obj.trait_get(name + "Max")[name + "Max"])
+                print (min, max)
+                
+            elif dtype == 'int':
+                (min, max) = (self._obj.trait_get(name + "Min")[name + "Min"],
+                              self._obj.trait_get(name + "Max")[name + "Max"])
+                print (min, max)
+                
 
 class SubsetEditor(BasicEditorFactory):
     
