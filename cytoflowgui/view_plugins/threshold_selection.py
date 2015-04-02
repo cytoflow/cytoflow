@@ -10,10 +10,10 @@ from traits.api import provides
 
 from cytoflow import ThresholdSelection
 from cytoflowgui.view_plugins.i_view_plugin \
-    import IViewPlugin, MViewPlugin, VIEW_PLUGIN_EXT
+    import IViewPlugin, VIEW_PLUGIN_EXT
 
 @provides(IViewPlugin)
-class ThresholdSelectionPlugin(Plugin, MViewPlugin):
+class ThresholdSelectionPlugin(Plugin):
     """
     classdocs
     """
@@ -25,7 +25,7 @@ class ThresholdSelectionPlugin(Plugin, MViewPlugin):
     def get_view(self):
         return ThresholdSelection()
     
-    def get_ui(self, model):
+    def get_ui(self, wi):
         return View(Item('object.view.name'),
                     Item('object.view.channel'),
                     Item('object.view.xfacet'),

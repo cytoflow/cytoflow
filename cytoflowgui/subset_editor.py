@@ -14,7 +14,7 @@ if __name__ == '__main__':
 from traitsui.api import BasicEditorFactory, View, Group, UI, \
                          CheckListEditor, Item
 from traitsui.qt4.editor import Editor
-from traits.api import Instance, HasTraits, List, Float, Int
+from traits.api import Instance, HasTraits, List, Float, Int, Str
 from cytoflow import Experiment
 from value_bounds_editor import ValuesBoundsEditor
 import pandas as pd
@@ -36,8 +36,7 @@ class _SubsetEditor(Editor):
         Finishes initializing the editor; create the underlying toolkit widget
         """
         
-        self.experiment = self.factory.experiment
-        #self.sync_value(self.factory.experiment, 'experiment', 'from')
+        self.sync_value(self.factory.experiment, 'experiment', 'from')
         
         self._obj, group = self._get_view()
         
@@ -53,6 +52,7 @@ class _SubsetEditor(Editor):
         super(_SubsetEditor, self).dispose()
         
     def update_editor(self):
+        print "TODO - update editor with {0}".format(self.value)
         pass  #for the moment
         
     def _get_view(self):
@@ -121,29 +121,36 @@ class _SubsetEditor(Editor):
             if dtype == 'bool':
                 val = self._obj.trait_get(name)[name]
                 if name + '+' in val and not name + '-' in val:
-                    subsets.append("{0} == True".format(name))
+                    subsets.append("({0} == True)".format(name))
                 elif name + '+' not in val and name + '-' in val:
-                    subsets.append("{0} == False".format(name))
+                    subsets.append("({0} == False)".format(name))
                 else:
                     # "name" is any value; dont' include specifier
                     pass
                 
             elif dtype == 'category':
                 val = self._obj.trait_get(name)[name]
+                phrase = "("
                 for cat in val:
-                    pass #subsets = 
-                print val
+                    if len(phrase) > 1:
+                        phrase += " or "
+                    phrase += "{0} == {1}".format(name, cat) 
+                phrase += ")"
                 
             elif dtype == 'float':
-                (min, max) = (self._obj.trait_get(name + "Min")[name + "Min"],
-                              self._obj.trait_get(name + "Max")[name + "Max"])
-                print (min, max)
+                min_val = self._obj.trait_get(name + "Min")[name + "Min"]
+                max_val= self._obj.trait_get(name + "Max")[name + "Max"]
+                subsets.append("({0} >= {1} and {0} <= {2})"
+                               .format(name, min_val, max_val))
                 
             elif dtype == 'int':
-                (min, max) = (self._obj.trait_get(name + "Min")[name + "Min"],
-                              self._obj.trait_get(name + "Max")[name + "Max"])
-                print (min, max)
+                min_val = self._obj.trait_get(name + "Min")[name + "Min"]
+                max_val = self._obj.trait_get(name + "Max")[name + "Max"]
+                subsets.append("({0} >= {1} and {0} <= {2})"
+                               .format(name, min_val, max_val))
                 
+            self.value = " and ".join(subsets)
+            print self.value                
 
 class SubsetEditor(BasicEditorFactory):
     
@@ -151,6 +158,6 @@ class SubsetEditor(BasicEditorFactory):
     klass = _SubsetEditor
     
     # the cytoflow.Experiment instance to build the UI
-    experiment = Instance(Experiment)
+    experiment = Str
     
     

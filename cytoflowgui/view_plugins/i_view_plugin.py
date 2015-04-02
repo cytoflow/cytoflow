@@ -4,7 +4,8 @@ Created on Mar 15, 2015
 @author: brian
 """
 
-from traits.api import Interface, Str, HasTraits, Property, Instance
+from traits.api import Interface, Str, HasTraits, Property, Instance, \
+                       DelegatesTo
 from cytoflowgui.workflow_item import WorkflowItem
 
 VIEW_PLUGIN_EXT = 'edu.mit.synbio.cytoflow.view_plugins'
@@ -47,20 +48,17 @@ class IViewPlugin(Interface):
             The WorkflowItem whose result this view is viewing; to set 
             EnumEditors, etc.
         """
-    
-class MViewPlugin(object):
-    """
-    A mixin class containing common code for implementations of IViewPlugin
-    """
-    pass
 
 class ViewHandlerMixin(HasTraits):
+    """
+    Common bits useful for View handlers.
+    """
     
     channels = Property
     conditions = Property
     
     wi = Instance(WorkflowItem)
-    
+
     # MAGIC: provides dynamically updated values for the "channels" trait
     def _get_channels(self):
         """

@@ -52,13 +52,13 @@ class FlowTask(Task):
         self.model.workflow.append(item)
         
         if self.debug:
-            Tube.add_class_trait("Dox", Int)
+            Tube.add_class_trait("Dox", Bool)
             tube1 = Tube(Name = "Tube 1",
                          File = "../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs",
-                         Dox = 1)
+                         Dox = True)
             tube2 = Tube(Name = "Tube 2",
                          File = "../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs",
-                         Dox = 2)
+                         Dox = False)
             
             item.operation.tubes.append(tube1)
             item.operation.tubes.append(tube2)
