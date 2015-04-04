@@ -34,8 +34,9 @@ class WorkflowItem(HasStrictTraits):
     # the operation this Item wraps
     operation = Instance(IOperation)
     
-    # the traitsui handler for the operation
-    handler = Instance(Handler)
+    # the handler that's associated with this operation.
+    # since it doesn't maintain any state, we can make and destroy as needed
+    handler = Property(depends_on = 'operation', trait = Instance(Handler))
     
     # the Experiment that is the result of applying *operation* to a 
     # previous Experiment
@@ -83,3 +84,10 @@ class WorkflowItem(HasStrictTraits):
             return QtGui.QStyle.SP_BrowserReload
         else: # self.valid == "invalid" or None
             return QtGui.QStyle.SP_BrowserStop
+
+    @cached_property
+    def _get_handler(self):
+        # operation.handler isn't statically defined; it's dynamically
+        # associated with this instance in flow_task
+        return self.operation.handler_factory(model = self.operation,
+                                              wi = self)

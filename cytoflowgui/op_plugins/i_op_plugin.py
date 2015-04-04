@@ -32,9 +32,10 @@ class IOperationPlugin(Interface):
     short_name = Str
     menu_group = Str
 
-    def get_operation_factory(self):
+    def get_operation(self):
         """
-        Return an instance of the IOperation that this plugin wraps
+        Return an instance of the IOperation that this plugin wraps, along
+        with the factory for the handler
         """
         
     def get_handler_factory(self):

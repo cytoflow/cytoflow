@@ -59,6 +59,7 @@ class HistogramView(HasTraits):
                           row = (self.yfacet if self.yfacet else None),
                           hue = (self.huefacet if self.huefacet else None))
         
+        # TODO - compute and specify the bin width!
         g.map(plt.hist, self.channel, **kwargs)
         
         

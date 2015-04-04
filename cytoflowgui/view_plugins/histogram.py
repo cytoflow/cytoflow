@@ -13,31 +13,31 @@ from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.subset_editor import SubsetEditor
 from cytoflowgui.subset_model import SubsetModel
 from cytoflowgui.view_plugins.i_view_plugin \
-    import IViewPlugin, VIEW_PLUGIN_EXT, ViewWrapperMixin
+    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin
     
-class HistogramViewWrapper(HistogramView, ViewWrapperMixin):
+class HistogramHandler(Controller, ViewHandlerMixin):
     """
     docs
     """
     
     def default_traits_view(self):
-        return View(Item('name'),
-            Item('channel',
-                 editor=EnumEditor(name='channels'),
-                 label = "Channel"),
-            Item('xfacet',
-                 editor=EnumEditor(name='conditions'),
-                 label = "Horizontal\nFacet"),
-            Item('yfacet',
-                 editor=EnumEditor(name='conditions'),
-                 label = "Vertical\nFacet"),
-            Item('huefacet',
-                 editor=EnumEditor(name='conditions'),
-                 label="Color\nFacet"),
-            Item('_'),
-            Item('subset',
-                 label="Subset",
-                 editor = SubsetEditor(experiment = "object.wi.result")))
+        return View(Item('object.name'),
+                    Item('object.channel',
+                         editor=EnumEditor(name='handler.channels'),
+                         label = "Channel"),
+                    Item('object.xfacet',
+                         editor=EnumEditor(name='handler.conditions'),
+                         label = "Horizontal\nFacet"),
+                    Item('object.yfacet',
+                         editor=EnumEditor(name='handler.conditions'),
+                         label = "Vertical\nFacet"),
+                    Item('object.huefacet',
+                         editor=EnumEditor(name='handler.conditions'),
+                         label="Color\nFacet"),
+                    Item('_'),
+                    Item('object.subset',
+                         label="Subset",
+                         editor = SubsetEditor(experiment = "handler.wi.result")))
 
 @provides(IViewPlugin)
 class HistogramPlugin(Plugin):
@@ -49,8 +49,10 @@ class HistogramPlugin(Plugin):
     view_id = 'edu.mit.synbio.cytoflow.view.histogram'
     short_name = "Histogram"
     
-    def get_view(self, wi):
-        return HistogramViewWrapper(wi = wi)
+    def get_view(self):
+        ret = HistogramView()
+        ret.handler_factory = HistogramHandler
+        return ret
 
     @contributes_to(VIEW_PLUGIN_EXT)
     def get_plugin(self):

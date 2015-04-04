@@ -29,11 +29,10 @@ class ThresholdPlugin(Plugin):
     short_name = "Threshold"
     menu_group = "Gates"
     
-    def get_operation_factory(self):
-        return ThresholdOp
-    
-    def get_handler_factory(self):
-        return ThresholdHandler
+    def get_operation(self):
+        ret = ThresholdOp()
+        ret.handler_factory = ThresholdHandler
+        return ret
     
     def get_icon(self):
         return QtGui.QIcon()

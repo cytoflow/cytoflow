@@ -1,5 +1,5 @@
-from traits.api import Instance, Any, List, on_trait_change
-from traitsui.api import UI, View, Item, EnumEditor
+from traits.api import Instance, Any, List, on_trait_change, Property
+from traitsui.api import UI, View, Item, EnumEditor, Handler
 from cytoflow.views.i_view import IView
 from pyface.tasks.api import DockPane, Task
 from pyface.qt import QtGui
@@ -24,7 +24,7 @@ class ViewDockPane(DockPane):
     
     # the IView we're currently editing
     view = Instance(IView)
-
+    
     # the UI object associated with the object we're editing.
     # NOTE: we don't maintain a reference to the IView itself...
     _ui = Instance(UI)
@@ -106,9 +106,10 @@ class ViewDockPane(DockPane):
         if isinstance(old, IView):
             self._layout.takeAt(self._layout.count() - 1)
     
-        # note: the "ui" attribute isn't defined on IView; it's dynamically
+        # note: the "handler" attribute isn't defined on IView; it's dynamically
         # associated with these instances in flow_task.FlowTask.set_current_view
-        self._ui = new.edit_traits(kind='subpanel', 
-                                   parent=self._parent)
+        
+        self._ui = new.handler.edit_traits(kind='subpanel', 
+                                           parent=self._parent)
                  
         self._layout.addWidget(self._ui.control)

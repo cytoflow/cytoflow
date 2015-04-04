@@ -47,9 +47,7 @@ class FlowTask(Task):
     def initialized(self):
         plugin = ImportPlugin()
         wi = WorkflowItem(task = self)
-        wi.operation = plugin.get_operation_factory()()
-        wi.handler = plugin.get_handler_factory()(model = wi.operation,
-                                                  wi = wi)
+        wi.operation = plugin.get_operation()
 
         self.model.workflow.append(wi)
         
@@ -98,9 +96,7 @@ class FlowTask(Task):
         idx = self.model.workflow.index(after)
         
         wi = WorkflowItem(task = self)
-        wi.operation = plugin.get_operation_factory()()
-        wi.handler = plugin.get_handler_factory()(model = wi.operation,
-                                                  wi = wi)
+        wi.operation = plugin.get_operation()
 
         after.next = wi
         wi.previous = after
@@ -149,7 +145,10 @@ class FlowTask(Task):
         
         if not view:
             plugin = next((x for x in self.view_plugins if x.view_id == view_id))
-            view = plugin.get_view(wi)
+            view = plugin.get_view()
+            
+        view.handler = view.handler_factory(model = view,
+                                            wi = wi)
 
         # whenever the view parameters change, we need to know so we can
         # update the plot(s)

@@ -31,11 +31,11 @@ class IViewPlugin(Interface):
     view_id = Str
     short_name = Str
 
-    def get_view(self, wi):
-        pass
+    def get_view_(self):
+        """Return an IView instance that this plugin wraps"""
 
 
-class ViewWrapperMixin(HasTraits):
+class ViewHandlerMixin(HasTraits):
     """
     Common bits useful for View wrappers.
     """
@@ -44,8 +44,6 @@ class ViewWrapperMixin(HasTraits):
     conditions = Property
     
     wi = Instance(WorkflowItem)
-    #subset_model = Instance(SubsetModel)
-    #subset = DelegatesTo('subset_model', 'subset_string')
 
     # MAGIC: provides dynamically updated values for the "channels" trait
     def _get_channels(self):

@@ -95,9 +95,8 @@ class ImportPlugin(Plugin):
     short_name = "Import data"
     menu_group = "TOP"
     
-    def get_operation_factory(self):
-        return ImportOp
-    
-    def get_handler_factory(self):
-        return ImportHandler
+    def get_operation(self):
+        ret = ImportOp()
+        ret.handler_factory = ImportHandler
+        return ret
     
