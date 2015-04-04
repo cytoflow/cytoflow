@@ -15,7 +15,7 @@ from cytoflowgui.subset_model import SubsetModel
 from cytoflowgui.view_plugins.i_view_plugin \
     import IViewPlugin, VIEW_PLUGIN_EXT, ViewWrapperMixin
     
-class HistogramViewWrapper(ViewWrapperMixin, HistogramView):
+class HistogramViewWrapper(HistogramView, ViewWrapperMixin):
     """
     docs
     """

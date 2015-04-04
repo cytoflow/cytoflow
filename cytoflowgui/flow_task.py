@@ -47,18 +47,17 @@ class FlowTask(Task):
     def initialized(self):
         plugin = ImportPlugin()
         item = WorkflowItem(task = self)
-        item.operation = plugin.get_operation()
-        item.ui = plugin.get_ui(item)
+        item.operation = plugin.get_operation(item)
         self.model.workflow.append(item)
         
         if self.debug:
-            Tube.add_class_trait("Dox", Bool)
+            Tube.add_class_trait("Dox", Float)
             tube1 = Tube(Name = "Tube 1",
                          File = "../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs",
-                         Dox = True)
+                         Dox = 0.01)
             tube2 = Tube(Name = "Tube 2",
                          File = "../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs",
-                         Dox = False)
+                         Dox = 0.1)
             
             item.operation.tubes.append(tube1)
             item.operation.tubes.append(tube2)
@@ -96,8 +95,7 @@ class FlowTask(Task):
         idx = self.model.workflow.index(after)
         
         item = WorkflowItem(task = self)
-        item.operation = plugin.get_operation()
-        item.ui = plugin.get_ui(item)
+        item.operation = plugin.get_operation(item)
 
         after.next = item
         item.previous = after

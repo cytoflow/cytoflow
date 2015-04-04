@@ -14,14 +14,13 @@ if __name__ == '__main__':
 from traitsui.api import View, Item, Controller
 from traits.api import Button, Property, cached_property, provides, Instance
 from cytoflowgui.import_dialog import ExperimentDialog
-from cytoflowgui.op_plugins.i_op_plugin import IOperationPlugin,\
-    MOperationPlugin
+from cytoflowgui.op_plugins.i_op_plugin import IOperationPlugin, OpWrapperMixin
 from pyface.api import OK as PyfaceOK
 from cytoflow import ImportOp
 from envisage.api import Plugin
 from cytoflowgui.workflow_item import WorkflowItem
 
-class ImportHandler(Controller):
+class ImportOpWrapper(ImportOp, OpWrapperMixin):
     """
     A WorkflowItem that handles importing data and making a new Experiment
     """
@@ -30,10 +29,23 @@ class ImportHandler(Controller):
     samples = Property(depends_on = 'wi.result')
     events = Property(depends_on = 'wi.result')
     
-    wi = Instance(WorkflowItem)
-    
-    def init(self, info):
-        pass
+    def default_traits_view(self):
+        return View(Item('import_event',
+                         show_label=False),
+                    Item('samples',
+                         label='Samples',
+                         style='readonly',
+                         visible_when='wi.result is not None'),
+                    Item('events',
+                         label='Events',
+                         style='readonly',
+                         visible_when='wi.result is not None'),
+                    Item('coarse',
+                         label="Coarse\nimport?",
+                         visible_when='wi.result is not None'),
+                    Item('coarse_events',
+                         label="Events per\nsample",
+                         visible_when='wi.result is not None and wi.coarse is True'))
         
     def _import_event_fired(self):
         """
@@ -72,7 +84,7 @@ class ImportHandler(Controller):
 
             
 @provides(IOperationPlugin)
-class ImportPlugin(Plugin, MOperationPlugin):
+class ImportPlugin(Plugin):
     """
     class docs
     """
@@ -83,25 +95,5 @@ class ImportPlugin(Plugin, MOperationPlugin):
     short_name = "Import data"
     menu_group = "TOP"
     
-    def get_operation(self):
-        return ImportOp()
-    
-    def get_ui(self, wi):
-        return View(Item('handler.import_event',
-                         show_label=False),
-                    Item('handler.samples',
-                         label='Samples',
-                         style='readonly',
-                         visible_when='object.result is not None'),
-                    Item('handler.events',
-                         label='Events',
-                         style='readonly',
-                         visible_when='object.result is not None'),
-                    Item('object.operation.coarse',
-                         label="Coarse\nimport?",
-                         visible_when='object.result is not None'),
-                    Item('object.operation.coarse_events',
-                         label="Events per\nsample",
-                         visible_when='object.result is not None and object.operation.coarse is True'),
-                    handler = ImportHandler(wi = wi)
-    )
+    def get_operation(self, wi):
+        return ImportOpWrapper(wi = wi)

@@ -6,7 +6,7 @@ Created on Mar 15, 2015
 
 from traits.api import HasStrictTraits, Instance, List, DelegatesTo, Event, \
                        Enum, Property, cached_property, on_trait_change
-from traitsui.api import View
+from traitsui.api import View, Item
 from cytoflow import Experiment
 from cytoflow.operations.i_operation import IOperation
 from cytoflow.views.i_view import IView
@@ -33,9 +33,6 @@ class WorkflowItem(HasStrictTraits):
     # the operation this Item wraps
     operation = Instance(IOperation)
     
-    # the traitsui View that displays this operation
-    ui = Instance(View)
-    
     # the Experiment that is the result of applying *operation* to a 
     # previous Experiment
     result = Instance(Experiment)
@@ -50,10 +47,6 @@ class WorkflowItem(HasStrictTraits):
     # self.result = self.apply(previous.result)
     previous = Instance('WorkflowItem')
     
-    # a Property wrapper around the previous.result.channels
-    # used to constrain the operation view (with an EnumEditor)
-    previous_channels = Property(depends_on = 'previous.result.channels')
-    
     # the next WorkflowItem in the workflow
     next = Instance('WorkflowItem')
     
@@ -65,8 +58,14 @@ class WorkflowItem(HasStrictTraits):
     icon = Property(depends_on = 'valid')
     
     # an event for the previous WorkflowItem to tell this one to update
-    update = Event
+    #update = Event
+    
+    # we're viewing the operation wrapper's ui
+    traits_view = View(Item('operation',
+                            style = 'custom',
+                            show_label = False))
         
+    # TODO - why is this wonky all of a sudden?
     @on_trait_change('operation.+')
     def update(self):
         """
@@ -74,13 +73,6 @@ class WorkflowItem(HasStrictTraits):
         the controller.
         """
         self.task.operation_parameters_updated(self)
-                
-    @cached_property
-    def _get_previous_channels(self):
-        if (not self.previous) or (not self.previous.result):
-            return []
-              
-        return self.previous.result.channels
     
     @cached_property
     def _get_icon(self):
@@ -90,7 +82,6 @@ class WorkflowItem(HasStrictTraits):
             return QtGui.QStyle.SP_BrowserReload
         else: # self.valid == "invalid" or None
             return QtGui.QStyle.SP_BrowserStop
-     
-    def default_traits_view(self):
-        return self.ui
+        
+    
     

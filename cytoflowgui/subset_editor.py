@@ -109,11 +109,9 @@ class _SubsetEditor(Editor):
         return obj, group
     
     def _view_changed(self, name, new, old):
-        print "view changed"
-        # update self.value from self._obj
         
-        # we want to spit out a value in conjunctive normal form (CNF) so
-        # we can easily parse it back in.
+        # we want to spit out a value in a standard form so we can easily
+        # parse it back in.
         
         subsets = []
         
