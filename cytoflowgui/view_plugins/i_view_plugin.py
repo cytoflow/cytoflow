@@ -44,8 +44,8 @@ class ViewWrapperMixin(HasTraits):
     conditions = Property
     
     wi = Instance(WorkflowItem)
-    subset_model = Instance(SubsetModel)
-    subset = DelegatesTo('subset_model', 'subset_string')
+    #subset_model = Instance(SubsetModel)
+    #subset = DelegatesTo('subset_model', 'subset_string')
 
     # MAGIC: provides dynamically updated values for the "channels" trait
     def _get_channels(self):

@@ -35,9 +35,9 @@ class HistogramViewWrapper(ViewWrapperMixin, HistogramView):
                  editor=EnumEditor(name='conditions'),
                  label="Color\nFacet"),
             Item('_'),
-            Item('subset_model',
+            Item('subset',
                  label="Subset",
-                 style = 'custom'))
+                 editor = SubsetEditor(experiment = "object.wi.result")))
 
 @provides(IViewPlugin)
 class HistogramPlugin(Plugin):
@@ -50,8 +50,7 @@ class HistogramPlugin(Plugin):
     short_name = "Histogram"
     
     def get_view(self, wi):
-        return HistogramViewWrapper(wi = wi,
-                                    subset_model = SubsetModel(experiment = wi.result))
+        return HistogramViewWrapper(wi = wi)
 
     @contributes_to(VIEW_PLUGIN_EXT)
     def get_plugin(self):
