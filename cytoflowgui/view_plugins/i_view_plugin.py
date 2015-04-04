@@ -7,6 +7,7 @@ Created on Mar 15, 2015
 from traits.api import Interface, Str, HasTraits, Property, Instance, \
                        DelegatesTo
 from cytoflowgui.workflow_item import WorkflowItem
+from cytoflowgui.subset_model import SubsetModel
 
 VIEW_PLUGIN_EXT = 'edu.mit.synbio.cytoflow.view_plugins'
 
@@ -30,34 +31,21 @@ class IViewPlugin(Interface):
     view_id = Str
     short_name = Str
 
-    def get_view(self):
+    def get_view(self, wi):
         pass
-    
-    def get_ui(self, wi):
-        """
-        Return an instance of a traitsui View for the view we wrap.
-        
-        There's a lot of logic you can stuff into a view (enums, visible_when,
-        etc.)  If you need more logic, though, feel free to define a Controller
-        and use that to handle, eg, button presses or derived traits (eg,
-        with a Property trait)
-        
-        Parameters
-        ----------
-        wi : WorkflowItem
-            The WorkflowItem whose result this view is viewing; to set 
-            EnumEditors, etc.
-        """
 
-class ViewHandlerMixin(HasTraits):
+
+class ViewWrapperMixin(HasTraits):
     """
-    Common bits useful for View handlers.
+    Common bits useful for View wrappers.
     """
     
     channels = Property
     conditions = Property
     
     wi = Instance(WorkflowItem)
+    subset_model = Instance(SubsetModel)
+    subset = DelegatesTo('subset_model', 'subset_string')
 
     # MAGIC: provides dynamically updated values for the "channels" trait
     def _get_channels(self):

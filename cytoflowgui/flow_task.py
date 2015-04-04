@@ -145,12 +145,12 @@ class FlowTask(Task):
         
         if not view:
             plugin = next((x for x in self.view_plugins if x.view_id == view_id))
-            view = plugin.get_view()
-            
-            # dynamically associate a traitsui View with this view.
-            view.ui = plugin.get_ui(wi)
+            view = plugin.get_view(wi)
 
+        # whenever the view parameters change, we need to know so we can
+        # update the plot(s)
         view.on_trait_change(self.view_parameters_updated)
+        
         wi.current_view = view
         view_pane.view = view
         

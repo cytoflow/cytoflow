@@ -21,11 +21,11 @@ import numpy as np
 import pandas as pd
 import FlowCytometryTools as fc
 
-class ISubset(Interface):
+class ISubsetModel(Interface):
     subset_str = Property
     
-@provides(ISubset)
-class BoolSubset(HasTraits):
+@provides(ISubsetModel)
+class BoolSubsetModel(HasTraits):
     name = Str
     experiment = Instance(Experiment)
     selected_t = Bool(False)
@@ -33,7 +33,10 @@ class BoolSubset(HasTraits):
     subset_str = Property
     
     def default_traits_view(self):
-        return View(HGroup(Item('selected_t'), Item('selected_f')))
+        return View(HGroup(Item('selected_t',
+                                label = self.name + "+"), 
+                           Item('selected_f',
+                                label = self.name + "-")))
     
     # MAGIC: gets the value of the Property trait "subset_str"
     def _get_subset_str(self):
@@ -44,8 +47,8 @@ class BoolSubset(HasTraits):
         else:
             return ""
 
-@provides(ISubset)
-class CategorySubset(HasTraits):
+@provides(ISubsetModel)
+class CategorySubsetModel(HasTraits):
     name = Str
     experiment = Instance(Experiment)
     selected = List
@@ -54,6 +57,7 @@ class CategorySubset(HasTraits):
     
     def default_traits_view(self):
         return View(Item('selected',
+                         label = self.name,
                          editor = CheckListEditor(
                                      values = self.values,
                                      cols = len(self.values)
@@ -74,8 +78,8 @@ class CategorySubset(HasTraits):
         
         return phrase
 
-@provides(ISubset)
-class RangeSubset(HasTraits):
+@provides(ISubsetModel)
+class RangeSubsetModel(HasTraits):
     name = Str
     experiment = Instance(Experiment)
     values = Property(depends_on = 'experiment')
@@ -86,6 +90,7 @@ class RangeSubset(HasTraits):
     
     def default_traits_view(self):
         return View(Item('high',
+                         label = self.name,
                          editor = ValuesBoundsEditor(
                                      values = self.values,
                                      low_name = 'low',
@@ -108,18 +113,20 @@ class RangeSubset(HasTraits):
     def _low_default(self):
         return self.experiment[self.name].min()
 
-class ExperimentSubset(HasTraits):
+class SubsetModel(HasTraits):
     
     experiment = Instance(Experiment)
     
-    subset_list = List(ISubset)
+    subset_list = List(ISubsetModel)
     
     subset_string = Property(depends_on = 'subset_list', trait = Str)
       
     traits_view = View(Item('subset_list',
                              style = 'custom',
+                             show_label = False,
                              editor = ListEditor(editor = InstanceEditor(),
-                                                 style = 'custom')))
+                                                 style = 'custom',
+                                                 mutable = False)))
 
     # MAGIC: gets the value of the Property trait "subset_string"
     def _get_subset_string(self):
@@ -127,10 +134,10 @@ class ExperimentSubset(HasTraits):
     
     # MAGIC: gets the default value of the trait "subset_list"
     def _subset_list_default(self):
-        cond_map = {"bool" : BoolSubset,
-                    "category" : CategorySubset,
-                    "float" : RangeSubset,
-                    "int" : RangeSubset}
+        cond_map = {"bool" : BoolSubsetModel,
+                    "category" : CategorySubsetModel,
+                    "float" : RangeSubsetModel,
+                    "int" : RangeSubsetModel}
         
         ret = []
         for name, dtype in self.experiment.conditions.iteritems():
@@ -152,6 +159,6 @@ if __name__ == '__main__':
     ex.add_tube(tube1, {"Dox" : True})
     ex.add_tube(tube2, {"Dox" : False})
     
-    subset = ExperimentSubset(experiment = ex)
+    subset = SubsetModel(experiment = ex)
     subset.configure_traits()
     

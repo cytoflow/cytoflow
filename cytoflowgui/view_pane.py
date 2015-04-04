@@ -109,7 +109,6 @@ class ViewDockPane(DockPane):
         # note: the "ui" attribute isn't defined on IView; it's dynamically
         # associated with these instances in flow_task.FlowTask.set_current_view
         self._ui = new.edit_traits(kind='subpanel', 
-                                   parent=self._parent,
-                                   view=new.ui)
+                                   parent=self._parent)
                  
         self._layout.addWidget(self._ui.control)

@@ -6,23 +6,41 @@ Created on Feb 24, 2015
 
 from traitsui.api import View, Item, Controller, EnumEditor
 from envisage.api import Plugin, contributes_to
-from traits.api import provides, Property, Instance
+from traits.api import provides, Property, Instance, DelegatesTo
 
 from cytoflow import HistogramView
 from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.subset_editor import SubsetEditor
+from cytoflowgui.subset_model import SubsetModel
 from cytoflowgui.view_plugins.i_view_plugin \
-    import IViewPlugin, MViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin
+    import IViewPlugin, VIEW_PLUGIN_EXT, ViewWrapperMixin
     
-class HistogramHandler(Controller, ViewHandlerMixin):
+class HistogramViewWrapper(ViewWrapperMixin, HistogramView):
     """
     docs
     """
-    pass
     
+    def default_traits_view(self):
+        return View(Item('name'),
+            Item('channel',
+                 editor=EnumEditor(name='channels'),
+                 label = "Channel"),
+            Item('xfacet',
+                 editor=EnumEditor(name='conditions'),
+                 label = "Horizontal\nFacet"),
+            Item('yfacet',
+                 editor=EnumEditor(name='conditions'),
+                 label = "Vertical\nFacet"),
+            Item('huefacet',
+                 editor=EnumEditor(name='conditions'),
+                 label="Color\nFacet"),
+            Item('_'),
+            Item('subset_model',
+                 label="Subset",
+                 style = 'custom'))
 
 @provides(IViewPlugin)
-class HistogramPlugin(Plugin, MViewPlugin):
+class HistogramPlugin(Plugin):
     """
     classdocs
     """
@@ -31,27 +49,9 @@ class HistogramPlugin(Plugin, MViewPlugin):
     view_id = 'edu.mit.synbio.cytoflow.view.histogram'
     short_name = "Histogram"
     
-    def get_view(self):
-        return HistogramView()
-    
-    def get_ui(self, wi):
-        return View(Item('object.name'),
-                    Item('object.channel',
-                         editor=EnumEditor(name='handler.channels'),
-                         label = "Channel"),
-                    Item('object.xfacet',
-                         editor=EnumEditor(name='handler.conditions'),
-                         label = "Horizontal\nFacet"),
-                    Item('object.yfacet',
-                         editor=EnumEditor(name='handler.conditions'),
-                         label = "Vertical\nFacet"),
-                    Item('object.huefacet',
-                         editor=EnumEditor(name='handler.conditions'),
-                         label="Color\nFacet"),
-                    Item('object.subset',
-                         editor=SubsetEditor(experiment = wi.result),
-                         label="Subset"),
-                    handler = HistogramHandler(wi = wi))
+    def get_view(self, wi):
+        return HistogramViewWrapper(wi = wi,
+                                    subset_model = SubsetModel(experiment = wi.result))
 
     @contributes_to(VIEW_PLUGIN_EXT)
     def get_plugin(self):
