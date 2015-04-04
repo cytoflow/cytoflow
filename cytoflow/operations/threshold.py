@@ -1,7 +1,6 @@
 from cytoflow import Experiment
-from traits.api import HasTraits, CFloat, Str
+from traits.api import HasTraits, CFloat, Str, CStr, provides
 import pandas as pd
-from traits.has_traits import provides
 from cytoflow.operations.i_operation import IOperation
 
 @provides(IOperation)
@@ -25,7 +24,7 @@ class ThresholdOp(HasTraits):
     id = "edu.mit.synbio.cytoflow.op.threshold"
     friendly_id = "Threshold"
     
-    name = Str()
+    name = CStr()
     channel = Str()
     threshold = CFloat()
     

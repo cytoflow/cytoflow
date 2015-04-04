@@ -5,8 +5,9 @@ Created on Mar 15, 2015
 '''
 
 from traits.api import HasStrictTraits, Instance, List, DelegatesTo, Event, \
-                       Enum, Property, cached_property, on_trait_change
-from traitsui.api import View, Item
+                       Enum, Property, cached_property, on_trait_change, \
+                       Any
+from traitsui.api import View, Item, Handler
 from cytoflow import Experiment
 from cytoflow.operations.i_operation import IOperation
 from cytoflow.views.i_view import IView
@@ -33,6 +34,9 @@ class WorkflowItem(HasStrictTraits):
     # the operation this Item wraps
     operation = Instance(IOperation)
     
+    # the traitsui handler for the operation
+    handler = Instance(Handler)
+    
     # the Experiment that is the result of applying *operation* to a 
     # previous Experiment
     result = Instance(Experiment)
@@ -57,22 +61,19 @@ class WorkflowItem(HasStrictTraits):
     # the icon for the vertical notebook view.  Qt specific, sadly.
     icon = Property(depends_on = 'valid')
     
-    # an event for the previous WorkflowItem to tell this one to update
-    #update = Event
-    
-    # we're viewing the operation wrapper's ui
-    traits_view = View(Item('operation',
-                            style = 'custom',
-                            show_label = False))
+    def default_traits_view(self):
+        return View(Item('handler',
+                         style = 'custom',
+                         show_label = False))
         
-    # TODO - why is this wonky all of a sudden?
     @on_trait_change('operation.+')
     def update(self):
         """
         Called when self.operation changed its parameters.  also called by
         the controller.
         """
-        self.task.operation_parameters_updated(self)
+        if self.task:
+            self.task.operation_parameters_updated(self)
     
     @cached_property
     def _get_icon(self):
@@ -82,6 +83,3 @@ class WorkflowItem(HasStrictTraits):
             return QtGui.QStyle.SP_BrowserReload
         else: # self.valid == "invalid" or None
             return QtGui.QStyle.SP_BrowserStop
-        
-    
-    

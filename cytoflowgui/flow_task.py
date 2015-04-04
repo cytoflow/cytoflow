@@ -46,9 +46,12 @@ class FlowTask(Task):
         
     def initialized(self):
         plugin = ImportPlugin()
-        item = WorkflowItem(task = self)
-        item.operation = plugin.get_operation(item)
-        self.model.workflow.append(item)
+        wi = WorkflowItem(task = self)
+        wi.operation = plugin.get_operation_factory()()
+        wi.handler = plugin.get_handler_factory()(model = wi.operation,
+                                                  wi = wi)
+
+        self.model.workflow.append(wi)
         
         if self.debug:
             Tube.add_class_trait("Dox", Float)
@@ -59,10 +62,10 @@ class FlowTask(Task):
                          File = "../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs",
                          Dox = 0.1)
             
-            item.operation.tubes.append(tube1)
-            item.operation.tubes.append(tube2)
+            wi.operation.tubes.append(tube1)
+            wi.operation.tubes.append(tube2)
             
-            item.update()
+            wi.update()
             
     
     def prepare_destroy(self):
@@ -94,14 +97,17 @@ class FlowTask(Task):
         
         idx = self.model.workflow.index(after)
         
-        item = WorkflowItem(task = self)
-        item.operation = plugin.get_operation(item)
+        wi = WorkflowItem(task = self)
+        wi.operation = plugin.get_operation_factory()()
+        wi.handler = plugin.get_handler_factory()(model = wi.operation,
+                                                  wi = wi)
 
-        after.next = item
-        item.previous = after
-        self.model.workflow.insert(idx+1, item)
+        after.next = wi
+        wi.previous = after
+        self.model.workflow.insert(idx+1, wi)
         
     def operation_parameters_updated(self, wi): #wi == "WorkflowItem"
+        print "op parameters updated"
         wi.valid = "updating"
         
         prev_result = wi.previous.result if wi.previous else None

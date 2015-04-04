@@ -14,13 +14,13 @@ if __name__ == '__main__':
 from traitsui.api import View, Item, Controller
 from traits.api import Button, Property, cached_property, provides, Instance
 from cytoflowgui.import_dialog import ExperimentDialog
-from cytoflowgui.op_plugins.i_op_plugin import IOperationPlugin, OpWrapperMixin
+from cytoflowgui.op_plugins.i_op_plugin import IOperationPlugin, OpHandlerMixin
 from pyface.api import OK as PyfaceOK
 from cytoflow import ImportOp
 from envisage.api import Plugin
 from cytoflowgui.workflow_item import WorkflowItem
 
-class ImportOpWrapper(ImportOp, OpWrapperMixin):
+class ImportHandler(Controller, OpHandlerMixin):
     """
     A WorkflowItem that handles importing data and making a new Experiment
     """
@@ -30,22 +30,22 @@ class ImportOpWrapper(ImportOp, OpWrapperMixin):
     events = Property(depends_on = 'wi.result')
     
     def default_traits_view(self):
-        return View(Item('import_event',
+        return View(Item('handler.import_event',
                          show_label=False),
-                    Item('samples',
+                    Item('handler.samples',
                          label='Samples',
                          style='readonly',
-                         visible_when='wi.result is not None'),
-                    Item('events',
+                         visible_when='handler.wi.result is not None'),
+                    Item('handler.events',
                          label='Events',
                          style='readonly',
-                         visible_when='wi.result is not None'),
-                    Item('coarse',
+                         visible_when='handler.wi.result is not None'),
+                    Item('object.coarse',
                          label="Coarse\nimport?",
-                         visible_when='wi.result is not None'),
-                    Item('coarse_events',
+                         visible_when='handler.wi.result is not None'),
+                    Item('object.coarse_events',
                          label="Events per\nsample",
-                         visible_when='wi.result is not None and wi.coarse is True'))
+                         visible_when='handler.wi.result is not None and object.coarse is True'))
         
     def _import_event_fired(self):
         """
@@ -95,5 +95,9 @@ class ImportPlugin(Plugin):
     short_name = "Import data"
     menu_group = "TOP"
     
-    def get_operation(self, wi):
-        return ImportOpWrapper(wi = wi)
+    def get_operation_factory(self):
+        return ImportOp
+    
+    def get_handler_factory(self):
+        return ImportHandler
+    

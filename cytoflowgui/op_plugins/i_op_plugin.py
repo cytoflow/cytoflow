@@ -32,9 +32,14 @@ class IOperationPlugin(Interface):
     short_name = Str
     menu_group = Str
 
-    def get_operation(self, wi):
+    def get_operation_factory(self):
         """
         Return an instance of the IOperation that this plugin wraps
+        """
+        
+    def get_handler_factory(self):
+        """
+        Return a handler and view for the operation
         """
         
 #     def get_ui(self, wi):
@@ -58,7 +63,7 @@ class IOperationPlugin(Interface):
         doc
         """
         
-class OpWrapperMixin(HasTraits):
+class OpHandlerMixin(HasTraits):
     wi = Instance(WorkflowItem)
     
     # a Property wrapper around the wi.previous.result.channels
