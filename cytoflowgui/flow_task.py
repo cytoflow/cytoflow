@@ -138,7 +138,7 @@ class FlowTask(Task):
             
         # remove the notifications from the current view
         if wi.current_view:
-            wi.current_view.on_trait_change(self.view_parameters_updated, 
+            wi.current_view.on_trait_change(self.view_parameters_updated,
                                             remove = True)
             
         view = next((x for x in wi.views if x.id == view_id), None)
@@ -160,7 +160,16 @@ class FlowTask(Task):
         if wi.current_view.validate(wi.result):
             self.view.plot(wi.result, wi.current_view)
         
-    def view_parameters_updated(self):
+    def view_parameters_updated(self, obj, name, new):
+        
+        # i should be able to specify the metadata i want in the listener,
+        # but there's an odd interaction (bug) between metadata, dynamic 
+        # trait listeners and instance traits.
+        
+        if obj.trait(name).transient:
+            return
+        
+        print "view parameters updated"
         wi = self.model.selected
         if wi is None:
             wi = self.model.workflow[-1]

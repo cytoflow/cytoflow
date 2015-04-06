@@ -38,16 +38,19 @@ class ThresholdSelection(HasTraits):
     
     threshold = Float(None)
     
-    view = Instance(IView)
-    interactive = Bool(False)
+    view = Instance(IView,
+                    transient = True)
+    interactive = Bool(False,
+                       transient = True)
 
     # internal state
-    _line = Instance(Line2D)
+    _line = Instance(Line2D,
+                     transient = True)
     
     def plot(self, experiment, **kwargs):
         """Plot self.view, and then plot the threshold on top of it."""
         self.view.plot(experiment, **kwargs)
-        self._draw_threshold
+        self._draw_threshold()
         
     def validate(self, experiment):
         """If the decorated view is valid, we are too"""

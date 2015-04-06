@@ -50,9 +50,9 @@ class HistogramPlugin(Plugin):
     short_name = "Histogram"
     
     def get_view(self):
-        ret = HistogramView()
-        ret.handler_factory = HistogramHandler
-        return ret
+        view = HistogramView()
+        view.handler_factory = HistogramHandler
+        return view
 
     @contributes_to(VIEW_PLUGIN_EXT)
     def get_plugin(self):
