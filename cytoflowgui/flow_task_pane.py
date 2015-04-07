@@ -43,7 +43,12 @@ class FlowTaskPane(TaskPane):
             The view to use for the plotting
         """
         
-        view.plot(experiment)
-        self.editor.figure = plt.gcf()
-        
+        self.editor.figure.clear()
+        view.plot(experiment, fig_num = self.editor.fig_num)
+        self.editor.control.draw()
+        #self.editor.control.update()
+
+#         if "interactive" in view.traits():
+#             #view.interactive = False
+#             view.interactive = True        
         

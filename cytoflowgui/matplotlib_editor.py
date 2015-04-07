@@ -24,7 +24,7 @@ import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 
 import numpy as np
-from traits.api import Float, Int, Any, Instance, on_trait_change
+from traits.api import Float, Int, Any, Instance, on_trait_change, Property
 
 from pyface.widget import Widget
 from pyface.qt import QtGui
@@ -37,6 +37,8 @@ class MPLFigureEditor(Widget):
     scrollable = True
     
     figure = Instance(Figure)
+    control = Instance(FigureCanvas)
+    fig_num = Property
  
     def __init__(self, parent, **traits):
         super(MPLFigureEditor, self).__init__(**traits)
@@ -49,8 +51,8 @@ class MPLFigureEditor(Widget):
         """ Create the MPL canvas. """
         # matplotlib commands to create a canvas
 
-        plt.figure()
-        self.figure = plt.gcf()
+        self.figure = plt.figure()
+        # self.figure = plt.gcf()
         
         def f(t):
             return np.exp(-t) * np.cos(2*np.pi*t)
@@ -63,20 +65,25 @@ class MPLFigureEditor(Widget):
 
         return mpl_canvas
     
-    # MAGIC: listens for a change in the 'figure' trait.
-    def _figure_changed(self, old, new):
-        
-        if not isinstance(new, Figure) or not self.control:
-            return
-
-        (w, h) = old.get_size_inches()
-        new.set_size_inches((w, h))        
-        self.control.figure = new
-        
-        self.control.draw()
-        self.control.update()
-        
-        plt.close(old)
+    # MAGIC: gets the value of the "fig_num" property
+    def _get_fig_num(self):
+        return self.figure.number
+    
+#     # MAGIC: listens for a change in the 'figure' trait.
+#     def _figure_changed(self, old, new):
+#         
+#         if not isinstance(new, Figure) or not self.control:
+#             return
+# 
+#         (w, h) = old.get_size_inches()
+#         new.set_size_inches((w, h))        
+#         #self.control.figure = new
+#         #new.set_canvas(self.control)
+#         
+#         self.control.draw()
+#         self.control.update()
+#         
+#         plt.close(old)
         
         
     

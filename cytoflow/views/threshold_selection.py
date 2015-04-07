@@ -63,6 +63,7 @@ class ThresholdSelection(HasTraits):
         
         if self._line:
             self._line.remove()
+            self._line = None
             
         self._line = plt.axvline(self.threshold, linewidth=3, color='blue')
         

@@ -1,7 +1,14 @@
+if __name__ == '__main__':
+    from traits.etsconfig.api import ETSConfig
+    ETSConfig.toolkit = 'qt4'
+
+    import os
+    os.environ['TRAITS_DEBUG'] = "1"
+
 from traits.api import HasTraits, Str, provides
 import matplotlib.pyplot as plt
-import seaborn as sns
 from cytoflow.views.i_view import IView
+from cytoflow.views.sns_axisgrid import FacetGrid
 
 @provides(IView)
 class HistogramView(HasTraits):
@@ -42,7 +49,7 @@ class HistogramView(HasTraits):
     huefacet = Str
     subset = Str
     
-    def plot(self, experiment, **kwargs):
+    def plot(self, experiment, fig_num = None, **kwargs):
         """Plot a faceted histogram view of a channel"""
         
         kwargs.setdefault('histtype', 'stepfilled')
@@ -54,10 +61,11 @@ class HistogramView(HasTraits):
         else:
             x = experiment.query(self.subset)
 
-        g = sns.FacetGrid(x, 
-                          col = (self.xfacet if self.xfacet else None),
-                          row = (self.yfacet if self.yfacet else None),
-                          hue = (self.huefacet if self.huefacet else None))
+        g = FacetGrid(x, 
+                      col = (self.xfacet if self.xfacet else None),
+                      row = (self.yfacet if self.yfacet else None),
+                      hue = (self.huefacet if self.huefacet else None),
+                      fig_kws={"num" : fig_num})
         
         # TODO - compute and specify the bin width!
         g.map(plt.hist, self.channel, **kwargs)
@@ -87,5 +95,3 @@ class HistogramView(HasTraits):
                 return False
         
         return True
-        
-    

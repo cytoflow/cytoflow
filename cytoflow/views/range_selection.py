@@ -48,9 +48,9 @@ class RangeSelection(HasTraits):
     _max_line = Instance(Line2D)
     _hline = Instance(Line2D)
         
-    def plot(self, experiment, **kwargs):
+    def plot(self, experiment, fig_num = None, **kwargs):
         """Plot self.view, and then plot the selection on top of it."""
-        self.view.plot(experiment, **kwargs)
+        self.view.plot(experiment, fig_num, **kwargs)
         self._draw_span()
 
     def validate(self, experiment):
