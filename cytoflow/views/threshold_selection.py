@@ -62,23 +62,37 @@ class ThresholdSelection(HasTraits):
             return
         
         if self._line:
-            self._line.remove()
-            self._line = None
             
-        self._line = plt.axvline(self.threshold, linewidth=3, color='blue')
+            # when used in the GUI, _draw_threshold gets called *twice* without
+            # the plot being updated inbetween: and then the line can't be 
+            # removed from the plot, because it was never added.  so check
+            # explicitly first.  this is likely to be an issue in other
+            # interactive plots, too.
+            fig = plt.gcf()
+            if self._line in fig.lines:
+                self._line.remove()
+ 
+            self._line = None
+        
+        if self.threshold:    
+            self._line = plt.axvline(self.threshold, linewidth=3, color='blue')
         
     @on_trait_change('interactive')
     def _interactive(self):
+        fig = plt.gcf()
         if self.interactive:
+            print "set interactive"
             ax = plt.gca()
             self._cursor = Cursor(ax, 
                                   horizOn=False,
                                   vertOn=True,
                                   color='blue')
-            fig = plt.gcf()
-            fig.canvas.mpl_connect('button_press_event', self._onclick)
+            
+            self._cid = fig.canvas.mpl_connect('button_press_event', 
+                                               self._onclick)
         else:
             self._cursor = None
+            fig.canvas.mpl_disconnect(self._cid)
             
     def _onclick(self, event):
         """Update the threshold location"""

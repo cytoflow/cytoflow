@@ -95,3 +95,16 @@ class HistogramView(HasTraits):
                 return False
         
         return True
+    
+if __name__ == '__main__':
+    import matplotlib as mpl
+    import matplotlib.pyplot as plt
+    
+    plt.ioff()
+    p = plt.figure(1)
+    
+    import seaborn as sns
+    tips = sns.load_dataset("tips")
+    g = FacetGrid(tips, col="time", fig_kws={"num" : 1})
+    
+    plt.show()

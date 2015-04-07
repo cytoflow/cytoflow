@@ -169,7 +169,7 @@ class FlowTask(Task):
         if obj.trait(name).transient:
             return
         
-        print "view parameters updated"
+        print "view parameters updated: {0}".format(name)
         wi = self.model.selected
         if wi is None:
             wi = self.model.workflow[-1]

@@ -57,8 +57,6 @@ class ThresholdSelectionPlugin(Plugin):
         view.add_trait('huefacet', DelegatesTo('view'))
         view.add_trait('subset', DelegatesTo('view'))
         view.handler_factory = ThresholdHandler
-        view.interactive = True
-        #view.threshold = 100
         return view
 
     @contributes_to(VIEW_PLUGIN_EXT)

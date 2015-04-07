@@ -46,9 +46,10 @@ class FlowTaskPane(TaskPane):
         self.editor.figure.clear()
         view.plot(experiment, fig_num = self.editor.fig_num)
         self.editor.control.draw()
-        #self.editor.control.update()
 
-#         if "interactive" in view.traits():
-#             #view.interactive = False
-#             view.interactive = True        
+        if "interactive" in view.traits():
+            # we have to re-bind the Cursor to the new Axes object by twiddling
+            # the "interactive" trait
+            view.interactive = False
+            view.interactive = True        
         

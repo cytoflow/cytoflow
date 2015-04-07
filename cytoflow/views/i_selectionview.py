@@ -35,3 +35,5 @@ class ISelectionView(IView):
     
     view = Instance(IView)
     interactive = Bool(False)
+    
+    
