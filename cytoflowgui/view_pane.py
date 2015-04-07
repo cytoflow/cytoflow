@@ -102,7 +102,8 @@ class ViewDockPane(DockPane):
         self.task.set_current_view(self, new.view_id)
         
     @on_trait_change('view')
-    def _view_changed(self, old, new):
+    def _view_changed(self, obj, name, old, new):
+        
         if isinstance(old, IView):
             self._layout.takeAt(self._layout.count() - 1)
     
