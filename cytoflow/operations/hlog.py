@@ -29,7 +29,7 @@ class HlogTransformOp(HasTraits):
     name = Str()
     channels = ListStr()
     
-    def valid(self, experiment):
+    def validate(self, experiment):
         """Validate this transform instance against an experiment.
         
         Parameters
@@ -43,7 +43,16 @@ class HlogTransformOp(HasTraits):
         False otherwise.
         """
         
-        raise NotImplementedError
+        if not experiment:
+            return False
+        
+        if not self.name:
+            return False
+        
+        if not set(self.channels).issubset(set(experiment.channels)):
+            return False
+        
+        return True
     
     def apply(self, old_experiment):
         """Applies the hlog transform to channels in an experiment.
