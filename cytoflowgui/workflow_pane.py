@@ -1,12 +1,11 @@
 from pyface.tasks.api import DockPane, IDockPane, Task
 from traits.api import provides, Instance, List
-from pyface.qt import QtGui
+from pyface.qt import QtGui, QtCore
 from cytoflowgui.workflow import Workflow
 from traitsui.api import View, UI
 from pyface.action.api import ToolBarManager
-from envisage.api import Application
 from pyface.tasks.action.api import TaskAction
-from cytoflowgui.op_plugins import OP_PLUGIN_EXT, IOperationPlugin
+from cytoflowgui.op_plugins import IOperationPlugin
 
 
 @provides(IDockPane)
@@ -56,16 +55,19 @@ class WorkflowDockPane(DockPane):
         Create and return the toolkit-specific contents of the dock pane.
         """
  
-        self.toolbar = ToolBarManager(orientation='vertical', 
+        self.toolbar = ToolBarManager(orientation='vertical',
+                                      show_tool_names = False,
                                       image_size = (32, 32))
                  
         for plugin in self.plugins:
             task_action = TaskAction(name=plugin.short_name,
-                                     on_perform = lambda: self.task.add_operation(plugin.id))
+                                     on_perform = lambda: self.task.add_operation(plugin.id),
+                                     image = plugin.get_icon())
             self.toolbar.append(task_action)
              
         window = QtGui.QMainWindow()
-        window.addToolBar(self.toolbar.create_tool_bar(window))
+        window.addToolBar(QtCore.Qt.LeftToolBarArea, 
+                          self.toolbar.create_tool_bar(window))
          
         self.ui = self.model.edit_traits(kind='subpanel', parent=window)
         window.setCentralWidget(self.ui.control)
