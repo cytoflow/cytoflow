@@ -61,7 +61,8 @@ class WorkflowDockPane(DockPane):
                  
         for plugin in self.plugins:
             task_action = TaskAction(name=plugin.short_name,
-                                     on_perform = lambda: self.task.add_operation(plugin.id),
+                                     on_perform = lambda id=plugin.id: 
+                                                    self.task.add_operation(id),
                                      image = plugin.get_icon())
             self.toolbar.append(task_action)
              

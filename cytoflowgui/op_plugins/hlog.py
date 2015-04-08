@@ -20,7 +20,8 @@ class HLogHandler(Controller, OpHandlerMixin):
     def default_traits_view(self):
         return View(Item('object.name'),
                     Item('object.channels',
-                         editor = CheckListEditor(name='handler.previous_channels'),
+                         editor = CheckListEditor(name='handler.previous_channels',
+                                                  cols = 2),
                          style = 'custom'))
     
 @provides(IOperationPlugin)
