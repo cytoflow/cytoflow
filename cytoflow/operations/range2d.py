@@ -1,11 +1,10 @@
-from cytoflow import Experiment
 from traits.api import HasTraits, CFloat, Str
 import pandas as pd
 from traits.has_traits import provides
 from cytoflow.operations.i_operation import IOperation
 
 @provides(IOperation)
-class RangeOp(HasTraits):
+class Range2DOp(HasTraits):
     """Apply a range gate to a cytometry experiment.
     
     Attributes
@@ -58,7 +57,7 @@ class RangeOp(HasTraits):
             self.xhigh > experiment[self.xchannel].max() or
             self.ylow < experiment[self.ychannel].min() or
             self.yhigh > experiment[self.ychannel].max):
-           return False
+            return False
        
         return True
         

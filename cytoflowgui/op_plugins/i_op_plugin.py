@@ -61,7 +61,7 @@ class IOperationPlugin(Interface):
 
     def get_icon(self):
         """
-        doc
+        
         """
         
 class OpHandlerMixin(HasTraits):

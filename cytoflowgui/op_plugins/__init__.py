@@ -1,3 +1,8 @@
+from i_op_plugin import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT
 from import_op import ImportPlugin
+
+# gates
 from threshold import ThresholdPlugin
-from i_op_plugin import IOperationPlugin, OP_PLUGIN_EXT
+
+# transforms 
+from hlog import HLogPlugin
