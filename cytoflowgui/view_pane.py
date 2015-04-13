@@ -1,4 +1,4 @@
-from traits.api import Instance, Any, List, on_trait_change, Property
+from traits.api import Instance, Any, List, on_trait_change, Property, Str, Dict
 from traitsui.api import UI, View, Item, EnumEditor, Handler
 from cytoflow.views.i_view import IView
 from pyface.tasks.api import DockPane, Task
@@ -19,18 +19,27 @@ class ViewDockPane(DockPane):
     # the Task that serves as the controller
     task = Instance('flow_task.FlowTask')
 
-    # the IViewPlugins that the user can possibly choose
+    # the IViewPlugins that the user can possibly choose.  set by the controller
+    # as we're instantiated
     plugins = List(IViewPlugin)
     
-    # the IView we're currently editing
-    view = Instance(IView)
+    # the IView we're currently editing.  set by the controller; then
+    # we display the view controls
+    view = Instance(IView) 
+    
+    # if the IOperation whose results we're viewing has a default view
+    # (for example, an interactive widget), keep a ref; otherwise, None
+    default_view = Instance(IView)
     
     # the UI object associated with the object we're editing.
     # NOTE: we don't maintain a reference to the IView itself...
     _ui = Instance(UI)
 
-    # the plugin instance for the IView we're currently showing
-    _current_plugin = Instance(IViewPlugin)
+    # plugin name --> plugin ID
+    _plugins_dict = Dict(Str, Str)
+
+    # the id for the IView we're currently showing
+    _current_plugin = Str
     
     # the layout that manages the pane
     _layout = Instance(QtGui.QVBoxLayout)
@@ -63,9 +72,9 @@ class ViewDockPane(DockPane):
         Create and return the toolkit-specific contents of the dock pane.
         """
 
-        plugins_dict = {p: p.short_name for p in self.plugins}
+        self._plugins_dict = {p.view_id: p.short_name for p in self.plugins}
         plugin_view = View(Item('_current_plugin',
-                                editor=EnumEditor(values=plugins_dict),
+                                editor=EnumEditor(values=self._plugins_dict),
                                 show_label = False))
         
         picker_control = self.edit_traits(kind='subpanel',
@@ -98,14 +107,31 @@ class ViewDockPane(DockPane):
         return control
 
     @on_trait_change('_current_plugin')
-    def _current_plugin_changed(self, new):
-        self.task.set_current_view(self, new.view_id)
+    def _on_current_plugin_changed(self, obj, name, old, new):
+        self.task.set_current_view(self, new)
+        
+    @on_trait_change('default_view')
+    def _on_default_view_changed(self, obj, name, old, new):
+
+        if isinstance(old, IView):
+            del self._plugins_dict[old.view_id]
+            #old_name = "Default: {0}".format(old.short_name)
+            
+        new_name = "Default: {0}".format(new.short_name)
+        self._plugins_dict[new.view_id] = new_name
         
     @on_trait_change('view')
     def _view_changed(self, obj, name, old, new):
         
         if isinstance(old, IView):
-            self._layout.takeAt(self._layout.count() - 1)
+            self._layout.takeAt(self._layout.count() - 1) 
+            self._ui = None
+            
+        if not isinstance(new, IView):
+            self._current_plugin = None
+            return 
+        
+        self._current_plugin = new.id
     
         # note: the "handler" attribute isn't defined on IView; it's dynamically
         # associated with these instances in flow_task.FlowTask.set_current_view

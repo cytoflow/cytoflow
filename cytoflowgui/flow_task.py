@@ -6,7 +6,7 @@ Created on Feb 11, 2015
 
 import os.path
 
-from traits.api import Instance, List, Bool, Str, Float, Int
+from traits.api import Instance, List, Bool, Float, on_trait_change
 from pyface.api import error
 from pyface.tasks.api import Task, TaskLayout, PaneItem
 from envisage.api import Plugin, ExtensionPoint, contributes_to
@@ -102,6 +102,9 @@ class FlowTask(Task):
         wi.previous = after
         self.model.workflow.insert(idx+1, wi)
         
+        # select (open) the new workflow item
+        self.model.selected = wi
+        
     def operation_parameters_updated(self, wi): #wi == "WorkflowItem"
         print "op parameters updated"
         wi.valid = "updating"
@@ -176,6 +179,10 @@ class FlowTask(Task):
             
         if wi.current_view and wi.current_view.validate(wi.result):
             self.view.plot(wi.result, wi.current_view)
+            
+    @on_trait_change('model.selected')
+    def _on_selected_wi_changed(self, obj, name, old, new):
+        self.view.view = new.current_view
         
 class FlowTaskPlugin(Plugin):
     """
