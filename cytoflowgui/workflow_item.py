@@ -48,6 +48,9 @@ class WorkflowItem(HasStrictTraits):
     # the view currently displayed (or selected) by the central pane
     current_view = Instance(IView)
     
+    # the default view for this workflow item
+    default_view = Instance(IView)
+    
     # the previous WorkflowItem in the workflow
     # self.result = self.apply(previous.result)
     previous = Instance('WorkflowItem')

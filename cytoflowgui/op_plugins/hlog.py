@@ -11,7 +11,6 @@ from pyface.api import ImageResource
 from cytoflow.operations import IOperation, HlogTransformOp
 from cytoflowgui.op_plugins import OpHandlerMixin, IOperationPlugin, OP_PLUGIN_EXT
 
-@provides(IOperation)
 class HLogHandler(Controller, OpHandlerMixin):
     """
     classdocs
@@ -40,6 +39,9 @@ class HLogPlugin(Plugin):
         ret = HlogTransformOp()
         ret.handler_factory = HLogHandler
         return ret
+    
+    def get_default_view(self, op):
+        return None
     
     def get_icon(self):
         return ImageResource('hlog')

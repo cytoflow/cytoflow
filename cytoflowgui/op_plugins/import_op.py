@@ -100,3 +100,5 @@ class ImportPlugin(Plugin):
         ret.handler_factory = ImportHandler
         return ret
     
+    def get_default_view(self, op):
+        None

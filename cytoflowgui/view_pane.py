@@ -69,7 +69,7 @@ class ViewDockPane(DockPane):
 
         self._plugins_dict = {p.view_id: p.short_name for p in self.plugins}
         plugin_chooser = View(Item('_current_plugin',
-                                   editor=EnumEditor(values=self._plugins_dict),
+                                   editor=EnumEditor(name = "_plugins_dict"),
                                    show_label = False))
         
         picker_control = self.edit_traits(kind='subpanel',
@@ -109,7 +109,7 @@ class ViewDockPane(DockPane):
         if not new:
             self.task.clear_current_view()
         else:
-            self.task.set_current_view(self, new)
+            self.task.set_current_view(new)
             
     @on_trait_change('task.model.selected.valid')
     def _workflow_valid_changed(self, obj, name, old, new):
@@ -131,6 +131,9 @@ class ViewDockPane(DockPane):
         
         # we get notified if *either* the currently selected workflowitem
         # *or* the current view changes.
+        
+        if not (isinstance(obj, Workflow) or isinstance(obj, WorkflowItem)):
+            return        
          
         old_view = (old.current_view 
                     if isinstance(obj, Workflow) 
@@ -161,3 +164,27 @@ class ViewDockPane(DockPane):
                  
         self._layout.addWidget(self._ui.control)
         
+    @on_trait_change('task.model.selected.default_view')
+    def _default_view_changed(self, obj, name, old, new):
+        
+        if not (isinstance(obj, Workflow) or isinstance(obj, WorkflowItem)):
+            return
+         
+        old_view = (old.default_view 
+                    if isinstance(obj, Workflow) 
+                       and isinstance(old, WorkflowItem) 
+                    else old)
+         
+        new_view = (new.default_view 
+                    if isinstance(obj, Workflow) 
+                       and isinstance(new, WorkflowItem)
+                    else new)
+                        
+        if old_view is not None:
+            old_id = old_view.id
+            del self._plugins_dict[old_id]
+             
+        if new_view is not None:
+            new_id = new_view.id
+            new_name = "{0} (Default)".format(new_view.friendly_id)
+            self._plugins_dict[new_id] = new_name

@@ -38,26 +38,17 @@ class IOperationPlugin(Interface):
         with the factory for the handler
         """
         
-    def get_handler_factory(self):
-        """
-        Return a handler and view for the operation
-        """
         
-#     def get_ui(self, wi):
-#         """
-#         Return a traitsui View for the IOperation this plugin wraps
-#         
-#         There's a lot of logic you can stuff into a view (enums, visible_when,
-#         etc.)  If you need more logic, though, feel free to define a Controller
-#         and use that to handle, eg, button presses or derived traits (eg,
-#         with a Property trait)
-#         
-#         Parameters
-#         ----------
-#         wi : WorkflowItem
-#             the WorkflowItem that wraps this Operation; lets us access the 
-#             previous and current operation results.
-#         """
+    def get_default_view(self, op):
+        """
+        Return an IView instance set up to be the default view for the operation.
+        
+        Arguments
+        ---------
+        
+        op: IOperation instance
+            the operation to set up the view for
+        """
 
     def get_icon(self):
         """

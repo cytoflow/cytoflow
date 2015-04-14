@@ -103,8 +103,17 @@ class FlowTask(Task):
         wi.previous = after
         self.model.workflow.insert(idx+1, wi)
         
+        # set up the default view
+        wi.default_view = plugin.get_default_view(wi.operation)
+        if wi.default_view is not None:
+            wi.default_view.handler = \
+                wi.default_view.handler_factory(model = wi.default_view, wi = wi.previous)
+            wi.views.append(wi.default_view)
+
         # select (open) the new workflow item
         self.model.selected = wi
+        if wi.default_view:
+            self.set_current_view(wi.default_view.id)
         
     def operation_parameters_updated(self, wi): #wi == "WorkflowItem"
         print "op parameters updated"
@@ -138,10 +147,13 @@ class FlowTask(Task):
     def clear_current_view(self):
         self.view.clear_plot()
         
-    def set_current_view(self, view_pane, view_id): 
+    def set_current_view(self, view_id): 
         wi = self.model.selected
         if wi is None:
             wi = self.model.workflow[-1]
+            
+        if wi.current_view and wi.current_view.id == view_id:
+            return
             
         # remove the notifications from the current view
         if wi.current_view:
@@ -161,7 +173,6 @@ class FlowTask(Task):
         view.on_trait_change(self.view_parameters_updated)
         
         wi.current_view = view
-        view_pane.view = view
         
         if wi.current_view.is_valid(wi.result):
             self.view.plot(wi.result, wi.current_view)
