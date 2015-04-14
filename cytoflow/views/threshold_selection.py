@@ -52,9 +52,9 @@ class ThresholdSelection(HasTraits):
         self.view.plot(experiment, **kwargs)
         self._draw_threshold()
         
-    def validate(self, experiment):
+    def is_valid(self, experiment):
         """If the decorated view is valid, we are too"""
-        return self.view.validate(experiment)
+        return self.view.is_valid(experiment)
     
     @on_trait_change('threshold')
     def _draw_threshold(self):

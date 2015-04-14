@@ -26,14 +26,6 @@ class ViewDockPane(DockPane):
     # as we're instantiated
     plugins = List(IViewPlugin)
     
-    # the IView we're currently editing.  set by the controller; then
-    # we display the view controls
-    # view = Instance(IView) 
-    
-    # if the IOperation whose results we're viewing has a default view
-    # (for example, an interactive widget), keep a ref; otherwise, None
-    # default_view = Instance(IView)
-    
     # the UI object associated with the object we're editing.
     # NOTE: we don't maintain a reference to the IView itself...
     _ui = Instance(UI)
@@ -140,8 +132,15 @@ class ViewDockPane(DockPane):
         # we get notified if *either* the currently selected workflowitem
         # *or* the current view changes.
          
-        old_view = old.current_view if isinstance(obj, Workflow) and isinstance(old, WorkflowItem) else old
-        new_view = new.current_view if isinstance(obj, Workflow) and isinstance(new, WorkflowItem) else new
+        old_view = (old.current_view 
+                    if isinstance(obj, Workflow) 
+                       and isinstance(old, WorkflowItem) 
+                    else old)
+        
+        new_view = (new.current_view 
+                    if isinstance(obj, Workflow) 
+                       and isinstance(new, WorkflowItem) 
+                    else new)
         
         if isinstance(old_view, IView):
             self._layout.takeAt(self._layout.indexOf(self._ui.control))
@@ -161,3 +160,4 @@ class ViewDockPane(DockPane):
                                                 parent=self._parent)
                  
         self._layout.addWidget(self._ui.control)
+        

@@ -53,9 +53,9 @@ class RangeSelection(HasTraits):
         self.view.plot(experiment, fig_num, **kwargs)
         self._draw_span()
 
-    def validate(self, experiment):
+    def is_valid(self, experiment):
         """If the decorated view is valid, we are too."""
-        return self.view.validate(experiment)
+        return self.view.is_valid(experiment)
     
     @on_trait_change('min, max')
     def _draw_span(self):

@@ -43,7 +43,7 @@ class Range2DOp(HasTraits):
     ylow = CFloat()
     yhigh = CFloat()
     
-    def validate(self, experiment):
+    def is_valid(self, experiment):
         """Validate this operation against an experiment."""
         
         if not self.xchannel or not self.ychannel:

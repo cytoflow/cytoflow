@@ -29,7 +29,7 @@ class HlogTransformOp(HasTraits):
     name = Str()
     channels = ListStr()
     
-    def validate(self, experiment):
+    def is_valid(self, experiment):
         """Validate this transform instance against an experiment.
         
         Parameters

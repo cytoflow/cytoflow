@@ -59,7 +59,7 @@ class ImportOp(HasTraits):
     
     tubes = List(Tube)
           
-    def validate(self, experiment = None):
+    def is_valid(self, experiment = None):
         if not self.tubes:
             return False
         

@@ -141,6 +141,6 @@ class LogicleTransformOp(HasTraits):
             
         return new_experiment
     
-    def validate(self, experiment):
+    def is_valid(self, experiment):
         """ Validate this transformation against an experiment"""
         raise NotImplementedError

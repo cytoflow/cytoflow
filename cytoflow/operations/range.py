@@ -30,7 +30,7 @@ class RangeOp(HasTraits):
     low = CFloat()
     high = CFloat()
     
-    def validate(self, experiment):
+    def is_valid(self, experiment):
         """Validate this operation against an experiment."""
         
         if not self.channel:

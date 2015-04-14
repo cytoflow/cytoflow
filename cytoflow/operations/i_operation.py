@@ -22,7 +22,7 @@ class IOperation(Interface):
     friendly_id = Str
     name = Str
     
-    def validate(self, experiment):
+    def is_valid(self, experiment):
         """Validate the parameters of this operation given an Experiment.
         
         For example, make sure that all the channels this op asks for 

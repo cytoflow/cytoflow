@@ -111,7 +111,7 @@ class FlowTask(Task):
         wi.valid = "updating"
         
         prev_result = wi.previous.result if wi.previous else None
-        is_valid = wi.operation.validate(prev_result)
+        is_valid = wi.operation.is_valid(prev_result)
         
         if not is_valid:
             wi.valid = "invalid"
@@ -126,7 +126,7 @@ class FlowTask(Task):
         
         # update the center pane
         
-        if wi.current_view and wi.current_view.validate(wi.result):
+        if wi.current_view and wi.current_view.is_valid(wi.result):
             self.view.plot(wi.result, wi.current_view)
 
         wi.valid = "valid"
@@ -163,7 +163,7 @@ class FlowTask(Task):
         wi.current_view = view
         view_pane.view = view
         
-        if wi.current_view.validate(wi.result):
+        if wi.current_view.is_valid(wi.result):
             self.view.plot(wi.result, wi.current_view)
         
     def view_parameters_updated(self, obj, name, new):
@@ -180,7 +180,7 @@ class FlowTask(Task):
         if wi is None:
             wi = self.model.workflow[-1]
             
-        if wi.current_view and wi.current_view.validate(wi.result):
+        if wi.current_view and wi.current_view.is_valid(wi.result):
             self.view.plot(wi.result, wi.current_view)
             
 #     @on_trait_change('model.selected')

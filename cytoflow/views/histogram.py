@@ -71,7 +71,7 @@ class HistogramView(HasTraits):
         g.map(plt.hist, self.channel, **kwargs)
         
         
-    def validate(self, experiment):
+    def is_valid(self, experiment):
         """Validate this view against an experiment."""
         if not experiment:
             return False

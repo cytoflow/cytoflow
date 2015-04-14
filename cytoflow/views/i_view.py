@@ -30,12 +30,13 @@ class IView(Interface):
         Passed to pandas.DataFrame.query().
     """
 
-    name = Str
     id = Str      
+    friendly_id = Str
      
+    name = Str
     subset = Str
     
-    def validate(self, experiment):
+    def is_valid(self, experiment):
         """Validate the parameters of this view, given a test Experiment.
         
         For example, make sure that all the channels this op asks for 
@@ -52,7 +53,7 @@ class IView(Interface):
         """
     
     def plot(self, experiment, fig_num = None, **kwargs):
-        """Plot a visualization of flow data.
+        """Plot a visualization of flow data using the pyplot stateful interface
         
         Parameters
         ----------

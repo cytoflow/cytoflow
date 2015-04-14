@@ -28,7 +28,7 @@ class ThresholdOp(HasTraits):
     channel = Str()
     threshold = CFloat()
     
-    def validate(self, experiment):
+    def is_valid(self, experiment):
         """Validate this operation against an experiment."""
         if not experiment:
             return False
