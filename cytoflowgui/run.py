@@ -25,7 +25,7 @@ def run_gui(argv):
 
     plugins = [CorePlugin(), TasksPlugin(), FlowTaskPlugin(debug = debug),
                ImportPlugin(), ThresholdPlugin(), HistogramPlugin(),
-               ThresholdSelectionPlugin(), HLogPlugin()]
+               HLogPlugin()]
     
     app = CytoflowApplication(id = 'edu.mit.synbio.cytoflow',
                               plugins = plugins)

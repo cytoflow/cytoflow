@@ -50,6 +50,7 @@ class FlowTask(Task):
         wi.operation = plugin.get_operation()
 
         self.model.workflow.append(wi)
+        self.model.selected = wi
         
         if self.debug:
             Tube.add_class_trait("Dox", Float)
@@ -134,7 +135,10 @@ class FlowTask(Task):
         if wi.next:
             wi.next.update = True
         
-    def set_current_view(self, view_pane, view_id):
+    def clear_current_view(self):
+        self.view.clear_plot()
+        
+    def set_current_view(self, view_pane, view_id): 
         wi = self.model.selected
         if wi is None:
             wi = self.model.workflow[-1]
@@ -149,9 +153,8 @@ class FlowTask(Task):
         if not view:
             plugin = next((x for x in self.view_plugins if x.view_id == view_id))
             view = plugin.get_view()
-            
-        view.handler = view.handler_factory(model = view,
-                                            wi = wi)
+            view.handler = view.handler_factory(model = view, wi = wi)
+            wi.views.append(view)
 
         # whenever the view parameters change, we need to know so we can
         # update the plot(s)
@@ -180,9 +183,12 @@ class FlowTask(Task):
         if wi.current_view and wi.current_view.validate(wi.result):
             self.view.plot(wi.result, wi.current_view)
             
-    @on_trait_change('model.selected')
-    def _on_selected_wi_changed(self, obj, name, old, new):
-        self.view.view = new.current_view
+#     @on_trait_change('model.selected')
+#     def _on_selected_wi_changed(self, obj, name, old, new):
+#         if not new:
+#             self.view.clear_plot()
+#         else:
+#             self.view.view = new.current_view
         
 class FlowTaskPlugin(Plugin):
     """

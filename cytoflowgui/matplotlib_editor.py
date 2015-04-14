@@ -55,12 +55,12 @@ class MPLFigureEditor(Widget):
         self.figure = plt.figure()
         # self.figure = plt.gcf()
         
-        def f(t):
-            return np.exp(-t) * np.cos(2*np.pi*t)
-
-        t1 = np.arange(0.0, 5.0, 0.1)
-        t2 = np.arange(0.0, 5.0, 0.02)
-        plt.plot(t1, f(t1), 'bo', t2, f(t2), 'k')
+#         def f(t):
+#             return np.exp(-t) * np.cos(2*np.pi*t)
+# 
+#         t1 = np.arange(0.0, 5.0, 0.1)
+#         t2 = np.arange(0.0, 5.0, 0.02)
+#         plt.plot(t1, f(t1), 'bo', t2, f(t2), 'k')
 
         mpl_canvas = FigureCanvas(self.figure)
 

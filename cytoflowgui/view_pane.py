@@ -5,6 +5,9 @@ from pyface.tasks.api import DockPane, Task
 from pyface.qt import QtGui
 from envisage.api import Application, Plugin
 from cytoflowgui.view_plugins import IViewPlugin, VIEW_PLUGIN_EXT
+from cytoflowgui.workflow_item import WorkflowItem
+from cytoflowgui.workflow import Workflow
+from scipy.weave.build_tools import old_argv
 
 class ViewDockPane(DockPane):
     """
@@ -25,11 +28,11 @@ class ViewDockPane(DockPane):
     
     # the IView we're currently editing.  set by the controller; then
     # we display the view controls
-    view = Instance(IView) 
+    # view = Instance(IView) 
     
     # if the IOperation whose results we're viewing has a default view
     # (for example, an interactive widget), keep a ref; otherwise, None
-    default_view = Instance(IView)
+    # default_view = Instance(IView)
     
     # the UI object associated with the object we're editing.
     # NOTE: we don't maintain a reference to the IView itself...
@@ -73,12 +76,12 @@ class ViewDockPane(DockPane):
         """
 
         self._plugins_dict = {p.view_id: p.short_name for p in self.plugins}
-        plugin_view = View(Item('_current_plugin',
-                                editor=EnumEditor(values=self._plugins_dict),
-                                show_label = False))
+        plugin_chooser = View(Item('_current_plugin',
+                                   editor=EnumEditor(values=self._plugins_dict),
+                                   show_label = False))
         
         picker_control = self.edit_traits(kind='subpanel',
-                                          view = plugin_view).control
+                                          view = plugin_chooser).control
    
         # the top-level control 
         control = QtGui.QScrollArea()
@@ -104,39 +107,57 @@ class ViewDockPane(DockPane):
         self._layout.addWidget(line)
         
         self._parent = parent
+        
+        self._parent.setEnabled(False)
+        
         return control
 
     @on_trait_change('_current_plugin')
     def _on_current_plugin_changed(self, obj, name, old, new):
-        self.task.set_current_view(self, new)
-        
-    @on_trait_change('default_view')
-    def _on_default_view_changed(self, obj, name, old, new):
-
-        if isinstance(old, IView):
-            del self._plugins_dict[old.view_id]
-            #old_name = "Default: {0}".format(old.short_name)
+        if not new:
+            self.task.clear_current_view()
+        else:
+            self.task.set_current_view(self, new)
             
-        new_name = "Default: {0}".format(new.short_name)
-        self._plugins_dict[new.view_id] = new_name
+    @on_trait_change('task.model.selected.valid')
+    def _workflow_valid_changed(self, obj, name, old, new):
+        if not new:
+            return
         
-    @on_trait_change('view')
-    def _view_changed(self, obj, name, old, new):
+        if not (isinstance(obj, Workflow) or isinstance(obj, WorkflowItem)):
+            return
         
-        if isinstance(old, IView):
-            self._layout.takeAt(self._layout.count() - 1) 
+        new_valid = new.valid if isinstance(obj, Workflow) else new
+        
+        if new_valid == "valid":
+            self._parent.setEnabled(True)
+        else:
+            self._parent.setEnabled(False)
+
+    @on_trait_change('task.model.selected.current_view')
+    def _current_view_changed(self, obj, name, old, new):
+        
+        # we get notified if *either* the currently selected workflowitem
+        # *or* the current view changes.
+         
+        old_view = old.current_view if isinstance(obj, Workflow) and isinstance(old, WorkflowItem) else old
+        new_view = new.current_view if isinstance(obj, Workflow) and isinstance(new, WorkflowItem) else new
+        
+        if isinstance(old_view, IView):
+            self._layout.takeAt(self._layout.indexOf(self._ui.control))
+            self._ui.dispose()
             self._ui = None
             
-        if not isinstance(new, IView):
-            self._current_plugin = None
+        if not isinstance(new_view, IView):
+            self._current_plugin = ""
             return 
         
-        self._current_plugin = new.id
+        self._current_plugin = new_view.id
     
         # note: the "handler" attribute isn't defined on IView; it's dynamically
         # associated with these instances in flow_task.FlowTask.set_current_view
         
-        self._ui = new.handler.edit_traits(kind='subpanel', 
-                                           parent=self._parent)
+        self._ui = new_view.handler.edit_traits(kind='subpanel', 
+                                                parent=self._parent)
                  
         self._layout.addWidget(self._ui.control)

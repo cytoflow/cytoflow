@@ -48,6 +48,8 @@ class _SubsetEditor(Editor):
         self.control = self._ui.control
         
     def dispose(self):
+        self._ui.dispose()
+        self._ui = None
         self._obj.on_trait_change(self._view_changed, remove = True)
         super(_SubsetEditor, self).dispose()
         

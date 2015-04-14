@@ -30,6 +30,10 @@ class FlowTaskPane(TaskPane):
         self.editor.destroy()
         self.control = self.editor = None 
         
+    def clear_plot(self):
+        self.editor.figure.clear()
+        self.editor.control.draw()
+        
     def plot(self, experiment, view):
         """
         Plot the an experiment in the center pane.

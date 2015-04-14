@@ -31,7 +31,7 @@ class IViewPlugin(Interface):
     view_id = Str
     short_name = Str
 
-    def get_view_(self):
+    def get_view(self):
         """Return an IView instance that this plugin wraps"""
 
 
