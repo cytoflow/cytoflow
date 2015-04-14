@@ -17,7 +17,7 @@ class IView(Interface):
     Attributes
     ----------
     id : Str
-        A unique id for this view.  Prefix: "edu.mit.cytoflow.view"
+        A unique id for this view.  Prefix: "edu.mit.cytoflow.views"
 
     friendly_id : Str
         The human-readable id of this view: eg, "Histogram"

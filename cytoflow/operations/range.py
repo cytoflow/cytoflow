@@ -25,6 +25,9 @@ class RangeOp(HasTraits):
     """
     
     # traits
+    id = "edu.mit.synbio.cytoflow.operations.rangeop"
+    friendly_id = "Range"
+    
     name = Str()
     channel = Str()
     low = CFloat()

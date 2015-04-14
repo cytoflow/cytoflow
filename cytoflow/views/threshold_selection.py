@@ -33,7 +33,7 @@ class ThresholdSelection(HasTraits):
         is this view interactive?
     """
     
-    id = "edu.mit.synbio.cytoflow.view.threshold"
+    id = "edu.mit.synbio.cytoflow.views.threshold"
     friendly_id = "Threshold Selection"
     
     threshold = Float(None)

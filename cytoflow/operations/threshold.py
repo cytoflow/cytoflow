@@ -21,7 +21,7 @@ class ThresholdOp(HasTraits):
     """
     
     # traits
-    id = "edu.mit.synbio.cytoflow.op.threshold"
+    id = "edu.mit.synbio.cytoflow.operations.threshold"
     friendly_id = "Threshold"
     
     name = CStr()

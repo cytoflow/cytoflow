@@ -33,6 +33,9 @@ class Range2DOp(HasTraits):
     """
     
     # traits
+    id = "edu.mit.synbio.cytoflow.operations.range2d"
+    friendly_id = "2D Range"
+    
     name = Str()
     
     xchannel = Str()

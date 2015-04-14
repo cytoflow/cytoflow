@@ -50,8 +50,8 @@ class ImportOp(HasTraits):
     classdocs
     '''
 
-    id = "edu.mit.synbio.cytoflow.op.import"
-    friendly_id = ""
+    id = "edu.mit.synbio.cytoflow.operations.import"
+    friendly_id = "Import"
     name = "Import Data"
 
     coarse = Bool(False)

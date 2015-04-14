@@ -6,7 +6,7 @@ class IOperation(Interface):
     Attributes
     ----------
     id : Str
-        a unique identifier for this class. prefix: edu.mit.synbio.cytoflow.op
+        a unique identifier for this class. prefix: edu.mit.synbio.cytoflow.operations
         
     friendly_id : Str
         The operation's human-readable id (like "Logicle" or "Hyperlog").  Used

@@ -62,8 +62,8 @@ class LogicleTransformOp(HasTraits):
     """
     
     #traits
-    id = "edu.mit.synbio.cytoflow.op.logicle"
-    friendly_id = "Logicle"
+    id = "edu.mit.synbio.cytoflow.operations.logicle"
+    friendly_id = "Logicle Transform"
     name = Str()
     channels = ListStr()
     
