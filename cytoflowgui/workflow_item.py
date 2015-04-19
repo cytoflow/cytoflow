@@ -7,7 +7,7 @@ Created on Mar 15, 2015
 from traits.api import HasStrictTraits, Instance, List, DelegatesTo, Event, \
                        Enum, Property, cached_property, on_trait_change, \
                        Any
-from traitsui.api import View, Item, Handler
+from traitsui.api import View, Item, Handler, error
 from cytoflow import Experiment
 from cytoflow.operations.i_operation import IOperation
 from cytoflow.views.i_view import IView
@@ -16,10 +16,6 @@ from pyface.qt import QtGui
 class WorkflowItem(HasStrictTraits):
     """        
     The basic unit of a Workflow: wraps an operation and a list of views.
-    
-    This object is part of the workflow *model* -- as such, it is implemented
-    *reactively*.  No methods; just reactions to traits being changed by
-    the UI and handler.
     """
     
     # the operation's id
@@ -70,14 +66,29 @@ class WorkflowItem(HasStrictTraits):
                          style = 'custom',
                          show_label = False))
         
-    @on_trait_change('operation.+')
+
     def update(self):
         """
-        Called when self.operation changed its parameters.  also called by
-        the controller.
+        Called by the controller to update this wi
         """
-        if self.task:
-            self.task.operation_parameters_updated(self)
+    
+        self.valid = "updating"
+        
+        prev_result = self.previous.result if self.previous else None
+        is_valid = self.operation.is_valid(prev_result)
+        
+        if not is_valid:
+            self.valid = "invalid"
+            return
+        
+        # re-run the operation
+        
+        try:
+            self.result = self.operation.apply(prev_result)
+        except RuntimeError as e:
+            error(None, e.strerror)       
+
+        self.valid = "valid"
     
     @cached_property
     def _get_icon(self):

@@ -11,7 +11,7 @@ from traitsui.api import View, Item
 from cytoflowgui.vertical_notebook_editor import VerticalNotebookEditor
 from cytoflowgui.workflow_item import WorkflowItem
 
-
+from util import UniquePriorityQueue
 
 class Workflow(HasTraits):
     """
@@ -21,6 +21,8 @@ class Workflow(HasTraits):
     workflow = List(WorkflowItem)
     
     selected = Instance(WorkflowItem)
+    
+    to_update = Instance(UniquePriorityQueue, ())
     
     traits_view = View(Item(name='workflow',
                             id='table',

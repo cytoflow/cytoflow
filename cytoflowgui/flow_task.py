@@ -22,6 +22,8 @@ from cytoflowgui.workflow_item import WorkflowItem
 
 from cytoflow import Tube
 
+import threading
+
 class FlowTask(Task):
     """
     classdocs
@@ -43,11 +45,14 @@ class FlowTask(Task):
     
     # are we debugging?  ie, do we need a default setup?
     debug = Bool
+    
+    worker = Instance(threading.Thread)
         
     def initialized(self):
         plugin = ImportPlugin()
         wi = WorkflowItem(task = self)
         wi.operation = plugin.get_operation()
+        wi.operation.parent = wi
 
         self.model.workflow.append(wi)
         self.model.selected = wi
@@ -98,6 +103,7 @@ class FlowTask(Task):
         
         wi = WorkflowItem(task = self)
         wi.operation = plugin.get_operation()
+        wi.operation.parent = wi
 
         after.next = wi
         wi.previous = after
@@ -115,35 +121,32 @@ class FlowTask(Task):
         if wi.default_view:
             self.set_current_view(wi.default_view.id)
         
-    def operation_parameters_updated(self, wi): #wi == "WorkflowItem"
-        print "op parameters updated"
-        wi.valid = "updating"
+    @on_trait_change("model:selected:operation:+")
+    def operation_parameters_updated(self, obj, name, old, new): 
         
-        prev_result = wi.previous.result if wi.previous else None
-        is_valid = wi.operation.is_valid(prev_result)
-        
-        if not is_valid:
+        # invalidate this workflow item and all the ones following it
+        wi = self.model.selected
+        while True:
             wi.valid = "invalid"
-            return
-        
-        # re-run the operation
-        
-        try:
-            wi.result = wi.operation.apply(prev_result)
-        except RuntimeError as e:
-            error(None, e.strerror)       
-        
-        # update the center pane
-        
-        if wi.current_view and wi.current_view.is_valid(wi.result):
-            self.view.plot(wi.result, wi.current_view)
-
-        wi.valid = "valid"
-        
-        # tell the next WorkflowItem to go        
-        if wi.next:
-            wi.next.update = True
-        
+            self.model.to_update.put_nowait((len(self.model.workflow) - self.model.workflow.index(wi), wi))
+            if wi.next:
+                wi = wi.next
+            else:
+                break
+            
+        def update_model(to_update):
+            while not to_update.empty():
+                prio, wi = to_update.get_nowait()
+                wi.update()
+    
+        if not (self.worker and self.worker.is_alive()):
+            try:
+                self.worker = threading.Thread(target = update_model, 
+                                               args = (self.model.to_update,))
+                self.worker.start()
+            except RuntimeError as e:
+                error(None, e.strerror)       
+              
     def clear_current_view(self):
         self.view.clear_plot()
         
