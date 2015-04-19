@@ -79,8 +79,8 @@ class VerticalNotebookPage(HasPrivateTraits):
 
     #-- Public Methods -------------------------------------------------------
 
-    def __init__(self, *args, **kwargs):
-        super(VerticalNotebookPage, self).__init__(*args, **kwargs)
+    def __init__(self, **kwargs):
+        super(VerticalNotebookPage, self).__init__(**kwargs)
 
         self.on_trait_change(self._on_is_open_changed, 'is_open', dispatch = 'ui')
         self.on_trait_change(self._on_name_changed, 'name', dispatch = 'ui')

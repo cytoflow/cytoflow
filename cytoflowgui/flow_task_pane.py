@@ -9,6 +9,8 @@ from traits.api import Instance, provides
 from pyface.tasks.i_task_pane import ITaskPane
 import matplotlib.pyplot as plt
 
+import threading
+
 @provides(ITaskPane)
 class FlowTaskPane(TaskPane):
     """
@@ -47,13 +49,33 @@ class FlowTaskPane(TaskPane):
             The view to use for the plotting
         """
         
-        self.editor.figure.clear()
-        view.plot(experiment, fig_num = self.editor.fig_num)
-        self.editor.control.draw()
+        def do_plot(editor, view, experiment, fig_num):
+            editor.clear = True
+            view.plot(experiment, fig_num = fig_num)
+            editor.draw = True
+            
+            if "interactive" in view.traits():
+                # we have to re-bind the Cursor to the new Axes object by twiddling
+                # the "interactive" trait
+                view.interactive = False
+                view.interactive = True 
+             
+        t = threading.Thread(target = do_plot,
+                             args = (self.editor, 
+                                     view, 
+                                     experiment, 
+                                     self.editor.fig_num))
+        t.start()
 
-        if "interactive" in view.traits():
-            # we have to re-bind the Cursor to the new Axes object by twiddling
-            # the "interactive" trait
-            view.interactive = False
-            view.interactive = True        
+#         self.editor.clear = True
+#         view.plot(experiment, fig_num = self.editor.fig_num)
+#         self.editor.draw = True
+
+#         if "interactive" in view.traits():
+#             # we have to re-bind the Cursor to the new Axes object by twiddling
+#             # the "interactive" trait
+#             view.interactive = False
+#             view.interactive = True 
+
+       
         

@@ -52,7 +52,6 @@ class FlowTask(Task):
         plugin = ImportPlugin()
         wi = WorkflowItem(task = self)
         wi.operation = plugin.get_operation()
-        wi.operation.parent = wi
 
         self.model.workflow.append(wi)
         self.model.selected = wi
@@ -103,7 +102,6 @@ class FlowTask(Task):
         
         wi = WorkflowItem(task = self)
         wi.operation = plugin.get_operation()
-        wi.operation.parent = wi
 
         after.next = wi
         wi.previous = after

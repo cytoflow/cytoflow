@@ -15,7 +15,6 @@ http://matplotlib.org/examples/user_interfaces/embedding_in_qt4.html
 """
 
 import matplotlib
-import new
 
 # We want matplotlib to use a QT backend
 matplotlib.use('Qt4Agg')
@@ -24,7 +23,7 @@ import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 
 import numpy as np
-from traits.api import Float, Int, Any, Instance, on_trait_change, Property
+from traits.api import Float, Int, Any, Instance, on_trait_change, Property, Event
 
 from pyface.widget import Widget
 from pyface.qt import QtGui
@@ -39,14 +38,26 @@ class MPLFigureEditor(Widget):
     figure = Instance(Figure)
     control = Instance(FigureCanvas)
     fig_num = Property
+    
+    clear = Event
+    draw = Event    
  
     def __init__(self, parent, **traits):
         super(MPLFigureEditor, self).__init__(**traits)
         plt.ioff()  # make sure matplotlib doesn't make a Qt window
         self.control = self._create_canvas(parent)
+        
+        self.on_trait_event(self._clear, 'clear', dispatch = 'ui')
+        self.on_trait_event(self._draw, 'draw', dispatch = 'ui')
  
     def update_editor(self):
         pass
+    
+    def _clear(self):
+        self.figure.clear()
+        
+    def _draw(self):
+        self.control.draw()
  
     def _create_canvas(self, parent):
         """ Create the MPL canvas. """
