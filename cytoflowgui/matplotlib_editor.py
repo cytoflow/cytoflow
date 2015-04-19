@@ -42,7 +42,7 @@ class MPLFigureEditor(Widget):
  
     def __init__(self, parent, **traits):
         super(MPLFigureEditor, self).__init__(**traits)
-        plt.ion()
+        plt.ioff()  # make sure matplotlib doesn't make a Qt window
         self.control = self._create_canvas(parent)
  
     def update_editor(self):
