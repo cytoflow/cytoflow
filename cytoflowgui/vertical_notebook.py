@@ -79,6 +79,14 @@ class VerticalNotebookPage(HasPrivateTraits):
 
     #-- Public Methods -------------------------------------------------------
 
+    def __init__(self, *args, **kwargs):
+        super(VerticalNotebookPage, self).__init__(*args, **kwargs)
+
+        self.on_trait_change(self._on_is_open_changed, 'is_open', dispatch = 'ui')
+        self.on_trait_change(self._on_name_changed, 'name', dispatch = 'ui')
+        self.on_trait_change(self._on_description_changed, 'description', dispatch = 'ui')
+        self.on_trait_change(self._on_icon_changed, 'icon', dispatch = 'ui')
+
     def close(self):
         """ Closes the notebook page. """
 
@@ -172,7 +180,7 @@ class VerticalNotebookPage(HasPrivateTraits):
         """
         return self.notebook.control
 
-    def _is_open_changed(self, is_open):
+    def _on_is_open_changed(self, is_open):
         """ 
         Handles the 'is_open' state of the page being changed.
         """
@@ -186,16 +194,16 @@ class VerticalNotebookPage(HasPrivateTraits):
             else:
                 self.icon = QtGui.QStyle.SP_ArrowRight
 
-    def _name_changed(self, name):
+    def _on_name_changed(self, name):
         """ 
         Handles the name trait being changed.
         """
         self.button.setText(name)
 
-    def _description_changed(self, description):
+    def _on_description_changed(self, description):
         self.button.setDescription(description)
 
-    def _icon_changed(self, icon):
+    def _on_icon_changed(self, icon):
         self.button.setIcon(self.button.style().standardIcon(icon))
         
     def _name_updated(self):

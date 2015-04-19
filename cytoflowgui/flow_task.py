@@ -128,7 +128,7 @@ class FlowTask(Task):
         wi = self.model.selected
         while True:
             wi.valid = "invalid"
-            self.model.to_update.put_nowait((len(self.model.workflow) - self.model.workflow.index(wi), wi))
+            self.model.to_update.put_nowait((self.model.workflow.index(wi), wi))
             if wi.next:
                 wi = wi.next
             else:
