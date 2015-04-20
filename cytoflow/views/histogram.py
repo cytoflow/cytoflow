@@ -9,6 +9,7 @@ from traits.api import HasTraits, Str, provides
 import matplotlib.pyplot as plt
 from cytoflow.views.i_view import IView
 from cytoflow.views.sns_axisgrid import FacetGrid
+from cytoflow.utility.util import num_hist_bins
 
 @provides(IView)
 class HistogramView(HasTraits):
@@ -54,7 +55,9 @@ class HistogramView(HasTraits):
         
         kwargs.setdefault('histtype', 'stepfilled')
         kwargs.setdefault('alpha', 0.5)
-        kwargs.setdefault('bins', 200) # Do not move above
+        
+        bins = num_hist_bins(experiment[self.channel])
+        kwargs.setdefault('bins', bins) # Do not move above.  don't ask.
         
         if not self.subset:
             x = experiment.data
