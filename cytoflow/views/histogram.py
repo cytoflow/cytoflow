@@ -40,7 +40,7 @@ class HistogramView(HasTraits):
     """
     
     # traits   
-    id = "edu.mit.synbio.cytoflow.views.histogram"
+    id = "edu.mit.synbio.cytoflow.view.histogram"
     friendly_id = "Histogram" 
     
     name = Str

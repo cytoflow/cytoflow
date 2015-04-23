@@ -17,7 +17,7 @@ class HexbinView(HasTraits):
     classdocs
     """
     
-    id = 'edu.mit.synbio.cytoflow.views.hexbin'
+    id = 'edu.mit.synbio.cytoflow.view.hexbin'
     friend_id = "Hex Bin"
     
     name = Str

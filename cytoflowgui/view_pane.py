@@ -32,9 +32,8 @@ class ViewDockPane(DockPane):
 
     # plugin name --> plugin ID
     _plugins_dict = Dict(Str, Str)
-
-    # the id for the IView we're currently showing
-    _current_plugin = Str
+    
+    _current_view_id = Property
     
     # the layout that manages the pane
     _layout = Instance(QtGui.QVBoxLayout)
@@ -68,7 +67,7 @@ class ViewDockPane(DockPane):
         """
 
         self._plugins_dict = {p.view_id: p.short_name for p in self.plugins}
-        plugin_chooser = View(Item('_current_plugin',
+        plugin_chooser = View(Item('_current_view_id',
                                    editor=EnumEditor(name = "_plugins_dict"),
                                    show_label = False))
         
@@ -103,72 +102,54 @@ class ViewDockPane(DockPane):
         self._parent.setEnabled(False)
         
         return control
-
-    @on_trait_change('_current_plugin')
-    def _on_current_plugin_changed(self, obj, name, old, new):
-        if not new:
-            self.task.clear_current_view()
-        else:
-            self.task.set_current_view(new)
             
-    @on_trait_change('task.model.selected.valid')
+    # magic: gets the _current_view_id Property value
+    def _get__current_view_id(self):
+        if self.task.model.selected and self.task.model.selected.current_view:
+            return self.task.model.selected.current_view.id
+        else:
+            return ""
+    
+    def _set__current_view_id(self, view_id):
+        self.task.set_current_view(view_id)
+            
+    @on_trait_change('task:model:selected.valid')
     def _workflow_valid_changed(self, obj, name, old, new):
         if not new:
             return
         
-        if not (isinstance(obj, Workflow) or isinstance(obj, WorkflowItem)):
-            return
-        
-        new_valid = new.valid if isinstance(obj, Workflow) else new
-        
-        if new_valid == "valid":
+        if name == 'selected':
+            new = new.valid
+                
+        if new == "valid":
             self._parent.setEnabled(True)
         else:
             self._parent.setEnabled(False)
 
-    @on_trait_change('task.model.selected.current_view')
+    @on_trait_change('task:model:selected.current_view')
     def _current_view_changed(self, obj, name, old, new):
         
         # we get notified if *either* the currently selected workflowitem
         # *or* the current view changes.
+  
+        if name == 'selected':
+            old = old.current_view if old else None
+            new = new.current_view if new else None
         
-        if not (isinstance(obj, Workflow) or isinstance(obj, WorkflowItem)):
-            return        
-         
-        old_view = (old.current_view 
-                    if isinstance(obj, Workflow) 
-                       and isinstance(old, WorkflowItem) 
-                    else old)
-        
-        new_view = (new.current_view 
-                    if isinstance(obj, Workflow) 
-                       and isinstance(new, WorkflowItem) 
-                    else new)
-        
-        if isinstance(old_view, IView):
+        if old:
             self._layout.takeAt(self._layout.indexOf(self._ui.control))
             self._ui.dispose()
             self._ui = None
             
-        if not isinstance(new_view, IView):
-            self._current_plugin = ""
-            return 
+        if new:
+            # note: the "handler" attribute isn't defined on IView; it's dynamically
+            # associated with these instances in flow_task.FlowTask.set_
+            self._ui = new.handler.edit_traits(kind='subpanel', 
+                                                parent=self._parent)              
+            self._layout.addWidget(self._ui.control)
         
-        self._current_plugin = new_view.id
-    
-        # note: the "handler" attribute isn't defined on IView; it's dynamically
-        # associated with these instances in flow_task.FlowTask.set_current_view
-        
-        self._ui = new_view.handler.edit_traits(kind='subpanel', 
-                                                parent=self._parent)
-                 
-        self._layout.addWidget(self._ui.control)
-        
-    @on_trait_change('task.model.selected.default_view')
+    @on_trait_change('task:model:selected.default_view')
     def _default_view_changed(self, obj, name, old, new):
-        
-        if not (isinstance(obj, Workflow) or isinstance(obj, WorkflowItem)):
-            return
          
         old_view = (old.default_view 
                     if isinstance(obj, Workflow) 

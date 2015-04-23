@@ -22,6 +22,8 @@ from cytoflowgui.workflow_item import WorkflowItem
 
 from cytoflow import Tube
 
+from util import UniquePriorityQueue
+
 import threading
 
 class FlowTask(Task):
@@ -47,20 +49,25 @@ class FlowTask(Task):
     debug = Bool
     
     #worker = Instance(threading.Thread)
+    to_update = Instance(UniquePriorityQueue, ())
     worker_flag = Instance(threading.Event, args = ())
+    worker_lock = Instance(threading.Lock, args = ())
         
     def initialized(self):
         
         # setup the worker thread
-        def update_model(flag, to_update):
+        def update_model(flag, lock, to_update):
             while flag.wait():
                 flag.clear()
                 while not to_update.empty():
-                    prio, wi = to_update.get_nowait()
+                    with lock:
+                        prio, wi = to_update.get_nowait()
                     wi.update()
     
         worker = threading.Thread(target = update_model, 
-                                  args = (self.worker_flag, self.model.to_update))
+                                  args = (self.worker_flag, 
+                                          self.worker_lock,
+                                          self.to_update))
         worker.start()
         
         # add an import plugin
@@ -141,32 +148,24 @@ class FlowTask(Task):
         wi = self.model.selected
         while True:
             wi.valid = "invalid"
-            self.model.to_update.put_nowait((self.model.workflow.index(wi), wi))
+            with self.worker_lock:
+                self.to_update.put_nowait((self.model.workflow.index(wi), wi))
             if wi.next:
                 wi = wi.next
             else:
                 break
             
         # start the worker thread processing
-        if not self.model.to_update.empty():
-            self.worker_flag.set()
+        with self.worker_lock:
+            if not self.to_update.empty():
+                self.worker_flag.set()
               
     def clear_current_view(self):
         self.view.clear_plot()
         
-    def set_current_view(self, view_id): 
+    def set_current_view(self, view_id):
         wi = self.model.selected
-        if wi is None:
-            wi = self.model.workflow[-1]
-            
-        if wi.current_view and wi.current_view.id == view_id:
-            return
-            
-        # remove the notifications from the current view
-        if wi.current_view:
-            wi.current_view.on_trait_change(self.view_parameters_updated,
-                                            remove = True)
-            
+        
         view = next((x for x in wi.views if x.id == view_id), None)
         
         if not view:
@@ -174,15 +173,30 @@ class FlowTask(Task):
             view = plugin.get_view()
             view.handler = view.handler_factory(model = view, wi = wi)
             wi.views.append(view)
-
-        # whenever the view parameters change, we need to know so we can
-        # update the plot(s)
-        view.on_trait_change(self.view_parameters_updated)
         
         wi.current_view = view
         
-        if wi.current_view.is_valid(wi.result):
-            self.view.plot(wi.result, wi.current_view)
+    @on_trait_change("model:selected.current_view")
+    def _current_view_changed(self, obj, name, old, new): 
+        
+        # we get notified if *either* the currently selected workflowitem
+        # *or* the current view changes.
+        
+        if name == 'selected':
+            new = new.current_view if new else None
+            old = old.current_view if old else None
+            
+        # remove the notifications from the old view
+        if old:
+            old.on_trait_change(self.view_parameters_updated, remove = True)
+            
+        # whenever the view parameters change, we need to know so we can
+        # update the plot(s)
+        if new:
+            new.on_trait_change(self.view_parameters_updated)
+            
+            if new.is_valid(self.model.selected.result):
+                self.view.plot(self.model.selected.result, new)
         
     def view_parameters_updated(self, obj, name, new):
         
