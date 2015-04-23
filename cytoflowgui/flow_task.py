@@ -46,9 +46,24 @@ class FlowTask(Task):
     # are we debugging?  ie, do we need a default setup?
     debug = Bool
     
-    worker = Instance(threading.Thread)
+    #worker = Instance(threading.Thread)
+    worker_flag = Instance(threading.Event, args = ())
         
     def initialized(self):
+        
+        # setup the worker thread
+        def update_model(flag, to_update):
+            while flag.wait():
+                flag.clear()
+                while not to_update.empty():
+                    prio, wi = to_update.get_nowait()
+                    wi.update()
+    
+        worker = threading.Thread(target = update_model, 
+                                  args = (self.worker_flag, self.model.to_update))
+        worker.start()
+        
+        # add an import plugin
         plugin = ImportPlugin()
         wi = WorkflowItem(task = self)
         wi.operation = plugin.get_operation()
@@ -56,6 +71,7 @@ class FlowTask(Task):
         self.model.workflow.append(wi)
         self.model.selected = wi
         
+        # if we're debugging, add a few data bits
         if self.debug:
             Tube.add_class_trait("Dox", Float)
             tube1 = Tube(Name = "Tube 1",
@@ -69,7 +85,6 @@ class FlowTask(Task):
             wi.operation.tubes.append(tube2)
             
             wi.update()
-            
     
     def prepare_destroy(self):
         self.model = None
@@ -132,18 +147,9 @@ class FlowTask(Task):
             else:
                 break
             
-        def update_model(to_update):
-            while not to_update.empty():
-                prio, wi = to_update.get_nowait()
-                wi.update()
-    
-        if not (self.worker and self.worker.is_alive()):
-            try:
-                self.worker = threading.Thread(target = update_model, 
-                                               args = (self.model.to_update,))
-                self.worker.start()
-            except RuntimeError as e:
-                error(None, e.strerror)       
+        # start the worker thread processing
+        if not self.model.to_update.empty():
+            self.worker_flag.set()
               
     def clear_current_view(self):
         self.view.clear_plot()
