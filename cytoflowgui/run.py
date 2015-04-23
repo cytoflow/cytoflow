@@ -15,7 +15,7 @@ from envisage.ui.tasks.tasks_plugin import TasksPlugin
 from flow_task import FlowTaskPlugin
 from cytoflow_application import CytoflowApplication
 from op_plugins import ImportPlugin, ThresholdPlugin, HLogPlugin
-from view_plugins import HistogramPlugin, ThresholdSelectionPlugin
+from view_plugins import HistogramPlugin, HexbinPlugin
 
 def run_gui(argv):
     
@@ -25,7 +25,7 @@ def run_gui(argv):
 
     plugins = [CorePlugin(), TasksPlugin(), FlowTaskPlugin(debug = debug),
                ImportPlugin(), ThresholdPlugin(), HistogramPlugin(),
-               HLogPlugin()]
+               HLogPlugin(), HexbinPlugin()]
     
     app = CytoflowApplication(id = 'edu.mit.synbio.cytoflow',
                               plugins = plugins)
