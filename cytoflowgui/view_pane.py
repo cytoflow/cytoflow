@@ -1,13 +1,12 @@
-from traits.api import Instance, Any, List, on_trait_change, Property, Str, Dict
-from traitsui.api import UI, View, Item, EnumEditor, Handler
-from cytoflow.views.i_view import IView
-from pyface.tasks.api import DockPane, Task
+from traits.api import Instance, Any, List, on_trait_change, Str, Dict, Bool
+from traitsui.api import UI, View, Item, EnumEditor
+from pyface.tasks.api import DockPane
 from pyface.qt import QtGui
-from envisage.api import Application, Plugin
-from cytoflowgui.view_plugins import IViewPlugin, VIEW_PLUGIN_EXT
+from cytoflowgui.view_plugins import IViewPlugin
 from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.workflow import Workflow
-from scipy.weave.build_tools import old_argv
+
+import threading
 
 class ViewDockPane(DockPane):
     """
@@ -26,6 +25,11 @@ class ViewDockPane(DockPane):
     # as we're instantiated
     plugins = List(IViewPlugin)
     
+    # changed depending on whether the selected wi in the model is valid.
+    # would use a direct listener, but valid gets changed outside
+    # the UI thread and we can't change UI things from other threads.
+    enabled = Bool
+    
     # the UI object associated with the object we're editing.
     # NOTE: we don't maintain a reference to the IView itself...
     _ui = Instance(UI)
@@ -33,7 +37,7 @@ class ViewDockPane(DockPane):
     # plugin name --> plugin ID
     _plugins_dict = Dict(Str, Str)
     
-    _current_view_id = Property
+    _current_view_id = Str
     
     # the layout that manages the pane
     _layout = Instance(QtGui.QVBoxLayout)
@@ -44,6 +48,11 @@ class ViewDockPane(DockPane):
     ###########################################################################
     # 'ITaskPane' interface.
     ###########################################################################
+
+    def create(self, *args, **kwargs):
+        super(ViewDockPane, self).create(*args, **kwargs)
+        
+        self.on_trait_change(self._set_enabled, 'enabled', dispatch = 'ui')
 
     def destroy(self):
         """ 
@@ -103,31 +112,32 @@ class ViewDockPane(DockPane):
         
         return control
             
-    # magic: gets the _current_view_id Property value
-    def _get__current_view_id(self):
-        if self.task.model.selected and self.task.model.selected.current_view:
-            return self.task.model.selected.current_view.id
-        else:
-            return ""
-    
-    def _set__current_view_id(self, view_id):
-        self.task.set_current_view(view_id)
+    @on_trait_change('_current_view_id')
+    def _picker_current_view_changed(self, obj, name, old, new):
+        if new:
+            self.task.set_current_view(new)
+        
+    def _set_enabled(self, obj, name, old, new):
+        self._parent.setEnabled(new)
             
     @on_trait_change('task:model:selected.valid')
-    def _workflow_valid_changed(self, obj, name, old, new):
+    def _on_model_valid_changed(self, obj, name, old, new):
+#        print "valid changed: {0}".format(threading.current_thread())
+        
         if not new:
             return
         
         if name == 'selected':
             new = new.valid
                 
-        if new == "valid":
-            self._parent.setEnabled(True)
-        else:
-            self._parent.setEnabled(False)
+        # redirect to the UI thread
+        self.enabled = True if new == "valid" else False
 
     @on_trait_change('task:model:selected.current_view')
-    def _current_view_changed(self, obj, name, old, new):
+    def _model_current_view_changed(self, obj, name, old, new):
+        # at the moment, this only gets called from the UI thread, so we can
+        # do UI things.
+        # print "current view changed: {0}".format(threading.current_thread())
         
         # we get notified if *either* the currently selected workflowitem
         # *or* the current view changes.
@@ -142,11 +152,12 @@ class ViewDockPane(DockPane):
             self._ui = None
             
         if new:
-            # note: the "handler" attribute isn't defined on IView; it's dynamically
-            # associated with these instances in flow_task.FlowTask.set_
             self._ui = new.handler.edit_traits(kind='subpanel', 
                                                 parent=self._parent)              
             self._layout.addWidget(self._ui.control)
+            self._current_view_id = new.id
+        else:
+            self._current_view_id = ""
         
     @on_trait_change('task:model:selected.default_view')
     def _default_view_changed(self, obj, name, old, new):
