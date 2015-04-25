@@ -125,8 +125,11 @@ class FlowTask(Task):
         wi = WorkflowItem(task = self)
         wi.operation = plugin.get_operation()
 
+        wi.next = after.next
         after.next = wi
         wi.previous = after
+        if wi.next:
+            wi.next.previous = wi
         self.model.workflow.insert(idx+1, wi)
         
         # set up the default view
@@ -140,9 +143,12 @@ class FlowTask(Task):
         self.model.selected = wi
         if wi.default_view:
             wi.current_view = wi.default_view
+            
+        # invalidate everything following
+        #self.operation_parameters_updated()
         
     @on_trait_change("model:selected:operation:+")
-    def operation_parameters_updated(self, obj, name, old, new): 
+    def operation_parameters_updated(self): 
         
         # invalidate this workflow item and all the ones following it
         wi = self.model.selected
@@ -164,6 +170,9 @@ class FlowTask(Task):
         self.view.clear_plot()
         
     def set_current_view(self, view_id):
+        """
+        called by the view pane 
+        """
         wi = self.model.selected
         
         view = next((x for x in wi.views if x.id == view_id), None)
@@ -214,14 +223,6 @@ class FlowTask(Task):
             
         if wi.is_plottable:
             wi.plot(self.view)
-            #self.view.plot(wi.result, wi.current_view)
-            
-#     @on_trait_change('model.selected')
-#     def _on_selected_wi_changed(self, obj, name, old, new):
-#         if not new:
-#             self.view.clear_plot()
-#         else:
-#             self.view.view = new.current_view
         
 class FlowTaskPlugin(Plugin):
     """
