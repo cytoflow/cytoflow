@@ -1,9 +1,8 @@
 from traitsui.api import View, Item, EnumEditor, Controller
 from envisage.api import Plugin, contributes_to
-from traits.api import provides, Instance, DelegatesTo
+from traits.api import provides, DelegatesTo, Callable
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT
 from cytoflow import ThresholdOp
-from cytoflow.operations.i_operation import IOperation
 from pyface.api import ImageResource
 from cytoflow.views.threshold_selection import ThresholdSelection
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin
@@ -33,6 +32,26 @@ class ThresholdViewHandler(Controller, ViewHandlerMixin):
                          label = "Subset",
                          editor = SubsetEditor(experiment = 'handler.wi.result')))
 
+class ThresholdSelectionView(ThresholdSelection):
+    handler_factory = Callable(ThresholdViewHandler)
+    
+    def __init__(self, **kwargs):
+        super(ThresholdSelectionView, self).__init__(**kwargs)
+        
+        self.view = HistogramView()
+        
+        self.add_trait('name', DelegatesTo('view'))
+        self.add_trait('channel', DelegatesTo('view'))
+        self.add_trait('subset', DelegatesTo('view'))
+        
+    def is_wi_valid(self, wi):
+        return (wi.previous 
+                and wi.previous.result 
+                and self.is_valid(wi.previous.result))
+    
+    def plot_wi(self, wi, pane):
+        pane.plot(wi.previous.result, self) 
+
 @provides(IOperationPlugin)
 class ThresholdPlugin(Plugin):
     """
@@ -51,20 +70,15 @@ class ThresholdPlugin(Plugin):
         return ret
     
     def get_default_view(self, op):
-        view = ThresholdSelection(view = HistogramView())
+        view = ThresholdSelectionView()
         
         # we have to make these traits on the top-level ThresholdSelection
         # so that the change handlers get updated.
-        
-        view.add_trait('name', DelegatesTo('view'))
-        view.add_trait('channel', DelegatesTo('view'))
-        view.add_trait('subset', DelegatesTo('view'))
         
         op.sync_trait('channel', view, mutual = True)
         op.sync_trait('name', view, mutual = True)
         op.sync_trait('threshold', view, mutual = True)
         
-        view.handler_factory = ThresholdViewHandler 
         return view
     
     def get_icon(self):

@@ -6,12 +6,10 @@ Created on Feb 24, 2015
 
 from traitsui.api import View, Item, Controller, EnumEditor
 from envisage.api import Plugin, contributes_to
-from traits.api import provides, Property, Instance, DelegatesTo
+from traits.api import provides, Callable
 
 from cytoflow import HistogramView
-from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.subset_editor import SubsetEditor
-from cytoflowgui.subset_model import SubsetModel
 from cytoflowgui.view_plugins.i_view_plugin \
     import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin
     
@@ -38,6 +36,16 @@ class HistogramHandler(Controller, ViewHandlerMixin):
                     Item('object.subset',
                          label="Subset",
                          editor = SubsetEditor(experiment = "handler.wi.result")))
+    
+class HistogramPluginView(HistogramView):
+    
+    handler_factory = Callable(HistogramHandler)
+    
+    def is_wi_valid(self, wi):
+        return wi.result and self.is_valid(wi.result)
+
+    def plot_wi(self, wi, pane):
+        pane.plot(wi.result, self)
 
 @provides(IViewPlugin)
 class HistogramPlugin(Plugin):
@@ -50,9 +58,7 @@ class HistogramPlugin(Plugin):
     short_name = "Histogram"
     
     def get_view(self):
-        view = HistogramView()
-        view.handler_factory = HistogramHandler
-        return view
+        return HistogramPluginView()
 
     @contributes_to(VIEW_PLUGIN_EXT)
     def get_plugin(self):

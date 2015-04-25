@@ -6,12 +6,10 @@ Created on Apr 23, 2015
 
 from traitsui.api import View, Item, Controller, EnumEditor
 from envisage.api import Plugin, contributes_to
-from traits.api import provides, Property, Instance, DelegatesTo
+from traits.api import provides, Callable
 
 from cytoflow import HexbinView
-from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.subset_editor import SubsetEditor
-from cytoflowgui.subset_model import SubsetModel
 from cytoflowgui.view_plugins.i_view_plugin \
     import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin
 
@@ -42,6 +40,14 @@ class HexbinHandler(Controller, ViewHandlerMixin):
                          label="Subset",
                          editor = SubsetEditor(experiment = "handler.wi.result")))
 
+class HexbinPluginView(HexbinView):
+    handler_factory = Callable(HexbinHandler)
+    
+    def is_wi_valid(self, wi):
+        return wi.result and self.is_valid(wi.result)
+
+    def plot_wi(self, wi, pane):
+        pane.plot(wi.result, self)
 
 @provides(IViewPlugin)
 class HexbinPlugin(Plugin):
@@ -52,11 +58,15 @@ class HexbinPlugin(Plugin):
     id = 'edu.mit.synbio.cytoflowgui.view.hexbin'
     view_id = 'edu.mit.synbio.cytoflow.view.hexbin'
     short_name = "HexBin"
+
+    def is_wi_valid(self, wi):
+        return wi.result and self.is_valid(wi.result)
+    
+    def plot_wi(self, wi, pane):
+        pane.plot(wi.result, self)
     
     def get_view(self):
-        view = HexbinView()
-        view.handler_factory = HexbinHandler
-        return view
+        return HexbinPluginView()
 
     @contributes_to(VIEW_PLUGIN_EXT)
     def get_plugin(self):

@@ -139,7 +139,7 @@ class FlowTask(Task):
         # select (open) the new workflow item
         self.model.selected = wi
         if wi.default_view:
-            self.set_current_view(wi.default_view.id)
+            wi.current_view = wi.default_view
         
     @on_trait_change("model:selected:operation:+")
     def operation_parameters_updated(self, obj, name, old, new): 
@@ -195,8 +195,8 @@ class FlowTask(Task):
         if new:
             new.on_trait_change(self.view_parameters_updated)
             
-            if new.is_valid(self.model.selected.result):
-                self.view.plot(self.model.selected.result, new)
+            if self.model.selected.is_plottable:
+                self.model.selected.plot(self.view)
         
     def view_parameters_updated(self, obj, name, new):
         
@@ -212,8 +212,9 @@ class FlowTask(Task):
         if wi is None:
             wi = self.model.workflow[-1]
             
-        if wi.current_view and wi.current_view.is_valid(wi.result):
-            self.view.plot(wi.result, wi.current_view)
+        if wi.is_plottable:
+            wi.plot(self.view)
+            #self.view.plot(wi.result, wi.current_view)
             
 #     @on_trait_change('model.selected')
 #     def _on_selected_wi_changed(self, obj, name, old, new):

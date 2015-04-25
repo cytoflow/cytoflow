@@ -6,7 +6,7 @@ Created on Mar 21, 2015
 
 from traitsui.api import View, Item, Controller, EnumEditor
 from envisage.api import Plugin, contributes_to
-from traits.api import provides, DelegatesTo
+from traits.api import provides, DelegatesTo, Callable
 
 from cytoflow import ThresholdSelection, HistogramView
 from cytoflowgui.view_plugins.i_view_plugin \
@@ -37,6 +37,29 @@ class ThresholdHandler(Controller, ViewHandlerMixin):
                          label = "Subset",
                          editor = SubsetEditor(experiment = 'handler.wi.result')))
     
+class ThresholdSelectionView(ThresholdSelection):
+
+    handler_factory = Callable(ThresholdHandler)
+    
+    def __init__(self, **kwargs):
+        super(ThresholdSelectionView, self).__init__(**kwargs)
+        
+        self.view = HistogramView()
+        self.add_trait('name', DelegatesTo('view'))
+        self.add_trait('channel', DelegatesTo('view'))
+        self.add_trait('xfacet', DelegatesTo('view'))
+        self.add_trait('yfacet', DelegatesTo('view'))
+        self.add_trait('huefacet', DelegatesTo('view'))
+        self.add_trait('subset', DelegatesTo('view'))
+        
+    def is_wi_valid(self, wi):
+        return (wi.previous 
+                and wi.previous.result 
+                and self.is_valid(wi.previous.result))
+    
+    def plot_wi(self, wi, pane):
+        pane.plot(wi.previous.result, self)        
+    
 
 @provides(IViewPlugin)
 class ThresholdSelectionPlugin(Plugin):
@@ -49,15 +72,7 @@ class ThresholdSelectionPlugin(Plugin):
     short_name = "Threshold"
     
     def get_view(self):
-        view = ThresholdSelection(view = HistogramView())
-        view.add_trait('name', DelegatesTo('view'))
-        view.add_trait('channel', DelegatesTo('view'))
-        view.add_trait('xfacet', DelegatesTo('view'))
-        view.add_trait('yfacet', DelegatesTo('view'))
-        view.add_trait('huefacet', DelegatesTo('view'))
-        view.add_trait('subset', DelegatesTo('view'))
-        view.handler_factory = ThresholdHandler
-        return view
+        return ThresholdSelectionView()
 
     @contributes_to(VIEW_PLUGIN_EXT)
     def get_plugin(self):

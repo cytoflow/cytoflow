@@ -6,7 +6,7 @@ Created on Mar 15, 2015
 
 from traits.api import HasStrictTraits, Instance, List, DelegatesTo, Event, \
                        Enum, Property, cached_property, on_trait_change, \
-                       Any
+                       Any, Bool
 from traitsui.api import View, Item, Handler, error
 from cytoflow import Experiment
 from cytoflow.operations.i_operation import IOperation
@@ -47,6 +47,9 @@ class WorkflowItem(HasStrictTraits):
     # the default view for this workflow item
     default_view = Instance(IView)
     
+    # is this wi plottable with the current view?
+    is_plottable = Property(Bool)
+    
     # the previous WorkflowItem in the workflow
     # self.result = self.apply(previous.result)
     previous = Instance('WorkflowItem')
@@ -54,7 +57,7 @@ class WorkflowItem(HasStrictTraits):
     # the next WorkflowItem in the workflow
     next = Instance('WorkflowItem')
     
-    # are we valid?
+    # is the wi valid?
     # MAGIC: first value is the default
     valid = Enum("invalid", "updating", "valid")
     
@@ -89,6 +92,12 @@ class WorkflowItem(HasStrictTraits):
             error(None, e.strerror)       
 
         self.valid = "valid"
+        
+    def plot(self, pane):
+        """
+        pane: FlowTaskPane
+        """
+        self.current_view.plot_wi(self, pane)
     
     @cached_property
     def _get_icon(self):
@@ -98,6 +107,10 @@ class WorkflowItem(HasStrictTraits):
             return QtGui.QStyle.SP_BrowserReload
         else: # self.valid == "invalid" or None
             return QtGui.QStyle.SP_BrowserStop
+
+    # MAGIC: returns the value for property is_plottable
+    def _get_is_plottable(self):
+        return self.current_view and self.current_view.is_wi_valid(self)
 
     @cached_property
     def _get_handler(self):
