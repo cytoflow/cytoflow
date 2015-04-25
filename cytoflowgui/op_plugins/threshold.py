@@ -8,8 +8,7 @@ from cytoflow.views.threshold_selection import ThresholdSelection
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin
 from cytoflowgui.subset_editor import SubsetEditor
 from cytoflow.views.histogram import HistogramView
-#from pyface.qt import QtGui
-#import cytoflowgui.resources
+
 
 class ThresholdHandler(Controller, OpHandlerMixin):
     

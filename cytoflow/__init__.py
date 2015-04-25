@@ -14,6 +14,7 @@ if LooseVersion(_numexpr_version.version) < '2.1':
 
 from experiment import Experiment
 from operations.threshold import ThresholdOp
+from operations.range2d import Range2DOp
 from operations.hlog import HlogTransformOp
 from operations.import_op import ImportOp, Tube
 from views.histogram import HistogramView
