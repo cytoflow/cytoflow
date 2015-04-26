@@ -15,7 +15,6 @@ from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin
 from cytoflowgui.subset_editor import SubsetEditor
 from cytoflow.views.histogram import HistogramView
 
-
 class Range2DHandler(Controller, OpHandlerMixin):
     
     def default_traits_view(self):

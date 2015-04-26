@@ -8,12 +8,12 @@ from traitsui.api import View, Item, Controller, EnumEditor
 from envisage.api import Plugin, contributes_to
 from traits.api import provides, Callable
 
-from cytoflow import HexbinView
+from cytoflow import ScatterplotView
 from cytoflowgui.subset_editor import SubsetEditor
 from cytoflowgui.view_plugins.i_view_plugin \
     import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin
 
-class HexbinHandler(Controller, ViewHandlerMixin):
+class ScatterplotHandler(Controller, ViewHandlerMixin):
     '''
     classdocs
     '''
@@ -40,8 +40,8 @@ class HexbinHandler(Controller, ViewHandlerMixin):
                          label="Subset",
                          editor = SubsetEditor(experiment = "handler.wi.result")))
 
-class HexbinPluginView(HexbinView):
-    handler_factory = Callable(HexbinHandler)
+class ScatterplotPluginView(ScatterplotView):
+    handler_factory = Callable(ScatterplotHandler)
     
     def is_wi_valid(self, wi):
         return wi.result and self.is_valid(wi.result)
@@ -50,17 +50,17 @@ class HexbinPluginView(HexbinView):
         pane.plot(wi.result, self)
 
 @provides(IViewPlugin)
-class HexbinPlugin(Plugin):
+class ScatterplotPlugin(Plugin):
     """
     classdocs
     """
 
-    id = 'edu.mit.synbio.cytoflowgui.view.hexbin'
-    view_id = 'edu.mit.synbio.cytoflow.view.hexbin'
-    short_name = "HexBin"
-
+    id = 'edu.mit.synbio.cytoflowgui.view.scatterplot'
+    view_id = 'edu.mit.synbio.cytoflow.view.scatterplot'
+    short_name = "Scatter Plot"
+    
     def get_view(self):
-        return HexbinPluginView()
+        return ScatterplotPluginView()
 
     @contributes_to(VIEW_PLUGIN_EXT)
     def get_plugin(self):

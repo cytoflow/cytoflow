@@ -19,6 +19,7 @@ from operations.hlog import HlogTransformOp
 from operations.import_op import ImportOp, Tube
 from views.histogram import HistogramView
 from views.hexbin import HexbinView
+from views.scatterplot import ScatterplotView
 from views.range_selection import RangeSelection
 from views.threshold_selection import ThresholdSelection
 
