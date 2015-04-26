@@ -15,16 +15,16 @@ class RangeSelection2D(HasTraits):
     
     Attributes
     ----------
-    xmin : Float
+    xlow : Float
         The minimum value of the range on the X axis
         
-    xmax : Float
+    xhigh : Float
         The maximum value of the range on the X axis
         
-    ymin : Float
+    ylow : Float
         The minimum value of the range on the Y axis
         
-    ymax : Float
+    yhigh : Float
         The maximum value of the range on the Y axis
         
     view : Instance(IView)
@@ -39,11 +39,11 @@ class RangeSelection2D(HasTraits):
     id = "edu.mit.synbio.cytoflow.views.range2d"
     friendly_id = "2D Range Selection"
     
-    xmin = Float(None)
-    xmax = Float(None)
+    xlow = Float(None)
+    xhigh = Float(None)
 
-    ymin = Float(None)
-    ymax = Float(None)
+    ylow = Float(None)
+    yhigh = Float(None)
     
     view = Instance(IView)
     interactive = Bool(False)
@@ -61,19 +61,19 @@ class RangeSelection2D(HasTraits):
         """If the decorated view is valid, we are too."""
         return self.view.is_valid(experiment)
     
-    @on_trait_change('xmin, xmax, ymin, ymax')
+    @on_trait_change('xlow, xhigh, ylow, yhigh')
     def _draw_rect(self):
-        if not (self.xmin and self.xmax and self.ymin and self.ymax):
+        if not (self.xlow and self.xhigh and self.ylow and self.yhigh):
             return
         
         if self._box:
             self._box.remove()
             
-        if self.xmin and self.xmax and self.ymin and self.ymax:
+        if self.xlow and self.xhigh and self.ylow and self.yhigh:
             ca = plt.gca()
-            self._box = Rectangle((self.xmin, self.ymin), 
-                                  (self.xmax - self.xmin), 
-                                  (self.ymax - self.ymin), 
+            self._box = Rectangle((self.xlow, self.ylow), 
+                                  (self.xhigh - self.xlow), 
+                                  (self.yhigh - self.ylow), 
                                   facecolor="grey",
                                   alpha = 0.2)
             ca.add_patch(self._box)
@@ -95,15 +95,15 @@ class RangeSelection2D(HasTraits):
     
     def _onselect(self, pos1, pos2): 
         """Update selection traits"""
-        self.xmin = min(pos1.xdata, pos2.xdata)
-        self.xmax = max(pos1.xdata, pos2.xdata)
-        self.ymin = min(pos1.ydata, pos2.ydata)
-        self.ymax = max(pos1.ydata, pos2.ydata)
+        self.xlow = min(pos1.xdata, pos2.xdata)
+        self.xhigh = max(pos1.xdata, pos2.xdata)
+        self.ylow = min(pos1.ydata, pos2.ydata)
+        self.yhigh = max(pos1.ydata, pos2.ydata)
         
-        print "x:({0}, {1})  y:({2}, {3})".format(self.xmin, 
-                                                  self.xmax,
-                                                  self.ymin,
-                                                  self.ymax)
+        print "x:({0}, {1})  y:({2}, {3})".format(self.xlow, 
+                                                  self.xhigh,
+                                                  self.ylow,
+                                                  self.yhigh)
         
         
 if __name__ == '__main__':

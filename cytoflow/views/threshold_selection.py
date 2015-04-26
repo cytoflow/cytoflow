@@ -37,11 +37,6 @@ class ThresholdSelection(HasTraits):
     friendly_id = "Threshold Selection"
     
     threshold = Float(None)
-    
-    view = Instance(IView,
-                    transient = True)
-    interactive = Bool(False,
-                       transient = True)
 
     # internal state
     _line = Instance(Line2D,

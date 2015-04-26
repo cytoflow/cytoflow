@@ -33,7 +33,7 @@ class ISelectionView(IView):
     r.plot(ex)
     """
     
-    view = Instance(IView)
-    interactive = Bool(False)
+    view = Instance(IView, transient = True)
+    interactive = Bool(False, transient = True)
     
     

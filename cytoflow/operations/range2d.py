@@ -1,4 +1,4 @@
-from traits.api import HasTraits, CFloat, Str
+from traits.api import HasTraits, CFloat, Str, CStr
 import pandas as pd
 from traits.has_traits import provides
 from cytoflow.operations.i_operation import IOperation
@@ -36,7 +36,7 @@ class Range2DOp(HasTraits):
     id = "edu.mit.synbio.cytoflow.operations.range2d"
     friendly_id = "2D Range"
     
-    name = Str()
+    name = CStr()
     
     xchannel = Str()
     xlow = CFloat()
@@ -59,7 +59,7 @@ class Range2DOp(HasTraits):
         if (self.xlow < experiment[self.xchannel].min() or
             self.xhigh > experiment[self.xchannel].max() or
             self.ylow < experiment[self.ychannel].min() or
-            self.yhigh > experiment[self.ychannel].max):
+            self.yhigh > experiment[self.ychannel].max()):
             return False
        
         return True
@@ -92,11 +92,17 @@ class Range2DOp(HasTraits):
         
         
         new_experiment = old_experiment.clone()
-        new_experiment[self.name] = \
-            pd.Series(new_experiment[self.xchannel] > self.xlow and
-                      new_experiment[self.xchannel] < self.xhigh and
-                      new_experiment[self.ychannel] > self.ylow and
-                      new_experiment[self.ychannel] < self.yhigh)
+        x = new_experiment[self.xchannel].between(self.xlow, self.xhigh)
+        y = new_experiment[self.ychannel].between(self.ylow, self.yhigh)
+        new_experiment[self.name] = x & y
+        
+        new_experiment.conditions[self.name] = "bool"
+        new_experiment.metadata[self.name] = {}
+        
+#             pd.Series(new_experiment[self.xchannel] > self.xlow &
+#                       new_experiment[self.xchannel] < self.xhigh &
+#                       new_experiment[self.ychannel] > self.ylow &
+#                       new_experiment[self.ychannel] < self.yhigh)
             
         return new_experiment
     

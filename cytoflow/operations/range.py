@@ -1,5 +1,5 @@
 from cytoflow import Experiment
-from traits.api import HasTraits, CFloat, Str
+from traits.api import HasTraits, CFloat, Str, CStr
 import pandas as pd
 from traits.has_traits import provides
 from cytoflow.operations.i_operation import IOperation
@@ -28,7 +28,7 @@ class RangeOp(HasTraits):
     id = "edu.mit.synbio.cytoflow.operations.rangeop"
     friendly_id = "Range"
     
-    name = Str()
+    name = CStr()
     channel = Str()
     low = CFloat()
     high = CFloat()
@@ -77,8 +77,13 @@ class RangeOp(HasTraits):
         
         new_experiment = old_experiment.clone()
         new_experiment[self.name] = \
-            pd.Series(new_experiment[self.channel] > self.low and
-                      new_experiment[self.channel] < self.high)
+            new_experiment[self.channel].between(self.low, self.high)
+            
+        new_experiment.conditions[self.name] = "bool"
+        new_experiment.metadata[self.name] = {}
+            
+#             pd.Series(new_experiment[self.channel]. > self.low &
+#                       new_experiment[self.channel] < self.high)
             
         return new_experiment
     

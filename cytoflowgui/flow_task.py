@@ -91,7 +91,13 @@ class FlowTask(Task):
             wi.operation.tubes.append(tube1)
             wi.operation.tubes.append(tube2)
             
-            wi.update()
+#            wi.update()
+            
+            self.add_operation('edu.mit.synbio.cytoflowgui.op.hlog')
+            self.model.selected.operation.channels = ["V2-A", "Y2-A"]
+            self.model.selected.operation.name = "H"
+
+#            self.model.selected.update()
     
     def prepare_destroy(self):
         self.model = None
