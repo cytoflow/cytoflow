@@ -55,7 +55,7 @@ class RangeSelection2D(HasTraits):
     def plot(self, experiment, fig_num = None, **kwargs):
         """Plot self.view, and then plot the selection on top of it."""
         self.view.plot(experiment, fig_num, **kwargs)
-        self._draw_span()
+        self._draw_rect()
 
     def is_valid(self, experiment):
         """If the decorated view is valid, we are too."""
@@ -74,8 +74,10 @@ class RangeSelection2D(HasTraits):
             self._box = Rectangle((self.xmin, self.ymin), 
                                   (self.xmax - self.xmin), 
                                   (self.ymax - self.ymin), 
-                                  facecolor="grey")
+                                  facecolor="grey",
+                                  alpha = 0.2)
             ca.add_patch(self._box)
+            plt.gcf().canvas.draw()
     
     @on_trait_change('interactive')
     def _interactive(self):
@@ -86,7 +88,6 @@ class RangeSelection2D(HasTraits):
                                 onselect=self._onselect, 
                                 rectprops={'alpha':0.2,
                                            'color':'grey'},
-                                span_stays=False,
                                 useblit = True)
         else:
             self._selector = None
@@ -94,9 +95,52 @@ class RangeSelection2D(HasTraits):
     
     def _onselect(self, pos1, pos2): 
         """Update selection traits"""
-        self.xmin = min(pos1[0], pos2[0])
-        self.xmax = max(pos1[0], pos2[0])
-        self.ymin = min(pos1[1], pos2[1])
-        self.ymax = max(pos1[1], pos2[1])
+        self.xmin = min(pos1.xdata, pos2.xdata)
+        self.xmax = max(pos1.xdata, pos2.xdata)
+        self.ymin = min(pos1.ydata, pos2.ydata)
+        self.ymax = max(pos1.ydata, pos2.ydata)
+        
+        print "x:({0}, {1})  y:({2}, {3})".format(self.xmin, 
+                                                  self.xmax,
+                                                  self.ymin,
+                                                  self.ymax)
         
         
+if __name__ == '__main__':
+    import seaborn as sns
+    import cytoflow as flow
+    import FlowCytometryTools as fc
+    
+    import matplotlib as mpl
+    import matplotlib.pyplot as plt
+    mpl.rcParams['savefig.dpi'] = 2 * mpl.rcParams['savefig.dpi']
+    
+    tube1 = fc.FCMeasurement(ID='Test 1', 
+                             datafile='../../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs')
+
+    tube2 = fc.FCMeasurement(ID='Test 2', 
+                           datafile='../../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs')
+    
+    ex = flow.Experiment()
+    ex.add_conditions({"Dox" : "float"})
+    
+    ex.add_tube(tube1, {"Dox" : 10.0})
+    ex.add_tube(tube2, {"Dox" : 1.0})
+    
+    hlog = flow.HlogTransformOp()
+    hlog.name = "Hlog transformation"
+    hlog.channels = ['V2-A', 'Y2-A', 'B1-A', 'FSC-A', 'SSC-A']
+    ex2 = hlog.apply(ex)
+    
+    scatter = flow.ScatterplotView()
+    scatter.name = "Scatter"
+    scatter.xchannel = "V2-A"
+    scatter.ychannel = "Y2-A"
+    scatter.huefacet = 'Dox'
+    
+    range = flow.RangeSelection2D(view = scatter) 
+    
+    plt.ioff()
+    range.plot(ex2)
+    range.interactive = True
+    plt.show()
