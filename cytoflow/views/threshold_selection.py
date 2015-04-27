@@ -36,11 +36,14 @@ class ThresholdSelection(HasTraits):
     id = "edu.mit.synbio.cytoflow.views.threshold"
     friendly_id = "Threshold Selection"
     
+    view = Instance(IView, transient = True)
+    interactive = Bool(False, transient = True)
+    
     threshold = Float(None)
 
     # internal state
-    _line = Instance(Line2D,
-                     transient = True)
+    _line = Instance(Line2D, transient = True)
+    _cursor = Instance(Cursor, transient = True)
     
     def plot(self, experiment, **kwargs):
         """Plot self.view, and then plot the threshold on top of it."""

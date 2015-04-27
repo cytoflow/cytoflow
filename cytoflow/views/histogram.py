@@ -63,6 +63,9 @@ class HistogramView(HasTraits):
             x = experiment.data
         else:
             x = experiment.query(self.subset)
+            
+        # TODO - make sure the bin width is the same across all the facets
+        # being plotted on the same axes
 
         g = FacetGrid(x, 
                       col = (self.xfacet if self.xfacet else None),

@@ -4,7 +4,7 @@ from traits.api import provides, HasTraits, Instance, Float, Bool, \
 from cytoflow.views.i_selectionview import ISelectionView
 from cytoflow.views.i_view import IView
 
-from matplotlib.widgets import SpanSelector
+from matplotlib.widgets import SpanSelector, Cursor
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from matplotlib.lines import Line2D
@@ -35,12 +35,16 @@ class RangeSelection(HasTraits):
     
     id = "edu.mit.synbio.cytoflow.views.range"
     friendly_id = "Range Selection"
+
+    view = Instance(IView, transient = True)
+    interactive = Bool(False, transient = True)
     
     low = Float(None)
     high = Float(None)
     
     # internal state.
     _span = Instance(SpanSelector, transient = True)
+    _cursor = Instance(Cursor, transient = True)
     _low_line = Instance(Line2D, transient = True)
     _high_line = Instance(Line2D, transient = True)
     _hline = Instance(Line2D, transient = True)
@@ -58,19 +62,21 @@ class RangeSelection(HasTraits):
     def _draw_span(self):
         if not (self.low and self.high):
             return
+  
+        fig = plt.gcf()
         
-        if self._low_line:
+        if self._low_line and self._low_line in fig.lines:
             self._low_line.remove()
         
-        if self._high_line:
+        if self._high_line and self._high_line in fig.lines:
             self._high_line.remove()
             
-        if self._hline:
+        if self._hline and self._hline in fig.lines:
             self._hline.remove()
             
         if self.low and self.high:
-            self._low_line = plt.axvline(self.low, linewidth=3, color='grey')
-            self._high_line = plt.axvline(self.high, linewidth=3, color='grey')
+            self._low_line = plt.axvline(self.low, linewidth=3, color='blue')
+            self._high_line = plt.axvline(self.high, linewidth=3, color='blue')
             
             ymin, ymax = plt.ylim()
             y = (ymin + ymax) / 2.0
@@ -85,6 +91,7 @@ class RangeSelection(HasTraits):
     def _interactive(self):
         if self.interactive:
             ax = plt.gca()
+            self._cursor = Cursor(ax, horizOn=False, vertOn=True, color='blue')
             self._span = SpanSelector(ax, 
                              onselect=self._onselect, 
                              direction='horizontal',
@@ -93,6 +100,7 @@ class RangeSelection(HasTraits):
                              span_stays=False,
                              useblit = True)
         else:
+            self._cursor = None
             self._span = None
         
     

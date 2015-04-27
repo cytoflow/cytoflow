@@ -48,27 +48,27 @@ class FlowTaskPane(TaskPane):
         view : cytoflow.IView
             The view to use for the plotting
         """
-        
+#         
 #         def do_plot(editor, view, experiment, fig_num):
 #             editor.clear = True
 #             time.sleep(0)
 #             view.plot(experiment, fig_num = fig_num)
 #             time.sleep(0)
 #             editor.draw = True
-#               
+#                
 #             if "interactive" in view.traits():
 #                 # we have to re-bind the Cursor to the new Axes object by twiddling
 #                 # the "interactive" trait
 #                 view.interactive = False
 #                 view.interactive = True 
-#                
+#                 
 #         t = threading.Thread(target = do_plot,
 #                              args = (self.editor, 
 #                                      view, 
 #                                      experiment, 
 #                                      self.editor.fig_num))
 #         t.start()
-#         
+         
         
         # TODO - figure out how to make this threaded.  unfortunately, it 
         # probably involves moving away from the pyplot stateful interface,
@@ -77,7 +77,7 @@ class FlowTaskPane(TaskPane):
         self.editor.clear = True
         view.plot(experiment, fig_num = self.editor.fig_num)
         self.editor.draw = True
-          
+           
         if "interactive" in view.traits():
             # we have to re-bind the Cursor to the new Axes object by twiddling
             # the "interactive" trait

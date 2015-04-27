@@ -42,9 +42,12 @@ class RangeOp(HasTraits):
         if not self.channel in experiment.channels:
             return False
         
-        if self.low < experiment[self.channel].min() or \
-           self.high > experiment[self.channel].max():
-           return False
+        if self.high <= self.low:
+            return False
+        
+        if self.high <= experiment[self.channel].min() or \
+           self.low >= experiment[self.channel].max:
+            return False
        
         return True
         
@@ -74,16 +77,12 @@ class RangeOp(HasTraits):
             raise RuntimeError("Experiment already contains a column {0}"
                                .format(self.name))
         
-        
         new_experiment = old_experiment.clone()
         new_experiment[self.name] = \
             new_experiment[self.channel].between(self.low, self.high)
             
         new_experiment.conditions[self.name] = "bool"
         new_experiment.metadata[self.name] = {}
-            
-#             pd.Series(new_experiment[self.channel]. > self.low &
-#                       new_experiment[self.channel] < self.high)
             
         return new_experiment
     

@@ -6,6 +6,7 @@ from cytoflow import RangeOp, RangeSelection, HistogramView
 from pyface.api import ImageResource
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin
 from cytoflowgui.subset_editor import SubsetEditor
+from cytoflow.views.i_selectionview import ISelectionView
 
 
 class RangeHandler(Controller, OpHandlerMixin):
@@ -30,6 +31,7 @@ class RangeViewHandler(Controller, ViewHandlerMixin):
                          label = "Subset",
                          editor = SubsetEditor(experiment = 'handler.wi.result')))
 
+@provides(ISelectionView)
 class RangeSelectionView(RangeSelection):
     handler_factory = Callable(RangeViewHandler)
     

@@ -12,6 +12,7 @@ from cytoflow import Experiment
 from cytoflow.operations.i_operation import IOperation
 from cytoflow.views.i_view import IView
 from pyface.qt import QtGui
+from pyface.api import error
 
 class WorkflowItem(HasStrictTraits):
     """        
@@ -89,7 +90,7 @@ class WorkflowItem(HasStrictTraits):
         try:
             self.result = self.operation.apply(prev_result)
         except RuntimeError as e:
-            error(None, e.strerror)       
+            error(None, str(e))       
 
         self.valid = "valid"
         

@@ -39,18 +39,18 @@ class RangeSelection2D(HasTraits):
     id = "edu.mit.synbio.cytoflow.views.range2d"
     friendly_id = "2D Range Selection"
     
+    view = Instance(IView, transient = True)
+    interactive = Bool(False, transient = True)
+    
     xlow = Float(None)
     xhigh = Float(None)
 
     ylow = Float(None)
     yhigh = Float(None)
     
-    view = Instance(IView)
-    interactive = Bool(False)
-    
     # internal state.
-    _selector = Instance(RectangleSelector)
-    _box = Instance(Rectangle)
+    _selector = Instance(RectangleSelector, transient = True)
+    _box = Instance(Rectangle, transient = True)
         
     def plot(self, experiment, fig_num = None, **kwargs):
         """Plot self.view, and then plot the selection on top of it."""
@@ -66,7 +66,9 @@ class RangeSelection2D(HasTraits):
         if not (self.xlow and self.xhigh and self.ylow and self.yhigh):
             return
         
-        if self._box:
+        fig = plt.gcf()
+        
+        if self._box and self._box in fig.patches:
             self._box.remove()
             
         if self.xlow and self.xhigh and self.ylow and self.yhigh:
