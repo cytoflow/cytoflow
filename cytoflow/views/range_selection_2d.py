@@ -6,7 +6,6 @@ from cytoflow.views.i_view import IView
 
 from matplotlib.widgets import RectangleSelector
 import matplotlib.pyplot as plt
-import matplotlib as mpl
 from matplotlib.patches import Rectangle
 
 @provides(ISelectionView)

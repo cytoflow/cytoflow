@@ -4,10 +4,8 @@ Created on Mar 15, 2015
 @author: brian
 """
 
-from traits.api import Interface, Str, HasTraits, Property, Instance, \
-                       DelegatesTo
+from traits.api import Interface, Str, HasTraits, Property, Instance
 from cytoflowgui.workflow_item import WorkflowItem
-from cytoflowgui.subset_model import SubsetModel
 
 VIEW_PLUGIN_EXT = 'edu.mit.synbio.cytoflow.view_plugins'
 

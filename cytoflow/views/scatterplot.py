@@ -8,7 +8,6 @@ from cytoflow.views.i_view import IView
 from cytoflow.utility.util import num_hist_bins
 from cytoflow.views.sns_axisgrid import FacetGrid
 import matplotlib.pyplot as plt
-import numpy as np
 import seaborn as sns
 
 @provides(IView)

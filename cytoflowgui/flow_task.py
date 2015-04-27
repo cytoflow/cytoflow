@@ -7,7 +7,6 @@ Created on Feb 11, 2015
 import os.path
 
 from traits.api import Instance, List, Bool, Float, on_trait_change
-from pyface.api import error
 from pyface.tasks.api import Task, TaskLayout, PaneItem
 from envisage.api import Plugin, ExtensionPoint, contributes_to
 from envisage.ui.tasks.api import TaskFactory

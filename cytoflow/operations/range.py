@@ -35,6 +35,9 @@ class RangeOp(HasTraits):
     
     def is_valid(self, experiment):
         """Validate this operation against an experiment."""
+
+        if not self.name:
+            return False
         
         if not self.channel:
             return False

@@ -4,10 +4,9 @@ Created on Mar 15, 2015
 @author: brian
 '''
 
-from traits.api import HasStrictTraits, Instance, List, DelegatesTo, Event, \
-                       Enum, Property, cached_property, on_trait_change, \
-                       Any, Bool
-from traitsui.api import View, Item, Handler, error
+from traits.api import HasStrictTraits, Instance, List, DelegatesTo, Enum, \
+                       Property, cached_property, Bool
+from traitsui.api import View, Item, Handler
 from cytoflow import Experiment
 from cytoflow.operations.i_operation import IOperation
 from cytoflow.views.i_view import IView

@@ -39,9 +39,9 @@ class ThresholdOp(HasTraits):
         if self.channel not in experiment.channels:
             return False
         
-        if (self.threshold > experiment[self.channel].max() or
-            self.threshold < experiment[self.channel].min()):
-            return False
+#         if (self.threshold > experiment[self.channel].max() or
+#             self.threshold < experiment[self.channel].min()):
+#             return False
         
         return True
         

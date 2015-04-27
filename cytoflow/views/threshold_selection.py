@@ -11,7 +11,6 @@ from cytoflow.views.i_view import IView
 
 from matplotlib.widgets import Cursor
 import matplotlib.pyplot as plt
-import matplotlib as mpl
 from matplotlib.lines import Line2D
 
 @provides(ISelectionView)

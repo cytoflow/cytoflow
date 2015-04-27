@@ -13,8 +13,8 @@ if __name__ == '__main__':
 
 from traits.api import HasTraits, List, Interface, provides, Float, Property, \
                        Str, Instance, Bool
-from traitsui.api import View, Group, Item, CheckListEditor, HGroup, \
-                         ListEditor, InstanceEditor
+from traitsui.api import View, Item, CheckListEditor, HGroup, ListEditor, \
+                         InstanceEditor
 from value_bounds_editor import ValuesBoundsEditor
 from cytoflow import Experiment
 import numpy as np

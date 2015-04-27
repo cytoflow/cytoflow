@@ -7,7 +7,6 @@ from pyface.action.api import ToolBarManager
 from pyface.tasks.action.api import TaskAction
 from cytoflowgui.op_plugins import IOperationPlugin
 
-
 @provides(IDockPane)
 class WorkflowDockPane(DockPane):
     

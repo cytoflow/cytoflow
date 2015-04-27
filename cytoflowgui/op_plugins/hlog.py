@@ -8,7 +8,7 @@ from traitsui.api import Controller, View, Item, CheckListEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
-from cytoflow.operations import IOperation, HlogTransformOp
+from cytoflow import HlogTransformOp
 from cytoflowgui.op_plugins import OpHandlerMixin, IOperationPlugin, OP_PLUGIN_EXT
 
 class HLogHandler(Controller, OpHandlerMixin):

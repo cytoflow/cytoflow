@@ -22,11 +22,9 @@ from matplotlib.backends.backend_qt4agg import FigureCanvas
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 
-import numpy as np
-from traits.api import Float, Int, Any, Instance, on_trait_change, Property, Event
+from traits.api import Instance, Property, Event
 
 from pyface.widget import Widget
-from pyface.qt import QtGui
 
 class MPLFigureEditor(Widget):
  

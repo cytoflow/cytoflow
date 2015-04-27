@@ -6,8 +6,6 @@ from cytoflowgui.view_plugins import IViewPlugin
 from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.workflow import Workflow
 
-import threading
-
 class ViewDockPane(DockPane):
     """
     A DockPane to manipulate the traits of the currently selected view.

@@ -8,13 +8,10 @@ from traitsui.api import View, Item, EnumEditor, Controller
 from envisage.api import Plugin, contributes_to
 from traits.api import provides, DelegatesTo, Callable
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT
-from cytoflow import Range2DOp, ScatterplotView
+from cytoflow import Range2DOp, ScatterplotView, RangeSelection2D
 from pyface.api import ImageResource
-from cytoflow.views.threshold_selection import ThresholdSelection
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin
 from cytoflowgui.subset_editor import SubsetEditor
-from cytoflow.views.histogram import HistogramView
-from cytoflow.views.range_selection_2d import RangeSelection2D
 from cytoflow.views.i_selectionview import ISelectionView
 
 class Range2DHandler(Controller, OpHandlerMixin):

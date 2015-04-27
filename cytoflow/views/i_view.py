@@ -4,8 +4,7 @@ Created on Feb 23, 2015
 @author: brian
 '''
 
-from traits.api import Interface, Str, List
-from matplotlib.pyplot import plot
+from traits.api import Interface, Str
 
 class IView(Interface):
     """An interface for a visualization of flow data.
