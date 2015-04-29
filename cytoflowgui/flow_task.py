@@ -24,8 +24,8 @@ from cytoflowgui.workflow_item import WorkflowItem
 from cytoflow import Tube
 
 from util import UniquePriorityQueue
-
 import threading
+import pickle as pickle
 
 class FlowTask(Task):
     """
@@ -138,11 +138,13 @@ class FlowTask(Task):
                             action = 'open',
                             wildcard='*.flow')
         if dialog.open() == OK:
-            # Recall that 'open_file' was defined in the previous section.
+
             self.open_file(dialog.path)
             
     def open_file(self, path):
-        pass
+        f = open(path, 'r')
+        unpickler = pickle.Unpickler(f)
+        self.model = unpickler.load()
         
     def save(self):
         """ Shows a dialog to open a file.
@@ -151,11 +153,13 @@ class FlowTask(Task):
                             action = 'save as', 
                             wildcard='*.flow')
         if dialog.open() == OK:
-            # Recall that 'open_file' was defined in the previous section.
             self.save_file(dialog.path)
             
     def save_file(self, path):
-        pass
+        # TODO - error handling
+        f = open(path, 'w')
+        pickler = pickle.Pickler(f, 0)  # text protocol for now
+        pickler.dump(self.model)
     
     def add_operation(self, op_id):
         # first, find the matching plugin

@@ -25,7 +25,7 @@ class WorkflowItem(HasStrictTraits):
     name = DelegatesTo('operation')
     
     # the Task instance that serves as controller for this model
-    task = Instance('flow_task.FlowTask')
+    task = Instance('flow_task.FlowTask', transient = True)
     
     # the operation this Item wraps
     operation = Instance(IOperation)
@@ -36,7 +36,7 @@ class WorkflowItem(HasStrictTraits):
     
     # the Experiment that is the result of applying *operation* to a 
     # previous Experiment
-    result = Instance(Experiment)
+    result = Instance(Experiment, transient = True)
     
     # the IViews against the output of this operation
     views = List(IView)
@@ -48,7 +48,7 @@ class WorkflowItem(HasStrictTraits):
     default_view = Instance(IView)
     
     # is this wi plottable with the current view?
-    is_plottable = Property(Bool)
+    is_plottable = Property(Bool, transient = True)
     
     # the previous WorkflowItem in the workflow
     # self.result = self.apply(previous.result)
@@ -62,7 +62,7 @@ class WorkflowItem(HasStrictTraits):
     valid = Enum("invalid", "updating", "valid")
     
     # the icon for the vertical notebook view.  Qt specific, sadly.
-    icon = Property(depends_on = 'valid')
+    icon = Property(depends_on = 'valid', transient = True)
     
     def default_traits_view(self):
         return View(Item('handler',
