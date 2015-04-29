@@ -82,7 +82,7 @@ class RangeSelection(HasTraits):
             y = (ymin + ymax) / 2.0
             self._hline = plt.plot([self.low, self.high], 
                                    [y, y], 
-                                   color='grey', 
+                                   color='blue', 
                                    linewidth = 2)[0]
                                    
         plt.gcf().canvas.draw()
@@ -110,12 +110,9 @@ class RangeSelection(HasTraits):
         self.high = xmax
         
 if __name__ == '__main__':
-    import seaborn as sns
     import cytoflow as flow
     import FlowCytometryTools as fc
-    
-    import matplotlib as mpl
-    import matplotlib.pyplot as plt
+
     mpl.rcParams['savefig.dpi'] = 2 * mpl.rcParams['savefig.dpi']
     
     tube1 = fc.FCMeasurement(ID='Test 1', 
@@ -140,9 +137,9 @@ if __name__ == '__main__':
     hist.channel = "V2-A"
     hist.huefacet = 'Dox'
     
-    range = flow.RangeSelection(view = hist) 
+    range_view = flow.RangeSelection(view = hist) 
     
     plt.ioff()
-    range.plot(ex2)
-    range.interactive = True
+    range_view.plot(ex2)
+    range_view.interactive = True
     plt.show()

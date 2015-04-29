@@ -8,6 +8,8 @@ import os.path
 
 from traits.api import Instance, List, Bool, Float, on_trait_change
 from pyface.tasks.api import Task, TaskLayout, PaneItem
+from pyface.tasks.action.api import SMenu, SMenuBar, SToolBar, TaskAction
+from pyface.api import FileDialog, OK, ImageResource
 from envisage.api import Plugin, ExtensionPoint, contributes_to
 from envisage.ui.tasks.api import TaskFactory
 from flow_task_pane import FlowTaskPane
@@ -43,6 +45,19 @@ class FlowTask(Task):
     # plugin lists, to setup the interface
     op_plugins = List(IOperationPlugin)
     view_plugins = List(IViewPlugin)
+    
+    menu_bar = SMenuBar(SMenu(TaskAction(name='Open...', method='open',
+                                         accelerator='Ctrl+O'),
+                              TaskAction(name='Save', method='save',
+                                         accelerator='Ctrl+S'),
+                              id='File', name='&File'))
+    
+    tool_bars = [ SToolBar(TaskAction(method='open',
+                                      tooltip='Open a file',
+                                      image=ImageResource('document_open')),
+                           TaskAction(method='save',
+                                      tooltip='Save the current file',
+                                      image=ImageResource('document_save'))) ]
     
     # are we debugging?  ie, do we need a default setup?
     debug = Bool
@@ -116,6 +131,32 @@ class FlowTask(Task):
                 ViewDockPane(plugins = self.view_plugins,
                              task = self)]
         
+    def open(self):
+        """ Shows a dialog to open a file.
+        """
+        dialog = FileDialog(parent=self.window.control, 
+                            action = 'open',
+                            wildcard='*.flow')
+        if dialog.open() == OK:
+            # Recall that 'open_file' was defined in the previous section.
+            self.open_file(dialog.path)
+            
+    def open_file(self, path):
+        pass
+        
+    def save(self):
+        """ Shows a dialog to open a file.
+        """
+        dialog = FileDialog(parent=self.window.control,
+                            action = 'save as', 
+                            wildcard='*.flow')
+        if dialog.open() == OK:
+            # Recall that 'open_file' was defined in the previous section.
+            self.save_file(dialog.path)
+            
+    def save_file(self, path):
+        pass
+    
     def add_operation(self, op_id):
         # first, find the matching plugin
         plugin = next((x for x in self.op_plugins if x.id == op_id))
