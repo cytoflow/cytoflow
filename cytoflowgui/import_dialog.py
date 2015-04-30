@@ -64,14 +64,39 @@ class ExperimentColumn(ObjectColumn):
         
     
 class ExperimentDialogModel(HasTraits):
- 
-    # the tubes
-    tubes = List(Tube)
+    """
+    The model for the Experiment setup dialog.
     
-    # the traits on the tubes that are experimental conditions
-    conditions = List(Str)
+    This model depends on duck-typing ("if it walks like a duck, and quacks
+    like a duck...").  Because we want to use all of the TableEditor's nice
+    features, each row needs to be an instance, and each column a Trait.
+    So, each Tube instance represents a single tube, and each experimental
+    condition (as well as the tube name, its file, and optional plate row and 
+    col) are traits. These traits are dynamically added to Tube INSTANCES 
+    (NOT THE TUBE CLASS.)  Then, we add appropriate columns to the table editor
+    to access these traits.
     
-    #the rest is for communicating with the View
+    This is slightly complicated by the fact that there are two different
+    kinds of traits we want to keep track of: traits that specify experimental
+    conditions (inducer concentration, time point, etc.) and other things
+    (file name, tube name, etc.).  We differentiate them because we enforce
+    the invariant that each tube MUST have a unique combination of experimental
+    conditions.  I used to do this with trait metadata (seems like the right
+    thing) .... but trait metadata on dynamic traits (both instance and
+    class) doesn't survive pickling.  >.>
+    
+    So: we keep a separate list of traits that are experimental conditions.
+    Every 'public' trait (doesn't start with '_') is given a column in the
+    editor; only those that are in the conditions list are considered for tests
+    of equality (to make sure combinations of experimental conditions are 
+    unique.)
+    
+    And of course, the 'transient' flag controls whether the trait is serialized
+    or not.
+    """
+    
+    # the tubes.  this is the model; the rest is for communicating with the View
+    tubes = Instance(List(Tube))
     
     # a collections.Counter that keeps track of duplicates for us.  rebuilt
     # whenever the Tube elements of self.tubes changes
@@ -119,13 +144,17 @@ class ExperimentDialogHandler(Controller):
         for tube in self.model.tubes:
             tube._parent = self.model
 
+        tube_traits = \
+            self.model.tubes[0].trait_names(transient = lambda x: x is not True)
+
         for tube in self.model.tubes:
             for cond in self.model.conditions:
                 assert(tube.trait(cond) is not None)
+            for trait_name in tube_traits:
+                pass
 
-        # and make sure the Tube class traits are synchronized with the 
-        # instance traits (handles the case where we unpicked a bunch of
-        # Tube instances)
+        
+
                 
 #         tube = self.model.tubes[0]
 #         for trait_name in tube.trait_names(transient = lambda x: x is not True):
