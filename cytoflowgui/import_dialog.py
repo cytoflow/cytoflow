@@ -11,7 +11,8 @@ if __name__ == '__main__':
     os.environ['TRAITS_DEBUG'] = "1"
     
 from traits.api import HasTraits, provides, Instance, Str, Int, List, \
-                       Bool, Enum, Float, DelegatesTo, Property, CStr
+                       Bool, Enum, Float, DelegatesTo, Property, CStr, Dict, \
+                       Trait
                        
 from traitsui.api import UI, Group, View, Item, TableEditor, OKCancelButtons, \
                          Controller
@@ -29,16 +30,7 @@ from pyface.ui.qt4.directory_dialog import DirectoryDialog as QtDirectoryDialog
 from FlowCytometryTools.core.containers import FCMeasurement, FCPlate
 from traitsui.table_column import ObjectColumn
 from collections import Counter
-from cytoflow.operations.import_op import Tube
-
-class LogFloat(Float):
-    """
-    A trait to represent a numeric condition on a log scale.
-    
-    Since I can't figure out how to add metadata to a trait class (just an
-    instance), we'll subclass it instead.  Don't need to override anything;
-    all we're really looking to change is the name.
-    """
+from cytoflow.operations.import_op import Tube, LogFloat
 
 class PlateDirectoryDialog(QtDirectoryDialog):
     """
@@ -64,8 +56,8 @@ class PlateDirectoryDialog(QtDirectoryDialog):
 class ExperimentColumn(ObjectColumn):
     
     # override ObjectColumn.get_cell_color
-    def get_cell_color(self, object):
-        if(object._parent.tubes_counter[object] > 1):
+    def get_cell_color(self, obj):
+        if(obj._parent.tubes_counter[object] > 1):
             return QtGui.QColor('lightpink')
         else:
             return super(ObjectColumn, self).get_cell_color(object)
@@ -73,8 +65,13 @@ class ExperimentColumn(ObjectColumn):
     
 class ExperimentDialogModel(HasTraits):
  
-    # the actual model; the rest is for communicating with the View
+    # the tubes
     tubes = List(Tube)
+    
+    # the conditions we're tracking, to aid in serialization
+    conditions = Dict(Str, Trait)
+    
+    #the rest is for communicating with the View
     
     # a collections.Counter that keeps track of duplicates for us.  rebuilt
     # whenever the Tube elements of self.tubes changes
@@ -111,7 +108,6 @@ class ExperimentDialogModel(HasTraits):
     def _get_tubes_counter(self):
         return Counter(self.tubes)
 
-
 class ExperimentDialogHandler(Controller):
 
     # keep around a ref to the underlying widget so we can add columns dynamically
@@ -122,6 +118,23 @@ class ExperimentDialogHandler(Controller):
         # set the parent model object for any preexisting tubes
         for tube in self.model.tubes:
             tube._parent = self.model
+
+        for tube in self.model.tubes:
+            for cond in self.model.conditions:
+                assert(tube.trait(cond) is not None)
+
+        # and make sure the Tube class traits are synchronized with the 
+        # instance traits (handles the case where we unpicked a bunch of
+        # Tube instances)
+                
+#         tube = self.model.tubes[0]
+#         for trait_name in tube.trait_names(transient = lambda x: x is not True):
+#             trait = tube.trait(trait_name)
+#             if not trait_name in Tube.class_trait_names():
+#                 Tube.add_class_trait(trait_name, trait) 
+            
+        
+        
             
         Controller.init_info(self, info)
     
@@ -157,13 +170,13 @@ class ExperimentDialogHandler(Controller):
         name = new_trait.condition_name
         
         if new_trait.condition_type == "String":
-            self._add_metadata(name, name + " (String)", Str)
+            self._add_metadata(name, name + " (String)", Str(condition = True))
         elif new_trait.condition_type == "Number":
-            self._add_metadata(name, name + " (Number)", Float)
+            self._add_metadata(name, name + " (Number)", Float(condition = True))
         elif new_trait.condition_type == "Number (Log)":
-            self._add_metadata(name, name + " (Log)", LogFloat)
+            self._add_metadata(name, name + " (Log)", LogFloat(condition = True))
         else:
-            self._add_metadata(name, name + " (T/F)", Bool)       
+            self._add_metadata(name, name + " (T/F)", Bool(condition = True))       
         
     def _on_add_tubes(self):
         """
@@ -196,12 +209,9 @@ class ExperimentDialogHandler(Controller):
         
         if dir_dialog.return_code != PyfaceOK:
             return
-        
-        #if not self.model.tubes:
-        #    self.dialog.size = (550, 300)
                 
-        self._add_metadata("Row", "Row", Str(transient = True))
-        self._add_metadata("Col", "Col", Int(transient = True))
+        self._add_metadata("Row", "Row", Str(condition = False))
+        self._add_metadata("Col", "Col", Int(condition = False))
         
         # TODO - error handling!
         # TODO - allow for different file name prototypes or manufacturers
@@ -237,13 +247,14 @@ class ExperimentDialogHandler(Controller):
         Add a new condition
         """
         
-        if not meta_name in Tube.class_trait_names():
-            Tube.add_class_trait(meta_name, meta_type)       
+        if not meta_name in self.model.conditions:
+            self.model.conditions.append(meta_name)
+            for tube in self.model.tubes:
+                tube.add_trait(meta_name, meta_type)     
+                tube.on_trait_change(self._try_multiedit, meta_name)
+                
             self.table_editor.columns.append(ExperimentColumn(name = meta_name,
                                                               label = column_name))
-            
-            for tube in self.model.tubes:
-                tube.on_trait_change(self._try_multiedit, meta_name)
                 
     def _remove_metadata(self, meta_name, column_name, meta_type):
         # TODO
@@ -322,10 +333,11 @@ class ExperimentDialog(Dialog):
         # need to keep a reference to the table editor so we can dynamically
         # add columns to it.
         self.handler.table_editor = self.ui.get_editors('tubes')[0]
-                        
+        
         # and if the Tube class already has traits defined, add them to the 
         # table editor
-        ext_traits = Tube.class_trait_names(transient = lambda x: x is not True)
+        ext_traits = Tube.class_trait_names(condition = True,
+                                            transient = lambda x: x is not True)
         for trait in ext_traits:
             self.handler.table_editor.columns.append(ExperimentColumn(name = trait,
                                                                       label = trait))

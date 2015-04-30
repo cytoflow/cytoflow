@@ -21,7 +21,7 @@ from cytoflowgui.op_plugins import IOperationPlugin, ImportPlugin, OP_PLUGIN_EXT
 from cytoflowgui.view_plugins import IViewPlugin, VIEW_PLUGIN_EXT
 from cytoflowgui.workflow_item import WorkflowItem
 
-from cytoflow import Tube
+
 
 from util import UniquePriorityQueue
 import threading
@@ -93,25 +93,23 @@ class FlowTask(Task):
         self.model.selected = wi
         
         # if we're debugging, add a few data bits
-        if self.debug:
-            Tube.add_class_trait("Dox", Float)
-            tube1 = Tube(Name = "Tube 1",
-                         File = "../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs",
-                         Dox = 0.01)
-            tube2 = Tube(Name = "Tube 2",
-                         File = "../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs",
-                         Dox = 0.1)
-            
-            wi.operation.tubes.append(tube1)
-            wi.operation.tubes.append(tube2)
-            
-#            wi.update()
-            
-            self.add_operation('edu.mit.synbio.cytoflowgui.op.hlog')
-            self.model.selected.operation.channels = ["V2-A", "Y2-A"]
-            self.model.selected.operation.name = "H"
-
-#            self.model.selected.update()
+#         if self.debug:
+#             from cytoflow import Tube
+#             from cytoflow.operations.import_op import LogFloat
+#             Tube.add_class_trait("Dox", LogFloat)
+#             tube1 = Tube(Name = "Tube 1",
+#                          File = "../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs",
+#                          Dox = LogFloat(0.01))
+#             tube2 = Tube(Name = "Tube 2",
+#                          File = "../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs",
+#                          Dox = LogFloat(0.1))
+#                
+#             wi.operation.tubes.append(tube1)
+#             wi.operation.tubes.append(tube2)
+#                
+#             self.add_operation('edu.mit.synbio.cytoflowgui.op.hlog')
+#             self.model.selected.operation.channels = ["V2-A", "Y2-A"]
+#             self.model.selected.operation.name = "H"
     
     def prepare_destroy(self):
         self.model = None
@@ -138,13 +136,33 @@ class FlowTask(Task):
                             action = 'open',
                             wildcard='*.flow')
         if dialog.open() == OK:
-
             self.open_file(dialog.path)
             
     def open_file(self, path):
         f = open(path, 'r')
         unpickler = pickle.Unpickler(f)
-        self.model = unpickler.load()
+        new_model = unpickler.load()
+
+        for wi in self.model.workflow:
+            wi.task = self
+        
+        self.model.workflow[:] = new_model.workflow
+        self.model.selected = new_model.selected
+
+        wi = self.model.workflow[0]
+        while True:
+            wi.valid = "invalid"
+            with self.worker_lock:
+                self.to_update.put_nowait((self.model.workflow.index(wi), wi))
+            if wi.next:
+                wi = wi.next
+            else:
+                break
+            
+        # start the worker thread processing
+        with self.worker_lock:
+            if not self.to_update.empty():
+                self.worker_flag.set()
         
     def save(self):
         """ Shows a dialog to open a file.
