@@ -4,7 +4,7 @@ Created on Mar 20, 2015
 @author: brian
 '''
 from traits.api import HasTraits, provides, Str, List, Bool, Instance, \
-                       Property, property_depends_on, Int, Any, Float
+                       Property, property_depends_on, Int, Any, Float, Dict
 from cytoflow.operations.i_operation import IOperation
 from cytoflow import Experiment
 import FlowCytometryTools as fc
@@ -68,7 +68,11 @@ class ImportOp(HasTraits):
     coarse = Bool(False)
     coarse_events = Int(1000)
 
+    # a list of the tubes we're importing
     tubes = List(Tube)
+    
+    # the traits on the tube instances that are experimental conditions
+    conditions = List(Str)
           
     def is_valid(self, experiment = None):
         if not self.tubes:
@@ -80,6 +84,13 @@ class ImportOp(HasTraits):
         for idx, i in enumerate(self.tubes[0:-2]):
             for j in self.tubes[idx+1:]:
                 if i == j:
+                    return False
+                
+        for tube in self.tubes:
+            trait_names = tube.trait_names(transient = lambda x: x is not True,
+                                           condition = True)
+            for trait_name in trait_names:
+                if trait_name not in self.conditions:
                     return False
                 
 #         tube0 = self.tubes[0]

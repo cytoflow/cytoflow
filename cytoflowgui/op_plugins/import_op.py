@@ -68,8 +68,6 @@ class ImportHandler(Controller, OpHandlerMixin):
         
         d = None
         
-        #self.model.update = True
-        
     @cached_property
     def _get_samples(self):
         if self.wi.result is not None:

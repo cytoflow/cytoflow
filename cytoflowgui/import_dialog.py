@@ -68,8 +68,8 @@ class ExperimentDialogModel(HasTraits):
     # the tubes
     tubes = List(Tube)
     
-    # the conditions we're tracking, to aid in serialization
-    conditions = Dict(Str, Trait)
+    # the traits on the tubes that are experimental conditions
+    conditions = List(Str)
     
     #the rest is for communicating with the View
     
