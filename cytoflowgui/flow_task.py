@@ -145,11 +145,37 @@ class FlowTask(Task):
         unpickler = pickle.Unpickler(f)
         new_model = unpickler.load()
 
+        # update the link back to the controller (ie, self)
         for wi in self.model.workflow:
             wi.task = self
+            
+        self.model.workflow[:] = []
         
-        self.model.workflow[:] = new_model.workflow
-        self.model.selected = new_model.selected
+        ## TODO - workflow gets replace without operations being run
+        # step-by-step.  that means for a basic import --> hlog workflow,
+        # the hlog op's channels get cleared because:
+        # - the import wi gets created
+        # - the hlog wi gets created
+        # - the hlog view asks for the set of available channels, which depends
+        #   on prev_result
+        # - there aren't any; so the view says "there aren't any channels"
+        #   and updates the underlying hlog op
+        # - the import op gets run
+        # - now there are channels in the hlog wi's prev_result
+        # - they get shown; but the "selected" channels that we just loaded
+        #   are gone.
+        
+        # this gets at the issue i was thinking about earlier today -- 
+        # how to best decouple the workflow from the data it's working on?
+        # and still retain the dynamicity of the interface?  hmmmm.
+            
+#         from event_tracer import record_events 
+#         
+#         with record_events() as container:
+#             self.model.workflow[:] = new_model.workflow
+#             self.model.selected = new_model.selected
+# 
+#         container.save_to_directory(os.getcwd()) 
 
         wi = self.model.workflow[0]
         while True:

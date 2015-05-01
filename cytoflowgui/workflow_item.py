@@ -116,7 +116,5 @@ class WorkflowItem(HasStrictTraits):
 
     @cached_property
     def _get_handler(self):
-        # operation.handler isn't statically defined; it's dynamically
-        # associated with this instance in flow_task
         return self.operation.handler_factory(model = self.operation,
                                               wi = self)
