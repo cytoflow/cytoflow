@@ -4,9 +4,9 @@ Created on Apr 23, 2015
 @author: brian
 '''
 
-from traitsui.api import View, Item, Controller, EnumEditor
+from traitsui.api import View, Item, Controller, EnumEditor, Handler
 from envisage.api import Plugin, contributes_to
-from traits.api import provides, Callable
+from traits.api import provides, Callable, Instance
 
 from cytoflow import HexbinView
 from cytoflowgui.subset_editor import SubsetEditor
@@ -41,7 +41,8 @@ class HexbinHandler(Controller, ViewHandlerMixin):
                          editor = SubsetEditor(experiment = "handler.wi.result")))
 
 class HexbinPluginView(HexbinView):
-    handler_factory = Callable(HexbinHandler)
+    handler = Instance(Handler, transient = True)
+    handler_factory = Callable(HexbinHandler, transient = True)
     
     def is_wi_valid(self, wi):
         return wi.result and self.is_valid(wi.result)

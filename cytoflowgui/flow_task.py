@@ -95,18 +95,19 @@ class FlowTask(Task):
         # if we're debugging, add a few data bits
 #         if self.debug:
 #             from cytoflow import Tube
-#             from cytoflow.operations.import_op import LogFloat
-#             Tube.add_class_trait("Dox", LogFloat)
 #             tube1 = Tube(Name = "Tube 1",
-#                          File = "../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs",
-#                          Dox = LogFloat(0.01))
+#                          file = "../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs")
+#             tube1.add_metadata("Dox", Float, True)
+#             tube1.Dox = 0.01
+#             
 #             tube2 = Tube(Name = "Tube 2",
-#                          File = "../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs",
-#                          Dox = LogFloat(0.1))
-#                
+#                          file = "../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs")
+#             tube2.add_metadata("Dox", Float, True)
+#             tube2.Dox = 0.1
+#                   
 #             wi.operation.tubes.append(tube1)
 #             wi.operation.tubes.append(tube2)
-#                
+#                  
 #             self.add_operation('edu.mit.synbio.cytoflowgui.op.hlog')
 #             self.model.selected.operation.channels = ["V2-A", "Y2-A"]
 #             self.model.selected.operation.name = "H"

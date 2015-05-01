@@ -55,7 +55,6 @@ class ImportHandler(Controller, OpHandlerMixin):
 
         if self.wi.operation.tubes is not None:
             d.model.tubes = self.wi.operation.tubes
-            d.model.conditions = self.wi.operation.conditions
             
         d.size = (550, 500)
         d.open()
@@ -64,7 +63,6 @@ class ImportHandler(Controller, OpHandlerMixin):
             return
         
         self.wi.operation.tubes = d.model.tubes
-        self.wi.operation.conditions = d.model.conditions
         
         d = None
         

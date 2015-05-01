@@ -11,8 +11,7 @@ if __name__ == '__main__':
     os.environ['TRAITS_DEBUG'] = "1"
     
 from traits.api import HasTraits, provides, Instance, Str, Int, List, \
-                       Bool, Enum, Float, DelegatesTo, Property, CStr, Dict, \
-                       Trait
+                       Bool, Enum, Float, DelegatesTo, Property, CStr
                        
 from traitsui.api import UI, Group, View, Item, TableEditor, OKCancelButtons, \
                          Controller
@@ -31,6 +30,12 @@ from FlowCytometryTools.core.containers import FCMeasurement, FCPlate
 from traitsui.table_column import ObjectColumn
 from collections import Counter
 from cytoflow.operations.import_op import Tube, LogFloat
+
+def not_true ( value ):
+    return (value is not True)
+
+def not_false ( value ):
+    return (value is not False)
 
 class PlateDirectoryDialog(QtDirectoryDialog):
     """
@@ -96,7 +101,7 @@ class ExperimentDialogModel(HasTraits):
     """
     
     # the tubes.  this is the model; the rest is for communicating with the View
-    tubes = Instance(List(Tube))
+    tubes = List(Tube)
     
     # a collections.Counter that keeps track of duplicates for us.  rebuilt
     # whenever the Tube elements of self.tubes changes
@@ -143,27 +148,6 @@ class ExperimentDialogHandler(Controller):
         # set the parent model object for any preexisting tubes
         for tube in self.model.tubes:
             tube._parent = self.model
-
-        tube_traits = \
-            self.model.tubes[0].trait_names(transient = lambda x: x is not True)
-
-        for tube in self.model.tubes:
-            for cond in self.model.conditions:
-                assert(tube.trait(cond) is not None)
-            for trait_name in tube_traits:
-                pass
-
-        
-
-                
-#         tube = self.model.tubes[0]
-#         for trait_name in tube.trait_names(transient = lambda x: x is not True):
-#             trait = tube.trait(trait_name)
-#             if not trait_name in Tube.class_trait_names():
-#                 Tube.add_class_trait(trait_name, trait) 
-            
-        
-        
             
         Controller.init_info(self, info)
     
@@ -199,13 +183,13 @@ class ExperimentDialogHandler(Controller):
         name = new_trait.condition_name
         
         if new_trait.condition_type == "String":
-            self._add_metadata(name, name + " (String)", Str(condition = True))
+            self._add_metadata(name, name + " (String)", Str, condition = True)
         elif new_trait.condition_type == "Number":
-            self._add_metadata(name, name + " (Number)", Float(condition = True))
+            self._add_metadata(name, name + " (Number)", Float, condition = True)
         elif new_trait.condition_type == "Number (Log)":
-            self._add_metadata(name, name + " (Log)", LogFloat(condition = True))
+            self._add_metadata(name, name + " (Log)", LogFloat, condition = True)
         else:
-            self._add_metadata(name, name + " (T/F)", Bool(condition = True))       
+            self._add_metadata(name, name + " (T/F)", Bool, condition = True)       
         
     def _on_add_tubes(self):
         """
@@ -221,7 +205,7 @@ class ExperimentDialogHandler(Controller):
             return
         
         for path in file_dialog.paths:
-            tube = Tube(File = path)
+            tube = Tube(_file = path)
             tube._parent = self.model
             fcs = FCMeasurement(ID='new tube', datafile = path)
             tube.Name = fcs.meta['$SRC']
@@ -252,7 +236,7 @@ class ExperimentDialogHandler(Controller):
         
         for well_name in plate.data:
             well_data = plate[well_name]
-            tube = Tube(File = well_data.datafile,
+            tube = Tube(_file = well_data.datafile,
                         Row = well_data.position['new plate'][0],
                         Col = well_data.position['new plate'][1],
                         Name = well_data.meta['$SRC'])
@@ -271,19 +255,20 @@ class ExperimentDialogHandler(Controller):
             if tube != obj:
                 tube.trait_set( **dict([(trait_name, new)]))
         
-    def _add_metadata(self, meta_name, column_name, meta_type):
+    def _add_metadata(self, name, label, klass, condition):
         """
-        Add a new condition
+        Add a new tube metadata
         """
         
-        if not meta_name in self.model.conditions:
-            self.model.conditions.append(meta_name)
+        traits = self.model.tubes[0].trait_names(transient = not_true)
+            
+        if not name in traits:
             for tube in self.model.tubes:
-                tube.add_trait(meta_name, meta_type)     
-                tube.on_trait_change(self._try_multiedit, meta_name)
-                
-            self.table_editor.columns.append(ExperimentColumn(name = meta_name,
-                                                              label = column_name))
+                tube.add_metadata(name, klass, klass.default, condition)
+                tube.on_trait_change(self._try_multiedit, name)    
+
+            self.table_editor.columns.append(ExperimentColumn(name = name,
+                                                              label = label))
                 
     def _remove_metadata(self, meta_name, column_name, meta_type):
         # TODO
@@ -365,12 +350,24 @@ class ExperimentDialog(Dialog):
         
         # and if the Tube class already has traits defined, add them to the 
         # table editor
-        ext_traits = Tube.class_trait_names(condition = True,
-                                            transient = lambda x: x is not True)
-        for trait in ext_traits:
-            self.handler.table_editor.columns.append(ExperimentColumn(name = trait,
-                                                                      label = trait))
-  
+        if len(self.model.tubes) > 0:
+            trait_to_col = {"Str" : " (String)",
+                            "Float" : " (Number)",
+                            "LogFloat" : " (Log)",
+                            "Bool" : " (T/F)",
+                            "Int" : " (Int)"}
+            
+            trait_names = self.model.tubes[0].trait_names(transient = not_true,
+                                                          show = not_false)
+            for trait_name in trait_names:
+                if trait_name.startswith("_") or trait_name == "Name":
+                    continue
+                trait = self.model.tubes[0].trait(trait_name)
+                trait_type = trait.trait_type.__class__.__name__
+                col_name = trait_name + trait_to_col[trait_type]
+                self.handler.table_editor.columns.append(ExperimentColumn(name = trait_name,
+                                                                          label = col_name))
+      
         return self.ui.control
     
     def destroy(self):

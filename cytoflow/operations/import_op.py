@@ -8,6 +8,9 @@ from cytoflow.operations.i_operation import IOperation
 from cytoflow import Experiment
 import FlowCytometryTools as fc
 
+def not_true ( value ):
+    return (value is not True)
+
 class LogFloat(Float):
     """
     A trait to represent a numeric condition on a log scale.
@@ -51,17 +54,20 @@ class Tube(HasTraits):
     
     Name = Str
     
-    _file = Str
-    _conditions = List(Str)
+    file = Str(show = False)
+    conditions = List(Str, show = False)
     
     # any added trait starting with an underscore is automatically transient
-    __ = Any(transient = True)
+    __ = Any(transient = True, show = False)
+    
+    def add_metadata(self, name, klass, condition):
+        self.add_trait(name, klass)
+        if condition:
+            self.conditions.append(name)
     
     def __hash__(self):
         ret = int(0)
-        for trait in self.trait_names(transient = lambda x: x is not True):
-            if trait not in self._conditions:
-                continue
+        for trait in self.conditions:
             if not ret:
                 ret = hash(self.trait_get(trait)[trait])
             else:
@@ -70,13 +76,13 @@ class Tube(HasTraits):
         return ret
     
     def __eq__(self, other):
-        for trait in self.trait_names(transient = lambda x: x is not True):
-            if trait not in self._conditions:
-                continue
+        for trait in self.conditions:
             if not self.trait_get(trait)[trait] == other.trait_get(trait)[trait]:
                 return False
                 
         return True
+    
+    # TODO - add pickle/unpickle support for dynamic traits.
 
 @provides(IOperation)
 class ImportOp(HasTraits):
@@ -93,9 +99,6 @@ class ImportOp(HasTraits):
 
     # a list of the tubes we're importing
     tubes = List(Tube)
-    
-    # the traits on the tube instances that are experimental conditions
-    conditions = List(Str)
           
     def is_valid(self, experiment = None):
         if not self.tubes:
@@ -104,15 +107,19 @@ class ImportOp(HasTraits):
         if len(self.tubes) == 0:
             return False
         
-        tube0_traits = \
-            set(self.tubes[0].trait_names(transient = lambda x: x is not True))
+        tube0_traits = set(self.tubes[0].trait_names(transient = not_true))
+        tube0_conditions = set(self.tubes[0].conditions)
         for tube in self.tubes:
-            tube_traits = \
-                set(tube.trait_names(transient = lambda x: x is not True))
+            tube_traits = set(tube.trait_names(transient = not_true))
+            tube_conditions = set(tube.conditions)
             if len(tube0_traits ^ tube_traits) > 0: 
                 return False
+            if not tube_traits.issuperset(tube_conditions):
+                return False
+            if len(tube0_conditions ^ tube_conditions) > 0:
+                return False
 
-        for idx, i in enumerate(self.tubes[0:-2]):
+        for idx, i in enumerate(self.tubes[0:-1]):
             for j in self.tubes[idx+1:]:
                 if i == j:
                     return False
@@ -132,10 +139,9 @@ class ImportOp(HasTraits):
                           "Bool" : "bool",
                           "Int" : "int"}
             
-        conditions = self.tube[0]._conditions
+        conditions = self.tubes[0].conditions
         
         for condition in conditions:
-            
             trait = self.tubes[0].trait(condition)
             trait_type = trait.trait_type.__class__.__name__
         
@@ -144,7 +150,7 @@ class ImportOp(HasTraits):
                 experiment.metadata[condition]["repr"] = "Log"
         
         for tube in self.tubes:
-            tube_fc = fc.FCMeasurement(ID=tube.Name, datafile=tube._file)
-            experiment.add_tube(tube_fc, tube.trait_get(conditions))
+            tube_fc = fc.FCMeasurement(ID=tube.Name, datafile=tube.file)
+            experiment.add_tube(tube_fc, tube.trait_get(*conditions))
             
         return experiment

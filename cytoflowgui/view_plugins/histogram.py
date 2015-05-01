@@ -4,9 +4,9 @@ Created on Feb 24, 2015
 @author: brian
 """
 
-from traitsui.api import View, Item, Controller, EnumEditor
+from traitsui.api import View, Item, Controller, EnumEditor, Handler
 from envisage.api import Plugin, contributes_to
-from traits.api import provides, Callable
+from traits.api import provides, Callable, Instance
 
 from cytoflow import HistogramView
 from cytoflowgui.subset_editor import SubsetEditor
@@ -38,8 +38,8 @@ class HistogramHandler(Controller, ViewHandlerMixin):
                          editor = SubsetEditor(experiment = "handler.wi.result")))
     
 class HistogramPluginView(HistogramView):
-    
-    handler_factory = Callable(HistogramHandler)
+    handler = Instance(Handler, transient = True)
+    handler_factory = Callable(HistogramHandler, transient = True)
     
     def is_wi_valid(self, wi):
         return wi.result and self.is_valid(wi.result)

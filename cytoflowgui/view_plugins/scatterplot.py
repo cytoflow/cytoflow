@@ -4,9 +4,9 @@ Created on Apr 23, 2015
 @author: brian
 '''
 
-from traitsui.api import View, Item, Controller, EnumEditor
+from traitsui.api import View, Item, Controller, EnumEditor, Handler
 from envisage.api import Plugin, contributes_to
-from traits.api import provides, Callable
+from traits.api import provides, Callable, Instance
 
 from cytoflow import ScatterplotView
 from cytoflowgui.subset_editor import SubsetEditor
@@ -41,7 +41,8 @@ class ScatterplotHandler(Controller, ViewHandlerMixin):
                          editor = SubsetEditor(experiment = "handler.wi.result")))
 
 class ScatterplotPluginView(ScatterplotView):
-    handler_factory = Callable(ScatterplotHandler)
+    handler = Instance(Handler, transient = True)
+    handler_factory = Callable(ScatterplotHandler, transient = True)
     
     def is_wi_valid(self, wi):
         return wi.result and self.is_valid(wi.result)
