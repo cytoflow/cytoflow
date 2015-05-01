@@ -53,8 +53,7 @@ class ImportHandler(Controller, OpHandlerMixin):
 
         d = ExperimentDialog()
 
-        if self.wi.operation.tubes is not None:
-            d.model.tubes = self.wi.operation.tubes
+        d.model.init_model(self.model)
             
         d.size = (550, 500)
         d.open()
@@ -62,7 +61,7 @@ class ImportHandler(Controller, OpHandlerMixin):
         if d.return_code is not PyfaceOK:
             return
         
-        self.wi.operation.tubes = d.model.tubes
+        d.model.update_import_op(self.model)
         
         d = None
         

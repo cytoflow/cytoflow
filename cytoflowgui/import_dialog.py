@@ -11,7 +11,8 @@ if __name__ == '__main__':
     os.environ['TRAITS_DEBUG'] = "1"
     
 from traits.api import HasTraits, provides, Instance, Str, Int, List, \
-                       Bool, Enum, Float, DelegatesTo, Property, CStr
+                       Bool, Enum, Float, DelegatesTo, Property, CStr, \
+                       HasStrictTraits
                        
 from traitsui.api import UI, Group, View, Item, TableEditor, OKCancelButtons, \
                          Controller
@@ -29,7 +30,8 @@ from pyface.ui.qt4.directory_dialog import DirectoryDialog as QtDirectoryDialog
 from FlowCytometryTools.core.containers import FCMeasurement, FCPlate
 from traitsui.table_column import ObjectColumn
 from collections import Counter
-from cytoflow.operations.import_op import Tube, LogFloat
+
+from cytoflow import Tube as CytoflowTube
 
 def not_true ( value ):
     return (value is not True)
@@ -37,41 +39,26 @@ def not_true ( value ):
 def not_false ( value ):
     return (value is not False)
 
-class PlateDirectoryDialog(QtDirectoryDialog):
+class LogFloat(Float):
     """
-    A custom open file dialog for opening plates, so we can specify different
-    file name --> plate position mappings.
+    A trait to represent a numeric condition on a log scale.
+    
+    Since I can't figure out how to add metadata to a trait class (just an
+    instance), we'll subclass it instead.  Don't need to override anything;
+    all we're really looking to change is the name.
     """
+
+class Tube(HasStrictTraits):
+    """
+    The model for a tube in an experiment.
     
-    def _create_control(self, parent):
-        self.dlg = QtGui.QFileDialog(parent, self.title, self.default_path)
+    I originally wanted to make the Tube in the ImportDialog and the Tube in
+    the ImportOp the same, but that fell apart when I tried to implement
+    serialization (dynamic traits don't survive pickling.)  (well, their values
+    do, but neither the trait type nor the metadata do.)
     
-        self.dlg.setViewMode(QtGui.QFileDialog.Detail | QtGui.QFileDialog.ShowDirsOnly)
-        self.dlg.setFileMode(QtGui.QFileDialog.Directory)
-    
-        self.dlg.setNameFilters(["one", "two"])
-        self.dlg.setReadOnly(True)
-    
-        return self.dlg
-    
-    def selectedNameFilter(self):
-        return self.dlg.selectedNameFilter()
-    
-    
-class ExperimentColumn(ObjectColumn):
-    
-    # override ObjectColumn.get_cell_color
-    def get_cell_color(self, obj):
-        if(obj._parent.tubes_counter[object] > 1):
-            return QtGui.QColor('lightpink')
-        else:
-            return super(ObjectColumn, self).get_cell_color(object)
+    Oh well.
         
-    
-class ExperimentDialogModel(HasTraits):
-    """
-    The model for the Experiment setup dialog.
-    
     This model depends on duck-typing ("if it walks like a duck, and quacks
     like a duck...").  Because we want to use all of the TableEditor's nice
     features, each row needs to be an instance, and each column a Trait.
@@ -86,18 +73,59 @@ class ExperimentDialogModel(HasTraits):
     conditions (inducer concentration, time point, etc.) and other things
     (file name, tube name, etc.).  We differentiate them because we enforce
     the invariant that each tube MUST have a unique combination of experimental
-    conditions.  I used to do this with trait metadata (seems like the right
-    thing) .... but trait metadata on dynamic traits (both instance and
-    class) doesn't survive pickling.  >.>
+    conditions.  We do this with trait metadata: "condition == True" means 
+    "is an experimental condition" (everything but File, Name, Row, Column, 
+    _parent).
     
-    So: we keep a separate list of traits that are experimental conditions.
-    Every 'public' trait (doesn't start with '_') is given a column in the
-    editor; only those that are in the conditions list are considered for tests
-    of equality (to make sure combinations of experimental conditions are 
-    unique.)
+    We also use the "transient" flag to specify traits that shouldn't be 
+    displayed in the editor.  This matches well with the traits that
+    every HasTraits-derived class has by default (all of which are transient.)
+    """
     
-    And of course, the 'transient' flag controls whether the trait is serialized
-    or not.
+    # these are the traits that every tube has.  every other trait is
+    # dynamically created. 
+
+    # the tube or well name.  pulled from FCS metadata
+    Name = Str
+    
+    # the file name.
+    _file = Str(transient = True)
+    
+    # need a link to the model; needed for row coloring
+    _parent = Instance("ExperimentDialogModel", transient = True)
+    
+    def __hash__(self):
+        ret = int(0)
+        for trait in self.trait_names(condition = True):
+            if not ret:
+                ret = hash(self.trait_get(trait)[trait])
+            else:
+                ret = ret ^ hash(self.trait_get(trait)[trait])
+                
+        return ret
+    
+    def __eq__(self, other):
+        for trait in self.trait_names(condition = True):
+            if not self.trait_get(trait)[trait] == other.trait_get(trait)[trait]:
+                return False
+                
+        return True
+
+    
+class ExperimentColumn(ObjectColumn):
+    
+    # override ObjectColumn.get_cell_color
+    def get_cell_color(self, obj):
+        if(obj._parent.tubes_counter[object] > 1):
+            return QtGui.QColor('lightpink')
+        else:
+            return super(ObjectColumn, self).get_cell_color(object)
+        
+    
+class ExperimentDialogModel(HasTraits):
+    """
+    The model for the Experiment setup dialog.
+
     """
     
     # the tubes.  this is the model; the rest is for communicating with the View
@@ -134,29 +162,106 @@ class ExperimentDialogModel(HasTraits):
             resizable = True
         )
     
+    def init_model(self, op):
+        dtype_to_trait = {"category" : Str,
+                          "float" : Float,
+                          "log" : LogFloat,
+                          "bool" : Bool,
+                          "int" : Int}
+        
+        has_row = any(tube.row for tube in op.tubes)
+        has_col = any(tube.col for tube in op.tubes)
+        for op_tube in op.tubes:
+            tube = Tube(Name = op_tube.name,
+                        _file = op_tube.file)
+            if has_row:
+                tube.add_trait("Row", Str)
+                tube.Row = op_tube.row
+            if has_col:
+                tube.add_trait("Col", Str)
+                
+            for condition in op_tube.conditions:
+                condition_dtype = op.conditions[condition]
+                condition_trait = \
+                    dtype_to_trait[condition_dtype](condition = True)
+                tube.add_trait(condition, condition_trait)
+            tube.trait_set(**op_tube.conditions)
+    
+    def update_import_op(self, op):
+        trait_to_dtype = {"Str" : "category",
+                          "Float" : "float",
+                          "LogFloat" : "log",
+                          "Bool" : "bool",
+                          "Int" : "int"}
+        
+        op.conditions.clear()
+        for trait_name in self.tubes[0].trait_names(condition = True):
+            trait = self.tubes[0].trait(trait_name)
+            trait_type = trait.trait_type.__class__.__name__
+            op.conditions[trait_name] = trait_to_dtype[trait_type]
+            
+        for tube in self.tubes:
+            op_tube = CytoflowTube(name = tube.Name,
+                                   file = tube._file)
+            
+            if "Row" in tube.trait_names():
+                op_tube.row = tube.Row
+                
+            if "Col" in tube.trait_names():
+                op_tube.col = tube.Col
+                
+            op_tube.conditions = tube.trait_get(condition = True)
+            
+            # AFAICT this is going to cause the op to reload THE ENTIRE
+            # SET each time a tube is added.  >.>
+            # TODO - FIX THIS.  need a general strategy for only updating
+            # if there's a "pause" in the action.
+            op.tubes.append(op_tube)
+    
     ## i'd love to cache this, but it screws up the coloring stuff  :-/
     def _get_tubes_counter(self):
         return Counter(self.tubes)
+
+
+class PlateDirectoryDialog(QtDirectoryDialog):
+    """
+    A custom open file dialog for opening plates, so we can specify different
+    file name --> plate position mappings.
+    """
+    
+    def _create_control(self, parent):
+        self.dlg = QtGui.QFileDialog(parent, self.title, self.default_path)
+    
+        self.dlg.setViewMode(QtGui.QFileDialog.Detail | QtGui.QFileDialog.ShowDirsOnly)
+        self.dlg.setFileMode(QtGui.QFileDialog.Directory)
+    
+        self.dlg.setNameFilters(["one", "two"])
+        self.dlg.setReadOnly(True)
+    
+        return self.dlg
+    
+    def selectedNameFilter(self):
+        return self.dlg.selectedNameFilter()
 
 class ExperimentDialogHandler(Controller):
 
     # keep around a ref to the underlying widget so we can add columns dynamically
     table_editor = Instance(TableEditorQt)
     
-    def init_info(self, info):
-        
-        # set the parent model object for any preexisting tubes
-        for tube in self.model.tubes:
-            tube._parent = self.model
-            
-        Controller.init_info(self, info)
+#     def init_info(self, info):
+#         
+#         # set the parent model object for any preexisting tubes
+#         for tube in self.model.tubes:
+#             tube._parent = self.model
+#             
+#         Controller.init_info(self, info)
     
     def closed(self, info, is_ok):
         for tube in self.model.tubes:
             tube.on_trait_change(self._try_multiedit, '+', remove = True)
         
     def _on_delete_column(self, obj, column, info):
-        # TODO - be able to remove traits..... ?
+        # TODO - be able to remove traits.....
         pass
         
     def _on_add_condition(self):
@@ -183,13 +288,13 @@ class ExperimentDialogHandler(Controller):
         name = new_trait.condition_name
         
         if new_trait.condition_type == "String":
-            self._add_metadata(name, name + " (String)", Str, condition = True)
+            self._add_metadata(name, name + " (String)", Str(condition = True))
         elif new_trait.condition_type == "Number":
-            self._add_metadata(name, name + " (Number)", Float, condition = True)
+            self._add_metadata(name, name + " (Number)", Float(condition = True))
         elif new_trait.condition_type == "Number (Log)":
-            self._add_metadata(name, name + " (Log)", LogFloat, condition = True)
+            self._add_metadata(name, name + " (Log)", LogFloat(condition = True))
         else:
-            self._add_metadata(name, name + " (T/F)", Bool, condition = True)       
+            self._add_metadata(name, name + " (T/F)", Bool(condition = True))       
         
     def _on_add_tubes(self):
         """
@@ -205,10 +310,19 @@ class ExperimentDialogHandler(Controller):
             return
         
         for path in file_dialog.paths:
-            tube = Tube(_file = path)
-            tube._parent = self.model
             fcs = FCMeasurement(ID='new tube', datafile = path)
-            tube.Name = fcs.meta['$SRC']
+            
+            if len(self.model.tubes) > 0: 
+                # easier than making all the dynamic traits anew
+                tube = self.model.tubes[0].clone_traits(copy = "shallow")
+                tube.reset_traits(traits = tube.copyable_trait_names())
+            else:
+                tube = Tube()
+                
+            tube.trait_set(Name = fcs.meta['$SRC'],
+                           _file = path,
+                           _parent = self.model)
+            
             tube.on_trait_change(self._try_multiedit, '+')
             self.model.tubes.append(tube)
     
@@ -236,11 +350,20 @@ class ExperimentDialogHandler(Controller):
         
         for well_name in plate.data:
             well_data = plate[well_name]
-            tube = Tube(_file = well_data.datafile,
-                        Row = well_data.position['new plate'][0],
-                        Col = well_data.position['new plate'][1],
-                        Name = well_data.meta['$SRC'])
-            tube._parent = self.model
+            
+            if len(self.model.tubes) > 0: 
+                # easier than making all the dynamic traits anew
+                tube = self.model.tubes[0].clone_traits(copy = "shallow")
+                tube.reset_traits(traits = tube.copyable_trait_names())
+            else:
+                tube = Tube()
+            
+            tube.trait_set(_file = well_data.datafile,
+                           Row = well_data.position['new plate'][0],
+                           Col = well_data.position['new plate'][1],
+                           Name = well_data.meta['$SRC'],
+                           _parent = self.model)
+
             tube.on_trait_change(self._try_multiedit, '+')
             self.model.tubes.append(tube)
             
@@ -255,23 +378,23 @@ class ExperimentDialogHandler(Controller):
             if tube != obj:
                 tube.trait_set( **dict([(trait_name, new)]))
         
-    def _add_metadata(self, name, label, klass, condition):
+    def _add_metadata(self, name, label, trait):
         """
         Add a new tube metadata
         """
         
-        traits = self.model.tubes[0].trait_names(transient = not_true)
+        trait_names = self.model.tubes[0].trait_names(transient = not_true)
             
-        if not name in traits:
+        if not name in trait_names:
             for tube in self.model.tubes:
-                tube.add_metadata(name, klass, klass.default, condition)
+                tube.add_trait(name, trait)
                 tube.on_trait_change(self._try_multiedit, name)    
 
             self.table_editor.columns.append(ExperimentColumn(name = name,
                                                               label = label))
                 
     def _remove_metadata(self, meta_name, column_name, meta_type):
-        # TODO
+        # TODO - make it possible to remove metadata
         pass
         
 @provides(IDialog)
@@ -357,10 +480,9 @@ class ExperimentDialog(Dialog):
                             "Bool" : " (T/F)",
                             "Int" : " (Int)"}
             
-            trait_names = self.model.tubes[0].trait_names(transient = not_true,
-                                                          show = not_false)
+            trait_names = self.model.tubes[0].trait_names(transient = not_true)
             for trait_name in trait_names:
-                if trait_name.startswith("_") or trait_name == "Name":
+                if trait_name == "Name":  # already have a "Name" column
                     continue
                 trait = self.model.tubes[0].trait(trait_name)
                 trait_type = trait.trait_type.__class__.__name__
