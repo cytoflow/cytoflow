@@ -32,7 +32,9 @@ class WorkflowItem(HasStrictTraits):
     
     # the handler that's associated with this operation.
     # since it doesn't maintain any state, we can make and destroy as needed
-    handler = Property(depends_on = 'operation', trait = Instance(Handler))
+    handler = Property(depends_on = 'operation', 
+                       trait = Instance(Handler), 
+                       transient = True)
     
     # the Experiment that is the result of applying *operation* to a 
     # previous Experiment
@@ -59,7 +61,7 @@ class WorkflowItem(HasStrictTraits):
     
     # is the wi valid?
     # MAGIC: first value is the default
-    valid = Enum("invalid", "updating", "valid")
+    valid = Enum("invalid", "updating", "valid", transient = True)
     
     # the icon for the vertical notebook view.  Qt specific, sadly.
     icon = Property(depends_on = 'valid', transient = True)

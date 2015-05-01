@@ -93,22 +93,22 @@ class FlowTask(Task):
         self.model.selected = wi
         
         # if we're debugging, add a few data bits
-        if self.debug:
-            from cytoflow import Tube
-              
-            wi.operation.conditions["Dox"] = "log"
- 
-            tube1 = Tube(name = "Tube 1",
-                         file = "../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs",
-                         conditions = {"Dox" : 0.1})
- 
-            tube2 = Tube(name = "Tube 2",
-                         file = "../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs",
-                         conditions = {"Dox" : 1.0})
- 
-            wi.operation.tubes.append(tube1)
-            wi.operation.tubes.append(tube2)
-                  
+#         if self.debug:
+#             from cytoflow import Tube
+#                
+#             wi.operation.conditions["Dox"] = "log"
+#   
+#             tube1 = Tube(name = "Tube 1",
+#                          file = "../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs",
+#                          conditions = {"Dox" : 0.1})
+#   
+#             tube2 = Tube(name = "Tube 2",
+#                          file = "../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs",
+#                          conditions = {"Dox" : 1.0})
+#   
+#             wi.operation.tubes.append(tube1)
+#             wi.operation.tubes.append(tube2)
+#                    
 #             self.add_operation('edu.mit.synbio.cytoflowgui.op.hlog')
 #             self.model.selected.operation.channels = ["V2-A", "Y2-A"]
 #             self.model.selected.operation.name = "H"

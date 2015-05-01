@@ -26,18 +26,8 @@ class Tube(HasTraits):
     
     # a dict of experimental conditions: name --> value
     conditions = Dict(Str, Any)
-        
-    def __hash__(self):
-        ret = int(0)
-        for name, value in self.conditions.items():
-            if not ret:
-                ret = hash(name) ^ hash(value)
-            else:
-                ret = ret ^ hash(name) ^ hash(value)
-                
-        return ret
     
-    def __eq__(self, other):
+    def conditions_equal(self, other):        
         return len(set(self.conditions.items()) ^ 
                    set(other.conditions.items())) == 0
 
@@ -75,7 +65,7 @@ class ImportOp(HasTraits):
         # make sure experimental conditions are unique
         for idx, i in enumerate(self.tubes[0:-1]):
             for j in self.tubes[idx+1:]:
-                if i == j:
+                if i.conditions_equal(j):
                     return False
                 
         # TODO - more error checking.  ie, does the file exist?  is it

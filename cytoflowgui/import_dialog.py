@@ -116,7 +116,7 @@ class ExperimentColumn(ObjectColumn):
     
     # override ObjectColumn.get_cell_color
     def get_cell_color(self, obj):
-        if(obj._parent.tubes_counter[object] > 1):
+        if(obj._parent.tubes_counter[obj] > 1):
             return QtGui.QColor('lightpink')
         else:
             return super(ObjectColumn, self).get_cell_color(object)
@@ -163,6 +163,10 @@ class ExperimentDialogModel(HasTraits):
         )
     
     def init_model(self, op):
+        
+        # I DON'T KNOW WHY THIS STICKS AROUND ACROSS DIALOG INVOCATIONS.
+        del self.tubes[:]
+        
         dtype_to_trait = {"category" : Str,
                           "float" : Float,
                           "log" : LogFloat,
@@ -173,7 +177,8 @@ class ExperimentDialogModel(HasTraits):
         has_col = any(tube.col for tube in op.tubes)
         for op_tube in op.tubes:
             tube = Tube(Name = op_tube.name,
-                        _file = op_tube.file)
+                        _file = op_tube.file,
+                        _parent = self)
             if has_row:
                 tube.add_trait("Row", Str)
                 tube.Row = op_tube.row
@@ -186,6 +191,8 @@ class ExperimentDialogModel(HasTraits):
                     dtype_to_trait[condition_dtype](condition = True)
                 tube.add_trait(condition, condition_trait)
             tube.trait_set(**op_tube.conditions)
+            
+            self.tubes.append(tube)
     
     def update_import_op(self, op):
         trait_to_dtype = {"Str" : "category",
@@ -247,14 +254,6 @@ class ExperimentDialogHandler(Controller):
 
     # keep around a ref to the underlying widget so we can add columns dynamically
     table_editor = Instance(TableEditorQt)
-    
-#     def init_info(self, info):
-#         
-#         # set the parent model object for any preexisting tubes
-#         for tube in self.model.tubes:
-#             tube._parent = self.model
-#             
-#         Controller.init_info(self, info)
     
     def closed(self, info, is_ok):
         for tube in self.model.tubes:
