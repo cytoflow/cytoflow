@@ -21,19 +21,19 @@ class ScatterplotHandler(Controller, ViewHandlerMixin):
     def default_traits_view(self):
         return View(Item('object.name'),
                     Item('object.xchannel',
-                         editor=EnumEditor(name='handler.channels'),
+                         editor=EnumEditor(name='handler.wi.channels'),
                          label = "X Channel"),
                     Item('object.ychannel',
-                         editor=EnumEditor(name='handler.channels'),
+                         editor=EnumEditor(name='handler.wi.channels'),
                          label = "Y Channel"),
                     Item('object.xfacet',
-                         editor=EnumEditor(name='handler.conditions'),
+                         editor=EnumEditor(name='handler.wi.conditions'),
                          label = "Horizontal\nFacet"),
                     Item('object.yfacet',
-                         editor=EnumEditor(name='handler.conditions'),
+                         editor=EnumEditor(name='handler.wi.conditions'),
                          label = "Vertical\nFacet"),
                     Item('object.huefacet',
-                         editor=EnumEditor(name='handler.conditions'),
+                         editor=EnumEditor(name='handler.wi.conditions'),
                          label="Color\nFacet"),
                     Item('_'),
                     Item('object.subset',
@@ -42,7 +42,7 @@ class ScatterplotHandler(Controller, ViewHandlerMixin):
 
 class ScatterplotPluginView(ScatterplotView):
     handler = Instance(Handler, transient = True)
-    handler_factory = Callable(ScatterplotHandler, transient = True)
+    handler_factory = Callable(ScatterplotHandler)
     
     def is_wi_valid(self, wi):
         return wi.result and self.is_valid(wi.result)

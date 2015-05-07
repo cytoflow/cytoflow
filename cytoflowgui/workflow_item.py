@@ -40,6 +40,12 @@ class WorkflowItem(HasStrictTraits):
     # previous Experiment
     result = Instance(Experiment, transient = True)
     
+    # the channels and conditions from result.  usually these would be
+    # Property traits (ie, determined dynamically), but we need to cache them
+    # so that persistence works properly.
+    channels = List
+    conditions = List
+    
     # the IViews against the output of this operation
     views = List(IView)
     
@@ -55,12 +61,6 @@ class WorkflowItem(HasStrictTraits):
     # the previous WorkflowItem in the workflow
     # self.result = self.apply(previous.result)
     previous = Instance('WorkflowItem')
-    
-    # the channels and conditions from previous.result.  usually these would be
-    # Property traits (ie, determined dynamically), but we need to cache them
-    # so that persistence works properly.
-    previous_channels = List
-    previous_conditions = List
     
     # the next WorkflowItem in the workflow
     next = Instance('WorkflowItem')
@@ -125,12 +125,10 @@ class WorkflowItem(HasStrictTraits):
         return self.operation.handler_factory(model = self.operation,
                                               wi = self)
         
-    @on_trait_change('previous.result')
-    def _on_previous_changed(self, name, old, new):
+    @on_trait_change('result')
+    def _result_changed(self, new):
         """Update previous_channels and previous_conditions"""
-        if new and isinstance(new, WorkflowItem):
-            new = new.result
-             
+ 
         if new:
-            self.previous_channels = new.channels
-            self.previous_conditions = new.conditions.keys()
+            self.channels = new.channels
+            self.conditions = new.conditions.keys()

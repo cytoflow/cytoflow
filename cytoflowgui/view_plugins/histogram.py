@@ -21,16 +21,16 @@ class HistogramHandler(Controller, ViewHandlerMixin):
     def default_traits_view(self):
         return View(Item('object.name'),
                     Item('object.channel',
-                         editor=EnumEditor(name='handler.channels'),
+                         editor=EnumEditor(name='handler.wi.channels'),
                          label = "Channel"),
                     Item('object.xfacet',
-                         editor=EnumEditor(name='handler.conditions'),
+                         editor=EnumEditor(name='handler.wi.conditions'),
                          label = "Horizontal\nFacet"),
                     Item('object.yfacet',
-                         editor=EnumEditor(name='handler.conditions'),
+                         editor=EnumEditor(name='handler.wi.conditions'),
                          label = "Vertical\nFacet"),
                     Item('object.huefacet',
-                         editor=EnumEditor(name='handler.conditions'),
+                         editor=EnumEditor(name='handler.wi.conditions'),
                          label="Color\nFacet"),
                     Item('_'),
                     Item('object.subset',
@@ -39,7 +39,7 @@ class HistogramHandler(Controller, ViewHandlerMixin):
     
 class HistogramPluginView(HistogramView):
     handler = Instance(Handler, transient = True)
-    handler_factory = Callable(HistogramHandler, transient = True)
+    handler_factory = Callable(HistogramHandler)
     
     def is_wi_valid(self, wi):
         return wi.result and self.is_valid(wi.result)

@@ -21,7 +21,6 @@ class Workflow(HasTraits):
     
     selected = Instance(WorkflowItem)
 
-    
     traits_view = View(Item(name='workflow',
                             id='table',
                             editor=VerticalNotebookEditor(page_name='.name',

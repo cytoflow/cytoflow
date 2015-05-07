@@ -93,21 +93,21 @@ class FlowTask(Task):
         self.model.selected = wi
         
         # if we're debugging, add a few data bits
-#         if self.debug:
-#             from cytoflow import Tube
-#                   
-#             wi.operation.conditions["Dox"] = "log"
-#      
-#             tube1 = Tube(name = "Tube 1",
-#                          file = "../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs",
-#                          conditions = {"Dox" : 0.1})
-#      
-#             tube2 = Tube(name = "Tube 2",
-#                          file = "../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs",
-#                          conditions = {"Dox" : 1.0})
-#      
-#             wi.operation.tubes.append(tube1)
-#             wi.operation.tubes.append(tube2)
+        if self.debug:
+            from cytoflow import Tube
+                   
+            wi.operation.conditions["Dox"] = "log"
+      
+            tube1 = Tube(name = "Tube 1",
+                         file = "../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs",
+                         conditions = {"Dox" : 0.1})
+      
+            tube2 = Tube(name = "Tube 2",
+                         file = "../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs",
+                         conditions = {"Dox" : 1.0})
+      
+            wi.operation.tubes.append(tube1)
+            wi.operation.tubes.append(tube2)
 #                      
 #             self.add_operation('edu.mit.synbio.cytoflowgui.op.hlog')
 #             self.model.selected.operation.channels = ["V2-A", "Y2-A"]
@@ -149,37 +149,13 @@ class FlowTask(Task):
         for wi in self.model.workflow:
             wi.task = self
             
-        #self.model.workflow[:] = []
-        
+            # and set up the view handlers
+            for view in wi.views:
+                view.handler = view.handler_factory(model = view, wi = wi)
+                  
         self.model.workflow[:] = new_model.workflow
         self.model.selected = new_model.selected
         
-        ## TODO - workflow gets replace without operations being run
-        # step-by-step.  that means for a basic import --> hlog workflow,
-        # the hlog op's channels get cleared because:
-        # - the import wi gets created
-        # - the hlog wi gets created
-        # - the hlog view asks for the set of available channels, which depends
-        #   on prev_result
-        # - there aren't any; so the view says "there aren't any channels"
-        #   and updates the underlying hlog op
-        # - the import op gets run
-        # - now there are channels in the hlog wi's prev_result
-        # - they get shown; but the "selected" channels that we just loaded
-        #   are gone.
-        
-        # this gets at the issue i was thinking about earlier today -- 
-        # how to best decouple the workflow from the data it's working on?
-        # and still retain the dynamicity of the interface?  hmmmm.
-            
-#         from event_tracer import record_events 
-#         
-#         with record_events() as container:
-#             self.model.workflow[:] = new_model.workflow
-#             self.model.selected = new_model.selected
-# 
-#         container.save_to_directory(os.getcwd()) 
-
         wi = self.model.workflow[0]
         while True:
             wi.valid = "invalid"
