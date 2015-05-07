@@ -19,12 +19,12 @@ class Range2DHandler(Controller, OpHandlerMixin):
     def default_traits_view(self):
         return View(Item('object.name'),
                     Item('object.xchannel',
-                         editor=EnumEditor(name='handler.previous_channels'),
+                         editor=EnumEditor(name='handler.wi.previous_channels'),
                          label = "X Channel"),
                     Item('object.xlow', label = "X Low"),
                     Item('object.xhigh', label = "X High"),
                     Item('object.ychannel',
-                         editor=EnumEditor(name='handler.previous_channels'),
+                         editor=EnumEditor(name='handler.wi.previous_channels'),
                          label = "Y Channel"),
                     Item('object.ylow', label = "Y Low"),
                     Item('object.yhigh', label = "Y High")) 

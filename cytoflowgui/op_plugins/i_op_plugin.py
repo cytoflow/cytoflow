@@ -58,14 +58,3 @@ class IOperationPlugin(Interface):
 class OpHandlerMixin(HasTraits):
     wi = Instance(WorkflowItem)
     
-    # a Property wrapper around the wi.previous.result.channels
-    # used to constrain the operation view (with an EnumEditor)
-    previous_channels = Property(depends_on = 'wi.previous.result.channels')
-    
-    @cached_property
-    def _get_previous_channels(self):
-        if (not self.wi.previous) or (not self.wi.previous.result):
-            return []
-              
-        return self.wi.previous.result.channels
-    

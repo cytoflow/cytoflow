@@ -5,7 +5,7 @@ Created on Mar 15, 2015
 '''
 
 from traits.api import HasStrictTraits, Instance, List, DelegatesTo, Enum, \
-                       Property, cached_property, Bool
+                       Property, cached_property, Bool, on_trait_change
 from traitsui.api import View, Item, Handler
 from cytoflow import Experiment
 from cytoflow.operations.i_operation import IOperation
@@ -55,6 +55,12 @@ class WorkflowItem(HasStrictTraits):
     # the previous WorkflowItem in the workflow
     # self.result = self.apply(previous.result)
     previous = Instance('WorkflowItem')
+    
+    # the channels and conditions from previous.result.  usually these would be
+    # Property traits (ie, determined dynamically), but we need to cache them
+    # so that persistence works properly.
+    previous_channels = List
+    previous_conditions = List
     
     # the next WorkflowItem in the workflow
     next = Instance('WorkflowItem')
@@ -118,3 +124,13 @@ class WorkflowItem(HasStrictTraits):
     def _get_handler(self):
         return self.operation.handler_factory(model = self.operation,
                                               wi = self)
+        
+    @on_trait_change('previous.result')
+    def _on_previous_changed(self, name, old, new):
+        """Update previous_channels and previous_conditions"""
+        if new and isinstance(new, WorkflowItem):
+            new = new.result
+             
+        if new:
+            self.previous_channels = new.channels
+            self.previous_conditions = new.conditions.keys()
