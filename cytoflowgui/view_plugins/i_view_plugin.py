@@ -37,24 +37,24 @@ class ViewHandlerMixin(HasTraits):
     """
     Common bits useful for View wrappers.
     """
-#     
-#     channels = Property
-#     conditions = Property
+     
+    channels = Property
+    conditions = Property
     
     wi = Instance(WorkflowItem)
 
-#     # MAGIC: provides dynamically updated values for the "channels" trait
-#     def _get_channels(self):
-#         """
-#         doc
-#         """
-#         return self.wi.result.channels
-#         
-#     # MAGIC: provides dynamically updated values for the "conditions" trait
-#     def _get_conditions(self):
-#         """
-#         doc
-#         """
-#         ret = [""]
-#         ret.extend(self.wi.result.conditions.keys())
-#         return ret
+    # MAGIC: provides dynamically updated values for the "channels" trait
+    def _get_channels(self):
+        """
+        doc
+        """
+        return self.wi.channels
+         
+    # MAGIC: provides dynamically updated values for the "conditions" trait
+    def _get_conditions(self):
+        """
+        doc
+        """
+        ret = [""]
+        ret.extend(self.wi.conditions)
+        return ret
