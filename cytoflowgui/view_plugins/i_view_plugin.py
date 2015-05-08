@@ -4,7 +4,7 @@ Created on Mar 15, 2015
 @author: brian
 """
 
-from traits.api import Interface, Str, HasTraits, Property, Instance
+from traits.api import Interface, Str, HasTraits, Property, Instance, List
 from cytoflowgui.workflow_item import WorkflowItem
 
 VIEW_PLUGIN_EXT = 'edu.mit.synbio.cytoflow.view_plugins'
@@ -38,8 +38,8 @@ class ViewHandlerMixin(HasTraits):
     Common bits useful for View wrappers.
     """
      
-    channels = Property
-    conditions = Property
+    channels = Property(List, depends_on = 'wi.channels')
+    conditions = Property(List, depends_on = 'wi.conditions')
     
     wi = Instance(WorkflowItem)
 
