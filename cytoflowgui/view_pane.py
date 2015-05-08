@@ -151,7 +151,7 @@ class ViewDockPane(DockPane):
             
         if new:
             self._ui = new.handler.edit_traits(kind='subpanel', 
-                                                parent=self._parent)              
+                                               parent=self._parent)              
             self._layout.addWidget(self._ui.control)
             self._current_view_id = new.id
         else:

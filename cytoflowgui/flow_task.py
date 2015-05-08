@@ -108,10 +108,10 @@ class FlowTask(Task):
       
             wi.operation.tubes.append(tube1)
             wi.operation.tubes.append(tube2)
-#                      
-#             self.add_operation('edu.mit.synbio.cytoflowgui.op.hlog')
-#             self.model.selected.operation.channels = ["V2-A", "Y2-A"]
-#             self.model.selected.operation.name = "H"
+                      
+            self.add_operation('edu.mit.synbio.cytoflowgui.op.hlog')
+            self.model.selected.operation.channels = ["V2-A", "Y2-A"]
+            self.model.selected.operation.name = "H"
     
     def prepare_destroy(self):
         self.model = None
@@ -146,13 +146,14 @@ class FlowTask(Task):
         new_model = unpickler.load()
 
         # update the link back to the controller (ie, self)
-        for wi in self.model.workflow:
+        for wi in new_model.workflow:
             wi.task = self
             
             # and set up the view handlers
             for view in wi.views:
                 view.handler = view.handler_factory(model = view, wi = wi)
                   
+        # replace the current workflow with the one we just loaded
         self.model.workflow[:] = new_model.workflow
         self.model.selected = new_model.selected
         
@@ -220,7 +221,7 @@ class FlowTask(Task):
             wi.current_view = wi.default_view
             
         # invalidate everything following
-        #self.operation_parameters_updated()
+        self.operation_parameters_updated()
         
     @on_trait_change("model:selected:operation:+")
     def operation_parameters_updated(self): 
@@ -279,8 +280,19 @@ class FlowTask(Task):
         if new:
             new.on_trait_change(self.view_parameters_updated)
             
-            if self.model.selected.is_plottable:
+            if self.model.selected and self.model.selected.is_plottable:
                 self.model.selected.plot(self.view)
+            else:
+                self.clear_current_view()
+        else:
+            self.clear_current_view()
+                
+    @on_trait_change("model:selected:result")
+    def _result_updated(self, obj, name, old, new):
+        if self.model.selected and self.model.selected.is_plottable:
+            self.model.selected.plot(self.view)
+        else:
+            self.clear_current_view()
         
     def view_parameters_updated(self, obj, name, new):
         
@@ -298,6 +310,8 @@ class FlowTask(Task):
             
         if wi.is_plottable:
             wi.plot(self.view)
+        else:
+            self.clear_current_view()
         
 class FlowTaskPlugin(Plugin):
     """

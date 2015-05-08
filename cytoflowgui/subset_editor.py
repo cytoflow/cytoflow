@@ -38,6 +38,9 @@ class _SubsetEditor(Editor):
         
         self.sync_value(self.factory.experiment, 'experiment', 'from')
         
+        # TODO - when loading, this gets called before the wi gets updated
+        # with the operation's results; so we need a way to display a subset
+        # that's not yet initialized.
         self._obj, group = self._get_view()
         
         self._ui = self._obj.edit_traits(kind='subpanel', 
@@ -62,51 +65,51 @@ class _SubsetEditor(Editor):
         obj = HasTraits()   # the underlying object whose traits we're viewing
         group = Group()     # the TraitsUI Group with the editors in it
         
-        for name, dtype in self.experiment.conditions.iteritems():
-            if dtype == 'bool':
-                values = [name + '-', name + '+']
-                obj.add_trait(name, List(editor = CheckListEditor(
-                                                    values = values,
-                                                    cols = 2)))
-                group.content.append(Item(name, 
-                                          style = 'custom'))
-                
-            elif dtype == 'category':
-                values = list(self.experiment[name].cat.categories)
-                obj.add_trait(name, List(editor = CheckListEditor(
-                                                    values = values,
-                                                    cols = len(values))))
-                group.content.append(Item(name, 
-                                          style = 'custom'))
-                
-            elif dtype == 'float':
-                values = list(np.sort(pd.unique(self.experiment[name])))
-                obj.add_trait(name + "Min", Float(self.experiment[name].min()))
-                obj.add_trait(name + "Max", 
-                              Float(default_value = self.experiment[name].max(),
-                                    editor = ValuesBoundsEditor( 
-                                                values = values,
-                                                low_name = name + "Min",
-                                                high_name = name + "Max"))
-                            )
-                group.content.append(Item(name + "Max", 
-                                          label = name, 
-                                          style = 'custom'))
-                
-            elif dtype == 'int':
-                values = list(np.sort(pd.unique(self.experiment[name])))
-                obj.add_trait(name + "Min", Int(self.experiment[name].min()))
-                obj.add_trait(name + "Max", 
-                              Int(default_value = self.experiment[name].max(),
-                                  editor = ValuesBoundsEditor(
-                                                values = values,
-                                                low_name = name + "Min",
-                                                high_name = name + "Max"))
-                            )
-                
-                group.content.append(Item(name + "Max", 
-                                          label = name, 
-                                          style = 'custom'))
+#         for name, dtype in self.experiment.conditions.iteritems():
+#             if dtype == 'bool':
+#                 values = [name + '-', name + '+']
+#                 obj.add_trait(name, List(editor = CheckListEditor(
+#                                                     values = values,
+#                                                     cols = 2)))
+#                 group.content.append(Item(name, 
+#                                           style = 'custom'))
+#                 
+#             elif dtype == 'category':
+#                 values = list(self.experiment[name].cat.categories)
+#                 obj.add_trait(name, List(editor = CheckListEditor(
+#                                                     values = values,
+#                                                     cols = len(values))))
+#                 group.content.append(Item(name, 
+#                                           style = 'custom'))
+#                 
+#             elif dtype == 'float':
+#                 values = list(np.sort(pd.unique(self.experiment[name])))
+#                 obj.add_trait(name + "Min", Float(self.experiment[name].min()))
+#                 obj.add_trait(name + "Max", 
+#                               Float(default_value = self.experiment[name].max(),
+#                                     editor = ValuesBoundsEditor( 
+#                                                 values = values,
+#                                                 low_name = name + "Min",
+#                                                 high_name = name + "Max"))
+#                             )
+#                 group.content.append(Item(name + "Max", 
+#                                           label = name, 
+#                                           style = 'custom'))
+#                 
+#             elif dtype == 'int':
+#                 values = list(np.sort(pd.unique(self.experiment[name])))
+#                 obj.add_trait(name + "Min", Int(self.experiment[name].min()))
+#                 obj.add_trait(name + "Max", 
+#                               Int(default_value = self.experiment[name].max(),
+#                                   editor = ValuesBoundsEditor(
+#                                                 values = values,
+#                                                 low_name = name + "Min",
+#                                                 high_name = name + "Max"))
+#                             )
+#                 
+#                 group.content.append(Item(name + "Max", 
+#                                           label = name, 
+#                                           style = 'custom'))
         
         return obj, group
     
