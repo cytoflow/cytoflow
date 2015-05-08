@@ -42,7 +42,7 @@ class RangeView2DHandler(Controller, ViewHandlerMixin):
                     Item('_'),
                     Item('object.subset',
                          label = "Subset",
-                         editor = SubsetEditor(experiment = 'handler.wi.result')))
+                         editor = SubsetEditor(experiment = 'handler.wi.previous.result')))
 
 @provides(ISelectionView)
 class Range2DSelectionView(RangeSelection2D):

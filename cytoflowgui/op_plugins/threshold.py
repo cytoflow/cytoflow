@@ -11,7 +11,6 @@ from cytoflow.views.histogram import HistogramView
 
 
 class ThresholdHandler(Controller, OpHandlerMixin):
-    
     def default_traits_view(self):
         return View(Item('object.name'),
                     Item('object.channel',
@@ -29,7 +28,7 @@ class ThresholdViewHandler(Controller, ViewHandlerMixin):
                     Item('_'),
                     Item('object.subset',
                          label = "Subset",
-                         editor = SubsetEditor(experiment = 'handler.wi.result')))
+                         editor = SubsetEditor(experiment = 'handler.wi.previous.result')))
 
 class ThresholdSelectionView(ThresholdSelection):
     handler_factory = Callable(ThresholdViewHandler)
