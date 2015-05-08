@@ -84,6 +84,13 @@ class FlowTask(Task):
                                           self.to_update))
         worker.start()
         
+        # make sure that when the result changes we get notified
+        # can't use a static notifier because selected.result gets updated
+        # on the worker thread, but we need to dispatch on the UI thread
+        self.model.on_trait_change(self._result_updated, 
+                                   "selected:result",
+                                   dispatch = 'ui')
+        
         # add an import plugin
         plugin = ImportPlugin()
         wi = WorkflowItem(task = self)
@@ -286,9 +293,9 @@ class FlowTask(Task):
                 self.clear_current_view()
         else:
             self.clear_current_view()
-                
-    @on_trait_change("model:selected:result")
+
     def _result_updated(self, obj, name, old, new):
+        print "result updated"
         if self.model.selected and self.model.selected.is_plottable:
             self.model.selected.plot(self.view)
         else:
