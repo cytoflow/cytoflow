@@ -73,7 +73,7 @@ class _SubsetEditor(Editor):
 #                                                     cols = 2)))
 #                 group.content.append(Item(name, 
 #                                           style = 'custom'))
-#                 
+#                  
 #             elif dtype == 'category':
 #                 values = list(self.experiment[name].cat.categories)
 #                 obj.add_trait(name, List(editor = CheckListEditor(
@@ -81,7 +81,7 @@ class _SubsetEditor(Editor):
 #                                                     cols = len(values))))
 #                 group.content.append(Item(name, 
 #                                           style = 'custom'))
-#                 
+#                  
 #             elif dtype == 'float':
 #                 values = list(np.sort(pd.unique(self.experiment[name])))
 #                 obj.add_trait(name + "Min", Float(self.experiment[name].min()))
@@ -95,7 +95,7 @@ class _SubsetEditor(Editor):
 #                 group.content.append(Item(name + "Max", 
 #                                           label = name, 
 #                                           style = 'custom'))
-#                 
+#                  
 #             elif dtype == 'int':
 #                 values = list(np.sort(pd.unique(self.experiment[name])))
 #                 obj.add_trait(name + "Min", Int(self.experiment[name].min()))
@@ -106,7 +106,7 @@ class _SubsetEditor(Editor):
 #                                                 low_name = name + "Min",
 #                                                 high_name = name + "Max"))
 #                             )
-#                 
+#                  
 #                 group.content.append(Item(name + "Max", 
 #                                           label = name, 
 #                                           style = 'custom'))

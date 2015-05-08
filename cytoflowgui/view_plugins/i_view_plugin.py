@@ -48,7 +48,10 @@ class ViewHandlerMixin(HasTraits):
         """
         doc
         """
-        return self.wi.channels
+        if self.wi and self.wi.channels:
+            return self.wi.channels
+        else:
+            return []
          
     # MAGIC: provides dynamically updated values for the "conditions" trait
     def _get_conditions(self):
@@ -56,5 +59,6 @@ class ViewHandlerMixin(HasTraits):
         doc
         """
         ret = [""]
-        ret.extend(self.wi.conditions)
+        if self.wi and self.wi.conditions:
+            ret.extend(self.wi.conditions.keys())
         return ret

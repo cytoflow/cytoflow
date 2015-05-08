@@ -4,7 +4,7 @@ Created on Mar 15, 2015
 @author: brian
 """
 from traits.api import Interface, Str, HasTraits, Instance, Property, \
-                       cached_property
+                       cached_property, List
 from cytoflowgui.workflow_item import WorkflowItem
 
 OP_PLUGIN_EXT = 'edu.mit.synbio.cytoflow.op_plugins'
@@ -57,4 +57,27 @@ class IOperationPlugin(Interface):
         
 class OpHandlerMixin(HasTraits):
     wi = Instance(WorkflowItem)
+    
+    previous_channels = Property(List, depends_on = 'wi.previous.channels')
+    previous_conditions = Property(List, depends_on = 'wi.previous.conditions')
+
+    # MAGIC: provides dynamically updated values for the "channels" trait
+    def _get_previous_channels(self):
+        """
+        doc
+        """
+        if self.wi and self.wi.previous and self.wi.previous.channels:
+            return self.wi.previous.channels
+        else:
+            return []
+         
+    # MAGIC: provides dynamically updated values for the "conditions" trait
+    def _get_previous_conditions(self):
+        """
+        doc
+        """
+        if self.wi and self.wi.previous and self.wi.previous.conditions:
+            return self.wi.conditions.keys()
+        else:
+            return []
     

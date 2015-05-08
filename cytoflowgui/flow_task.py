@@ -119,6 +119,11 @@ class FlowTask(Task):
             self.add_operation('edu.mit.synbio.cytoflowgui.op.hlog')
             self.model.selected.operation.channels = ["V2-A", "Y2-A"]
             self.model.selected.operation.name = "H"
+            
+            self.add_operation('edu.mit.synbio.cytoflowgui.op.threshold')
+            self.model.selected.operation.channel = "Y2-A"
+            self.model.selected.operation.threshold = 2000
+            self.model.selected.operation.name = "T"
     
     def prepare_destroy(self):
         self.model = None

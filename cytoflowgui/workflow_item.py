@@ -5,7 +5,8 @@ Created on Mar 15, 2015
 '''
 
 from traits.api import HasStrictTraits, Instance, List, DelegatesTo, Enum, \
-                       Property, cached_property, Bool, on_trait_change
+                       Property, cached_property, Bool, on_trait_change, \
+                       Dict, Str
 from traitsui.api import View, Item, Handler
 from cytoflow import Experiment
 from cytoflow.operations.i_operation import IOperation
@@ -43,8 +44,8 @@ class WorkflowItem(HasStrictTraits):
     # the channels and conditions from result.  usually these would be
     # Property traits (ie, determined dynamically), but we need to cache them
     # so that persistence works properly.
-    channels = List
-    conditions = List
+    channels = List(Str)
+    conditions = Dict(Str, Str)
     
     # the IViews against the output of this operation
     views = List(IView)
@@ -127,8 +128,8 @@ class WorkflowItem(HasStrictTraits):
         
     @on_trait_change('result')
     def _result_changed(self, new):
-        """Update previous_channels and previous_conditions"""
+        """Update channels and conditions"""
  
         if new:
             self.channels = new.channels
-            self.conditions = new.conditions.keys()
+            self.conditions = new.conditions

@@ -15,7 +15,7 @@ class ThresholdHandler(Controller, OpHandlerMixin):
     def default_traits_view(self):
         return View(Item('object.name'),
                     Item('object.channel',
-                         editor=EnumEditor(name='handler.wi.previous.channels'),
+                         editor=EnumEditor(name='handler.previous_channels'),
                          label = "Channel"),
                     Item('object.threshold')) 
         

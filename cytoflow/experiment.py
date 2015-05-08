@@ -1,7 +1,6 @@
 import pandas as pd
 import FlowCytometryTools as fc
-from traits.api import HasStrictTraits, DictStrAny, ListStr, Instance, \
-                       Set, DictStrStr
+from traits.api import HasStrictTraits, Dict, List, Instance, Set, Str, Any
 
 class Experiment(HasStrictTraits):
     """An Experiment manages all the data and metadata for a flow experiment.
@@ -104,13 +103,13 @@ class Experiment(HasStrictTraits):
     """
     
     # potentially mutable.  deep copy required
-    conditions = DictStrStr(copy = "deep")
+    conditions = Dict(Str, Str, copy = "deep")
     
     # potentially mutable.  deep copy required
-    channels = ListStr(copy = "deep")
+    channels = List(Str, copy = "deep")
     
     # potentially mutable.  deep copy required
-    metadata = DictStrAny(copy = "deep")
+    metadata = Dict(Str, Any, copy = "deep")
     
     # this doesn't play nice with copy.copy(); clone it ourselves.
     data = Instance(pd.DataFrame, args=())
