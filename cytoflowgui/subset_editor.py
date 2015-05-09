@@ -36,27 +36,29 @@ class _SubsetEditor(Editor):
     _obj = Instance(HasTraits)
     
     # the parent layout.  we need to keep this around to update dynamically
-    _layout = Instance(QtGui.QLayout)
+    _layout = Instance(QtGui.QVBoxLayout)
     
     def init(self, parent):
         """
-        Finishes initializing the editor.
+        Finishes initializing the editor and make the toolkit control
         """
-        
-        assert(isinstance(parent, QtGui.QLayout))
-        self._layout = parent
-        
+
         self.sync_value(self.factory.experiment, 'experiment', 'from')
         self.on_trait_change(self.update_experiment, 'experiment', dispatch = 'ui')
         
-        # creates the initial widget
+        assert(isinstance(parent, QtGui.QLayout))
+        self._layout = QtGui.QVBoxLayout()
+        
+        self.control = QtGui.QWidget()
+        self.control.setLayout(self._layout)
+
         obj, group = self._make_view()
         self._obj = obj
         self._obj.on_trait_change(self._view_changed)
         self._ui = self._obj.edit_traits(kind = 'subpanel',
                                          parent = self._parent,
                                          view = View(group))
-        self.control = self._ui.control
+        self._layout.addWidget(self._ui.control)
         
     def dispose(self):
         if self._ui:
@@ -72,7 +74,11 @@ class _SubsetEditor(Editor):
         
         print "updating subset experiment"
         
+        self._layout.parentWidget().setUpdatesEnabled(False)
+        
         if self._ui:
+            #idx = self._layout.indexOf(self._ui.control)
+            #print "layout idx: {0}".format(idx)
             self._layout.takeAt(self._layout.indexOf(self._ui.control))
             self._ui.dispose()
             self._ui = None
@@ -89,6 +95,8 @@ class _SubsetEditor(Editor):
                                          view = View(group))
         self.control = self._ui.control
         self._layout.addWidget(self.control) 
+        
+        self._layout.parentWidget().setUpdatesEnabled(True)
     
     def _make_view(self):
         

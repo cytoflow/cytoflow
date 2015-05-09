@@ -102,24 +102,24 @@ class FlowTask(Task):
         # if we're debugging, add a few data bits
         if self.debug:
             from cytoflow import Tube
-                   
+                     
             wi.operation.conditions["Dox"] = "log"
-      
+        
             tube1 = Tube(name = "Tube 1",
                          file = "../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs",
                          conditions = {"Dox" : 0.1})
-      
+        
             tube2 = Tube(name = "Tube 2",
                          file = "../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs",
                          conditions = {"Dox" : 1.0})
-      
+        
             wi.operation.tubes.append(tube1)
             wi.operation.tubes.append(tube2)
-                      
+                        
             self.add_operation('edu.mit.synbio.cytoflowgui.op.hlog')
             self.model.selected.operation.channels = ["V2-A", "Y2-A"]
             self.model.selected.operation.name = "H"
-            
+              
             self.add_operation('edu.mit.synbio.cytoflowgui.op.threshold')
             self.model.selected.operation.channel = "Y2-A"
             self.model.selected.operation.threshold = 2000
@@ -166,8 +166,18 @@ class FlowTask(Task):
                 view.handler = view.handler_factory(model = view, wi = wi)
                   
         # replace the current workflow with the one we just loaded
-        self.model.workflow[:] = new_model.workflow
-        self.model.selected = new_model.selected
+        
+        if False:
+            from event_tracer import record_events 
+            
+            with record_events() as container:
+                self.model.workflow[:] = new_model.workflow
+                self.model.selected = new_model.selected
+                
+            container.save_to_directory(os.getcwd()) 
+        else:
+            self.model.workflow[:] = new_model.workflow
+            self.model.selected = new_model.selected            
         
         wi = self.model.workflow[0]
         while True:
