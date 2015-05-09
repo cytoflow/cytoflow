@@ -4,9 +4,14 @@ Created on Feb 11, 2015
 @author: brian
 """
 
+from traits.etsconfig.api import ETSConfig
+ETSConfig.toolkit = 'qt4'
+
+from pyface.qt import QtGui
+
 import os.path
 
-from traits.api import Instance, List, Bool, Float, on_trait_change
+from traits.api import Instance, List, Bool, on_trait_change
 from pyface.tasks.api import Task, TaskLayout, PaneItem
 from pyface.tasks.action.api import SMenu, SMenuBar, SToolBar, TaskAction
 from pyface.api import FileDialog, OK, ImageResource
@@ -20,8 +25,6 @@ from cytoflowgui.workflow import Workflow
 from cytoflowgui.op_plugins import IOperationPlugin, ImportPlugin, OP_PLUGIN_EXT
 from cytoflowgui.view_plugins import IViewPlugin, VIEW_PLUGIN_EXT
 from cytoflowgui.workflow_item import WorkflowItem
-
-
 
 from util import UniquePriorityQueue
 import threading
@@ -46,18 +49,45 @@ class FlowTask(Task):
     op_plugins = List(IOperationPlugin)
     view_plugins = List(IViewPlugin)
     
-    menu_bar = SMenuBar(SMenu(TaskAction(name='Open...', method='open',
+    menu_bar = SMenuBar(SMenu(TaskAction(name='Open...',
+                                         method='on_open',
                                          accelerator='Ctrl+O'),
-                              TaskAction(name='Save', method='save',
+                              TaskAction(name='Save',
+                                         #image='save', 
+                                         method='on_save',
                                          accelerator='Ctrl+S'),
+                              TaskAction(name='Save As...',
+                                         method='on_save_as',
+                                         accelerator='Ctrl+e'),
+                              TaskAction(name='Export...',
+                                         method='on_export',
+                                         accelerator='Ctrl+x'),
+                              TaskAction(name='Preferences...',
+                                         method='on_prefs',
+                                         accelerator='Ctrl+P'),
                               id='File', name='&File'))
     
-    tool_bars = [ SToolBar(TaskAction(method='open',
+    tool_bars = [ SToolBar(TaskAction(method='on_new',
+                                      name = "New",
+                                      tooltip='New workflow',
+                                      image=ImageResource('new')),
+                           TaskAction(method='on_open',
+                                      name = "Open",
                                       tooltip='Open a file',
-                                      image=ImageResource('document_open')),
-                           TaskAction(method='save',
+                                      image=ImageResource('open')),
+                           TaskAction(method='on_save',
+                                      name = "Save",
                                       tooltip='Save the current file',
-                                      image=ImageResource('document_save'))) ]
+                                      image=ImageResource('save')),
+                           TaskAction(method='on_export',
+                                      name = "Export",
+                                      tooltip='Export the current plot',
+                                      image=ImageResource('export')),
+                           TaskAction(method='on_prefs',
+                                      name = "Prefs",
+                                      tooltip='Preferences',
+                                      image=ImageResource('prefs')),
+                           image_size = (32, 32))]
     
     # are we debugging?  ie, do we need a default setup?
     debug = Bool
@@ -143,7 +173,10 @@ class FlowTask(Task):
                 ViewDockPane(plugins = self.view_plugins,
                              task = self)]
         
-    def open(self):
+    def on_new(self):
+        pass
+        
+    def on_open(self):
         """ Shows a dialog to open a file.
         """
         dialog = FileDialog(parent=self.window.control, 
@@ -194,7 +227,7 @@ class FlowTask(Task):
             if not self.to_update.empty():
                 self.worker_flag.set()
         
-    def save(self):
+    def on_save(self):
         """ Shows a dialog to open a file.
         """
         dialog = FileDialog(parent=self.window.control,
@@ -203,11 +236,20 @@ class FlowTask(Task):
         if dialog.open() == OK:
             self.save_file(dialog.path)
             
+    def on_save_as(self):
+        pass
+            
     def save_file(self, path):
         # TODO - error handling
         f = open(path, 'w')
         pickler = pickle.Pickler(f, 0)  # text protocol for now
         pickler.dump(self.model)
+        
+    def on_export(self):
+        pass
+    
+    def on_prefs(self):
+        pass
     
     def add_operation(self, op_id):
         # first, find the matching plugin
