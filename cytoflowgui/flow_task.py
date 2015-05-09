@@ -89,6 +89,8 @@ class FlowTask(Task):
                                       image=ImageResource('prefs')),
                            image_size = (32, 32))]
     
+    # TODO - acknowledge the Tango icons.
+    
     # are we debugging?  ie, do we need a default setup?
     debug = Bool
     
