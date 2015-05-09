@@ -78,8 +78,8 @@ class _VerticalNotebookEditor(Editor):
         """
         
         # Replace all of the current notebook pages:
-        self.notebook.pages = [self._create_page(object)
-                               for object in self.value]
+        self.notebook.pages = [self._create_page(obj)
+                               for obj in self.value]
 
     def update_editor_item(self, event):
         """ 
@@ -88,7 +88,7 @@ class _VerticalNotebookEditor(Editor):
         
         # Replace the updated notebook pages:
         self.notebook.pages[ event.index: event.index + len( event.removed ) ] \
-            = [self._create_page(object) for object in event.added]
+            = [self._create_page(obj) for obj in event.added]
 
     def dispose(self):
         """ 
@@ -119,11 +119,11 @@ class _VerticalNotebookEditor(Editor):
         """
         
         notebook = self.notebook
-        for object in old:
-            notebook.close(self._find_page(object))
+        for obj in old:
+            notebook.close(self._find_page(obj))
 
-        for object in new:
-            notebook.open(self._find_page(object))
+        for obj in new:
+            notebook.open(self._find_page(obj))
 
     def _selected_list_items_changed(self, event):
         self._selected_list_changed(event.removed, event.added)
@@ -131,12 +131,12 @@ class _VerticalNotebookEditor(Editor):
     @on_trait_change('notebook:pages:is_open')
     def _page_state_modified(self, page, name, old, is_open):
         if self.factory.multiple_open:
-            object = page.data
+            obj = page.data
             if is_open:
-                if object not in self.selected_list:
-                    self.selected_list.append(object)
-            elif object in self.selected_list:
-                self.selected_list.remove(object)
+                if obj not in self.selected_list:
+                    self.selected_list.append(obj)
+            elif obj in self.selected_list:
+                self.selected_list.remove(obj)
         elif is_open:
             self.selected_item = page.data
         else:
@@ -144,30 +144,29 @@ class _VerticalNotebookEditor(Editor):
 
     #-- Private Methods ------------------------------------------------------
 
-    def _create_page(self, object):
+    def _create_page(self, obj):
         """ 
         Creates and returns a notebook page for a specified object with traits.
         """
         # Create a new notebook page:
-        page = self.notebook.create_page().set(data = object)
+        page = self.notebook.create_page().set(data = obj)
 
         # Create the Traits UI for the object to put in the notebook page:
-        ui = object.edit_traits(parent=page.parent,
-                                view=self.factory.view,
-                                kind='subpanel').set(
-            parent=self.ui)
+        ui = obj.edit_traits(parent=page.parent,
+                             view=self.factory.view,
+                             kind='subpanel').set(parent=self.ui)
 
         # Get the name of the page being added to the notebook:
         name = ''
         page_name = self.factory.page_name
         if page_name[0:1] == '.':
-            if getattr(object, page_name[1:], Undefined) is not Undefined:
-                page.register_name_listener(object, page_name[1:])
+            if getattr(obj, page_name[1:], Undefined) is not Undefined:
+                page.register_name_listener(obj, page_name[1:])
         else:
             name = page_name
 
         if name == '':
-            name = user_name_for(object.__class__.__name__)
+            name = user_name_for(obj.__class__.__name__)
 
         # Make sure the name is not a duplicate, then save it in the page:
         if page.name == '':
@@ -179,14 +178,14 @@ class _VerticalNotebookEditor(Editor):
         # Get the page description
         page_desc = self.factory.page_description
         if page_desc[0:1] == '.':
-            if getattr(object, page_desc[1:], Undefined) is not Undefined:
-                page.register_description_listener(object, page_desc[1:])
+            if getattr(obj, page_desc[1:], Undefined) is not Undefined:
+                page.register_description_listener(obj, page_desc[1:])
             
         # Get the page icon
         page_icon = self.factory.page_icon
         if page_icon[0:1] == '.':
-            if getattr(object, page_icon[1:], Undefined) is not Undefined:
-                page.register_icon_listener(object, page_icon[1:])
+            if getattr(obj, page_icon[1:], Undefined) is not Undefined:
+                page.register_icon_listener(obj, page_icon[1:])
 
         # Save the Traits UI in the page so it can dispose of it later:
         page.ui = ui
@@ -194,13 +193,13 @@ class _VerticalNotebookEditor(Editor):
         # Return the new notebook page
         return page
 
-    def _find_page(self, object):
+    def _find_page(self, obj):
         """ 
         Find the notebook page corresponding to a specified object. Returns
         the page if found, and **None** otherwise.
         """
         for page in self.notebook.pages:
-            if object is page.data:
+            if obj is page.data:
                 return page
 
         return None
