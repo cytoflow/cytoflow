@@ -70,9 +70,6 @@ class HistogramView(HasTraits):
         bin_width = (xmax - xmin) / num_bins
         bins = np.arange(xmin, xmax, bin_width)
         kwargs.setdefault('bins', bins) 
-            
-        # TODO - make sure the bin width is the same across all the facets
-        # being plotted on the same axes
 
         g = FacetGrid(x, 
                       col = (self.xfacet if self.xfacet else None),

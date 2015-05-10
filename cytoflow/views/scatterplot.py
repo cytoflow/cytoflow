@@ -5,10 +5,9 @@ Created on Apr 19, 2015
 """
 from traits.api import HasTraits, provides, Str
 from cytoflow.views.i_view import IView
-from cytoflow.utility.util import num_hist_bins
 from cytoflow.views.sns_axisgrid import FacetGrid
 import matplotlib.pyplot as plt
-import seaborn as sns
+import matplotlib as mpl
 
 @provides(IView)
 class ScatterplotView(HasTraits):
@@ -58,9 +57,10 @@ class ScatterplotView(HasTraits):
     def plot(self, experiment, fig_num = None, **kwargs):
         """Plot a faceted scatter plot view of a channel"""
         
-        kwargs.setdefault('alpha', 0.5)
+        kwargs.setdefault('alpha', 0.25)
         kwargs.setdefault('s', 2)
-        kwargs.setdefault('marker', '.')
+        kwargs.setdefault('marker', 'o')
+
         
         if not self.subset:
             x = experiment.data
@@ -71,17 +71,17 @@ class ScatterplotView(HasTraits):
                       col = (self.xfacet if self.xfacet else None),
                       row = (self.yfacet if self.yfacet else None),
                       hue = (self.huefacet if self.huefacet else None),
-                      fig_kws={"num" : fig_num})
+                      fig_kws={"num" : fig_num},
+                      legend_out = False)
         
         g.map(plt.scatter, self.xchannel, self.ychannel, **kwargs)
+        g.add_legend()
+        #plt.rcdefaults()
         
 if __name__ == '__main__':
-    import seaborn as sns
     import cytoflow as flow
     import FlowCytometryTools as fc
     
-    import matplotlib as mpl
-    import matplotlib.pyplot as plt
     mpl.rcParams['savefig.dpi'] = 2 * mpl.rcParams['savefig.dpi']
     
     tube1 = fc.FCMeasurement(ID='Test 1', 
