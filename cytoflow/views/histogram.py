@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 from cytoflow.views.i_view import IView
 from cytoflow.views.sns_axisgrid import FacetGrid
 from cytoflow.utility.util import num_hist_bins
-from numpy import arange
+import numpy as np
 
 @provides(IView)
 class HistogramView(HasTraits):
@@ -58,18 +58,18 @@ class HistogramView(HasTraits):
         
         kwargs.setdefault('histtype', 'stepfilled')
         kwargs.setdefault('alpha', 0.5)
-        
-        num_bins = num_hist_bins(experiment[self.channel])
-        plot_min = experiment[self.channel].min()
-        plot_max = experiment[self.channel].max()
-        bin_width = (plot_max - plot_min) / num_bins
-        bins = arange(plot_min, plot_max, bin_width)
-        kwargs.setdefault('bins', bins) 
-        
+
         if not self.subset:
             x = experiment.data
         else:
             x = experiment.query(self.subset)
+            
+        num_bins = num_hist_bins(x[self.channel])
+        xmin = np.amin(x[self.channel])
+        xmax = np.amax(x[self.channel])
+        bin_width = (xmax - xmin) / num_bins
+        bins = np.arange(xmin, xmax, bin_width)
+        kwargs.setdefault('bins', bins) 
             
         # TODO - make sure the bin width is the same across all the facets
         # being plotted on the same axes
@@ -78,10 +78,11 @@ class HistogramView(HasTraits):
                       col = (self.xfacet if self.xfacet else None),
                       row = (self.yfacet if self.yfacet else None),
                       hue = (self.huefacet if self.huefacet else None),
-                      fig_kws={"num" : fig_num})
+                      fig_kws={"num" : fig_num},
+                      legend_out = False)
         
         g.map(plt.hist, self.channel, **kwargs)
-        
+        g.add_legend()
         
     def is_valid(self, experiment):
         """Validate this view against an experiment."""
@@ -109,9 +110,7 @@ class HistogramView(HasTraits):
         return True
     
 if __name__ == '__main__':
-    import matplotlib as mpl
-    import matplotlib.pyplot as plt
-    
+   
     plt.ioff()
     p = plt.figure(1)
     
