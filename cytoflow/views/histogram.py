@@ -1,3 +1,5 @@
+from __future__ import division
+
 if __name__ == '__main__':
     from traits.etsconfig.api import ETSConfig
     ETSConfig.toolkit = 'qt4'
@@ -10,6 +12,7 @@ import matplotlib.pyplot as plt
 from cytoflow.views.i_view import IView
 from cytoflow.views.sns_axisgrid import FacetGrid
 from cytoflow.utility.util import num_hist_bins
+from numpy import arange
 
 @provides(IView)
 class HistogramView(HasTraits):
@@ -56,8 +59,12 @@ class HistogramView(HasTraits):
         kwargs.setdefault('histtype', 'stepfilled')
         kwargs.setdefault('alpha', 0.5)
         
-        bins = num_hist_bins(experiment[self.channel])
-        kwargs.setdefault('bins', bins) # Do not move above.  don't ask.
+        num_bins = num_hist_bins(experiment[self.channel])
+        plot_min = experiment[self.channel].min()
+        plot_max = experiment[self.channel].max()
+        bin_width = (plot_max - plot_min) / num_bins
+        bins = arange(plot_min, plot_max, bin_width)
+        kwargs.setdefault('bins', bins) 
         
         if not self.subset:
             x = experiment.data
@@ -73,7 +80,6 @@ class HistogramView(HasTraits):
                       hue = (self.huefacet if self.huefacet else None),
                       fig_kws={"num" : fig_num})
         
-        # TODO - compute and specify the bin width!
         g.map(plt.hist, self.channel, **kwargs)
         
         
