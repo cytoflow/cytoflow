@@ -10,6 +10,7 @@ from cytoflow.views.sns_axisgrid import FacetGrid
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
+import matplotlib.transforms as mtrans
 
 @provides(IView)
 class HexbinView(HasTraits):
@@ -62,17 +63,28 @@ class HexbinView(HasTraits):
         #kwargs.setdefault('histtype', 'stepfilled')
         #kwargs.setdefault('alpha', 0.5)
         kwargs.setdefault('edgecolor', 'none')
+        #kwargs.setdefault('mincnt', 1)
+        #kwargs.setdefault('bins', 'log')
+        
+        if not self.subset:
+            x = experiment.data
+        else:
+            x = experiment.query(self.subset)
+            
+        xmin, xmax = (np.amin(x[self.xchannel]), np.amax(x[self.xchannel]))
+        ymin, ymax = (np.amin(x[self.ychannel]), np.amax(x[self.ychannel]))
+        # to avoid issues with singular data, expand the min/max pairs
+        xmin, xmax = mtrans.nonsingular(xmin, xmax, expander=0.1)
+        ymin, ymax = mtrans.nonsingular(ymin, ymax, expander=0.1)
+        
+        extent = (xmin, xmax, ymin, ymax)
+        kwargs.setdefault('extent', extent)
         
         xbins = num_hist_bins(experiment[self.xchannel])
         ybins = num_hist_bins(experiment[self.ychannel])
         bins = np.mean([xbins, ybins])
         
         kwargs.setdefault('bins', bins) # Do not move above.  don't ask.
-        
-        if not self.subset:
-            x = experiment.data
-        else:
-            x = experiment.query(self.subset)
 
         g = FacetGrid(x, 
                       col = (self.xfacet if self.xfacet else None),
