@@ -1,8 +1,7 @@
 from traits.etsconfig.api import ETSConfig
-from gevent.core import CHILD
 ETSConfig.toolkit = 'qt4'
 
-from pyface.qt import QtGui, QtCore
+from pyface.qt import QtGui
 
 from traits.api \
     import HasTraits, HasPrivateTraits, Instance, List, Str, Bool, Property, \
