@@ -295,15 +295,17 @@ class FlowTask(Task):
             assert len(old) == 1
             wi = old[0]
             
-            if self.model.selected == wi.
+            if self.model.selected == wi:
+                self.model.selected = wi.previous
             
-            wi.prev.next = wi.next
-            wi.next.prev = wi.prev
+            wi.previous.next = wi.next
+            wi.next.previous = wi.previous
             
             del wi.default_view
             del wi.views
-            
-            wi.next.operation_parameters_updated()
+            del wi
+
+            self.operation_parameters_updated()
         
     @on_trait_change("model:selected:operation:+")
     def operation_parameters_updated(self): 
