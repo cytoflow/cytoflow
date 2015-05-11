@@ -78,8 +78,7 @@ class _VerticalNotebookEditor(Editor):
         """
         
         # Replace all of the current notebook pages:
-        self.notebook.pages = [self._create_page(obj)
-                               for obj in self.value]
+        self.notebook.pages = [self._create_page(obj) for obj in self.value]
 
     def update_editor_item(self, event):
         """ 
@@ -87,7 +86,7 @@ class _VerticalNotebookEditor(Editor):
         """
         
         # Replace the updated notebook pages:
-        self.notebook.pages[ event.index: event.index + len( event.removed ) ] \
+        self.notebook.pages[event.index: event.index + len(event.removed)] \
             = [self._create_page(obj) for obj in event.added]
 
     def dispose(self):

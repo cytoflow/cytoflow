@@ -73,9 +73,15 @@ class VerticalNotebookPage(HasPrivateTraits):
 
     # The control representing the open page:
     control = Property
+    
+    # The layout for the controls
+    layout = Instance(QtGui.QVBoxLayout)
+    
+    cmd_button = Instance(QtGui.QCommandLinkButton)
 
     # The control representing the button that opens and closes the control
-    button = Property
+    #button = Property
+    #close_button = Property
 
     #-- Public Methods -------------------------------------------------------
 
@@ -86,6 +92,47 @@ class VerticalNotebookPage(HasPrivateTraits):
         self.on_trait_change(self._on_name_changed, 'name', dispatch = 'ui')
         self.on_trait_change(self._on_description_changed, 'description', dispatch = 'ui')
         self.on_trait_change(self._on_icon_changed, 'icon', dispatch = 'ui')
+        
+    def create_control(self, parent):
+        """ 
+        Creates the underlying Qt window used for the notebook.
+        """
+
+        self.layout = QtGui.QVBoxLayout()
+        self.control = QtGui.QWidget()
+
+        buttons_layout = QtGui.QHBoxLayout()
+        buttons_control = QtGui.QWidget()
+        
+        self.cmd_button = QtGui.QCommandLinkButton(buttons_control)
+        self.cmd_button.setVisible(True)
+        self.cmd_button.setCheckable(True)
+        self.cmd_button.setFlat(True)
+        self.cmd_button.setAutoFillBackground(True)
+        self.cmd_button.clicked.connect(self._handle_page_toggle)
+        
+        buttons_layout.addWidget(self.cmd_button)
+        
+        del_button = QtGui.QPushButton(buttons_control)
+        del_button.setVisible(True)
+        del_button.setFlat(True)
+        del_button.setIcon(self.button.style().standardIcon(QtGui.QStyle.SP_TitleBarCloseButton))
+        del_button.clicked.connect(self._handle_close_button)
+        
+        buttons_layout.addWidget(del_button)
+        buttons_control.setLayout(buttons_layout)
+        
+        self.layout.addWidget(buttons_control)
+        self.layout.addWidget(self.ui.control)
+        
+        splitter = QtGui.QSplitter()
+        splitter.setOrientation(QtGui.QStyle.Horizontal)
+        self.layaout.addWidget(splitter)
+        
+        self.layout.addWidget()
+        
+        self.control.setLayout(self.layout)
+        return self.control
 
     def close(self):
         """ Closes the notebook page. """
@@ -163,11 +210,23 @@ class VerticalNotebookPage(HasPrivateTraits):
         new_button = QtGui.QCommandLinkButton(self.notebook.control)
         new_button.setVisible(True)
         new_button.setCheckable(True)
-        new_button.setFlat(False)
+        new_button.setFlat(True)
         new_button.setAutoFillBackground(True)
         new_button.clicked.connect(self._handle_page_toggle)
         return new_button
-
+    
+    @cached_property
+    def _get_close_button(self):
+        new_button = QtGui.QPushButton(self.notebook.control)
+        new_button.setVisible(True)
+        new_button.setFlat(True)
+        new_button.setIcon(self.button.style().standardIcon(QtGui.QStyle.SP_TitleBarCloseButton))
+        new_button.clicked.connect(self._handle_close_button)
+        return new_button
+    
+    def _handle_close_button(self):
+        self.notebook.remove_page(self)
+    
     def _get_control(self):
         """ 
         Returns the 'open' form of the notebook page.
@@ -307,7 +366,7 @@ class VerticalNotebook(HasPrivateTraits):
     # The Qt control used to represent the notebook:
     control = Instance(QtGui.QWidget)
 
-    # The Qt layout containing the child widgets
+    # The Qt layout containing the child widgets & layouts
     layout = Instance(QtGui.QVBoxLayout)
 
     #-- Public Methods -------------------------------------------------------
@@ -342,6 +401,12 @@ class VerticalNotebook(HasPrivateTraits):
         returns it as the result.
         """
         return VerticalNotebookPage(notebook=self)
+    
+#     def remove_page(self, page):
+#         page.ui.dispose()
+#         del page.ui
+#         self.editor.value.remove(page.data)
+#         self._refresh()
 
     def open(self, page):
         """ 
@@ -406,10 +471,20 @@ class VerticalNotebook(HasPrivateTraits):
             self.layout.takeAt(0)
 
         for page in self.pages:
-            self.layout.addWidget(page.button)
-            #page.closed_page.setVisible(not page.is_open)
+            if not page.control:
+                page.create_control(self.control)
             self.layout.addWidget(page.control)
-            page.control.setVisible(page.is_open)
+            
+#             buttons_control = QtGui.QWidget()
+#             buttons_layout = QtGui.QHBoxLayout()
+#             buttons_control.setLayout(buttons_layout)
+#             buttons_layout.addWidget(page.button)
+#             buttons_layout.addWidget(page.close_button)
+#             self.layout.addWidget(buttons_control)
+#             self.layout.addWidget(page.control)
+#             page.control.setVisible(page.is_open)
+            
+            # TODO - move this all up into the page
 
         self.control.setUpdatesEnabled(True)
 
@@ -443,6 +518,6 @@ if __name__ == '__main__':
         )
 
     test = TestList()
-    test.el.append(TestPageClass(trait1="one", trait2="two"))
-    test.el.append(TestPageClass(trait1="three", trait2="four"))
+    test.el.append(TestPageClass(trait1="one", trait2=True))
+    test.el.append(TestPageClass(trait1="three", trait2=False))
     test.configure_traits()
