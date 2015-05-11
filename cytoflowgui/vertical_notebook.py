@@ -1,11 +1,11 @@
 from traits.etsconfig.api import ETSConfig
 ETSConfig.toolkit = 'qt4'
 
-from pyface.qt import QtGui
+from pyface.qt import QtGui, QtCore
 
 from traits.api \
     import HasTraits, HasPrivateTraits, Instance, List, Str, Bool, Property, \
-    Any, cached_property
+    Any, cached_property, Int
 
 from traitsui.api import UI
 
@@ -53,7 +53,7 @@ class VerticalNotebookPage(HasPrivateTraits):
     icon_object_trait = Str
     
     # The icon for the page open/closed button
-    icon = Instance(QtGui.QStyle.StandardPixmap)
+    icon = Int(QtGui.QStyle.SP_ArrowRight)
 
     # The parent window for the client page [Get by client]:
     parent = Property
@@ -77,6 +77,8 @@ class VerticalNotebookPage(HasPrivateTraits):
     # The layout for the controls
     layout = Instance(QtGui.QVBoxLayout)
     
+    # the control representing the command button.  need to keep it around
+    # so we can update its name, desc, and icon dynamaically
     cmd_button = Instance(QtGui.QCommandLinkButton)
 
     # The control representing the button that opens and closes the control
@@ -93,46 +95,50 @@ class VerticalNotebookPage(HasPrivateTraits):
         self.on_trait_change(self._on_description_changed, 'description', dispatch = 'ui')
         self.on_trait_change(self._on_icon_changed, 'icon', dispatch = 'ui')
         
-    def create_control(self, parent):
-        """ 
-        Creates the underlying Qt window used for the notebook.
-        """
-
-        self.layout = QtGui.QVBoxLayout()
-        self.control = QtGui.QWidget()
-
-        buttons_layout = QtGui.QHBoxLayout()
-        buttons_control = QtGui.QWidget()
-        
-        self.cmd_button = QtGui.QCommandLinkButton(buttons_control)
-        self.cmd_button.setVisible(True)
-        self.cmd_button.setCheckable(True)
-        self.cmd_button.setFlat(True)
-        self.cmd_button.setAutoFillBackground(True)
-        self.cmd_button.clicked.connect(self._handle_page_toggle)
-        
-        buttons_layout.addWidget(self.cmd_button)
-        
-        del_button = QtGui.QPushButton(buttons_control)
-        del_button.setVisible(True)
-        del_button.setFlat(True)
-        del_button.setIcon(self.button.style().standardIcon(QtGui.QStyle.SP_TitleBarCloseButton))
-        del_button.clicked.connect(self._handle_close_button)
-        
-        buttons_layout.addWidget(del_button)
-        buttons_control.setLayout(buttons_layout)
-        
-        self.layout.addWidget(buttons_control)
-        self.layout.addWidget(self.ui.control)
-        
-        splitter = QtGui.QSplitter()
-        splitter.setOrientation(QtGui.QStyle.Horizontal)
-        self.layaout.addWidget(splitter)
-        
-        self.layout.addWidget()
-        
-        self.control.setLayout(self.layout)
-        return self.control
+#     def create_control(self, parent):
+#         """ 
+#         Creates the underlying Qt window used for the notebook.
+#         """
+# 
+#         self.layout = QtGui.QVBoxLayout()
+#         self.control = QtGui.QWidget()
+# 
+#         buttons_layout = QtGui.QHBoxLayout()
+#         buttons_control = QtGui.QWidget()
+#         
+#         self.cmd_button = QtGui.QCommandLinkButton(buttons_control)
+#         self.cmd_button.setVisible(True)
+#         self.cmd_button.setCheckable(True)
+#         self.cmd_button.setFlat(True)
+#         self.cmd_button.setAutoFillBackground(True)
+#         self.cmd_button.clicked.connect(self._handle_page_toggle)
+#         
+#         self.cmd_button.setText(self.name)
+#         self.cmd_button.setDescription(self.description)
+#         self.cmd_button.setIcon(self.cmd_button.style().standardIcon(self.icon))
+#         
+#         buttons_layout.addWidget(self.cmd_button)
+#         
+#         del_button = QtGui.QPushButton(buttons_control)
+#         del_button.setVisible(True)
+#         del_button.setFlat(True)
+#         del_button.setIcon(self.button.style().standardIcon(QtGui.QStyle.SP_TitleBarCloseButton))
+#         del_button.clicked.connect(self._handle_close_button)
+#         
+#         buttons_layout.addWidget(del_button)
+#         buttons_control.setLayout(buttons_layout)
+#         
+#         self.layout.addWidget(buttons_control)
+#         self.layout.addWidget(self.ui.control)
+#         
+#         splitter = QtGui.QSplitter()
+#         splitter.setOrientation(QtGui.QStyle.Horizontal)
+#         self.layaout.addWidget(splitter)
+#         
+#         #self.layout.addWidget()
+#         
+#         self.control.setLayout(self.layout)
+#         return self.control
 
     def close(self):
         """ Closes the notebook page. """
@@ -202,36 +208,75 @@ class VerticalNotebookPage(HasPrivateTraits):
         else:
             self.notebook.open(self)
 
-    @cached_property
-    def _get_button(self):
-        """ 
-        Returns the button to open or close the notebook page
-        """
-        new_button = QtGui.QCommandLinkButton(self.notebook.control)
-        new_button.setVisible(True)
-        new_button.setCheckable(True)
-        new_button.setFlat(True)
-        new_button.setAutoFillBackground(True)
-        new_button.clicked.connect(self._handle_page_toggle)
-        return new_button
-    
-    @cached_property
-    def _get_close_button(self):
-        new_button = QtGui.QPushButton(self.notebook.control)
-        new_button.setVisible(True)
-        new_button.setFlat(True)
-        new_button.setIcon(self.button.style().standardIcon(QtGui.QStyle.SP_TitleBarCloseButton))
-        new_button.clicked.connect(self._handle_close_button)
-        return new_button
-    
+#     @cached_property
+#     def _get_button(self):
+#         """ 
+#         Returns the button to open or close the notebook page
+#         """
+#         new_button = QtGui.QCommandLinkButton(self.notebook.control)
+#         new_button.setVisible(True)
+#         new_button.setCheckable(True)
+#         new_button.setFlat(True)
+#         new_button.setAutoFillBackground(True)
+#         new_button.clicked.connect(self._handle_page_toggle)
+#         return new_button
+#     
+#     @cached_property
+#     def _get_close_button(self):
+#         new_button = QtGui.QPushButton(self.notebook.control)
+#         new_button.setVisible(True)
+#         new_button.setFlat(True)
+#         new_button.setIcon(self.button.style().standardIcon(QtGui.QStyle.SP_TitleBarCloseButton))
+#         new_button.clicked.connect(self._handle_close_button)
+#         return new_button
+#     
     def _handle_close_button(self):
         self.notebook.remove_page(self)
     
+    @cached_property
     def _get_control(self):
         """ 
-        Returns the 'open' form of the notebook page.
+        Returns the control cluster for the notebook page
         """
-        return self.ui.control
+        self.layout = QtGui.QVBoxLayout()
+        control = QtGui.QWidget()
+
+        buttons_layout = QtGui.QHBoxLayout()
+        buttons_control = QtGui.QWidget()
+        
+        self.cmd_button = QtGui.QCommandLinkButton(buttons_control)
+        self.cmd_button.setVisible(True)
+        self.cmd_button.setCheckable(True)
+        self.cmd_button.setFlat(True)
+        self.cmd_button.setAutoFillBackground(True)
+        self.cmd_button.clicked.connect(self._handle_page_toggle)
+        
+        self.cmd_button.setText(self.name)
+        self.cmd_button.setDescription(self.description)
+        self.cmd_button.setIcon(self.cmd_button.style().standardIcon(self.icon))
+        
+        buttons_layout.addWidget(self.cmd_button)
+        
+        del_button = QtGui.QPushButton(buttons_control)
+        del_button.setVisible(True)
+        del_button.setFlat(True)
+        del_button.setIcon(del_button.style().standardIcon(QtGui.QStyle.SP_TitleBarCloseButton))
+        del_button.clicked.connect(self._handle_close_button)
+        
+        buttons_layout.addWidget(del_button)
+        buttons_control.setLayout(buttons_layout)
+        
+        self.layout.addWidget(buttons_control)
+        self.layout.addWidget(self.ui.control)
+        
+        splitter = QtGui.QSplitter()
+        splitter.setOrientation(QtCore.Qt.Horizontal)
+        self.layout.addWidget(splitter)
+        
+        #self.layout.addWidget()
+        
+        control.setLayout(self.layout)
+        return control
 
     def _get_parent(self):
         """ 
@@ -245,7 +290,7 @@ class VerticalNotebookPage(HasPrivateTraits):
         """
 
         self.control.setVisible(is_open)
-        self.button.setChecked(is_open)
+        self.cmd_button.setChecked(is_open)
         
         if self.icon_object is None:
             if is_open:
@@ -257,13 +302,16 @@ class VerticalNotebookPage(HasPrivateTraits):
         """ 
         Handles the name trait being changed.
         """
-        self.button.setText(name)
+        if self.cmd_button:
+            self.cmd_button.setText(name)
 
     def _on_description_changed(self, description):
-        self.button.setDescription(description)
+        if self.cmd_button:
+            self.cmd_button.setDescription(description)
 
     def _on_icon_changed(self, icon):
-        self.button.setIcon(self.button.style().standardIcon(icon))
+        if self.cmd_button:
+            self.cmd_button.setIcon(self.cmd_button.style().standardIcon(icon))
         
     def _name_updated(self):
         """ 
@@ -471,8 +519,6 @@ class VerticalNotebook(HasPrivateTraits):
             self.layout.takeAt(0)
 
         for page in self.pages:
-            if not page.control:
-                page.create_control(self.control)
             self.layout.addWidget(page.control)
             
 #             buttons_control = QtGui.QWidget()
