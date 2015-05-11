@@ -1,4 +1,5 @@
 from traits.etsconfig.api import ETSConfig
+from gevent.core import CHILD
 ETSConfig.toolkit = 'qt4'
 
 from pyface.qt import QtGui, QtCore
@@ -90,7 +91,7 @@ class VerticalNotebookPage(HasPrivateTraits):
     def __init__(self, **kwargs):
         super(VerticalNotebookPage, self).__init__(**kwargs)
 
-        # usually i'd make these static notifiers, but because these traits get
+        # usually i'd make these static notifiers, but because these traits can
         # changed from the worker thread, they need to be re-dispatched on the
         # UI thread, and you can only specify UI dispatch with a dynamic
         # notifier
@@ -100,7 +101,7 @@ class VerticalNotebookPage(HasPrivateTraits):
         self.on_trait_change(self._on_description_changed, 'description', dispatch = 'ui')
         self.on_trait_change(self._on_icon_changed, 'icon', dispatch = 'ui')
 
-    def remove(self):
+    def dispose(self):
         """ Removes this notebook page. """
  
         if self.name_object is not None:
@@ -118,13 +119,42 @@ class VerticalNotebookPage(HasPrivateTraits):
             self.icon_object.on_trait_change(self._icon_updated,
                                              self.icon_object_trait,
                                              remove = True)
- 
+        
+        self.on_trait_change(self._on_is_open_changed, 
+                             'is_open', 
+                             dispatch = 'ui',
+                             remove = True)
+        self.on_trait_change(self._on_name_changed, 
+                             'name', 
+                             dispatch = 'ui',
+                             remove = True)
+        self.on_trait_change(self._on_description_changed, 
+                             'description', 
+                             dispatch = 'ui',
+                             remove = True)
+        self.on_trait_change(self._on_icon_changed, 
+                             'icon', 
+                             dispatch = 'ui',
+                             remove = True)
+        
+        # make sure we dispose of the child ui properly
         if self.ui is not None:
             self.ui.dispose()
             self.ui = None
+        
+        # and clean up all the widgets
+        buttons_container = self.layout.takeAt(0).widget()
+        buttons_layout = buttons_container.layout()
+        
+        while buttons_layout.count() > 0:
+            child = buttons_layout.takeAt(0)
+            child.widget().setParent(None)
             
-        # TODO - probably need to destroy the Qt widgets too?  and take down
-        # the listeners from __init__?
+        buttons_container.setParent(None)
+        
+        while self.layout.count() > 0:
+            child = self.layout.takeAt(0)
+            child.widget().setParent(None)
 
     def register_name_listener(self, model, trait):
         """ 
@@ -178,7 +208,10 @@ class VerticalNotebookPage(HasPrivateTraits):
 
 
     def _handle_close_button(self):
-        self.notebook.remove_page(self)
+        # because of the various handlers, all we have to do is remove
+        # self.data from the underlying list, and the ui should take care
+        # of itself.
+        self.notebook.editor.value.remove(self.data)
     
     @cached_property
     def _get_control(self):
@@ -189,9 +222,9 @@ class VerticalNotebookPage(HasPrivateTraits):
         control = QtGui.QWidget()
 
         buttons_layout = QtGui.QHBoxLayout()
-        buttons_control = QtGui.QWidget()
+        buttons_container = QtGui.QWidget()
         
-        self.cmd_button = QtGui.QCommandLinkButton(buttons_control)
+        self.cmd_button = QtGui.QCommandLinkButton(buttons_container)
         self.cmd_button.setVisible(True)
         self.cmd_button.setCheckable(True)
         self.cmd_button.setFlat(True)
@@ -204,16 +237,17 @@ class VerticalNotebookPage(HasPrivateTraits):
         
         buttons_layout.addWidget(self.cmd_button)
         
-        del_button = QtGui.QPushButton(buttons_control)
-        del_button.setVisible(True)
-        del_button.setFlat(True)
-        del_button.setIcon(del_button.style().standardIcon(QtGui.QStyle.SP_TitleBarCloseButton))
-        del_button.clicked.connect(self._handle_close_button)
+        if self.notebook.delete:
+            del_button = QtGui.QPushButton(buttons_container)
+            del_button.setVisible(True)
+            del_button.setFlat(True)
+            del_button.setIcon(del_button.style().standardIcon(QtGui.QStyle.SP_TitleBarCloseButton))
+            del_button.clicked.connect(self._handle_close_button)
+            
+            buttons_layout.addWidget(del_button)
+        buttons_container.setLayout(buttons_layout)
         
-        buttons_layout.addWidget(del_button)
-        buttons_control.setLayout(buttons_layout)
-        
-        self.layout.addWidget(buttons_control)
+        self.layout.addWidget(buttons_container)
         
         self.ui.control.setVisible(self.is_open)
         self.layout.addWidget(self.ui.control)
@@ -349,6 +383,9 @@ class VerticalNotebook(HasPrivateTraits):
 
     # Allow multiple open pages at once?
     multiple_open = Bool(False)
+    
+    # can the editor delete list items?
+    delete = Bool(False)
 
     # Should the notebook be scrollable?
     scrollable = Bool(False)
@@ -399,12 +436,6 @@ class VerticalNotebook(HasPrivateTraits):
         returns it as the result.
         """
         return VerticalNotebookPage(notebook=self)
-    
-#     def remove_page(self, page):
-#         page.ui.dispose()
-#         del page.ui
-#         self.editor.value.remove(page.data)
-#         self._refresh()
 
     def open(self, page):
         """ 
@@ -431,7 +462,7 @@ class VerticalNotebook(HasPrivateTraits):
         Handles the notebook's pages being changed.
         """
         for page in old:
-            page.remove()
+            page.dispose()
 
         self._refresh()
 
@@ -440,7 +471,7 @@ class VerticalNotebook(HasPrivateTraits):
         Handles some of the notebook's pages being changed.
         """
         for page in event.removed:
-            page.remove()
+            page.dispose()
 
         self._refresh()
 
@@ -470,17 +501,6 @@ class VerticalNotebook(HasPrivateTraits):
 
         for page in self.pages:
             self.layout.addWidget(page.control)
-            
-#             buttons_control = QtGui.QWidget()
-#             buttons_layout = QtGui.QHBoxLayout()
-#             buttons_control.setLayout(buttons_layout)
-#             buttons_layout.addWidget(page.button)
-#             buttons_layout.addWidget(page.close_button)
-#             self.layout.addWidget(buttons_control)
-#             self.layout.addWidget(page.control)
-#             page.control.setVisible(page.is_open)
-            
-            # TODO - move this all up into the page
 
         self.control.setUpdatesEnabled(True)
 
@@ -508,7 +528,8 @@ if __name__ == '__main__':
                      id='table',
                      #editor = ListEditor()
                      editor=VerticalNotebookEditor(page_name='.trait1',
-                                                   view='traits_view')
+                                                   view='traits_view',
+                                                   delete = True)
                      )),
                     resizable = True)
 

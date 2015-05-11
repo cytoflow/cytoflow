@@ -55,7 +55,9 @@ class _VerticalNotebookEditor(Editor):
         
         factory = self.factory
         self.notebook = VerticalNotebook(**factory.get('multiple_open',
-                                                       'scrollable', 'double_click')).set(editor=self)
+                                                       'delete',
+                                                       'scrollable', 
+                                                       'double_click')).set(editor=self)
         self.control = self.notebook.create_control(parent)
 
         # Set up the additional 'list items changed' event handler needed for
@@ -211,6 +213,9 @@ class VerticalNotebookEditor(BasicEditorFactory):
 
     # Allow multiple open pages at once?
     multiple_open = Bool(False)
+    
+    # Include a "delete" button?
+    delete = Bool(False)
 
     # Should the notebook be scrollable?
     scrollable = Bool(False)
