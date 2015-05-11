@@ -90,73 +90,41 @@ class VerticalNotebookPage(HasPrivateTraits):
     def __init__(self, **kwargs):
         super(VerticalNotebookPage, self).__init__(**kwargs)
 
+        # usually i'd make these static notifiers, but because these traits get
+        # changed from the worker thread, they need to be re-dispatched on the
+        # UI thread, and you can only specify UI dispatch with a dynamic
+        # notifier
+        
         self.on_trait_change(self._on_is_open_changed, 'is_open', dispatch = 'ui')
         self.on_trait_change(self._on_name_changed, 'name', dispatch = 'ui')
         self.on_trait_change(self._on_description_changed, 'description', dispatch = 'ui')
         self.on_trait_change(self._on_icon_changed, 'icon', dispatch = 'ui')
-        
-#     def create_control(self, parent):
-#         """ 
-#         Creates the underlying Qt window used for the notebook.
-#         """
-# 
-#         self.layout = QtGui.QVBoxLayout()
-#         self.control = QtGui.QWidget()
-# 
-#         buttons_layout = QtGui.QHBoxLayout()
-#         buttons_control = QtGui.QWidget()
-#         
-#         self.cmd_button = QtGui.QCommandLinkButton(buttons_control)
-#         self.cmd_button.setVisible(True)
-#         self.cmd_button.setCheckable(True)
-#         self.cmd_button.setFlat(True)
-#         self.cmd_button.setAutoFillBackground(True)
-#         self.cmd_button.clicked.connect(self._handle_page_toggle)
-#         
-#         self.cmd_button.setText(self.name)
-#         self.cmd_button.setDescription(self.description)
-#         self.cmd_button.setIcon(self.cmd_button.style().standardIcon(self.icon))
-#         
-#         buttons_layout.addWidget(self.cmd_button)
-#         
-#         del_button = QtGui.QPushButton(buttons_control)
-#         del_button.setVisible(True)
-#         del_button.setFlat(True)
-#         del_button.setIcon(self.button.style().standardIcon(QtGui.QStyle.SP_TitleBarCloseButton))
-#         del_button.clicked.connect(self._handle_close_button)
-#         
-#         buttons_layout.addWidget(del_button)
-#         buttons_control.setLayout(buttons_layout)
-#         
-#         self.layout.addWidget(buttons_control)
-#         self.layout.addWidget(self.ui.control)
-#         
-#         splitter = QtGui.QSplitter()
-#         splitter.setOrientation(QtGui.QStyle.Horizontal)
-#         self.layaout.addWidget(splitter)
-#         
-#         #self.layout.addWidget()
-#         
-#         self.control.setLayout(self.layout)
-#         return self.control
 
-    def close(self):
-        """ Closes the notebook page. """
-
+    def remove(self):
+        """ Removes this notebook page. """
+ 
         if self.name_object is not None:
             self.name_object.on_trait_change(self._name_updated,
                                              self.name_object_trait,
                                              remove=True)
             self.name_object = None
-
+ 
         if self.description_object is not None:
             self.description_object.on_trait_change(self._description_updated,
                                                     self.description_object_trait,
                                                     remove=True)
-
+            
+        if self.icon_object is not None:
+            self.icon_object.on_trait_change(self._icon_updated,
+                                             self.icon_object_trait,
+                                             remove = True)
+ 
         if self.ui is not None:
             self.ui.dispose()
             self.ui = None
+            
+        # TODO - probably need to destroy the Qt widgets too?  and take down
+        # the listeners from __init__?
 
     def register_name_listener(self, model, trait):
         """ 
@@ -208,28 +176,7 @@ class VerticalNotebookPage(HasPrivateTraits):
         else:
             self.notebook.open(self)
 
-#     @cached_property
-#     def _get_button(self):
-#         """ 
-#         Returns the button to open or close the notebook page
-#         """
-#         new_button = QtGui.QCommandLinkButton(self.notebook.control)
-#         new_button.setVisible(True)
-#         new_button.setCheckable(True)
-#         new_button.setFlat(True)
-#         new_button.setAutoFillBackground(True)
-#         new_button.clicked.connect(self._handle_page_toggle)
-#         return new_button
-#     
-#     @cached_property
-#     def _get_close_button(self):
-#         new_button = QtGui.QPushButton(self.notebook.control)
-#         new_button.setVisible(True)
-#         new_button.setFlat(True)
-#         new_button.setIcon(self.button.style().standardIcon(QtGui.QStyle.SP_TitleBarCloseButton))
-#         new_button.clicked.connect(self._handle_close_button)
-#         return new_button
-#     
+
     def _handle_close_button(self):
         self.notebook.remove_page(self)
     
@@ -267,13 +214,14 @@ class VerticalNotebookPage(HasPrivateTraits):
         buttons_control.setLayout(buttons_layout)
         
         self.layout.addWidget(buttons_control)
+        
+        self.ui.control.setVisible(self.is_open)
         self.layout.addWidget(self.ui.control)
         
-        splitter = QtGui.QSplitter()
-        splitter.setOrientation(QtCore.Qt.Horizontal)
-        self.layout.addWidget(splitter)
-        
-        #self.layout.addWidget()
+        separator = QtGui.QFrame(control)
+        separator.setFrameShape(QtGui.QFrame.HLine)
+        separator.setFrameShadow(QtGui.QFrame.Sunken)
+        self.layout.addWidget(separator)
         
         control.setLayout(self.layout)
         return control
@@ -289,7 +237,7 @@ class VerticalNotebookPage(HasPrivateTraits):
         Handles the 'is_open' state of the page being changed.
         """
 
-        self.control.setVisible(is_open)
+        self.ui.control.setVisible(is_open)
         self.cmd_button.setChecked(is_open)
         
         if self.icon_object is None:
@@ -297,7 +245,9 @@ class VerticalNotebookPage(HasPrivateTraits):
                 self.icon = QtGui.QStyle.SP_ArrowDown
             else:
                 self.icon = QtGui.QStyle.SP_ArrowRight
-
+        
+        self.ui.control.setVisible(is_open)        
+        
     def _on_name_changed(self, name):
         """ 
         Handles the name trait being changed.
@@ -323,7 +273,8 @@ class VerticalNotebookPage(HasPrivateTraits):
         method = None
         editor = nb.editor
         if editor is not None:
-            # I don't 100% understand this magic.  looks like a handler redirect
+            # I don't 100% understand this magic (taken from the wx themed 
+            # vertical notebook).  looks like a handler redirect?
             method = getattr(editor.ui.handler,
                              '%s_%s_page_name' % 
                              (editor.object_name, editor.name), 
@@ -347,7 +298,6 @@ class VerticalNotebookPage(HasPrivateTraits):
         method = None
         editor = nb.editor
         if editor is not None:
-            # i don't 100% understand this magic.
             method = getattr(editor.ui.handler,
                              '%s_%s_page_description' %
                              (editor.object_name, editor.name),
@@ -481,7 +431,7 @@ class VerticalNotebook(HasPrivateTraits):
         Handles the notebook's pages being changed.
         """
         for page in old:
-            page.close()
+            page.remove()
 
         self._refresh()
 
@@ -490,7 +440,7 @@ class VerticalNotebook(HasPrivateTraits):
         Handles some of the notebook's pages being changed.
         """
         for page in event.removed:
-            page.close()
+            page.remove()
 
         self._refresh()
 
@@ -559,11 +509,16 @@ if __name__ == '__main__':
                      #editor = ListEditor()
                      editor=VerticalNotebookEditor(page_name='.trait1',
                                                    view='traits_view')
-                     )
-            )
-        )
+                     )),
+                    resizable = True)
 
-    test = TestList()
-    test.el.append(TestPageClass(trait1="one", trait2=True))
-    test.el.append(TestPageClass(trait1="three", trait2=False))
-    test.configure_traits()
+    from event_tracer import record_events 
+    import os
+            
+    with record_events() as container:
+        test = TestList()
+        test.el.append(TestPageClass(trait1="one", trait2=True))
+        test.el.append(TestPageClass(trait1="three", trait2=False))
+        
+        test.configure_traits()
+    container.save_to_directory(os.getcwd())
