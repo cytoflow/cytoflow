@@ -289,6 +289,22 @@ class FlowTask(Task):
         # invalidate everything following
         self.operation_parameters_updated()
         
+    @on_trait_change("model:workflow[]")
+    def _on_remove_operation(self, obj, name, old, new):
+        if name == "workflow_items" and len(new) == 0 and len(old) > 0:
+            assert len(old) == 1
+            wi = old[0]
+            
+            if self.model.selected == wi.
+            
+            wi.prev.next = wi.next
+            wi.next.prev = wi.prev
+            
+            del wi.default_view
+            del wi.views
+            
+            wi.next.operation_parameters_updated()
+        
     @on_trait_change("model:selected:operation:+")
     def operation_parameters_updated(self): 
         

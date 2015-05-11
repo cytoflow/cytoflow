@@ -28,7 +28,8 @@ class Workflow(HasTraits):
                                                           page_icon='.icon',
                                                           selected = 'selected',
                                                           scrollable = True,
-                                                          multiple_open = False),
+                                                          multiple_open = False,
+                                                          delete = True),
                             show_label = False
                             ),
                        #resizable = True
