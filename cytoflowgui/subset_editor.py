@@ -28,6 +28,9 @@ class _SubsetEditor(Editor):
     # the cytoflow.Experiment construct the UI
     experiment = Instance(Experiment)
     
+    # the model object whose traits view we'll display
+    model = Instance()
+    
     # the UI for the Experiment metadata
     _ui = Instance(UI)
     
@@ -51,7 +54,7 @@ class _SubsetEditor(Editor):
         
         self.control = QtGui.QWidget()
         self.control.setLayout(self._layout)
-
+  
         obj, group = self._make_view()
         self._obj = obj
         self._obj.on_trait_change(self._view_changed)

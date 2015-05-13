@@ -23,6 +23,7 @@ import FlowCytometryTools as fc
 
 class ISubsetModel(Interface):
     subset_str = Property
+    experiment = Instance(Experiment)
     
 @provides(ISubsetModel)
 class BoolSubsetModel(HasTraits):
@@ -46,6 +47,15 @@ class BoolSubsetModel(HasTraits):
             return "{0} == False".format(self.name)
         else:
             return ""
+    
+    def _set_subset_str(self, val):
+        """Update the view based on a subset string"""
+        if val == "{0} == True".format(self.name):
+            self.selected_t = True
+            self.selected_f = False
+        elif val == "{0} == False".format(self.name):
+            self.selected_t = False
+            self.selected_f = True
 
 @provides(ISubsetModel)
 class CategorySubsetModel(HasTraits):
@@ -116,10 +126,9 @@ class RangeSubsetModel(HasTraits):
 class SubsetModel(HasTraits):
     
     experiment = Instance(Experiment)
-    
     subset_list = List(ISubsetModel)
     
-    subset_string = Property(depends_on = 'subset_list', trait = Str)
+    subset_str = Property(depends_on = 'subset_list', trait = Str)
       
     traits_view = View(Item('subset_list',
                              style = 'custom',
@@ -129,8 +138,11 @@ class SubsetModel(HasTraits):
                                                  mutable = False)))
 
     # MAGIC: gets the value of the Property trait "subset_string"
-    def _get_subset_string(self):
+    def _get_subset_str(self):
         return " and ".join([s.subset_str for s in self.subset_list])
+    
+    # MAGIC: when the Property trait "subset_string" is assigned to,
+    # update the view
     
     # MAGIC: gets the default value of the trait "subset_list"
     def _subset_list_default(self):
