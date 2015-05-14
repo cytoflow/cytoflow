@@ -176,7 +176,15 @@ class FlowTask(Task):
                              task = self)]
         
     def on_new(self):
-        pass
+        self.model.workflow = []
+        
+        # add an import plugin
+        plugin = ImportPlugin()
+        wi = WorkflowItem(task = self)
+        wi.operation = plugin.get_operation()
+
+        self.model.workflow.append(wi)
+        self.model.selected = wi
         
     def on_open(self):
         """ Shows a dialog to open a file.
