@@ -59,6 +59,9 @@ class BoolSubsetModel(HasTraits):
         elif val == "({0} == False)".format(self.name):
             self.selected_t = False
             self.selected_f = True
+        else:
+            self.selected_t = False
+            self.selected_f = False
 
 @provides(ISubsetModel)
 class CategorySubsetModel(HasTraits):
@@ -93,6 +96,7 @@ class CategorySubsetModel(HasTraits):
     
     def _set_subset_str(self, val):
         if not val:
+            self.selected = []
             return
         
         if val.startswith("("):
@@ -141,10 +145,12 @@ class RangeSubsetModel(HasTraits):
         # because low and high are CFloats, we can just assign the string
         # and they'll get "C"onverted
         if not val:
+            self.low = self._low_default()
+            self.high = self._high_default()
             return
         
-        self.low = re.search(r">= (\w+)", val)
-        self.high = re.search(r"<= (\w+)", val)
+        self.low = re.search(r">= ([0-9.]+)", val).group(1)
+        self.high = re.search(r"<= ([0-9.]+)", val).group(1)
     
     # MAGIC: the default value for self.high
     def _high_default(self):
@@ -185,6 +191,10 @@ class SubsetModel(HasTraits):
     # MAGIC: when the Property trait "subset_string" is assigned to,
     # update the view    
     def _set_subset_str(self, value):
+        # do we have a valid experiment yet?
+        if not self.experiment:
+            return 
+        
         # reset everything
         for subset in self.subset_list:
             subset.subset_str = ""
@@ -248,8 +258,7 @@ class _SubsetEditor(Editor):
         self.model = SubsetModel()
         self.sync_value(self.factory.experiment, 'experiment', 'from')
 
-        self.model.on_trait_change(self.update_value, 'subset_str')
-
+        #self.model.on_trait_change(self.update_value, 'subset_str')
         
         self._ui = self.model.edit_traits(kind = 'subpanel',
                                           parent = parent)
@@ -264,8 +273,11 @@ class _SubsetEditor(Editor):
         print "update editor with value: {0}".format(self.value)
         self.model.subset_str = self.value
     
-    #@on_trait_change('model.subset_str')
+    @on_trait_change('model.subset_str')
     def update_value(self, new):
+        if not self.experiment:
+            return
+        
         print "updating value from editor: {0}".format(new)
         self.value = new            
 
