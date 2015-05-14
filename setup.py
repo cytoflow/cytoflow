@@ -3,6 +3,8 @@ from setuptools import setup, find_packages, Extension
 import io
 import os
 
+from cytoflow import version as cf_version
+
 here = os.path.abspath(os.path.dirname(__file__))
 
 def read(*filenames, **kwargs):
@@ -18,7 +20,7 @@ long_description = read('README.rst')
 
 setup(
     name = "cytoflow",
-    version = "0.1.2",
+    version = cf_version,
     packages = find_packages(),
     include_package_data=True,
     
