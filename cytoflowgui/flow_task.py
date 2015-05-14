@@ -7,14 +7,12 @@ Created on Feb 11, 2015
 from traits.etsconfig.api import ETSConfig
 ETSConfig.toolkit = 'qt4'
 
-from pyface.qt import QtGui
-
 import os.path
 
 from traits.api import Instance, List, Bool, on_trait_change
 from pyface.tasks.api import Task, TaskLayout, PaneItem
 from pyface.tasks.action.api import SMenu, SMenuBar, SToolBar, TaskAction
-from pyface.api import FileDialog, OK, ImageResource
+from pyface.api import FileDialog, OK, ImageResource, AboutDialog
 from envisage.api import Plugin, ExtensionPoint, contributes_to
 from envisage.ui.tasks.api import TaskFactory
 from flow_task_pane import FlowTaskPane
@@ -25,6 +23,7 @@ from cytoflowgui.workflow import Workflow
 from cytoflowgui.op_plugins import IOperationPlugin, ImportPlugin, OP_PLUGIN_EXT
 from cytoflowgui.view_plugins import IViewPlugin, VIEW_PLUGIN_EXT
 from cytoflowgui.workflow_item import WorkflowItem
+
 
 from util import UniquePriorityQueue
 import threading
@@ -65,7 +64,11 @@ class FlowTask(Task):
                               TaskAction(name='Preferences...',
                                          method='on_prefs',
                                          accelerator='Ctrl+P'),
-                              id='File', name='&File'))
+                              id='File', name='&File'),
+                        SMenu(TaskAction(name='About...',
+                                         method='on_about',
+                                         accelerator="Ctrl+A"),
+                              id="Help", name ="&Help"))
     
     tool_bars = [ SToolBar(TaskAction(method='on_new',
                                       name = "New",
@@ -88,8 +91,6 @@ class FlowTask(Task):
                                       tooltip='Preferences',
                                       image=ImageResource('prefs')),
                            image_size = (32, 32))]
-    
-    # TODO - acknowledge the Tango icons.
     
     # are we debugging?  ie, do we need a default setup?
     debug = Bool
@@ -252,6 +253,41 @@ class FlowTask(Task):
     
     def on_prefs(self):
         pass
+    
+    def on_about(self):
+        from cytoflow import __version__ as cf_version
+        from FlowCytometryTools import __version__ as fct_version
+        from GoreUtilities import __version__ as gu_version
+        from pandas.version import version as pd_version
+        from numpy.version import version as np_version
+        from numexpr import version as numexp_version
+        from seaborn import __version__ as sns_version
+        from matplotlib import __version__ as mpl_version
+        from pyface import __version__ as py_version
+        from envisage import __version__ as env_version
+        from traits import __version__ as trt_version
+        from traitsui import __version__ as trt_ui_version
+
+        text = ["<b>Cytoflow {0}</b>".format(cf_version),
+                "<p>",
+                "FlowCytometryTools {0}".format(fct_version),
+                "GoreUtilities {0}".format(gu_version),
+                "pandas {0}".format(pd_version),
+                "numpy {0}".format(np_version),
+                "numexpr {0}".format(numexp_version),
+                "seaborn {0}".format(sns_version),
+                "matplotlib {0}".format(mpl_version),
+                "pyface {0}".format(py_version),
+                "envisage {0}".format(env_version),
+                "traits {0}".format(trt_version),
+                "traitsui {0}".format(trt_ui_version),
+                "Icons from the <a href=http://tango.freedesktop.org/>Tango Desktop Project</a>",
+                "Cuvette image from Wikimedia Commons user <a href=http://commons.wikimedia.org/wiki/File:Hellma_Large_cone_cytometry_cell.JPG>HellmaUSA</a>"]
+        dialog = AboutDialog(parent = self.window.control,
+                             title = "About",
+                             image = ImageResource('cuvette'),
+                             additions = text)
+        dialog.open()
     
     def add_operation(self, op_id):
         # first, find the matching plugin
