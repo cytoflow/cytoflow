@@ -13,12 +13,14 @@ if __name__ == '__main__':
 from traitsui.api import BasicEditorFactory, View, UI, \
                          CheckListEditor, Item, HGroup, ListEditor, InstanceEditor
 from traitsui.qt4.editor import Editor
-from traits.api import Instance, HasTraits, List, Float, Int, Str, Dict, \
+from traits.api import Instance, HasTraits, List, CFloat, CInt, Str, Dict, \
                        Interface, Property, Bool, provides, on_trait_change, DelegatesTo
+                       
 from cytoflow import Experiment
 from value_bounds_editor import ValuesBoundsEditor
 import pandas as pd
 import numpy as np
+import re
 
 class ISubsetModel(Interface):
     name = Str
@@ -43,18 +45,18 @@ class BoolSubsetModel(HasTraits):
     # MAGIC: gets the value of the Property trait "subset_str"
     def _get_subset_str(self):
         if self.selected_t and not self.selected_f:
-            return "{0} == True".format(self.name)
+            return "({0} == True)".format(self.name)
         elif not self.selected_t and self.selected_f:
-            return "{0} == False".format(self.name)
+            return "({0} == False)".format(self.name)
         else:
             return ""
     
     def _set_subset_str(self, val):
         """Update the view based on a subset string"""
-        if val == "{0} == True".format(self.name):
+        if val == "({0} == True)".format(self.name):
             self.selected_t = True
             self.selected_f = False
-        elif val == "{0} == False".format(self.name):
+        elif val == "({0} == False)".format(self.name):
             self.selected_t = False
             self.selected_f = True
 
@@ -88,14 +90,30 @@ class CategorySubsetModel(HasTraits):
         phrase += ")"
         
         return phrase
+    
+    def _set_subset_str(self, val):
+        if not val:
+            return
+        
+        if val.startswith("("):
+            val = val[1:]
+        if val.endswidth(")"):
+            val = val[:-1]
+            
+        values = []
+        for s in val.split(" or "):
+            cat = re.search(" == (\w+)$", s).group(1)
+            values.append(cat)
+            
+        self.values = values
 
 @provides(ISubsetModel)
 class RangeSubsetModel(HasTraits):
     name = Str
     experiment = Instance(Experiment)
     values = Property(depends_on = 'experiment')
-    high = Float
-    low = Float
+    high = CFloat
+    low = CFloat
     
     subset_str = Property(trait = Str,
                           depends_on = "name, low, high")
@@ -116,6 +134,17 @@ class RangeSubsetModel(HasTraits):
     def _get_subset_str(self):
         return "({0} >= {1} and {0} <= {2})" \
             .format(self.name, self.low, self.high)
+            
+    # MAGIC: when the Property trait "subset_str" is set, update the
+    # editor.
+    def _set_subset_str(self, val):
+        # because low and high are CFloats, we can just assign the string
+        # and they'll get "C"onverted
+        if not val:
+            return
+        
+        self.low = re.search(r">= (\w+)", val)
+        self.high = re.search(r"<= (\w+)", val)
     
     # MAGIC: the default value for self.high
     def _high_default(self):
@@ -126,9 +155,19 @@ class RangeSubsetModel(HasTraits):
         return self.experiment[self.name].min()
 
 class SubsetModel(HasTraits):
+    
+    # the experiment we use to set up the editor
     experiment = Instance(Experiment)
+    
+    # the primary piece of the model; the traits view is a bunch of
+    # InstanceEditors for this list.
     subset_list = List(ISubsetModel)
     
+    # maps a condition name to an ISubsetModel instance
+    subset_map = Dict(Str, Instance(ISubsetModel))
+    
+    # the actual string representation of this model: something you
+    # can feed to pandas.DataFrame.subset()    
     subset_str = Property(trait = Str,
                           depends_on = "subset_list.subset_str")
       
@@ -146,7 +185,29 @@ class SubsetModel(HasTraits):
     # MAGIC: when the Property trait "subset_string" is assigned to,
     # update the view    
     def _set_subset_str(self, value):
-        print "TODO - set editor to {0}".format(value)
+        # reset everything
+        for subset in self.subset_list:
+            subset.subset_str = ""
+            
+        # abort if there's nothing to parse
+        if not value:
+            return
+        
+        # this parser is ugly and brittle.
+        phrases = value.split(r") and (")
+        if phrases[0] == "":
+            # only had one phrase
+            phrases = [value]
+        for phrase in phrases:
+            if not phrase.startswith("("):
+                phrase = "(" + phrase
+            if not phrase.endswith(")"):
+                phrase = phrase + ")"
+            name = re.match(r"\((\w+) ", phrase).group(1)
+            print "phrase {0} name {1}".format(phrase, name)
+            
+            # update the subset editor ui
+            self.subset_map[name].subset_str = phrase
         
     @on_trait_change('experiment')
     def _on_experiment_change(self):
@@ -157,30 +218,27 @@ class SubsetModel(HasTraits):
                     "int" : RangeSubsetModel}
         
         subset_list = []
+        subset_map = {}
         for name, dtype in self.experiment.conditions.iteritems():
-            subset_list.append(cond_map[dtype](name = name,
-                                               experiment = self.experiment))        
+            subset = cond_map[dtype](name = name,
+                                     experiment = self.experiment)
+            subset_list.append(subset) 
+            subset_map[name] = subset 
+            
+        self.subset_map = subset_map     
         self.subset_list = subset_list
 
 class _SubsetEditor(Editor):
     
-    # the cytoflow.Experiment construct the UI
-    #experiment = Instance(Experiment)
-    
-    # the model object whose traits view we'll display
+    # the model object whose View this Editor displays
     model = Instance(SubsetModel, args = ())
     
+    # the cytoflow.Experiment instance to use to construct the UI.  delegates
+    # to the editor model.
     experiment = DelegatesTo('model')
     
     # the UI for the Experiment metadata
     _ui = Instance(UI)
-     
-#     # the object we create to represent the Experiment conditions.
-#     # make a default instance
-#     _obj = Instance(HasTraits)
-#     
-#     # the parent layout.  we need to keep this around to update dynamically
-#     _layout = Instance(QtGui.QVBoxLayout)
     
     def init(self, parent):
         """
@@ -189,28 +247,13 @@ class _SubsetEditor(Editor):
 
         self.model = SubsetModel()
         self.sync_value(self.factory.experiment, 'experiment', 'from')
-        #self.on_trait_change(self.update_experiment, 'experiment', dispatch = 'ui')
-        
-        #self.sync_value(self.model.subset_str, 'value', 'both')
-        #self.factory.sync_value(self.model.experiment, 'experiment', 'both')
+
+        self.model.on_trait_change(self.update_value, 'subset_str')
+
         
         self._ui = self.model.edit_traits(kind = 'subpanel',
                                           parent = parent)
         self.control = self._ui.control
-        
-#         assert(isinstance(parent, QtGui.QLayout))
-#         self._layout = QtGui.QVBoxLayout()
-#         
-#         self.control = QtGui.QWidget()
-#         self.control.setLayout(self._layout)
-#   
-#         obj, group = self._make_view()
-#         self._obj = obj
-#         self._obj.on_trait_change(self._view_changed)
-#         self._ui = self._obj.edit_traits(kind = 'subpanel',
-#                                          parent = self._parent,
-#                                          view = View(group))
-#         self._layout.addWidget(self._ui.control)
         
     def dispose(self):
         if self._ui:
@@ -221,149 +264,10 @@ class _SubsetEditor(Editor):
         print "update editor with value: {0}".format(self.value)
         self.model.subset_str = self.value
     
-    @on_trait_change('model.subset_str')
+    #@on_trait_change('model.subset_str')
     def update_value(self, new):
         print "updating value from editor: {0}".format(new)
-        self.value = new
-    
-#     def update_editor(self):
-#         print "TODO - update editor with value: {0}".format(self.value)
-#         pass  #for the moment
-#             
-# #         if self._obj:
-# #             self._obj.on_trait_change(self._view_changed, remove = True)
-# #             
-#         super(_SubsetEditor, self).dispose()
-
-#     def update_experiment(self):
-#         
-#         print "updating subset experiment"
-#         
-#         self._layout.parentWidget().setUpdatesEnabled(False)
-#         
-#         if self._ui:
-#             #idx = self._layout.indexOf(self._ui.control)
-#             #print "layout idx: {0}".format(idx)
-#             self._layout.takeAt(self._layout.indexOf(self._ui.control))
-#             self._ui.dispose()
-#             self._ui = None
-#         
-#         if self._obj:
-#             self._obj.on_trait_change(self._view_changed, remove = True)
-#         
-#         obj, group = self._make_view()
-#         
-#         self._obj = obj
-#         self._obj.on_trait_change(self._view_changed)
-#         self._ui = self._obj.edit_traits(kind = 'subpanel',
-#                                          parent = self._parent,
-#                                          view = View(group))
-#         self.control = self._ui.control
-#         self._layout.addWidget(self.control) 
-#         
-#         self._layout.parentWidget().setUpdatesEnabled(True)
-#     
-#     def _make_view(self):
-#         
-#         obj = HasTraits()   # the underlying object whose traits we're viewing
-#         group = Group()     # the TraitsUI Group with the editors in it
-# 
-#         if not self.experiment:
-#             return obj, group
-# 
-#         for name, dtype in self.experiment.conditions.iteritems():
-#             if dtype == 'bool':
-#                 values = [name + '-', name + '+']
-#                 obj.add_trait(name, List(editor = CheckListEditor(
-#                                                     values = values,
-#                                                     cols = 2)))
-#                 group.content.append(Item(name, 
-#                                           style = 'custom'))
-#                    
-#             elif dtype == 'category':
-#                 values = list(self.experiment[name].cat.categories)
-#                 obj.add_trait(name, List(editor = CheckListEditor(
-#                                                     values = values,
-#                                                     cols = len(values))))
-#                 group.content.append(Item(name, 
-#                                           style = 'custom'))
-#                    
-#             elif dtype == 'float':
-#                 values = list(np.sort(pd.unique(self.experiment[name])))
-#                 obj.add_trait(name + "Min", Float(self.experiment[name].min()))
-#                 obj.add_trait(name + "Max", 
-#                               Float(default_value = self.experiment[name].max(),
-#                                     editor = ValuesBoundsEditor( 
-#                                                 values = values,
-#                                                 low_name = name + "Min",
-#                                                 high_name = name + "Max"))
-#                             )
-#                 group.content.append(Item(name + "Max", 
-#                                           label = name, 
-#                                           style = 'custom'))
-#                    
-#             elif dtype == 'int':
-#                 values = list(np.sort(pd.unique(self.experiment[name])))
-#                 obj.add_trait(name + "Min", Int(self.experiment[name].min()))
-#                 obj.add_trait(name + "Max", 
-#                               Int(default_value = self.experiment[name].max(),
-#                                   editor = ValuesBoundsEditor(
-#                                                 values = values,
-#                                                 low_name = name + "Min",
-#                                                 high_name = name + "Max"))
-#                             )
-#                    
-#                 group.content.append(Item(name + "Max", 
-#                                           label = name, 
-#                                           style = 'custom'))
-#                 
-#         return obj, group
-#  
-# 
-#          
-# 
-#     
-#     def _view_changed(self, name, new, old):
-#         
-#         # we want to spit out a value in a standard form so we can easily
-#         # parse it back in.
-#         
-#         subsets = []
-#         
-#         for name, dtype in self.experiment.conditions.iteritems(): 
-#             if dtype == 'bool':
-#                 val = self._obj.trait_get(name)[name]
-#                 if name + '+' in val and not name + '-' in val:
-#                     subsets.append("({0} == True)".format(name))
-#                 elif name + '+' not in val and name + '-' in val:
-#                     subsets.append("({0} == False)".format(name))
-#                 else:
-#                     # "name" is any value; dont' include specifier
-#                     pass
-#                 
-#             elif dtype == 'category':
-#                 val = self._obj.trait_get(name)[name]
-#                 phrase = "("
-#                 for cat in val:
-#                     if len(phrase) > 1:
-#                         phrase += " or "
-#                     phrase += "{0} == {1}".format(name, cat) 
-#                 phrase += ")"
-#                 
-#             elif dtype == 'float':
-#                 min_val = self._obj.trait_get(name + "Min")[name + "Min"]
-#                 max_val= self._obj.trait_get(name + "Max")[name + "Max"]
-#                 subsets.append("({0} >= {1} and {0} <= {2})"
-#                                .format(name, min_val, max_val))
-#                 
-#             elif dtype == 'int':
-#                 min_val = self._obj.trait_get(name + "Min")[name + "Min"]
-#                 max_val = self._obj.trait_get(name + "Max")[name + "Max"]
-#                 subsets.append("({0} >= {1} and {0} <= {2})"
-#                                .format(name, min_val, max_val))
-#                 
-#             self.value = " and ".join(subsets)
-#             print self.value                
+        self.value = new            
 
 class SubsetEditor(BasicEditorFactory):
     
@@ -395,6 +299,7 @@ if __name__ == '__main__':
         experiment = Instance(Experiment)
 
     c = C(experiment = ex)
+    c.val = "(Dox == True)"
     
     c.configure_traits(view=View(Item('val',
                                       editor = SubsetEditor(experiment = 'experiment'))))
