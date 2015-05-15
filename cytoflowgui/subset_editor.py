@@ -13,8 +13,8 @@ if __name__ == '__main__':
 from traitsui.api import BasicEditorFactory, View, UI, \
                          CheckListEditor, Item, HGroup, ListEditor, InstanceEditor
 from traitsui.qt4.editor import Editor
-from traits.api import Instance, HasTraits, List, CFloat, CInt, Str, Dict, \
-                       Interface, Property, Bool, provides, on_trait_change, DelegatesTo
+from traits.api import Instance, HasTraits, List, CFloat, Str, Dict, Interface, \
+                       Property, Bool, provides, on_trait_change, DelegatesTo
                        
 from cytoflow import Experiment
 from value_bounds_editor import ValuesBoundsEditor
@@ -139,8 +139,7 @@ class RangeSubsetModel(HasTraits):
         return "({0} >= {1} and {0} <= {2})" \
             .format(self.name, self.low, self.high)
             
-    # MAGIC: when the Property trait "subset_str" is set, update the
-    # editor.
+    # MAGIC: when the Property trait "subset_str" is set, update the editor.
     def _set_subset_str(self, val):
         # because low and high are CFloats, we can just assign the string
         # and they'll get "C"onverted
@@ -176,6 +175,10 @@ class SubsetModel(HasTraits):
     # can feed to pandas.DataFrame.subset()    
     subset_str = Property(trait = Str,
                           depends_on = "subset_list.subset_str")
+    
+    # if we're unpickling, say, and try to set the subset str before we 
+    # have an experiment to set up the rest of the model, save it here.
+    tmp_subset_str = Str
       
     traits_view = View(Item('subset_list',
                             style = 'custom',
@@ -193,7 +196,8 @@ class SubsetModel(HasTraits):
     def _set_subset_str(self, value):
         # do we have a valid experiment yet?
         if not self.experiment:
-            return 
+            self.tmp_subset_str = value
+            return
         
         # reset everything
         for subset in self.subset_list:
@@ -203,18 +207,20 @@ class SubsetModel(HasTraits):
         if not value:
             return
         
-        # this parser is ugly and brittle.
+        # this parser is ugly and brittle.  TODO - replace me with
+        # something from pyparsing.  ie, see
+        # http://pyparsing.wikispaces.com/file/view/simpleBool.py
+        
         phrases = value.split(r") and (")
-        if phrases[0] == "":
-            # only had one phrase
+        if phrases[0] == "":  # only had one phrase, not a conjunction
             phrases = [value]
+            
         for phrase in phrases:
             if not phrase.startswith("("):
                 phrase = "(" + phrase
             if not phrase.endswith(")"):
                 phrase = phrase + ")"
             name = re.match(r"\((\w+) ", phrase).group(1)
-            print "phrase {0} name {1}".format(phrase, name)
             
             # update the subset editor ui
             self.subset_map[name].subset_str = phrase
@@ -237,6 +243,10 @@ class SubsetModel(HasTraits):
             
         self.subset_map = subset_map     
         self.subset_list = subset_list
+        
+        if self.tmp_subset_str:
+            self.subset_str = self.tmp_subset_str
+            self.tmp_subset_str = ""
 
 class _SubsetEditor(Editor):
     
@@ -257,8 +267,6 @@ class _SubsetEditor(Editor):
 
         self.model = SubsetModel()
         self.sync_value(self.factory.experiment, 'experiment', 'from')
-
-        #self.model.on_trait_change(self.update_value, 'subset_str')
         
         self._ui = self.model.edit_traits(kind = 'subpanel',
                                           parent = parent)
