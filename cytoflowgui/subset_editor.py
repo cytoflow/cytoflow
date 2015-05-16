@@ -184,7 +184,7 @@ class SubsetModel(HasTraits):
     
     # if we're unpickling, say, and try to set the subset str before we 
     # have an experiment to set up the rest of the model, save it here.
-    tmp_subset_str = Str
+    initial_subset_str = Str
       
     traits_view = View(Item('subset_list',
                             style = 'custom',
@@ -204,7 +204,7 @@ class SubsetModel(HasTraits):
     def _set_subset_str(self, value):
         # do we have a valid experiment yet?
         if not self.experiment:
-            self.tmp_subset_str = value
+            self.initial_subset_str = value
             return
         
         # reset everything
@@ -254,9 +254,9 @@ class SubsetModel(HasTraits):
         self.subset_map = subset_map     
         self.subset_list = subset_list
         
-        if self.tmp_subset_str:
-            self.subset_str = self.tmp_subset_str
-            self.tmp_subset_str = ""
+        if self.initial_subset_str:
+            self.subset_str = self.initial_subset_str
+            self.initial_subset_str = ""
 
 class _SubsetEditor(Editor):
     
@@ -275,7 +275,7 @@ class _SubsetEditor(Editor):
         Finishes initializing the editor and make the toolkit control
         """
 
-        self.model = SubsetModel()
+        self.model = SubsetModel(initial_subset_str = self.value)
         self.sync_value(self.factory.experiment, 'experiment', 'from')
         
         self._ui = self.model.edit_traits(kind = 'subpanel',
