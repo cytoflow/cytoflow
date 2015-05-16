@@ -85,6 +85,9 @@ class CategorySubsetModel(HasTraits):
 
     # MAGIC: gets the value of the Property trait "subset_str"
     def _get_subset_str(self):
+        if len(self.values) == 0:
+            return ""
+        
         phrase = "("
         for cat in self.values:
             if len(phrase) > 1:
@@ -136,6 +139,9 @@ class RangeSubsetModel(HasTraits):
     
     # MAGIC: gets the value of the Property trait "subset_str"
     def _get_subset_str(self):
+        if self.low == self.values[0] and self.high == self.values[-1]:
+            return ""
+         
         return "({0} >= {1} and {0} <= {2})" \
             .format(self.name, self.low, self.high)
             
@@ -189,7 +195,9 @@ class SubsetModel(HasTraits):
 
     # MAGIC: gets the value of the Property trait "subset_string"
     def _get_subset_str(self):
-        return " and ".join([s.subset_str for s in self.subset_list])
+        subset_strings = [s.subset_str for s in self.subset_list]
+        subset_strings = filter(lambda x: x, subset_strings)
+        return " and ".join(subset_strings)
 
     # MAGIC: when the Property trait "subset_string" is assigned to,
     # update the view    
@@ -210,6 +218,8 @@ class SubsetModel(HasTraits):
         # this parser is ugly and brittle.  TODO - replace me with
         # something from pyparsing.  ie, see
         # http://pyparsing.wikispaces.com/file/view/simpleBool.py
+        
+        print "set overall subset str ''{0}''".format(value)
         
         phrases = value.split(r") and (")
         if phrases[0] == "":  # only had one phrase, not a conjunction
@@ -278,7 +288,7 @@ class _SubsetEditor(Editor):
             self._ui = None
             
     def update_editor(self):
-        print "update editor with value: {0}".format(self.value)
+        print "update editor with value: ''{0}''".format(self.value)
         self.model.subset_str = self.value
     
     @on_trait_change('model.subset_str')
@@ -286,7 +296,7 @@ class _SubsetEditor(Editor):
         if not self.experiment:
             return
         
-        print "updating value from editor: {0}".format(new)
+        print "updating value from editor: ''{0}''".format(new)
         self.value = new            
 
 class SubsetEditor(BasicEditorFactory):
