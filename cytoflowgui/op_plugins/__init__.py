@@ -5,6 +5,7 @@ from import_op import ImportPlugin
 from threshold import ThresholdPlugin
 from range import RangePlugin
 from range2d import Range2DPlugin
+from polygon import PolygonPlugin
 
 # transforms 
 from hlog import HLogPlugin
