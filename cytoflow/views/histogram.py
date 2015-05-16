@@ -58,6 +58,7 @@ class HistogramView(HasTraits):
         
         kwargs.setdefault('histtype', 'stepfilled')
         kwargs.setdefault('alpha', 0.5)
+        kwargs.setdefault('antialiased', True)
 
         if not self.subset:
             x = experiment.data

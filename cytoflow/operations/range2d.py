@@ -61,6 +61,12 @@ class Range2DOp(HasTraits):
             self.ylow < experiment[self.ychannel].min() or
             self.yhigh > experiment[self.ychannel].max()):
             return False
+        
+        if not self.name:
+            return False
+               
+        if self.name in self.experiment.columns:
+            return False
        
         return True
         

@@ -60,6 +60,7 @@ class ScatterplotView(HasTraits):
         kwargs.setdefault('alpha', 0.25)
         kwargs.setdefault('s', 2)
         kwargs.setdefault('marker', 'o')
+        kwargs.setdefault('antialiased', True)
 
         
         if not self.subset:

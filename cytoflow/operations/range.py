@@ -39,6 +39,9 @@ class RangeOp(HasTraits):
         if not self.name:
             return False
         
+        if self.name in self.experiment.columns:
+            return False
+        
         if not self.channel:
             return False
         

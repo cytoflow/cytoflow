@@ -65,6 +65,7 @@ class HexbinView(HasTraits):
         kwargs.setdefault('edgecolor', 'none')
         #kwargs.setdefault('mincnt', 1)
         #kwargs.setdefault('bins', 'log')
+        kwargs.setdefault('antialiased', True)
         
         if not self.subset:
             x = experiment.data
