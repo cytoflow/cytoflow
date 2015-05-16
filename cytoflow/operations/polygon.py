@@ -42,7 +42,7 @@ class PolygonOp(HasTraits):
         if not self.name:
             return False
         
-        if self.name in self.experiment.columns:
+        if self.name in experiment.data.columns:
             return False
         
         if not self.xchannel or not self.ychannel:

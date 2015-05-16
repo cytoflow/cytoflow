@@ -41,13 +41,13 @@ class PolygonSelection(HasTraits):
     _cursor = Instance(Cursor, transient = True)
     _path = Instance(mpl.path.Path, transient = True)
     _patch = Instance(mpl.patches.PathPatch, transient = True)
-    _line = Instance(mpl.lines.Line2D)
+    _line = Instance(mpl.lines.Line2D, transient = True)
     _drawing = Bool(transient = True)
         
     def plot(self, experiment, fig_num = None, **kwargs):
         """Plot self.view, and then plot the selection on top of it."""
         self.view.plot(experiment, fig_num, **kwargs)
-        #self._draw_rect()
+        self._draw_poly()
 
     def is_valid(self, experiment):
         """If the decorated view is valid, we are too."""

@@ -84,12 +84,11 @@ class ThresholdSelection(HasTraits):
                                   horizOn=False,
                                   vertOn=True,
                                   color='blue')
+            self._cursor.connect_event('button_press_event', self._onclick)
             
-            self._cid = fig.canvas.mpl_connect('button_press_event', 
-                                               self._onclick)
         else:
+            self._cursor.disconnect_events()
             self._cursor = None
-            fig.canvas.mpl_disconnect(self._cid)
             
     def _onclick(self, event):
         """Update the threshold location"""
