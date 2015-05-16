@@ -148,11 +148,11 @@ class FlowTask(Task):
             wi.operation.tubes.append(tube1)
             wi.operation.tubes.append(tube2)
                         
-            self.add_operation('edu.mit.synbio.cytoflowgui.op.hlog')
+            self.add_operation('edu.mit.synbio.cytoflowgui.op_plugins.hlog')
             self.model.selected.operation.channels = ["V2-A", "Y2-A"]
             self.model.selected.operation.name = "H"
               
-            self.add_operation('edu.mit.synbio.cytoflowgui.op.threshold')
+            self.add_operation('edu.mit.synbio.cytoflowgui.op_plugins.threshold')
             self.model.selected.operation.channel = "Y2-A"
             self.model.selected.operation.threshold = 2000
             self.model.selected.operation.name = "T"
@@ -366,6 +366,11 @@ class FlowTask(Task):
         # remove the notifications from the old view
         if old:
             old.on_trait_change(self.view_parameters_updated, remove = True)
+            
+            # and if the old view was interactive, turn off its interactivity
+            # to remove the matplotlib event handlers
+            if "interactive" in old.traits():
+                old.interactive = False
             
         # whenever the view parameters change, we need to know so we can
         # update the plot(s)
