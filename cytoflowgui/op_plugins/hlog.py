@@ -29,8 +29,8 @@ class HLogPlugin(Plugin):
     class docs
     """
     
-    id = 'edu.mit.synbio.cytoflowgui.op.hlog'
-    operation_id = 'edu.mit.synbio.cytoflow.op.hlog'
+    id = 'edu.mit.synbio.cytoflowgui.op_plugins.hlog'
+    operation_id = 'edu.mit.synbio.cytoflow.operations.hlog'
     
     short_name = "Hyperlog"
     menu_group = "Transformations"

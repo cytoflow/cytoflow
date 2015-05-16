@@ -69,7 +69,7 @@ class Range2DPlugin(Plugin):
     class docs
     """
     
-    id = 'edu.mit.synbio.cytoflowgui.operations.range2d'
+    id = 'edu.mit.synbio.cytoflowgui.op_plugins.range2d'
     operation_id = 'edu.mit.synbio.cytoflow.operations.range2d'
 
     short_name = "Range 2D"
@@ -95,7 +95,7 @@ class Range2DPlugin(Plugin):
         op.sync_trait('name', view, mutual = True)
          
         return view
-#     
+     
     def get_icon(self):
         return ImageResource('range2d')
     

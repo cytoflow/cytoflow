@@ -28,7 +28,7 @@ class PolygonOp(HasTraits):
     """
     
     # traits
-    id = "edu.mit.synbio.cytoflow.operations.polygonop"
+    id = "edu.mit.synbio.cytoflow.operations.polygon"
     friendly_id = "Polygon"
     
     name = CStr()

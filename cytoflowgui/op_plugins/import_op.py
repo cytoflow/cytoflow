@@ -86,8 +86,8 @@ class ImportPlugin(Plugin):
     class docs
     """
     
-    id = 'edu.mit.synbio.cytoflowgui.op.import'
-    operation_id = 'edu.mit.synbio.cytoflow.op.import'
+    id = 'edu.mit.synbio.cytoflowgui.op_plugins.import'
+    operation_id = 'edu.mit.synbio.cytoflow.operations.import'
 
     short_name = "Import data"
     menu_group = "TOP"

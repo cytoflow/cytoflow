@@ -55,8 +55,8 @@ class RangePlugin(Plugin):
     class docs
     """
     
-    id = 'edu.mit.synbio.cytoflowgui.op.range'
-    operation_id = 'edu.mit.synbio.cytoflow.op.range'
+    id = 'edu.mit.synbio.cytoflowgui.op_plugins.range'
+    operation_id = 'edu.mit.synbio.cytoflow.operations.range'
 
     short_name = "Range"
     menu_group = "Gates"

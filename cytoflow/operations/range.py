@@ -25,7 +25,7 @@ class RangeOp(HasTraits):
     """
     
     # traits
-    id = "edu.mit.synbio.cytoflow.operations.rangeop"
+    id = "edu.mit.synbio.cytoflow.operations.range"
     friendly_id = "Range"
     
     name = CStr()
