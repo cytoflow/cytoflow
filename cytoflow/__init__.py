@@ -16,6 +16,7 @@ from experiment import Experiment
 from operations.threshold import ThresholdOp
 from operations.range import RangeOp
 from operations.range2d import Range2DOp
+from operations.polygon import PolygonOp
 from operations.hlog import HlogTransformOp
 from operations.import_op import ImportOp, Tube
 from views.histogram import HistogramView
@@ -24,6 +25,7 @@ from views.scatterplot import ScatterplotView
 from views.range_selection import RangeSelection
 from views.range_selection_2d import RangeSelection2D
 from views.threshold_selection import ThresholdSelection
+from views.poly_selection import PolygonSelection
 
 try:
     from operations.logicle import LogicleTransformOp

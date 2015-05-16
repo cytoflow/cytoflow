@@ -6,6 +6,7 @@ from import_op import ImportOp
 from threshold import ThresholdOp
 from range import RangeOp
 from range2d import Range2DOp
+from polygon import PolygonOp
 
 # transforms
 from hlog import HlogTransformOp
