@@ -26,6 +26,7 @@ from views.range_selection import RangeSelection
 from views.range_selection_2d import RangeSelection2D
 from views.threshold_selection import ThresholdSelection
 from views.poly_selection import PolygonSelection
+from views.bar_chart import BarChartView
 
 try:
     from operations.logicle import LogicleTransformOp
