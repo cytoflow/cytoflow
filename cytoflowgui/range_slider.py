@@ -9,8 +9,6 @@ class RangeSlider(QtGui.QSlider):
 
         This class emits the same signals as the QSlider base class, with the
         exception of valueChanged
-        
-        Adapted from traitsui.qt4.extras.range_slider
     """
     def __init__(self, *args):
         super(RangeSlider, self).__init__(*args)
@@ -24,12 +22,15 @@ class RangeSlider(QtGui.QSlider):
 
         # 0 for the low, 1 for the high, -1 for both
         self.active_slider = 0
+        
+        self.last_active_slider = 0
 
     def low(self):
         return self._low
 
     def setLow(self, low):
         self._low = low
+        self.last_active_slider = 0
         self.update()
 
     def high(self):
@@ -37,8 +38,20 @@ class RangeSlider(QtGui.QSlider):
 
     def setHigh(self, high):
         self._high = high
+        self.last_active_slider = 1
         self.update()
-
+        
+    def sliderOrderForPaint(self):
+        if self.last_active_slider == 0:
+            return [(1, self._high), (0, self._low)]
+        else:
+            return [(0, self._low), (1, self._high)]
+        
+    def sliderOrderForMove(self):
+        if self.last_active_slider == 0:
+            return [(0, self._low), (1, self._high)]
+        else:
+            return [(1, self._high), (0, self._low)]
 
     def paintEvent(self, event):
         # based on http://qt.gitorious.org/qt/qt/blobs/master/src/gui/widgets/qslider.cpp
@@ -46,14 +59,17 @@ class RangeSlider(QtGui.QSlider):
         painter = QtGui.QPainter(self)
         style = QtGui.QApplication.style()
 
-        for i, value in enumerate([self._low, self._high]):
+        hasPainted = False
+
+        for i, value in self.sliderOrderForPaint():
             opt = QtGui.QStyleOptionSlider()
             self.initStyleOption(opt)
 
             # Only draw the groove for the first slider so it doesn't get drawn
             # on top of the existing ones every time
-            if i == 0:
+            if not hasPainted:
                 opt.subControls = QtGui.QStyle.SC_SliderGroove | QtGui.QStyle.SC_SliderHandle
+                hasPainted = True
             else:
                 opt.subControls = QtGui.QStyle.SC_SliderHandle
 
@@ -89,11 +105,12 @@ class RangeSlider(QtGui.QSlider):
 
             self.active_slider = -1
 
-            for i, value in enumerate([self._low, self._high]):
+            for i, value in self.sliderOrderForMove():
                 opt.sliderPosition = value
                 hit = style.hitTestComplexControl(style.CC_Slider, opt, event.pos(), self)
                 if hit == style.SC_SliderHandle:
                     self.active_slider = i
+                    self.last_active_slider = i
                     self.pressed_control = hit
 
                     self.triggerAction(self.SliderMove)
@@ -173,6 +190,7 @@ class RangeSlider(QtGui.QSlider):
         return style.sliderValueFromPosition(self.minimum(), self.maximum(),
                                              pos-slider_min, slider_max-slider_min,
                                              opt.upsideDown)
+
 
 if __name__ == "__main__":
     import sys

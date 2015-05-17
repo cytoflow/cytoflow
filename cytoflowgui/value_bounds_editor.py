@@ -10,7 +10,7 @@ from pyface.qt import QtGui, QtCore
 from traits.api import Any, Str, Trait, List, Bool
 from traitsui.editors.api import RangeEditor
 from traitsui.qt4.editor import Editor
-from traitsui.qt4.extra.range_slider import RangeSlider
+from range_slider import RangeSlider
 
 class _ValueBoundsEditor(Editor):
     """
@@ -75,6 +75,8 @@ class _ValueBoundsEditor(Editor):
         slider.setSingleStep(100)
         slider.setLow(self._convert_to_slider(self.low))
         slider.setHigh(self._convert_to_slider(self.high))
+        
+#        if self.low == self.values[0]
 
         QtCore.QObject.connect(slider, QtCore.SIGNAL('sliderMoved(int)'),
                 self.update_object_on_scroll)
@@ -108,11 +110,16 @@ class _ValueBoundsEditor(Editor):
 #                 low = int(low)
 
             if low > self.high:
-                low = self.high - self._step_size()
+                low = self.high
                 self._label_lo.setText(self.format % low)
 
             self.control.slider.setLow(self._convert_to_slider(low))
             self.low = low
+            
+            slider_high = self._convert_to_slider(self.high)
+            if slider_high < (self.control.slider.minimum() + 
+                              self.control.slider.singleStep()):
+                self.control.slider.setHigh(slider_high)
         except:
             pass
 
@@ -130,11 +137,16 @@ class _ValueBoundsEditor(Editor):
 #                 high = int(high)
 
             if high < self.low:
-                high = self.low + self._step_size()
+                high = self.low
                 self._label_hi.setText(self.format % high)
 
             self.control.slider.setHigh(self._convert_to_slider(high))
             self.high = high
+            
+            slider_low = self._convert_to_slider(self.low)
+            if slider_low > (self.control.slider.maximum() - 
+                             self.control.slider.singleStep()):
+                self.control.slider.setLow(slider_low) 
         except:
             pass
 
@@ -143,21 +155,6 @@ class _ValueBoundsEditor(Editor):
         self.low = self._convert_from_slider(self.control.slider.low())
         self.high = self._convert_from_slider(self.control.slider.high())
         self._updating = False
-
-        # TODO - fix slider jiggle?
-        
-#         if self.factory.is_float:
-#             self.low = low
-#             self.high = high
-#         else:
-#             self.low = int(low)
-#             self.high = int(high)
-# 
-#             # update the sliders to the int values or the sliders
-#             # will jiggle
-#             self.control.slider.setLow(self._convert_to_slider(low))
-#             self.control.slider.setHigh(self._convert_to_slider(high))
-
 
     def update_editor(self):
         return
@@ -176,7 +173,8 @@ class _ValueBoundsEditor(Editor):
 
     def _convert_to_slider(self, value):
         # first we have to find the value in the list.  let's assume, for the
-        # sake of argument, that the list is sorted and pretty small.
+        # sake of argument, that the list is sorted and pretty small, so we can
+        # do something costly like a binary search (implemented recursively!)
         
         if value < self.values[0]:
             value = self.values[0]
@@ -210,6 +208,11 @@ class _ValueBoundsEditor(Editor):
 
         if not self._updating:
             self.control.slider.setLow(self._convert_to_slider(low))
+            
+            slider_high = self._convert_to_slider(self.high)
+            if slider_high < (self.control.slider.minimum() + 
+                              self.control.slider.singleStep()):
+                self.control.slider.setHigh(slider_high)
 
     def _high_changed(self, high):
         if self.control is None:
@@ -219,6 +222,11 @@ class _ValueBoundsEditor(Editor):
 
         if not self._updating:
             self.control.slider.setHigh(self._convert_to_slider(self.high))
+            
+            slider_low = self._convert_to_slider(self.low)
+            if slider_low > (self.control.slider.maximum() - 
+                             self.control.slider.singleStep()):
+                self.control.slider.setLow(slider_low) 
             
     
 class ValuesBoundsEditor(RangeEditor):
@@ -238,10 +246,10 @@ if __name__ == "__main__":
     from traitsui.api import View, Item
     
     class T(HasTraits):
-        lo = Int(2)
-        hi = Int(3)
+        lo = Int(5)
+        hi = Int(5)
         
-    values = [1,2,3, 4,5]
+    values = [1,2,3,4,5]
     view = View(Item('lo',
                      editor = ValuesBoundsEditor(values = values, 
                                                  low_name = 'lo',
