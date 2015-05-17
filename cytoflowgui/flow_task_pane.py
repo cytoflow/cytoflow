@@ -83,6 +83,11 @@ class FlowTaskPane(TaskPane):
             # the "interactive" trait
             view.interactive = False
             view.interactive = True 
-
-       
+            
+            
+    def export(self, filename):
+        # TODO - eventually give a preview, allow changing size, dpi, aspect 
+        # ratio, plot layout, etc.
+        plt.savefig(filename, bbox_inches = 'tight')
+        
         

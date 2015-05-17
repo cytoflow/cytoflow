@@ -256,7 +256,13 @@ class FlowTask(Task):
         pickler.dump(self.model)
         
     def on_export(self):
-        pass
+        """
+        Shows a dialog to export a file
+        """
+        dialog = FileDialog(parent = self.window.control,
+                            action = 'save as')
+        if dialog.open() == OK:
+            self.view.export(dialog.path)
     
     def on_prefs(self):
         pass
