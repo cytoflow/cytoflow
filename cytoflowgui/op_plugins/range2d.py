@@ -4,9 +4,9 @@ Created on Apr 25, 2015
 @author: brian
 '''
 
-from traitsui.api import View, Item, EnumEditor, Controller
+from traitsui.api import View, Item, EnumEditor, Controller, Handler
 from envisage.api import Plugin, contributes_to
-from traits.api import provides, DelegatesTo, Callable
+from traits.api import provides, DelegatesTo, Callable, Instance
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT
 from cytoflow import Range2DOp, ScatterplotView, RangeSelection2D
 from pyface.api import ImageResource
@@ -46,17 +46,14 @@ class RangeView2DHandler(Controller, ViewHandlerMixin):
 
 @provides(ISelectionView)
 class Range2DSelectionView(RangeSelection2D):
+    handler = Instance(Handler, transient = True)
     handler_factory = Callable(RangeView2DHandler)
     
-    def __init__(self, **kwargs):
-        super(Range2DSelectionView, self).__init__(**kwargs)
-        
-        self.view = ScatterplotView()
-        
-        self.add_trait('name', DelegatesTo('view'))
-        self.add_trait('xchannel', DelegatesTo('view'))
-        self.add_trait('ychannel', DelegatesTo('view'))
-        self.add_trait('subset', DelegatesTo('view'))
+    view = Instance(ScatterplotView, args = ())
+    name = DelegatesTo('view')
+    xchannel = DelegatesTo('view')
+    ychannel = DelegatesTo('view')
+    subset = DelegatesTo('view')
         
     def is_wi_valid(self, wi):
         return (wi.previous 

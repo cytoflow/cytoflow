@@ -79,6 +79,7 @@ class ViewDockPane(DockPane):
                                    show_label = False))
         
         picker_control = self.edit_traits(kind='subpanel',
+                                          parent = parent,
                                           view = plugin_chooser).control
    
         # the top-level control 
@@ -91,11 +92,10 @@ class ViewDockPane(DockPane):
     
         # the panel's layout manager
         self._layout = QtGui.QVBoxLayout()
-        self._layout.setSizeConstraint(QtGui.QLayout.SetFixedSize)
         panel.setLayout(self._layout)
         control.setWidget(panel)
         
-        # add the selector to the layout
+        # add the view selector to the layout
         self._layout.addWidget(picker_control)
         
         # and a separator
@@ -134,25 +134,28 @@ class ViewDockPane(DockPane):
     @on_trait_change('task:model:selected.current_view')
     def _model_current_view_changed(self, obj, name, old, new):
         # at the moment, this only gets called from the UI thread, so we can
-        # do UI things.
-        # print "current view changed: {0}".format(threading.current_thread())
-        
-        # we get notified if *either* the currently selected workflowitem
-        # *or* the current view changes.
+        # do UI things.   we get notified if *either* the currently selected 
+        # workflowitem *or* the current view changes.
   
         if name == 'selected':
             old = old.current_view if old else None
             new = new.current_view if new else None
         
         if old:
+            # remove the view's widget from the layout
             self._layout.takeAt(self._layout.indexOf(self._ui.control))
+            
+            # and the spacer
+            self._layout.takeAt(self._layout.count() - 1)
+            
+            self._ui.control.setParent(None)
             self._ui.dispose()
-            self._ui = None
             
         if new:
             self._ui = new.handler.edit_traits(kind='subpanel', 
                                                parent=self._parent)              
             self._layout.addWidget(self._ui.control)
+            self._layout.addStretch(stretch = 1)
             self._current_view_id = new.id
         else:
             self._current_view_id = ""
