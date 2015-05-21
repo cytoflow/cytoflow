@@ -77,11 +77,15 @@ class CategorySubsetModel(HasTraits):
         return View(Item('selected',
                          label = self.name,
                          editor = CheckListEditor(values = self.values,
-                                                  cols = len(self.values))))
+                                                  cols = len(self.values)),
+                         style = 'custom'))
     
     # MAGIC: gets the value of the Property trait "values"
     def _get_values(self):
-        return list(self.experiment[self.name].cat.categories)
+        if self.name:
+            return list(self.experiment[self.name].cat.categories)
+        else:
+            return []
 
     # MAGIC: gets the value of the Property trait "subset_str"
     def _get_subset_str(self):
@@ -89,7 +93,7 @@ class CategorySubsetModel(HasTraits):
         for cat in self.values:
             if len(phrase) > 1:
                 phrase += " or "
-            phrase += "{0} == {1}".format(self.name, cat) 
+            phrase += "{0} == \"{1}\"".format(self.name, cat) 
         phrase += ")"
         
         return phrase
@@ -101,15 +105,15 @@ class CategorySubsetModel(HasTraits):
         
         if val.startswith("("):
             val = val[1:]
-        if val.endswidth(")"):
+        if val.endswith(")"):
             val = val[:-1]
             
-        values = []
+        selected = []
         for s in val.split(" or "):
-            cat = re.search(" == (\w+)$", s).group(1)
-            values.append(cat)
+            cat = re.search(" == \"(\w+)\"$", s).group(1)
+            selected.append(cat)
             
-        self.values = values
+        self.selected = selected
 
 @provides(ISubsetModel)
 class RangeSubsetModel(HasTraits):
@@ -298,32 +302,32 @@ class SubsetEditor(BasicEditorFactory):
     experiment = Str
     
     
-if __name__ == '__main__':
-    
-    import FlowCytometryTools as fc
-    
-    ex = Experiment()
-    ex.add_conditions({"Dox" : "bool"})
-    
-    tube1 = fc.FCMeasurement(ID='Test 1', 
-                       datafile='../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs')
-
-    tube2 = fc.FCMeasurement(ID='Test 2', 
-                       datafile='../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs')
-    
-    ex.add_tube(tube1, {"Dox" : True})
-    ex.add_tube(tube2, {"Dox" : False})
-    
-    class C(HasTraits):
-        val = Str()
-        experiment = Instance(Experiment)
-
-    c = C(experiment = ex)
-    c.val = "(Dox == True)"
-    
-    c.configure_traits(view=View(Item('val',
-                                      editor = SubsetEditor(experiment = 'experiment'))))
-    
-    
-    
-    
+# if __name__ == '__main__':
+#     
+#     import FlowCytometryTools as fc
+#     
+#     ex = Experiment()
+#     ex.add_conditions({"Dox" : "bool"})
+#     
+#     tube1 = fc.FCMeasurement(ID='Test 1', 
+#                        datafile='../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs')
+# 
+#     tube2 = fc.FCMeasurement(ID='Test 2', 
+#                        datafile='../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs')
+#     
+#     ex.add_tube(tube1, {"Dox" : True})
+#     ex.add_tube(tube2, {"Dox" : False})
+#     
+#     class C(HasTraits):
+#         val = Str()
+#         experiment = Instance(Experiment)
+# 
+#     c = C(experiment = ex)
+#     c.val = "(Dox == True)"
+#     
+#     c.configure_traits(view=View(Item('val',
+#                                       editor = SubsetEditor(experiment = 'experiment'))))
+#     
+#     
+#     
+#     
