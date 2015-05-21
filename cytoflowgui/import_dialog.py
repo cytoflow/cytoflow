@@ -48,7 +48,7 @@ class LogFloat(Float):
     all we're really looking to change is the name.
     """
 
-class Tube(HasStrictTraits):
+class Tube(HasTraits):
     """
     The model for a tube in an experiment.
     
@@ -74,8 +74,8 @@ class Tube(HasStrictTraits):
     (file name, tube name, etc.).  We differentiate them because we enforce
     the invariant that each tube MUST have a unique combination of experimental
     conditions.  We do this with trait metadata: "condition == True" means 
-    "is an experimental condition" (everything but File, Name, Row, Column, 
-    _parent).
+    "is an experimental condition" (everything but File, Source, Tube, Row, 
+    Column, _parent).
     
     We also use the "transient" flag to specify traits that shouldn't be 
     displayed in the editor.  This matches well with the traits that
@@ -85,10 +85,14 @@ class Tube(HasStrictTraits):
     # these are the traits that every tube has.  every other trait is
     # dynamically created. 
 
-    # the tube or well name.  pulled from FCS metadata
-    Name = Str
+    # the sample source ($SRC FCS keyword).  pulled from FCS metadata
+    Source = Str
+    
+    # the tube label - from TUBE NAME or SMNO FCS keywords
+    Tube = Str
     
     # the file name.
+    # TODO - /sigh show the filename in the editor.  or .... something?
     _file = Str(transient = True)
     
     # need a link to the model; needed for row coloring
@@ -105,6 +109,10 @@ class Tube(HasStrictTraits):
         return ret
     
     def __eq__(self, other):
+        if not (set(self.trait_names(condition = True)) == 
+                set(other.trait_get(condition = True))):
+            return False
+        
         for trait in self.trait_names(condition = True):
             if not self.trait_get(trait)[trait] == other.trait_get(trait)[trait]:
                 return False
@@ -125,7 +133,6 @@ class ExperimentColumn(ObjectColumn):
 class ExperimentDialogModel(HasTraits):
     """
     The model for the Experiment setup dialog.
-
     """
     
     # the tubes.  this is the model; the rest is for communicating with the View
@@ -150,7 +157,8 @@ class ExperimentDialogModel(HasTraits):
                                           configurable = False,
                                           selection_mode = 'cells',
                                           selected = 'selected',
-                                          columns = [ExperimentColumn(name = 'Name')],
+                                          columns = [ExperimentColumn(name = 'Source'),
+                                                     ExperimentColumn(name = 'Tube')],
                                           ),
                      enabled_when = "object.tubes"),
                 show_labels = False
@@ -176,7 +184,8 @@ class ExperimentDialogModel(HasTraits):
         has_row = any(tube.row for tube in op.tubes)
         has_col = any(tube.col for tube in op.tubes)
         for op_tube in op.tubes:
-            tube = Tube(Name = op_tube.name,
+            tube = Tube(Source = op_tube.source,
+                        Tube = op_tube.tube,
                         _file = op_tube.file,
                         _parent = self)
             if has_row:
@@ -208,7 +217,8 @@ class ExperimentDialogModel(HasTraits):
             op.conditions[trait_name] = trait_to_dtype[trait_type]
             
         for tube in self.tubes:
-            op_tube = CytoflowTube(name = tube.Name,
+            op_tube = CytoflowTube(source = tube.Source,
+                                   tube = tube.Tube,
                                    file = tube._file)
             
             if "Row" in tube.trait_names():
@@ -300,6 +310,9 @@ class ExperimentDialogHandler(Controller):
         Handle "Add tubes..." button.  Add tubes to the experiment.
         """
         
+        # TODO - adding a set of files, then a condition, then another
+        # set doesn't work.
+        
         file_dialog = FileDialog()
         file_dialog.wildcard = "Flow cytometry files (*.fcs)|*.fcs|"
         file_dialog.action = 'open files'
@@ -311,16 +324,27 @@ class ExperimentDialogHandler(Controller):
         for path in file_dialog.paths:
             fcs = FCMeasurement(ID='new tube', datafile = path)
             
+            tube = Tube()
             if len(self.model.tubes) > 0: 
-                # easier than making all the dynamic traits anew
-                tube = self.model.tubes[0].clone_traits(copy = "shallow")
-                tube.reset_traits(traits = tube.copyable_trait_names())
-            else:
-                tube = Tube()
+                tube0 = self.model.tubes[0]
+                trait_names = set(tube0.trait_names(transient = not_false)) - \
+                              set(Tube.class_trait_names(transient = not_false))
+                for name in trait_names:
+                    trait = tube0.trait(name)
+                    tube.add_trait(name, trait)
+                    
+                    # this magic makes sure the trait is actually defined
+                    # in tube.__dict__, so it shows up in trait_names etc.
+                    tube.trait_set(**{name : trait.default_value()[1]})
                 
-            tube.trait_set(Name = fcs.meta['$SRC'],
+            tube.trait_set(Source = fcs.meta['$SRC'],
                            _file = path,
                            _parent = self.model)
+            
+            if 'TUBE NAME' in fcs.meta:
+                tube.Tube = fcs.meta['TUBE NAME']
+            elif '$SMNO' in fcs.meta:
+                tube.Tube = fcs.meta['$SMNO']
             
             tube.on_trait_change(self._try_multiedit, '+')
             self.model.tubes.append(tube)
@@ -350,18 +374,30 @@ class ExperimentDialogHandler(Controller):
         for well_name in plate.data:
             well_data = plate[well_name]
             
+            tube = Tube()
+            
             if len(self.model.tubes) > 0: 
-                # easier than making all the dynamic traits anew
-                tube = self.model.tubes[0].clone_traits(copy = "shallow")
-                tube.reset_traits(traits = tube.copyable_trait_names())
-            else:
-                tube = Tube()
+                tube0 = self.model.tubes[0]
+                trait_names = set(tube0.trait_names(transient = not_false)) - \
+                              set(Tube.class_trait_names(transient = not_false))
+                for name in trait_names:
+                    trait = tube0.trait(name)
+                    tube.add_trait(name, trait)
+                    
+                    # this magic makes sure the trait is actually defined
+                    # in tube.__dict__, so it shows up in trait_names etc.
+                    tube.trait_set(**{name : trait.default_value()[1]})
             
             tube.trait_set(_file = well_data.datafile,
                            Row = well_data.position['new plate'][0],
                            Col = well_data.position['new plate'][1],
-                           Name = well_data.meta['$SRC'],
+                           Source = well_data.meta['$SRC'],
                            _parent = self.model)
+            
+            if 'TUBE NAME' in well_data.meta:
+                tube.Tube = well_data.meta['TUBE NAME']
+            elif '$SMNO' in well_data.meta:
+                tube.Tube = well_data.meta['$SMNO']
 
             tube.on_trait_change(self._try_multiedit, '+')
             self.model.tubes.append(tube)
@@ -387,6 +423,9 @@ class ExperimentDialogHandler(Controller):
         if not name in trait_names:
             for tube in self.model.tubes:
                 tube.add_trait(name, trait)
+                 # this magic makes sure the trait is actually defined
+                # in tube.__dict__, so it shows up in trait_names etc.
+                tube.trait_set(**{name : trait.default_value})
                 tube.on_trait_change(self._try_multiedit, name)    
 
             self.table_editor.columns.append(ExperimentColumn(name = name,
@@ -481,7 +520,8 @@ class ExperimentDialog(Dialog):
             
             trait_names = self.model.tubes[0].trait_names(transient = not_true)
             for trait_name in trait_names:
-                if trait_name == "Name":  # already have a "Name" column
+                # already have Source and Tube columns
+                if trait_name == "Source" or trait_name == "Tube":
                     continue
                 trait = self.model.tubes[0].trait(trait_name)
                 trait_type = trait.trait_type.__class__.__name__
