@@ -15,7 +15,8 @@ class Tube(HasTraits):
     
     # name, row and col are optional for interactive use 
     # (needed for GUI persistance)
-    name = Str
+    source = Str
+    tube = Str
     row = Str
     col = Int
     
@@ -78,6 +79,7 @@ class ImportOp(HasTraits):
         experiment = Experiment()
             
         for condition, dtype in self.conditions.items():
+            is_log = False
             if dtype == "log":
                 is_log = True
                 dtype = "float"
