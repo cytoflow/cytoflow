@@ -73,6 +73,8 @@ class ViewDockPane(DockPane):
         Create and return the toolkit-specific contents of the dock pane.
         """
 
+        # TODO - the subset editor doesn't expand vertically like it should.
+
         self._plugins_dict = {p.view_id: p.short_name for p in self.plugins}
         plugin_chooser = View(Item('_current_view_id',
                                    editor=EnumEditor(name = "_plugins_dict"),
