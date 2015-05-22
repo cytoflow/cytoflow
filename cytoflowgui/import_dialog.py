@@ -32,6 +32,7 @@ from traitsui.table_column import ObjectColumn
 from collections import Counter
 
 from cytoflow import Tube as CytoflowTube
+import weakref
 
 def not_true ( value ):
     return (value is not True)
@@ -157,8 +158,10 @@ class ExperimentDialogModel(HasTraits):
                                           configurable = False,
                                           selection_mode = 'cells',
                                           selected = 'selected',
-                                          columns = [ExperimentColumn(name = 'Source'),
-                                                     ExperimentColumn(name = 'Tube')],
+                                          columns = [ExperimentColumn(name = 'Source',
+                                                                      editable = False),
+                                                     ExperimentColumn(name = 'Tube',
+                                                                      editable = False)],
                                           ),
                      enabled_when = "object.tubes"),
                 show_labels = False
@@ -201,6 +204,7 @@ class ExperimentDialogModel(HasTraits):
                 tube.add_trait(condition, condition_trait)
             tube.trait_set(**op_tube.conditions)
             
+            #tube.on_trait_change(self._try_multiedit, '+condition')
             self.tubes.append(tube)
     
     def update_import_op(self, op):
@@ -265,10 +269,18 @@ class ExperimentDialogHandler(Controller):
     # keep around a ref to the underlying widget so we can add columns dynamically
     table_editor = Instance(TableEditorQt)
     
+    updating = Bool(False)
+    
     def closed(self, info, is_ok):
-        for tube in self.model.tubes:
-            tube.on_trait_change(self._try_multiedit, '+', remove = True)
-        
+        if len(self.model.tubes) > 0:
+            tube0 = self.model.tubes[0]
+            traits = tube0.trait_names(condition = True)
+            for trait in traits:
+                for tube in self.model.tubes:
+                    tube.on_trait_change(self._try_multiedit, 
+                                         trait, 
+                                         remove = True)
+
     def _on_delete_column(self, obj, column, info):
         # TODO - be able to remove traits.....
         pass
@@ -336,6 +348,8 @@ class ExperimentDialogHandler(Controller):
                     # this magic makes sure the trait is actually defined
                     # in tube.__dict__, so it shows up in trait_names etc.
                     tube.trait_set(**{name : trait.default_value()[1]})
+                    if trait.condition:
+                        tube.on_trait_change(self._try_multiedit, name)
                 
             tube.trait_set(Source = fcs.meta['$SRC'],
                            _file = path,
@@ -346,7 +360,6 @@ class ExperimentDialogHandler(Controller):
             elif '$SMNO' in fcs.meta:
                 tube.Tube = fcs.meta['$SMNO']
             
-            tube.on_trait_change(self._try_multiedit, '+')
             self.model.tubes.append(tube)
     
     def _on_add_plate(self):
@@ -387,6 +400,8 @@ class ExperimentDialogHandler(Controller):
                     # this magic makes sure the trait is actually defined
                     # in tube.__dict__, so it shows up in trait_names etc.
                     tube.trait_set(**{name : trait.default_value()[1]})
+                    if trait.condition:
+                        tube.on_trait_change(self._try_multiedit, name)
             
             tube.trait_set(_file = well_data.datafile,
                            Row = well_data.position['new plate'][0],
@@ -399,7 +414,6 @@ class ExperimentDialogHandler(Controller):
             elif '$SMNO' in well_data.meta:
                 tube.Tube = well_data.meta['$SMNO']
 
-            tube.on_trait_change(self._try_multiedit, '+')
             self.model.tubes.append(tube)
             
     def _try_multiedit(self, obj, name, old, new):
@@ -408,10 +422,20 @@ class ExperimentDialogHandler(Controller):
         
         and if so, edit the same trait for all the selected tubes.
         """
-                
+        
+        if self.updating:
+            return
+        
+        self.updating = True
+
         for tube, trait_name in self.model.selected:
             if tube != obj:
-                tube.trait_set( **dict([(trait_name, new)]))
+                # update the underlying traits without notifying the editor
+                tube.trait_setq(**{trait_name: new})
+
+        # now refresh the editor all at once
+        self.table_editor.refresh_editor()
+        self.updating = False
         
     def _add_metadata(self, name, label, trait):
         """
@@ -423,13 +447,16 @@ class ExperimentDialogHandler(Controller):
         if not name in trait_names:
             for tube in self.model.tubes:
                 tube.add_trait(name, trait)
-                 # this magic makes sure the trait is actually defined
+                
+                # this magic makes sure the trait is actually defined
                 # in tube.__dict__, so it shows up in trait_names etc.
                 tube.trait_set(**{name : trait.default_value})
-                tube.on_trait_change(self._try_multiedit, name)    
+                if trait.condition:
+                    tube.on_trait_change(self._try_multiedit, name)
 
             self.table_editor.columns.append(ExperimentColumn(name = name,
-                                                              label = label))
+                                                              label = label,
+                                                              editable = trait.condition))
                 
     def _remove_metadata(self, meta_name, column_name, meta_type):
         # TODO - make it possible to remove metadata
