@@ -88,7 +88,7 @@ class ImportOp(HasTraits):
                 experiment.metadata[condition]["repr"] = "Log"
         
         for tube in self.tubes:
-            tube_fc = fc.FCMeasurement(ID=tube.name, datafile=tube.file)
+            tube_fc = fc.FCMeasurement(ID=tube.source + tube.tube, datafile=tube.file)
             experiment.add_tube(tube_fc, tube.conditions)
             
         return experiment
