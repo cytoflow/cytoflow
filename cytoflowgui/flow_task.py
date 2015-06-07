@@ -115,6 +115,7 @@ class FlowTask(Task):
                                   args = (self.worker_flag, 
                                           self.worker_lock,
                                           self.to_update))
+        worker.daemon = True
         worker.start()
         
         # make sure that when the result changes we get notified
