@@ -91,7 +91,7 @@ class PolygonPlugin(Plugin):
         return view
      
     def get_icon(self):
-        return ImageResource('range2d')
+        return ImageResource('polygon')
     
     @contributes_to(OP_PLUGIN_EXT)
     def get_plugin(self):
