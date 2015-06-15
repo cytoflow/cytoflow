@@ -33,8 +33,9 @@ class FlowTaskPane(TaskPane):
         self.control = self.editor = None 
         
     def clear_plot(self):
-        self.editor.figure.clear()
-        self.editor.control.draw()
+        pass
+#         self.editor.figure.clear()
+#         self.editor.control.draw()
         
     def plot(self, experiment, view):
         """
@@ -68,26 +69,31 @@ class FlowTaskPane(TaskPane):
 #                                      experiment, 
 #                                      self.editor.fig_num))
 #         t.start()
-         
         
-        # TODO - figure out how to make this threaded.  unfortunately, it 
-        # probably involves moving away from the pyplot stateful interface,
-        # which opens a huge can of worms.
+        # TODO - view.plot is going to create a new figure.  get the new
+        # figure with plt.gcf() and keep track of the mapping between figure
+        # and view; then, set the editor to the new figure.
+        
+        # TODO - make the plotting responsive to the view params.  ie,
+        # after a new view is created, watch it so that if its params change
+        # we can make a new plot (figure); but if the params stay the same
+        # and the plot is re-selected, we can just reuse the existing figure.
         
         self.editor.clear = True
-        view.plot(experiment, fig_num = self.editor.fig_num)
+        view.plot(experiment)
         self.editor.draw = True
            
-        if "interactive" in view.traits():
-            # we have to re-bind the Cursor to the new Axes object by twiddling
-            # the "interactive" trait
-            view.interactive = False
-            view.interactive = True 
+#         if "interactive" in view.traits():
+#             # we have to re-bind the Cursor to the new Axes object by twiddling
+#             # the "interactive" trait
+#             view.interactive = False
+#             view.interactive = True 
             
             
     def export(self, filename):
+        pass
         # TODO - eventually give a preview, allow changing size, dpi, aspect 
         # ratio, plot layout, etc.
-        plt.savefig(filename, bbox_inches = 'tight')
+        # plt.savefig(filename, bbox_inches = 'tight')
         
         

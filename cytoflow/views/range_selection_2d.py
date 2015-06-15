@@ -51,9 +51,9 @@ class RangeSelection2D(HasTraits):
     _selector = Instance(RectangleSelector, transient = True)
     _box = Instance(Rectangle, transient = True)
         
-    def plot(self, experiment, fig_num = None, **kwargs):
+    def plot(self, experiment, **kwargs):
         """Plot self.view, and then plot the selection on top of it."""
-        self.view.plot(experiment, fig_num, **kwargs)
+        self.view.plot(experiment, **kwargs)
         self._draw_rect()
 
     def is_valid(self, experiment):

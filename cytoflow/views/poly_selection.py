@@ -6,10 +6,8 @@ from cytoflow.views.i_view import IView
 
 from matplotlib.widgets import Cursor
 import matplotlib.pyplot as plt
-from matplotlib.patches import Rectangle
 import matplotlib as mpl
 import numpy as np
-from distutils.dir_util import _path_created
 
 @provides(ISelectionView)
 class PolygonSelection(HasTraits):
@@ -44,9 +42,9 @@ class PolygonSelection(HasTraits):
     _line = Instance(mpl.lines.Line2D, transient = True)
     _drawing = Bool(transient = True)
         
-    def plot(self, experiment, fig_num = None, **kwargs):
+    def plot(self, experiment, **kwargs):
         """Plot self.view, and then plot the selection on top of it."""
-        self.view.plot(experiment, fig_num, **kwargs)
+        self.view.plot(experiment, **kwargs)
         self._draw_poly()
 
     def is_valid(self, experiment):

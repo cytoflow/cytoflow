@@ -17,12 +17,13 @@ http://matplotlib.org/examples/user_interfaces/embedding_in_qt4.html
 import matplotlib
 
 # We want matplotlib to use a QT backend
-matplotlib.use('Qt4Agg')
-from matplotlib.backends.backend_qt4agg import FigureCanvas
+matplotlib.use('module://matplotlib_backend')
+from matplotlib_backend import FigureCanvas
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
+import numpy as np
 
-from traits.api import Instance, Property, Event
+from traits.api import Instance, Event
 
 from pyface.widget import Widget
 
@@ -35,15 +36,16 @@ class MPLFigureEditor(Widget):
     
     figure = Instance(Figure)
     control = Instance(FigureCanvas)
-    fig_num = Property
     
     clear = Event
     draw = Event    
  
     def __init__(self, parent, **traits):
         super(MPLFigureEditor, self).__init__(**traits)
-        plt.ioff()  # make sure matplotlib doesn't make a Qt window
+        #plt.ioff()  # make sure matplotlib doesn't make a Qt window
+        plt.ion()  # make sure matplotlib doesn't make a Qt window
         self.control = self._create_canvas(parent)
+        #self.control.draw()
         
         self.on_trait_event(self._clear, 'clear', dispatch = 'ui')
         self.on_trait_event(self._draw, 'draw', dispatch = 'ui')
@@ -64,20 +66,16 @@ class MPLFigureEditor(Widget):
         self.figure = plt.figure()
         # self.figure = plt.gcf()
         
-#         def f(t):
-#             return np.exp(-t) * np.cos(2*np.pi*t)
-# 
-#         t1 = np.arange(0.0, 5.0, 0.1)
-#         t2 = np.arange(0.0, 5.0, 0.02)
-#         plt.plot(t1, f(t1), 'bo', t2, f(t2), 'k')
+        def f(t):
+            return np.exp(-t) * np.cos(2*np.pi*t)
+ 
+        t1 = np.arange(0.0, 5.0, 0.1)
+        t2 = np.arange(0.0, 5.0, 0.02)
+        plt.plot(t1, f(t1), 'bo', t2, f(t2), 'k')
 
         mpl_canvas = FigureCanvas(self.figure)
 
         return mpl_canvas
-    
-    # MAGIC: gets the value of the "fig_num" property
-    def _get_fig_num(self):
-        return self.figure.number
     
 #     # MAGIC: listens for a change in the 'figure' trait.
 #     def _figure_changed(self, old, new):

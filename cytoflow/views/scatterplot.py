@@ -5,9 +5,10 @@ Created on Apr 19, 2015
 """
 from traits.api import HasTraits, provides, Str
 from cytoflow.views.i_view import IView
-from cytoflow.views.sns_axisgrid import FacetGrid
+#from cytoflow.views.sns_axisgrid import FacetGrid
 import matplotlib.pyplot as plt
 import matplotlib as mpl
+import seaborn as sns
 
 @provides(IView)
 class ScatterplotView(HasTraits):
@@ -54,7 +55,7 @@ class ScatterplotView(HasTraits):
         
         return True
     
-    def plot(self, experiment, fig_num = None, **kwargs):
+    def plot(self, experiment, **kwargs):
         """Plot a faceted scatter plot view of a channel"""
         
         kwargs.setdefault('alpha', 0.25)
@@ -68,12 +69,11 @@ class ScatterplotView(HasTraits):
         else:
             x = experiment.query(self.subset)
 
-        g = FacetGrid(x, 
-                      col = (self.xfacet if self.xfacet else None),
-                      row = (self.yfacet if self.yfacet else None),
-                      hue = (self.huefacet if self.huefacet else None),
-                      fig_kws={"num" : fig_num},
-                      legend_out = False)
+        g = sns.FacetGrid(x, 
+                          col = (self.xfacet if self.xfacet else None),
+                          row = (self.yfacet if self.yfacet else None),
+                          hue = (self.huefacet if self.huefacet else None),
+                          legend_out = False)
         
         g.map(plt.scatter, self.xchannel, self.ychannel, **kwargs)
         g.add_legend()

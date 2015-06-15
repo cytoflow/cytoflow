@@ -6,7 +6,6 @@ Created on Apr 19, 2015
 from traits.api import HasTraits, provides, Str
 from cytoflow.views.i_view import IView
 from cytoflow.utility.util import num_hist_bins
-from cytoflow.views.sns_axisgrid import FacetGrid
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
@@ -57,7 +56,7 @@ class HexbinView(HasTraits):
         
         return True
     
-    def plot(self, experiment, fig_num = None, **kwargs):
+    def plot(self, experiment, **kwargs):
         """Plot a faceted histogram view of a channel"""
         
         #kwargs.setdefault('histtype', 'stepfilled')
@@ -87,21 +86,18 @@ class HexbinView(HasTraits):
         
         kwargs.setdefault('bins', bins) # Do not move above.  don't ask.
 
-        g = FacetGrid(x, 
-                      col = (self.xfacet if self.xfacet else None),
-                      row = (self.yfacet if self.yfacet else None),
-                      hue = (self.huefacet if self.huefacet else None),
-                      fig_kws={"num" : fig_num})
+        g = sns.FacetGrid(x, 
+                          col = (self.xfacet if self.xfacet else None),
+                          row = (self.yfacet if self.yfacet else None),
+                          hue = (self.huefacet if self.huefacet else None))
         
         g.map(plt.hexbin, self.xchannel, self.ychannel, **kwargs)
         
 if __name__ == '__main__':
-    import seaborn as sns
     import cytoflow as flow
     import FlowCytometryTools as fc
     
     import matplotlib as mpl
-    import matplotlib.pyplot as plt
     mpl.rcParams['savefig.dpi'] = 2 * mpl.rcParams['savefig.dpi']
     
     tube1 = fc.FCMeasurement(ID='Test 1', 

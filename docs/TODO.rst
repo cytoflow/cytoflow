@@ -51,6 +51,7 @@ Major features still TODO
   * 1D mixture model (from EM clustering)
   * K-means clustering?  May want to check out the "fcm" Python package
   * Binning (probably log-scale?)
+  * Principle component analysis?
  
 * Views
 
@@ -82,5 +83,7 @@ Major features still TODO
     * Attribute: y statistic
     * Attribute: y statistic channel
     * Attribute: x, y, hue trellis
+
+  * Radar plots!  I just discovered these.  Possibly with principle component analysis?
 
     
