@@ -51,16 +51,13 @@ class IView(Interface):
             True if this op will work; False otherwise.
         """
     
-    def plot(self, experiment, fig_num = None, **kwargs):
+    def plot(self, experiment, **kwargs):
         """Plot a visualization of flow data using the pyplot stateful interface
         
         Parameters
         ----------
         experiment : Experiment 
             the Experiment containing the data to plot
-        fig_num : int
-            The figure id from pyplot that we're to plot in, or None if 
-            making a new plot. 
         kwargs : dict
             additional arguments to pass to the underlying plotting function.
         """

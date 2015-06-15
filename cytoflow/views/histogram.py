@@ -10,9 +10,9 @@ if __name__ == '__main__':
 from traits.api import HasTraits, Str, provides
 import matplotlib.pyplot as plt
 from cytoflow.views.i_view import IView
-from cytoflow.views.sns_axisgrid import FacetGrid
 from cytoflow.utility.util import num_hist_bins
 import numpy as np
+import seaborn as sns
 
 @provides(IView)
 class HistogramView(HasTraits):
@@ -53,7 +53,7 @@ class HistogramView(HasTraits):
     huefacet = Str
     subset = Str
     
-    def plot(self, experiment, fig_num = None, **kwargs):
+    def plot(self, experiment, **kwargs):
         """Plot a faceted histogram view of a channel"""
         
         kwargs.setdefault('histtype', 'stepfilled')
@@ -72,12 +72,11 @@ class HistogramView(HasTraits):
         bins = np.arange(xmin, xmax, bin_width)
         kwargs.setdefault('bins', bins) 
 
-        g = FacetGrid(x, 
-                      col = (self.xfacet if self.xfacet else None),
-                      row = (self.yfacet if self.yfacet else None),
-                      hue = (self.huefacet if self.huefacet else None),
-                      fig_kws={"num" : fig_num},
-                      legend_out = False)
+        g = sns.FacetGrid(x, 
+                          col = (self.xfacet if self.xfacet else None),
+                          row = (self.yfacet if self.yfacet else None),
+                          hue = (self.huefacet if self.huefacet else None),
+                          legend_out = False)
         
         g.map(plt.hist, self.channel, **kwargs)
         g.add_legend()
@@ -114,6 +113,6 @@ if __name__ == '__main__':
     
     import seaborn as sns
     tips = sns.load_dataset("tips")
-    g = FacetGrid(tips, col="time", fig_kws={"num" : 1})
+    g = sns.FacetGrid(tips, col="time", fig_kws={"num" : 1})
     
     plt.show()

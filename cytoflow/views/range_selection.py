@@ -49,9 +49,9 @@ class RangeSelection(HasTraits):
     _high_line = Instance(Line2D, transient = True)
     _hline = Instance(Line2D, transient = True)
         
-    def plot(self, experiment, fig_num = None, **kwargs):
+    def plot(self, experiment, **kwargs):
         """Plot self.view, and then plot the selection on top of it."""
-        self.view.plot(experiment, fig_num, **kwargs)
+        self.view.plot(experiment, **kwargs)
         self._draw_span()
 
     def is_valid(self, experiment):
