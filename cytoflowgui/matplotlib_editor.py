@@ -16,7 +16,7 @@ http://matplotlib.org/examples/user_interfaces/embedding_in_qt4.html
 
 import matplotlib
 
-# We want matplotlib to use a QT backend
+# We want matplotlib to use our backend
 matplotlib.use('module://matplotlib_backend')
 from matplotlib_backend import FigureCanvas
 import matplotlib.pyplot as plt
@@ -26,6 +26,7 @@ import numpy as np
 from traits.api import Instance, Event
 
 from pyface.widget import Widget
+from pyface.qt import QtGui, QtCore
 
 class MPLFigureEditor(Widget):
  
@@ -35,17 +36,19 @@ class MPLFigureEditor(Widget):
     scrollable = True
     
     figure = Instance(Figure)
-    control = Instance(FigureCanvas)
+    _canvas = Instance(FigureCanvas)
+    _layout = Instance(QtGui.QStackedLayout)
     
     clear = Event
     draw = Event    
  
     def __init__(self, parent, **traits):
         super(MPLFigureEditor, self).__init__(**traits)
-        #plt.ioff()  # make sure matplotlib doesn't make a Qt window
-        plt.ion()  # make sure matplotlib doesn't make a Qt window
-        self.control = self._create_canvas(parent)
-        #self.control.draw()
+        
+        self.parent = parent
+        self.control = QtGui.QWidget(parent)    # the layout that manages the pane
+        self._layout = QtGui.QStackedLayout()
+        self.control.setLayout(self._layout)
         
         self.on_trait_event(self._clear, 'clear', dispatch = 'ui')
         self.on_trait_event(self._draw, 'draw', dispatch = 'ui')
@@ -54,45 +57,28 @@ class MPLFigureEditor(Widget):
         pass
     
     def _clear(self):
-        self.figure.clear()
+        if self.figure:
+            self.figure.clear()
         
     def _draw(self):
-        self.control.draw()
+        if self.figure:
+            self.figure.canvas.draw()
  
-    def _create_canvas(self, parent):
-        """ Create the MPL canvas. """
-        # matplotlib commands to create a canvas
-
-        self.figure = plt.figure()
-        # self.figure = plt.gcf()
+    # MAGIC: listens for a change in the 'figure' trait.
+    def _figure_changed(self, old, new):
         
-        def f(t):
-            return np.exp(-t) * np.cos(2*np.pi*t)
- 
-        t1 = np.arange(0.0, 5.0, 0.1)
-        t2 = np.arange(0.0, 5.0, 0.02)
-        plt.plot(t1, f(t1), 'bo', t2, f(t2), 'k')
+        if old:
+            # remove the view's widget from the layout
+            self._layout.takeAt(self._layout.indexOf(self._canvas))           
+            self._canvas.setParent(None)
+            del self._canvas
+            
+        if new:
+            self._canvas = new.canvas
+            self._layout.addWidget(self._canvas)
+            self._canvas.setParent(self.control)
+            #self._canvas.show()
 
-        mpl_canvas = FigureCanvas(self.figure)
-
-        return mpl_canvas
-    
-#     # MAGIC: listens for a change in the 'figure' trait.
-#     def _figure_changed(self, old, new):
-#         
-#         if not isinstance(new, Figure) or not self.control:
-#             return
-# 
-#         (w, h) = old.get_size_inches()
-#         new.set_size_inches((w, h))        
-#         #self.control.figure = new
-#         #new.set_canvas(self.control)
-#         
-#         self.control.draw()
-#         self.control.update()
-#         
-#         plt.close(old)
-        
         
     
 
