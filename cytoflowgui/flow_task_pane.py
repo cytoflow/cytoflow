@@ -33,9 +33,8 @@ class FlowTaskPane(TaskPane):
         self.control = self.editor = None 
         
     def clear_plot(self):
-        pass
-#         self.editor.figure.clear()
-#         self.editor.control.draw()
+        self.editor.clear = True
+        self.editor.draw = True
         
     def plot(self, experiment, view):
         """
@@ -49,26 +48,20 @@ class FlowTaskPane(TaskPane):
         view : cytoflow.IView
             The view to use for the plotting
         """
-#         
-#         def do_plot(editor, view, experiment, fig_num):
-#             editor.clear = True
-#             time.sleep(0)
-#             view.plot(experiment, fig_num = fig_num)
-#             time.sleep(0)
-#             editor.draw = True
-#                
-#             if "interactive" in view.traits():
-#                 # we have to re-bind the Cursor to the new Axes object by twiddling
-#                 # the "interactive" trait
-#                 view.interactive = False
-#                 view.interactive = True 
-#                 
+         
+#         # TODO - make this multithreaded.  atm this returns "Cannot set parent,
+#         # new parent is in a different thread."
+#         def do_plot(view, experiment):
+#             view.plot(experiment)
+#                  
 #         t = threading.Thread(target = do_plot,
-#                              args = (self.editor, 
-#                                      view, 
-#                                      experiment, 
-#                                      self.editor.fig_num))
+#                              args = (view, experiment))
 #         t.start()
+#         t.join()
+#         
+#         self.editor.clear = True
+#         self.editor.figure = plt.gcf()
+#         self.editor.draw = True
         
         # TODO - view.plot is going to create a new figure.  get the new
         # figure with plt.gcf() and keep track of the mapping between figure
@@ -81,19 +74,19 @@ class FlowTaskPane(TaskPane):
         
         self.editor.clear = True
         view.plot(experiment)
+        self.editor.figure = plt.gcf()
         self.editor.draw = True
            
-#         if "interactive" in view.traits():
-#             # we have to re-bind the Cursor to the new Axes object by twiddling
-#             # the "interactive" trait
-#             view.interactive = False
-#             view.interactive = True 
+        if "interactive" in view.traits():
+            # we have to re-bind the Cursor to the new Axes object by twiddling
+            # the "interactive" trait
+            view.interactive = False
+            view.interactive = True 
             
             
     def export(self, filename):
-        pass
         # TODO - eventually give a preview, allow changing size, dpi, aspect 
         # ratio, plot layout, etc.
-        # plt.savefig(filename, bbox_inches = 'tight')
+        plt.savefig(filename, bbox_inches = 'tight')
         
         
