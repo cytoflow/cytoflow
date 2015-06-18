@@ -14,8 +14,8 @@
    id="svg2"
    version="1.1"
    inkscape:version="0.48.4 r9939"
-   sodipodi:docname="quad.svg"
-   inkscape:export-filename="/home/brian/src/cytoflow/cytoflowgui/op_plugins/images/quad.png"
+   sodipodi:docname="range2d.svg"
+   inkscape:export-filename="/home/brian/src/cytoflow/cytoflowgui/op_plugins/images/range2d.png"
    inkscape:export-xdpi="8"
    inkscape:export-ydpi="8">
   <defs
@@ -107,11 +107,10 @@
       <rect
          style="fill:none;stroke:#0000ff;stroke-width:20;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
          id="rect5542"
-         width="228"
-         height="275"
-         x="120"
-         y="14"
-         transform="translate(22.857143,483.78832)" />
+         width="313"
+         height="314"
+         x="47.85714"
+         y="505.78833" />
     </g>
   </g>
 </svg>

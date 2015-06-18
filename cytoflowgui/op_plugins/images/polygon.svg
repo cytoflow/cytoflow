@@ -14,8 +14,8 @@
    id="svg2"
    version="1.1"
    inkscape:version="0.48.4 r9939"
-   sodipodi:docname="range2d.svg"
-   inkscape:export-filename="/home/brian/src/cytoflow/cytoflowgui/op_plugins/images/range2d.svg.png"
+   sodipodi:docname="polygon.svg"
+   inkscape:export-filename="/home/brian/src/cytoflow/cytoflowgui/op_plugins/images/polygon.png"
    inkscape:export-xdpi="8"
    inkscape:export-ydpi="8">
   <defs
@@ -105,11 +105,10 @@
          id="path5470"
          inkscape:connector-curvature="0" />
       <path
-         style="fill:none;stroke:#0000ff;stroke-width:20;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none"
-         d="M 86,138 163,33 313,54 335,196 253,274 114,232 z"
+         style="fill:none;stroke:#0000ff;stroke-width:20.00000191;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+         d="M 46.857149,646.72191 143.02985,510.7883 330.37926,537.97503 357.85716,721.80905 255.43949,822.7883 81.829039,768.41485 z"
          id="path5575"
-         inkscape:connector-curvature="0"
-         transform="translate(22.857143,483.78832)" />
+         inkscape:connector-curvature="0" />
     </g>
   </g>
 </svg>
