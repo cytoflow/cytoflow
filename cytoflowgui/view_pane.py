@@ -80,6 +80,9 @@ class ViewDockPane(DockPane):
                                    editor=EnumEditor(name = "_plugins_dict"),
                                    show_label = False))
         
+        # TODO - move this to a vertical toolbar like the operations are.
+        # perhaps add carets for plots that have already been generated
+        # for this op.  add/remove default plots dynamically
         picker_control = self.edit_traits(kind='subpanel',
                                           parent = parent,
                                           view = plugin_chooser).control
