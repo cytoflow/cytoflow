@@ -7,6 +7,7 @@ Created on Apr 23, 2015
 from traitsui.api import View, Item, Controller, EnumEditor, Handler
 from envisage.api import Plugin, contributes_to
 from traits.api import provides, Callable, Instance
+from pyface.api import ImageResource
 
 from cytoflow import ScatterplotView
 from cytoflowgui.subset_editor import SubsetEditor
@@ -62,8 +63,12 @@ class ScatterplotPlugin(Plugin):
     
     def get_view(self):
         return ScatterplotPluginView()
+    
+    def get_icon(self):
+        return ImageResource('hlog')
 
     @contributes_to(VIEW_PLUGIN_EXT)
     def get_plugin(self):
         return self
+
         

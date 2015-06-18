@@ -7,6 +7,7 @@ Created on Feb 24, 2015
 from traitsui.api import View, Item, Controller, EnumEditor, Handler
 from envisage.api import Plugin, contributes_to
 from traits.api import provides, Callable, Instance
+from pyface.api import ImageResource
 
 from cytoflow import HistogramView
 from cytoflowgui.subset_editor import SubsetEditor
@@ -59,6 +60,9 @@ class HistogramPlugin(Plugin):
     
     def get_view(self):
         return HistogramPluginView()
+    
+    def get_icon(self):
+        return ImageResource('hlog')
 
     @contributes_to(VIEW_PLUGIN_EXT)
     def get_plugin(self):

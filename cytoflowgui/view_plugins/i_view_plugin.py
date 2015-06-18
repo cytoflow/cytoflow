@@ -31,6 +31,12 @@ class IViewPlugin(Interface):
 
     def get_view(self):
         """Return an IView instance that this plugin wraps"""
+        
+    
+    def get_icon(self):
+        """
+        Returns an icon for this plugin
+        """
 
 
 class ViewHandlerMixin(HasTraits):
