@@ -124,7 +124,9 @@ class FlowTask(Task):
         self.model.on_trait_change(self._result_updated, 
                                    "selected:result",
                                    dispatch = 'ui')
-        
+
+            
+    def activated(self):
         # add an import plugin
         plugin = ImportPlugin()
         wi = WorkflowItem(task = self)
@@ -157,7 +159,7 @@ class FlowTask(Task):
             self.add_operation('edu.mit.synbio.cytoflowgui.op_plugins.threshold')
             self.model.selected.operation.channel = "Y2-A"
             self.model.selected.operation.threshold = 2000
-            self.model.selected.operation.name = "T"
+            self.model.selected.operation.name = "T"        
     
     def prepare_destroy(self):
         self.model = None
