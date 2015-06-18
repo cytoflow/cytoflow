@@ -72,10 +72,8 @@ class FlowTaskPane(TaskPane):
         # we can make a new plot (figure); but if the params stay the same
         # and the plot is re-selected, we can just reuse the existing figure.
         
-        self.editor.clear = True
         view.plot(experiment)
         self.editor.figure = plt.gcf()
-        self.editor.draw = True
            
         if "interactive" in view.traits():
             # we have to re-bind the Cursor to the new Axes object by twiddling
@@ -86,7 +84,8 @@ class FlowTaskPane(TaskPane):
             
     def export(self, filename):
         # TODO - eventually give a preview, allow changing size, dpi, aspect 
-        # ratio, plot layout, etc.
+        # ratio, plot layout, etc.  at the moment, just export exactly what's
+        # on the screen
         plt.savefig(filename, bbox_inches = 'tight')
         
         

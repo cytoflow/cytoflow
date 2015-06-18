@@ -19,9 +19,7 @@ import matplotlib
 # We want matplotlib to use our backend
 matplotlib.use('module://matplotlib_backend')
 from matplotlib_backend import FigureCanvas
-import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
-import numpy as np
 
 from traits.api import Instance, Event
 
@@ -66,7 +64,6 @@ class MPLFigureEditor(Widget):
  
     # MAGIC: listens for a change in the 'figure' trait.
     def _figure_changed(self, old, new):
-        
         if old:
             # remove the view's widget from the layout
             self._layout.takeAt(self._layout.indexOf(self._canvas))           
@@ -77,7 +74,6 @@ class MPLFigureEditor(Widget):
             self._canvas = new.canvas
             self._layout.addWidget(self._canvas)
             self._canvas.setParent(self.control)
-            #self._canvas.show()
 
         
     
