@@ -91,6 +91,12 @@ def new_figure_manager(num, *args, **kwargs):
     
     FigureClass = kwargs.pop('FigureClass', Figure)
     thisFig = FigureClass(*args, **kwargs)
+
+    # the default figure size in Seaborn is 3 inches x 3 inches.  the framework
+    # should stretch this out .... but it doesn't.  i don't know why.  so,
+    # we set the dpi and figure size manually here ..... why?  i don't know.
+    thisFig.set_dpi(96)
+    thisFig.set_size_inches(5, 5)
     canvas = FigureCanvasQTAgg(thisFig)
     return FigureManagerCytoflow(canvas, num)
 
