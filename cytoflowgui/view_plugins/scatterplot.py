@@ -65,7 +65,7 @@ class ScatterplotPlugin(Plugin):
         return ScatterplotPluginView()
     
     def get_icon(self):
-        return ImageResource('hlog')
+        return ImageResource('scatterplot')
 
     @contributes_to(VIEW_PLUGIN_EXT)
     def get_plugin(self):

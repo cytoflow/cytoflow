@@ -62,7 +62,7 @@ class HistogramPlugin(Plugin):
         return HistogramPluginView()
     
     def get_icon(self):
-        return ImageResource('hlog')
+        return ImageResource('histogram')
 
     @contributes_to(VIEW_PLUGIN_EXT)
     def get_plugin(self):
