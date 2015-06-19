@@ -352,7 +352,8 @@ class FlowTask(Task):
                 self.model.selected = wi.previous
             
             wi.previous.next = wi.next
-            wi.next.previous = wi.previous
+            if wi.next:
+                wi.next.previous = wi.previous
             
             del wi.default_view
             del wi.views
