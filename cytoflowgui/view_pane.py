@@ -23,7 +23,7 @@ class ViewDockPane(DockPane):
 
     # the IViewPlugins that the user can possibly choose.  set by the controller
     # as we're instantiated
-    plugins = List(IViewPlugin)
+    view_plugins = List(IViewPlugin)
     
     # changed depending on whether the selected wi in the model is valid.
     # would use a direct listener, but valid gets changed outside
@@ -33,9 +33,6 @@ class ViewDockPane(DockPane):
     # the UI object associated with the object we're editing.
     # NOTE: we don't maintain a reference to the IView itself...
     _ui = Instance(UI)
-
-    # plugin name --> plugin ID
-    #_plugins_dict = Dict(Str, Str)
     
     _current_view_id = Str
     
@@ -50,6 +47,9 @@ class ViewDockPane(DockPane):
     
     # actions associated with views
     _actions = Dict(Str, TaskAction)
+    
+    # the default action
+    _default_action = Instance(TaskAction)
     
     ###########################################################################
     # 'ITaskPane' interface.
@@ -83,6 +83,13 @@ class ViewDockPane(DockPane):
         self.toolbar = ToolBarManager(orientation = 'vertical',
                                       show_tool_names = False,
                                       image_size = (32, 32))
+        
+        self._default_action = TaskAction(name = "Default\nView",
+                                          on_perform = lambda: self.task.set_current_view("default"),
+                                          style = 'toggle',
+                                          visible = False)
+        self._actions["default"] = self._default_action
+        self.toolbar.append(self._default_action)
         
         for plugin in self.plugins:
             task_action = TaskAction(name = plugin.short_name,
@@ -142,16 +149,17 @@ class ViewDockPane(DockPane):
         # at the moment, this only gets called from the UI thread, so we can
         # do UI things.   we get notified if *either* the currently selected 
         # workflowitem *or* the current view changes.
+        
+         # untoggle everything on the toolbar
+        for action in self._actions.itervalues():
+            action.checked = False
   
         if name == 'selected':
             old = old.current_view if old else None
             new = new.current_view if new else None
+
         
         if old:
-            # untoggle everything on the toolbar
-            for action in self._actions.itervalues():
-                action.checked = False
-                
             # remove the view's widget from the layout
             self._layout.takeAt(self._layout.indexOf(self._ui.control))
             
@@ -162,7 +170,10 @@ class ViewDockPane(DockPane):
             self._ui.dispose()
             
         if new:
-            self._actions[new.id].checked = True
+            if new == self.task.model.selected.default_view:
+                self._default_action.checked = True
+            else:
+                self._actions[new.id].checked = True
             
             self._ui = new.handler.edit_traits(kind='subpanel', 
                                                parent=self._control)              
@@ -171,20 +182,27 @@ class ViewDockPane(DockPane):
             self._current_view_id = new.id
         else:
             self._current_view_id = ""
+
+    @on_trait_change('task:model:selected.default_view')
+    def _default_view_changed(self, obj, name, old, new):
+        old_view = (old.default_view 
+                    if isinstance(obj, Workflow) 
+                       and isinstance(old, WorkflowItem) 
+                    else old)
+          
+        new_view = (new.default_view 
+                    if isinstance(obj, Workflow) 
+                       and isinstance(new, WorkflowItem)
+                    else new)
         
-#     @on_trait_change('task:model:selected.default_view')
-#     def _default_view_changed(self, obj, name, old, new):
-#         pass
-#         old_view = (old.default_view 
-#                     if isinstance(obj, Workflow) 
-#                        and isinstance(old, WorkflowItem) 
-#                     else old)
-#          
-#         new_view = (new.default_view 
-#                     if isinstance(obj, Workflow) 
-#                        and isinstance(new, WorkflowItem)
-#                     else new)
-#                         
+        if new_view is None:
+            self._default_action.visible = False
+        else:
+            plugins = [x for x in self.task.op_plugins if x.operation_id == self.task.model.selected.operation.id]
+            plugin = plugins[0]
+            self._default_action.image = plugin.get_icon()
+            self._default_action.visible = True
+                         
 #         if old_view is not None:
 #             old_id = old_view.id
 #             del self._plugins_dict[old_id]

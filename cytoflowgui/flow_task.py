@@ -389,6 +389,9 @@ class FlowTask(Task):
         """
         wi = self.model.selected
         
+        if view_id == "default":
+            view_id = self.model.selected.default_view.id
+        
         view = next((x for x in wi.views if x.id == view_id), None)
         
         if not view:
