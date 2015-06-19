@@ -45,6 +45,12 @@ class ViewDockPane(DockPane):
     # the main panel control
     _control = Instance(QtGui.QWidget)
     
+    # the entire window (plus toolbar)
+    _window = Instance(QtGui.QMainWindow)
+    
+    # actions associated with views
+    _actions = Dict(Str, TaskAction)
+    
     ###########################################################################
     # 'ITaskPane' interface.
     ###########################################################################
@@ -80,15 +86,16 @@ class ViewDockPane(DockPane):
         
         for plugin in self.plugins:
             task_action = TaskAction(name = plugin.short_name,
-                                     on_perform = lambda id=plugin.id:
-                                                    self.trait_set(_current_view_id = id),
+                                     on_perform = lambda id=plugin.view_id:
+                                                    self.task.set_current_view(id),
                                      image = plugin.get_icon(),
                                      style = 'toggle')
+            self._actions[plugin.view_id] = task_action
             self.toolbar.append(task_action)
             
-        window = QtGui.QMainWindow()
-        tb = self.toolbar.create_tool_bar(window)
-        window.addToolBar(QtCore.Qt.RightToolBarArea, tb)
+        self._window = QtGui.QMainWindow()
+        tb = self.toolbar.create_tool_bar(self._window)
+        self._window.addToolBar(QtCore.Qt.RightToolBarArea, tb)
    
         # the top-level control 
         scroll_area = QtGui.QScrollArea()
@@ -103,18 +110,19 @@ class ViewDockPane(DockPane):
         self._control.setLayout(self._layout)
         scroll_area.setWidget(self._control)
         
-        window.setCentralWidget(scroll_area)
-        window.setParent(parent)
-        parent.setWidget(window)
-        return window
+        self._window.setCentralWidget(scroll_area)
+        self._window.setParent(parent)
+        parent.setWidget(self._window)
+        self._window.setEnabled(False)
+        return self._window
             
-    @on_trait_change('_current_view_id')
-    def _picker_current_view_changed(self, obj, name, old, new):
-        if new:
-            self.task.set_current_view(new)
+#     @on_trait_change('_current_view_id')
+#     def _picker_current_view_changed(self, obj, name, old, new):
+#         if new:
+#             self.task.set_current_view(new)
         
     def _set_enabled(self, obj, name, old, new):
-        self._parent.setEnabled(new)
+        self._window.setEnabled(new)
             
     @on_trait_change('task:model:selected.valid')
     def _on_model_valid_changed(self, obj, name, old, new):
@@ -140,6 +148,10 @@ class ViewDockPane(DockPane):
             new = new.current_view if new else None
         
         if old:
+            # untoggle everything on the toolbar
+            for action in self._actions.itervalues():
+                action.checked = False
+                
             # remove the view's widget from the layout
             self._layout.takeAt(self._layout.indexOf(self._ui.control))
             
@@ -150,6 +162,8 @@ class ViewDockPane(DockPane):
             self._ui.dispose()
             
         if new:
+            self._actions[new.id].checked = True
+            
             self._ui = new.handler.edit_traits(kind='subpanel', 
                                                parent=self._control)              
             self._layout.addWidget(self._ui.control)
@@ -158,9 +172,9 @@ class ViewDockPane(DockPane):
         else:
             self._current_view_id = ""
         
-    @on_trait_change('task:model:selected.default_view')
-    def _default_view_changed(self, obj, name, old, new):
-        pass
+#     @on_trait_change('task:model:selected.default_view')
+#     def _default_view_changed(self, obj, name, old, new):
+#         pass
 #         old_view = (old.default_view 
 #                     if isinstance(obj, Workflow) 
 #                        and isinstance(old, WorkflowItem) 
