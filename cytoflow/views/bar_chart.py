@@ -65,8 +65,8 @@ class BarChartView(HasTraits):
     """
     
     # traits   
-    id = "edu.mit.synbio.cytoflow.view.histogram"
-    friendly_id = "Histogram" 
+    id = "edu.mit.synbio.cytoflow.view.barchart"
+    friendly_id = "Bar Chart" 
     
     name = Str
     channel = Str
@@ -96,8 +96,7 @@ class BarChartView(HasTraits):
             group_idx = np.arange(ngroup)
   
             bar_width = 0.35
-            
-            plt.ioff()
+
             colors = sns.color_palette("hls", nsubgroup)
             for i, subgroup in enumerate(agg.index.levels[1]):
                 group_data = agg[:, subgroup]
@@ -110,9 +109,7 @@ class BarChartView(HasTraits):
             group_names = ["{0} = {1}".format(self.group, x) for x in agg.index.levels[0]]
             plt.xticks(group_idx + bar_width, group_names)
             plt.legend()
-            plt.show()
-            plt.ion()
-            
+
         else:
             g = experiment.data.groupby(by = [self.group])
             agg = g[self.channel].aggregate(self.function)
@@ -122,7 +119,6 @@ class BarChartView(HasTraits):
             bar_width = 0.35
             colors = sns.color_palette("hls")
             
-            plt.ioff()
             plt.bar(group_idx + bar_width,
                     agg,
                     width = bar_width,
@@ -130,8 +126,6 @@ class BarChartView(HasTraits):
             group_names = ["{0} = {1}".format(self.group, x) for x in agg.index]
             plt.xticks(group_idx + bar_width * 1.5, group_names)
             plt.legend()
-            plt.show()
-            plt.ion()
         
     def is_valid(self, experiment):
         """Validate this view against an experiment."""
