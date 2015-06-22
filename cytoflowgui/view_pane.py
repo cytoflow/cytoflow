@@ -198,7 +198,8 @@ class ViewDockPane(DockPane):
         if new_view is None:
             self._default_action.visible = False
         else:
-            plugins = [x for x in self.task.op_plugins if x.operation_id == self.task.model.selected.operation.id]
+            plugins = [x for x in self.task.op_plugins 
+                       if x.operation_id == self.task.model.selected.operation.id]
             plugin = plugins[0]
             self._default_action.image = plugin.get_icon()
             self._default_action.visible = True

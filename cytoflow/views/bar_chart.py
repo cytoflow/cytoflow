@@ -52,7 +52,7 @@ class BarChartView(HasTraits):
     error_bars : Enum(None, "data", "summary")
         draw error bars?  if "data", apply *error_function* to the same
         data that was summarized with *function*.  if "summary", apply
-        *function* to subsets defined by *error_group* 
+        *function* to subsets defined by *error_var* 
         
     error_var : Str
         the conditioning variable used to determine summary subsets.  take the
@@ -84,7 +84,7 @@ class BarChartView(HasTraits):
     subgroup = Str
     error_bars = Enum(None, "data", "summary")
     error_function = Callable
-    error_group = Str
+    error_var = Str
     subset = Str
     
     # TODO - return the un-transformed values?  is this even valid?
@@ -111,6 +111,8 @@ class BarChartView(HasTraits):
                 error_agg = error_g[self.channel].aggregate(self.function)
                 err_bars = error_agg.groupby(level = [self.group, self.subgroup]) \
                                 .aggregate(self.error_function)
+            else:
+                err_bars = None
 
             ngroup = len(agg.index.levels[0])
             nsubgroup = len(agg.index.levels[1])
@@ -118,10 +120,12 @@ class BarChartView(HasTraits):
   
             bar_width = 0.35
 
+            plt.figure()
             colors = sns.color_palette("hls", nsubgroup)
             for i, subgroup in enumerate(agg.index.levels[1]):
                 group_data = agg[:, subgroup]
-                group_err_bars = err_bars[:, subgroup].as_matrix()
+                group_err_bars = err_bars[:, subgroup].as_matrix() \
+                                 if err_bars else None
 
                 plt.bar(group_idx + i * bar_width,
                         group_data,
@@ -154,6 +158,7 @@ class BarChartView(HasTraits):
             bar_width = 0.35
             colors = sns.color_palette("hls")
             
+            plt.figure()
             plt.bar(group_idx + bar_width,
                     agg,
                     width = bar_width,
@@ -183,9 +188,15 @@ class BarChartView(HasTraits):
         if self.subgroup and not self.subgroup in experiment.metadata:
             return False
         
-        if self.error_input == "summary" \
-            and (self.error_aggregate is None 
-                 or not self.error_aggregate in experiment.metadata):
+        if not self.function:
+            return False
+        
+        if self.error_bars == 'data' and self.error_function is None:
+            return False
+        
+        if self.error_bars == 'summary' \
+            and (self.error_function is None 
+                 or not self.error_var in experiment.metadata):
             return False
         
         if self.subset:

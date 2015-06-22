@@ -6,24 +6,59 @@ Created on Feb 24, 2015
 
 from traitsui.api import View, Item, Controller, EnumEditor, Handler
 from envisage.api import Plugin, contributes_to
-from traits.api import provides, Callable, Instance
+from traits.api import provides, Callable, Instance, Dict
 from pyface.api import ImageResource
 
-from cytoflow import BarChartView
+from cytoflow import BarChartView, geom_mean
 from cytoflowgui.subset_editor import SubsetEditor
 from cytoflowgui.view_plugins.i_view_plugin \
     import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin
+    
+import numpy as np
+import scipy.stats
     
 class BarChartHandler(Controller, ViewHandlerMixin):
     """
     docs
     """
     
+    summary_functions = Dict({np.mean : "Mean",
+                             # TODO - add count and proportion
+                             geom_mean : "Geom.Mean",
+                             len : "Count"})
+    
+    spread_functions = Dict({np.std : "Std.Dev.",
+                             scipy.stats.sem : "S.E.M"
+                       # TODO - add 95% CI
+                       })
+    
     def default_traits_view(self):
         return View(Item('object.name'),
                     Item('object.channel',
                          editor=EnumEditor(name='handler.channels'),
                          label = "Channel"),
+                    Item('object.group',
+                         editor=EnumEditor(name='handler.conditions'),
+                         label = "Group"),
+                    Item('object.subgroup',
+                         editor=EnumEditor(name='handler.conditions'),
+                         label = "Subgroup"),
+                    Item('object.function',
+                         editor = EnumEditor(name='handler.summary_functions'),
+                         label = "Summary\nFunction"),
+                    Item('object.error_bars',
+                         editor = EnumEditor(values = {None : "",
+                                                       "data" : "Data",
+                                                       "summary" : "Summary"}),
+                         label = "Error bars?"),
+                    Item('object.error_function',
+                         editor = EnumEditor(name='handler.spread_functions'),
+                         label = "Error bar\nfunction",
+                         visible_when = 'object.error_bars is not None'),
+                    Item('object.error_var',
+                         editor = EnumEditor(name = 'handler.conditions'),
+                         label = "Error bar\nVariable",
+                         visible_when = 'object.error_bars == "summary"'),
 #                     Item('object.xfacet',
 #                          editor=EnumEditor(name='handler.conditions'),
 #                          label = "Horizontal\nFacet"),
@@ -62,7 +97,7 @@ class BarChartPlugin(Plugin):
         return BarChartPluginView()
 
     def get_icon(self):
-        return ImageResource('histogram')
+        return ImageResource('bar_chart')
 
     @contributes_to(VIEW_PLUGIN_EXT)
     def get_plugin(self):
