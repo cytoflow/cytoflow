@@ -10,8 +10,6 @@ if __name__ == '__main__':
 from traits.api import HasTraits, Str, provides, Callable, Enum
 import matplotlib.pyplot as plt
 from cytoflow.views.i_view import IView
-from cytoflow.views.sns_axisgrid import FacetGrid
-from cytoflow.utility.util import num_hist_bins
 import numpy as np
 import seaborn as sns
 
@@ -28,8 +26,9 @@ class BarChartView(HasTraits):
         the name of the channel we're summarizing
 
     function : Callable (1D numpy.ndarray --> float)
-        per facet, call this function to get the data.  takes a single
+        per facet, call this function to summarize the data.  takes a single
         parameter, a 1-dimensional numpy.ndarray, and returns a single float. 
+        useful suggestions: np.mean, cytoflow.geom_mean
         
     orientation : Enum("horizontal", "vertical")
         do we plot the bar chart horizontally or vertically?
@@ -50,14 +49,21 @@ class BarChartView(HasTraits):
         the conditioning variable to make multiple bars in a group.  these
         subgroup bars are different colors.
         
-    error : Str
-        the conditioning variable to compute error bars.  ie, if you have
-        three replicates and named the condition "replicate"
+    error_bars : Enum(None, "data", "summary")
+        draw error bars?  if "data", apply *error_function* to the same
+        data that was summarized with *function*.  if "summary", apply
+        *function* to subsets defined by *error_group* 
         
-    error_function : Callable (2D numpy.ndarray --> 1D numpy.ndarray)
-        for each group/subgroup subset, create a (n x 2) array where the
-        first column is the observation and the second column is an int
-        representing the replicate the 
+    error_var : Str
+        the conditioning variable used to determine summary subsets.  take the
+        data that was used to draw the bar; subdivide it further by error_var;
+        compute the summary statistic for each subset, then apply error_function
+        to the resulting list.
+        
+    error_function : Callable (1D numpy.ndarray --> float)
+        for each group/subgroup subset, call this function to compute the 
+        error bars.  whether it is called on the data or the summary function
+        is determined by the value of *error_bars*
         
     subset : Str
         a string passed to pandas.DataFrame.query() to subset the data before 
@@ -76,21 +82,36 @@ class BarChartView(HasTraits):
     yfacet = Str
     group = Str
     subgroup = Str
-    error = Str
+    error_bars = Enum(None, "data", "summary")
     error_function = Callable
+    error_group = Str
     subset = Str
     
-    def plot(self, experiment, fig_num = None, **kwargs):
+    # TODO - return the un-transformed values?  is this even valid?
+    # ie, if we transform with Hlog, take the mean, then return the reverse
+    # transformed mean, is that the same as taking the ... um .... geometric
+    # mean of the untransformed data?  hm.
+    
+    def plot(self, experiment, **kwargs):
         """Plot a bar chart"""
         
-        if not self.subset:
-            x = experiment.data
-        else:
+        if self.subset:
             x = experiment.query(self.subset)
+        else:
+            x = experiment.data
         
         if self.subgroup:
-            g = experiment.data.groupby(by=[self.group, self.subgroup])
+            g = x.groupby(by=[self.group, self.subgroup])
             agg = g[self.channel].aggregate(self.function)
+            
+            if self.error_bars == "data":
+                err_bars = g[self.channel].aggregate(self.error_function)
+            elif self.error_bars == "summary":
+                error_g = x.groupby(by = [self.group, self.subgroup, self.error_var])
+                error_agg = error_g[self.channel].aggregate(self.function)
+                err_bars = error_agg.groupby(level = [self.group, self.subgroup]) \
+                                .aggregate(self.error_function)
+
             ngroup = len(agg.index.levels[0])
             nsubgroup = len(agg.index.levels[1])
             group_idx = np.arange(ngroup)
@@ -100,10 +121,13 @@ class BarChartView(HasTraits):
             colors = sns.color_palette("hls", nsubgroup)
             for i, subgroup in enumerate(agg.index.levels[1]):
                 group_data = agg[:, subgroup]
+                group_err_bars = err_bars[:, subgroup].as_matrix()
+
                 plt.bar(group_idx + i * bar_width,
                         group_data,
                         width = bar_width,
                         color = colors[i],
+                        yerr = group_err_bars,
                         label = agg.index.names[1] + " = {0}".format(subgroup))
                 
             group_names = ["{0} = {1}".format(self.group, x) for x in agg.index.levels[0]]
@@ -111,8 +135,19 @@ class BarChartView(HasTraits):
             plt.legend()
 
         else:
-            g = experiment.data.groupby(by = [self.group])
+            g = x.groupby(by = [self.group])
             agg = g[self.channel].aggregate(self.function)
+            
+            if self.error_bars == "data":
+                err_bars = g[self.channel].aggregate(self.error_function).as_matrix()
+            elif self.error_bars == "summary":
+                error_g = x.groupby(by = [self.group, self.error_var])
+                error_agg = error_g[self.channel].aggregate(self.error_function)
+                err_bars = error_agg.groupby(level = self.error_var) \
+                                .aggregate(self.error_function)  \
+                                .as_matrix()
+            else:
+                err_bars = None    
             ngroup = len(agg)
             group_idx = np.arange(ngroup)
             
@@ -122,6 +157,7 @@ class BarChartView(HasTraits):
             plt.bar(group_idx + bar_width,
                     agg,
                     width = bar_width,
+                    yerr = err_bars,
                     color = colors[0])
             group_names = ["{0} = {1}".format(self.group, x) for x in agg.index]
             plt.xticks(group_idx + bar_width * 1.5, group_names)
@@ -147,6 +183,11 @@ class BarChartView(HasTraits):
         if self.subgroup and not self.subgroup in experiment.metadata:
             return False
         
+        if self.error_input == "summary" \
+            and (self.error_aggregate is None 
+                 or not self.error_aggregate in experiment.metadata):
+            return False
+        
         if self.subset:
             try:
                 experiment.query(self.subset)
@@ -155,3 +196,52 @@ class BarChartView(HasTraits):
         
         return True
     
+if __name__ == '__main__':
+    import cytoflow as flow
+    import FlowCytometryTools as fc
+    import numpy as np
+    
+    tube1 = fc.FCMeasurement(ID='Test 1', 
+                             datafile='../../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs')
+
+    tube2 = fc.FCMeasurement(ID='Test 2', 
+                           datafile='../../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs')
+    
+    tube3 = fc.FCMeasurement(ID='Test 3', 
+                             datafile='../../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs')
+
+    tube4 = fc.FCMeasurement(ID='Test 4', 
+                           datafile='../../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs')
+    
+    ex = flow.Experiment()
+    ex.add_conditions({"Dox" : "float", "Repl" : "int"})
+    
+    ex.add_tube(tube1, {"Dox" : 10.0, "Repl" : 1})
+    ex.add_tube(tube2, {"Dox" : 1.0, "Repl" : 1})
+    ex.add_tube(tube3, {"Dox" : 10.0, "Repl" : 2})
+    ex.add_tube(tube4, {"Dox" : 1.0, "Repl" : 2})
+    
+    hlog = flow.HlogTransformOp()
+    hlog.name = "Hlog transformation"
+    hlog.channels = ['V2-A', 'Y2-A', 'B1-A', 'FSC-A', 'SSC-A']
+    ex2 = hlog.apply(ex)
+    
+    thresh = flow.ThresholdOp()
+    thresh.name = "Y2-A+"
+    thresh.channel = 'Y2-A'
+    thresh.threshold = 2005.0
+
+    ex3 = thresh.apply(ex2)
+    
+    s = flow.BarChartView()
+    s.channel = "V2-A"
+    s.function = flow.geom_mean
+    s.group = "Dox"
+    s.subgroup = "Y2-A+"
+    s.error_bars = "data"
+    #s.error_var = "Repl"
+    s.error_function = np.std
+    
+    plt.ioff()
+    s.plot(ex3)
+    plt.show()

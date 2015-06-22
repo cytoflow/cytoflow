@@ -28,6 +28,8 @@ from views.threshold_selection import ThresholdSelection
 from views.poly_selection import PolygonSelection
 from views.bar_chart import BarChartView
 
+from utility.util import geom_mean
+
 try:
     from operations.logicle import LogicleTransformOp
 except ImportError:
