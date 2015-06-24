@@ -89,6 +89,8 @@ class ImportOp(HasTraits):
         
         for tube in self.tubes:
             tube_fc = fc.FCMeasurement(ID=tube.source + tube.tube, datafile=tube.file)
+            if self.coarse:
+                tube_fc = tube_fc.subsample(self.coarse_events, "random")
             experiment.add_tube(tube_fc, tube.conditions)
             
         return experiment
