@@ -3,7 +3,7 @@ from setuptools import setup, find_packages, Extension
 import io
 import os
 
-from cytoflow import version as cf_version
+from cytoflow import __version__ as cf_version
 
 here = os.path.abspath(os.path.dirname(__file__))
 
