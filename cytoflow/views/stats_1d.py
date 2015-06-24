@@ -156,7 +156,7 @@ class Stats1DView(HasTraits):
         
         # TODO - check that self.variable is NUMERIC, not categorical
         
-        if self.xchannel and self.channel not in experiment.channels:
+        if self.xchannel and self.xchannel not in experiment.channels:
             return False
         
         if self.xchannel and not self.xfunction:
