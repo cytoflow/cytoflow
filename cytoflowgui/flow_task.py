@@ -352,7 +352,8 @@ class FlowTask(Task):
                 self.model.selected = wi.previous
             
             wi.previous.next = wi.next
-            wi.next.previous = wi.previous
+            if wi.next:
+                wi.next.previous = wi.previous
             
             del wi.default_view
             del wi.views
@@ -387,6 +388,9 @@ class FlowTask(Task):
         called by the view pane 
         """
         wi = self.model.selected
+        
+        if view_id == "default":
+            view_id = self.model.selected.default_view.id
         
         view = next((x for x in wi.views if x.id == view_id), None)
         

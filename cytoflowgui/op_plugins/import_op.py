@@ -44,7 +44,7 @@ class ImportHandler(Controller, OpHandlerMixin):
                          visible_when='handler.wi.result is not None'),
                     Item('object.coarse_events',
                          label="Events per\nsample",
-                         visible_when='handler.wi.result is not None and object.coarse is True'))
+                         visible_when='handler.wi.result is not None and object.coarse == True'))
         
     def _import_event_fired(self):
         """

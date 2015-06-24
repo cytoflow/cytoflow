@@ -5,7 +5,6 @@ Created on Apr 19, 2015
 """
 from traits.api import HasTraits, provides, Str
 from cytoflow.views.i_view import IView
-#from cytoflow.views.sns_axisgrid import FacetGrid
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import seaborn as sns
@@ -102,6 +101,13 @@ if __name__ == '__main__':
     hlog.channels = ['V2-A', 'Y2-A', 'B1-A', 'FSC-A', 'SSC-A']
     ex2 = hlog.apply(ex)
     
+    thresh = flow.ThresholdOp()
+    thresh.name = "Y2-A+"
+    thresh.channel = 'Y2-A'
+    thresh.threshold = 2005.0
+
+    ex3 = thresh.apply(ex2)
+    
     scatter = flow.ScatterplotView()
     scatter.name = "Scatter"
     scatter.xchannel = "FSC-A"
@@ -109,5 +115,5 @@ if __name__ == '__main__':
     scatter.huefacet = 'Dox'
     
     plt.ioff()
-    scatter.plot(ex2)
+    scatter.plot(ex3)
     plt.show()
