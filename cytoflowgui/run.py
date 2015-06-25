@@ -39,4 +39,18 @@ def run_gui(argv):
 
 if __name__ == '__main__':
     import sys
+    from pyface.qt import qt_api
+    
+    if qt_api == "pyside":
+        print "Cytoflow uses PyQT; but it is trying to use PySide instead."
+        print " - Make sure PyQT is installed."
+        print " - If both are installed, and you don't need both, uninstall PySide."
+        print " - If you must have both installed, select PyQT by setting the"
+        print "   environment variable QT_API to \"pyqt\""
+        print "   * eg, on Linux, type on the command line:"
+        print "     QT_API=\"pyqt\" python run.py"
+        # TODO - better instructions
+        sys.exit(1)
+    
+
     run_gui(sys.argv)
