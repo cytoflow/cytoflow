@@ -15,12 +15,14 @@ class TestExperiment(unittest.TestCase):
     """
 
     def setUp(self):
+        import os
+        pwd = os.path.dirname(os.path.abspath(__file__))
         self.ex = flow.Experiment()
         self.ex.add_conditions({"time" : "float"})
         self.tube1 = fc.FCMeasurement(ID='Test 1',
-                                      datafile='data/Plate01/RFP_Well_A3.fcs')
+                                      datafile=pwd + 'data/Plate01/RFP_Well_A3.fcs')
         self.tube2 = fc.FCMeasurement(ID='Test 2', 
-                                      datafile='data/Plate01/CFP_Well_A4.fcs')
+                                      datafile=pwd + 'data/Plate01/CFP_Well_A4.fcs')
     
     def test_metadata_unique(self):
         self.ex.add_tube(self.tube1, {"time" : 10.0})
