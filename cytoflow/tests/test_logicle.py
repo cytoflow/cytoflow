@@ -6,12 +6,14 @@ import cytoflow as flow
 class TestLogicle(unittest.TestCase):
     
     def setUp(self):
+        import os
+        cwd = os.path.dirname(os.path.abspath(__file__))
         self.ex = flow.Experiment()
         self.ex.add_conditions({"time" : "float"})
         self.tube1 = fc.FCMeasurement(ID='Test 1',
-                                      datafile='data/Plate01/RFP_Well_A3.fcs')
+                                      datafile=cwd + '/data/Plate01/RFP_Well_A3.fcs')
         self.tube2 = fc.FCMeasurement(ID='Test 2', 
-                                      datafile='data/Plate01/CFP_Well_A4.fcs')
+                                      datafile=cwd + '/data/Plate01/CFP_Well_A4.fcs')
         self.ex.add_tube(self.tube1, {"time" : 10.0})
         #self.ex.add_tube(self.tube2, {"time" : 20.0})
         

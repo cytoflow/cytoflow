@@ -18,7 +18,9 @@ from operations.range import RangeOp
 from operations.range2d import Range2DOp
 from operations.polygon import PolygonOp
 from operations.hlog import HlogTransformOp
+from operations.logicle import LogicleTransformOp
 from operations.import_op import ImportOp, Tube
+
 from views.histogram import HistogramView
 from views.hexbin import HexbinView
 from views.scatterplot import ScatterplotView
@@ -31,9 +33,4 @@ from cytoflow.views.bar_chart import BarChartView
 
 from utility.util import geom_mean
 
-try:
-    from operations.logicle import LogicleTransformOp
-except ImportError:
-    pass
-
-__version__ = "0.1.3"
+__version__ = "0.2.0.dev0"

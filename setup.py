@@ -1,13 +1,10 @@
 from __future__ import print_function
 from setuptools import setup, find_packages, Extension
-import io
-import os
-
-from cytoflow import __version__ as cf_version
+import io, os, re
 
 here = os.path.abspath(os.path.dirname(__file__))
 
-def read(*filenames, **kwargs):
+def read_rst(*filenames, **kwargs):
     encoding = kwargs.get('encoding', 'utf-8')
     sep = kwargs.get('sep', '\n')
     buf = []
@@ -16,11 +13,28 @@ def read(*filenames, **kwargs):
             buf.append(f.read())
     return sep.join(buf)
 
-long_description = read('README.rst')
+# cf https://packaging.python.org/en/latest/single_source_version.html
+
+def read_file(*names, **kwargs):
+    with io.open(
+        os.path.join(os.path.dirname(__file__), *names),
+        encoding=kwargs.get("encoding", "utf8")
+    ) as fp:
+        return fp.read()
+    
+def find_version(*file_paths):
+    version_file = read_file(*file_paths)
+    version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]",
+                              version_file, re.M)
+    if version_match:
+        return version_match.group(1)
+    raise RuntimeError("Unable to find version string.")
+
+long_description = read_rst('README.rst')
 
 setup(
     name = "cytoflow",
-    version = cf_version,
+    version = find_version("cytoflow", "__init__.py"),
     packages = find_packages(),
     include_package_data=True,
     
@@ -37,10 +51,13 @@ setup(
                         # via distutils.  Install it locally!
                         
     # try to build the Logicle extension
-    ext_modules = [Extension("cytoflow.operations.logicle_ext.Logicle",
-                            ["cytoflow/operations/logicle_ext/FastLogicle.cpp",
-                             "cytoflow/operations/logicle_ext/Logicle.cpp",
-                             "cytoflow/operations/logicle_ext/Logicle.i"],
+    ext_modules = [Extension("cytoflow.operations.logicle_ext._Logicle",
+                             sources = ["cytoflow/operations/logicle_ext/FastLogicle.cpp",
+                                        "cytoflow/operations/logicle_ext/Logicle.cpp",
+                                        "cytoflow/operations/logicle_ext/Logicle.i"],
+                             depends = ["cytoflow/operations/logicle_ext/FastLogicle.cpp",
+                                        "cytoflow/operations/logicle_ext/Logicle.cpp",
+                                        "cytoflow/operations/logicle_ext/Logicle.i"],
                              swig_opts=['-c++'])],
 
     # metadata for upload to PyPI
