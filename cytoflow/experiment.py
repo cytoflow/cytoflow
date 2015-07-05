@@ -224,6 +224,7 @@ class Experiment(HasStrictTraits):
                 
                 # add the maximum possible value for this channel.
                 data_max = tube.channels[tube.channels['$PnN'] == channel]['$PnR'].iloc[0]
+                data_max = float(data_max)
                 self.metadata[channel]['max'] = data_max
                     
         # validate the experimental conditions
