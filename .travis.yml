@@ -19,7 +19,7 @@ install:
   # of as a dependency of, say, pandas.  something to do with wanting you to
   # use a pre-packaged version, which is more likely to have a non-broken linear
   # algebra library?
-  - pip install numpy
+  - pip install --upgrade numpy
   
   - python setup.py develop
 
