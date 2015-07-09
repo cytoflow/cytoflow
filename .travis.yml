@@ -19,9 +19,9 @@ install:
   # of as a dependency of, say, pandas.  something to do with wanting you to
   # use a pre-packaged version, which is more likely to have a non-broken linear
   # algebra library?
-  - pip install --allow-all-external numpy
+  - pip install numpy
   
-  - sudo python setup.py develop
+  - python setup.py develop
 
 # command to run tests
 script: nosetests
