@@ -14,7 +14,7 @@ python:
 
 install:
   # g++4.8.1
-  - sudo apt-get install -qq g++ swig
+  - sudo apt-get install -qq g++ swig python-numpy
 #  #- export CXX="g++" CC="gcc"
 #  #- sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
 #  #- sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 90
