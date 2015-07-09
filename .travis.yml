@@ -8,6 +8,7 @@ addons:
     - g++
     - swig
     - python-qt4
+    - libblas-dev
     
 python:
   - "2.7"
