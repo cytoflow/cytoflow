@@ -2,7 +2,7 @@ language: python
 python:
   - "2.7"
 
-before_install:
+#before_install:
     #- echo "yes" | sudo add-apt-repository ppa:kalakris/cmake
     #- echo "yes" | sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
     #- sudo apt-get update -qq
@@ -15,19 +15,19 @@ before_install:
 install:
   # g++4.8.1
   - sudo apt-get install -qq g++ swig
-  #- export CXX="g++" CC="gcc"
-  #- sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
-  #- sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 90
-  #- sudo apt-get install libstdc++-4.8-dev
-  #- echo "CXX=$CXX"
-  #- echo "version `$CXX --version`"
+#  #- export CXX="g++" CC="gcc"
+#  #- sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
+#  #- sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 90
+#  #- sudo apt-get install libstdc++-4.8-dev
+#  #- echo "CXX=$CXX"
+  - echo "version `$CXX --version`"
   - pip install --allow-all-external
   - sudo python setup.py develop
 
 # # command to run tests
- script: nosetests
+# script: nosetests
 
 #on_success:
 #  - TODO: upload the content of dist/*.whl to a public wheelhouse
-  - pip install wheel
-  - python setup.py bdist_wheel
+#  - pip install wheel
+#  - python setup.py bdist_wheel
