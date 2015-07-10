@@ -9,6 +9,8 @@ addons:
     - swig
     - python-qt4
     - libblas-dev
+    - liblapack-dev
+    - libatlas-dev
     
 python:
   - "2.7"
