@@ -40,15 +40,15 @@ setup(
     
     # Project uses reStructuredText, so ensure that the docutils get
     # installed or upgraded on the target machine
-    install_requires = ['FlowCytometryTools>=0.4',
-                        'pandas>=0.15.0',
+    install_requires = ['pandas>=0.15.0',
+                        'FlowCytometryTools>=0.4',
                         'numexpr>=2.1',
                         'seaborn>=0.5.0',
                         'pyface>=4.0',
                         'envisage>=4.0'],
                         
-                        # ALSO requires PyQt4 >= 4.10, but that's not available
-                        # via distutils.  Install it locally!
+                        # ALSO requires PyQt4 >= 4.10, but it's not available
+                        # via pypi and distutils.  Install it locally!
                         
     # try to build the Logicle extension
     ext_modules = [Extension("cytoflow.operations.logicle_ext._Logicle",
