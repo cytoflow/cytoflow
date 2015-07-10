@@ -6,6 +6,7 @@ addons:
   apt:
     packages:
     - g++
+    - gfortran
     - swig
     - python-qt4
     - libblas-dev
