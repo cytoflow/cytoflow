@@ -37,7 +37,7 @@ install:
   - python setup.py develop
 
 # command to run tests
-script: nosetests
+script: nosetests cytoflow
 
 on_success:
 
