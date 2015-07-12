@@ -27,12 +27,6 @@ install:
   # use a pre-packaged version, which is more likely to have a non-broken linear
   # algebra library?
   - pip install --quiet --upgrade numpy
-#  - pip install --quiet --upgrade scipy
-#  - pip install --quiet --upgrade pandas
-#  - pip install --quiet --upgrade FlowCytometryTools
-#  - pip install --quiet --upgrade seaborn
-#  - pip install --quiet --upgrade pyface
-#  - pip install --quiet --upgrade envisage
   
   - python setup.py develop
 
@@ -42,5 +36,7 @@ script: nosetests cytoflow
 on_success:
 
   # TODO: upload the content of dist/*.whl to a public wheelhouse
-  - pip install wheel
+  - pip install wheel wheelhouse-uploader
   - python setup.py bdist_wheel
+  - chmod 600 .travis/deploy_key.pem # this key should have push access
+  - echo .travis/deploy_key.pem
