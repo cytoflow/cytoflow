@@ -33,7 +33,7 @@ install:
 # command to run tests
 script: nosetests cytoflow
 
-on_success:
+after_success:
 
   # TODO: upload the content of dist/*.whl to a public wheelhouse
   - pip install wheel wheelhouse-uploader
