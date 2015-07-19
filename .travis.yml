@@ -1,7 +1,5 @@
 language: python
-
 sudo: false
-
 addons:
   apt:
     packages:
@@ -14,29 +12,32 @@ addons:
     - libatlas-dev
     
 python:
-  - "2.7"
-  
+- '2.7'
+
 before_install:
-  - pip install --quiet --upgrade pip
+- pip install --quiet --upgrade pip
 
 install:
-  - echo "version `$CXX --version`"
+- echo "version `$CXX --version`"
+- pip install --quiet --upgrade numpy
+- python setup.py develop
 
-  # i'm not quite clear on why this has to be installed directly, instead
-  # of as a dependency of, say, pandas.  something to do with wanting you to
-  # use a pre-packaged version, which is more likely to have a non-broken linear
-  # algebra library?
-  - pip install --quiet --upgrade numpy
-  
-  - python setup.py develop
-
-# command to run tests
 script: nosetests cytoflow
 
 after_success:
+- pip install wheel wheelhouse-uploader
+- python setup.py bdist_wheel
+- chmod 600 .travis/deploy_key.pem
+- echo .travis/deploy_key.pem
 
-  # TODO: upload the content of dist/*.whl to a public wheelhouse
-  - pip install wheel wheelhouse-uploader
-  - python setup.py bdist_wheel
-  - chmod 600 .travis/deploy_key.pem # this key should have push access
-  - echo .travis/deploy_key.pem
+deploy:
+  provider: pypi
+  user: bteague
+  password:
+    secure: wuHiud6wAjUpigiABFhlnNi8nWivwmsx6mluEu0pbySGJZZzUDe0y7X7GwvzCE2TDcXcTf8ol5Gmbwndc/Oe2ekDVv+G0caC0cRbMnFYPvQWHuj/Y6laEpjKqtXG+8OJ9uTWMPlbEj9BJRQ3nE8Udi8yZSgHWLM8Cs5MSSxmB+ojLxR2YMJbLrIecRT+w0Kk3R3Ke9rHNDWk1KE0jiwmSlZHdfQ4BvP5hWGyJzgz8scCOzCs0FADtdbcI07fYBmzO24Tu7hRpWk+MuJT+42MN41tzS/lPGesIli928GNCzUVJb8hVVKPP+igVwDCyzUoLJIAxAJvBspTDQ9zyOHYmGQB+dj7Mi5s1hhTS0+ZUSJ+A1/RR+G+rvWHDpdbJWny/JLErLuY6a+nYdXiZQnQqyh9fbzE3eBhYGkEEpZu1I3IgjgIyrEsTSSN7v6z+L6OXsttaze8GQ7q6Es+dGmu2rZpSGw9Cp1hBnm4vdPgbe73N2lnm+m+mDsiZ6eDdDmdhRCRPjmN5f3iUo3BdZkJ9vypjBo5HzAPJcJlg3BAeGkOBa7Vx2ZD2VQgyePR3YerzxfnAJ9bVeo2ZD4xe/8xwr05RwJc2D3/w9+aumJbXQbEj44OVVFfDD1WHaHFH5Y+NXHBrZRbPNYlNyVYBYsRF3lVrnpqR0QXP1BbgUrpzwY=
+  on:
+    repo: bpteague/cytoflow
+    branch: wheel_ci
+  server: https://testpypi.python.org/pypi
+  distributions: "sdist bdist_wheel"
+  skip_cleanup: true
