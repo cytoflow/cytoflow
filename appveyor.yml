@@ -44,7 +44,8 @@ install:
   - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
 
   # Install the build and runtime dependencies of the project.
-  - "%CMD_IN_ENV% pip install --timeout=60 -r appveyor/requirements.txt"
+  - "%CMD_IN_ENV% conda install pandas numexpr seaborn traits pyface envisage pyqt"
+  - "%CMD_IN_ENV% pip install FlowCytometryTools
   - "%CMD_IN_ENV% python setup.py bdist_wheel bdist_wininst"
 
   # Install the genreated wheel package to test it
