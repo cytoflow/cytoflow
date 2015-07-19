@@ -44,7 +44,7 @@ install:
   - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
   
   # install swig
-  - choco install swig -y
+  - choco install swig -yv
 
   # Install the build and runtime dependencies of the project.
   - "%CMD_IN_ENV% conda install --yes pandas numexpr seaborn traits pyface envisage pyqt"
