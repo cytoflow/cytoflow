@@ -18,17 +18,10 @@ before_install:
 - pip install --quiet --upgrade pip
 
 install:
-- echo "version `$CXX --version`"
 - pip install --quiet --upgrade numpy
 - python setup.py develop
 
 script: nosetests cytoflow
-
-after_success:
-- pip install wheel wheelhouse-uploader
-- python setup.py bdist_wheel
-- chmod 600 .travis/deploy_key.pem
-- echo .travis/deploy_key.pem
 
 deploy:
   provider: pypi
