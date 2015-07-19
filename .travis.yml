@@ -1,5 +1,7 @@
 language: python
+
 sudo: false
+
 addons:
   apt:
     packages:
@@ -10,7 +12,7 @@ addons:
     - libblas-dev
     - liblapack-dev
     - libatlas-dev
-    
+
 python:
 - '2.7'
 
@@ -27,9 +29,10 @@ deploy:
   provider: pypi
   user: bteague
   password:
-    secure: wuHiud6wAjUpigiABFhlnNi8nWivwmsx6mluEu0pbySGJZZzUDe0y7X7GwvzCE2TDcXcTf8ol5Gmbwndc/Oe2ekDVv+G0caC0cRbMnFYPvQWHuj/Y6laEpjKqtXG+8OJ9uTWMPlbEj9BJRQ3nE8Udi8yZSgHWLM8Cs5MSSxmB+ojLxR2YMJbLrIecRT+w0Kk3R3Ke9rHNDWk1KE0jiwmSlZHdfQ4BvP5hWGyJzgz8scCOzCs0FADtdbcI07fYBmzO24Tu7hRpWk+MuJT+42MN41tzS/lPGesIli928GNCzUVJb8hVVKPP+igVwDCyzUoLJIAxAJvBspTDQ9zyOHYmGQB+dj7Mi5s1hhTS0+ZUSJ+A1/RR+G+rvWHDpdbJWny/JLErLuY6a+nYdXiZQnQqyh9fbzE3eBhYGkEEpZu1I3IgjgIyrEsTSSN7v6z+L6OXsttaze8GQ7q6Es+dGmu2rZpSGw9Cp1hBnm4vdPgbe73N2lnm+m+mDsiZ6eDdDmdhRCRPjmN5f3iUo3BdZkJ9vypjBo5HzAPJcJlg3BAeGkOBa7Vx2ZD2VQgyePR3YerzxfnAJ9bVeo2ZD4xe/8xwr05RwJc2D3/w9+aumJbXQbEj44OVVFfDD1WHaHFH5Y+NXHBrZRbPNYlNyVYBYsRF3lVrnpqR0QXP1BbgUrpzwY=
+    secure: sM8peynamiTf+GWSnBoNcURHKTRzN6b/CMICrIwkZWcFNuCap1wj7vduRaGTasIpxNwMlPXvQkz7z7+Zkp5Xt82JYSIzU638l1MucNDKO36ttkuEE+Bj9+SASYmIoMxKjmxyGpVhlPDVS5hqIyEH7aR/nrNfCYlWt9LuAlNzEB4eZ38AyUiu5RItLxihMyq0olNM9IyF4Eo7KjI3+BzM0pp8Rx+huk8Hcsa6a/jAFhcf/0aFDGlBRsxy8GsNcn1e5RI1dQYqjoQ10AbFdSgFrFpurV306at6sEavNzL/lOvIOLV8SIo8+GZlbodgiNW7wCZ+nJhHzhW7V+rEBjNvdF40cMrRl26NwZYLmfPj/cijU3CsFLsSe0DpkVdEHF41fqtY9lTb8kwOiaLuYSELkRK/C2POTdyqkVzyoEZ5oMalPhWI+EmpdiAC+BfWx9TS1UeHaujWKD/xoMASR2hKEcncRlFRUj5gnYC9r7VKxJihLWpeQ3ZQhICxp4eWQijTTDwrnESlkhWv4U4yVksRoiU9AFrr1NNI1mygq70lFLTGA9Vud8Qq1MUl6U3cVPKnw8QhDTPdsRJ1qP8xWAYRblQPKEU6OGV3NtZP0JdKXt3Gzixe9HEXx5tfqbb2d5FPNsOWPNcL0oDuAzlD0tizY5I9pHS5QKBu0L8ekUALPj8=
   on:
     repo: bpteague/cytoflow
-    branch: wheel_ci
-  server: https://testpypi.python.org/pypi
+    branch: master
+    tags: true
+  server: https://pypi.python.org/pypi
   skip_cleanup: true
