@@ -32,5 +32,4 @@ deploy:
     repo: bpteague/cytoflow
     branch: wheel_ci
   server: https://testpypi.python.org/pypi
-  distributions: "sdist bdist_wheel"
   skip_cleanup: true
