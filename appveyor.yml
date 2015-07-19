@@ -11,11 +11,11 @@ environment:
     # Pre-installed Python versions, which Appveyor may upgrade to
     # a later point release.
 
-    - PYTHON: "C:\\Python27"
+    - PYTHON: "C:\\Python27-Anaconda"
       PYTHON_VERSION: "2.7.x" # currently 2.7.9
       PYTHON_ARCH: "32"
 
-    - PYTHON: "C:\\Python27-x64"
+    - PYTHON: "C:\\Python27-x64-Anaconda"
       PYTHON_VERSION: "2.7.x" # currently 2.7.9
       PYTHON_ARCH: "64"
       WINDOWS_SDK_VERSION: "v7.0"
