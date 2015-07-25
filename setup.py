@@ -43,7 +43,7 @@ setup(
     install_requires = ['pandas>=0.15.0',
                         'FlowCytometryTools>=0.4',
                         'numexpr>=2.1',
-                        'seaborn>=0.5.0',
+                        'seaborn>=0.6.0',
                         'pyface>=4.0',
                         'envisage>=4.0'],
                         
