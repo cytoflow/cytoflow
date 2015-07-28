@@ -158,7 +158,7 @@ class Experiment(HasStrictTraits):
                                "adding your tubes!")              
             
         for key, value in conditions.iteritems():
-            self.data[key] = pd.Series(dtype = value)
+            #self.data[key] = pd.Series(dtype = value)
             self.metadata[key] = {}
         
         self.conditions.update(conditions)
@@ -243,7 +243,14 @@ class Experiment(HasStrictTraits):
         # add the conditions to tube's internal data frame.  specify the conditions
         # dtype using self.conditions.  check for errors as we do so.
         
-        new_data = tube.data.copy(deep=True)
+        # take this chance to up-convert the float32s to float64.
+        # this happened automatically in DataFrame.append(), below, but 
+        # only in certain cases.... :-/
+        
+        # TODO - the FCS standard says you can specify the precision.  
+        # check with int/float/double files!
+        
+        new_data = tube.data.astype("float64", copy=True)
         
         for meta_name, meta_value in conditions.iteritems():
             if(meta_name not in self.conditions):
@@ -257,7 +264,7 @@ class Experiment(HasStrictTraits):
                                              dtype = meta_type)
                 
                 # if we're categorical, merge the categories
-                if meta_type == "category":
+                if meta_type == "category" and meta_name in self.data.columns:
                     cats = set(self.data[meta_name].cat.categories) | set(new_data[meta_name].cat.categories)
                     self.data[meta_name] = self.data[meta_name].cat.set_categories(cats)
                     new_data[meta_name] = new_data[meta_name].cat.set_categories(cats)

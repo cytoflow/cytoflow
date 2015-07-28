@@ -3,6 +3,7 @@ from logicle_ext.Logicle import Logicle
 from .i_operation import IOperation
 from ..experiment import Experiment
 import math
+import numpy as np
 
 @provides(IOperation)
 class LogicleTransformOp(HasTraits):
@@ -15,14 +16,6 @@ class LogicleTransformOp(HasTraits):
     
     If you don't have any data around 0, you might be better of with a more
     traditional log scale or a Hyperlog.
-    
-    .. warning: THIS CODE CURRENTLY CALLS A SWIG-WRAPPED C++ LIBRARY (from
-                the second reference, below.)  Because I haven't figured
-                out the distribution/packaging issues yet, it is currently
-                NOT imported when you `import cytoflow`.  If you want to
-                try it (it's cool!), edit __init__.py and uncomment the
-                `import Logicle....` line; and then you'll have to build the
-                C++ sources (included in the repo.)
     
     Attributes
     ----------
@@ -147,6 +140,14 @@ class LogicleTransformOp(HasTraits):
             return False
         
         for channel in self.channels:
+            # the Logicle C++/SWIG extension is REALLY picky about it
+            # being a double
+            
+            if experiment[channel].dtype != np.float64:
+                return False
+            
+            # Logicle works best if there's some data < 0.
+            # TODO: how to report this if it's not true?
             neg_values = experiment[experiment[channel] < 0][channel]
             if neg_values.empty:
                 return False

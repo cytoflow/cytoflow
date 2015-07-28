@@ -29,6 +29,16 @@ from util import UniquePriorityQueue
 import threading
 import pickle as pickle
 
+# setup the worker thread
+def update_model(flag, lock, to_update):
+    while flag.wait():
+        flag.clear()
+        while not to_update.empty():
+            with lock:
+                prio, wi = to_update.get_nowait()
+            wi.update()
+
+
 class FlowTask(Task):
     """
     classdocs
@@ -95,29 +105,13 @@ class FlowTask(Task):
     # are we debugging?  ie, do we need a default setup?
     debug = Bool
     
-    #worker = Instance(threading.Thread)
+    worker = Instance(threading.Thread)
     to_update = Instance(UniquePriorityQueue, ())
     worker_flag = Instance(threading.Event, args = ())
     worker_lock = Instance(threading.Lock, args = ())
         
     def initialized(self):
-        
-        # setup the worker thread
-        def update_model(flag, lock, to_update):
-            while flag.wait():
-                flag.clear()
-                while not to_update.empty():
-                    with lock:
-                        prio, wi = to_update.get_nowait()
-                    wi.update()
-    
-        worker = threading.Thread(target = update_model, 
-                                  args = (self.worker_flag, 
-                                          self.worker_lock,
-                                          self.to_update))
-        worker.daemon = True
-        worker.start()
-        
+
         # make sure that when the result changes we get notified
         # can't use a static notifier because selected.result gets updated
         # on the worker thread, but we need to dispatch on the UI thread
@@ -224,7 +218,7 @@ class FlowTask(Task):
             container.save_to_directory(os.getcwd()) 
         else:
             self.model.workflow[:] = new_model.workflow
-            self.model.selected = new_model.selected            
+            self.model.selected = new_model.selected   
         
         wi = self.model.workflow[0]
         while True:
@@ -235,6 +229,15 @@ class FlowTask(Task):
                 wi = wi.next
             else:
                 break
+            
+        # check to see if we have a worker thread around
+        if not self.worker or not self.worker.is_alive():
+            self.worker = threading.Thread(target = update_model, 
+                                           args = (self.worker_flag, 
+                                                   self.worker_lock,
+                                                   self.to_update))
+            self.worker.daemon = True
+            self.worker.start()
             
         # start the worker thread processing
         with self.worker_lock:
@@ -374,6 +377,15 @@ class FlowTask(Task):
                 wi = wi.next
             else:
                 break
+            
+        # check to see if we have a worker thread around
+        if not self.worker or not self.worker.is_alive():
+            self.worker = threading.Thread(target = update_model, 
+                                           args = (self.worker_flag, 
+                                                   self.worker_lock,
+                                                   self.to_update))
+            self.worker.daemon = True
+            self.worker.start()
             
         # start the worker thread processing
         with self.worker_lock:
