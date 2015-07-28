@@ -95,16 +95,7 @@ class LogicleTransformOp(HasTraits):
             experiment = experiment.query(subset)
         
         for channel in self.channels:
-            # get the maximum range for T
-            # should be the same for each tube, so we'll just suck it off
-            # the first one.
-            # TODO - should this be experiment[channel].max()?
-
-            self.T[channel] = experiment.metadata[channel]['max']
-            
-            #keywords = experiment.tube_keywords.itervalues().next()            
-            #float(keywords[keywords["$PnN"] == channel]["$PnR"].item())
-            
+            self.T[channel] = experiment.metadata[channel]['max']            
             self.A[channel] = 0.0
             
             # get the range by finding the rth quantile of the negative values
@@ -143,4 +134,30 @@ class LogicleTransformOp(HasTraits):
     
     def is_valid(self, experiment):
         """ Validate this transformation against an experiment"""
-        raise NotImplementedError
+        if not experiment:
+            return False
+        
+        if not self.name:
+            return False
+        
+        if not set(self.channels).issubset(set(experiment.channels)):
+            return False
+        
+        if self.M <= 0 or self.r <= 0 or self.r >= 1:
+            return False
+        
+        for channel in self.channels:
+            neg_values = experiment[experiment[channel] < 0][channel]
+            if neg_values.empty:
+                return False
+            
+            if not channel in self.T or self.T[channel] <= 0:
+                return False
+            
+            if not channel in self.W or self.W[channel] <= 0:
+                return False
+            
+            if not channel in self.A or self.A[channel] < 0:
+                return False
+            
+        return True
