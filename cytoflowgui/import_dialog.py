@@ -3,6 +3,7 @@ Created on Feb 26, 2015
 
 @author: brian
 """
+
 if __name__ == '__main__':
     from traits.etsconfig.api import ETSConfig
     ETSConfig.toolkit = 'qt4'
@@ -12,7 +13,7 @@ if __name__ == '__main__':
     
 from traits.api import HasTraits, provides, Instance, Str, Int, List, \
                        Bool, Enum, Float, DelegatesTo, Property, CStr, \
-                       HasStrictTraits
+                       TraitType, Dict
                        
 from traitsui.api import UI, Group, View, Item, TableEditor, OKCancelButtons, \
                          Controller
@@ -32,7 +33,6 @@ from traitsui.table_column import ObjectColumn
 from collections import Counter
 
 from cytoflow import Tube as CytoflowTube
-import weakref
 
 def not_true ( value ):
     return (value is not True)
@@ -139,6 +139,9 @@ class ExperimentDialogModel(HasTraits):
     # the tubes.  this is the model; the rest is for communicating with the View
     tubes = List(Tube)
     
+    # the tubes' traits.
+    tube_traits = Dict(Str, TraitType)
+    
     # a collections.Counter that keeps track of duplicates for us.  rebuilt
     # whenever the Tube elements of self.tubes changes
     tubes_counter = Property(depends_on = 'tubes[]')
@@ -186,6 +189,7 @@ class ExperimentDialogModel(HasTraits):
         
         has_row = any(tube.row for tube in op.tubes)
         has_col = any(tube.col for tube in op.tubes)
+        
         for op_tube in op.tubes:
             tube = Tube(Source = op_tube.source,
                         Tube = op_tube.tube,
@@ -194,17 +198,23 @@ class ExperimentDialogModel(HasTraits):
             if has_row:
                 tube.add_trait("Row", Str)
                 tube.Row = op_tube.row
+                if not "Row" in self.tube_traits:
+                    self.tube_traits["Row"] = Str()
             if has_col:
                 tube.add_trait("Col", Str)
+                tube.Col = op_tube.col
+                if not "Col" in self.tube_traits:
+                    self.tube_traits["Col"] = Str()
                 
             for condition in op_tube.conditions:
                 condition_dtype = op.conditions[condition]
                 condition_trait = \
                     dtype_to_trait[condition_dtype](condition = True)
                 tube.add_trait(condition, condition_trait)
+                if not condition in self.tube_traits:
+                    self.tube_traits[condition] = condition_trait
             tube.trait_set(**op_tube.conditions)
             
-            #tube.on_trait_change(self._try_multiedit, '+condition')
             self.tubes.append(tube)
     
     def update_import_op(self, op):
@@ -215,9 +225,12 @@ class ExperimentDialogModel(HasTraits):
                           "Int" : "int"}
         
         op.conditions.clear()
-        for trait_name in self.tubes[0].trait_names(condition = True):
-            trait = self.tubes[0].trait(trait_name)
-            trait_type = trait.trait_type.__class__.__name__
+        
+        for trait_name, trait in self.tube_traits.items():
+            if not trait.condition:
+                continue
+
+            trait_type = trait.__class__.__name__
             op.conditions[trait_name] = trait_to_dtype[trait_type]
             
         for tube in self.tubes:
@@ -235,6 +248,7 @@ class ExperimentDialogModel(HasTraits):
             
             # AFAICT this is going to cause the op to reload THE ENTIRE
             # SET each time a tube is added.  >.>
+            
             # TODO - FIX THIS.  need a general strategy for only updating
             # if there's a "pause" in the action.
             op.tubes.append(op_tube)
@@ -272,14 +286,13 @@ class ExperimentDialogHandler(Controller):
     updating = Bool(False)
     
     def closed(self, info, is_ok):
-        if len(self.model.tubes) > 0:
-            tube0 = self.model.tubes[0]
-            traits = tube0.trait_names(condition = True)
-            for trait in traits:
-                for tube in self.model.tubes:
-                    tube.on_trait_change(self._try_multiedit, 
-                                         trait, 
-                                         remove = True)
+        for trait_name, trait in self.model.tube_traits.items():
+            if not trait.condition:
+                continue
+            for tube in self.model.tubes:
+                tube.on_trait_change(self._try_multiedit, 
+                                     trait_name, 
+                                     remove = True)
 
     def _on_delete_column(self, obj, column, info):
         # TODO - be able to remove traits.....
@@ -337,19 +350,16 @@ class ExperimentDialogHandler(Controller):
             fcs = FCMeasurement(ID='new tube', datafile = path)
             
             tube = Tube()
-            if len(self.model.tubes) > 0: 
-                tube0 = self.model.tubes[0]
-                trait_names = set(tube0.trait_names(transient = not_false)) - \
-                              set(Tube.class_trait_names(transient = not_false))
-                for name in trait_names:
-                    trait = tube0.trait(name)
-                    tube.add_trait(name, trait)
-                    
-                    # this magic makes sure the trait is actually defined
-                    # in tube.__dict__, so it shows up in trait_names etc.
-                    tube.trait_set(**{name : trait.default_value()[1]})
-                    if trait.condition:
-                        tube.on_trait_change(self._try_multiedit, name)
+            
+            for trait_name, trait in self.model.tube_traits.items():
+                # TODO - do we still need to check for transient?
+                tube.add_trait(trait_name, trait)
+                
+                # this magic makes sure the trait is actually defined
+                # in tube.__dict__, so it shows up in trait_names etc.
+                tube.trait_set(**{trait_name : trait.default_value})
+                if trait.condition:
+                    tube.on_trait_change(self._try_multiedit, trait_name)
                 
             tube.trait_set(Source = fcs.meta['$SRC'],
                            _file = path,
@@ -389,19 +399,14 @@ class ExperimentDialogHandler(Controller):
             
             tube = Tube()
             
-            if len(self.model.tubes) > 0: 
-                tube0 = self.model.tubes[0]
-                trait_names = set(tube0.trait_names(transient = not_false)) - \
-                              set(Tube.class_trait_names(transient = not_false))
-                for name in trait_names:
-                    trait = tube0.trait(name)
-                    tube.add_trait(name, trait)
-                    
-                    # this magic makes sure the trait is actually defined
-                    # in tube.__dict__, so it shows up in trait_names etc.
-                    tube.trait_set(**{name : trait.default_value()[1]})
-                    if trait.condition:
-                        tube.on_trait_change(self._try_multiedit, name)
+            for trait_name, trait in self.tube_traits.items():
+                tube.add_trait(trait_name, trait)
+                
+                # this magic makes sure the trait is actually defined
+                # in tube.__dict__, so it shows up in trait_names etc.
+                tube.trait_set(**{trait_name : trait.default_value})
+                if trait.condition:
+                    tube.on_trait_change(self._try_multiedit, trait_name)
             
             tube.trait_set(_file = well_data.datafile,
                            Row = well_data.position['new plate'][0],
@@ -442,9 +447,11 @@ class ExperimentDialogHandler(Controller):
         Add a new tube metadata
         """
         
-        trait_names = self.model.tubes[0].trait_names(transient = not_true)
+        trait_names = self.model.tube_traits.keys()
             
         if not name in trait_names:
+            self.model.tube_traits[name] = trait
+            
             for tube in self.model.tubes:
                 tube.add_trait(name, trait)
                 
