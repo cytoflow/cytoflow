@@ -9,3 +9,4 @@ from polygon import PolygonPlugin
 
 # transforms 
 from hlog import HLogPlugin
+from logicle import LogiclePlugin
