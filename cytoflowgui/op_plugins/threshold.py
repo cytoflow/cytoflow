@@ -62,6 +62,7 @@ class ThresholdPlugin(Plugin):
     
     def get_operation(self):
         ret = ThresholdOp()
+        ret.add_trait("handler_factory", Callable)
         ret.handler_factory = ThresholdHandler
         return ret
     

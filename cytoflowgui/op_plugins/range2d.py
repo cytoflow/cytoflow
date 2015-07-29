@@ -77,6 +77,7 @@ class Range2DPlugin(Plugin):
     
     def get_operation(self):
         ret = Range2DOp()
+        ret.add_trait("handler_factory", Callable)
         ret.handler_factory = Range2DHandler
         return ret
     

@@ -3,7 +3,7 @@ Created on Feb 24, 2015
 
 @author: brian
 """
-from traits.api import provides
+from traits.api import provides, Callable
 from traitsui.api import Controller, View, Item, CheckListEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
@@ -37,6 +37,7 @@ class HLogPlugin(Plugin):
      
     def get_operation(self):
         ret = HlogTransformOp()
+        ret.add_trait("handler_factory", Callable)
         ret.handler_factory = HLogHandler
         return ret
     

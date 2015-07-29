@@ -135,12 +135,10 @@ class FlowTask(Task):
                      
             wi.operation.conditions["Dox"] = "log"
         
-            tube1 = Tube(name = "Tube 1",
-                         file = "../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs",
+            tube1 = Tube(file = "../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs",
                          conditions = {"Dox" : 0.1})
         
-            tube2 = Tube(name = "Tube 2",
-                         file = "../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs",
+            tube2 = Tube(file = "../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs",
                          conditions = {"Dox" : 1.0})
         
             wi.operation.tubes.append(tube1)

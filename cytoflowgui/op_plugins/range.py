@@ -63,6 +63,7 @@ class RangePlugin(Plugin):
     
     def get_operation(self):
         ret = RangeOp()
+        ret.add_trait("handler_factory", Callable)
         ret.handler_factory = RangeHandler
         return ret
     

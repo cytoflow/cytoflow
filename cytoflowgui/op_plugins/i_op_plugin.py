@@ -3,8 +3,7 @@ Created on Mar 15, 2015
 
 @author: brian
 """
-from traits.api import Interface, Str, HasTraits, Instance, Property, \
-                       cached_property, List
+from traits.api import Interface, Str, HasTraits, Instance, Property, List
 from cytoflowgui.workflow_item import WorkflowItem
 
 OP_PLUGIN_EXT = 'edu.mit.synbio.cytoflow.op_plugins'

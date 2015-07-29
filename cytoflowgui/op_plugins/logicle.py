@@ -3,7 +3,7 @@ Created on Feb 24, 2015
 
 @author: brian
 """
-from traits.api import provides
+from traits.api import provides, Callable
 from traitsui.api import Controller, View, Item, CheckListEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
@@ -45,6 +45,7 @@ class LogiclePlugin(Plugin):
      
     def get_operation(self):
         ret = LogicleTransformOp()
+        ret.add_trait("handler_factory", Callable)
         ret.handler_factory = LogicleHandler
         return ret
     

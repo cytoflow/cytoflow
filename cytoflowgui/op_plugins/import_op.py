@@ -12,7 +12,7 @@ if __name__ == '__main__':
     os.environ['TRAITS_DEBUG'] = "1"
 
 from traitsui.api import View, Item, Controller
-from traits.api import Button, Property, cached_property, provides
+from traits.api import Button, Property, cached_property, provides, Callable
 from cytoflowgui.import_dialog import ExperimentDialog
 from cytoflowgui.op_plugins.i_op_plugin import IOperationPlugin, OpHandlerMixin
 from pyface.api import OK as PyfaceOK
@@ -94,6 +94,7 @@ class ImportPlugin(Plugin):
     
     def get_operation(self):
         ret = ImportOp()
+        ret.add_trait("handler_factory", Callable)
         ret.handler_factory = ImportHandler
         return ret
     

@@ -6,7 +6,7 @@ Created on Apr 25, 2015
 
 from traitsui.api import View, Item, EnumEditor, Controller, Handler
 from envisage.api import Plugin, contributes_to
-from traits.api import provides, DelegatesTo, Callable, Instance
+from traits.api import provides, DelegatesTo, Callable, Instance, Callable
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT
 from cytoflow import PolygonOp, ScatterplotView, PolygonSelection
 from pyface.api import ImageResource
@@ -74,6 +74,7 @@ class PolygonPlugin(Plugin):
     
     def get_operation(self):
         ret = PolygonOp()
+        ret.add_trait("handler_factory", Callable)
         ret.handler_factory = PolygonHandler
         return ret
     
