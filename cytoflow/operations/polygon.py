@@ -1,13 +1,11 @@
-from cytoflow import Experiment
-from traits.api import HasTraits, CFloat, Str, CStr, Instance, List, Float
-import pandas as pd
+from traits.api import HasStrictTraits, Str, CStr, List, Float
 import numpy as np
 import matplotlib as mpl
 from traits.has_traits import provides
 from cytoflow.operations.i_operation import IOperation
 
 @provides(IOperation)
-class PolygonOp(HasTraits):
+class PolygonOp(HasStrictTraits):
     """Apply a range gate to a cytometry experiment.
     
     Attributes
@@ -99,8 +97,3 @@ class PolygonOp(HasTraits):
         new_experiment.metadata[self.name] = {}
             
         return new_experiment
-    
-    def default_view(self, experiment):
-        """Returns a scatter plot view with the polygon highlighted."""
-        raise NotImplementedError
-    

@@ -3,12 +3,13 @@ Created on Mar 20, 2015
 
 @author: brian
 '''
-from traits.api import HasTraits, provides, Str, List, Bool, Int, Any, Dict 
+from traits.api import HasStrictTraits, provides, Str, List, Bool, Int, Any, \
+                       Dict 
 from cytoflow.operations.i_operation import IOperation
 from cytoflow import Experiment
 import FlowCytometryTools as fc
 
-class Tube(HasTraits):
+class Tube(HasStrictTraits):
     """
     Represents a tube or plate well we want to import.
     """
@@ -33,7 +34,7 @@ class Tube(HasTraits):
                    set(other.conditions.items())) == 0
 
 @provides(IOperation)
-class ImportOp(HasTraits):
+class ImportOp(HasStrictTraits):
     '''
     classdocs
     '''

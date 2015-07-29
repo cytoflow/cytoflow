@@ -10,4 +10,4 @@ from polygon import PolygonOp
 
 # transforms
 from hlog import HlogTransformOp
-#from logicle import LogicleTransformOp
+from logicle import LogicleTransformOp

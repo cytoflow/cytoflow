@@ -1,10 +1,9 @@
-from cytoflow import Experiment
-from traits.api import HasTraits, CFloat, Str, CStr, provides
+from traits.api import HasStrictTraits, CFloat, Str, CStr, provides
 import pandas as pd
 from cytoflow.operations.i_operation import IOperation
 
 @provides(IOperation)
-class ThresholdOp(HasTraits):
+class ThresholdOp(HasStrictTraits):
     """Apply a threshold to a cytometry experiment.
     
     Attributes
@@ -80,8 +79,3 @@ class ThresholdOp(HasTraits):
         new_experiment.metadata[self.name] = {}
             
         return new_experiment
-    
-    def default_view(self, experiment):
-        """Returns a histogram view with the threshold highlighted."""
-        raise NotImplementedError
-    

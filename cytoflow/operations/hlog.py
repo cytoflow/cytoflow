@@ -1,10 +1,9 @@
 from FlowCytometryTools.core.transforms import Transformation
-from traits.api import HasTraits, Str, ListStr, provides
-from ..experiment import Experiment 
+from traits.api import HasStrictTraits, Str, ListStr, provides
 from .i_operation import IOperation
 
 @provides(IOperation)
-class HlogTransformOp(HasTraits):
+class HlogTransformOp(HasStrictTraits):
     """An operation that applies the Hyperlog transformation to channels.
     
     Attributes

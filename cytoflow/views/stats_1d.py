@@ -7,7 +7,7 @@ if __name__ == '__main__':
     import os
     os.environ['TRAITS_DEBUG'] = "1"
 
-from traits.api import HasTraits, Str, provides, Callable, Enum
+from traits.api import HasStrictTraits, Str, provides, Callable, Enum
 import matplotlib.pyplot as plt
 from cytoflow.views.i_view import IView
 import numpy as np
@@ -15,7 +15,7 @@ import seaborn as sns
 import pandas as pd
 
 @provides(IView)
-class Stats1DView(HasTraits):
+class Stats1DView(HasStrictTraits):
     """
     Plots a scatter plot of a numeric variable (or optionally a summary
     statistic of some data) on the x axis vs a summary statistic of the

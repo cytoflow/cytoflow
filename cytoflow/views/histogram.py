@@ -7,7 +7,7 @@ if __name__ == '__main__':
     import os
     os.environ['TRAITS_DEBUG'] = "1"
 
-from traits.api import HasTraits, Str, provides
+from traits.api import HasStrictTraits, Str, provides
 import matplotlib.pyplot as plt
 from cytoflow.views.i_view import IView
 from cytoflow.utility.util import num_hist_bins
@@ -15,7 +15,7 @@ import numpy as np
 import seaborn as sns
 
 @provides(IView)
-class HistogramView(HasTraits):
+class HistogramView(HasStrictTraits):
     """Plots a one-channel histogram
     
     Attributes
@@ -110,8 +110,7 @@ if __name__ == '__main__':
    
     plt.ioff()
     p = plt.figure(1)
-    
-    import seaborn as sns
+
     tips = sns.load_dataset("tips")
     g = sns.FacetGrid(tips, col="time", fig_kws={"num" : 1})
     

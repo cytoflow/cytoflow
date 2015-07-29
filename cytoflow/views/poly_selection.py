@@ -1,5 +1,5 @@
-from traits.api import provides, HasTraits, Instance, Float, Bool, \
-                       on_trait_change, List, Any
+from traits.api import provides, HasStrictTraits, Instance, Float, Bool, \
+                       on_trait_change, List
 
 from cytoflow.views.i_selectionview import ISelectionView
 from cytoflow.views.i_view import IView
@@ -10,7 +10,7 @@ import matplotlib as mpl
 import numpy as np
 
 @provides(ISelectionView)
-class PolygonSelection(HasTraits):
+class PolygonSelection(HasStrictTraits):
     """Plots, and lets the user interact with, a 2D selection.
     
     Attributes

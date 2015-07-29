@@ -38,7 +38,7 @@ class IOperation(Interface):
             True if this op will work; False otherwise.
         """
         
-    def estimate(self, experiment, subset):
+    def estimate(self, experiment, subset = None):
         """Estimate this operation's parameters from some data.
         
         For operations that are data-driven (for example, a mixture model,
@@ -70,17 +70,3 @@ class IOperation(Interface):
             Experiment
                 the old Experiment with this operation applied
         """
-    
-    def default_view(self, experiment):
-        """Get an IView suited to viewing the results of this operation.
-        
-        Parameters
-        ----------
-            experiment : Experiment 
-                The Experiment we're viewing
-            
-        Returns
-        -------
-            a new IView instance, suitable for calling plot(experiment) on.
-        """
-    

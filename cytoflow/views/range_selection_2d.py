@@ -1,4 +1,4 @@
-from traits.api import provides, HasTraits, Instance, Float, Bool, \
+from traits.api import provides, HasStrictTraits, Instance, Float, Bool, \
                        on_trait_change
 
 from cytoflow.views.i_selectionview import ISelectionView
@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 
 @provides(ISelectionView)
-class RangeSelection2D(HasTraits):
+class RangeSelection2D(HasStrictTraits):
     """Plots, and lets the user interact with, a 2D selection.
     
     Attributes

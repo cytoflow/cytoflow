@@ -7,7 +7,7 @@ if __name__ == '__main__':
     import os
     os.environ['TRAITS_DEBUG'] = "1"
 
-from traits.api import HasStrictTraits, Str, provides, Callable
+from traits.api import HasStrictTraits, Str, provides, Callable, Enum
 import matplotlib.pyplot as plt
 from cytoflow.views.i_view import IView
 import numpy as np
@@ -78,7 +78,7 @@ class BarChartView(HasStrictTraits):
     channel = Str
     variable = Str
     function = Callable
-#    orientation = Enum("horizontal", "vertical")
+    #orientation = Enum("horizontal", "vertical")
     xfacet = Str
     yfacet = Str
     huefacet = Str
@@ -101,88 +101,17 @@ class BarChartView(HasStrictTraits):
         else:
             data = experiment.data
             
-        plot = sns.factorplot(x = self.variable,
-                              y = self.channel,
-                              data = data,
-                              row = (self.yfacet if self.yfacet else None),
-                              col = (self.xfacet if self.xfacet else None),
-                              hue = (self.huefacet if self.huefacet else None),
-                              #orient = ("h" if self.orientation == "horizontal" 
-                              #          else "v"),
-                              # TODO - when seaborn releases 0.6, depend on it
-                              # and use the orient flag
-                              estimator = self.function,
-                              ci = None,
-                              kind = "bar")
-        
-        
-#         if self.subgroup:
-#             g = x.groupby(by=[self.group, self.subgroup])
-#             agg = g[self.channel].aggregate(self.function)
-#             
-#             if self.error_bars == "data":
-#                 err_bars = g[self.channel].aggregate(self.error_function)
-#             elif self.error_bars == "summary":
-#                 error_g = x.groupby(by = [self.group, self.subgroup, self.error_var])
-#                 error_agg = error_g[self.channel].aggregate(self.function)
-#                 err_bars = error_agg.groupby(level = [self.group, self.subgroup]) \
-#                                 .aggregate(self.error_function)
-#             else:
-#                 err_bars = None
-# 
-#             ngroup = len(agg.index.levels[0])
-#             nsubgroup = len(agg.index.levels[1])
-#             group_idx = np.arange(ngroup)
-#   
-#             bar_width = 0.35
-# 
-#             plt.figure()
-#             colors = sns.color_palette("hls", nsubgroup)
-#             for i, subgroup in enumerate(agg.index.levels[1]):
-#                 group_data = agg[:, subgroup]
-#                 group_err_bars = err_bars[:, subgroup].as_matrix() \
-#                                  if err_bars else None
-# 
-#                 plt.bar(group_idx + i * bar_width,
-#                         group_data,
-#                         width = bar_width,
-#                         color = colors[i],
-#                         yerr = group_err_bars,
-#                         label = agg.index.names[1] + " = {0}".format(subgroup))
-#                 
-#             group_names = ["{0} = {1}".format(self.group, x) for x in agg.index.levels[0]]
-#             plt.xticks(group_idx + bar_width, group_names)
-#             plt.legend()
-# 
-#         else:
-#             g = x.groupby(by = [self.group])
-#             agg = g[self.channel].aggregate(self.function)
-#             
-#             if self.error_bars == "data":
-#                 err_bars = g[self.channel].aggregate(self.error_function).as_matrix()
-#             elif self.error_bars == "summary":
-#                 error_g = x.groupby(by = [self.group, self.error_var])
-#                 error_agg = error_g[self.channel].aggregate(self.error_function)
-#                 err_bars = error_agg.groupby(level = self.error_var) \
-#                                 .aggregate(self.error_function)  \
-#                                 .as_matrix()
-#             else:
-#                 err_bars = None    
-#             ngroup = len(agg)
-#             group_idx = np.arange(ngroup)
-#             
-#             bar_width = 0.35
-#             colors = sns.color_palette("hls")
-#             
-#             plt.figure()
-#             plt.bar(group_idx + bar_width,
-#                     agg,
-#                     width = bar_width,
-#                     yerr = err_bars,
-#                     color = colors[0])
-#             group_names = ["{0} = {1}".format(self.group, x) for x in agg.index]
-#             plt.xticks(group_idx + bar_width * 1.5, group_names)
-#             plt.legend()
+        sns.factorplot(x = self.variable,
+                       y = self.channel,
+                       data = data,
+                       row = (self.yfacet if self.yfacet else None),
+                       col = (self.xfacet if self.xfacet else None),
+                       hue = (self.huefacet if self.huefacet else None),
+                       # something buggy here.
+                       #orient = ("h" if self.orientation == "horizontal" else "v"),
+                       estimator = self.function,
+                       ci = None,
+                       kind = "bar")
         
     def is_valid(self, experiment):
         """Validate this view against an experiment."""
@@ -266,7 +195,7 @@ if __name__ == '__main__':
     s.huefacet = "Y2-A+"
     #s.error_bars = "data"
     #s.error_var = "Repl"
-    s.error_function = np.std
+    #s.error_function = np.std
     
     plt.ioff()
     s.plot(ex3)

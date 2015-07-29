@@ -3,14 +3,14 @@ Created on Apr 19, 2015
 
 @author: brian
 """
-from traits.api import HasTraits, provides, Str
+from traits.api import HasStrictTraits, provides, Str
 from cytoflow.views.i_view import IView
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import seaborn as sns
 
 @provides(IView)
-class ScatterplotView(HasTraits):
+class ScatterplotView(HasStrictTraits):
     """
     classdocs
     """

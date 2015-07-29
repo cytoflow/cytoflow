@@ -1,10 +1,9 @@
-from traits.api import HasTraits, CFloat, Str, CStr
-import pandas as pd
+from traits.api import HasStrictTraits, CFloat, Str, CStr
 from traits.has_traits import provides
 from cytoflow.operations.i_operation import IOperation
 
 @provides(IOperation)
-class Range2DOp(HasTraits):
+class Range2DOp(HasStrictTraits):
     """Apply a range gate to a cytometry experiment.
     
     Attributes
@@ -111,8 +110,3 @@ class Range2DOp(HasTraits):
 #                       new_experiment[self.ychannel] < self.yhigh)
             
         return new_experiment
-    
-    def default_view(self, experiment):
-        """Returns a histogram view with the threshold highlighted."""
-        raise NotImplementedError
-    

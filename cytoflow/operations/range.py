@@ -1,11 +1,9 @@
-from cytoflow import Experiment
-from traits.api import HasTraits, CFloat, Str, CStr
-import pandas as pd
+from traits.api import HasStrictTraits, CFloat, Str, CStr
 from traits.has_traits import provides
 from cytoflow.operations.i_operation import IOperation
 
 @provides(IOperation)
-class RangeOp(HasTraits):
+class RangeOp(HasStrictTraits):
     """Apply a range gate to a cytometry experiment.
     
     Attributes
@@ -91,8 +89,4 @@ class RangeOp(HasTraits):
         new_experiment.metadata[self.name] = {}
             
         return new_experiment
-    
-    def default_view(self, experiment):
-        """Returns a histogram view with the threshold highlighted."""
-        raise NotImplementedError
     

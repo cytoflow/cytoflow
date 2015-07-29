@@ -3,7 +3,7 @@ Created on Mar 19, 2015
 
 @author: brian
 '''
-from traits.api import provides, HasTraits, Float, Instance, Bool, \
+from traits.api import provides, HasStrictTraits, Float, Instance, Bool, \
                        on_trait_change
 
 from cytoflow.views.i_selectionview import ISelectionView
@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 
 @provides(ISelectionView)
-class ThresholdSelection(HasTraits):
+class ThresholdSelection(HasStrictTraits):
     """
     Plots, and lets the user interact with, a threshold on the X axis.
     

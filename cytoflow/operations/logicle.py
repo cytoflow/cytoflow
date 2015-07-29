@@ -1,12 +1,12 @@
-from traits.api import HasTraits, provides, Str, ListStr, Float, DictStrFloat
+from traits.api import HasStrictTraits, provides, Str, ListStr, Float, \
+                       DictStrFloat
 from logicle_ext.Logicle import Logicle
 from .i_operation import IOperation
-from ..experiment import Experiment
 import math
 import numpy as np
 
 @provides(IOperation)
-class LogicleTransformOp(HasTraits):
+class LogicleTransformOp(HasStrictTraits):
     """An implementation of the Logicle scaling method.
     
     This scaling method implements a "linear-like" region around 0, and a
