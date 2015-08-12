@@ -19,6 +19,7 @@ from operations.range2d import Range2DOp
 from operations.polygon import PolygonOp
 from operations.hlog import HlogTransformOp
 from operations.logicle import LogicleTransformOp
+from operations.log import LogTransformOp
 from operations.import_op import ImportOp, Tube
 
 from views.histogram import HistogramView
