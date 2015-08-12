@@ -163,7 +163,7 @@ class Experiment(HasStrictTraits):
         
         self.conditions.update(conditions)
              
-    def add_tube(self, tube, conditions):
+    def add_tube(self, tube, conditions, ignore_v = False):
         """Add an FCMeasurement, and its experimental conditions, to this Experiment.
         
         Remember: because add_tube COPIES the data into this Experiment, you can
@@ -200,7 +200,7 @@ class Experiment(HasStrictTraits):
                     old_v = self.metadata[channel]["voltage"]
                     new_v = tube.channels[tube.channels['$PnN'] == channel]['$PnV'].iloc[0]
                     
-                    if old_v != new_v:
+                    if old_v != new_v and not ignore_v:
                         raise RuntimeError("Tube {0} doesn't have the same voltages "
                                            "as the first tube" \
                                            .format(tube.datafile))
