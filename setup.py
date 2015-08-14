@@ -36,7 +36,6 @@ setup(
     name = "cytoflow",
     version = find_version("cytoflow", "__init__.py"),
     packages = find_packages(),
-    include_package_data=True,
     
     # Project uses reStructuredText, so ensure that the docutils get
     # installed or upgraded on the target machine
@@ -59,6 +58,13 @@ setup(
                                         "cytoflow/operations/logicle_ext/Logicle.cpp",
                                         "cytoflow/operations/logicle_ext/Logicle.i"],
                              swig_opts=['-c++'])],
+    
+    #include_package_data = True,
+    
+    package_data = { 'cytoflowgui' : ['preferences.ini',
+                                      'images/*.png',
+                                      'op_plugins/images/*.png',
+                                      'view_plugins/images/*.png']},
 
     # metadata for upload to PyPI
     author = "Brian Teague",
