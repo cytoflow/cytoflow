@@ -21,8 +21,6 @@ from cmd:
 
 TO JUST RUN THE CODE
 
- ## PLEASE NOTE, DUE TO A PACKAGING BUG, THIS DOES NOT YET WORK ##
-
  * Install Anaconda 2.7 (full install)
  * From cmd.exe:
    - conda install pandas numexpr seaborn traits pyface envisage pyqt pip
