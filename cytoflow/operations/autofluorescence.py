@@ -81,7 +81,6 @@ class AutofluorescenceOp(HasStrictTraits):
         """
         
         tube = fc.FCMeasurement(ID="blank", datafile = self.blank_file)
-        print tube.channels
         new_experiment = old_experiment.clone()
                 
         for channel in self.channels:
