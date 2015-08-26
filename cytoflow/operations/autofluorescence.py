@@ -1,3 +1,5 @@
+from __future__ import division
+
 from traits.api import HasStrictTraits, Str, CStr, CFloat, File, Dict, Instance, Python
 import numpy as np
 import matplotlib as mpl
@@ -28,7 +30,8 @@ class AutofluorescenceOp(HasStrictTraits):
         values.
         
     blank_file : File
-        The filename of a file with "blank" cells (not fluorescent).
+        The filename of a file with "blank" cells (not fluorescent).  Used
+        to `estimate()` the autofluorescence.
     """
     
     # traits
@@ -37,7 +40,8 @@ class AutofluorescenceOp(HasStrictTraits):
     
     name = CStr()
     autofluorescence = Dict(Str, CFloat)
-    blank_file = File(filter = "*.fcs", exists = True)
+    
+    blank_file = File(filter = "*.fcs", exists = True, transient = True)
     
     def is_valid(self, experiment):
         """Validate this operation against an experiment."""
@@ -48,46 +52,45 @@ class AutofluorescenceOp(HasStrictTraits):
         if not set(self.autofluorescence.keys()).issubset(set(experiment.channels)):
             return False
         
-        # don't have to validate that blank_file exists; should crap out on 
-        # trying to set a bad value
-        
-        if self.blank_file is not None:
-            tube = fc.FCMeasurement(ID="blank", datafile = self.blank_file)
-            
-            try:
-                tube.read_meta()
-            except Exception:
-                print "FCS reader threw an error!"
+        for _, value in self.autofluorescence.iteritems():
+            if value == 0.0:
                 return False
-            
-            for channel in self.autofluorescence.keys():
-                v = experiment.metadata[channel]['voltage']
-                
-                if not "$PnV" in tube.channels:
-                    raise RuntimeError("Didn't find a voltage for channel {0}" \
-                                       "in tube {1}".format(channel, tube.datafile))
-                
-                blank_v = tube.channels[tube.channels['$PnN'] == channel]['$PnV'].iloc[0]
-                
-                if blank_v != v:
-                    return False
-            
-        # TODO - make sure there haven't been transformations applied to 
-        # the channels yet!
-       
+        
         return True
     
-    def estimate(self, experiment = None, subset = None): 
+    def estimate(self, experiment, subset = None): 
         """
         Estimate the autofluorescence from *blank_file*
         """
+
+        # don't have to validate that blank_file exists; should crap out on 
+        # trying to set a bad value
         
         tube = fc.FCMeasurement(ID="blank", datafile = self.blank_file)
-                
+
+        # make sure that the blank tube was collected with the same voltages
+        # as the experimental tubes
+
+        try:
+            tube.read_meta()
+        except Exception:
+            raise RuntimeError("FCS reader threw an error!")
+        
+        for channel in self.autofluorescence.keys():
+            v = experiment.metadata[channel]['voltage']
+            
+            if not "$PnV" in tube.channels:
+                raise RuntimeError("Didn't find a voltage for channel {0}" \
+                                   "in tube {1}".format(channel, tube.datafile))
+            
+            blank_v = tube.channels[tube.channels['$PnN'] == channel]['$PnV'].iloc[0]
+            
+            if blank_v != v:
+                raise RuntimeError("Voltage differs for channel {0}".format(channel)) 
+       
         for channel in self.autofluorescence.keys():
             self.autofluorescence[channel] = np.median(tube.data[channel])     
-               
-        
+                
     def apply(self, old_experiment):
         """Applies the threshold to an experiment.
         
