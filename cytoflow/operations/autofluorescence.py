@@ -24,16 +24,16 @@ class AutofluorescenceOp(HasStrictTraits):
         The operation name (for UI representation.)
         
     autofluorescence : Dict(Str, Float)
-        The channel names to correct, and the corresponding autoflorescence
+        The channel names to correct, and the corresponding autofluorescence
         values.
         
     blank_file : File
-        The filename of a file with "blank" cells (not fluorescing).
+        The filename of a file with "blank" cells (not fluorescent).
     """
     
     # traits
     id = "edu.mit.synbio.cytoflow.operations.autofluorescence"
-    friendly_id = "Polygon"
+    friendly_id = "Autofluorescence correction"
     
     name = CStr()
     autofluorescence = Dict(Str, CFloat)
