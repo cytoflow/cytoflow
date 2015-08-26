@@ -32,7 +32,6 @@ from views.threshold_selection import ThresholdSelection
 from views.poly_selection import PolygonSelection
 from views.stats_1d import Stats1DView
 from views.bar_chart import BarChartView
-from views.autofluorescence_diag import AutofluorescenceDiagnosticView
 
 from utility.util import geom_mean
 

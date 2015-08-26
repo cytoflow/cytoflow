@@ -1,9 +1,10 @@
-from traits.api import HasStrictTraits, Str, CStr, CFloat, File, Dict
+from traits.api import HasStrictTraits, Str, CStr, CFloat, File, Dict, Instance, Python
 import numpy as np
 import matplotlib as mpl
 from traits.has_traits import provides
 from cytoflow.operations.i_operation import IOperation
 import FlowCytometryTools as fc
+from ..views import IView
 
 @provides(IOperation)
 class AutofluorescenceOp(HasStrictTraits):
@@ -108,3 +109,60 @@ class AutofluorescenceOp(HasStrictTraits):
                                       self.autofluorescence[channel]
 
         return new_experiment
+    
+    def default_view(self):
+        return AutofluorescenceDiagnosticView(op = self)
+    
+    
+@provides(IView)
+class AutofluorescenceDiagnosticView(HasStrictTraits):
+    """
+    Plots a histogram of each channel, and its median in red.  Serves as a
+    diagnostic for the autofluorescence correction.
+    
+    
+    Attributes
+    ----------
+    name : Str
+        The instance name (for serialization, UI etc.)
+    
+    op : Instance(AutofluorescenceOp)
+        The op whose parameters we're viewing
+        
+    """
+    
+    # traits   
+    id = "edu.mit.synbio.cytoflow.view.autofluorescencediagnosticview"
+    friendly_id = "Autofluorescence Diagnostic" 
+    
+    name = Str
+    op = Instance(IOperation)
+    
+    def plot(self, experiment = None, **kwargs):
+        """Plot a faceted histogram view of a channel"""
+        
+        import matplotlib.pyplot as plt
+        
+        kwargs.setdefault('histtype', 'stepfilled')
+        kwargs.setdefault('alpha', 0.5)
+        kwargs.setdefault('antialiased', True)
+        
+        tube = fc.FCMeasurement(ID="blank", datafile = self.op.blank_file)    
+        plt.figure()
+        channels = self.op.autofluorescence.keys()
+        
+        for idx, channel in enumerate(channels):
+            d = tube.data[channel]
+            plt.subplot(len(channels), 1, idx+1)
+            plt.title(channel)
+            plt.hist(d, bins = 200)
+            
+            plt.axvline(self.op.autofluorescence[channel], color = 'r')
+                    
+    def is_valid(self, experiment):
+        """Validate this view against an experiment."""
+        
+        return self.op.is_valid(experiment)
+
+    
+
