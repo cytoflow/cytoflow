@@ -38,6 +38,10 @@ class IOperation(Interface):
             True if this op will work; False otherwise.
         """
         
+        # TODO - return something other than T/F (throw an exception, maybe?)
+        # telling what, exactly, was wrong.  (File not found; bad channel names;
+        # bad params; etc.)
+        
     def estimate(self, experiment, subset = None):
         """Estimate this operation's parameters from some data.
         

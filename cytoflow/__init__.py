@@ -21,6 +21,7 @@ from operations.hlog import HlogTransformOp
 from operations.logicle import LogicleTransformOp
 from operations.log import LogTransformOp
 from operations.import_op import ImportOp, Tube
+from operations.autofluorescence import AutofluorescenceOp
 
 from views.histogram import HistogramView
 from views.hexbin import HexbinView
@@ -30,7 +31,8 @@ from views.range_selection_2d import RangeSelection2D
 from views.threshold_selection import ThresholdSelection
 from views.poly_selection import PolygonSelection
 from views.stats_1d import Stats1DView
-from cytoflow.views.bar_chart import BarChartView
+from views.bar_chart import BarChartView
+from views.autofluorescence_diag import AutofluorescenceDiagnosticView
 
 from utility.util import geom_mean
 
