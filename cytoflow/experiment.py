@@ -223,9 +223,9 @@ class Experiment(HasStrictTraits):
                 self.metadata[channel]['xforms'] = []
                 
                 # add the maximum possible value for this channel.
-                data_max = tube.channels[tube.channels['$PnN'] == channel]['$PnR'].iloc[0]
-                data_max = float(data_max)
-                self.metadata[channel]['max'] = data_max
+                data_range = tube.channels[tube.channels['$PnN'] == channel]['$PnR'].iloc[0]
+                data_range = float(data_range)
+                self.metadata[channel]['range'] = data_range
                     
         # validate the experimental conditions
         

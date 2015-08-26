@@ -88,7 +88,7 @@ class LogicleTransformOp(HasStrictTraits):
             experiment = experiment.query(subset)
         
         for channel in self.channels:
-            self.T[channel] = experiment.metadata[channel]['max']            
+            self.T[channel] = experiment.metadata[channel]['range']            
             self.A[channel] = 0.0
             
             # get the range by finding the rth quantile of the negative values
