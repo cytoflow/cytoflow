@@ -1,4 +1,5 @@
 from traits.api import Interface, Str
+from xdiagnose.diagnostics import Diagnostic
 
 class IOperation(Interface):
     """The basic interface for an operation on cytometry data.
@@ -74,3 +75,19 @@ class IOperation(Interface):
             Experiment
                 the old Experiment with this operation applied
         """
+        
+    def default_view(self):
+        """
+        Many operations have a "default" view.  This can either be a diagnostic
+        for the operation's estimate() method, an interactive for setting
+        gates, etc.  Frequently it makes sense to link the properties of the
+        view to the properties of the IOperation; sometimes, *default_view()*
+        is the only way to get the view (ie, it's not useful when it doesn't
+        reference an IOperation instance.)
+        
+        Returns
+        -------
+            IView
+                the IView instance
+        """
+        
