@@ -12,3 +12,6 @@ from polygon import PolygonOp
 from hlog import HlogTransformOp
 from logicle import LogicleTransformOp
 from log import LogTransformOp
+
+# etc 
+from bleedthrough_piecewise import BleedthroughPiecewiseOp
