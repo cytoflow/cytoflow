@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from traits.api import HasStrictTraits, Str, ListStr, provides
 from .i_operation import IOperation
 
@@ -13,6 +14,7 @@ class LogTransformOp(HasStrictTraits):
     channels : ListStr
         A list of the channels on which to apply the transformation
     """
+    
     
     # traits
     id = "edu.mit.synbio.cytoflow.operations.log"
@@ -62,11 +64,25 @@ class LogTransformOp(HasStrictTraits):
         
         new_experiment = old_experiment.clone()
         
+        # taking a log is only valid on values > 0.  because we can't just
+        # add a filter column to the dataframe, this is going to waste a TON
+        # of memory on big datasets.
+        
+        data = new_experiment.data
+        gt_0 = pd.Series([True] * len(data.index))
+        
         for channel in self.channels:
-            new_experiment[channel] = old_experiment[channel].apply(np.log10)
-            
-        new_experiment = new_experiment.data.dropna()
-            
+            gt_0 = np.logical_and(gt_0, data[channel] > 1)
+
+        data = data.reset_index(drop = True) 
+        gt_0.index = data.index.copy()         
+
+        data = data.loc[gt_0]
+        new_experiment.data = data
+        
+        for channel in self.channels:
+            new_experiment[channel] = new_experiment[channel].apply(np.log10)
+
             # TODO - figure out transformation craps
             #new_experiment.metadata[channel]["xforms"].append(transform)
 
