@@ -65,20 +65,19 @@ class RangeSelection2D(HasStrictTraits):
         if not (self.xlow and self.xhigh and self.ylow and self.yhigh):
             return
         
-        fig = plt.gcf()
+        ax = plt.gca()
         
-        if self._box and self._box in fig.patches:
+        if self._box and self._box in ax.patches:
             self._box.remove()
             
         if self.xlow and self.xhigh and self.ylow and self.yhigh:
-            ca = plt.gca()
             self._box = Rectangle((self.xlow, self.ylow), 
                                   (self.xhigh - self.xlow), 
                                   (self.yhigh - self.ylow), 
                                   facecolor="grey",
                                   alpha = 0.2)
-            ca.add_patch(self._box)
-            plt.gcf().canvas.draw()
+            ax.add_patch(self._box)
+            plt.draw_if_interactive()
     
     @on_trait_change('interactive')
     def _interactive(self):

@@ -53,9 +53,9 @@ class PolygonSelection(HasStrictTraits):
     
     @on_trait_change('vertices')
     def _draw_poly(self):
-        ca = plt.gca()
+        ax = plt.gca()
          
-        if self._patch and self._patch in ca.patches:
+        if self._patch and self._patch in ax.patches:
             self._patch.remove()
             
         if self._drawing or not self.vertices or len(self.vertices) < 3 \
@@ -72,8 +72,8 @@ class PolygonSelection(HasStrictTraits):
                                   linewidth = 1.5,
                                   fill = False)
             
-        ca.add_patch(self._patch)
-        plt.gcf().canvas.draw()
+        ax.add_patch(self._patch)
+        plt.draw_if_interactive()
     
     @on_trait_change('interactive')
     def _interactive(self):
@@ -97,10 +97,10 @@ class PolygonSelection(HasStrictTraits):
             self._path = None
             return
                 
-        ca = plt.gca()
+        ax = plt.gca()
                 
         self._drawing = True
-        if self._patch and self._patch in ca.patches:
+        if self._patch and self._patch in ax.patches:
             self._patch.remove()
             
         if self._path:
@@ -114,8 +114,8 @@ class PolygonSelection(HasStrictTraits):
                                             edgecolor = "black",
                                             fill = False)
 
-        ca.add_patch(self._patch)
-        plt.gcf().canvas.draw()
+        ax.add_patch(self._patch)
+        plt.draw_if_interactive()
         
     def _onmove(self, event):       
          

@@ -65,21 +65,21 @@ class ThresholdSelection(HasStrictTraits):
             # removed from the plot, because it was never added.  so check
             # explicitly first.  this is likely to be an issue in other
             # interactive plots, too.
-            fig = plt.gcf()
-            if self._line in fig.lines:
+            ax = plt.gca()
+            if self._line and self._line in ax.lines:
                 self._line.remove()
  
             self._line = None
         
         if self.threshold:    
             self._line = plt.axvline(self.threshold, linewidth=3, color='blue')
+            
+        plt.draw_if_interactive()
         
     @on_trait_change('interactive')
     def _interactive(self):
-        fig = plt.gcf()
+        ax = plt.gca()
         if self.interactive:
-            print "set interactive"
-            ax = plt.gca()
             self._cursor = Cursor(ax, 
                                   horizOn=False,
                                   vertOn=True,
