@@ -48,6 +48,7 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
         they're to parameterize `estimate()`.
         
     blank_file : File
+        FCS file with blank cells.  Must be set to use `estimate()`.
     
     controls : Dict(Str, File)
         The channel names to correct, and corresponding single-color control
@@ -68,7 +69,7 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
     bleedthrough = Dict(Str, Dict(Str, Python))
     voltage = Dict(Str, CInt)
     
-    blank_file = File
+    blank_file = File(transient = True)
     controls = Dict(Str, File, transient = True)
     num_knots = Int(5, transient = True)
     
@@ -305,7 +306,6 @@ class BleedthroughPiecewiseDiagnostic(HasStrictTraits):
 
                 tube = fc.FCMeasurement(ID=from_channel, 
                                         datafile = self.op.controls[from_channel])
-                
                                 
                 plt.subplot(num_channels, 
                             num_channels, 
