@@ -42,11 +42,6 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
         ``bleedthrough['FITC-A']['PE-A']`` is the bleedthrough *from* the
         `FITC-A` channel *to* the `PE-A` channel.
         
-    voltage : Dict(Str, Int)
-        The channel voltages that the single-color controls were collected at.
-        This gets persisted by pickle(); while `controls` and `knots` don't,
-        they're to parameterize `estimate()`.
-        
     blank_file : File
         FCS file with blank cells.  Must be set to use `estimate()`.
     
@@ -67,7 +62,6 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
     name = CStr()
 
     bleedthrough = Dict(Str, Dict(Str, Python))
-    voltage = Dict(Str, CInt)
     
     blank_file = File(transient = True)
     controls = Dict(Str, File, transient = True)
@@ -85,15 +79,8 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
         if not self.bleedthrough:
             return False
         
-        if not set(self.bleedthrough.keys()).issubset(set(experiment.channels)):
+        if not set(self.bleedthrough.keys()) <= set(experiment.channels):
             return False
-        
-        # make sure the controls were collected with the same voltages as
-        # the experiment
-        
-        for channel, voltage in self.voltage.iteritems():
-            if experiment.metadata[channel]['voltage'] != voltage:
-                return False
        
         return True
     
