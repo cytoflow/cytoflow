@@ -66,30 +66,30 @@ class AutofluorescenceOp(HasStrictTraits):
         # don't have to validate that blank_file exists; should crap out on 
         # trying to set a bad value
         
-        tube = fc.FCMeasurement(ID="blank", datafile = self.blank_file)
+        blank_tube = fc.FCMeasurement(ID="blank", datafile = self.blank_file)
 
         # make sure that the blank tube was collected with the same voltages
         # as the experimental tubes
 
         try:
-            tube.read_meta()
+            blank_tube.read_meta()
         except Exception:
             raise RuntimeError("FCS reader threw an error!")
         
         for channel in self.autofluorescence.keys():
             v = experiment.metadata[channel]['voltage']
             
-            if not "$PnV" in tube.channels:
+            if not "$PnV" in blank_tube.channels:
                 raise RuntimeError("Didn't find a voltage for channel {0}" \
-                                   "in tube {1}".format(channel, tube.datafile))
+                                   "in tube {1}".format(channel, blank_tube.datafile))
             
-            blank_v = tube.channels[tube.channels['$PnN'] == channel]['$PnV'].iloc[0]
+            blank_v = blank_tube.channels[blank_tube.channels['$PnN'] == channel]['$PnV'].iloc[0]
             
             if blank_v != v:
                 raise RuntimeError("Voltage differs for channel {0}".format(channel)) 
        
         for channel in self.autofluorescence.keys():
-            self.autofluorescence[channel] = np.median(tube.data[channel])     
+            self.autofluorescence[channel] = np.median(blank_tube.data[channel])     
                 
     def apply(self, old_experiment):
         """Applies the threshold to an experiment.
