@@ -15,3 +15,4 @@ from log import LogTransformOp
 
 # etc 
 from bleedthrough_piecewise import BleedthroughPiecewiseOp
+from bead_calibration import BeadCalibrationOp

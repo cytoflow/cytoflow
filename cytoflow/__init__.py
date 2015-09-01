@@ -23,6 +23,7 @@ from operations.log import LogTransformOp
 from operations.import_op import ImportOp, Tube
 from operations.autofluorescence import AutofluorescenceOp
 from operations.bleedthrough_piecewise import BleedthroughPiecewiseOp
+from operations.bead_calibration import BeadCalibrationOp
 
 from views.histogram import HistogramView
 from views.hexbin import HexbinView
