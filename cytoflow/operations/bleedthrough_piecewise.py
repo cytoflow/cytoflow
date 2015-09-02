@@ -40,10 +40,8 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
         the source channel; the second key is the destination channel; and
         and the value is the spline representing the bleedthrough.  So,
         ``bleedthrough['FITC-A']['PE-A']`` is the bleedthrough *from* the
-        `FITC-A` channel *to* the `PE-A` channel.
-        
-    blank_file : File
-        FCS file with blank cells.  Must be set to use `estimate()`.
+        `FITC-A` channel *to* the `PE-A` channel.  This is filled by 
+        `estimate()`
     
     controls : Dict(Str, File)
         The channel names to correct, and corresponding single-color control
@@ -62,8 +60,7 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
     name = CStr()
 
     bleedthrough = Dict(Str, Dict(Str, Python))
-    
-    blank_file = File(transient = True)
+
     controls = Dict(Str, File, transient = True)
     num_knots = Int(5, transient = True)
     
@@ -93,28 +90,6 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
             raise RuntimeError("Need to allow at least 3 knots in the spline")
         
         channels = self.controls.keys()
-        
-        # make sure the voltages are all in order
-        
-        blank_tube = fc.FCMeasurement(ID='blank', datafile = self.blank_file)
-        
-        try:
-            blank_tube.read_meta()
-        except Exception:
-            raise RuntimeError("FCS reader threw an error on tube {0}".format(self.blank_file))
-
-        for channel in channels:
-            exp_v = experiment.metadata[channel]['voltage']
-        
-            if not "$PnV" in blank_tube.channels:
-                raise RuntimeError("Didn't find a voltage for channel {0}" \
-                                   "in tube {1}".format(channel, blank_tube.datafile))
-            
-            control_v = blank_tube.channels[blank_tube.channels['$PnN'] == channel]['$PnV'].iloc[0]
-            
-            if control_v != exp_v:
-                raise RuntimeError("Voltage differs for channel {0} in tube {1}"
-                                   .format(channel, self.controls[channel]))
     
         for channel in channels:       
             tube = fc.FCMeasurement(ID=channel, datafile = self.controls[channel])
@@ -136,12 +111,6 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
                 if control_v != exp_v:
                     raise RuntimeError("Voltage differs for channel {0} in tube {1}"
                                        .format(channel, self.controls[channel]))
-            
-            self.voltage[channel] = experiment.metadata[channel]['voltage']
-
-        blank_af = {}
-        for channel in channels:
-            blank_af[channel] = np.median(blank_tube.data[channel])
 
         self.bleedthrough = {}
 
@@ -151,10 +120,10 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
             tube = fc.FCMeasurement(ID=from_channel, datafile = self.controls[from_channel])
             data = tube.data.sort(from_channel)
             
-            # i'm not sure about this -- but it cleans up the plots wonderfully
             for channel in channels:
-                #data = data[data[channel] > 1]
-                data[channel] = data[channel] - blank_af[channel]
+                if 'af_median' in experiment.metadata[channel]:
+                    data[channel] = data[channel] - \
+                                    experiment.metadata[channel]['af_median']
 
             channel_min = data[from_channel].min()
             channel_max = data[from_channel].max()
@@ -187,37 +156,22 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
         -------
             a new experiment with the bleedthrough subtracted out.
         """
-        
-        def correct_bleedthrough(row, channels):
-            idx = {channel : idx for idx, channel in enumerate(channels)}
-            
-            def err_channel(x, channel):
-                ret = row[channel] - x[idx[channel]]
-                for from_channel in [c for c in channels if c != channel]:
-                    ret -= self.bleedthrough[from_channel][channel] \
-                                            (x[idx[from_channel]])
-                return ret
-            
-            def err_bld(x):
-                ret = [err_channel(x, channel) for channel in channels]
-                return ret
-            
-            x_0 = row.loc[channels].convert_objects(convert_numeric = True)
-            x = scipy.optimize.root(err_bld, x_0)
-            
-            ret = row.copy()
-            for idx, channel in enumerate(channels):
-                ret[channel] = x.x[idx]
-                
-            return ret
-        
+
         channels = self.bleedthrough.keys()
         old_data = old_experiment.data[channels].copy()
-        new_data = old_data.apply(correct_bleedthrough, axis = 1, args = ([channels]))
+        new_data = old_data.apply(correct_bleedthrough, 
+                                  axis = 1, 
+                                  args = ([channels, self.bleedthrough]))
                 
         new_experiment = old_experiment.clone()
+        
         for channel in channels:
             new_experiment[channel] = new_data[channel]
+            
+            # add the correction splines to the experiment metadata so we can 
+            # correct other controls later on
+            new_experiment.metadata[channel]['piecewise_bleedthrough'] = \
+                self.bleedthrough[channel]
 
         return new_experiment
     
@@ -246,6 +200,29 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
                 raise RuntimeError("FCS reader threw an error on tube {0}".format(self.controls[channel]))
         
         return BleedthroughPiecewiseDiagnostic(op = self)
+    
+# move this up to module-level so we can re-use it in other contexts        
+def correct_bleedthrough(row, channels, splines):
+    idx = {channel : idx for idx, channel in enumerate(channels)}
+    
+    def channel_error(x, channel):
+        ret = row[channel] - x[idx[channel]]
+        for from_channel in [c for c in channels if c != channel]:
+            ret -= splines[from_channel][channel](x[idx[from_channel]])
+        return ret
+    
+    def row_error(x):
+        ret = [channel_error(x, channel) for channel in channels]
+        return ret
+    
+    x_0 = row.loc[channels].convert_objects(convert_numeric = True)
+    x = scipy.optimize.root(row_error, x_0)
+    
+    ret = row.copy()
+    for idx, channel in enumerate(channels):
+        ret[channel] = x.x[idx]
+        
+    return ret
         
 @provides(IView)
 class BleedthroughPiecewiseDiagnostic(HasStrictTraits):

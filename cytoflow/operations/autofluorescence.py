@@ -1,6 +1,7 @@
 from __future__ import division
 
-from traits.api import HasStrictTraits, Str, CStr, CFloat, File, Dict, Instance, Python
+from traits.api import HasStrictTraits, Str, CStr, CFloat, File, Dict, \
+                       Instance, List
 import numpy as np
 import matplotlib as mpl
 from traits.has_traits import provides
@@ -13,21 +14,23 @@ class AutofluorescenceOp(HasStrictTraits):
     """
     Apply autofluorescence correction to a set of fluorescence channels.
     
-    If using known autofluorescence values, simply set up the *autofluorescence*
-    dict and then apply().
-    
-    If estimating, set up the *autofluorescence* dict with the channels to
-    estimate and arbitrary values; set the *blank_file* property, and call
-    *estimate()*.
+    To use, set the `blank_file` property to point to an FCS file with
+    unstained or unfluorescent cells in it; set the `channels` property to a 
+    list of channels to correct; and call `estimate()`, then `apply()`.
     
     Attributes
     ----------
     name : Str
         The operation name (for UI representation.)
         
-    autofluorescence : Dict(Str, Float)
-        The channel names to correct, and the corresponding autofluorescence
-        values.
+    channels : List(Str)
+        The channels to correct.  Must be set to run `estimate()`.
+
+    af_median: Dict(Str, Float)
+        The autofluorescence medians.
+        
+    af_stdev: Dict(Str, Float)
+        The autofluorescence standard deviations.
         
     blank_file : File
         The filename of a file with "blank" cells (not fluorescent).  Used
@@ -39,7 +42,9 @@ class AutofluorescenceOp(HasStrictTraits):
     friendly_id = "Autofluorescence correction"
     
     name = CStr()
-    autofluorescence = Dict(Str, CFloat)
+    channels = List(Str)
+    af_median = Dict(Str, CFloat)
+    af_stdev = Dict(Str, CFloat)
     
     blank_file = File(filter = "*.fcs", exists = True, transient = True)
     
@@ -49,19 +54,27 @@ class AutofluorescenceOp(HasStrictTraits):
         if not self.name:
             return False
         
-        if not set(self.autofluorescence.keys()).issubset(set(experiment.channels)):
+        if not set(self.af_median.keys()) <= set(experiment.channels):
             return False
         
-        for _, value in self.autofluorescence.iteritems():
-            if value == 0.0:
-                return False
+        if not set(self.af_stdev.keys()) <= set(experiment.channels):
+            return False
         
+        if not set(self.af_median.keys()) == set(self.af_stdev.keys()):
+            return False
+        
+        if not set(self.channels) == set(self.af_median.keys()):
+            return False
+
         return True
     
     def estimate(self, experiment, subset = None): 
         """
         Estimate the autofluorescence from *blank_file*
         """
+        
+        if not set(self.channels) <= set(experiment.channels):
+            raise RuntimeError("Specified bad channels")
 
         # don't have to validate that blank_file exists; should crap out on 
         # trying to set a bad value
@@ -89,7 +102,8 @@ class AutofluorescenceOp(HasStrictTraits):
                 raise RuntimeError("Voltage differs for channel {0}".format(channel)) 
        
         for channel in self.autofluorescence.keys():
-            self.autofluorescence[channel] = np.median(blank_tube.data[channel])     
+            self.af_median[channel] = np.median(blank_tube.data[channel])
+            self.af_stdev[channel] = np.std(blank_tube.data[channel])    
                 
     def apply(self, old_experiment):
         """Applies the threshold to an experiment.
@@ -107,9 +121,17 @@ class AutofluorescenceOp(HasStrictTraits):
         
         new_experiment = old_experiment.clone()
                 
-        for channel in self.autofluorescence.keys():
-            new_experiment[channel] = old_experiment[channel] - \
-                                      self.autofluorescence[channel]
+        for channel in self.channels:
+            new_experiment[channel] = \
+                old_experiment[channel] - self.af_median[channel]
+                
+            # add the AF values to the channel's metadata, so we can correct
+            # other controls (etc) later on
+            new_experiment.metadata[channel]['af_median'] = \
+                self.af_median[channel]
+                
+            new_experiment.metadata[channel]['af_stdev'] = \
+                self.af_stdev[channel]
 
         return new_experiment
     
