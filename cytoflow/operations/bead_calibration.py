@@ -165,11 +165,11 @@ class BeadCalibrationOp(HasStrictTraits):
                 raise RuntimeError("Found too many peaks; check the diagnostic plot")
             elif len(peaks) == 1:
                 # if we only have one peak, assume it's the brightest peak
-                self.calibration[channel] = mef[-1] / peaks[0] 
+                self.calibration[channel] = [mef[-1] / peaks[0]] 
             elif len(peaks) == 2:
                 # if we have only two peaks, assume they're the brightest two
                 self.calibration[channel] = \
-                    (mef[-1] - mef[-2]) / (peaks[1] - peaks[0])
+                    [(mef[-1] - mef[-2]) / (peaks[1] - peaks[0])]
             else:
                 # if there are n > 2 peaks, check all the contiguous n-subsets
                 # of mef for the one whose linear regression with the peaks
@@ -214,7 +214,7 @@ class BeadCalibrationOp(HasStrictTraits):
         for channel in channels:
             if len(self.calibration[channel]) == 1:
                 # plain old multiplication
-                a = self.calibration[channel]
+                a = self.calibration[channel][0]
                 new_experiment[channel] = old_experiment[channel] * a
             else:
                 a = self.calibration[channel][0]
@@ -340,6 +340,3 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
         """Validate this view against an experiment."""
         
         return self.op.is_valid(experiment)
-
-    
-
