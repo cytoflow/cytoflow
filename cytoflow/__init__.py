@@ -24,6 +24,7 @@ from operations.import_op import ImportOp, Tube
 from operations.autofluorescence import AutofluorescenceOp
 from operations.bleedthrough_piecewise import BleedthroughPiecewiseOp
 from operations.bead_calibration import BeadCalibrationOp
+from operations.color_translation import ColorTranslationOp
 
 from views.histogram import HistogramView
 from views.hexbin import HexbinView
