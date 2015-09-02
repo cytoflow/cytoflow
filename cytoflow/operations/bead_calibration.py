@@ -137,11 +137,17 @@ class BeadCalibrationOp(HasStrictTraits):
             hist_bins = np.logspace(1, math.log(data_range, 2), num = 256, base = 2)
             hist = np.histogram(data, bins = hist_bins)
             
+            # mask off-scale values
+            hist[0][0] = 0
+            hist[0][-1] = 0
+            
             # smooth it with a Savitzky-Golay filter
             hist_smooth = scipy.signal.savgol_filter(hist[0], 5, 1)
             
             # find peaks
-            peak_bins = scipy.signal.find_peaks_cwt(hist_smooth, widths = np.arange(5, 10))
+            peak_bins = scipy.signal.find_peaks_cwt(hist_smooth, 
+                                                    widths = np.arange(3, 20),
+                                                    max_distances = np.arange(3, 20) / 2)
             
             # filter by height and intensity
             peak_threshold = np.percentile(hist_smooth, self.bead_peak_quantile)
@@ -316,11 +322,16 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
             hist_bins = np.logspace(1, math.log(data_range, 2), num = 256, base = 2)
             hist = np.histogram(data, bins = hist_bins)
             
+            # mask off-scale values
+            hist[0][0] = 0
+            hist[0][-1] = 0
+            
             hist_smooth = scipy.signal.savgol_filter(hist[0], 5, 1)
             
             # find peaks
             peak_bins = scipy.signal.find_peaks_cwt(hist_smooth, 
-                                                    widths = np.arange(5, 10))
+                                                    widths = np.arange(3, 20),
+                                                    max_distances = np.arange(3, 20) / 2)
             
             # filter by height and intensity
             peak_threshold = np.percentile(hist_smooth, self.op.bead_peak_quantile)
