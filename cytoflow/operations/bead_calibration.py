@@ -7,16 +7,14 @@ Created on Aug 31, 2015
 
 from __future__ import division
 
-from traits.api import HasStrictTraits, Str, CStr, CInt, File, Dict, Python, \
-                       Instance, Int, CFloat, List, Float
+from traits.api import HasStrictTraits, Str, CStr, File, Dict, Python, \
+                       Instance, Int, List, Float
 import numpy as np
 from traits.has_traits import provides
 from cytoflow.operations.i_operation import IOperation
 from ..views import IView
 import FlowCytometryTools as fc
 import math
-import scipy.interpolate
-import scipy.optimize
 import scipy.signal
 from statsmodels.tsa.tests.results.arima111_css_results import resid
 
