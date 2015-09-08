@@ -16,7 +16,6 @@ from ..views import IView
 import FlowCytometryTools as fc
 import math
 import scipy.signal
-from statsmodels.tsa.tests.results.arima111_css_results import resid
 
 @provides(IOperation)
 class BeadCalibrationOp(HasStrictTraits):
