@@ -3,7 +3,6 @@ from __future__ import division
 from traits.api import HasStrictTraits, Str, CStr, CFloat, File, Dict, \
                        Instance, List
 import numpy as np
-import matplotlib as mpl
 from traits.has_traits import provides
 from cytoflow.operations.i_operation import IOperation
 import FlowCytometryTools as fc
@@ -89,7 +88,7 @@ class AutofluorescenceOp(HasStrictTraits):
         except Exception:
             raise RuntimeError("FCS reader threw an error!")
         
-        for channel in self.autofluorescence.keys():
+        for channel in self.channels:
             v = experiment.metadata[channel]['voltage']
             
             if not "$PnV" in blank_tube.channels:
@@ -101,7 +100,7 @@ class AutofluorescenceOp(HasStrictTraits):
             if blank_v != v:
                 raise RuntimeError("Voltage differs for channel {0}".format(channel)) 
        
-        for channel in self.autofluorescence.keys():
+        for channel in self.channels:
             self.af_median[channel] = np.median(blank_tube.data[channel])
             self.af_stdev[channel] = np.std(blank_tube.data[channel])    
                 
@@ -167,6 +166,7 @@ class AutofluorescenceDiagnosticView(HasStrictTraits):
         """Plot a faceted histogram view of a channel"""
         
         import matplotlib.pyplot as plt
+        import seaborn as sns
         
         kwargs.setdefault('histtype', 'stepfilled')
         kwargs.setdefault('alpha', 0.5)
@@ -174,15 +174,14 @@ class AutofluorescenceDiagnosticView(HasStrictTraits):
         
         tube = fc.FCMeasurement(ID="blank", datafile = self.op.blank_file)    
         plt.figure()
-        channels = self.op.autofluorescence.keys()
         
-        for idx, channel in enumerate(channels):
+        for idx, channel in enumerate(self.op.channels):
             d = tube.data[channel]
-            plt.subplot(len(channels), 1, idx+1)
+            plt.subplot(len(self.op.channels), 1, idx+1)
             plt.title(channel)
             plt.hist(d, bins = 200)
             
-            plt.axvline(self.op.autofluorescence[channel], color = 'r')
+            plt.axvline(self.op.af_median[channel], color = 'r')
                     
     def is_valid(self, experiment):
         """Validate this view against an experiment."""
