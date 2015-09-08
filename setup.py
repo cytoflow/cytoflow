@@ -44,6 +44,7 @@ setup(
                         'FlowCytometryTools>=0.4',
                         'numexpr>=2.1',
                         'matplotlib>=1.4.3',
+                        'scipy>=0.14',
                         'scikit-learn>=0.16',
                         'seaborn>=0.6.0',
                         'pyface>=4.0',
