@@ -4,7 +4,7 @@ Created on Mar 20, 2015
 @author: brian
 '''
 from traits.api import HasStrictTraits, provides, Str, List, Bool, Int, Any, \
-                       Dict 
+                       Dict, File
 from cytoflow.operations.i_operation import IOperation
 from cytoflow import Experiment
 import FlowCytometryTools as fc
@@ -24,7 +24,7 @@ class Tube(HasStrictTraits):
     # file and conditions are not optional.  (-:
     
     # the file name for the FCS file to import
-    file = Str
+    file = File
     
     # a dict of experimental conditions: name --> value
     conditions = Dict(Str, Any)
