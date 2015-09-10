@@ -47,6 +47,8 @@ class ColorTranslationOp(HasStrictTraits):
         pairs in `translation`).  They values are FCS files containing two-color 
         constitutive fluorescent expression for the mapping.
         
+    
+        
     coefficients : Dict((Str, Str), List(Float))
         The regression coefficients determined by `estimate()`, used to map 
         colors between channels.  The keys are tuples of (*from-channel*,
@@ -128,8 +130,8 @@ class ColorTranslationOp(HasStrictTraits):
                               args = ([splines.keys(), splines]))
             
             plt.figure()
-            plt.xscale('log', nonposx='clip')
-            plt.yscale('log', nonposy='clip')
+            plt.xscale('log', nonposx='mask')
+            plt.yscale('log', nonposy='mask')
             plt.xlim(1, 10**6)
             plt.ylim(1, 10**6)
             
