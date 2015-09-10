@@ -26,10 +26,10 @@ class AutofluorescenceOp(HasStrictTraits):
         The channels to correct.  Must be set to run `estimate()`.
 
     af_median: Dict(Str, Float)
-        The autofluorescence medians.
+        Keys are channels; values are the autofluorescence medians.
         
     af_stdev: Dict(Str, Float)
-        The autofluorescence standard deviations.
+        Keys are channels; values are the autofluorescence standard deviations.
         
     blank_file : File
         The filename of a file with "blank" cells (not fluorescent).  Used
