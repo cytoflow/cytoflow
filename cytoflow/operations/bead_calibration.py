@@ -250,7 +250,6 @@ class BeadCalibrationOp(HasStrictTraits):
             beads_tube.read_meta()
         except Exception:
             raise RuntimeError("FCS reader threw an error on tube {0}".format(self.beads_file))
-        
 
         return BeadCalibrationDiagnostic(op = self)
     
@@ -309,6 +308,7 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
                                       datafile = self.op.beads_file)
         
         import matplotlib.pyplot as plt
+        import seaborn
         
         kwargs.setdefault('histtype', 'stepfilled')
         kwargs.setdefault('alpha', 0.5)
@@ -346,7 +346,7 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
             plt.subplot(len(channels), 1, idx+1)
             plt.xscale('log')
             plt.xlabel(channel)
-            plt.plot(hist_bins[1:], hist_smooth)
+            plt.plot(hist_bins[1:], hist_smooth, kwargs)
             for peak in peak_bins_filtered:
                 plt.axvline(hist_bins[peak], color = 'r')
             
