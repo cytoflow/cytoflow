@@ -228,7 +228,7 @@ class BeadCalibrationOp(HasStrictTraits):
                 calibration_fn = lambda x, a=a, b=b: b * (x ** a)
     
             new_experiment[channel] = calibration_fn(old_experiment[channel])
-            new_experiment.metadata[channel]['calibration'] = calibration_fn
+            new_experiment.metadata[channel]['bead_calibration_fn'] = calibration_fn
             new_experiment.metadata[channel]['units'] = self.units[channel]
             
         return new_experiment
