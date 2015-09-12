@@ -13,7 +13,6 @@ from traits.has_traits import provides
 from cytoflow.operations.i_operation import IOperation
 import FlowCytometryTools as fc
 import matplotlib.pyplot as plt
-import seaborn
 import math
 
 import sklearn.mixture
@@ -49,7 +48,8 @@ class ColorTranslationOp(HasStrictTraits):
         constitutive fluorescent expression for the mapping.
         
     subset : Int (default = 30,000)
-        How many cells from each control file to take.
+        How many cells from each control file to use to estimate the 
+        translation coefficients.
         
     mixture_model : Bool (default = False)
         If "True", try to model the "from" channel as a mixture of expressing
@@ -75,6 +75,7 @@ class ColorTranslationOp(HasStrictTraits):
     subset = Int(10000, transient = True)
     mixture_model = Bool(False, transient = True)
 
+    # TODO - why can't i make the value List(Float)?
     coefficients = Dict(Tuple(Str, Str), Python)
     
     def is_valid(self, experiment):
@@ -170,7 +171,7 @@ class ColorTranslationOp(HasStrictTraits):
 
 
     def apply(self, old_experiment):
-        """Applies the bleedthrough correction to an experiment.
+        """Applies the color translation to an experiment
         
         Parameters
         ----------
@@ -179,10 +180,22 @@ class ColorTranslationOp(HasStrictTraits):
             
         Returns
         -------
-            a new experiment with the bleedthrough subtracted out.
+            a new experiment with the color translation applied.
         """
 
         new_experiment = old_experiment.clone()
+        for from_channel, to_channel in self.translation.iteritems():
+            coeff = self.coefficients[(from_channel, to_channel)]
+            
+            # remember, the (linear) coefficients come from logspace, so
+            # the translation is y = a * x ^ b
+            a = coeff[0]
+            b = coeff[1]
+            trans_fn = lambda x, a=a, b=b: b * (x ** a)
+            
+            new_experiment[from_channel] = trans_fn(old_experiment[from_channel])
+            new_experiment.metadata[from_channel]['channel_translation_fn'] = trans_fn
+            new_experiment.metadata[from_channel]['channel_translation'] = to_channel
 
         return new_experiment
     
@@ -271,9 +284,10 @@ class ColorTranslationDiagnostic(HasStrictTraits):
                            for channel in experiment.channels
                            if 'piecewise_bleedthrough' in experiment.metadata[channel]}    
                 
-                tube_data = tube_data.apply(correct_bleedthrough,
-                                  axis = 1,
-                                  args = ([splines.keys(), splines]))
+                if splines:
+                    tube_data = tube_data.apply(correct_bleedthrough,
+                                                axis = 1,
+                                                args = ([splines.keys(), splines]))
                 
                 tubes[tube_file] = tube_data
                 
