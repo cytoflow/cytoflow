@@ -7,16 +7,21 @@ Created on Aug 26, 2015
 from __future__ import division
 
 from traits.api import HasStrictTraits, Str, CStr, CInt, File, Dict, Python, \
-                       Instance, Int, CFloat
+                       Instance, Int, CFloat, List
 import numpy as np
 from traits.has_traits import provides
 from cytoflow.operations.i_operation import IOperation
+from cytoflow.utility.util import cartesian
 import FlowCytometryTools as fc
 import math
 import scipy.interpolate
 import scipy.optimize
+import pandas
+
+from FlowCytometryTools.core.transforms import hlog, hlog_inv
 
 from ..views import IView
+import FlowCytometryTools
 
 @provides(IOperation)
 class BleedthroughPiecewiseOp(HasStrictTraits):
@@ -24,7 +29,7 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
     Apply bleedthrough correction to a set of fluorescence channels.
     
     To use, set up the `controls` dict with the single color controls; 
-    call `estimate()` to populate `bleedthrough`; check that the bleedthrough 
+    call `estimate()` to parameterize the operation; check that the bleedthrough 
     plots look good with `default_view`(); and then `apply()` to an Experiment.
     
     **WARNING THIS CODE IS WILDLY INEFFICIENT AND TAKES A VERY LONG TIME**
@@ -34,14 +39,6 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
     ----------
     name : Str
         The operation name (for UI representation.)
-        
-    bleedthrough : Dict(Str, Dict(Str, scipy.interpolate.LSQUnivariateSpline))
-        The splines to do the bleedthrough correction.  The first key is
-        the source channel; the second key is the destination channel; and
-        and the value is the spline representing the bleedthrough.  So,
-        ``bleedthrough['FITC-A']['PE-A']`` is the bleedthrough *from* the
-        `FITC-A` channel *to* the `PE-A` channel.  This is filled by 
-        `estimate()`
     
     controls : Dict(Str, File)
         The channel names to correct, and corresponding single-color control
@@ -51,6 +48,22 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
     num_knots : Int (default = 7)
         The number of internal control points to estimate, spaced log-evenly
         from 0 to the range of the channel.  Must be set to use `estimate()`.
+        
+    mesh_size : Int (default = 32)
+        The size of each axis in the mesh used to interpolate corrected values.
+        
+    Notes
+    -----
+    We use an interpolation-based scheme to estimate corrected bleedthrough.
+    The algorithm is as follows:
+     - Fit a piecewise-linear spline to each single-color control's bleedthrough
+       into other channels.   
+     - At each point on a regular mesh spanning the entire range of the
+       instrument, estimate the mapping from (raw colors) --> (actual colors).
+       This is quite slow.
+     - Use these estimates to paramaterize a linear interpolator (in log space).
+       There's one interpolator per output channel.  For each measured cell,
+       run each interpolator to give the corrected output.
     """
     
     # traits
@@ -59,10 +72,16 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
     
     name = CStr()
 
-    bleedthrough = Dict(Str, Dict(Str, Python))
+    controls = Dict(Str, File)
+    num_knots = Int(7)
+    mesh_size = Int(32)
 
-    controls = Dict(Str, File, transient = True)
-    num_knots = Int(5, transient = True)
+    _splines = Dict(Str, Dict(Str, Python))
+    _interpolators = Dict(Str, Python)
+    
+    # because the order of the channels is important, we can't just call
+    # _interpolators.keys()
+    _channels = List(Str)
     
     def is_valid(self, experiment):
         """Validate this operation against an experiment."""
@@ -73,10 +92,10 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
         # NOTE: these conditions are for applying the correction, NOT estimating
         # the correction from controls.
         
-        if not self.bleedthrough:
+        if not self._interpolators:
             return False
         
-        if not set(self.bleedthrough.keys()) <= set(experiment.channels):
+        if not set(self._interpolators.keys()) <= set(experiment.channels):
             return False
        
         return True
@@ -89,9 +108,9 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
         if self.num_knots < 3:
             raise RuntimeError("Need to allow at least 3 knots in the spline")
         
-        channels = self.controls.keys()
+        self._channels = self.controls.keys()
     
-        for channel in channels:       
+        for channel in self._channels:       
             tube = fc.FCMeasurement(ID=channel, datafile = self.controls[channel])
             
             try:
@@ -99,7 +118,7 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
             except Exception:
                 raise RuntimeError("FCS reader threw an error on tube {0}".format(self.controls[channel]))
 
-            for channel in channels:
+            for channel in self._channels:
                 exp_v = experiment.metadata[channel]['voltage']
             
                 if not "$PnV" in tube.channels:
@@ -112,37 +131,86 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
                     raise RuntimeError("Voltage differs for channel {0} in tube {1}"
                                        .format(channel, self.controls[channel]))
 
-        self.bleedthrough = {}
+        self._splines = {}
+        mesh_axes = []
 
-        for from_channel in channels:
-            self.bleedthrough[from_channel] = {}
+        for channel in self._channels:
+            self._splines[channel] = {}
             
-            tube = fc.FCMeasurement(ID=from_channel, datafile = self.controls[from_channel])
-            data = tube.data.sort(from_channel)
-            
-            for channel in channels:
-                if 'af_median' in experiment.metadata[channel]:
-                    data[channel] = data[channel] - \
-                                    experiment.metadata[channel]['af_median']
+            tube = fc.FCMeasurement(ID=channel, datafile = self.controls[channel])
+            data = tube.data.sort(channel)
 
-            channel_min = data[from_channel].min()
-            channel_max = data[from_channel].max()
+            for af_channel in self._channels:
+                if 'af_median' in experiment.metadata[af_channel]:
+                    data[af_channel] = data[af_channel] - \
+                                    experiment.metadata[af_channel]['af_median']
 
-            r = experiment.metadata[from_channel]['range']
-            knots = np.logspace(1, math.log(r, 2), num=self.num_knots, base = 2)
-            knots = [k for k in knots if k > channel_min and k < channel_max]
+            channel_min = data[channel].min()
+            channel_max = data[channel].max()
             
-            for to_channel in channels:
+            # we're going to set the knots and splines evenly across the hlog-
+            # transformed data, so as to capture both the "linear" aspect
+            # of near-0 and negative values, and the "log" aspect of large
+            # values
+
+            # parameterize the hlog transform
+            r = experiment.metadata[channel]['range']  # instrument range
+            d = np.log10(r)  # maximum display scale, in decades
+            
+            # the transition point from linear --> log scale
+            # use half of the log-transformed scale as "linear".
+            b = 2 ** (np.log2(r) / 2)
+            
+            # the splines' knots
+            knot_min = channel_min
+            knot_max = channel_max
+            
+            hlog_knot_min, hlog_knot_max = \
+                hlog((knot_min, knot_max), b = b, r = r, d = d)
+            hlog_knots = np.linspace(hlog_knot_min, hlog_knot_max, self.num_knots)
+            knots = hlog_inv(hlog_knots, b = b, r = r, d = d)
+            
+            # only keep the interior knots
+            knots = knots[1:-1] 
+            
+            # the interpolators' mesh            
+            mesh_min = -3 * experiment.metadata[channel]['af_stdev']
+            mesh_max = r
+                
+            hlog_mesh_min, hlog_mesh_max = \
+                hlog((mesh_min, mesh_max), b = b, r = r, d = d)
+            hlog_mesh_axis = \
+                np.linspace(hlog_mesh_min, hlog_mesh_max, self.mesh_size)
+            
+            mesh_axis = hlog_inv(hlog_mesh_axis, b = b, r = r, d = d)
+            mesh_axes.append(mesh_axis)
+            
+            for to_channel in self._channels:
+                from_channel = channel
                 if from_channel == to_channel:
                     continue
                 
-                self.bleedthrough[from_channel][to_channel] = \
+                self._splines[from_channel][to_channel] = \
                     scipy.interpolate.LSQUnivariateSpline(data[from_channel].values,
                                                           data[to_channel].values,
                                                           t = knots,
                                                           k = 1)
-                    
-                # TODO - some sort of validity checking.
+         
+        
+        mesh = pandas.DataFrame(cartesian(mesh_axes), 
+                                columns = [x for x in self._channels])
+         
+        mesh_corrected = mesh.apply(_correct_bleedthrough,
+                                    axis = 1,
+                                    args = ([[x for x in self._channels], 
+                                             self._splines]))
+        
+        for channel in self._channels:
+            chan_values = np.reshape(mesh_corrected[channel], [len(x) for x in mesh_axes])
+            self._interpolators[channel] = \
+                scipy.interpolate.RegularGridInterpolator(mesh_axes, chan_values)
+
+        # TODO - some sort of validity checking.
 
     def apply(self, old_experiment):
         """Applies the bleedthrough correction to an experiment.
@@ -157,21 +225,26 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
             a new experiment with the bleedthrough subtracted out.
         """
 
-        channels = self.bleedthrough.keys()
-        old_data = old_experiment.data[channels].copy()
-        new_data = old_data.apply(correct_bleedthrough, 
-                                  axis = 1, 
-                                  args = ([channels, self.bleedthrough]))
-                
         new_experiment = old_experiment.clone()
         
-        for channel in channels:
-            new_experiment[channel] = new_data[channel]
+        # get rid of data outside of the interpolators' mesh 
+        # (-3 * autofluorescence sigma )
+        for channel in self._channels:
+            af_stdev = new_experiment.metadata[channel]['af_stdev']
+            new_experiment.data = \
+                new_experiment.data[new_experiment.data[channel] > -3 * af_stdev]
+        
+        new_experiment.data.reset_index(drop = True, inplace = True)
+        
+        old_data = new_experiment.data[self._channels]
+        
+        for channel in self._channels:
+            new_experiment[channel] = self._interpolators[channel](old_data)
             
             # add the correction splines to the experiment metadata so we can 
             # correct other controls later on
             new_experiment.metadata[channel]['piecewise_bleedthrough'] = \
-                self.bleedthrough[channel]
+                self._interpolators[channel]
 
         return new_experiment
     
@@ -185,7 +258,7 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
             IView : An IView, call plot() to see the diagnostic plots
         """
         
-        if set(self.controls.keys()) != set(self.bleedthrough.keys()):
+        if set(self.controls.keys()) != set(self._splines.keys()):
             raise "Must have both the controls and bleedthrough to plot" 
  
         channels = self.controls.keys()
@@ -201,8 +274,8 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
         
         return BleedthroughPiecewiseDiagnostic(op = self)
     
-# move this up to module-level so we can re-use it in other contexts        
-def correct_bleedthrough(row, channels, splines):
+# module-level "static" function (doesn't require a class instance
+def _correct_bleedthrough(row, channels, splines):
     idx = {channel : idx for idx, channel in enumerate(channels)}
     
     def channel_error(x, channel):
@@ -260,7 +333,7 @@ class BleedthroughPiecewiseDiagnostic(HasStrictTraits):
          
         plt.figure()
         
-        channels = self.op.bleedthrough.keys()
+        channels = self.op._splines.keys()
         num_channels = len(channels)
         
         for from_idx, from_channel in enumerate(channels):
@@ -284,7 +357,7 @@ class BleedthroughPiecewiseDiagnostic(HasStrictTraits):
                             s = 1,
                             marker = 'o')
                 
-                spline = self.op.bleedthrough[from_channel][to_channel]
+                spline = self.op._splines[from_channel][to_channel]
                 xs = np.logspace(-1, math.log(tube.data[from_channel].max(), 10))
             
                 plt.plot(xs, 
