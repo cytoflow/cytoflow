@@ -72,10 +72,13 @@ class HistogramView(HasStrictTraits):
         bins = np.arange(xmin, xmax, bin_width)
         kwargs.setdefault('bins', bins) 
 
+        # TODO - convince seaborn to sort by numeric facets?
+
         g = sns.FacetGrid(x, 
                           col = (self.xfacet if self.xfacet else None),
                           row = (self.yfacet if self.yfacet else None),
                           hue = (self.huefacet if self.huefacet else None),
+                          hue_order = (np.sort(x[self.huefacet].unique()) if self.huefacet else None),
                           legend_out = False)
         
         g.map(plt.hist, self.channel, **kwargs)
