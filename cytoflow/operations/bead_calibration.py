@@ -215,6 +215,17 @@ class BeadCalibrationOp(HasStrictTraits):
         channels = self.calibration.keys()
         new_experiment = old_experiment.clone()
         
+        # two things.  first, you can't raise a negative value to a non-integer
+        # power.  second, negative physical units don't make sense -- how can
+        # you have the equivalent of -5 molecules of fluoresceine?  so,
+        # we filter out negative values here.
+        
+        for channel in channels:
+            new_experiment.data = \
+                new_experiment.data[new_experiment.data[channel] > 0]
+                
+        new_experiment.data.reset_index(drop = True, inplace = True)
+        
         for channel in channels:
             if len(self.calibration[channel]) == 1:
                 # plain old multiplication
@@ -225,9 +236,9 @@ class BeadCalibrationOp(HasStrictTraits):
                 # the translation is y = a * x ^ b
                 a = self.calibration[channel][0]
                 b = self.calibration[channel][1]
-                calibration_fn = lambda x, a=a, b=b: b * (x ** a)
+                calibration_fn = lambda x, a=a, b=b: b * np.power(x, a)
     
-            new_experiment[channel] = calibration_fn(old_experiment[channel])
+            new_experiment[channel] = calibration_fn(new_experiment[channel])
             new_experiment.metadata[channel]['bead_calibration_fn'] = calibration_fn
             new_experiment.metadata[channel]['units'] = self.units[channel]
             
