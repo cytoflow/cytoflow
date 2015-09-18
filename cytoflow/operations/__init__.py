@@ -17,3 +17,5 @@ from log import LogTransformOp
 from bleedthrough_piecewise import BleedthroughPiecewiseOp
 from bead_calibration import BeadCalibrationOp
 from color_translation import ColorTranslationOp
+
+from binning import BinningOp
