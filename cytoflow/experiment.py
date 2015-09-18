@@ -279,7 +279,7 @@ class Experiment(HasStrictTraits):
                                            meta_type))
         
         self._tube_conditions.add(frozenset(conditions.iteritems()))
-        self.data = self.data.append(new_data)
+        self.data = self.data.append(new_data, ignore_index = True)
         del new_data
         
         # TODO - figure out if we can actually delete the original tube's data
