@@ -179,7 +179,7 @@ class AutofluorescenceDiagnosticView(HasStrictTraits):
             d = tube.data[channel]
             plt.subplot(len(self.op.channels), 1, idx+1)
             plt.title(channel)
-            plt.hist(d, bins = 200)
+            plt.hist(d, bins = 200, **kwargs)
             
             plt.axvline(self.op.af_median[channel], color = 'r')
                     
