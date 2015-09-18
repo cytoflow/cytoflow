@@ -18,7 +18,6 @@ import math
 import sklearn.mixture
 
 from ..views import IView
-from bleedthrough_piecewise import correct_bleedthrough
 
 @provides(IOperation)
 class ColorTranslationOp(HasStrictTraits):
@@ -47,21 +46,13 @@ class ColorTranslationOp(HasStrictTraits):
         pairs in `translation`).  They values are FCS files containing two-color 
         constitutive fluorescent expression for the mapping.
         
-    subset : Int (default = 30,000)
-        How many cells from each control file to use to estimate the 
-        translation coefficients.
-        
     mixture_model : Bool (default = False)
         If "True", try to model the "from" channel as a mixture of expressing
         cells and non-expressing cells (as you would get with a transient
         transfection.)  Make sure you check the diagnostic plots!
         
     coefficients : Dict((Str, Str), List(Float))
-        The regression coefficients determined by `estimate()`, used to map 
-        colors between channels.  The keys are tuples of (*from-channel*,
-        *to-channel) (corresponding to key-value pairs in `translation`).  The
-        values are lists of Float, the log-log coefficients for the color 
-        translation (determined by `estimate()`).        
+       
     """
     
     # traits
@@ -72,11 +63,15 @@ class ColorTranslationOp(HasStrictTraits):
 
     translation = Dict(Str, Str)
     controls = Dict(Tuple(Str, Str), File, transient = True)
-    subset = Int(10000, transient = True)
     mixture_model = Bool(False, transient = True)
 
+    # The regression coefficients determined by `estimate()`, used to map 
+    # colors between channels.  The keys are tuples of (*from-channel*,
+    # *to-channel) (corresponding to key-value pairs in `translation`).  The
+    # values are lists of Float, the log-log coefficients for the color 
+    # translation (determined by `estimate()`). 
     # TODO - why can't i make the value List(Float)?
-    coefficients = Dict(Tuple(Str, Str), Python)
+    _coefficients = Dict(Tuple(Str, Str), Python)
     
     def is_valid(self, experiment):
         """Validate this operation against an experiment."""
@@ -87,7 +82,7 @@ class ColorTranslationOp(HasStrictTraits):
         # NOTE: these conditions are for applying the correction, NOT estimating
         # the correction from controls.
         
-        if not self.coefficients:
+        if not self._coefficients:
             return False
         
         if not set(self.translation.keys()) <= set(experiment.channels):
@@ -97,7 +92,7 @@ class ColorTranslationOp(HasStrictTraits):
             return False
         
         for key, val in self.translation.iteritems():
-            if (key, val) not in self.coefficients:
+            if (key, val) not in self._coefficients:
                 return False
        
         return True
@@ -114,12 +109,12 @@ class ColorTranslationOp(HasStrictTraits):
             if (from_channel, to_channel) not in self.controls:
                 raise RuntimeError("Control file for {0} --> {1} not specified"
                                    .format(from_channel, to_channel))
+                
             tube_file = self.controls[(from_channel, to_channel)]
             
             if tube_file not in tubes: 
                 tube = fc.FCMeasurement(ID='{0}.{1}'.format(from_channel, to_channel),
-                                        datafile = tube_file) \
-                                        .subsample(self.subset, "random")
+                                        datafile = tube_file)
                                     
                 try:
                     tube.read_meta()
@@ -130,22 +125,28 @@ class ColorTranslationOp(HasStrictTraits):
                 tube_data = tube.data
                 
                 # autofluorescence correction
-                af = [(channel, experiment.metadata[channel]['af_median']) 
+                af = [(channel, (experiment.metadata[channel]['af_median'],
+                                 experiment.metadata[channel]['af_stdev'])) 
                       for channel in experiment.channels 
                       if 'af_median' in experiment.metadata[channel]]
                 
-                for af_channel, af_value in af:
-                    tube_data[af_channel] = tube_data[af_channel] - af_value
+                for af_channel, (af_median, af_stdev) in af:
+                    tube_data[af_channel] = tube_data[af_channel] - af_median
+                    tube_data = tube_data[tube_data[af_channel] > -3 * af_stdev]
+                    
+                tube_data.reset_index(drop = True, inplace = True)
                     
                 # bleedthrough correction
-                splines = {channel: experiment.metadata[channel]['piecewise_bleedthrough']
-                           for channel in experiment.channels
-                           if 'piecewise_bleedthrough' in experiment.metadata[channel]}    
-                
-                tube_data = tube_data.apply(correct_bleedthrough,
-                                  axis = 1,
-                                  args = ([splines.keys(), splines]))
-                
+                old_tube_data = tube_data.copy()
+                bleedthrough = \
+                    {channel: experiment.metadata[channel]['piecewise_bleedthrough']
+                     for channel in experiment.channels
+                     if 'piecewise_bleedthrough' in experiment.metadata[channel]} 
+
+                for channel, (interp_channels, interpolator) in bleedthrough.iteritems():
+                    interp_data = old_tube_data[interp_channels]
+                    tube_data[channel] = interpolator(interp_data)
+
                 tubes[tube_file] = tube_data
                 
             data = tubes[tube_file][[from_channel, to_channel]]
@@ -167,7 +168,7 @@ class ColorTranslationOp(HasStrictTraits):
                             deg = 1, 
                             w = weights)
             
-            self.coefficients[(from_channel, to_channel)] = lr
+            self._coefficients[(from_channel, to_channel)] = lr
 
 
     def apply(self, old_experiment):
@@ -185,7 +186,7 @@ class ColorTranslationOp(HasStrictTraits):
 
         new_experiment = old_experiment.clone()
         for from_channel, to_channel in self.translation.iteritems():
-            coeff = self.coefficients[(from_channel, to_channel)]
+            coeff = self._coefficients[(from_channel, to_channel)]
             
             # remember, the (linear) coefficients come from logspace, so
             # the translation is y = a * x ^ b
@@ -260,8 +261,7 @@ class ColorTranslationDiagnostic(HasStrictTraits):
             
             if tube_file not in tubes: 
                 tube = fc.FCMeasurement(ID='{0}.{1}'.format(from_channel, to_channel),
-                                        datafile = tube_file) \
-                                        .subsample(self.op.subset, "random")
+                                        datafile = tube_file)
                                     
                 try:
                     tube.read_meta()
@@ -270,25 +270,30 @@ class ColorTranslationDiagnostic(HasStrictTraits):
                                        .format(self.op.controls[(from_channel, to_channel)]))
     
                 tube_data = tube.data
-                
+
                 # autofluorescence correction
-                af = [(channel, experiment.metadata[channel]['af_median']) 
+                af = [(channel, (experiment.metadata[channel]['af_median'],
+                                 experiment.metadata[channel]['af_stdev'])) 
                       for channel in experiment.channels 
                       if 'af_median' in experiment.metadata[channel]]
                 
-                for af_channel, af_value in af:
-                    tube_data[af_channel] = tube_data[af_channel] - af_value
+                for af_channel, (af_median, af_stdev) in af:
+                    tube_data[af_channel] = tube_data[af_channel] - af_median
+                    tube_data = tube_data[tube_data[af_channel] > -3 * af_stdev]
+                    
+                tube_data.reset_index(drop = True, inplace = True)
                     
                 # bleedthrough correction
-                splines = {channel: experiment.metadata[channel]['piecewise_bleedthrough']
-                           for channel in experiment.channels
-                           if 'piecewise_bleedthrough' in experiment.metadata[channel]}    
-                
-                if splines:
-                    tube_data = tube_data.apply(correct_bleedthrough,
-                                                axis = 1,
-                                                args = ([splines.keys(), splines]))
-                
+                old_tube_data = tube_data.copy()
+                bleedthrough = \
+                    {channel: experiment.metadata[channel]['piecewise_bleedthrough']
+                     for channel in experiment.channels
+                     if 'piecewise_bleedthrough' in experiment.metadata[channel]} 
+
+                for channel, (interp_channels, interpolator) in bleedthrough.iteritems():
+                    interp_data = old_tube_data[interp_channels]
+                    tube_data[channel] = interpolator(interp_data)
+
                 tubes[tube_file] = tube_data
                 
             data_range = experiment.metadata[channel]['range']
