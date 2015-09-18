@@ -260,8 +260,10 @@ class Experiment(HasStrictTraits):
                                            meta_name))
             meta_type = self.conditions[meta_name]
             try:
-                new_data[meta_name] = pd.Series([meta_value] * tube.data.size,
-                                             dtype = meta_type)
+                new_data[meta_name] = \
+                    pd.Series(data = [meta_value] * len(tube.data.index),
+                              index = new_data.index,
+                              dtype = meta_type)
                 
                 # if we're categorical, merge the categories
                 if meta_type == "category" and meta_name in self.data.columns:
