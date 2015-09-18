@@ -188,11 +188,18 @@ class ColorTranslationOp(HasStrictTraits):
         for from_channel, to_channel in self.translation.iteritems():
             coeff = self._coefficients[(from_channel, to_channel)]
             
-            # remember, the (linear) coefficients come from logspace, so
-            # the translation is y = a * x ^ b
+            # remember, these (linear) coefficients came from logspace, so 
+            # if the relationship in log10 space is Y = aX + b, then in
+            # linear space the relationship is x = 10**X, y = 10**Y,
+            # and y = (10**b) * x ^ a
+            
+            # also remember that the result of np.polyfit is a list of
+            # coefficients with the highest power first!  so if we
+            # solve y=ax + b, coeff #0 is a and coeff #1 is b
+            
             a = coeff[0]
-            b = coeff[1]
-            trans_fn = lambda x, a=a, b=b: b * (x ** a)
+            b = 10 ** coeff[1]
+            trans_fn = lambda x, a=a, b=b: b * np.power(x, a)
             
             new_experiment[from_channel] = trans_fn(old_experiment[from_channel])
             new_experiment.metadata[from_channel]['channel_translation_fn'] = trans_fn

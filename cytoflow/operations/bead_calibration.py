@@ -73,7 +73,7 @@ class BeadCalibrationOp(HasStrictTraits):
     
     name = CStr()
     units = Dict(Str, Str)
-    calibration = Dict(Str, Python)
+    _coefficients = Dict(Str, Python)
     
     beads_file = File(transient = True)
     bead_peak_quantile = Int(80)
@@ -83,14 +83,14 @@ class BeadCalibrationOp(HasStrictTraits):
     def is_valid(self, experiment):
         """Validate this operation against an experiment."""
 
-        if not self.units or not self.calibration:
+        if not self.units or not self._calibration:
             return False
         
         channels = self.units.keys()
         if not set(self.units.keys()) <= set(experiment.channels):
             return False
                 
-        if set(channels) != set(self.calibration.keys()):
+        if set(channels) != set(self._coefficients.keys()):
             return False
         
         if not set(self.units.values()) <= set(self.beads.keys()):
@@ -169,10 +169,10 @@ class BeadCalibrationOp(HasStrictTraits):
                 raise RuntimeError("Found too many peaks; check the diagnostic plot")
             elif len(peaks) == 1:
                 # if we only have one peak, assume it's the brightest peak
-                self.calibration[channel] = [mef[-1] / peaks[0]] 
+                self._coefficients[channel] = [mef[-1] / peaks[0]] 
             elif len(peaks) == 2:
                 # if we have only two peaks, assume they're the brightest two
-                self.calibration[channel] = \
+                self._coefficients[channel] = \
                     [(mef[-1] - mef[-2]) / (peaks[1] - peaks[0])]
             else:
                 # if there are n > 2 peaks, check all the contiguous n-subsets
@@ -197,7 +197,7 @@ class BeadCalibrationOp(HasStrictTraits):
                         best_lr = lr[0]
                         best_resid = resid
                         
-                self.calibration[channel] = (best_lr[0], 10 ** best_lr[1])
+                self._coefficients[channel] = (best_lr[0], best_lr[1])
 
     def apply(self, old_experiment):
         """Applies the bleedthrough correction to an experiment.
@@ -212,7 +212,7 @@ class BeadCalibrationOp(HasStrictTraits):
             a new experiment calibrated in physical units.
         """
         
-        channels = self.calibration.keys()
+        channels = self._coefficients.keys()
         new_experiment = old_experiment.clone()
         
         # two things.  first, you can't raise a negative value to a non-integer
@@ -227,15 +227,21 @@ class BeadCalibrationOp(HasStrictTraits):
         new_experiment.data.reset_index(drop = True, inplace = True)
         
         for channel in channels:
-            if len(self.calibration[channel]) == 1:
+            if len(self._coefficients[channel]) == 1:
                 # plain old multiplication
-                a = self.calibration[channel][0]
+                a = self._coefficients[channel][0]
                 calibration_fn = lambda x, a=a: a * x
             else:
                 # remember, these (linear) coefficients came from logspace, so 
-                # the translation is y = a * x ^ b
-                a = self.calibration[channel][0]
-                b = self.calibration[channel][1]
+                # if the relationship in log10 space is Y = aX + b, then in
+                # linear space the relationship is x = 10**X, y = 10**Y,
+                # and y = (10**b) * x ^ a
+                
+                # also remember that the result of np.polyfit is a list of
+                # coefficients with the highest power first!  so if we
+                # solve y=ax + b, coeff #0 is a and coeff #1 is b
+                a = self._coefficients[channel][0]
+                b = 10 ** self._coefficients[channel][1]
                 calibration_fn = lambda x, a=a, b=b: b * np.power(x, a)
     
             new_experiment[channel] = calibration_fn(new_experiment[channel])
