@@ -32,9 +32,6 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
     call `estimate()` to parameterize the operation; check that the bleedthrough 
     plots look good with `default_view`(); and then `apply()` to an Experiment.
     
-    **WARNING THIS CODE IS WILDLY INEFFICIENT AND TAKES A VERY LONG TIME**
-    **TODO - MAKE MORE EFFICIENT please**
-    
     Attributes
     ----------
     name : Str
@@ -244,7 +241,7 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
             # add the correction splines to the experiment metadata so we can 
             # correct other controls later on
             new_experiment.metadata[channel]['piecewise_bleedthrough'] = \
-                self._interpolators[channel]
+                (self._channels, self._interpolators[channel])
 
         return new_experiment
     
