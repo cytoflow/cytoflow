@@ -309,10 +309,7 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
         
         import matplotlib.pyplot as plt
         import seaborn
-        
-        kwargs.setdefault('histtype', 'stepfilled')
-        kwargs.setdefault('alpha', 0.5)
-        kwargs.setdefault('antialiased', True)
+
          
         plt.figure()
         
@@ -346,7 +343,7 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
             plt.subplot(len(channels), 1, idx+1)
             plt.xscale('log')
             plt.xlabel(channel)
-            plt.plot(hist_bins[1:], hist_smooth, kwargs)
+            plt.plot(hist_bins[1:], hist_smooth)
             for peak in peak_bins_filtered:
                 plt.axvline(hist_bins[peak], color = 'r')
             
