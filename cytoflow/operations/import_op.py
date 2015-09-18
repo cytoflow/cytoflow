@@ -92,7 +92,7 @@ class ImportOp(HasStrictTraits):
                 dtype = "float"
             experiment.add_conditions({condition : dtype})
             if is_log:
-                experiment.metadata[condition]["repr"] = "Log"
+                experiment.metadata[condition]["repr"] = "log"
         
         for tube in self.tubes:
             tube_fc = fc.FCMeasurement(ID=tube.source + tube.tube, datafile=tube.file)
