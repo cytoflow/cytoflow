@@ -22,6 +22,8 @@ import pandas as pd
 import numpy as np
 import re
 
+# TODO - something breaks when you set a column name with a space.
+
 class ISubsetModel(Interface):
     name = Str
     subset_str = Property

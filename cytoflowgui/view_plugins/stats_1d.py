@@ -50,7 +50,6 @@ class Stats1DHandler(Controller, ViewHandlerMixin):
                     Item('object.yfunction',
                          editor = EnumEditor(name='handler.summary_functions'),
                          label = "Y Summary\nFunction"),
-
                     Item('object.xfacet',
                          editor=EnumEditor(name='handler.conditions'),
                          label = "Horizontal\nFacet"),
