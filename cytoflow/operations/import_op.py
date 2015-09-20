@@ -4,7 +4,7 @@ Created on Mar 20, 2015
 @author: brian
 '''
 from traits.api import HasStrictTraits, provides, Str, List, Bool, Int, Any, \
-                       Dict 
+                       Dict, File
 from cytoflow.operations.i_operation import IOperation
 from cytoflow import Experiment
 import FlowCytometryTools as fc
@@ -24,11 +24,11 @@ class Tube(HasStrictTraits):
     # file and conditions are not optional.  (-:
     
     # the file name for the FCS file to import
-    file = Str
+    file = File
     
     # a dict of experimental conditions: name --> value
     conditions = Dict(Str, Any)
-    
+
     def conditions_equal(self, other):        
         return len(set(self.conditions.items()) ^ 
                    set(other.conditions.items())) == 0
@@ -49,6 +49,9 @@ class ImportOp(HasStrictTraits):
     # experimental conditions: name --> dtype.  can also be "log"
     conditions = Dict(Str, Str)
     tubes = List(Tube)
+        
+    # DON'T DO THIS
+    ignore_v = Bool(False)
           
     def is_valid(self, experiment = None):
         if not self.tubes:
@@ -70,6 +73,9 @@ class ImportOp(HasStrictTraits):
                 if i.conditions_equal(j):
                     return False
                 
+        if self.ignore_v:
+            raise RuntimeError("Ignoring voltages?  Buddy, you're on your own.")
+                
         # TODO - more error checking.  ie, does the file exist?  is it
         # readable?  etc etc.
                 
@@ -86,12 +92,12 @@ class ImportOp(HasStrictTraits):
                 dtype = "float"
             experiment.add_conditions({condition : dtype})
             if is_log:
-                experiment.metadata[condition]["repr"] = "Log"
+                experiment.metadata[condition]["repr"] = "log"
         
         for tube in self.tubes:
             tube_fc = fc.FCMeasurement(ID=tube.source + tube.tube, datafile=tube.file)
             if self.coarse:
                 tube_fc = tube_fc.subsample(self.coarse_events, "random")
-            experiment.add_tube(tube_fc, tube.conditions)
+            experiment.add_tube(tube_fc, tube.conditions, ignore_v = self.ignore_v)
             
         return experiment

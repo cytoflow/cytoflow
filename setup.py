@@ -41,7 +41,11 @@ setup(
     # installed or upgraded on the target machine
     install_requires = ['pandas>=0.15.0',
                         'FlowCytometryTools>=0.4',
+                        'numpy>=1.9.0',
                         'numexpr>=2.1',
+                        'matplotlib>=1.4.3',
+                        'scipy>=0.14',
+                        'scikit-learn>=0.16',
                         'seaborn>=0.6.0',
                         'pyface>=4.0',
                         'envisage>=4.0'],

@@ -85,14 +85,16 @@ class LogicleTransformOp(HasStrictTraits):
         """
         
         if subset:
-            experiment = experiment.query(subset)
+            data = experiment.query(subset)
+        else:
+            data = experiment.data
         
         for channel in self.channels:
-            self.T[channel] = experiment.metadata[channel]['max']            
+            self.T[channel] = experiment.metadata[channel]['range']            
             self.A[channel] = 0.0
             
             # get the range by finding the rth quantile of the negative values
-            neg_values = experiment[experiment[channel] < 0][channel]
+            neg_values = data[data[channel] < 0][channel]
             if(not neg_values.empty):
                 r_value = neg_values.quantile(self.r).item()
                 self.W[channel] = (self.M - math.log10(self.T[channel]/math.fabs(r_value)))/2

@@ -76,6 +76,7 @@ class HistogramView(HasStrictTraits):
                           col = (self.xfacet if self.xfacet else None),
                           row = (self.yfacet if self.yfacet else None),
                           hue = (self.huefacet if self.huefacet else None),
+                          hue_order = (np.sort(x[self.huefacet].unique()) if self.huefacet else None),
                           legend_out = False)
         
         g.map(plt.hist, self.channel, **kwargs)

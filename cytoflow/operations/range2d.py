@@ -64,7 +64,7 @@ class Range2DOp(HasStrictTraits):
         if not self.name:
             return False
                
-        if self.name in self.experiment.columns:
+        if self.name in experiment.conditions:
             return False
        
         return True

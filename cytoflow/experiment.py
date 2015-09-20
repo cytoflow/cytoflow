@@ -163,7 +163,7 @@ class Experiment(HasStrictTraits):
         
         self.conditions.update(conditions)
              
-    def add_tube(self, tube, conditions):
+    def add_tube(self, tube, conditions, ignore_v = False):
         """Add an FCMeasurement, and its experimental conditions, to this Experiment.
         
         Remember: because add_tube COPIES the data into this Experiment, you can
@@ -200,7 +200,7 @@ class Experiment(HasStrictTraits):
                     old_v = self.metadata[channel]["voltage"]
                     new_v = tube.channels[tube.channels['$PnN'] == channel]['$PnV'].iloc[0]
                     
-                    if old_v != new_v:
+                    if old_v != new_v and not ignore_v:
                         raise RuntimeError("Tube {0} doesn't have the same voltages "
                                            "as the first tube" \
                                            .format(tube.datafile))
@@ -223,9 +223,9 @@ class Experiment(HasStrictTraits):
                 self.metadata[channel]['xforms'] = []
                 
                 # add the maximum possible value for this channel.
-                data_max = tube.channels[tube.channels['$PnN'] == channel]['$PnR'].iloc[0]
-                data_max = float(data_max)
-                self.metadata[channel]['max'] = data_max
+                data_range = tube.channels[tube.channels['$PnN'] == channel]['$PnR'].iloc[0]
+                data_range = float(data_range)
+                self.metadata[channel]['range'] = data_range
                     
         # validate the experimental conditions
         
@@ -260,8 +260,10 @@ class Experiment(HasStrictTraits):
                                            meta_name))
             meta_type = self.conditions[meta_name]
             try:
-                new_data[meta_name] = pd.Series([meta_value] * tube.data.size,
-                                             dtype = meta_type)
+                new_data[meta_name] = \
+                    pd.Series(data = [meta_value] * len(tube.data.index),
+                              index = new_data.index,
+                              dtype = meta_type)
                 
                 # if we're categorical, merge the categories
                 if meta_type == "category" and meta_name in self.data.columns:
@@ -277,7 +279,7 @@ class Experiment(HasStrictTraits):
                                            meta_type))
         
         self._tube_conditions.add(frozenset(conditions.iteritems()))
-        self.data = self.data.append(new_data)
+        self.data = self.data.append(new_data, ignore_index = True)
         del new_data
         
         # TODO - figure out if we can actually delete the original tube's data

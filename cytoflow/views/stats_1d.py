@@ -52,7 +52,6 @@ class Stats1DView(HasStrictTraits):
         
     huefacet : 
         the conditioning variable for color.
-        TODO - currently unimplemented
         
     x_error_bars, y_error_bars : Enum(None, "data", "summary")
         draw error bars?  if "data", apply *{x,y}_error_function* to the same
@@ -110,6 +109,8 @@ class Stats1DView(HasStrictTraits):
         kwargs.setdefault('marker', 'o')
         kwargs.setdefault('antialiased', True)
         
+        xlog = False
+        
         if self.subset:
             data = experiment.query(self.subset)
         else:
@@ -133,7 +134,10 @@ class Stats1DView(HasStrictTraits):
         else:
             plot_data = y.reset_index()
             x_name = self.variable
-            
+            if 'repr' in experiment.metadata[self.variable] and \
+                experiment.metadata[self.variable]['repr'] == 'log':
+                xlog = True
+
         # TODO - handle log-scale variables
             
         grid = sns.FacetGrid(plot_data,
@@ -141,6 +145,9 @@ class Stats1DView(HasStrictTraits):
                              row = (self.yfacet if self.yfacet else None),
                              hue = (self.huefacet if self.huefacet else None),
                              legend_out = False)
+
+        if xlog:
+            plt.xscale('log', nonposx = 'mask')
         
         grid.map(plt.scatter, x_name, self.ychannel, **kwargs)
         grid.map(plt.plot, x_name, self.ychannel, **kwargs)

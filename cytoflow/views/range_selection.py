@@ -18,10 +18,10 @@ class RangeSelection(HasStrictTraits):
     
     Attributes
     ----------
-    min : Float
+    low : Float
         The minimum value of the range.
         
-    max : Float
+    high : Float
         The maximum value of the range.
         
     view : Instance(IView)
@@ -62,16 +62,16 @@ class RangeSelection(HasStrictTraits):
     def _draw_span(self):
         if not (self.low and self.high):
             return
-  
-        fig = plt.gcf()
+
+        ax = plt.gca()
         
-        if self._low_line and self._low_line in fig.lines:
+        if self._low_line and self._low_line in ax.lines:
             self._low_line.remove()
         
-        if self._high_line and self._high_line in fig.lines:
+        if self._high_line and self._high_line in ax.lines:
             self._high_line.remove()
             
-        if self._hline and self._hline in fig.lines:
+        if self._hline and self._hline in ax.lines:
             self._hline.remove()
             
         if self.low and self.high:
@@ -85,7 +85,7 @@ class RangeSelection(HasStrictTraits):
                                    color='blue', 
                                    linewidth = 2)[0]
                                    
-        plt.gcf().canvas.draw()
+        plt.draw_if_interactive()
     
     @on_trait_change('interactive')
     def _interactive(self):
@@ -95,7 +95,7 @@ class RangeSelection(HasStrictTraits):
             self._span = SpanSelector(ax, 
                              onselect=self._onselect, 
                              direction='horizontal',
-                             rectprops={'alpha':0.2,
+                             rectprops={'alpha':0.3,
                                         'color':'grey'},
                              span_stays=False,
                              useblit = True)
