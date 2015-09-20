@@ -198,7 +198,15 @@ class SubsetModel(HasTraits):
                             editor = ListEditor(editor = InstanceEditor(),
                                                 style = 'custom',
                                                 mutable = False)))
-
+    
+    def __init__(self, *args, **kw_args):
+        super(SubsetModel, self).__init__( *args, **kw_args )
+        # have to set a dynamic notifier because this is occasionally changed
+        # by the processing thread, and we need to re-dispatch to the ui thread
+        self.on_trait_change(self._on_experiment_change, 
+                             'experiment', 
+                             dispatch = 'ui')
+    
     # MAGIC: gets the value of the Property trait "subset_string"
     def _get_subset_str(self):
         subset_strings = [s.subset_str for s in self.subset_list]
@@ -241,7 +249,7 @@ class SubsetModel(HasTraits):
             # update the subset editor ui
             self.subset_map[name].subset_str = phrase
         
-    @on_trait_change('experiment')
+    #@on_trait_change('experiment')
     def _on_experiment_change(self):
         print "experiment changed"
         cond_map = {"bool" : BoolSubsetModel,
