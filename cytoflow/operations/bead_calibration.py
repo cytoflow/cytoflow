@@ -20,35 +20,44 @@ import scipy.signal
 @provides(IOperation)
 class BeadCalibrationOp(HasStrictTraits):
     """
-    Calibrate arbitrary units to molecules-of-fluorophore using fluorescent
-    beads (eg, the Spherotech RCP-30-5A.)
+    Calibrate arbitrary channels to molecules-of-fluorophore using fluorescent
+    beads (eg, the Spherotech RCP-30-5A rainbow beads.)
     
     To use, set the `beads_file` property to an FCS file containing the beads'
     events; specify which beads you ran by setting the `beads_type` property
-    to match on of the keys in BeadCalibrationOp.BeadTypes; and set the
+    to match one of the keys in BeadCalibrationOp.BeadTypes; and set the
     `channels` dict to which channels you want calibrated and in which units.
+    Then, call `estimate()` and check the peak-finding with 
+    `default_view().plot()`.  If the peak-finding is wacky, try adjusting
+    `bead_peak_quantile` and `bead_brightness_threshold`.  When the peaks are
+    successfully identified, call apply() on your experimental data set. 
     
-    This procedure works best when the beads file is very clean data. 
-    Recommend gating the acquisition on the FSC/SSC channels in order
-    to get rid of debris and noise.
+    If you can't make the peak finding work, please submit a bug report!
+    
+    This procedure works best when the beads file is very clean data.  It does
+    not do its own gating (maybe a future addition?)  In the meantime, 
+    I recommend gating the *acquisition* on the FSC/SSC channels in order
+    to get rid of debris, cells, and other noise.
     
     Attributes
     ----------
     name : Str
         The operation name (for UI representation.)
 
-    units : Dict(Str, Str)
+    channels : Dict(Str, Str)
         A dictionary specifying the channels you want calibrated (keys) and
         the units you want them calibrated in (values).  The units must be
-        keys of `beads`.       
-        
-    calibration : Dict(Str, Python)
-        Keys are channels to calibrate; values are the coefficient by which
-        to multiply the input values (either a `Float` or a 2-list of `Float`s).
+        keys of the `beads` attribute.       
         
     beads_file : File
         A file containing the FCS events from the beads.  Must be set to use
         `estimate()`.  This isn't persisted by `pickle()`.
+
+    beads : Dict(Str, List(Float))
+        The beads' characteristics.  Keys are calibrated units (ie, MEFL or
+        MEAP) and values are ordered lists of known fluorophore levels.  Common
+        values for this dict are included in BeadCalibrationOp.BEADS.
+        Must be set to use `estimate()`.
         
     bead_peak_quantile : Int
         The quantile threshold used to choose bead peaks.  Default == 80.
@@ -56,44 +65,92 @@ class BeadCalibrationOp(HasStrictTraits):
         
     bead_brightness_threshold : Float
         How bright must a bead peak be to be considered?  Default == 100.
-        Must be set to use `estimate()`.  TODO - this should probably be
-        different depending on the data range of the input.
-        
-    beads : Dict(Str, List(Float))
-        The beads' characteristics.  Keys are calibrated units (ie, MEFL or
-        MEAP) and values are ordered lists of known fluorophore levels.  Common
-        values for this dict are included in BeadCalibrationOp.BEADS.
         Must be set to use `estimate()`.
+        
+    Notes
+    -----
+    The peak finding is rather sophisticated.  
+    
+    For each channel, a 256-bin histogram is computed on the log-transformed
+    bead data, and then the histogram is smoothed with a Savitzky-Golay 
+    filter (with a window length of 5 and a polynomial order of 1).  
+    
+    Next, a wavelet-based peak-finding algorithm is used: it convolves the
+    smoothed histogram with a series of wavelets and looks for relative 
+    maxima at various length-scales.  The parameters of the smoothing 
+    algorithm were arrived at empircally, using beads collected at a wide 
+    range of PMT voltages.
+    
+    Finally, the peaks are filtered by height (the histogram bin has a quantile
+    greater than `bead_peak_quantile`) and intensity (brighter than 
+    `bead_brightness_threshold`).
+    
+    How to convert from a series of peaks to mean equivalent fluorochrome?
+    If there's one peak, we assume that it's the brightest peak.  If there
+    are two peaks, we assume they're the brighest two.  If there are n >=3
+    peaks, we check all the contiguous n-subsets of the bead intensities
+    and find the one whose linear regression (in log space!) has the smallest
+    norm (square-root sum-of-squared-residuals.)
+    
+    There's a slight subtlety in the fact that we're performing the linear
+    regression in log-space: if the relationship in log10-space is Y=aX + b,
+    then the same relationship in linear space is x = 10**X, y = 10**y, and
+    y = (10**b) * (x ** a).
+    
+    One more thing.  Because the beads are (log) evenly spaced across all
+    the channels, we can directly compute the fluorophore equivalent in channels
+    where we wouldn't usually measure that fluorophore: for example, you can
+    compute MEFL (mean equivalent fluorosceine) in the PE-Texas Red channel,
+    because the bead peak pattern is the same in the PE-Texas Red channel
+    as it would be in the FITC channel.
+    
+    Examples
+    --------
+    >>> bead_op = flow.BeadCalibrationOp()
+    >>> bead_op.beads = flow.BeadCalibrationOp.BEADS["Spherotech RCP-30-5A Lot AA01-AA04, AB01, AB02, AC01, GAA01-R"]
+    >>> bead_op.units = {"Pacific Blue-A" : "MEFL",
+                         "FITC-A" : "MEFL",
+                         "PE-Tx-Red-YG-A" : "MEFL"}
 
+    >>> bead_op.beads_file = "beads.fcs"
+    >>> bead_op.estimate(ex3)
+
+    >>> bead_op.default_view().plot(ex3)  
+    >>> ex4 = bead_op.apply(ex3)  
     """
     
-    # traiats
+    # traits
     id = 'edu.mit.synbio.cytoflow.operations.beads_calibrate'
     friendly_id = "Bead Calibration"
     
     name = CStr()
-    units = Dict(Str, Str)
-    _coefficients = Dict(Str, Python)
+    channels = Dict(Str, Str)
     
     beads_file = File(transient = True)
     bead_peak_quantile = Int(80)
+
     bead_brightness_threshold = Float(100)
+    # TODO - bead_brightness_threshold should probably be different depending
+    # on the data range of the input.
+    
     beads = Dict(Str, List(Float), transient = True)
+
+    _coefficients = Dict(Str, Python)
     
     def is_valid(self, experiment):
         """Validate this operation against an experiment."""
 
-        if not self.units or not self._calibration:
+        if not self.channels or not self._calibration:
             return False
         
-        channels = self.units.keys()
-        if not set(self.units.keys()) <= set(experiment.channels):
+        channels = self.channels.keys()
+        if not set(self.channels.keys()) <= set(experiment.channels):
             return False
                 
         if set(channels) != set(self._coefficients.keys()):
             return False
         
-        if not set(self.units.values()) <= set(self.beads.keys()):
+        if not set(self.channels.values()) <= set(self.beads.keys()):
             return False
 
         return True
@@ -104,7 +161,7 @@ class BeadCalibrationOp(HasStrictTraits):
         """
         
         beads_tube = fc.FCMeasurement(ID='blank', datafile = self.beads_file)
-        channels = self.units.keys()
+        channels = self.channels.keys()
         
         try:
             beads_tube.read_meta()
@@ -155,7 +212,7 @@ class BeadCalibrationOp(HasStrictTraits):
             
             peaks = [hist_bins[x] for x in peak_bins_filtered]
             
-            mef_unit = self.units[channel]
+            mef_unit = self.channels[channel]
             
             if not mef_unit in self.beads:
                 raise RuntimeError("Invalid unit {0} specified for channel {1}".format(mef_unit, channel))
@@ -209,7 +266,7 @@ class BeadCalibrationOp(HasStrictTraits):
             
         Returns
         -------
-            a new experiment calibrated in physical units.
+            a new experiment calibrated in physical channels.
         """
         
         channels = self._coefficients.keys()
@@ -246,7 +303,7 @@ class BeadCalibrationOp(HasStrictTraits):
     
             new_experiment[channel] = calibration_fn(new_experiment[channel])
             new_experiment.metadata[channel]['bead_calibration_fn'] = calibration_fn
-            new_experiment.metadata[channel]['units'] = self.units[channel]
+            new_experiment.metadata[channel]['units'] = self.channels[channel]
             
         return new_experiment
     
@@ -330,7 +387,7 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
          
         plt.figure()
         
-        channels = self.op.units.keys()
+        channels = self.op.channels.keys()
         
         for idx, channel in enumerate(channels):
             data = beads_tube.data[channel]

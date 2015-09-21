@@ -13,27 +13,42 @@ class AutofluorescenceOp(HasStrictTraits):
     """
     Apply autofluorescence correction to a set of fluorescence channels.
     
+    The `estimate()` function loads a separate FCS file (not part of the input
+    `Experiment`) and computes the untransformed median and standard deviation 
+    of the blank cells.  Then, `apply()` subtracts the median from the 
+    experiment data.
+    
     To use, set the `blank_file` property to point to an FCS file with
-    unstained or unfluorescent cells in it; set the `channels` property to a 
+    unstained or nonfluorescing cells in it; set the `channels` property to a 
     list of channels to correct; and call `estimate()`, then `apply()`.
+    
+    `apply()` also adds the "af_median" and "af_stdev" metadata to the corrected
+    channels, representing the median and standard deviation of the measured 
+    blank distributions.  Some other modules (especially in the TASBE workflow)
+    depend on this metadata and will fail if it's not present.
     
     Attributes
     ----------
     name : Str
-        The operation name (for UI representation.)
+        The operation name (for UI representation; optional for interactive use)
         
     channels : List(Str)
-        The channels to correct.  Must be set to run `estimate()`.
-
-    af_median: Dict(Str, Float)
-        Keys are channels; values are the autofluorescence medians.
-        
-    af_stdev: Dict(Str, Float)
-        Keys are channels; values are the autofluorescence standard deviations.
+        The channels to correct.
         
     blank_file : File
         The filename of a file with "blank" cells (not fluorescent).  Used
         to `estimate()` the autofluorescence.
+        
+    Examples
+    --------
+    >>> af_op = flow.AutofluorescenceOp()
+    >>> af_op.blank_file = "blank.fcs"
+    >>> af_op.channels = ["Pacific Blue-A", "FITC-A", "PE-Tx-Red-YG-A"] 
+
+    >>> af_op.estimate(ex)
+    >>> af_op.is_valid(ex)
+    >>> af_op.default_view().plot()
+    >>> ex2 = af_op.apply(ex)
     """
     
     # traits
