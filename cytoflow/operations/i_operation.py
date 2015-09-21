@@ -1,5 +1,4 @@
 from traits.api import Interface, Str
-from xdiagnose.diagnostics import Diagnostic
 
 class IOperation(Interface):
     """The basic interface for an operation on cytometry data.
