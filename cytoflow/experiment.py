@@ -20,9 +20,6 @@ class Experiment(HasStrictTraits):
     An Experiment object manages all this data.  By "manage", we mean:
       - Get events that match a particular metadata "signature"
       - Add additional metadata to define populations
-      
-    TODO - how many of these attributes need to be public?  Many are just
-    internal record-keeping.....
     
     Attributes
     ----------
@@ -54,15 +51,8 @@ class Experiment(HasStrictTraits):
                    keyword "$PnV".
         * max: for channels, the maximum possible value.  from the FCS
                keyword "$PnN"
-        * repr: for float conditions, whether to represent it linearly or on
+        * repr: for float conditions, whether to plot it linearly or on
                 a log scale.
-                
-    _tube_conditions : set( dict(string : string) )
-        a dictionary mapping a tube reference to the experimental conditions
-        under which that sample was collected (provided by the experimenter.)
-        used to make sure that no two tubes have the same conditions.  not used
-        after import is done.  
-        
         
     Notes
     -----              
@@ -100,6 +90,27 @@ class Experiment(HasStrictTraits):
     the wrapped DataFrame.  We'll do the same with some of the more useful
     DataFrame API pieces (like query()); and of course, you can just get the
     data frame itself with Experiment.data
+    
+    Examples
+    --------
+    >>> import cytoflow as flow
+    >>> tube1 = flow.Tube(file = 'cytoflow/tests/data/Plate01/RFP_Well_A3.fcs',
+    ...                   conditions = {"Dox" : 10.0})
+    >>> tube2 = flow.Tube(file='cytoflow/tests/data/Plate01/CFP_Well_A4.fcs',
+    ...                   conditions = {"Dox" : 1.0})
+    >>> 
+    >>> import_op = flow.ImportOp(conditions = {"Dox" : "float"},
+    ...                           tubes = [tube1, tube2])
+    >>> 
+    >>> ex = import_op.apply()
+    >>> ex.data.shape
+    (20000, 17)
+    >>> ex.data.groupby(['Dox']).size()
+    Dox
+    1      10000
+    10     10000
+    dtype: int64
+
     """
     
     # potentially mutable.  deep copy required
@@ -150,7 +161,13 @@ class Experiment(HasStrictTraits):
         ------
         RuntimeError
             If you call add_conditions() after you've already started adding
-            tubes.                
+            tubes.          
+            
+        Examples
+        --------
+        >>> import cytoflow as flow
+        >>> ex = flow.Experiment()
+        >>> ex.add_conditions({"Time" : "float", "Strain" : "category"})      
         """
         
         if(self._tube_conditions):
@@ -173,9 +190,28 @@ class Experiment(HasStrictTraits):
         ----------
         tube : FCMeasurement
             a single tube or well's worth of data
+            
+        Raises
+        ------
+        RuntimeError
+            - If you try to add tubes with different channels
+            - If you try to add tubes with different channel voltages
+            - If you try to add tubes with identical metadata
+            - If you try to add tubes with different metadata types
+            ....among others.
         
-        conditions : dict(string : any)
+        conditions : Dict(Str : any)
             the tube's experimental conditions in (condition:value) pairs
+            
+        Examples
+        --------
+        >>> import cytoflow as flow
+        >>> ex = flow.Experiment()
+        >>> ex.add_conditions({"Time" : "float", "Strain" : "category"})
+        >>> tube1 = fc.FCMeasurement(ID='Test 1', datafile='CFP_Well_A4.fcs')
+        >>> tube2 = fc.FCMeasurement(ID='Test 2', datafile='RFP_Well_A3.fcs')
+        >>> ex.add_tube(tube1, {"Time" : 1, "Strain" : "BL21"})
+        >>> ex.add_tube(tube2, {"Time" : 1, "Strain" : "Top10G"})
         """
     
         if(self.channels):
@@ -205,7 +241,6 @@ class Experiment(HasStrictTraits):
                                            "as the first tube" \
                                            .format(tube.datafile))
 
-                    
             # TODO check the delay -- and any other params?
         else:
             self.channels = list(tube.channel_names)
