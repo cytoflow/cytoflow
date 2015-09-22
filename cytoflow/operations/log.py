@@ -1,26 +1,48 @@
 import numpy as np
 import pandas as pd
-from traits.api import HasStrictTraits, Str, ListStr, provides
+from traits.api import HasStrictTraits, Str, List, Enum, Float, provides
 from .i_operation import IOperation
 
 @provides(IOperation)
 class LogTransformOp(HasStrictTraits):
-    """An operation that applies a natural log transformation to channels.
+    """
+    An operation that applies a natural log10 transformation to channels.
+    
+    It can be configured to mask or clip values less than some threshold.  
+    The log10 transform is sometimes okay for basic visualization, but
+    most analyses should be using `HlogTransformOp` or `LogicleTransformOp`. 
     
     Attributes
     ----------
     name : Str
         The name of the transformation (for UI representation)
-    channels : ListStr
+        
+    channels : List(Str)
         A list of the channels on which to apply the transformation
-    """
+        
+    mode : Enum("mask", "clip") (default = "mask")
+        If `mask`, events with values <= `self.threshold` *in any channel* in
+        `channels` are dropped.  If `clip`, values <= `self.threshold` are 
+        transformed to `log10(self.threshold)`.
     
+    threshold : Float (default = 1.0)
+        The threshold for masking or truncation.
+        
+    Examples
+    --------
+    tlog = flow.LogTransformOp()
+    tlog.channels =["V2-A", "Y2-A", "B1-A"]
+    ex2 = tlog.apply(ex)
+    """
     
     # traits
     id = "edu.mit.synbio.cytoflow.operations.log"
-    friendly_id = "Natural Log"
+    friendly_id = "Log10"
+
     name = Str()
-    channels = ListStr()
+    channels = List(Str)
+    mode = Enum("mask", "truncate")
+    threshold = Float(1.0)
     
     def is_valid(self, experiment):
         """Validate this transform instance against an experiment.
@@ -45,10 +67,13 @@ class LogTransformOp(HasStrictTraits):
         if not set(self.channels).issubset(set(experiment.channels)):
             return False
         
+        if self.threshold < 0:
+            return False
+        
         return True
     
     def apply(self, old_experiment):
-        """Applies the hlog transform to channels in an experiment.
+        """Applies the log10 transform to channels in an experiment.
         
         Parameters
         ----------
@@ -64,26 +89,31 @@ class LogTransformOp(HasStrictTraits):
         
         new_experiment = old_experiment.clone()
         
-        # taking a log is only valid on values > 0.  because we can't just
-        # add a filter column to the dataframe, this is going to waste a TON
-        # of memory on big datasets.
-        
         data = new_experiment.data
-        gt_0 = pd.Series([True] * len(data.index))
         
-        for channel in self.channels:
-            gt_0 = np.logical_and(gt_0, data[channel] > 1)
+        if self.mode == "mask":
+            gt = pd.Series([True] * len(data.index))
+        
+            for channel in self.channels:
+                gt = np.logical_and(gt, data[channel] > self.threshold)
 
-        data = data.reset_index(drop = True) 
-        gt_0.index = data.index.copy()         
+            #data = data.reset_index(drop = True) 
+            #gt.index = data.index.copy()         
 
-        data = data.loc[gt_0]
+            data = data.loc[gt]
+            data.reset_index(inplace = True, drop = True)
+            
         new_experiment.data = data
         
+        log_fwd = lambda x, t = self.threshold: \
+            np.where(x <= t, np.log10(t), np.log10(x))
+        
+        log_rev = lambda x: 10**x
+        
         for channel in self.channels:
-            new_experiment[channel] = new_experiment[channel].apply(np.log10)
-
-            # TODO - figure out transformation craps
-            #new_experiment.metadata[channel]["xforms"].append(transform)
+            new_experiment[channel] = log_fwd(new_experiment[channel])
+            
+            new_experiment.metadata[channel]["xforms"].append(log_fwd)
+            new_experiment.metadata[channel]["xforms_inv"].append(log_rev)
 
         return new_experiment
