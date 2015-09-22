@@ -1,5 +1,4 @@
-from traits.api import HasStrictTraits, provides, Str, ListStr, Float, \
-                       DictStrFloat
+from traits.api import HasStrictTraits, provides, Str, List, Float, Dict
 from logicle_ext.Logicle import Logicle
 from .i_operation import IOperation
 import math
@@ -7,7 +6,8 @@ import numpy as np
 
 @provides(IOperation)
 class LogicleTransformOp(HasStrictTraits):
-    """An implementation of the Logicle scaling method.
+    """
+    An implementation of the Logicle scaling method.
     
     This scaling method implements a "linear-like" region around 0, and a
     "log-like" region for large values, with a very smooth transition between
@@ -17,19 +17,20 @@ class LogicleTransformOp(HasStrictTraits):
     If you don't have any data around 0, you might be better of with a more
     traditional log scale or a Hyperlog.
     
+    The transformation has one parameter, `W`, which specifies the width of
+    the "linear" range in log10 decades.  You can estimate an "optimal" value 
+    with `estimate()`, or you can set it to a fixed value like 0.5.
+    
     Attributes
     ----------
     name : Str 
         the name of this operation
-    channels : ListStr 
+    channels : List(Str) 
         the channels on which to apply the operation
-    T : dict(Str : float)
-        for each channel, the maximum data value for this channel.  
-        On a BD instrument, 2^18.
-    W : dict(Str : float)
+    W : Dict(Str : float)
         for each channel, the width of the linear range, in log10 decades.  
         can estimate, or use a fixed value like 0.5.
-    A : dict(Str : float) 
+    A : Dict(Str : float) 
         for each channel, additional decades of negative data to include.  
         the display usually captures all the data, so 0 is fine to start.
     r : Float
@@ -58,21 +59,17 @@ class LogicleTransformOp(HasStrictTraits):
     id = "edu.mit.synbio.cytoflow.operations.logicle"
     friendly_id = "Logicle Transform"
     name = Str()
-    channels = ListStr()
+    channels = List(Str)
     
-    T = DictStrFloat(desc = "the maximum data value.  for a BD instrument, 2^18.")
-    W = DictStrFloat(desc="the width of the linear range, in log10 decades.")
-    M = Float(4.5, 
-              desc = "the width of the display in log10 decades")
-    A = DictStrFloat(desc = "additional decades of negative data to include.")
-    r = Float(0.05,
-              desc = "quantile to use for estimating the W parameter.")
+    W = Dict(Str, Float, desc="the width of the linear range, in log10 decades.")
+    M = Float(4.5, desc = "the width of the display in log10 decades")
+    A = Dict(Str, Float, desc = "additional decades of negative data to include.")
+    r = Float(0.05, desc = "quantile to use for estimating the W parameter.")
     
     def estimate(self, experiment, subset = None):
-        """Estimate T, A and W per-channel from the data (given r.)
+        """Estimate A and W per-channel from the data (given r.)
         
-        Actually, that's not quite right.  Set T based on the maximum value in
-        the FCS metadata; set A to 0.0; and estimate W given r.
+        Actually, that's not quite right. Set A to 0.0; and estimate W given r.
         
         Parameters
         ----------
@@ -89,15 +86,15 @@ class LogicleTransformOp(HasStrictTraits):
         else:
             data = experiment.data
         
-        for channel in self.channels:
-            self.T[channel] = experiment.metadata[channel]['range']            
+        for channel in self.channels:          
+            t = experiment.metadata[channel]['range']
             self.A[channel] = 0.0
             
             # get the range by finding the rth quantile of the negative values
             neg_values = data[data[channel] < 0][channel]
             if(not neg_values.empty):
                 r_value = neg_values.quantile(self.r).item()
-                self.W[channel] = (self.M - math.log10(self.T[channel]/math.fabs(r_value)))/2
+                self.W[channel] = (self.M - math.log10(t/math.fabs(r_value)))/2
             else:
                 # ... unless there aren't any negative values, in which case
                 # you probably shouldn't use this transform
@@ -108,7 +105,7 @@ class LogicleTransformOp(HasStrictTraits):
     def apply(self, old_experiment):
         """Applies the Logicle transform to channels"""
         
-        # TODO - a little basic checking to make sure that T, W, M, A are
+        # TODO - a little basic checking to make sure that W, M, A are
         # set for each channel, and okay (mirroring Logicle.cpp's initialize()
         # function .... because the errors that SWIG throws are not useful.
         #
@@ -118,7 +115,7 @@ class LogicleTransformOp(HasStrictTraits):
         
         for channel in self.channels:
             
-            el = Logicle(self.T[channel], 
+            el = Logicle(new_experiment.metadata[channel]['range'], 
                          self.W[channel], 
                          self.M,
                          self.A[channel])
@@ -157,9 +154,6 @@ class LogicleTransformOp(HasStrictTraits):
             # TODO: how to report this if it's not true?
             neg_values = experiment[experiment[channel] < 0][channel]
             if neg_values.empty:
-                return False
-            
-            if not channel in self.T or self.T[channel] <= 0:
                 return False
             
             if not channel in self.W or self.W[channel] <= 0:
