@@ -117,13 +117,18 @@ class LogicleTransformOp(HasStrictTraits):
         new_experiment = old_experiment.clone()
         
         for channel in self.channels:
+            
             el = Logicle(self.T[channel], 
                          self.W[channel], 
                          self.M,
                          self.A[channel])
             
-            new_experiment[channel] = old_experiment[channel].apply(el.scale)
-            new_experiment.metadata[channel]["xforms"].append(el)
+            logicle_fwd = lambda x: x.apply(el.scale)
+            logicle_rev = lambda x: x.apply(el.inverse)
+            
+            new_experiment[channel] = logicle_fwd(old_experiment[channel])
+            new_experiment.metadata[channel]["xforms"].append(logicle_fwd)
+            new_experiment.metadata[channel]["xforms_inv"].append(logicle_rev)
             
         return new_experiment
     
