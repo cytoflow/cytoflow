@@ -44,15 +44,17 @@ class Experiment(HasStrictTraits):
         and whose values are dicts of metadata.  Some of this is 
         application-specific and still being determined.  Currently defined 
         metadata:
-        * xforms: for chanels, a list of (parameterized!) transformations that 
-                  have been applied.  necessary for computing tic marks on 
-                  plots, among other things.
         * voltage: for channels, the detector voltage used. from the FCS
-                   keyword "$PnV".
+            keyword "$PnV".
         * max: for channels, the maximum possible value.  from the FCS
-               keyword "$PnN"
+            keyword "$PnN"
         * repr: for float conditions, whether to plot it linearly or on
-                a log scale.
+            a log scale.
+        * xforms, xforms_inv: for channels, a list of (parameterized!) 
+            transformations that have been applied.  each must be a
+            one-parameter function that takes either a single value or a list 
+            of values and applies the transformation (or inverse).  necessary
+            for computing tic marks on plots, among other things.
         
     Notes
     -----              
@@ -72,8 +74,9 @@ class Experiment(HasStrictTraits):
     ----------------------
     
     The OOP programmer in me desperately wanted to subclass DataFrame, add
-    some flow-specific stuff, and move on with my life.  A few things get in 
-    the way.
+    some flow-specific stuff, and move on with my life.  (I may still, with
+    something like https://github.com/dalejung/pandas-composition).  A few 
+    things get in the way of directly subclassing pandas.DataFrame:
     
      - First, to enable some of the delicious syntactic sugar for accessing
        its contents, DataFrame redefines __{get,set}attribute__, and making
@@ -251,11 +254,11 @@ class Experiment(HasStrictTraits):
                     new_v = tube.channels[tube.channels['$PnN'] == channel]['$PnV'].iloc[0]
                     if new_v: self.metadata[channel]["voltage"] = new_v
                         
-                # add an empty list for channel transforms.  a transform must
-                # be an object with scale(float) and inverse(float) methods,
-                # each of which applies or inverts the transformation.
+                # add empty lists to keep track of channel transforms.  
+                # the list 
                 # required to draw tic marks, etc.                    
                 self.metadata[channel]['xforms'] = []
+                self.metadata[channel]['xforms_inv']= []
                 
                 # add the maximum possible value for this channel.
                 data_range = tube.channels[tube.channels['$PnN'] == channel]['$PnR'].iloc[0]
