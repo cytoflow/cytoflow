@@ -44,7 +44,7 @@ class BeadCalibrationOp(HasStrictTraits):
     name : Str
         The operation name (for UI representation.)
 
-    channels : Dict(Str, Str)
+    units : Dict(Str, Str)
         A dictionary specifying the channels you want calibrated (keys) and
         the units you want them calibrated in (values).  The units must be
         keys of the `beads` attribute.       
@@ -124,7 +124,7 @@ class BeadCalibrationOp(HasStrictTraits):
     friendly_id = "Bead Calibration"
     
     name = CStr()
-    channels = Dict(Str, Str)
+    units = Dict(Str, Str)
     
     beads_file = File(transient = True)
     bead_peak_quantile = Int(80)
@@ -140,17 +140,17 @@ class BeadCalibrationOp(HasStrictTraits):
     def is_valid(self, experiment):
         """Validate this operation against an experiment."""
 
-        if not self.channels or not self._calibration:
+        if not self.units or not self._calibration:
             return False
         
-        channels = self.channels.keys()
-        if not set(self.channels.keys()) <= set(experiment.channels):
+        channels = self.units.keys()
+        if not set(self.units.keys()) <= set(experiment.channels):
             return False
                 
         if set(channels) != set(self._coefficients.keys()):
             return False
         
-        if not set(self.channels.values()) <= set(self.beads.keys()):
+        if not set(self.units.values()) <= set(self.beads.keys()):
             return False
 
         return True
@@ -161,7 +161,7 @@ class BeadCalibrationOp(HasStrictTraits):
         """
         
         beads_tube = fc.FCMeasurement(ID='blank', datafile = self.beads_file)
-        channels = self.channels.keys()
+        channels = self.units.keys()
         
         try:
             beads_tube.read_meta()
@@ -212,7 +212,7 @@ class BeadCalibrationOp(HasStrictTraits):
             
             peaks = [hist_bins[x] for x in peak_bins_filtered]
             
-            mef_unit = self.channels[channel]
+            mef_unit = self.units[channel]
             
             if not mef_unit in self.beads:
                 raise RuntimeError("Invalid unit {0} specified for channel {1}".format(mef_unit, channel))
@@ -261,12 +261,12 @@ class BeadCalibrationOp(HasStrictTraits):
         
         Parameters
         ----------
-        experiment : Experiment
-            the old_experiment to which this op is applied
+        old_experiment : Experiment
+            the experiment to which this op is applied
             
         Returns
         -------
-            a new experiment calibrated in physical channels.
+            a new experiment calibrated in physical units.
         """
         
         channels = self._coefficients.keys()
@@ -303,7 +303,7 @@ class BeadCalibrationOp(HasStrictTraits):
     
             new_experiment[channel] = calibration_fn(new_experiment[channel])
             new_experiment.metadata[channel]['bead_calibration_fn'] = calibration_fn
-            new_experiment.metadata[channel]['units'] = self.channels[channel]
+            new_experiment.metadata[channel]['units'] = self.units[channel]
             
         return new_experiment
     
@@ -354,14 +354,14 @@ class BeadCalibrationOp(HasStrictTraits):
 @provides(IView)
 class BeadCalibrationDiagnostic(HasStrictTraits):
     """
-    Plots a scatterplot of the forward/side scatter channels
+    Plots diagnostic histograms of the peak finding algorithm.
     
     Attributes
     ----------
     name : Str
         The instance name (for serialization, UI etc.)
     
-    op : Instance(BleedthroughPiecewiseOp)
+    op : Instance(BeadCalibrationDiagnostic)
         The op whose parameters we're viewing
         
     """
@@ -387,7 +387,7 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
          
         plt.figure()
         
-        channels = self.op.channels.keys()
+        channels = self.op.units.keys()
         
         for idx, channel in enumerate(channels):
             data = beads_tube.data[channel]

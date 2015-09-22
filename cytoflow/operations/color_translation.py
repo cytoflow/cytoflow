@@ -7,7 +7,7 @@ Created on Sep 2, 2015
 from __future__ import division
 
 from traits.api import HasStrictTraits, Str, CStr, File, Dict, Python, \
-                       Instance, Int, Tuple, Bool
+                       Instance, Tuple, Bool
 import numpy as np
 from traits.has_traits import provides
 from cytoflow.operations.i_operation import IOperation
@@ -27,9 +27,8 @@ class ColorTranslationOp(HasStrictTraits):
     
     To use, set up the `channels` dict with the desired mapping and the 
     `controls` dict with the multi-color controls.  Call `estimate()` to
-    populate the `mapping` dict; check that the plots look good with 
-    `default_view()`; then `apply()` to an Experiment.
-
+    paramterize the module; check that the plots look good with 
+    `default_view().plot()`; then `apply()` to an Experiment.
     
     Attributes
     ----------
@@ -43,7 +42,7 @@ class ColorTranslationOp(HasStrictTraits):
     controls : Dict((Str, Str), File)
         Two-color controls used to determine the mapping.  They keys are 
         tuples of *from-channel* and *to-channel* (corresponding to key-value
-        pairs in `translation`).  They values are FCS files containing two-color 
+        pairs in `translation`).  The values are FCS files containing two-color 
         constitutive fluorescent expression for the mapping.
         
     mixture_model : Bool (default = False)
@@ -51,8 +50,31 @@ class ColorTranslationOp(HasStrictTraits):
         cells and non-expressing cells (as you would get with a transient
         transfection.)  Make sure you check the diagnostic plots!
         
-    coefficients : Dict((Str, Str), List(Float))
-       
+    Notes
+    -----
+    In the TASBE workflow, this operation happens *after* the application of
+    `AutofluorescenceOp` and `BleedthroughPiecewiseOp`.  Both must be applied
+    to the single-color controls before the translation coefficients are
+    estimated; the autofluorescence and bleedthrough parameters for each channel 
+    are retrieved from the channel metadata and applied in `estimate()`.
+    
+    However, because there are possible workflows for which the autofluorescence
+    and bleedthrough corrections are not necessary, `estimate()` does NOT fail
+    if those parameters are not available; it simply does not apply the
+    corresponding corrections.
+
+    Examples
+    --------
+    ct_op = flow.ColorTranslationOp()
+    ct_op.translation = {"Pacific Blue-A" : "FITC-A",
+                         "PE-Tx-Red-YG-A" : "FITC-A"}
+    ct_op.controls = {("Pacific Blue-A", "FITC-A") : "merged/rby.fcs",
+                      ("PE-Tx-Red-YG-A", "FITC-A") : "merged/rby.fcs"}
+    ct_op.mixture_model = True
+
+    ct_op.estimate(ex4)
+    ct_op.default_view().plot(ex4)
+    ex5 = ct_op.apply(ex4)
     """
     
     # traits
@@ -121,6 +143,9 @@ class ColorTranslationOp(HasStrictTraits):
                 except Exception:
                     raise RuntimeError("FCS reader threw an error on tube {0}"
                                        .format(self.controls[(from_channel, to_channel)]))
+                    
+                # check voltages
+                
     
                 tube_data = tube.data
                 

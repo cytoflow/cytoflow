@@ -6,9 +6,8 @@ Created on Sep 18, 2015
 
 from __future__ import division
 
-from traits.api import HasStrictTraits, Str, CStr, List, Float, Int, Enum
+from traits.api import HasStrictTraits, Str, CStr, Int, Enum
 import numpy as np
-import matplotlib as mpl
 from traits.has_traits import provides
 from cytoflow.operations.i_operation import IOperation
 
@@ -34,7 +33,18 @@ class BinningOp(HasStrictTraits):
         
     scale : Enum("Linear", "Log")
         Make the bins equidistant along what scale?
-        TODO - add other scales, like Logicle        
+        TODO - add other scales, like Logicle      
+        
+    Examples
+    --------
+    >>> bin_op = flow.BinningOp(name = "CFP_Bin",
+    ...                         channel = "PE-Tx-Red-YG-A",
+    ...                         scale = "linear",
+    ...                         num_bins = 40)
+    >>> ex5_binned = bin_op.apply(ex5)
+
+    >>> h.huefacet = "CFP_Bin"
+    >>> h.plot(ex5_binned)
     """
     
     # traits

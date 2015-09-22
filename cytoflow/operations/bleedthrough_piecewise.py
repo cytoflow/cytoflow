@@ -28,9 +28,19 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
     """
     Apply bleedthrough correction to a set of fluorescence channels.
     
-    To use, set up the `controls` dict with the single color controls; 
+    This is not a traditional bleedthrough matrix-based compensation; it uses
+    a similar set of single-color controls, but instead of computing a compensation
+    matrix, it fits a piecewise-linear spline to the untransformed data and
+    uses those splines to compute the correction factor at each point in
+    a mesh across the color space.  The experimental data is corrected using
+    a linear interpolation along that mesh: this is much faster than computing
+    the correction factor for each cell indiviually (an operation that takes
+    5 msec each.)
+    
+    To use, set up the `controls` dict with the single color controls;
     call `estimate()` to parameterize the operation; check that the bleedthrough 
-    plots look good with `default_view`(); and then `apply()` to an Experiment.
+    plots look good with `default_view().plot()`; and then `apply()` to an 
+    Experiment.
     
     Attributes
     ----------
@@ -53,14 +63,41 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
     -----
     We use an interpolation-based scheme to estimate corrected bleedthrough.
     The algorithm is as follows:
+    
      - Fit a piecewise-linear spline to each single-color control's bleedthrough
-       into other channels.   
+       into other channels.  Because we want to fit the spline to untransfomed
+       data, but capture both the negative, positive-linear and positive-log 
+       portions of a traditional flow data set, we distribute the spline knots 
+       evenly on an hlog-transformed axis for each color we're correcting.   
+
      - At each point on a regular mesh spanning the entire range of the
        instrument, estimate the mapping from (raw colors) --> (actual colors).
-       This is quite slow.
-     - Use these estimates to paramaterize a linear interpolator (in log space).
-       There's one interpolator per output channel.  For each measured cell,
-       run each interpolator to give the corrected output.
+       The mesh points are also distributed evenly along the hlog-transformed
+       color axes; this captures negative data as well as positive 
+       This is quite slow: ~30 seconds for a mesh size of 32 in 3-space.
+       Remember that additional channels expand the number of mesh points
+       exponentially!
+
+     - Use these estimates to paramaterize a linear interpolator (in linear
+       space, this time).  There's one interpolator per output channel (so
+       for a 3-channel correction, each interpolator is R^3 --> R).  For 
+       each measured cell, run each interpolator to give the corrected output.
+
+    Examples
+    --------
+    >>> bl_op = flow.BleedthroughPiecewiseOp()
+    >>> bl_op.num_knots = 10
+    >>> bl_op.controls = {'Pacific Blue-A' : 'merged/ebfp.fcs',
+                          'FITC-A' : 'merged/eyfp.fcs',
+                          'PE-Tx-Red-YG-A' : 'merged/mkate.fcs'}
+
+    >>> bl_op.estimate(ex2)
+    >>> bl_op.default_view().plot()    
+    
+    >>> %time ex3 = bl_op.apply(ex2) # 410,000 cells
+
+    CPU times: user 577 ms, sys: 27.7 ms, total: 605 ms
+    Wall time: 607 ms
     """
     
     # traits
