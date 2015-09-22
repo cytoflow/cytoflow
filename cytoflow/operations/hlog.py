@@ -1,4 +1,4 @@
-from traits.api import HasStrictTraits, Str, List, Float, provides
+from traits.api import HasStrictTraits, Str, List, Float, Dict, provides
 from .i_operation import IOperation
 
 @provides(IOperation)
@@ -13,13 +13,16 @@ class HlogTransformOp(HasStrictTraits):
     channels : List(Str)
         A list of the channels on which to apply the transformation
         
-    b: List(Float) (default = 500)
+    b: Dict(Str : Float) (default = 500)
         The point at which the transform transitions from linear to log.
-        If the list is empty, the default value of 500 is used.
+        The keys are channel names and the values are transition points for
+        each channel; if a channel in `channels` isn't specified here, the 
+        default value of 500 is used.
     
-    r: List(Float) (default = 10**4)  
-        The maximum of the transformed values.  If the list is empty, the
-        default value of 10**4 is used.
+    r: Dict(Str : Float) (default = 10**4)  
+        The maximum of the transformed values.  The keys are channel names and
+        the values are the display maxima; if a channel in `channels` isn't
+        specified here, the default value of 10**4 is used.
     
     References
     ----------
@@ -27,7 +30,15 @@ class HlogTransformOp(HasStrictTraits):
            zero, and  positive valued data."
            Bagwell CB.
            Cytometry A. 2005 Mar;64(1):34-42.
-           PMID: 15700280 [PubMed - indexed for MEDLINE] 
+           PMID: 15700280 
+           
+    Examples
+    --------
+    hlog = flow.HlogTransformOp()
+    hlog.channels =["V2-A", "Y2-A", "B1-A"]
+    hlog.b = {"V2-A" : 500, "Y2-A" : 1000, "B1-A" : 1000 }
+    hlog.r = {c : 1.0 for c in hlog.channels}
+    ex2 = hlog.apply(ex)
     """
     
     # traits
@@ -35,8 +46,8 @@ class HlogTransformOp(HasStrictTraits):
     friendly_id = "Hyperlog"
     name = Str()
     channels = List(Str)
-    b = List(Float)
-    r = List(Float)
+    b = Dict(Str, Float)
+    r = Dict(Str, Float)
     
     def is_valid(self, experiment):
         """Validate this transform instance against an experiment.
@@ -61,6 +72,12 @@ class HlogTransformOp(HasStrictTraits):
         if not set(self.channels).issubset(set(experiment.channels)):
             return False
         
+        if not set(self.b.keys()) <= set(self.channels):
+            return False
+        
+        if not set(self.r.keys()) <= set(self.channels):
+            return False
+        
         return True
     
     def apply(self, old_experiment):
@@ -80,10 +97,10 @@ class HlogTransformOp(HasStrictTraits):
         
         new_experiment = old_experiment.clone()
         
-        for idx, channel in enumerate(self.channels):
+        for channel in self.channels:
             # TODO - probably should change this if the channel range changes
-            b = self.b[idx] if self.b else 500
-            r = self.r[idx] if self.r else 10**4
+            b = self.b[channel] if channel in self.b else 500
+            r = self.r[channel] if channel in self.r else 10**4
             d = np.log10(old_experiment.metadata[channel]['range'])
             
             hlog_fwd = \
