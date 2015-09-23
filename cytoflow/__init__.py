@@ -35,6 +35,7 @@ from views.range_selection_2d import RangeSelection2D
 from views.threshold_selection import ThresholdSelection
 from views.poly_selection import PolygonSelection
 from views.stats_1d import Stats1DView
+from views.stats_2d import Stats2DView
 from views.bar_chart import BarChartView
 
 from utility.util import geom_mean
