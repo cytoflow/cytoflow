@@ -4,7 +4,7 @@ from cytoflow.operations.i_operation import IOperation
 
 @provides(IOperation)
 class Range2DOp(HasStrictTraits):
-    """Apply a range gate to a cytometry experiment.
+    """Apply a 2D range gate to a cytometry experiment.
     
     Attributes
     ----------
@@ -29,6 +29,30 @@ class Range2DOp(HasStrictTraits):
         
     yhigh : Float
         The highest value in ychannel to include in this gate.
+        
+    Examples
+    --------
+    range_2d = flow.Range2DOp(xchannel = "V2-A",
+                              xlow = 0.0,
+                              xhigh = 0.5,
+                              ychannel = "Y2-A",
+                              ylow = 0.4,
+                              yhigh = 0.8)
+    ex3 = range_2d.apply(ex2)
+
+    ### alternately, in an IPython notebook with `%matplotlib notebook`
+    s = flow.ScatterplotView(xchannel = "V2-A",
+                             ychannel = "Y2-A")
+    r2d = flow.RangeSelection2D(view = s)
+    r2d.plot(ex2)
+    r2d.interactive = True
+    # ... draw a range on the plot ....
+    range_2d = flow.Range2DOp(xchannel = "V2-A",
+                              xlow = r2d.xlow,
+                              xhigh = r2d.xhigh,
+                              ychannel = "Y2-A",
+                              ylow = r2d.ylow,
+                              yhigh = r2d.yhigh) 
     """
     
     # traits

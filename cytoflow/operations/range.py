@@ -20,6 +20,27 @@ class RangeOp(HasStrictTraits):
         
     high : Float
         The highest value to include in this gate.
+        
+    Examples
+    --------
+    range = flow.RangeOp()
+    range.name = "Y2-A+"
+    range.channel = 'Y2-A'
+    range.low = 0.3
+    range.high = 0.8
+
+    ex3 = range.apply(ex2)
+    
+    ### alternately  (in an IPython notebook with `%matplotlib notebook`)
+    
+    h = flow.HistogramView()
+    h.channel = 'Y2-A'
+    rs = flow.RangeSelection(view = h)
+    rs.plot(ex2)
+    rs.interactive = True
+    # ... draw a range on the plot ....
+    range.low, range.high = rs.low, rs.high
+    ex3 = range.apply(ex2)
     """
     
     # traits

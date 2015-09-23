@@ -6,7 +6,7 @@ from cytoflow.operations.i_operation import IOperation
 
 @provides(IOperation)
 class PolygonOp(HasStrictTraits):
-    """Apply a range gate to a cytometry experiment.
+    """Apply a polygon gate to a cytometry experiment.
     
     Attributes
     ----------
@@ -23,6 +23,15 @@ class PolygonOp(HasStrictTraits):
     polygon : List((Float, Float))
         The polygon verticies.  An ordered list of 2-tuples, representing
         the x and y coordinates of the vertices.
+        
+    Notes
+    -----
+    This module uses `matplotlib.path.Path` to represent the polygon, because
+    membership testing is very fast.
+    
+    You can set the verticies by hand, I suppose, but it's much easier to use
+    the `PolygonSelection` view to do so.  Unfortunately, it's currently very
+    slow in the GUI and impossible to use in an IPython notebook.
     """
     
     # traits

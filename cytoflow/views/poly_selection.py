@@ -92,6 +92,7 @@ class PolygonSelection(HasStrictTraits):
             return
         
         if event.dblclick:
+            # TODO - this doesn't work in an IPython %matplotlib notebook
             self._drawing = False
             self.vertices = map(tuple, self._path.vertices)
             self._path = None
@@ -109,6 +110,8 @@ class PolygonSelection(HasStrictTraits):
         else:
             vertices = np.array((event.xdata, event.ydata), ndmin = 2)
             
+        # TODO - this is super slow in an IPython %matplotlib notebook
+
         self._path = mpl.path.Path(vertices, closed = False)
         self._patch = mpl.patches.PathPatch(self._path, 
                                             edgecolor = "black",
