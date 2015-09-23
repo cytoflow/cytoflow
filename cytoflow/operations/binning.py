@@ -6,7 +6,7 @@ Created on Sep 18, 2015
 
 from __future__ import division
 
-from traits.api import HasStrictTraits, Str, CStr, Int, Enum
+from traits.api import HasStrictTraits, Str, CStr, Int, Enum, Float
 import numpy as np
 from traits.has_traits import provides
 from cytoflow.operations.i_operation import IOperation
@@ -29,7 +29,10 @@ class BinningOp(HasStrictTraits):
         The name of the channel along which to bin.
         
     num_bins = Int
-        The number of bins to make
+        The number of bins to make.  Must set either `num_bins` or `bin_width`
+        
+    bin_width = Float
+        The width of the bins.  Must set either `num_bins` or `bin_width`
         
     scale : Enum("Linear", "Log")
         Make the bins equidistant along what scale?
@@ -53,7 +56,8 @@ class BinningOp(HasStrictTraits):
     
     name = CStr()
     channel = Str()
-    num_bins = Int()
+    num_bins = Int(None)
+    bin_width = Float(None)
     scale = Enum("linear", "log10")
     
     def is_valid(self, experiment):
@@ -71,7 +75,13 @@ class BinningOp(HasStrictTraits):
         if not self.channel in experiment.channels:
             return False
               
-        if not self.num_bins or self.num_bins <= 0:
+        if not self.num_bins and not self.bin_width:
+            return False
+        
+        if self.num_bins and self.num_bins <= 0:
+            return False
+        
+        if self.bin_width and self.bin_width <= 0:
             return False
        
         return True
@@ -105,13 +115,19 @@ class BinningOp(HasStrictTraits):
             
         channel_min = old_experiment.data[self.channel].min()
         channel_max = old_experiment.data[self.channel].max()
+        
+        
         if self.scale == "linear":
+            num_bins = self.num_bins if self.num_bins else \
+                       (channel_max - channel_min) / self.bin_width
             bins = np.linspace(start = channel_min, stop = channel_max,
-                               num = self.num_bins)
+                               num = num_bins)
         elif self.scale == "log10":
+            num_bins = self.num_bins if self.num_bins else \
+                       (np.log10(channel_max) - np.log10(channel_min)) / self.bin_width
             bins = np.logspace(start = np.log10(channel_min),
                                stop = np.log10(channel_max),
-                               num = self.num_bins,
+                               num = num_bins,
                                base = 10) 
             
         # bins need to be internal; drop the first and last one
