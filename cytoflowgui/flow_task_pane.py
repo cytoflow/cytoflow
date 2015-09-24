@@ -3,7 +3,7 @@ Created on Feb 11, 2015
 
 @author: brian
 """
-from pyface.tasks.task_pane import TaskPane
+from pyface.tasks.api import TaskPane
 from matplotlib_editor import MPLFigureEditor
 from traits.api import Instance, provides
 from pyface.tasks.i_task_pane import ITaskPane

@@ -7,11 +7,7 @@ from traits.api \
     import HasTraits, HasPrivateTraits, Instance, List, Str, Bool, Property, \
     Any, cached_property, Int
 
-from traitsui.api import UI
-
-from traitsui.editor \
-    import Editor
-
+from traitsui.api import UI, Editor
 
 class VerticalNotebookPage(HasPrivateTraits):
     """ 
