@@ -47,7 +47,7 @@ install:
   - choco install swig -yv
 
   # Install the build and runtime dependencies of the project.
-  - "%CMD_IN_ENV% conda install --yes pandas numexpr seaborn traits pyface envisage pyqt"
+  - "%CMD_IN_ENV% conda install --yes pip pandas numexpr scipy scikit-learn seaborn traits pyface envisage pyqt"
   - "%CMD_IN_ENV% pip install FlowCytometryTools wheel"
   - "%CMD_IN_ENV% python setup.py bdist_wheel bdist_wininst"
 
