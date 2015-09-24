@@ -33,6 +33,6 @@ deploy:
   on:
     repo: bpteague/cytoflow
     branch: master
-    tags: false
+    tags: true
   server: https://pypi.python.org/pypi
   skip_cleanup: true
