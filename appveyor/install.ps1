@@ -174,7 +174,7 @@ function InstallMinicondaPip ($python_home) {
 
 function InstallPackage ($python_home, $pkg) {
     $pip_path = $python_home + "/Scripts/pip.exe"
-    & $pip_path install $pkg
+    & $pip_path install --upgrade $pkg
 }
 
 function main () {

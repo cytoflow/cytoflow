@@ -48,10 +48,6 @@ install:
 
   # Install the build and runtime dependencies of the project.
   - "%CMD_IN_ENV% conda install --yes --quiet pandas numexpr scipy scikit-learn seaborn traits pyface envisage pyqt"
-  - "%CMD_IN_ENV% pip install --quiet --upgrade pip"
-  - "%CMD_IN_ENV% pip install --quiet --upgrade setuptools"
-  - "%CMD_IN_ENV% pip install --quiet wheel"
-  - "%CMD_IN_ENV% pip install --quiet FlowCytometryTools"
   - "%CMD_IN_ENV% python setup.py --help-commands"
   - "%CMD_IN_ENV% python setup.py bdist_wheel bdist_wininst"
 
