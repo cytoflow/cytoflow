@@ -1,7 +1,7 @@
-from traits.api import Instance, Bool
-from cytoflow.views.i_view import IView
+from traits.api import Instance, Bool, Interface
+from .i_view import IView
 
-class ISelectionView(IView):
+class ISelectionView(Interface):
     """A decorator that lets you add (possibly interactive) selections to an IView.
     
     Note that this is a Decorator *design pattern*, not a Python `@decorator`.
