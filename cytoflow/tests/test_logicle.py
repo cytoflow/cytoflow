@@ -30,7 +30,6 @@ class TestLogicle(unittest.TestCase):
 
         # these are the values the R implementation gives
         self.assertAlmostEqual(el.A['Y2-A'], 0.0)
-        self.assertAlmostEqual(el.T['Y2-A'], 262144.0)
         self.assertAlmostEqual(el.W['Y2-A'], 0.533191950161284)
         
     ### TODO - test the estimator failure modes
