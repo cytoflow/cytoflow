@@ -1,7 +1,6 @@
-from traits.api import HasStrictTraits, Str, CStr, List, Float
+from traits.api import HasStrictTraits, Str, CStr, List, Float, provides
 import numpy as np
 import matplotlib as mpl
-from traits.has_traits import provides
 from cytoflow.operations.i_operation import IOperation
 
 @provides(IOperation)

@@ -7,9 +7,8 @@ Created on Sep 2, 2015
 from __future__ import division
 
 from traits.api import HasStrictTraits, Str, CStr, File, Dict, Python, \
-                       Instance, Tuple, Bool
+                       Instance, Tuple, Bool, provides
 import numpy as np
-from traits.has_traits import provides
 from cytoflow.operations.i_operation import IOperation
 import fcsparser
 import matplotlib.pyplot as plt
