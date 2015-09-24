@@ -66,7 +66,7 @@ setup(
                                         "cytoflow/operations/logicle_ext/Logicle.i",
                                         "cytoflow/operations/logicle_ext/logicle.h"],
                              swig_opts=['-c++'])] \
-                if on_rtd else None,
+                if not on_rtd else None,
     
     #include_package_data = True,
     
