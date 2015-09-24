@@ -172,9 +172,15 @@ function InstallMinicondaPip ($python_home) {
     }
 }
 
+function InstallPackage ($python_home, $pkg) {
+    $pip_path = $python_home + "/Scripts/pip.exe"
+    & $pip_path install $pkg
+}
+
 function main () {
     InstallMiniconda $env:PYTHON_VERSION $env:PYTHON_ARCH $env:PYTHON
     InstallMinicondaPip $env:PYTHON
+    InstallPackage $env:PYTHON wheel
 }
 
 main
