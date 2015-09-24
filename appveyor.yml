@@ -48,10 +48,10 @@ install:
 
   # Install the build and runtime dependencies of the project.
   - "conda install --yes --quiet pandas numexpr scipy scikit-learn seaborn traits pyface envisage pyqt"
-  - "python -m pip install -U setuptools"
-  - "python -m pip install -U pip"
-  - "python -m pip install -U wheel"
-  - "python -m pip install -U tox"
+  #- "python -m pip install -U setuptools"
+  #- "python -m pip install -U -I pip"
+  - "python -m pip install -U -I wheel"
+  #- "python -m pip install -U tox"
 
   - "python setup.py --help-commands"
   - "python -c \"import wheel; print wheel.__version__\""
