@@ -18,7 +18,10 @@ import os
 # mock configuration
 import mock
 
-MOCK_MODULES = ['cytoflow.operations.logicle_ext.Logicle']
+MOCK_MODULES = ['cytoflow.operations.logicle_ext.Logicle', 'pandas',
+                'FlowCytometryTools', 'numpy', 'numexpr', 'matplotlib',
+                'scipy', 'scikit-learn', 'seaborn', 'pyface', 'envisage',
+                'traits', 'traitsui']
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = mock.Mock()
 
