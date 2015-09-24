@@ -47,10 +47,11 @@ install:
   - choco install swig -yv
 
   # Install the build and runtime dependencies of the project.
-  - "conda install --yes --quiet pandas numexpr scipy scikit-learn seaborn traits pyface envisage pyqt"
+  - conda install --yes --quiet pandas numexpr scipy scikit-learn seaborn traits pyface envisage pyqt
+  - conda uninstall --yes wheel
   #- "python -m pip install -U setuptools"
-  #- "python -m pip install -U -I pip"
-  - "python -m pip install -U -I wheel"
+  #- "python -m pip install -U -I --force-reinstall pip"
+  - python -m pip install -U -I --force-reinstall wheel
   #- "python -m pip install -U tox"
 
   - "python setup.py --help-commands"
