@@ -48,15 +48,13 @@ install:
 
   # Install the build and runtime dependencies of the project.
   - conda install --yes --quiet pandas numexpr scipy scikit-learn seaborn traits pyface envisage pyqt
-  - conda uninstall --yes wheel
-  #- "python -m pip install -U setuptools"
-  #- "python -m pip install -U -I --force-reinstall pip"
-  - python -m pip install -U -I --force-reinstall wheel
-  #- "python -m pip install -U tox"
 
-  - "python setup.py --help-commands"
-  - "python -c \"import wheel; print wheel.__version__\""
-  - "pip --version"
+  # conda's wheel 0.26 package is borked; remove it and replace with pip
+  - conda uninstall --yes wheel
+  - python -m pip install -U pip
+  - python -m pip install -U setuptools
+  - python -m pip install -U wheel
+
   - "%WITH_COMPILER% python setup.py bdist_wheel bdist_wininst"
 
 build: off
