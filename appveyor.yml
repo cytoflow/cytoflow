@@ -11,11 +11,11 @@ environment:
     # Pre-installed Python versions, which Appveyor may upgrade to
     # a later point release.
 
-    - PYTHON: "C:\\Python27-Anaconda"
+    - PYTHON: "C:\\Miniconda"
       PYTHON_VERSION: "2.7.x" # currently 2.7.9
       PYTHON_ARCH: "32"
 
-    - PYTHON: "C:\\Python27-x64-Anaconda"
+    - PYTHON: "C:\\Miniconda-x64"
       PYTHON_VERSION: "2.7.x" # currently 2.7.9
       PYTHON_ARCH: "64"
       WINDOWS_SDK_VERSION: "v7.0"
@@ -32,7 +32,7 @@ install:
 
   # Install Python (from the official .msi of http://python.org) and pip when
   # not already installed.
-  - "powershell ./appveyor/install.ps1"
+  # - "powershell ./appveyor/install.ps1"
 
   # Prepend newly installed Python to the PATH of this build (this cannot be
   # done from inside the powershell script as it would require to restart
@@ -47,12 +47,12 @@ install:
   - choco install swig -yv
 
   # Install the build and runtime dependencies of the project.
-  - "%CMD_IN_ENV% conda install --yes --quiet pandas numexpr scipy scikit-learn seaborn traits pyface envisage pyqt"
-  - "%CMD_IN_ENV% pip install --upgrade wheel" 
-  - "%CMD_IN_ENV% python setup.py --help-commands"
-  - "%CMD_IN_ENV% python -c \"import wheel; print wheel.__version__\""
-  - "%CMD_IN_ENV% pip --version"
-  - "%CMD_IN_ENV% python setup.py bdist_wheel bdist_wininst"
+  - "conda install --yes --quiet pandas numexpr scipy scikit-learn seaborn traits pyface envisage pyqt"
+  - "pip install --upgrade wheel" 
+  - "python setup.py --help-commands"
+  - "python -c \"import wheel; print wheel.__version__\""
+  - "pip --version"
+  - "%WITH_COMPILER% python setup.py bdist_wheel bdist_wininst"
 
 build: off
 
