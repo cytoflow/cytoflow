@@ -41,7 +41,6 @@ install:
 
   # Check that we have the expected version and architecture for Python
   - "python --version"
-  - "%CMD_IN_ENV% python --version"
   - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
   
   # install swig
@@ -50,7 +49,7 @@ install:
   # Install the build and runtime dependencies of the project.
   - "%CMD_IN_ENV% conda install --yes --quiet pandas numexpr scipy scikit-learn seaborn traits pyface envisage pyqt"
   - "%CMD_IN_ENV% python setup.py --help-commands"
-  - "%CMD_IN_ENV% python -c 'import wheel; print wheel.__version__'"
+  - "%CMD_IN_ENV% python -c \"import wheel; print wheel.__version__\""
   - "%CMD_IN_ENV% python setup.py bdist_wheel bdist_wininst"
 
 build: off
