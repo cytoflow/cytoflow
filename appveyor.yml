@@ -50,6 +50,7 @@ install:
   - "%CMD_IN_ENV% conda install --yes --quiet pandas numexpr scipy scikit-learn seaborn traits pyface envisage pyqt"
   - "%CMD_IN_ENV% python setup.py --help-commands"
   - "%CMD_IN_ENV% python -c \"import wheel; print wheel.__version__\""
+  - "%CMD_IN_ENV% pip --version"
   - "%CMD_IN_ENV% python setup.py bdist_wheel bdist_wininst"
 
 build: off
