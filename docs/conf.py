@@ -16,7 +16,29 @@ import sys
 import os
 
 from mock import Mock as MagicMock
+<<<<<<< HEAD
+=======
+ 
+class SphinxMock(MagicMock):
+    @classmethod
+    def __getattr__(cls, name):
+        if name == "version":  # catch pandas.version.version
+            return "0.15.0"
+        return SphinxMock()
+ 
+# MOCK_MODULES = ['pygtk', 'gtk', 'gobject', 'argparse', 'numpy', 'pandas', 'numexpr',
+#                 'cytoflow.operations.logicle_ext.Logicle', 'scipy', 'scikit-learn',
+#                 'traits.api', 'traits.etsconfig', 'traits.etsconfig.api', 'matplotlib.pyplot',
+#                 'scipy.optimize', 'pylab', 'matplotlib', 'FlowCytometryTools',
+#                 'scipy.signal', 'scipy.interpolate', 'scipy.optimize',
+#                 'sklearn.mixture', 'seaborn', 'matplotlib.transforms', 
+#                 'matplotlib.widgets', 'matplotlib.lines', 'matplotlib.patches',
+#                 'envisage.ui.tasks.api', 'pyface.tasks.api', 'traitsui.api',
+#                 'pyface.api', 'envisage.api', 'traitsui.qt4.editor',
+#                 'apptools.preferences.api', 'pyface.tasks.action.api']
+>>>>>>> branch 'packaging' of git@github.com:bpteague/cytoflow.git
 
+<<<<<<< HEAD
 class Mock(MagicMock):
     @classmethod
     def __getattr__(cls, name):
@@ -36,6 +58,22 @@ sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 #                 'FlowCytometryTools', 'numpy', 'numexpr', 'matplotlib',
 #                 'scipy', 'scikit-learn', 'seaborn', 'pyface', 'envisage',
 #                 'traits', 'traitsui']
+=======
+MOCK_MODULES = ['pygtk', 'gtk', 'gobject', 'argparse', 'numpy', 'pandas', 'numexpr',
+                'cytoflow.operations.logicle_ext.Logicle', 'scipy', 'scikit-learn',
+                'traits.api', 'matplotlib', 'matplotlib.pyplot', 'scipy.optimize',
+                'scipy.signal', 'scipy.interpolate', 'sklearn.mixture', 'pylab']
+
+sys.modules.update((mod_name, SphinxMock()) for mod_name in MOCK_MODULES)
+#  
+# # mock configuration
+# import mock
+#  
+# MOCK_MODULES = ['cytoflow.operations.logicle_ext.Logicle', 'pandas',
+#                 'FlowCytometryTools', 'numpy', 'numexpr', 'matplotlib',
+#                 'scipy', 'scikit-learn', 'seaborn', 'pyface', 'envisage',
+#                 'traits', 'traitsui', 'pandas.version']
+>>>>>>> branch 'packaging' of git@github.com:bpteague/cytoflow.git
 # for mod_name in MOCK_MODULES:
 #     sys.modules[mod_name] = mock.Mock()
 

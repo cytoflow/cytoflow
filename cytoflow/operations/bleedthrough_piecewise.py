@@ -6,8 +6,13 @@ Created on Aug 26, 2015
 
 from __future__ import division
 
+<<<<<<< HEAD
 from traits.api import HasStrictTraits, Str, CStr, File, Dict, Python, Int, \
                        Instance, List, provides
+=======
+from traits.api import HasStrictTraits, Str, CStr, CInt, File, Dict, Python, \
+                       Instance, Int, CFloat, List, provides
+>>>>>>> branch 'packaging' of git@github.com:bpteague/cytoflow.git
 import numpy as np
 from cytoflow.operations.i_operation import IOperation
 from cytoflow.utility.util import cartesian
@@ -18,7 +23,10 @@ import pandas
 import fcsparser
 
 from .hlog import hlog, hlog_inv
+<<<<<<< HEAD
 
+=======
+>>>>>>> branch 'packaging' of git@github.com:bpteague/cytoflow.git
 from ..views import IView
 
 @provides(IOperation)
