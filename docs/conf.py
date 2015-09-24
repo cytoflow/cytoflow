@@ -17,22 +17,16 @@ import os
 
 from mock import Mock as MagicMock
 
-<<<<<<< Upstream, based on master
-MOCK_MODULES = ['cytoflow.operations.logicle_ext.Logicle', 'pandas',
-                'numpy', 'numexpr', 'matplotlib',
-                'scipy', 'scikit-learn', 'seaborn', 'pyface', 'envisage',
-                'traits', 'traitsui']
-for mod_name in MOCK_MODULES:
-    sys.modules[mod_name] = mock.Mock()
-=======
 class Mock(MagicMock):
     @classmethod
     def __getattr__(cls, name):
             return Mock()
 
-MOCK_MODULES = ['pygtk', 'gtk', 'gobject', 'argparse', 'numpy', 'pandas',
+MOCK_MODULES = ['pygtk', 'gtk', 'gobject', 'argparse', 'numpy', 'pandas', 'numexpr',
                 'cytoflow.operations.logicle_ext.Logicle', 'scipy', 'scikit-learn',
-                'traits']
+                'traits.api', 'matplotlib', 'matplotlib.pyplot', 'scipy.optimize',
+                'scipy.signal', 'scipy.interpolate', 'sklearn.mixture', 'pylab']
+
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
  
 # # mock configuration
@@ -44,7 +38,6 @@ sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 #                 'traits', 'traitsui']
 # for mod_name in MOCK_MODULES:
 #     sys.modules[mod_name] = mock.Mock()
->>>>>>> 8e3374b Change the mock config
 
 #import cytoflow
 #import cytoflowgui
