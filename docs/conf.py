@@ -15,7 +15,7 @@
 import sys
 import os
 
-from unittest.mock import MagicMock
+from mock import Mock as MagicMock
 
 <<<<<<< Upstream, based on master
 MOCK_MODULES = ['cytoflow.operations.logicle_ext.Logicle', 'pandas',
