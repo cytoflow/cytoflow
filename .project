@@ -3,8 +3,7 @@
 	<name>cytoflow</name>
 	<comment></comment>
 	<projects>
-		<project>flowcytometrytools</project>
-		<project>goreutilities</project>
+		<project>fcsparser</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

@@ -1,5 +1,4 @@
 import pandas as pd
-import FlowCytometryTools as fc
 from traits.api import HasStrictTraits, Dict, List, Instance, Set, Str, Any
 
 class Experiment(HasStrictTraits):
@@ -191,8 +190,9 @@ class Experiment(HasStrictTraits):
         
         Parameters
         ----------
-        tube : FCMeasurement
-            a single tube or well's worth of data
+        tube : (metadata, data)
+            a single tube or well's worth of data.  a tuple of (metadata, data)
+            as returned by `fcsparser.parse()`
             
         Raises
         ------
@@ -203,7 +203,7 @@ class Experiment(HasStrictTraits):
             - If you try to add tubes with different metadata types
             ....among others.
         
-        conditions : Dict(Str : any)
+        conditions : Dict(Str : Any)
             the tube's experimental conditions in (condition:value) pairs
             
         Examples
@@ -216,52 +216,57 @@ class Experiment(HasStrictTraits):
         >>> ex.add_tube(tube1, {"Time" : 1, "Strain" : "BL21"})
         >>> ex.add_tube(tube2, {"Time" : 1, "Strain" : "Top10G"})
         """
+
+        tube_meta, tube_data = tube
+        
+        if "_channels_" not in tube_meta:
+            raise RuntimeError("Did you pass `reformat_meta=True` to fcsparser.parse()?")
+    
+        # TODO - should we use $PnN? $PnS? WTF?
+        tube_channels = tube_meta["_channels_"].set_index("$PnN")    
+        tube_file = tube_meta["$FIL"]   
     
         if(self.channels):
             # first, make sure the new tube's channels match the rest of the 
             # channels in the Experiment
             
-            if(list(tube.channel_names) != self.channels):
+            if(set(tube_meta["_channel_names_"]) != set(self.channels)):
                 raise RuntimeError("Tube {0} doesn't have the same channels "
-                                   "as the first tube added".format(tube.datafile))
-                                            
+                                   "as the first tube added".format(tube_file))
              
             # next check the per-channel parameters
             for channel in self.channels:
                 
                 # first check voltage
-                if "voltage" in self.metadata[channel]:
-                    
-                    if not "$PnV" in tube.channels:
+                if "voltage" in self.metadata[channel]:    
+                    if not "$PnV" in tube_channels.ix[channel]:
                         raise RuntimeError("Didn't find a voltage for channel {0}" \
-                                           "in tube {1}".format(channel, tube.datafile))
+                                           "in tube {1}".format(channel, tube_file))
                     
                     old_v = self.metadata[channel]["voltage"]
-                    new_v = tube.channels[tube.channels['$PnN'] == channel]['$PnV'].iloc[0]
+                    new_v = tube_channels.ix[channel]['$PnV']
                     
                     if old_v != new_v and not ignore_v:
                         raise RuntimeError("Tube {0} doesn't have the same voltages "
-                                           "as the first tube" \
-                                           .format(tube.datafile))
+                                           "as the first tube".format(tube_file))
 
             # TODO check the delay -- and any other params?
         else:
-            self.channels = list(tube.channel_names)
+            self.channels = list(tube_channels.index)
             
             for channel in self.channels:
                 self.metadata[channel] = {}
-                if("$PnV" in tube.channels):
-                    new_v = tube.channels[tube.channels['$PnN'] == channel]['$PnV'].iloc[0]
+                if("$PnV" in tube_channels.ix[channel]):
+                    new_v = tube_channels.ix[channel]['$PnV']
                     if new_v: self.metadata[channel]["voltage"] = new_v
                         
                 # add empty lists to keep track of channel transforms.  
-                # the list 
                 # required to draw tic marks, etc.                    
                 self.metadata[channel]['xforms'] = []
                 self.metadata[channel]['xforms_inv']= []
                 
                 # add the maximum possible value for this channel.
-                data_range = tube.channels[tube.channels['$PnN'] == channel]['$PnR'].iloc[0]
+                data_range = tube_channels.ix[channel]['$PnR']
                 data_range = float(data_range)
                 self.metadata[channel]['range'] = data_range
                     
@@ -271,12 +276,12 @@ class Experiment(HasStrictTraits):
         if( any(True for k in conditions if k not in self.conditions) or \
             any(True for k in self.conditions if k not in conditions) ):
             raise RuntimeError("Metadata mismatch for tube {0}" \
-                               .format(tube.datafile))
+                               .format(tube_file))
             
         # next, make sure that this tube's conditions doesn't match any other
         # tube's conditions
         if frozenset(conditions.iteritems()) in self._tube_conditions:
-            raise RuntimeError("Tube {0} has non-unique conditions".format(tube.datafile))
+            raise RuntimeError("Tube {0} has non-unique conditions".format(tube_file))
                 
         # add the conditions to tube's internal data frame.  specify the conditions
         # dtype using self.conditions.  check for errors as we do so.
@@ -288,18 +293,17 @@ class Experiment(HasStrictTraits):
         # TODO - the FCS standard says you can specify the precision.  
         # check with int/float/double files!
         
-        new_data = tube.data.astype("float64", copy=True)
+        new_data = tube_data.astype("float64", copy=True)
         
         for meta_name, meta_value in conditions.iteritems():
             if(meta_name not in self.conditions):
                 raise RuntimeError("Tube {0} asked to add conditions {1} which" \
                                    "hasn't been specified as a condition" \
-                                   .format(tube.datafile,
-                                           meta_name))
+                                   .format(tube_file, meta_name))
             meta_type = self.conditions[meta_name]
             try:
                 new_data[meta_name] = \
-                    pd.Series(data = [meta_value] * len(tube.data.index),
+                    pd.Series(data = [meta_value] * len(tube_data.index),
                               index = new_data.index,
                               dtype = meta_type)
                 
@@ -311,7 +315,7 @@ class Experiment(HasStrictTraits):
             except (ValueError, TypeError):
                 raise RuntimeError("Tube {0} had trouble converting conditions {1}"
                                    "(value = {2}) to type {3}" \
-                                   .format(tube.datafile,
+                                   .format(tube_file,
                                            meta_name,
                                            meta_value,
                                            meta_type))
@@ -323,14 +327,13 @@ class Experiment(HasStrictTraits):
         # TODO - figure out if we can actually delete the original tube's data
 
 if __name__ == "__main__":
+    import fcsparser
     ex = Experiment()
     ex.add_conditions({"time" : "category"})
     
-    tube1 = fc.FCMeasurement(ID='Test 1', 
-                       datafile='../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs')
+    tube1 = fcsparser.parse('../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs')
     
-    tube2 = fc.FCMeasurement(ID='Test 2', 
-                       datafile='../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs')
+    tube2 = fcsparser.parse('../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs')
     
     ex.add_tube(tube1, {"time" : "one"})
     ex.add_tube(tube2, {"time" : "two"})

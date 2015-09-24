@@ -40,7 +40,7 @@ setup(
     # Project uses reStructuredText, so ensure that the docutils get
     # installed or upgraded on the target machine
     install_requires = ['pandas>=0.15.0',
-                        'FlowCytometryTools>=0.4',
+                        'fcsparser>=0.1.1',
                         'numpy>=1.9.0',
                         'numexpr>=2.1',
                         'matplotlib>=1.4.3',

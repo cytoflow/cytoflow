@@ -5,7 +5,7 @@ from traits.api import HasStrictTraits, Str, CStr, CFloat, File, Dict, \
 import numpy as np
 from traits.has_traits import provides
 from cytoflow.operations.i_operation import IOperation
-import FlowCytometryTools as fc
+import fcsparser
 from ..views import IView
 
 @provides(IOperation)
@@ -93,31 +93,28 @@ class AutofluorescenceOp(HasStrictTraits):
         # don't have to validate that blank_file exists; should crap out on 
         # trying to set a bad value
         
-        blank_tube = fc.FCMeasurement(ID="blank", datafile = self.blank_file)
-
-        # make sure that the blank tube was collected with the same voltages
-        # as the experimental tubes
-
         try:
-            blank_tube.read_meta()
-        except Exception:
-            raise RuntimeError("FCS reader threw an error!")
+            blank_meta, blank_data = \
+                fcsparser.parse(self.blank_file, reformat_meta = True)  
+            blank_channels = blank_meta["_channels_"].set_index("$PnN")     
+        except Exception as e:
+            raise RuntimeError("FCS reader threw an error: " + e.value)
         
         for channel in self.channels:
             v = experiment.metadata[channel]['voltage']
             
-            if not "$PnV" in blank_tube.channels:
+            if not "$PnV" in blank_channels.ix[channel]:
                 raise RuntimeError("Didn't find a voltage for channel {0}" \
-                                   "in tube {1}".format(channel, blank_tube.datafile))
+                                   "in tube {1}".format(channel, self.blank_file))
             
-            blank_v = blank_tube.channels[blank_tube.channels['$PnN'] == channel]['$PnV'].iloc[0]
+            blank_v = blank_channels.ix[channel]['$PnV']
             
             if blank_v != v:
                 raise RuntimeError("Voltage differs for channel {0}".format(channel)) 
        
         for channel in self.channels:
-            self.af_median[channel] = np.median(blank_tube.data[channel])
-            self.af_stdev[channel] = np.std(blank_tube.data[channel])    
+            self.af_median[channel] = np.median(blank_data[channel])
+            self.af_stdev[channel] = np.std(blank_data[channel])    
                 
     def apply(self, old_experiment):
         """Applies the threshold to an experiment.
@@ -187,11 +184,11 @@ class AutofluorescenceDiagnosticView(HasStrictTraits):
         kwargs.setdefault('alpha', 0.5)
         kwargs.setdefault('antialiased', True)
         
-        tube = fc.FCMeasurement(ID="blank", datafile = self.op.blank_file)    
+        _, blank_data = fcsparser.parse(self.op.blank_file, reformat_meta=True)    
         plt.figure()
         
         for idx, channel in enumerate(self.op.channels):
-            d = tube.data[channel]
+            d = blank_data[channel]
             plt.subplot(len(self.op.channels), 1, idx+1)
             plt.title(channel)
             plt.hist(d, bins = 200, **kwargs)

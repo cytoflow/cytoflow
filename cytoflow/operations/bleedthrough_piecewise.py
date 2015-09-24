@@ -6,22 +6,21 @@ Created on Aug 26, 2015
 
 from __future__ import division
 
-from traits.api import HasStrictTraits, Str, CStr, CInt, File, Dict, Python, \
-                       Instance, Int, CFloat, List
+from traits.api import HasStrictTraits, Str, CStr, File, Dict, Python, Int, \
+                       Instance, List
 import numpy as np
 from traits.has_traits import provides
 from cytoflow.operations.i_operation import IOperation
 from cytoflow.utility.util import cartesian
-import FlowCytometryTools as fc
 import math
 import scipy.interpolate
 import scipy.optimize
 import pandas
+import fcsparser
 
-from FlowCytometryTools.core.transforms import hlog, hlog_inv
+from .hlog import hlog, hlog_inv
 
 from ..views import IView
-import FlowCytometryTools
 
 @provides(IOperation)
 class BleedthroughPiecewiseOp(HasStrictTraits):
@@ -144,22 +143,24 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
         
         self._channels = self.controls.keys()
     
-        for channel in self._channels:       
-            tube = fc.FCMeasurement(ID=channel, datafile = self.controls[channel])
-            
+        for channel in self._channels:
             try:
-                tube.read_meta()
-            except Exception:
-                raise RuntimeError("FCS reader threw an error on tube {0}".format(self.controls[channel]))
+                tube_meta = fcsparser.parse(self.controls[channel], 
+                                            meta_data_only = True, 
+                                            reformat_meta = True)
+                tube_channels = tube_meta["_channels_"].set_index("$PnN")
+            except Exception as e:
+                raise RuntimeError("FCS reader threw an error on tube {0}: {1}"\
+                                   .format(self.controls[channel], e.value))
 
             for channel in self._channels:
                 exp_v = experiment.metadata[channel]['voltage']
             
-                if not "$PnV" in tube.channels:
+                if not "$PnV" in tube_channels.ix[channel]:
                     raise RuntimeError("Didn't find a voltage for channel {0}" \
-                                       "in tube {1}".format(channel, tube.datafile))
+                                       "in tube {1}".format(channel, self.controls[channel]))
                 
-                control_v = tube.channels[tube.channels['$PnN'] == channel]['$PnV'].iloc[0]
+                control_v = tube_channels.ix[channel]["$PnV"]
                 
                 if control_v != exp_v:
                     raise RuntimeError("Voltage differs for channel {0} in tube {1}"
@@ -170,9 +171,16 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
 
         for channel in self._channels:
             self._splines[channel] = {}
+
+            try:
+                tube_meta, tube_data = fcsparser.parse(self.controls[channel], 
+                                                       reformat_meta = True)
+                tube_channels = tube_meta["_channels_"].set_index("$PnN")
+            except Exception as e:
+                raise RuntimeError("FCS reader threw an error on tube {0}: {1}"\
+                                   .format(self.controls[channel], e.value))
             
-            tube = fc.FCMeasurement(ID=channel, datafile = self.controls[channel])
-            data = tube.data.sort(channel)
+            data = tube_data.sort(channel)
 
             for af_channel in self._channels:
                 if 'af_median' in experiment.metadata[af_channel]:
@@ -299,13 +307,14 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
         
         # make sure we can get the control tubes to plot the diagnostic
         for channel in channels:       
-            tube = fc.FCMeasurement(ID=channel, datafile = self.controls[channel])
-            
             try:
-                tube.read_meta()
-            except Exception:
-                raise RuntimeError("FCS reader threw an error on tube {0}".format(self.controls[channel]))
-        
+                _ = fcsparser.parse(self.controls[channel], 
+                                    meta_data_only = True, 
+                                    reformat_meta = True)
+            except Exception as e:
+                raise RuntimeError("FCS reader threw an error on tube {0}: {1}"\
+                                   .format(self.controls[channel], e.value))
+
         return BleedthroughPiecewiseDiagnostic(op = self)
     
 # module-level "static" function (doesn't require a class instance
@@ -374,10 +383,14 @@ class BleedthroughPiecewiseDiagnostic(HasStrictTraits):
             for to_idx, to_channel in enumerate(channels):
                 if from_idx == to_idx:
                     continue
-
-                tube = fc.FCMeasurement(ID=from_channel, 
-                                        datafile = self.op.controls[from_channel])
-                                
+                
+                try:
+                    _, tube_data = fcsparser.parse(self.op.controls[from_channel], 
+                                                   reformat_meta = True)
+                except Exception as e:
+                    raise RuntimeError("FCS reader threw an error on tube {0}: {1}"\
+                                       .format(self.op.controls[from_channel], e.value))
+             
                 plt.subplot(num_channels, 
                             num_channels, 
                             from_idx + (to_idx * num_channels) + 1)
@@ -385,14 +398,14 @@ class BleedthroughPiecewiseDiagnostic(HasStrictTraits):
                 plt.yscale('log', nonposy='mask')
                 plt.xlabel(from_channel)
                 plt.ylabel(to_channel)
-                plt.scatter(tube.data[from_channel],
-                            tube.data[to_channel],
+                plt.scatter(tube_data[from_channel],
+                            tube_data[to_channel],
                             alpha = 0.1,
                             s = 1,
                             marker = 'o')
                 
                 spline = self.op._splines[from_channel][to_channel]
-                xs = np.logspace(-1, math.log(tube.data[from_channel].max(), 10))
+                xs = np.logspace(-1, math.log(tube_data[from_channel].max(), 10))
             
                 plt.plot(xs, 
                          spline(xs), 

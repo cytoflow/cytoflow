@@ -11,7 +11,7 @@ from traits.api import HasStrictTraits, Str, CStr, File, Dict, Python, \
 import numpy as np
 from traits.has_traits import provides
 from cytoflow.operations.i_operation import IOperation
-import FlowCytometryTools as fc
+import fcsparser
 import matplotlib.pyplot as plt
 import math
 
@@ -125,7 +125,7 @@ class ColorTranslationOp(HasStrictTraits):
         """
         
         tubes = {}
-        
+
         for from_channel, to_channel in self.translation.iteritems():
             
             if (from_channel, to_channel) not in self.controls:
@@ -135,20 +135,28 @@ class ColorTranslationOp(HasStrictTraits):
             tube_file = self.controls[(from_channel, to_channel)]
             
             if tube_file not in tubes: 
-                tube = fc.FCMeasurement(ID='{0}.{1}'.format(from_channel, to_channel),
-                                        datafile = tube_file)
-                                    
                 try:
-                    tube.read_meta()
-                except Exception:
-                    raise RuntimeError("FCS reader threw an error on tube {0}"
-                                       .format(self.controls[(from_channel, to_channel)]))
-                    
+                    tube_meta, tube_data = fcsparser.parse(tube_file, 
+                                                           reformat_meta = True)
+                    tube_channels = tube_meta["_channels_"].set_index("$PnN")
+                except Exception as e:
+                    raise RuntimeError("FCS reader threw an error on tube {0}: {1}"\
+                                       .format(tube_file, e.value))
+
                 # check voltages
+                for channel in [from_channel, to_channel]:
+                    exp_v = experiment.metadata[channel]['voltage']
                 
-    
-                tube_data = tube.data
-                
+                    if not "$PnV" in tube_channels.ix[channel]:
+                        raise RuntimeError("Didn't find a voltage for channel {0}" \
+                                           "in tube {1}".format(channel, self.controls[channel]))
+                    
+                    control_v = tube_channels.ix[channel]["$PnV"]
+                    
+                    if control_v != exp_v:
+                        raise RuntimeError("Voltage differs for channel {0} in tube {1}"
+                                           .format(channel, self.controls[channel]))
+
                 # autofluorescence correction
                 af = [(channel, (experiment.metadata[channel]['af_median'],
                                  experiment.metadata[channel]['af_stdev'])) 
@@ -242,13 +250,14 @@ class ColorTranslationOp(HasStrictTraits):
             IView : An IView, call plot() to see the diagnostic plots
         """
         
-        for tube_file in self.controls.values():
-            tube = fc.FCMeasurement(ID="beads", datafile = tube_file)
-
-        try:
-            tube.read_meta()
-        except Exception:
-            raise RuntimeError("FCS reader threw an error on tube {0}".format(self.beads_file))
+        for tube_file in self.controls.values():  
+            try:
+                _ = fcsparser.parse(tube_file, 
+                                    meta_data_only = True, 
+                                    reformat_meta = True)
+            except Exception as e:
+                raise RuntimeError("FCS reader threw an error on tube {0}: {1}"\
+                                   .format(tube_file, e.value))
 
         return ColorTranslationDiagnostic(op = self)
     
@@ -292,17 +301,14 @@ class ColorTranslationDiagnostic(HasStrictTraits):
             tube_file = self.op.controls[(from_channel, to_channel)]
             
             if tube_file not in tubes: 
-                tube = fc.FCMeasurement(ID='{0}.{1}'.format(from_channel, to_channel),
-                                        datafile = tube_file)
-                                    
+                
                 try:
-                    tube.read_meta()
-                except Exception:
-                    raise RuntimeError("FCS reader threw an error on tube {0}"
-                                       .format(self.op.controls[(from_channel, to_channel)]))
-    
-                tube_data = tube.data
-
+                    _, tube_data = fcsparser.parse(tube_file,
+                                                   reformat_meta = True)
+                except Exception as e:
+                    raise RuntimeError("FCS reader threw an error on tube {0}: {1}"\
+                                       .format(tube_file, e.value))
+                
                 # autofluorescence correction
                 af = [(channel, (experiment.metadata[channel]['af_median'],
                                  experiment.metadata[channel]['af_stdev'])) 

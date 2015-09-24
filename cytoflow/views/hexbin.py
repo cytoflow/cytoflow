@@ -95,16 +95,16 @@ class HexbinView(HasStrictTraits):
         
 if __name__ == '__main__':
     import cytoflow as flow
-    import FlowCytometryTools as fc
+    import fcsparser
     
     import matplotlib as mpl
     mpl.rcParams['savefig.dpi'] = 2 * mpl.rcParams['savefig.dpi']
     
-    tube1 = fc.FCMeasurement(ID='Test 1', 
-                             datafile='../../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs')
+    tube1 = fcsparser.parse('../../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs',
+                            reformat_meta = True)
 
-    tube2 = fc.FCMeasurement(ID='Test 2', 
-                           datafile='../../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs')
+    tube2 = fcsparser.parse('../../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs',
+                            reformat_meta = True)
     
     ex = flow.Experiment()
     ex.add_conditions({"Dox" : "float"})

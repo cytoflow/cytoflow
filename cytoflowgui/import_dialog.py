@@ -28,11 +28,12 @@ from pyface.constant import OK as PyfaceOK
 
 from pyface.ui.qt4.directory_dialog import DirectoryDialog as QtDirectoryDialog
 
-from FlowCytometryTools.core.containers import FCMeasurement, FCPlate
 from traitsui.table_column import ObjectColumn
 from collections import Counter
 
 from cytoflow import Tube as CytoflowTube
+
+import fcsparser
 
 def not_true ( value ):
     return (value is not True)
@@ -347,8 +348,15 @@ class ExperimentDialogHandler(Controller):
             return
         
         for path in file_dialog.paths:
-            fcs = FCMeasurement(ID='new tube', datafile = path)
-            
+            try:
+                tube_meta = fcsparser.parse(path, 
+                                            meta_data_only = True, 
+                                            reformat_meta = True)
+                tube_channels = tube_meta["_channels_"].set_index("$PnN")
+            except Exception as e:
+                raise RuntimeError("FCS reader threw an error on tube {0}: {1}"\
+                                   .format(path, e.value))
+                
             tube = Tube()
             
             for trait_name, trait in self.model.tube_traits.items():
@@ -361,65 +369,67 @@ class ExperimentDialogHandler(Controller):
                 if trait.condition:
                     tube.on_trait_change(self._try_multiedit, trait_name)
                 
-            tube.trait_set(Source = fcs.meta['$SRC'],
+            tube.trait_set(Source = tube_meta['$SRC'],
                            _file = path,
                            _parent = self.model)
             
-            if 'TUBE NAME' in fcs.meta:
-                tube.Tube = fcs.meta['TUBE NAME']
-            elif '$SMNO' in fcs.meta:
-                tube.Tube = fcs.meta['$SMNO']
+            if 'TUBE NAME' in tube_meta:
+                tube.Tube = tube_meta['TUBE NAME']
+            elif '$SMNO' in tube_meta:
+                tube.Tube = tube_meta['$SMNO']
             
             self.model.tubes.append(tube)
     
-    def _on_add_plate(self):
-        # TODO - add alternate manufacturer's plate types (to the name filters)
-        
-        dir_dialog = PlateDirectoryDialog()
-        dir_dialog.open()
-        
-        print dir_dialog.selectedNameFilter()
-        
-        if dir_dialog.return_code != PyfaceOK:
-            return
-                
-        self._add_metadata("Row", "Row", Str(condition = False))
-        self._add_metadata("Col", "Col", Int(condition = False))
-        
-        # TODO - error handling!
-        # TODO - allow for different file name prototypes or manufacturers
-        plate = FCPlate.from_dir(ID='new plate', 
-                                 path=dir_dialog.path,
-                                 parser = 'name',
-                                 ID_kwargs={'pre':'_',
-                                            'post':'_'} )
-        
-        for well_name in plate.data:
-            well_data = plate[well_name]
-            
-            tube = Tube()
-            
-            for trait_name, trait in self.tube_traits.items():
-                tube.add_trait(trait_name, trait)
-                
-                # this magic makes sure the trait is actually defined
-                # in tube.__dict__, so it shows up in trait_names etc.
-                tube.trait_set(**{trait_name : trait.default_value})
-                if trait.condition:
-                    tube.on_trait_change(self._try_multiedit, trait_name)
-            
-            tube.trait_set(_file = well_data.datafile,
-                           Row = well_data.position['new plate'][0],
-                           Col = well_data.position['new plate'][1],
-                           Source = well_data.meta['$SRC'],
-                           _parent = self.model)
-            
-            if 'TUBE NAME' in well_data.meta:
-                tube.Tube = well_data.meta['TUBE NAME']
-            elif '$SMNO' in well_data.meta:
-                tube.Tube = well_data.meta['$SMNO']
-
-            self.model.tubes.append(tube)
+    # TODO - plate support.
+    
+#     def _on_add_plate(self):
+#         # TODO - add alternate manufacturer's plate types (to the name filters)
+#         
+#         dir_dialog = PlateDirectoryDialog()
+#         dir_dialog.open()
+#         
+#         print dir_dialog.selectedNameFilter()
+#         
+#         if dir_dialog.return_code != PyfaceOK:
+#             return
+#                 
+#         self._add_metadata("Row", "Row", Str(condition = False))
+#         self._add_metadata("Col", "Col", Int(condition = False))
+#         
+#         # TODO - error handling!
+#         # TODO - allow for different file name prototypes or manufacturers
+#         plate = FCPlate.from_dir(ID='new plate', 
+#                                  path=dir_dialog.path,
+#                                  parser = 'name',
+#                                  ID_kwargs={'pre':'_',
+#                                             'post':'_'} )
+#         
+#         for well_name in plate.data:
+#             well_data = plate[well_name]
+#             
+#             tube = Tube()
+#             
+#             for trait_name, trait in self.tube_traits.items():
+#                 tube.add_trait(trait_name, trait)
+#                 
+#                 # this magic makes sure the trait is actually defined
+#                 # in tube.__dict__, so it shows up in trait_names etc.
+#                 tube.trait_set(**{trait_name : trait.default_value})
+#                 if trait.condition:
+#                     tube.on_trait_change(self._try_multiedit, trait_name)
+#             
+#             tube.trait_set(_file = well_data.datafile,
+#                            Row = well_data.position['new plate'][0],
+#                            Col = well_data.position['new plate'][1],
+#                            Source = well_data.meta['$SRC'],
+#                            _parent = self.model)
+#             
+#             if 'TUBE NAME' in well_data.meta:
+#                 tube.Tube = well_data.meta['TUBE NAME']
+#             elif '$SMNO' in well_data.meta:
+#                 tube.Tube = well_data.meta['$SMNO']
+# 
+#             self.model.tubes.append(tube)
             
     def _try_multiedit(self, obj, name, old, new):
         """
@@ -504,10 +514,10 @@ class ExperimentDialog(Dialog):
         QtCore.QObject.connect(btn_tube, QtCore.SIGNAL('clicked()'),
                                self.handler._on_add_tubes)
         
-        btn_plate = QtGui.QPushButton("Add plate...")
-        layout.addWidget(btn_plate)
-        QtCore.QObject.connect(btn_plate, QtCore.SIGNAL('clicked()'),
-                               self.handler._on_add_plate)
+#         btn_plate = QtGui.QPushButton("Add plate...")
+#         layout.addWidget(btn_plate)
+#         QtCore.QObject.connect(btn_plate, QtCore.SIGNAL('clicked()'),
+#                                self.handler._on_add_plate)
         
         btn_add_cond = QtGui.QPushButton("Add condition...")
         layout.addWidget(btn_add_cond)

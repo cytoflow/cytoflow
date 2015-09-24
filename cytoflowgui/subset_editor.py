@@ -322,32 +322,32 @@ class SubsetEditor(BasicEditorFactory):
     experiment = Str
     
     
-# if __name__ == '__main__':
-#     
-#     import FlowCytometryTools as fc
-#     
-#     ex = Experiment()
-#     ex.add_conditions({"Dox" : "bool"})
-#     
-#     tube1 = fc.FCMeasurement(ID='Test 1', 
-#                        datafile='../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs')
-# 
-#     tube2 = fc.FCMeasurement(ID='Test 2', 
-#                        datafile='../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs')
-#     
-#     ex.add_tube(tube1, {"Dox" : True})
-#     ex.add_tube(tube2, {"Dox" : False})
-#     
-#     class C(HasTraits):
-#         val = Str()
-#         experiment = Instance(Experiment)
-# 
-#     c = C(experiment = ex)
-#     c.val = "(Dox == True)"
-#     
-#     c.configure_traits(view=View(Item('val',
-#                                       editor = SubsetEditor(experiment = 'experiment'))))
-#     
-#     
-#     
-#     
+if __name__ == '__main__':
+     
+    import fcsparser
+     
+    ex = Experiment()
+    ex.add_conditions({"Dox" : "bool"})
+     
+    tube1 = fcsparser.parse('../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs',
+                            reformat_meta = True)
+ 
+    tube2 = fcsparser.parse('../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs',
+                            reformat_meta = True)
+     
+    ex.add_tube(tube1, {"Dox" : True})
+    ex.add_tube(tube2, {"Dox" : False})
+     
+    class C(HasTraits):
+        val = Str()
+        experiment = Instance(Experiment)
+ 
+    c = C(experiment = ex)
+    c.val = "(Dox == True)"
+     
+    c.configure_traits(view=View(Item('val',
+                                      editor = SubsetEditor(experiment = 'experiment'))))
+     
+     
+     
+     

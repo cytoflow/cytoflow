@@ -13,7 +13,7 @@ import numpy as np
 from traits.has_traits import provides
 from cytoflow.operations.i_operation import IOperation
 from ..views import IView
-import FlowCytometryTools as fc
+import fcsparser
 import math
 import scipy.signal
 
@@ -160,24 +160,26 @@ class BeadCalibrationOp(HasStrictTraits):
         Estimate the calibration coefficients from the beads file.
         """
         
-        beads_tube = fc.FCMeasurement(ID='blank', datafile = self.beads_file)
-        channels = self.units.keys()
-        
         try:
-            beads_tube.read_meta()
-        except Exception:
-            raise RuntimeError("FCS reader threw an error on tube {0}".format(self.beads_file))
+            beads_meta, beads_data = fcsparser.parse(self.beads_file, 
+                                                     reformat_meta = True)
+            beads_channels = beads_meta["_channels_"].set_index("$PnN")
+        except Exception as e:
+            raise RuntimeError("FCS reader threw an error on tube {0}: {1}"\
+                               .format(self.beads_file, e.value))
+        
+        channels = self.units.keys()
 
         # make sure the voltages didn't change
         
         for channel in channels:
             exp_v = experiment.metadata[channel]['voltage']
         
-            if not "$PnV" in beads_tube.channels:
+            if not "$PnV" in beads_channels.ix[channel]:
                 raise RuntimeError("Didn't find a voltage for channel {0}" \
                                    "in tube {1}".format(channel, self.beads_file))
             
-            control_v = beads_tube.channels[beads_tube.channels['$PnN'] == channel]['$PnV'].iloc[0]
+            control_v = beads_channels.ix[channel]['$PnV']
             
             if control_v != exp_v:
                 raise RuntimeError("Voltage differs for channel {0} in tube {1}"
@@ -185,7 +187,7 @@ class BeadCalibrationOp(HasStrictTraits):
     
 
         for channel in channels:
-            data = beads_tube.data[channel]
+            data = beads_data[channel]
             
             # bin the data on a log scale
             data_range = experiment.metadata[channel]['range']
@@ -317,13 +319,13 @@ class BeadCalibrationOp(HasStrictTraits):
             IView : An IView, call plot() to see the diagnostic plots
         """
         
-        beads_tube = fc.FCMeasurement(ID="beads",
-                              datafile = self.beads_file)
-
         try:
-            beads_tube.read_meta()
-        except Exception:
-            raise RuntimeError("FCS reader threw an error on tube {0}".format(self.beads_file))
+            _ = fcsparser.parse(self.beads_file, 
+                                meta_data_only = True, 
+                                reformat_meta = True)
+        except Exception as e:
+            raise RuntimeError("FCS reader threw an error on tube {0}: {1}"\
+                               .format(self.beads_file, e.value))
 
         return BeadCalibrationDiagnostic(op = self)
     
@@ -378,19 +380,23 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
     def plot(self, experiment, **kwargs):
         """Plot a faceted histogram view of a channel"""
         
-        beads_tube = fc.FCMeasurement(ID="beads",
-                                      datafile = self.op.beads_file)
+                        
+        try:
+            _, beads_data = fcsparser.parse(self.op.beads_file, 
+                                            reformat_meta = True)
+        except Exception as e:
+            raise RuntimeError("FCS reader threw an error on tube {0}: {1}"\
+                               .format(self.op.beads_file, e.value))
         
         import matplotlib.pyplot as plt
         import seaborn
 
-         
         plt.figure()
         
         channels = self.op.units.keys()
         
         for idx, channel in enumerate(channels):
-            data = beads_tube.data[channel]
+            data = beads_data[channel]
             
             # bin the data on a log scale
             data_range = experiment.metadata[channel]['range']

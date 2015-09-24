@@ -7,7 +7,8 @@ from traits.api import HasStrictTraits, provides, Str, List, Bool, Int, Any, \
                        Dict, File
 from cytoflow.operations.i_operation import IOperation
 from cytoflow import Experiment
-import FlowCytometryTools as fc
+import fcsparser
+import numpy as np
 
 class Tube(HasStrictTraits):
     """
@@ -186,9 +187,13 @@ class ImportOp(HasStrictTraits):
                 experiment.metadata[condition]["repr"] = "log"
         
         for tube in self.tubes:
-            tube_fc = fc.FCMeasurement(ID=tube.source + tube.tube, datafile=tube.file)
+            tube_fc = fcsparser.parse(tube.file, reformat_meta = True)
             if self.coarse:
-                tube_fc = tube_fc.subsample(self.coarse_events, "random")
+                tube_meta, tube_data = tube_fc
+                tube_data = tube_data.loc[np.random.choice(tube_data.index,
+                                                           self.coarse_events,
+                                                           replace = False)]
+                tube_fc = (tube_meta, tube_data)
             experiment.add_tube(tube_fc, tube.conditions, ignore_v = self.ignore_v)
             
         return experiment

@@ -1,6 +1,6 @@
 import unittest
 
-import FlowCytometryTools as fc
+import fcsparser
 import cytoflow as flow
 
 class TestLogicle(unittest.TestCase):
@@ -10,10 +10,10 @@ class TestLogicle(unittest.TestCase):
         cwd = os.path.dirname(os.path.abspath(__file__))
         self.ex = flow.Experiment()
         self.ex.add_conditions({"time" : "float"})
-        self.tube1 = fc.FCMeasurement(ID='Test 1',
-                                      datafile=cwd + '/data/Plate01/RFP_Well_A3.fcs')
-        self.tube2 = fc.FCMeasurement(ID='Test 2', 
-                                      datafile=cwd + '/data/Plate01/CFP_Well_A4.fcs')
+        self.tube1 = fcsparser.parse(cwd + '/data/Plate01/RFP_Well_A3.fcs',
+                                     reformat_meta = True)
+        self.tube2 = fcsparser.parse(cwd + '/data/Plate01/CFP_Well_A4.fcs',
+                                     reformat_meta = True)
         self.ex.add_tube(self.tube1, {"time" : 10.0})
         #self.ex.add_tube(self.tube2, {"time" : 20.0})
         

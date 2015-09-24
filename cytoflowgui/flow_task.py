@@ -274,8 +274,7 @@ class FlowTask(Task):
     
     def on_about(self):
         from cytoflow import __version__ as cf_version
-        from FlowCytometryTools import __version__ as fct_version
-        from GoreUtilities import __version__ as gu_version
+        from fcsparser import __version__ as fcs_version
         from pandas.version import version as pd_version
         from numpy.version import version as np_version
         from numexpr import version as numexp_version
@@ -288,8 +287,7 @@ class FlowTask(Task):
 
         text = ["<b>Cytoflow {0}</b>".format(cf_version),
                 "<p>",
-                "FlowCytometryTools {0}".format(fct_version),
-                "GoreUtilities {0}".format(gu_version),
+                "fcsversion {0}".format(fct_version),
                 "pandas {0}".format(pd_version),
                 "numpy {0}".format(np_version),
                 "numexpr {0}".format(numexp_version),
