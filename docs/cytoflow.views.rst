@@ -4,6 +4,22 @@ cytoflow.views package
 Submodules
 ----------
 
+cytoflow.views.bar_chart module
+-------------------------------
+
+.. automodule:: cytoflow.views.bar_chart
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+cytoflow.views.hexbin module
+----------------------------
+
+.. automodule:: cytoflow.views.hexbin
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 cytoflow.views.histogram module
 -------------------------------
 
@@ -28,10 +44,58 @@ cytoflow.views.i_view module
     :undoc-members:
     :show-inheritance:
 
+cytoflow.views.poly_selection module
+------------------------------------
+
+.. automodule:: cytoflow.views.poly_selection
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 cytoflow.views.range_selection module
 -------------------------------------
 
 .. automodule:: cytoflow.views.range_selection
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+cytoflow.views.range_selection_2d module
+----------------------------------------
+
+.. automodule:: cytoflow.views.range_selection_2d
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+cytoflow.views.scatterplot module
+---------------------------------
+
+.. automodule:: cytoflow.views.scatterplot
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+cytoflow.views.stats_1d module
+------------------------------
+
+.. automodule:: cytoflow.views.stats_1d
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+cytoflow.views.stats_2d module
+------------------------------
+
+.. automodule:: cytoflow.views.stats_2d
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+cytoflow.views.threshold_selection module
+-----------------------------------------
+
+.. automodule:: cytoflow.views.threshold_selection
     :members:
     :undoc-members:
     :show-inheritance:
