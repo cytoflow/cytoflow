@@ -50,6 +50,7 @@ install:
   - conda install --yes --quiet pandas numexpr scipy scikit-learn seaborn traits pyface envisage pyqt
 
   # conda's wheel 0.26 package is borked; remove it and replace with pip
+  # make sure the rest of the install env is up-to-date, too
   - conda uninstall --yes wheel
   - python -m pip install -U pip
   - python -m pip install -U setuptools
