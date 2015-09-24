@@ -2,6 +2,8 @@ from __future__ import print_function
 from setuptools import setup, find_packages, Extension
 import io, os, re
 
+on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
+
 here = os.path.abspath(os.path.dirname(__file__))
 
 def read_rst(*filenames, **kwargs):
@@ -63,7 +65,8 @@ setup(
                                         "cytoflow/operations/logicle_ext/Logicle.cpp",
                                         "cytoflow/operations/logicle_ext/Logicle.i",
                                         "cytoflow/operations/logicle_ext/logicle.h"],
-                             swig_opts=['-c++'])],
+                             swig_opts=['-c++'])] \
+                if on_rtd else None,
     
     #include_package_data = True,
     
