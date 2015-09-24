@@ -7,9 +7,8 @@ Created on Aug 26, 2015
 from __future__ import division
 
 from traits.api import HasStrictTraits, Str, CStr, CInt, File, Dict, Python, \
-                       Instance, Int, CFloat, List
+                       Instance, Int, CFloat, List, provides
 import numpy as np
-from traits.has_traits import provides
 from cytoflow.operations.i_operation import IOperation
 from cytoflow.utility.util import cartesian
 import FlowCytometryTools as fc
@@ -18,10 +17,8 @@ import scipy.interpolate
 import scipy.optimize
 import pandas
 
-from FlowCytometryTools.core.transforms import hlog, hlog_inv
-
+from .hlog import hlog, hlog_inv
 from ..views import IView
-import FlowCytometryTools
 
 @provides(IOperation)
 class BleedthroughPiecewiseOp(HasStrictTraits):

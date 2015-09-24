@@ -1,8 +1,8 @@
 from traits.api import provides, HasStrictTraits, Instance, Float, Bool, \
                        on_trait_change
 
-from cytoflow.views.i_selectionview import ISelectionView
-from cytoflow.views.i_view import IView
+from .i_selectionview import ISelectionView
+from .i_view import IView
 
 from matplotlib.widgets import SpanSelector, Cursor
 import matplotlib.pyplot as plt
@@ -13,8 +13,7 @@ from matplotlib.lines import Line2D
 class RangeSelection(HasStrictTraits):
     """Plots, and lets the user interact with, a selection on the X axis.
     
-    Is it beautiful?  No, not yet.  Does it demonstrate the capabilities I
-    desire?  Yes.
+    Is it beautiful?  No.  Does it demonstrate the capabilities I desire?  Yes.
     
     Attributes
     ----------

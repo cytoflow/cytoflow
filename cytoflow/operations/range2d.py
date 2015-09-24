@@ -1,5 +1,4 @@
-from traits.api import HasStrictTraits, CFloat, Str, CStr
-from traits.has_traits import provides
+from traits.api import HasStrictTraits, CFloat, Str, CStr, provides
 from cytoflow.operations.i_operation import IOperation
 
 @provides(IOperation)

@@ -6,9 +6,8 @@ Created on Sep 18, 2015
 
 from __future__ import division
 
-from traits.api import HasStrictTraits, Str, CStr, Int, Enum, Float
+from traits.api import HasStrictTraits, Str, CStr, Int, Enum, Float, provides
 import numpy as np
-from traits.has_traits import provides
 from cytoflow.operations.i_operation import IOperation
 
 @provides(IOperation)

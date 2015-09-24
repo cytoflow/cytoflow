@@ -1,9 +1,8 @@
 from __future__ import division
 
 from traits.api import HasStrictTraits, Str, CStr, CFloat, File, Dict, \
-                       Instance, List
+                       Instance, List, provides
 import numpy as np
-from traits.has_traits import provides
 from cytoflow.operations.i_operation import IOperation
 import FlowCytometryTools as fc
 from ..views import IView
