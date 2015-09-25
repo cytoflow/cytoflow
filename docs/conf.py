@@ -22,7 +22,7 @@ class Mock(MagicMock):
     def __getattr__(cls, name):
             return Mock()
 
-MOCK_MODULES = ['pygtk', 'gtk', 'gobject', 'argparse', 'numpy', 'pandas', 'numexpr',
+MOCK_MODULES = ['pygtk', 'gtk', 'gobject', 'argparse', 'pandas', 'numexpr',
                 'cytoflow.operations.logicle_ext.Logicle', 'scipy',
                 'matplotlib', 'matplotlib.pyplot', 'matplotlib.transforms', 'matplotlib.widgets', 'matplotlib.lines', 'matplotlib.patches', 'matplotlib.figure',
                 'scipy.optimize', 'scipy.signal', 'scipy.interpolate', 'scipy.sparse',
