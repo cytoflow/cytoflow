@@ -22,7 +22,7 @@ class Mock(MagicMock):
     def __getattr__(cls, name):
             return Mock()
 
-MOCK_MODULES = ['cytoflow.operations.logicle_ext.Logicle', 'pandas',
+MOCK_MODULES = ['cytoflow.operations.logicle_ext.Logicle',
                 'matplotlib', 'matplotlib.pyplot', 'matplotlib.transforms', 'matplotlib.widgets', 'matplotlib.lines', 'matplotlib.patches', 'matplotlib.figure',
                 'traits', 'traits.api']
 

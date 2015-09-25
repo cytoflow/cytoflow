@@ -4,3 +4,4 @@ fcsparser
 scikit-learn
 numpy
 pandas
+seaborn
