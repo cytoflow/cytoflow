@@ -23,7 +23,7 @@ class Mock(MagicMock):
             return Mock()
 
 MOCK_MODULES = ['pygtk', 'gtk', 'gobject', 'argparse', 'numpy', 'pandas', 'numexpr',
-                'cytoflow.operations.logicle_ext.Logicle', 'scipy', 'scikit-learn', 'sklearn.mixture',
+                'cytoflow.operations.logicle_ext.Logicle', 'scipy', 'sklearn', 'sklearn.mixture',
                 'matplotlib', 'matplotlib.pyplot', 'matplotlib.transforms', 'matplotlib.widgets', 'matplotlib.lines', 'matplotlib.patches', 'matplotlib.figure',
                 'scipy.optimize', 'scipy.signal', 'scipy.interpolate', 'sklearn.mixture', 
                 'traits', 'traits.api', 'seaborn']
