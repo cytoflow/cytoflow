@@ -5,5 +5,3 @@ scikit-learn
 numpy
 pandas
 seaborn
-traits
-traitsui
