@@ -3,4 +3,3 @@ mock
 fcsparser
 scikit-learn
 numpy
-scipy

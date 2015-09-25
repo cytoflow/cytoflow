@@ -23,9 +23,9 @@ class Mock(MagicMock):
             return Mock()
 
 MOCK_MODULES = ['pygtk', 'gtk', 'gobject', 'argparse', 'pandas', 'numexpr',
-                'cytoflow.operations.logicle_ext.Logicle', #'scipy',
+                'cytoflow.operations.logicle_ext.Logicle', 'scipy',
                 'matplotlib', 'matplotlib.pyplot', 'matplotlib.transforms', 'matplotlib.widgets', 'matplotlib.lines', 'matplotlib.patches', 'matplotlib.figure',
-                #'scipy.optimize', 'scipy.signal', 'scipy.interpolate', 'scipy.sparse',
+                'scipy.optimize', 'scipy.signal', 'scipy.interpolate', 'scipy.sparse',
                 'traits', 'traits.api', 'seaborn']
 
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
