@@ -6,6 +6,8 @@ Subpackages
 
 .. toctree::
 
+    cytoflow.operations.logicle_ext
+
 Submodules
 ----------
 

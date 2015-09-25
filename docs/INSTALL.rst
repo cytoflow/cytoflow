@@ -1,7 +1,10 @@
+Installation notes
+==================
 
-* Windows
+Windows
 
 TO DEVELOP ON THE CODE
+----------------------
 
 Anaconda 2.7 (full install)
 
@@ -20,6 +23,7 @@ from cmd:
 
 
 TO JUST RUN THE CODE
+--------------------
 
  * Install Anaconda 2.7 (full install)
  * From cmd.exe:
