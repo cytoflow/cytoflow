@@ -23,7 +23,6 @@ class Mock(MagicMock):
             return Mock()
 
 MOCK_MODULES = ['cytoflow.operations.logicle_ext.Logicle',
-                'matplotlib', 'matplotlib.pyplot', 'matplotlib.transforms', 'matplotlib.widgets', 'matplotlib.lines', 'matplotlib.patches', 'matplotlib.figure',
                 'traits', 'traits.api']
 
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
