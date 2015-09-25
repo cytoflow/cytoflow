@@ -26,8 +26,7 @@ MOCK_MODULES = ['pygtk', 'gtk', 'gobject', 'argparse', 'numpy', 'pandas', 'numex
                 'cytoflow.operations.logicle_ext.Logicle', 'scipy', 'scikit-learn',
                 'matplotlib', 'matplotlib.pyplot', 'matplotlib.transforms', 'matplotlib.widgets', 'matplotlib.lines', 'matplotlib.patches', 'matplotlib.figure',
                 'scipy.optimize', 'scipy.signal', 'scipy.interpolate', 'sklearn.mixture', 
-                'traits.api',
-                'seaborn']
+                'traits', 'traits.api', 'seaborn']
 
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
  
@@ -41,8 +40,6 @@ sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 # sys.path.insert(0, os.path.abspath('../src/cytoflow'))
 sys.path.insert(0, os.path.abspath('..'))
 sys.path.insert(0, os.path.abspath('../..'))
-
-
 
 # -- General configuration ------------------------------------------------
 
