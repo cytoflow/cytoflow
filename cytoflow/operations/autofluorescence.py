@@ -56,30 +56,10 @@ class AutofluorescenceOp(HasStrictTraits):
     
     name = CStr()
     channels = List(Str)
-    af_median = Dict(Str, CFloat)
-    af_stdev = Dict(Str, CFloat)
-    
     blank_file = File(filter = "*.fcs", exists = True, transient = True)
-    
-    def is_valid(self, experiment):
-        """Validate this operation against an experiment."""
 
-        if not self.name:
-            return False
-        
-        if not set(self.af_median.keys()) <= set(experiment.channels):
-            return False
-        
-        if not set(self.af_stdev.keys()) <= set(experiment.channels):
-            return False
-        
-        if not set(self.af_median.keys()) == set(self.af_stdev.keys()):
-            return False
-        
-        if not set(self.channels) == set(self.af_median.keys()):
-            return False
-
-        return True
+    _af_median = Dict(Str, CFloat)
+    _af_stdev = Dict(Str, CFloat)
     
     def estimate(self, experiment, subset = None): 
         """
@@ -87,7 +67,8 @@ class AutofluorescenceOp(HasStrictTraits):
         """
         
         if not set(self.channels) <= set(experiment.channels):
-            raise RuntimeError("Specified bad channels")
+            raise RuntimeError("Specified channels that weren't found in "
+                               "the experiment.")
 
         # don't have to validate that blank_file exists; should crap out on 
         # trying to set a bad value
@@ -115,7 +96,7 @@ class AutofluorescenceOp(HasStrictTraits):
             self.af_median[channel] = np.median(blank_data[channel])
             self.af_stdev[channel] = np.std(blank_data[channel])    
                 
-    def apply(self, old_experiment):
+    def apply(self, experiment):
         """Applies the threshold to an experiment.
         
         Parameters
@@ -129,19 +110,33 @@ class AutofluorescenceOp(HasStrictTraits):
             the values in self.blank_file
         """
         
-        new_experiment = old_experiment.clone()
+        if not set(self._af_median.keys()) <= set(experiment.channels) or \
+           not set(self._af_stdev.keys()) <= set(experiment.channels):
+            raise RuntimeError("Autofluorescence estimates aren't set, or are "
+                               "different than those in the experiment "
+                               "parameter. Did you forget to run estimate()?")
+
+        if not set(self.af_median.keys()) == set(self.af_stdev.keys()):
+            raise RuntimeError("Median and stdev keys are different! "
+                               "What the hell happened?!")
+        
+        if not set(self.channels) == set(self.af_median.keys()):
+            raise RuntimeError("Estimated channels differ from the channels "
+                               "parameter.  Did you forget to (re)run estimate()?")
+        
+        new_experiment = experiment.clone()
                 
         for channel in self.channels:
             new_experiment[channel] = \
-                old_experiment[channel] - self.af_median[channel]
+                experiment[channel] - self._af_median[channel]
                 
             # add the AF values to the channel's metadata, so we can correct
             # other controls (etc) later on
             new_experiment.metadata[channel]['af_median'] = \
-                self.af_median[channel]
+                self._af_median[channel]
                 
             new_experiment.metadata[channel]['af_stdev'] = \
-                self.af_stdev[channel]
+                self._af_stdev[channel]
 
         return new_experiment
     
