@@ -30,6 +30,22 @@ class ThresholdSelection(HasStrictTraits):
         
     interactive : Bool
         is this view interactive?
+        
+    Examples
+    --------
+    In an IPython notebook with `%matplotlib notebook`
+    
+    >>> h = flow.HistogramView()
+    >>> h.channel = 'Y2-A'
+    >>> h.huefacet = 'Dox'
+    >>> ts = flow.ThresholdSelection(view = h)
+    >>> ts.plot(ex2)
+    >>> ts.interactive = True
+    >>> # .... draw a threshold on the plot
+    >>> thresh = flow.ThresholdOp(name = "Y2-A+",
+    ...                           channel = "Y2-A",
+    ...                           thresh.threshold = ts.threshold)
+    >>> ex3 = thresh.apply(ex2)
     """
     
     id = "edu.mit.synbio.cytoflow.views.threshold"

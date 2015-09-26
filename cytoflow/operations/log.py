@@ -30,9 +30,9 @@ class LogTransformOp(HasStrictTraits):
         
     Examples
     --------
-    tlog = flow.LogTransformOp()
-    tlog.channels =["V2-A", "Y2-A", "B1-A"]
-    ex2 = tlog.apply(ex)
+    >>> tlog = flow.LogTransformOp()
+    >>> tlog.channels =["V2-A", "Y2-A", "B1-A"]
+    >>> ex2 = tlog.apply(ex)
     """
     
     # traits

@@ -37,6 +37,13 @@ class LogicleTransformOp(HasStrictTraits):
         if estimating W, the quantile of negative data used to estimate W.  
         default 0.05 is a good choice.
         
+    Examples
+    --------
+    >>> logicle = flow.LogicleTransformOp()
+    >>> logicle.channels =["V2-A", "Y2-A", "B1-A"]
+    >>> logicle.estimate(ex)
+    >>> ex2 = tlog.apply(ex)
+        
     References
     ----------
     [1] A new "Logicle" display method avoids deceptive effects of logarithmic 

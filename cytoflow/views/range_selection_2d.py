@@ -33,6 +33,24 @@ class RangeSelection2D(HasStrictTraits):
     interactive : Bool
         is this view interactive?  Ie, can the user set min and max
         with a mouse drag?
+        
+    Examples
+    --------
+    
+    In an IPython notebook with `%matplotlib notebook`
+    
+    >>> s = flow.ScatterplotView(xchannel = "V2-A",
+    ...                          ychannel = "Y2-A")
+    >>> r2d = flow.RangeSelection2D(view = s)
+    >>> r2d.plot(ex2)
+    >>> r2d.interactive = True
+    >>> # ... draw a range on the plot ....
+    >>> range_2d = flow.Range2DOp(xchannel = "V2-A",
+    ...                           xlow = r2d.xlow,
+    ...                           xhigh = r2d.xhigh,
+    ...                           ychannel = "Y2-A",
+    ...                           ylow = r2d.ylow,
+    ...                           yhigh = r2d.yhigh) 
     """
     
     id = "edu.mit.synbio.cytoflow.views.range2d"

@@ -34,11 +34,11 @@ class HlogTransformOp(HasStrictTraits):
            
     Examples
     --------
-    hlog = flow.HlogTransformOp()
-    hlog.channels =["V2-A", "Y2-A", "B1-A"]
-    hlog.b = {"V2-A" : 500, "Y2-A" : 1000, "B1-A" : 1000 }
-    hlog.r = {c : 1.0 for c in hlog.channels}
-    ex2 = hlog.apply(ex)
+    >>> hlog = flow.HlogTransformOp()
+    >>> hlog.channels =["V2-A", "Y2-A", "B1-A"]
+    >>> hlog.b = {"V2-A" : 500, "Y2-A" : 1000, "B1-A" : 1000 }
+    >>> hlog.r = {c : 1.0 for c in hlog.channels}
+    >>> ex2 = hlog.apply(ex)
     """
     
     # traits

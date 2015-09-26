@@ -72,6 +72,36 @@ class Stats2DView(HasStrictTraits):
     subset : Str
         a string passed to Experiment.query() to subset the data before 
         we plot it.
+        
+    Examples
+    --------
+    
+    Assume we want an input-output curve for a repressor that's under the
+    control of a Dox-inducible promoter.  We have an "input" channel
+    `(Dox --> eYFP, FITC-A channel)` and an output channel 
+    `(Dox --> repressor --| eBFP, Pacific Blue channel)` as well as a 
+    constitutive expression channel (mKate, PE-Tx-Red-YG-A channel). 
+    We have induced several wells with different amounts of Dox.  We want 
+    to plot the relationship between the input and output channels (binned by 
+    input channel intensity) as we vary Dox, faceted by constitutive channel 
+    bin.
+    
+    >>> ex_cfp_binned = flow.BinningOp(name = "CFP_Bin",
+    ...                                channel = "PE-Tx-Red-YG-A",
+    ...                                scale = "log",
+    ...                                bin_width = 0.1).apply(ex)
+    >>> ex_ifp_binned = flow.BinningOp(name = "IFP_Bin",
+    ...                                channel = "Pacific Blue-A",
+    ...                                scale = "log",
+    ...                                bin_width = 0.1)
+    >>> view = flow.Stats2DView(name = "IFP vs OFP",
+    ...                         variable = "IFP_Bin",
+    ...                         xchannel = "Pacific Blue-A",
+    ...                         xfunction = flow.geom_mean,
+    ...                         ychannel = "FITC-A",
+    ...                         yfunction = flow.geom_mean,
+    ...                         huefacet = "CFP_Bin").plot(ex6_ifp_binned)
+    >>> view.plot(ex_binned)
     """
     
     # traits   

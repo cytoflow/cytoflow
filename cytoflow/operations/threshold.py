@@ -20,26 +20,26 @@ class ThresholdOp(HasStrictTraits):
         
     Examples
     --------
-    thresh = flow.ThresholdOp()
-    thresh.name = "Y2-A+"
-    thresh.channel = 'Y2-A'
-    thresh.threshold = 0.3
+    >>> thresh = flow.ThresholdOp()
+    >>> thresh.name = "Y2-A+"
+    >>> thresh.channel = 'Y2-A'
+    >>> thresh.threshold = 0.3
     
-    ex3 = thresh.apply(ex2)    
+    >>> ex3 = thresh.apply(ex2)    
     
-    # alternately, in an IPython notebook with `%matplotlib notebook`
+    Alternately, in an IPython notebook with `%matplotlib notebook`
     
-    h = flow.HistogramView()
-    h.channel = 'Y2-A'
-    h.huefacet = 'Dox'
-    ts = flow.ThresholdSelection(view = h)
-    ts.plot(ex2)
-    ts.interactive = True
-    # .... draw a threshold on the plot
-    thresh = flow.ThresholdOp(name = "Y2-A+",
-                              channel = "Y2-A",
-                              thresh.threshold = ts.threshold)
-    ex3 = thresh.apply(ex2)
+    >>> h = flow.HistogramView()
+    >>> h.channel = 'Y2-A'
+    >>> h.huefacet = 'Dox'
+    >>> ts = flow.ThresholdSelection(view = h)
+    >>> ts.plot(ex2)
+    >>> ts.interactive = True
+    >>> # .... draw a threshold on the plot
+    >>> thresh = flow.ThresholdOp(name = "Y2-A+",
+    ...                           channel = "Y2-A",
+    ...                           thresh.threshold = ts.threshold)
+    >>> ex3 = thresh.apply(ex2)
     """
     
     # traits

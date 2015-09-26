@@ -40,6 +40,13 @@ class HistogramView(HasStrictTraits):
         we plot it.
         
         .. note: Should this be a param instead?
+        
+    >>> hist = flow.HistogramView()
+    >>> hist.name = "Histogram view, grid"
+    >>> hist.channel = 'Y2-A'
+    >>> hist.xfacet = 'Dox'
+    >>> hist.yfacet = 'Y2-A+'
+    >>> hist.plot(ex)
     """
     
     # traits   

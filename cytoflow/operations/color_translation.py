@@ -64,16 +64,16 @@ class ColorTranslationOp(HasStrictTraits):
 
     Examples
     --------
-    ct_op = flow.ColorTranslationOp()
-    ct_op.translation = {"Pacific Blue-A" : "FITC-A",
-                         "PE-Tx-Red-YG-A" : "FITC-A"}
-    ct_op.controls = {("Pacific Blue-A", "FITC-A") : "merged/rby.fcs",
-                      ("PE-Tx-Red-YG-A", "FITC-A") : "merged/rby.fcs"}
-    ct_op.mixture_model = True
+    >>> ct_op = flow.ColorTranslationOp()
+    >>> ct_op.translation = {"Pacific Blue-A" : "FITC-A",
+    ...                      "PE-Tx-Red-YG-A" : "FITC-A"}
+    >>> ct_op.controls = {("Pacific Blue-A", "FITC-A") : "merged/rby.fcs",
+    >>>                   ("PE-Tx-Red-YG-A", "FITC-A") : "merged/rby.fcs"}
+    >>> ct_op.mixture_model = True
 
-    ct_op.estimate(ex4)
-    ct_op.default_view().plot(ex4)
-    ex5 = ct_op.apply(ex4)
+    >>> ct_op.estimate(ex4)
+    >>> ct_op.default_view().plot(ex4)
+    >>> ex5 = ct_op.apply(ex4)
     """
     
     # traits

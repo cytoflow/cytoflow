@@ -31,27 +31,29 @@ class Range2DOp(HasStrictTraits):
         
     Examples
     --------
-    range_2d = flow.Range2DOp(xchannel = "V2-A",
-                              xlow = 0.0,
-                              xhigh = 0.5,
-                              ychannel = "Y2-A",
-                              ylow = 0.4,
-                              yhigh = 0.8)
-    ex3 = range_2d.apply(ex2)
+    
+    >>> range_2d = flow.Range2DOp(xchannel = "V2-A",
+    ...                           xlow = 0.0,
+    ...                           xhigh = 0.5,
+    ...                           ychannel = "Y2-A",
+    ...                           ylow = 0.4,
+    ...                           yhigh = 0.8)
+    >>> ex3 = range_2d.apply(ex2)
 
-    ### alternately, in an IPython notebook with `%matplotlib notebook`
-    s = flow.ScatterplotView(xchannel = "V2-A",
-                             ychannel = "Y2-A")
-    r2d = flow.RangeSelection2D(view = s)
-    r2d.plot(ex2)
-    r2d.interactive = True
+    Alternately, in an IPython notebook with `%matplotlib notebook`
+    
+    >>> s = flow.ScatterplotView(xchannel = "V2-A",
+    ...                          ychannel = "Y2-A")
+    >>> r2d = flow.RangeSelection2D(view = s)
+    >>> r2d.plot(ex2)
+    >>> r2d.interactive = True
     # ... draw a range on the plot ....
-    range_2d = flow.Range2DOp(xchannel = "V2-A",
-                              xlow = r2d.xlow,
-                              xhigh = r2d.xhigh,
-                              ychannel = "Y2-A",
-                              ylow = r2d.ylow,
-                              yhigh = r2d.yhigh) 
+    >>> range_2d = flow.Range2DOp(xchannel = "V2-A",
+    ...                           xlow = r2d.xlow,
+    ...                           xhigh = r2d.xhigh,
+    ...                           ychannel = "Y2-A",
+    ...                           ylow = r2d.ylow,
+    ...                           yhigh = r2d.yhigh) 
     """
     
     # traits

@@ -30,6 +30,20 @@ class RangeSelection(HasStrictTraits):
     interactive : Bool
         is this view interactive?  Ie, can the user set min and max
         with a mouse drag?
+        
+    Examples
+    --------
+    
+    In an IPython notebook with `%matplotlib notebook`
+    
+    >>> h = flow.HistogramView()
+    >>> h.channel = 'Y2-A'
+    >>> rs = flow.RangeSelection(view = h)
+    >>> rs.plot(ex2)
+    >>> rs.interactive = True
+    >>> # ... draw a range on the plot ....
+    >>> range.low, range.high = rs.low, rs.high
+    >>> ex3 = range.apply(ex2)
     """
     
     id = "edu.mit.synbio.cytoflow.views.range"

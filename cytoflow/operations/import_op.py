@@ -20,7 +20,7 @@ class Tube(HasStrictTraits):
         The file name of the FCS file to import
         
     conditions : Dict(Str, Any)
-        A dictionary containing this `Tube`'s experimental conditions.  Keys
+        A dictionary containing this `Tube` experimental conditions.  Keys
         are condition names, values are condition values.
     
     source : Str
@@ -36,15 +36,13 @@ class Tube(HasStrictTraits):
         the well's row.  Optional for interactive use.
         
     col : Int
-        If this FCS file was a well from a multi-well plate, 'col' contains the
+        If this FCS file was a well from a multi-well plate, `col` contains the
         well's column.  Optional for interactive use.
         
     Examples
     --------
-    tube1 = flow.Tube(file = '../../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs',
-                      conditions = {"Dox" : 10.0})
-    tube2 = flow.Tube(file='../../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs',
-                      conditions = {"Dox" : 1.0})
+    >>> tube1 = flow.Tube(file = 'RFP_Well_A3.fcs', conditions = {"Dox" : 10.0})
+    >>> tube2 = flow.Tube(file='CFP_Well_A4.fcs', conditions = {"Dox" : 1.0})
     """
     
     # source, name, row and col are optional for interactive use 
@@ -54,7 +52,7 @@ class Tube(HasStrictTraits):
     row = Str
     col = Int
     
-    # file and conditions are not optional.  (-:
+    # file and conditions are not optional.
     
     # the file name for the FCS file to import
     file = File
@@ -72,11 +70,11 @@ class ImportOp(HasStrictTraits):
     An operation for importing data and making an `Experiment`.
     
     To use, set the `conditions` dict to a mapping between condition name and
-    NumPy `dtype`.  Useful dtypes include "category", "float", "int", "bool", 
-    and "log". ("log" is not a NumPy `dtype`: instead, it is converted to 
+    NumPy `dtype`.  Useful dtypes include `category`, `float`, `int`, `bool`, 
+    and `log`. (`log` is not a NumPy `dtype`: instead, it is converted to 
     `float`, but all plots are displayed on a log scale.)
     
-    Next, set `tubes` to a list of `Tube`s containing FCS filenames and the
+    Next, set `tubes` to a list of `Tube` containing FCS filenames and the
     corresponding conditions.
     
     If you would rather not analyze every single event in every FCS file,
@@ -109,7 +107,7 @@ class ImportOp(HasStrictTraits):
         file.
         
     ignore_v : Bool
-        **CytoFlow** is designed to operate on `Experiment`s containing tubes
+        **CytoFlow** is designed to operate on an `Experiment` containing tubes
         that were all collected under the instrument settings.  In particular,
         the same PMV voltages ensure that data can be compared across samples.
         
@@ -121,15 +119,11 @@ class ImportOp(HasStrictTraits):
         
     Examples
     --------
-    tube1 = flow.Tube(file = '../../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs',
-                      conditions = {"Dox" : 10.0})
-    tube2 = flow.Tube(file='../../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs',
-                      conditions = {"Dox" : 1.0})
-    
-    import_op = flow.ImportOp(conditions = {"Dox" : "float"},
-                              tubes = [tube1, tube2])
-    
-    ex = import_op.apply()
+    >>> tube1 = flow.Tube(file = 'RFP_Well_A3.fcs', conditions = {"Dox" : 10.0})
+    >>> tube2 = flow.Tube(file='CFP_Well_A4.fcs', conditions = {"Dox" : 1.0})
+    >>> import_op = flow.ImportOp(conditions = {"Dox" : "float"},
+    ...                           tubes = [tube1, tube2])
+    >>> ex = import_op.apply()
     """
 
     id = "edu.mit.synbio.cytoflow.operations.import"

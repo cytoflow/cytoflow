@@ -7,10 +7,9 @@ if __name__ == '__main__':
     import os
     os.environ['TRAITS_DEBUG'] = "1"
 
-from traits.api import HasStrictTraits, Str, provides, Callable, Enum
+from traits.api import HasStrictTraits, Str, provides, Callable
 import matplotlib.pyplot as plt
 from cytoflow.views.i_view import IView
-import numpy as np
 import seaborn as sns
 
 @provides(IView)
@@ -68,6 +67,16 @@ class BarChartView(HasStrictTraits):
     subset : Str
         a string passed to pandas.DataFrame.query() to subset the data before 
         we plot it.
+        
+    Examples
+    --------
+    >>> bar = flow.BarChartView()
+    >>> bar.name = "Bar Chart"
+    >>> bar.channel = 'Y2-A'
+    >>> bar.variable = 'Y2-A+'
+    >>> bar.huefacet = 'Dox'
+    >>> bar.function = len
+    >>> bar.plot(ex)
     """
     
     # traits   

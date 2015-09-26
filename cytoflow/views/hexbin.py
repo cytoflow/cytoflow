@@ -14,7 +14,37 @@ import matplotlib.transforms as mtrans
 @provides(IView)
 class HexbinView(HasStrictTraits):
     """
-    classdocs
+    Plots a "hexbin" 2-d plot.  
+    
+    A hexbin is a 2-d histogram; the plot is divided into hexagons and the color
+    of the hexagon is related to the number of points that fall into it.
+    
+    Attributes
+    ----------
+    
+    name : Str
+        The name of the plot, for visualization (and the plot title)
+        
+    xchannel : Str
+        The channel to plot on the X axis
+        
+    ychannel : Str
+        The channel to plot on the Y axis
+        
+    xfacet : Str
+        The conditioning variable for multiple plots (horizontal)
+        
+    yfacet = Str
+        The conditioning variable for multiple plots (vertical)
+        
+    huefacet = Str
+        The conditioning variable for multiple plots (color)
+
+    subset = Str
+        A string passed to pandas.DataFrame.query() to subset the data before
+        we plot it.
+        
+        .. note: should this be a param instead?
     """
     
     id = 'edu.mit.synbio.cytoflow.view.hexbin'

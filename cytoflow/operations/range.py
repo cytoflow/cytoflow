@@ -22,24 +22,24 @@ class RangeOp(HasStrictTraits):
         
     Examples
     --------
-    range = flow.RangeOp()
-    range.name = "Y2-A+"
-    range.channel = 'Y2-A'
-    range.low = 0.3
-    range.high = 0.8
+    >>> range = flow.RangeOp()
+    >>> range.name = "Y2-A+"
+    >>> range.channel = 'Y2-A'
+    >>> range.low = 0.3
+    >>> range.high = 0.8
 
-    ex3 = range.apply(ex2)
+    >>> ex3 = range.apply(ex2)
     
-    ### alternately  (in an IPython notebook with `%matplotlib notebook`)
+    Alternately  (in an IPython notebook with `%matplotlib notebook`)
     
-    h = flow.HistogramView()
-    h.channel = 'Y2-A'
-    rs = flow.RangeSelection(view = h)
-    rs.plot(ex2)
-    rs.interactive = True
-    # ... draw a range on the plot ....
-    range.low, range.high = rs.low, rs.high
-    ex3 = range.apply(ex2)
+    >>> h = flow.HistogramView()
+    >>> h.channel = 'Y2-A'
+    >>> rs = flow.RangeSelection(view = h)
+    >>> rs.plot(ex2)
+    >>> rs.interactive = True
+    >>> # ... draw a range on the plot ....
+    >>> range.low, range.high = rs.low, rs.high
+    >>> ex3 = range.apply(ex2)
     """
     
     # traits

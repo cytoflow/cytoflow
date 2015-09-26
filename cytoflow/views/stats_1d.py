@@ -66,6 +66,27 @@ class Stats1DView(HasStrictTraits):
     subset : Str
         a string passed to Experiment.query() to subset the data before 
         we plot it.
+        
+    Examples
+    --------
+    
+    Assume we want a Dox induction curve in a transient transfection experiment.  
+    We have induced several wells with different amounts of Dox and the output
+    of the Dox-inducible channel is "Pacific Blue-A".  We have a constitutive
+    expression channel in "PE-Tx-Red-YG-A". We want to bin all the data by
+    constitutive expression level, then plot the dose-response (geometric mean)
+    curve in each bin. 
+    
+    >>> ex_binned = flow.BinningOp(name = "CFP_Bin",
+    ...                            channel = "PE-Tx-Red-YG-A",
+    ...                            scale = "log",
+    ...                            bin_width = 0.1).apply(ex)
+    >>> view = Stats1DView(name = "Dox vs IFP",
+    ...                    variable = "Dox",
+    ...                    ychannel = "Pacific Blue-A",
+    ...                    huefacet = "CFP_Bin",
+    ...                    yfunction = flow.geom_mean)
+    >>> view.plot(ex_binned)
     """
     
     # traits   
