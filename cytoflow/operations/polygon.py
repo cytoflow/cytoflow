@@ -1,7 +1,9 @@
 from traits.api import HasStrictTraits, Str, CStr, List, Float, provides
 import numpy as np
 import matplotlib as mpl
-from cytoflow.operations.i_operation import IOperation
+
+from .i_operation import IOperation
+from ..utility import CytoflowOpError
 
 @provides(IOperation)
 class PolygonOp(HasStrictTraits):
@@ -41,38 +43,14 @@ class PolygonOp(HasStrictTraits):
     xchannel = Str()
     ychannel = Str()
     vertices = List((Float, Float))
-    
-    def is_valid(self, experiment):
-        """Validate this operation against an experiment."""
-
-        if not self.name:
-            return False
         
-        if self.name in experiment.data.columns:
-            return False
-        
-        if not self.xchannel or not self.ychannel:
-            return False
-        
-        if (not self.xchannel in experiment.channels or
-            not self.ychannel in experiment.channels):
-            return False
-              
-        if len(self.vertices) < 3:
-            return False
-       
-        if any([len(x) != 2 for x in self.vertices]):
-            return False 
-       
-        return True
-        
-    def apply(self, old_experiment):
+    def apply(self, experiment):
         """Applies the threshold to an experiment.
         
         Parameters
         ----------
         experiment : Experiment
-            the old_experiment to which this op is applied
+            the old experiment to which this op is applied
             
         Returns
         -------
@@ -80,7 +58,33 @@ class PolygonOp(HasStrictTraits):
             column the same as the operation name.  The bool is True if the
             event's measurement in self.channel is greater than self.low and
             less than self.high; it is False otherwise.
+            
+        Raises
+        ------
+        CytoflowOpError
+            if for some reason the operation can't be applied to this
+            experiment. The reason is in CytoflowOpError.value
         """
+        
+        if self.name in experiment.data.columns:
+            raise CytoflowOpError("op.name is in the experiment already!")
+        
+        if not self.xchannel or not self.ychannel:
+            raise CytoflowOpError("Must specify both an x channel and a y channel")
+        
+        if not self.xchannel in experiment.channels:
+            raise CytoflowOpError("xchannel {0} is not in the experiment"
+                                  .format(self.xchannel))
+                                  
+        if not self.ychannel in experiment.channels:
+            raise CytoflowOpError("ychannel {0} is not in the experiment"
+                                  .format(self.ychannel))
+              
+        if len(self.vertices) < 3:
+            return False
+       
+        if any([len(x) != 2 for x in self.vertices]):
+            return False 
         
         # make sure name got set!
         if not self.name:
@@ -88,16 +92,16 @@ class PolygonOp(HasStrictTraits):
                                "before applying it!")
         
         # make sure old_experiment doesn't already have a column named self.name
-        if(self.name in old_experiment.data.columns):
+        if(self.name in experiment.data.columns):
             raise RuntimeError("Experiment already contains a column {0}"
                                .format(self.name))
             
         # use a matplotlib Path because testing for membership is a fast C fn.
         path = mpl.path.Path(np.array(self.vertices))
-        xy_data = old_experiment.data.as_matrix(columns = [self.xchannel,
+        xy_data = experiment.data.as_matrix(columns = [self.xchannel,
                                                            self.ychannel])
         
-        new_experiment = old_experiment.clone()
+        new_experiment = experiment.clone()
         
         new_experiment[self.name] = path.contains_points(xy_data)
             

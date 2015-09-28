@@ -8,6 +8,15 @@ from __future__ import division
 import numpy as np
 from scipy import stats
 
+class CytoflowError(RuntimeError):
+    pass
+
+class CytoflowOpError(CytoflowError):
+    pass
+
+class CytoflowViewError(CytoflowError):
+    pass
+
 def iqr(a):
     """Calculate the IQR for an array of numbers."""
     a = np.asarray(a)

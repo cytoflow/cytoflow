@@ -1,8 +1,10 @@
 from traits.api import HasStrictTraits, provides, Str, List, Float, Dict
-from logicle_ext.Logicle import Logicle
-from .i_operation import IOperation
 import math
 import numpy as np
+
+from ..utility import CytoflowOpError
+from logicle_ext.Logicle import Logicle
+from .i_operation import IOperation
 
 @provides(IOperation)
 class LogicleTransformOp(HasStrictTraits):
@@ -42,7 +44,7 @@ class LogicleTransformOp(HasStrictTraits):
     >>> logicle = flow.LogicleTransformOp()
     >>> logicle.channels =["V2-A", "Y2-A", "B1-A"]
     >>> logicle.estimate(ex)
-    >>> ex2 = tlog.apply(ex)
+    >>> ex2 = logicle.apply(ex)
         
     References
     ----------
@@ -87,6 +89,9 @@ class LogicleTransformOp(HasStrictTraits):
             the subset of the Experiment to use; passed to 
             pandas.DataFrame.query()
         """
+
+        if self.r <= 0 or self.r >= 1:
+            raise CytoflowOpError("op.r must be between 0 and 1")
         
         if subset:
             data = experiment.query(subset)
@@ -105,20 +110,46 @@ class LogicleTransformOp(HasStrictTraits):
             else:
                 # ... unless there aren't any negative values, in which case
                 # you probably shouldn't use this transform
-                raise RuntimeError("You shouldn't use the Logicle transform "
-                                   "for channels without any negative data. "
-                                   "Try a regular log10 transform instead.")
+                raise CytoflowOpError("You shouldn't use the Logicle transform "
+                                      "for channels without any negative data. "
+                                      "Try a hlog or a log10 transform instead.")
     
-    def apply(self, old_experiment):
+    def apply(self, experiment):
         """Applies the Logicle transform to channels"""
         
-        # TODO - a little basic checking to make sure that W, M, A are
-        # set for each channel, and okay (mirroring Logicle.cpp's initialize()
-        # function .... because the errors that SWIG throws are not useful.
-        #
-        # or (and?) -- fix the SWIG error situation.
+        if not set(self.channels).issubset(set(experiment.channels)):
+            raise CytoflowOpError("self.channels isn't a subset "
+                                  "of experiment.channels")
         
-        new_experiment = old_experiment.clone()
+        if self.M <= 0:
+            raise CytoflowOpError("op.M must be > 0")
+
+        for channel in self.channels:
+            # the Logicle C++/SWIG extension is REALLY picky about it
+            # being a double
+            
+            if experiment[channel].dtype != np.float64:
+                raise CytoflowOpError("The dtype for channel {0} MUST be "
+                                      "np.float64.  Please submit a bug report."
+                                      .format(channel))
+            
+            if not channel in self.W: 
+                raise CytoflowOpError("op.W wasn't set for channel {0}"
+                                      .format(channel))
+                
+            if self.W[channel] <= 0:
+                raise CytoflowOpError("op.W for channel {0} must be > 0"
+                                      .format(channel))
+            
+            if not channel in self.A:
+                raise CytoflowOpError("op.A wasn't set for channel {0}"
+                                      .format(channel))
+                
+            if self.A[channel] < 0:
+                raise CytoflowOpError("op.A for channel {0} must be >= 0"
+                                      .format(channel))
+        
+        new_experiment = experiment.clone()
         
         for channel in self.channels:
             
@@ -130,43 +161,8 @@ class LogicleTransformOp(HasStrictTraits):
             logicle_fwd = lambda x: x.apply(el.scale)
             logicle_rev = lambda x: x.apply(el.inverse)
             
-            new_experiment[channel] = logicle_fwd(old_experiment[channel])
+            new_experiment[channel] = logicle_fwd(new_experiment[channel])
             new_experiment.metadata[channel]["xforms"].append(logicle_fwd)
             new_experiment.metadata[channel]["xforms_inv"].append(logicle_rev)
             
         return new_experiment
-    
-    def is_valid(self, experiment):
-        """ Validate this transformation against an experiment"""
-        if not experiment:
-            return False
-        
-        if not self.name:
-            return False
-        
-        if not set(self.channels).issubset(set(experiment.channels)):
-            return False
-        
-        if self.M <= 0 or self.r <= 0 or self.r >= 1:
-            return False
-        
-        for channel in self.channels:
-            # the Logicle C++/SWIG extension is REALLY picky about it
-            # being a double
-            
-            if experiment[channel].dtype != np.float64:
-                return False
-            
-            # Logicle works best if there's some data < 0.
-            # TODO: how to report this if it's not true?
-            neg_values = experiment[experiment[channel] < 0][channel]
-            if neg_values.empty:
-                return False
-            
-            if not channel in self.W or self.W[channel] <= 0:
-                return False
-            
-            if not channel in self.A or self.A[channel] < 0:
-                return False
-            
-        return True

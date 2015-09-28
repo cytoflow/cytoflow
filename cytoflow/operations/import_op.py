@@ -5,10 +5,14 @@ Created on Mar 20, 2015
 '''
 from traits.api import HasStrictTraits, provides, Str, List, Bool, Int, Any, \
                        Dict, File
-from cytoflow.operations.i_operation import IOperation
-from cytoflow import Experiment
+
 import fcsparser
 import numpy as np
+
+from .i_operation import IOperation
+from cytoflow import Experiment
+from ..utility import CytoflowOpError
+from cytoflow.utility.util import CytoflowOpError
 
 class Tube(HasStrictTraits):
     """
@@ -20,7 +24,7 @@ class Tube(HasStrictTraits):
         The file name of the FCS file to import
         
     conditions : Dict(Str, Any)
-        A dictionary containing this `Tube` experimental conditions.  Keys
+        A dictionary containing this tube's experimental conditions.  Keys
         are condition names, values are condition values.
     
     source : Str
@@ -139,36 +143,29 @@ class ImportOp(HasStrictTraits):
         
     # DON'T DO THIS
     ignore_v = Bool(False)
-          
-    def is_valid(self, experiment = None):
-        if not self.tubes:
-            return False
+      
+    def apply(self, experiment = None):
         
-        if len(self.tubes) == 0:
-            return False
+        if not self.tubes or len(self.tubes) == 0:
+            raise CytoflowOpError("Must specify some tubes!")
         
         # make sure each tube has the same conditions
         tube0_conditions = set(self.tubes[0].conditions)
         for tube in self.tubes:
             tube_conditions = set(tube.conditions)
             if len(tube0_conditions ^ tube_conditions) > 0:
-                return False
+                raise CytoflowOpError("Tube {0} didn't have the same "
+                                      "conditions as tube {1}"
+                                      .format(tube.file, self.tubes[0].file))
 
         # make sure experimental conditions are unique
         for idx, i in enumerate(self.tubes[0:-1]):
             for j in self.tubes[idx+1:]:
                 if i.conditions_equal(j):
-                    return False
-                
-        if self.ignore_v:
-            raise RuntimeError("Ignoring voltages?  Buddy, you're on your own.")
-                
-        # TODO - more error checking.  ie, does the file exist?  is it
-        # readable?  etc etc.
-                
-        return True
-      
-    def apply(self, experiment = None):
+                    raise CytoflowOpError("The same conditions specified for "
+                                          "tube {0} and tube {1}"
+                                          .format(i.file, j.file))
+        
         experiment = Experiment()
             
         for condition, dtype in self.conditions.items():

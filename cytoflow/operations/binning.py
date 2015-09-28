@@ -8,7 +8,9 @@ from __future__ import division
 
 from traits.api import HasStrictTraits, Str, CStr, Int, Enum, Float, provides
 import numpy as np
-from cytoflow.operations.i_operation import IOperation
+
+from .i_operation import IOperation
+from ..utility import CytoflowOpError
 
 @provides(IOperation)
 class BinningOp(HasStrictTraits):
@@ -59,34 +61,7 @@ class BinningOp(HasStrictTraits):
     bin_width = Float(None)
     scale = Enum("linear", "log10")
     
-    def is_valid(self, experiment):
-        """Validate this operation against an experiment."""
-
-        if not self.name:
-            return False
-        
-        if self.name in experiment.data.columns:
-            return False
-        
-        if not self.channel:
-            return False
-        
-        if not self.channel in experiment.channels:
-            return False
-              
-        if not self.num_bins and not self.bin_width:
-            return False
-        
-        if self.num_bins and self.num_bins <= 0:
-            return False
-        
-        if self.bin_width and self.bin_width <= 0:
-            return False
-       
-        return True
-    
-    
-    def apply(self, old_experiment):
+    def apply(self, experiment):
         """Applies the binning to an experiment.
         
         Parameters
@@ -101,20 +76,36 @@ class BinningOp(HasStrictTraits):
             event's measurement in self.channel is greater than self.low and
             less than self.high; it is False otherwise.
         """
-        
-        # make sure name got set!
+
         if not self.name:
-            raise RuntimeError("You have to set the Binning operations's name "
-                               "before applying it!")
+            raise CytoflowOpError("You have to set the Binning operations's name "
+                                  "before applying it!")
+        
+        if self.name in experiment.data.columns:
+            raise CytoflowOpError("Operation name is in the experiment already!")
+        
+        if not self.channel:
+            raise CytoflowOpError("Didn't specify a channel")
+        
+        if not self.channel in experiment.channels:
+            raise CytoflowOpError("channel isn't in the experiment")
+              
+        if not self.num_bins and not self.bin_width:
+            raise CytoflowOpError("Must set either bin number or width")
+        
+        if self.num_bins and self.num_bins <= 0:
+            raise CytoflowOpError("Number of bins must be positive")
+        
+        if self.bin_width and self.bin_width <= 0:
+            raise CytoflowOpError("Bin width must be positive")
         
         # make sure old_experiment doesn't already have a column named self.name
-        if(self.name in old_experiment.data.columns):
-            raise RuntimeError("Experiment already contains a column {0}"
+        if(self.name in experiment.data.columns):
+            raise CytoflowOpError("Experiment already contains a column {0}"
                                .format(self.name))    
             
-        channel_min = old_experiment.data[self.channel].min()
-        channel_max = old_experiment.data[self.channel].max()
-        
+        channel_min = experiment.data[self.channel].min()
+        channel_max = experiment.data[self.channel].max()
         
         if self.scale == "linear":
             num_bins = self.num_bins if self.num_bins else \
@@ -132,8 +123,8 @@ class BinningOp(HasStrictTraits):
         # bins need to be internal; drop the first and last one
         bins = bins[1:-1]
             
-        new_experiment = old_experiment.clone()
-        new_experiment[self.name] = np.digitize(old_experiment[self.channel], bins)
+        new_experiment = experiment.clone()
+        new_experiment[self.name] = np.digitize(experiment[self.channel], bins)
         
         new_experiment.conditions[self.name] = "int"
         new_experiment.metadata[self.name] = {}
