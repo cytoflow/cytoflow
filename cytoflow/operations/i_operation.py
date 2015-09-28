@@ -21,26 +21,6 @@ class IOperation(Interface):
     id = Str
     friendly_id = Str
     name = Str
-    
-    def is_valid(self, experiment):
-        """Validate the parameters of this operation given an Experiment.
-        
-        For example, make sure that all the channels this op asks for 
-        exist; or that the subset string for a data-driven op is valid.
-        
-        Parameters
-        ----------
-        experiment : Experiment
-            the Experiment to validate this op against
-            
-        Returns
-        -------
-            True if this op will work; False otherwise.
-        """
-        
-        # TODO - return something other than T/F (throw an exception, maybe?)
-        # telling what, exactly, was wrong.  (File not found; bad channel names;
-        # bad params; etc.)
         
     def estimate(self, experiment, subset = None):
         """Estimate this operation's parameters from some data.
@@ -57,7 +37,12 @@ class IOperation(Interface):
         subset : Str (optional)
             a string passed to pandas.DataFrame.query() to select the subset
             of data on which to run the parameter estimation.
-        
+            
+        Raises
+        ------
+        CytoflowOpException
+            If the operation can't be be completed because of bad op
+            parameters.
         """ 
     
     def apply(self, experiment):
@@ -66,13 +51,19 @@ class IOperation(Interface):
         
         Parameters
         ----------
-            old_experiment : Experiment
+            experiment : Experiment
                 the Experiment to apply this op to
                     
         Returns
         -------
             Experiment
                 the old Experiment with this operation applied
+                
+        Raises
+        ------
+        CytoflowOpException
+            If the operation can't be be completed because of bad op
+            parameters.
         """
         
     def default_view(self):

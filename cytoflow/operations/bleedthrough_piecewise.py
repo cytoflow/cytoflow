@@ -9,17 +9,16 @@ from __future__ import division
 from traits.api import HasStrictTraits, Str, CStr, File, Dict, Python, \
                        Instance, Int, List, provides
 import numpy as np
-from cytoflow.operations.i_operation import IOperation
-from cytoflow.utility.util import cartesian
 import math
 import scipy.interpolate
 import scipy.optimize
 import pandas
 import fcsparser
 
+from .i_operation import IOperation
 from .hlog import hlog, hlog_inv
-
 from ..views import IView
+from ..utility import CytoflowOpError, cartesian
 
 @provides(IOperation)
 class BleedthroughPiecewiseOp(HasStrictTraits):
@@ -43,7 +42,7 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
     Attributes
     ----------
     name : Str
-        The operation name (for UI representation.)
+        The operation name (for UI representation; optional for interactive use)
     
     controls : Dict(Str, File)
         The channel names to correct, and corresponding single-color control
@@ -86,14 +85,13 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
     >>> bl_op = flow.BleedthroughPiecewiseOp()
     >>> bl_op.num_knots = 10
     >>> bl_op.controls = {'Pacific Blue-A' : 'merged/ebfp.fcs',
-                          'FITC-A' : 'merged/eyfp.fcs',
-                          'PE-Tx-Red-YG-A' : 'merged/mkate.fcs'}
-
+    ...                   'FITC-A' : 'merged/eyfp.fcs',
+    ...                   'PE-Tx-Red-YG-A' : 'merged/mkate.fcs'}
+    >>>
     >>> bl_op.estimate(ex2)
     >>> bl_op.default_view().plot()    
-    
+    >>>
     >>> %time ex3 = bl_op.apply(ex2) # 410,000 cells
-
     CPU times: user 577 ms, sys: 27.7 ms, total: 605 ms
     Wall time: 607 ms
     """
@@ -115,30 +113,13 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
     # _interpolators.keys()
     _channels = List(Str)
     
-    def is_valid(self, experiment):
-        """Validate this operation against an experiment."""
-
-        if not self.name:
-            return False
-        
-        # NOTE: these conditions are for applying the correction, NOT estimating
-        # the correction from controls.
-        
-        if not self._interpolators:
-            return False
-        
-        if not set(self._interpolators.keys()) <= set(experiment.channels):
-            return False
-       
-        return True
-    
     def estimate(self, experiment, subset = None): 
         """
         Estimate the bleedthrough from the single-channel controls in `controls`
         """
 
         if self.num_knots < 3:
-            raise RuntimeError("Need to allow at least 3 knots in the spline")
+            raise CytoflowOpError("Need to allow at least 3 knots in the spline")
         
         self._channels = self.controls.keys()
     
@@ -156,14 +137,14 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
                 exp_v = experiment.metadata[channel]['voltage']
             
                 if not "$PnV" in tube_channels.ix[channel]:
-                    raise RuntimeError("Didn't find a voltage for channel {0}" \
-                                       "in tube {1}".format(channel, self.controls[channel]))
+                    raise CytoflowOpError("Didn't find a voltage for channel {0}" 
+                                          "in tube {1}".format(channel, self.controls[channel]))
                 
                 control_v = tube_channels.ix[channel]["$PnV"]
                 
                 if control_v != exp_v:
-                    raise RuntimeError("Voltage differs for channel {0} in tube {1}"
-                                       .format(channel, self.controls[channel]))
+                    raise CytoflowOpError("Voltage differs for channel {0} in tube {1}"
+                                          .format(channel, self.controls[channel]))
 
         self._splines = {}
         mesh_axes = []
@@ -253,7 +234,7 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
 
         # TODO - some sort of validity checking.
 
-    def apply(self, old_experiment):
+    def apply(self, experiment):
         """Applies the bleedthrough correction to an experiment.
         
         Parameters
@@ -265,11 +246,18 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
         -------
             a new experiment with the bleedthrough subtracted out.
         """
+                
+        if not self._interpolators:
+            raise CytoflowOpError("Module interpolators aren't set. "
+                                  "Did you run estimate()?")
+        
+        if not set(self._interpolators.keys()) <= set(experiment.channels):
+            raise CytoflowOpError("Module parameters don't match experiment channels")
 
-        new_experiment = old_experiment.clone()
+        new_experiment = experiment.clone()
         
         # get rid of data outside of the interpolators' mesh 
-        # (-3 * autofluorescence sigma )
+        # (-3 * autofluorescence sigma)
         for channel in self._channels:
             af_stdev = new_experiment.metadata[channel]['af_stdev']
             new_experiment.data = \
@@ -300,7 +288,7 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
         """
         
         if set(self.controls.keys()) != set(self._splines.keys()):
-            raise "Must have both the controls and bleedthrough to plot" 
+            raise CytoflowOpError("Must have both the controls and bleedthrough to plot")
  
         channels = self.controls.keys()
         
@@ -311,12 +299,12 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
                                     meta_data_only = True, 
                                     reformat_meta = True)
             except Exception as e:
-                raise RuntimeError("FCS reader threw an error on tube {0}: {1}"\
+                raise CytoflowOpError("FCS reader threw an error on tube {0}: {1}"\
                                    .format(self.controls[channel], e.value))
 
         return BleedthroughPiecewiseDiagnostic(op = self)
     
-# module-level "static" function (doesn't require a class instance
+# module-level "static" function (doesn't require a class instance)
 def _correct_bleedthrough(row, channels, splines):
     idx = {channel : idx for idx, channel in enumerate(channels)}
     
@@ -387,8 +375,8 @@ class BleedthroughPiecewiseDiagnostic(HasStrictTraits):
                     _, tube_data = fcsparser.parse(self.op.controls[from_channel], 
                                                    reformat_meta = True)
                 except Exception as e:
-                    raise RuntimeError("FCS reader threw an error on tube {0}: {1}"\
-                                       .format(self.op.controls[from_channel], e.value))
+                    raise CytoflowOpError("FCS reader threw an error on tube {0}: {1}"\
+                                          .format(self.op.controls[from_channel], e.value))
              
                 plt.subplot(num_channels, 
                             num_channels, 

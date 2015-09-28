@@ -161,7 +161,7 @@ class Experiment(HasStrictTraits):
             
         Raises
         ------
-        RuntimeError
+        CytoflowError
             If you call add_conditions() after you've already started adding
             tubes.          
             
@@ -173,7 +173,7 @@ class Experiment(HasStrictTraits):
         """
         
         if(self._tube_conditions):
-            raise RuntimeError("You have to add all your conditions before "
+            raise CytoflowError("You have to add all your conditions before "
                                "adding your tubes!")              
             
         for key, value in conditions.iteritems():
@@ -196,7 +196,7 @@ class Experiment(HasStrictTraits):
             
         Raises
         ------
-        RuntimeError
+        CytoflowError
             - If you try to add tubes with different channels
             - If you try to add tubes with different channel voltages
             - If you try to add tubes with identical metadata
@@ -220,7 +220,7 @@ class Experiment(HasStrictTraits):
         tube_meta, tube_data = tube
         
         if "_channels_" not in tube_meta:
-            raise RuntimeError("Did you pass `reformat_meta=True` to fcsparser.parse()?")
+            raise CytoflowError("Did you pass `reformat_meta=True` to fcsparser.parse()?")
     
         # TODO - should we use $PnN? $PnS? WTF?
         tube_channels = tube_meta["_channels_"].set_index("$PnN")    
@@ -231,7 +231,7 @@ class Experiment(HasStrictTraits):
             # channels in the Experiment
             
             if(set(tube_meta["_channel_names_"]) != set(self.channels)):
-                raise RuntimeError("Tube {0} doesn't have the same channels "
+                raise CytoflowError("Tube {0} doesn't have the same channels "
                                    "as the first tube added".format(tube_file))
              
             # next check the per-channel parameters
@@ -240,14 +240,14 @@ class Experiment(HasStrictTraits):
                 # first check voltage
                 if "voltage" in self.metadata[channel]:    
                     if not "$PnV" in tube_channels.ix[channel]:
-                        raise RuntimeError("Didn't find a voltage for channel {0}" \
+                        raise CytoflowError("Didn't find a voltage for channel {0}" \
                                            "in tube {1}".format(channel, tube_file))
                     
                     old_v = self.metadata[channel]["voltage"]
                     new_v = tube_channels.ix[channel]['$PnV']
                     
                     if old_v != new_v and not ignore_v:
-                        raise RuntimeError("Tube {0} doesn't have the same voltages "
+                        raise CytoflowError("Tube {0} doesn't have the same voltages "
                                            "as the first tube".format(tube_file))
 
             # TODO check the delay -- and any other params?
@@ -275,13 +275,13 @@ class Experiment(HasStrictTraits):
         # first, make sure that the keys in conditions are the same as self.conditions
         if( any(True for k in conditions if k not in self.conditions) or \
             any(True for k in self.conditions if k not in conditions) ):
-            raise RuntimeError("Metadata mismatch for tube {0}" \
+            raise CytoflowError("Metadata mismatch for tube {0}" \
                                .format(tube_file))
             
         # next, make sure that this tube's conditions doesn't match any other
         # tube's conditions
         if frozenset(conditions.iteritems()) in self._tube_conditions:
-            raise RuntimeError("Tube {0} has non-unique conditions".format(tube_file))
+            raise CytoflowError("Tube {0} has non-unique conditions".format(tube_file))
                 
         # add the conditions to tube's internal data frame.  specify the conditions
         # dtype using self.conditions.  check for errors as we do so.
@@ -297,7 +297,7 @@ class Experiment(HasStrictTraits):
         
         for meta_name, meta_value in conditions.iteritems():
             if(meta_name not in self.conditions):
-                raise RuntimeError("Tube {0} asked to add conditions {1} which" \
+                raise CytoflowError("Tube {0} asked to add conditions {1} which" \
                                    "hasn't been specified as a condition" \
                                    .format(tube_file, meta_name))
             meta_type = self.conditions[meta_name]
@@ -313,7 +313,7 @@ class Experiment(HasStrictTraits):
                     self.data[meta_name] = self.data[meta_name].cat.set_categories(cats)
                     new_data[meta_name] = new_data[meta_name].cat.set_categories(cats)
             except (ValueError, TypeError):
-                raise RuntimeError("Tube {0} had trouble converting conditions {1}"
+                raise CytoflowError("Tube {0} had trouble converting conditions {1}"
                                    "(value = {2}) to type {3}" \
                                    .format(tube_file,
                                            meta_name,

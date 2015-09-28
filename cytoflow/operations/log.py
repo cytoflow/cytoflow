@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from traits.api import HasStrictTraits, Str, List, Enum, Float, provides
 from .i_operation import IOperation
+from ..utility import CytoflowOpError
 
 @provides(IOperation)
 class LogTransformOp(HasStrictTraits):
@@ -15,7 +16,8 @@ class LogTransformOp(HasStrictTraits):
     Attributes
     ----------
     name : Str
-        The name of the transformation (for UI representation)
+        The name of the transformation (for UI representation; optional for
+        interactive use)
         
     channels : List(Str)
         A list of the channels on which to apply the transformation
@@ -44,35 +46,7 @@ class LogTransformOp(HasStrictTraits):
     mode = Enum("mask", "truncate")
     threshold = Float(1.0)
     
-    def is_valid(self, experiment):
-        """Validate this transform instance against an experiment.
-        
-        Parameters
-        ----------
-        experiment : Experiment
-            The Experiment against which to validate this op.
-            
-        Returns
-        -------
-        True if this is a valid operation on the given experiment; 
-        False otherwise.
-        """
-        
-        if not experiment:
-            return False
-        
-        if not self.name:
-            return False
-        
-        if not set(self.channels).issubset(set(experiment.channels)):
-            return False
-        
-        if self.threshold < 0:
-            return False
-        
-        return True
-    
-    def apply(self, old_experiment):
+    def apply(self, experiment):
         """Applies the log10 transform to channels in an experiment.
         
         Parameters
@@ -87,7 +61,13 @@ class LogTransformOp(HasStrictTraits):
             transformed channels.
         """
         
-        new_experiment = old_experiment.clone()
+        if not set(self.channels).issubset(set(experiment.channels)):
+            raise CytoflowOpError("The op channels aren't in the experiment")
+        
+        if self.threshold <= 0:
+            raise CytoflowOpError("op.threshold must be > 0")
+        
+        new_experiment = experiment.clone()
         
         data = new_experiment.data
         
@@ -95,10 +75,7 @@ class LogTransformOp(HasStrictTraits):
             gt = pd.Series([True] * len(data.index))
         
             for channel in self.channels:
-                gt = np.logical_and(gt, data[channel] > self.threshold)
-
-            #data = data.reset_index(drop = True) 
-            #gt.index = data.index.copy()         
+                gt = np.logical_and(gt, data[channel] > self.threshold)        
 
             data = data.loc[gt]
             data.reset_index(inplace = True, drop = True)

@@ -1,5 +1,6 @@
 from traits.api import HasStrictTraits, Str, List, Float, Dict, provides
 from .i_operation import IOperation
+from ..utility import CytoflowOpError
 
 @provides(IOperation)
 class HlogTransformOp(HasStrictTraits):
@@ -8,7 +9,8 @@ class HlogTransformOp(HasStrictTraits):
     Attributes
     ----------
     name : Str
-        The name of the transformation (for UI representation)
+        The name of the transformation (for UI representation, optional for
+        interactive use)
         
     channels : List(Str)
         A list of the channels on which to apply the transformation
@@ -49,38 +51,7 @@ class HlogTransformOp(HasStrictTraits):
     b = Dict(Str, Float)
     r = Dict(Str, Float)
     
-    def is_valid(self, experiment):
-        """Validate this transform instance against an experiment.
-        
-        Parameters
-        ----------
-        experiment : Experiment
-            The Experiment against which to validate this op.
-            
-        Returns
-        -------
-        True if this is a valid operation on the given experiment; 
-        False otherwise.
-        """
-        
-        if not experiment:
-            return False
-        
-        if not self.name:
-            return False
-        
-        if not set(self.channels).issubset(set(experiment.channels)):
-            return False
-        
-        if not set(self.b.keys()) <= set(self.channels):
-            return False
-        
-        if not set(self.r.keys()) <= set(self.channels):
-            return False
-        
-        return True
-    
-    def apply(self, old_experiment):
+    def apply(self, experiment):
         """Applies the hlog transform to channels in an experiment.
         
         Parameters
@@ -94,28 +65,36 @@ class HlogTransformOp(HasStrictTraits):
             A new Experiment, identical to old_experiment except for the
             transformed channels.
         """
+
+        if not set(self.channels).issubset(set(experiment.channels)):
+            raise CytoflowOpError("Op channels are not in experiment!")
         
-        new_experiment = old_experiment.clone()
+        if not set(self.b.keys()) <= set(self.channels):
+            raise CytoflowOpError("Some keys in op.b are not in experiment")
+        
+        if not set(self.r.keys()) <= set(self.channels):
+            raise CytoflowOpError("Some keys in op.r are not in experiment")
+        
+        new_experiment = experiment.clone()
         
         for channel in self.channels:
             # TODO - probably should change this if the channel range changes
             b = self.b[channel] if channel in self.b else 500
             r = self.r[channel] if channel in self.r else 10**4
-            d = np.log10(old_experiment.metadata[channel]['range'])
+            d = np.log10(experiment.metadata[channel]['range'])
             
             hlog_fwd = \
                 lambda x, b = b, r = r, d = d: hlog(x, b = b, r = r, d = d)
             hlog_rev = \
                 lambda y, b = b, r = r, d = d: hlog_inv(y, b = b, r = r, d = d)
                                
-            new_experiment[channel] = hlog_fwd(old_experiment[channel])
+            new_experiment[channel] = hlog_fwd(experiment[channel])
             
             # TODO - figure out what 
             new_experiment.metadata[channel]["xforms"].append(hlog_fwd)
             new_experiment.metadata[channel]["xforms_inv"].append(hlog_rev)
 
         return new_experiment
-    
     
 # the following functions were taken from Eugene Yurtsev's FlowCytometryTools
 # http://gorelab.bitbucket.org/flowcytometrytools/

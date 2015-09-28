@@ -3,9 +3,11 @@ from __future__ import division
 from traits.api import HasStrictTraits, Str, CStr, CFloat, File, Dict, \
                        Instance, List, provides
 import numpy as np
-from cytoflow.operations.i_operation import IOperation
 import fcsparser
+
+from .i_operation import IOperation
 from ..views import IView
+from ..utility import CytoflowOpError
 
 @provides(IOperation)
 class AutofluorescenceOp(HasStrictTraits):
@@ -67,7 +69,7 @@ class AutofluorescenceOp(HasStrictTraits):
         """
         
         if not set(self.channels) <= set(experiment.channels):
-            raise RuntimeError("Specified channels that weren't found in "
+            raise CytoflowOpError("Specified channels that weren't found in "
                                "the experiment.")
 
         # don't have to validate that blank_file exists; should crap out on 
@@ -78,19 +80,19 @@ class AutofluorescenceOp(HasStrictTraits):
                 fcsparser.parse(self.blank_file, reformat_meta = True)  
             blank_channels = blank_meta["_channels_"].set_index("$PnN")     
         except Exception as e:
-            raise RuntimeError("FCS reader threw an error: " + e.value)
+            raise CytoflowOpError("FCS reader threw an error: " + e.value)
         
         for channel in self.channels:
             v = experiment.metadata[channel]['voltage']
             
             if not "$PnV" in blank_channels.ix[channel]:
-                raise RuntimeError("Didn't find a voltage for channel {0}" \
+                raise CytoflowOpError("Didn't find a voltage for channel {0}" \
                                    "in tube {1}".format(channel, self.blank_file))
             
             blank_v = blank_channels.ix[channel]['$PnV']
             
             if blank_v != v:
-                raise RuntimeError("Voltage differs for channel {0}".format(channel)) 
+                raise CytoflowOpError("Voltage differs for channel {0}".format(channel)) 
        
         for channel in self.channels:
             self.af_median[channel] = np.median(blank_data[channel])
@@ -112,16 +114,16 @@ class AutofluorescenceOp(HasStrictTraits):
         
         if not set(self._af_median.keys()) <= set(experiment.channels) or \
            not set(self._af_stdev.keys()) <= set(experiment.channels):
-            raise RuntimeError("Autofluorescence estimates aren't set, or are "
+            raise CytoflowOpError("Autofluorescence estimates aren't set, or are "
                                "different than those in the experiment "
                                "parameter. Did you forget to run estimate()?")
 
         if not set(self.af_median.keys()) == set(self.af_stdev.keys()):
-            raise RuntimeError("Median and stdev keys are different! "
+            raise CytoflowOpError("Median and stdev keys are different! "
                                "What the hell happened?!")
         
         if not set(self.channels) == set(self.af_median.keys()):
-            raise RuntimeError("Estimated channels differ from the channels "
+            raise CytoflowOpError("Estimated channels differ from the channels "
                                "parameter.  Did you forget to (re)run estimate()?")
         
         new_experiment = experiment.clone()
@@ -188,11 +190,3 @@ class AutofluorescenceDiagnosticView(HasStrictTraits):
             plt.hist(d, bins = 200, **kwargs)
             
             plt.axvline(self.op.af_median[channel], color = 'r')
-                    
-    def is_valid(self, experiment):
-        """Validate this view against an experiment."""
-        
-        return self.op.is_valid(experiment)
-
-    
-

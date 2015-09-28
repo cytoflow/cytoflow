@@ -10,11 +10,13 @@ from __future__ import division
 from traits.api import HasStrictTraits, Str, CStr, File, Dict, Python, \
                        Instance, Int, List, Float, provides
 import numpy as np
-from cytoflow.operations.i_operation import IOperation
-from ..views import IView
 import fcsparser
 import math
 import scipy.signal
+
+from .i_operation import IOperation
+from ..views import IView
+from ..utility import CytoflowOpError
 
 @provides(IOperation)
 class BeadCalibrationOp(HasStrictTraits):
@@ -24,8 +26,8 @@ class BeadCalibrationOp(HasStrictTraits):
     
     To use, set the `beads_file` property to an FCS file containing the beads'
     events; specify which beads you ran by setting the `beads_type` property
-    to match one of the keys in BeadCalibrationOp.BeadTypes; and set the
-    `channels` dict to which channels you want calibrated and in which units.
+    to match one of the values of BeadCalibrationOp.BEADS; and set the
+    `units` dict to which channels you want calibrated and in which units.
     Then, call `estimate()` and check the peak-finding with 
     `default_view().plot()`.  If the peak-finding is wacky, try adjusting
     `bead_peak_quantile` and `bead_brightness_threshold`.  When the peaks are
@@ -37,6 +39,10 @@ class BeadCalibrationOp(HasStrictTraits):
     not do its own gating (maybe a future addition?)  In the meantime, 
     I recommend gating the *acquisition* on the FSC/SSC channels in order
     to get rid of debris, cells, and other noise.
+    
+    Finally, because you can't have a negative number of fluorescent molecules
+    (MEFLs, etc) (as well as for math reasons), this module filters out
+    negative values.
     
     Attributes
     ----------
@@ -110,11 +116,13 @@ class BeadCalibrationOp(HasStrictTraits):
     >>> bead_op.units = {"Pacific Blue-A" : "MEFL",
                          "FITC-A" : "MEFL",
                          "PE-Tx-Red-YG-A" : "MEFL"}
-
+    >>>
     >>> bead_op.beads_file = "beads.fcs"
     >>> bead_op.estimate(ex3)
-
+    >>>
     >>> bead_op.default_view().plot(ex3)  
+    >>> # check the plot!
+    >>>
     >>> ex4 = bead_op.apply(ex3)  
     """
     
@@ -139,20 +147,7 @@ class BeadCalibrationOp(HasStrictTraits):
     def is_valid(self, experiment):
         """Validate this operation against an experiment."""
 
-        if not self.units or not self._calibration:
-            return False
-        
-        channels = self.units.keys()
-        if not set(self.units.keys()) <= set(experiment.channels):
-            return False
-                
-        if set(channels) != set(self._coefficients.keys()):
-            return False
-        
-        if not set(self.units.values()) <= set(self.beads.keys()):
-            return False
 
-        return True
     
     def estimate(self, experiment, subset = None): 
         """
@@ -257,7 +252,7 @@ class BeadCalibrationOp(HasStrictTraits):
                         
                 self._coefficients[channel] = (best_lr[0], best_lr[1])
 
-    def apply(self, old_experiment):
+    def apply(self, experiment):
         """Applies the bleedthrough correction to an experiment.
         
         Parameters
@@ -270,13 +265,31 @@ class BeadCalibrationOp(HasStrictTraits):
             a new experiment calibrated in physical units.
         """
         
-        channels = self._coefficients.keys()
-        new_experiment = old_experiment.clone()
+        channels = self.units.keys()
+
+        if not self.units:
+            raise CytoflowOpError("Units not specified.")
+        
+        if not self._calibration:
+            raise CytoflowOpError("Calibration not found. "
+                                  "Did you forget to call estimate()?")
+        
+        if not set(channels) <= set(experiment.channels):
+            raise CytoflowOpError("Module units don't match experiment channels")
+                
+        if set(channels) != set(self._coefficients.keys()):
+            raise CytoflowOpError("Calibration doesn't match units. "
+                                  "Did you forget to call estimate()?")
+        
+        if not set(self.units.values()) <= set(self.beads.keys()):
+            raise CytoflowOpError("Units don't match beads.")
         
         # two things.  first, you can't raise a negative value to a non-integer
         # power.  second, negative physical units don't make sense -- how can
         # you have the equivalent of -5 molecules of fluoresceine?  so,
         # we filter out negative values here.
+
+        new_experiment = experiment.clone()
         
         for channel in channels:
             new_experiment.data = \
