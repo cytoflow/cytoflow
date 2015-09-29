@@ -287,7 +287,7 @@ class FlowTask(Task):
 
         text = ["<b>Cytoflow {0}</b>".format(cf_version),
                 "<p>",
-                "fcsversion {0}".format(fct_version),
+                "fcsversion {0}".format(fcs_version),
                 "pandas {0}".format(pd_version),
                 "numpy {0}".format(np_version),
                 "numexpr {0}".format(numexp_version),
