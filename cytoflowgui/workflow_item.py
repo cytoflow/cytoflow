@@ -13,6 +13,7 @@ from cytoflow.operations.i_operation import IOperation
 from cytoflow.views.i_view import IView
 from pyface.qt import QtGui
 from pyface.api import error
+from pyface.tasks.api import Task
 
 class WorkflowItem(HasStrictTraits):
     """        
@@ -26,7 +27,7 @@ class WorkflowItem(HasStrictTraits):
     name = DelegatesTo('operation')
     
     # the Task instance that serves as controller for this model
-    task = Instance('flow_task.FlowTask', transient = True)
+    task = Instance(Task, transient = True)
     
     # the operation this Item wraps
     operation = Instance(IOperation)
