@@ -3,6 +3,7 @@ from setuptools import setup, find_packages, Extension
 import io, os, re
 
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
+no_logicle = os.environ.get('NO_LOGICLE', None) == 'True'
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -66,7 +67,7 @@ setup(
                                         "cytoflow/operations/logicle_ext/Logicle.i",
                                         "cytoflow/operations/logicle_ext/logicle.h"],
                              swig_opts=['-c++'])] \
-                if not on_rtd else None,
+                if not (on_rtd or no_logicle) else None,
     
     package_data = { 'cytoflowgui' : ['preferences.ini',
                                       'images/*.png',
