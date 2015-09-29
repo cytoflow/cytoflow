@@ -68,8 +68,6 @@ setup(
                              swig_opts=['-c++'])] \
                 if not on_rtd else None,
     
-    #include_package_data = True,
-    
     package_data = { 'cytoflowgui' : ['preferences.ini',
                                       'images/*.png',
                                       'op_plugins/images/*.png',

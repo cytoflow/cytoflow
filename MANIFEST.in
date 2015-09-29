@@ -1,5 +1,6 @@
-include README.md
+include README.*
 include *.txt
 include docs/*.rst
 include docs/*.py
 include cytoflow/operations/logicle_ext/LICENSE.txt
+include cytoflow/operations/logicle_ext/logicle.h
