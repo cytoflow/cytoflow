@@ -18,12 +18,14 @@ from op_plugins import ImportPlugin, ThresholdPlugin, HLogPlugin, RangePlugin, \
                        Range2DPlugin, PolygonPlugin, LogiclePlugin
 from view_plugins import HistogramPlugin, HexbinPlugin, ScatterplotPlugin, \
                          BarChartPlugin, Stats1DPlugin
+                         
+import sys
 
-def run_gui(argv):
+def run_gui():
     
     logging.basicConfig(level=logging.DEBUG)
     
-    debug = ("--debug" in argv)
+    debug = ("--debug" in sys.argv)
 
     plugins = [CorePlugin(), TasksPlugin(), FlowTaskPlugin(debug = debug),
                ImportPlugin(), ThresholdPlugin(), HistogramPlugin(),
@@ -38,7 +40,6 @@ def run_gui(argv):
     logging.shutdown()
 
 if __name__ == '__main__':
-    import sys
     from pyface.qt import qt_api
     
     if qt_api == "pyside":
@@ -55,4 +56,4 @@ if __name__ == '__main__':
         sys.exit(1)
     
 
-    run_gui(sys.argv)
+    run_gui()
