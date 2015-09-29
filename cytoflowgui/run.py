@@ -49,7 +49,9 @@ if __name__ == '__main__':
         print "   environment variable QT_API to \"pyqt\""
         print "   * eg, on Linux, type on the command line:"
         print "     QT_API=\"pyqt\" python run.py"
-        # TODO - better instructions
+        print "   * on Windows, try: "
+        print "     setx QT_API \"pyqt\""
+
         sys.exit(1)
     
 
