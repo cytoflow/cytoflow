@@ -5,7 +5,7 @@ import io, os, re
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 no_logicle = os.environ.get('NO_LOGICLE', None) == 'True'
 
-print("on rtd? {0}".format(on_rtd))
+print("on rtd? {0}".format(os.environ.get('READTHEDOCS', None)))
 print("no_logicle? {0}".format(no_logicle))
 
 here = os.path.abspath(os.path.dirname(__file__))
