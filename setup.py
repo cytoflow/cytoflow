@@ -5,6 +5,9 @@ import io, os, re
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 no_logicle = os.environ.get('NO_LOGICLE', None) == 'True'
 
+print("on rtd? {0}".format(on_rtd))
+print("no_logicle? {0}".format(no_logicle))
+
 here = os.path.abspath(os.path.dirname(__file__))
 
 def read_rst(*filenames, **kwargs):
@@ -67,7 +70,7 @@ setup(
                                         "cytoflow/operations/logicle_ext/Logicle.i",
                                         "cytoflow/operations/logicle_ext/logicle.h"],
                              swig_opts=['-c++'])] \
-                if ((not on_rtd) and (not no_logicle)) else None,
+                if not (on_rtd or no_logicle) else None,
     
     package_data = { 'cytoflowgui' : ['preferences.ini',
                                       'images/*.png',
