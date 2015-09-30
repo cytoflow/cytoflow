@@ -78,10 +78,10 @@ class Experiment(HasStrictTraits):
     things get in the way of directly subclassing pandas.DataFrame:
     
      - First, to enable some of the delicious syntactic sugar for accessing
-       its contents, DataFrame redefines __{get,set}attribute__, and making
-       it recognize (and maintain across copies) additional attributes
-       is an unsupported (non-public) API feature and introduces other
-       subclassing weirdness.
+       its contents, DataFrame redefines ``__getattribute__`` and 
+       ``__setattribute__``, and making it recognize (and maintain across 
+       copies) additional attributes is an unsupported (non-public) API 
+       feature and introduces other subclassing weirdness.
     
      - Second, many of the operations (like appending!) don't happen in-place;
        they return copies instead.  It's cleaner to simply manage that copying
