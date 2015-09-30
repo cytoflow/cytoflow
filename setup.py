@@ -8,6 +8,8 @@ no_logicle = os.environ.get('NO_LOGICLE', None) == 'True'
 print("on rtd? {0}".format(on_rtd))
 print("no_logicle? {0}".format(no_logicle))
 
+print(os.environ)
+
 here = os.path.abspath(os.path.dirname(__file__))
 
 def read_rst(*filenames, **kwargs):
