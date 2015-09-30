@@ -5,7 +5,7 @@ import io, os, re
 #on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 
 # until RTD can get their act together
-on_rtd = os.environ["PWD"].find("readthedocs") >= 0
+on_rtd = (os.environ["PWD"].get('NO_LOGICLE', "").find("readthedocs")) >= 0
 
 no_logicle = os.environ.get('NO_LOGICLE', None) == 'True'
 
