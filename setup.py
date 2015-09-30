@@ -67,7 +67,7 @@ setup(
                                         "cytoflow/operations/logicle_ext/Logicle.i",
                                         "cytoflow/operations/logicle_ext/logicle.h"],
                              swig_opts=['-c++'])] \
-                if not (on_rtd or no_logicle) else None,
+                if ((not on_rtd) and (not no_logicle)) else None,
     
     package_data = { 'cytoflowgui' : ['preferences.ini',
                                       'images/*.png',
