@@ -1,6 +1,6 @@
 from traits.api import Instance, Any, List, on_trait_change, Str, Dict, Bool
 from traitsui.api import UI, View, Item, EnumEditor
-from pyface.tasks.api import DockPane
+from pyface.tasks.api import DockPane, Task
 from pyface.action.api import ToolBarManager
 from pyface.tasks.action.api import TaskAction
 from pyface.qt import QtGui, QtCore
@@ -19,7 +19,7 @@ class ViewDockPane(DockPane):
     name = 'View Properties'
 
     # the Task that serves as the controller
-    task = Instance('flow_task.FlowTask')
+    task = Instance(Task)
 
     # the IViewPlugins that the user can possibly choose.  set by the controller
     # as we're instantiated
