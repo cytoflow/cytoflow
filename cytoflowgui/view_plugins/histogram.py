@@ -41,9 +41,6 @@ class HistogramHandler(Controller, ViewHandlerMixin):
 class HistogramPluginView(HistogramView):
     handler = Instance(Handler, transient = True)
     handler_factory = Callable(HistogramHandler)
-    
-    def plot_wi(self, wi, pane):
-        pane.plot(wi.result, self)
 
 @provides(IViewPlugin)
 class HistogramPlugin(Plugin):

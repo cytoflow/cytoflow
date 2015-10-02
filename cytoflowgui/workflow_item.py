@@ -107,11 +107,12 @@ class WorkflowItem(HasStrictTraits):
 
         self.valid = "valid"
         
-    def plot(self, pane):
-        """
-        pane: FlowTaskPane
-        """
-        self.current_view.plot_wi(self, pane)
+#     def plot(self, pane):
+#         """
+#         pane: FlowTaskPane
+#         """
+#         if self.current_view:
+#             pane.plot(self.result, self.current_plot)
     
     @cached_property
     def _get_icon(self):

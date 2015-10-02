@@ -388,9 +388,6 @@ class FlowTask(Task):
         with self.worker_lock:
             if not self.to_update.empty():
                 self.worker_flag.set()
-              
-    def clear_current_view(self):
-        self.view.clear_plot()
         
     def set_current_view(self, view_id):
         """
@@ -437,25 +434,25 @@ class FlowTask(Task):
             
             if self.model.selected:
                 try:
-                    self.model.selected.plot(self.view)
+                    self.view.plot(self.model.selected)
                 except CytoflowError as e:
-                    print "Plot error (view changed): " + e.value
-                    self.clear_current_view()
+                    print "Plot error (view changed): ", e
+                    self.view.clear_plot()
             else:
-                self.clear_current_view()
+                self.view.clear_plot()
         else:
-            self.clear_current_view()
+            self.view.clear_plot()
 
     def _result_updated(self, obj, name, old, new):
         print "result updated"
         if self.model.selected:
             try:
-                self.model.selected.plot(self.view)
+                self.view.plot(self.model.selected)
             except CytoflowError as e:
-                print "Plot error (result update): " + e.value
-                self.clear_current_view()
+                print "Plot error (result update): ", e
+                self.view.clear_plot()
         else:
-            self.clear_current_view()
+            self.view.clear_plot()
         
     def view_parameters_updated(self, obj, name, new):
         
@@ -472,10 +469,10 @@ class FlowTask(Task):
             wi = self.model.workflow[-1]
             
         try:
-            wi.plot(self.view)
+            self.view.plot(wi)
         except CytoflowError as e:
-            print "Plot error (view update): " + e.value
-            self.clear_current_view()
+            print "Plot error (view update): ", e
+            self.view.clear_plot()
         
 class FlowTaskPlugin(Plugin):
     """

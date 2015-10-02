@@ -76,9 +76,6 @@ class BarChartPluginView(BarChartView):
     handler = Instance(Handler, transient = True)
     handler_factory = Callable(BarChartHandler)
 
-    def plot_wi(self, wi, pane):
-        pane.plot(wi.result, self)
-
 @provides(IViewPlugin)
 class BarChartPlugin(Plugin):
     """

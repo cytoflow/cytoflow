@@ -74,9 +74,6 @@ class Stats1DHandler(Controller, ViewHandlerMixin):
 class Stats1DPluginView(Stats1DView):
     handler = Instance(Handler, transient = True)
     handler_factory = Callable(Stats1DHandler)
-    
-    def plot_wi(self, wi, pane):
-        pane.plot(wi.result, self)
 
 @provides(IViewPlugin)
 class Stats1DPlugin(Plugin):

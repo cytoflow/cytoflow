@@ -36,17 +36,14 @@ class FlowTaskPane(TaskPane):
         self.editor.clear = True
         self.editor.draw = True
         
-    def plot(self, experiment, view):
+    def plot(self, wi):
         """
         Plot the an experiment in the center pane.
         
         Arguments
         ---------
-        experiment : cytoflow.Experiment
-            The data to plot
-            
-        view : cytoflow.IView
-            The view to use for the plotting
+        wi : WorkflowItem
+            The WorkflowItem (data + current view) to plot
         """
          
 #         # TODO - make this multithreaded.  atm this returns "Cannot set parent,
@@ -72,14 +69,18 @@ class FlowTaskPane(TaskPane):
         # we can make a new plot (figure); but if the params stay the same
         # and the plot is re-selected, we can just reuse the existing figure.
         
-        view.plot(experiment)
+        if not wi.current_view:
+            self.clear_plot()
+            return
+        
+        wi.current_view.plot(wi.result)
         self.editor.figure = plt.gcf()
            
-        if "interactive" in view.traits():
+        if "interactive" in wi.current_view.traits():
             # we have to re-bind the Cursor to the new Axes object by twiddling
             # the "interactive" trait
-            view.interactive = False
-            view.interactive = True 
+            wi.current_view.interactive = False
+            wi.current_view.interactive = True 
             
             
     def export(self, filename):
@@ -87,5 +88,4 @@ class FlowTaskPane(TaskPane):
         # ratio, plot layout, etc.  at the moment, just export exactly what's
         # on the screen
         plt.savefig(filename, bbox_inches = 'tight')
-        
         

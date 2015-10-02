@@ -45,9 +45,6 @@ class HexbinPluginView(HexbinView):
     handler = Instance(Handler, transient = True)
     handler_factory = Callable(HexbinHandler)
 
-    def plot_wi(self, wi, pane):
-        pane.plot(wi.result, self)
-
 @provides(IViewPlugin)
 class HexbinPlugin(Plugin):
     """

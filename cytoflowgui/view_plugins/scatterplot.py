@@ -45,9 +45,6 @@ class ScatterplotPluginView(ScatterplotView):
     handler = Instance(Handler, transient = True)
     handler_factory = Callable(ScatterplotHandler)
 
-    def plot_wi(self, wi, pane):
-        pane.plot(wi.result, self)
-
 @provides(IViewPlugin)
 class ScatterplotPlugin(Plugin):
     """
