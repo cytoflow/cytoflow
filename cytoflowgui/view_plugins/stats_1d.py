@@ -76,7 +76,8 @@ class Stats1DHandler(Controller, ViewHandlerMixin):
                          style = "readonly",
                          visible_when = "object.error",
                          editor = ColorTextEditor(foreground_color = "#000000",
-                                                  background_color = "#ff9191")))
+                                                  background_color = "#ff9191",
+                                                  word_wrap = True)))
     
 class Stats1DPluginView(Stats1DView, PluginViewMixin):
     handler_factory = Callable(Stats1DHandler)

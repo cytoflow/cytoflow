@@ -46,7 +46,8 @@ class HexbinHandler(Controller, ViewHandlerMixin):
                          style = "readonly",
                          visible_when = "object.error",
                          editor = ColorTextEditor(foreground_color = "#000000",
-                                                  background_color = "#ff9191")))
+                                                  background_color = "#ff9191",
+                                                  word_wrap = True)))
 
 class HexbinPluginView(HexbinView, PluginViewMixin):
     handler_factory = Callable(HexbinHandler)
