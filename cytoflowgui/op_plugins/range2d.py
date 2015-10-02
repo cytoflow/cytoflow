@@ -7,7 +7,8 @@ Created on Apr 25, 2015
 from traitsui.api import View, Item, EnumEditor, Controller, Handler
 from envisage.api import Plugin, contributes_to
 from traits.api import provides, DelegatesTo, Callable, Instance
-from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT
+from cytoflowgui.op_plugins.i_op_plugin \
+    import IOperationPlugin, OpHandlerMixin, PluginOpMixin, OP_PLUGIN_EXT
 from cytoflow import Range2DOp, ScatterplotView, RangeSelection2D
 from pyface.api import ImageResource
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
@@ -53,6 +54,9 @@ class Range2DSelectionView(RangeSelection2D, PluginViewMixin):
     xchannel = DelegatesTo('view')
     ychannel = DelegatesTo('view')
     subset = DelegatesTo('view')
+    
+class Range2DPluginOp(Range2DOp, PluginOpMixin):
+    handler_factory = Callable(Range2DHandler)
 
 @provides(IOperationPlugin)
 class Range2DPlugin(Plugin):
@@ -67,10 +71,7 @@ class Range2DPlugin(Plugin):
     menu_group = "Gates"
     
     def get_operation(self):
-        ret = Range2DOp()
-        ret.add_trait("handler_factory", Callable)
-        ret.handler_factory = Range2DHandler
-        return ret
+        return Range2DPluginOp()
     
     def get_default_view(self, op):
         view = Range2DSelectionView()

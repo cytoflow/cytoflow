@@ -1,7 +1,8 @@
 from traitsui.api import View, Item, EnumEditor, Controller, Handler
 from envisage.api import Plugin, contributes_to
 from traits.api import provides, DelegatesTo, Callable, Instance
-from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT
+from cytoflowgui.op_plugins.i_op_plugin \
+    import IOperationPlugin, OpHandlerMixin, PluginOpMixin, OP_PLUGIN_EXT
 from cytoflow import ThresholdOp
 from pyface.api import ImageResource
 from cytoflow.views.threshold_selection import ThresholdSelection
@@ -38,6 +39,9 @@ class ThresholdSelectionView(ThresholdSelection, PluginViewMixin):
     subset = DelegatesTo('view')
     
     view = Instance(HistogramView, args = ())
+    
+class ThresholdPluginOp(ThresholdOp, PluginOpMixin):
+    handler_factory = Callable(ThresholdHandler)
 
 @provides(IOperationPlugin)
 class ThresholdPlugin(Plugin):
@@ -52,10 +56,7 @@ class ThresholdPlugin(Plugin):
     menu_group = "Gates"
     
     def get_operation(self):
-        ret = ThresholdOp()
-        ret.add_trait("handler_factory", Callable)
-        ret.handler_factory = ThresholdHandler
-        return ret
+        return ThresholdPluginOp()
     
     def get_default_view(self, op):
         view = ThresholdSelectionView()

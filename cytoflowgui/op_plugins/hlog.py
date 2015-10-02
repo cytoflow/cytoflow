@@ -9,7 +9,8 @@ from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
 from cytoflow import HlogTransformOp
-from cytoflowgui.op_plugins import OpHandlerMixin, IOperationPlugin, OP_PLUGIN_EXT
+from cytoflowgui.op_plugins.i_op_plugin \
+    import OpHandlerMixin, IOperationPlugin, OP_PLUGIN_EXT, PluginOpMixin
 
 class HLogHandler(Controller, OpHandlerMixin):
     """
@@ -22,6 +23,9 @@ class HLogHandler(Controller, OpHandlerMixin):
                          editor = CheckListEditor(name='handler.previous_channels',
                                                   cols = 2),
                          style = 'custom'))
+        
+class HLogTransformPluginOp(HlogTransformOp, PluginOpMixin):
+    handler_factory = Callable(HLogHandler)
     
 @provides(IOperationPlugin)
 class HLogPlugin(Plugin):
@@ -36,10 +40,7 @@ class HLogPlugin(Plugin):
     menu_group = "Transformations"
      
     def get_operation(self):
-        ret = HlogTransformOp()
-        ret.add_trait("handler_factory", Callable)
-        ret.handler_factory = HLogHandler
-        return ret
+        return HLogTransformPluginOp()
     
     def get_default_view(self, op):
         return None

@@ -4,6 +4,7 @@ Created on Mar 15, 2015
 @author: brian
 """
 from traits.api import Interface, Str, HasTraits, Instance, Property, List
+from traitsui.api import Handler
 from cytoflowgui.workflow_item import WorkflowItem
 
 OP_PLUGIN_EXT = 'edu.mit.synbio.cytoflow.op_plugins'
@@ -53,6 +54,10 @@ class IOperationPlugin(Interface):
         """
         
         """
+
+class PluginOpMixin(HasTraits):
+    handler = Instance(Handler, transient = True)
+    error = Str(transient = True)
         
 class OpHandlerMixin(HasTraits):
     wi = Instance(WorkflowItem)

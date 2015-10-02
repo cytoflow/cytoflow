@@ -14,9 +14,11 @@ if __name__ == '__main__':
 from traitsui.api import View, Item, Controller
 from traits.api import Button, Property, cached_property, provides, Callable
 from cytoflowgui.import_dialog import ExperimentDialog
-from cytoflowgui.op_plugins.i_op_plugin import IOperationPlugin, OpHandlerMixin
+from cytoflowgui.op_plugins.i_op_plugin \
+    import IOperationPlugin, OpHandlerMixin, PluginOpMixin
 from pyface.api import OK as PyfaceOK
 from cytoflow import ImportOp
+from cytoflow.operations import IOperation
 from envisage.api import Plugin
 
 class ImportHandler(Controller, OpHandlerMixin):
@@ -78,7 +80,9 @@ class ImportHandler(Controller, OpHandlerMixin):
             return self.wi.result.data.shape[0]
         else:
             return 0
-
+        
+class ImportPluginOp(ImportOp, PluginOpMixin):
+    handler_factory = Callable(ImportHandler)
             
 @provides(IOperationPlugin)
 class ImportPlugin(Plugin):
@@ -93,10 +97,7 @@ class ImportPlugin(Plugin):
     menu_group = "TOP"
     
     def get_operation(self):
-        ret = ImportOp()
-        ret.add_trait("handler_factory", Callable)
-        ret.handler_factory = ImportHandler
-        return ret
+        return ImportPluginOp()
     
     def get_default_view(self, op):
         None
