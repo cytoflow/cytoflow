@@ -5,7 +5,7 @@ from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_E
 from cytoflow import ThresholdOp
 from pyface.api import ImageResource
 from cytoflow.views.threshold_selection import ThresholdSelection
-from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin
+from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
 from cytoflowgui.subset_editor import SubsetEditor
 from cytoflow.views.histogram import HistogramView
 
@@ -30,8 +30,7 @@ class ThresholdViewHandler(Controller, ViewHandlerMixin):
                          label = "Subset",
                          editor = SubsetEditor(experiment = 'handler.wi.previous.result')))
 
-class ThresholdSelectionView(ThresholdSelection):
-    handler = Instance(Handler, transient = True)
+class ThresholdSelectionView(ThresholdSelection, PluginViewMixin):
     handler_factory = Callable(ThresholdViewHandler)
     
     name = DelegatesTo('view')
@@ -39,9 +38,6 @@ class ThresholdSelectionView(ThresholdSelection):
     subset = DelegatesTo('view')
     
     view = Instance(HistogramView, args = ())
-
-    def plot_wi(self, wi, pane):
-        pane.plot(wi.previous.result, self) 
 
 @provides(IOperationPlugin)
 class ThresholdPlugin(Plugin):

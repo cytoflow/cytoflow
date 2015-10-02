@@ -4,15 +4,15 @@ Created on Feb 24, 2015
 @author: brian
 """
 
-from traitsui.api import View, Item, Controller, EnumEditor, Handler
+from traitsui.api import View, Item, Controller, EnumEditor
 from envisage.api import Plugin, contributes_to
-from traits.api import provides, Callable, Instance, Dict
+from traits.api import provides, Callable, Dict
 from pyface.api import ImageResource
 
 from cytoflow import BarChartView, geom_mean
 from cytoflowgui.subset_editor import SubsetEditor
 from cytoflowgui.view_plugins.i_view_plugin \
-    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin
+    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin
     
 import numpy as np
 import scipy.stats
@@ -72,8 +72,7 @@ class BarChartHandler(Controller, ViewHandlerMixin):
                          label="Subset",
                          editor = SubsetEditor(experiment = "handler.wi.result")))
     
-class BarChartPluginView(BarChartView):
-    handler = Instance(Handler, transient = True)
+class BarChartPluginView(BarChartView, PluginViewMixin):
     handler_factory = Callable(BarChartHandler)
 
 @provides(IViewPlugin)

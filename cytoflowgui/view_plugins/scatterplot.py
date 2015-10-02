@@ -4,15 +4,15 @@ Created on Apr 23, 2015
 @author: brian
 '''
 
-from traitsui.api import View, Item, Controller, EnumEditor, Handler
+from traitsui.api import View, Item, Controller, EnumEditor
 from envisage.api import Plugin, contributes_to
-from traits.api import provides, Callable, Instance
+from traits.api import provides, Callable
 from pyface.api import ImageResource
 
 from cytoflow import ScatterplotView
 from cytoflowgui.subset_editor import SubsetEditor
 from cytoflowgui.view_plugins.i_view_plugin \
-    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin
+    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin
 
 class ScatterplotHandler(Controller, ViewHandlerMixin):
     '''
@@ -39,10 +39,12 @@ class ScatterplotHandler(Controller, ViewHandlerMixin):
                     Item('_'),
                     Item('object.subset',
                          label="Subset",
-                         editor = SubsetEditor(experiment = "handler.wi.result")))
+                         editor = SubsetEditor(experiment = "handler.wi.result")),
+                    Item('_'),
+                    Item('object.error',
+                         style = "readonly"))
 
-class ScatterplotPluginView(ScatterplotView):
-    handler = Instance(Handler, transient = True)
+class ScatterplotPluginView(ScatterplotView, PluginViewMixin):
     handler_factory = Callable(ScatterplotHandler)
 
 @provides(IViewPlugin)

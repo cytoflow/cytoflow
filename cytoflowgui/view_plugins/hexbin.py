@@ -4,15 +4,15 @@ Created on Apr 23, 2015
 @author: brian
 '''
 
-from traitsui.api import View, Item, Controller, EnumEditor, Handler
+from traitsui.api import View, Item, Controller, EnumEditor
 from envisage.api import Plugin, contributes_to
-from traits.api import provides, Callable, Instance
+from traits.api import provides, Callable
 from pyface.api import ImageResource
 
 from cytoflow import HexbinView
 from cytoflowgui.subset_editor import SubsetEditor
 from cytoflowgui.view_plugins.i_view_plugin \
-    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin
+    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin
 
 class HexbinHandler(Controller, ViewHandlerMixin):
     '''
@@ -41,8 +41,7 @@ class HexbinHandler(Controller, ViewHandlerMixin):
                          label="Subset",
                          editor = SubsetEditor(experiment = "handler.wi.result")))
 
-class HexbinPluginView(HexbinView):
-    handler = Instance(Handler, transient = True)
+class HexbinPluginView(HexbinView, PluginViewMixin):
     handler_factory = Callable(HexbinHandler)
 
 @provides(IViewPlugin)

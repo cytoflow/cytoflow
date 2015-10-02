@@ -4,15 +4,15 @@ Created on Feb 24, 2015
 @author: brian
 """
 
-from traitsui.api import View, Item, Controller, EnumEditor, Handler
+from traitsui.api import View, Item, Controller, EnumEditor
 from envisage.api import Plugin, contributes_to
-from traits.api import provides, Callable, Instance
+from traits.api import provides, Callable
 from pyface.api import ImageResource
 
 from cytoflow import HistogramView
 from cytoflowgui.subset_editor import SubsetEditor
 from cytoflowgui.view_plugins.i_view_plugin \
-    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin
+    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin
     
 class HistogramHandler(Controller, ViewHandlerMixin):
     """
@@ -38,8 +38,7 @@ class HistogramHandler(Controller, ViewHandlerMixin):
                          label="Subset",
                          editor = SubsetEditor(experiment = "handler.wi.result")))
     
-class HistogramPluginView(HistogramView):
-    handler = Instance(Handler, transient = True)
+class HistogramPluginView(HistogramView, PluginViewMixin):
     handler_factory = Callable(HistogramHandler)
 
 @provides(IViewPlugin)

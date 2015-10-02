@@ -9,6 +9,8 @@ from traits.api import Instance, provides
 from pyface.tasks.i_task_pane import ITaskPane
 import matplotlib.pyplot as plt
 
+from cytoflow.utility import CytoflowViewError
+
 import threading, time
 
 @provides(ITaskPane)
@@ -69,11 +71,17 @@ class FlowTaskPane(TaskPane):
         # we can make a new plot (figure); but if the params stay the same
         # and the plot is re-selected, we can just reuse the existing figure.
         
-        if not wi.current_view:
+        if not wi.current_view or not wi.result:
             self.clear_plot()
             return
         
-        wi.current_view.plot(wi.result)
+        try:
+            wi.current_view.plot(wi.result)
+        except CytoflowViewError as e:
+            wi.current_view.error = e.__str__()
+        else:
+            wi.current_view.error = ""
+
         self.editor.figure = plt.gcf()
            
         if "interactive" in wi.current_view.traits():

@@ -433,11 +433,7 @@ class FlowTask(Task):
             new.on_trait_change(self.view_parameters_updated)
             
             if self.model.selected:
-                try:
-                    self.view.plot(self.model.selected)
-                except CytoflowError as e:
-                    print "Plot error (view changed): ", e
-                    self.view.clear_plot()
+                self.view.plot(self.model.selected)
             else:
                 self.view.clear_plot()
         else:
@@ -446,11 +442,7 @@ class FlowTask(Task):
     def _result_updated(self, obj, name, old, new):
         print "result updated"
         if self.model.selected:
-            try:
-                self.view.plot(self.model.selected)
-            except CytoflowError as e:
-                print "Plot error (result update): ", e
-                self.view.clear_plot()
+            self.view.plot(self.model.selected)
         else:
             self.view.clear_plot()
         
@@ -468,11 +460,7 @@ class FlowTask(Task):
         if wi is None:
             wi = self.model.workflow[-1]
             
-        try:
-            self.view.plot(wi)
-        except CytoflowError as e:
-            print "Plot error (view update): ", e
-            self.view.clear_plot()
+        self.view.plot(wi)
         
 class FlowTaskPlugin(Plugin):
     """
