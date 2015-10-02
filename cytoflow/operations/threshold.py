@@ -1,6 +1,8 @@
 from traits.api import HasStrictTraits, CFloat, Str, CStr, provides
 import pandas as pd
-from cytoflow.operations.i_operation import IOperation
+
+from .i_operation import IOperation
+from ..utility import CytoflowOpError
 
 @provides(IOperation)
 class ThresholdOp(HasStrictTraits):
@@ -24,7 +26,7 @@ class ThresholdOp(HasStrictTraits):
     >>> thresh.name = "Y2-A+"
     >>> thresh.channel = 'Y2-A'
     >>> thresh.threshold = 0.3
-    
+    >>> 
     >>> ex3 = thresh.apply(ex2)    
     
     Alternately, in an IPython notebook with `%matplotlib notebook`
@@ -49,25 +51,8 @@ class ThresholdOp(HasStrictTraits):
     name = CStr()
     channel = Str()
     threshold = CFloat()
-    
-    def is_valid(self, experiment):
-        """Validate this operation against an experiment."""
-        if not experiment:
-            return False
         
-        if not self.name:
-            return False
-        
-        if self.channel not in experiment.channels:
-            return False
-        
-#         if (self.threshold > experiment[self.channel].max() or
-#             self.threshold < experiment[self.channel].min()):
-#             return False
-        
-        return True
-        
-    def apply(self, old_experiment):
+    def apply(self, experiment):
         """Applies the threshold to an experiment.
         
         Parameters
@@ -85,16 +70,20 @@ class ThresholdOp(HasStrictTraits):
         
         # make sure name got set!
         if not self.name:
-            raise RuntimeError("You have to set the Threshold gate's name "
-                               "before applying it!")
+            raise CytoflowOpError("You have to set the gate's name "
+                                  "before applying it!")
         
         # make sure old_experiment doesn't already have a column named self.name
-        if(self.name in old_experiment.data.columns):
-            raise RuntimeError("Experiment already contains a column {0}"
+        if(self.name in experiment.data.columns):
+            raise CytoflowOpError("Experiment already contains a column {0}"
                                .format(self.name))
+            
+        if self.channel not in experiment.channels:
+            raise CytoflowOpError("{0} isn't a channel in the experiment"
+                                  .format(self.channel))
         
         
-        new_experiment = old_experiment.clone()
+        new_experiment = experiment.clone()
         new_experiment[self.name] = \
             pd.Series(new_experiment[self.channel] > self.threshold)
             

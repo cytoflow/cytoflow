@@ -1,4 +1,5 @@
 from __future__ import division
+from cytoflow.utility.util import CytoflowViewError
 
 if __name__ == '__main__':
     from traits.etsconfig.api import ETSConfig
@@ -9,15 +10,17 @@ if __name__ == '__main__':
 
 from traits.api import HasStrictTraits, Str, provides, Callable, Enum
 import matplotlib.pyplot as plt
-from cytoflow.views.i_view import IView
+
 import numpy as np
 import seaborn as sns
-import pandas as pd
+
+from .i_view import IView
+from ..utility import CytoflowViewError
 
 @provides(IView)
 class Stats1DView(HasStrictTraits):
     """
-    Divide the data up by `variable`, then plot a scatter plot of `variable`
+    Divide the data up by `variable`, then plot a line plot of `variable`
     on the x axis with a summary statistic `yfunction` of the same data in 
     `ychannel` on the y axis. 
     
@@ -102,27 +105,60 @@ class Stats1DView(HasStrictTraits):
     huefacet = Str
     
     # TODO - implement me pls?
-#     x_error_bars = Enum(None, "data", "summary")
-#     x_error_function = Callable
-#     x_error_var = Str
 #     y_error_bars = Enum(None, "data", "summary")
 #     y_error_function = Callable
 #     y_error_var = Str
+
     subset = Str
     
     # TODO - think carefully about how to handle transformations.
     # ie, if we transform with Hlog, take the mean, then return the reverse
     # transformed mean, is that the same as taking the ... um .... geometric
-    # mean of the untransformed data?  hm.
+    # mean of the untransformed data?  or maybe just plot the appropriate
+    # axes (ie the Y axis) with the transformed ticker?
     
     def plot(self, experiment, **kwargs):
         """Plot a bar chart"""
+        
+        if not self.variable:
+            raise CytoflowViewError("Independent variable not set")
+            
+        if self.variable not in experiment.conditions:
+            raise CytoflowViewError("Variable {0} not in the experiment"
+                                    .format(self.variable))
+        
+        if not (experiment.conditions[self.variable] == "float" or
+                experiment.conditions[self.variable] == "int"):
+            raise CytoflowViewError("Variable {0} isn't numeric"
+                                    .format(self.variable)) 
+
+        if not self.ychannel:
+            raise CytoflowViewError("Y channel isn't set.")
+        
+        if self.ychannel not in experiment.channels:
+            raise CytoflowViewError("Y channel {0} isn't in the experiment"
+                                    .format(self.ychannel))
+        
+        if not self.yfunction:
+            raise CytoflowViewError("Y summary function isn't set")
+        
+        if self.xfacet and self.xfacet not in experiment.conditions:
+            raise CytoflowViewError("X facet {0} not in the experiment")
+        
+        if self.yfacet and self.yfacet not in experiment.conditions:
+            raise CytoflowViewError("Y facet {0} not in the experiment")
+        
+        if self.huefacet and self.huefacet not in experiment.metadata:
+            raise CytoflowViewError("Hue facet {0} not in the experiment")        
         
         kwargs.setdefault('marker', 'o')
         kwargs.setdefault('antialiased', True)
 
         if self.subset:
-            data = experiment.query(self.subset)
+            try:
+                data = experiment.query(self.subset)
+            except:
+                raise 
         else:
             data = experiment.data
             
@@ -158,26 +194,7 @@ class Stats1DView(HasStrictTraits):
         if not experiment:
             return False
         
-        if not self.variable in experiment.metadata:
-            return False
-        
-        # TODO - check that self.variable is NUMERIC, not categorical
-        
-        if not self.ychannel or self.ychannel not in experiment.channels:
-            return False
-        
-        if not self.yfunction:
-            return False
-        
-        if self.xfacet and self.xfacet not in experiment.metadata:
-            return False
-        
-        if self.yfacet and self.yfacet not in experiment.metadata:
-            return False
-        
-        if self.huefacet and self.huefacet not in experiment.metadata:
-            return False
-        
+
         if self.subset:
             try:
                 experiment.query(self.subset)

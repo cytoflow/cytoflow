@@ -9,10 +9,13 @@ if __name__ == '__main__':
 
 from traits.api import HasStrictTraits, Str, provides, Callable, Enum
 import matplotlib.pyplot as plt
-from cytoflow.views.i_view import IView
+
 import numpy as np
 import seaborn as sns
 import pandas as pd
+
+from .i_view import IView
+from ..utility import CytoflowViewError
 
 @provides(IView)
 class Stats2DView(HasStrictTraits):
@@ -133,11 +136,57 @@ class Stats2DView(HasStrictTraits):
     def plot(self, experiment, **kwargs):
         """Plot a bar chart"""
         
+        if not self.variable:
+            raise CytoflowViewError("Independent variable not set")
+            
+        if self.variable not in experiment.conditions:
+            raise CytoflowViewError("Variable {0} not in the experiment"
+                                    .format(self.variable))
+        
+        if not (experiment.conditions[self.variable] == "float" or
+                experiment.conditions[self.variable] == "int"):
+            raise CytoflowViewError("Variable {0} isn't numeric"
+                                    .format(self.variable)) 
+            
+        if not self.xchannel:
+            raise CytoflowViewError("X channel isn't set.")
+        
+        if self.xchannel not in experiment.channels:
+            raise CytoflowViewError("X channel {0} isn't in the experiment"
+                                    .format(self.xchannel))
+        
+        if not self.xfunction:
+            raise CytoflowViewError("X summary function isn't set")
+                
+        if not self.ychannel:
+            raise CytoflowViewError("Y channel isn't set.")
+        
+        if self.ychannel not in experiment.channels:
+            raise CytoflowViewError("Y channel {0} isn't in the experiment"
+                                    .format(self.ychannel))
+        
+        if not self.yfunction:
+            raise CytoflowViewError("Y summary function isn't set")
+        
+        if self.xfacet and self.xfacet not in experiment.conditions:
+            raise CytoflowViewError("X facet {0} not in the experiment")
+        
+        if self.yfacet and self.yfacet not in experiment.conditions:
+            raise CytoflowViewError("Y facet {0} not in the experiment")
+        
+        if self.huefacet and self.huefacet not in experiment.metadata:
+            raise CytoflowViewError("Hue facet {0} not in the experiment")        
+        
+        
         kwargs.setdefault('marker', 'o')
         kwargs.setdefault('antialiased', True)
         
         if self.subset:
-            data = experiment.query(self.subset)
+            try:
+                data = experiment.query(self.subset)
+            except:
+                raise CytoflowViewError("Subset string '{0}' isn't valid"
+                                        .format(self.subset))
         else:
             data = experiment.data
             

@@ -9,8 +9,10 @@ if __name__ == '__main__':
 
 from traits.api import HasStrictTraits, Str, provides, Callable
 import matplotlib.pyplot as plt
-from cytoflow.views.i_view import IView
 import seaborn as sns
+
+from .i_view import IView
+from ..utility import CytoflowViewError
 
 @provides(IView)
 class BarChartView(HasStrictTraits):
@@ -104,9 +106,49 @@ class BarChartView(HasStrictTraits):
     
     def plot(self, experiment, **kwargs):
         """Plot a bar chart"""
+
+        if not self.channel:
+            raise CytoflowViewError("Channel not specified")
+        
+        if self.channel not in experiment.channels:
+            raise CytoflowViewError("Channel {0} isn't in the experiment"
+                                    .format(self.channel))
+        
+        if not self.variable:
+            raise CytoflowViewError("Variable not specified")
+        
+        if not self.variable in experiment.conditions:
+            raise CytoflowViewError("Variable {0} isn't in the experiment")
+        
+        if not self.function:
+            raise CytoflowViewError("Function not specified")
+        
+        if self.xfacet and self.xfacet not in experiment.conditions:
+            raise CytoflowViewError("X facet {0} isn't in the experiment"
+                                    .format(self.xfacet))
+        
+        if self.yfacet and self.yfacet not in experiment.metadata:
+            raise CytoflowViewError("Y facet {0} isn't in the experiment"
+                                    .format(self.yfacet))
+
+        if self.huefacet and self.huefacet not in experiment.metadata:
+            raise CytoflowViewError("Hue facet {0} isn't in the experiment"
+                                    .format(self.huefacet))
+        
+#         if self.error_bars == 'data' and self.error_function is None:
+#             return False
+#         
+#         if self.error_bars == 'summary' \
+#             and (self.error_function is None 
+#                  or not self.error_var in experiment.metadata):
+#             return False
         
         if self.subset:
-            data = experiment.query(self.subset)
+            try:
+                data = experiment.query(self.subset)
+            except:
+                raise CytoflowViewError("Subset string {0} isn't valid"
+                                        .format(self.subset))
         else:
             data = experiment.data
             
@@ -121,46 +163,7 @@ class BarChartView(HasStrictTraits):
                        estimator = self.function,
                        ci = None,
                        kind = "bar")
-        
-    def is_valid(self, experiment):
-        """Validate this view against an experiment."""
-        if not experiment:
-            return False
-        
-        if self.channel not in experiment.channels:
-            return False
-        
-        if not self.variable in experiment.metadata:
-            return False
-        
-        if not self.function:
-            return False
-        
-        if self.xfacet and self.xfacet not in experiment.metadata:
-            return False
-        
-        if self.yfacet and self.yfacet not in experiment.metadata:
-            return False
 
-        if self.huefacet and self.huefacet not in experiment.metadata:
-            return False
-        
-#         if self.error_bars == 'data' and self.error_function is None:
-#             return False
-#         
-#         if self.error_bars == 'summary' \
-#             and (self.error_function is None 
-#                  or not self.error_var in experiment.metadata):
-#             return False
-        
-        if self.subset:
-            try:
-                experiment.query(self.subset)
-            except:
-                return False
-        
-        return True
-    
 if __name__ == '__main__':
     import cytoflow as flow
     import fcsparser

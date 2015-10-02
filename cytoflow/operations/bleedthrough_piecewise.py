@@ -130,7 +130,7 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
                                             reformat_meta = True)
                 tube_channels = tube_meta["_channels_"].set_index("$PnN")
             except Exception as e:
-                raise RuntimeError("FCS reader threw an error on tube {0}: {1}"\
+                raise CytoflowOpError("FCS reader threw an error on tube {0}: {1}"\
                                    .format(self.controls[channel], e.value))
 
             for channel in self._channels:
@@ -157,7 +157,7 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
                                                        reformat_meta = True)
                 tube_channels = tube_meta["_channels_"].set_index("$PnN")
             except Exception as e:
-                raise RuntimeError("FCS reader threw an error on tube {0}: {1}"\
+                raise CytoflowOpError("FCS reader threw an error on tube {0}: {1}"\
                                    .format(self.controls[channel], e.value))
             
             data = tube_data.sort(channel)

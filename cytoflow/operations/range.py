@@ -1,5 +1,7 @@
 from traits.api import HasStrictTraits, CFloat, Str, CStr, provides
-from cytoflow.operations.i_operation import IOperation
+from .i_operation import IOperation
+from ..utility import CytoflowOpError
+from cytoflow.utility.util import CytoflowOpError
 
 @provides(IOperation)
 class RangeOp(HasStrictTraits):
@@ -27,7 +29,7 @@ class RangeOp(HasStrictTraits):
     >>> range.channel = 'Y2-A'
     >>> range.low = 0.3
     >>> range.high = 0.8
-
+    >>> 
     >>> ex3 = range.apply(ex2)
     
     Alternately  (in an IPython notebook with `%matplotlib notebook`)
@@ -50,32 +52,8 @@ class RangeOp(HasStrictTraits):
     channel = Str()
     low = CFloat()
     high = CFloat()
-    
-    def is_valid(self, experiment):
-        """Validate this operation against an experiment."""
-
-        if not self.name:
-            return False
         
-        if self.name in experiment.data.columns:
-            return False
-        
-        if not self.channel:
-            return False
-        
-        if not self.channel in experiment.channels:
-            return False
-        
-        if self.high <= self.low:
-            return False
-        
-        if self.high <= experiment[self.channel].min() or \
-           self.low >= experiment[self.channel].max:
-            return False
-       
-        return True
-        
-    def apply(self, old_experiment):
+    def apply(self, experiment):
         """Applies the threshold to an experiment.
         
         Parameters
@@ -90,18 +68,34 @@ class RangeOp(HasStrictTraits):
             event's measurement in self.channel is greater than self.low and
             less than self.high; it is False otherwise.
         """
-        
+
         # make sure name got set!
         if not self.name:
-            raise RuntimeError("You have to set the Threshold gate's name "
-                               "before applying it!")
+            raise CytoflowOpError("You have to set the gate's name "
+                                  "before applying it!")
+
+        if self.name in experiment.data.columns:
+            raise CytoflowOpError("Experiment already has a column named {0}"
+                                  .format(self.name))
         
-        # make sure old_experiment doesn't already have a column named self.name
-        if(self.name in old_experiment.data.columns):
-            raise RuntimeError("Experiment already contains a column {0}"
-                               .format(self.name))
+        if not self.channel:
+            raise CytoflowOpError("Channel not specified")
         
-        new_experiment = old_experiment.clone()
+        if not self.channel in experiment.channels:
+            raise CytoflowOpError("Channel {0} not in the experiment"
+                                  .format(self.channel))
+        
+        if self.high <= self.low:
+            raise CytoflowOpError("range high must be > range low")
+        
+        if self.high <= experiment[self.channel].min():
+            raise CytoflowOpError("range high must be > {0}"
+                                  .format(experiment[self.channel].min()))
+        if self.low >= experiment[self.channel].max:
+            raise CytoflowOpError("range low must be < {0}"
+                                  .format(experiment[self.channel].max()))
+        
+        new_experiment = experiment.clone()
         new_experiment[self.name] = \
             new_experiment[self.channel].between(self.low, self.high)
             

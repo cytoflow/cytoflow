@@ -1,5 +1,3 @@
-from util import cartesian
-from util import iqr
-from util import geom_mean
+from util import cartesian, iqr, geom_mean, num_hist_bins
+from util import CytoflowError, CytoflowOpError, CytoflowViewError
 
-from util import CytoflowOpError

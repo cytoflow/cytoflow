@@ -1,6 +1,8 @@
 import pandas as pd
 from traits.api import HasStrictTraits, Dict, List, Instance, Set, Str, Any
 
+from utility import CytoflowError
+
 class Experiment(HasStrictTraits):
     """An Experiment manages all the data and metadata for a flow experiment.
     
@@ -176,8 +178,7 @@ class Experiment(HasStrictTraits):
             raise CytoflowError("You have to add all your conditions before "
                                "adding your tubes!")              
             
-        for key, value in conditions.iteritems():
-            #self.data[key] = pd.Series(dtype = value)
+        for key, _ in conditions.iteritems():
             self.metadata[key] = {}
         
         self.conditions.update(conditions)
