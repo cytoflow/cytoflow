@@ -324,8 +324,7 @@ class Experiment(HasStrictTraits):
         self._tube_conditions.add(frozenset(conditions.iteritems()))
         self.data = self.data.append(new_data, ignore_index = True)
         del new_data
-        
-        # TODO - figure out if we can actually delete the original tube's data
+
 
 if __name__ == "__main__":
     import fcsparser
