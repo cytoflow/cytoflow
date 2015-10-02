@@ -56,7 +56,6 @@ class IOperationPlugin(Interface):
         """
 
 class PluginOpMixin(HasTraits):
-    handler = Instance(Handler, transient = True)
     error = Str(transient = True)
         
 class OpHandlerMixin(HasTraits):
