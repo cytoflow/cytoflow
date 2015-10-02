@@ -14,6 +14,7 @@ from pyface.api import ImageResource
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
 from cytoflowgui.subset_editor import SubsetEditor
 from cytoflow.views.i_selectionview import ISelectionView
+from cytoflowgui.color_text_editor import ColorTextEditor
 
 class Range2DHandler(Controller, OpHandlerMixin):
     
@@ -28,7 +29,13 @@ class Range2DHandler(Controller, OpHandlerMixin):
                          editor=EnumEditor(name='handler.previous_channels'),
                          label = "Y Channel"),
                     Item('object.ylow', label = "Y Low"),
-                    Item('object.yhigh', label = "Y High")) 
+                    Item('object.yhigh', label = "Y High"),
+                    Item('handler.wi.error',
+                         label = 'Error',
+                         visible_when = 'handler.wi.error',
+                         editor = ColorTextEditor(foreground_color = "#000000",
+                                                  background_color = "#ff9191",
+                                                  word_wrap = True))) 
         
 class RangeView2DHandler(Controller, ViewHandlerMixin):
     def default_traits_view(self):

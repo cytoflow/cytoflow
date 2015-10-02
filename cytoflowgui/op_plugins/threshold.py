@@ -9,6 +9,7 @@ from cytoflow.views.threshold_selection import ThresholdSelection
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
 from cytoflowgui.subset_editor import SubsetEditor
 from cytoflow.views.histogram import HistogramView
+from cytoflowgui.color_text_editor import ColorTextEditor
 
 
 class ThresholdHandler(Controller, OpHandlerMixin):
@@ -17,7 +18,13 @@ class ThresholdHandler(Controller, OpHandlerMixin):
                     Item('object.channel',
                          editor=EnumEditor(name='handler.previous_channels'),
                          label = "Channel"),
-                    Item('object.threshold')) 
+                    Item('object.threshold'),
+                    Item('handler.wi.error',
+                         label = 'Error',
+                         visible_when = 'handler.wi.error',
+                         editor = ColorTextEditor(foreground_color = "#000000",
+                                                  background_color = "#ff9191",
+                                                  word_wrap = True))) 
         
 class ThresholdViewHandler(Controller, ViewHandlerMixin):
     def default_traits_view(self):

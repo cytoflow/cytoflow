@@ -8,7 +8,7 @@ Created on Oct 2, 2015
 from pyface.qt import QtGui, QtCore
 from traitsui.qt4.editor_factory import ReadonlyEditor
 from traitsui.api import BasicEditorFactory
-from traits.api import Color, Instance, Str, Undefined
+from traits.api import Color, Instance, Str, Undefined, Bool
 
 class ColorText(ReadonlyEditor):
     """ Read-only style of text editor, which displays a read-only text field.
@@ -51,6 +51,9 @@ class ColorText(ReadonlyEditor):
         flags = (self.control.textInteractionFlags() |
                  QtCore.Qt.TextSelectableByMouse)
         self.control.setTextInteractionFlags(flags)
+
+        if self.factory.word_wrap:
+            self.control.setWordWrap(True)
 
         fg_color = self.factory.foreground_color
         if fg_color[0:1] == '.':
@@ -97,3 +100,4 @@ class ColorTextEditor(BasicEditorFactory):
     klass = ColorText
     foreground_color = Str
     background_color = Str
+    word_wrap = Bool

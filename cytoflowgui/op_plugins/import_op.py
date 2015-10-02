@@ -18,8 +18,8 @@ from cytoflowgui.op_plugins.i_op_plugin \
     import IOperationPlugin, OpHandlerMixin, PluginOpMixin
 from pyface.api import OK as PyfaceOK
 from cytoflow import ImportOp
-from cytoflow.operations import IOperation
 from envisage.api import Plugin
+from cytoflowgui.color_text_editor import ColorTextEditor
 
 class ImportHandler(Controller, OpHandlerMixin):
     """
@@ -46,7 +46,13 @@ class ImportHandler(Controller, OpHandlerMixin):
                          visible_when='handler.wi.result is not None'),
                     Item('object.coarse_events',
                          label="Events per\nsample",
-                         visible_when='handler.wi.result is not None and object.coarse == True'))
+                         visible_when='handler.wi.result is not None and object.coarse == True'),
+                    Item('handler.wi.error',
+                         label = 'Error',
+                         visible_when = 'handler.wi.error',
+                         editor = ColorTextEditor(foreground_color = "#000000",
+                                                  background_color = "#ff9191",
+                                                  word_wrap = True)))
         
     def _import_event_fired(self):
         """

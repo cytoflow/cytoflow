@@ -11,6 +11,7 @@ from pyface.api import ImageResource
 from cytoflow import HlogTransformOp
 from cytoflowgui.op_plugins.i_op_plugin \
     import OpHandlerMixin, IOperationPlugin, OP_PLUGIN_EXT, PluginOpMixin
+from cytoflowgui.color_text_editor import ColorTextEditor
 
 class HLogHandler(Controller, OpHandlerMixin):
     """
@@ -22,7 +23,13 @@ class HLogHandler(Controller, OpHandlerMixin):
                     Item('object.channels',
                          editor = CheckListEditor(name='handler.previous_channels',
                                                   cols = 2),
-                         style = 'custom'))
+                         style = 'custom'),
+                    Item('handler.wi.error',
+                         label = 'Error',
+                         visible_when = 'handler.wi.error',
+                         editor = ColorTextEditor(foreground_color = "#000000",
+                                                  background_color = "#ff9191",
+                                                  word_wrap = True)))
         
 class HLogTransformPluginOp(HlogTransformOp, PluginOpMixin):
     handler_factory = Callable(HLogHandler)

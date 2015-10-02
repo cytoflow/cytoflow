@@ -8,6 +8,7 @@ from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewM
 from cytoflowgui.subset_editor import SubsetEditor
 from cytoflow.views.i_selectionview import ISelectionView
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
+from cytoflowgui.color_text_editor import ColorTextEditor
 
 
 class RangeHandler(Controller, OpHandlerMixin):
@@ -18,7 +19,13 @@ class RangeHandler(Controller, OpHandlerMixin):
                          editor=EnumEditor(name='handler.previous_channels'),
                          label = "Channel"),
                     Item('object.low'),
-                    Item('object.high')) 
+                    Item('object.high'),
+                    Item('handler.wi.error',
+                         label = 'Error',
+                         visible_when = 'handler.wi.error',
+                         editor = ColorTextEditor(foreground_color = "#000000",
+                                                  background_color = "#ff9191",
+                                                  word_wrap = True))) 
         
 class RangeViewHandler(Controller, ViewHandlerMixin):
     def default_traits_view(self):
