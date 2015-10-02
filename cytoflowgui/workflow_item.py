@@ -11,6 +11,7 @@ from traitsui.api import View, Item, Handler
 from cytoflow import Experiment
 from cytoflow.operations.i_operation import IOperation
 from cytoflow.views.i_view import IView
+from cytoflow.utility import CytoflowError
 from pyface.qt import QtGui
 from pyface.api import error
 from pyface.tasks.api import Task
@@ -18,6 +19,11 @@ from pyface.tasks.api import Task
 class WorkflowItem(HasStrictTraits):
     """        
     The basic unit of a Workflow: wraps an operation and a list of views.
+    
+    Notes
+    -----
+    Because we serialize instances of this, we have to pay careful attention
+    to which traits are ``transient`` (and aren't serialized)
     """
     
     # the operation's id
@@ -32,14 +38,16 @@ class WorkflowItem(HasStrictTraits):
     # the operation this Item wraps
     operation = Instance(IOperation)
     
-    # the handler that's associated with this operation.
-    # since it doesn't maintain any state, we can make and destroy as needed
+    # the handler that's associated with this operation; we get it from the 
+    # operation plugin, and it controls what operation traits are in the UI
+    # and any special handling (heh) of them.  since the handler doesn't 
+    # maintain any state, we can make and destroy as needed.
     handler = Property(depends_on = 'operation', 
                        trait = Instance(Handler), 
                        transient = True)
     
-    # the Experiment that is the result of applying *operation* to a 
-    # previous Experiment
+    # the Experiment that is the result of applying *operation* to the
+    # previous WorkflowItem's ``result``
     result = Instance(Experiment, transient = True)
     
     # the channels and conditions from result.  usually these would be
@@ -57,9 +65,6 @@ class WorkflowItem(HasStrictTraits):
     # the default view for this workflow item
     default_view = Instance(IView)
     
-    # is this wi plottable with the current view?
-    is_plottable = Property(Bool, transient = True)
-    
     # the previous WorkflowItem in the workflow
     # self.result = self.apply(previous.result)
     previous = Instance('WorkflowItem')
@@ -71,6 +76,9 @@ class WorkflowItem(HasStrictTraits):
     # MAGIC: first value is the default
     valid = Enum("invalid", "updating", "valid", transient = True)
     
+    # if we errored out, what was the error string?
+    error = Str(transient = True)
+    
     # the icon for the vertical notebook view.  Qt specific, sadly.
     icon = Property(depends_on = 'valid', transient = True)
     
@@ -79,27 +87,23 @@ class WorkflowItem(HasStrictTraits):
                          style = 'custom',
                          show_label = False))
         
-
     def update(self):
         """
         Called by the controller to update this wi
         """
     
         self.valid = "updating"
+        self.error = ""
+        self.result = None
         
         prev_result = self.previous.result if self.previous else None
-        is_valid = self.operation.is_valid(prev_result)
-        
-        if not is_valid:
-            self.valid = "invalid"
-            return
-        
-        # re-run the operation
         
         try:
             self.result = self.operation.apply(prev_result)
-        except RuntimeError as e:
-            error(None, str(e))       
+        except CytoflowError as e:
+            self.valid = "invalid"
+            self.error = e.value    
+            return
 
         self.valid = "valid"
         
@@ -117,10 +121,6 @@ class WorkflowItem(HasStrictTraits):
             return QtGui.QStyle.SP_BrowserReload
         else: # self.valid == "invalid" or None
             return QtGui.QStyle.SP_BrowserStop
-
-    # MAGIC: returns the value for property is_plottable
-    def _get_is_plottable(self):
-        return self.current_view and self.current_view.is_wi_valid(self)
 
     @cached_property
     def _get_handler(self):

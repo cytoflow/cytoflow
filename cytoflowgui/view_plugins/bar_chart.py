@@ -75,9 +75,6 @@ class BarChartHandler(Controller, ViewHandlerMixin):
 class BarChartPluginView(BarChartView):
     handler = Instance(Handler, transient = True)
     handler_factory = Callable(BarChartHandler)
-    
-    def is_wi_valid(self, wi):
-        return wi.result and self.is_valid(wi.result)
 
     def plot_wi(self, wi, pane):
         pane.plot(wi.result, self)

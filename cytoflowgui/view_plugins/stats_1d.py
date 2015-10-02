@@ -75,9 +75,6 @@ class Stats1DPluginView(Stats1DView):
     handler = Instance(Handler, transient = True)
     handler_factory = Callable(Stats1DHandler)
     
-    def is_wi_valid(self, wi):
-        return wi.result and self.is_valid(wi.result)
-
     def plot_wi(self, wi, pane):
         pane.plot(wi.result, self)
 

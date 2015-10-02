@@ -51,12 +51,7 @@ class PolygonSelectionView(PolygonSelection):
     xchannel = DelegatesTo('view')
     ychannel = DelegatesTo('view')
     subset = DelegatesTo('view')
-        
-    def is_wi_valid(self, wi):
-        return (wi.previous 
-                and wi.previous.result 
-                and self.is_valid(wi.previous.result))
-    
+
     def plot_wi(self, wi, pane):
         pane.plot(wi.previous.result, self) 
 
