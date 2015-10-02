@@ -36,7 +36,7 @@ def update_model(flag, lock, to_update):
         flag.clear()
         while not to_update.empty():
             with lock:
-                prio, wi = to_update.get_nowait()
+                _, wi = to_update.get_nowait()
             wi.update()
 
 

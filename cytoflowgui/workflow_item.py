@@ -13,7 +13,6 @@ from cytoflow.operations.i_operation import IOperation
 from cytoflow.views.i_view import IView
 from cytoflow.utility import CytoflowError
 from pyface.qt import QtGui
-from pyface.api import error
 from pyface.tasks.api import Task
 
 class WorkflowItem(HasStrictTraits):
@@ -102,7 +101,8 @@ class WorkflowItem(HasStrictTraits):
             self.result = self.operation.apply(prev_result)
         except CytoflowError as e:
             self.valid = "invalid"
-            self.error = e.value    
+            self.error = e.__str__()    
+            print self.error
             return
 
         self.valid = "valid"

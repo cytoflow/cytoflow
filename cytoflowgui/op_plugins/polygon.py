@@ -13,6 +13,8 @@ from pyface.api import ImageResource
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
 from cytoflowgui.subset_editor import SubsetEditor
 from cytoflow.views.i_selectionview import ISelectionView
+from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
+from cytoflowgui.color_text_editor import ColorTextEditor
 
 class PolygonHandler(Controller, OpHandlerMixin):
     
@@ -24,7 +26,13 @@ class PolygonHandler(Controller, OpHandlerMixin):
                     Item('object.ychannel',
                          editor=EnumEditor(name='handler.previous_channels'),
                          label = "Y Channel"),
-                    Item('object.vertices', label = "Vertices")) 
+                    Item('object.vertices', label = "Vertices"),
+                    Item('handler.wi.error',
+                         label = 'Error',
+                         visible_when = 'handler.wi.error',
+                         editor = ColorTextEditor(foreground_color = "#000000",
+                                                  background_color = "#ff9191",
+                                                  word_wrap = True))) 
         
 class PolygonViewHandler(Controller, ViewHandlerMixin):
     def default_traits_view(self):
@@ -50,6 +58,9 @@ class PolygonSelectionView(PolygonSelection, PluginViewMixin):
     xchannel = DelegatesTo('view')
     ychannel = DelegatesTo('view')
     subset = DelegatesTo('view')
+    
+class PolygonPluginOp(PolygonOp, PluginOpMixin):
+    handler_factory = Callable(PolygonHandler)
 
 @provides(IOperationPlugin)
 class PolygonPlugin(Plugin):
@@ -64,10 +75,7 @@ class PolygonPlugin(Plugin):
     menu_group = "Gates"
     
     def get_operation(self):
-        ret = PolygonOp()
-        ret.add_trait("handler_factory", Callable)
-        ret.handler_factory = PolygonHandler
-        return ret
+        return PolygonPluginOp()
     
     def get_default_view(self, op):
         view = PolygonSelectionView()

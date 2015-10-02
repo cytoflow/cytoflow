@@ -7,6 +7,8 @@ from pyface.api import ImageResource
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
 from cytoflowgui.subset_editor import SubsetEditor
 from cytoflow.views.i_selectionview import ISelectionView
+from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
+from cytoflowgui.color_text_editor import ColorTextEditor
 
 
 class RangeHandler(Controller, OpHandlerMixin):
@@ -17,7 +19,13 @@ class RangeHandler(Controller, OpHandlerMixin):
                          editor=EnumEditor(name='handler.previous_channels'),
                          label = "Channel"),
                     Item('object.low'),
-                    Item('object.high')) 
+                    Item('object.high'),
+                    Item('handler.wi.error',
+                         label = 'Error',
+                         visible_when = 'handler.wi.error',
+                         editor = ColorTextEditor(foreground_color = "#000000",
+                                                  background_color = "#ff9191",
+                                                  word_wrap = True))) 
         
 class RangeViewHandler(Controller, ViewHandlerMixin):
     def default_traits_view(self):
@@ -39,6 +47,9 @@ class RangeSelectionView(RangeSelection, PluginViewMixin):
     name = DelegatesTo('view')
     channel = DelegatesTo('view')
     subset = DelegatesTo('view')
+    
+class RangePluginOp(RangeOp, PluginOpMixin):
+    handler_factory = Callable(RangeHandler)
 
 @provides(IOperationPlugin)
 class RangePlugin(Plugin):
@@ -53,10 +64,7 @@ class RangePlugin(Plugin):
     menu_group = "Gates"
     
     def get_operation(self):
-        ret = RangeOp()
-        ret.add_trait("handler_factory", Callable)
-        ret.handler_factory = RangeHandler
-        return ret
+        return RangePluginOp()
     
     def get_default_view(self, op):
         view = RangeSelectionView()

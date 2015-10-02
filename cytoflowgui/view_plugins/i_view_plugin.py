@@ -8,8 +8,6 @@ from traits.api import Interface, Str, HasTraits, Property, Instance, List
 from traitsui.api import Handler
 from cytoflowgui.workflow_item import WorkflowItem
 
-from cytoflow.views import IView
-
 VIEW_PLUGIN_EXT = 'edu.mit.synbio.cytoflow.view_plugins'
 
 class IViewPlugin(Interface):
