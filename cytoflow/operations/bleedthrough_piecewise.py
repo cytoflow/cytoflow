@@ -398,11 +398,3 @@ class BleedthroughPiecewiseDiagnostic(HasStrictTraits):
                          spline(xs), 
                          'g-', 
                          lw=3)
-
-    def is_valid(self, experiment):
-        """Validate this view against an experiment."""
-        
-        return self.op.is_valid(experiment)
-
-    
-

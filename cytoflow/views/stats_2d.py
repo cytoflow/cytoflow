@@ -216,45 +216,7 @@ class Stats2DView(HasStrictTraits):
         grid.map(plt.scatter, self.xchannel, self.ychannel, **kwargs)
         grid.map(plt.plot, self.xchannel, self.ychannel, **kwargs)
         grid.add_legend()
-        
-    def is_valid(self, experiment):
-        """Validate this view against an experiment."""
-        if not experiment:
-            return False
-        
-        if not self.variable in experiment.metadata:
-            return False
-        
-        # TODO - check that self.variable is NUMERIC, not categorical
-        
-        if not self.ychannel or self.xchannel not in experiment.channels:
-            return False
-        
-        if not self.xfunction:
-            return False
-        
-        if not self.ychannel or self.ychannel not in experiment.channels:
-            return False
-        
-        if not self.yfunction:
-            return False
-        
-        if self.xfacet and self.xfacet not in experiment.metadata:
-            return False
-        
-        if self.yfacet and self.yfacet not in experiment.metadata:
-            return False
-        
-        if self.huefacet and self.huefacet not in experiment.metadata:
-            return False
-        
-        if self.subset:
-            try:
-                experiment.query(self.subset)
-            except:
-                return False
-        
-        return True
+
     
 if __name__ == '__main__':
     import cytoflow as flow

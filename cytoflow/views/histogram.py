@@ -108,20 +108,7 @@ class HistogramView(HasStrictTraits):
         
         g.map(plt.hist, self.channel, **kwargs)
         g.add_legend()
-        
-    def is_valid(self, experiment):
-        """Validate this view against an experiment."""
-        if not experiment:
-            return False
-        
 
-        if self.subset:
-            try:
-                experiment.query(self.subset)
-            except:
-                return False
-        
-        return True
     
 if __name__ == '__main__':
    

@@ -188,21 +188,7 @@ class Stats1DView(HasStrictTraits):
         grid.map(plt.scatter, self.variable, self.ychannel, **kwargs)
         grid.map(plt.plot, self.variable, self.ychannel, **kwargs)
         grid.add_legend()
-        
-    def is_valid(self, experiment):
-        """Validate this view against an experiment."""
-        if not experiment:
-            return False
-        
 
-        if self.subset:
-            try:
-                experiment.query(self.subset)
-            except:
-                return False
-        
-        return True
-    
 if __name__ == '__main__':
     import cytoflow as flow
     import fcsparser

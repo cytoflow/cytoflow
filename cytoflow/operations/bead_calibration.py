@@ -144,11 +144,6 @@ class BeadCalibrationOp(HasStrictTraits):
 
     _coefficients = Dict(Str, Python)
     
-    def is_valid(self, experiment):
-        """Validate this operation against an experiment."""
-
-
-    
     def estimate(self, experiment, subset = None): 
         """
         Estimate the calibration coefficients from the beads file.
@@ -438,9 +433,4 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
             plt.plot(hist_bins[1:], hist_smooth)
             for peak in peak_bins_filtered:
                 plt.axvline(hist_bins[peak], color = 'r')
-            
 
-    def is_valid(self, experiment):
-        """Validate this view against an experiment."""
-        
-        return self.op.is_valid(experiment)
