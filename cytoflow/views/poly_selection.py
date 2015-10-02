@@ -1,8 +1,8 @@
 from traits.api import provides, HasStrictTraits, Instance, Float, Bool, \
                        on_trait_change, List
 
-from cytoflow.views.i_selectionview import ISelectionView
-from cytoflow.views.i_view import IView
+from .i_selectionview import ISelectionView
+from .i_view import IView
 
 from matplotlib.widgets import Cursor
 import matplotlib.pyplot as plt
@@ -25,6 +25,24 @@ class PolygonSelection(HasStrictTraits):
     interactive : Bool
         is this view interactive?  Ie, can the user set the polygon verticies
         with mouse clicks?
+        
+    Examples
+    --------
+    
+    **At the moment, this doesn't work!  TODO - make me faster***
+    
+    In an IPython notebook with `%matplotlib notebook`
+    
+    >>> s = flow.ScatterplotView(xchannel = "V2-A",
+    ...                          ychannel = "Y2-A")
+    >>> poly = flow.PolygoinSelection(view = s)
+    >>> poly.plot(ex2)
+    >>> poly.interactive = True
+    >>> # ... draw a range on the plot ....
+    >>> poly_op = flow.PolygonOp(name = "Polygon",
+                                 xchannel = "V2-A",
+    ...                          ychannel = "Y2-A",
+    ...                          polygon = poly.verticies) 
     """
     
     id = "edu.mit.synbio.cytoflow.views.polygon"
@@ -46,10 +64,6 @@ class PolygonSelection(HasStrictTraits):
         """Plot self.view, and then plot the selection on top of it."""
         self.view.plot(experiment, **kwargs)
         self._draw_poly()
-
-    def is_valid(self, experiment):
-        """If the decorated view is valid, we are too."""
-        return self.view.is_valid(experiment)
     
     @on_trait_change('vertices')
     def _draw_poly(self):

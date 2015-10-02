@@ -9,6 +9,8 @@ from traits.api import Instance, provides
 from pyface.tasks.i_task_pane import ITaskPane
 import matplotlib.pyplot as plt
 
+from cytoflow.utility import CytoflowViewError
+
 import threading, time
 
 @provides(ITaskPane)
@@ -36,17 +38,14 @@ class FlowTaskPane(TaskPane):
         self.editor.clear = True
         self.editor.draw = True
         
-    def plot(self, experiment, view):
+    def plot(self, wi):
         """
         Plot the an experiment in the center pane.
         
         Arguments
         ---------
-        experiment : cytoflow.Experiment
-            The data to plot
-            
-        view : cytoflow.IView
-            The view to use for the plotting
+        wi : WorkflowItem
+            The WorkflowItem (data + current view) to plot
         """
          
 #         # TODO - make this multithreaded.  atm this returns "Cannot set parent,
@@ -72,14 +71,24 @@ class FlowTaskPane(TaskPane):
         # we can make a new plot (figure); but if the params stay the same
         # and the plot is re-selected, we can just reuse the existing figure.
         
-        view.plot(experiment)
+        if not wi.current_view or not wi.result:
+            self.clear_plot()
+            return
+        
+        try:
+            wi.current_view.plot(wi.result)
+        except CytoflowViewError as e:
+            wi.current_view.error = e.__str__()
+        else:
+            wi.current_view.error = ""
+
         self.editor.figure = plt.gcf()
            
-        if "interactive" in view.traits():
+        if "interactive" in wi.current_view.traits():
             # we have to re-bind the Cursor to the new Axes object by twiddling
             # the "interactive" trait
-            view.interactive = False
-            view.interactive = True 
+            wi.current_view.interactive = False
+            wi.current_view.interactive = True 
             
             
     def export(self, filename):
@@ -87,5 +96,4 @@ class FlowTaskPane(TaskPane):
         # ratio, plot layout, etc.  at the moment, just export exactly what's
         # on the screen
         plt.savefig(filename, bbox_inches = 'tight')
-        
         

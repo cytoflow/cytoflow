@@ -10,7 +10,7 @@ from traits.api import provides, DelegatesTo, Callable, Instance, Callable
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT
 from cytoflow import PolygonOp, ScatterplotView, PolygonSelection
 from pyface.api import ImageResource
-from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin
+from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
 from cytoflowgui.subset_editor import SubsetEditor
 from cytoflow.views.i_selectionview import ISelectionView
 
@@ -42,8 +42,7 @@ class PolygonViewHandler(Controller, ViewHandlerMixin):
                          editor = SubsetEditor(experiment = 'handler.wi.previous.result')))
 
 @provides(ISelectionView)
-class PolygonSelectionView(PolygonSelection):
-    handler = Instance(Handler, transient = True)
+class PolygonSelectionView(PolygonSelection, PluginViewMixin):
     handler_factory = Callable(PolygonViewHandler)
     
     view = Instance(ScatterplotView, args = ())
@@ -51,14 +50,6 @@ class PolygonSelectionView(PolygonSelection):
     xchannel = DelegatesTo('view')
     ychannel = DelegatesTo('view')
     subset = DelegatesTo('view')
-        
-    def is_wi_valid(self, wi):
-        return (wi.previous 
-                and wi.previous.result 
-                and self.is_valid(wi.previous.result))
-    
-    def plot_wi(self, wi, pane):
-        pane.plot(wi.previous.result, self) 
 
 @provides(IOperationPlugin)
 class PolygonPlugin(Plugin):

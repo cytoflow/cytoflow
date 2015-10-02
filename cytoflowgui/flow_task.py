@@ -5,6 +5,7 @@ Created on Feb 11, 2015
 """
 
 from traits.etsconfig.api import ETSConfig
+from cytoflow.utility.util import CytoflowError
 ETSConfig.toolkit = 'qt4'
 
 import os.path
@@ -387,9 +388,6 @@ class FlowTask(Task):
         with self.worker_lock:
             if not self.to_update.empty():
                 self.worker_flag.set()
-              
-    def clear_current_view(self):
-        self.view.clear_plot()
         
     def set_current_view(self, view_id):
         """
@@ -434,19 +432,19 @@ class FlowTask(Task):
         if new:
             new.on_trait_change(self.view_parameters_updated)
             
-            if self.model.selected and self.model.selected.is_plottable:
-                self.model.selected.plot(self.view)
+            if self.model.selected:
+                self.view.plot(self.model.selected)
             else:
-                self.clear_current_view()
+                self.view.clear_plot()
         else:
-            self.clear_current_view()
+            self.view.clear_plot()
 
     def _result_updated(self, obj, name, old, new):
         print "result updated"
-        if self.model.selected and self.model.selected.is_plottable:
-            self.model.selected.plot(self.view)
+        if self.model.selected:
+            self.view.plot(self.model.selected)
         else:
-            self.clear_current_view()
+            self.view.clear_plot()
         
     def view_parameters_updated(self, obj, name, new):
         
@@ -462,10 +460,7 @@ class FlowTask(Task):
         if wi is None:
             wi = self.model.workflow[-1]
             
-        if wi.is_plottable:
-            wi.plot(self.view)
-        else:
-            self.clear_current_view()
+        self.view.plot(wi)
         
 class FlowTaskPlugin(Plugin):
     """

@@ -4,12 +4,14 @@ Created on Apr 19, 2015
 @author: brian
 """
 from traits.api import HasStrictTraits, provides, Str
-from cytoflow.views.i_view import IView
-from cytoflow.utility.util import num_hist_bins
+
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 import matplotlib.transforms as mtrans
+
+from .i_view import IView
+from ..utility import num_hist_bins, CytoflowViewError
 
 @provides(IView)
 class HexbinView(HasStrictTraits):
@@ -58,36 +60,38 @@ class HexbinView(HasStrictTraits):
     huefacet = Str
     subset = Str
     
-    def is_valid(self, experiment):
-        """Validate this view against an experiment."""
-        if not experiment:
-            return False
-        
-        if not self.xchannel or self.xchannel not in experiment.channels:
-            return False
-        
-        if not self.ychannel or self.ychannel not in experiment.channels:
-            return False
-        
-        if self.xfacet and self.xfacet not in experiment.metadata:
-            return False
-        
-        if self.yfacet and self.yfacet not in experiment.metadata:
-            return False
-        
-        if self.huefacet and self.huefacet not in experiment.metadata:
-            return False
-        
-        if self.subset:
-            try:
-                experiment.query(self.subset)
-            except:
-                return False
-        
-        return True
-    
     def plot(self, experiment, **kwargs):
         """Plot a faceted histogram view of a channel"""
+        
+        if not self.xchannel:
+            raise CytoflowViewError("X channel not specified")
+        
+        if self.xchannel not in experiment.channels:
+            raise CytoflowViewError("X channel {0} not in the experiment"
+                                    .format(self.xchannel))
+            
+        if not self.ychannel:
+            raise CytoflowViewError("Y channel not specified")
+        
+        if self.ychannel not in experiment.channels:
+            raise CytoflowViewError("Y channel {0} not in the experiment")
+        
+        if self.xfacet and self.xfacet not in experiment.conditions:
+            raise CytoflowViewError("X facet {0} not in the experiment")
+        
+        if self.yfacet and self.yfacet not in experiment.conditions:
+            raise CytoflowViewError("Y facet {0} not in the experiment")
+        
+        if self.huefacet and self.huefacet not in experiment.metadata:
+            raise CytoflowViewError("Hue facet {0} not in the experiment")
+
+        if self.subset:
+            try: 
+                data = experiment.query(self.subset)
+            except:
+                raise CytoflowViewError("Subset string \'{0}\' not valid")
+        else:
+            data = experiment.data
         
         #kwargs.setdefault('histtype', 'stepfilled')
         #kwargs.setdefault('alpha', 0.5)
@@ -95,14 +99,9 @@ class HexbinView(HasStrictTraits):
         #kwargs.setdefault('mincnt', 1)
         #kwargs.setdefault('bins', 'log')
         kwargs.setdefault('antialiased', True)
-        
-        if not self.subset:
-            x = experiment.data
-        else:
-            x = experiment.query(self.subset)
             
-        xmin, xmax = (np.amin(x[self.xchannel]), np.amax(x[self.xchannel]))
-        ymin, ymax = (np.amin(x[self.ychannel]), np.amax(x[self.ychannel]))
+        xmin, xmax = (np.amin(data[self.xchannel]), np.amax(data[self.xchannel]))
+        ymin, ymax = (np.amin(data[self.ychannel]), np.amax(data[self.ychannel]))
         # to avoid issues with singular data, expand the min/max pairs
         xmin, xmax = mtrans.nonsingular(xmin, xmax, expander=0.1)
         ymin, ymax = mtrans.nonsingular(ymin, ymax, expander=0.1)
@@ -116,7 +115,7 @@ class HexbinView(HasStrictTraits):
         
         kwargs.setdefault('bins', bins) # Do not move above.  don't ask.
 
-        g = sns.FacetGrid(x, 
+        g = sns.FacetGrid(data, 
                           col = (self.xfacet if self.xfacet else None),
                           row = (self.yfacet if self.yfacet else None),
                           hue = (self.huefacet if self.huefacet else None))

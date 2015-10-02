@@ -1,6 +1,8 @@
 import pandas as pd
 from traits.api import HasStrictTraits, Dict, List, Instance, Set, Str, Any
 
+from utility import CytoflowError
+
 class Experiment(HasStrictTraits):
     """An Experiment manages all the data and metadata for a flow experiment.
     
@@ -78,10 +80,10 @@ class Experiment(HasStrictTraits):
     things get in the way of directly subclassing pandas.DataFrame:
     
      - First, to enable some of the delicious syntactic sugar for accessing
-       its contents, DataFrame redefines __{get,set}attribute__, and making
-       it recognize (and maintain across copies) additional attributes
-       is an unsupported (non-public) API feature and introduces other
-       subclassing weirdness.
+       its contents, DataFrame redefines ``__getattribute__`` and 
+       ``__setattribute__``, and making it recognize (and maintain across 
+       copies) additional attributes is an unsupported (non-public) API 
+       feature and introduces other subclassing weirdness.
     
      - Second, many of the operations (like appending!) don't happen in-place;
        they return copies instead.  It's cleaner to simply manage that copying
@@ -176,8 +178,7 @@ class Experiment(HasStrictTraits):
             raise CytoflowError("You have to add all your conditions before "
                                "adding your tubes!")              
             
-        for key, value in conditions.iteritems():
-            #self.data[key] = pd.Series(dtype = value)
+        for key, _ in conditions.iteritems():
             self.metadata[key] = {}
         
         self.conditions.update(conditions)
@@ -323,8 +324,7 @@ class Experiment(HasStrictTraits):
         self._tube_conditions.add(frozenset(conditions.iteritems()))
         self.data = self.data.append(new_data, ignore_index = True)
         del new_data
-        
-        # TODO - figure out if we can actually delete the original tube's data
+
 
 if __name__ == "__main__":
     import fcsparser

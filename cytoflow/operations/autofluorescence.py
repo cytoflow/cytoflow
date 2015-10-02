@@ -47,7 +47,6 @@ class AutofluorescenceOp(HasStrictTraits):
     >>> af_op.channels = ["Pacific Blue-A", "FITC-A", "PE-Tx-Red-YG-A"] 
 
     >>> af_op.estimate(ex)
-    >>> af_op.is_valid(ex)
     >>> af_op.default_view().plot()
     >>> ex2 = af_op.apply(ex)
     """

@@ -7,6 +7,11 @@ Created on Feb 11, 2015
 from traits.etsconfig.api import ETSConfig
 ETSConfig.toolkit = 'qt4'
 
+import matplotlib
+
+# We want matplotlib to use our backend
+matplotlib.use('module://matplotlib_backend')
+
 import logging
 
 from envisage.core_plugin import CorePlugin

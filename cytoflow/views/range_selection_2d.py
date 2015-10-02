@@ -45,7 +45,8 @@ class RangeSelection2D(HasStrictTraits):
     >>> r2d.plot(ex2)
     >>> r2d.interactive = True
     >>> # ... draw a range on the plot ....
-    >>> range_2d = flow.Range2DOp(xchannel = "V2-A",
+    >>> range_2d = flow.Range2DOp(name = "Range2D",
+                                  xchannel = "V2-A",
     ...                           xlow = r2d.xlow,
     ...                           xhigh = r2d.xhigh,
     ...                           ychannel = "Y2-A",
@@ -74,10 +75,6 @@ class RangeSelection2D(HasStrictTraits):
         self.view.plot(experiment, **kwargs)
         self._draw_rect()
 
-    def is_valid(self, experiment):
-        """If the decorated view is valid, we are too."""
-        return self.view.is_valid(experiment)
-    
     @on_trait_change('xlow, xhigh, ylow, yhigh')
     def _draw_rect(self):
         if not (self.xlow and self.xhigh and self.ylow and self.yhigh):

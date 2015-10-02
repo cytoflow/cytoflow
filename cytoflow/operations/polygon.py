@@ -88,12 +88,12 @@ class PolygonOp(HasStrictTraits):
         
         # make sure name got set!
         if not self.name:
-            raise RuntimeError("You have to set the Polygon gate's name "
+            raise CytoflowOpError("You have to set the Polygon gate's name "
                                "before applying it!")
         
         # make sure old_experiment doesn't already have a column named self.name
         if(self.name in experiment.data.columns):
-            raise RuntimeError("Experiment already contains a column {0}"
+            raise CytoflowOpError("Experiment already contains a column {0}"
                                .format(self.name))
             
         # use a matplotlib Path because testing for membership is a fast C fn.

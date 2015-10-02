@@ -1,5 +1,6 @@
 from traits.api import HasStrictTraits, CFloat, Str, CStr, provides
-from cytoflow.operations.i_operation import IOperation
+from .i_operation import IOperation
+from ..utility import CytoflowOpError
 
 @provides(IOperation)
 class Range2DOp(HasStrictTraits):
@@ -69,32 +70,8 @@ class Range2DOp(HasStrictTraits):
     ychannel = Str()
     ylow = CFloat()
     yhigh = CFloat()
-    
-    def is_valid(self, experiment):
-        """Validate this operation against an experiment."""
-        
-        if not self.xchannel or not self.ychannel:
-            return False
-        
-        if (not self.xchannel in experiment.channels or
-            not self.ychannel in experiment.channels):
-            return False
-        
-        if (self.xlow < experiment[self.xchannel].min() or
-            self.xhigh > experiment[self.xchannel].max() or
-            self.ylow < experiment[self.ychannel].min() or
-            self.yhigh > experiment[self.ychannel].max()):
-            return False
-        
-        if not self.name:
-            return False
-               
-        if self.name in experiment.conditions:
-            return False
-       
-        return True
-        
-    def apply(self, old_experiment):
+
+    def apply(self, experiment):
         """Applies the threshold to an experiment.
         
         Parameters
@@ -112,26 +89,43 @@ class Range2DOp(HasStrictTraits):
         
         # make sure name got set!
         if not self.name:
-            raise RuntimeError("You have to set the Threshold gate's name "
-                               "before applying it!")
+            raise CytoflowOpError("You have to set the gate's name "
+                                  "before applying it!")
         
         # make sure old_experiment doesn't already have a column named self.name
-        if(self.name in old_experiment.data.columns):
-            raise RuntimeError("Experiment already contains a column {0}"
+        if(self.name in experiment.data.columns):
+            raise CytoflowOpError("Experiment already contains a column {0}"
                                .format(self.name))
         
+        if not self.xchannel or not self.ychannel:
+            raise CytoflowOpError("Must specify xchannel and ychannel")
         
-        new_experiment = old_experiment.clone()
+        if not self.xchannel in experiment.channels:
+            raise CytoflowOpError("xchannel isn't in the experiment")
+        
+        if not self.ychannel in experiment.channels:
+            raise CytoflowOpError("ychannel isn't in the experiment")
+        
+        if self.xhigh <= experiment[self.xchannel].min():
+            raise CytoflowOpError("x channel range high must be > {0}"
+                                  .format(experiment[self.xchannel].min()))
+        if self.xlow >= experiment[self.xchannel].max:
+            raise CytoflowOpError("x channel range low must be < {0}"
+                                  .format(experiment[self.xchannel].max()))
+            
+        if self.yhigh <= experiment[self.ychannel].min():
+            raise CytoflowOpError("y channel range high must be > {0}"
+                                  .format(experiment[self.ychannel].min()))
+        if self.ylow >= experiment[self.ychannel].max:
+            raise CytoflowOpError("y channel range low must be < {0}"
+                                  .format(experiment[self.ychannel].max()))
+        
+        new_experiment = experiment.clone()
         x = new_experiment[self.xchannel].between(self.xlow, self.xhigh)
         y = new_experiment[self.ychannel].between(self.ylow, self.yhigh)
         new_experiment[self.name] = x & y
         
         new_experiment.conditions[self.name] = "bool"
         new_experiment.metadata[self.name] = {}
-        
-#             pd.Series(new_experiment[self.xchannel] > self.xlow &
-#                       new_experiment[self.xchannel] < self.xhigh &
-#                       new_experiment[self.ychannel] > self.ylow &
-#                       new_experiment[self.ychannel] < self.yhigh)
-            
+
         return new_experiment

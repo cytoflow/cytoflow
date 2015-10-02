@@ -64,10 +64,6 @@ class ThresholdSelection(HasStrictTraits):
         """Plot self.view, and then plot the threshold on top of it."""
         self.view.plot(experiment, **kwargs)
         self._draw_threshold()
-        
-    def is_valid(self, experiment):
-        """If the decorated view is valid, we are too"""
-        return self.view.is_valid(experiment)
     
     @on_trait_change('threshold')
     def _draw_threshold(self):
@@ -109,6 +105,4 @@ class ThresholdSelection(HasStrictTraits):
     def _onclick(self, event):
         """Update the threshold location"""
         self.threshold = event.xdata
-        
-        
         

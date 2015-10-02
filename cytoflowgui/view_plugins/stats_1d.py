@@ -4,15 +4,15 @@ Created on Feb 24, 2015
 @author: brian
 """
 
-from traitsui.api import View, Item, Controller, EnumEditor, Handler
+from traitsui.api import View, Item, Controller, EnumEditor
 from envisage.api import Plugin, contributes_to
-from traits.api import provides, Callable, Instance, Dict
+from traits.api import provides, Callable, Dict
 from pyface.api import ImageResource
 
 from cytoflow import Stats1DView, geom_mean
 from cytoflowgui.subset_editor import SubsetEditor
 from cytoflowgui.view_plugins.i_view_plugin \
-    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin
+    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin
     
 import numpy as np
 import scipy.stats
@@ -71,15 +71,8 @@ class Stats1DHandler(Controller, ViewHandlerMixin):
                          label="Subset",
                          editor = SubsetEditor(experiment = "handler.wi.result")))
     
-class Stats1DPluginView(Stats1DView):
-    handler = Instance(Handler, transient = True)
+class Stats1DPluginView(Stats1DView, PluginViewMixin):
     handler_factory = Callable(Stats1DHandler)
-    
-    def is_wi_valid(self, wi):
-        return wi.result and self.is_valid(wi.result)
-
-    def plot_wi(self, wi, pane):
-        pane.plot(wi.result, self)
 
 @provides(IViewPlugin)
 class Stats1DPlugin(Plugin):

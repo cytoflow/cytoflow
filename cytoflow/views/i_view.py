@@ -35,22 +35,6 @@ class IView(Interface):
     name = Str
     subset = Str
     
-    def is_valid(self, experiment):
-        """Validate the parameters of this view, given a test Experiment.
-        
-        For example, make sure that all the channels this op asks for 
-        exist; or that the subset string for a data-driven op is valid.
-        
-        Parameters
-        ----------
-        experiment : Experiment 
-            the Experiment to validate this op against
-            
-        Returns
-        -------
-            True if this op will work; False otherwise.
-        """
-    
     def plot(self, experiment, **kwargs):
         """Plot a visualization of flow data using the pyplot stateful interface
         

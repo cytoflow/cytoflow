@@ -159,7 +159,7 @@ class BeadCalibrationOp(HasStrictTraits):
                                                      reformat_meta = True)
             beads_channels = beads_meta["_channels_"].set_index("$PnN")
         except Exception as e:
-            raise RuntimeError("FCS reader threw an error on tube {0}: {1}"\
+            raise CytoflowOpError("FCS reader threw an error on tube {0}: {1}"\
                                .format(self.beads_file, e.value))
         
         channels = self.units.keys()
@@ -170,13 +170,13 @@ class BeadCalibrationOp(HasStrictTraits):
             exp_v = experiment.metadata[channel]['voltage']
         
             if not "$PnV" in beads_channels.ix[channel]:
-                raise RuntimeError("Didn't find a voltage for channel {0}" \
+                raise CytoflowOpError("Didn't find a voltage for channel {0}" \
                                    "in tube {1}".format(channel, self.beads_file))
             
             control_v = beads_channels.ix[channel]['$PnV']
             
             if control_v != exp_v:
-                raise RuntimeError("Voltage differs for channel {0} in tube {1}"
+                raise CytoflowOpError("Voltage differs for channel {0} in tube {1}"
                                    .format(channel, self.beads_file))
     
 
@@ -211,15 +211,15 @@ class BeadCalibrationOp(HasStrictTraits):
             mef_unit = self.units[channel]
             
             if not mef_unit in self.beads:
-                raise RuntimeError("Invalid unit {0} specified for channel {1}".format(mef_unit, channel))
+                raise CytoflowOpError("Invalid unit {0} specified for channel {1}".format(mef_unit, channel))
             
             # "mean equivalent fluorochrome"
             mef = self.beads[mef_unit]
             
             if len(peaks) == 0:
-                raise RuntimeError("Didn't find any peaks; check the diagnostic plot")
+                raise CytoflowOpError("Didn't find any peaks; check the diagnostic plot")
             elif len(peaks) > len(self.beads):
-                raise RuntimeError("Found too many peaks; check the diagnostic plot")
+                raise CytoflowOpError("Found too many peaks; check the diagnostic plot")
             elif len(peaks) == 1:
                 # if we only have one peak, assume it's the brightest peak
                 self._coefficients[channel] = [mef[-1] / peaks[0]] 
@@ -336,7 +336,7 @@ class BeadCalibrationOp(HasStrictTraits):
                                 meta_data_only = True, 
                                 reformat_meta = True)
         except Exception as e:
-            raise RuntimeError("FCS reader threw an error on tube {0}: {1}"\
+            raise CytoflowOpError("FCS reader threw an error on tube {0}: {1}"\
                                .format(self.beads_file, e.value))
 
         return BeadCalibrationDiagnostic(op = self)
@@ -397,7 +397,7 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
             _, beads_data = fcsparser.parse(self.op.beads_file, 
                                             reformat_meta = True)
         except Exception as e:
-            raise RuntimeError("FCS reader threw an error on tube {0}: {1}"\
+            raise CytoflowOpError("FCS reader threw an error on tube {0}: {1}"\
                                .format(self.op.beads_file, e.value))
         
         import matplotlib.pyplot as plt
@@ -438,9 +438,4 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
             plt.plot(hist_bins[1:], hist_smooth)
             for peak in peak_bins_filtered:
                 plt.axvline(hist_bins[peak], color = 'r')
-            
 
-    def is_valid(self, experiment):
-        """Validate this view against an experiment."""
-        
-        return self.op.is_valid(experiment)

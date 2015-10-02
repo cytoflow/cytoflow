@@ -42,6 +42,7 @@ class RangeSelection(HasStrictTraits):
     >>> rs.plot(ex2)
     >>> rs.interactive = True
     >>> # ... draw a range on the plot ....
+    >>> range = RangeOp(name = "RangeGate")
     >>> range.low, range.high = rs.low, rs.high
     >>> ex3 = range.apply(ex2)
     """
@@ -67,10 +68,6 @@ class RangeSelection(HasStrictTraits):
         self.view.plot(experiment, **kwargs)
         self._draw_span()
 
-    def is_valid(self, experiment):
-        """If the decorated view is valid, we are too."""
-        return self.view.is_valid(experiment)
-    
     @on_trait_change('low, high')
     def _draw_span(self):
         if not (self.low and self.high):

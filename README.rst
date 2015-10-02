@@ -68,6 +68,13 @@ A few things.
    analysis, such as fitting 2-dimensional Gaussians for automated
    gating and mixture modeling.
 
+Installation
+~~~~~~~~~~~~
+
+See the `installation
+notes <http://cytoflow.readthedocs.org/en/latest/INSTALL.html>`__ on
+`ReadTheDocs <http://cytoflow.readthedocs.org/>`__.
+
 Required packages
 ~~~~~~~~~~~~~~~~~
 
@@ -80,10 +87,14 @@ packages:
 
     python >= 2.7
     pandas >= 0.15.0
+    numpy >= 1.9.0
     numexpr >= 2.1
-    seaborn >= 0.5.0
+    matplotlib >= 1.4.3
+    scipy >= 0.14
+    scikit-learn >= 0.16
+    seaborn >= 0.6.0
     traits >= 4.0
-    FlowCytometryTools  >= 0.4.0
+    fcsparser >= 0.1.1
 
 For the GUI, you additionally need:
 
@@ -94,11 +105,7 @@ For the GUI, you additionally need:
     pyqt >= 4.10 -- this must be installed separately!
 
 Note that many of these packages have additional dependencies, including
-but not limited to ``matplotlib``, ``numpy``, ``traitsui``,
-``decorator``, etc. Everything except PyQT should be a well well-behaved
-PyPI package; you should be able to install all the above with
-``pip install`` or the Canopy package manager.
-
-**Please note:** I am a Linux user, and installing these packages is
-quite easy for me. It may be harder for Mac and Windows users; please
-write an install guide to help those that come after!
+but not limited to ``traitsui``, ``decorator``, etc. Everything except
+PyQT should be a well well-behaved PyPI package; you should be able to
+install all the above with ``pip install`` or the Canopy package
+manager.

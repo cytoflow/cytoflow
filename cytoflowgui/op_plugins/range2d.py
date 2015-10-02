@@ -10,7 +10,7 @@ from traits.api import provides, DelegatesTo, Callable, Instance
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT
 from cytoflow import Range2DOp, ScatterplotView, RangeSelection2D
 from pyface.api import ImageResource
-from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin
+from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
 from cytoflowgui.subset_editor import SubsetEditor
 from cytoflow.views.i_selectionview import ISelectionView
 
@@ -45,8 +45,7 @@ class RangeView2DHandler(Controller, ViewHandlerMixin):
                          editor = SubsetEditor(experiment = 'handler.wi.previous.result')))
 
 @provides(ISelectionView)
-class Range2DSelectionView(RangeSelection2D):
-    handler = Instance(Handler, transient = True)
+class Range2DSelectionView(RangeSelection2D, PluginViewMixin):
     handler_factory = Callable(RangeView2DHandler)
     
     view = Instance(ScatterplotView, args = ())
@@ -54,14 +53,6 @@ class Range2DSelectionView(RangeSelection2D):
     xchannel = DelegatesTo('view')
     ychannel = DelegatesTo('view')
     subset = DelegatesTo('view')
-        
-    def is_wi_valid(self, wi):
-        return (wi.previous 
-                and wi.previous.result 
-                and self.is_valid(wi.previous.result))
-    
-    def plot_wi(self, wi, pane):
-        pane.plot(wi.previous.result, self) 
 
 @provides(IOperationPlugin)
 class Range2DPlugin(Plugin):

@@ -9,8 +9,8 @@ if __name__ == '__main__':
 
 from traits.api import HasStrictTraits, Str, provides
 import matplotlib.pyplot as plt
-from cytoflow.views.i_view import IView
-from cytoflow.utility.util import num_hist_bins
+from .i_view import IView
+from ..utility import num_hist_bins, CytoflowViewError
 import numpy as np
 import seaborn as sns
 
@@ -63,56 +63,52 @@ class HistogramView(HasStrictTraits):
     def plot(self, experiment, **kwargs):
         """Plot a faceted histogram view of a channel"""
         
+        if self.channel not in experiment.channels:
+            raise CytoflowViewError("Channel {0} not in the experiment"
+                                    .format(self.channel))
+        
+        if self.xfacet and self.xfacet not in experiment.conditions:
+            raise CytoflowViewError("X facet {0} not in the experiment"
+                                    .format(self.xfacet))
+        
+        if self.yfacet and self.yfacet not in experiment.conditions:
+            raise CytoflowViewError("Y facet {0} not in the experiment"
+                                    .format(self.yfacet))
+        
+        if self.huefacet and self.huefacet not in experiment.conditions:
+            raise CytoflowViewError("Hue facet {0} not in the experiment"
+                                    .format(self.huefacet))
+
+        if self.subset:
+            try:
+                data = experiment.query(self.subset)
+            except:
+                raise CytoflowViewError("Subset string '{0}' isn't valid"
+                                        .format(self.subset))
+        else:
+            data = experiment.data        
+        
         kwargs.setdefault('histtype', 'stepfilled')
         kwargs.setdefault('alpha', 0.5)
         kwargs.setdefault('antialiased', True)
 
-        if not self.subset:
-            x = experiment.data
-        else:
-            x = experiment.query(self.subset)
-            
-        num_bins = num_hist_bins(x[self.channel])
-        xmin = np.amin(x[self.channel])
-        xmax = np.amax(x[self.channel])
+        num_bins = num_hist_bins(data[self.channel])
+        xmin = np.amin(data[self.channel])
+        xmax = np.amax(data[self.channel])
         bin_width = (xmax - xmin) / num_bins
         bins = np.arange(xmin, xmax, bin_width)
         kwargs.setdefault('bins', bins) 
 
-        g = sns.FacetGrid(x, 
+        g = sns.FacetGrid(data, 
                           col = (self.xfacet if self.xfacet else None),
                           row = (self.yfacet if self.yfacet else None),
                           hue = (self.huefacet if self.huefacet else None),
-                          hue_order = (np.sort(x[self.huefacet].unique()) if self.huefacet else None),
+                          hue_order = (np.sort(data[self.huefacet].unique()) if self.huefacet else None),
                           legend_out = False)
         
         g.map(plt.hist, self.channel, **kwargs)
         g.add_legend()
-        
-    def is_valid(self, experiment):
-        """Validate this view against an experiment."""
-        if not experiment:
-            return False
-        
-        if self.channel not in experiment.channels:
-            return False
-        
-        if self.xfacet and self.xfacet not in experiment.metadata:
-            return False
-        
-        if self.yfacet and self.yfacet not in experiment.metadata:
-            return False
-        
-        if self.huefacet and self.huefacet not in experiment.metadata:
-            return False
-        
-        if self.subset:
-            try:
-                experiment.query(self.subset)
-            except:
-                return False
-        
-        return True
+
     
 if __name__ == '__main__':
    
