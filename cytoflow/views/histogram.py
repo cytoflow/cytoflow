@@ -9,8 +9,8 @@ if __name__ == '__main__':
 
 from traits.api import HasStrictTraits, Str, provides
 import matplotlib.pyplot as plt
-from .i_view import IView
-from ..utility import num_hist_bins, CytoflowViewError
+from cytoflow.views import IView
+from cytoflow.utility import num_hist_bins, CytoflowViewError
 import numpy as np
 import seaborn as sns
 

@@ -14,9 +14,9 @@ import matplotlib.pyplot as plt
 import math
 import sklearn.mixture
 
-from .i_operation import IOperation
-from ..views import IView
-from ..utility import CytoflowOpError
+from cytoflow.operations import IOperation
+from cytoflow.views import IView
+from cytoflow.utility import CytoflowOpError
 
 @provides(IOperation)
 class ColorTranslationOp(HasStrictTraits):

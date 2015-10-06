@@ -1,7 +1,6 @@
 from traits.api import HasStrictTraits, CFloat, Str, CStr, provides
-from .i_operation import IOperation
-from ..utility import CytoflowOpError
-from cytoflow.utility.util import CytoflowOpError
+from cytoflow.operations import IOperation
+from cytoflow.utility import CytoflowOpError
 
 @provides(IOperation)
 class RangeOp(HasStrictTraits):

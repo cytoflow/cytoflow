@@ -1,5 +1,4 @@
 from __future__ import division
-from cytoflow.utility.util import CytoflowViewError
 
 if __name__ == '__main__':
     from traits.etsconfig.api import ETSConfig
@@ -8,14 +7,14 @@ if __name__ == '__main__':
     import os
     os.environ['TRAITS_DEBUG'] = "1"
 
-from traits.api import HasStrictTraits, Str, provides, Callable, Enum
+from traits.api import HasStrictTraits, Str, provides, Callable
 import matplotlib.pyplot as plt
 
 import numpy as np
 import seaborn as sns
 
-from .i_view import IView
-from ..utility import CytoflowViewError
+from cytoflow.views import IView
+from cytoflow.utility import CytoflowViewError
 
 @provides(IView)
 class Stats1DView(HasStrictTraits):

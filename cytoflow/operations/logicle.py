@@ -2,9 +2,9 @@ from traits.api import HasStrictTraits, provides, Str, List, Float, Dict
 import math
 import numpy as np
 
-from ..utility import CytoflowOpError
+from cytoflow.utility import CytoflowOpError
 from logicle_ext.Logicle import Logicle
-from .i_operation import IOperation
+from cytoflow.operations import IOperation
 
 @provides(IOperation)
 class LogicleTransformOp(HasStrictTraits):

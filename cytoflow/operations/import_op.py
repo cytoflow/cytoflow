@@ -9,10 +9,9 @@ from traits.api import HasStrictTraits, provides, Str, List, Bool, Int, Any, \
 import fcsparser
 import numpy as np
 
-from .i_operation import IOperation
 from cytoflow import Experiment
-from ..utility import CytoflowOpError
-from cytoflow.utility.util import CytoflowOpError
+from cytoflow.operations import IOperation
+from cytoflow.utility import CytoflowOpError
 
 class Tube(HasStrictTraits):
     """

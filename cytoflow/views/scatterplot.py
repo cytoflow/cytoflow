@@ -9,8 +9,8 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import seaborn as sns
 
-from .i_view import IView
-from ..utility import CytoflowViewError
+from cytoflow.views import IView
+from cytoflow.utility import CytoflowViewError
 
 @provides(IView)
 class ScatterplotView(HasStrictTraits):

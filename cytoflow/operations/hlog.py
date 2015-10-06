@@ -1,6 +1,6 @@
 from traits.api import HasStrictTraits, Str, List, Float, Dict, provides
-from .i_operation import IOperation
-from ..utility import CytoflowOpError
+from cytoflow.operations import IOperation
+from cytoflow.utility import CytoflowOpError
 
 @provides(IOperation)
 class HlogTransformOp(HasStrictTraits):

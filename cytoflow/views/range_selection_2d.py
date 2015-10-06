@@ -1,8 +1,7 @@
 from traits.api import provides, HasStrictTraits, Instance, Float, Bool, \
                        on_trait_change
 
-from cytoflow.views.i_selectionview import ISelectionView
-from cytoflow.views.i_view import IView
+from cytoflow.views import IView, ISelectionView
 
 from matplotlib.widgets import RectangleSelector
 import matplotlib.pyplot as plt

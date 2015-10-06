@@ -2,8 +2,8 @@ from traits.api import HasStrictTraits, Str, CStr, List, Float, provides
 import numpy as np
 import matplotlib as mpl
 
-from .i_operation import IOperation
-from ..utility import CytoflowOpError
+from cytoflow.operations import IOperation
+from cytoflow.utility import CytoflowOpError
 
 @provides(IOperation)
 class PolygonOp(HasStrictTraits):

@@ -15,10 +15,10 @@ import scipy.optimize
 import pandas
 import fcsparser
 
-from .i_operation import IOperation
-from .hlog import hlog, hlog_inv
-from ..views import IView
-from ..utility import CytoflowOpError, cartesian
+from cytoflow.operations.i_operation import IOperation
+from cytoflow.operations.hlog import hlog, hlog_inv
+from cytoflow.views import IView
+from cytoflow.utility import CytoflowOpError, cartesian
 
 @provides(IOperation)
 class BleedthroughPiecewiseOp(HasStrictTraits):

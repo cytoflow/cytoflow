@@ -10,8 +10,8 @@ import numpy as np
 import seaborn as sns
 import matplotlib.transforms as mtrans
 
-from .i_view import IView
-from ..utility import num_hist_bins, CytoflowViewError
+from cytoflow.views import IView
+from cytoflow.utility import num_hist_bins, CytoflowViewError
 
 @provides(IView)
 class HexbinView(HasStrictTraits):

@@ -14,9 +14,9 @@ import fcsparser
 import math
 import scipy.signal
 
-from .i_operation import IOperation
-from ..views import IView
-from ..utility import CytoflowOpError
+from cytoflow.operations import IOperation
+from cytoflow.views import IView
+from cytoflow.utility import CytoflowOpError
 
 @provides(IOperation)
 class BeadCalibrationOp(HasStrictTraits):
@@ -270,7 +270,7 @@ class BeadCalibrationOp(HasStrictTraits):
         if not self.units:
             raise CytoflowOpError("Units not specified.")
         
-        if not self._calibration:
+        if not self._coefficients:
             raise CytoflowOpError("Calibration not found. "
                                   "Did you forget to call estimate()?")
         

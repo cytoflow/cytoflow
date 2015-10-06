@@ -1,5 +1,5 @@
 from traits.api import Instance, Bool
-from .i_view import IView
+from cytoflow.views import IView
 
 class ISelectionView(IView):
     """A decorator that lets you add (possibly interactive) selections to an IView.

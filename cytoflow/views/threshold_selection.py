@@ -6,8 +6,7 @@ Created on Mar 19, 2015
 from traits.api import provides, HasStrictTraits, Float, Instance, Bool, \
                        on_trait_change
 
-from cytoflow.views.i_selectionview import ISelectionView
-from cytoflow.views.i_view import IView
+from cytoflow.views import IView, ISelectionView
 
 from matplotlib.widgets import Cursor
 import matplotlib.pyplot as plt

@@ -11,8 +11,8 @@ from traits.api import HasStrictTraits, Str, provides, Callable
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from .i_view import IView
-from ..utility import CytoflowViewError
+from cytoflow.views import IView
+from cytoflow.utility import CytoflowViewError
 
 @provides(IView)
 class BarChartView(HasStrictTraits):
