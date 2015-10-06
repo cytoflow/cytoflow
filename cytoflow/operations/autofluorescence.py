@@ -94,8 +94,8 @@ class AutofluorescenceOp(HasStrictTraits):
                 raise CytoflowOpError("Voltage differs for channel {0}".format(channel)) 
        
         for channel in self.channels:
-            self.af_median[channel] = np.median(blank_data[channel])
-            self.af_stdev[channel] = np.std(blank_data[channel])    
+            self._af_median[channel] = np.median(blank_data[channel])
+            self._af_stdev[channel] = np.std(blank_data[channel])    
                 
     def apply(self, experiment):
         """Applies the threshold to an experiment.
@@ -117,11 +117,11 @@ class AutofluorescenceOp(HasStrictTraits):
                                "different than those in the experiment "
                                "parameter. Did you forget to run estimate()?")
 
-        if not set(self.af_median.keys()) == set(self.af_stdev.keys()):
+        if not set(self._af_median.keys()) == set(self._af_stdev.keys()):
             raise CytoflowOpError("Median and stdev keys are different! "
                                "What the hell happened?!")
         
-        if not set(self.channels) == set(self.af_median.keys()):
+        if not set(self.channels) == set(self._af_median.keys()):
             raise CytoflowOpError("Estimated channels differ from the channels "
                                "parameter.  Did you forget to (re)run estimate()?")
         
@@ -188,4 +188,4 @@ class AutofluorescenceDiagnosticView(HasStrictTraits):
             plt.title(channel)
             plt.hist(d, bins = 200, **kwargs)
             
-            plt.axvline(self.op.af_median[channel], color = 'r')
+            plt.axvline(self.op._af_median[channel], color = 'r')
