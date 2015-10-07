@@ -1,6 +1,15 @@
-from traits.api import HasStrictTraits, CFloat, Str, CStr, provides
+from traits.api import HasStrictTraits, CFloat, Str, CStr, Float, Instance, \
+    Bool, provides, on_trait_change
 from cytoflow.operations import IOperation
 from cytoflow.utility import CytoflowOpError
+from cytoflow.views import ISelectionView
+from cytoflow.views.scatterplot import ScatterplotView
+
+from matplotlib.widgets import RectangleSelector
+import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle
+
+import time
 
 @provides(IOperation)
 class Range2DOp(HasStrictTraits):
@@ -43,18 +52,9 @@ class Range2DOp(HasStrictTraits):
 
     Alternately, in an IPython notebook with `%matplotlib notebook`
     
-    >>> s = flow.ScatterplotView(xchannel = "V2-A",
-    ...                          ychannel = "Y2-A")
-    >>> r2d = flow.RangeSelection2D(view = s)
-    >>> r2d.plot(ex2)
-    >>> r2d.interactive = True
-    # ... draw a range on the plot ....
-    >>> range_2d = flow.Range2DOp(xchannel = "V2-A",
-    ...                           xlow = r2d.xlow,
-    ...                           xhigh = r2d.xhigh,
-    ...                           ychannel = "Y2-A",
-    ...                           ylow = r2d.ylow,
-    ...                           yhigh = r2d.yhigh) 
+    >>> rv = range_2d.default_view()
+    >>> rv.plot(ex2)
+    >>> ### draw a box on the plot in the notebook ### 
     """
     
     # traits
@@ -129,3 +129,137 @@ class Range2DOp(HasStrictTraits):
         new_experiment.metadata[self.name] = {}
 
         return new_experiment
+    
+    def default_view(self):
+        return RangeSelection2D(op = self)
+    
+@provides(ISelectionView)
+class RangeSelection2D(HasStrictTraits):
+    """Plots, and lets the user interact with, a 2D selection.
+    
+    Attributes
+    ----------
+    op : Instance(Range2DOp)
+        The instance of Range2DOp that we're viewing / editing
+        
+    subset : Str
+        The string passed to `Experiment.query()` to subset the data before
+        plotting
+        
+    interactive : Bool
+        is this view interactive?  Ie, can the user set min and max
+        with a mouse drag?
+        
+    Examples
+    --------
+    
+    In an IPython notebook with `%matplotlib notebook`
+    
+    >>> r = flow.Range2DOp(name = "Range2D",
+    ...                    xchannel = "V2-A",
+    ...                    ychannel = "Y2-A"))
+    >>> rv = r.default_view()
+    >>> rv.interactive = True
+    >>> rv.plot(ex2) 
+    """
+    
+    id = "edu.mit.synbio.cytoflow.views.range2d"
+    friendly_id = "2D Range Selection"
+    
+    op = Instance(Range2DOp)
+    subset = Str
+    interactive = Bool(False, transient = True)
+    
+    # internal state.
+    _view = Instance(ScatterplotView, transient = True)
+    _selector = Instance(RectangleSelector, transient = True)
+    _box = Instance(Rectangle, transient = True)
+        
+    def plot(self, experiment, **kwargs):
+        """Plot self.view, and then plot the selection on top of it."""
+        self._view = ScatterplotView(name = self.op.name,
+                                     xchannel = self.op.xchannel,
+                                     ychannel = self.op.ychannel,
+                                     subset = self.subset)
+        self._view.plot(experiment, **kwargs)
+        if self.interactive:
+            self._interactive()
+        self._draw_rect()
+
+    @on_trait_change('op.xlow, op.xhigh, op.ylow, op.yhigh')
+    def _draw_rect(self):
+        if not self._view:
+            return
+
+        ax = plt.gca()
+        
+        if self._box and self._box in ax.patches:
+            self._box.remove()
+            
+        if self.op.xlow and self.op.xhigh and self.op.ylow and self.op.yhigh:
+            self._box = Rectangle((self.op.xlow, self.op.ylow), 
+                                  (self.op.xhigh - self.op.xlow), 
+                                  (self.op.yhigh - self.op.ylow), 
+                                  facecolor="grey",
+                                  alpha = 0.2)
+            ax.add_patch(self._box)
+            plt.draw_if_interactive()
+    
+    @on_trait_change('interactive')
+    def _interactive(self):
+        if not self._view:
+            return
+        
+        if self.interactive:
+            ax = plt.gca()
+            self._selector = RectangleSelector(
+                                ax, 
+                                onselect=self._onselect, 
+                                rectprops={'alpha':0.2,
+                                           'color':'grey'},
+                                useblit = True)
+        else:
+            self._selector = None
+        
+    
+    def _onselect(self, pos1, pos2): 
+        """Update selection traits"""
+        self.op.xlow = min(pos1.xdata, pos2.xdata)
+        self.op.xhigh = max(pos1.xdata, pos2.xdata)
+        self.op.ylow = min(pos1.ydata, pos2.ydata)
+        self.op.yhigh = max(pos1.ydata, pos2.ydata)
+    
+if __name__ == '__main__':
+    import seaborn as sns
+    import cytoflow as flow
+    import fcsparser
+    
+    import matplotlib as mpl
+    mpl.rcParams['savefig.dpi'] = 2 * mpl.rcParams['savefig.dpi']
+    
+    tube1 = fcsparser.parse('../../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs',
+                            reformat_meta = True)
+
+    tube2 = fcsparser.parse('../../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs',
+                            reformat_meta = True)
+    
+    ex = flow.Experiment()
+    ex.add_conditions({"Dox" : "float"})
+    
+    ex.add_tube(tube1, {"Dox" : 10.0})
+    ex.add_tube(tube2, {"Dox" : 1.0})
+    
+    hlog = flow.HlogTransformOp()
+    hlog.name = "Hlog transformation"
+    hlog.channels = ['V2-A', 'Y2-A']
+    ex2 = hlog.apply(ex)
+    
+    r = flow.Range2DOp(xchannel = "V2-A",
+                       ychannel = "Y2-A")
+    rv = r.default_view()
+    
+    plt.ioff()
+    rv.plot(ex2)
+    rv.interactive = True
+    plt.show()
+    print "x:({0}, {1})  y:({2}, {3})".format(r.xlow, r.xhigh, r.ylow, r.yhigh)

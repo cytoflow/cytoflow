@@ -140,9 +140,7 @@ class PolygonSelection(HasStrictTraits):
         
     Examples
     --------
-    
-    **At the moment, this doesn't work!  TODO - make me faster***
-    
+
     In an IPython notebook with `%matplotlib notebook`
     
     >>> s = flow.ScatterplotView(xchannel = "V2-A",
@@ -273,7 +271,7 @@ class PolygonSelection(HasStrictTraits):
             return
 
         # only draw 5 times/sec
-        if(time.clock() - self._last_draw_time < 0.25):
+        if(time.clock() - self._last_draw_time < 0.2):
             return
         
         self._last_draw_time = time.clock()
