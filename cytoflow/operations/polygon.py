@@ -1,8 +1,16 @@
-from traits.api import HasStrictTraits, Str, CStr, List, Float, provides
-import numpy as np
-import matplotlib as mpl
+from traits.api import HasStrictTraits, Str, CStr, List, Float, provides, \
+    Instance, Bool, on_trait_change
 
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+from matplotlib.widgets import Cursor
+import numpy as np
+
+import time
+
+from cytoflow.views.scatterplot import ScatterplotView
 from cytoflow.operations import IOperation
+from cytoflow.views import ISelectionView
 from cytoflow.utility import CytoflowOpError
 
 @provides(IOperation)
@@ -21,7 +29,7 @@ class PolygonOp(HasStrictTraits):
     ychannel : Str
         The name of the second channel to apply the range gate.
         
-    polygon : List((Float, Float))
+    vertices : List((Float, Float))
         The polygon verticies.  An ordered list of 2-tuples, representing
         the x and y coordinates of the vertices.
         
@@ -31,8 +39,9 @@ class PolygonOp(HasStrictTraits):
     membership testing is very fast.
     
     You can set the verticies by hand, I suppose, but it's much easier to use
-    the `PolygonSelection` view to do so.  Unfortunately, it's currently very
-    slow in the GUI and impossible to use in an IPython notebook.
+    the interactive view you get from `default_view()` to do so.  Unfortunately, 
+    it's currently very slow in the GUI and impossible to use in an IPython 
+    notebook.
     """
     
     # traits
@@ -63,7 +72,7 @@ class PolygonOp(HasStrictTraits):
         ------
         CytoflowOpError
             if for some reason the operation can't be applied to this
-            experiment. The reason is in CytoflowOpError.value
+            experiment. The reason is in CytoflowOpError.args
         """
         
         if self.name in experiment.data.columns:
@@ -109,3 +118,207 @@ class PolygonOp(HasStrictTraits):
         new_experiment.metadata[self.name] = {}
             
         return new_experiment
+    
+    def default_view(self):
+        return PolygonSelection(op = self)
+    
+@provides(ISelectionView)
+class PolygonSelection(HasStrictTraits):
+    """Plots, and lets the user interact with, a 2D polygon selection.
+    
+    Attributes
+    ----------
+    op : Instance(PolygonOp)
+        The operation on which this selection view is operating
+        
+    subset : Str
+        The string for subsetting the plot
+
+    interactive : Bool
+        is this view interactive?  Ie, can the user set the polygon verticies
+        with mouse clicks?
+        
+    Examples
+    --------
+    
+    **At the moment, this doesn't work!  TODO - make me faster***
+    
+    In an IPython notebook with `%matplotlib notebook`
+    
+    >>> s = flow.ScatterplotView(xchannel = "V2-A",
+    ...                          ychannel = "Y2-A")
+    >>> poly = s.default_view()
+    >>> poly.plot(ex2)
+    >>> poly.interactive = True
+    """
+    
+    id = "edu.mit.synbio.cytoflow.views.polygon"
+    friendly_id = "Polygon Selection"
+    
+    op = Instance(PolygonOp)
+    subset = Str
+    interactive = Bool(False, transient = True)
+
+    # internal state.
+    _view = Instance(ScatterplotView, transient = True)
+    _cursor = Instance(Cursor, transient = True)
+    _path = Instance(mpl.path.Path, transient = True)
+    _patch = Instance(mpl.patches.PathPatch, transient = True)
+    _line = Instance(mpl.lines.Line2D, transient = True)
+    _drawing = Bool(transient = True)
+    _last_draw_time = Float(0.0, transient = True)
+    _last_click_time = Float(0.0, transient = True)
+        
+    def plot(self, experiment, **kwargs):
+        """Plot self.view, and then plot the selection on top of it."""
+        self._view = ScatterplotView(name = self.op.name,
+                                     xchannel = self.op.xchannel,
+                                     ychannel = self.op.ychannel,
+                                     subset = self.subset)
+        self._view.plot(experiment, **kwargs)
+        if self.interactive:
+            self._interactive()
+        self._draw_poly()
+    
+    @on_trait_change('op.vertices')
+    def _draw_poly(self):
+        if not self._view:
+            return
+        
+        ax = plt.gca()
+         
+        if self._patch and self._patch in ax.patches:
+            self._patch.remove()
+            
+        if self._drawing or not self.op.vertices or len(self.op.vertices) < 3 \
+           or any([len(x) != 2 for x in self.op.vertices]):
+            return
+             
+
+        patch_vert = np.concatenate((np.array(self.op.vertices), 
+                                    np.array((0,0), ndmin = 2)))
+                                    
+        self._patch = \
+            mpl.patches.PathPatch(mpl.path.Path(patch_vert, closed = True),
+                                  edgecolor="black",
+                                  linewidth = 1.5,
+                                  fill = False)
+            
+        ax.add_patch(self._patch)
+        plt.draw_if_interactive()
+    
+    @on_trait_change('interactive')
+    def _interactive(self):
+        if not self._view:
+            return
+        
+        if self.interactive:
+            ax = plt.gca()
+            self._cursor = Cursor(ax, horizOn = False, vertOn = False)            
+            self._cursor.connect_event('button_press_event', self._onclick)
+            self._cursor.connect_event('motion_notify_event', self._onmove)
+        else:
+            self._cursor.disconnect_events()
+            self._cursor = None       
+    
+    def _onclick(self, event): 
+        """Update selection traits"""      
+        if(self._cursor.ignore(event)):
+            return
+        
+        # we have to check the wall clock time because the IPython notebook
+        # doesn't seem to register double-clicks
+        if event.dblclick or (time.clock() - self._last_click_time < 0.25):
+            self._drawing = False
+            self.op.vertices = map(tuple, self._path.vertices)
+            self._path = None
+            return
+        
+        self._last_click_time = time.clock()
+        ax = plt.gca()
+                
+        self._drawing = True
+        if self._patch and self._patch in ax.patches:
+            self._patch.remove()
+            
+        if self._path:
+            vertices = np.concatenate((self._path.vertices,
+                                      np.array((event.xdata, event.ydata), ndmin = 2)))
+        else:
+            vertices = np.array((event.xdata, event.ydata), ndmin = 2)
+            
+        # TODO - this is super slow in an IPython %matplotlib notebook
+
+        self._path = mpl.path.Path(vertices, closed = False)
+        self._patch = mpl.patches.PathPatch(self._path, 
+                                            edgecolor = "black",
+                                            fill = False)
+
+        ax.add_patch(self._patch)
+        plt.draw_if_interactive()
+        
+    def _onmove(self, event):       
+         
+        if(self._cursor.ignore(event) 
+           or not self._drawing
+           or not self._path
+           or self._path.vertices.shape[0] == 0
+           or not event.xdata
+           or not event.ydata):
+            return
+
+        ca = plt.gca()
+         
+        if not ca:
+            return
+
+        # only draw 5 times/sec
+        if(time.clock() - self._last_draw_time < 0.25):
+            return
+        
+        self._last_draw_time = time.clock()
+         
+        if self._line and self._line in ca.lines:
+            self._line.remove()
+            
+        xdata = [self._path.vertices[-1, 0], event.xdata]
+        ydata = [self._path.vertices[-1, 1], event.ydata]
+        self._line = mpl.lines.Line2D(xdata, ydata, linewidth = 1, color = "black")
+        
+        ca.add_line(self._line)
+        plt.gcf().canvas.draw()
+        
+        
+if __name__ == '__main__':
+    import cytoflow as flow
+    import fcsparser
+
+    mpl.rcParams['savefig.dpi'] = 2 * mpl.rcParams['savefig.dpi']
+    
+    tube1 = fcsparser.parse('../../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs',
+                            reformat_meta = True)
+
+    tube2 = fcsparser.parse('../../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs',
+                            reformat_meta = True)
+    
+    ex = flow.Experiment()
+    ex.add_conditions({"Dox" : "float"})
+    
+    ex.add_tube(tube1, {"Dox" : 10.0})
+    ex.add_tube(tube2, {"Dox" : 1.0})
+    
+    hlog = flow.HlogTransformOp()
+    hlog.name = "Hlog transformation"
+    hlog.channels = ['V2-A', 'Y2-A']
+    ex2 = hlog.apply(ex)
+    
+    p = PolygonOp(xchannel = "V2-A",
+                  ychannel = "Y2-A")
+    v = p.default_view()
+    
+    plt.ioff()
+
+    v.interactive = True
+    v.plot(ex2)
+    plt.show()
+    print p.vertices
