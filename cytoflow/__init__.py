@@ -16,7 +16,7 @@ from operations.binning import BinningOp
 from views.histogram import HistogramView
 from views.hexbin import HexbinView
 from views.scatterplot import ScatterplotView
-\from views.stats_1d import Stats1DView
+from views.stats_1d import Stats1DView
 from views.stats_2d import Stats2DView
 from views.bar_chart import BarChartView
 
