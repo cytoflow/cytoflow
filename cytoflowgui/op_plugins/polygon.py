@@ -4,11 +4,11 @@ Created on Apr 25, 2015
 @author: brian
 '''
 
-from traitsui.api import View, Item, EnumEditor, Controller, Handler
+from traitsui.api import View, Item, EnumEditor, Controller
 from envisage.api import Plugin, contributes_to
-from traits.api import provides, DelegatesTo, Callable, Instance, Callable
+from traits.api import provides, Callable
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT
-from cytoflow import PolygonOp, ScatterplotView, PolygonSelection
+from cytoflow.operations.polygon import PolygonOp, PolygonSelection
 from pyface.api import ImageResource
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
 from cytoflowgui.subset_editor import SubsetEditor
@@ -53,12 +53,6 @@ class PolygonViewHandler(Controller, ViewHandlerMixin):
 class PolygonSelectionView(PolygonSelection, PluginViewMixin):
     handler_factory = Callable(PolygonViewHandler)
     
-    view = Instance(ScatterplotView, args = ())
-    name = DelegatesTo('view')
-    xchannel = DelegatesTo('view')
-    ychannel = DelegatesTo('view')
-    subset = DelegatesTo('view')
-    
 class PolygonPluginOp(PolygonOp, PluginOpMixin):
     handler_factory = Callable(PolygonHandler)
 
@@ -77,18 +71,8 @@ class PolygonPlugin(Plugin):
     def get_operation(self):
         return PolygonPluginOp()
     
-    def get_default_view(self, op):
-        view = PolygonSelectionView()
-         
-        # we have to make these traits on the top-level selection view
-        # so that the change handlers get updated.
-         
-        op.sync_trait('xchannel', view, mutual = True)
-        op.sync_trait('ychannel', view, mutual = True)
-        op.sync_trait('name', view, mutual = True)
-        op.sync_trait('vertices', view, mutual = True)
-         
-        return view
+    def get_default_view(self):
+        return PolygonSelectionView()
      
     def get_icon(self):
         return ImageResource('polygon')
