@@ -90,10 +90,10 @@ class PolygonOp(HasStrictTraits):
                                   .format(self.ychannel))
               
         if len(self.vertices) < 3:
-            return False
+            raise CytoflowOpError("Must have at least 3 vertices")
        
         if any([len(x) != 2 for x in self.vertices]):
-            return False 
+            return CytoflowOpError("All vertices must be lists of length = 2") 
         
         # make sure name got set!
         if not self.name:
@@ -168,7 +168,7 @@ class PolygonSelection(ScatterplotView):
     interactive = Bool(False, transient = True)
 
     # internal state.
-    _ax = Any
+    _ax = Any(transient = True)
     _cursor = Instance(Cursor, transient = True)
     _path = Instance(mpl.path.Path, transient = True)
     _patch = Instance(mpl.patches.PathPatch, transient = True)
