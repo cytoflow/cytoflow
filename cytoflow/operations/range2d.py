@@ -1,7 +1,7 @@
-from traits.api import HasStrictTraits, CFloat, Str, CStr, Float, Instance, \
-    Bool, provides, on_trait_change
+from traits.api import HasStrictTraits, CFloat, Str, CStr, Bool, Instance, \
+    provides, on_trait_change, DelegatesTo, Any
 from cytoflow.operations import IOperation
-from cytoflow.utility import CytoflowOpError
+from cytoflow.utility import CytoflowOpError, CytoflowViewError
 from cytoflow.views import ISelectionView
 from cytoflow.views.scatterplot import ScatterplotView
 
@@ -9,7 +9,6 @@ from matplotlib.widgets import RectangleSelector
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 
-import time
 
 @provides(IOperation)
 class Range2DOp(HasStrictTraits):
@@ -134,13 +133,16 @@ class Range2DOp(HasStrictTraits):
         return RangeSelection2D(op = self)
     
 @provides(ISelectionView)
-class RangeSelection2D(HasStrictTraits):
+class RangeSelection2D(ScatterplotView):
     """Plots, and lets the user interact with, a 2D selection.
     
     Attributes
     ----------
     op : Instance(Range2DOp)
         The instance of Range2DOp that we're viewing / editing
+        
+    huefacet : Str
+        The conditioning variable to plot multiple colors
         
     subset : Str
         The string passed to `Experiment.query()` to subset the data before
@@ -149,6 +151,11 @@ class RangeSelection2D(HasStrictTraits):
     interactive : Bool
         is this view interactive?  Ie, can the user set min and max
         with a mouse drag?
+        
+    Notes
+    -----
+    We inherit `xfacet` and `yfacet` from `cytoflow.views.ScatterplotView`, but
+    they must both be unset!
         
     Examples
     --------
@@ -166,34 +173,36 @@ class RangeSelection2D(HasStrictTraits):
     id = "edu.mit.synbio.cytoflow.views.range2d"
     friendly_id = "2D Range Selection"
     
-    op = Instance(Range2DOp)
-    subset = Str
+    op = Instance(IOperation)
+    name = DelegatesTo('op')
+    xchannel = DelegatesTo('op')
+    ychannel = DelegatesTo('op')
     interactive = Bool(False, transient = True)
     
     # internal state.
-    _view = Instance(ScatterplotView, transient = True)
+    _ax = Any
     _selector = Instance(RectangleSelector, transient = True)
     _box = Instance(Rectangle, transient = True)
         
     def plot(self, experiment, **kwargs):
-        """Plot self.view, and then plot the selection on top of it."""
-        self._view = ScatterplotView(name = self.op.name,
-                                     xchannel = self.op.xchannel,
-                                     ychannel = self.op.ychannel,
-                                     subset = self.subset)
-        self._view.plot(experiment, **kwargs)
-        if self.interactive:
-            self._interactive()
-        self._draw_rect()
-
-    @on_trait_change('op.xlow, op.xhigh, op.ylow, op.yhigh')
-    def _draw_rect(self):
-        if not self._view:
-            return
-
-        ax = plt.gca()
+        """Plot the underlying scatterplot and then plot the selection on top of it."""
+        if self.xfacet:
+            raise CytoflowViewError("RangeSelection.xfacet must be empty or `Undefined`")
         
-        if self._box and self._box in ax.patches:
+        if self.yfacet:
+            raise CytoflowViewError("RangeSelection.yfacet must be empty or `Undefined`")
+        
+        super(RangeSelection2D, self).plot(experiment, **kwargs)
+        self._ax = plt.gca()
+        self._draw_rect()
+        self._interactive()
+
+    @on_trait_change('op.xlow, op.xhigh, op.ylow, op.yhigh', post_init = True)
+    def _draw_rect(self):
+        if not self._ax:
+            return
+        
+        if self._box and self._box in self._ax.patches:
             self._box.remove()
             
         if self.op.xlow and self.op.xhigh and self.op.ylow and self.op.yhigh:
@@ -202,18 +211,14 @@ class RangeSelection2D(HasStrictTraits):
                                   (self.op.yhigh - self.op.ylow), 
                                   facecolor="grey",
                                   alpha = 0.2)
-            ax.add_patch(self._box)
+            self._ax.add_patch(self._box)
             plt.draw_if_interactive()
     
-    @on_trait_change('interactive')
+    @on_trait_change('interactive', post_init = True)
     def _interactive(self):
-        if not self._view:
-            return
-        
-        if self.interactive:
-            ax = plt.gca()
+        if self._ax and self.interactive:
             self._selector = RectangleSelector(
-                                ax, 
+                                self._ax, 
                                 onselect=self._onselect, 
                                 rectprops={'alpha':0.2,
                                            'color':'grey'},
@@ -230,12 +235,8 @@ class RangeSelection2D(HasStrictTraits):
         self.op.yhigh = max(pos1.ydata, pos2.ydata)
     
 if __name__ == '__main__':
-    import seaborn as sns
     import cytoflow as flow
     import fcsparser
-    
-    import matplotlib as mpl
-    mpl.rcParams['savefig.dpi'] = 2 * mpl.rcParams['savefig.dpi']
     
     tube1 = fcsparser.parse('../../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs',
                             reformat_meta = True)

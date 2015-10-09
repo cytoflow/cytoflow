@@ -1,5 +1,5 @@
 from traits.api import HasStrictTraits, CFloat, Str, CStr, Instance, Bool, \
-    provides, on_trait_change
+    provides, on_trait_change, DelegatesTo, Any
 
 from matplotlib.widgets import SpanSelector, Cursor
 import matplotlib.pyplot as plt
@@ -8,8 +8,8 @@ from matplotlib.lines import Line2D
 
 from cytoflow.views.histogram import HistogramView
 from cytoflow.operations import IOperation
-from cytoflow.utility import CytoflowOpError
-from cytoflow.views import IView, ISelectionView
+from cytoflow.utility import CytoflowOpError, CytoflowViewError
+from cytoflow.views import ISelectionView
 
 @provides(IOperation)
 class RangeOp(HasStrictTraits):
@@ -115,7 +115,7 @@ class RangeOp(HasStrictTraits):
         return RangeSelection(op = self)
     
 @provides(ISelectionView)
-class RangeSelection(HasStrictTraits):
+class RangeSelection(HistogramView):
     """Plots, and lets the user interact with, a selection on the X axis.
     
     Is it beautiful?  No.  Does it demonstrate the capabilities I desire?  Yes.
@@ -125,6 +125,9 @@ class RangeSelection(HasStrictTraits):
     op : Instance(RangeOp)
         the RangeOp instance that this view is, well, viewing
         
+    huefacet : Str
+        The conditioning variable to show multiple colors on this plot
+        
     subset : Str
         The string passed to `Experiment.query()` to subset the data before
         plotting
@@ -132,6 +135,11 @@ class RangeSelection(HasStrictTraits):
     interactive : Bool
         is this view interactive?  Ie, can the user set min and max
         with a mouse drag?
+        
+    Notes
+    -----
+    We inherit `xfacet` and `yfacet` from `cytoflow.views.HistogramView`, but
+    they must both be unset!
         
     Examples
     --------
@@ -151,11 +159,12 @@ class RangeSelection(HasStrictTraits):
     friendly_id = "Range Selection"
 
     op = Instance(IOperation)
-    subset = Str
+    name = DelegatesTo('op')
+    channel = DelegatesTo('op')
     interactive = Bool(False, transient = True)
 
     # internal state.
-    _view = Instance(IView, transient = True)
+    _ax = Any
     _span = Instance(SpanSelector, transient = True)
     _cursor = Instance(Cursor, transient = True)
     _low_line = Instance(Line2D, transient = True)
@@ -163,32 +172,30 @@ class RangeSelection(HasStrictTraits):
     _hline = Instance(Line2D, transient = True)
         
     def plot(self, experiment, **kwargs):
-        """Plot self.view, and then plot the selection on top of it."""
-        self._view = HistogramView(name = self.op.name,
-                                   channel = self.op.channel,
-                                   subset = self.subset)
-        self._view.plot(experiment, **kwargs)
-        if self.interactive:
-            self._interactive()
+        """Plot the underlying histogram and then plot the selection on top of it."""
+        if self.xfacet:
+            raise CytoflowViewError("RangeSelection.xfacet must be empty or `Undefined`")
+        
+        if self.yfacet:
+            raise CytoflowViewError("RangeSelection.yfacet must be empty or `Undefined`")
+        
+        super(RangeSelection, self).plot(experiment, **kwargs)
+        self._ax = plt.gca()
         self._draw_span()
+        self._interactive()
 
-    @on_trait_change('op.low, op.high')
+    @on_trait_change('op.low, op.high', post_init = True)
     def _draw_span(self):
-        if not self._view:
+        if not (self._ax and self.op.low and self.op.high):
             return
         
-        if not (self.op.low and self.op.high):
-            return
-
-        ax = plt.gca()
-        
-        if self._low_line and self._low_line in ax.lines:
+        if self._low_line and self._low_line in self._ax.lines:
             self._low_line.remove()
         
-        if self._high_line and self._high_line in ax.lines:
+        if self._high_line and self._high_line in self._ax.lines:
             self._high_line.remove()
             
-        if self._hline and self._hline in ax.lines:
+        if self._hline and self._hline in self._ax.lines:
             self._hline.remove()
             
 
@@ -204,21 +211,17 @@ class RangeSelection(HasStrictTraits):
                                    
         plt.draw_if_interactive()
     
-    @on_trait_change('interactive')
+    @on_trait_change('interactive', post_init = True)
     def _interactive(self):
-        if not self._view:
-            return
-        
-        if self.interactive:
-            ax = plt.gca()
-            self._cursor = Cursor(ax, horizOn=False, vertOn=True, color='blue')
-            self._span = SpanSelector(ax, 
-                             onselect=self._onselect, 
-                             direction='horizontal',
-                             rectprops={'alpha':0.3,
-                                        'color':'grey'},
-                             span_stays=False,
-                             useblit = True)
+        if self._ax and self.interactive:
+            self._cursor = Cursor(self._ax, horizOn=False, vertOn=True, color='blue')
+            self._span = SpanSelector(self._ax, 
+                                      onselect=self._onselect, 
+                                      direction='horizontal',
+                                      rectprops={'alpha':0.3,
+                                                 'color':'grey'},
+                                      span_stays=False,
+                                      useblit = True)
         else:
             self._cursor = None
             self._span = None

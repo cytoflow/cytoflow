@@ -1,5 +1,5 @@
 from traits.api import HasStrictTraits, CFloat, Str, CStr, Instance, \
-    Bool, Float, on_trait_change, provides
+    Bool, Float, on_trait_change, provides, DelegatesTo, Any
 import pandas as pd
 
 from matplotlib.widgets import Cursor
@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 
 from cytoflow.operations import IOperation
-from cytoflow.utility import CytoflowOpError
+from cytoflow.utility import CytoflowOpError, CytoflowViewError
 from cytoflow.views import IView, ISelectionView
 from cytoflow.views.histogram import HistogramView
 
@@ -104,7 +104,7 @@ class ThresholdOp(HasStrictTraits):
 
 
 @provides(ISelectionView)
-class ThresholdSelection(HasStrictTraits):
+class ThresholdSelection(HistogramView):
     """
     Plots, and lets the user interact with, a threshold on the X axis.
     
@@ -114,12 +114,20 @@ class ThresholdSelection(HasStrictTraits):
     ----------
     op : Instance(ThresholdOp)
         the ThresholdOp we're working on.
-
-    interactive : Bool
-        is this view interactive?
+        
+    huefacet : Str
+        The conditioning variable to show multiple colors on this plot
 
     subset : Str    
         the string passed to Experiment.subset() defining the subset we plot
+
+    interactive : Bool
+        is this view interactive?
+        
+    Notes
+    -----
+    We inherit `xfacet` and `yfacet` from `cytoflow.views.HistogramView`, but
+    they must both be unset!
         
     Examples
     --------
@@ -137,32 +145,32 @@ class ThresholdSelection(HasStrictTraits):
     id = "edu.mit.synbio.cytoflow.views.threshold"
     friendly_id = "Threshold Selection"
     
-
-    interactive = Bool(False, transient = True)
     op = Instance(IOperation)
-    subset = Str
+    name = DelegatesTo('op')
+    channel = DelegatesTo('op')
+    interactive = Bool(False, transient = True)
 
     # internal state
-    _view = Instance(HistogramView, transient = True)
+    _ax = Any
     _line = Instance(Line2D, transient = True)
     _cursor = Instance(Cursor, transient = True)
     
     def plot(self, experiment, **kwargs):
-        """Plot self.view, and then plot the threshold on top of it."""
-        self._view = HistogramView(name = self.op.name,
-                                   channel = self.op.channel,
-                                   subset = self.subset)
-        self._view.plot(experiment, **kwargs)
-        if self.interactive:
-            self._interactive()
-        self._draw_threshold()
-    
-    @on_trait_change('op.threshold')
-    def _draw_threshold(self):
-        if not self._view:
-            return
+        """Plot the histogram and then plot the threshold on top of it."""
+        if self.xfacet:
+            raise CytoflowViewError("ThresholdSelection.xfacet must be empty")
         
-        if not self.op.threshold:
+        if self.yfacet:
+            raise CytoflowViewError("ThresholdSelection.yfacet must be empty")
+        
+        super(ThresholdSelection, self).plot(experiment, **kwargs)
+        self._ax = plt.gca()        
+        self._draw_threshold()
+        self._interactive()
+    
+    @on_trait_change('op.threshold', post_init = True)
+    def _draw_threshold(self):
+        if not self._ax or not self.op.threshold:
             return
         
         if self._line:
@@ -171,8 +179,7 @@ class ThresholdSelection(HasStrictTraits):
             # removed from the plot, because it was never added.  so check
             # explicitly first.  this is likely to be an issue in other
             # interactive plots, too.
-            ax = plt.gca()
-            if self._line and self._line in ax.lines:
+            if self._line and self._line in self._ax.lines:
                 self._line.remove()
  
             self._line = None
@@ -182,20 +189,16 @@ class ThresholdSelection(HasStrictTraits):
             
         plt.draw_if_interactive()
         
-    @on_trait_change('interactive')
+    @on_trait_change('interactive', post_init = True)
     def _interactive(self):
-        if not self._view:
-            return
-        
-        ax = plt.gca()
-        if self.interactive:
-            self._cursor = Cursor(ax, 
+        if self._ax and self.interactive:
+            self._cursor = Cursor(self._ax, 
                                   horizOn=False,
                                   vertOn=True,
                                   color='blue')
             self._cursor.connect_event('button_press_event', self._onclick)
             
-        else:
+        elif self._cursor:
             self._cursor.disconnect_events()
             self._cursor = None
             
@@ -207,8 +210,6 @@ if __name__ == '__main__':
     import cytoflow as flow
     import fcsparser
 
-    #mpl.rcParams['savefig.dpi'] = 2 * mpl.rcParams['savefig.dpi']
-    
     tube1 = fcsparser.parse('../../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs',
                             reformat_meta = True)
 

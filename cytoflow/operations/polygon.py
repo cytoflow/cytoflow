@@ -1,5 +1,5 @@
 from traits.api import HasStrictTraits, Str, CStr, List, Float, provides, \
-    Instance, Bool, on_trait_change
+    Instance, Bool, on_trait_change, DelegatesTo, Any
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -11,7 +11,7 @@ import time
 from cytoflow.views.scatterplot import ScatterplotView
 from cytoflow.operations import IOperation
 from cytoflow.views import ISelectionView
-from cytoflow.utility import CytoflowOpError
+from cytoflow.utility import CytoflowOpError, CytoflowViewError
 
 @provides(IOperation)
 class PolygonOp(HasStrictTraits):
@@ -123,7 +123,7 @@ class PolygonOp(HasStrictTraits):
         return PolygonSelection(op = self)
     
 @provides(ISelectionView)
-class PolygonSelection(HasStrictTraits):
+class PolygonSelection(ScatterplotView):
     """Plots, and lets the user interact with, a 2D polygon selection.
     
     Attributes
@@ -131,12 +131,20 @@ class PolygonSelection(HasStrictTraits):
     op : Instance(PolygonOp)
         The operation on which this selection view is operating
         
+    huefacet : Str
+        The conditioning variable to show multiple colors on this plot
+        
     subset : Str
         The string for subsetting the plot
 
     interactive : Bool
         is this view interactive?  Ie, can the user set the polygon verticies
         with mouse clicks?
+        
+    Notes
+    -----
+    We inherit `xfacet` and `yfacet` from `cytoflow.views.ScatterPlotView`, but
+    they must both be unset!
         
     Examples
     --------
@@ -154,11 +162,13 @@ class PolygonSelection(HasStrictTraits):
     friendly_id = "Polygon Selection"
     
     op = Instance(PolygonOp)
-    subset = Str
+    name = DelegatesTo('op')
+    xchannel = DelegatesTo('op')
+    ychannel = DelegatesTo('op')
     interactive = Bool(False, transient = True)
 
     # internal state.
-    _view = Instance(ScatterplotView, transient = True)
+    _ax = Any
     _cursor = Instance(Cursor, transient = True)
     _path = Instance(mpl.path.Path, transient = True)
     _patch = Instance(mpl.patches.PathPatch, transient = True)
@@ -169,23 +179,23 @@ class PolygonSelection(HasStrictTraits):
         
     def plot(self, experiment, **kwargs):
         """Plot self.view, and then plot the selection on top of it."""
-        self._view = ScatterplotView(name = self.op.name,
-                                     xchannel = self.op.xchannel,
-                                     ychannel = self.op.ychannel,
-                                     subset = self.subset)
-        self._view.plot(experiment, **kwargs)
-        if self.interactive:
-            self._interactive()
-        self._draw_poly()
-    
-    @on_trait_change('op.vertices')
-    def _draw_poly(self):
-        if not self._view:
-            return
+        if self.xfacet:
+            raise CytoflowViewError("RangeSelection.xfacet must be empty or `Undefined`")
         
-        ax = plt.gca()
+        if self.yfacet:
+            raise CytoflowViewError("RangeSelection.yfacet must be empty or `Undefined`")
+        
+        super(PolygonSelection, self).plot(experiment, **kwargs)
+        self._ax = plt.gca()
+        self._draw_poly()
+        self._interactive()
+    
+    @on_trait_change('op.vertices', post_init = True)
+    def _draw_poly(self):
+        if not self._ax:
+            return
          
-        if self._patch and self._patch in ax.patches:
+        if self._patch and self._patch in self._ax.patches:
             self._patch.remove()
             
         if self._drawing or not self.op.vertices or len(self.op.vertices) < 3 \
@@ -202,25 +212,24 @@ class PolygonSelection(HasStrictTraits):
                                   linewidth = 1.5,
                                   fill = False)
             
-        ax.add_patch(self._patch)
+        self._ax.add_patch(self._patch)
         plt.draw_if_interactive()
     
-    @on_trait_change('interactive')
+    @on_trait_change('interactive', post_init = True)
     def _interactive(self):
-        if not self._view:
-            return
-        
-        if self.interactive:
-            ax = plt.gca()
-            self._cursor = Cursor(ax, horizOn = False, vertOn = False)            
+        if self._ax and self.interactive:
+            self._cursor = Cursor(self._ax, horizOn = False, vertOn = False)            
             self._cursor.connect_event('button_press_event', self._onclick)
             self._cursor.connect_event('motion_notify_event', self._onmove)
-        else:
+        elif self._cursor:
             self._cursor.disconnect_events()
             self._cursor = None       
     
     def _onclick(self, event): 
         """Update selection traits"""      
+        if not self._ax:
+            return
+        
         if(self._cursor.ignore(event)):
             return
         
@@ -233,10 +242,9 @@ class PolygonSelection(HasStrictTraits):
             return
         
         self._last_click_time = time.clock()
-        ax = plt.gca()
                 
         self._drawing = True
-        if self._patch and self._patch in ax.patches:
+        if self._patch and self._patch in self._ax.patches:
             self._patch.remove()
             
         if self._path:
@@ -244,18 +252,19 @@ class PolygonSelection(HasStrictTraits):
                                       np.array((event.xdata, event.ydata), ndmin = 2)))
         else:
             vertices = np.array((event.xdata, event.ydata), ndmin = 2)
-            
-        # TODO - this is super slow in an IPython %matplotlib notebook
 
         self._path = mpl.path.Path(vertices, closed = False)
         self._patch = mpl.patches.PathPatch(self._path, 
                                             edgecolor = "black",
                                             fill = False)
 
-        ax.add_patch(self._patch)
+        self._ax.add_patch(self._patch)
         plt.draw_if_interactive()
         
     def _onmove(self, event):       
+         
+        if not self._ax:
+            return
          
         if(self._cursor.ignore(event) 
            or not self._drawing
@@ -265,25 +274,20 @@ class PolygonSelection(HasStrictTraits):
            or not event.ydata):
             return
 
-        ca = plt.gca()
-         
-        if not ca:
-            return
-
         # only draw 5 times/sec
         if(time.clock() - self._last_draw_time < 0.2):
             return
         
         self._last_draw_time = time.clock()
          
-        if self._line and self._line in ca.lines:
+        if self._line and self._line in self._ax.lines:
             self._line.remove()
             
         xdata = [self._path.vertices[-1, 0], event.xdata]
         ydata = [self._path.vertices[-1, 1], event.ydata]
         self._line = mpl.lines.Line2D(xdata, ydata, linewidth = 1, color = "black")
         
-        ca.add_line(self._line)
+        self._ax.add_line(self._line)
         plt.gcf().canvas.draw()
         
         
@@ -291,8 +295,6 @@ if __name__ == '__main__':
     import cytoflow as flow
     import fcsparser
 
-    mpl.rcParams['savefig.dpi'] = 2 * mpl.rcParams['savefig.dpi']
-    
     tube1 = fcsparser.parse('../../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs',
                             reformat_meta = True)
 
@@ -315,8 +317,7 @@ if __name__ == '__main__':
     v = p.default_view()
     
     plt.ioff()
-
-    v.interactive = True
     v.plot(ex2)
+    v.interactive = True
     plt.show()
     print p.vertices
