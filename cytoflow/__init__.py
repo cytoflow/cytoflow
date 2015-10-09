@@ -16,7 +16,6 @@ from operations.binning import BinningOp
 from views.histogram import HistogramView
 from views.hexbin import HexbinView
 from views.scatterplot import ScatterplotView
-from views.range_selection import RangeSelection
 from views.threshold_selection import ThresholdSelection
 from views.stats_1d import Stats1DView
 from views.stats_2d import Stats2DView
