@@ -105,5 +105,5 @@ class ImportPlugin(Plugin):
     def get_operation(self):
         return ImportPluginOp()
     
-    def get_default_view(self, op):
+    def get_default_view(self):
         None

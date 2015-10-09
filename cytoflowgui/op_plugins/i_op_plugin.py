@@ -39,15 +39,9 @@ class IOperationPlugin(Interface):
         """
         
         
-    def get_default_view(self, op):
+    def get_default_view(self):
         """
         Return an IView instance set up to be the default view for the operation.
-        
-        Arguments
-        ---------
-        
-        op: IOperation instance
-            the operation to set up the view for
         """
 
     def get_icon(self):

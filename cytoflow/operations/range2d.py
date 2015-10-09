@@ -180,7 +180,7 @@ class RangeSelection2D(ScatterplotView):
     interactive = Bool(False, transient = True)
     
     # internal state.
-    _ax = Any
+    _ax = Any(transient = True)
     _selector = Instance(RectangleSelector, transient = True)
     _box = Instance(Rectangle, transient = True)
         

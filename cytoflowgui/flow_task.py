@@ -328,8 +328,9 @@ class FlowTask(Task):
         self.model.workflow.insert(idx+1, wi)
         
         # set up the default view
-        wi.default_view = plugin.get_default_view(wi.operation)
+        wi.default_view = plugin.get_default_view()
         if wi.default_view is not None:
+            wi.default_view.op = wi.operation
             wi.default_view.handler = \
                 wi.default_view.handler_factory(model = wi.default_view, wi = wi.previous)
             wi.views.append(wi.default_view)

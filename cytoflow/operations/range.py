@@ -164,7 +164,7 @@ class RangeSelection(HistogramView):
     interactive = Bool(False, transient = True)
 
     # internal state.
-    _ax = Any
+    _ax = Any(transient = True)
     _span = Instance(SpanSelector, transient = True)
     _cursor = Instance(Cursor, transient = True)
     _low_line = Instance(Line2D, transient = True)

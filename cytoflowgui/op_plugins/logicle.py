@@ -54,7 +54,7 @@ class LogiclePlugin(Plugin):
     def get_operation(self):
         return LogicleTransformPluginOp()
     
-    def get_default_view(self, op):
+    def get_default_view(self):
         return None
     
     def get_icon(self):

@@ -151,7 +151,7 @@ class ThresholdSelection(HistogramView):
     interactive = Bool(False, transient = True)
 
     # internal state
-    _ax = Any
+    _ax = Any(transient = True)
     _line = Instance(Line2D, transient = True)
     _cursor = Instance(Cursor, transient = True)
     
