@@ -130,6 +130,7 @@ class BinningOp(HasStrictTraits):
         
         new_experiment.conditions[self.name] = "int"
         new_experiment.metadata[self.name] = {}
+        new_experiment.metadata[self.name]["bins"] = bins
         
         return new_experiment
         

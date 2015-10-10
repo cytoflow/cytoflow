@@ -100,27 +100,34 @@ class HistogramView(HasStrictTraits):
         # for a reference.
         
         num_bins = num_hist_bins(data[self.channel])
-        
-        if self.huefacet:
-            # to make multi-colored plots look pretty, we want to line the
-            # bins up with the locations of the hue splits.  else, we get
+        xmin = np.amin(data[self.channel])
+        xmax = np.amax(data[self.channel])
+                    
+        if (self.huefacet 
+            and "bins" in experiment.metadata[self.huefacet]):
+            # if we color facet by the result of a BinningOp and we don't
+            # match the BinningOp bins with the histogram bins, we get
             # gnarly aliasing.
             
             # each color gets at least one bin.  however, if the estimated
             # number of bins for the histogram is much larger than the
             # number of colors, sub-divide each color into multiple bins.
+            bins = experiment.metadata[self.huefacet]["bins"]
+            bins = np.append(bins, xmax)
+            
             num_hues = len(data[self.huefacet].unique())
             bins_per_hue = math.ceil(num_bins / num_hues)
-            bins = [np.amin(data[self.channel])]
-            for h in np.sort(data[self.huefacet].unique()):
-                dh = data[data[self.huefacet] == h]
-                next_bin_end = dh[self.channel].max()
-                new_bins = np.linspace(bins[-1], next_bin_end, bins_per_hue + 1, endpoint = True)[1:]
-                bins = np.append(bins, new_bins)
-            bins = np.append(bins, np.amax(data[self.channel]))
+            
+            new_bins = [xmin]
+            for end in bins:
+                new_bins = np.append(new_bins,
+                                     np.linspace(new_bins[-1],
+                                                 end,
+                                                 bins_per_hue + 1,
+                                                 endpoint = True)[1:])
+
+            bins = new_bins
         else:
-            xmin = np.amin(data[self.channel])
-            xmax = np.amax(data[self.channel])
             bin_width = (xmax - xmin) / num_bins
             bins = np.arange(xmin, xmax, bin_width)
             bins = np.append(bins, xmax)
