@@ -71,16 +71,29 @@ class FlowTaskPane(TaskPane):
         # we can make a new plot (figure); but if the params stay the same
         # and the plot is re-selected, we can just reuse the existing figure.
         
-        if not wi.current_view or not wi.result:
+        if not wi.current_view:
             self.clear_plot()
             return
         
-        try:
-            wi.current_view.plot(wi.result)
-        except CytoflowViewError as e:
-            wi.current_view.error = e.__str__()
+        if wi.current_view == wi.default_view:
+            # plotting the default view
+            try:
+                wi.current_view.plot(wi.previous.result)
+            except CytoflowViewError as e:
+                wi.current_view.error = e.__str__()
+            else:
+                wi.current_view.error = ""
         else:
-            wi.current_view.error = ""
+            if not wi.result:
+                self.clear_plot()
+                return
+            
+            try:
+                wi.current_view.plot(wi.result)
+            except CytoflowViewError as e:
+                wi.current_view.error = e.__str__()
+            else:
+                wi.current_view.error = ""
 
         self.editor.figure = plt.gcf()
            
@@ -89,7 +102,6 @@ class FlowTaskPane(TaskPane):
             # the "interactive" trait
             wi.current_view.interactive = False
             wi.current_view.interactive = True 
-            
             
     def export(self, filename):
         # TODO - eventually give a preview, allow changing size, dpi, aspect 

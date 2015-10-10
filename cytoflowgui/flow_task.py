@@ -451,7 +451,8 @@ class FlowTask(Task):
         
         # i should be able to specify the metadata i want in the listener,
         # but there's an odd interaction (bug) between metadata, dynamic 
-        # trait listeners and instance traits.
+        # trait listeners and instance traits.  so, check for 'transient'
+        # here instead,
         
         if obj.trait(name).transient:
             return
