@@ -17,7 +17,6 @@ from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
 from cytoflowgui.color_text_editor import ColorTextEditor
 
 class PolygonHandler(Controller, OpHandlerMixin):
-    
     def default_traits_view(self):
         return View(Item('object.name'),
                     Item('object.xchannel',
@@ -26,7 +25,6 @@ class PolygonHandler(Controller, OpHandlerMixin):
                     Item('object.ychannel',
                          editor=EnumEditor(name='handler.previous_channels'),
                          label = "Y Channel"),
-                    Item('object.vertices', label = "Vertices"),
                     Item('handler.wi.error',
                          label = 'Error',
                          visible_when = 'handler.wi.error',
@@ -44,6 +42,9 @@ class PolygonViewHandler(Controller, ViewHandlerMixin):
                     Item('object.ychannel',
                          label = "Y Channel",
                          style = 'readonly'),
+                    Item('object.huefacet',
+                         editor=EnumEditor(name='handler.conditions'),
+                         label="Color\nFacet"),
                     Item('_'),
                     Item('object.subset',
                          label = "Subset",
