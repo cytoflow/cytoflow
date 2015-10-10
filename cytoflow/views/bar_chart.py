@@ -106,6 +106,9 @@ class BarChartView(HasStrictTraits):
     
     def plot(self, experiment, **kwargs):
         """Plot a bar chart"""
+        
+        if not experiment:
+            raise CytoflowViewError("No experiment specified")
 
         if not self.channel:
             raise CytoflowViewError("Channel not specified")

@@ -15,6 +15,8 @@ import scipy.optimize
 import pandas
 import fcsparser
 
+import matplotlib.pyplot as plt
+
 from cytoflow.operations.i_operation import IOperation
 from cytoflow.operations.hlog import hlog, hlog_inv
 from cytoflow.views import IView
@@ -117,7 +119,9 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
         """
         Estimate the bleedthrough from the single-channel controls in `controls`
         """
-
+        if not experiment:
+            raise CytoflowOpError("No experiment specified")
+        
         if self.num_knots < 3:
             raise CytoflowOpError("Need to allow at least 3 knots in the spline")
         
@@ -246,7 +250,9 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
         -------
             a new experiment with the bleedthrough subtracted out.
         """
-                
+        if not experiment:
+            raise CytoflowOpError("No experiment specified")
+        
         if not self._interpolators:
             raise CytoflowOpError("Module interpolators aren't set. "
                                   "Did you run estimate()?")
@@ -354,8 +360,6 @@ class BleedthroughPiecewiseDiagnostic(HasStrictTraits):
     
     def plot(self, experiment = None, **kwargs):
         """Plot a faceted histogram view of a channel"""
-        
-        import matplotlib.pyplot as plt
         
         kwargs.setdefault('histtype', 'stepfilled')
         kwargs.setdefault('alpha', 0.5)

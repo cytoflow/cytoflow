@@ -66,6 +66,8 @@ class AutofluorescenceOp(HasStrictTraits):
         """
         Estimate the autofluorescence from *blank_file*
         """
+        if not experiment:
+            raise CytoflowOpError("No experiment specified")
         
         if not set(self.channels) <= set(experiment.channels):
             raise CytoflowOpError("Specified channels that weren't found in "
@@ -110,6 +112,8 @@ class AutofluorescenceOp(HasStrictTraits):
             a new experiment with the autofluorescence median subtracted from
             the values in self.blank_file
         """
+        if not experiment:
+            raise CytoflowOpError("No experiment specified")
         
         if not set(self._af_median.keys()) <= set(experiment.channels) or \
            not set(self._af_stdev.keys()) <= set(experiment.channels):

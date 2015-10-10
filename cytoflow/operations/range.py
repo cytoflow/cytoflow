@@ -76,6 +76,9 @@ class RangeOp(HasStrictTraits):
             less than self.high; it is False otherwise.
         """
 
+        if not experiment:
+            raise CytoflowOpError("No experiment specified")
+        
         # make sure name got set!
         if not self.name:
             raise CytoflowOpError("You have to set the gate's name "
@@ -173,6 +176,10 @@ class RangeSelection(HistogramView):
         
     def plot(self, experiment, **kwargs):
         """Plot the underlying histogram and then plot the selection on top of it."""
+        
+        if not experiment:
+            raise CytoflowViewError("No experiment specified")
+        
         if self.xfacet:
             raise CytoflowViewError("RangeSelection.xfacet must be empty or `Undefined`")
         

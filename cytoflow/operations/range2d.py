@@ -186,6 +186,13 @@ class RangeSelection2D(ScatterplotView):
         
     def plot(self, experiment, **kwargs):
         """Plot the underlying scatterplot and then plot the selection on top of it."""
+        
+        if not experiment:
+            raise CytoflowOpError("No experiment specified")
+        
+        if not experiment:
+            raise CytoflowViewError("No experiment specified")
+        
         if self.xfacet:
             raise CytoflowViewError("RangeSelection.xfacet must be empty or `Undefined`")
         

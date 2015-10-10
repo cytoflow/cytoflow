@@ -90,6 +90,9 @@ class LogicleTransformOp(HasStrictTraits):
             pandas.DataFrame.query()
         """
 
+        if not experiment:
+            raise CytoflowOpError("No experiment specified")
+        
         if self.r <= 0 or self.r >= 1:
             raise CytoflowOpError("op.r must be between 0 and 1")
         
@@ -116,6 +119,9 @@ class LogicleTransformOp(HasStrictTraits):
     
     def apply(self, experiment):
         """Applies the Logicle transform to channels"""
+        
+        if not experiment:
+            raise CytoflowOpError("No experiment specified")
         
         if not set(self.channels).issubset(set(experiment.channels)):
             raise CytoflowOpError("self.channels isn't a subset "

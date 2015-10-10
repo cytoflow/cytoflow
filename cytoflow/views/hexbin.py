@@ -63,6 +63,9 @@ class HexbinView(HasStrictTraits):
     def plot(self, experiment, **kwargs):
         """Plot a faceted histogram view of a channel"""
         
+        if not experiment:
+            raise CytoflowViewError("No experiment specified")
+        
         if not self.xchannel:
             raise CytoflowViewError("X channel not specified")
         

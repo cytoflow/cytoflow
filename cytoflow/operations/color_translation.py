@@ -16,7 +16,7 @@ import sklearn.mixture
 
 from cytoflow.operations import IOperation
 from cytoflow.views import IView
-from cytoflow.utility import CytoflowOpError
+from cytoflow.utility import CytoflowOpError, CytoflowViewError
 
 @provides(IOperation)
 class ColorTranslationOp(HasStrictTraits):
@@ -98,6 +98,9 @@ class ColorTranslationOp(HasStrictTraits):
         """
         Estimate the mapping from the two-channel controls
         """
+
+        if not experiment:
+            raise CytoflowOpError("No experiment specified")
         
         tubes = {}
 
@@ -198,6 +201,9 @@ class ColorTranslationOp(HasStrictTraits):
             a new experiment with the color translation applied.
         """
 
+        if not experiment:
+            raise CytoflowOpError("No experiment specified")
+        
         if not self._coefficients:
             raise CytoflowOpError("Coefficients aren't set. "
                                   "Did you call estimate()?")
@@ -285,6 +291,9 @@ class ColorTranslationDiagnostic(HasStrictTraits):
         """
         Plot the plots
         """
+        
+        if not experiment:
+            raise CytoflowViewError("No experiment specified")
         
         tubes = {}
         

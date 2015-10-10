@@ -63,6 +63,9 @@ class HistogramView(HasStrictTraits):
     def plot(self, experiment, **kwargs):
         """Plot a faceted histogram view of a channel"""
         
+        if not experiment:
+            raise CytoflowViewError("No experiment specified")
+        
         if self.channel not in experiment.channels:
             raise CytoflowViewError("Channel {0} not in the experiment"
                                     .format(self.channel))

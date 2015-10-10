@@ -119,6 +119,9 @@ class Stats1DView(HasStrictTraits):
     def plot(self, experiment, **kwargs):
         """Plot a bar chart"""
         
+        if not experiment:
+            raise CytoflowViewError("No experiment specified")
+        
         if not self.variable:
             raise CytoflowViewError("Independent variable not set")
             

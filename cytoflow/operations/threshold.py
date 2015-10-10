@@ -75,6 +75,9 @@ class ThresholdOp(HasStrictTraits):
             it is False otherwise.
         """
         
+        if not experiment:
+            raise CytoflowOpError("No experiment specified")
+        
         # make sure name got set!
         if not self.name:
             raise CytoflowOpError("You have to set the gate's name "
@@ -157,6 +160,10 @@ class ThresholdSelection(HistogramView):
     
     def plot(self, experiment, **kwargs):
         """Plot the histogram and then plot the threshold on top of it."""
+        
+        if not experiment:
+            raise CytoflowViewError("No experiment specified")
+        
         if self.xfacet:
             raise CytoflowViewError("ThresholdSelection.xfacet must be empty")
         

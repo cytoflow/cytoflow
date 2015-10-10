@@ -66,6 +66,9 @@ class HlogTransformOp(HasStrictTraits):
             transformed channels.
         """
 
+        if not experiment:
+            raise CytoflowOpError("No experiment specified")
+        
         if not set(self.channels).issubset(set(experiment.channels)):
             raise CytoflowOpError("Op channels are not in experiment!")
         
