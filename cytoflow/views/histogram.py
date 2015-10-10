@@ -119,7 +119,7 @@ class HistogramView(HasStrictTraits):
             bins_per_hue = math.ceil(num_bins / num_hues)
             
             new_bins = [xmin]
-            for end in bins:
+            for end in [b for b in bins if (b > xmin and b <= xmax)]:
                 new_bins = np.append(new_bins,
                                      np.linspace(new_bins[-1],
                                                  end,
