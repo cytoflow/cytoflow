@@ -249,7 +249,6 @@ class SubsetModel(HasTraits):
             # update the subset editor ui
             self.subset_map[name].subset_str = phrase
         
-    #@on_trait_change('experiment')
     def _on_experiment_change(self):
         print "experiment changed"
         cond_map = {"bool" : BoolSubsetModel,
@@ -259,6 +258,13 @@ class SubsetModel(HasTraits):
         
         subset_list = []
         subset_map = {}
+        
+        # it's possible that the op we're viewing is no longer valid,
+        # in which case the experiment goes away.
+        
+        if not self.experiment:
+            return
+        
         for name, dtype in self.experiment.conditions.iteritems():
             subset = cond_map[dtype](name = name,
                                      experiment = self.experiment)
