@@ -13,6 +13,7 @@ from cytoflow.views import IView
 from cytoflow.utility import num_hist_bins, CytoflowViewError
 import numpy as np
 import seaborn as sns
+import math
 
 @provides(IView)
 class HistogramView(HasStrictTraits):
@@ -95,11 +96,35 @@ class HistogramView(HasStrictTraits):
         kwargs.setdefault('alpha', 0.5)
         kwargs.setdefault('antialiased', True)
 
+        # estimate a "good" number of bins; see cytoflow.utility.num_hist_bins
+        # for a reference.
+        
         num_bins = num_hist_bins(data[self.channel])
-        xmin = np.amin(data[self.channel])
-        xmax = np.amax(data[self.channel])
-        bin_width = (xmax - xmin) / num_bins
-        bins = np.arange(xmin, xmax, bin_width)
+        
+        if self.huefacet:
+            # to make multi-colored plots look pretty, we want to line the
+            # bins up with the locations of the hue splits.  else, we get
+            # gnarly aliasing.
+            
+            # each color gets at least one bin.  however, if the estimated
+            # number of bins for the histogram is much larger than the
+            # number of colors, sub-divide each color into multiple bins.
+            num_hues = len(data[self.huefacet].unique())
+            bins_per_hue = math.ceil(num_bins / num_hues)
+            bins = [np.amin(data[self.channel])]
+            for h in np.sort(data[self.huefacet].unique()):
+                dh = data[data[self.huefacet] == h]
+                next_bin_end = dh[self.channel].max()
+                new_bins = np.linspace(bins[-1], next_bin_end, bins_per_hue + 1, endpoint = True)[1:]
+                bins = np.append(bins, new_bins)
+            bins = np.append(bins, np.amax(data[self.channel]))
+        else:
+            xmin = np.amin(data[self.channel])
+            xmax = np.amax(data[self.channel])
+            bin_width = (xmax - xmin) / num_bins
+            bins = np.arange(xmin, xmax, bin_width)
+            bins = np.append(bins, xmax)
+        
         kwargs.setdefault('bins', bins) 
 
         g = sns.FacetGrid(data, 
