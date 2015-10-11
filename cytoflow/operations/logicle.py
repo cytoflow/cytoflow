@@ -32,6 +32,8 @@ class LogicleTransformOp(HasStrictTraits):
     W : Dict(Str : float)
         for each channel, the width of the linear range, in log10 decades.  
         can estimate, or use a fixed value like 0.5.
+    M : Float (default = 4.5)
+        The width of the entire display, in log10 decades
     A : Dict(Str : float) 
         for each channel, additional decades of negative data to include.  
         the display usually captures all the data, so 0 is fine to start.
@@ -94,7 +96,7 @@ class LogicleTransformOp(HasStrictTraits):
             raise CytoflowOpError("No experiment specified")
         
         if self.r <= 0 or self.r >= 1:
-            raise CytoflowOpError("op.r must be between 0 and 1")
+            raise CytoflowOpError("r must be between 0 and 1")
         
         if subset:
             data = experiment.query(subset)

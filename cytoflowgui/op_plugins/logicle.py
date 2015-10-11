@@ -20,7 +20,6 @@ class LogicleHandler(Controller, OpHandlerMixin):
     
     def default_traits_view(self):
         return View(Item('object.name'),
-                    Item('object.T'),
                     Item('object.W'),
                     Item('object.M'),
                     Item('object.A'),
