@@ -24,6 +24,7 @@ class BinningHandler(Controller, OpHandlerMixin):
                          editor=EnumEditor(name='handler.previous_channels'),
                          label = "Channel"),
                     Item('object.scale'),
+                    Item('object.num_bins', label = "Num Bins"),
                     Item('object.bin_width'),
                     Item('handler.wi.error',
                          label = 'Error',
@@ -44,7 +45,7 @@ class BinningPlugin(Plugin):
     id = 'edu.mit.synbio.cytoflowgui.op_plugins.binning'
     operation_id = 'edu.mit.synbio.cytoflow.operations.binning'
 
-    short_name = "Range"
+    short_name = "Binning"
     menu_group = "Gates"
     
     def get_operation(self):

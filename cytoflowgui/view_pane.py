@@ -150,7 +150,7 @@ class ViewDockPane(DockPane):
         # do UI things.   we get notified if *either* the currently selected 
         # workflowitem *or* the current view changes.
         
-         # untoggle everything on the toolbar
+        # untoggle everything on the toolbar
         for action in self._actions.itervalues():
             action.checked = False
   
