@@ -93,7 +93,7 @@ class LogicleTransformOp(HasStrictTraits):
         """
 
         if not experiment:
-            raise CytoflowOpError("No experiment specified")
+            raise CytoflowOpError("no experiment specified")
         
         if self.r <= 0 or self.r >= 1:
             raise CytoflowOpError("r must be between 0 and 1")
@@ -123,14 +123,14 @@ class LogicleTransformOp(HasStrictTraits):
         """Applies the Logicle transform to channels"""
         
         if not experiment:
-            raise CytoflowOpError("No experiment specified")
+            raise CytoflowOpError("no experiment specified")
         
         if not set(self.channels).issubset(set(experiment.channels)):
             raise CytoflowOpError("self.channels isn't a subset "
                                   "of experiment.channels")
         
         if self.M <= 0:
-            raise CytoflowOpError("op.M must be > 0")
+            raise CytoflowOpError("M must be > 0")
 
         for channel in self.channels:
             # the Logicle C++/SWIG extension is REALLY picky about it
@@ -142,19 +142,19 @@ class LogicleTransformOp(HasStrictTraits):
                                       .format(channel))
             
             if not channel in self.W: 
-                raise CytoflowOpError("op.W wasn't set for channel {0}"
+                raise CytoflowOpError("W wasn't set for channel {0}"
                                       .format(channel))
                 
             if self.W[channel] <= 0:
-                raise CytoflowOpError("op.W for channel {0} must be > 0"
+                raise CytoflowOpError("W for channel {0} must be > 0"
                                       .format(channel))
             
             if not channel in self.A:
-                raise CytoflowOpError("op.A wasn't set for channel {0}"
+                raise CytoflowOpError("A wasn't set for channel {0}"
                                       .format(channel))
                 
             if self.A[channel] < 0:
-                raise CytoflowOpError("op.A for channel {0} must be >= 0"
+                raise CytoflowOpError("A for channel {0} must be >= 0"
                                       .format(channel))
         
         new_experiment = experiment.clone()
