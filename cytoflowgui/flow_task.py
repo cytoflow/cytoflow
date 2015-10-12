@@ -5,7 +5,6 @@ Created on Feb 11, 2015
 """
 
 from traits.etsconfig.api import ETSConfig
-from cytoflow.utility.util import CytoflowError
 ETSConfig.toolkit = 'qt4'
 
 import os.path
