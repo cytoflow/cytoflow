@@ -3,6 +3,7 @@ from traitsui.api import UI, View, Item, EnumEditor
 from pyface.tasks.api import DockPane, Task
 from pyface.action.api import ToolBarManager
 from pyface.tasks.action.api import TaskAction
+from pyface.api import ImageResource
 from pyface.qt import QtGui, QtCore
 from cytoflowgui.view_plugins import IViewPlugin
 from cytoflowgui.workflow_item import WorkflowItem
@@ -90,8 +91,9 @@ class ViewDockPane(DockPane):
                                       show_tool_names = False,
                                       image_size = (32, 32))
         
-        self._default_action = TaskAction(name = "Default\nView",
+        self._default_action = TaskAction(name = "Setup View",
                                           on_perform = lambda: self.task.set_current_view("default"),
+                                          image = ImageResource('setup'),
                                           style = 'toggle',
                                           visible = False)
         self._actions["default"] = self._default_action
