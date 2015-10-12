@@ -414,7 +414,7 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
             data = beads_data[channel]
             
             # bin the data on a log scale
-            data_range = beads_channels.ix[channel]['$PnR']
+            data_range = float(beads_channels.ix[channel]['$PnR'])
             hist_bins = np.logspace(1, math.log(data_range, 2), num = 256, base = 2)
             hist = np.histogram(data, bins = hist_bins)
             
