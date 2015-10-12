@@ -6,12 +6,16 @@ Created on Sep 18, 2015
 
 from __future__ import division
 
-from traits.api import HasStrictTraits, Str, CStr, Property, Enum, provides, \
-    Undefined
+from traits.api import HasStrictTraits, Str, CStr, Enum, provides, Undefined, \
+    Instance, DelegatesTo
 import numpy as np
 
 from cytoflow.operations import IOperation
-from cytoflow.utility import CytoflowOpError, PositiveInt, PositiveFloat
+from cytoflow.utility import CytoflowOpError, CytoflowViewError, \
+    PositiveInt, PositiveFloat
+from cytoflow.views.histogram import HistogramView
+from cytoflow.views import IView
+from cytoflow.utility.util import CytoflowViewError
 
 @provides(IOperation)
 class BinningOp(HasStrictTraits):
@@ -145,4 +149,47 @@ class BinningOp(HasStrictTraits):
             new_experiment.metadata[self.bin_count_name] = {}
         
         return new_experiment
+    
+    def default_view(self):
+        return BinningView(op = self)
+    
+@provides(IView)
+class BinningView(HistogramView):
+    """Plots a histogram of the current binning op, with the bins set to
+       the hue facet.
+       
+    Attributes
+    ----------
+    op: Instance(BinningOp)
+        the BinningOp we're viewing
+       
+    subset : Str
+        The string passed to `Experiment.query()` to subset the data before
+        plotting
         
+    Examples
+    --------
+    >>> b = BinningOp(name = "Y2-A-Bin",
+    ...               channel = "Y2-A",
+    ...               num_bins = 10,
+    ...               scale = "linear")
+    >>> b.default_view().plot(ex2)
+    """
+     
+    id = "edu.mit.synbio.cytoflow.views.binning"
+    friendly_id = "Binning Setup"
+    
+    op = Instance(IOperation)   
+    name = DelegatesTo('op')
+    channel = DelegatesTo('op')
+    huefacet = DelegatesTo('op', 'name')
+    
+    def plot(self, experiment, **kwargs):
+        if not self.huefacet:
+            raise CytoflowViewError("didn't set BinningOp.channel")
+        
+        try:
+            temp_experiment = self.op.apply(experiment)
+            super(BinningView, self).plot(temp_experiment, **kwargs)
+        except CytoflowOpError as e:
+            raise CytoflowViewError(e.__str__())
