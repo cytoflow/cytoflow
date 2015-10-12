@@ -6,7 +6,8 @@ Created on Sep 18, 2015
 
 from __future__ import division
 
-from traits.api import HasStrictTraits, Str, CStr, Property, Enum, provides
+from traits.api import HasStrictTraits, Str, CStr, Property, Enum, provides, \
+    Undefined
 import numpy as np
 
 from cytoflow.operations import IOperation
@@ -42,6 +43,11 @@ class BinningOp(HasStrictTraits):
         Make the bins equidistant along what scale?
         TODO - add other scales, like Logicle      
         
+    bin_count_name : Str
+        If `bin_count_name` is set, add another piece of metadata when calling
+        `apply()` that contains the number of events in the bin that this event
+        falls in.  Useful for filtering bins by # of events.
+        
     Examples
     --------
     >>> bin_op = flow.BinningOp(name = "CFP_Bin",
@@ -59,9 +65,10 @@ class BinningOp(HasStrictTraits):
     friendly_id = "Binning"
     
     name = CStr()
+    bin_count_name = CStr()
     channel = Str()
-    num_bins = PositiveInt()
-    bin_width = PositiveFloat()
+    num_bins = PositiveInt(Undefined)
+    bin_width = PositiveFloat(Undefined)
     scale = Enum("linear", "log10")
 
     def apply(self, experiment):
@@ -80,43 +87,37 @@ class BinningOp(HasStrictTraits):
             less than self.high; it is False otherwise.
         """
         if not experiment:
-            raise CytoflowOpError("No experiment specified")
+            raise CytoflowOpError("no experiment specified")
         
         if not self.name:
-            raise CytoflowOpError("You have to set the Binning operations's name "
-                                  "before applying it!")
+            raise CytoflowOpError("name is not set")
         
         if self.name in experiment.data.columns:
-            raise CytoflowOpError("Operation name is in the experiment already!")
+            raise CytoflowOpError("name {0} is in the experiment already"
+                                  .format(self.name))
+            
+        if self.bin_count_name and self.bin_count_name in experiment.data.columns:
+            raise CytoflowOpError("bin_count_name {0} is in the experiment already"
+                                  .format(self.bin_count_name))
         
         if not self.channel:
-            raise CytoflowOpError("Didn't specify a channel")
+            raise CytoflowOpError("channel is not set")
         
         if not self.channel in experiment.channels:
-            raise CytoflowOpError("channel isn't in the experiment")
+            raise CytoflowOpError("channel {0} isn't in the experiment"
+                                  .format(self.channel))
               
-        if not self.num_bins and not self.bin_width:
-            raise CytoflowOpError("Must set either bin number or width")
-        
-        if self.num_bins and self.num_bins <= 0:
-            raise CytoflowOpError("Number of bins must be positive")
-        
-        if self.bin_width and self.bin_width <= 0:
-            raise CytoflowOpError("Bin width must be positive")
-        
-        # make sure old_experiment doesn't already have a column named self.name
-        if(self.name in experiment.data.columns):
-            raise CytoflowOpError("Experiment already contains a column {0}"
-                               .format(self.name))    
+        if self.num_bins is Undefined and self.bin_width is Undefined:
+            raise CytoflowOpError("must set either bin number or width")  
             
         channel_min = experiment.data[self.channel].min()
         channel_max = experiment.data[self.channel].max()
         
         if self.scale == "linear":
-            num_bins = self.num_bins if self.num_bins else \
+            num_bins = self.num_bins if self.num_bins is not Undefined else \
                        (channel_max - channel_min) / self.bin_width
             bins = np.linspace(start = channel_min, stop = channel_max,
-                               num = self.num_bins)
+                               num = num_bins)
         elif self.scale == "log10":
             num_bins = self.num_bins if self.num_bins else \
                        (np.log10(channel_max) - np.log10(channel_min)) / self.bin_width
@@ -134,6 +135,14 @@ class BinningOp(HasStrictTraits):
         new_experiment.conditions[self.name] = "int"
         new_experiment.metadata[self.name] = {}
         new_experiment.metadata[self.name]["bins"] = bins
+        
+        if self.bin_count_name:
+            agg_count = new_experiment.data.groupby(self.name).count()
+            agg_count = agg_count[agg_count.columns[0]]
+            new_experiment[self.bin_count_name] = \
+                new_experiment[self.name].map(agg_count)
+            new_experiment.conditions[self.bin_count_name] = "int"
+            new_experiment.metadata[self.bin_count_name] = {}
         
         return new_experiment
         
