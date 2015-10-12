@@ -7,7 +7,7 @@ Created on Sep 18, 2015
 from __future__ import division
 
 from traits.api import HasStrictTraits, Str, CStr, Enum, provides, Undefined, \
-    Instance, DelegatesTo
+    Instance, DelegatesTo, Constant
 import numpy as np
 
 from cytoflow.operations import IOperation
@@ -15,7 +15,6 @@ from cytoflow.utility import CytoflowOpError, CytoflowViewError, \
     PositiveInt, PositiveFloat
 from cytoflow.views.histogram import HistogramView
 from cytoflow.views import IView
-from cytoflow.utility.util import CytoflowViewError
 
 @provides(IOperation)
 class BinningOp(HasStrictTraits):
@@ -65,8 +64,8 @@ class BinningOp(HasStrictTraits):
     """
     
     # traits
-    id = "edu.mit.synbio.cytoflow.operations.binning"
-    friendly_id = "Binning"
+    id = Constant('edu.mit.synbio.cytoflow.operations.binning')
+    friendly_id = Constant("Binning")
     
     name = CStr()
     bin_count_name = CStr()
@@ -176,8 +175,8 @@ class BinningView(HistogramView):
     >>> b.default_view().plot(ex2)
     """
      
-    id = "edu.mit.synbio.cytoflow.views.binning"
-    friendly_id = "Binning Setup"
+    id = Constant('edu.mit.synbio.cytoflow.views.binning')
+    friendly_id = Constant('Binning Setup')
     
     op = Instance(IOperation)   
     name = DelegatesTo('op')

@@ -1,4 +1,5 @@
-from traits.api import HasStrictTraits, provides, Str, List, Float, Dict
+from traits.api import HasStrictTraits, provides, Str, List, Float, Dict, \
+                        Constant
 import math
 import numpy as np
 
@@ -67,8 +68,9 @@ class LogicleTransformOp(HasStrictTraits):
     """
     
     #traits
-    id = "edu.mit.synbio.cytoflow.operations.logicle"
-    friendly_id = "Logicle Transform"
+    id = Constant('edu.mit.synbio.cytoflow.operations.logicle')
+    friendly_id = Constant("Logicle Transform")
+    
     name = Str()
     channels = List(Str)
     

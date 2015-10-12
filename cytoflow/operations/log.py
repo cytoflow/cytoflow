@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
-from traits.api import HasStrictTraits, Str, List, Enum, Float, provides
+from traits.api import HasStrictTraits, Str, List, Enum, Float, Constant, \
+                       provides
 from cytoflow.operations import IOperation
 from cytoflow.utility import CytoflowOpError
 
@@ -38,8 +39,8 @@ class LogTransformOp(HasStrictTraits):
     """
     
     # traits
-    id = "edu.mit.synbio.cytoflow.operations.log"
-    friendly_id = "Log10"
+    id = Constant('edu.mit.synbio.cytoflow.operations.log')
+    friendly_id = Constant("Log10")
 
     name = Str()
     channels = List(Str)

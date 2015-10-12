@@ -1,5 +1,5 @@
 from traits.api import HasStrictTraits, Str, CStr, List, Float, provides, \
-    Instance, Bool, on_trait_change, DelegatesTo, Any
+    Instance, Bool, on_trait_change, DelegatesTo, Any, Constant
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -45,8 +45,8 @@ class PolygonOp(HasStrictTraits):
     """
     
     # traits
-    id = "edu.mit.synbio.cytoflow.operations.polygon"
-    friendly_id = "Polygon"
+    id = Constant('edu.mit.synbio.cytoflow.operations.polygon')
+    friendly_id = Constant("Polygon")
     
     name = CStr()
     xchannel = Str()
@@ -161,8 +161,8 @@ class PolygonSelection(ScatterplotView):
     >>> poly.interactive = True
     """
     
-    id = "edu.mit.synbio.cytoflow.views.polygon"
-    friendly_id = "Polygon Selection"
+    id = Constant('edu.mit.synbio.cytoflow.views.polygon')
+    friendly_id = Constant("Polygon Selection")
     
     op = Instance(PolygonOp)
     name = DelegatesTo('op')

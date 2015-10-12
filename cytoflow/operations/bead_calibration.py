@@ -8,7 +8,7 @@ Created on Aug 31, 2015
 from __future__ import division
 
 from traits.api import HasStrictTraits, Str, CStr, File, Dict, Python, \
-                       Instance, Int, List, Float, provides
+                       Instance, Int, List, Float, Constant, provides
 import numpy as np
 import fcsparser
 import math
@@ -129,8 +129,8 @@ class BeadCalibrationOp(HasStrictTraits):
     """
     
     # traits
-    id = 'edu.mit.synbio.cytoflow.operations.beads_calibrate'
-    friendly_id = "Bead Calibration"
+    id = Constant('edu.mit.synbio.cytoflow.operations.beads_calibrate')
+    friendly_id = Constant("Bead Calibration")
     
     name = CStr()
     units = Dict(Str, Str)

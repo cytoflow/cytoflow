@@ -1,5 +1,5 @@
 from traits.api import HasStrictTraits, CFloat, Str, CStr, Bool, Instance, \
-    provides, on_trait_change, DelegatesTo, Any
+    provides, on_trait_change, DelegatesTo, Any, Constant
 from cytoflow.operations import IOperation
 from cytoflow.utility import CytoflowOpError, CytoflowViewError
 from cytoflow.views import ISelectionView
@@ -57,8 +57,8 @@ class Range2DOp(HasStrictTraits):
     """
     
     # traits
-    id = "edu.mit.synbio.cytoflow.operations.range2d"
-    friendly_id = "2D Range"
+    id = Constant('edu.mit.synbio.cytoflow.operations.range2d')
+    friendly_id = Constant("2D Range")
     
     name = CStr()
     
@@ -170,8 +170,8 @@ class RangeSelection2D(ScatterplotView):
     >>> rv.plot(ex2) 
     """
     
-    id = "edu.mit.synbio.cytoflow.views.range2d"
-    friendly_id = "2D Range Selection"
+    id = Constant('edu.mit.synbio.cytoflow.views.range2d')
+    friendly_id = Constant("2D Range Selection")
     
     op = Instance(IOperation)
     name = DelegatesTo('op')

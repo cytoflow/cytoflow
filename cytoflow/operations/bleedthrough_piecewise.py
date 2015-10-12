@@ -7,7 +7,7 @@ Created on Aug 26, 2015
 from __future__ import division
 
 from traits.api import HasStrictTraits, Str, CStr, File, Dict, Python, \
-                       Instance, Int, List, provides
+                       Instance, Int, List, Constant, provides
 import numpy as np
 import math
 import scipy.interpolate
@@ -99,8 +99,8 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
     """
     
     # traits
-    id = "edu.mit.synbio.cytoflow.operations.bleedthrough_piecewise"
-    friendly_id = "Piecewise Bleedthrough Correction"
+    id = Constant('edu.mit.synbio.cytoflow.operations.bleedthrough_piecewise')
+    friendly_id = Constant("Piecewise Bleedthrough Correction")
     
     name = CStr()
 
