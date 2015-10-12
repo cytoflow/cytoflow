@@ -35,11 +35,15 @@ class LogicleHandler(Controller, OpHandlerMixin):
                                                   background_color = "#ff9191",
                                                   word_wrap = True)))
         
+    def setattr(self, info, obj, name, value):
+        super(LogicleHandler, self).setattr(info, obj, name, value)
+        #Controller.setattr(self, info, object, name, value)
+        
 class LogicleTransformPluginOp(LogicleTransformOp, PluginOpMixin):
     handler_factory = Callable(LogicleHandler)
     
     @on_trait_change('channels[]')
-    def _channels_upd(self):
+    def _on_channels_changed(self):
         for channel in self.channels:
             if channel not in self.W:
                 self.W[channel] = 0.5
