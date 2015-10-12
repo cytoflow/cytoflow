@@ -10,12 +10,8 @@ from traits.api import provides, Callable
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT
 from cytoflow.operations.binning import BinningOp
 from pyface.api import ImageResource
-from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
-from cytoflowgui.subset_editor import SubsetEditor
-from cytoflow.views.i_selectionview import ISelectionView
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
 from cytoflowgui.color_text_editor import ColorTextEditor
-
 
 class BinningHandler(Controller, OpHandlerMixin):
     def default_traits_view(self):

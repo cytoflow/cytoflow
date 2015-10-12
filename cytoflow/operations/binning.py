@@ -6,11 +6,11 @@ Created on Sep 18, 2015
 
 from __future__ import division
 
-from traits.api import HasStrictTraits, Str, CStr, Int, Enum, Float, provides
+from traits.api import HasStrictTraits, Str, CStr, Property, Enum, provides
 import numpy as np
 
 from cytoflow.operations import IOperation
-from cytoflow.utility import CytoflowOpError
+from cytoflow.utility import CytoflowOpError, PositiveInt, PositiveFloat
 
 @provides(IOperation)
 class BinningOp(HasStrictTraits):
@@ -30,12 +30,15 @@ class BinningOp(HasStrictTraits):
         The name of the channel along which to bin.
         
     num_bins = Int
-        The number of bins to make.  Must set either `num_bins` or `bin_width`
+        The number of bins to make.  Must set either `num_bins` or `bin_width`.
+        If both are defined, `num_bins` takes precedence.
         
     bin_width = Float
-        The width of the bins.  Must set either `num_bins` or `bin_width`
+        The width of the bins.  Must set either `num_bins` or `bin_width`.  If
+        `scale` is `log10`, `bin_width` is in log-10 units.  If both `num_bins`
+        and `bin_width` are defined, `num_bins` takes precedence. 
         
-    scale : Enum("Linear", "Log")
+    scale : Enum("linear", "log10")
         Make the bins equidistant along what scale?
         TODO - add other scales, like Logicle      
         
@@ -57,10 +60,10 @@ class BinningOp(HasStrictTraits):
     
     name = CStr()
     channel = Str()
-    num_bins = Int(None)
-    bin_width = Float(None)
+    num_bins = PositiveInt()
+    bin_width = PositiveFloat()
     scale = Enum("linear", "log10")
-    
+
     def apply(self, experiment):
         """Applies the binning to an experiment.
         
@@ -113,7 +116,7 @@ class BinningOp(HasStrictTraits):
             num_bins = self.num_bins if self.num_bins else \
                        (channel_max - channel_min) / self.bin_width
             bins = np.linspace(start = channel_min, stop = channel_max,
-                               num = num_bins)
+                               num = self.num_bins)
         elif self.scale == "log10":
             num_bins = self.num_bins if self.num_bins else \
                        (np.log10(channel_max) - np.log10(channel_min)) / self.bin_width
