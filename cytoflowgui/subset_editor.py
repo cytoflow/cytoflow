@@ -201,12 +201,7 @@ class SubsetModel(HasTraits):
     
     def __init__(self, *args, **kw_args):
         super(SubsetModel, self).__init__( *args, **kw_args )
-        # have to set a dynamic notifier because this is occasionally changed
-        # by the processing thread, and we need to re-dispatch to the ui thread
-        self.on_trait_change(self._on_experiment_change, 
-                             'experiment', 
-                             dispatch = 'ui')
-    
+        
     # MAGIC: gets the value of the Property trait "subset_string"
     def _get_subset_str(self):
         subset_strings = [s.subset_str for s in self.subset_list]
@@ -249,7 +244,6 @@ class SubsetModel(HasTraits):
             # update the subset editor ui
             self.subset_map[name].subset_str = phrase
         
-    #@on_trait_change('experiment')
     def _on_experiment_change(self):
         print "experiment changed"
         cond_map = {"bool" : BoolSubsetModel,
@@ -259,6 +253,13 @@ class SubsetModel(HasTraits):
         
         subset_list = []
         subset_map = {}
+        
+        # it's possible that the op we're viewing is no longer valid,
+        # in which case the experiment goes away.
+        
+        if not self.experiment:
+            return
+        
         for name, dtype in self.experiment.conditions.iteritems():
             subset = cond_map[dtype](name = name,
                                      experiment = self.experiment)
@@ -290,13 +291,28 @@ class _SubsetEditor(Editor):
         """
 
         self.model = SubsetModel(initial_subset_str = self.value)
-        self.sync_value(self.factory.experiment, 'experiment', 'from')
         
+        # usually, we'd make this a static notifier on 
+        # SubsetModel._on_experiment_change.  however, in this case we
+        # have to set a dynamic notifier because this is occasionally changed
+        # by the processing thread, and we need to re-dispatch to the ui thread
+        self.model.on_trait_change(self.model._on_experiment_change, 
+                             'experiment', 
+                             dispatch = 'ui')
+        
+        self.sync_value(self.factory.experiment, 'experiment', 'from')        
         self._ui = self.model.edit_traits(kind = 'subpanel',
                                           parent = parent)
         self.control = self._ui.control
         
     def dispose(self):
+        
+        # disconnect the dynamic notifier.
+        self.model.on_trait_change(self.model._on_experiment_change,
+                                   'experiment',
+                                   dispatch = 'ui',
+                                   remove = True)
+        
         if self._ui:
             self._ui.dispose()
             self._ui = None

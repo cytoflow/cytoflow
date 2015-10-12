@@ -4,12 +4,12 @@ Created on Apr 25, 2015
 @author: brian
 '''
 
-from traitsui.api import View, Item, EnumEditor, Controller, Handler
+from traitsui.api import View, Item, EnumEditor, Controller
 from envisage.api import Plugin, contributes_to
-from traits.api import provides, DelegatesTo, Callable, Instance
+from traits.api import provides, Callable
 from cytoflowgui.op_plugins.i_op_plugin \
     import IOperationPlugin, OpHandlerMixin, PluginOpMixin, OP_PLUGIN_EXT
-from cytoflow import Range2DOp, ScatterplotView, RangeSelection2D
+from cytoflow.operations.range2d import Range2DOp, RangeSelection2D
 from pyface.api import ImageResource
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
 from cytoflowgui.subset_editor import SubsetEditor
@@ -47,6 +47,9 @@ class RangeView2DHandler(Controller, ViewHandlerMixin):
                     Item('object.ychannel',
                          label = "Y Channel",
                          style = 'readonly'),
+                    Item('object.huefacet',
+                         editor=EnumEditor(name='handler.conditions'),
+                         label="Color\nFacet"),
                     Item('_'),
                     Item('object.subset',
                          label = "Subset",
@@ -55,12 +58,6 @@ class RangeView2DHandler(Controller, ViewHandlerMixin):
 @provides(ISelectionView)
 class Range2DSelectionView(RangeSelection2D, PluginViewMixin):
     handler_factory = Callable(RangeView2DHandler)
-    
-    view = Instance(ScatterplotView, args = ())
-    name = DelegatesTo('view')
-    xchannel = DelegatesTo('view')
-    ychannel = DelegatesTo('view')
-    subset = DelegatesTo('view')
     
 class Range2DPluginOp(Range2DOp, PluginOpMixin):
     handler_factory = Callable(Range2DHandler)
@@ -80,22 +77,9 @@ class Range2DPlugin(Plugin):
     def get_operation(self):
         return Range2DPluginOp()
     
-    def get_default_view(self, op):
-        view = Range2DSelectionView()
-         
-        # we have to make these traits on the top-level ThresholdSelection
-        # so that the change handlers get updated.
-         
-        op.sync_trait('xchannel', view, mutual = True)
-        op.sync_trait('xlow', view, mutual = True)
-        op.sync_trait('xhigh', view, mutual = True)
-        op.sync_trait('ychannel', view, mutual = True)
-        op.sync_trait('ylow', view, mutual = True)
-        op.sync_trait('yhigh', view, mutual = True)
-        op.sync_trait('name', view, mutual = True)
-         
-        return view
-     
+    def get_default_view(self):
+        return Range2DSelectionView()
+
     def get_icon(self):
         return ImageResource('range2d')
     

@@ -1,14 +1,12 @@
-from traitsui.api import View, Item, EnumEditor, Controller, Handler
+from traitsui.api import View, Item, EnumEditor, Controller
 from envisage.api import Plugin, contributes_to
-from traits.api import provides, DelegatesTo, Callable, Instance
+from traits.api import provides, Callable
 from cytoflowgui.op_plugins.i_op_plugin \
     import IOperationPlugin, OpHandlerMixin, PluginOpMixin, OP_PLUGIN_EXT
-from cytoflow import ThresholdOp
 from pyface.api import ImageResource
-from cytoflow.views.threshold_selection import ThresholdSelection
+from cytoflow.operations.threshold import ThresholdOp, ThresholdSelection
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
 from cytoflowgui.subset_editor import SubsetEditor
-from cytoflow.views.histogram import HistogramView
 from cytoflowgui.color_text_editor import ColorTextEditor
 
 
@@ -33,6 +31,9 @@ class ThresholdViewHandler(Controller, ViewHandlerMixin):
                     Item('object.channel', 
                          label = "Channel",
                          style = "readonly"),
+                    Item('object.huefacet',
+                         editor=EnumEditor(name='handler.conditions'),
+                         label="Color\nFacet"),
                     Item('_'),
                     Item('object.subset',
                          label = "Subset",
@@ -40,12 +41,6 @@ class ThresholdViewHandler(Controller, ViewHandlerMixin):
 
 class ThresholdSelectionView(ThresholdSelection, PluginViewMixin):
     handler_factory = Callable(ThresholdViewHandler)
-    
-    name = DelegatesTo('view')
-    channel = DelegatesTo('view')
-    subset = DelegatesTo('view')
-    
-    view = Instance(HistogramView, args = ())
     
 class ThresholdPluginOp(ThresholdOp, PluginOpMixin):
     handler_factory = Callable(ThresholdHandler)
@@ -65,18 +60,9 @@ class ThresholdPlugin(Plugin):
     def get_operation(self):
         return ThresholdPluginOp()
     
-    def get_default_view(self, op):
-        view = ThresholdSelectionView()
-        
-        # we have to make these traits on the top-level ThresholdSelection
-        # so that the change handlers get updated.
-        
-        op.sync_trait('channel', view, mutual = True)
-        op.sync_trait('name', view, mutual = True)
-        op.sync_trait('threshold', view, mutual = True)
-        
-        return view
-    
+    def get_default_view(self):
+        return ThresholdSelectionView()
+
     def get_icon(self):
         return ImageResource('threshold')
     

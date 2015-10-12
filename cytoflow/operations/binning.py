@@ -76,7 +76,9 @@ class BinningOp(HasStrictTraits):
             event's measurement in self.channel is greater than self.low and
             less than self.high; it is False otherwise.
         """
-
+        if not experiment:
+            raise CytoflowOpError("No experiment specified")
+        
         if not self.name:
             raise CytoflowOpError("You have to set the Binning operations's name "
                                   "before applying it!")
@@ -128,6 +130,7 @@ class BinningOp(HasStrictTraits):
         
         new_experiment.conditions[self.name] = "int"
         new_experiment.metadata[self.name] = {}
+        new_experiment.metadata[self.name]["bins"] = bins
         
         return new_experiment
         

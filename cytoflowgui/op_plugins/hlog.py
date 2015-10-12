@@ -49,7 +49,7 @@ class HLogPlugin(Plugin):
     def get_operation(self):
         return HLogTransformPluginOp()
     
-    def get_default_view(self, op):
+    def get_default_view(self):
         return None
     
     def get_icon(self):

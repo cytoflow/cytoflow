@@ -57,9 +57,9 @@ class FigureManagerCytoflow(FigureManagerBase):
         # Give the keyboard focus to the figure instead of the
         # manager; StrongFocus accepts both tab and click to focus and
         # will enable the canvas to process event w/o clicking.
-        # ClickFocus only takes the focus is the window has been
-        # clicked
-        # on. http://qt-project.org/doc/qt-4.8/qt.html#FocusPolicy-enum or
+        # ClickFocus only takes the focus if the window has been
+        # clicked on. 
+        # http://qt-project.org/doc/qt-4.8/qt.html#FocusPolicy-enum or
         # http://doc.qt.digia.com/qt/qt.html#FocusPolicy-enum
         self.canvas.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.canvas.setFocus()

@@ -13,6 +13,7 @@ from cytoflow.views import IView
 from cytoflow.utility import num_hist_bins, CytoflowViewError
 import numpy as np
 import seaborn as sns
+import math
 
 @provides(IView)
 class HistogramView(HasStrictTraits):
@@ -63,6 +64,9 @@ class HistogramView(HasStrictTraits):
     def plot(self, experiment, **kwargs):
         """Plot a faceted histogram view of a channel"""
         
+        if not experiment:
+            raise CytoflowViewError("No experiment specified")
+        
         if self.channel not in experiment.channels:
             raise CytoflowViewError("Channel {0} not in the experiment"
                                     .format(self.channel))
@@ -92,11 +96,42 @@ class HistogramView(HasStrictTraits):
         kwargs.setdefault('alpha', 0.5)
         kwargs.setdefault('antialiased', True)
 
+        # estimate a "good" number of bins; see cytoflow.utility.num_hist_bins
+        # for a reference.
+        
         num_bins = num_hist_bins(data[self.channel])
         xmin = np.amin(data[self.channel])
         xmax = np.amax(data[self.channel])
-        bin_width = (xmax - xmin) / num_bins
-        bins = np.arange(xmin, xmax, bin_width)
+                    
+        if (self.huefacet 
+            and "bins" in experiment.metadata[self.huefacet]):
+            # if we color facet by the result of a BinningOp and we don't
+            # match the BinningOp bins with the histogram bins, we get
+            # gnarly aliasing.
+            
+            # each color gets at least one bin.  however, if the estimated
+            # number of bins for the histogram is much larger than the
+            # number of colors, sub-divide each color into multiple bins.
+            bins = experiment.metadata[self.huefacet]["bins"]
+            bins = np.append(bins, xmax)
+            
+            num_hues = len(data[self.huefacet].unique())
+            bins_per_hue = math.ceil(num_bins / num_hues)
+            
+            new_bins = [xmin]
+            for end in [b for b in bins if (b > xmin and b <= xmax)]:
+                new_bins = np.append(new_bins,
+                                     np.linspace(new_bins[-1],
+                                                 end,
+                                                 bins_per_hue + 1,
+                                                 endpoint = True)[1:])
+
+            bins = new_bins
+        else:
+            bin_width = (xmax - xmin) / num_bins
+            bins = np.arange(xmin, xmax, bin_width)
+            bins = np.append(bins, xmax)
+        
         kwargs.setdefault('bins', bins) 
 
         g = sns.FacetGrid(data, 

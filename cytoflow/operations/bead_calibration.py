@@ -13,10 +13,12 @@ import numpy as np
 import fcsparser
 import math
 import scipy.signal
+        
+import matplotlib.pyplot as plt
 
 from cytoflow.operations import IOperation
 from cytoflow.views import IView
-from cytoflow.utility import CytoflowOpError
+from cytoflow.utility import CytoflowOpError, CytoflowViewError
 
 @provides(IOperation)
 class BeadCalibrationOp(HasStrictTraits):
@@ -153,6 +155,8 @@ class BeadCalibrationOp(HasStrictTraits):
         """
         Estimate the calibration coefficients from the beads file.
         """
+        if not experiment:
+            raise CytoflowOpError("No experiment specified")
         
         try:
             beads_meta, beads_data = fcsparser.parse(self.beads_file, 
@@ -264,6 +268,8 @@ class BeadCalibrationOp(HasStrictTraits):
         -------
             a new experiment calibrated in physical units.
         """
+        if not experiment:
+            raise CytoflowOpError("No experiment specified")
         
         channels = self.units.keys()
 
@@ -389,13 +395,13 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
     # TODO - why can't I use BeadCalibrationOp here?
     op = Instance(IOperation)
     
-    def plot(self, experiment, **kwargs):
+    def plot(self, experiment = None, **kwargs):
         """Plot a faceted histogram view of a channel"""
-        
-                        
+      
         try:
-            _, beads_data = fcsparser.parse(self.op.beads_file, 
+            beads_meta, beads_data = fcsparser.parse(self.op.beads_file, 
                                             reformat_meta = True)
+            beads_channels = beads_meta["_channels_"].set_index("$PnN")
         except Exception as e:
             raise CytoflowOpError("FCS reader threw an error on tube {0}: {1}"\
                                .format(self.op.beads_file, e))
@@ -411,7 +417,7 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
             data = beads_data[channel]
             
             # bin the data on a log scale
-            data_range = experiment.metadata[channel]['range']
+            data_range = beads_channels.ix[channel]['$PnR']
             hist_bins = np.logspace(1, math.log(data_range, 2), num = 256, base = 2)
             hist = np.histogram(data, bins = hist_bins)
             

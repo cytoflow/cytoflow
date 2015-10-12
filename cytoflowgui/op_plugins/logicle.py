@@ -3,7 +3,7 @@ Created on Feb 24, 2015
 
 @author: brian
 """
-from traits.api import provides, Callable
+from traits.api import provides, Callable, on_trait_change
 from traitsui.api import Controller, View, Item, CheckListEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
@@ -20,7 +20,6 @@ class LogicleHandler(Controller, OpHandlerMixin):
     
     def default_traits_view(self):
         return View(Item('object.name'),
-                    Item('object.T'),
                     Item('object.W'),
                     Item('object.M'),
                     Item('object.A'),
@@ -39,6 +38,14 @@ class LogicleHandler(Controller, OpHandlerMixin):
 class LogicleTransformPluginOp(LogicleTransformOp, PluginOpMixin):
     handler_factory = Callable(LogicleHandler)
     
+    @on_trait_change('channels[]')
+    def _channels_upd(self):
+        for channel in self.channels:
+            if channel not in self.W:
+                self.W[channel] = 0.5
+            if channel not in self.A:
+                self.A[channel] = 0.0
+    
 @provides(IOperationPlugin)
 class LogiclePlugin(Plugin):
     """
@@ -54,7 +61,7 @@ class LogiclePlugin(Plugin):
     def get_operation(self):
         return LogicleTransformPluginOp()
     
-    def get_default_view(self, op):
+    def get_default_view(self):
         return None
     
     def get_icon(self):
