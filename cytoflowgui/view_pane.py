@@ -63,6 +63,12 @@ class ViewDockPane(DockPane):
         """ 
         Destroy the toolkit-specific control that represents the pane.
         """
+        # disconnect the notifier
+        self.on_trait_change(self._set_enabled, 
+                             'enabled', 
+                             dispatch = 'ui',
+                             remove = True)
+                 
         # Destroy the Traits-generated control inside the dock control.
         if self._ui is not None:
             self._ui.dispose()
