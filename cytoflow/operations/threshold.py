@@ -1,5 +1,5 @@
 from traits.api import HasStrictTraits, CFloat, Str, CStr, Instance, \
-    Bool, Float, on_trait_change, provides, DelegatesTo, Any
+    Bool, Float, on_trait_change, provides, DelegatesTo, Any, Constant
 import pandas as pd
 
 from matplotlib.widgets import Cursor
@@ -52,8 +52,8 @@ class ThresholdOp(HasStrictTraits):
     """
     
     # traits
-    id = "edu.mit.synbio.cytoflow.operations.threshold"
-    friendly_id = "Threshold"
+    id = Constant('edu.mit.synbio.cytoflow.operations.threshold')
+    friendly_id = Constant("Threshold")
     
     name = CStr()
     channel = Str()
@@ -145,8 +145,8 @@ class ThresholdSelection(HistogramView):
     >>> ex3 = thresh.apply(ex2)
     """
     
-    id = "edu.mit.synbio.cytoflow.views.threshold"
-    friendly_id = "Threshold Selection"
+    id = Constant('edu.mit.synbio.cytoflow.views.threshold')
+    friendly_id = Constant("Threshold Selection")
     
     op = Instance(IOperation)
     name = DelegatesTo('op')

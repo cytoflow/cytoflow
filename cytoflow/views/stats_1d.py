@@ -176,11 +176,14 @@ class Stats1DView(HasStrictTraits):
         plot_data = g[self.ychannel].aggregate(self.yfunction).reset_index()        
   
         grid = sns.FacetGrid(plot_data,
+                             size = 6,
+                             aspect = 1.5,
                              col = (self.xfacet if self.xfacet else None),
                              row = (self.yfacet if self.yfacet else None),
                              hue = (self.huefacet if self.huefacet else None),
-                             hue_order = (np.sort(plot_data[self.huefacet].unique())
-                                          if self.huefacet else None),
+                             col_order = (np.sort(data[self.xfacet].unique()) if self.xfacet else None),
+                             row_order = (np.sort(data[self.yfacet].unique()) if self.yfacet else None),
+                             hue_order = (np.sort(data[self.huefacet].unique()) if self.huefacet else None),
                              legend_out = False)
 
         if 'repr' in experiment.metadata[self.variable] and \

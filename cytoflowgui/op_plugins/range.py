@@ -7,6 +7,7 @@ from pyface.api import ImageResource
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
 from cytoflowgui.subset_editor import SubsetEditor
 from cytoflow.views.i_selectionview import ISelectionView
+from cytoflow.operations.i_operation import IOperation
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
 from cytoflowgui.color_text_editor import ColorTextEditor
 
@@ -46,6 +47,7 @@ class RangeViewHandler(Controller, ViewHandlerMixin):
 class RangeSelectionView(RangeSelection, PluginViewMixin):
     handler_factory = Callable(RangeViewHandler)
     
+@provides(IOperation)
 class RangePluginOp(RangeOp, PluginOpMixin):
     handler_factory = Callable(RangeHandler)
 

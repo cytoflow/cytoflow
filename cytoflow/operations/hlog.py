@@ -1,4 +1,4 @@
-from traits.api import HasStrictTraits, Str, List, Float, Dict, provides
+from traits.api import HasStrictTraits, Str, List, Float, Dict, provides, Constant
 from cytoflow.operations import IOperation
 from cytoflow.utility import CytoflowOpError
 
@@ -44,8 +44,8 @@ class HlogTransformOp(HasStrictTraits):
     """
     
     # traits
-    id = "edu.mit.synbio.cytoflow.operations.hlog"
-    friendly_id = "Hyperlog"
+    id = Constant('edu.mit.synbio.cytoflow.operations.hlog')
+    friendly_id = Constant("Hyperlog")
     name = Str()
     channels = List(Str)
     b = Dict(Str, Float)

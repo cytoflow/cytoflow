@@ -5,7 +5,6 @@ Created on Feb 11, 2015
 """
 
 from traits.etsconfig.api import ETSConfig
-from cytoflow.utility.util import CytoflowError
 ETSConfig.toolkit = 'qt4'
 
 import os.path
@@ -278,7 +277,7 @@ class FlowTask(Task):
         from fcsparser import __version__ as fcs_version
         from pandas.version import version as pd_version
         from numpy.version import version as np_version
-        from numexpr import version as numexp_version
+        from numexpr import __version__ as numexp_version
         from seaborn import __version__ as sns_version
         from matplotlib import __version__ as mpl_version
         from pyface import __version__ as py_version
@@ -298,7 +297,8 @@ class FlowTask(Task):
                 "envisage {0}".format(env_version),
                 "traits {0}".format(trt_version),
                 "traitsui {0}".format(trt_ui_version),
-                "Icons from the <a href=http://tango.freedesktop.org/>Tango Desktop Project</a>",
+                "Icons from the <a href=http://tango.freedesktop.org>Tango Desktop Project</a>",
+                "<a href=https://thenounproject.com/search/?q=setup&i=14287>Settings icon</a> by Paulo Sa Ferreira from <a href=https://thenounproject.com>The Noun Project</a>",
                 "Cuvette image from Wikimedia Commons user <a href=http://commons.wikimedia.org/wiki/File:Hellma_Large_cone_cytometry_cell.JPG>HellmaUSA</a>"]
         dialog = AboutDialog(parent = self.window.control,
                              title = "About",

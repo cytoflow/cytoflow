@@ -8,6 +8,7 @@ from traits.api import HasStrictTraits, provides, Str
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import seaborn as sns
+import numpy as np
 
 from cytoflow.views import IView
 from cytoflow.utility import CytoflowViewError
@@ -99,9 +100,14 @@ class ScatterplotView(HasStrictTraits):
         kwargs.setdefault('antialiased', True)
 
         g = sns.FacetGrid(data, 
+                          size = 6,
+                          aspect = 1.5,
                           col = (self.xfacet if self.xfacet else None),
                           row = (self.yfacet if self.yfacet else None),
                           hue = (self.huefacet if self.huefacet else None),
+                          col_order = (np.sort(data[self.xfacet].unique()) if self.xfacet else None),
+                          row_order = (np.sort(data[self.yfacet].unique()) if self.yfacet else None),
+                          hue_order = (np.sort(data[self.huefacet].unique()) if self.huefacet else None),
                           legend_out = False)
         
         g.map(plt.scatter, self.xchannel, self.ychannel, **kwargs)

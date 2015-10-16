@@ -1,5 +1,5 @@
 from traits.api import HasStrictTraits, CFloat, Str, CStr, Instance, Bool, \
-    provides, on_trait_change, DelegatesTo, Any
+    provides, on_trait_change, DelegatesTo, Any, Constant
 
 from matplotlib.widgets import SpanSelector, Cursor
 import matplotlib.pyplot as plt
@@ -52,8 +52,8 @@ class RangeOp(HasStrictTraits):
     """
     
     # traits
-    id = "edu.mit.synbio.cytoflow.operations.range"
-    friendly_id = "Range"
+    id = Constant('edu.mit.synbio.cytoflow.operations.range')
+    friendly_id = Constant('Range')
     
     name = CStr()
     channel = Str()
@@ -158,8 +158,8 @@ class RangeSelection(HistogramView):
     >>> print r.low, r.high
     """
     
-    id = "edu.mit.synbio.cytoflow.views.range"
-    friendly_id = "Range Selection"
+    id = Constant('edu.mit.synbio.cytoflow.views.range')
+    friendly_id = Constant("Range Selection")
 
     op = Instance(IOperation)
     name = DelegatesTo('op')

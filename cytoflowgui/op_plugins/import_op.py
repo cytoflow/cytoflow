@@ -18,6 +18,7 @@ from cytoflowgui.op_plugins.i_op_plugin \
     import IOperationPlugin, OpHandlerMixin, PluginOpMixin
 from pyface.api import OK as PyfaceOK
 from cytoflow import ImportOp
+from cytoflow.operations.i_operation import IOperation
 from envisage.api import Plugin
 from cytoflowgui.color_text_editor import ColorTextEditor
 
@@ -86,7 +87,8 @@ class ImportHandler(Controller, OpHandlerMixin):
             return self.wi.result.data.shape[0]
         else:
             return 0
-        
+
+@provides(IOperation)
 class ImportPluginOp(ImportOp, PluginOpMixin):
     handler_factory = Callable(ImportHandler)
             

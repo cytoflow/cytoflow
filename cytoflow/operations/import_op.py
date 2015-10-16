@@ -4,7 +4,7 @@ Created on Mar 20, 2015
 @author: brian
 '''
 from traits.api import HasStrictTraits, provides, Str, List, Bool, Int, Any, \
-                       Dict, File
+                       Dict, File, Constant
 
 import fcsparser
 import numpy as np
@@ -129,9 +129,9 @@ class ImportOp(HasStrictTraits):
     >>> ex = import_op.apply()
     """
 
-    id = "edu.mit.synbio.cytoflow.operations.import"
-    friendly_id = "Import"
-    name = "Import Data"
+    id = Constant("edu.mit.synbio.cytoflow.operations.import")
+    friendly_id = Constant("Import")
+    name = Constant("Import Data")
 
     coarse = Bool(False)
     coarse_events = Int(1000)

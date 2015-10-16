@@ -8,14 +8,13 @@ from traitsui.api import View, Item, EnumEditor, Controller
 from envisage.api import Plugin, contributes_to
 from traits.api import provides, Callable
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT
-from cytoflow.operations.binning import BinningOp
+from cytoflow.operations.binning import BinningOp, BinningView
 from pyface.api import ImageResource
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
+from cytoflow.views.i_selectionview import IView
 from cytoflowgui.subset_editor import SubsetEditor
-from cytoflow.views.i_selectionview import ISelectionView
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
 from cytoflowgui.color_text_editor import ColorTextEditor
-
 
 class BinningHandler(Controller, OpHandlerMixin):
     def default_traits_view(self):
@@ -36,6 +35,24 @@ class BinningHandler(Controller, OpHandlerMixin):
 class BinningPluginOp(BinningOp, PluginOpMixin):
     handler_factory = Callable(BinningHandler)
 
+
+class BinningViewHandler(Controller, ViewHandlerMixin):
+    def default_traits_view(self):
+        return View(Item('object.name',
+                         style = 'readonly'),
+                    Item('object.channel',
+                         style = 'readonly'),
+                    Item('object.huefacet',
+                         style = 'readonly'),
+                    Item('_'),
+                    Item('object.subset',
+                         label = "Subset",
+                         editor = SubsetEditor(experiment = 'handler.wi.previous.result')))
+
+@provides(IView)
+class BinningPluginView(BinningView, PluginViewMixin):
+    handler_factory = Callable(BinningViewHandler)
+
 @provides(IOperationPlugin)
 class BinningPlugin(Plugin):
     """
@@ -52,7 +69,7 @@ class BinningPlugin(Plugin):
         return BinningPluginOp()
     
     def get_default_view(self):
-        return None
+        return BinningPluginView()
     
     def get_icon(self):
         return ImageResource('binning')

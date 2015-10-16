@@ -7,7 +7,7 @@ Created on Sep 2, 2015
 from __future__ import division
 
 from traits.api import HasStrictTraits, Str, CStr, File, Dict, Python, \
-                       Instance, Tuple, Bool, provides
+                       Instance, Tuple, Bool, Constant, provides
 import numpy as np
 import fcsparser
 import matplotlib.pyplot as plt
@@ -77,8 +77,8 @@ class ColorTranslationOp(HasStrictTraits):
     """
     
     # traits
-    id = "edu.mit.synbio.cytoflow.operations.color_translation"
-    friendly_id = "Color translation"
+    id = Constant('edu.mit.synbio.cytoflow.operations.color_translation')
+    friendly_id = Constant("Color translation")
     
     name = CStr()
 

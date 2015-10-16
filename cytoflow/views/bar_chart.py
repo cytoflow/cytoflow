@@ -10,6 +10,7 @@ if __name__ == '__main__':
 from traits.api import HasStrictTraits, Str, provides, Callable
 import matplotlib.pyplot as plt
 import seaborn as sns
+import numpy as np
 
 from cytoflow.views import IView
 from cytoflow.utility import CytoflowViewError
@@ -158,9 +159,13 @@ class BarChartView(HasStrictTraits):
         sns.factorplot(x = self.variable,
                        y = self.channel,
                        data = data,
+                       size = 6,
+                       aspect = 1.5,
                        row = (self.yfacet if self.yfacet else None),
                        col = (self.xfacet if self.xfacet else None),
                        hue = (self.huefacet if self.huefacet else None),
+                       col_order = (np.sort(data[self.xfacet].unique()) if self.xfacet else None),
+                       row_order = (np.sort(data[self.yfacet].unique()) if self.yfacet else None),
                        # something buggy here.
                        #orient = ("h" if self.orientation == "horizontal" else "v"),
                        estimator = self.function,

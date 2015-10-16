@@ -118,10 +118,15 @@ class HexbinView(HasStrictTraits):
         
         kwargs.setdefault('bins', bins) # Do not move above.  don't ask.
 
-        g = sns.FacetGrid(data, 
+        g = sns.FacetGrid(data,
+                          size = 6,
+                          aspect = 1.5, 
                           col = (self.xfacet if self.xfacet else None),
                           row = (self.yfacet if self.yfacet else None),
-                          hue = (self.huefacet if self.huefacet else None))
+                          hue = (self.huefacet if self.huefacet else None),
+                          col_order = (np.sort(data[self.xfacet].unique()) if self.xfacet else None),
+                          row_order = (np.sort(data[self.yfacet].unique()) if self.yfacet else None),
+                          hue_order = (np.sort(data[self.huefacet].unique()) if self.huefacet else None),)
         
         g.map(plt.hexbin, self.xchannel, self.ychannel, **kwargs)
         

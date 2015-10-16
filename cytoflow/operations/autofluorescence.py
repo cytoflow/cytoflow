@@ -1,7 +1,7 @@
 from __future__ import division
 
 from traits.api import HasStrictTraits, Str, CStr, CFloat, File, Dict, \
-                       Instance, List, provides
+                       Instance, List, Constant, provides
 import numpy as np
 import fcsparser
 
@@ -52,8 +52,8 @@ class AutofluorescenceOp(HasStrictTraits):
     """
     
     # traits
-    id = "edu.mit.synbio.cytoflow.operations.autofluorescence"
-    friendly_id = "Autofluorescence correction"
+    id = Constant('edu.mit.synbio.cytoflow.operations.autofluorescence')
+    friendly_id = Constant("Autofluorescence correction")
     
     name = CStr()
     channels = List(Str)
@@ -167,8 +167,8 @@ class AutofluorescenceDiagnosticView(HasStrictTraits):
     """
     
     # traits   
-    id = "edu.mit.synbio.cytoflow.view.autofluorescencediagnosticview"
-    friendly_id = "Autofluorescence Diagnostic" 
+    id = Constant('edu.mit.synbio.cytoflow.view.autofluorescencediagnosticview')
+    friendly_id = Constant("Autofluorescence Diagnostic")
     
     name = Str
     op = Instance(IOperation)
