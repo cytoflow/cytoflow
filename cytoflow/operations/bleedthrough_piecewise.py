@@ -135,7 +135,7 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
                 tube_channels = tube_meta["_channels_"].set_index("$PnN")
             except Exception as e:
                 raise CytoflowOpError("FCS reader threw an error on tube {0}: {1}"\
-                                   .format(self.controls[channel], e.value))
+                                   .format(self.controls[channel], e))
 
             for channel in self._channels:
                 exp_v = experiment.metadata[channel]['voltage']
@@ -162,7 +162,7 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
                 tube_channels = tube_meta["_channels_"].set_index("$PnN")
             except Exception as e:
                 raise CytoflowOpError("FCS reader threw an error on tube {0}: {1}"\
-                                   .format(self.controls[channel], e.value))
+                                   .format(self.controls[channel], e))
             
             data = tube_data.sort(channel)
 
@@ -306,7 +306,7 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
                                     reformat_meta = True)
             except Exception as e:
                 raise CytoflowOpError("FCS reader threw an error on tube {0}: {1}"\
-                                   .format(self.controls[channel], e.value))
+                                   .format(self.controls[channel], e))
 
         return BleedthroughPiecewiseDiagnostic(op = self)
     
@@ -380,7 +380,7 @@ class BleedthroughPiecewiseDiagnostic(HasStrictTraits):
                                                    reformat_meta = True)
                 except Exception as e:
                     raise CytoflowOpError("FCS reader threw an error on tube {0}: {1}"\
-                                          .format(self.op.controls[from_channel], e.value))
+                                          .format(self.op.controls[from_channel], e))
              
                 plt.subplot(num_channels, 
                             num_channels, 
