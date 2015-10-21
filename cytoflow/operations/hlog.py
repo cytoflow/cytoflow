@@ -69,7 +69,11 @@ class HlogTransformOp(HasStrictTraits):
         if not experiment:
             raise CytoflowOpError("No experiment specified")
         
-        if not set(self.channels).issubset(set(experiment.channels)):
+        exp_channels = [x for x in self.metadata 
+                        if 'type' in self.metadata[x] 
+                        and self.metadata[x]['type'] == "channel"]
+        
+        if not set(self.channels).issubset(set(exp_channels)):
             raise CytoflowOpError("Op channels are not in experiment!")
         
         if not set(self.b.keys()) <= set(self.channels):
@@ -84,6 +88,12 @@ class HlogTransformOp(HasStrictTraits):
             # TODO - probably should change this if the channel range changes
             b = self.b[channel] if channel in self.b else 500
             r = self.r[channel] if channel in self.r else 10**4
+            
+            if (channel not in experiment.metadata
+                or 'range' not in experiment.metadata[channel]):
+                raise CytoflowOpError("Range metadata not set for channel {0}"
+                                      .channel)
+            
             d = np.log10(experiment.metadata[channel]['range'])
             
             hlog_fwd = \

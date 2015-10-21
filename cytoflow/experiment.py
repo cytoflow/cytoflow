@@ -25,31 +25,35 @@ class Experiment(HasStrictTraits):
     Attributes
     ----------
 
-    channels : list(string)
-        A list containing the channels that this experiment tracks.
+    channels : List(string)
+        A `list` containing the channels that this experiment tracks.
     
-    conditions : dict(string : string)
+    conditions : Dict(String : String)
         A dict of the experimental conditions and analysis metadata (gate
         membership, etc) and that this experiment tracks.  The key is the name
         of the condition, and the value is the string representation of the 
         numpy dtype (usually one of "category", "float", "int" or "bool".
         
     data : pandas.DataFrame
-        the DataFrame representing all the events and metadata.  Each event
-        is a row; each column is either a fluorescent channel or a piece of
-        metadata, either supplied by the tube conditions or by further operations
-        (like gates, etc.)
+        the `DataFrame` representing all the events and metadata.  Each event
+        is a row; each column is either a measured channel (ie a fluorescence
+        measurement), a derived channel (eg the ratio between two channels), or
+        a piece of metadata.  Metadata can be either supplied by the tube 
+        conditions (eg induction level, timepoint) or by operations (eg gate
+        membership)
         
-    metadata : dict( str : dict(str : any) )
-        A dict whose keys are column names (either channels or conditions)
-        and whose values are dicts of metadata.  Some of this is 
-        application-specific and still being determined.  Currently defined 
-        metadata:
-        * voltage: for channels, the detector voltage used. from the FCS
+    metadata : Dict( Str : Dict(Str : Any) )
+        A dict whose keys are column names of self.data and whose values are 
+        dicts of metadata for each column. Operations may define their own
+        metadata, which is occasionally useful if modules are expected to
+        work together.
+        * type (Enum: "channel" or "meta") : is a column a channel or an 
+            event-level metadata?
+        * voltage (int) : for channels, the detector voltage used. from the FCS
             keyword "$PnV".
-        * max: for channels, the maximum possible value.  from the FCS
+        * max (float) : for channels, the maximum possible value.  from the FCS
             keyword "$PnN"
-        * repr: for float conditions, whether to plot it linearly or on
+        * repr : for float conditions, whether to plot it linearly or on
             a log scale.
         * xforms, xforms_inv: for channels, a list of (parameterized!) 
             transformations that have been applied.  each must be a
@@ -227,16 +231,20 @@ class Experiment(HasStrictTraits):
         tube_channels = tube_meta["_channels_"].set_index("$PnN")    
         tube_file = tube_meta["$FIL"]   
     
-        if(self.channels):
+        if len(self.data.columns) > 0:
             # first, make sure the new tube's channels match the rest of the 
             # channels in the Experiment
             
-            if(set(tube_meta["_channel_names_"]) != set(self.channels)):
+            channels = [x for x in self.metadata 
+                        if 'type' in self.metadata[x] 
+                        and self.metadata[x]['type'] == "channel"]
+            
+            if set(tube_meta["_channel_names_"]) != set(channels):
                 raise CytoflowError("Tube {0} doesn't have the same channels "
                                    "as the first tube added".format(tube_file))
              
             # next check the per-channel parameters
-            for channel in self.channels:
+            for channel in channels:
                 
                 # first check voltage
                 if "voltage" in self.metadata[channel]:    
@@ -253,10 +261,11 @@ class Experiment(HasStrictTraits):
 
             # TODO check the delay -- and any other params?
         else:
-            self.channels = list(tube_channels.index)
+            channels = list(tube_channels.index)
             
-            for channel in self.channels:
+            for channel in channels:
                 self.metadata[channel] = {}
+                self.metadata[channel]['type'] = 'channel'
                 if("$PnV" in tube_channels.ix[channel]):
                     new_v = tube_channels.ix[channel]['$PnV']
                     if new_v: self.metadata[channel]["voltage"] = new_v

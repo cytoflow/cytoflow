@@ -145,18 +145,21 @@ class BeadCalibrationOp(HasStrictTraits):
     beads = Dict(Str, List(Float), transient = True)
 
     _coefficients = Dict(Str, Python)
-    
-    def is_valid(self, experiment):
-        """Validate this operation against an experiment."""
 
-
-    
     def estimate(self, experiment, subset = None): 
         """
         Estimate the calibration coefficients from the beads file.
         """
         if not experiment:
             raise CytoflowOpError("No experiment specified")
+        
+        exp_channels = [x for x in self.metadata 
+                        if 'type' in self.metadata[x] 
+                        and self.metadata[x]['type'] == "channel"]
+
+        if not set(self.units.keys()) <= set(exp_channels):
+            raise CytoflowOpError("Specified channels that weren't found in "
+                                  "the experiment.")
         
         try:
             beads_meta, beads_data = fcsparser.parse(self.beads_file, 
@@ -171,6 +174,11 @@ class BeadCalibrationOp(HasStrictTraits):
         # make sure the voltages didn't change
         
         for channel in channels:
+            if (channel not in experiment.metadata
+                or 'voltage' not in experiment.metadata[channel]):
+                raise CytoflowOpError("Didn't find voltage for channel {0}"
+                                      .format(channel))
+                
             exp_v = experiment.metadata[channel]['voltage']
         
             if not "$PnV" in beads_channels.ix[channel]:
@@ -279,8 +287,12 @@ class BeadCalibrationOp(HasStrictTraits):
         if not self._coefficients:
             raise CytoflowOpError("Calibration not found. "
                                   "Did you forget to call estimate()?")
+            
+        exp_channels = [x for x in self.metadata 
+                        if 'type' in self.metadata[x] 
+                        and self.metadata[x]['type'] == "channel"]
         
-        if not set(channels) <= set(experiment.channels):
+        if not set(channels) <= set(exp_channels):
             raise CytoflowOpError("Module units don't match experiment channels")
                 
         if set(channels) != set(self._coefficients.keys()):

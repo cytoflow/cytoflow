@@ -91,7 +91,11 @@ class RangeOp(HasStrictTraits):
         if not self.channel:
             raise CytoflowOpError("Channel not specified")
         
-        if not self.channel in experiment.channels:
+        exp_channels = [x for x in self.metadata 
+                        if 'type' in self.metadata[x] 
+                        and self.metadata[x]['type'] == "channel"]
+        
+        if not self.channel in exp_channels:
             raise CytoflowOpError("Channel {0} not in the experiment"
                                   .format(self.channel))
         

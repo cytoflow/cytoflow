@@ -114,7 +114,11 @@ class BarChartView(HasStrictTraits):
         if not self.channel:
             raise CytoflowViewError("Channel not specified")
         
-        if self.channel not in experiment.channels:
+        exp_channels = [x for x in self.metadata 
+                        if 'type' in self.metadata[x] 
+                        and self.metadata[x]['type'] == "channel"]
+        
+        if self.channel not in exp_channels:
             raise CytoflowViewError("Channel {0} isn't in the experiment"
                                     .format(self.channel))
         

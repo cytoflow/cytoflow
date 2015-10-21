@@ -106,7 +106,7 @@ class BinningOp(HasStrictTraits):
         if not self.channel:
             raise CytoflowOpError("channel is not set")
         
-        if not self.channel in experiment.channels:
+        if self.channel not in experiment.data.columns:
             raise CytoflowOpError("channel {0} isn't in the experiment"
                                   .format(self.channel))
               

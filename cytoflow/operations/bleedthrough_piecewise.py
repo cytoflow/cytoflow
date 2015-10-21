@@ -256,8 +256,12 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
         if not self._interpolators:
             raise CytoflowOpError("Module interpolators aren't set. "
                                   "Did you run estimate()?")
+            
+        exp_channels = [x for x in self.metadata 
+                        if 'type' in self.metadata[x] 
+                        and self.metadata[x]['type'] == "channel"]
         
-        if not set(self._interpolators.keys()) <= set(experiment.channels):
+        if not set(self._interpolators.keys()) <= set(exp_channels):
             raise CytoflowOpError("Module parameters don't match experiment channels")
 
         new_experiment = experiment.clone()
