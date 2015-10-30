@@ -153,7 +153,6 @@ class Stats1DView(HasStrictTraits):
         if self.huefacet and self.huefacet not in experiment.metadata:
             raise CytoflowViewError("Hue facet {0} not in the experiment")        
         
-        kwargs.setdefault('marker', 'o')
         kwargs.setdefault('antialiased', True)
 
         if self.subset:
@@ -190,7 +189,6 @@ class Stats1DView(HasStrictTraits):
             experiment.metadata[self.variable]['repr'] == 'log':
             plt.xscale('log', nonposx = 'mask')
         
-        grid.map(plt.scatter, self.variable, self.ychannel, **kwargs)
         grid.map(plt.plot, self.variable, self.ychannel, **kwargs)
         grid.add_legend()
 

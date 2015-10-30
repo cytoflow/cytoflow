@@ -140,6 +140,7 @@ class BinningOp(HasStrictTraits):
         new_experiment.metadata[self.name]["bins"] = bins
         
         if self.bin_count_name:
+            # TODO - this is a HUGE memory hog?!
             agg_count = new_experiment.data.groupby(self.name).count()
             agg_count = agg_count[agg_count.columns[0]]
             new_experiment[self.bin_count_name] = \

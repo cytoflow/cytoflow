@@ -51,8 +51,8 @@ class Experiment(HasStrictTraits):
             event-level metadata?
         * voltage (int) : for channels, the detector voltage used. from the FCS
             keyword "$PnV".
-        * max (float) : for channels, the maximum possible value.  from the FCS
-            keyword "$PnN"
+        * range (float) : for channels, the maximum possible value.  from the FCS
+            keyword "$PnR"
         * repr : for float conditions, whether to plot it linearly or on
             a log scale.
         * xforms, xforms_inv: for channels, a list of (parameterized!) 

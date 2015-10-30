@@ -179,9 +179,7 @@ class Stats2DView(HasStrictTraits):
         
         if self.huefacet and self.huefacet not in experiment.metadata:
             raise CytoflowViewError("Hue facet {0} not in the experiment")        
-        
-        
-        kwargs.setdefault('marker', 'o')
+
         kwargs.setdefault('antialiased', True)
         
         if self.subset:
@@ -218,8 +216,7 @@ class Stats2DView(HasStrictTraits):
                              row_order = (np.sort(data[self.yfacet].unique()) if self.yfacet else None),
                              hue_order = (np.sort(data[self.huefacet].unique()) if self.huefacet else None),
                              legend_out = False)
-        
-        grid.map(plt.scatter, self.xchannel, self.ychannel, **kwargs)
+
         grid.map(plt.plot, self.xchannel, self.ychannel, **kwargs)
         grid.add_legend()
 
