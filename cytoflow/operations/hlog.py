@@ -69,9 +69,9 @@ class HlogTransformOp(HasStrictTraits):
         if not experiment:
             raise CytoflowOpError("No experiment specified")
         
-        exp_channels = [x for x in self.metadata 
-                        if 'type' in self.metadata[x] 
-                        and self.metadata[x]['type'] == "channel"]
+        exp_channels = [x for x in experiment.metadata 
+                        if 'type' in experiment.metadata[x] 
+                        and experiment.metadata[x]['type'] == "channel"]
         
         if not set(self.channels).issubset(set(exp_channels)):
             raise CytoflowOpError("Op channels are not in experiment!")

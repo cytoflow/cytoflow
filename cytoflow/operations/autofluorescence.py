@@ -70,9 +70,9 @@ class AutofluorescenceOp(HasStrictTraits):
         if not experiment:
             raise CytoflowOpError("No experiment specified")
         
-        exp_channels = [x for x in self.metadata 
-                        if 'type' in self.metadata[x] 
-                        and self.metadata[x]['type'] == "channel"]
+        exp_channels = [x for x in experiment.metadata 
+                        if 'type' in experiment.metadata[x] 
+                        and experiment.metadata[x]['type'] == "channel"]
 
         if not set(self.channels) <= set(exp_channels):
             raise CytoflowOpError("Specified channels that weren't found in "
@@ -126,9 +126,9 @@ class AutofluorescenceOp(HasStrictTraits):
         if not experiment:
             raise CytoflowOpError("No experiment specified")
         
-        exp_channels = [x for x in self.metadata 
-                        if 'type' in self.metadata[x] 
-                        and self.metadata[x]['type'] == "channel"]
+        exp_channels = [x for x in experiment.metadata 
+                        if 'type' in experiment.metadata[x] 
+                        and experiment.metadata[x]['type'] == "channel"]
         
         if not set(self._af_median.keys()) <= set(exp_channels) or \
            not set(self._af_stdev.keys()) <= set(exp_channels):

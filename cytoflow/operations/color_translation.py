@@ -102,9 +102,9 @@ class ColorTranslationOp(HasStrictTraits):
         if not experiment:
             raise CytoflowOpError("No experiment specified")
         
-        exp_channels = [x for x in self.metadata 
-                        if 'type' in self.metadata[x] 
-                        and self.metadata[x]['type'] == "channel"]
+        exp_channels = [x for x in experiment.metadata 
+                        if 'type' in experiment.metadata[x] 
+                        and experiment.metadata[x]['type'] == "channel"]
         
         tubes = {}
 
@@ -229,9 +229,9 @@ class ColorTranslationOp(HasStrictTraits):
             raise CytoflowOpError("Coefficients aren't set. "
                                   "Did you call estimate()?")
             
-        exp_channels = [x for x in self.metadata 
-                        if 'type' in self.metadata[x] 
-                        and self.metadata[x]['type'] == "channel"]
+        exp_channels = [x for x in experiment.metadata 
+                        if 'type' in experiment.metadata[x] 
+                        and experiment.metadata[x]['type'] == "channel"]
         
         if not set(self.translation.keys()) <= set(exp_channels):
             raise CytoflowOpError("Translation keys don't match "
@@ -320,9 +320,9 @@ class ColorTranslationDiagnostic(HasStrictTraits):
         if not experiment:
             raise CytoflowViewError("No experiment specified")
         
-        exp_channels = [x for x in self.metadata 
-                        if 'type' in self.metadata[x] 
-                        and self.metadata[x]['type'] == "channel"]
+        exp_channels = [x for x in experiment.metadata 
+                        if 'type' in experiment.metadata[x] 
+                        and experiment.metadata[x]['type'] == "channel"]
         
         tubes = {}
         

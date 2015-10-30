@@ -64,9 +64,9 @@ class OpHandlerMixin(HasTraits):
         doc
         """
         if self.wi and self.wi.previous and self.wi.previous.metadata:
-            return [x for x in self.metadata 
-                    if 'type' in self.metadata[x] 
-                    and self.metadata[x]['type'] == "channel"]
+            return [x for x in experiment.metadata 
+                    if 'type' in experiment.metadata[x] 
+                    and experiment.metadata[x]['type'] == "channel"]
         else:
             return []
          

@@ -153,9 +153,9 @@ class BeadCalibrationOp(HasStrictTraits):
         if not experiment:
             raise CytoflowOpError("No experiment specified")
         
-        exp_channels = [x for x in self.metadata 
-                        if 'type' in self.metadata[x] 
-                        and self.metadata[x]['type'] == "channel"]
+        exp_channels = [x for x in experiment.metadata 
+                        if 'type' in experiment.metadata[x] 
+                        and experiment.metadata[x]['type'] == "channel"]
 
         if not set(self.units.keys()) <= set(exp_channels):
             raise CytoflowOpError("Specified channels that weren't found in "
@@ -288,9 +288,9 @@ class BeadCalibrationOp(HasStrictTraits):
             raise CytoflowOpError("Calibration not found. "
                                   "Did you forget to call estimate()?")
             
-        exp_channels = [x for x in self.metadata 
-                        if 'type' in self.metadata[x] 
-                        and self.metadata[x]['type'] == "channel"]
+        exp_channels = [x for x in experiment.metadata 
+                        if 'type' in experiment.metadata[x] 
+                        and experiment.metadata[x]['type'] == "channel"]
         
         if not set(channels) <= set(exp_channels):
             raise CytoflowOpError("Module units don't match experiment channels")

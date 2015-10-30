@@ -16,16 +16,24 @@ class TestExperiment(unittest.TestCase):
 
     def setUp(self):
         import os
-        cwd = os.path.dirname(os.path.abspath(__file__))
+        self.cwd = os.path.dirname(os.path.abspath(__file__))
         self.ex = flow.Experiment()
-        self.ex.add_conditions({"time" : "float"})
-        self.tube1 = fcsparser.parse(cwd + '/data/Plate01/RFP_Well_A3.fcs', 
-                                     reformat_meta = True)
-        self.tube2 = fcsparser.parse(cwd + '/data/Plate01/CFP_Well_A4.fcs',
-                                     reformat_meta = True)
-    
-    def test_metadata_unique(self):
-        self.ex.add_tube(self.tube1, {"time" : 10.0})
-        with self.assertRaises(RuntimeError):
-            self.ex.add_tube(self.tube2, {"time" : 10.0})
+        tube = fcsparser.parse(self.cwd + '/data/tasbe/rby.fcs', 
+                               reformat_meta = True)
+        self.ex.add_tube(tube, {})
         
+        self.af_op = flow.AutofluorescenceOp(
+                    blank_file = self.cwd + '/data/tasbe/blank.fcs',
+                    channels = ["Pacific Blue-A", "FITC-A", "PE-Tx-Red-YG-A"])
+
+    def test_estimate(self):
+        self.af_op.estimate(self.ex)
+        
+        self.assertAlmostEqual(self.af_op._af_median["FITC-A"], 3.480000019073486)
+        self.assertAlmostEqual(self.af_op._af_median["Pacific Blue-A"], 12.800000190734863)
+        self.assertAlmostEqual(self.af_op._af_median["PE-Tx-Red-YG-A"], 21.15999984741211)
+        
+        self.assertAlmostEqual(self.af_op._af_stdev["FITC-A"], 77.11998565547066)
+        self.assertAlmostEqual(self.af_op._af_stdev["Pacific Blue-A"], 51.38079964603144)
+        self.assertAlmostEqual(self.af_op._af_stdev["PE-Tx-Red-YG-A"], 117.84230806595949)
+                

@@ -99,9 +99,9 @@ class Range2DOp(HasStrictTraits):
         if not self.xchannel or not self.ychannel:
             raise CytoflowOpError("Must specify xchannel and ychannel")
         
-        exp_channels = [x for x in self.metadata 
-                        if 'type' in self.metadata[x] 
-                        and self.metadata[x]['type'] == "channel"]
+        exp_channels = [x for x in experiment.metadata 
+                        if 'type' in experiment.metadata[x] 
+                        and experiment.metadata[x]['type'] == "channel"]
         
         if not self.xchannel in exp_channels:
             raise CytoflowOpError("xchannel isn't in the experiment")
