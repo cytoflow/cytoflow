@@ -154,7 +154,7 @@ class Stats2DView(HasStrictTraits):
         if not self.xchannel:
             raise CytoflowViewError("X channel isn't set.")
         
-        if self.xchannel not in experiment.channels:
+        if self.xchannel not in experiment.data:
             raise CytoflowViewError("X channel {0} isn't in the experiment"
                                     .format(self.xchannel))
         
@@ -164,7 +164,7 @@ class Stats2DView(HasStrictTraits):
         if not self.ychannel:
             raise CytoflowViewError("Y channel isn't set.")
         
-        if self.ychannel not in experiment.channels:
+        if self.ychannel not in experiment.data:
             raise CytoflowViewError("Y channel {0} isn't in the experiment"
                                     .format(self.ychannel))
         

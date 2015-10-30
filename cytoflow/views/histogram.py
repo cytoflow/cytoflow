@@ -67,7 +67,7 @@ class HistogramView(HasStrictTraits):
         if not experiment:
             raise CytoflowViewError("No experiment specified")
         
-        if self.channel not in experiment.channels:
+        if self.channel not in experiment.data:
             raise CytoflowViewError("Channel {0} not in the experiment"
                                     .format(self.channel))
         

@@ -69,10 +69,6 @@ class HexbinView(HasStrictTraits):
         if not self.xchannel:
             raise CytoflowViewError("X channel not specified")
         
-#         exp_channels = [x for x in self.metadata 
-#                         if 'type' in self.metadata[x] 
-#                         and self.metadata[x]['type'] == "channel"]
-        
         if self.xchannel not in experiment.data:
             raise CytoflowViewError("X channel {0} not in the experiment"
                                     .format(self.xchannel))
