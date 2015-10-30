@@ -55,7 +55,7 @@ class PluginOpMixin(HasTraits):
 class OpHandlerMixin(HasTraits):
     wi = Instance(WorkflowItem)
     
-    previous_channels = Property(List, depends_on = 'wi.previous.channels')
+    previous_channels = Property(List, depends_on = 'wi.previous.metadata')
     previous_conditions = Property(List, depends_on = 'wi.previous.conditions')
 
     # MAGIC: provides dynamically updated values for the "channels" trait
@@ -63,8 +63,10 @@ class OpHandlerMixin(HasTraits):
         """
         doc
         """
-        if self.wi and self.wi.previous and self.wi.previous.channels:
-            return self.wi.previous.channels
+        if self.wi and self.wi.previous and self.wi.previous.metadata:
+            return [x for x in self.metadata 
+                    if 'type' in self.metadata[x] 
+                    and self.metadata[x]['type'] == "channel"]
         else:
             return []
          

@@ -137,6 +137,8 @@ class ExperimentDialogModel(HasTraits):
     The model for the Experiment setup dialog.
     """
     
+    # TODO - there's some bug here with categorical things
+    
     # the tubes.  this is the model; the rest is for communicating with the View
     tubes = List(Tube)
     

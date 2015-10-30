@@ -178,7 +178,7 @@ class ColorTranslationOp(HasStrictTraits):
         
                 # bead calibration
                 beads = [(channel, experiment.metadata[channel]['bead_calibration_fn'])
-                         for channel in experiment.channels
+                         for channel in exp_channels
                          if 'bead_calibration_fn' in experiment.metadata[channel]]
                 
                 for channel, calibration_fn in beads:
@@ -371,7 +371,7 @@ class ColorTranslationDiagnostic(HasStrictTraits):
                     
                 # bead calibration
                 beads = [(channel, experiment.metadata[channel]['bead_calibration_fn'])
-                         for channel in experiment.channels
+                         for channel in exp_channels
                          if 'bead_calibration_fn' in experiment.metadata[channel]]
                 
                 for channel, calibration_fn in beads:

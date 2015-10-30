@@ -25,7 +25,7 @@ class Experiment(HasStrictTraits):
     Attributes
     ----------
 
-    channels : List(string)
+    channels : List(String)
         A `list` containing the channels that this experiment tracks.
     
     conditions : Dict(String : String)
@@ -48,7 +48,7 @@ class Experiment(HasStrictTraits):
         metadata, which is occasionally useful if modules are expected to
         work together.
         * type (Enum: "channel" or "meta") : is a column a channel or an 
-            event-level metadata?
+            event-level metadata?  many modules don't care, but some do.
         * voltage (int) : for channels, the detector voltage used. from the FCS
             keyword "$PnV".
         * range (float) : for channels, the maximum possible value.  from the FCS
@@ -125,9 +125,6 @@ class Experiment(HasStrictTraits):
     conditions = Dict(Str, Str, copy = "deep")
     
     # potentially mutable.  deep copy required
-    channels = List(Str, copy = "deep")
-    
-    # potentially mutable.  deep copy required
     metadata = Dict(Str, Any, copy = "deep")
     
     # this doesn't play nice with copy.copy(); clone it ourselves.
@@ -180,7 +177,7 @@ class Experiment(HasStrictTraits):
         
         if(self._tube_conditions):
             raise CytoflowError("You have to add all your conditions before "
-                               "adding your tubes!")              
+                                "adding your tubes!")              
             
         for key, _ in conditions.iteritems():
             self.metadata[key] = {}
@@ -188,7 +185,7 @@ class Experiment(HasStrictTraits):
         self.conditions.update(conditions)
              
     def add_tube(self, tube, conditions, ignore_v = False):
-        """Add an FCMeasurement, and its experimental conditions, to this Experiment.
+        """Add a tube of data, and its experimental conditions, to this Experiment.
         
         Remember: because add_tube COPIES the data into this Experiment, you can
         DELETE the tube after you add it (and save memory)
@@ -197,7 +194,7 @@ class Experiment(HasStrictTraits):
         ----------
         tube : (metadata, data)
             a single tube or well's worth of data.  a tuple of (metadata, data)
-            as returned by `fcsparser.parse()`
+            as returned by `fcsparser.parse(filename, reformat_meta = True)`
             
         Raises
         ------
@@ -214,10 +211,11 @@ class Experiment(HasStrictTraits):
         Examples
         --------
         >>> import cytoflow as flow
+        >>> import fcparser
         >>> ex = flow.Experiment()
         >>> ex.add_conditions({"Time" : "float", "Strain" : "category"})
-        >>> tube1 = fc.FCMeasurement(ID='Test 1', datafile='CFP_Well_A4.fcs')
-        >>> tube2 = fc.FCMeasurement(ID='Test 2', datafile='RFP_Well_A3.fcs')
+        >>> tube1 = fcparser.parse('CFP_Well_A4.fcs', reformat_meta = True)
+        >>> tube2 = fcparser.parse('RFP_Well_A3.fcs', reformat_meta = True)
         >>> ex.add_tube(tube1, {"Time" : 1, "Strain" : "BL21"})
         >>> ex.add_tube(tube2, {"Time" : 1, "Strain" : "Top10G"})
         """
@@ -339,8 +337,9 @@ if __name__ == "__main__":
     import fcsparser
     ex = Experiment()
     ex.add_conditions({"time" : "category"})
-    
-    tube1 = fcsparser.parse('../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs')
+
+    tube0 = fcsparser.parse('../cytoflow/tests/data/tasbe/BEADS-1_H7_H07_P3.fcs')    
+    tube1 = fcsparser.parse('../cytoflow/tests/data/tasbe/beads.fcs')
     
     tube2 = fcsparser.parse('../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs')
     
