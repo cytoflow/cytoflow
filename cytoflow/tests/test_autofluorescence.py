@@ -33,7 +33,7 @@ class TestExperiment(unittest.TestCase):
         self.assertAlmostEqual(self.af_op._af_median["Pacific Blue-A"], 12.800000190734863)
         self.assertAlmostEqual(self.af_op._af_median["PE-Tx-Red-YG-A"], 21.15999984741211)
         
-        self.assertAlmostEqual(self.af_op._af_stdev["FITC-A"], 77.11998565547066)
-        self.assertAlmostEqual(self.af_op._af_stdev["Pacific Blue-A"], 51.38079964603144)
-        self.assertAlmostEqual(self.af_op._af_stdev["PE-Tx-Red-YG-A"], 117.84230806595949)
+        self.assertAlmostEqual(self.af_op._af_stdev["FITC-A"], 77.12065887451172)
+        self.assertAlmostEqual(self.af_op._af_stdev["Pacific Blue-A"], 51.380287170410156)
+        self.assertAlmostEqual(self.af_op._af_stdev["PE-Tx-Red-YG-A"], 117.84236145019531)
                 
