@@ -163,8 +163,17 @@ class ColorTranslationOp(HasStrictTraits):
                 for channel, (interp_channels, interpolator) in bleedthrough.iteritems():
                     interp_data = old_tube_data[interp_channels]
                     tube_data[channel] = interpolator(interp_data)
+        
+                # bead calibration
+                beads = [(channel, experiment.metadata[channel]['bead_calibration_fn'])
+                         for channel in experiment.channels
+                         if 'bead_calibration_fn' in experiment.metadata[channel]]
+                
+                for channel, calibration_fn in beads:
+                    tube_data[channel] = calibration_fn(tube_data[channel])
 
                 tubes[tube_file] = tube_data
+
                 
             data = tubes[tube_file][[from_channel, to_channel]]
             data = data[data[from_channel] > 0]
@@ -339,10 +348,19 @@ class ColorTranslationDiagnostic(HasStrictTraits):
                 for channel, (interp_channels, interpolator) in bleedthrough.iteritems():
                     interp_data = old_tube_data[interp_channels]
                     tube_data[channel] = interpolator(interp_data)
+                    
+                # bead calibration
+                beads = [(channel, experiment.metadata[channel]['bead_calibration_fn'])
+                         for channel in experiment.channels
+                         if 'bead_calibration_fn' in experiment.metadata[channel]]
+                
+                for channel, calibration_fn in beads:
+                    tube_data[channel] = calibration_fn(tube_data[channel])
 
                 tubes[tube_file] = tube_data
                 
-            data_range = experiment.metadata[channel]['range']
+            from_range = experiment.metadata[from_channel]['range']
+            to_range = experiment.metadata[to_channel]['range']
             data = tubes[tube_file][[from_channel, to_channel]]
             data = data[data[from_channel] > 0]
             data = data[data[to_channel] > 0]
@@ -351,7 +369,7 @@ class ColorTranslationDiagnostic(HasStrictTraits):
             if self.op.mixture_model:    
                 plt.subplot(num_plots, 2, plt_idx * 2 + 2)
                 plt.xscale('log', nonposx='mask')
-                hist_bins = np.logspace(1, math.log(data_range, 2), num = 128, base = 2)
+                hist_bins = np.logspace(1, math.log(from_range, 2), num = 128, base = 2)
                 _ = plt.hist(data[from_channel],
                              bins = hist_bins,
                              histtype = 'stepfilled',
@@ -380,16 +398,18 @@ class ColorTranslationDiagnostic(HasStrictTraits):
             plt.yscale('log', nonposy = 'mask')
             plt.xlabel(from_channel)
             plt.ylabel(to_channel)
-            plt.xlim(1, data_range)
-            plt.ylim(1, data_range)
+            plt.xlim(1, from_range)
+            plt.ylim(1, to_range)
+            
+            kwargs.setdefault('alpha', 0.2)
+            kwargs.setdefault('s', 1)
+            kwargs.setdefault('marker', 'o')
+            
             plt.scatter(data[from_channel],
                         data[to_channel],
-                        alpha = 0.2,
-                        s = 1,
-                        marker = 'o')
-            
+                        **kwargs)          
 
-            xs = np.logspace(1, math.log(data_range, 2), num = 256, base = 2)
+            xs = np.logspace(1, math.log(from_range, 2), num = 256, base = 2)
             p = np.poly1d(lr)
             plt.plot(xs, 10 ** p(np.log10(xs)), "--g")
             
