@@ -73,7 +73,7 @@ class CategorySubsetModel(HasTraits):
     values = Property(trait = List,
                       depends_on = 'experiment')
     subset_str = Property(trait = Str,
-                          depends_on = 'name, values')
+                          depends_on = 'name, selected[]')
     
     def default_traits_view(self):
         return View(Item('selected',
@@ -95,7 +95,7 @@ class CategorySubsetModel(HasTraits):
             return ""
         
         phrase = "("
-        for cat in self.values:
+        for cat in self.selected:
             if len(phrase) > 1:
                 phrase += " or "
             phrase += "{0} == \"{1}\"".format(self.name, cat) 
