@@ -91,7 +91,7 @@ class CategorySubsetModel(HasTraits):
 
     # MAGIC: gets the value of the Property trait "subset_str"
     def _get_subset_str(self):
-        if len(self.values) == 0:
+        if len(self.selected) == 0:
             return ""
         
         phrase = "("
