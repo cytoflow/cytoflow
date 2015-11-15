@@ -21,7 +21,7 @@ from flow_task import FlowTaskPlugin
 from cytoflow_application import CytoflowApplication
 from op_plugins import ImportPlugin, ThresholdPlugin, HLogPlugin, RangePlugin, \
                        Range2DPlugin, PolygonPlugin, LogiclePlugin, \
-                       BinningPlugin
+                       BinningPlugin, LogPlugin
 from view_plugins import HistogramPlugin, HexbinPlugin, ScatterplotPlugin, \
                          BarChartPlugin, Stats1DPlugin
                          
@@ -37,7 +37,7 @@ def run_gui():
                ImportPlugin(), ThresholdPlugin(), HistogramPlugin(),
                HLogPlugin(), HexbinPlugin(), ScatterplotPlugin(), RangePlugin(),
                Range2DPlugin(), PolygonPlugin(), BarChartPlugin(), 
-               Stats1DPlugin(), LogiclePlugin(), BinningPlugin()]
+               Stats1DPlugin(), LogiclePlugin(), BinningPlugin(), LogPlugin()]
     
     app = CytoflowApplication(id = 'edu.mit.synbio.cytoflow',
                               plugins = plugins)
