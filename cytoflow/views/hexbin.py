@@ -93,6 +93,10 @@ class HexbinView(HasStrictTraits):
                 data = experiment.query(self.subset)
             except:
                 raise CytoflowViewError("Subset string \'{0}\' not valid")
+                            
+            if len(data.index) == 0:
+                raise CytoflowViewError("Subset string '{0}' returned no events"
+                                        .format(self.subset))
         else:
             data = experiment.data
         

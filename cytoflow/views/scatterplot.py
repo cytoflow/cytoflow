@@ -91,6 +91,10 @@ class ScatterplotView(HasStrictTraits):
             except:
                 raise CytoflowViewError("Subset string '{0}' isn't valid"
                                         .format(self.subset))
+                            
+            if len(data.index) == 0:
+                raise CytoflowViewError("Subset string '{0}' returned no events"
+                                        .format(self.subset))
         else:
             data = experiment.data
         
