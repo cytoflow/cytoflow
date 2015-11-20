@@ -15,24 +15,18 @@ class Test(unittest.TestCase):
         import os
         self.cwd = os.path.dirname(os.path.abspath(__file__))
         self.ex = flow.Experiment()
-        tube = fcsparser.parse(self.cwd + '/data/tasbe/mkate.fcs', 
+        tube = fcsparser.parse(self.cwd + '/data/tasbe/rby.fcs', 
                                reformat_meta = True,
                                channel_naming = "$PnN")
         self.ex.add_tube(tube, {})
         
-        self.op = flow.ColorTranslationOp(
-                  
-                  blank_file = self.cwd + '/data/tasbe/blank.fcs',
-                    channels = ["Pacific Blue-A", "FITC-A", "PE-Tx-Red-YG-A"])
-        self.af_op.estimate(self.ex)
-
-
-    def tearDown(self):
-        pass
-
-
-    def testName(self):
-        pass
+        self.op = flow.BleedthroughPiecewiseOp(
+                                 controls = {"FITC-A" : self.cwd + '/data/tasbe/eyfp.fcs'})
+        
+    def testRun(self):
+        self.op.estimate(self.ex)
+        self.op.apply(self.ex)
+        self.op.default_view().plot(self.ex)
 
 
 if __name__ == "__main__":

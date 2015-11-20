@@ -20,9 +20,11 @@ class TestExperiment(unittest.TestCase):
         self.ex = flow.Experiment()
         self.ex.add_conditions({"time" : "float"})
         self.tube1 = fcsparser.parse(cwd + '/data/Plate01/RFP_Well_A3.fcs', 
-                                     reformat_meta = True)
+                                     reformat_meta = True,
+                                     channel_naming = "$PnN")
         self.tube2 = fcsparser.parse(cwd + '/data/Plate01/CFP_Well_A4.fcs',
-                                     reformat_meta = True)
+                                     reformat_meta = True,
+                                     channel_naming = "$PnN")
     
     def test_metadata_unique(self):
         self.ex.add_tube(self.tube1, {"time" : 10.0})

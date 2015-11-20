@@ -10,6 +10,7 @@ from traits.api import HasStrictTraits, Str, CStr, File, Dict, Python, \
                        Instance, Int, List, Constant, provides
 import numpy as np
 import math
+import os
 import scipy.interpolate
 import scipy.optimize
 import pandas
@@ -91,7 +92,7 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
     ...                   'PE-Tx-Red-YG-A' : 'merged/mkate.fcs'}
     >>>
     >>> bl_op.estimate(ex2)
-    >>> bl_op.default_view().plot()    
+    >>> bl_op.default_view().plot(ex2)    
     >>>
     >>> %time ex3 = bl_op.apply(ex2) # 410,000 cells
     CPU times: user 577 ms, sys: 27.7 ms, total: 605 ms
@@ -126,7 +127,13 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
             raise CytoflowOpError("Need to allow at least 3 knots in the spline")
         
         self._channels = self.controls.keys()
-    
+
+        # make sure the control files exist
+        for channel in self._channels:
+            if not os.path.isfile(self.controls[channel]):
+                raise CytoflowOpError("Can't find file {0} for channel {1}."
+                                      .format(self.controls[channel], channel))
+        
         for channel in self._channels:
             try:
                 tube_meta = fcsparser.parse(self.controls[channel], 
@@ -135,7 +142,7 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
                 tube_channels = tube_meta["_channels_"].set_index("$PnN")
             except Exception as e:
                 raise CytoflowOpError("FCS reader threw an error on tube {0}: {1}"\
-                                   .format(self.controls[channel], e.value))
+                                   .format(self.controls[channel], str(e)))
 
             for channel in self._channels:
                 exp_v = experiment.metadata[channel]['voltage']
@@ -157,8 +164,11 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
             self._splines[channel] = {}
 
             try:
-                tube_meta, tube_data = fcsparser.parse(self.controls[channel], 
-                                                       reformat_meta = True)
+                channel_naming = experiment.metadata["name_meta"]
+                tube_meta, tube_data = \
+                    fcsparser.parse(self.controls[channel], 
+                                    reformat_meta = True,
+                                    channel_naming = channel_naming)
                 tube_channels = tube_meta["_channels_"].set_index("$PnN")
             except Exception as e:
                 raise CytoflowOpError("FCS reader threw an error on tube {0}: {1}"\
@@ -199,8 +209,11 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
             # only keep the interior knots
             knots = knots[1:-1] 
             
-            # the interpolators' mesh            
-            mesh_min = -3 * experiment.metadata[channel]['af_stdev']
+            # the interpolators' mesh       
+            if experiment.metadata[channel]['af_stdev']:     
+                mesh_min = -3 * experiment.metadata[channel]['af_stdev']
+            else
+                mesh_min = -3 
             mesh_max = r
                 
             hlog_mesh_min, hlog_mesh_max = \
@@ -380,8 +393,11 @@ class BleedthroughPiecewiseDiagnostic(HasStrictTraits):
                     continue
                 
                 try:
-                    _, tube_data = fcsparser.parse(self.op.controls[from_channel], 
-                                                   reformat_meta = True)
+                    channel_naming = experiment.metadata["name_meta"]
+                    _, tube_data = \
+                        fcsparser.parse(self.op.controls[from_channel], 
+                                        reformat_meta = True,
+                                        channel_naming = channel_naming)
                 except Exception as e:
                     raise CytoflowOpError("FCS reader threw an error on tube {0}: {1}"\
                                           .format(self.op.controls[from_channel], e.value))

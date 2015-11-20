@@ -42,11 +42,12 @@ class Experiment(HasStrictTraits):
         conditions (eg induction level, timepoint) or by operations (eg gate
         membership)
         
-    metadata : Dict( Str : Dict(Str : Any) )
-        A dict whose keys are column names of self.data and whose values are 
-        dicts of metadata for each column. Operations may define their own
-        metadata, which is occasionally useful if modules are expected to
-        work together.
+    metadata : Dict( Str : Any )
+        The experimental metadata.  In particular, each column in self.data has
+        an entry whose key is the column name and whose value is a dict of
+        column-specific metadata. Operations may define their own metadata, 
+        which is occasionally useful if modules are expected to work together.
+        An incomplete list of column-specific metadata:
         * type (Enum: "channel" or "meta") : is a column a channel or an 
             event-level metadata?  many modules don't care, but some do.
         * voltage (int) : for channels, the detector voltage used. from the FCS
@@ -338,10 +339,16 @@ if __name__ == "__main__":
     ex = Experiment()
     ex.add_conditions({"time" : "category"})
 
-    tube0 = fcsparser.parse('../cytoflow/tests/data/tasbe/BEADS-1_H7_H07_P3.fcs')    
-    tube1 = fcsparser.parse('../cytoflow/tests/data/tasbe/beads.fcs')
+    tube0 = fcsparser.parse('../cytoflow/tests/data/tasbe/BEADS-1_H7_H07_P3.fcs',
+                            reformat_meta = True,
+                            channel_naming = "$PnN")    
+    tube1 = fcsparser.parse('../cytoflow/tests/data/tasbe/beads.fcs',
+                            reformat_meta = True,
+                            channel_naming = "$PnN")
     
-    tube2 = fcsparser.parse('../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs')
+    tube2 = fcsparser.parse('../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs',
+                            reformat_meta = True,
+                            channel_naming = "$PnN")
     
     ex.add_tube(tube1, {"time" : "one"})
     ex.add_tube(tube2, {"time" : "two"})

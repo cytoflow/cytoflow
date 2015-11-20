@@ -82,8 +82,11 @@ class AutofluorescenceOp(HasStrictTraits):
         # trying to set a bad value
         
         try:
+            channel_naming = experiment.metadata["name_meta"]
             blank_meta, blank_data = \
-                fcsparser.parse(self.blank_file, reformat_meta = True)  
+                fcsparser.parse(self.blank_file, 
+                                reformat_meta = True,
+                                channel_naming = channel_naming)  
             blank_channels = blank_meta["_channels_"].set_index("$PnN")     
         except Exception as e:
             raise CytoflowOpError("FCS reader threw an error: " + e.value)
@@ -188,7 +191,7 @@ class AutofluorescenceDiagnosticView(HasStrictTraits):
     name = Str
     op = Instance(IOperation)
     
-    def plot(self, experiment = None, **kwargs):
+    def plot(self, experiment, **kwargs):
         """Plot a faceted histogram view of a channel"""
         
         import matplotlib.pyplot as plt
@@ -198,7 +201,11 @@ class AutofluorescenceDiagnosticView(HasStrictTraits):
         kwargs.setdefault('alpha', 0.5)
         kwargs.setdefault('antialiased', True)
         
-        _, blank_data = fcsparser.parse(self.op.blank_file, reformat_meta=True)    
+        channel_naming = experiment.metadata["name_meta"]
+        
+        _, blank_data = fcsparser.parse(self.op.blank_file, 
+                                        reformat_meta = True,
+                                        channel_naming = channel_naming)    
         plt.figure()
         
         for idx, channel in enumerate(self.op.channels):

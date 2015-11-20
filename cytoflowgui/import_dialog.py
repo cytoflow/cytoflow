@@ -354,7 +354,7 @@ class ExperimentDialogHandler(Controller):
                 tube_meta = fcsparser.parse(path, 
                                             meta_data_only = True, 
                                             reformat_meta = True)
-                tube_channels = tube_meta["_channels_"].set_index("$PnN")
+                #tube_channels = tube_meta["_channels_"].set_index("$PnN")
             except Exception as e:
                 raise RuntimeError("FCS reader threw an error on tube {0}: {1}"\
                                    .format(path, e.value))

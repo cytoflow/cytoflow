@@ -346,10 +346,12 @@ if __name__ == '__main__':
     ex.add_conditions({"Dox" : "bool"})
      
     tube1 = fcsparser.parse('../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs',
-                            reformat_meta = True)
+                            reformat_meta = True,
+                            channel_naming = "$PnN")
  
     tube2 = fcsparser.parse('../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs',
-                            reformat_meta = True)
+                            reformat_meta = True,
+                            channel_naming = "$PnN")
      
     ex.add_tube(tube1, {"Dox" : True})
     ex.add_tube(tube2, {"Dox" : False})

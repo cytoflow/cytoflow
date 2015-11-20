@@ -127,8 +127,11 @@ class ColorTranslationOp(HasStrictTraits):
             
             if tube_file not in tubes: 
                 try:
-                    tube_meta, tube_data = fcsparser.parse(tube_file, 
-                                                           reformat_meta = True)
+                    channel_naming = experiment.metadata["name_meta"]
+                    tube_meta, tube_data = \
+                        fcsparser.parse(tube_file, 
+                                        reformat_meta = True,
+                                        channel_naming = channel_naming)
                     tube_channels = tube_meta["_channels_"].set_index("$PnN")
                 except Exception as e:
                     raise CytoflowOpError("FCS reader threw an error on tube "
@@ -340,8 +343,11 @@ class ColorTranslationDiagnostic(HasStrictTraits):
             if tube_file not in tubes: 
                 
                 try:
-                    _, tube_data = fcsparser.parse(tube_file,
-                                                   reformat_meta = True)
+                    channel_naming = experiment.metadata["name_meta"]
+                    _, tube_data = \
+                        fcsparser.parse(tube_file,
+                                        reformat_meta = True,
+                                        channel_naming = channel_naming)
                 except Exception as e:
                     raise CytoflowOpError("FCS reader threw an error on tube {0}: {1}"\
                                        .format(tube_file, e.value))

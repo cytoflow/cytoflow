@@ -15,7 +15,8 @@ class TestBeads(unittest.TestCase):
         self.cwd = os.path.dirname(os.path.abspath(__file__))
         self.ex = flow.Experiment()
         tube = fcsparser.parse(self.cwd + '/data/tasbe/rby.fcs', 
-                               reformat_meta = True)
+                               reformat_meta = True,
+                               channel_naming = "$PnN")
         self.ex.add_tube(tube, {})
         
         self.op = flow.BeadCalibrationOp(

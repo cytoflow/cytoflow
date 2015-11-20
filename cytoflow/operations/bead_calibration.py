@@ -163,8 +163,11 @@ class BeadCalibrationOp(HasStrictTraits):
                                   "the experiment.")
         
         try:
-            beads_meta, beads_data = fcsparser.parse(self.beads_file, 
-                                                     reformat_meta = True)
+            channel_naming = experiment.metadata["name_meta"]
+            beads_meta, beads_data = \
+                fcsparser.parse(self.beads_file, 
+                                reformat_meta = True,
+                                channel_naming = channel_naming)
             beads_channels = beads_meta["_channels_"].set_index("$PnN")
         except Exception as e:
             raise CytoflowOpError("FCS reader threw an error on tube {0}: {1}"\
@@ -411,12 +414,15 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
     # TODO - why can't I use BeadCalibrationOp here?
     op = Instance(IOperation)
     
-    def plot(self, experiment = None, **kwargs):
+    def plot(self, experiment, **kwargs):
         """Plot a faceted histogram view of a channel"""
       
         try:
-            beads_meta, beads_data = fcsparser.parse(self.op.beads_file, 
-                                            reformat_meta = True)
+            channel_naming = experiment.metadata["name_meta"]
+            beads_meta, beads_data = \
+                fcsparser.parse(self.op.beads_file, 
+                                reformat_meta = True,
+                                channel_naming = channel_naming)
             beads_channels = beads_meta["_channels_"].set_index("$PnN")
         except Exception as e:
             raise CytoflowOpError("FCS reader threw an error on tube {0}: {1}"\
