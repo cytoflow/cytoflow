@@ -1,7 +1,7 @@
 import pandas as pd
 from traits.api import HasStrictTraits, Dict, List, Instance, Set, Str, Any
 
-from utility import CytoflowError
+from utility import CytoflowError, sanitize_identifier
 
 class Experiment(HasStrictTraits):
     """An Experiment manages all the data and metadata for a flow experiment.
@@ -143,8 +143,35 @@ class Experiment(HasStrictTraits):
         return self.data.__setitem__(key, value)
     
     def query(self, expr, **kwargs):
-        """Expose pandas.DataFrame.query() to the outside world"""
-        return self.data.query(expr, **kwargs)
+        """
+        Expose pandas.DataFrame.query() to the outside world
+
+        This method "sanitizes" column names first, replacing characters that
+        are not valid in a Python identifier with an underscore '_'. So, the
+        column name "a column" becomes "a_column", and can be queried with
+        an `expr` string `a_column == True` or such.
+        
+        Parameters
+        ----------
+        expr : string
+            The expression to pass to `pandas.DataFrame.query()`.  Must be
+            a valid Python expression, something you could pass to `eval()`.
+            
+        **kwargs : dict
+            Other named parameters to pass to `pandas.DataFrame.query()`.
+        """
+        
+        resolvers = {}
+        for name, col in self.data.iteritems():
+            new_name = sanitize_identifier(name)
+            if new_name in resolvers:
+                raise CytoflowError("Tried to sanitize column name {1} to {2} "
+                                    "but it already existed in the DataFrame."
+                                    .format(name, new_name))
+            else:
+                resolvers[new_name] = col
+
+        return self.data.query(expr, resolvers = ({}, resolvers), **kwargs)
     
     def clone(self):
         """Clone this experiment"""
