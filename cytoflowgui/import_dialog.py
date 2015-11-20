@@ -283,6 +283,9 @@ class PlateDirectoryDialog(QtDirectoryDialog):
 
 class ExperimentDialogHandler(Controller):
 
+    # TODO - this doesn't like column names with spaces (or other invalid
+    # python identifiers (??))
+
     # keep around a ref to the underlying widget so we can add columns dynamically
     table_editor = Instance(TableEditorQt)
     
