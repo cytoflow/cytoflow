@@ -89,7 +89,7 @@ class AutofluorescenceOp(HasStrictTraits):
                                 channel_naming = channel_naming)  
             blank_channels = blank_meta["_channels_"].set_index("$PnN")     
         except Exception as e:
-            raise CytoflowOpError("FCS reader threw an error: " + e.value)
+            raise CytoflowOpError("FCS reader threw an error: " + str(e))
         
         for channel in self.channels:
             if (channel not in experiment.metadata

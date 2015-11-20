@@ -171,7 +171,7 @@ class BeadCalibrationOp(HasStrictTraits):
             beads_channels = beads_meta["_channels_"].set_index("$PnN")
         except Exception as e:
             raise CytoflowOpError("FCS reader threw an error on tube {0}: {1}"\
-                               .format(self.beads_file, e.value))
+                               .format(self.beads_file, str(e)))
         
         channels = self.units.keys()
 
@@ -362,7 +362,7 @@ class BeadCalibrationOp(HasStrictTraits):
                                 reformat_meta = True)
         except Exception as e:
             raise CytoflowOpError("FCS reader threw an error on tube {0}: {1}"\
-                               .format(self.beads_file, e.value))
+                               .format(self.beads_file, str(e)))
 
         return BeadCalibrationDiagnostic(op = self)
     
@@ -426,7 +426,7 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
             beads_channels = beads_meta["_channels_"].set_index("$PnN")
         except Exception as e:
             raise CytoflowOpError("FCS reader threw an error on tube {0}: {1}"\
-                               .format(self.op.beads_file, e.value))
+                               .format(self.op.beads_file, str(e)))
 
         plt.figure()
         

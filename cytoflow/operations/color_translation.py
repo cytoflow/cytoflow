@@ -136,7 +136,7 @@ class ColorTranslationOp(HasStrictTraits):
                 except Exception as e:
                     raise CytoflowOpError("FCS reader threw an error on tube "
                                           "{0}: {1}"
-                                          .format(tube_file, e.value))
+                                          .format(tube_file, str(e)))
 
                 # check voltages
                 for channel in [from_channel, to_channel]:
@@ -290,7 +290,7 @@ class ColorTranslationOp(HasStrictTraits):
                                     reformat_meta = True)
             except Exception as e:
                 raise CytoflowOpError("FCS reader threw an error on tube {0}: {1}"\
-                                   .format(tube_file, e.value))
+                                   .format(tube_file, str(e)))
 
         return ColorTranslationDiagnostic(op = self)
     
@@ -350,7 +350,7 @@ class ColorTranslationDiagnostic(HasStrictTraits):
                                         channel_naming = channel_naming)
                 except Exception as e:
                     raise CytoflowOpError("FCS reader threw an error on tube {0}: {1}"\
-                                       .format(tube_file, e.value))
+                                       .format(tube_file, str(e)))
                 
                 # autofluorescence correction
                 af = [(channel, (experiment.metadata[channel]['af_median'],

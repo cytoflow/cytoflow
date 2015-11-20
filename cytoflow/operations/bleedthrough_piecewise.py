@@ -172,7 +172,7 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
                 tube_channels = tube_meta["_channels_"].set_index("$PnN")
             except Exception as e:
                 raise CytoflowOpError("FCS reader threw an error on tube {0}: {1}"\
-                                   .format(self.controls[channel], e.value))
+                                   .format(self.controls[channel], str(e)))
             
             data = tube_data.sort(channel)
 
@@ -210,10 +210,13 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
             knots = knots[1:-1] 
             
             # the interpolators' mesh       
-            if experiment.metadata[channel]['af_stdev']:     
-                mesh_min = -3 * experiment.metadata[channel]['af_stdev']
-            else
-                mesh_min = -3 
+            if 'af_median' in experiment.metadata[channel] and \
+               'af_stdev' in experiment.metadata[channel]:     
+                mesh_min = experiment.metadata[channel]['af_median'] - \
+                           3 * experiment.metadata[channel]['af_stdev']
+            else:
+                mesh_min = -0.01 * r  # TODO - does this even work?
+                
             mesh_max = r
                 
             hlog_mesh_min, hlog_mesh_max = \
@@ -281,10 +284,18 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
         
         # get rid of data outside of the interpolators' mesh 
         # (-3 * autofluorescence sigma)
-        for channel in self._channels:
-            af_stdev = new_experiment.metadata[channel]['af_stdev']
+        for channel in self._channels:     
+            
+            # if you update the mesh calculation above, update it here too!
+            if 'af_median' in experiment.metadata[channel] and \
+               'af_stdev' in experiment.metadata[channel]:     
+                mesh_min = experiment.metadata[channel]['af_median'] - \
+                           3 * experiment.metadata[channel]['af_stdev']
+            else:
+                mesh_min = -0.01 * experiment.metadata[channel]['range']  # TODO - does this even work?
+
             new_experiment.data = \
-                new_experiment.data[new_experiment.data[channel] > -3 * af_stdev]
+                new_experiment.data[new_experiment.data[channel] > mesh_min]
         
         new_experiment.data.reset_index(drop = True, inplace = True)
         
@@ -323,7 +334,7 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
                                     reformat_meta = True)
             except Exception as e:
                 raise CytoflowOpError("FCS reader threw an error on tube {0}: {1}"\
-                                   .format(self.controls[channel], e.value))
+                                   .format(self.controls[channel], str(e)))
 
         return BleedthroughPiecewiseDiagnostic(op = self)
     
@@ -400,7 +411,7 @@ class BleedthroughPiecewiseDiagnostic(HasStrictTraits):
                                         channel_naming = channel_naming)
                 except Exception as e:
                     raise CytoflowOpError("FCS reader threw an error on tube {0}: {1}"\
-                                          .format(self.op.controls[from_channel], e.value))
+                                          .format(self.op.controls[from_channel], str(e)))
              
                 plt.subplot(num_channels, 
                             num_channels, 

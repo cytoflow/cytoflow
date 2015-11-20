@@ -17,7 +17,7 @@ class TestExperiment(unittest.TestCase):
     def setUp(self):
         import os
         cwd = os.path.dirname(os.path.abspath(__file__))
-        self.ex = flow.Experiment()
+        self.ex = flow.Experiment(metadata = {"name_meta" : "$PnN"})
         self.ex.add_conditions({"time" : "float"})
         self.tube1 = fcsparser.parse(cwd + '/data/Plate01/RFP_Well_A3.fcs', 
                                      reformat_meta = True,
