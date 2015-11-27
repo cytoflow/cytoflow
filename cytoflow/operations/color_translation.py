@@ -10,6 +10,7 @@ from traits.api import HasStrictTraits, Str, CStr, File, Dict, Python, \
                        Instance, Tuple, Bool, Constant, provides
 import numpy as np
 import fcsparser
+import warnings
 import matplotlib.pyplot as plt
 import math
 import sklearn.mixture
@@ -285,9 +286,13 @@ class ColorTranslationOp(HasStrictTraits):
         
         for tube_file in self.controls.values():  
             try:
-                _ = fcsparser.parse(tube_file, 
-                                    meta_data_only = True, 
-                                    reformat_meta = True)
+                # suppress the channel name warnings
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+
+                    _ = fcsparser.parse(tube_file, 
+                                        meta_data_only = True, 
+                                        reformat_meta = True)
             except Exception as e:
                 raise CytoflowOpError("FCS reader threw an error on tube {0}: {1}"\
                                    .format(tube_file, str(e)))

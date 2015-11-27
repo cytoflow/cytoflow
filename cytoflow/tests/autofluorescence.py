@@ -45,6 +45,9 @@ class TestExperiment(unittest.TestCase):
         self.assertAlmostEqual(np.median(ex2["Pacific Blue-A"]), 0.0)
         self.assertAlmostEqual(np.median(ex2["PE-Tx-Red-YG-A"]), 0.0)
         
+    def test_plot(self):
+        self.op.default_view().plot(self.ex)
+        
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']
     unittest.main()

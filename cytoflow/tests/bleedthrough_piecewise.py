@@ -21,7 +21,8 @@ class Test(unittest.TestCase):
         self.ex.add_tube(tube, {})
         
         self.op = flow.BleedthroughPiecewiseOp(
-                                 controls = {"FITC-A" : self.cwd + '/data/tasbe/eyfp.fcs'})
+                                 controls = {"FITC-A" : self.cwd + '/data/tasbe/eyfp.fcs',
+                                             "PE-Tx-Red-YG-A" : self.cwd + '/data/tasbe/mkate.fcs'})
         
     def testRun(self):
         self.op.estimate(self.ex)

@@ -31,11 +31,13 @@ class Test(unittest.TestCase):
             
         self.op.estimate(self.ex)
 
-    def tearDown(self):
-        pass
-
-    def testName(self):
-        pass
+    def test_apply(self):
+        self.op.apply(self.ex)
+    
+    def test_plot(self):
+        self.op.default_view().plot(self.ex)
+        
+        
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']

@@ -11,6 +11,7 @@ from traits.api import HasStrictTraits, Str, CStr, File, Dict, Python, \
 import numpy as np
 import math
 import os
+import warnings
 import scipy.interpolate
 import scipy.optimize
 import pandas
@@ -128,6 +129,9 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
         
         self._channels = self.controls.keys()
 
+        if len(self._channels) < 2:
+            raise CytoflowOpError("Need at least two channels to correct bleedthrough.")
+
         # make sure the control files exist
         for channel in self._channels:
             if not os.path.isfile(self.controls[channel]):
@@ -136,9 +140,11 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
         
         for channel in self._channels:
             try:
+                channel_naming = experiment.metadata["name_meta"]
                 tube_meta = fcsparser.parse(self.controls[channel], 
                                             meta_data_only = True, 
-                                            reformat_meta = True)
+                                            reformat_meta = True,
+                                            channel_naming = channel_naming)
                 tube_channels = tube_meta["_channels_"].set_index("$PnN")
             except Exception as e:
                 raise CytoflowOpError("FCS reader threw an error on tube {0}: {1}"\
@@ -329,9 +335,13 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
         # make sure we can get the control tubes to plot the diagnostic
         for channel in channels:       
             try:
-                _ = fcsparser.parse(self.controls[channel], 
-                                    meta_data_only = True, 
-                                    reformat_meta = True)
+                # suppress the channel name warnings
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                
+                    _ = fcsparser.parse(self.controls[channel], 
+                                        meta_data_only = True, 
+                                        reformat_meta = True)
             except Exception as e:
                 raise CytoflowOpError("FCS reader threw an error on tube {0}: {1}"\
                                    .format(self.controls[channel], str(e)))
