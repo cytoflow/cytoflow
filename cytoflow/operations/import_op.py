@@ -144,6 +144,7 @@ class ImportOp(HasStrictTraits):
     tubes = List(Tube)
         
     # which FCS metadata has the channel name in it?
+    # (default is the first item in the enum, $PnN
     name_meta = Enum("$PnN", "$PnS")
         
     # DON'T DO THIS
