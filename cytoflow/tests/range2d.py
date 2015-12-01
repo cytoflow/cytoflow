@@ -24,17 +24,18 @@ class Test(unittest.TestCase):
         logicle.estimate(ex)
         self.ex = logicle.apply(ex)
 
-        self.gate = flow.PolygonOp(name = "Polygon",
+
+        self.gate = flow.Range2DOp(name = "Range2D",
                                    xchannel = "V2-A",
                                    ychannel = "Y2-A",
-                                   vertices = [(0, 0.6), (0.2, 0.8), 
-                                               (0.4, 0.6), (0.2, 0.4)])
+                                   xlow = 0.0, xhigh = 0.4,
+                                   ylow = 0.4, yhigh = 0.8)
         
     def testGate(self):
         ex2 = self.gate.apply(self.ex)
         
         # how many events ended up in the gate?
-        self.assertEqual(ex2.data.groupby("Polygon").size()[True], 4098)
+        self.assertEqual(ex2.data.groupby("Range2D").size()[True], 4385)
         
     def testPlot(self):
         self.gate.default_view().plot(self.ex)
