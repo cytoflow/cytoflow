@@ -67,7 +67,7 @@ See the [installation notes](http://cytoflow.readthedocs.org/en/latest/INSTALL.h
 
 These are all in the `setuptools` spec.
 
-For the core `cytotools` library, you need the following Python packages:
+For the core `cytoflow` library, you need the following Python packages:
 ```
 python >= 2.7
 pandas >= 0.15.0
