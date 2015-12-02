@@ -7,6 +7,8 @@ Created on Aug 31, 2015
 
 from __future__ import division
 
+import warnings
+
 from traits.api import HasStrictTraits, Str, CStr, File, Dict, Python, \
                        Instance, Int, List, Float, Constant, provides
 import numpy as np
@@ -357,9 +359,12 @@ class BeadCalibrationOp(HasStrictTraits):
         """
         
         try:
-            _ = fcsparser.parse(self.beads_file, 
-                                meta_data_only = True, 
-                                reformat_meta = True)
+            # suppress the channel name warnings
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                _ = fcsparser.parse(self.beads_file, 
+                                    meta_data_only = True, 
+                                    reformat_meta = True)
         except Exception as e:
             raise CytoflowOpError("FCS reader threw an error on tube {0}: {1}"\
                                .format(self.beads_file, str(e)))
