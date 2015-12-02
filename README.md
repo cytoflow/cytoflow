@@ -2,7 +2,7 @@
 ##Python tools for quantitative, reproducible flow cytometry analysis
 
 Welcome to a different style of flow cytometry analysis.  For a quick demo,
-check out [an example IPython notebook](http://nbviewer.ipython.org/github/bpteague/cytoflow/blob/master/docs/examples/Basic%20Cytometry.ipynb)
+check out [an example IPython notebook](http://nbviewer.ipython.org/github/bpteague/cytoflow/blob/master/docs/examples-basic/Basic%20Cytometry.ipynb)
 
 ### What's wrong with other packages?  
 
