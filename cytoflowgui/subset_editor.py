@@ -23,8 +23,6 @@ import pandas as pd
 import numpy as np
 import re
 
-# TODO - something breaks when you set a column name with a space.
-
 class ISubsetModel(Interface):
     name = Str
     subset_str = Property
@@ -80,7 +78,7 @@ class CategorySubsetModel(HasTraits):
         return View(Item('selected',
                          label = self.name,
                          editor = CheckListEditor(values = self.values,
-                                                  cols = len(self.values)),
+                                                  cols = 2),
                          style = 'custom'))
     
     # MAGIC: gets the value of the Property trait "values"
