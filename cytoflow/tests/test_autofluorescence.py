@@ -3,6 +3,8 @@ Created on Oct 30, 2015
 
 @author: brian
 '''
+import matplotlib
+matplotlib.use('Agg')
 
 import unittest
 

@@ -5,6 +5,9 @@ Created on Nov 15, 2015
 '''
 import unittest
 
+import matplotlib
+matplotlib.use('Agg')
+
 import cytoflow as flow
 import fcsparser
 

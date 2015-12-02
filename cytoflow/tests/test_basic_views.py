@@ -3,9 +3,13 @@ Created on Dec 1, 2015
 
 @author: brian
 '''
+import matplotlib
+matplotlib.use('Agg')
+
 import unittest
 import cytoflow as flow
 import os
+import warnings
 
 class Test(unittest.TestCase):
 
@@ -31,10 +35,13 @@ class Test(unittest.TestCase):
                           function = len).plot(self.ex)
                           
     def testHexBin(self):
-        flow.HexbinView(name = "Hexbin",
-                        xchannel = "V2-A",
-                        ychannel = "Y2-A",
-                        huefacet = "Dox").plot(self.ex)
+        # suppress unicode warning.
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            flow.HexbinView(name = "Hexbin",
+                            xchannel = "V2-A",
+                            ychannel = "Y2-A",
+                            huefacet = "Dox").plot(self.ex)
                         
     def testHistogram(self):
         flow.HistogramView(name = "Histogram",

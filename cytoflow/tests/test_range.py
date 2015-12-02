@@ -4,6 +4,10 @@ Created on Dec 1, 2015
 @author: brian
 '''
 import unittest
+
+import matplotlib
+matplotlib.use('Agg')
+
 import cytoflow as flow
 import os
 
