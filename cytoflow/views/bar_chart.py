@@ -114,7 +114,7 @@ class BarChartView(HasStrictTraits):
         if not self.channel:
             raise CytoflowViewError("Channel not specified")
         
-        if self.channel not in experiment.channels:
+        if self.channel not in experiment.data:
             raise CytoflowViewError("Channel {0} isn't in the experiment"
                                     .format(self.channel))
         
@@ -153,6 +153,10 @@ class BarChartView(HasStrictTraits):
             except:
                 raise CytoflowViewError("Subset string {0} isn't valid"
                                         .format(self.subset))
+                            
+            if len(data.index) == 0:
+                raise CytoflowViewError("Subset string '{0}' returned no events"
+                                        .format(self.subset))
         else:
             data = experiment.data
             
@@ -177,16 +181,20 @@ if __name__ == '__main__':
     import fcsparser
     
     tube1 = fcsparser.parse('../../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs',
-                            reformat_meta = True)
+                            reformat_meta = True,
+                            channel_naming = "$PnN")
 
     tube2 = fcsparser.parse('../../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs',
-                            reformat_meta = True)
+                            reformat_meta = True,
+                            channel_naming = "$PnN")
     
     tube3 = fcsparser.parse('../../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs',
-                            reformat_meta = True)
+                            reformat_meta = True,
+                            channel_naming = "$PnN")
 
     tube4 = fcsparser.parse('../../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs',
-                            reformat_meta = True)
+                            reformat_meta = True,
+                            channel_naming = "$PnN")
     
     ex = flow.Experiment()
     ex.add_conditions({"Dox" : "float", "Repl" : "int"})

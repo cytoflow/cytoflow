@@ -106,7 +106,7 @@ class BinningOp(HasStrictTraits):
         if not self.channel:
             raise CytoflowOpError("channel is not set")
         
-        if not self.channel in experiment.channels:
+        if self.channel not in experiment.data.columns:
             raise CytoflowOpError("channel {0} isn't in the experiment"
                                   .format(self.channel))
               
@@ -122,7 +122,8 @@ class BinningOp(HasStrictTraits):
             bins = np.linspace(start = channel_min, stop = channel_max,
                                num = num_bins)
         elif self.scale == "log10":
-            num_bins = self.num_bins if self.num_bins else \
+            channel_min = channel_min if channel_min > 0 else 1
+            num_bins = self.num_bins if self.num_bins is not Undefined else \
                        (np.log10(channel_max) - np.log10(channel_min)) / self.bin_width
             bins = np.logspace(start = np.log10(channel_min),
                                stop = np.log10(channel_max),

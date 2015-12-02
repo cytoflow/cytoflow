@@ -78,17 +78,21 @@ class PolygonOp(HasStrictTraits):
         if not experiment:
             raise CytoflowOpError("No experiment specified")
         
+        exp_channels = [x for x in experiment.metadata 
+                        if 'type' in experiment.metadata[x] 
+                        and experiment.metadata[x]['type'] == "channel"]
+        
         if self.name in experiment.data.columns:
             raise CytoflowOpError("op.name is in the experiment already!")
         
         if not self.xchannel or not self.ychannel:
             raise CytoflowOpError("Must specify both an x channel and a y channel")
         
-        if not self.xchannel in experiment.channels:
+        if not self.xchannel in exp_channels:
             raise CytoflowOpError("xchannel {0} is not in the experiment"
                                   .format(self.xchannel))
                                   
-        if not self.ychannel in experiment.channels:
+        if not self.ychannel in exp_channels:
             raise CytoflowOpError("ychannel {0} is not in the experiment"
                                   .format(self.ychannel))
               
@@ -303,10 +307,12 @@ if __name__ == '__main__':
     import fcsparser
 
     tube1 = fcsparser.parse('../../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs',
-                            reformat_meta = True)
+                            reformat_meta = True, 
+                            channel_naming = "$PnN")
 
     tube2 = fcsparser.parse('../../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs',
-                            reformat_meta = True)
+                            reformat_meta = True,
+                            channel_naming = "$PnN")
     
     ex = flow.Experiment()
     ex.add_conditions({"Dox" : "float"})

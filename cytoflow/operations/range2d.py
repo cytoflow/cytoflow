@@ -99,10 +99,14 @@ class Range2DOp(HasStrictTraits):
         if not self.xchannel or not self.ychannel:
             raise CytoflowOpError("Must specify xchannel and ychannel")
         
-        if not self.xchannel in experiment.channels:
+        exp_channels = [x for x in experiment.metadata 
+                        if 'type' in experiment.metadata[x] 
+                        and experiment.metadata[x]['type'] == "channel"]
+        
+        if not self.xchannel in exp_channels:
             raise CytoflowOpError("xchannel isn't in the experiment")
         
-        if not self.ychannel in experiment.channels:
+        if not self.ychannel in exp_channels:
             raise CytoflowOpError("ychannel isn't in the experiment")
         
         if self.xhigh <= experiment[self.xchannel].min():
@@ -246,10 +250,12 @@ if __name__ == '__main__':
     import fcsparser
     
     tube1 = fcsparser.parse('../../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs',
-                            reformat_meta = True)
+                            reformat_meta = True,
+                            channel_naming = "$PnN")
 
     tube2 = fcsparser.parse('../../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs',
-                            reformat_meta = True)
+                            reformat_meta = True,
+                            channel_naming = "$PnN")
     
     ex = flow.Experiment()
     ex.add_conditions({"Dox" : "float"})

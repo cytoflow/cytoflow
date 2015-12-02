@@ -69,14 +69,14 @@ class HexbinView(HasStrictTraits):
         if not self.xchannel:
             raise CytoflowViewError("X channel not specified")
         
-        if self.xchannel not in experiment.channels:
+        if self.xchannel not in experiment.data:
             raise CytoflowViewError("X channel {0} not in the experiment"
                                     .format(self.xchannel))
             
         if not self.ychannel:
             raise CytoflowViewError("Y channel not specified")
         
-        if self.ychannel not in experiment.channels:
+        if self.ychannel not in experiment.data:
             raise CytoflowViewError("Y channel {0} not in the experiment")
         
         if self.xfacet and self.xfacet not in experiment.conditions:
@@ -93,6 +93,10 @@ class HexbinView(HasStrictTraits):
                 data = experiment.query(self.subset)
             except:
                 raise CytoflowViewError("Subset string \'{0}\' not valid")
+                            
+            if len(data.index) == 0:
+                raise CytoflowViewError("Subset string '{0}' returned no events"
+                                        .format(self.subset))
         else:
             data = experiment.data
         
@@ -138,10 +142,12 @@ if __name__ == '__main__':
     mpl.rcParams['savefig.dpi'] = 2 * mpl.rcParams['savefig.dpi']
     
     tube1 = fcsparser.parse('../../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs',
-                            reformat_meta = True)
+                            reformat_meta = True,
+                            channel_naming = "$PnN")
 
     tube2 = fcsparser.parse('../../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs',
-                            reformat_meta = True)
+                            reformat_meta = True,
+                            channel_naming = "$PnN")
     
     ex = flow.Experiment()
     ex.add_conditions({"Dox" : "float"})

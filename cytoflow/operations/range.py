@@ -91,7 +91,11 @@ class RangeOp(HasStrictTraits):
         if not self.channel:
             raise CytoflowOpError("Channel not specified")
         
-        if not self.channel in experiment.channels:
+        exp_channels = [x for x in experiment.metadata 
+                        if 'type' in experiment.metadata[x] 
+                        and experiment.metadata[x]['type'] == "channel"]
+        
+        if not self.channel in exp_channels:
             raise CytoflowOpError("Channel {0} not in the experiment"
                                   .format(self.channel))
         
@@ -246,10 +250,12 @@ if __name__ == '__main__':
     mpl.rcParams['savefig.dpi'] = 2 * mpl.rcParams['savefig.dpi']
     
     tube1 = fcsparser.parse('../../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs',
-                            reformat_meta = True)
+                            reformat_meta = True,
+                            channel_naming = "$PnN")
 
     tube2 = fcsparser.parse('../../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs',
-                            reformat_meta = True)
+                            reformat_meta = True,
+                            channel_naming = "$PnN")
     
     ex = flow.Experiment()
     ex.add_conditions({"Dox" : "float"})
