@@ -2,11 +2,7 @@ from __future__ import print_function
 from setuptools import setup, find_packages, Extension
 import io, os, re
 
-#on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
-
-# until RTD can get their act together
-on_rtd = (os.environ.get('PWD', "").find("readthedocs")) >= 0
-
+on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 no_logicle = os.environ.get('NO_LOGICLE', None) == 'True'
 
 print(os.environ)
