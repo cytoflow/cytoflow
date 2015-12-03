@@ -246,7 +246,7 @@ class PolygonSelection(ScatterplotView):
         
         # we have to check the wall clock time because the IPython notebook
         # doesn't seem to register double-clicks
-        if event.dblclick or (time.clock() - self._last_click_time < 0.25):
+        if event.dblclick or (time.clock() - self._last_click_time < 0.5):
             self._drawing = False
             self.op.vertices = map(tuple, self._path.vertices)
             self._path = None
