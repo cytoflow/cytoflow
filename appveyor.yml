@@ -49,15 +49,15 @@ install:
   # Install the build and runtime dependencies of the project.
   - conda install --yes --quiet numpy numexpr scipy matplotlib=1.4.3 nose dateutil pandas statsmodels scikit-learn seaborn pyface=4.4.0 envisage
 
-  - "%WITH_COMPILER% python setup.py develop bdist_wheel bdist_wininst"
+  - "%WITH_COMPILER% python setup.py develop"
 
 build: off
 
 test_script:
-  - "%WITH_COMPILER% %PYTHON%/python nosetests cytoflow"
+  - "%WITH_COMPILER% %PYTHON%/python setup.py nosetests"
 
 after_test:
-  - "%WITH_COMPILER% %PYTHON%/python setup.py bdist_wheel"
+  - "%WITH_COMPILER% %PYTHON%/python setup.py bdist_wheel bdist_wininst"
 
 artifacts:
   - path: dist\*
