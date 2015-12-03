@@ -24,6 +24,10 @@ something existing packages don't handle gracefully.
 
 A few things.
 
+* **Free and open-source.**  Use the software free-of-charge; modify it to
+  suit your own needs, then contribute your changes back so the rest of the
+  community can benefit from them.
+
 * An emphasis on **metadata**.  CytoFlow assumes that you are measuring
   fluorescence on several samples that were treated differently: either
   they were collected at different times, treated with varying levels
