@@ -44,7 +44,7 @@ install:
   - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
   
   # install swig
-  - choco install swig -yv
+  - choco install swig -y
 
   # Install the build and runtime dependencies of the project.
   - conda install --yes --quiet numpy numexpr scipy matplotlib=1.4.3 nose dateutil pandas statsmodels scikit-learn seaborn pyface=4.4.0 envisage
