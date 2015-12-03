@@ -104,5 +104,6 @@ setup(
                  'Programming Language :: Python :: Implementation :: CPython',
                  'Topic :: Scientific/Engineering :: Bio-Informatics'],
     
-    entry_points={'gui_scripts' : ['cytoflow = cytoflowgui:run_gui']}
+    entry_points={'gui_scripts' : ['cytoflow = cytoflowgui:run_gui'],
+                  'nose.plugins.0.10' : ['mplplugin = nose_plugins:MplPlugin']}
 )
