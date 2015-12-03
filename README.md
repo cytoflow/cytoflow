@@ -2,7 +2,7 @@
 ##Python tools for quantitative, reproducible flow cytometry analysis
 
 Welcome to a different style of flow cytometry analysis.  For a quick demo,
-check out [an example IPython notebook](http://nbviewer.ipython.org/github/bpteague/cytoflow/blob/master/docs/examples-basic/Basic%20Cytometry.ipynb)
+check out [an introductory Jupyter notebook](http://nbviewer.ipython.org/github/bpteague/cytoflow/blob/master/docs/examples-basic/Basic%20Cytometry.ipynb), and then look at [an example with some real data](http://nbviewer.ipython.org/github/bpteague/cytoflow/blob/master/docs/examples-basic/Yeast%20Dose%20Reponse.ipynb)
 
 ### What's wrong with other packages?  
 
@@ -58,6 +58,8 @@ A few things.
 * **Statistically sound.** Ready access to useful data-driven tools for
   analysis, such as fitting 2-dimensional Gaussians for automated gating
   and mixture modeling.
+
+#### Note: this is still beta software!  Prepare to run into bugs.  The point-and-click interface is even buggier, and does not expose all the functionality of the underlying analysis modules.  Caveat emptor!
   
 ### Installation
 
@@ -73,7 +75,7 @@ python >= 2.7
 pandas >= 0.15.0
 numpy >= 1.9.0
 numexpr >= 2.1
-matplotlib >= 1.4.3
+matplotlib == 1.4.3
 scipy >= 0.14
 scikit-learn >= 0.16
 seaborn >= 0.6.0
@@ -83,7 +85,7 @@ fcsparser >= 0.1.1
 
 For the GUI, you additionally need:
 ```
-pyface >= 4.0
+pyface == 4.4.0
 envisage >= 4.0
 pyqt >= 4.10 -- this must be installed separately!
 ```
