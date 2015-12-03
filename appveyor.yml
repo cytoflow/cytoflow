@@ -47,7 +47,7 @@ install:
   - choco install swig -yv
 
   # Install the build and runtime dependencies of the project.
-  - conda install --yes --quiet pandas numexpr scipy scikit-learn seaborn traits pyface envisage pyqt
+  - conda install --yes --quiet atlas numpy numexpr scipy matplotlib=1.4.3 nose dateutil pandas statsmodels scikit-learn seaborn pyface=4.4.0 envisage
 
   # conda's wheel 0.26 package is borked; remove it and replace with pip
   # make sure the rest of the install env is up-to-date, too
