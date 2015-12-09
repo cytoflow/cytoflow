@@ -432,6 +432,9 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
         except Exception as e:
             raise CytoflowOpError("FCS reader threw an error on tube {0}: {1}"\
                                .format(self.op.beads_file, str(e)))
+        
+        import matplotlib.pyplot as plt
+        import seaborn
 
         plt.figure()
         
