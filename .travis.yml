@@ -5,25 +5,32 @@ sudo: false
 addons:
   apt:
     packages:
-    - g++
-    - gfortran
-    - swig
-    - python-qt4
-    - libblas-dev
-    - liblapack-dev
-    - libatlas-dev
+      - g++
+      - gfortran
+      - swig
+      - python-qt4
+      - libblas-dev
+      - liblapack-dev
+      - libatlas-dev
 
 python:
-- '2.7'
+  - '2.7'
 
 before_install:
-- pip install --quiet --upgrade pip
+  - pip install --quiet --upgrade pip
+
+  # setup anaconda (from https://gist.github.com/dan-blanchard/7045057)
+  - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
+  - chmod +x miniconda.sh
+  - ./miniconda.sh -b
+  - export PATH=/home/travis/miniconda2/bin:$PATH
+  - conda update --yes conda
 
 install:
-- pip install --quiet --upgrade numpy
-- python setup.py develop
+  - conda install --yes python=$TRAVIS_PYTHON_VERSION numpy numexpr scipy matplotlib=1.4.3 nose dateutil pandas statsmodels scikit-learn seaborn pyface=4.4.0 envisage
+  - python setup.py develop
 
-script: nosetests cytoflow
+script: python setup.py nosetests
 
 deploy:
   provider: pypi

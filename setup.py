@@ -2,11 +2,7 @@ from __future__ import print_function
 from setuptools import setup, find_packages, Extension
 import io, os, re
 
-#on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
-
-# until RTD can get their act together
-on_rtd = (os.environ.get('PWD', "").find("readthedocs")) >= 0
-
+on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 no_logicle = os.environ.get('NO_LOGICLE', None) == 'True'
 
 print(os.environ)
@@ -52,11 +48,11 @@ setup(
                         'fcsparser>=0.1.1',
                         'numpy>=1.9.0',
                         'numexpr>=2.1',
-                        'matplotlib>=1.4.3',
+                        'matplotlib==1.4.3',
                         'scipy>=0.14',
                         'scikit-learn>=0.16',
                         'seaborn>=0.6.0',
-                        'pyface>=4.0',
+                        'pyface==4.4.0',
                         'envisage>=4.0'] \
                 if not on_rtd else None,
                         
@@ -104,5 +100,6 @@ setup(
                  'Programming Language :: Python :: Implementation :: CPython',
                  'Topic :: Scientific/Engineering :: Bio-Informatics'],
     
-    entry_points={'gui_scripts' : ['cytoflow = cytoflowgui:run_gui']}
+    entry_points={'gui_scripts' : ['cytoflow = cytoflowgui:run_gui'],
+                  'nose.plugins.0.10' : ['mplplugin = nose_plugins:MplPlugin']}
 )

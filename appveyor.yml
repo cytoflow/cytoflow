@@ -44,27 +44,20 @@ install:
   - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
   
   # install swig
-  - choco install swig -yv
+  - choco install swig -y
 
   # Install the build and runtime dependencies of the project.
-  - conda install --yes --quiet pandas numexpr scipy scikit-learn seaborn traits pyface envisage pyqt
+  - conda install --yes --quiet numpy numexpr scipy matplotlib=1.4.3 nose dateutil pandas statsmodels scikit-learn seaborn pyface=4.4.0 envisage
 
-  # conda's wheel 0.26 package is borked; remove it and replace with pip
-  # make sure the rest of the install env is up-to-date, too
-  - conda uninstall --yes wheel
-  - python -m pip install -U pip
-  - python -m pip install -U setuptools
-  - python -m pip install -U wheel
-
-  - "%WITH_COMPILER% python setup.py bdist_wheel bdist_wininst"
+  - "%WITH_COMPILER% python setup.py develop"
 
 build: off
 
 test_script:
-  - "%WITH_COMPILER% %PYTHON%/python setup.py test"
+  - "%WITH_COMPILER% %PYTHON%/python setup.py nosetests"
 
 after_test:
-  - "%WITH_COMPILER% %PYTHON%/python setup.py bdist_wheel"
+  - "%WITH_COMPILER% %PYTHON%/python setup.py bdist_wheel bdist_wininst"
 
 artifacts:
   - path: dist\*

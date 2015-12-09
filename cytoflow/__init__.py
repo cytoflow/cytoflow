@@ -13,6 +13,7 @@ from operations.bead_calibration import BeadCalibrationOp
 from operations.color_translation import ColorTranslationOp
 from operations.binning import BinningOp
 from operations.KeyImport import ImportKeyOp
+from operations.quad import QuadOp
 
 from views.histogram import HistogramView
 from views.hexbin import HexbinView
@@ -23,4 +24,4 @@ from views.bar_chart import BarChartView
 
 from utility.util import geom_mean
 
-__version__ = "0.1.8"
+__version__ = "0.1.11"

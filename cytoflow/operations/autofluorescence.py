@@ -8,6 +8,7 @@ import fcsparser
 from cytoflow.operations import IOperation
 from cytoflow.views import IView
 from cytoflow.utility import CytoflowOpError
+from cytoflow.utility.util import CytoflowOpError
 
 @provides(IOperation)
 class AutofluorescenceOp(HasStrictTraits):
@@ -69,26 +70,39 @@ class AutofluorescenceOp(HasStrictTraits):
         if not experiment:
             raise CytoflowOpError("No experiment specified")
         
-        if not set(self.channels) <= set(experiment.channels):
+        exp_channels = [x for x in experiment.metadata 
+                        if 'type' in experiment.metadata[x] 
+                        and experiment.metadata[x]['type'] == "channel"]
+
+        if not set(self.channels) <= set(exp_channels):
             raise CytoflowOpError("Specified channels that weren't found in "
-                               "the experiment.")
+                                  "the experiment.")
 
         # don't have to validate that blank_file exists; should crap out on 
         # trying to set a bad value
         
         try:
+            channel_naming = experiment.metadata["name_meta"]
             blank_meta, blank_data = \
-                fcsparser.parse(self.blank_file, reformat_meta = True)  
+                fcsparser.parse(self.blank_file, 
+                                reformat_meta = True,
+                                channel_naming = channel_naming)  
             blank_channels = blank_meta["_channels_"].set_index("$PnN")     
         except Exception as e:
-            raise CytoflowOpError("FCS reader threw an error: " + e.value)
+            raise CytoflowOpError("FCS reader threw an error: " + str(e))
         
         for channel in self.channels:
+            if (channel not in experiment.metadata
+                or 'voltage' not in experiment.metadata[channel]):
+                raise CytoflowOpError("Didn't find voltage for channel {0}"
+                                      .format(channel))
+                
             v = experiment.metadata[channel]['voltage']
             
             if not "$PnV" in blank_channels.ix[channel]:
-                raise CytoflowOpError("Didn't find a voltage for channel {0}" \
-                                   "in tube {1}".format(channel, self.blank_file))
+                raise CytoflowOpError("Didn't find a voltage for channel {0}"
+                                      "in tube {1}"
+                                      .format(channel, self.blank_file))
             
             blank_v = blank_channels.ix[channel]['$PnV']
             
@@ -115,8 +129,12 @@ class AutofluorescenceOp(HasStrictTraits):
         if not experiment:
             raise CytoflowOpError("No experiment specified")
         
-        if not set(self._af_median.keys()) <= set(experiment.channels) or \
-           not set(self._af_stdev.keys()) <= set(experiment.channels):
+        exp_channels = [x for x in experiment.metadata 
+                        if 'type' in experiment.metadata[x] 
+                        and experiment.metadata[x]['type'] == "channel"]
+        
+        if not set(self._af_median.keys()) <= set(exp_channels) or \
+           not set(self._af_stdev.keys()) <= set(exp_channels):
             raise CytoflowOpError("Autofluorescence estimates aren't set, or are "
                                "different than those in the experiment "
                                "parameter. Did you forget to run estimate()?")
@@ -173,7 +191,7 @@ class AutofluorescenceDiagnosticView(HasStrictTraits):
     name = Str
     op = Instance(IOperation)
     
-    def plot(self, experiment = None, **kwargs):
+    def plot(self, experiment, **kwargs):
         """Plot a faceted histogram view of a channel"""
         
         import matplotlib.pyplot as plt
@@ -183,7 +201,11 @@ class AutofluorescenceDiagnosticView(HasStrictTraits):
         kwargs.setdefault('alpha', 0.5)
         kwargs.setdefault('antialiased', True)
         
-        _, blank_data = fcsparser.parse(self.op.blank_file, reformat_meta=True)    
+        channel_naming = experiment.metadata["name_meta"]
+        
+        _, blank_data = fcsparser.parse(self.op.blank_file, 
+                                        reformat_meta = True,
+                                        channel_naming = channel_naming)    
         plt.figure()
         
         for idx, channel in enumerate(self.op.channels):

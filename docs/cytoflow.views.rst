@@ -44,30 +44,6 @@ cytoflow.views.i_view module
     :undoc-members:
     :show-inheritance:
 
-cytoflow.views.poly_selection module
-------------------------------------
-
-.. automodule:: cytoflow.views.poly_selection
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-cytoflow.views.range_selection module
--------------------------------------
-
-.. automodule:: cytoflow.views.range_selection
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-cytoflow.views.range_selection_2d module
-----------------------------------------
-
-.. automodule:: cytoflow.views.range_selection_2d
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 cytoflow.views.scatterplot module
 ---------------------------------
 
@@ -88,14 +64,6 @@ cytoflow.views.stats_2d module
 ------------------------------
 
 .. automodule:: cytoflow.views.stats_2d
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-cytoflow.views.threshold_selection module
------------------------------------------
-
-.. automodule:: cytoflow.views.threshold_selection
     :members:
     :undoc-members:
     :show-inheritance:

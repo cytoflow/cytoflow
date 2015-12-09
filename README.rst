@@ -5,8 +5,10 @@ Python tools for quantitative, reproducible flow cytometry analysis
 -------------------------------------------------------------------
 
 Welcome to a different style of flow cytometry analysis. For a quick
-demo, check out `an example IPython
-notebook <http://nbviewer.ipython.org/github/bpteague/cytoflow/blob/master/docs/examples/Basic%20Cytometry.ipynb>`__
+demo, check out `an introductory Jupyter
+notebook <http://nbviewer.ipython.org/github/bpteague/cytoflow/blob/master/docs/examples-basic/Basic%20Cytometry.ipynb>`__,
+and then look at `an example with some real
+data <http://nbviewer.ipython.org/github/bpteague/cytoflow/blob/master/docs/examples-basic/Yeast%20Dose%20Reponse.ipynb>`__
 
 What's wrong with other packages?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -31,6 +33,10 @@ What's different about CytoFlow?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A few things.
+
+-  **Free and open-source.** Use the software free-of-charge; modify it
+   to suit your own needs, then contribute your changes back so the rest
+   of the community can benefit from them.
 
 -  An emphasis on **metadata**. CytoFlow assumes that you are measuring
    fluorescence on several samples that were treated differently: either
@@ -68,6 +74,9 @@ A few things.
    analysis, such as fitting 2-dimensional Gaussians for automated
    gating and mixture modeling.
 
+Note: this is still beta software! Prepare to run into bugs. The point-and-click interface is even buggier, and does not expose all the functionality of the underlying analysis modules. Caveat emptor!
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 Installation
 ~~~~~~~~~~~~
 
@@ -80,7 +89,7 @@ Required packages
 
 These are all in the ``setuptools`` spec.
 
-For the core ``cytotools`` library, you need the following Python
+For the core ``cytoflow`` library, you need the following Python
 packages:
 
 ::
@@ -89,7 +98,7 @@ packages:
     pandas >= 0.15.0
     numpy >= 1.9.0
     numexpr >= 2.1
-    matplotlib >= 1.4.3
+    matplotlib == 1.4.3
     scipy >= 0.14
     scikit-learn >= 0.16
     seaborn >= 0.6.0
@@ -100,7 +109,7 @@ For the GUI, you additionally need:
 
 ::
 
-    pyface >= 4.0
+    pyface == 4.4.0
     envisage >= 4.0
     pyqt >= 4.10 -- this must be installed separately!
 

@@ -17,12 +17,11 @@ from traits.api import Instance, HasTraits, List, CFloat, Str, Dict, Interface, 
                        Property, Bool, provides, on_trait_change, DelegatesTo
                        
 from cytoflow import Experiment
+from cytoflow.utility import sanitize_identifier
 from value_bounds_editor import ValuesBoundsEditor
 import pandas as pd
 import numpy as np
 import re
-
-# TODO - something breaks when you set a column name with a space.
 
 class ISubsetModel(Interface):
     name = Str
@@ -47,18 +46,18 @@ class BoolSubsetModel(HasTraits):
     # MAGIC: gets the value of the Property trait "subset_str"
     def _get_subset_str(self):
         if self.selected_t and not self.selected_f:
-            return "({0} == True)".format(self.name)
+            return "({0} == True)".format(sanitize_identifier(self.name))
         elif not self.selected_t and self.selected_f:
-            return "({0} == False)".format(self.name)
+            return "({0} == False)".format(sanitize_identifier(self.name))
         else:
             return ""
     
     def _set_subset_str(self, val):
         """Update the view based on a subset string"""
-        if val == "({0} == True)".format(self.name):
+        if val == "({0} == True)".format(sanitize_identifier(self.name)):
             self.selected_t = True
             self.selected_f = False
-        elif val == "({0} == False)".format(self.name):
+        elif val == "({0} == False)".format(sanitize_identifier(self.name)):
             self.selected_t = False
             self.selected_f = True
         else:
@@ -73,13 +72,13 @@ class CategorySubsetModel(HasTraits):
     values = Property(trait = List,
                       depends_on = 'experiment')
     subset_str = Property(trait = Str,
-                          depends_on = 'name, values')
+                          depends_on = 'name, selected[]')
     
     def default_traits_view(self):
         return View(Item('selected',
                          label = self.name,
                          editor = CheckListEditor(values = self.values,
-                                                  cols = len(self.values)),
+                                                  cols = 2),
                          style = 'custom'))
     
     # MAGIC: gets the value of the Property trait "values"
@@ -91,14 +90,14 @@ class CategorySubsetModel(HasTraits):
 
     # MAGIC: gets the value of the Property trait "subset_str"
     def _get_subset_str(self):
-        if len(self.values) == 0:
+        if len(self.selected) == 0:
             return ""
         
         phrase = "("
-        for cat in self.values:
+        for cat in self.selected:
             if len(phrase) > 1:
                 phrase += " or "
-            phrase += "{0} == \"{1}\"".format(self.name, cat) 
+            phrase += "{0} == \"{1}\"".format(sanitize_identifier(self.name), cat) 
         phrase += ")"
         
         return phrase
@@ -149,7 +148,7 @@ class RangeSubsetModel(HasTraits):
             return ""
          
         return "({0} >= {1} and {0} <= {2})" \
-            .format(self.name, self.low, self.high)
+            .format(sanitize_identifier(self.name), self.low, self.high)
             
     # MAGIC: when the Property trait "subset_str" is set, update the editor.
     def _set_subset_str(self, val):
@@ -346,10 +345,12 @@ if __name__ == '__main__':
     ex.add_conditions({"Dox" : "bool"})
      
     tube1 = fcsparser.parse('../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs',
-                            reformat_meta = True)
+                            reformat_meta = True,
+                            channel_naming = "$PnN")
  
     tube2 = fcsparser.parse('../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs',
-                            reformat_meta = True)
+                            reformat_meta = True,
+                            channel_naming = "$PnN")
      
     ex.add_tube(tube1, {"Dox" : True})
     ex.add_tube(tube2, {"Dox" : False})

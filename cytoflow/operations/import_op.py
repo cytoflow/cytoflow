@@ -4,7 +4,7 @@ Created on Mar 20, 2015
 @author: brian
 '''
 from traits.api import HasStrictTraits, provides, Str, List, Bool, Int, Any, \
-                       Dict, File, Constant
+                       Dict, File, Constant, Enum
 
 import fcsparser
 import numpy as np
@@ -109,10 +109,13 @@ class ImportOp(HasStrictTraits):
         If `coarse == True`, how many random events to choose from each FCS 
         file.
         
+    name_metadata : Enum("$PnN", "$PnS") (default = "$PnN")
+        Which FCS metadata is the channel name?
+        
     ignore_v : Bool
         **CytoFlow** is designed to operate on an `Experiment` containing tubes
         that were all collected under the instrument settings.  In particular,
-        the same PMV voltages ensure that data can be compared across samples.
+        the same PMT voltages ensure that data can be compared across samples.
         
         *Very rarely*, you may need to set up an Experiment with different 
         voltage settings.  This is likely only to be the case when you are
@@ -139,6 +142,10 @@ class ImportOp(HasStrictTraits):
     # experimental conditions: name --> dtype.  can also be "log"
     conditions = Dict(Str, Str)
     tubes = List(Tube)
+        
+    # which FCS metadata has the channel name in it?
+    # (default is the first item in the enum, $PnN
+    name_meta = Enum("$PnN", "$PnS")
         
     # DON'T DO THIS
     ignore_v = Bool(False)
@@ -176,8 +183,13 @@ class ImportOp(HasStrictTraits):
             if is_log:
                 experiment.metadata[condition]["repr"] = "log"
         
+        experiment.metadata["name_meta"] = self.name_meta
+        
         for tube in self.tubes:
-            tube_fc = fcsparser.parse(tube.file, reformat_meta = True)
+            tube_fc = fcsparser.parse(tube.file, 
+                                      channel_naming = self.name_meta,
+                                      reformat_meta = True)
+            
             if self.coarse:
                 tube_meta, tube_data = tube_fc
                 tube_data = tube_data.loc[np.random.choice(tube_data.index,

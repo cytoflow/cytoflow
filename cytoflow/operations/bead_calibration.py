@@ -7,6 +7,8 @@ Created on Aug 31, 2015
 
 from __future__ import division
 
+import warnings
+
 from traits.api import HasStrictTraits, Str, CStr, File, Dict, Python, \
                        Instance, Int, List, Float, Constant, provides
 import numpy as np
@@ -144,13 +146,9 @@ class BeadCalibrationOp(HasStrictTraits):
     
     beads = Dict(Str, List(Float), transient = True)
 
-    _coefficients = Dict(Str, Python)
-    
-    def is_valid(self, experiment):
-        """Validate this operation against an experiment."""
+    #_coefficients = Dict(Str, Python)
+    _calibration_functions = Dict(Str, Python)
 
-
-    
     def estimate(self, experiment, subset = None): 
         """
         Estimate the calibration coefficients from the beads file.
@@ -158,19 +156,35 @@ class BeadCalibrationOp(HasStrictTraits):
         if not experiment:
             raise CytoflowOpError("No experiment specified")
         
+        exp_channels = [x for x in experiment.metadata 
+                        if 'type' in experiment.metadata[x] 
+                        and experiment.metadata[x]['type'] == "channel"]
+
+        if not set(self.units.keys()) <= set(exp_channels):
+            raise CytoflowOpError("Specified channels that weren't found in "
+                                  "the experiment.")
+        
         try:
-            beads_meta, beads_data = fcsparser.parse(self.beads_file, 
-                                                     reformat_meta = True)
+            channel_naming = experiment.metadata["name_meta"]
+            beads_meta, beads_data = \
+                fcsparser.parse(self.beads_file, 
+                                reformat_meta = True,
+                                channel_naming = channel_naming)
             beads_channels = beads_meta["_channels_"].set_index("$PnN")
         except Exception as e:
             raise CytoflowOpError("FCS reader threw an error on tube {0}: {1}"\
-                               .format(self.beads_file, e))
+                               .format(self.beads_file, str(e)))
         
         channels = self.units.keys()
 
         # make sure the voltages didn't change
         
         for channel in channels:
+            if (channel not in experiment.metadata
+                or 'voltage' not in experiment.metadata[channel]):
+                raise CytoflowOpError("Didn't find voltage for channel {0}"
+                                      .format(channel))
+                
             exp_v = experiment.metadata[channel]['voltage']
         
             if not "$PnV" in beads_channels.ix[channel]:
@@ -186,6 +200,8 @@ class BeadCalibrationOp(HasStrictTraits):
 
         for channel in channels:
             data = beads_data[channel]
+            
+            #TODO - this assumes the data is on a linear scale.  check it!
             
             # bin the data on a log scale
             data_range = experiment.metadata[channel]['range']
@@ -226,11 +242,12 @@ class BeadCalibrationOp(HasStrictTraits):
                 raise CytoflowOpError("Found too many peaks; check the diagnostic plot")
             elif len(peaks) == 1:
                 # if we only have one peak, assume it's the brightest peak
-                self._coefficients[channel] = [mef[-1] / peaks[0]] 
+                a = [mef[-1] / peaks[0]]
+                self._calibration_functions[channel] = lambda x, a=a: a * x
             elif len(peaks) == 2:
                 # if we have only two peaks, assume they're the brightest two
-                self._coefficients[channel] = \
-                    [(mef[-1] - mef[-2]) / (peaks[1] - peaks[0])]
+                a = [(mef[-1] - mef[-2]) / (peaks[1] - peaks[0])]
+                self._calibration_functions[channel] = lambda x, a=a: a * x
             else:
                 # if there are n > 2 peaks, check all the contiguous n-subsets
                 # of mef for the one whose linear regression with the peaks
@@ -251,10 +268,24 @@ class BeadCalibrationOp(HasStrictTraits):
                     
                     resid = lr[1][0]
                     if resid < best_resid:
+                        best_subset = mef_subset
                         best_lr = lr[0]
                         best_resid = resid
                         
-                self._coefficients[channel] = (best_lr[0], best_lr[1])
+                
+                # remember, these (linear) coefficients came from logspace, so 
+                # if the relationship in log10 space is Y = aX + b, then in
+                # linear space the relationship is x = 10**X, y = 10**Y,
+                # and y = (10**b) * x ^ a
+                
+                # also remember that the result of np.polyfit is a list of
+                # coefficients with the highest power first!  so if we
+                # solve y=ax + b, coeff #0 is a and coeff #1 is b
+                
+                a = best_lr[0]
+                b = 10 ** best_lr[1]
+                self._calibration_functions[channel] = \
+                    lambda x, a=a, b=b: b * np.power(x, a)
 
     def apply(self, experiment):
         """Applies the bleedthrough correction to an experiment.
@@ -276,14 +307,18 @@ class BeadCalibrationOp(HasStrictTraits):
         if not self.units:
             raise CytoflowOpError("Units not specified.")
         
-        if not self._coefficients:
+        if not self._calibration_functions:
             raise CytoflowOpError("Calibration not found. "
                                   "Did you forget to call estimate()?")
+            
+        exp_channels = [x for x in experiment.metadata 
+                        if 'type' in experiment.metadata[x] 
+                        and experiment.metadata[x]['type'] == "channel"]
         
-        if not set(channels) <= set(experiment.channels):
+        if not set(channels) <= set(exp_channels):
             raise CytoflowOpError("Module units don't match experiment channels")
                 
-        if set(channels) != set(self._coefficients.keys()):
+        if set(channels) != set(self._calibration_functions.keys()):
             raise CytoflowOpError("Calibration doesn't match units. "
                                   "Did you forget to call estimate()?")
         
@@ -304,23 +339,8 @@ class BeadCalibrationOp(HasStrictTraits):
         new_experiment.data.reset_index(drop = True, inplace = True)
         
         for channel in channels:
-            if len(self._coefficients[channel]) == 1:
-                # plain old multiplication
-                a = self._coefficients[channel][0]
-                calibration_fn = lambda x, a=a: a * x
-            else:
-                # remember, these (linear) coefficients came from logspace, so 
-                # if the relationship in log10 space is Y = aX + b, then in
-                # linear space the relationship is x = 10**X, y = 10**Y,
-                # and y = (10**b) * x ^ a
-                
-                # also remember that the result of np.polyfit is a list of
-                # coefficients with the highest power first!  so if we
-                # solve y=ax + b, coeff #0 is a and coeff #1 is b
-                a = self._coefficients[channel][0]
-                b = 10 ** self._coefficients[channel][1]
-                calibration_fn = lambda x, a=a, b=b: b * np.power(x, a)
-    
+            calibration_fn = self._calibration_functions[channel]
+            
             new_experiment[channel] = calibration_fn(new_experiment[channel])
             new_experiment.metadata[channel]['bead_calibration_fn'] = calibration_fn
             new_experiment.metadata[channel]['units'] = self.units[channel]
@@ -339,12 +359,15 @@ class BeadCalibrationOp(HasStrictTraits):
         """
         
         try:
-            _ = fcsparser.parse(self.beads_file, 
-                                meta_data_only = True, 
-                                reformat_meta = True)
+            # suppress the channel name warnings
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                _ = fcsparser.parse(self.beads_file, 
+                                    meta_data_only = True, 
+                                    reformat_meta = True)
         except Exception as e:
             raise CytoflowOpError("FCS reader threw an error on tube {0}: {1}"\
-                               .format(self.beads_file, e))
+                               .format(self.beads_file, str(e)))
 
         return BeadCalibrationDiagnostic(op = self)
     
@@ -396,16 +419,19 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
     # TODO - why can't I use BeadCalibrationOp here?
     op = Instance(IOperation)
     
-    def plot(self, experiment = None, **kwargs):
+    def plot(self, experiment, **kwargs):
         """Plot a faceted histogram view of a channel"""
       
         try:
-            beads_meta, beads_data = fcsparser.parse(self.op.beads_file, 
-                                            reformat_meta = True)
+            channel_naming = experiment.metadata["name_meta"]
+            beads_meta, beads_data = \
+                fcsparser.parse(self.op.beads_file, 
+                                reformat_meta = True,
+                                channel_naming = channel_naming)
             beads_channels = beads_meta["_channels_"].set_index("$PnN")
         except Exception as e:
             raise CytoflowOpError("FCS reader threw an error on tube {0}: {1}"\
-                               .format(self.op.beads_file, e))
+                               .format(self.op.beads_file, str(e)))
         
         import matplotlib.pyplot as plt
         import seaborn

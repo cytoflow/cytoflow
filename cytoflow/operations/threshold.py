@@ -88,7 +88,11 @@ class ThresholdOp(HasStrictTraits):
             raise CytoflowOpError("Experiment already contains a column {0}"
                                .format(self.name))
             
-        if self.channel not in experiment.channels:
+        exp_channels = [x for x in experiment.metadata 
+                        if 'type' in experiment.metadata[x] 
+                        and experiment.metadata[x]['type'] == "channel"]
+            
+        if self.channel not in exp_channels:
             raise CytoflowOpError("{0} isn't a channel in the experiment"
                                   .format(self.channel))
         
@@ -218,10 +222,12 @@ if __name__ == '__main__':
     import fcsparser
 
     tube1 = fcsparser.parse('../../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs',
-                            reformat_meta = True)
+                            reformat_meta = True,
+                            channel_naming = "$PnN")
 
     tube2 = fcsparser.parse('../../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs',
-                            reformat_meta = True)
+                            reformat_meta = True,
+                            channel_naming = "$PnN")
     
     ex = flow.Experiment()
     ex.add_conditions({"Dox" : "float"})

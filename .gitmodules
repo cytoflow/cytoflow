@@ -1,0 +1,3 @@
+[submodule "cytoflow-examples"]
+	path = docs/examples-advanced
+	url = https://github.com/bpteague/cytoflow-examples.git

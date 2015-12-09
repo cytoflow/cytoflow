@@ -141,3 +141,15 @@ def cartesian(arrays, out=None):
         for j in xrange(1, arrays[0].size):
             out[j*m:(j+1)*m,1:] = out[0:m,1:]
     return out
+
+def sanitize_identifier(name):
+    """Makes name a Python identifier by replacing all nonsafe characters with '_'"""
+    
+    new_name = list(name)
+    for i, c in enumerate(list(name)): # character by character
+        if i == 0 and not (c.isalpha() or c == '_'):
+            new_name[i] = '_'
+        if i > 0 and not (c.isalnum() or c == '_'):
+            new_name[i] = '_'
+
+    return  "".join(new_name)

@@ -35,10 +35,10 @@ class Stats1DHandler(Controller, ViewHandlerMixin):
     
     def default_traits_view(self):
         return View(Item('object.name'),
-                    Item('object.xvariable',
+                    Item('object.variable',
                          editor=EnumEditor(name='handler.conditions'),
                          # TODO - restrict this to NUMERIC values?
-                         label = "X Variable"),
+                         label = "Variable"),
                     Item('object.ychannel',
                          editor=EnumEditor(name='handler.channels'),
                          label = "Y Channel"),

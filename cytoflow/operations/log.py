@@ -65,7 +65,11 @@ class LogTransformOp(HasStrictTraits):
         if not experiment:
             raise CytoflowOpError("No experiment specified")
         
-        if not set(self.channels).issubset(set(experiment.channels)):
+        exp_channels = [x for x in experiment.metadata 
+                        if 'type' in experiment.metadata[x] 
+                        and experiment.metadata[x]['type'] == "channel"]
+        
+        if not set(self.channels).issubset(set(exp_channels)):
             raise CytoflowOpError("The op channels aren't in the experiment")
         
         if self.threshold <= 0:
