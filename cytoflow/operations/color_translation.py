@@ -200,6 +200,7 @@ class ColorTranslationOp(HasStrictTraits):
                 gmm = sklearn.mixture.GMM(n_components=2)
                 fit = gmm.fit(np.log10(data[from_channel][:, np.newaxis]))
     
+                # pick the component with the maximum mean
                 mu_idx = 0 if fit.means_[0][0] > fit.means_[1][0] else 1
                 weights = [x[mu_idx] for x in fit.predict_proba(np.log10(data[from_channel][:, np.newaxis]))]
             else:
