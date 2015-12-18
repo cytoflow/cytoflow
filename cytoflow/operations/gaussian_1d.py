@@ -7,13 +7,17 @@ Created on Dec 16, 2015
 from __future__ import division
 
 from traits.api import HasStrictTraits, Str, CStr, File, Dict, Python, \
-                       Instance, Tuple, Bool, Constant, provides
+                       Instance, Tuple, Bool, Constant, Int, Float, List, \
+                       Enum, provides, DelegatesTo
 import numpy as np
 import fcsparser
 import warnings
 import matplotlib.pyplot as plt
 import math
-import sklearn.mixture
+from sklearn import mixture
+import pandas as pd
+
+from cytoflow import Experiment, HistogramView
 
 from cytoflow.operations import IOperation
 from cytoflow.views import IView
@@ -53,15 +57,15 @@ class GaussianMixture1DOp(HasStrictTraits):
     channel : Str
         Which channel to apply the mixture model to.
         
-    num_components : Int
-        How many components to fit to the data? 
+    num_components : Int (default = 2)
+        How many components to fit to the data?  Must be >= 2.
 
     sigma : Float (default = 0.0)
         How many standard deviations on either side of the mean to include
         in each category?  If an event is in multiple components, assign it
         to the component with the highest posterior probability.  If 
         `sigma == 0.0`, categorize *all* the data by assigning each event to
-        the component with the highest posterior probability.
+        the component with the highest posterior probability.  Must be >= 0.0.
     
     by : List(Str)
         A list of metadata attributes to aggregate the data before estimating
@@ -71,10 +75,183 @@ class GaussianMixture1DOp(HasStrictTraits):
         `Time` and `Dox`.
         
     scale : Enum("linear", "log") (default = "linear")
-        Re-scale the data before fitting the data?
-        
-        
-     
+        Re-scale the data before fitting the data?  
+        TODO - not currently implemented.
     """
     
+    id = Constant('edu.mit.synbio.cytoflow.operations.gaussian_1d')
+    friendly_id = Constant("1D Gaussian Mixture")
+    
+    name = CStr()
+    channel = Str()
+    num_components = Int(2)
+    sigma = Float(0.0)
+    by = List(Str)
+    
+    # scale = Enum("linear", "log")
+    
+    _gmms = Dict(Tuple, Instance(mixture.GMM))
+    
+    def estimate(self, experiment, subset = None):
+        """
+        Estimate the Gaussian mixture model parameters
+        """
+        
+        if not experiment:
+            raise CytoflowOpError("No experiment specified")
+
+        if self.channel not in experiment.data:
+            raise CytoflowOpError("Column {0} not found in the experiment"
+                                  .format(self.channel))
+            
+        if self.num_components < 2:
+            raise CytoflowOpError("num_components must be >= 2") 
+       
+        for b in self.by:
+            if b not in experiment.data:
+                raise CytoflowOpError("Aggregation metadata {0} not found"
+                                      " in the experiment"
+                                      .format(b))
+            if len(experiment.data[b].unique()) > 100: #WARNING - magic number
+                raise CytoflowOpError("More than 100 unique values found for"
+                                      " aggregation metadata {0}.  Did you"
+                                      " accidentally specify a data channel?"
+                                      .format(b))
+                
+        if self.by:
+            for group, data_subset in experiment.data.groupby(self.by):
+                x = data_subset[self.channel].reset_index(drop = True)
+                gmm = mixture.GMM(n_components = self.num_components)
+                gmm.fit(x[:, np.newaxis], random_state = 1)
+                
+                if not gmm._converged:
+                    raise CytoflowOpError("Estimator didn't converge"
+                                          " for group {0}"
+                                          .format(group))
+                
+                self._gmms[group] = gmm 
+        else:
+            x = experiment.data[self.channel].reset_index(drop = True)
+            gmm = mixture.GMM(n_components = self.num_components)
+            gmm.fit(x[:, np.newaxis])
+            
+            if not gmm._converged:
+                raise CytoflowOpError("Estimator didn't converge")
+            
+            self._gmms[()] = gmm
+                
+    
+    def apply(self, experiment):
+        """
+        Assigns new metadata to events using the mixture model estimated
+        in `estimate`.
+        """
+            
+        if not experiment:
+            raise CytoflowOpError("No experiment specified")
+
+        
+        if not self._gmms:
+            raise CytoflowOpError("No components found.  Did you forget to "
+                                  "call estimate()?")
+
+        if self.channel not in experiment.data:
+            raise CytoflowOpError("Column {0} not found in the experiment"
+                                  .format(self.channel))
+            
+        if self.num_components < 2:
+            raise CytoflowOpError("num_components must be >= 2") 
+       
+        for b in self.by:
+            if b not in experiment.data:
+                raise CytoflowOpError("Aggregation metadata {0} not found"
+                                      " in the experiment"
+                                      .format(b))
+            if len(experiment.data[b].unique()) > 100: #WARNING - magic number
+                raise CytoflowOpError("More than 100 unique values found for"
+                                      " aggregation metadata {0}.  Did you"
+                                      " accidentally specify a data channel?"
+                                      .format(b))
+                
+            for groups, _ in self._gmms:
+                for group in groups:
+                    if not group in self.by:
+                        raise CytoflowOpError("Mismatch between groups in "
+                                              "self.by and previously estimated "
+                                              "models.  Did you forget to "
+                                              "call estimate()?")
+                           
+        if self.sigma < 0.0:
+            raise CytoflowOpError("sigma must be >= 0.0")
+        
+        # what we DON'T want to do is iterate through event-by-event.
+        # the more of this we can push into numpy, sklearn and pandas,
+        # the faster it's going to be.
+        
+        if self.by:
+            groupby = experiment.data.groupby(self.by)
+            
+        for group, gmm in self._gmms:
+            if group == (): # no groups, only one mixture model
+                data = experiment.data
+            else:
+                data = groupby.get_group(groups)
+                
+            x = data[self.channel]
+        
+            if self.sigma == 0.0:
+                # assign each event to the component with the highest
+                # posterior probability
+                pass
+            
+ 
+            
+        
+    
+    def default_view(self):
+        """
+        Returns a diagnostic plot of the Gaussian mixture model.
+        
+        Returns
+        -------
+            IView : an IView, call plot() to see the diagnostic plot.
+        """
+        return GaussianMixture1DView(op = self)
+    
+@provides(IView)
+class GaussianMixture1DView(HistogramView):
+    """
+    Attributes
+    ----------
+    name : Str
+        The instance name (for serialization, UI etc.)
+        
+    op : Instance(GaussianMixture1DOp)
+        The op whose parameters we're viewing.
+    """
+    
+    id = 'edu.mit.synbio.cytoflow.view.gaussianmixture1dview'
+    friendly_id = "1D Gaussian Mixture Diagnostic Plot"
+    
+    # TODO - why can't I use GaussianMixture1DOp here?
+    op = Instance(IOperation)
+    name = DelegatesTo('op')
+    channel = DelegatesTo('op')
+    huefacet = DelegatesTo('op', 'name')
+    
+    def plot(self, experiment, **kwargs):
+        """
+        Plot the plots.
+        """
+        
+        if not self.huefacet:
+            raise CytoflowViewError("didn't set GaussianMixture1DOp.name")
+        
+        try:
+            temp_experiment = self.op.apply(experiment)
+            super(GaussianMixture1DView, self).plot(temp_experiment, **kwargs)
+        except CytoflowOpError as e:
+            raise CytoflowViewError(e.__str__())
+        
+        
     

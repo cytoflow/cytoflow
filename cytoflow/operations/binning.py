@@ -187,7 +187,7 @@ class BinningView(HistogramView):
     
     def plot(self, experiment, **kwargs):
         if not self.huefacet:
-            raise CytoflowViewError("didn't set BinningOp.channel")
+            raise CytoflowViewError("didn't set BinningOp.name")
         
         try:
             temp_experiment = self.op.apply(experiment)
