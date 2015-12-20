@@ -149,7 +149,15 @@ class GaussianMixture1DOp(HasStrictTraits):
             
         if not experiment:
             raise CytoflowOpError("No experiment specified")
+        
+        # make sure name got set!
+        if not self.name:
+            raise CytoflowOpError("You have to set the gate's name "
+                                  "before applying it!")
 
+        if self.name in experiment.data.columns:
+            raise CytoflowOpError("Experiment already has a column named {0}"
+                                  .format(self.name))
         
         if not self._gmms:
             raise CytoflowOpError("No components found.  Did you forget to "
@@ -184,29 +192,31 @@ class GaussianMixture1DOp(HasStrictTraits):
         if self.sigma < 0.0:
             raise CytoflowOpError("sigma must be >= 0.0")
         
+        new_experiment = experiment.clone()
+        
         # what we DON'T want to do is iterate through event-by-event.
         # the more of this we can push into numpy, sklearn and pandas,
         # the faster it's going to be.
         
         if self.by:
-            groupby = experiment.data.groupby(self.by)
+            groupby = new_experiment.data.groupby(self.by)
             
         for group, gmm in self._gmms:
             if group == (): # no groups, only one mixture model
-                data = experiment.data
+                data = new_experiment.data
             else:
                 data = groupby.get_group(groups)
-                
-            x = data[self.channel]
-        
-            if self.sigma == 0.0:
-                # assign each event to the component with the highest
-                # posterior probability
-                pass
+
+            x = data[self.channel][:, np.newaxis]
             
- 
+            posteriors = gmm.predict_proba(x)
             
-        
+            if self.sigma > 0.0:
+                for c in self.num_components:
+                    lo = (gmm.means_[c][0] 
+                          - self.sigma * np.sqrt(gmm.covars_[c][0]))
+                    hi = (gmm.means_[c][0] 
+                          + self.sigma * np.sqrt(gmm.covars_[c][0]))       
     
     def default_view(self):
         """
