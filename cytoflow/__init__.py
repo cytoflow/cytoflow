@@ -13,6 +13,7 @@ from operations.bead_calibration import BeadCalibrationOp
 from operations.color_translation import ColorTranslationOp
 from operations.binning import BinningOp
 from operations.quad import QuadOp
+from operations.gaussian_1d import GaussianMixture1DOp
 
 from views.histogram import HistogramView
 from views.hexbin import HexbinView

@@ -6,18 +6,20 @@ Created on Dec 16, 2015
 
 from __future__ import division
 
-from traits.api import HasStrictTraits, Str, CStr, File, Dict, Python, \
+from traits.api import HasStrictTraits, Str, CStr, File, Dict, Any, \
                        Instance, Tuple, Bool, Constant, Int, Float, List, \
-                       Enum, provides, DelegatesTo
+                       Enum, provides, DelegatesTo, undefined
 import numpy as np
 import fcsparser
 import warnings
 import matplotlib.pyplot as plt
 import math
 from sklearn import mixture
+from scipy import stats
 import pandas as pd
+import seaborn as sns
 
-from cytoflow import Experiment, HistogramView
+from cytoflow.views.histogram import HistogramView
 
 from cytoflow.operations import IOperation
 from cytoflow.views import IView
@@ -77,6 +79,11 @@ class GaussianMixture1DOp(HasStrictTraits):
     scale : Enum("linear", "log") (default = "linear")
         Re-scale the data before fitting the data?  
         TODO - not currently implemented.
+        
+    posteriors : Bool (default = False)
+        If `True`, add one column per component giving the posterior probability
+        that each event is in each component.  Useful for filtering out
+        low-probability events.
     """
     
     id = Constant('edu.mit.synbio.cytoflow.operations.gaussian_1d')
@@ -90,7 +97,10 @@ class GaussianMixture1DOp(HasStrictTraits):
     
     # scale = Enum("linear", "log")
     
-    _gmms = Dict(Tuple, Instance(mixture.GMM))
+    posteriors = Bool(False)
+    
+    # the key is either a single value or a tuple
+    _gmms = Dict(Any, Instance(mixture.GMM))
     
     def estimate(self, experiment, subset = None):
         """
@@ -119,27 +129,24 @@ class GaussianMixture1DOp(HasStrictTraits):
                                       .format(b))
                 
         if self.by:
-            for group, data_subset in experiment.data.groupby(self.by):
-                x = data_subset[self.channel].reset_index(drop = True)
-                gmm = mixture.GMM(n_components = self.num_components)
-                gmm.fit(x[:, np.newaxis], random_state = 1)
-                
-                if not gmm._converged:
-                    raise CytoflowOpError("Estimator didn't converge"
-                                          " for group {0}"
-                                          .format(group))
-                
-                self._gmms[group] = gmm 
+            groupby = experiment.data.groupby(self.by)
         else:
-            x = experiment.data[self.channel].reset_index(drop = True)
-            gmm = mixture.GMM(n_components = self.num_components)
+            # use a lambda expression to return a group that contains
+            # all the events
+            groupby = experiment.data.groupby(lambda x: True)
+            
+        for group, data_subset in groupby:
+            x = data_subset[self.channel].reset_index(drop = True)
+            gmm = mixture.GMM(n_components = self.num_components,
+                              random_state = 1)
             gmm.fit(x[:, np.newaxis])
             
-            if not gmm._converged:
-                raise CytoflowOpError("Estimator didn't converge")
-            
-            self._gmms[()] = gmm
-                
+            if not gmm.converged_:
+                raise CytoflowOpError("Estimator didn't converge"
+                                      " for group {0}"
+                                      .format(group))
+           
+            self._gmms[group] = gmm
     
     def apply(self, experiment):
         """
@@ -175,24 +182,30 @@ class GaussianMixture1DOp(HasStrictTraits):
                 raise CytoflowOpError("Aggregation metadata {0} not found"
                                       " in the experiment"
                                       .format(b))
+
             if len(experiment.data[b].unique()) > 100: #WARNING - magic number
                 raise CytoflowOpError("More than 100 unique values found for"
                                       " aggregation metadata {0}.  Did you"
                                       " accidentally specify a data channel?"
                                       .format(b))
-                
-            for groups, _ in self._gmms:
-                for group in groups:
-                    if not group in self.by:
-                        raise CytoflowOpError("Mismatch between groups in "
-                                              "self.by and previously estimated "
-                                              "models.  Did you forget to "
-                                              "call estimate()?")
                            
         if self.sigma < 0.0:
             raise CytoflowOpError("sigma must be >= 0.0")
         
         new_experiment = experiment.clone()
+        name_dtype = np.dtype("S{0}".format(len(self.name) + 5))
+        new_experiment.data[self.name] = \
+            np.full(len(new_experiment.data.index), "", name_dtype)
+        new_experiment.metadata[self.name] = {'type' : 'meta'}
+        new_experiment.conditions[self.name] = "category"
+        
+        if self.posteriors:
+            for i in range(0, self.num_components):
+                col_name = "{0}_{1}_Posterior".format(self.name, i+1)
+                new_experiment.data[col_name] = \
+                    np.full(len(new_experiment.data.index), 0.0)
+                new_experiment.metadata[col_name] = {'type' : 'meta'}
+                new_experiment.conditions[col_name] = "float"
         
         # what we DON'T want to do is iterate through event-by-event.
         # the more of this we can push into numpy, sklearn and pandas,
@@ -200,23 +213,60 @@ class GaussianMixture1DOp(HasStrictTraits):
         
         if self.by:
             groupby = new_experiment.data.groupby(self.by)
+        else:
+            # use a lambda expression to return a group that
+            # contains all the events
+            groupby = new_experiment.data.groupby(lambda x: True)
+        
+        for group, data_subset in groupby:
+            gmm = self._gmms[group]
+            x = data_subset[self.channel]
             
-        for group, gmm in self._gmms:
-            if group == (): # no groups, only one mixture model
-                data = new_experiment.data
-            else:
-                data = groupby.get_group(groups)
-
-            x = data[self.channel][:, np.newaxis]
+            # make a preliminary assignment
+            predicted = gmm.predict(x[:,np.newaxis])
             
-            posteriors = gmm.predict_proba(x)
-            
+            # if we're doing sigma-based gating, for each component check
+            # to see if the event is in the sigma gate.
             if self.sigma > 0.0:
-                for c in self.num_components:
+                
+                # make a quick dataframe with the value and the predicted
+                # component
+                gate_df = pd.DataFrame({"x" : x, "p" : predicted})
+
+                # for each component, get the low and the high threshold
+                for c in range(0, self.num_components):
                     lo = (gmm.means_[c][0] 
                           - self.sigma * np.sqrt(gmm.covars_[c][0]))
                     hi = (gmm.means_[c][0] 
-                          + self.sigma * np.sqrt(gmm.covars_[c][0]))       
+                          + self.sigma * np.sqrt(gmm.covars_[c][0]))
+                    
+                    # and build an expression with numexpr so it evaluates fast!
+                    gate_bool = gate_df.eval("p == @c and x >= @lo and x <= @hi").values
+                    predicted[np.logical_and(predicted == c, gate_bool == False)] = -1
+        
+            # TODO - sort component assignments by mean.  eg, the lowest
+            # mean should be component 1, then component 2, etc.
+        
+            cname = np.full(len(predicted), self.name + "_", name_dtype)
+            predicted_str = np.char.mod('%d', predicted + 1) 
+            predicted_str = np.char.add(cname, predicted_str)
+            predicted_str[predicted == -1] = "{0}_None".format(self.name)
+
+            # it took me a few goes to get this slicing right.  the key
+            # is the use of .loc so you're not chaining lookups
+            new_experiment.data.loc[groupby.groups[group], self.name] = \
+                predicted_str
+                    
+            if self.posteriors:
+                probability = gmm.predict_proba(x[:,np.newaxis])
+                #print probability[:, 0]
+                for i in range(0, self.num_components):
+                    col_name = "{0}_{1}_Posterior".format(self.name, i+1)
+                    #print probability[i]
+                    new_experiment.data.loc[groupby.groups[group], col_name] = \
+                        probability[:, i]
+                    
+        return new_experiment
     
     def default_view(self):
         """
@@ -238,6 +288,10 @@ class GaussianMixture1DView(HistogramView):
         
     op : Instance(GaussianMixture1DOp)
         The op whose parameters we're viewing.
+        
+    group : Python (default: None)
+        The subset of data to display.  Must match one of the keys of 
+        `op._gmms`.  If `None` (the default), display a plot for each subset.
     """
     
     id = 'edu.mit.synbio.cytoflow.view.gaussianmixture1dview'
@@ -248,6 +302,7 @@ class GaussianMixture1DView(HistogramView):
     name = DelegatesTo('op')
     channel = DelegatesTo('op')
     huefacet = DelegatesTo('op', 'name')
+    group = Any(None)
     
     def plot(self, experiment, **kwargs):
         """
@@ -257,11 +312,46 @@ class GaussianMixture1DView(HistogramView):
         if not self.huefacet:
             raise CytoflowViewError("didn't set GaussianMixture1DOp.name")
         
+        if not self.op._gmms:
+            raise CytoflowViewError("Didn't find a model. Did you call "
+                                    "estimate()?")
+            
+        if self.group and self.group not in self.op._gmms:
+            raise CytoflowViewError("didn't find group {0} in op._gmms"
+                                    .format(self.group))
+        
+        # if `group` wasn't specified, make a new plot per group.
+        if self.op.by and not self.group:
+            groupby = experiment.data.groupby(self.op.by)
+            for group, _ in groupby:
+                GaussianMixture1DView(op = self.op,
+                                      group = group).plot(experiment, **kwargs)
+                plt.title("{0} = {1}".format(self.op.by, group))
+            return
+                
+        temp_experiment = experiment.clone()
+        if self.group:
+            groupby = experiment.data.groupby(self.op.by)
+            temp_experiment.data = groupby.get_group(self.group)
+        
         try:
-            temp_experiment = self.op.apply(experiment)
-            super(GaussianMixture1DView, self).plot(temp_experiment, **kwargs)
+            temp_experiment = self.op.apply(temp_experiment)
         except CytoflowOpError as e:
             raise CytoflowViewError(e.__str__())
+
+        # plot the group's histogram, colored by component
+        super(GaussianMixture1DView, self).plot(temp_experiment, **kwargs)
         
-        
-    
+        # plot the actual distribution on top of it.
+        xmin, xmax = plt.gca().get_xlim()
+        x = np.linspace(xmin, xmax, 500)
+        _, ymax = plt.gca().get_ylim()
+        gmm = self.op._gmms[self.group] if self.group else self.op._gmms[True]
+        for i in range(0, len(gmm.means_)):
+            mean = gmm.means_[i][0]
+            stdev = np.sqrt(gmm.covars_[i][0])
+            y = stats.norm.pdf(x, mean, stdev) * (ymax / 8)
+            color_i = i % 6
+            color = sns.color_palette()[i]
+            plt.plot(x, y, color = color)
+            
