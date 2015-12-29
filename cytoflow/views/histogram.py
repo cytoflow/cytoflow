@@ -104,6 +104,7 @@ class HistogramView(HasStrictTraits):
         # for a reference.
         
         num_bins = num_hist_bins(data[self.channel])
+        num_bins = 50 if num_bins < 50 else num_bins
         xmin = np.amin(data[self.channel])
         xmax = np.amax(data[self.channel])
                     
