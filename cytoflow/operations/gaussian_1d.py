@@ -351,7 +351,7 @@ class GaussianMixture1DView(HistogramView):
             mean = gmm.means_[i][0]
             stdev = np.sqrt(gmm.covars_[i][0])
             y = stats.norm.pdf(x, mean, stdev) * (ymax / 8)
-            color_i = i % 6
-            color = sns.color_palette()[i]
+            color_i = i % len(sns.color_palette())
+            color = sns.color_palette()[color_i]
             plt.plot(x, y, color = color)
             
