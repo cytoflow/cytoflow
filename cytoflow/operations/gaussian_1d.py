@@ -23,7 +23,7 @@ from cytoflow.views.histogram import HistogramView
 
 from cytoflow.operations import IOperation
 from cytoflow.views import IView
-from cytoflow.utility import CytoflowOpError, CytoflowViewError
+from cytoflow.utility import CytoflowOpError, CytoflowViewError, num_hist_bins
 
 @provides(IOperation)
 
@@ -354,14 +354,32 @@ class GaussianMixture1DView(HistogramView):
         super(GaussianMixture1DView, self).plot(temp_experiment, **kwargs)
         
         # plot the actual distribution on top of it.
-        xmin, xmax = plt.gca().get_xlim()
-        x = np.linspace(xmin, xmax, 500)
-        _, ymax = plt.gca().get_ylim()
+        # we want to scale the plots so they have the same area under the
+        # curve as the histograms.  we'll do so with the predicted group
+        # assignments (as opposed to the values of self.name) because we
+        # want the scale to be the same regardless of self.op.sigma
+    
         gmm = self.op._gmms[self.group] if self.group else self.op._gmms[True]
+        
+        predicted = gmm.predict(temp_experiment[self.channel][:, np.newaxis])
+        temp_experiment.data[self.name + "_predicted"] = predicted
+                
         for i in range(0, len(gmm.means_)):
+            groupby = temp_experiment.data.groupby(self.name + "_predicted")
+            group_data = groupby.get_group(i).reset_index(drop = True)
+            xmin = np.amin(group_data[self.channel])
+            xmax = np.amax(group_data[self.channel])
+            hist_bin_width = (xmax - xmin) / num_hist_bins(group_data[self.channel])
+            pdf_scale = hist_bin_width * len(group_data.index)
+            
+            # okay, so maybe we'll fudge a little.
+            pdf_scale *= 1.2
+            
+            plt_min, plt_max = plt.gca().get_xlim()
+            x = np.linspace(plt_min, plt_max, 100)
             mean = gmm.means_[i][0]
             stdev = np.sqrt(gmm.covars_[i][0])
-            y = stats.norm.pdf(x, mean, stdev) * (ymax / 8)
+            y = stats.norm.pdf(x, mean, stdev) * pdf_scale
             color_i = i % len(sns.color_palette())
             color = sns.color_palette()[color_i]
             plt.plot(x, y, color = color)

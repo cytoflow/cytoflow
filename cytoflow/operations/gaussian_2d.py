@@ -264,6 +264,9 @@ class GaussianMixture2DOp(HasStrictTraits):
                 # for each component, get the ellipse that follows the isoline
                 # around the mixture component
                 # cf. http://scikit-learn.org/stable/auto_examples/mixture/plot_gmm.html
+                # and http://www.mathworks.com/matlabcentral/newsreader/view_thread/298389
+                # and http://stackoverflow.com/questions/7946187/point-and-ellipse-rotated-position-test-algorithm
+                # i am not proud of how many tries this took me to get right.
 
                 for c in range(0, self.num_components):
                     mean = gmm.means_[c]
@@ -274,7 +277,6 @@ class GaussianMixture2DOp(HasStrictTraits):
                     xc = mean[0]
                     yc = mean[1]
                     
-
                     v, w = linalg.eigh(covar)
                     u = w[0] / linalg.norm(w[0])
                     
@@ -290,9 +292,7 @@ class GaussianMixture2DOp(HasStrictTraits):
                     cos_t = np.cos(t)
                                         
                     # and build an expression with numexpr so it evaluates fast!
-                    # cf. http://www.mathworks.com/matlabcentral/newsreader/view_thread/298389
-                    # and http://stackoverflow.com/questions/7946187/point-and-ellipse-rotated-position-test-algorithm
-                    # i am not proud of how many tries this took me to get right.
+
                     gate_bool = gate_df.eval("p == @c and "
                                              "((x - @xc) * @cos_t - (y - @yc) * @sin_t) ** 2 / ((@xl / 2) ** 2) + "
                                              "((x - @xc) * @sin_t + (y - @yc) * @cos_t) ** 2 / ((@yl / 2) ** 2) <= 1").values
@@ -396,7 +396,7 @@ class GaussianMixture2DView(ScatterplotView):
         super(GaussianMixture2DView, self).plot(temp_experiment, **kwargs)
         
         # plot the actual distribution on top of it.  display as a "contour"
-        # plot with lines at 1, 2, and 3 standard deviations
+        # plot with arcs at 1, 2, and 3 standard deviations
         # cf. http://scikit-learn.org/stable/auto_examples/mixture/plot_gmm.html
         
         gmm = self.op._gmms[self.group] if self.group else self.op._gmms[True]
@@ -404,7 +404,7 @@ class GaussianMixture2DView(ScatterplotView):
             v, w = linalg.eigh(covar)
             u = w[0] / linalg.norm(w[0])
             
-            #rotation angle
+            #rotation angle (in degrees)
             t = np.arctan(u[1] / u[0])
             t = 180 * t / np.pi
             
