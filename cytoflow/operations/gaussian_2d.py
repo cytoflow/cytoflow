@@ -30,7 +30,7 @@ from cytoflow.utility import CytoflowOpError, CytoflowViewError
 
 class GaussianMixture2DOp(HasStrictTraits):
     """
-    This module fits a Gaussian mixture model with a specified number of
+    This module fits a 2D Gaussian mixture model with a specified number of
     components to a pair of channels.
     
     Creates a new categorical metadata variable named `name`, with possible
@@ -188,8 +188,19 @@ class GaussianMixture2DOp(HasStrictTraits):
             raise CytoflowOpError("Column {0} not found in the experiment"
                                   .format(self.ychannel))
             
+        if (self.name + "_Posterior") in experiment.data:
+            raise CytoflowOpError("Column {0} already found in the experiment"
+                                  .format(self.name + "_Posterior"))
+
         if self.num_components < 2:
             raise CytoflowOpError("num_components must be >= 2") 
+
+        if self.posteriors:
+            for i in range(0, self.num_components):
+                col_name = "{0}_{1}_Posterior".format(self.name, i+1)
+                if col_name in experiment.data:
+                    raise CytoflowOpError("Column {0} already found in the experiment"
+                                  .format(col_name))
        
         for b in self.by:
             if b not in experiment.data:
@@ -223,7 +234,8 @@ class GaussianMixture2DOp(HasStrictTraits):
         
         # what we DON'T want to do is iterate through event-by-event.
         # the more of this we can push into numpy, sklearn and pandas,
-        # the faster it's going to be.
+        # the faster it's going to be.  for example, this is why
+        # we don't use Ellipse.contains().  
         
         if self.by:
             groupby = new_experiment.data.groupby(self.by)
@@ -245,21 +257,49 @@ class GaussianMixture2DOp(HasStrictTraits):
                 
                 # make a quick dataframe with the value and the predicted
                 # component
-                gate_df = pd.DataFrame({"x" : x, "p" : predicted})
+                gate_df = pd.DataFrame({"x" : data_subset[self.xchannel], 
+                                        "y" : data_subset[self.ychannel],
+                                        "p" : predicted})
 
-                # for each component, get the low and the high threshold
+                # for each component, get the ellipse that follows the isoline
+                # around the mixture component
+                # cf. http://scikit-learn.org/stable/auto_examples/mixture/plot_gmm.html
+
                 for c in range(0, self.num_components):
-                    lo = (gmm.means_[c][0] 
-                          - self.sigma * np.sqrt(gmm.covars_[c][0]))
-                    hi = (gmm.means_[c][0] 
-                          + self.sigma * np.sqrt(gmm.covars_[c][0]))
+                    mean = gmm.means_[c]
+                    covar = gmm._get_covars()[c]
                     
+                    # xc is the center on the x axis
+                    # yc is the center on the y axis
+                    xc = mean[0]
+                    yc = mean[1]
+                    
+
+                    v, w = linalg.eigh(covar)
+                    u = w[0] / linalg.norm(w[0])
+                    
+                    # xl is the length along the x axis
+                    # yl is the length along the y axis
+                    xl = np.sqrt(v[0]) * self.sigma
+                    yl = np.sqrt(v[1]) * self.sigma
+                    
+                    # t is the rotation in radians (counter-clockwise)
+                    t = 2 * np.pi - np.arctan(u[1] / u[0])
+                    
+                    sin_t = np.sin(t)
+                    cos_t = np.cos(t)
+                                        
                     # and build an expression with numexpr so it evaluates fast!
-                    gate_bool = gate_df.eval("p == @c and x >= @lo and x <= @hi").values
+                    # cf. http://www.mathworks.com/matlabcentral/newsreader/view_thread/298389
+                    # and http://stackoverflow.com/questions/7946187/point-and-ellipse-rotated-position-test-algorithm
+                    # i am not proud of how many tries this took me to get right.
+                    gate_bool = gate_df.eval("p == @c and "
+                                             "((x - @xc) * @cos_t - (y - @yc) * @sin_t) ** 2 / ((@xl / 2) ** 2) + "
+                                             "((x - @xc) * @sin_t + (y - @yc) * @cos_t) ** 2 / ((@yl / 2) ** 2) <= 1").values
+
                     predicted[np.logical_and(predicted == c, gate_bool == False)] = -1
         
-            # TODO - sort component assignments by mean.  eg, the lowest
-            # mean should be component 1, then component 2, etc.
+            # TODO - sort component assignments ... somehow?  hrm.
         
             cname = np.full(len(predicted), self.name + "_", name_dtype)
             predicted_str = np.char.mod('%d', predicted + 1) 
@@ -273,10 +313,8 @@ class GaussianMixture2DOp(HasStrictTraits):
                     
             if self.posteriors:
                 probability = gmm.predict_proba(x[:,np.newaxis])
-                #print probability[:, 0]
                 for i in range(0, self.num_components):
                     col_name = "{0}_{1}_Posterior".format(self.name, i+1)
-                    #print probability[i]
                     new_experiment.data.loc[groupby.groups[group], col_name] = \
                         probability[:, i]
                     
@@ -357,22 +395,47 @@ class GaussianMixture2DView(ScatterplotView):
         # plot the group's scatterplot, colored by component
         super(GaussianMixture2DView, self).plot(temp_experiment, **kwargs)
         
-        # plot the actual distribution on top of it.  display as a "topo" 
+        # plot the actual distribution on top of it.  display as a "contour"
         # plot with lines at 1, 2, and 3 standard deviations
+        # cf. http://scikit-learn.org/stable/auto_examples/mixture/plot_gmm.html
+        
         gmm = self.op._gmms[self.group] if self.group else self.op._gmms[True]
         for i, (mean, covar) in enumerate(zip(gmm.means_, gmm._get_covars())):
             v, w = linalg.eigh(covar)
             u = w[0] / linalg.norm(w[0])
-            angle = np.arctan(u[1] / u[0])
-            angle = 180 * angle / np.pi
+            
+            #rotation angle
+            t = np.arctan(u[1] / u[0])
+            t = 180 * t / np.pi
             
             color_i = i % len(sns.color_palette())
             color = sns.color_palette()[color_i]
             ell = mpl.patches.Ellipse(mean, 
                                       np.sqrt(v[0]), 
                                       np.sqrt(v[1]),
-                                      180 + angle, 
-                                      color = color)
-            ell.set_alpha(0.5)
+                                      180 + t, 
+                                      color = color,
+                                      fill = False,
+                                      linewidth = 2)
+            plt.gca().add_artist(ell)
+            
+            ell = mpl.patches.Ellipse(mean, 
+                                      np.sqrt(v[0]) * 2, 
+                                      np.sqrt(v[1]) * 2,
+                                      180 + t, 
+                                      color = color,
+                                      fill = False,
+                                      linewidth = 2)
+            ell.set_alpha(0.66)
+            plt.gca().add_artist(ell)
+            
+            ell = mpl.patches.Ellipse(mean, 
+                                      np.sqrt(v[0]) * 3, 
+                                      np.sqrt(v[1]) * 3,
+                                      180 + t, 
+                                      color = color,
+                                      fill = False,
+                                      linewidth = 2)
+            ell.set_alpha(0.33)
             plt.gca().add_artist(ell)
     

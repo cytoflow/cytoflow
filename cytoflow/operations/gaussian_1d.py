@@ -174,8 +174,19 @@ class GaussianMixture1DOp(HasStrictTraits):
             raise CytoflowOpError("Column {0} not found in the experiment"
                                   .format(self.channel))
             
+        if (self.name + "_Posterior") in experiment.data:
+            raise CytoflowOpError("Column {0} already found in the experiment"
+                                  .format(self.name + "_Posterior"))
+
         if self.num_components < 2:
             raise CytoflowOpError("num_components must be >= 2") 
+
+        if self.posteriors:
+            for i in range(0, self.num_components):
+                col_name = "{0}_{1}_Posterior".format(self.name, i+1)
+                if col_name in experiment.data:
+                    raise CytoflowOpError("Column {0} already found in the experiment"
+                                  .format(col_name))
        
         for b in self.by:
             if b not in experiment.data:
