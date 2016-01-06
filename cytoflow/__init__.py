@@ -15,6 +15,7 @@ from operations.binning import BinningOp
 from operations.quad import QuadOp
 from operations.gaussian_1d import GaussianMixture1DOp
 from operations.gaussian_2d import GaussianMixture2DOp
+from operations.bleedthrough_linear import BleedthroughLinearOp
 
 from views.histogram import HistogramView
 from views.hexbin import HexbinView

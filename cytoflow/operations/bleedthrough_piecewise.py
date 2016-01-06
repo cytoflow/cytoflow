@@ -115,6 +115,7 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
     
     # because the order of the channels is important, we can't just call
     # _interpolators.keys()
+    # TODO - this is ugly and unpythonic.  :-/
     _channels = List(Str)
     
     def estimate(self, experiment, subset = None): 
