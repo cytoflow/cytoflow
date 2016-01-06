@@ -150,7 +150,22 @@ class GaussianMixture2DOp(HasStrictTraits):
                 raise CytoflowOpError("Estimator didn't converge"
                                       " for group {0}"
                                       .format(group))
-           
+                
+            # in the 1D version, we sort the components by the means -- so
+            # the first component has the lowest mean, the second component
+            # has the next-lowest mean, etc.  that doesn't work in a 2D area,
+            # obviously.
+            
+            # instead, we assume that the clusters are likely (?) to be
+            # arranged along *one* of the axes, so we take the |norm| of the
+            # x,y mean of each cluster and sort that way.
+            
+            norms = (gmm.means_[:, 0] ** 2 + gmm.means_[:, 1] ** 2) ** 0.5
+            sort_idx = np.argsort(norms)
+            gmm.means_ = gmm.means_[sort_idx]
+            gmm.weights_ = gmm.weights_[sort_idx]
+            gmm.covars_ = gmm.covars_[sort_idx]
+            
             self._gmms[group] = gmm
     
     def apply(self, experiment):
@@ -291,8 +306,6 @@ class GaussianMixture2DOp(HasStrictTraits):
                                              "((x - @xc) * @sin_t + (y - @yc) * @cos_t) ** 2 / ((@yl / 2) ** 2) <= 1").values
 
                     predicted[np.logical_and(predicted == c, gate_bool == False)] = -1
-        
-            # TODO - sort component assignments ... somehow?  hrm.
         
             cname = np.full(len(predicted), self.name + "_", name_dtype)
             predicted_str = np.char.mod('%d', predicted + 1) 

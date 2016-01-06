@@ -140,6 +140,15 @@ class GaussianMixture1DOp(HasStrictTraits):
                 raise CytoflowOpError("Estimator didn't converge"
                                       " for group {0}"
                                       .format(group))
+                
+            # to make sure we have a stable ordering, sort the components
+            # by the means (so the first component has the lowest mean, 
+            # the next component has the next-lowest, etc.)
+            
+            sort_idx = np.argsort(gmm.means_[:, 0])
+            gmm.means_ = gmm.means_[sort_idx]
+            gmm.weights_ = gmm.weights_[sort_idx]
+            gmm.covars_ = gmm.covars_[sort_idx]
            
             self._gmms[group] = gmm
     
@@ -247,9 +256,6 @@ class GaussianMixture1DOp(HasStrictTraits):
                     # and build an expression with numexpr so it evaluates fast!
                     gate_bool = gate_df.eval("p == @c and x >= @lo and x <= @hi").values
                     predicted[np.logical_and(predicted == c, gate_bool == False)] = -1
-        
-            # TODO - sort component assignments by mean.  eg, the lowest
-            # mean should be component 1, then component 2, etc.
         
             cname = np.full(len(predicted), self.name + "_", name_dtype)
             predicted_str = np.char.mod('%d', predicted + 1) 
