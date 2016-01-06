@@ -38,9 +38,8 @@ class GaussianMixture2DOp(HasStrictTraits):
     any category, it is assigned to `name_None`.
     
     Optionally, if `posteriors` is `True`, this module will also compute the 
-    posterior probability of each event in each component.  Each component
-    will have a metadata column named `name_i_Posterior` containing the
-    posterior probability that that event is in that component.
+    posterior probability of each event in its assigned component, returning
+    it in a new colunm named `{Name}_Posterior`.
     
     Finally, the same mixture model (mean and standard deviation) may not
     be appropriate for every subset of the data.  If this is the case, you
