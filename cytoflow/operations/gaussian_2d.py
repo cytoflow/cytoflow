@@ -6,16 +6,13 @@ Created on Dec 16, 2015
 
 from __future__ import division
 
-from traits.api import HasStrictTraits, Str, CStr, File, Dict, Any, \
-                       Instance, Tuple, Bool, Constant, Int, Float, List, \
-                       Enum, provides, DelegatesTo, undefined
+from traits.api import HasStrictTraits, Str, CStr, Dict, Any, \
+                       Instance, Bool, Constant, Int, Float, List, \
+                       provides, DelegatesTo
 import numpy as np
-import fcsparser
-import warnings
 import matplotlib.pyplot as plt
-import math
 from sklearn import mixture
-from scipy import stats, linalg
+from scipy import linalg
 import pandas as pd
 import seaborn as sns
 import matplotlib as mpl
@@ -274,22 +271,22 @@ class GaussianMixture2DOp(HasStrictTraits):
                     
                     # xc is the center on the x axis
                     # yc is the center on the y axis
-                    xc = mean[0]
-                    yc = mean[1]
+                    xc = mean[0]  # @UnusedVariable
+                    yc = mean[1]  # @UnusedVariable
                     
                     v, w = linalg.eigh(covar)
                     u = w[0] / linalg.norm(w[0])
                     
                     # xl is the length along the x axis
                     # yl is the length along the y axis
-                    xl = np.sqrt(v[0]) * self.sigma
-                    yl = np.sqrt(v[1]) * self.sigma
+                    xl = np.sqrt(v[0]) * self.sigma  # @UnusedVariable
+                    yl = np.sqrt(v[1]) * self.sigma  # @UnusedVariable
                     
                     # t is the rotation in radians (counter-clockwise)
                     t = 2 * np.pi - np.arctan(u[1] / u[0])
                     
-                    sin_t = np.sin(t)
-                    cos_t = np.cos(t)
+                    sin_t = np.sin(t)  # @UnusedVariable
+                    cos_t = np.cos(t)  # @UnusedVariable
                                         
                     # and build an expression with numexpr so it evaluates fast!
 
@@ -312,7 +309,7 @@ class GaussianMixture2DOp(HasStrictTraits):
                 predicted_str
                     
             if self.posteriors:
-                probability = gmm.predict_proba(x[:,np.newaxis])
+                probability = gmm.predict_proba(x)
                 for i in range(0, self.num_components):
                     col_name = "{0}_{1}_Posterior".format(self.name, i+1)
                     new_experiment.data.loc[groupby.groups[group], col_name] = \
@@ -396,7 +393,7 @@ class GaussianMixture2DView(ScatterplotView):
         super(GaussianMixture2DView, self).plot(temp_experiment, **kwargs)
         
         # plot the actual distribution on top of it.  display as a "contour"
-        # plot with arcs at 1, 2, and 3 standard deviations
+        # plot with ellipses at 1, 2, and 3 standard deviations
         # cf. http://scikit-learn.org/stable/auto_examples/mixture/plot_gmm.html
         
         gmm = self.op._gmms[self.group] if self.group else self.op._gmms[True]

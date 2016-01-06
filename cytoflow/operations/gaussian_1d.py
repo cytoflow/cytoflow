@@ -6,14 +6,11 @@ Created on Dec 16, 2015
 
 from __future__ import division
 
-from traits.api import HasStrictTraits, Str, CStr, File, Dict, Any, \
-                       Instance, Tuple, Bool, Constant, Int, Float, List, \
-                       Enum, provides, DelegatesTo, undefined
+from traits.api import HasStrictTraits, Str, CStr, Dict, Any, \
+                       Instance, Bool, Constant, Int, Float, List, \
+                       provides, DelegatesTo
 import numpy as np
-import fcsparser
-import warnings
 import matplotlib.pyplot as plt
-import math
 from sklearn import mixture
 from scipy import stats
 import pandas as pd
@@ -26,7 +23,6 @@ from cytoflow.views import IView
 from cytoflow.utility import CytoflowOpError, CytoflowViewError, num_hist_bins
 
 @provides(IOperation)
-
 class GaussianMixture1DOp(HasStrictTraits):
     """
     This module fits a Gaussian mixture model with a specified number of
@@ -246,9 +242,9 @@ class GaussianMixture1DOp(HasStrictTraits):
 
                 # for each component, get the low and the high threshold
                 for c in range(0, self.num_components):
-                    lo = (gmm.means_[c][0] 
+                    lo = (gmm.means_[c][0]    # @UnusedVariable
                           - self.sigma * np.sqrt(gmm.covars_[c][0]))
-                    hi = (gmm.means_[c][0] 
+                    hi = (gmm.means_[c][0]    # @UnusedVariable
                           + self.sigma * np.sqrt(gmm.covars_[c][0]))
                     
                     # and build an expression with numexpr so it evaluates fast!
