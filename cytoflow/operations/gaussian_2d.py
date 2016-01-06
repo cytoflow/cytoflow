@@ -81,9 +81,9 @@ class GaussianMixture2DOp(HasStrictTraits):
         TODO - not currently implemented.
         
     posteriors : Bool (default = False)
-        If `True`, add one column per component giving the posterior probability
-        that each event is in each component.  Useful for filtering out
-        low-probability events.
+        If `True`, add a column named `{Name}_Posterior` giving the posterior
+        probability that the event is in the component to which it was
+        assigned.  Useful for filtering out low-probability events.
     """
     
     id = Constant('edu.mit.synbio.cytoflow.operations.gaussian_2d')
@@ -192,11 +192,10 @@ class GaussianMixture2DOp(HasStrictTraits):
             raise CytoflowOpError("num_components must be >= 2") 
 
         if self.posteriors:
-            for i in range(0, self.num_components):
-                col_name = "{0}_{1}_Posterior".format(self.name, i+1)
-                if col_name in experiment.data:
-                    raise CytoflowOpError("Column {0} already found in the experiment"
-                                  .format(col_name))
+            col_name = "{0}_Posterior".format(self.name)
+            if col_name in experiment.data:
+                raise CytoflowOpError("Column {0} already found in the experiment"
+                              .format(col_name))
        
         for b in self.by:
             if b not in experiment.data:
@@ -221,13 +220,12 @@ class GaussianMixture2DOp(HasStrictTraits):
         new_experiment.conditions[self.name] = "category"
         
         if self.posteriors:
-            for i in range(0, self.num_components):
-                col_name = "{0}_{1}_Posterior".format(self.name, i+1)
-                new_experiment.data[col_name] = \
-                    np.full(len(new_experiment.data.index), 0.0)
-                new_experiment.metadata[col_name] = {'type' : 'meta'}
-                new_experiment.conditions[col_name] = "float"
-        
+            col_name = "{0}_Posterior".format(self.name)
+            new_experiment.data[col_name] = \
+                np.full(len(new_experiment.data.index), 0.0)
+            new_experiment.metadata[col_name] = {'type' : 'meta'}
+            new_experiment.conditions[col_name] = "float"
+    
         # what we DON'T want to do is iterate through event-by-event.
         # the more of this we can push into numpy, sklearn and pandas,
         # the faster it's going to be.  for example, this is why
@@ -309,10 +307,10 @@ class GaussianMixture2DOp(HasStrictTraits):
                     
             if self.posteriors:
                 probability = gmm.predict_proba(x)
+                col_name = "{0}_Posterior".format(self.name)
                 for i in range(0, self.num_components):
-                    col_name = "{0}_{1}_Posterior".format(self.name, i+1)
-                    new_experiment.data.loc[groupby.groups[group], col_name] = \
-                        probability[:, i]
+                    new_experiment.data.loc[predicted == i, col_name] = \
+                        probability[predicted == i, i]
                     
         return new_experiment
     
