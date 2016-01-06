@@ -24,7 +24,6 @@ from cytoflow.views import IView
 from cytoflow.utility import CytoflowOpError, CytoflowViewError
 
 @provides(IOperation)
-
 class GaussianMixture2DOp(HasStrictTraits):
     """
     This module fits a 2D Gaussian mixture model with a specified number of
