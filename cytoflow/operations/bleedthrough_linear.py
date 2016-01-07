@@ -8,6 +8,7 @@ from __future__ import division
 
 from traits.api import HasStrictTraits, Str, CStr, File, Dict, Python, \
                        Instance, Int, List, Constant, Tuple, Float, provides
+    
 import numpy as np
 import math
 import os
@@ -23,6 +24,7 @@ from cytoflow.operations.i_operation import IOperation
 from cytoflow.operations.hlog import hlog, hlog_inv
 from cytoflow.views import IView
 from cytoflow.utility import CytoflowOpError, cartesian
+from piston_mini_client import returns
 
 @provides(IOperation)
 class BleedthroughLinearOp(HasStrictTraits):
@@ -158,6 +160,21 @@ class BleedthroughLinearOp(HasStrictTraits):
                 if from_channel == to_channel:
                     continue
                 
+                # sometimes some of the data is off the edge of the
+                # plot, and this screws up a linear regression
+                
+                # TODO - do a better job figuring out (and excluding)
+                # off-axis data
+                from_5, from_95 = np.percentile(data[from_channel], (5, 95))
+                data = data[data[from_channel] > from_5]
+                data = data[data[from_channel] < from_95]
+                
+                to_5, to_95 = np.percentile(data[to_channel], (5, 95))
+                data = data[data[to_channel] > to_5]
+                data = data[data[to_channel] < to_95]
+                
+                data.reset_index(drop = True, inplace = True)
+                
                 lr = np.polyfit(data[from_channel],
                                 data[to_channel],
                                 deg = 1)
@@ -182,17 +199,140 @@ class BleedthroughLinearOp(HasStrictTraits):
         if not self.spillover:
             raise CytoflowOpError("Spillover matrix isn't set. "
                                   "Did you forget to run estimate()?")
-            
-        exp_channels = [x for x in experiment.metadata 
-                        if 'type' in experiment.metadata[x] 
-                        and experiment.metadata[x]['type'] == "channel"]
         
         for (from_channel, to_channel) in self.spillover:
-            if not from_channel in exp_channels:
+            if not from_channel in experiment.data:
                 raise CytoflowOpError("Can't find channel {0} in experiment"
                                       .format(from_channel))
-            if not to_channel in exp_channels:
+            if not to_channel in experiment.data:
                 raise CytoflowOpError("Can't find channel {0} in experiment"
                                       .format(to_channel))
+                
+            if not (to_channel, from_channel) in self.spillover:
+                raise CytoflowOpError("Must have both (from, to) and "
+                                      "(to, from) keys in self.spillover")
         
         new_experiment = experiment.clone()
+        
+        # the completely arbitrary ordering of the channels
+        channels = list(set([x for (x, _) in self.spillover.keys()]))
+        
+        # build the spillover matrix from the spillover dictionary
+        a = [  [self.spillover[(y, x)] if x != y else 1.0 for x in channels]
+               for y in channels]
+        
+        # invert it.  use the pseudoinverse in case a is singular
+        a_inv = np.linalg.pinv(a)
+        
+        new_experiment.data[channels] = np.dot(experiment.data[channels], a_inv)
+        
+        for channel in channels:
+            # add the spillover values to the channel's metadata
+            new_experiment.metadata[channel]['linear_bleedthrough'] = \
+                {x : self.spillover[(x, channel)]
+                     for x in channels if x != channel}
+        
+        return new_experiment
+    
+    def default_view(self):
+        """
+        Returns a diagnostic plot to make sure spillover estimation is working.
+        
+        Returns
+        -------
+            IView : An IView, call plot() to see the diagnostic plots
+        """
+ 
+        # the completely arbitrary ordering of the channels
+        channels = list(set([x for (x, _) in self.spillover.keys()]))
+        
+        if set(self.controls.keys()) != set(channels):
+            raise CytoflowOpError("Must have both the controls and bleedthrough to plot")
+        
+        # make sure we can get the control tubes to plot the diagnostic
+        for channel in channels:       
+            try:
+                # suppress the channel name warnings
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                
+                    _ = fcsparser.parse(self.controls[channel], 
+                                        meta_data_only = True, 
+                                        reformat_meta = True)
+            except Exception as e:
+                raise CytoflowOpError("FCS reader threw an error on tube {0}: {1}"\
+                                   .format(self.controls[channel], str(e)))
+
+        return BleedthroughLinearDiagnostic(op = self)
+    
+@provides(IView)
+class BleedthroughLinearDiagnostic(HasStrictTraits):
+    """
+    Plots a scatterplot of each channel vs every other channel and the 
+    bleedthrough line
+    
+    Attributes
+    ----------
+    name : Str
+        The instance name (for serialization, UI etc.)
+    
+    op : Instance(BleedthroughPiecewiseOp)
+        The op whose parameters we're viewing
+        
+    """
+    
+    # traits   
+    id = "edu.mit.synbio.cytoflow.view.autofluorescencediagnosticview"
+    friendly_id = "Autofluorescence Diagnostic" 
+    
+    name = Str
+    
+    # TODO - why can't I use BleedthroughPiecewiseOp here?
+    op = Instance(IOperation)
+    
+    def plot(self, experiment = None, **kwargs):
+        """Plot a faceted histogram view of a channel"""
+        
+        kwargs.setdefault('histtype', 'stepfilled')
+        kwargs.setdefault('alpha', 0.5)
+        kwargs.setdefault('antialiased', True)
+         
+        plt.figure()
+        
+        # the completely arbitrary ordering of the channels
+        channels = list(set([x for (x, _) in self.op.spillover.keys()]))
+        num_channels = len(channels)
+        
+        for from_idx, from_channel in enumerate(channels):
+            for to_idx, to_channel in enumerate(channels):
+                if from_idx == to_idx:
+                    continue
+                
+                try:
+                    channel_naming = experiment.metadata["name_meta"]
+                    _, tube_data = \
+                        fcsparser.parse(self.op.controls[from_channel], 
+                                        reformat_meta = True,
+                                        channel_naming = channel_naming)
+                except Exception as e:
+                    raise CytoflowOpError("FCS reader threw an error on tube {0}: {1}"\
+                                          .format(self.op.controls[from_channel], str(e)))
+             
+                plt.subplot(num_channels, 
+                            num_channels, 
+                            from_idx + (to_idx * num_channels) + 1)
+                plt.xlim(np.percentile(tube_data[from_channel], (5, 95)))
+                plt.ylim(np.percentile(tube_data[to_channel], (5, 95)))
+                plt.xlabel(from_channel)
+                plt.ylabel(to_channel)
+                plt.scatter(tube_data[from_channel],
+                            tube_data[to_channel],
+                            alpha = 0.1,
+                            s = 1,
+                            marker = 'o')
+                
+                xstart, xstop = np.percentile(tube_data[from_channel], (5, 95))
+                xs = np.linspace(xstart, xstop, 10)
+                ys = xs * self.op.spillover[(from_channel, to_channel)]
+          
+                plt.plot(xs, ys, 'g-', lw=3)
