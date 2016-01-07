@@ -83,6 +83,17 @@ class GaussianMixture2DOp(HasStrictTraits):
         If `True`, add a column named `{Name}_Posterior` giving the posterior
         probability that the event is in the component to which it was
         assigned.  Useful for filtering out low-probability events.
+    
+    Examples
+    --------
+    
+    >>> gauss_op = GaussianMixture2DOp(name = "Gaussian",
+    ...                                xchannel = "V2-A",
+    ...                                ychannel = "Y2-A",
+    ...                                num_components = 2)
+    >>> gauss_op.estimate(ex2)
+    >>> gauss_op.default_view().plot(ex2)
+    >>> ex3 = gauss_op.apply(ex2)
     """
     
     id = Constant('edu.mit.synbio.cytoflow.operations.gaussian_2d')
