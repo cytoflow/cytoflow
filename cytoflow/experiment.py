@@ -1,5 +1,6 @@
 import pandas as pd
-from traits.api import HasStrictTraits, Dict, List, Instance, Set, Str, Any
+from traits.api import HasStrictTraits, Dict, List, Instance, Set, Str, Any, \
+                       Property, cached_property
 
 from utility import CytoflowError, sanitize_identifier
 
@@ -48,8 +49,11 @@ class Experiment(HasStrictTraits):
         column-specific metadata. Operations may define their own metadata, 
         which is occasionally useful if modules are expected to work together.
         An incomplete list of column-specific metadata:
-        * type (Enum: "channel" or "meta") : is a column a channel or an 
-            event-level metadata?  many modules don't care, but some do.
+        * type (Enum: "channel", "category", "float", "int", "bool") : what kind
+            of data is stored in this column?  If the column is event
+            measurement data (raw, transformed, or derived), then the value is 
+            "channel".  If the column is per-event metadata, then the value is
+            a NumPy `dtype` -- `category`, `float`, `int`, or `bool`.
         * voltage (int) : for channels, the detector voltage used. from the FCS
             keyword "$PnV".
         * range (float) : for channels, the maximum possible value.  from the FCS
@@ -61,6 +65,15 @@ class Experiment(HasStrictTraits):
             one-parameter function that takes either a single value or a list 
             of values and applies the transformation (or inverse).  necessary
             for computing tic marks on plots, among other things.
+        
+    channels : List(Str)
+        A read-only `Property` containing the names of columns in `data` that
+        are channels (ie, `metadata[channel]['type'] == "channel"`)
+        
+    conditions : Dict(Str : Str)
+        A read-only `Property` containing the names of columnns in `data`
+        that are not channels (as the dictionary keys), and their type \
+        (dictionary values).
         
     Notes
     -----              
@@ -121,17 +134,17 @@ class Experiment(HasStrictTraits):
     dtype: int64
 
     """
-    
-    # potentially mutable.  deep copy required
-    conditions = Dict(Str, Str, copy = "deep")
+
+    # this doesn't play nice with copy.copy(); clone it ourselves.
+    data = Instance(pd.DataFrame, args=())
     
     # potentially mutable.  deep copy required
     metadata = Dict(Str, Any, copy = "deep")
     
-    # this doesn't play nice with copy.copy(); clone it ourselves.
-    data = Instance(pd.DataFrame, args=())
+    channels = Property(List, depends_on = "metadata")
+    conditions = Property(Dict, depends_on = "metadata")
     
-    # don't really have to keep this one around at all
+    # keep the tube conditions so we can check for uniqueness
     _tube_conditions = Set(transient = True)
             
     def __getitem__(self, key):
@@ -142,14 +155,26 @@ class Experiment(HasStrictTraits):
         """Override __setitem__ so we can assign columns like ex.column = ..."""
         return self.data.__setitem__(key, value)
     
+    @cached_property
+    def _get_channels(self):
+        return [x for x in self.metadata
+                if isinstance(self.metadata[x], dict)
+                and self.metadata[x]['type'] == "channel"]
+    
+    @cached_property
+    def _get_conditions(self):
+        return {x : self.metadata[x]['type'] for x in self.metadata
+                if isinstance(self.metadata[x], dict)
+                and self.metadata[x]['type'] != "channel"}
+    
     def query(self, expr, **kwargs):
         """
         Expose pandas.DataFrame.query() to the outside world
 
         This method "sanitizes" column names first, replacing characters that
         are not valid in a Python identifier with an underscore '_'. So, the
-        column name "a column" becomes "a_column", and can be queried with
-        an `expr` string `a_column == True` or such.
+        column name `a column` becomes `a_column`, and can be queried with
+        an `a_column == True` or such.
         
         Parameters
         ----------
@@ -203,14 +228,18 @@ class Experiment(HasStrictTraits):
         >>> ex.add_conditions({"Time" : "float", "Strain" : "category"})      
         """
         
-        if(self._tube_conditions):
-            raise CytoflowError("You have to add all your conditions before "
-                                "adding your tubes!")              
-            
+        if(len(self.data.index) > 0):
+            raise CytoflowError("You can't add conditions after you have "
+                                "already added a tube!")              
+    
         for key, _ in conditions.iteritems():
+            if key in self.metadata:
+                raise CytoflowError("You have already added condition {0}"
+                                    .format(key))
+            
+        for key, key_type in conditions.iteritems():
             self.metadata[key] = {}
-        
-        self.conditions.update(conditions)
+            self.metadata[key]['type'] = key_type
              
     def add_tube(self, tube, conditions, ignore_v = False):
         """Add a tube of data, and its experimental conditions, to this Experiment.
@@ -257,20 +286,16 @@ class Experiment(HasStrictTraits):
         tube_channels = tube_meta["_channels_"].set_index("$PnN")    
         tube_file = tube_meta["$FIL"]   
     
-        if len(self.data.columns) > 0:
+        if len(self.data.index) > 0:
             # first, make sure the new tube's channels match the rest of the 
             # channels in the Experiment
             
-            channels = [x for x in self.metadata 
-                        if 'type' in self.metadata[x] 
-                        and self.metadata[x]['type'] == "channel"]
-            
-            if set(tube_meta["_channel_names_"]) != set(channels):
+            if set(tube_meta["_channel_names_"]) != set(self.channels):
                 raise CytoflowError("Tube {0} doesn't have the same channels "
                                    "as the first tube added".format(tube_file))
              
             # next check the per-channel parameters
-            for channel in channels:
+            for channel in self.channels:
                 
                 # first check voltage
                 if "voltage" in self.metadata[channel]:    
