@@ -19,7 +19,7 @@ from cytoflow.utility import CytoflowViewError
 @provides(IView)
 class Stats1DView(HasStrictTraits):
     """
-    Divide the data up by `variable`, then plot a line plot of `variable`
+    Divide the data up by `by`, then plot a line plot of `by`
     on the x axis with a summary statistic `yfunction` of the same data in 
     `ychannel` on the y axis. 
     
@@ -28,11 +28,11 @@ class Stats1DView(HasStrictTraits):
     name : Str
         The plot's name 
     
-    variable : Str
-        the name of the condition to put on the X axis
+    by : Str
+        the name of the conditioning variable to put on the X axis
 
     ychannel : Str
-        Apply `yfunction` to `ychannel` for each value of `variable`
+        Apply `yfunction` to `ychannel` for each value of `by`
         
     yfunction : Callable (list-like --> float)
         What summary function to apply to `ychannel`
@@ -84,7 +84,7 @@ class Stats1DView(HasStrictTraits):
     ...                            scale = "log",
     ...                            bin_width = 0.1).apply(ex)
     >>> view = Stats1DView(name = "Dox vs IFP",
-    ...                    variable = "Dox",
+    ...                    by = "Dox",
     ...                    ychannel = "Pacific Blue-A",
     ...                    huefacet = "CFP_Bin",
     ...                    yfunction = flow.geom_mean)
@@ -96,7 +96,7 @@ class Stats1DView(HasStrictTraits):
     friendly_id = "1D Statistics View" 
     
     name = Str
-    variable = Str
+    by = Str
     ychannel = Str
     yfunction = Callable
     xfacet = Str
@@ -122,17 +122,17 @@ class Stats1DView(HasStrictTraits):
         if not experiment:
             raise CytoflowViewError("No experiment specified")
         
-        if not self.variable:
-            raise CytoflowViewError("Independent variable not set")
+        if not self.by:
+            raise CytoflowViewError("Stats1DView.by not set")
             
-        if self.variable not in experiment.conditions:
-            raise CytoflowViewError("Variable {0} not in the experiment"
-                                    .format(self.variable))
+        if self.by not in experiment.conditions:
+            raise CytoflowViewError("'by' variable {0} not in the experiment"
+                                    .format(self.by))
         
-        if not (experiment.conditions[self.variable] == "float" or
-                experiment.conditions[self.variable] == "int"):
-            raise CytoflowViewError("Variable {0} isn't numeric"
-                                    .format(self.variable)) 
+        if not (experiment.conditions[self.by] == "float" or
+                experiment.conditions[self.by] == "int"):
+            raise CytoflowViewError("by {0} isn't numeric"
+                                    .format(self.by)) 
 
         if not self.ychannel:
             raise CytoflowViewError("Y channel isn't set.")
@@ -168,7 +168,7 @@ class Stats1DView(HasStrictTraits):
         else:
             data = experiment.data
             
-        group_vars = [self.variable]
+        group_vars = [self.by]
         if self.xfacet:
             group_vars.append(self.xfacet)
         if self.yfacet:
@@ -190,11 +190,11 @@ class Stats1DView(HasStrictTraits):
                              hue_order = (np.sort(data[self.huefacet].unique()) if self.huefacet else None),
                              legend_out = False)
 
-        if 'repr' in experiment.metadata[self.variable] and \
-            experiment.metadata[self.variable]['repr'] == 'log':
+        if 'repr' in experiment.metadata[self.by] and \
+            experiment.metadata[self.by]['repr'] == 'log':
             plt.xscale('log', nonposx = 'mask')
         
-        grid.map(plt.plot, self.variable, self.ychannel, **kwargs)
+        grid.map(plt.plot, self.by, self.ychannel, **kwargs)
         grid.add_legend()
 
 if __name__ == '__main__':
@@ -238,7 +238,7 @@ if __name__ == '__main__':
     ex3 = thresh.apply(ex2)
     
     s = flow.Stats1DView()
-    s.variable = "Dox"
+    s.by = "Dox"
     s.ychannel = "Y2-A"
     s.yfunction = np.mean
     s.huefacet = "Y2-A+"

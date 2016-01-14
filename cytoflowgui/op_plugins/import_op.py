@@ -12,7 +12,8 @@ if __name__ == '__main__':
     os.environ['TRAITS_DEBUG'] = "1"
 
 from traitsui.api import View, Item, Controller
-from traits.api import Button, Property, cached_property, provides, Callable
+from traits.api import Button, Property, cached_property, provides, Callable, \
+                       Bool
 from cytoflowgui.import_dialog import ExperimentDialog
 from cytoflowgui.op_plugins.i_op_plugin \
     import IOperationPlugin, OpHandlerMixin, PluginOpMixin
@@ -91,6 +92,7 @@ class ImportHandler(Controller, OpHandlerMixin):
 @provides(IOperation)
 class ImportPluginOp(ImportOp, PluginOpMixin):
     handler_factory = Callable(ImportHandler)
+    coarse = Bool(False)
             
 @provides(IOperationPlugin)
 class ImportPlugin(Plugin):

@@ -20,7 +20,7 @@ from cytoflow.utility import CytoflowViewError
 @provides(IView)
 class Stats2DView(HasStrictTraits):
     """
-    Divide the data up by `variable`, then plot a scatter plot of a summary
+    Divide the data up by `by`, then plot a scatter plot of a summary
     statistic `xfunction` on the x axis vs a summary statistic `yfunction` of
     the same data on the y axis.
     
@@ -29,17 +29,17 @@ class Stats2DView(HasStrictTraits):
     name : Str
         The plot's name 
     
-    variable : Str
-        the name of the condition to put on the X axis
+    by : Str
+        the name of the conditioning variable
         
     xchannel : Str
-        Apply `xfunction` to `xchannel` for each value of `xvariable`.
+        Apply `xfunction` to `xchannel` for each value of `by`.
         
     xfunction : Callable
         What summary function to apply to `xchannel`
     
     ychannel : Str
-        Apply `yfunction` to `ychannel` for each value of `variable`
+        Apply `yfunction` to `ychannel` for each value of `by`
         
     yfunction : Callable
         What summary function to apply to `ychannel`
@@ -98,7 +98,7 @@ class Stats2DView(HasStrictTraits):
     ...                                scale = "log",
     ...                                bin_width = 0.1)
     >>> view = flow.Stats2DView(name = "IFP vs OFP",
-    ...                         variable = "IFP_Bin",
+    ...                         by = "IFP_Bin",
     ...                         xchannel = "Pacific Blue-A",
     ...                         xfunction = flow.geom_mean,
     ...                         ychannel = "FITC-A",
@@ -112,7 +112,7 @@ class Stats2DView(HasStrictTraits):
     friendly_id = "2D Statistics View" 
     
     name = Str
-    variable = Str
+    by = Str
     xchannel = Str
     xfunction = Callable
     ychannel = Str
@@ -139,17 +139,17 @@ class Stats2DView(HasStrictTraits):
         if not experiment:
             raise CytoflowViewError("No experiment specified")
         
-        if not self.variable:
-            raise CytoflowViewError("Independent variable not set")
+        if not self.by:
+            raise CytoflowViewError("Independent variable 'by' not set")
             
-        if self.variable not in experiment.conditions:
-            raise CytoflowViewError("Variable {0} not in the experiment"
-                                    .format(self.variable))
+        if self.by not in experiment.conditions:
+            raise CytoflowViewError("Independent variable {0} not in the experiment"
+                                    .format(self.by))
         
-        if not (experiment.conditions[self.variable] == "float" or
-                experiment.conditions[self.variable] == "int"):
-            raise CytoflowViewError("Variable {0} isn't numeric"
-                                    .format(self.variable)) 
+        if not (experiment.conditions[self.by] == "float" or
+                experiment.conditions[self.by] == "int"):
+            raise CytoflowViewError("by variable {0} isn't numeric"
+                                    .format(self.by)) 
             
         if not self.xchannel:
             raise CytoflowViewError("X channel isn't set.")
@@ -195,7 +195,7 @@ class Stats2DView(HasStrictTraits):
         else:
             data = experiment.data
             
-        group_vars = [self.variable]
+        group_vars = [self.by]
         if self.xfacet:
             group_vars.append(self.xfacet)
         if self.yfacet:
@@ -266,7 +266,7 @@ if __name__ == '__main__':
     ex3 = thresh.apply(ex2)
     
     s = flow.Stats2DView()
-    s.variable = "Dox"
+    s.by = "Dox"
     s.xchannel = "V2-A"
     s.xfunction = np.mean
     s.ychannel = "Y2-A"

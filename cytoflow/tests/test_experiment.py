@@ -31,3 +31,7 @@ class TestExperiment(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             self.ex.add_tube(self.tube2, {"time" : 10.0})
         
+        
+if __name__ == "__main__":
+    #import sys;sys.argv = ['', 'Test.testName']
+    unittest.main()

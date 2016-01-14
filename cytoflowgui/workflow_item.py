@@ -52,8 +52,8 @@ class WorkflowItem(HasStrictTraits):
     # the channels and conditions from result.  usually these would be
     # Property traits (ie, determined dynamically), but we need to cache them
     # so that persistence works properly.
-    channels = List(Str)
-    conditions = Dict(Str, Str)
+#     channels = List(Str)
+#     conditions = Dict(Str, Str)
     
     # the IViews against the output of this operation
     views = List(IView)
@@ -122,9 +122,18 @@ class WorkflowItem(HasStrictTraits):
                                               wi = self)
         
     @on_trait_change('result')
-    def _result_changed(self, new):
+    def _result_changed(self, experiment):
         """Update channels and conditions"""
  
-        if new:
-            self.channels = new.channels
-            self.conditions = new.conditions
+        if experiment:
+            self.channels = \
+                [x for x in experiment.metadata 
+                 if 'type' in experiment.metadata[x] 
+                 and experiment.metadata[x]['type'] == "channel"]
+
+            self.conditions = \
+                [x for x in experiment.metadata 
+                 if 'type' in experiment.metadata[x] 
+                 and experiment.metadata[x]['type'] == "meta"]
+
+                        

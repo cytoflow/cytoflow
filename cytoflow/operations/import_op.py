@@ -100,14 +100,11 @@ class ImportOp(HasStrictTraits):
         experimental conditions.  Each `Tube` must have a `conditions` dict
         whose keys match `self.conditions.keys()`.
         
-    coarse : Bool
-        Do we want to import a random subset of events?  Presumably the analysis
-        will go faster but less precisely; good for interactive exploration.
-        Then, set `coarse = False` and re-run the analysis non-interactively.
-        
-    coarse_events : Int (default = 1000)
-        If `coarse == True`, how many random events to choose from each FCS 
-        file.
+    coarse_events : Int (default = 0)
+        If >= 0, import only a random subset of events of size `coarse_events`. 
+        Presumably the analysis will go faster but less precisely; good for
+        interactive data exploration.  Then, set `coarse_events = 0` and re-run
+        the analysis non-interactively.
         
     name_metadata : Enum("$PnN", "$PnS") (default = "$PnN")
         Which FCS metadata is the channel name?
@@ -136,8 +133,7 @@ class ImportOp(HasStrictTraits):
     friendly_id = Constant("Import")
     name = Constant("Import Data")
 
-    coarse = Bool(False)
-    coarse_events = Int(1000)
+    coarse_events = Int(0)
 
     # experimental conditions: name --> dtype.  can also be "log"
     conditions = Dict(Str, Str)
@@ -190,7 +186,7 @@ class ImportOp(HasStrictTraits):
                                       channel_naming = self.name_meta,
                                       reformat_meta = True)
             
-            if self.coarse:
+            if self.coarse_events:
                 tube_meta, tube_data = tube_fc
                 tube_data = tube_data.loc[np.random.choice(tube_data.index,
                                                            self.coarse_events,

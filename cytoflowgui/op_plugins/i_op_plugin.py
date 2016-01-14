@@ -63,12 +63,17 @@ class OpHandlerMixin(HasTraits):
         """
         doc
         """
-        if self.wi and self.wi.previous and self.wi.previous.metadata:
-            return [x for x in experiment.metadata 
-                    if 'type' in experiment.metadata[x] 
-                    and experiment.metadata[x]['type'] == "channel"]
-        else:
+        if self.wi and self.wi.previous and self.wi.previous.channels:
+            return self.wi.previous.channels
+        else 
             return []
+        
+#     and self.wi.previous.metadata:
+#             return [x for x in experiment.metadata 
+#                     if 'type' in experiment.metadata[x] 
+#                     and experiment.metadata[x]['type'] == "channel"]
+#         else:
+#             return []
          
     # MAGIC: provides dynamically updated values for the "conditions" trait
     def _get_previous_conditions(self):
@@ -76,7 +81,7 @@ class OpHandlerMixin(HasTraits):
         doc
         """
         if self.wi and self.wi.previous and self.wi.previous.conditions:
-            return self.wi.conditions.keys()
+            return self.wi.previous.conditions.keys()
         else:
             return []
     
