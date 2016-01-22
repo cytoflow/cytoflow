@@ -8,7 +8,6 @@ import fcsparser
 from cytoflow.operations import IOperation
 from cytoflow.views import IView
 from cytoflow.utility import CytoflowOpError
-from cytoflow.utility.util import CytoflowOpError
 
 @provides(IOperation)
 class AutofluorescenceOp(HasStrictTraits):
@@ -69,12 +68,8 @@ class AutofluorescenceOp(HasStrictTraits):
         """
         if not experiment:
             raise CytoflowOpError("No experiment specified")
-        
-        exp_channels = [x for x in experiment.metadata 
-                        if 'type' in experiment.metadata[x] 
-                        and experiment.metadata[x]['type'] == "channel"]
 
-        if not set(self.channels) <= set(exp_channels):
+        if not set(self.channels) <= set(experiment.channels):
             raise CytoflowOpError("Specified channels that weren't found in "
                                   "the experiment.")
 

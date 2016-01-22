@@ -240,7 +240,13 @@ class Experiment(HasStrictTraits):
         for key, key_type in conditions.iteritems():
             self.metadata[key] = {}
             self.metadata[key]['type'] = key_type
-             
+            
+    def validate_tube(self, tube):
+        pass
+    
+    def parse_tube(self, tube):
+        pass
+    
     def add_tube(self, tube, conditions, ignore_v = False):
         """Add a tube of data, and its experimental conditions, to this Experiment.
         
@@ -249,9 +255,9 @@ class Experiment(HasStrictTraits):
         
         Parameters
         ----------
-        tube : (metadata, data)
+        tube : data
             a single tube or well's worth of data.  a tuple of (metadata, data)
-            as returned by `fcsparser.parse(filename, reformat_meta = True)`
+            as returned by `fcsparser.parse(filename, reformat_meta = True)
             
         Raises
         ------

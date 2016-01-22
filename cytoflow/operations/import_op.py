@@ -141,7 +141,8 @@ class ImportOp(HasStrictTraits):
         
     # which FCS metadata has the channel name in it?
     # (default is the first item in the enum, $PnN
-    name_meta = Enum("$PnN", "$PnS")
+    name_meta = 
+
         
     # DON'T DO THIS
     ignore_v = Bool(False)
