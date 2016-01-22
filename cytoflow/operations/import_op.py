@@ -3,6 +3,9 @@ Created on Mar 20, 2015
 
 @author: brian
 '''
+
+import warnings
+
 from traits.api import HasStrictTraits, provides, Str, List, Bool, Int, Any, \
                        Dict, File, Constant, Enum
 
@@ -189,9 +192,13 @@ class ImportOp(HasStrictTraits):
                 experiment.metadata[condition]["repr"] = "log"
 
         try:
-            tube0_meta = fcsparser.parse(self.tubes[0].file,
-                                         meta_data_only = True,
-                                         reformat_meta = True)
+            # silence warnings about duplicate channels;
+            # we'll figure that out below
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                tube0_meta = fcsparser.parse(self.tubes[0].file,
+                                             meta_data_only = True,
+                                             reformat_meta = True)
         except Exception as e:
             raise CytoflowOpError("FCS reader threw an error reading metadata "
                                   " for tube {0}: {1}"
@@ -212,11 +219,11 @@ class ImportOp(HasStrictTraits):
                 PnS = meta_channels["$PnS"]
                 
                 # sometimes one is unique and the other isn't
-                if (set(PnN.unique()) == set(PnN) and 
-                    set(PnS.unique()) != set(PnS)):
+                if (len(set(PnN)) == len(PnN) and 
+                    len(set(PnS)) != len(PnS)):
                     experiment.metadata["name_metadata"] = "$PnN"
-                elif (set(PnN.unique()) != set(PnN) and 
-                      set(PnS.unique()) != set(PnS)):
+                elif (len(set(PnN)) != len(PnN) and 
+                      len(set(PnS)) == len(PnS)):
                     experiment.metadata["name_metadata"] = "$PnS"
                 else:
                     # as per fcsparser.api, $PnN is the "short name" (like FL-1)
@@ -259,7 +266,7 @@ class ImportOp(HasStrictTraits):
         return experiment
 
 # module-level    
-def parse_tube(filename, experiment, ignore_v):        
+def parse_tube(filename, experiment, ignore_v = False):        
     try:
         tube_meta, tube_data = fcsparser.parse(
                             filename, 
@@ -276,6 +283,8 @@ def parse_tube(filename, experiment, ignore_v):
                            "as the first tube added".format(filename))
      
     tube_channels = tube_meta["_channels_"]
+    tube_channels.set_index(experiment.metadata["name_metadata"], 
+                            inplace = True)
      
     # next check the per-channel parameters
     for channel in experiment.channels:        
