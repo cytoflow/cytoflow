@@ -117,9 +117,9 @@ class LogicleTransformOp(HasStrictTraits):
             else:
                 # ... unless there aren't any negative values, in which case
                 # you probably shouldn't use this transform
-                raise CytoflowOpError("You shouldn't use the Logicle transform "
-                                      "for channels without any negative data. "
-                                      "Try a hlog or a log10 transform instead.")
+                raise CytoflowOpError("Channel {0} doesn't have any negative data. " 
+                                      "Try a hlog or a log10 transform instead."
+                                      .format(channel))
     
     def apply(self, experiment):
         """Applies the Logicle transform to channels"""

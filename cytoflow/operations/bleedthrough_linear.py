@@ -6,25 +6,19 @@ Created on Aug 26, 2015
 
 from __future__ import division
 
-from traits.api import HasStrictTraits, Str, CStr, File, Dict, Python, \
-                       Instance, Int, List, Constant, Tuple, Float, provides
+from traits.api import HasStrictTraits, Str, CStr, File, Dict, Instance, \
+                       Constant, Tuple, Float, provides
     
 import numpy as np
-import math
 import os
 import warnings
-import scipy.interpolate
-import scipy.optimize
-import pandas
 import fcsparser
 
 import matplotlib.pyplot as plt
 
 from cytoflow.operations.i_operation import IOperation
-from cytoflow.operations.hlog import hlog, hlog_inv
 from cytoflow.views import IView
-from cytoflow.utility import CytoflowOpError, cartesian
-from piston_mini_client import returns
+from cytoflow.utility import CytoflowOpError
 
 @provides(IOperation)
 class BleedthroughLinearOp(HasStrictTraits):
@@ -163,15 +157,15 @@ class BleedthroughLinearOp(HasStrictTraits):
                 # sometimes some of the data is off the edge of the
                 # plot, and this screws up a linear regression
                 
-                # TODO - do a better job figuring out (and excluding)
-                # off-axis data
-                from_5, from_95 = np.percentile(data[from_channel], (5, 95))
-                data = data[data[from_channel] > from_5]
-                data = data[data[from_channel] < from_95]
+                from_min = np.min(data[from_channel]) * 1.05
+                from_max = np.max(data[from_channel]) * 0.95
+                data = data[data[from_channel] > from_min]
+                data = data[data[from_channel] < from_max]
                 
-                to_5, to_95 = np.percentile(data[to_channel], (5, 95))
-                data = data[data[to_channel] > to_5]
-                data = data[data[to_channel] < to_95]
+                to_min = np.min(data[to_channel]) * 1.05
+                to_max = np.max(data[to_channel]) * 0.95
+                data = data[data[to_channel] > to_min]
+                data = data[data[to_channel] < to_max]
                 
                 data.reset_index(drop = True, inplace = True)
                 
@@ -293,6 +287,9 @@ class BleedthroughLinearDiagnostic(HasStrictTraits):
     def plot(self, experiment = None, **kwargs):
         """Plot a faceted histogram view of a channel"""
         
+        if not experiment:
+            raise CytoflowOpError("No experiment specified")
+        
         kwargs.setdefault('histtype', 'stepfilled')
         kwargs.setdefault('alpha', 0.5)
         kwargs.setdefault('antialiased', True)
@@ -332,7 +329,7 @@ class BleedthroughLinearDiagnostic(HasStrictTraits):
                             marker = 'o')
                 
                 xstart, xstop = np.percentile(tube_data[from_channel], (5, 95))
-                xs = np.linspace(xstart, xstop, 10)
+                xs = np.linspace(xstart, xstop, 2)
                 ys = xs * self.op.spillover[(from_channel, to_channel)]
           
                 plt.plot(xs, ys, 'g-', lw=3)

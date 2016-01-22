@@ -400,6 +400,9 @@ class BleedthroughPiecewiseDiagnostic(HasStrictTraits):
     def plot(self, experiment = None, **kwargs):
         """Plot a faceted histogram view of a channel"""
         
+        if not experiment:
+            raise CytoflowOpError("No experiment specified")
+        
         kwargs.setdefault('histtype', 'stepfilled')
         kwargs.setdefault('alpha', 0.5)
         kwargs.setdefault('antialiased', True)
