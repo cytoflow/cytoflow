@@ -13,28 +13,23 @@ class Experiment(HasStrictTraits):
       - An array of events from each well or tube.  Each event is a tuple of 
         measurements of a single cell.
         
-    An Experiment is built from a set of FCMeasurement objects, subject to
-    a set of constraints:
-      - Each FCMeasurement object MUST have identical channels (including
-        channel parameters such as PMT voltage and delay.)
-      - Each FCMeasurement MUST have a unique set of metadata.
+    ....subject to the following constraints:
+
+      - Each tube or well MUST have identical channels (including channel 
+        parameters such as PMT voltage and delay.)
+      - Each tube or well MUST have a unique set of metadata.
           
     An Experiment object manages all this data.  By "manage", we mean:
       - Get events that match a particular metadata "signature"
-      - Add additional metadata to define populations
+      - Add additional metadata to define populations, etc.
+
+    NOTE: `Experiment` is not responsible for enforcing the constraints; 
+    `cytoflow.ImportOp` is.  Which is to say, you can break these rules if
+    you need to.  I don't recommend it.  (-;
     
     Attributes
     ----------
 
-    channels : List(String)
-        A `list` containing the channels that this experiment tracks.
-    
-    conditions : Dict(String : String)
-        A dict of the experimental conditions and analysis metadata (gate
-        membership, etc) and that this experiment tracks.  The key is the name
-        of the condition, and the value is the string representation of the 
-        numpy dtype (usually one of "category", "float", "int" or "bool".
-        
     data : pandas.DataFrame
         the `DataFrame` representing all the events and metadata.  Each event
         is a row; each column is either a measured channel (ie a fluorescence
@@ -43,7 +38,7 @@ class Experiment(HasStrictTraits):
         conditions (eg induction level, timepoint) or by operations (eg gate
         membership)
         
-    metadata : Dict( Str : Any )
+    metadata : Dict(Str : Any)
         The experimental metadata.  In particular, each column in self.data has
         an entry whose key is the column name and whose value is a dict of
         column-specific metadata. Operations may define their own metadata, 
@@ -65,15 +60,19 @@ class Experiment(HasStrictTraits):
             one-parameter function that takes either a single value or a list 
             of values and applies the transformation (or inverse).  necessary
             for computing tic marks on plots, among other things.
-        
-    channels : List(Str)
-        A read-only `Property` containing the names of columns in `data` that
-        are channels (ie, `metadata[channel]['type'] == "channel"`)
-        
-    conditions : Dict(Str : Str)
-        A read-only `Property` containing the names of columnns in `data`
-        that are not channels (as the dictionary keys), and their type \
-        (dictionary values).
+            
+        Note! There may be *other* experiment-wide things in `metadata`; 
+        the fact that a key is in `metadata` does not mean a corresponding
+        column exists in `data`.
+    
+    channels : List(String)
+        A read-only `List` containing the channels that this experiment tracks.
+    
+    conditions : Dict(String : String)
+        A read-only Dict of the experimental conditions and analysis metadata 
+        (gate membership, etc) and that this experiment tracks.  The key is the 
+        name of the condition, and the value is the string representation of the 
+        `numpy` dtype (usually one of "category", "float", "int" or "bool".)
         
     Notes
     -----              
@@ -87,7 +86,7 @@ class Experiment(HasStrictTraits):
     Finally, all this is implemented on top of a pandas DataFrame.... which
     earns us all sorts of fun optimization, and lets us select subsets easily:
         
-    ex.query('Induced == True') ... etc
+    >>> ex.query('Induced == True') 
 
     Implementation details
     ----------------------
@@ -143,9 +142,6 @@ class Experiment(HasStrictTraits):
     
     channels = Property(List, depends_on = "metadata")
     conditions = Property(Dict, depends_on = "metadata")
-    
-    # keep the tube conditions so we can check for uniqueness
-    _tube_conditions = Set(transient = True)
             
     def __getitem__(self, key):
         """Override __getitem__ so we can reference columns like ex.column"""
@@ -159,12 +155,14 @@ class Experiment(HasStrictTraits):
     def _get_channels(self):
         return [x for x in self.metadata
                 if isinstance(self.metadata[x], dict)
+                and 'type' in self.metadata[x]
                 and self.metadata[x]['type'] == "channel"]
     
     @cached_property
     def _get_conditions(self):
         return {x : self.metadata[x]['type'] for x in self.metadata
                 if isinstance(self.metadata[x], dict)
+                and 'type' in self.metadata[x]
                 and self.metadata[x]['type'] != "channel"}
     
     def query(self, expr, **kwargs):
@@ -240,116 +238,58 @@ class Experiment(HasStrictTraits):
         for key, key_type in conditions.iteritems():
             self.metadata[key] = {}
             self.metadata[key]['type'] = key_type
-            
-    def validate_tube(self, tube):
-        pass
-    
-    def parse_tube(self, tube):
-        pass
-    
-    def add_tube(self, tube, conditions, ignore_v = False):
-        """Add a tube of data, and its experimental conditions, to this Experiment.
+        
+    def add_tube(self, tube, conditions):
+        """
+        Add a tube of data, and its experimental conditions, to this Experiment.
         
         Remember: because add_tube COPIES the data into this Experiment, you can
         DELETE the tube after you add it (and save memory)
         
         Parameters
         ----------
-        tube : data
-            a single tube or well's worth of data.  a tuple of (metadata, data)
-            as returned by `fcsparser.parse(filename, reformat_meta = True)
-            
+        tube : pandas.DataFrame
+            A single tube or well's worth of data. Must be a DataFrame with
+            the same columns as `self.data`
+        
+        conditions : Dict(Str, Any)
+            A dictionary of the tube's metadata.  The keys must match 
+            `self.conditions`, and the values must be coercable to the
+            relevant `numpy` dtype.
+ 
         Raises
         ------
         CytoflowError
             - If you try to add tubes with different channels
-            - If you try to add tubes with different channel voltages
             - If you try to add tubes with identical metadata
-            - If you try to add tubes with different metadata types
-            ....among others.
-        
-        conditions : Dict(Str : Any)
-            the tube's experimental conditions in (condition:value) pairs
+            - If you try to add tubes with metadata that can't be converted
             
         Examples
         --------
         >>> import cytoflow as flow
-        >>> import fcparser
+        >>> import fcsparser
         >>> ex = flow.Experiment()
         >>> ex.add_conditions({"Time" : "float", "Strain" : "category"})
-        >>> tube1 = fcparser.parse('CFP_Well_A4.fcs', reformat_meta = True)
-        >>> tube2 = fcparser.parse('RFP_Well_A3.fcs', reformat_meta = True)
+        >>> tube1, _ = fcparser.parse('CFP_Well_A4.fcs')
+        >>> tube2, _ = fcparser.parse('RFP_Well_A3.fcs')
         >>> ex.add_tube(tube1, {"Time" : 1, "Strain" : "BL21"})
         >>> ex.add_tube(tube2, {"Time" : 1, "Strain" : "Top10G"})
         """
 
-        tube_meta, tube_data = tube
-        
-        if "_channels_" not in tube_meta:
-            raise CytoflowError("Did you pass `reformat_meta=True` to fcsparser.parse()?")
+        # make sure the new tube's channels match the rest of the 
+        # channels in the Experiment
     
-        # TODO - should we use $PnN? $PnS? WTF?
-        tube_channels = tube_meta["_channels_"].set_index("$PnN")    
-        tube_file = tube_meta["$FIL"]   
-    
-        if len(self.data.index) > 0:
-            # first, make sure the new tube's channels match the rest of the 
-            # channels in the Experiment
+        if len(self.data.index) > 0 and set(tube.columns) != set(self.channels):
+            raise CytoflowError("Tube {0} doesn't have the same channels")
             
-            if set(tube_meta["_channel_names_"]) != set(self.channels):
-                raise CytoflowError("Tube {0} doesn't have the same channels "
-                                   "as the first tube added".format(tube_file))
-             
-            # next check the per-channel parameters
-            for channel in self.channels:
-                
-                # first check voltage
-                if "voltage" in self.metadata[channel]:    
-                    if not "$PnV" in tube_channels.ix[channel]:
-                        raise CytoflowError("Didn't find a voltage for channel {0}" \
-                                           "in tube {1}".format(channel, tube_file))
-                    
-                    old_v = self.metadata[channel]["voltage"]
-                    new_v = tube_channels.ix[channel]['$PnV']
-                    
-                    if old_v != new_v and not ignore_v:
-                        raise CytoflowError("Tube {0} doesn't have the same voltages "
-                                           "as the first tube".format(tube_file))
+        # check that the conditions for this tube exist in the experiment
+        # already
 
-            # TODO check the delay -- and any other params?
-        else:
-            channels = list(tube_channels.index)
-            
-            for channel in channels:
-                self.metadata[channel] = {}
-                self.metadata[channel]['type'] = 'channel'
-                if("$PnV" in tube_channels.ix[channel]):
-                    new_v = tube_channels.ix[channel]['$PnV']
-                    if new_v: self.metadata[channel]["voltage"] = new_v
-                        
-                # add empty lists to keep track of channel transforms.  
-                # required to draw tic marks, etc.                    
-                self.metadata[channel]['xforms'] = []
-                self.metadata[channel]['xforms_inv']= []
-                
-                # add the maximum possible value for this channel.
-                data_range = tube_channels.ix[channel]['$PnR']
-                data_range = float(data_range)
-                self.metadata[channel]['range'] = data_range
-                    
-        # validate the experimental conditions
-        
-        # first, make sure that the keys in conditions are the same as self.conditions
         if( any(True for k in conditions if k not in self.conditions) or \
             any(True for k in self.conditions if k not in conditions) ):
-            raise CytoflowError("Metadata mismatch for tube {0}" \
-                               .format(tube_file))
+            raise CytoflowError("Metadata for this tube isn't the same as "
+                                "self.conditions")
             
-        # next, make sure that this tube's conditions doesn't match any other
-        # tube's conditions
-        if frozenset(conditions.iteritems()) in self._tube_conditions:
-            raise CytoflowError("Tube {0} has non-unique conditions".format(tube_file))
-                
         # add the conditions to tube's internal data frame.  specify the conditions
         # dtype using self.conditions.  check for errors as we do so.
         
@@ -360,17 +300,13 @@ class Experiment(HasStrictTraits):
         # TODO - the FCS standard says you can specify the precision.  
         # check with int/float/double files!
         
-        new_data = tube_data.astype("float64", copy=True)
+        new_data = tube.astype("float64", copy=True)
         
         for meta_name, meta_value in conditions.iteritems():
-            if(meta_name not in self.conditions):
-                raise CytoflowError("Tube {0} asked to add conditions {1} which" \
-                                   "hasn't been specified as a condition" \
-                                   .format(tube_file, meta_name))
             meta_type = self.conditions[meta_name]
             try:
                 new_data[meta_name] = \
-                    pd.Series(data = [meta_value] * len(tube_data.index),
+                    pd.Series(data = [meta_value] * len(new_data.index),
                               index = new_data.index,
                               dtype = meta_type)
                 
@@ -380,33 +316,23 @@ class Experiment(HasStrictTraits):
                     self.data[meta_name] = self.data[meta_name].cat.set_categories(cats)
                     new_data[meta_name] = new_data[meta_name].cat.set_categories(cats)
             except (ValueError, TypeError):
-                raise CytoflowError("Tube {0} had trouble converting conditions {1}"
+                raise CytoflowError("Had trouble converting conditions {1}"
                                    "(value = {2}) to type {3}" \
-                                   .format(tube_file,
-                                           meta_name,
+                                   .format(meta_name,
                                            meta_value,
                                            meta_type))
         
-        self._tube_conditions.add(frozenset(conditions.iteritems()))
         self.data = self.data.append(new_data, ignore_index = True)
         del new_data
-
 
 if __name__ == "__main__":
     import fcsparser
     ex = Experiment()
     ex.add_conditions({"time" : "category"})
 
-    tube0 = fcsparser.parse('../cytoflow/tests/data/tasbe/BEADS-1_H7_H07_P3.fcs',
-                            reformat_meta = True,
-                            channel_naming = "$PnN")    
-    tube1 = fcsparser.parse('../cytoflow/tests/data/tasbe/beads.fcs',
-                            reformat_meta = True,
-                            channel_naming = "$PnN")
-    
-    tube2 = fcsparser.parse('../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs',
-                            reformat_meta = True,
-                            channel_naming = "$PnN")
+    tube0, _ = fcsparser.parse('../cytoflow/tests/data/tasbe/BEADS-1_H7_H07_P3.fcs')
+    tube1, _ = fcsparser.parse('../cytoflow/tests/data/tasbe/beads.fcs')
+    tube2, _ = fcsparser.parse('../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs')
     
     ex.add_tube(tube1, {"time" : "one"})
     ex.add_tube(tube2, {"time" : "two"})
