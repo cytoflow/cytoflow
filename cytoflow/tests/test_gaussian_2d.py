@@ -45,14 +45,14 @@ class Test(unittest.TestCase):
     def testEstimateBy(self):
         self.gate.by = ["Dox"]
         self.gate.estimate(self.ex)
-        self.assertAlmostEqual(self.gate._gmms[1.0].means_[0][0], 0.36238996)
-        self.assertAlmostEqual(self.gate._gmms[1.0].means_[0][1], 0.14943463)        
-        self.assertAlmostEqual(self.gate._gmms[1.0].means_[1][0], 0.2097935)
-        self.assertAlmostEqual(self.gate._gmms[1.0].means_[1][1], 0.14054966)
-        self.assertAlmostEqual(self.gate._gmms[10.0].means_[0][0], 0.16640887)
-        self.assertAlmostEqual(self.gate._gmms[10.0].means_[0][1], 0.1326335)        
-        self.assertAlmostEqual(self.gate._gmms[10.0].means_[1][0], 0.23073166)
-        self.assertAlmostEqual(self.gate._gmms[10.0].means_[1][1], 0.61821791)
+        self.assertAlmostEqual(self.gate._gmms[1.0].means_[0][0], 0.209793501551)
+        self.assertAlmostEqual(self.gate._gmms[1.0].means_[0][1], 0.140549661228)        
+        self.assertAlmostEqual(self.gate._gmms[1.0].means_[1][0], 0.362389957305)
+        self.assertAlmostEqual(self.gate._gmms[1.0].means_[1][1], 0.149434629131)
+        self.assertAlmostEqual(self.gate._gmms[10.0].means_[0][0], 0.166408870403)
+        self.assertAlmostEqual(self.gate._gmms[10.0].means_[0][1], 0.132633502267)        
+        self.assertAlmostEqual(self.gate._gmms[10.0].means_[1][0], 0.230731659893)
+        self.assertAlmostEqual(self.gate._gmms[10.0].means_[1][1], 0.618217911538)
     
     def testApply(self):
         self.gate.estimate(self.ex)
@@ -67,10 +67,10 @@ class Test(unittest.TestCase):
         self.gate.estimate(self.ex)
         ex2 = self.gate.apply(self.ex)
          
-        self.assertEqual(ex2.data.groupby(["Gauss", "Dox"]).size()["Gauss_1", 1], 2026)
+        self.assertEqual(ex2.data.groupby(["Gauss", "Dox"]).size()["Gauss_1", 1], 3126)
         self.assertEqual(ex2.data.groupby(["Gauss", "Dox"]).size()["Gauss_1", 10], 2452)
  
-        self.assertEqual(ex2.data.groupby(["Gauss", "Dox"]).size()["Gauss_2", 1], 3126)
+        self.assertEqual(ex2.data.groupby(["Gauss", "Dox"]).size()["Gauss_2", 1], 2026)
         self.assertEqual(ex2.data.groupby(["Gauss", "Dox"]).size()["Gauss_2", 10], 2398)
          
         self.assertEqual(ex2.data.groupby(["Gauss", "Dox"]).size()["Gauss_None", 1], 4848)        
