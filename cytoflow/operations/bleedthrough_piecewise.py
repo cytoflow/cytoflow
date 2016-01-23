@@ -23,6 +23,7 @@ from cytoflow.operations.i_operation import IOperation
 from cytoflow.operations.hlog import hlog, hlog_inv
 from cytoflow.views import IView
 from cytoflow.utility import CytoflowOpError, cartesian
+from cytoflow.operations.import_op import parse_tube
 
 @provides(IOperation)
 class BleedthroughPiecewiseOp(HasStrictTraits):
@@ -133,55 +134,13 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
         if len(self._channels) < 2:
             raise CytoflowOpError("Need at least two channels to correct bleedthrough.")
 
-        # make sure the control files exist
-        for channel in self._channels:
-            if not os.path.isfile(self.controls[channel]):
-                raise CytoflowOpError("Can't find file {0} for channel {1}."
-                                      .format(self.controls[channel], channel))
-        
-        for channel in self._channels:
-            try:
-                channel_naming = experiment.metadata["name_meta"]
-                tube_meta = fcsparser.parse(self.controls[channel], 
-                                            meta_data_only = True, 
-                                            reformat_meta = True,
-                                            channel_naming = channel_naming)
-                tube_channels = tube_meta["_channels_"].set_index("$PnN")
-            except Exception as e:
-                raise CytoflowOpError("FCS reader threw an error on tube {0}: {1}"\
-                                   .format(self.controls[channel], str(e)))
-
-            for channel in self._channels:
-                exp_v = experiment.metadata[channel]['voltage']
-            
-                if not "$PnV" in tube_channels.ix[channel]:
-                    raise CytoflowOpError("Didn't find a voltage for channel {0}" 
-                                          "in tube {1}".format(channel, self.controls[channel]))
-                
-                control_v = tube_channels.ix[channel]["$PnV"]
-                
-                if control_v != exp_v:
-                    raise CytoflowOpError("Voltage differs for channel {0} in tube {1}"
-                                          .format(channel, self.controls[channel]))
-
         self._splines = {}
         mesh_axes = []
 
         for channel in self._channels:
             self._splines[channel] = {}
 
-            try:
-                channel_naming = experiment.metadata["name_meta"]
-                tube_meta, tube_data = \
-                    fcsparser.parse(self.controls[channel], 
-                                    reformat_meta = True,
-                                    channel_naming = channel_naming)
-                tube_channels = tube_meta["_channels_"].set_index("$PnN")
-            except Exception as e:
-                raise CytoflowOpError("FCS reader threw an error on tube {0}: {1}"\
-                                   .format(self.controls[channel], str(e)))
-            
-            data = tube_data.sort(channel)
+            data = parse_tube(self.controls[channel], experiment).sort(channel)
 
             for af_channel in self._channels:
                 if 'af_median' in experiment.metadata[af_channel]:
@@ -280,11 +239,7 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
             raise CytoflowOpError("Module interpolators aren't set. "
                                   "Did you run estimate()?")
             
-        exp_channels = [x for x in experiment.metadata 
-                        if 'type' in experiment.metadata[x] 
-                        and experiment.metadata[x]['type'] == "channel"]
-        
-        if not set(self._interpolators.keys()) <= set(exp_channels):
+        if not set(self._interpolators.keys()) <= set(experiment.channels):
             raise CytoflowOpError("Module parameters don't match experiment channels")
 
         new_experiment = experiment.clone()
@@ -330,22 +285,6 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
         
         if set(self.controls.keys()) != set(self._splines.keys()):
             raise CytoflowOpError("Must have both the controls and bleedthrough to plot")
- 
-        channels = self.controls.keys()
-        
-        # make sure we can get the control tubes to plot the diagnostic
-        for channel in channels:       
-            try:
-                # suppress the channel name warnings
-                with warnings.catch_warnings():
-                    warnings.simplefilter("ignore")
-                
-                    _ = fcsparser.parse(self.controls[channel], 
-                                        meta_data_only = True, 
-                                        reformat_meta = True)
-            except Exception as e:
-                raise CytoflowOpError("FCS reader threw an error on tube {0}: {1}"\
-                                   .format(self.controls[channel], str(e)))
 
         return BleedthroughPiecewiseDiagnostic(op = self)
     
@@ -417,16 +356,8 @@ class BleedthroughPiecewiseDiagnostic(HasStrictTraits):
                 if from_idx == to_idx:
                     continue
                 
-                try:
-                    channel_naming = experiment.metadata["name_meta"]
-                    _, tube_data = \
-                        fcsparser.parse(self.op.controls[from_channel], 
-                                        reformat_meta = True,
-                                        channel_naming = channel_naming)
-                except Exception as e:
-                    raise CytoflowOpError("FCS reader threw an error on tube {0}: {1}"\
-                                          .format(self.op.controls[from_channel], str(e)))
-             
+                tube_data = parse_tube(self.op.controls[from_channel], experiment)
+
                 plt.subplot(num_channels, 
                             num_channels, 
                             from_idx + (to_idx * num_channels) + 1)
