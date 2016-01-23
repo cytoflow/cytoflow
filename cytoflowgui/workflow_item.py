@@ -23,7 +23,7 @@ Created on Mar 15, 2015
 
 from traits.api import HasStrictTraits, Instance, List, DelegatesTo, Enum, \
                        Property, cached_property, on_trait_change, \
-                       Str
+                       Str, Dict
 from traitsui.api import View, Item, Handler
 from pyface.qt import QtGui
 from pyface.tasks.api import Task
@@ -70,8 +70,8 @@ class WorkflowItem(HasStrictTraits):
     # the channels and conditions from result.  usually these would be
     # Property traits (ie, determined dynamically), but we need to cache them
     # so that persistence works properly.
-#     channels = List(Str)
-#     conditions = Dict(Str, Str)
+    channels = List(Str)
+    conditions = Dict(Str, Str)
     
     # the IViews against the output of this operation
     views = List(IView)
@@ -138,20 +138,13 @@ class WorkflowItem(HasStrictTraits):
     def _get_handler(self):
         return self.operation.handler_factory(model = self.operation,
                                               wi = self)
-        
+         
     @on_trait_change('result')
     def _result_changed(self, experiment):
         """Update channels and conditions"""
- 
+  
         if experiment:
-            self.channels = \
-                [x for x in experiment.metadata 
-                 if 'type' in experiment.metadata[x] 
-                 and experiment.metadata[x]['type'] == "channel"]
-
-            self.conditions = \
-                [x for x in experiment.metadata 
-                 if 'type' in experiment.metadata[x] 
-                 and experiment.metadata[x]['type'] == "meta"]
+            self.channels = experiment.channels
+            self.conditions = experiment.conditions
 
                         

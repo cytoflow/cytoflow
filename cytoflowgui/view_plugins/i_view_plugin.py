@@ -75,8 +75,8 @@ class ViewHandlerMixin(HasTraits):
         """
         doc
         """
-        if self.wi and self.wi.channels:
-            return self.wi.channels
+        if self.wi and self.wi.result and self.wi.result.channels:
+            return self.wi.result.channels
         else:
             return []
          
@@ -86,6 +86,6 @@ class ViewHandlerMixin(HasTraits):
         doc
         """
         ret = [""]
-        if self.wi and self.wi.conditions:
-            ret.extend(self.wi.conditions.keys())
+        if self.wi and self.wi.result and self.wi.result.conditions:
+            ret.extend(self.wi.result.conditions.keys())
         return ret
