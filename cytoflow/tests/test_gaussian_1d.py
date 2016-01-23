@@ -43,7 +43,7 @@ class Test(unittest.TestCase):
         self.gate.by = ["Dox"]
         self.gate.estimate(self.ex)
         self.assertAlmostEqual(self.gate._gmms[1.0].means_[0][0], 0.14084352777, places = 3)
-        self.assertAlmostEqual(self.gate._gmms[1.0].means_[1][0], 0.440063665988, places = 3)        
+        self.assertAlmostEqual(self.gate._gmms[1.0].means_[1][0], 0.440063665988, places = 1)        
         self.assertAlmostEqual(self.gate._gmms[10.0].means_[0][0], 0.133235845266, places = 3)
         self.assertAlmostEqual(self.gate._gmms[10.0].means_[1][0], 0.618998444886, places = 3) 
         
