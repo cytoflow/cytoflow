@@ -234,7 +234,7 @@ class Experiment(HasStrictTraits):
                                     .format(key))
             
         for key, key_type in conditions.iteritems():
-            self.data[key] = []
+            self.data[key] = pd.Series(dtype = key_type)
             self.metadata[key] = {}
             self.metadata[key]['type'] = key_type
         
