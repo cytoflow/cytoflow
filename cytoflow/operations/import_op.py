@@ -11,6 +11,7 @@ from traits.api import HasStrictTraits, provides, Str, List, Bool, Int, Any, \
 
 import fcsparser
 import numpy as np
+import pandas as pd
 
 from cytoflow import Experiment
 from cytoflow.operations import IOperation
@@ -235,8 +236,9 @@ class ImportOp(HasStrictTraits):
                                 inplace = True)
         
         # now that we have the metadata, load it into experiment
-        
+
         for channel in meta_channels.index:
+            experiment.data[channel] = []
             experiment.metadata[channel] = {}
             experiment.metadata[channel]['type'] = 'channel'
             if("$PnV" in meta_channels.ix[channel]):

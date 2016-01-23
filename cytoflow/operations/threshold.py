@@ -87,12 +87,8 @@ class ThresholdOp(HasStrictTraits):
         if(self.name in experiment.data.columns):
             raise CytoflowOpError("Experiment already contains a column {0}"
                                .format(self.name))
-            
-        exp_channels = [x for x in experiment.metadata 
-                        if 'type' in experiment.metadata[x] 
-                        and experiment.metadata[x]['type'] == "channel"]
-            
-        if self.channel not in exp_channels:
+
+        if self.channel not in experiment.channels:
             raise CytoflowOpError("{0} isn't a channel in the experiment"
                                   .format(self.channel))
         

@@ -7,12 +7,9 @@ Created on Aug 31, 2015
 
 from __future__ import division
 
-import warnings
-
 from traits.api import HasStrictTraits, Str, CStr, File, Dict, Python, \
                        Instance, Int, List, Float, Constant, provides
 import numpy as np
-import fcsparser
 import math
 import scipy.signal
         
@@ -21,6 +18,7 @@ import matplotlib.pyplot as plt
 from cytoflow.operations import IOperation
 from cytoflow.views import IView
 from cytoflow.utility import CytoflowOpError, CytoflowViewError
+from cytoflow.operations.import_op import parse_tube
 
 @provides(IOperation)
 class BeadCalibrationOp(HasStrictTraits):
@@ -155,53 +153,18 @@ class BeadCalibrationOp(HasStrictTraits):
         """
         if not experiment:
             raise CytoflowOpError("No experiment specified")
-        
-        exp_channels = [x for x in experiment.metadata 
-                        if 'type' in experiment.metadata[x] 
-                        and experiment.metadata[x]['type'] == "channel"]
 
-        if not set(self.units.keys()) <= set(exp_channels):
+        if not set(self.units.keys()) <= set(experiment.channels):
             raise CytoflowOpError("Specified channels that weren't found in "
                                   "the experiment.")
         
-        try:
-            channel_naming = experiment.metadata["name_meta"]
-            beads_meta, beads_data = \
-                fcsparser.parse(self.beads_file, 
-                                reformat_meta = True,
-                                channel_naming = channel_naming)
-            beads_channels = beads_meta["_channels_"].set_index("$PnN")
-        except Exception as e:
-            raise CytoflowOpError("FCS reader threw an error on tube {0}: {1}"\
-                               .format(self.beads_file, str(e)))
-        
+        beads_data = parse_tube(self.beads_file, experiment)
         channels = self.units.keys()
-
-        # make sure the voltages didn't change
-        
-        for channel in channels:
-            if (channel not in experiment.metadata
-                or 'voltage' not in experiment.metadata[channel]):
-                raise CytoflowOpError("Didn't find voltage for channel {0}"
-                                      .format(channel))
-                
-            exp_v = experiment.metadata[channel]['voltage']
-        
-            if not "$PnV" in beads_channels.ix[channel]:
-                raise CytoflowOpError("Didn't find a voltage for channel {0}" \
-                                   "in tube {1}".format(channel, self.beads_file))
-            
-            control_v = beads_channels.ix[channel]['$PnV']
-            
-            if control_v != exp_v:
-                raise CytoflowOpError("Voltage differs for channel {0} in tube {1}"
-                                   .format(channel, self.beads_file))
-    
 
         for channel in channels:
             data = beads_data[channel]
             
-            #TODO - this assumes the data is on a linear scale.  check it!
+            # TODO - this assumes the data is on a linear scale.  check it!
             
             # bin the data on a log scale
             data_range = experiment.metadata[channel]['range']
@@ -310,12 +273,8 @@ class BeadCalibrationOp(HasStrictTraits):
         if not self._calibration_functions:
             raise CytoflowOpError("Calibration not found. "
                                   "Did you forget to call estimate()?")
-            
-        exp_channels = [x for x in experiment.metadata 
-                        if 'type' in experiment.metadata[x] 
-                        and experiment.metadata[x]['type'] == "channel"]
         
-        if not set(channels) <= set(exp_channels):
+        if not set(channels) <= set(experiment.channels):
             raise CytoflowOpError("Module units don't match experiment channels")
                 
         if set(channels) != set(self._calibration_functions.keys()):
@@ -357,17 +316,6 @@ class BeadCalibrationOp(HasStrictTraits):
         -------
             IView : An IView, call plot() to see the diagnostic plots
         """
-        
-        try:
-            # suppress the channel name warnings
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                _ = fcsparser.parse(self.beads_file, 
-                                    meta_data_only = True, 
-                                    reformat_meta = True)
-        except Exception as e:
-            raise CytoflowOpError("FCS reader threw an error on tube {0}: {1}"\
-                               .format(self.beads_file, str(e)))
 
         return BeadCalibrationDiagnostic(op = self)
     
@@ -422,16 +370,7 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
     def plot(self, experiment, **kwargs):
         """Plot a faceted histogram view of a channel"""
       
-        try:
-            channel_naming = experiment.metadata["name_meta"]
-            beads_meta, beads_data = \
-                fcsparser.parse(self.op.beads_file, 
-                                reformat_meta = True,
-                                channel_naming = channel_naming)
-            beads_channels = beads_meta["_channels_"].set_index("$PnN")
-        except Exception as e:
-            raise CytoflowOpError("FCS reader threw an error on tube {0}: {1}"\
-                               .format(self.op.beads_file, str(e)))
+        beads_data = parse_tube(self.op.beads_file, experiment)
 
         plt.figure()
         
@@ -441,7 +380,7 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
             data = beads_data[channel]
             
             # bin the data on a log scale
-            data_range = float(beads_channels.ix[channel]['$PnR'])
+            data_range = experiment.metadata[channel]['range']
             hist_bins = np.logspace(1, math.log(data_range, 2), num = 256, base = 2)
             hist = np.histogram(data, bins = hist_bins)
             

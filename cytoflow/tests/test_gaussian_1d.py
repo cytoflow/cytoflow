@@ -15,6 +15,7 @@ class Test(unittest.TestCase):
 
     def setUp(self):
         self.cwd = os.path.dirname(os.path.abspath(__file__)) + "/data/Plate01/"
+
         tube1 = flow.Tube(file = self.cwd + 'RFP_Well_A3.fcs', conditions = {"Dox" : 10.0})
         tube2 = flow.Tube(file= self.cwd + 'CFP_Well_A4.fcs', conditions = {"Dox" : 1.0})
         import_op = flow.ImportOp(conditions = {"Dox" : "float"},
@@ -32,7 +33,6 @@ class Test(unittest.TestCase):
                                              channel = "Y2-A",
                                              sigma = 0.5,
                                              posteriors = True)
-
         
     def testEstimate(self):
         self.gate.estimate(self.ex)

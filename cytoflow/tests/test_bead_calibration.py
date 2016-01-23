@@ -16,11 +16,9 @@ class TestBeads(unittest.TestCase):
     def setUp(self):
         import os
         self.cwd = os.path.dirname(os.path.abspath(__file__))
-        self.ex = flow.Experiment(metadata = {"name_meta" : "$PnN"})
-        tube = fcsparser.parse(self.cwd + '/data/tasbe/rby.fcs', 
-                               reformat_meta = True,
-                               channel_naming = "$PnN")
-        self.ex.add_tube(tube, {})
+        self.ex = flow.ImportOp(conditions = {},
+                                tubes = [flow.Tube(file = self.cwd + '/data/tasbe/rby.fcs',
+                                                   conditions = {})]).apply()        
         
         self.op = flow.BeadCalibrationOp(
                     units = {"PE-Tx-Red-YG-A" : "MEPTR"},

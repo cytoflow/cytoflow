@@ -7,17 +7,12 @@ class TestLogicle(unittest.TestCase):
     
     def setUp(self):
         import os
-        cwd = os.path.dirname(os.path.abspath(__file__))
-        self.ex = flow.Experiment(metadata = {"name_meta" : "$PnN"})
-        self.ex.add_conditions({"time" : "float"})
-        self.tube1 = fcsparser.parse(cwd + '/data/Plate01/RFP_Well_A3.fcs',
-                                     reformat_meta = True,
-                                     channel_naming = "$PnN")
-        self.tube2 = fcsparser.parse(cwd + '/data/Plate01/CFP_Well_A4.fcs',
-                                     reformat_meta = True,
-                                     channel_naming = "$PnN")
-        self.ex.add_tube(self.tube1, {"time" : 10.0})
-        #self.ex.add_tube(self.tube2, {"time" : 20.0})
+        self.cwd = os.path.dirname(os.path.abspath(__file__)) + "/data/Plate01/"
+        tube1 = flow.Tube(file = self.cwd + 'RFP_Well_A3.fcs', conditions = {})
+        import_op = flow.ImportOp(conditions = {},
+                                  tubes = [tube1])
+        self.ex = import_op.apply()
+
         
     def test_logicle_estimate(self):
         """

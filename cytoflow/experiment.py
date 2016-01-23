@@ -154,15 +154,13 @@ class Experiment(HasStrictTraits):
     @cached_property
     def _get_channels(self):
         return [x for x in self.metadata
-                if isinstance(self.metadata[x], dict)
-                and 'type' in self.metadata[x]
+                if x in self.data
                 and self.metadata[x]['type'] == "channel"]
     
     @cached_property
     def _get_conditions(self):
         return {x : self.metadata[x]['type'] for x in self.metadata
-                if isinstance(self.metadata[x], dict)
-                and 'type' in self.metadata[x]
+                if x in self.data
                 and self.metadata[x]['type'] != "channel"}
     
     def query(self, expr, **kwargs):
@@ -236,6 +234,7 @@ class Experiment(HasStrictTraits):
                                     .format(key))
             
         for key, key_type in conditions.iteritems():
+            self.data[key] = []
             self.metadata[key] = {}
             self.metadata[key]['type'] = key_type
         

@@ -18,6 +18,7 @@ import sklearn.mixture
 from cytoflow.operations import IOperation
 from cytoflow.views import IView
 from cytoflow.utility import CytoflowOpError, CytoflowViewError
+from cytoflow.operations.import_op import parse_tube
 
 @provides(IOperation)
 class ColorTranslationOp(HasStrictTraits):
@@ -102,20 +103,16 @@ class ColorTranslationOp(HasStrictTraits):
 
         if not experiment:
             raise CytoflowOpError("No experiment specified")
-        
-        exp_channels = [x for x in experiment.metadata 
-                        if 'type' in experiment.metadata[x] 
-                        and experiment.metadata[x]['type'] == "channel"]
-        
+
         tubes = {}
 
         for from_channel, to_channel in self.translation.iteritems():
             
-            if from_channel not in exp_channels:
+            if from_channel not in experiment.channels:
                 raise CytoflowOpError("Channel {0} not in the experiment"
                                       .format(from_channel))
                 
-            if to_channel not in exp_channels:
+            if to_channel not in experiment.channels:
                 raise CytoflowOpError("Channel {0} not in the experiment"
                                       .format(to_channel))
             
@@ -127,40 +124,12 @@ class ColorTranslationOp(HasStrictTraits):
             tube_file = self.controls[(from_channel, to_channel)]
             
             if tube_file not in tubes: 
-                try:
-                    channel_naming = experiment.metadata["name_meta"]
-                    tube_meta, tube_data = \
-                        fcsparser.parse(tube_file, 
-                                        reformat_meta = True,
-                                        channel_naming = channel_naming)
-                    tube_channels = tube_meta["_channels_"].set_index("$PnN")
-                except Exception as e:
-                    raise CytoflowOpError("FCS reader threw an error on tube "
-                                          "{0}: {1}"
-                                          .format(tube_file, str(e)))
-
-                # check voltages
-                for channel in [from_channel, to_channel]:
-                    exp_v = experiment.metadata[channel]['voltage']
-                
-                    if not "$PnV" in tube_channels.ix[channel]:
-                        raise CytoflowOpError("Didn't find a voltage for "
-                                              "channel {0} in tube {1}"
-                                              .format(channel, 
-                                                      self.controls[channel]))
-                    
-                    control_v = tube_channels.ix[channel]["$PnV"]
-                    
-                    if control_v != exp_v:
-                        raise CytoflowOpError("Voltage differs for channel "
-                                              "{0} in tube {1}"
-                                              .format(channel, 
-                                                      self.controls[channel]))
+                tube_data = parse_tube(tube_file, experiment)
 
                 # autofluorescence correction
                 af = [(channel, (experiment.metadata[channel]['af_median'],
                                  experiment.metadata[channel]['af_stdev'])) 
-                      for channel in exp_channels
+                      for channel in experiment.channels
                       if 'af_median' in experiment.metadata[channel]]
                 
                 for af_channel, (af_median, af_stdev) in af:
@@ -173,7 +142,7 @@ class ColorTranslationOp(HasStrictTraits):
                 old_tube_data = tube_data.copy()
                 bleedthrough = \
                     {channel: experiment.metadata[channel]['piecewise_bleedthrough']
-                     for channel in exp_channels
+                     for channel in experiment.channels
                      if 'piecewise_bleedthrough' in experiment.metadata[channel]} 
 
                 for channel, (interp_channels, interpolator) in bleedthrough.iteritems():
@@ -182,7 +151,7 @@ class ColorTranslationOp(HasStrictTraits):
         
                 # bead calibration
                 beads = [(channel, experiment.metadata[channel]['bead_calibration_fn'])
-                         for channel in exp_channels
+                         for channel in experiment.channels
                          if 'bead_calibration_fn' in experiment.metadata[channel]]
                 
                 for channel, calibration_fn in beads:
@@ -233,16 +202,12 @@ class ColorTranslationOp(HasStrictTraits):
         if not self._coefficients:
             raise CytoflowOpError("Coefficients aren't set. "
                                   "Did you call estimate()?")
-            
-        exp_channels = [x for x in experiment.metadata 
-                        if 'type' in experiment.metadata[x] 
-                        and experiment.metadata[x]['type'] == "channel"]
         
-        if not set(self.translation.keys()) <= set(exp_channels):
+        if not set(self.translation.keys()) <= set(experiment.channels):
             raise CytoflowOpError("Translation keys don't match "
                                   "experiment channels")
         
-        if not set(self.translation.values()) <= set(exp_channels):
+        if not set(self.translation.values()) <= set(experiment.channels):
             raise CytoflowOpError("Translation values don't match "
                                   "experiment channels")
         
@@ -284,19 +249,6 @@ class ColorTranslationOp(HasStrictTraits):
         -------
             IView : An IView, call plot() to see the diagnostic plots
         """
-        
-        for tube_file in self.controls.values():  
-            try:
-                # suppress the channel name warnings
-                with warnings.catch_warnings():
-                    warnings.simplefilter("ignore")
-
-                    _ = fcsparser.parse(tube_file, 
-                                        meta_data_only = True, 
-                                        reformat_meta = True)
-            except Exception as e:
-                raise CytoflowOpError("FCS reader threw an error on tube {0}: {1}"\
-                                   .format(tube_file, str(e)))
 
         return ColorTranslationDiagnostic(op = self)
     
@@ -328,11 +280,7 @@ class ColorTranslationDiagnostic(HasStrictTraits):
         
         if not experiment:
             raise CytoflowViewError("No experiment specified")
-        
-        exp_channels = [x for x in experiment.metadata 
-                        if 'type' in experiment.metadata[x] 
-                        and experiment.metadata[x]['type'] == "channel"]
-        
+
         tubes = {}
         
         plt.figure()
@@ -348,20 +296,12 @@ class ColorTranslationDiagnostic(HasStrictTraits):
             
             if tube_file not in tubes: 
                 
-                try:
-                    channel_naming = experiment.metadata["name_meta"]
-                    _, tube_data = \
-                        fcsparser.parse(tube_file,
-                                        reformat_meta = True,
-                                        channel_naming = channel_naming)
-                except Exception as e:
-                    raise CytoflowOpError("FCS reader threw an error on tube {0}: {1}"\
-                                       .format(tube_file, str(e)))
-                
+                tube_data = parse_tube(tube_file, experiment)
+
                 # autofluorescence correction
                 af = [(channel, (experiment.metadata[channel]['af_median'],
                                  experiment.metadata[channel]['af_stdev'])) 
-                      for channel in exp_channels 
+                      for channel in experiment.channels 
                       if 'af_median' in experiment.metadata[channel]]
                 
                 for af_channel, (af_median, af_stdev) in af:
@@ -374,7 +314,7 @@ class ColorTranslationDiagnostic(HasStrictTraits):
                 old_tube_data = tube_data.copy()
                 bleedthrough = \
                     {channel: experiment.metadata[channel]['piecewise_bleedthrough']
-                     for channel in exp_channels
+                     for channel in experiment.channels
                      if 'piecewise_bleedthrough' in experiment.metadata[channel]} 
 
                 for channel, (interp_channels, interpolator) in bleedthrough.iteritems():
@@ -383,7 +323,7 @@ class ColorTranslationDiagnostic(HasStrictTraits):
                     
                 # bead calibration
                 beads = [(channel, experiment.metadata[channel]['bead_calibration_fn'])
-                         for channel in exp_channels
+                         for channel in experiment.channels
                          if 'bead_calibration_fn' in experiment.metadata[channel]]
                 
                 for channel, calibration_fn in beads:

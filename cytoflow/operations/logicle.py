@@ -126,12 +126,8 @@ class LogicleTransformOp(HasStrictTraits):
         
         if not experiment:
             raise CytoflowOpError("no experiment specified")
-        
-        exp_channels = [x for x in experiment.metadata 
-                        if 'type' in experiment.metadata[x] 
-                        and experiment.metadata[x]['type'] == "channel"]
-        
-        if not set(self.channels).issubset(set(exp_channels)):
+
+        if not set(self.channels).issubset(set(experiment.channels)):
             raise CytoflowOpError("self.channels isn't a subset "
                                   "of experiment.channels")
         

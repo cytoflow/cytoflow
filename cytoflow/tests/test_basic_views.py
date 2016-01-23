@@ -57,19 +57,18 @@ class Test(unittest.TestCase):
     def testStats1D(self):
         import numpy as np
         flow.Stats1DView(name = "Stats1D",
-                         variable = "Dox",
+                         by = "Dox",
                          ychannel = "V2-A",
                          yfunction = np.mean).plot(self.ex)
                          
     def testStats2D(self):
         import numpy as np
         flow.Stats2DView(name = "Stats2D",
-                         variable = "Dox",
+                         by = "Dox",
                          xchannel = "V2-A",
                          xfunction = np.mean,
                          ychannel = "Y2-A",
                          yfunction = np.mean).plot(self.ex)
-
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']

@@ -8,6 +8,7 @@ import fcsparser
 from cytoflow.operations import IOperation
 from cytoflow.views import IView
 from cytoflow.utility import CytoflowOpError
+from cytoflow.operations.import_op import parse_tube
 
 @provides(IOperation)
 class AutofluorescenceOp(HasStrictTraits):
@@ -76,34 +77,8 @@ class AutofluorescenceOp(HasStrictTraits):
         # don't have to validate that blank_file exists; should crap out on 
         # trying to set a bad value
         
-        try:
-            channel_naming = experiment.metadata["name_meta"]
-            blank_meta, blank_data = \
-                fcsparser.parse(self.blank_file, 
-                                reformat_meta = True,
-                                channel_naming = channel_naming)  
-            blank_channels = blank_meta["_channels_"].set_index("$PnN")     
-        except Exception as e:
-            raise CytoflowOpError("FCS reader threw an error: " + str(e))
-        
-        for channel in self.channels:
-            if (channel not in experiment.metadata
-                or 'voltage' not in experiment.metadata[channel]):
-                raise CytoflowOpError("Didn't find voltage for channel {0}"
-                                      .format(channel))
-                
-            v = experiment.metadata[channel]['voltage']
-            
-            if not "$PnV" in blank_channels.ix[channel]:
-                raise CytoflowOpError("Didn't find a voltage for channel {0}"
-                                      "in tube {1}"
-                                      .format(channel, self.blank_file))
-            
-            blank_v = blank_channels.ix[channel]['$PnV']
-            
-            if blank_v != v:
-                raise CytoflowOpError("Voltage differs for channel {0}".format(channel)) 
-       
+        blank_data = parse_tube(self.blank_file, experiment, ignore_v = False)
+
         for channel in self.channels:
             self._af_median[channel] = np.median(blank_data[channel])
             self._af_stdev[channel] = np.std(blank_data[channel])    
@@ -124,12 +99,8 @@ class AutofluorescenceOp(HasStrictTraits):
         if not experiment:
             raise CytoflowOpError("No experiment specified")
         
-        exp_channels = [x for x in experiment.metadata 
-                        if 'type' in experiment.metadata[x] 
-                        and experiment.metadata[x]['type'] == "channel"]
-        
-        if not set(self._af_median.keys()) <= set(exp_channels) or \
-           not set(self._af_stdev.keys()) <= set(exp_channels):
+        if not set(self._af_median.keys()) <= set(experiment.channels) or \
+           not set(self._af_stdev.keys()) <= set(experiment.channels):
             raise CytoflowOpError("Autofluorescence estimates aren't set, or are "
                                "different than those in the experiment "
                                "parameter. Did you forget to run estimate()?")
