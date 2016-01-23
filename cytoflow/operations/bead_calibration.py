@@ -1,9 +1,25 @@
+#!/usr/bin/env python2.7
+
+# (c) Massachusetts Institute of Technology 2015-2016
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 '''
 Created on Aug 31, 2015
 
 @author: brian
 '''
-
 
 from __future__ import division
 
@@ -17,7 +33,7 @@ import matplotlib.pyplot as plt
 
 from cytoflow.operations import IOperation
 from cytoflow.views import IView
-from cytoflow.utility import CytoflowOpError, CytoflowViewError
+from cytoflow.utility import CytoflowOpError
 from cytoflow.operations.import_op import parse_tube
 
 @provides(IOperation)
@@ -231,7 +247,6 @@ class BeadCalibrationOp(HasStrictTraits):
                     
                     resid = lr[1][0]
                     if resid < best_resid:
-                        best_subset = mef_subset
                         best_lr = lr[0]
                         best_resid = resid
                         
