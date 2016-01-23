@@ -136,8 +136,7 @@ class BinningOp(HasStrictTraits):
         new_experiment = experiment.clone()
         new_experiment[self.name] = np.digitize(experiment[self.channel], bins)
         
-        new_experiment.metadata[self.name] = {}
-        new_experiment.metadata[self.name]["type"] = "int"
+        new_experiment.metadata[self.name] = {'type' : 'int'}
         new_experiment.metadata[self.name]["bins"] = bins
         
         if self.bin_count_name:
@@ -146,8 +145,7 @@ class BinningOp(HasStrictTraits):
             agg_count = agg_count[agg_count.columns[0]]
             new_experiment[self.bin_count_name] = \
                 new_experiment[self.name].map(agg_count)
-            new_experiment.metadata[self.bin_count_name] = {}
-            new_experiment.metadata[self.bin_count_name]["type"] = "int"
+            new_experiment.metadata[self.bin_count_name] = {'type' : 'int'}
         
         return new_experiment
     

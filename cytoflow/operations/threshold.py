@@ -97,8 +97,7 @@ class ThresholdOp(HasStrictTraits):
         new_experiment[self.name] = \
             pd.Series(new_experiment[self.channel] > self.threshold)
             
-        new_experiment.conditions[self.name] = "bool"
-        new_experiment.metadata[self.name] = {}
+        new_experiment.metadata[self.name] = {'type' : 'bool'}
             
         return new_experiment
     

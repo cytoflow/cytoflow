@@ -124,8 +124,7 @@ class Range2DOp(HasStrictTraits):
         y = new_experiment[self.ychannel].between(self.ylow, self.yhigh)
         new_experiment[self.name] = x & y
         
-        new_experiment.conditions[self.name] = "bool"
-        new_experiment.metadata[self.name] = {}
+        new_experiment.metadata[self.name] = {'type' : 'bool'}
 
         return new_experiment
     

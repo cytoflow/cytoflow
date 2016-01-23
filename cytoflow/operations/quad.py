@@ -150,8 +150,7 @@ class QuadOp(HasStrictTraits):
                             new_experiment[self.ychannel] < self.ythreshold)
         new_experiment.data.loc[ll, self.name] = self.name + '_4'
         
-        new_experiment.conditions[self.name] = 'category'
-        new_experiment.metadata[self.name] = {}
+        new_experiment.metadata[self.name] = {'type' : 'category'}
         new_experiment.metadata[self.name]['type'] = 'meta'
 
         return new_experiment

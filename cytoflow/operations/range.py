@@ -109,8 +109,7 @@ class RangeOp(HasStrictTraits):
         new_experiment[self.name] = \
             new_experiment[self.channel].between(self.low, self.high)
             
-        new_experiment.conditions[self.name] = "bool"
-        new_experiment.metadata[self.name] = {}
+        new_experiment.metadata[self.name] = {'type' : 'bool'}
             
         return new_experiment
     

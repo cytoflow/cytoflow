@@ -116,9 +116,7 @@ class PolygonOp(HasStrictTraits):
         new_experiment = experiment.clone()
         
         new_experiment[self.name] = path.contains_points(xy_data)
-            
-        new_experiment.conditions[self.name] = "bool"
-        new_experiment.metadata[self.name] = {}
+        new_experiment.metadata[self.name] = {'type' : 'bool'}
             
         return new_experiment
     

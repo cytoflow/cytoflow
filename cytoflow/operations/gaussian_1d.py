@@ -210,15 +210,13 @@ class GaussianMixture1DOp(HasStrictTraits):
         name_dtype = np.dtype("S{0}".format(len(self.name) + 5))
         new_experiment.data[self.name] = \
             np.full(len(new_experiment.data.index), "", name_dtype)
-        new_experiment.metadata[self.name] = {'type' : 'meta'}
-        new_experiment.conditions[self.name] = "category"
+        new_experiment.metadata[self.name] = {'type' : 'category'}
         
         if self.posteriors:
             col_name = "{0}_Posterior".format(self.name)
             new_experiment.data[col_name] = \
                 np.full(len(new_experiment.data.index), 0.0)
-            new_experiment.metadata[col_name] = {'type' : 'meta'}
-            new_experiment.conditions[col_name] = "float"
+            new_experiment.metadata[col_name] = {'type' : 'float'}
         
         # what we DON'T want to do is iterate through event-by-event.
         # the more of this we can push into numpy, sklearn and pandas,
