@@ -205,11 +205,11 @@ class BeadCalibrationOp(HasStrictTraits):
                 raise CytoflowOpError("Found too many peaks; check the diagnostic plot")
             elif len(peaks) == 1:
                 # if we only have one peak, assume it's the brightest peak
-                a = [mef[-1] / peaks[0]]
+                a = mef[-1] / peaks[0]
                 self._calibration_functions[channel] = lambda x, a=a: a * x
             elif len(peaks) == 2:
                 # if we have only two peaks, assume they're the brightest two
-                a = [(mef[-1] - mef[-2]) / (peaks[1] - peaks[0])]
+                a = (mef[-1] - mef[-2]) / (peaks[1] - peaks[0])
                 self._calibration_functions[channel] = lambda x, a=a: a * x
             else:
                 # if there are n > 2 peaks, check all the contiguous n-subsets
