@@ -98,7 +98,7 @@ setup(
     author_email = "teague@mit.edu",
     description = "Python tools for quantitative, reproducible flow cytometry analysis",
     long_description = long_description,
-    license = "GPLv3",
+    license = "GPLv2",
     keywords = "flow cytometry scipy",
     url = "https://github.com/bpteague/cytoflow", 
     classifiers=[
@@ -115,7 +115,8 @@ setup(
                  'Operating System :: POSIX :: Linux',
                  'Programming Language :: Python :: 2.7',
                  'Programming Language :: Python :: Implementation :: CPython',
-                 'Topic :: Scientific/Engineering :: Bio-Informatics'],
+                 'Topic :: Scientific/Engineering :: Bio-Informatics',
+                 'Topic :: Software Development :: Libraries :: Python Modules'],
     
     entry_points={'gui_scripts' : ['cytoflow = cytoflowgui:run_gui'],
                   'nose.plugins.0.10' : ['mplplugin = nose_plugins:MplPlugin']}
