@@ -77,6 +77,13 @@ A few things.
 See the [installation notes](http://cytoflow.readthedocs.org/en/latest/INSTALL.html) on [ReadTheDocs](http://cytoflow.readthedocs.org/).  Installation has been tested
 on Linux (Ubuntu Trusty) and Windows 7 (x86_64).  Mac installation should be similar.
 
+### Documentation
+
+There is some basic documentation at [ReadTheDocs](http://cytoflow.readthedocs.org/).
+Perhaps of most use is the [module index](http://cytoflow.readthedocs.org/en/latest/py-modindex.html).
+The example [Jupyter](http://jupyter.org/) notebooks, above, demonstrate how the package
+is intended to be used interactively.
+
 ### Required packages
 
 These are all in the `setuptools` spec.
