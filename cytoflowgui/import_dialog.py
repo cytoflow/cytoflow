@@ -21,12 +21,15 @@ Created on Feb 26, 2015
 @author: brian
 """
 
+# for local debugging
 if __name__ == '__main__':
     from traits.etsconfig.api import ETSConfig
     ETSConfig.toolkit = 'qt4'
 
     import os
     os.environ['TRAITS_DEBUG'] = "1"
+
+from collections import Counter
     
 from traits.api import HasTraits, provides, Instance, Str, Int, List, \
                        Bool, Enum, Float, DelegatesTo, Property, CStr, \
@@ -46,7 +49,6 @@ from pyface.constant import OK as PyfaceOK
 from pyface.ui.qt4.directory_dialog import DirectoryDialog as QtDirectoryDialog
 
 from traitsui.table_column import ObjectColumn
-from collections import Counter
 
 from cytoflow import Tube as CytoflowTube
 
