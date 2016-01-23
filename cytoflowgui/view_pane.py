@@ -1,10 +1,28 @@
-from traits.api import Instance, Any, List, on_trait_change, Str, Dict, Bool
-from traitsui.api import UI, View, Item, EnumEditor
+#!/usr/bin/env python2.7
+
+# (c) Massachusetts Institute of Technology 2015-2016
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+from traits.api import Instance, List, on_trait_change, Str, Dict, Bool
+from traitsui.api import UI
 from pyface.tasks.api import DockPane, Task
 from pyface.action.api import ToolBarManager
 from pyface.tasks.action.api import TaskAction
 from pyface.api import ImageResource
 from pyface.qt import QtGui, QtCore
+
 from cytoflowgui.view_plugins import IViewPlugin
 from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.workflow import Workflow

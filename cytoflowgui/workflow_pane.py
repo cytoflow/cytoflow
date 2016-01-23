@@ -1,10 +1,29 @@
-from pyface.tasks.api import DockPane, IDockPane, Task
+#!/usr/bin/env python2.7
+
+# (c) Massachusetts Institute of Technology 2015-2016
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 from traits.api import provides, Instance, List
-from pyface.qt import QtGui, QtCore
-from cytoflowgui.workflow import Workflow
 from traitsui.api import View, UI
+
+from pyface.qt import QtGui, QtCore
+from pyface.tasks.api import DockPane, IDockPane, Task
 from pyface.action.api import ToolBarManager
 from pyface.tasks.action.api import TaskAction
+
+from cytoflowgui.workflow import Workflow
 from cytoflowgui.op_plugins import IOperationPlugin
 
 @provides(IDockPane)
@@ -60,8 +79,8 @@ class WorkflowDockPane(DockPane):
                  
         for plugin in self.plugins:
             task_action = TaskAction(name=plugin.short_name,
-                                     on_perform = lambda id=plugin.id: 
-                                                    self.task.add_operation(id),
+                                     on_perform = lambda pid=plugin.id: 
+                                                    self.task.add_operation(pid),
                                      image = plugin.get_icon())
             self.toolbar.append(task_action)
              

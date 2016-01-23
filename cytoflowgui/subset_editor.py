@@ -1,8 +1,29 @@
+#!/usr/bin/env python2.7
+
+# (c) Massachusetts Institute of Technology 2015-2016
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 '''
 Created on Mar 23, 2015
 
 @author: brian
 '''
+
+import re
+
+# for local debugging
 if __name__ == '__main__':
     from traits.etsconfig.api import ETSConfig
     ETSConfig.toolkit = 'qt4'
@@ -10,18 +31,19 @@ if __name__ == '__main__':
     import os
     os.environ['TRAITS_DEBUG'] = "1"
 
+from traits.api import Instance, HasTraits, List, CFloat, Str, Dict, Interface, \
+                       Property, Bool, provides, on_trait_change, DelegatesTo
 from traitsui.api import BasicEditorFactory, View, UI, \
                          CheckListEditor, Item, HGroup, ListEditor, InstanceEditor
 from traitsui.qt4.editor import Editor
-from traits.api import Instance, HasTraits, List, CFloat, Str, Dict, Interface, \
-                       Property, Bool, provides, on_trait_change, DelegatesTo
+
+import pandas as pd
+import numpy as np
                        
 from cytoflow import Experiment
 from cytoflow.utility import sanitize_identifier
-from value_bounds_editor import ValuesBoundsEditor
-import pandas as pd
-import numpy as np
-import re
+from cytoflowgui.value_bounds_editor import ValuesBoundsEditor
+
 
 class ISubsetModel(Interface):
     name = Str
