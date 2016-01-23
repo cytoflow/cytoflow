@@ -166,12 +166,9 @@ class AutofluorescenceDiagnosticView(HasStrictTraits):
         kwargs.setdefault('histtype', 'stepfilled')
         kwargs.setdefault('alpha', 0.5)
         kwargs.setdefault('antialiased', True)
-        
-        channel_naming = experiment.metadata["name_meta"]
-        
-        _, blank_data = fcsparser.parse(self.op.blank_file, 
-                                        reformat_meta = True,
-                                        channel_naming = channel_naming)    
+           
+        blank_data = parse_tube(self.op.blank_file, experiment)
+
         plt.figure()
         
         for idx, channel in enumerate(self.op.channels):

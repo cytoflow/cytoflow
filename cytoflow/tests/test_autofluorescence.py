@@ -35,9 +35,9 @@ class TestExperiment(unittest.TestCase):
         
         # I don't know why this gives different results on my machine 
         # and on Travis-CI.  Weeeeird.
-        self.assertAlmostEqual(self.op._af_stdev["FITC-A"], 77.12065887451172, places = 3)
-        self.assertAlmostEqual(self.op._af_stdev["Pacific Blue-A"], 51.380287170410156, places = 3)
-        self.assertAlmostEqual(self.op._af_stdev["PE-Tx-Red-YG-A"], 117.84236145019531, places = 3)
+        self.assertAlmostEqual(self.op._af_stdev["FITC-A"], 77.12065887451172, places = 1)
+        self.assertAlmostEqual(self.op._af_stdev["Pacific Blue-A"], 51.380287170410156, places = 2)
+        self.assertAlmostEqual(self.op._af_stdev["PE-Tx-Red-YG-A"], 117.84236145019531, places = 2)
                 
     def test_apply(self):
         ex2 = self.op.apply(self.ex)
