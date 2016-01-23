@@ -36,38 +36,38 @@ class Test(unittest.TestCase):
         
     def testEstimate(self):
         self.gate.estimate(self.ex)
-        self.assertAlmostEqual(self.gate._gmms[True].means_[0][0], 0.138241432978)
-        self.assertAlmostEqual(self.gate._gmms[True].means_[1][0], 0.618966640805)
+        self.assertAlmostEqual(self.gate._gmms[True].means_[0][0], 0.138241432978, places = 3)
+        self.assertAlmostEqual(self.gate._gmms[True].means_[1][0], 0.618966640805, places = 3)
     
     def testEstimateBy(self):
         self.gate.by = ["Dox"]
         self.gate.estimate(self.ex)
-        self.assertAlmostEqual(self.gate._gmms[1.0].means_[0][0], 0.14084352777)
-        self.assertAlmostEqual(self.gate._gmms[1.0].means_[1][0], 0.440063665988)        
-        self.assertAlmostEqual(self.gate._gmms[10.0].means_[0][0], 0.133235845266)
-        self.assertAlmostEqual(self.gate._gmms[10.0].means_[1][0], 0.618998444886) 
+        self.assertAlmostEqual(self.gate._gmms[1.0].means_[0][0], 0.14084352777, places = 3)
+        self.assertAlmostEqual(self.gate._gmms[1.0].means_[1][0], 0.440063665988, places = 3)        
+        self.assertAlmostEqual(self.gate._gmms[10.0].means_[0][0], 0.133235845266, places = 3)
+        self.assertAlmostEqual(self.gate._gmms[10.0].means_[1][0], 0.618998444886, places = 3) 
         
     def testApply(self):
         self.gate.estimate(self.ex)
         ex2 = self.gate.apply(self.ex)
         
-        self.assertEqual(ex2.data.groupby("Gauss").size()["Gauss_1"], 6340)
-        self.assertEqual(ex2.data.groupby("Gauss").size()["Gauss_2"], 2497)
-        self.assertEqual(ex2.data.groupby("Gauss").size()["Gauss_None"], 11163)
+        self.assertAlmostEqual(ex2.data.groupby("Gauss").size()["Gauss_1"], 6340, delta = 3)
+        self.assertAlmostEqual(ex2.data.groupby("Gauss").size()["Gauss_2"], 2497, delta = 3)
+        self.assertAlmostEqual(ex2.data.groupby("Gauss").size()["Gauss_None"], 11163, delta = 3)
         
     def testApplyBy(self):
         self.gate.by = ["Dox"]
         self.gate.estimate(self.ex)
         ex2 = self.gate.apply(self.ex)
         
-        self.assertEqual(ex2.data.groupby(["Gauss", "Dox"]).size()["Gauss_1", 1], 3959)
-        self.assertEqual(ex2.data.groupby(["Gauss", "Dox"]).size()["Gauss_1", 10], 2345)
+        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size()["Gauss_1", 1], 3959, delta = 3)
+        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size()["Gauss_1", 10], 2345, delta = 3)
 
-        self.assertEqual(ex2.data.groupby(["Gauss", "Dox"]).size()["Gauss_2", 1], 16)
-        self.assertEqual(ex2.data.groupby(["Gauss", "Dox"]).size()["Gauss_2", 10], 2490)
+        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size()["Gauss_2", 1], 16, delta = 3)
+        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size()["Gauss_2", 10], 2490, delta = 3)
         
-        self.assertEqual(ex2.data.groupby(["Gauss", "Dox"]).size()["Gauss_None", 1], 6025)        
-        self.assertEqual(ex2.data.groupby(["Gauss", "Dox"]).size()["Gauss_None", 10], 5165)        
+        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size()["Gauss_None", 1], 6025, delta = 3)        
+        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size()["Gauss_None", 10], 5165, delta = 3)        
 
     
     def testPlot(self):
