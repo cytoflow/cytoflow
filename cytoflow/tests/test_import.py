@@ -18,6 +18,13 @@ class Test(unittest.TestCase):
         import_op = flow.ImportOp(conditions = {"Dox" : "float"},
                                   tubes = [tube1, tube2])
         ex = import_op.apply()
+
+    def testCategories(self):
+        tube1 = flow.Tube(file = self.cwd + '/data/Plate01/RFP_Well_A3.fcs', conditions = {"Dox" : "one"})
+        tube2 = flow.Tube(file= self.cwd + '/data/Plate01/CFP_Well_A4.fcs', conditions = {"Dox" : "two"})
+        import_op = flow.ImportOp(conditions = {"Dox" : "category"},
+                                  tubes = [tube1, tube2])
+        ex = import_op.apply()
         
     def testChannels(self):
         tube1 = flow.Tube(file = self.cwd + '/data/Plate01/RFP_Well_A3.fcs', conditions = {"Dox" : 10.0})

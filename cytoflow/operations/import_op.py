@@ -212,9 +212,9 @@ class ImportOp(HasStrictTraits):
         else:
             # try to autodetect the metadata
             if "$PnN" in meta_channels and not "$PnS" in meta_channels:
-                experiment.metadata["name_meta"] = "$PnN"
+                experiment.metadata["name_metadata"] = "$PnN"
             elif "$PnN" not in meta_channels and "$PnS" in meta_channels:
-                experiment.metadata["name_meta"] = "$PnS"
+                experiment.metadata["name_metadata"] = "$PnS"
             else:
                 PnN = meta_channels["$PnN"]
                 PnS = meta_channels["$PnS"]
