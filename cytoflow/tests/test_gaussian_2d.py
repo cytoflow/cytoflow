@@ -75,23 +75,23 @@ class Test(unittest.TestCase):
         self.gate.estimate(self.ex)
         ex2 = self.gate.apply(self.ex) 
                  
-        self.assertEqual(ex2.data.groupby("Gauss").size()["Gauss_1"], 6153)
-        self.assertEqual(ex2.data.groupby("Gauss").size()["Gauss_2"], 2395)
-        self.assertEqual(ex2.data.groupby("Gauss").size()["Gauss_None"], 11452)
+        self.assertEqual(ex2.data.groupby("Gauss").size().loc["Gauss_1"][0], 6153)
+        self.assertEqual(ex2.data.groupby("Gauss").size().loc["Gauss_2"][0], 2395)
+        self.assertEqual(ex2.data.groupby("Gauss").size().loc["Gauss_None"][0], 11452)
         
     def testApplyBy(self):
         self.gate.by = ["Dox"]
         self.gate.estimate(self.ex)
         ex2 = self.gate.apply(self.ex)
          
-        self.assertEqual(ex2.data.groupby(["Gauss", "Dox"]).size()["Gauss_1", 1], 3126)
-        self.assertEqual(ex2.data.groupby(["Gauss", "Dox"]).size()["Gauss_1", 10], 2452)
+        self.assertEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_1", 1], 3126)
+        self.assertEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_1", 10], 2452)
  
-        self.assertEqual(ex2.data.groupby(["Gauss", "Dox"]).size()["Gauss_2", 1], 2026)
-        self.assertEqual(ex2.data.groupby(["Gauss", "Dox"]).size()["Gauss_2", 10], 2398)
+        self.assertEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_2", 1], 2026)
+        self.assertEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_2", 10], 2398)
          
-        self.assertEqual(ex2.data.groupby(["Gauss", "Dox"]).size()["Gauss_None", 1], 4848)        
-        self.assertEqual(ex2.data.groupby(["Gauss", "Dox"]).size()["Gauss_None", 10], 5150)        
+        self.assertEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_None", 1], 4848)        
+        self.assertEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_None", 10], 5150)        
     
     def testPlot(self):
         self.gate.estimate(self.ex)

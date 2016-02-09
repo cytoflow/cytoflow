@@ -68,23 +68,23 @@ class Test(unittest.TestCase):
         self.gate.estimate(self.ex)
         ex2 = self.gate.apply(self.ex)
         
-        self.assertAlmostEqual(ex2.data.groupby("Gauss").size()["Gauss_1"], 6340, delta = 3)
-        self.assertAlmostEqual(ex2.data.groupby("Gauss").size()["Gauss_2"], 2497, delta = 3)
-        self.assertAlmostEqual(ex2.data.groupby("Gauss").size()["Gauss_None"], 11163, delta = 3)
+        self.assertAlmostEqual(ex2.data.groupby("Gauss").size().loc["Gauss_1"][0], 6340, delta = 3)
+        self.assertAlmostEqual(ex2.data.groupby("Gauss").size().loc["Gauss_2"][0], 2497, delta = 3)
+        self.assertAlmostEqual(ex2.data.groupby("Gauss").size().loc["Gauss_None"][0], 11163, delta = 3)
         
     def testApplyBy(self):
         self.gate.by = ["Dox"]
         self.gate.estimate(self.ex)
         ex2 = self.gate.apply(self.ex)
         
-        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size()["Gauss_1", 1], 3959, delta = 3)
-        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size()["Gauss_1", 10], 2345, delta = 3)
+        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_1", 1], 3959, delta = 3)
+        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_1", 10], 2345, delta = 3)
 
-        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size()["Gauss_2", 1], 16, delta = 3)
-        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size()["Gauss_2", 10], 2490, delta = 3)
+        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_2", 1], 16, delta = 3)
+        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_2", 10], 2490, delta = 3)
         
-        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size()["Gauss_None", 1], 6025, delta = 3)        
-        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size()["Gauss_None", 10], 5165, delta = 3)        
+        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_None", 1], 6025, delta = 3)        
+        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_None", 10], 5165, delta = 3)        
 
     
     def testPlot(self):
@@ -98,5 +98,5 @@ class Test(unittest.TestCase):
         
 
 if __name__ == "__main__":
-    #import sys;sys.argv = ['', 'Test.testName']
+    #import sys;sys.argv = ['', 'Test.testApplyBy']
     unittest.main()

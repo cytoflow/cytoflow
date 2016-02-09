@@ -253,29 +253,28 @@ class GaussianMixture2DOp(HasStrictTraits):
         if self.sigma < 0.0:
             raise CytoflowOpError("sigma must be >= 0.0")
         
-        new_experiment = experiment.clone()
-        name_dtype = np.dtype("S{0}".format(len(self.name) + 5))
-        new_experiment.data[self.name] = \
-            np.full(len(new_experiment.data.index), "", name_dtype)
-        new_experiment.metadata[self.name] = {'type' : 'category'}
+        event_assignments = pd.Series([None] * len(experiment), dtype = "category")
+        event_assignments.cat.set_categories(["{0}_{1}".format(self.name, (i + 1))
+                                              for i in range(self.num_components)],
+                                             inplace = True)
+        if self.sigma > 0.0:
+            event_assignments.cat.add_categories(["{0}_None".format(self.name)],
+                                                 inplace = True)
         
         if self.posteriors:
-            col_name = "{0}_Posterior".format(self.name)
-            new_experiment.data[col_name] = \
-                np.full(len(new_experiment.data.index), 0.0)
-            new_experiment.metadata[col_name] = {'type' : 'float'}
-    
+            event_posteriors = pd.Series([0.0] * len(experiment))
+            
         # what we DON'T want to do is iterate through event-by-event.
         # the more of this we can push into numpy, sklearn and pandas,
         # the faster it's going to be.  for example, this is why
         # we don't use Ellipse.contains().  
         
         if self.by:
-            groupby = new_experiment.data.groupby(self.by)
+            groupby = experiment.data.groupby(self.by)
         else:
             # use a lambda expression to return a group that
             # contains all the events
-            groupby = new_experiment.data.groupby(lambda x: True)
+            groupby = experiment.data.groupby(lambda x: True)
         
         for group, data_subset in groupby:
             gmm = self._gmms[group]
@@ -331,23 +330,24 @@ class GaussianMixture2DOp(HasStrictTraits):
                                              "((x - @xc) * @sin_t + (y - @yc) * @cos_t) ** 2 / ((@yl / 2) ** 2) <= 1").values
 
                     predicted[np.logical_and(predicted == c, gate_bool == False)] = -1
-        
-            cname = np.full(len(predicted), self.name + "_", name_dtype)
-            predicted_str = np.char.mod('%d', predicted + 1) 
-            predicted_str = np.char.add(cname, predicted_str)
-            predicted_str[predicted == -1] = "{0}_None".format(self.name)
+            
+            predicted_str = pd.Series(["{0}_".format(self.name)] * len(predicted))
+            predicted_str = predicted_str + pd.Series(predicted + 1).apply(str)
+            predicted_str.loc[predicted == -1] = "{0}_None".format(self.name)
 
-            # it took me a few goes to get this slicing right.  the key
-            # is the use of .loc so you're not chaining lookups
-            new_experiment.data.loc[groupby.groups[group], self.name] = \
-                predicted_str
+            event_assignments[groupby.groups[group]] = predicted_str
                     
             if self.posteriors:
                 probability = gmm.predict_proba(x)
-                col_name = "{0}_Posterior".format(self.name)
                 for i in range(0, self.num_components):
-                    new_experiment.data.loc[predicted == i, col_name] = \
-                        probability[predicted == i, i]
+                    event_posteriors[groupby.groups[group]][predicted == i] = \
+                        probability[predicted == i]
+                    
+        new_experiment = experiment.clone()
+        new_experiment.add_condition(self.name, "category", event_assignments)
+        if self.posteriors:
+            col_name = "{0}_Posterior".format(self.name)
+            new_experiment.add_condition(col_name, "float", event_posteriors)
                     
         return new_experiment
     
@@ -417,6 +417,7 @@ class GaussianMixture2DView(ScatterplotView):
         if self.group:
             groupby = experiment.data.groupby(self.op.by)
             temp_experiment.data = groupby.get_group(self.group)
+            temp_experiment.data.reset_index(drop = True, inplace = True)
         
         try:
             temp_experiment = self.op.apply(temp_experiment)

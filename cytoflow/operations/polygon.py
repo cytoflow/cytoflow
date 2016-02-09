@@ -131,10 +131,10 @@ class PolygonOp(HasStrictTraits):
         xy_data = experiment.data.as_matrix(columns = [self.xchannel,
                                                            self.ychannel])
         
-        new_experiment = experiment.clone()
-        
-        new_experiment[self.name] = path.contains_points(xy_data)
-        new_experiment.metadata[self.name] = {'type' : 'bool'}
+        new_experiment = experiment.clone()        
+        new_experiment.add_condition(self.name, 
+                                     "bool", 
+                                     path.contains_points(xy_data))
             
         return new_experiment
     

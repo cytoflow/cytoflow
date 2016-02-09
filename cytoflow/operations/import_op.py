@@ -204,7 +204,7 @@ class ImportOp(HasStrictTraits):
             if dtype == "log":
                 is_log = True
                 dtype = "float"
-            experiment.add_conditions({condition : dtype})
+            experiment.add_condition(condition, dtype)
             if is_log:
                 experiment.metadata[condition]["repr"] = "log"
 
@@ -279,11 +279,11 @@ class ImportOp(HasStrictTraits):
                                                            self.coarse_events,
                                                            replace = False)]
 
-            experiment.add_tube(tube_data, tube.conditions)
+            experiment.add_events(tube_data, tube.conditions)
             
         return experiment
 
-# module-level    
+# module-level, so we can reuse it in other modules
 def parse_tube(filename, experiment, ignore_v = False):        
     try:
         tube_meta, tube_data = fcsparser.parse(

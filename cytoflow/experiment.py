@@ -16,33 +16,34 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import pandas as pd
-from traits.api import HasStrictTraits, Dict, List, Instance, Str, Any, \
+from traits.api import HasStrictTraits, Dict, List, Instance, Str, Int, Any, \
                        Property, cached_property
 
 from utility import CytoflowError, sanitize_identifier
 
+
 class Experiment(HasStrictTraits):
     """An Experiment manages all the data and metadata for a flow experiment.
     
-    A flow cytometry experiment consists of:
-      - A set of tubes or wells in a multi-well plate.  Each tube or well
-        contains cells subjected to different experimental conditions.
-      - An array of events from each well or tube.  Each event is a tuple of 
-        measurements of a single cell.
-        
-    ....subject to the following constraints:
-
-      - Each tube or well MUST have identical channels (including channel 
-        parameters such as PMT voltage and delay.)
-      - Each tube or well MUST have a unique set of metadata.
-          
-    An Experiment object manages all this data.  By "manage", we mean:
-      - Get events that match a particular metadata "signature"
-      - Add additional metadata to define populations, etc.
+    An `Experiment` is `cytoflow`'s central data structure: it wraps a huge 
+    `pandas.DataFrame` containing all the data from a flow experiment. Each 
+    row in the table is an event.  Each column is either a measurement from one 
+    of the detectors (or a "derived" measurement such as a transformed value or
+    a ratio), or a piece of metadata associated with that event: which 
+    tube it came from, what the experimental conditions for that tube were, 
+    gate membership, etc.  The `Experiment` object lets you:
+      - Add additional metadata to define subpopulations
+      - Get events that match a particular metadata signature.
+      
+    Additionally, the `Experiment` object manages channel- and experiment-level
+    metadata in the `metadata` field, which is a dictionary.  This allows
+    the rest of the `cytoflow` package to track and enforce other constraints
+    that are important in doing quantitative flow cytometry: for example,
+    every tube must be collected with the same channel parameters (such 
+    as PMT voltage.)
 
     NOTE: `Experiment` is not responsible for enforcing the constraints; 
-    `cytoflow.ImportOp` is.  Which is to say, you can break these rules if
-    you need to.  I don't recommend it.  (-;
+    `cytoflow.ImportOp` and the other modules are.
     
     Attributes
     ----------
@@ -51,9 +52,9 @@ class Experiment(HasStrictTraits):
         the `DataFrame` representing all the events and metadata.  Each event
         is a row; each column is either a measured channel (ie a fluorescence
         measurement), a derived channel (eg the ratio between two channels), or
-        a piece of metadata.  Metadata can be either supplied by the tube 
-        conditions (eg induction level, timepoint) or by operations (eg gate
-        membership)
+        a piece of metadata.  Metadata can be either experimental conditions 
+        (eg induction level, timepoint) or added by operations (eg gate 
+        membership).
         
     metadata : Dict(Str : Any)
         The experimental metadata.  In particular, each column in self.data has
@@ -66,10 +67,10 @@ class Experiment(HasStrictTraits):
             measurement data (raw, transformed, or derived), then the value is 
             "channel".  If the column is per-event metadata, then the value is
             a NumPy `dtype` -- `category`, `float`, `int`, or `bool`.
-        * voltage (int) : for channels, the detector voltage used. from the FCS
-            keyword "$PnV".
-        * range (float) : for channels, the maximum possible value.  from the FCS
-            keyword "$PnR"
+        * voltage (int) : for raw channels, the detector voltage used. from the 
+            FCS keyword "$PnV".
+        * range (float) : for raw and transformed channels, the maximum possible
+            value.  from the FCS keyword "$PnR"
         * repr : for float conditions, whether to plot it linearly or on
             a log scale.
         * xforms, xforms_inv: for channels, a list of (parameterized!) 
@@ -90,20 +91,7 @@ class Experiment(HasStrictTraits):
         (gate membership, etc) and that this experiment tracks.  The key is the 
         name of the condition, and the value is the string representation of the 
         `numpy` dtype (usually one of "category", "float", "int" or "bool".)
-        
-    Notes
-    -----              
-      
-    Note that nowhere do we mention filters or gates.  You can define gate,
-    sure .... but applying that gate to an Experiment simply adds another
-    condition for each event, indicating that the event is in the new
-    population or not.  This is in contrast to traditional cytometry tools,
-    which allow you to define a tree-like gating "hierarchy."
-        
-    Finally, all this is implemented on top of a pandas DataFrame.... which
-    earns us all sorts of fun optimization, and lets us select subsets easily:
-        
-    >>> ex.query('Induced == True') 
+
 
     Implementation details
     ----------------------
@@ -121,7 +109,7 @@ class Experiment(HasStrictTraits):
     
      - Second, many of the operations (like appending!) don't happen in-place;
        they return copies instead.  It's cleaner to simply manage that copying
-       ourselves instead of making the client deal with it.  we can pretend
+       ourselves instead of making the client deal with it.  We can pretend
        to operate on the data in-place.
        
     To maintain the ease of use, we'll override __getitem__ and pass it to
@@ -167,6 +155,10 @@ class Experiment(HasStrictTraits):
     def __setitem__(self, key, value):
         """Override __setitem__ so we can assign columns like ex.column = ..."""
         return self.data.__setitem__(key, value)
+    
+    def __len__(self):
+        return len(self.data)
+
     
     @cached_property
     def _get_channels(self):
@@ -217,56 +209,134 @@ class Experiment(HasStrictTraits):
         new_exp.data = self.data.copy()
         return new_exp
             
-    def add_conditions(self, conditions):
-        """Add one or more conditions as a dictionary. Call before adding tubes.
+    def add_condition(self, name, dtype, data = None):
+        """Add a new column of per-event metadata to this `Experiment`.  Operates
+           *in place*.
         
-        We keep track of this for metadata validation as tubes are added.
+        There are two places to call `add_condition`.
+          - As you're setting up a new `Experiment`, call `add_condition()`
+            with `data` set to `None` to specify the conditions the new events
+            will have.
+          - If you compute some new per-event metadata on an existing 
+            `Experiment`, call `add_condition()` to add it. 
         
         Parameters
         ----------
-        conditions : dict(name : dtype): 
-            a dictionary of name:dtype pairs that define the tubes' conditions.
-            useful dtypes: "category", "float", "int", "bool"
+        name : String
+            The name of the new column in `self.data`.
+        
+        dtype : String
+            The type of the new column in `self.data`.  Must be a string that
+            `pandas.Series` recognizes as a `dtype`: common types are 
+            "category", "float", "int", and "bool".
             
+        data : pandas.Series (default = None)
+            The `pandas.Series` to add to `self.data`.  Must be the same
+            length as `self.data`, and it must be convertable to a 
+            `pandas.Series` of type `dtype`.  If `None`, will add an
+            empty column to the `Experiment` ... but the `Experiment` must
+            be empty to do so!
+             
         Raises
         ------
         CytoflowError
-            If you call add_conditions() after you've already started adding
-            tubes.          
+            If the `pandas.Series` passed in `data` isn't the same length
+            as `self.data`, or isn't convertable to type `dtype`.          
             
         Examples
         --------
         >>> import cytoflow as flow
         >>> ex = flow.Experiment()
-        >>> ex.add_conditions({"Time" : "float", "Strain" : "category"})      
+        >>> ex.add_condition("Time", "float")
+        >>> ex.add_condition("Strain", "category")      
         """
         
-        if(len(self.data.index) > 0):
-            raise CytoflowError("You can't add conditions after you have "
-                                "already added a tube!")              
-    
-        for key, _ in conditions.iteritems():
-            if key in self.metadata:
-                raise CytoflowError("You have already added condition {0}"
-                                    .format(key))
+        if name in self.data:
+            raise CytoflowError("Already a column named {0} in self.data"
+                                .format(name))
+        
+        if data is None and len(self) > 0:
+            raise CytoflowError("If data is None, self.data must be empty!")
+        
+        if data is not None and len(self) != data.size:
+            raise CytoflowError("data must be the same length as self.data")
+        
+        try:
+            if data is not None:
+                self.data[name] = data.astype(dtype, copy = True)
+            else:
+                self.data[name] = pd.Series(dtype = dtype)
             
-        for key, key_type in conditions.iteritems():
-            self.data[key] = pd.Series(dtype = key_type)
-            self.metadata[key] = {}
-            self.metadata[key]['type'] = key_type
+            self.metadata[name] = {}
+            self.metadata[name]['type'] = dtype                
+        except (ValueError, TypeError):
+                raise CytoflowError("Had trouble converting data to type {0}"
+                                    .format(dtype))
+            
+    def add_channel(self, name, data):
+        """Add a new column of per-event "data" (as opposed to metadata) to this
+          `Experiment`: ie, something that was measured per cell, or derived
+          from per-cell measurements.  Operates *in place*.
         
-    def add_tube(self, tube, conditions):
+        Parameters
+        ----------
+        name : String
+            The name of the new column in `self.data`.
+            
+        data : pandas.Series
+            The `pandas.Series` to add to `self.data`.  Must be the same
+            length as `self.data`, and it must be convertable to a 
+            dtype of `float64` of type `dtype`.  If `None`, will add an
+            empty column to the `Experiment` ... but the `Experiment` must
+            be empty to do so!
+             
+        Raises
+        ------
+        CytoflowError
+            If the `pandas.Series` passed in `data` isn't the same length
+            as `self.data`, or isn't convertable to a dtype `float64`.          
+            
+        Examples
+        --------
+        >>> ex.add_channel("FSC_over_2", ex.data["FSC-A"] / 2.0) 
         """
-        Add a tube of data, and its experimental conditions, to this Experiment.
         
-        Remember: because add_tube COPIES the data into this Experiment, you can
-        DELETE the tube after you add it (and save memory)
+        if name in self.data:
+            raise CytoflowError("Already a column named {0} in self.data"
+                                .format(name))
+
+        if len(self) != data.size:
+            raise CytoflowError("data must be the same length as self.data")
+        
+        try:
+            self.data[name] = data.astype("float64", copy = True)
+            self.metadata[name] = {}
+            self.metadata[name]['type'] = "channel"
+            self.metadata[name]['xforms'] = []
+            self.metadata[name]['xforms_inv'] = []
+                
+        except (ValueError, TypeError):
+                raise CytoflowError("Had trouble converting data to type \"float64\"")
+        
+    def add_events(self, data, conditions):
+        """
+        Add new events to this Experiment.
+        
+        Each new event in `data` is appended to `self.data`, and its per-event
+        metadata columns will be set with the values specified in `conditions`.
+        Thus, it is particularly useful for adding tubes of data to new
+        experiments, before additional per-event metadata is added by gates,
+        etc.
+        
+        EVERY column in `self.data` must be accounted for.  Each column of
+        type `channel` must appear in `data`; each column of metadata must
+        have a key:value pair in `conditions`.
         
         Parameters
         ----------
         tube : pandas.DataFrame
             A single tube or well's worth of data. Must be a DataFrame with
-            the same columns as `self.data`
+            the same columns as `self.channels`
         
         conditions : Dict(Str, Any)
             A dictionary of the tube's metadata.  The keys must match 
@@ -276,27 +346,31 @@ class Experiment(HasStrictTraits):
         Raises
         ------
         CytoflowError
-            - If you try to add tubes with different channels
-            - If you try to add tubes with identical metadata
-            - If you try to add tubes with metadata that can't be converted
+            - If there are columns in `data` that aren't channels in the 
+              experiment, or vice versa. 
+            - If there are keys in `conditions` that aren't conditions in
+              the experiment, or vice versa.
+            - If there is metadata specified in `conditions` that can't be
+              converted to the corresponding metadata dtype.
             
         Examples
         --------
         >>> import cytoflow as flow
         >>> import fcsparser
         >>> ex = flow.Experiment()
-        >>> ex.add_conditions({"Time" : "float", "Strain" : "category"})
+        >>> ex.add_condition("Time", "float")
+        >>> ex.add_condition("Strain", "category")
         >>> tube1, _ = fcparser.parse('CFP_Well_A4.fcs')
         >>> tube2, _ = fcparser.parse('RFP_Well_A3.fcs')
-        >>> ex.add_tube(tube1, {"Time" : 1, "Strain" : "BL21"})
-        >>> ex.add_tube(tube2, {"Time" : 1, "Strain" : "Top10G"})
+        >>> ex.add_events(tube1, {"Time" : 1, "Strain" : "BL21"})
+        >>> ex.add_events(tube2, {"Time" : 1, "Strain" : "Top10G"})
         """
 
         # make sure the new tube's channels match the rest of the 
         # channels in the Experiment
     
-        if len(self.data.index) > 0 and set(tube.columns) != set(self.channels):
-            raise CytoflowError("Tube {0} doesn't have the same channels")
+        if len(self) > 0 and set(data.columns) != set(self.channels):
+            raise CytoflowError("New events don't have the same channels")
             
         # check that the conditions for this tube exist in the experiment
         # already
@@ -316,13 +390,13 @@ class Experiment(HasStrictTraits):
         # TODO - the FCS standard says you can specify the precision.  
         # check with int/float/double files!
         
-        new_data = tube.astype("float64", copy=True)
+        new_data = data.astype("float64", copy=True)
         
         for meta_name, meta_value in conditions.iteritems():
             meta_type = self.conditions[meta_name]
             try:
                 new_data[meta_name] = \
-                    pd.Series(data = [meta_value] * len(new_data.index),
+                    pd.Series(data = [meta_value] * len(new_data),
                               index = new_data.index,
                               dtype = meta_type)
                 

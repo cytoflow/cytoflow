@@ -123,7 +123,7 @@ class AutofluorescenceOp(HasStrictTraits):
 
         if not set(self._af_median.keys()) == set(self._af_stdev.keys()):
             raise CytoflowOpError("Median and stdev keys are different! "
-                               "What the hell happened?!")
+                                  "What the hell happened?!")
         
         if not set(self.channels) == set(self._af_median.keys()):
             raise CytoflowOpError("Estimated channels differ from the channels "

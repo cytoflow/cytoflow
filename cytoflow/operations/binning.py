@@ -151,18 +151,21 @@ class BinningOp(HasStrictTraits):
         bins = bins[1:-1]
             
         new_experiment = experiment.clone()
-        new_experiment[self.name] = np.digitize(experiment[self.channel], bins)
+        new_experiment.add_condition(self.name,
+                                     "int",
+                                     np.digitize(experiment[self.channel], bins))
         
-        new_experiment.metadata[self.name] = {'type' : 'int'}
+        # keep track of the bins we used, for pretty plotting later.
         new_experiment.metadata[self.name]["bins"] = bins
         
         if self.bin_count_name:
             # TODO - this is a HUGE memory hog?!
             agg_count = new_experiment.data.groupby(self.name).count()
             agg_count = agg_count[agg_count.columns[0]]
-            new_experiment[self.bin_count_name] = \
-                new_experiment[self.name].map(agg_count)
-            new_experiment.metadata[self.bin_count_name] = {'type' : 'int'}
+            new_experiment.add_condition(
+                self.bin_count_name,
+                "int",
+                new_experiment[self.name].map(agg_count))
         
         return new_experiment
     
