@@ -37,7 +37,7 @@ class BarChartView(HasStrictTraits):
     channel : Str
         the name of the channel we're summarizing 
         
-    variable : Str
+    by : Str
         the name of the conditioning variable to group the chart's bars
 
     function : Callable (1D numpy.ndarray --> float)
@@ -98,7 +98,7 @@ class BarChartView(HasStrictTraits):
     
     name = Str
     channel = Str
-    variable = Str
+    by = Str
     function = Callable
     #orientation = Enum("horizontal", "vertical")
     xfacet = Str
@@ -128,10 +128,10 @@ class BarChartView(HasStrictTraits):
             raise CytoflowViewError("Channel {0} isn't in the experiment"
                                     .format(self.channel))
         
-        if not self.variable:
+        if not self.by:
             raise CytoflowViewError("Variable not specified")
         
-        if not self.variable in experiment.conditions:
+        if not self.by in experiment.conditions:
             raise CytoflowViewError("Variable {0} isn't in the experiment")
         
         if not self.function:
@@ -170,7 +170,7 @@ class BarChartView(HasStrictTraits):
         else:
             data = experiment.data
             
-        sns.factorplot(x = self.variable,
+        sns.factorplot(x = self.by,
                        y = self.channel,
                        data = data,
                        size = 6,
@@ -229,7 +229,7 @@ if __name__ == '__main__':
     s = flow.BarChartView()
     s.channel = "V2-A"
     s.function = flow.geom_mean
-    s.variable = "Dox"
+    s.by = "Dox"
     s.huefacet = "Y2-A+"
     #s.error_bars = "data"
     #s.error_var = "Repl"

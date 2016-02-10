@@ -1,3 +1,6 @@
 [submodule "cytoflow-examples"]
 	path = docs/examples-advanced
 	url = https://github.com/bpteague/cytoflow-examples.git
+[submodule "docs/examples-advanced"]
+	path = docs/examples-advanced
+	url = ssh://git@github.com/bpteague/cytoflow-examples.git
