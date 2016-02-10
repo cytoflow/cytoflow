@@ -232,18 +232,10 @@ class GaussianMixture1DOp(HasStrictTraits):
         if self.sigma < 0.0:
             raise CytoflowOpError("sigma must be >= 0.0")
 
-        name_dtype = np.dtype("S{0}".format(len(self.name) + 5))
-        event_assignments = pd.Series([None] * len(experiment), dtype = "category")
-        event_assignments.cat.set_categories(["{0}_{1}".format(self.name, (i + 1))
-                                              for i in range(self.num_components)],
-                                             inplace = True)
-        if self.sigma > 0.0:
-            event_assignments.cat.add_categories(["{0}_None".format(self.name)],
-                                                 inplace = True)
+        event_assignments = pd.Series([None] * len(experiment), dtype = "object")
                                       
         if self.posteriors:
             event_posteriors = pd.Series([0.0] * len(experiment))
-            #event_posteriors = np.full(len(experiment), 0.0)
             
         # what we DON'T want to do is iterate through event-by-event.
         # the more of this we can push into numpy, sklearn and pandas,
@@ -283,20 +275,20 @@ class GaussianMixture1DOp(HasStrictTraits):
                     gate_bool = gate_df.eval("p == @c and x >= @lo and x <= @hi").values
                     predicted[np.logical_and(predicted == c, gate_bool == False)] = -1
         
-            predicted_str = pd.Series(["{0}_".format(self.name)] * len(x),
-                                      index = group_idx)
-            predicted_str = predicted_str + pd.Series(predicted + 1, index = group_idx).apply(str)
+            predicted_str = pd.Series(["{0}_".format(self.name)] * len(predicted))
+            predicted_str = predicted_str + pd.Series(predicted + 1).apply(str)
             predicted_str[predicted == -1] = "{0}_None".format(self.name)
+            predicted_str.index = group_idx
 
-            event_assignments.iloc[groupby.groups[group]] = predicted_str
+            event_assignments.iloc[group_idx] = predicted_str
                                 
             if self.posteriors:
                 probability = gmm.predict_proba(x[:,np.newaxis])
-                posteriors = pd.Series([0.0] * len(x), index = group_idx)
+                posteriors = pd.Series([0.0] * len(predicted))
                 for i in range(0, self.num_components):
                     posteriors[predicted == i] = probability[predicted == i, i]
-                event_posteriors.ix[group_idx] = posteriors
-                
+                posteriors.index = group_idx
+                event_posteriors.iloc[group_idx] = posteriors
                     
         new_experiment = experiment.clone()
         new_experiment.add_condition(self.name, "category", event_assignments)

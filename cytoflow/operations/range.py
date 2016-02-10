@@ -122,11 +122,9 @@ class RangeOp(HasStrictTraits):
             raise CytoflowOpError("range low must be < {0}"
                                   .format(experiment[self.channel].max()))
         
+        gate = experiment[self.channel].between(self.low, self.high)
         new_experiment = experiment.clone()
-        new_experiment[self.name] = \
-            new_experiment[self.channel].between(self.low, self.high)
-            
-        new_experiment.metadata[self.name] = {'type' : 'bool'}
+        new_experiment.add_condition(self.name, "bool", gate)
             
         return new_experiment
     

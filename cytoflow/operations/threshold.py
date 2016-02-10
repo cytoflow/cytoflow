@@ -108,14 +108,11 @@ class ThresholdOp(HasStrictTraits):
         if self.channel not in experiment.channels:
             raise CytoflowOpError("{0} isn't a channel in the experiment"
                                   .format(self.channel))
-        
-        
+
+        gate = pd.Series(experiment[self.channel] > self.threshold)
+
         new_experiment = experiment.clone()
-        new_experiment[self.name] = \
-            pd.Series(new_experiment[self.channel] > self.threshold)
-            
-        new_experiment.metadata[self.name] = {'type' : 'bool'}
-            
+        new_experiment.add_condition(self.name, "bool", gate)
         return new_experiment
     
     def default_view(self):

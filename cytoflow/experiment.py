@@ -258,7 +258,7 @@ class Experiment(HasStrictTraits):
         if data is None and len(self) > 0:
             raise CytoflowError("If data is None, self.data must be empty!")
         
-        if data is not None and len(self) != data.size:
+        if data is not None and len(self) != len(data):
             raise CytoflowError("data must be the same length as self.data")
         
         try:
@@ -305,7 +305,7 @@ class Experiment(HasStrictTraits):
             raise CytoflowError("Already a column named {0} in self.data"
                                 .format(name))
 
-        if len(self) != data.size:
+        if len(self) != len(data):
             raise CytoflowError("data must be the same length as self.data")
         
         try:

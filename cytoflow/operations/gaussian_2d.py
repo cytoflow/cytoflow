@@ -253,14 +253,8 @@ class GaussianMixture2DOp(HasStrictTraits):
         if self.sigma < 0.0:
             raise CytoflowOpError("sigma must be >= 0.0")
         
-        event_assignments = pd.Series([None] * len(experiment), dtype = "category")
-        event_assignments.cat.set_categories(["{0}_{1}".format(self.name, (i + 1))
-                                              for i in range(self.num_components)],
-                                             inplace = True)
-        if self.sigma > 0.0:
-            event_assignments.cat.add_categories(["{0}_None".format(self.name)],
-                                                 inplace = True)
-        
+        event_assignments = pd.Series([None] * len(experiment), dtype = "object")
+
         if self.posteriors:
             event_posteriors = pd.Series([0.0] * len(experiment))
             
@@ -279,6 +273,7 @@ class GaussianMixture2DOp(HasStrictTraits):
         for group, data_subset in groupby:
             gmm = self._gmms[group]
             x = data_subset.loc[:, [self.xchannel, self.ychannel]].values
+            group_idx = groupby.groups[group]
             
             # make a preliminary assignment
             predicted = gmm.predict(x)
@@ -333,15 +328,18 @@ class GaussianMixture2DOp(HasStrictTraits):
             
             predicted_str = pd.Series(["{0}_".format(self.name)] * len(predicted))
             predicted_str = predicted_str + pd.Series(predicted + 1).apply(str)
-            predicted_str.loc[predicted == -1] = "{0}_None".format(self.name)
+            predicted_str[predicted == -1] = "{0}_None".format(self.name)
+            predicted_str.index = group_idx
 
-            event_assignments[groupby.groups[group]] = predicted_str
+            event_assignments.iloc[group_idx] = predicted_str
                     
             if self.posteriors:
                 probability = gmm.predict_proba(x)
+                posteriors = pd.Series([0.0] * len(predicted))
                 for i in range(0, self.num_components):
-                    event_posteriors[groupby.groups[group]][predicted == i] = \
-                        probability[predicted == i]
+                    posteriors[predicted == i] = probability[predicted == i, i]
+                posteriors.index = group_idx
+                event_posteriors.iloc[group_idx] = posteriors
                     
         new_experiment = experiment.clone()
         new_experiment.add_condition(self.name, "category", event_assignments)

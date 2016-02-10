@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import pandas as pd
+
 from traits.api import HasStrictTraits, CFloat, Str, CStr, Bool, Instance, \
     provides, on_trait_change, DelegatesTo, Any, Constant
 from cytoflow.operations import IOperation
@@ -135,13 +137,12 @@ class Range2DOp(HasStrictTraits):
             raise CytoflowOpError("y channel range low must be < {0}"
                                   .format(experiment[self.ychannel].max()))
         
-        new_experiment = experiment.clone()
-        x = new_experiment[self.xchannel].between(self.xlow, self.xhigh)
-        y = new_experiment[self.ychannel].between(self.ylow, self.yhigh)
-        new_experiment[self.name] = x & y
+        x = experiment[self.xchannel].between(self.xlow, self.xhigh)
+        y = experiment[self.ychannel].between(self.ylow, self.yhigh)
+        gate = pd.Series(x & y)
         
-        new_experiment.metadata[self.name] = {'type' : 'bool'}
-
+        new_experiment = experiment.clone() 
+        new_experiment.add_condition(self.name, "bool", gate)       
         return new_experiment
     
     def default_view(self):

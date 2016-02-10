@@ -23,6 +23,7 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 
 import numpy as np
+import pandas as pd
 
 from cytoflow.operations import IOperation
 from cytoflow.utility import CytoflowOpError, CytoflowViewError
@@ -128,49 +129,33 @@ class QuadOp(HasStrictTraits):
         
         if not self.ythreshold:
             raise CytoflowOpError('ythreshold must be set!')
-        
-#         if self.xthreshold <= experiment[self.xchannel].min():
-#             raise CytoflowOpError("x threshold must be > {0}"
-#                                   .format(experiment[self.xchannel].min()))
-#         if self.xthreshold >= experiment[self.xchannel].max:
-#             raise CytoflowOpError("x threshold must be < {0}"
-#                                   .format(experiment[self.xchannel].max()))
-#             
-#         if self.ythreshold <= experiment[self.ychannel].min():
-#             raise CytoflowOpError("y channel range high must be > {0}"
-#                                   .format(experiment[self.ychannel].min()))
-#         if self.ythreshold >= experiment[self.ychannel].max:
-#             raise CytoflowOpError("y channel range low must be < {0}"
-#                                   .format(experiment[self.ychannel].max()))
-        
-        new_experiment = experiment.clone()
-        new_experiment[self.name] = self.name
+
+        gate = pd.Series([None] * len(experiment))
         
         # perhaps there's some more pythonic way to do this?
         
         # upper-left
-        ul = np.logical_and(new_experiment[self.xchannel] < self.xthreshold,
-                            new_experiment[self.ychannel] > self.ythreshold)
-        new_experiment.data.loc[ul, self.name] = self.name + '_1'
+        ul = np.logical_and(experiment[self.xchannel] < self.xthreshold,
+                            experiment[self.ychannel] > self.ythreshold)
+        gate.loc[ul] = self.name + '_1'
 
         # upper-right
-        ur = np.logical_and(new_experiment[self.xchannel] > self.xthreshold,
-                            new_experiment[self.ychannel] > self.ythreshold)
-        new_experiment.data.loc[ur, self.name] = self.name + '_2'
+        ur = np.logical_and(experiment[self.xchannel] > self.xthreshold,
+                            experiment[self.ychannel] > self.ythreshold)
+        gate.loc[ur] = self.name + '_2'
         
         # lower-right
-        lr = np.logical_and(new_experiment[self.xchannel] > self.xthreshold,
-                            new_experiment[self.ychannel] < self.ythreshold)
-        new_experiment.data.loc[lr, self.name] = self.name + '_3'
+        lr = np.logical_and(experiment[self.xchannel] > self.xthreshold,
+                            experiment[self.ychannel] < self.ythreshold)
+        gate.loc[lr] = self.name + '_3'
 
         # lower-left
-        ll = np.logical_and(new_experiment[self.xchannel] < self.xthreshold,
-                            new_experiment[self.ychannel] < self.ythreshold)
-        new_experiment.data.loc[ll, self.name] = self.name + '_4'
-        
-        new_experiment.metadata[self.name] = {'type' : 'category'}
-        new_experiment.metadata[self.name]['type'] = 'meta'
+        ll = np.logical_and(experiment[self.xchannel] < self.xthreshold,
+                            experiment[self.ychannel] < self.ythreshold)
+        gate.loc[ll] = self.name + '_4'
 
+        new_experiment = experiment.clone()
+        new_experiment.add_condition(self.name, "category", gate)
         return new_experiment
     
     def default_view(self):
