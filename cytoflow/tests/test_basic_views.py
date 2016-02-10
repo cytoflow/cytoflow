@@ -50,7 +50,7 @@ class Test(unittest.TestCase):
     def testBarChart(self):
         flow.BarChartView(name = "Bar Chart",
                           channel = "Y2-A",
-                          variable = "Dox",
+                          by = "Dox",
                           function = len).plot(self.ex)
                           
     def testHexBin(self):
