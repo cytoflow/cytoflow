@@ -305,11 +305,18 @@ class Experiment(HasStrictTraits):
             raise CytoflowError("Already a column named {0} in self.data"
                                 .format(name))
 
-        if len(self) != len(data):
+        if data is None and len(self) > 0:
+            raise CytoflowError("If data is None, self.data must be empty!")
+
+        if data is not None and len(self) != len(data):
             raise CytoflowError("data must be the same length as self.data")
         
         try:
-            self.data[name] = data.astype("float64", copy = True)
+            if data is not None:
+                self.data[name] = data.astype("float64", copy = True)
+            else:
+                self.data[name] = pd.Series(dtype = "float64")
+                
             self.metadata[name] = {}
             self.metadata[name]['type'] = "channel"
             self.metadata[name]['xforms'] = []
