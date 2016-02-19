@@ -30,6 +30,7 @@ from traits.api import HasStrictTraits, Str, CStr, File, Dict, Python, \
 import numpy as np
 import matplotlib.pyplot as plt
 import sklearn.mixture
+import scipy.optimize
 
 from cytoflow.operations import IOperation
 from cytoflow.views import IView
@@ -190,7 +191,27 @@ class ColorTranslationOp(HasStrictTraits):
                 weights = [x[mu_idx] for x in fit.predict_proba(np.log10(data[from_channel][:, np.newaxis]))]
             else:
                 weights = [1] * len(data.index)
-                
+            
+            # this estimation method yields different results than the TASBE
+            # method.  TASBE ..... does something with binned means, or
+            # something ..... I can't read the MATLAB code too well, and I 
+            # don't know if the code I have is the same as is running on the
+            # TASBE website ...... anyways.  It computes a linear, multiplicative
+            # scaling constant.  Ie, OUT = m * IN, where OUT is the color we're
+            # translating TO and IN is the color we're translating FROM.
+            
+            # this code uses a different approach: it uses a log-linear model,
+            # computing the linear Y = a * X + b coefficients on a log-log
+            # plot.  this is a more general model of the underlying physical
+            # behavior -- but it may not be more "correct."
+            
+            # which is better?  idunno.  i'd love to try EQUIP predictions with
+            # both.  i'd like to note that i can't reproduce the TASBE method
+            # precisely anyways; if i replace this with a linear model, i get
+            # coefficients that are close to (but not quite the same as) the
+            # TASBE website, and WAY off the color model I have in the same
+            # directory as my test data.
+            
             lr = np.polyfit(np.log10(data[from_channel]), 
                             np.log10(data[to_channel]), 
                             deg = 1, 
