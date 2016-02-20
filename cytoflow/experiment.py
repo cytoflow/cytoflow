@@ -16,11 +16,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import pandas as pd
-from traits.api import HasStrictTraits, Dict, List, Instance, Str, Int, Any, \
+from traits.api import HasStrictTraits, Dict, List, Instance, Str, Any, \
                        Property, cached_property
 
 from utility import CytoflowError, sanitize_identifier
-
 
 class Experiment(HasStrictTraits):
     """An Experiment manages all the data and metadata for a flow experiment.
@@ -83,6 +82,10 @@ class Experiment(HasStrictTraits):
         the fact that a key is in `metadata` does not mean a corresponding
         column exists in `data`.
     
+    history : List(IOperation)
+        A list of the operations that have been applied to the raw data that
+        have led to this Experiment.
+    
     channels : List(String)
         A read-only `List` containing the channels that this experiment tracks.
     
@@ -144,6 +147,8 @@ class Experiment(HasStrictTraits):
     
     # potentially mutable.  deep copy required
     metadata = Dict(Str, Any, copy = "deep")
+    
+    history = List(Any)
     
     channels = Property(List, depends_on = "metadata")
     conditions = Property(Dict, depends_on = "metadata")

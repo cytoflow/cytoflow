@@ -119,7 +119,8 @@ class HlogTransformOp(HasStrictTraits):
             # TODO - figure out what 
             new_experiment.metadata[channel]["xforms"].append(hlog_fwd)
             new_experiment.metadata[channel]["xforms_inv"].append(hlog_rev)
-
+            
+        new_experiment.history.append(self.clone_traits())
         return new_experiment
     
 # the following functions were taken from Eugene Yurtsev's FlowCytometryTools

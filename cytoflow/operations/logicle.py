@@ -191,5 +191,6 @@ class LogicleTransformOp(HasStrictTraits):
             new_experiment[channel] = logicle_fwd(new_experiment[channel])
             new_experiment.metadata[channel]["xforms"].append(logicle_fwd)
             new_experiment.metadata[channel]["xforms_inv"].append(logicle_rev)
-            
+
+        new_experiment.history.append(self.clone_traits())            
         return new_experiment

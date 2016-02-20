@@ -34,6 +34,7 @@ import pandas
 
 import matplotlib.pyplot as plt
 
+from cytoflow import Experiment
 from cytoflow.operations.i_operation import IOperation
 from cytoflow.operations.hlog import hlog, hlog_inv
 from cytoflow.views import IView
@@ -155,15 +156,33 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
         for channel in self._channels:
             self._splines[channel] = {}
 
-            data = parse_tube(self.controls[channel], experiment).sort(channel)
+            tube_data = parse_tube(self.controls[channel], experiment).sort(channel)
 
-            for af_channel in self._channels:
-                if 'af_median' in experiment.metadata[af_channel]:
-                    data[af_channel] = data[af_channel] - \
-                                    experiment.metadata[af_channel]['af_median']
-
-            channel_min = data[channel].min()
-            channel_max = data[channel].max()
+            # make a little Experiment
+            tube_exp = Experiment()
+            tube_exp.add_events(tube_data, {})
+            print tube_exp.data
+            
+            # apply previous operations
+            for op in experiment.history:
+                tube_exp = op.apply(tube_exp)
+                
+            # subset it
+            if subset:
+                try:
+                    tube_data = tube_exp.query(subset)
+                except:
+                    raise CytoflowOpError("Subset string '{0}' isn't valid"
+                                          .format(self.subset))
+                                
+                if len(tube_data.index) == 0:
+                    raise CytoflowOpError("Subset string '{0}' returned no events"
+                                          .format(self.subset))
+            else:
+                tube_data = tube_exp.data
+            
+            channel_min = tube_data[channel].min()
+            channel_max = tube_data[channel].max()
             
             # we're going to set the knots and splines evenly across the hlog-
             # transformed data, so as to capture both the "linear" aspect
@@ -214,8 +233,8 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
                     continue
                 
                 self._splines[from_channel][to_channel] = \
-                    scipy.interpolate.LSQUnivariateSpline(data[from_channel].values,
-                                                          data[to_channel].values,
+                    scipy.interpolate.LSQUnivariateSpline(tube_data[from_channel].values,
+                                                          tube_data[to_channel].values,
                                                           t = knots,
                                                           k = 1)
          
@@ -289,6 +308,7 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
             new_experiment.metadata[channel]['piecewise_bleedthrough'] = \
                 (self._channels, self._interpolators[channel])
 
+        new_experiment.history.append(self.clone_traits())
         return new_experiment
     
     def default_view(self):

@@ -21,6 +21,7 @@ from traits.api import HasStrictTraits, Str, CStr, CFloat, File, Dict, \
                        Instance, List, Constant, provides
 import numpy as np
 
+from cytoflow import Experiment
 from cytoflow.operations import IOperation
 from cytoflow.views import IView
 from cytoflow.utility import CytoflowOpError
@@ -94,7 +95,29 @@ class AutofluorescenceOp(HasStrictTraits):
         # trying to set a bad value
         
         blank_data = parse_tube(self.blank_file, experiment, ignore_v = False)
-
+        
+        # make a little Experiment
+        blank_exp = Experiment()
+        blank_exp.add_events(blank_data, {})
+        
+        # apply previous operations
+        for op in experiment.history:
+            blank_exp = op.apply(blank_exp)
+            
+        # subset it
+        if subset:
+            try:
+                blank_data = blank_exp.query(subset)
+            except:
+                raise CytoflowOpError("Subset string '{0}' isn't valid"
+                                      .format(self.subset))
+                            
+            if len(blank_data.index) == 0:
+                raise CytoflowOpError("Subset string '{0}' returned no events"
+                                      .format(self.subset))
+        else:
+            blank_data = blank_exp.data
+        
         for channel in self.channels:
             self._af_median[channel] = np.median(blank_data[channel])
             self._af_stdev[channel] = np.std(blank_data[channel])    
@@ -115,6 +138,9 @@ class AutofluorescenceOp(HasStrictTraits):
         if not experiment:
             raise CytoflowOpError("No experiment specified")
         
+        print self._af_median
+        print experiment.channels
+        
         if not set(self._af_median.keys()) <= set(experiment.channels) or \
            not set(self._af_stdev.keys()) <= set(experiment.channels):
             raise CytoflowOpError("Autofluorescence estimates aren't set, or are "
@@ -134,15 +160,8 @@ class AutofluorescenceOp(HasStrictTraits):
         for channel in self.channels:
             new_experiment[channel] = \
                 experiment[channel] - self._af_median[channel]
-                
-            # add the AF values to the channel's metadata, so we can correct
-            # other controls (etc) later on
-            new_experiment.metadata[channel]['af_median'] = \
-                self._af_median[channel]
-                
-            new_experiment.metadata[channel]['af_stdev'] = \
-                self._af_stdev[channel]
 
+        new_experiment.history.append(self.clone_traits())
         return new_experiment
     
     def default_view(self):

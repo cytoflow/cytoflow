@@ -32,6 +32,7 @@ import matplotlib.pyplot as plt
 import sklearn.mixture
 import scipy.optimize
 
+from cytoflow import Experiment
 from cytoflow.operations import IOperation
 from cytoflow.views import IView
 from cytoflow.utility import CytoflowOpError, CytoflowViewError
@@ -142,37 +143,28 @@ class ColorTranslationOp(HasStrictTraits):
             
             if tube_file not in tubes: 
                 tube_data = parse_tube(tube_file, experiment)
-
-                # autofluorescence correction
-                af = [(channel, (experiment.metadata[channel]['af_median'],
-                                 experiment.metadata[channel]['af_stdev'])) 
-                      for channel in experiment.channels
-                      if 'af_median' in experiment.metadata[channel]]
                 
-                for af_channel, (af_median, af_stdev) in af:
-                    tube_data[af_channel] = tube_data[af_channel] - af_median
-                    tube_data = tube_data[tube_data[af_channel] > -3 * af_stdev]
-                    
-                tube_data.reset_index(drop = True, inplace = True)
-                    
-                # bleedthrough correction
-                old_tube_data = tube_data.copy()
-                bleedthrough = \
-                    {channel: experiment.metadata[channel]['piecewise_bleedthrough']
-                     for channel in experiment.channels
-                     if 'piecewise_bleedthrough' in experiment.metadata[channel]} 
-
-                for channel, (interp_channels, interpolator) in bleedthrough.iteritems():
-                    interp_data = old_tube_data[interp_channels]
-                    tube_data[channel] = interpolator(interp_data)
-        
-                # bead calibration
-                beads = [(channel, experiment.metadata[channel]['bead_calibration_fn'])
-                         for channel in experiment.channels
-                         if 'bead_calibration_fn' in experiment.metadata[channel]]
+                # make a little experiment
+                tube_exp = Experiment()
+                tube_exp.add_events(tube_data, {})
                 
-                for channel, calibration_fn in beads:
-                    tube_data[channel] = calibration_fn(tube_data[channel])
+                # apply previous operations
+                for op in experiment.history:
+                    tube_exp = op.apply(tube_exp) 
+
+                # subset the events
+                if subset:
+                    try:
+                        tube_data = tube_exp.query(subset)
+                    except:
+                        raise CytoflowOpError("Subset string '{0}' isn't valid"
+                                              .format(self.subset))
+                                    
+                    if len(tube_data.index) == 0:
+                        raise CytoflowOpError("Subset string '{0}' returned no events"
+                                              .format(self.subset))
+                else:
+                    tube_data = tube_exp.data                
 
                 tubes[tube_file] = tube_data
 
@@ -275,6 +267,7 @@ class ColorTranslationOp(HasStrictTraits):
             new_experiment.metadata[from_channel]['channel_translation_fn'] = trans_fn
             new_experiment.metadata[from_channel]['channel_translation'] = to_channel
 
+        new_experiment.history.append(self.clone_traits())
         return new_experiment
     
     def default_view(self):

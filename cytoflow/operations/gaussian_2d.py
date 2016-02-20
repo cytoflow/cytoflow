@@ -347,6 +347,7 @@ class GaussianMixture2DOp(HasStrictTraits):
             col_name = "{0}_Posterior".format(self.name)
             new_experiment.add_condition(col_name, "float", event_posteriors)
                     
+        new_experiment.history.append(self.clone_traits())
         return new_experiment
     
     def default_view(self):

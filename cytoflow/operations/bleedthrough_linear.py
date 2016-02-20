@@ -31,6 +31,7 @@ from traits.api import HasStrictTraits, Str, CStr, File, Dict, Instance, \
 import numpy as np
 import matplotlib.pyplot as plt
 
+from cytoflow import Experiment
 from cytoflow.operations.i_operation import IOperation
 from cytoflow.views import IView
 from cytoflow.utility import CytoflowOpError
@@ -120,13 +121,30 @@ class BleedthroughLinearOp(HasStrictTraits):
                                       .format(self.controls[channel], channel))
                 
         for channel in channels:
-            data = parse_tube(self.controls[channel], experiment).sort(channel)
+            tube_data = parse_tube(self.controls[channel], experiment).sort(channel)
 
-            for af_channel in channels:
-                if 'af_median' in experiment.metadata[af_channel]:
-                    data[af_channel] = data[af_channel] - \
-                                    experiment.metadata[af_channel]['af_median']
+            # make a little Experiment
+            tube_exp = Experiment()
+            tube_exp.add_events(tube_data, {})
             
+            # apply previous operations
+            for op in experiment.history:
+                tube_exp = op.apply(tube_exp)
+                
+            # subset it
+            if subset:
+                try:
+                    tube_data = tube_exp.query(subset)
+                except:
+                    raise CytoflowOpError("Subset string '{0}' isn't valid"
+                                          .format(self.subset))
+                                
+                if len(tube_data.index) == 0:
+                    raise CytoflowOpError("Subset string '{0}' returned no events"
+                                          .format(self.subset))
+            else:
+                tube_data = tube_exp.data
+
             for to_channel in channels:
                 from_channel = channel
                 
@@ -136,20 +154,20 @@ class BleedthroughLinearOp(HasStrictTraits):
                 # sometimes some of the data is off the edge of the
                 # plot, and this screws up a linear regression
                 
-                from_min = np.min(data[from_channel]) * 1.05
-                from_max = np.max(data[from_channel]) * 0.95
-                data = data[data[from_channel] > from_min]
-                data = data[data[from_channel] < from_max]
+                from_min = np.min(tube_data[from_channel]) * 1.05
+                from_max = np.max(tube_data[from_channel]) * 0.95
+                tube_data = tube_data[tube_data[from_channel] > from_min]
+                tube_data = tube_data[tube_data[from_channel] < from_max]
                 
-                to_min = np.min(data[to_channel]) * 1.05
-                to_max = np.max(data[to_channel]) * 0.95
-                data = data[data[to_channel] > to_min]
-                data = data[data[to_channel] < to_max]
+                to_min = np.min(tube_data[to_channel]) * 1.05
+                to_max = np.max(tube_data[to_channel]) * 0.95
+                tube_data = tube_data[tube_data[to_channel] > to_min]
+                tube_data = tube_data[tube_data[to_channel] < to_max]
                 
-                data.reset_index(drop = True, inplace = True)
+                tube_data.reset_index(drop = True, inplace = True)
                 
-                lr = np.polyfit(data[from_channel],
-                                data[to_channel],
+                lr = np.polyfit(tube_data[from_channel],
+                                tube_data[to_channel],
                                 deg = 1)
                 
                 self.spillover[(from_channel, to_channel)] = lr[0]
@@ -204,7 +222,8 @@ class BleedthroughLinearOp(HasStrictTraits):
             new_experiment.metadata[channel]['linear_bleedthrough'] = \
                 {x : self.spillover[(x, channel)]
                      for x in channels if x != channel}
-        
+     
+        new_experiment.history.append(self.clone_traits())   
         return new_experiment
     
     def default_view(self):

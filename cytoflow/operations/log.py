@@ -113,5 +113,6 @@ class LogTransformOp(HasStrictTraits):
             
             new_experiment.metadata[channel]["xforms"].append(log_fwd)
             new_experiment.metadata[channel]["xforms_inv"].append(log_rev)
-
+            
+        new_experiment.history.append(self.clone_traits())
         return new_experiment

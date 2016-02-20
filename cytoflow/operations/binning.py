@@ -167,6 +167,8 @@ class BinningOp(HasStrictTraits):
                 "int",
                 new_experiment[self.name].map(agg_count))
         
+        
+        new_experiment.history.append(self.clone_traits())
         return new_experiment
     
     def default_view(self):

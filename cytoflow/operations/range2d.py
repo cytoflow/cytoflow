@@ -142,7 +142,8 @@ class Range2DOp(HasStrictTraits):
         gate = pd.Series(x & y)
         
         new_experiment = experiment.clone() 
-        new_experiment.add_condition(self.name, "bool", gate)       
+        new_experiment.add_condition(self.name, "bool", gate)   
+        new_experiment.history.append(self.clone_traits())    
         return new_experiment
     
     def default_view(self):
