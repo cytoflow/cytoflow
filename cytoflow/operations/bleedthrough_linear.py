@@ -35,7 +35,7 @@ from cytoflow import Experiment
 from cytoflow.operations.i_operation import IOperation
 from cytoflow.views import IView
 from cytoflow.utility import CytoflowOpError
-from cytoflow.operations.import_op import parse_tube
+from cytoflow.operations.import_op import Tube, ImportOp, check_tube, parse_tube
 
 @provides(IOperation)
 class BleedthroughLinearOp(HasStrictTraits):
@@ -121,11 +121,10 @@ class BleedthroughLinearOp(HasStrictTraits):
                                       .format(self.controls[channel], channel))
                 
         for channel in channels:
-            tube_data = parse_tube(self.controls[channel], experiment).sort(channel)
-
+            
             # make a little Experiment
-            tube_exp = Experiment()
-            tube_exp.add_events(tube_data, {})
+            check_tube(self.controls[channel], experiment)
+            tube_exp = ImportOp(tubes = [Tube(file = self.controls[channel])]).apply()
             
             # apply previous operations
             for op in experiment.history:
@@ -144,6 +143,9 @@ class BleedthroughLinearOp(HasStrictTraits):
                                           .format(self.subset))
             else:
                 tube_data = tube_exp.data
+                
+            # polyfit requires sorted data
+            tube_data.sort(channel, inplace = True)
 
             for to_channel in channels:
                 from_channel = channel

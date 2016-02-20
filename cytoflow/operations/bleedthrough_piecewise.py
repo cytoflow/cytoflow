@@ -34,12 +34,11 @@ import pandas
 
 import matplotlib.pyplot as plt
 
-from cytoflow import Experiment
 from cytoflow.operations.i_operation import IOperation
 from cytoflow.operations.hlog import hlog, hlog_inv
 from cytoflow.views import IView
 from cytoflow.utility import CytoflowOpError, cartesian
-from cytoflow.operations.import_op import parse_tube
+from cytoflow.operations.import_op import Tube, ImportOp, check_tube, parse_tube
 
 @provides(IOperation)
 class BleedthroughPiecewiseOp(HasStrictTraits):
@@ -155,13 +154,10 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
 
         for channel in self._channels:
             self._splines[channel] = {}
-
-            tube_data = parse_tube(self.controls[channel], experiment).sort(channel)
-
+            
             # make a little Experiment
-            tube_exp = Experiment()
-            tube_exp.add_events(tube_data, {})
-            print tube_exp.data
+            check_tube(self.controls[channel], experiment)
+            tube_exp = ImportOp(tubes = [Tube(file = self.controls[channel])]).apply()
             
             # apply previous operations
             for op in experiment.history:
@@ -180,6 +176,9 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
                                           .format(self.subset))
             else:
                 tube_data = tube_exp.data
+                
+            # polyfit requires sorted data
+            tube_data.sort(channel, inplace = True)
             
             channel_min = tube_data[channel].min()
             channel_max = tube_data[channel].max()

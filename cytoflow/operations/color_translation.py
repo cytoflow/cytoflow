@@ -30,13 +30,12 @@ from traits.api import HasStrictTraits, Str, CStr, File, Dict, Python, \
 import numpy as np
 import matplotlib.pyplot as plt
 import sklearn.mixture
-import scipy.optimize
 
-from cytoflow import Experiment
 from cytoflow.operations import IOperation
 from cytoflow.views import IView
 from cytoflow.utility import CytoflowOpError, CytoflowViewError
-from cytoflow.operations.import_op import parse_tube
+from cytoflow.operations.import_op import Tube, ImportOp, check_tube, parse_tube
+
 
 @provides(IOperation)
 class ColorTranslationOp(HasStrictTraits):
@@ -142,11 +141,9 @@ class ColorTranslationOp(HasStrictTraits):
             tube_file = self.controls[(from_channel, to_channel)]
             
             if tube_file not in tubes: 
-                tube_data = parse_tube(tube_file, experiment)
-                
-                # make a little experiment
-                tube_exp = Experiment()
-                tube_exp.add_events(tube_data, {})
+                # make a little Experiment
+                check_tube(tube_file, experiment)
+                tube_exp = ImportOp(tubes = [Tube(file = tube_file)]).apply()
                 
                 # apply previous operations
                 for op in experiment.history:

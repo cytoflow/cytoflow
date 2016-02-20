@@ -278,7 +278,7 @@ class Experiment(HasStrictTraits):
                 raise CytoflowError("Had trouble converting data to type {0}"
                                     .format(dtype))
             
-    def add_channel(self, name, data):
+    def add_channel(self, name, data = None):
         """Add a new column of per-event "data" (as opposed to metadata) to this
           `Experiment`: ie, something that was measured per cell, or derived
           from per-cell measurements.  Operates *in place*.

@@ -19,13 +19,14 @@ from __future__ import division
 
 from traits.api import HasStrictTraits, Str, CStr, CFloat, File, Dict, \
                        Instance, List, Constant, provides
+                       
 import numpy as np
 
-from cytoflow import Experiment
 from cytoflow.operations import IOperation
+from cytoflow.operations.import_op import Tube, ImportOp, check_tube, parse_tube
 from cytoflow.views import IView
 from cytoflow.utility import CytoflowOpError
-from cytoflow.operations.import_op import parse_tube
+
 
 @provides(IOperation)
 class AutofluorescenceOp(HasStrictTraits):
@@ -94,11 +95,9 @@ class AutofluorescenceOp(HasStrictTraits):
         # don't have to validate that blank_file exists; should crap out on 
         # trying to set a bad value
         
-        blank_data = parse_tube(self.blank_file, experiment, ignore_v = False)
-        
         # make a little Experiment
-        blank_exp = Experiment()
-        blank_exp.add_events(blank_data, {})
+        check_tube(self.blank_file, experiment)
+        blank_exp = ImportOp(tubes = [Tube(file = self.blank_file)]).apply()
         
         # apply previous operations
         for op in experiment.history:
@@ -137,9 +136,6 @@ class AutofluorescenceOp(HasStrictTraits):
         """
         if not experiment:
             raise CytoflowOpError("No experiment specified")
-        
-        print self._af_median
-        print experiment.channels
         
         if not set(self._af_median.keys()) <= set(experiment.channels) or \
            not set(self._af_stdev.keys()) <= set(experiment.channels):

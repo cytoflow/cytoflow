@@ -110,7 +110,7 @@ class BeadCalibrationOp(HasStrictTraits):
     
     How to convert from a series of peaks to mean equivalent fluorochrome?
     If there's one peak, we assume that it's the brightest peak.  If there
-    are two peaks, we assume they're the brighest two.  If there are n >=3
+    are two peaks, we assume they're the brightest two.  If there are n >=3
     peaks, we check all the contiguous n-subsets of the bead intensities
     and find the one whose linear regression (in log space!) has the smallest
     norm (square-root sum-of-squared-residuals.)
@@ -173,6 +173,9 @@ class BeadCalibrationOp(HasStrictTraits):
         if not set(self.units.keys()) <= set(experiment.channels):
             raise CytoflowOpError("Specified channels that weren't found in "
                                   "the experiment.")
+            
+        if not set(self.units.values()) <= set(self.beads.keys()):
+            raise CytoflowOpError("Units don't match beads.")
         
         beads_data = parse_tube(self.beads_file, experiment)
         channels = self.units.keys()
@@ -295,10 +298,7 @@ class BeadCalibrationOp(HasStrictTraits):
         if set(channels) != set(self._calibration_functions.keys()):
             raise CytoflowOpError("Calibration doesn't match units. "
                                   "Did you forget to call estimate()?")
-        
-        if not set(self.units.values()) <= set(self.beads.keys()):
-            raise CytoflowOpError("Units don't match beads.")
-        
+
         # two things.  first, you can't raise a negative value to a non-integer
         # power.  second, negative physical units don't make sense -- how can
         # you have the equivalent of -5 molecules of fluoresceine?  so,

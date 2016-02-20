@@ -254,17 +254,12 @@ class ImportOp(HasStrictTraits):
         # now that we have the metadata, load it into experiment
 
         for channel in meta_channels.index:
-            experiment.data[channel] = []
-            experiment.metadata[channel] = {}
-            experiment.metadata[channel]['type'] = 'channel'
+            experiment.add_channel(channel)
+            
+            # keep track of the channel's PMT voltage
             if("$PnV" in meta_channels.ix[channel]):
                 v = meta_channels.ix[channel]['$PnV']
                 if v: experiment.metadata[channel]["voltage"] = v
-                    
-            # add empty lists to keep track of channel transforms.  
-            # required to draw tic marks, etc.                    
-            experiment.metadata[channel]['xforms'] = []
-            experiment.metadata[channel]['xforms_inv']= []
             
             # add the maximum possible value for this channel.
             data_range = meta_channels.ix[channel]['$PnR']
@@ -283,13 +278,13 @@ class ImportOp(HasStrictTraits):
             
         return experiment
 
-# module-level, so we can reuse it in other modules
-def parse_tube(filename, experiment, ignore_v = False):        
+
+def check_tube(filename, experiment, ignore_v = False):
     try:
-        tube_meta, tube_data = fcsparser.parse(
-                            filename, 
-                            channel_naming = experiment.metadata["name_metadata"],
-                            reformat_meta = True)
+        tube_meta = fcsparser.parse( filename, 
+                                     channel_naming = experiment.metadata["name_metadata"],
+                                     meta_data_only = True,
+                                     reformat_meta = True)
     except Exception as e:
         raise CytoflowOpError("FCS reader threw an error reading metadata "
                               " for tube {0}: {1}"
@@ -316,10 +311,24 @@ def parse_tube(filename, experiment, ignore_v = False):
             new_v = tube_channels.ix[channel]['$PnV']
             
             if old_v != new_v and not ignore_v:
-                raise CytoflowError("Tube {0} doesn't have the same voltages "
-                                   "as the first tube".format(filename))
+                raise CytoflowError("Tube {0} doesn't have the same voltages"
+                                    .format(filename))
 
         # TODO check the delay -- and any other params?
+            
+
+# module-level, so we can reuse it in other modules
+def parse_tube(filename, experiment, ignore_v = False):   
+    
+    check_tube(filename, experiment, ignore_v)
+         
+    try:
+        _, tube_data = fcsparser.parse(
+                            filename, 
+                            channel_naming = experiment.metadata["name_metadata"])
+    except Exception as e:
+        raise CytoflowOpError("FCS reader threw an error reading data for tube "
+                              "{0}: {1}".format(filename, str(e)))
             
     return tube_data
 
