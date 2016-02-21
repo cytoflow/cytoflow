@@ -21,7 +21,7 @@ Created on Apr 19, 2015
 @author: brian
 """
 
-from traits.api import HasStrictTraits, provides, Str
+from traits.api import HasStrictTraits, provides, Str, Enum
 
 import matplotlib.pyplot as plt
 import matplotlib as mpl
@@ -45,8 +45,14 @@ class ScatterplotView(HasStrictTraits):
     xchannel : Str
         The channel to plot on the X axis
         
+    xscale : Enum("linear", "log", "logicle") (default = "linear")
+        What scale to use on the X axis
+        
     ychannel : Str
         The channel to plot on the Y axis
+        
+    yscale : Enum("linear", "log", "logicle") (default = "linear")
+        The scale to use on the Y axis
         
     xfacet : Str
         The conditioning variable for multiple plots (horizontal)
@@ -69,7 +75,9 @@ class ScatterplotView(HasStrictTraits):
     
     name = Str
     xchannel = Str
+    xscale = Enum("linear", "log", "logicle")
     ychannel = Str
+    yscale = Enum("linear", "log", "logicle")
     xfacet = Str
     yfacet = Str
     huefacet = Str
@@ -132,6 +140,12 @@ class ScatterplotView(HasStrictTraits):
                           hue_order = (np.sort(data[self.huefacet].unique()) if self.huefacet else None),
                           legend_out = False)
         
+        plt.xscale(self.xscale, 
+                   nonposx = "mask", 
+                   range = experiment.metadata[self.xchannel]['range'])
+        plt.yscale(self.yscale, 
+                   nonposy = "mask", 
+                   range = experiment.metadata[self.ychannel]['range'])
         g.map(plt.scatter, self.xchannel, self.ychannel, **kwargs)
         g.add_legend()
         #plt.rcdefaults()

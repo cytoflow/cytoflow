@@ -18,9 +18,10 @@
 from traits.api import HasStrictTraits, provides, Str, List, Float, Dict, \
                         Constant
 import math
+from warnings import warn
 import numpy as np
 
-from cytoflow.utility import CytoflowOpError
+from cytoflow.utility import CytoflowOpError, CytoflowOpWarning
 from logicle_ext.Logicle import Logicle
 from cytoflow.operations import IOperation
 
@@ -134,9 +135,11 @@ class LogicleTransformOp(HasStrictTraits):
             else:
                 # ... unless there aren't any negative values, in which case
                 # you probably shouldn't use this transform
-                raise CytoflowOpError("Channel {0} doesn't have any negative data. " 
-                                      "Try a hlog or a log10 transform instead."
-                                      .format(channel))
+                self.W[channel] = 0.5
+                warn( "Channel {0} doesn't have any negative data. " 
+                      "Try a hlog or a log10 transform instead."
+                      .format(channel),
+                      CytoflowOpWarning)
     
     def apply(self, experiment):
         """Applies the Logicle transform to channels"""

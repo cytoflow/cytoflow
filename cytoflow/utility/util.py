@@ -22,6 +22,8 @@ Created on Mar 5, 2015
 """
 from __future__ import division
 
+from exceptions import UserWarning
+
 import numpy as np
 from scipy import stats
 
@@ -32,6 +34,15 @@ class CytoflowOpError(CytoflowError):
     pass
 
 class CytoflowViewError(CytoflowError):
+    pass
+
+class CytoflowWarning(UserWarning):
+    pass
+
+class CytoflowOpWarning(CytoflowWarning):
+    pass
+
+class CytoflowViewWarning(CytoflowWarning):
     pass
 
 def iqr(a):

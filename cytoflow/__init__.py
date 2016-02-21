@@ -41,6 +41,8 @@ from views.stats_1d import Stats1DView
 from views.stats_2d import Stats2DView
 from views.bar_chart import BarChartView
 
+from views.logicle_scale import LogicleScale
+
 from utility.util import geom_mean
 
 __version__ = "0.1.11"

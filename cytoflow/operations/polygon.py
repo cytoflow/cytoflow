@@ -24,6 +24,7 @@ from traits.api import HasStrictTraits, Str, CStr, List, Float, provides, \
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Cursor
+from matplotlib import scale
 import numpy as np
 
 from cytoflow.views.scatterplot import ScatterplotView
@@ -70,6 +71,9 @@ class PolygonOp(HasStrictTraits):
     xchannel = Str()
     ychannel = Str()
     vertices = List((Float, Float))
+    
+    _xscale = Str("linear")
+    _yscale = Str("linear")
         
     def apply(self, experiment):
         """Applies the threshold to an experiment.
@@ -125,6 +129,11 @@ class PolygonOp(HasStrictTraits):
         if(self.name in experiment.data.columns):
             raise CytoflowOpError("Experiment already contains a column {0}"
                                .format(self.name))
+            
+        # there's a bit of a subtlety here: if the vertices were 
+        # selected with an interactive plot, and that plot had scaled
+        # axes, we need to apply that scale function to both the
+        # vertices and the data before looking for path membership
             
         # use a matplotlib Path because testing for membership is a fast C fn.
         path = mpl.path.Path(np.array(self.vertices))
@@ -262,6 +271,8 @@ class PolygonSelection(ScatterplotView):
         if event.dblclick or (time.clock() - self._last_click_time < 0.5):
             self._drawing = False
             self.op.vertices = map(tuple, self._path.vertices)
+            self.op._xscale = plt.gca().get_xscale()
+            self.op._yscale = plt.gca().get_yscale()
             self._path = None
             return
         
