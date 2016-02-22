@@ -134,11 +134,22 @@ class PolygonOp(HasStrictTraits):
         # selected with an interactive plot, and that plot had scaled
         # axes, we need to apply that scale function to both the
         # vertices and the data before looking for path membership
+        xscale = scale.scale_factory(self._xscale, None)
+        xscale.range = experiment.metadata[self.xchannel]['range']
+        x_tf = xscale.get_transform()
+        yscale = scale.scale_factory(self._yscale, None)
+        yscale.range = experiment.metadata[self.ychannel]['range']
+        y_tf = yscale.get_transform()
+        
+        vertices = [(x_tf.transform_non_affine(x), y_tf.transform_non_affine(y))
+                    for (x, y) in self.vertices]
+        data = experiment.data[[self.xchannel, self.ychannel]].copy()
+        data[self.xchannel] = x_tf.transform_non_affine(data[self.xchannel])
+        data[self.ychannel] = y_tf.transform_non_affine(data[self.ychannel])
             
         # use a matplotlib Path because testing for membership is a fast C fn.
-        path = mpl.path.Path(np.array(self.vertices))
-        xy_data = experiment.data.as_matrix(columns = [self.xchannel,
-                                                           self.ychannel])
+        path = mpl.path.Path(np.array(vertices))
+        xy_data = data.as_matrix(columns = [self.xchannel, self.ychannel])
         
         new_experiment = experiment.clone()        
         new_experiment.add_condition(self.name, 
@@ -232,10 +243,9 @@ class PolygonSelection(ScatterplotView):
             self._patch.remove()
             
         if self._drawing or not self.op.vertices or len(self.op.vertices) < 3 \
-           or any([len(x) != 2 for x in self.op.vertices]):
+                         or any([len(x) != 2 for x in self.op.vertices]):
             return
              
-
         patch_vert = np.concatenate((np.array(self.op.vertices), 
                                     np.array((0,0), ndmin = 2)))
                                     

@@ -24,7 +24,7 @@ Created on Feb 21, 2016
 from __future__ import division
 
 from traits.api import HasTraits, Float, Instance, Property, \
-                       cached_property
+                       cached_property, Undefined
                        
 import numpy as np
 
@@ -84,7 +84,7 @@ class LogicleScale(HasTraits, scale.ScaleBase):
     
     name = "logicle"
     
-    range = Float
+    range = Float(Undefined)
     W = Float(0.5, desc="the width of the linear range, in log10 decades.")
     M = Float(4.5, desc = "the width of the display in log10 decades")
     A = Float(0.0, desc = "additional decades of negative data to include.")
