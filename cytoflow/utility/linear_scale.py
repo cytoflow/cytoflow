@@ -1,3 +1,11 @@
+'''
+Created on Feb 24, 2016
+
+@author: brian
+'''
+
+#!/usr/bin/env python2.7
+
 # (c) Massachusetts Institute of Technology 2015-2016
 #
 # This program is free software: you can redistribute it and/or modify
@@ -13,24 +21,28 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from i_operation import IOperation
+from __future__ import division
 
-from import_op import ImportOp
+from traits.api import HasTraits, Instance, Str, Dict, provides, Constant, Any
 
-# gates
-from threshold import ThresholdOp
-from range import RangeOp
-from range2d import Range2DOp
-from polygon import PolygonOp
+#from cytoflow.experiment import Experiment
+#from cytoflow.utility import IScale
+from cytoflow.utility.i_scale import register_scale
 
-# transforms
-# from hlog import HlogTransformOp
-# from logicle import LogicleTransformOp
-# from log import LogTransformOp
+#@provides(IScale)
+class LinearScale(HasTraits):
+    id = Constant("edu.mit.synbio.cytoflow.utility.linear_scale")
+    name = "linear"
+    
+    experiment = Any #Instance(Experiment)
+    channel = Str
 
-# etc 
-from bleedthrough_piecewise import BleedthroughPiecewiseOp
-from bead_calibration import BeadCalibrationOp
-from color_translation import ColorTranslationOp
+    mpl_params = Dict()
 
-from binning import BinningOp
+    def __call__(self, data):
+        return data
+    
+    def inverse(self, data):
+        return data
+
+register_scale(LinearScale)

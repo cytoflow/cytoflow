@@ -22,7 +22,7 @@ from warnings import warn
 import numpy as np
 
 from cytoflow.utility import CytoflowOpError, CytoflowOpWarning
-from logicle_ext.Logicle import Logicle
+from cytoflow.utility.logicle_ext.Logicle import Logicle
 from cytoflow.operations import IOperation
 
 @provides(IOperation)

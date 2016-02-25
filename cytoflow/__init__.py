@@ -20,9 +20,9 @@ from operations.threshold import ThresholdOp
 from operations.range import RangeOp
 from operations.range2d import Range2DOp
 from operations.polygon import PolygonOp
-from operations.hlog import HlogTransformOp
-from operations.logicle import LogicleTransformOp
-from operations.log import LogTransformOp
+# from operations.hlog import HlogTransformOp
+# from operations.logicle import LogicleTransformOp
+# from operations.log import LogTransformOp
 from operations.import_op import ImportOp, Tube
 from operations.autofluorescence import AutofluorescenceOp
 from operations.bleedthrough_piecewise import BleedthroughPiecewiseOp
@@ -41,7 +41,7 @@ from views.stats_1d import Stats1DView
 from views.stats_2d import Stats2DView
 from views.bar_chart import BarChartView
 
-from views.logicle_scale import LogicleScale
+# from views.logicle_scale import LogicleScale
 
 from utility.util import geom_mean
 

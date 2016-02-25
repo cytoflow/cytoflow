@@ -23,21 +23,28 @@ Created on Feb 21, 2016
 
 from __future__ import division
 
-from traits.api import HasTraits, Float, Instance, Property, \
-                       cached_property, Undefined
+from traits.api import HasTraits, Float, Instance, Property, Instance, Str, \
+                       cached_property, Undefined, provides, Constant, Dict, \
+                       Any
                        
 import numpy as np
+from warnings import warn
+import math
 
 from matplotlib import scale
 from matplotlib import transforms
 from matplotlib.ticker import NullFormatter, ScalarFormatter
 from matplotlib.ticker import Locator
 
-from cytoflow.operations.logicle_ext.Logicle import Logicle
+from cytoflow.utility.logicle_ext.Logicle import Logicle
+from cytoflow.utility import CytoflowWarning, CytoflowError
+from cytoflow.utility.i_scale import IScale, register_scale
+#from cytoflow.experiment import Experiment
 
-class LogicleScale(HasTraits, scale.ScaleBase):
+@provides(IScale)
+class LogicleScale(HasTraits):
     """
-    A matplotlib scale that transforms the data using the `logicle` function
+    A scale that transforms the data using the `logicle` function.
     
     This scaling method implements a "linear-like" region around 0, and a
     "log-like" region for large values, with a very smooth transition between
@@ -80,17 +87,106 @@ class LogicleScale(HasTraits, scale.ScaleBase):
         doi: 10.1002/cyto.a.22030 
         PMID: 22411901
         http://onlinelibrary.wiley.com/doi/10.1002/cyto.a.22030/full
-    """
-    
+    """    
+
+    id = Constant("edu.mit.synbio.cytoflow.utility.logicle_scale")        
     name = "logicle"
     
-    range = Float(Undefined)
-    W = Float(0.5, desc="the width of the linear range, in log10 decades.")
+    experiment = Any #Instance(Experiment)
+    channel = Str
+
+    range = Property(Float, depends_on = "[experiment, channel]")
+    W = Property(Float, depends_on = "[experiment, channel, r]")
     M = Float(4.5, desc = "the width of the display in log10 decades")
     A = Float(0.0, desc = "additional decades of negative data to include.")
+    r = Float(0.05, desc = "quantile to use for estimating the W parameter.")
     
     logicle = Property(Instance(Logicle), depends_on = "[range, W, M, A]")
+
+    mpl_params = Property(Dict, depends_on = "logicle")
+
+    def __call__(self, data):
+        """
+        Transforms `data` using this scale.
+        
+        Careful!  May return `NaN` if the scale domain doesn't match the data 
+        (ie, applying a log10 scale to negative numbers.
+        """
+        scale = np.vectorize(self.logicle.scale)
+        return scale(data)
+        
+    def inverse(self, data):
+        """
+        Transforms 'data' using the inverse of this scale.
+        """
+        inverse = np.vectorize(self.logicle.inverse)
+        return inverse(data)
     
+    @cached_property
+    def _get_range(self):
+        if self.experiment and self.channel:
+            return self.experiment.metadata[self.channel]["range"]
+        else:
+            return Undefined
+        
+    @cached_property
+    def _get_W(self):
+        if not (self.experiment and self.channel):
+            return Undefined
+        
+        data = self.experiment[self.channel]
+        
+        if self.r <= 0 or self.r >= 1:
+            raise CytoflowError("r must be between 0 and 1")
+        
+        # get the range by finding the rth quantile of the negative values
+        neg_values = data[data < 0]
+        if(not neg_values.empty):
+            r_value = neg_values.quantile(self.r).item()
+            return (self.M - math.log10(self.range/math.fabs(r_value)))/2
+        else:
+            # ... unless there aren't any negative values, in which case
+            # you probably shouldn't use this transform
+            warn("Channel {0} doesn't have any negative data. " 
+                 "Try a hlog or a log10 transform instead."
+                 .format(self.channel),
+                 CytoflowWarning)
+            return 0.5
+        
+    @cached_property
+    def _get_logicle(self):
+        if self.range is Undefined or self.W is Undefined:
+            return Undefined
+        
+        if self.range <= 0:
+            raise CytoflowError("Logicle range must be > 0")
+        
+        if self.W < 0:
+            raise CytoflowError("Logicle param W must be >= 0")
+        
+        if self.M <= 0:
+            raise CytoflowError("Logicle param M must be > 0")
+        
+        if (2 * self.W > self.M):
+            raise CytoflowError("Logicle param W is too large; it must be "
+                                "less than half of param M.")
+        
+        if (-self.A > self.W or self.A + self.W > self.M - self.W):
+            raise CytoflowError("Logicle param A is too large.")
+        
+         
+        return Logicle(self.range, self.W, self.M, self.A)
+    
+    @cached_property
+    def _get_mpl_params(self):
+        return {"logicle" : self.logicle}
+    
+register_scale(LogicleScale)
+        
+class MatplotlibLogicleScale(HasTraits, scale.ScaleBase):   
+    name = "logicle"
+    logicle = Instance(Logicle)
+
     def __init__(self, axis, **kwargs):
         HasTraits.__init__(self, **kwargs)
     
@@ -99,7 +195,7 @@ class LogicleScale(HasTraits, scale.ScaleBase):
         Returns the matplotlib.transform instance that does the actual 
         transformation
         """
-        return LogicleScale.LogicleTransform(logicle = self.logicle)
+        return MatplotlibLogicleScale.LogicleTransform(logicle = self.logicle)
     
     def set_default_locators_and_formatters(self, axis):
         """
@@ -110,11 +206,7 @@ class LogicleScale(HasTraits, scale.ScaleBase):
         axis.set_major_formatter(ScalarFormatter())
         axis.set_minor_locator(LogicleMinorLocator())
         axis.set_minor_formatter(NullFormatter())        
-    
-    @cached_property
-    def _get_logicle(self):
-        return Logicle(self.range, self.W, self.M, self.A)
-    
+
     class LogicleTransform(HasTraits, transforms.Transform):
         # There are two value members that must be defined.
         # ``input_dims`` and ``output_dims`` specify number of input
@@ -141,7 +233,7 @@ class LogicleScale(HasTraits, scale.ScaleBase):
             return scale(values)
 
         def inverted(self):
-            return LogicleScale.InvertedLogicleTransform(logicle = self.logicle)
+            return MatplotlibLogicleScale.InvertedLogicleTransform(logicle = self.logicle)
         
     class InvertedLogicleTransform(HasTraits, transforms.Transform):
         input_dims = 1
@@ -161,7 +253,7 @@ class LogicleScale(HasTraits, scale.ScaleBase):
             return inverse(values)
         
         def inverted(self):
-            return LogicleScale.LogicleTransform(logicle = self.logicle)
+            return MatplotlibLogicleScale.LogicleTransform(logicle = self.logicle)
         
         
 class LogicleMajorLocator(Locator):
@@ -262,23 +354,5 @@ class LogicleMinorLocator(Locator):
         'Try to choose the view limits intelligently'
         
         return vmin, vmax
-# 
-#         if vmax < vmin:
-#             vmin, vmax = vmax, vmin
-#             
-#         # get the nearest decade that contains the data
-#         if vmax > 0:
-#             vmax = 10 ** np.ceil(np.log10(vmax))
-#         else: 
-#             vmax = -1.0 * 10 ** np.ceil(np.log10(-1.0 * vmax))    
-# 
-#         if vmin > 0:
-#             vmin = 10 ** np.ceil(np.log10(vmin))
-#         else: 
-#             vmin = -1.0 * 10 ** np.ceil(np.log10(-1.0 * vmin))           
-#          
-#         return vmin, vmax
-         
 
-
-scale.register_scale(LogicleScale)
+scale.register_scale(MatplotlibLogicleScale)

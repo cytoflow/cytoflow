@@ -87,9 +87,8 @@ class GaussianMixture1DOp(HasStrictTraits):
         separately to each subset of the data with a unique combination of
         `Time` and `Dox`.
         
-    scale : Enum("linear", "log") (default = "linear")
+    scale : Enum("linear", "log", "logicle") (default = "linear")
         Re-scale the data before fitting the data?  
-        TODO - not currently implemented.
         
     posteriors : Bool (default = False)
         If `True`, add a column named `{Name}_Posterior` giving the posterior

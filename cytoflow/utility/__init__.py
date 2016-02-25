@@ -19,5 +19,10 @@ from util import cartesian, iqr, geom_mean, num_hist_bins, sanitize_identifier
 from util import CytoflowError, CytoflowOpError, CytoflowViewError
 from util import CytoflowWarning, CytoflowOpWarning, CytoflowViewWarning
 
-
+from i_scale import IScale, scale_factory
 from custom_traits import PositiveInt, PositiveFloat
+
+# make sure the scales get registered
+import linear_scale
+import log_scale
+import logicle_scale

@@ -29,7 +29,7 @@ import seaborn as sns
 import numpy as np
 
 from cytoflow.views import IView
-from cytoflow.utility import CytoflowViewError
+from cytoflow.utility import CytoflowViewError, scale_factory
 
 @provides(IView)
 class ScatterplotView(HasStrictTraits):
@@ -140,12 +140,12 @@ class ScatterplotView(HasStrictTraits):
                           hue_order = (np.sort(data[self.huefacet].unique()) if self.huefacet else None),
                           legend_out = False)
         
-        plt.xscale(self.xscale, 
-                   nonposx = "mask", 
-                   range = experiment.metadata[self.xchannel]['range'])
-        plt.yscale(self.yscale, 
-                   nonposy = "mask", 
-                   range = experiment.metadata[self.ychannel]['range'])
+        xscale = scale_factory(self.xscale, experiment, self.xchannel)
+        plt.xscale(self.xscale, **xscale.mpl_params)
+        
+        yscale = scale_factory(self.yscale, experiment, self.ychannel)
+        plt.yscale(self.yscale, **yscale.mpl_params)
+
         g.map(plt.scatter, self.xchannel, self.ychannel, **kwargs)
         g.add_legend()
         #plt.rcdefaults()
