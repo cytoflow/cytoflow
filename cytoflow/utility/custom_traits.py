@@ -1,4 +1,5 @@
 #!/usr/bin/env python2.7
+from __builtin__ import False
 
 # (c) Massachusetts Institute of Technology 2015-2016
 #
@@ -21,7 +22,9 @@ Created on Oct 12, 2015
 @author: brian
 '''
 
-from traits.api import BaseInt, BaseFloat
+from traits.api import BaseInt, BaseFloat, BaseEnum, Property
+
+from i_scale import _scale_mapping
 
 class PositiveInt(BaseInt):
     
@@ -47,3 +50,20 @@ class PositiveFloat(BaseFloat):
             return value 
         
         self.error(obj, name, value)
+        
+
+class ScaleEnum(BaseEnum):
+    info_text = 'an enum containing one of the registered scales'
+
+    def __init__ ( self, *args, **metadata ):
+        """ Returns an Enum trait with values from the registered scales
+        
+        Default Value
+        -------------
+        "linear"
+        """
+        
+        self.name = ''
+        self.values = _scale_mapping.keys()
+        self.init_fast_validator( 5, self.values )
+        super( BaseEnum, self ).__init__("linear", **metadata )

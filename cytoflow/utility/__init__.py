@@ -20,7 +20,7 @@ from util import CytoflowError, CytoflowOpError, CytoflowViewError
 from util import CytoflowWarning, CytoflowOpWarning, CytoflowViewWarning
 
 from i_scale import IScale, scale_factory
-from custom_traits import PositiveInt, PositiveFloat
+from custom_traits import PositiveInt, PositiveFloat, ScaleEnum
 
 # make sure the scales get registered
 import linear_scale

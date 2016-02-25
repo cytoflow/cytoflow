@@ -29,7 +29,7 @@ import seaborn as sns
 import numpy as np
 
 from cytoflow.views import IView
-from cytoflow.utility import CytoflowViewError, scale_factory
+from cytoflow.utility import CytoflowViewError, scale_factory, ScaleEnum
 
 @provides(IView)
 class ScatterplotView(HasStrictTraits):
@@ -75,9 +75,9 @@ class ScatterplotView(HasStrictTraits):
     
     name = Str
     xchannel = Str
-    xscale = Enum("linear", "log", "logicle")
+    xscale = ScaleEnum
     ychannel = Str
-    yscale = Enum("linear", "log", "logicle")
+    yscale = ScaleEnum
     xfacet = Str
     yfacet = Str
     huefacet = Str
@@ -165,22 +165,17 @@ if __name__ == '__main__':
                             channel_naming = "$PnN")
     
     ex = flow.Experiment()
-    ex.add_conditions({"Dox" : "float"})
+    ex.add_condition("Dox", "float")
     
-    ex.add_tube(tube1, {"Dox" : 10.0})
-    ex.add_tube(tube2, {"Dox" : 1.0})
-    
-    hlog = flow.HlogTransformOp()
-    hlog.name = "Hlog transformation"
-    hlog.channels = ['V2-A', 'Y2-A', 'B1-A', 'FSC-A', 'SSC-A']
-    ex2 = hlog.apply(ex)
+    ex.add_events(tube1, {"Dox" : 10.0})
+    ex.add_events(tube2, {"Dox" : 1.0})
     
     thresh = flow.ThresholdOp()
     thresh.name = "Y2-A+"
     thresh.channel = 'Y2-A'
-    thresh.threshold = 2005.0
+    thresh.threshold = 200.0
 
-    ex3 = thresh.apply(ex2)
+    ex2 = thresh.apply(ex)
     
     scatter = flow.ScatterplotView()
     scatter.name = "Scatter"
@@ -189,5 +184,5 @@ if __name__ == '__main__':
     scatter.huefacet = 'Dox'
     
     plt.ioff()
-    scatter.plot(ex3)
+    scatter.plot(ex2)
     plt.show()
