@@ -29,7 +29,8 @@ import seaborn as sns
 import matplotlib.transforms as mtrans
 
 from cytoflow.views import IView
-from cytoflow.utility import num_hist_bins, CytoflowViewError
+from cytoflow.utility import num_hist_bins, CytoflowViewError, ScaleEnum, \
+                             scale_factory
 
 @provides(IView)
 class HexbinView(HasStrictTraits):
@@ -149,6 +150,12 @@ class HexbinView(HasStrictTraits):
                           col_order = (np.sort(data[self.xfacet].unique()) if self.xfacet else None),
                           row_order = (np.sort(data[self.yfacet].unique()) if self.yfacet else None),
                           hue_order = (np.sort(data[self.huefacet].unique()) if self.huefacet else None),)
+        
+        xscale = scale_factory(self.xscale, experiment, self.xchannel)
+        plt.xscale(self.xscale, **xscale.mpl_params)
+        
+        yscale = scale_factory(self.yscale, experiment, self.ychannel)
+        plt.yscale(self.yscale, **yscale.mpl_params)
         
         g.map(plt.hexbin, self.xchannel, self.ychannel, **kwargs)
         

@@ -29,7 +29,7 @@ import numpy as np
 
 from cytoflow.operations import IOperation
 from cytoflow.utility import CytoflowOpError, CytoflowViewError, \
-    PositiveInt, PositiveFloat
+    PositiveInt, PositiveFloat, ScaleEnum, scale_factory
 from cytoflow.views.histogram import HistogramView
 from cytoflow.views import IView
 
@@ -49,6 +49,9 @@ class BinningOp(HasStrictTraits):
         
     channel : Str
         The name of the channel along which to bin.
+
+    scale : Enum("linear", "log", "logicle)
+        Make the bins equidistant along what scale?
         
     num_bins = Int
         The number of bins to make.  Must set either `num_bins` or `bin_width`.
@@ -56,12 +59,10 @@ class BinningOp(HasStrictTraits):
         
     bin_width = Float
         The width of the bins.  Must set either `num_bins` or `bin_width`.  If
-        `scale` is `log10`, `bin_width` is in log-10 units.  If both `num_bins`
-        and `bin_width` are defined, `num_bins` takes precedence. 
-        
-    scale : Enum("linear", "log10")
-        Make the bins equidistant along what scale?
-        TODO - add other scales, like Logicle      
+        `scale` is `log`, `bin_width` is in log-10 units; if `scale` is
+        `logicle`, and error is thrown because the units are ill-defined.
+        If both `num_bins` and `bin_width` are defined, `num_bins` takes 
+        precedence. 
         
     bin_count_name : Str
         If `bin_count_name` is set, add another piece of metadata when calling
@@ -89,7 +90,7 @@ class BinningOp(HasStrictTraits):
     channel = Str()
     num_bins = PositiveInt(Undefined)
     bin_width = PositiveFloat(Undefined)
-    scale = Enum("linear", "log10")
+    scale = ScaleEnum
 
     def apply(self, experiment):
         """Applies the binning to an experiment.
@@ -128,24 +129,22 @@ class BinningOp(HasStrictTraits):
                                   .format(self.channel))
               
         if self.num_bins is Undefined and self.bin_width is Undefined:
-            raise CytoflowOpError("must set either bin number or width")  
-            
-        channel_min = experiment.data[self.channel].min()
-        channel_max = experiment.data[self.channel].max()
+            raise CytoflowOpError("must set either bin number or width")
         
-        if self.scale == "linear":
-            num_bins = self.num_bins if self.num_bins is not Undefined else \
-                       (channel_max - channel_min) / self.bin_width
-            bins = np.linspace(start = channel_min, stop = channel_max,
-                               num = num_bins)
-        elif self.scale == "log10":
-            channel_min = channel_min if channel_min > 0 else 1
-            num_bins = self.num_bins if self.num_bins is not Undefined else \
-                       (np.log10(channel_max) - np.log10(channel_min)) / self.bin_width
-            bins = np.logspace(start = np.log10(channel_min),
-                               stop = np.log10(channel_max),
-                               num = num_bins,
-                               base = 10) 
+        if self.num_bins is Undefined \
+           and not (self.scale == "linear" or self.scale == "log"):
+            raise CytoflowOpError("Can only use bin_width with linear or log scale") 
+        
+        scale = scale_factory(self.scale, experiment, self.channel)
+        scaled_data = scale(experiment.data[self.channel])
+            
+        channel_min = np.nanmin(scaled_data)
+        channel_max = np.nanmax(scaled_data)
+        
+        num_bins = self.num_bins if self.num_bins is not Undefined else \
+                   (channel_max - channel_min) / self.bin_width
+        bins = np.linspace(start = channel_min, stop = channel_max,
+                           num = num_bins)
             
         # bins need to be internal; drop the first and last one
         bins = bins[1:-1]
@@ -153,9 +152,14 @@ class BinningOp(HasStrictTraits):
         new_experiment = experiment.clone()
         new_experiment.add_condition(self.name,
                                      "int",
-                                     np.digitize(experiment[self.channel], bins))
+                                     np.digitize(scaled_data, bins))
+        
+        # if we're log-scaled (for example), don't label data that isn't
+        # showable on a log scale!
+        new_experiment.data.ix[np.isnan(scaled_data), self.name] = np.NaN
         
         # keep track of the bins we used, for pretty plotting later.
+        new_experiment.metadata[self.name]["bin_scale"] = self.scale
         new_experiment.metadata[self.name]["bins"] = bins
         
         if self.bin_count_name:
@@ -166,7 +170,6 @@ class BinningOp(HasStrictTraits):
                 self.bin_count_name,
                 "int",
                 new_experiment[self.name].map(agg_count))
-        
         
         new_experiment.history.append(self.clone_traits())
         return new_experiment
@@ -203,6 +206,7 @@ class BinningView(HistogramView):
     op = Instance(IOperation)   
     name = DelegatesTo('op')
     channel = DelegatesTo('op')
+    scale = DelegatesTo('op')
     huefacet = DelegatesTo('op', 'name')
     
     def plot(self, experiment, **kwargs):

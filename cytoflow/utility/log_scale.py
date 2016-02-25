@@ -30,9 +30,9 @@ import numpy as np
 
 #from cytoflow.experiment import Experiment
 #from cytoflow.utility import IScale
-from cytoflow.utility.i_scale import register_scale
+from cytoflow.utility.i_scale import register_scale, IScale
 
-#@provides(IScale)
+@provides(IScale)
 class LogScale(HasTraits):
     id = Constant("edu.mit.synbio.cytoflow.utility.log_scale")
     name = "log"

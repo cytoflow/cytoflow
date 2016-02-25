@@ -26,10 +26,9 @@ from __future__ import division
 from traits.api import HasTraits, Instance, Str, Dict, provides, Constant, Any
 
 #from cytoflow.experiment import Experiment
-#from cytoflow.utility import IScale
-from cytoflow.utility.i_scale import register_scale
+from cytoflow.utility.i_scale import register_scale, IScale
 
-#@provides(IScale)
+@provides(IScale)
 class LinearScale(HasTraits):
     id = Constant("edu.mit.synbio.cytoflow.utility.linear_scale")
     name = "linear"

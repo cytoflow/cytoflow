@@ -36,7 +36,8 @@ import seaborn as sns
 from cytoflow.views.histogram import HistogramView
 from cytoflow.operations import IOperation
 from cytoflow.views import IView
-from cytoflow.utility import CytoflowOpError, CytoflowViewError, num_hist_bins
+from cytoflow.utility import CytoflowOpError, CytoflowViewError, \
+                             num_hist_bins, scale_factory, ScaleEnum, IScale
 
 @provides(IOperation)
 class GaussianMixture1DOp(HasStrictTraits):
@@ -114,13 +115,12 @@ class GaussianMixture1DOp(HasStrictTraits):
     num_components = Int(2)
     sigma = Float(0.0)
     by = List(Str)
-    
-    # scale = Enum("linear", "log")
-    
+    scale = ScaleEnum
     posteriors = Bool(False)
     
     # the key is either a single value or a tuple
     _gmms = Dict(Any, Instance(mixture.GMM))
+    _scale = Instance(IScale)
     
     def estimate(self, experiment, subset = None):
         """
@@ -155,8 +155,18 @@ class GaussianMixture1DOp(HasStrictTraits):
             # all the events
             groupby = experiment.data.groupby(lambda x: True)
             
+        # get the scale. estimate the scale params for the ENTIRE data set,
+        # not subsets we get from groupby().  And we need to save it so that
+        # the data is transformed the same way when we apply()
+        self._scale = scale_factory(self.scale, experiment, self.channel)
+            
         for group, data_subset in groupby:
             x = data_subset[self.channel].reset_index(drop = True)
+            x = self._scale(x)
+            
+            # drop data that isn't in the scale range
+            x = x[~np.isnan(x)]
+            
             gmm = mixture.GMM(n_components = self.num_components,
                               random_state = 1)
             gmm.fit(x[:, np.newaxis])
@@ -198,6 +208,9 @@ class GaussianMixture1DOp(HasStrictTraits):
         if not self._gmms:
             raise CytoflowOpError("No components found.  Did you forget to "
                                   "call estimate()?")
+            
+        if not self._scale:
+            raise CytoflowOpError("Couldn't find _scale.  What happened??")
 
         if self.channel not in experiment.data:
             raise CytoflowOpError("Column {0} not found in the experiment"
@@ -250,6 +263,8 @@ class GaussianMixture1DOp(HasStrictTraits):
         for group, data_subset in groupby:
             gmm = self._gmms[group]
             x = data_subset[self.channel]
+            x = self._scale(x)
+            
             group_idx = groupby.groups[group]
             
             # make a preliminary assignment
@@ -331,6 +346,7 @@ class GaussianMixture1DView(HistogramView):
     op = Instance(IOperation)
     name = DelegatesTo('op')
     channel = DelegatesTo('op')
+    scale = DelegatesTo('op')
     huefacet = DelegatesTo('op', 'name')
     group = Any(None)
     
@@ -373,34 +389,37 @@ class GaussianMixture1DView(HistogramView):
         # plot the group's histogram, colored by component
         super(GaussianMixture1DView, self).plot(temp_experiment, **kwargs)
         
-        # plot the actual distribution on top of it.
-        # we want to scale the plots so they have the same area under the
-        # curve as the histograms.  we'll do so with the predicted group
-        # assignments (as opposed to the values of self.name) because we
-        # want the scale to be the same regardless of self.op.sigma
-    
-        gmm = self.op._gmms[self.group] if self.group else self.op._gmms[True]
+        # get the scale back from the op
+        scale = self.op._scale
         
-        predicted = gmm.predict(temp_experiment[self.channel][:, np.newaxis])
-        temp_experiment.data[self.name + "_predicted"] = predicted
-                
+        # plot the actual distribution on top of it.
+        
+        # we want to scale the plots so they have the same area under the
+        # curve as the histograms.  it used to be that we got the area from
+        # repeating the assignments, then calculating bin widths, etc.  but
+        # really, if we just plotted the damn thing already, we can get the
+        # area of the plot from the Polygon patch that we just plotted!
+
+        gmm = self.op._gmms[self.group] if self.group else self.op._gmms[True]
+                              
         for i in range(0, len(gmm.means_)):
-            groupby = temp_experiment.data.groupby(self.name + "_predicted")
-            group_data = groupby.get_group(i).reset_index(drop = True)
-            xmin = np.amin(group_data[self.channel])
-            xmax = np.amax(group_data[self.channel])
-            hist_bin_width = (xmax - xmin) / num_hist_bins(group_data[self.channel])
-            pdf_scale = hist_bin_width * len(group_data)
+            patch = plt.gca().patches[i]
+            xy = patch.get_xy()
+            pdf_scale = poly_area([scale(p[0]) for p in xy], [p[1] for p in xy])
             
-            # okay, so maybe we'll fudge a little.
+            # cheat a little
             pdf_scale *= 1.2
             
             plt_min, plt_max = plt.gca().get_xlim()
-            x = np.linspace(plt_min, plt_max, 100)
+            x = scale.inverse(np.linspace(scale(plt_min), scale(plt_max), 500))     
+                   
             mean = gmm.means_[i][0]
             stdev = np.sqrt(gmm.covars_[i][0])
-            y = stats.norm.pdf(x, mean, stdev) * pdf_scale
+            y = stats.norm.pdf(scale(x), mean, stdev) * pdf_scale
             color_i = i % len(sns.color_palette())
             color = sns.color_palette()[color_i]
-            plt.plot(x, y, color = color)
-            
+            plt.plot(x, y, color = color)      
+
+# from http://stackoverflow.com/questions/24467972/calculate-area-of-polygon-given-x-y-coordinates
+def poly_area(x,y):
+    return 0.5*np.abs(np.dot(x,np.roll(y,1))-np.dot(y,np.roll(x,1)))

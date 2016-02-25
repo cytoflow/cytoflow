@@ -106,14 +106,14 @@ class Stats2DView(HasStrictTraits):
     >>> ex_ifp_binned = flow.BinningOp(name = "IFP_Bin",
     ...                                channel = "Pacific Blue-A",
     ...                                scale = "log",
-    ...                                bin_width = 0.1)
+    ...                                bin_width = 0.1).apply(ex_cfp_binned)
     >>> view = flow.Stats2DView(name = "IFP vs OFP",
     ...                         by = "IFP_Bin",
     ...                         xchannel = "Pacific Blue-A",
     ...                         xfunction = flow.geom_mean,
     ...                         ychannel = "FITC-A",
     ...                         yfunction = flow.geom_mean,
-    ...                         huefacet = "CFP_Bin").plot(ex6_ifp_binned)
+    ...                         huefacet = "CFP_Bin").plot(ex_ifp_binned)
     >>> view.plot(ex_binned)
     """
     

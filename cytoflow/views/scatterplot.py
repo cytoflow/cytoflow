@@ -148,7 +148,6 @@ class ScatterplotView(HasStrictTraits):
 
         g.map(plt.scatter, self.xchannel, self.ychannel, **kwargs)
         g.add_legend()
-        #plt.rcdefaults()
         
 if __name__ == '__main__':
     import cytoflow as flow

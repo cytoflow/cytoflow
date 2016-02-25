@@ -17,13 +17,15 @@
 
 from __future__ import division
 
-from traits.api import HasStrictTraits, Str, provides
+from traits.api import HasStrictTraits, Str, Enum, provides
 import matplotlib.pyplot as plt
-from cytoflow.views import IView
-from cytoflow.utility import num_hist_bins, CytoflowViewError
+
 import numpy as np
 import seaborn as sns
 import math
+
+from cytoflow.views import IView
+from cytoflow.utility import num_hist_bins, scale_factory, ScaleEnum, CytoflowViewError
 
 @provides(IView)
 class HistogramView(HasStrictTraits):
@@ -66,6 +68,7 @@ class HistogramView(HasStrictTraits):
     
     name = Str
     channel = Str
+    scale = ScaleEnum
     xfacet = Str
     yfacet = Str
     huefacet = Str
@@ -105,6 +108,14 @@ class HistogramView(HasStrictTraits):
                                         .format(self.subset))
         else:
             data = experiment.data        
+            
+        # get the scale
+        scale = scale_factory(self.scale, experiment, self.channel)
+        scaled_data = scale(data[self.channel])
+        
+        # drop data that isn't in the scale function's domain
+        data = data[~np.isnan(scaled_data)]
+        scaled_data = scaled_data[~np.isnan(scaled_data)]
         
         kwargs.setdefault('histtype', 'stepfilled')
         kwargs.setdefault('alpha', 0.5)
@@ -113,13 +124,14 @@ class HistogramView(HasStrictTraits):
         # estimate a "good" number of bins; see cytoflow.utility.num_hist_bins
         # for a reference.
         
-        num_bins = num_hist_bins(data[self.channel])
+        num_bins = num_hist_bins(scaled_data)
         num_bins = 50 if num_bins < 50 else num_bins
-        xmin = np.amin(data[self.channel])
-        xmax = np.amax(data[self.channel])
+        xmin = scaled_data.min()
+        xmax = scaled_data.max()
                     
         if (self.huefacet 
-            and "bins" in experiment.metadata[self.huefacet]):
+            and "bins" in experiment.metadata[self.huefacet]
+            and experiment.metadata[self.huefacet]["bin_scale"] == self.scale):
             # if we color facet by the result of a BinningOp and we don't
             # match the BinningOp bins with the histogram bins, we get
             # gnarly aliasing.
@@ -141,11 +153,11 @@ class HistogramView(HasStrictTraits):
                                                  bins_per_hue + 1,
                                                  endpoint = True)[1:])
 
-            bins = new_bins
+            bins = scale.inverse(new_bins)
         else:
             bin_width = (xmax - xmin) / num_bins
-            bins = np.arange(xmin, xmax, bin_width)
-            bins = np.append(bins, xmax)
+            bins = scale.inverse(np.arange(xmin, xmax, bin_width))
+            bins = np.append(bins, scale.inverse(xmax))
         
         kwargs.setdefault('bins', bins) 
 
@@ -160,6 +172,9 @@ class HistogramView(HasStrictTraits):
                           hue_order = (np.sort(data[self.huefacet].unique()) if self.huefacet else None),
                           legend_out = False)
         
+        # TODO - something odd with the scaling here??
+        
+        plt.xscale(self.scale, **scale.mpl_params)        
         g.map(plt.hist, self.channel, **kwargs)
         g.add_legend()
 
