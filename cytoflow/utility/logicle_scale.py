@@ -353,3 +353,5 @@ class LogicleMinorLocator(Locator):
         'Try to choose the view limits intelligently'
         
         return vmin, vmax
+    
+matplotlib.scale.register_scale(MatplotlibLogicleScale)

@@ -23,8 +23,3 @@ from .cytoflow_errors import CytoflowWarning, CytoflowOpWarning, CytoflowViewWar
 
 from .scale import scale_factory, IScale
 from .custom_traits import PositiveInt, PositiveFloat, ScaleEnum
-
-# register the new scales
-from . import linear_scale
-from . import log_scale
-from . import logicle_scale

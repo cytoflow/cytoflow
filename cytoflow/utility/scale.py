@@ -17,7 +17,7 @@
 
 from __future__ import absolute_import
 
-from traits.api import Interface, Str, Dict, Instance
+from traits.api import Interface, Str, Dict, Instance, provides, HasTraits, Constant
 
 from .cytoflow_errors import CytoflowError
 
@@ -68,16 +68,17 @@ _scale_mapping = {}
 
 def scale_factory(scale, experiment, channel):
     scale = scale.lower()
-       
+        
     if scale not in _scale_mapping:
         raise CytoflowError("Unknown scale type {0}".format(scale))
-        
+         
     return _scale_mapping[scale](experiment = experiment, channel = channel)
-
+ 
 def register_scale(scale_class):
-    print "registering {0}".format(scale_class.name)
     _scale_mapping[scale_class.name] = scale_class
-# 
-# from . import linear_scale
-# from . import log_scale
-# from . import logicle_scale
+
+# register the new scales
+import cytoflow.utility.linear_scale   # @UnusedImport
+import cytoflow.utility.log_scale      # @UnusedImport
+import cytoflow.utility.logicle_scale  # @UnusedImport
+
