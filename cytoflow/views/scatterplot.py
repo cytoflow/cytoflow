@@ -21,7 +21,7 @@ Created on Apr 19, 2015
 @author: brian
 """
 
-from traits.api import HasStrictTraits, provides, Str, Enum
+from traits.api import HasStrictTraits, provides, Str
 
 import matplotlib.pyplot as plt
 import matplotlib as mpl
@@ -100,26 +100,30 @@ class ScatterplotView(HasStrictTraits):
             raise util.CytoflowViewError("Y channel not specified")
         
         if self.ychannel not in experiment.data:
-            raise util.CytoflowViewError("Y channel {0} not in the experiment")
+            raise util.CytoflowViewError("Y channel {0} not in the experiment"
+                                         .format(self.ychannel))
         
         if self.xfacet and self.xfacet not in experiment.conditions:
-            raise util.CytoflowViewError("X facet {0} not in the experiment")
+            raise util.CytoflowViewError("X facet {0} not in the experiment"
+                                         .format(self.xfacet))
         
         if self.yfacet and self.yfacet not in experiment.conditions:
-            raise util.CytoflowViewError("Y facet {0} not in the experiment")
+            raise util.CytoflowViewError("Y facet {0} not in the experiment"
+                                         .format(self.yfacet))
         
         if self.huefacet and self.huefacet not in experiment.metadata:
-            raise util.CytoflowViewError("Hue facet {0} not in the experiment")
+            raise util.CytoflowViewError("Hue facet {0} not in the experiment"
+                                         .format(self.huefacet))
         
         if self.subset:
             try:
                 data = experiment.query(self.subset)
             except:
-                raise CytoflowViewError("Subset string '{0}' isn't valid"
+                raise util.CytoflowViewError("Subset string '{0}' isn't valid"
                                         .format(self.subset))
                             
             if len(data.index) == 0:
-                raise CytoflowViewError("Subset string '{0}' returned no events"
+                raise util.CytoflowViewError("Subset string '{0}' returned no events"
                                         .format(self.subset))
         else:
             data = experiment.data
@@ -152,23 +156,13 @@ class ScatterplotView(HasStrictTraits):
         
 if __name__ == '__main__':
     import cytoflow as flow
-    import fcsparser
+    tube1 = flow.Tube(file = '../../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs',
+                      conditions = {"Dox" : 10.0})
     
-    mpl.rcParams['savefig.dpi'] = 2 * mpl.rcParams['savefig.dpi']
-    
-    tube1 = fcsparser.parse('../../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs',
-                            reformat_meta = True,
-                            channel_naming = "$PnN")
+    tube2 = flow.Tube(file = '../../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs',
+                      conditions = {"Dox" : 1.0})                      
 
-    tube2 = fcsparser.parse('../../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs',
-                            reformat_meta = True,
-                            channel_naming = "$PnN")
-    
-    ex = flow.Experiment()
-    ex.add_condition("Dox", "float")
-    
-    ex.add_events(tube1, {"Dox" : 10.0})
-    ex.add_events(tube2, {"Dox" : 1.0})
+    ex = flow.ImportOp(conditions = {"Dox" : "float"}, tubes = [tube1, tube2])
     
     thresh = flow.ThresholdOp()
     thresh.name = "Y2-A+"
@@ -181,6 +175,8 @@ if __name__ == '__main__':
     scatter.name = "Scatter"
     scatter.xchannel = "FSC-A"
     scatter.ychannel = "SSC-A"
+    scatter.xscale = "logicle"
+    scatter.yscale = "logicle"
     scatter.huefacet = 'Dox'
     
     plt.ioff()

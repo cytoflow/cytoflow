@@ -203,7 +203,7 @@ class PolygonSelection(cytoflow.views.ScatterplotView):
     id = Constant('edu.mit.synbio.cytoflow.views.polygon')
     friendly_id = Constant("Polygon Selection")
     
-    op = Instance(PolygonOp)
+    op = Instance(IOperation)
     name = DelegatesTo('op')
     xchannel = DelegatesTo('op')
     ychannel = DelegatesTo('op')

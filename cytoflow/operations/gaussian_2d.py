@@ -119,16 +119,18 @@ class GaussianMixture2DOp(HasStrictTraits):
     name = CStr()
     xchannel = Str()
     ychannel = Str()
+    xscale = util.ScaleEnum
+    yscale = util.ScaleEnum
     num_components = Int(2)
     sigma = Float(0.0)
     by = List(Str)
-    
-    # scale = Enum("linear", "log")
     
     posteriors = Bool(False)
     
     # the key is either a single value or a tuple
     _gmms = Dict(Any, Instance(mixture.GMM))
+    _xscale = Instance(util.IScale)
+    _yscale = Instance(util.IScale)
     
     def estimate(self, experiment, subset = None):
         """
@@ -167,8 +169,21 @@ class GaussianMixture2DOp(HasStrictTraits):
             # all the events
             groupby = experiment.data.groupby(lambda x: True)
             
+        # get the scale. estimate the scale params for the ENTIRE data set,
+        # not subsets we get from groupby().  And we need to save it so that
+        # the data is transformed the same way when we apply()
+        self._xscale = util.scale_factory(self.xscale, experiment, self.xchannel)
+        self._yscale = util.scale_factory(self.yscale, experiment, self.ychannel)
+            
         for group, data_subset in groupby:
-            x = data_subset.loc[:, [self.xchannel, self.ychannel]].values
+            x = data_subset.loc[:, [self.xchannel, self.ychannel]]
+            x[self.xchannel] = self._xscale(x[self.xchannel])
+            x[self.ychannel] = self._yscale(x[self.ychannel])
+            
+            # drop data that isn't in the scale range
+            x = x[~(np.isnan(x[self.xchannel]) | np.isnan(x[self.ychannel]))]
+            x = x.values
+            
             gmm = mixture.GMM(n_components = self.num_components,
                               covariance_type = "full",
                               random_state = 1)
@@ -217,6 +232,12 @@ class GaussianMixture2DOp(HasStrictTraits):
         if not self._gmms:
             raise util.CytoflowOpError("No components found.  Did you forget to "
                                   "call estimate()?")
+            
+        if not self._xscale:
+            raise util.CytoflowOpError("Couldn't find _xscale.  What happened??")
+        
+        if not self._yscale:
+            raise util.CytoflowOpError("Couldn't find _yscale.  What happened??")
 
         if self.xchannel not in experiment.data:
             raise util.CytoflowOpError("Column {0} not found in the experiment"
@@ -273,7 +294,11 @@ class GaussianMixture2DOp(HasStrictTraits):
         
         for group, data_subset in groupby:
             gmm = self._gmms[group]
-            x = data_subset.loc[:, [self.xchannel, self.ychannel]].values
+            x = data_subset.loc[:, [self.xchannel, self.ychannel]]
+            x[self.xchannel] = self._xscale(x[self.xchannel])
+            x[self.ychannel] = self._yscale(x[self.ychannel])
+            x = x.values
+            
             group_idx = groupby.groups[group]
             
             # make a preliminary assignment
@@ -385,6 +410,8 @@ class GaussianMixture2DView(cytoflow.views.ScatterplotView):
     name = DelegatesTo('op')
     xchannel = DelegatesTo('op')
     ychannel = DelegatesTo('op')
+    xscale = DelegatesTo('op')
+    yscale = DelegatesTo('op')
     huefacet = DelegatesTo('op', 'name')
     group = Any(None)
     
