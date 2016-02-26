@@ -20,18 +20,23 @@ Created on Mar 20, 2015
 
 @author: brian
 '''
+from __future__ import absolute_import
 
 import warnings
 
-from traits.api import HasStrictTraits, provides, Str, List, Bool, Int, Any, \
-                       Dict, File, Constant, Enum
+from traits.api import (HasStrictTraits, provides, Str, List, Bool, Int, Any,
+                        Dict, File, Constant, Enum)
 
 import fcsparser
 import numpy as np
 
+import cytoflow.utility as util
+
 from cytoflow import Experiment
-from cytoflow.operations import IOperation
-from cytoflow.utility import CytoflowError, CytoflowOpError
+from .i_operation import IOperation
+
+#from cytoflow.operations import IOperation
+#from cytoflow.utility import CytoflowError, CytoflowOpError
 
 class Tube(HasStrictTraits):
     """
@@ -176,14 +181,14 @@ class ImportOp(HasStrictTraits):
     def apply(self, experiment = None):
         
         if not self.tubes or len(self.tubes) == 0:
-            raise CytoflowOpError("Must specify some tubes!")
+            raise util.CytoflowOpError("Must specify some tubes!")
         
         # make sure each tube has the same conditions
         tube0_conditions = set(self.tubes[0].conditions)
         for tube in self.tubes:
             tube_conditions = set(tube.conditions)
             if len(tube0_conditions ^ tube_conditions) > 0:
-                raise CytoflowOpError("Tube {0} didn't have the same "
+                raise util.CytoflowOpError("Tube {0} didn't have the same "
                                       "conditions as tube {1}"
                                       .format(tube.file, self.tubes[0].file))
 
@@ -191,7 +196,7 @@ class ImportOp(HasStrictTraits):
         for idx, i in enumerate(self.tubes[0:-1]):
             for j in self.tubes[idx+1:]:
                 if i.conditions_equal(j):
-                    raise CytoflowOpError("The same conditions specified for "
+                    raise util.CytoflowOpError("The same conditions specified for "
                                           "tube {0} and tube {1}"
                                           .format(i.file, j.file))
         
@@ -217,9 +222,9 @@ class ImportOp(HasStrictTraits):
                                              meta_data_only = True,
                                              reformat_meta = True)
         except Exception as e:
-            raise CytoflowOpError("FCS reader threw an error reading metadata "
-                                  " for tube {0}: {1}"
-                                  .format(self.tubes[0].file, str(e)))
+            raise util.CytoflowOpError("FCS reader threw an error reading metadata "
+                                       " for tube {0}: {1}"
+                                       .format(self.tubes[0].file, str(e)))
               
         meta_channels = tube0_meta["_channels_"]
         
@@ -286,13 +291,13 @@ def check_tube(filename, experiment, ignore_v = False):
                                      meta_data_only = True,
                                      reformat_meta = True)
     except Exception as e:
-        raise CytoflowOpError("FCS reader threw an error reading metadata "
+        raise util.CytoflowOpError("FCS reader threw an error reading metadata "
                               " for tube {0}: {1}"
                               .format(filename, str(e)))
     
     # first make sure the tube has the right channels    
     if set(tube_meta["_channel_names_"]) != set(experiment.channels):
-        raise CytoflowError("Tube {0} doesn't have the same channels "
+        raise util.CytoflowError("Tube {0} doesn't have the same channels "
                            "as the first tube added".format(filename))
      
     tube_channels = tube_meta["_channels_"]
@@ -304,14 +309,14 @@ def check_tube(filename, experiment, ignore_v = False):
         # first check voltage
         if "voltage" in experiment.metadata[channel]:    
             if not "$PnV" in tube_channels.ix[channel]:
-                raise CytoflowError("Didn't find a voltage for channel {0}" \
+                raise util.CytoflowError("Didn't find a voltage for channel {0}" \
                                    "in tube {1}".format(channel, filename))
             
             old_v = experiment.metadata[channel]["voltage"]
             new_v = tube_channels.ix[channel]['$PnV']
             
             if old_v != new_v and not ignore_v:
-                raise CytoflowError("Tube {0} doesn't have the same voltages"
+                raise util.CytoflowError("Tube {0} doesn't have the same voltages"
                                     .format(filename))
 
         # TODO check the delay -- and any other params?
@@ -327,7 +332,7 @@ def parse_tube(filename, experiment, ignore_v = False):
                             filename, 
                             channel_naming = experiment.metadata["name_metadata"])
     except Exception as e:
-        raise CytoflowOpError("FCS reader threw an error reading data for tube "
+        raise util.CytoflowOpError("FCS reader threw an error reading data for tube "
                               "{0}: {1}".format(filename, str(e)))
             
     return tube_data

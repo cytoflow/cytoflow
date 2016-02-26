@@ -15,18 +15,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import division
+from __future__ import division, absolute_import
 
-from traits.api import HasStrictTraits, Str, CStr, CFloat, File, Dict, \
-                       Instance, List, Constant, provides
+from traits.api import (HasStrictTraits, Str, CStr, CFloat, File, Dict,
+                        Instance, List, Constant, provides)
                        
 import numpy as np
 
-from cytoflow.operations import IOperation
-from cytoflow.operations.import_op import Tube, ImportOp, check_tube, parse_tube
-from cytoflow.views import IView
-from cytoflow.utility import CytoflowOpError
+import cytoflow.views
+import cytoflow.utility as util
 
+from .i_operation import IOperation
+from .import_op import Tube, ImportOp, check_tube, parse_tube
 
 @provides(IOperation)
 class AutofluorescenceOp(HasStrictTraits):
@@ -86,10 +86,10 @@ class AutofluorescenceOp(HasStrictTraits):
         Estimate the autofluorescence from *blank_file*
         """
         if not experiment:
-            raise CytoflowOpError("No experiment specified")
+            raise util.CytoflowOpError("No experiment specified")
 
         if not set(self.channels) <= set(experiment.channels):
-            raise CytoflowOpError("Specified channels that weren't found in "
+            raise util.CytoflowOpError("Specified channels that weren't found in "
                                   "the experiment.")
 
         # don't have to validate that blank_file exists; should crap out on 
@@ -108,11 +108,11 @@ class AutofluorescenceOp(HasStrictTraits):
             try:
                 blank_data = blank_exp.query(subset)
             except:
-                raise CytoflowOpError("Subset string '{0}' isn't valid"
+                raise util.CytoflowOpError("Subset string '{0}' isn't valid"
                                       .format(self.subset))
                             
             if len(blank_data.index) == 0:
-                raise CytoflowOpError("Subset string '{0}' returned no events"
+                raise util.CytoflowOpError("Subset string '{0}' returned no events"
                                       .format(self.subset))
         else:
             blank_data = blank_exp.data
@@ -135,20 +135,20 @@ class AutofluorescenceOp(HasStrictTraits):
             the values in self.blank_file
         """
         if not experiment:
-            raise CytoflowOpError("No experiment specified")
+            raise util.CytoflowOpError("No experiment specified")
         
         if not set(self._af_median.keys()) <= set(experiment.channels) or \
            not set(self._af_stdev.keys()) <= set(experiment.channels):
-            raise CytoflowOpError("Autofluorescence estimates aren't set, or are "
+            raise util.CytoflowOpError("Autofluorescence estimates aren't set, or are "
                                "different than those in the experiment "
                                "parameter. Did you forget to run estimate()?")
 
         if not set(self._af_median.keys()) == set(self._af_stdev.keys()):
-            raise CytoflowOpError("Median and stdev keys are different! "
+            raise util.CytoflowOpError("Median and stdev keys are different! "
                                   "What the hell happened?!")
         
         if not set(self.channels) == set(self._af_median.keys()):
-            raise CytoflowOpError("Estimated channels differ from the channels "
+            raise util.CytoflowOpError("Estimated channels differ from the channels "
                                "parameter.  Did you forget to (re)run estimate()?")
         
         new_experiment = experiment.clone()
@@ -164,7 +164,7 @@ class AutofluorescenceOp(HasStrictTraits):
         return AutofluorescenceDiagnosticView(op = self)
     
     
-@provides(IView)
+@provides(cytoflow.views.IView)
 class AutofluorescenceDiagnosticView(HasStrictTraits):
     """
     Plots a histogram of each channel, and its median in red.  Serves as a

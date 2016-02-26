@@ -15,12 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import division, absolute_import
+
 import numpy as np
 import pandas as pd
-from traits.api import HasStrictTraits, Str, List, Enum, Float, Constant, \
-                       provides
-from cytoflow.operations import IOperation
-from cytoflow.utility import CytoflowOpError
+from traits.api import (HasStrictTraits, Str, List, Enum, Float, Constant,
+                        provides)
+
+import cytoflow.utility as util
+from .i_operation import IOperation
 
 @provides(IOperation)
 class LogTransformOp(HasStrictTraits):
@@ -80,13 +83,13 @@ class LogTransformOp(HasStrictTraits):
         """
         
         if not experiment:
-            raise CytoflowOpError("No experiment specified")
+            raise util.CytoflowOpError("No experiment specified")
 
         if not set(self.channels).issubset(set(experiment.channels)):
-            raise CytoflowOpError("The op channels aren't in the experiment")
+            raise util.CytoflowOpError("The op channels aren't in the experiment")
         
         if self.threshold <= 0:
-            raise CytoflowOpError("op.threshold must be > 0")
+            raise util.CytoflowOpError("op.threshold must be > 0")
         
         new_experiment = experiment.clone()
         

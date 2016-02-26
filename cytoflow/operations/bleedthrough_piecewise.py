@@ -21,12 +21,12 @@ Created on Aug 26, 2015
 @author: brian
 '''
 
-from __future__ import division
+from __future__ import division, absolute_import
 
 import math
 
-from traits.api import HasStrictTraits, Str, CStr, File, Dict, Python, \
-                       Instance, Int, List, Constant, provides
+from traits.api import (HasStrictTraits, Str, CStr, File, Dict, Python,
+                        Instance, Int, List, Constant, provides)
 import numpy as np
 import scipy.interpolate
 import scipy.optimize
@@ -34,11 +34,12 @@ import pandas
 
 import matplotlib.pyplot as plt
 
-from cytoflow.operations.i_operation import IOperation
-from cytoflow.operations.hlog import hlog, hlog_inv
-from cytoflow.views import IView
-from cytoflow.utility import CytoflowOpError, cartesian
-from cytoflow.operations.import_op import Tube, ImportOp, check_tube, parse_tube
+import cytoflow.views
+import cytoflow.utility as util
+
+from .i_operation import IOperation
+from .hlog import hlog, hlog_inv
+from .import_op import Tube, ImportOp, check_tube, parse_tube
 
 @provides(IOperation)
 class BleedthroughPiecewiseOp(HasStrictTraits):
@@ -139,15 +140,15 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
         Estimate the bleedthrough from the single-channel controls in `controls`
         """
         if not experiment:
-            raise CytoflowOpError("No experiment specified")
+            raise util.CytoflowOpError("No experiment specified")
         
         if self.num_knots < 3:
-            raise CytoflowOpError("Need to allow at least 3 knots in the spline")
+            raise util.CytoflowOpError("Need to allow at least 3 knots in the spline")
         
         self._channels = self.controls.keys()
 
         if len(self._channels) < 2:
-            raise CytoflowOpError("Need at least two channels to correct bleedthrough.")
+            raise util.CytoflowOpError("Need at least two channels to correct bleedthrough.")
 
         self._splines = {}
         mesh_axes = []
@@ -168,11 +169,11 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
                 try:
                     tube_data = tube_exp.query(subset)
                 except:
-                    raise CytoflowOpError("Subset string '{0}' isn't valid"
+                    raise util.CytoflowOpError("Subset string '{0}' isn't valid"
                                           .format(self.subset))
                                 
                 if len(tube_data.index) == 0:
-                    raise CytoflowOpError("Subset string '{0}' returned no events"
+                    raise util.CytoflowOpError("Subset string '{0}' returned no events"
                                           .format(self.subset))
             else:
                 tube_data = tube_exp.data
@@ -238,7 +239,7 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
                                                           k = 1)
          
         
-        mesh = pandas.DataFrame(cartesian(mesh_axes), 
+        mesh = pandas.DataFrame(util.cartesian(mesh_axes), 
                                 columns = [x for x in self._channels])
          
         mesh_corrected = mesh.apply(_correct_bleedthrough,
@@ -269,14 +270,14 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
             a new experiment with the bleedthrough subtracted out.
         """
         if not experiment:
-            raise CytoflowOpError("No experiment specified")
+            raise util.CytoflowOpError("No experiment specified")
         
         if not self._interpolators:
-            raise CytoflowOpError("Module interpolators aren't set. "
+            raise util.CytoflowOpError("Module interpolators aren't set. "
                                   "Did you run estimate()?")
             
         if not set(self._interpolators.keys()) <= set(experiment.channels):
-            raise CytoflowOpError("Module parameters don't match experiment channels")
+            raise util.CytoflowOpError("Module parameters don't match experiment channels")
 
         new_experiment = experiment.clone()
         
@@ -321,7 +322,7 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
         """
         
         if set(self.controls.keys()) != set(self._splines.keys()):
-            raise CytoflowOpError("Must have both the controls and bleedthrough to plot")
+            raise util.CytoflowOpError("Must have both the controls and bleedthrough to plot")
 
         return BleedthroughPiecewiseDiagnostic(op = self)
     
@@ -348,7 +349,7 @@ def _correct_bleedthrough(row, channels, splines):
         
     return ret
         
-@provides(IView)
+@provides(cytoflow.views.IView)
 class BleedthroughPiecewiseDiagnostic(HasStrictTraits):
     """
     Plots a scatterplot of each channel vs every other channel and the 
@@ -377,7 +378,7 @@ class BleedthroughPiecewiseDiagnostic(HasStrictTraits):
         """Plot a faceted histogram view of a channel"""
         
         if not experiment:
-            raise CytoflowOpError("No experiment specified")
+            raise util.CytoflowOpError("No experiment specified")
         
         kwargs.setdefault('histtype', 'stepfilled')
         kwargs.setdefault('alpha', 0.5)

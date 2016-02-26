@@ -15,8 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from traits.api import HasStrictTraits, CFloat, Str, CStr, Bool, Instance, \
-    provides, on_trait_change, DelegatesTo, Any, Constant
+from __future__ import division, absolute_import
+
+from traits.api import (HasStrictTraits, CFloat, Str, CStr, Bool, Instance,
+                        provides, on_trait_change, DelegatesTo, Any, Constant)
 
 from matplotlib.widgets import Cursor
 import matplotlib.pyplot as plt
@@ -25,10 +27,10 @@ from matplotlib.lines import Line2D
 import numpy as np
 import pandas as pd
 
-from cytoflow.operations import IOperation
-from cytoflow.utility import CytoflowOpError, CytoflowViewError
-from cytoflow.views import ISelectionView
-from cytoflow.views.scatterplot import ScatterplotView
+import cytoflow.utility as util
+import cytoflow.views
+
+from .i_operation import IOperation
 
 @provides(IOperation)
 class QuadOp(HasStrictTraits):
@@ -107,28 +109,28 @@ class QuadOp(HasStrictTraits):
         
         # make sure name got set!
         if not self.name:
-            raise CytoflowOpError("You have to set the gate's name "
+            raise util.CytoflowOpError("You have to set the gate's name "
                                   "before applying it!")
         
         # make sure old_experiment doesn't already have a column named self.name
         if(self.name in experiment.data.columns):
-            raise CytoflowOpError("Experiment already contains a column {0}"
+            raise util.CytoflowOpError("Experiment already contains a column {0}"
                                .format(self.name))
         
         if not self.xchannel or not self.ychannel:
-            raise CytoflowOpError("Must specify xchannel and ychannel")
+            raise util.CytoflowOpError("Must specify xchannel and ychannel")
 
         if not self.xchannel in experiment.channels:
-            raise CytoflowOpError("xchannel isn't in the experiment")
+            raise util.CytoflowOpError("xchannel isn't in the experiment")
         
         if not self.ychannel in experiment.channels:
-            raise CytoflowOpError("ychannel isn't in the experiment")
+            raise util.CytoflowOpError("ychannel isn't in the experiment")
         
         if not self.xthreshold:
-            raise CytoflowOpError('xthreshold must be set!')
+            raise util.CytoflowOpError('xthreshold must be set!')
         
         if not self.ythreshold:
-            raise CytoflowOpError('ythreshold must be set!')
+            raise util.CytoflowOpError('ythreshold must be set!')
 
         gate = pd.Series([None] * len(experiment))
         
@@ -162,8 +164,8 @@ class QuadOp(HasStrictTraits):
     def default_view(self):
         return QuadSelection(op = self)
     
-@provides(ISelectionView)
-class QuadSelection(ScatterplotView):
+@provides(cytoflow.views.ISelectionView)
+class QuadSelection(cytoflow.views.ScatterplotView):
     """Plots, and lets the user interact with, a quadrant gate.
     
     Attributes
@@ -219,16 +221,16 @@ class QuadSelection(ScatterplotView):
         """Plot the underlying scatterplot and then plot the selection on top of it."""
         
         if not experiment:
-            raise CytoflowOpError("No experiment specified")
+            raise util.CytoflowOpError("No experiment specified")
         
         if not experiment:
-            raise CytoflowViewError("No experiment specified")
+            raise util.CytoflowViewError("No experiment specified")
         
         if self.xfacet:
-            raise CytoflowViewError("RangeSelection.xfacet must be empty or `Undefined`")
+            raise util.CytoflowViewError("RangeSelection.xfacet must be empty or `Undefined`")
         
         if self.yfacet:
-            raise CytoflowViewError("RangeSelection.yfacet must be empty or `Undefined`")
+            raise util.CytoflowViewError("RangeSelection.yfacet must be empty or `Undefined`")
         
         super(QuadSelection, self).plot(experiment, **kwargs)
         self._ax = plt.gca()

@@ -21,11 +21,11 @@ Created on Dec 16, 2015
 @author: brian
 '''
 
-from __future__ import division
+from __future__ import division, absolute_import
 
-from traits.api import HasStrictTraits, Str, CStr, Dict, Any, \
-                       Instance, Bool, Constant, Int, Float, List, \
-                       provides, DelegatesTo
+from traits.api import (HasStrictTraits, Str, CStr, Dict, Any,
+                       Instance, Bool, Constant, Int, Float, List,
+                       provides, DelegatesTo)
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn import mixture
@@ -33,11 +33,10 @@ from scipy import stats
 import pandas as pd
 import seaborn as sns
 
-from cytoflow.views.histogram import HistogramView
-from cytoflow.operations import IOperation
-from cytoflow.views import IView
-from cytoflow.utility import CytoflowOpError, CytoflowViewError, \
-                             num_hist_bins, scale_factory, ScaleEnum, IScale
+import cytoflow.views
+import cytoflow.utility as util
+
+from .i_operation import IOperation
 
 @provides(IOperation)
 class GaussianMixture1DOp(HasStrictTraits):
@@ -115,12 +114,12 @@ class GaussianMixture1DOp(HasStrictTraits):
     num_components = Int(2)
     sigma = Float(0.0)
     by = List(Str)
-    scale = ScaleEnum
+    scale = util.ScaleEnum
     posteriors = Bool(False)
     
     # the key is either a single value or a tuple
     _gmms = Dict(Any, Instance(mixture.GMM))
-    _scale = Instance(IScale)
+    _scale = Instance(util.IScale)
     
     def estimate(self, experiment, subset = None):
         """
@@ -128,22 +127,22 @@ class GaussianMixture1DOp(HasStrictTraits):
         """
         
         if not experiment:
-            raise CytoflowOpError("No experiment specified")
+            raise util.CytoflowOpError("No experiment specified")
 
         if self.channel not in experiment.data:
-            raise CytoflowOpError("Column {0} not found in the experiment"
+            raise util.CytoflowOpError("Column {0} not found in the experiment"
                                   .format(self.channel))
             
         if self.num_components < 2:
-            raise CytoflowOpError("num_components must be >= 2") 
+            raise util.CytoflowOpError("num_components must be >= 2") 
        
         for b in self.by:
             if b not in experiment.data:
-                raise CytoflowOpError("Aggregation metadata {0} not found"
+                raise util.CytoflowOpError("Aggregation metadata {0} not found"
                                       " in the experiment"
                                       .format(b))
             if len(experiment.data[b].unique()) > 100: #WARNING - magic number
-                raise CytoflowOpError("More than 100 unique values found for"
+                raise util.CytoflowOpError("More than 100 unique values found for"
                                       " aggregation metadata {0}.  Did you"
                                       " accidentally specify a data channel?"
                                       .format(b))
@@ -158,7 +157,7 @@ class GaussianMixture1DOp(HasStrictTraits):
         # get the scale. estimate the scale params for the ENTIRE data set,
         # not subsets we get from groupby().  And we need to save it so that
         # the data is transformed the same way when we apply()
-        self._scale = scale_factory(self.scale, experiment, self.channel)
+        self._scale = util.scale_factory(self.scale, experiment, self.channel)
             
         for group, data_subset in groupby:
             x = data_subset[self.channel].reset_index(drop = True)
@@ -172,7 +171,7 @@ class GaussianMixture1DOp(HasStrictTraits):
             gmm.fit(x[:, np.newaxis])
             
             if not gmm.converged_:
-                raise CytoflowOpError("Estimator didn't converge"
+                raise util.CytoflowOpError("Estimator didn't converge"
                                       " for group {0}"
                                       .format(group))
                 
@@ -194,55 +193,55 @@ class GaussianMixture1DOp(HasStrictTraits):
         """
             
         if not experiment:
-            raise CytoflowOpError("No experiment specified")
+            raise util.CytoflowOpError("No experiment specified")
         
         # make sure name got set!
         if not self.name:
-            raise CytoflowOpError("You have to set the gate's name "
+            raise util.CytoflowOpError("You have to set the gate's name "
                                   "before applying it!")
 
         if self.name in experiment.data.columns:
-            raise CytoflowOpError("Experiment already has a column named {0}"
+            raise util.CytoflowOpError("Experiment already has a column named {0}"
                                   .format(self.name))
         
         if not self._gmms:
-            raise CytoflowOpError("No components found.  Did you forget to "
+            raise util.CytoflowOpError("No components found.  Did you forget to "
                                   "call estimate()?")
             
         if not self._scale:
-            raise CytoflowOpError("Couldn't find _scale.  What happened??")
+            raise util.CytoflowOpError("Couldn't find _scale.  What happened??")
 
         if self.channel not in experiment.data:
-            raise CytoflowOpError("Column {0} not found in the experiment"
+            raise util.CytoflowOpError("Column {0} not found in the experiment"
                                   .format(self.channel))
             
         if (self.name + "_Posterior") in experiment.data:
-            raise CytoflowOpError("Column {0} already found in the experiment"
+            raise util.CytoflowOpError("Column {0} already found in the experiment"
                                   .format(self.name + "_Posterior"))
 
         if self.num_components < 2:
-            raise CytoflowOpError("num_components must be >= 2") 
+            raise util.CytoflowOpError("num_components must be >= 2") 
 
         if self.posteriors:
             col_name = "{0}_Posterior".format(self.name)
             if col_name in experiment.data:
-                raise CytoflowOpError("Column {0} already found in the experiment"
+                raise util.CytoflowOpError("Column {0} already found in the experiment"
                               .format(col_name))
        
         for b in self.by:
             if b not in experiment.data:
-                raise CytoflowOpError("Aggregation metadata {0} not found"
+                raise util.CytoflowOpError("Aggregation metadata {0} not found"
                                       " in the experiment"
                                       .format(b))
 
             if len(experiment.data[b].unique()) > 100: #WARNING - magic number
-                raise CytoflowOpError("More than 100 unique values found for"
+                raise util.CytoflowOpError("More than 100 unique values found for"
                                       " aggregation metadata {0}.  Did you"
                                       " accidentally specify a data channel?"
                                       .format(b))
                            
         if self.sigma < 0.0:
-            raise CytoflowOpError("sigma must be >= 0.0")
+            raise util.CytoflowOpError("sigma must be >= 0.0")
 
         event_assignments = pd.Series([None] * len(experiment), dtype = "object")
                                       
@@ -323,8 +322,8 @@ class GaussianMixture1DOp(HasStrictTraits):
         """
         return GaussianMixture1DView(op = self)
     
-@provides(IView)
-class GaussianMixture1DView(HistogramView):
+@provides(cytoflow.views.IView)
+class GaussianMixture1DView(cytoflow.views.HistogramView):
     """
     Attributes
     ----------
@@ -356,14 +355,14 @@ class GaussianMixture1DView(HistogramView):
         """
         
         if not self.huefacet:
-            raise CytoflowViewError("didn't set GaussianMixture1DOp.name")
+            raise util.CytoflowViewError("didn't set GaussianMixture1DOp.name")
         
         if not self.op._gmms:
-            raise CytoflowViewError("Didn't find a model. Did you call "
+            raise util.CytoflowViewError("Didn't find a model. Did you call "
                                     "estimate()?")
             
         if self.group and self.group not in self.op._gmms:
-            raise CytoflowViewError("didn't find group {0} in op._gmms"
+            raise util.CytoflowViewError("didn't find group {0} in op._gmms"
                                     .format(self.group))
         
         # if `group` wasn't specified, make a new plot per group.
@@ -383,8 +382,8 @@ class GaussianMixture1DView(HistogramView):
         
         try:
             temp_experiment = self.op.apply(temp_experiment)
-        except CytoflowOpError as e:
-            raise CytoflowViewError(e.__str__())
+        except util.CytoflowOpError as e:
+            raise util.CytoflowViewError(e.__str__())
 
         # plot the group's histogram, colored by component
         super(GaussianMixture1DView, self).plot(temp_experiment, **kwargs)

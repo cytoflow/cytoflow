@@ -15,18 +15,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from traits.api import HasStrictTraits, CFloat, Str, CStr, Instance, Bool, \
-    provides, on_trait_change, DelegatesTo, Any, Constant
+from traits.api import (HasStrictTraits, CFloat, Str, CStr, Instance, Bool, 
+                        provides, on_trait_change, DelegatesTo, Any, Constant)
 
 from matplotlib.widgets import SpanSelector, Cursor
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from matplotlib.lines import Line2D    
 
-from cytoflow.views.histogram import HistogramView
-from cytoflow.operations import IOperation
-from cytoflow.utility import CytoflowOpError, CytoflowViewError
-from cytoflow.views import ISelectionView
+import cytoflow.utility as util
+import cytoflow.views
+
+from .i_operation import IOperation
 
 @provides(IOperation)
 class RangeOp(HasStrictTraits):
@@ -94,32 +94,32 @@ class RangeOp(HasStrictTraits):
         """
 
         if not experiment:
-            raise CytoflowOpError("No experiment specified")
+            raise util.CytoflowOpError("No experiment specified")
         
         # make sure name got set!
         if not self.name:
-            raise CytoflowOpError("You have to set the gate's name "
+            raise util.CytoflowOpError("You have to set the gate's name "
                                   "before applying it!")
 
         if self.name in experiment.data.columns:
-            raise CytoflowOpError("Experiment already has a column named {0}"
+            raise util.CytoflowOpError("Experiment already has a column named {0}"
                                   .format(self.name))
         
         if not self.channel:
-            raise CytoflowOpError("Channel not specified")
+            raise util.CytoflowOpError("Channel not specified")
         
         if not self.channel in experiment.channels:
-            raise CytoflowOpError("Channel {0} not in the experiment"
+            raise util.CytoflowOpError("Channel {0} not in the experiment"
                                   .format(self.channel))
         
         if self.high <= self.low:
-            raise CytoflowOpError("range high must be > range low")
+            raise util.CytoflowOpError("range high must be > range low")
         
         if self.high <= experiment[self.channel].min():
-            raise CytoflowOpError("range high must be > {0}"
+            raise util.CytoflowOpError("range high must be > {0}"
                                   .format(experiment[self.channel].min()))
         if self.low >= experiment[self.channel].max:
-            raise CytoflowOpError("range low must be < {0}"
+            raise util.CytoflowOpError("range low must be < {0}"
                                   .format(experiment[self.channel].max()))
         
         gate = experiment[self.channel].between(self.low, self.high)
@@ -132,8 +132,8 @@ class RangeOp(HasStrictTraits):
     def default_view(self):
         return RangeSelection(op = self)
     
-@provides(ISelectionView)
-class RangeSelection(HistogramView):
+@provides(cytoflow.views.ISelectionView)
+class RangeSelection(cytoflow.views.HistogramView):
     """Plots, and lets the user interact with, a selection on the X axis.
     
     Is it beautiful?  No.  Does it demonstrate the capabilities I desire?  Yes.
@@ -193,13 +193,13 @@ class RangeSelection(HistogramView):
         """Plot the underlying histogram and then plot the selection on top of it."""
         
         if not experiment:
-            raise CytoflowViewError("No experiment specified")
+            raise util.CytoflowViewError("No experiment specified")
         
         if self.xfacet:
-            raise CytoflowViewError("RangeSelection.xfacet must be empty or `Undefined`")
+            raise util.CytoflowViewError("RangeSelection.xfacet must be empty or `Undefined`")
         
         if self.yfacet:
-            raise CytoflowViewError("RangeSelection.yfacet must be empty or `Undefined`")
+            raise util.CytoflowViewError("RangeSelection.yfacet must be empty or `Undefined`")
         
         super(RangeSelection, self).plot(experiment, **kwargs)
         self._ax = plt.gca()
@@ -256,34 +256,19 @@ class RangeSelection(HistogramView):
         
 if __name__ == '__main__':
     import cytoflow as flow
-    import fcsparser
+    tube1 = flow.Tube(file = '../../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs',
+                      conditions = {"Dox" : 10.0})
+    
+    tube2 = flow.Tube(file = '../../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs',
+                      conditions = {"Dox" : 1.0})                      
 
-    mpl.rcParams['savefig.dpi'] = 2 * mpl.rcParams['savefig.dpi']
-    
-    tube1 = fcsparser.parse('../../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs',
-                            reformat_meta = True,
-                            channel_naming = "$PnN")
-
-    tube2 = fcsparser.parse('../../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs',
-                            reformat_meta = True,
-                            channel_naming = "$PnN")
-    
-    ex = flow.Experiment()
-    ex.add_conditions({"Dox" : "float"})
-    
-    ex.add_tube(tube1, {"Dox" : 10.0})
-    ex.add_tube(tube2, {"Dox" : 1.0})
-    
-    hlog = flow.HlogTransformOp()
-    hlog.name = "Hlog transformation"
-    hlog.channels = ['Y2-A']
-    ex2 = hlog.apply(ex)
+    ex = flow.ImportOp(conditions = {"Dox" : "float"}, tubes = [tube1, tube2])
     
     r = flow.RangeOp(channel = 'Y2-A')
     rv = r.default_view()
     
     plt.ioff()
-    rv.plot(ex2)
+    rv.plot(ex)
     rv.interactive = True
     plt.show()
 

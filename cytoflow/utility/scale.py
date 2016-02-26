@@ -15,9 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from traits.api import Interface, Str, Dict, Any, Instance
-from cytoflow.utility import CytoflowError
-#from cytoflow.experiment import Experiment
+from __future__ import absolute_import
+
+from traits.api import Interface, Str, Dict, Instance
+
+from .cytoflow_errors import CytoflowError
 
 class IScale(Interface):
     """An interface for various ways we could rescale flow data.
@@ -43,7 +45,7 @@ class IScale(Interface):
     id = Str           
     name = Str
     
-    experiment = Any #Instance(Experiment)
+    experiment = Instance("cytoflow.experiment.Experiment")
     channel = Str
 
     mpl_params = Dict()
@@ -73,5 +75,9 @@ def scale_factory(scale, experiment, channel):
     return _scale_mapping[scale](experiment = experiment, channel = channel)
 
 def register_scale(scale_class):
+    print "registering {0}".format(scale_class.name)
     _scale_mapping[scale_class.name] = scale_class
-
+# 
+# from . import linear_scale
+# from . import log_scale
+# from . import logicle_scale

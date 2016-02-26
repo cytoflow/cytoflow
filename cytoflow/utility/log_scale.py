@@ -21,23 +21,21 @@ Created on Feb 24, 2016
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import division
+from __future__ import division, absolute_import
 
-from traits.api import HasTraits, Instance, Str, Dict, provides, Constant, \
-                       Enum, Float, Property, cached_property, Any 
+from traits.api import (HasTraits, Instance, Str, Dict, provides, Constant,
+                        Enum, Float, Property, cached_property) 
                        
 import numpy as np
 
-#from cytoflow.experiment import Experiment
-#from cytoflow.utility import IScale
-from cytoflow.utility.i_scale import register_scale, IScale
+from .scale import IScale, register_scale
 
 @provides(IScale)
 class LogScale(HasTraits):
     id = Constant("edu.mit.synbio.cytoflow.utility.log_scale")
     name = "log"
     
-    experiment = Any #Instance(Experiment)
+    experiment = Instance("cytoflow.Experiment")
     channel = Str
 
     mode = Enum("mask", "clip")

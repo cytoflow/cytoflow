@@ -23,9 +23,9 @@ Created on Feb 25, 2016
 
 from __future__ import division
 
-from traits.api import HasTraits, Float, Instance, Property, Instance, Str, \
-                       cached_property, Undefined, provides, Constant, Dict, \
-                       Any
+from traits.api import (HasTraits, Float, Instance, Property, Instance, Str,
+                        cached_property, Undefined, provides, Constant, Dict,
+                        Any)
                        
 import numpy as np
 from warnings import warn
@@ -38,7 +38,7 @@ from matplotlib.ticker import Locator
 
 from cytoflow.utility.logicle_ext.Logicle import Logicle
 from cytoflow.utility import CytoflowWarning, CytoflowError
-from cytoflow.utility.i_scale import IScale, register_scale
+from cytoflow.utility.scale import IScale, register_scale
 #from cytoflow.experiment import Experiment
 
 @provides(IScale)

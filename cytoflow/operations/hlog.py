@@ -15,9 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import division, absolute_import
+
 from traits.api import HasStrictTraits, Str, List, Float, Dict, provides, Constant
-from cytoflow.operations import IOperation
-from cytoflow.utility import CytoflowOpError
+
+import cytoflow.utility as util
+
+from .i_operation import IOperation
 
 @provides(IOperation)
 class HlogTransformOp(HasStrictTraits):
@@ -84,16 +88,16 @@ class HlogTransformOp(HasStrictTraits):
         """
 
         if not experiment:
-            raise CytoflowOpError("No experiment specified")
+            raise util.CytoflowOpError("No experiment specified")
         
         if not set(self.channels).issubset(set(experiment.channels)):
-            raise CytoflowOpError("Op channels are not in experiment!")
+            raise util.CytoflowOpError("Op channels are not in experiment!")
         
         if not set(self.b.keys()) <= set(self.channels):
-            raise CytoflowOpError("Some keys in op.b are not in experiment")
+            raise util.CytoflowOpError("Some keys in op.b are not in experiment")
         
         if not set(self.r.keys()) <= set(self.channels):
-            raise CytoflowOpError("Some keys in op.r are not in experiment")
+            raise util.CytoflowOpError("Some keys in op.r are not in experiment")
         
         new_experiment = experiment.clone()
         
@@ -104,7 +108,7 @@ class HlogTransformOp(HasStrictTraits):
             
             if (channel not in experiment.metadata
                 or 'range' not in experiment.metadata[channel]):
-                raise CytoflowOpError("Range metadata not set for channel {0}"
+                raise util.CytoflowOpError("Range metadata not set for channel {0}"
                                       .channel)
             
             d = np.log10(experiment.metadata[channel]['range'])

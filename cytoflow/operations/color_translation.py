@@ -21,21 +21,21 @@ Created on Sep 2, 2015
 @author: brian
 '''
 
-from __future__ import division
+from __future__ import division, absolute_import
 
 import math
 
-from traits.api import HasStrictTraits, Str, CStr, File, Dict, Python, \
-                       Instance, Tuple, Bool, Constant, provides
+from traits.api import (HasStrictTraits, Str, CStr, File, Dict, Python,
+                        Instance, Tuple, Bool, Constant, provides)
 import numpy as np
 import matplotlib.pyplot as plt
 import sklearn.mixture
 
-from cytoflow.operations import IOperation
-from cytoflow.views import IView
-from cytoflow.utility import CytoflowOpError, CytoflowViewError
-from cytoflow.operations.import_op import Tube, ImportOp, check_tube, parse_tube
+import cytoflow.views
+import cytoflow.utility as util
 
+from .i_operation import IOperation
+from .import_op import Tube, ImportOp, check_tube, parse_tube
 
 @provides(IOperation)
 class ColorTranslationOp(HasStrictTraits):
@@ -119,22 +119,22 @@ class ColorTranslationOp(HasStrictTraits):
         """
 
         if not experiment:
-            raise CytoflowOpError("No experiment specified")
+            raise util.CytoflowOpError("No experiment specified")
 
         tubes = {}
 
         for from_channel, to_channel in self.translation.iteritems():
             
             if from_channel not in experiment.channels:
-                raise CytoflowOpError("Channel {0} not in the experiment"
+                raise util.CytoflowOpError("Channel {0} not in the experiment"
                                       .format(from_channel))
                 
             if to_channel not in experiment.channels:
-                raise CytoflowOpError("Channel {0} not in the experiment"
+                raise util.CytoflowOpError("Channel {0} not in the experiment"
                                       .format(to_channel))
             
             if (from_channel, to_channel) not in self.controls:
-                raise CytoflowOpError("Control file for {0} --> {1} "
+                raise util.CytoflowOpError("Control file for {0} --> {1} "
                                       "not specified"
                                       .format(from_channel, to_channel))
                 
@@ -154,11 +154,11 @@ class ColorTranslationOp(HasStrictTraits):
                     try:
                         tube_data = tube_exp.query(subset)
                     except:
-                        raise CytoflowOpError("Subset string '{0}' isn't valid"
+                        raise util.CytoflowOpError("Subset string '{0}' isn't valid"
                                               .format(self.subset))
                                     
                     if len(tube_data.index) == 0:
-                        raise CytoflowOpError("Subset string '{0}' returned no events"
+                        raise util.CytoflowOpError("Subset string '{0}' returned no events"
                                               .format(self.subset))
                 else:
                     tube_data = tube_exp.data                
@@ -223,23 +223,23 @@ class ColorTranslationOp(HasStrictTraits):
         """
 
         if not experiment:
-            raise CytoflowOpError("No experiment specified")
+            raise util.CytoflowOpError("No experiment specified")
         
         if not self._coefficients:
-            raise CytoflowOpError("Coefficients aren't set. "
+            raise util.CytoflowOpError("Coefficients aren't set. "
                                   "Did you call estimate()?")
         
         if not set(self.translation.keys()) <= set(experiment.channels):
-            raise CytoflowOpError("Translation keys don't match "
+            raise util.CytoflowOpError("Translation keys don't match "
                                   "experiment channels")
         
         if not set(self.translation.values()) <= set(experiment.channels):
-            raise CytoflowOpError("Translation values don't match "
+            raise util.CytoflowOpError("Translation values don't match "
                                   "experiment channels")
         
         for key, val in self.translation.iteritems():
             if (key, val) not in self._coefficients:
-                raise CytoflowOpError("Coefficients aren't set for translation "
+                raise util.CytoflowOpError("Coefficients aren't set for translation "
                                       "{1} --> {2}.  Did you call estimate()?"
                                       .format(key, val))
        
@@ -279,7 +279,7 @@ class ColorTranslationOp(HasStrictTraits):
 
         return ColorTranslationDiagnostic(op = self)
     
-@provides(IView)
+@provides(cytoflow.views.IView)
 class ColorTranslationDiagnostic(HasStrictTraits):
     """
     Attributes
@@ -306,7 +306,7 @@ class ColorTranslationDiagnostic(HasStrictTraits):
         """
         
         if not experiment:
-            raise CytoflowViewError("No experiment specified")
+            raise util.CytoflowViewError("No experiment specified")
 
         tubes = {}
         
@@ -317,7 +317,7 @@ class ColorTranslationDiagnostic(HasStrictTraits):
         for from_channel, to_channel in self.op.translation.iteritems():
             
             if (from_channel, to_channel) not in self.op.controls:
-                raise CytoflowOpError("Control file for {0} --> {1} not specified"
+                raise util.CytoflowOpError("Control file for {0} --> {1} not specified"
                                    .format(from_channel, to_channel))
             tube_file = self.op.controls[(from_channel, to_channel)]
             

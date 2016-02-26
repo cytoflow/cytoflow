@@ -15,18 +15,22 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from traits.api import HasStrictTraits, CFloat, Str, CStr, Instance, \
-    Bool, on_trait_change, provides, DelegatesTo, Any, Constant
+from __future__ import absolute_import, division
+
+from traits.api import (HasStrictTraits, CFloat, Str, CStr, Instance, 
+                        Bool, on_trait_change, provides, DelegatesTo, Any, 
+                        Constant)
+    
 import pandas as pd
 
 from matplotlib.widgets import Cursor
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 
-from cytoflow.operations import IOperation
-from cytoflow.utility import CytoflowOpError, CytoflowViewError
-from cytoflow.views import ISelectionView
-from cytoflow.views.histogram import HistogramView
+import cytoflow.utility as util
+import cytoflow.views
+
+from .i_operation import IOperation
 
 @provides(IOperation)
 class ThresholdOp(HasStrictTraits):
@@ -93,20 +97,20 @@ class ThresholdOp(HasStrictTraits):
         """
         
         if not experiment:
-            raise CytoflowOpError("No experiment specified")
+            raise util.CytoflowOpError("No experiment specified")
         
         # make sure name got set!
         if not self.name:
-            raise CytoflowOpError("You have to set the gate's name "
+            raise util.CytoflowOpError("You have to set the gate's name "
                                   "before applying it!")
         
         # make sure old_experiment doesn't already have a column named self.name
         if(self.name in experiment.data.columns):
-            raise CytoflowOpError("Experiment already contains a column {0}"
+            raise util.CytoflowOpError("Experiment already contains a column {0}"
                                .format(self.name))
 
         if self.channel not in experiment.channels:
-            raise CytoflowOpError("{0} isn't a channel in the experiment"
+            raise util.CytoflowOpError("{0} isn't a channel in the experiment"
                                   .format(self.channel))
 
         gate = pd.Series(experiment[self.channel] > self.threshold)
@@ -120,8 +124,8 @@ class ThresholdOp(HasStrictTraits):
         return ThresholdSelection(op = self)
 
 
-@provides(ISelectionView)
-class ThresholdSelection(HistogramView):
+@provides(cytoflow.views.ISelectionView)
+class ThresholdSelection(cytoflow.views.HistogramView):
     """
     Plots, and lets the user interact with, a threshold on the X axis.
     
@@ -176,13 +180,13 @@ class ThresholdSelection(HistogramView):
         """Plot the histogram and then plot the threshold on top of it."""
         
         if not experiment:
-            raise CytoflowViewError("No experiment specified")
+            raise util.CytoflowViewError("No experiment specified")
         
         if self.xfacet:
-            raise CytoflowViewError("ThresholdSelection.xfacet must be empty")
+            raise util.CytoflowViewError("ThresholdSelection.xfacet must be empty")
         
         if self.yfacet:
-            raise CytoflowViewError("ThresholdSelection.yfacet must be empty")
+            raise util.CytoflowViewError("ThresholdSelection.yfacet must be empty")
         
         super(ThresholdSelection, self).plot(experiment, **kwargs)
         self._ax = plt.gca()        
@@ -229,32 +233,20 @@ class ThresholdSelection(HistogramView):
         
 if __name__ == '__main__':
     import cytoflow as flow
-    import fcsparser
+    
+    tube1 = flow.Tube(file = '../../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs',
+                      conditions = {"Dox" : 10.0})
+    
+    tube2 = flow.Tube(file = '../../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs',
+                      conditions = {"Dox" : 1.0})                      
 
-    tube1 = fcsparser.parse('../../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs',
-                            reformat_meta = True,
-                            channel_naming = "$PnN")
-
-    tube2 = fcsparser.parse('../../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs',
-                            reformat_meta = True,
-                            channel_naming = "$PnN")
+    ex = flow.ImportOp(conditions = {"Dox" : "float"}, tubes = [tube1, tube2])
     
-    ex = flow.Experiment()
-    ex.add_conditions({"Dox" : "float"})
-    
-    ex.add_tube(tube1, {"Dox" : 10.0})
-    ex.add_tube(tube2, {"Dox" : 1.0})
-    
-    hlog = flow.HlogTransformOp()
-    hlog.name = "Hlog transformation"
-    hlog.channels = ['Y2-A']
-    ex2 = hlog.apply(ex)
-    
-    t = ThresholdOp(channel = "Y2-A")
+    t = ThresholdOp(channel = "Y2-A", scale = "logicle")
     v = t.default_view()
     
     plt.ioff()
     v.interactive = True
-    v.plot(ex2)
+    v.plot(ex)
     plt.show()
     print t.threshold

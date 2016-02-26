@@ -15,11 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import division, absolute_import
+
 import time
 
-from traits.api import HasStrictTraits, Str, CStr, List, Float, provides, \
-                       Instance, Bool, on_trait_change, DelegatesTo, Any, \
-                       Constant
+from traits.api import (HasStrictTraits, Str, CStr, List, Float, provides,
+                        Instance, Bool, on_trait_change, DelegatesTo, Any,
+                        Constant)
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -27,10 +29,10 @@ from matplotlib.widgets import Cursor
 from matplotlib import scale
 import numpy as np
 
-from cytoflow.views.scatterplot import ScatterplotView
-from cytoflow.operations import IOperation
-from cytoflow.views import ISelectionView
-from cytoflow.utility import CytoflowOpError, CytoflowViewError
+import cytoflow.utility as util
+import cytoflow.views
+
+from .i_operation import IOperation
 
 @provides(IOperation)
 class PolygonOp(HasStrictTraits):
@@ -92,42 +94,42 @@ class PolygonOp(HasStrictTraits):
             
         Raises
         ------
-        CytoflowOpError
+        util.CytoflowOpError
             if for some reason the operation can't be applied to this
-            experiment. The reason is in CytoflowOpError.args
+            experiment. The reason is in util.CytoflowOpError.args
         """
         
         if not experiment:
-            raise CytoflowOpError("No experiment specified")
+            raise util.CytoflowOpError("No experiment specified")
 
         if self.name in experiment.data.columns:
-            raise CytoflowOpError("op.name is in the experiment already!")
+            raise util.CytoflowOpError("op.name is in the experiment already!")
         
         if not self.xchannel or not self.ychannel:
-            raise CytoflowOpError("Must specify both an x channel and a y channel")
+            raise util.CytoflowOpError("Must specify both an x channel and a y channel")
         
         if not self.xchannel in experiment.channels:
-            raise CytoflowOpError("xchannel {0} is not in the experiment"
+            raise util.CytoflowOpError("xchannel {0} is not in the experiment"
                                   .format(self.xchannel))
                                   
         if not self.ychannel in experiment.channels:
-            raise CytoflowOpError("ychannel {0} is not in the experiment"
+            raise util.CytoflowOpError("ychannel {0} is not in the experiment"
                                   .format(self.ychannel))
               
         if len(self.vertices) < 3:
-            raise CytoflowOpError("Must have at least 3 vertices")
+            raise util.CytoflowOpError("Must have at least 3 vertices")
        
         if any([len(x) != 2 for x in self.vertices]):
-            return CytoflowOpError("All vertices must be lists of length = 2") 
+            return util.CytoflowOpError("All vertices must be lists of length = 2") 
         
         # make sure name got set!
         if not self.name:
-            raise CytoflowOpError("You have to set the Polygon gate's name "
+            raise util.CytoflowOpError("You have to set the Polygon gate's name "
                                "before applying it!")
         
         # make sure old_experiment doesn't already have a column named self.name
         if(self.name in experiment.data.columns):
-            raise CytoflowOpError("Experiment already contains a column {0}"
+            raise util.CytoflowOpError("Experiment already contains a column {0}"
                                .format(self.name))
             
         # there's a bit of a subtlety here: if the vertices were 
@@ -162,8 +164,8 @@ class PolygonOp(HasStrictTraits):
     def default_view(self):
         return PolygonSelection(op = self)
     
-@provides(ISelectionView)
-class PolygonSelection(ScatterplotView):
+@provides(cytoflow.views.ISelectionView)
+class PolygonSelection(cytoflow.views.ScatterplotView):
     """Plots, and lets the user interact with, a 2D polygon selection.
     
     Attributes
@@ -221,13 +223,13 @@ class PolygonSelection(ScatterplotView):
         """Plot self.view, and then plot the selection on top of it."""
         
         if not experiment:
-            raise CytoflowViewError("No experiment specified")
+            raise util.CytoflowViewError("No experiment specified")
         
         if self.xfacet:
-            raise CytoflowViewError("RangeSelection.xfacet must be empty or `Undefined`")
+            raise util.CytoflowViewError("RangeSelection.xfacet must be empty or `Undefined`")
         
         if self.yfacet:
-            raise CytoflowViewError("RangeSelection.yfacet must be empty or `Undefined`")
+            raise util.CytoflowViewError("RangeSelection.yfacet must be empty or `Undefined`")
         
         super(PolygonSelection, self).plot(experiment, **kwargs)
         self._ax = plt.gca()

@@ -15,17 +15,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import division
+from __future__ import division, absolute_import
 
-from traits.api import HasStrictTraits, Str, Enum, provides
+from traits.api import HasStrictTraits, Str, provides
 import matplotlib.pyplot as plt
 
 import numpy as np
 import seaborn as sns
 import math
 
-from cytoflow.views import IView
-from cytoflow.utility import num_hist_bins, scale_factory, ScaleEnum, CytoflowViewError
+import cytoflow.utility as util
+from .i_view import IView
 
 @provides(IView)
 class HistogramView(HasStrictTraits):
@@ -68,7 +68,7 @@ class HistogramView(HasStrictTraits):
     
     name = Str
     channel = Str
-    scale = ScaleEnum
+    scale = util.ScaleEnum
     xfacet = Str
     yfacet = Str
     huefacet = Str
@@ -78,39 +78,39 @@ class HistogramView(HasStrictTraits):
         """Plot a faceted histogram view of a channel"""
         
         if not experiment:
-            raise CytoflowViewError("No experiment specified")
+            raise util.CytoflowViewError("No experiment specified")
         
         if self.channel not in experiment.data:
-            raise CytoflowViewError("Channel {0} not in the experiment"
+            raise util.CytoflowViewError("Channel {0} not in the experiment"
                                     .format(self.channel))
         
         if self.xfacet and self.xfacet not in experiment.conditions:
-            raise CytoflowViewError("X facet {0} not in the experiment"
+            raise util.CytoflowViewError("X facet {0} not in the experiment"
                                     .format(self.xfacet))
         
         if self.yfacet and self.yfacet not in experiment.conditions:
-            raise CytoflowViewError("Y facet {0} not in the experiment"
+            raise util.CytoflowViewError("Y facet {0} not in the experiment"
                                     .format(self.yfacet))
         
         if self.huefacet and self.huefacet not in experiment.conditions:
-            raise CytoflowViewError("Hue facet {0} not in the experiment"
+            raise util.CytoflowViewError("Hue facet {0} not in the experiment"
                                     .format(self.huefacet))
 
         if self.subset:
             try:
                 data = experiment.query(self.subset)
             except:
-                raise CytoflowViewError("Subset string '{0}' isn't valid"
+                raise util.CytoflowViewError("Subset string '{0}' isn't valid"
                                         .format(self.subset))
                 
             if len(data.index) == 0:
-                raise CytoflowViewError("Subset string '{0}' returned no events"
+                raise util.CytoflowViewError("Subset string '{0}' returned no events"
                                         .format(self.subset))
         else:
             data = experiment.data        
             
         # get the scale
-        scale = scale_factory(self.scale, experiment, self.channel)
+        scale = util.scale_factory(self.scale, experiment, self.channel)
         scaled_data = scale(data[self.channel])
         
         # drop data that isn't in the scale function's domain
@@ -124,7 +124,7 @@ class HistogramView(HasStrictTraits):
         # estimate a "good" number of bins; see cytoflow.utility.num_hist_bins
         # for a reference.
         
-        num_bins = num_hist_bins(scaled_data)
+        num_bins = util.num_hist_bins(scaled_data)
         num_bins = 50 if num_bins < 50 else num_bins
         xmin = scaled_data.min()
         xmax = scaled_data.max()

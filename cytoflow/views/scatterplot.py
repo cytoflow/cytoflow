@@ -28,8 +28,8 @@ import matplotlib as mpl
 import seaborn as sns
 import numpy as np
 
-from cytoflow.views import IView
-from cytoflow.utility import CytoflowViewError, scale_factory, ScaleEnum
+import cytoflow.utility as util
+from .i_view import IView
 
 @provides(IView)
 class ScatterplotView(HasStrictTraits):
@@ -75,9 +75,9 @@ class ScatterplotView(HasStrictTraits):
     
     name = Str
     xchannel = Str
-    xscale = ScaleEnum
+    xscale = util.ScaleEnum
     ychannel = Str
-    yscale = ScaleEnum
+    yscale = util.ScaleEnum
     xfacet = Str
     yfacet = Str
     huefacet = Str
@@ -87,29 +87,29 @@ class ScatterplotView(HasStrictTraits):
         """Plot a faceted scatter plot view of a channel"""
         
         if not experiment:
-            raise CytoflowViewError("No experiment specified")
+            raise util.CytoflowViewError("No experiment specified")
 
         if not self.xchannel:
-            raise CytoflowViewError("X channel not specified")
+            raise util.CytoflowViewError("X channel not specified")
         
         if self.xchannel not in experiment.data:
-            raise CytoflowViewError("X channel {0} not in the experiment"
+            raise util.CytoflowViewError("X channel {0} not in the experiment"
                                     .format(self.xchannel))
             
         if not self.ychannel:
-            raise CytoflowViewError("Y channel not specified")
+            raise util.CytoflowViewError("Y channel not specified")
         
         if self.ychannel not in experiment.data:
-            raise CytoflowViewError("Y channel {0} not in the experiment")
+            raise util.CytoflowViewError("Y channel {0} not in the experiment")
         
         if self.xfacet and self.xfacet not in experiment.conditions:
-            raise CytoflowViewError("X facet {0} not in the experiment")
+            raise util.CytoflowViewError("X facet {0} not in the experiment")
         
         if self.yfacet and self.yfacet not in experiment.conditions:
-            raise CytoflowViewError("Y facet {0} not in the experiment")
+            raise util.CytoflowViewError("Y facet {0} not in the experiment")
         
         if self.huefacet and self.huefacet not in experiment.metadata:
-            raise CytoflowViewError("Hue facet {0} not in the experiment")
+            raise util.CytoflowViewError("Hue facet {0} not in the experiment")
         
         if self.subset:
             try:
@@ -140,8 +140,8 @@ class ScatterplotView(HasStrictTraits):
                           hue_order = (np.sort(data[self.huefacet].unique()) if self.huefacet else None),
                           legend_out = False)
         
-        xscale = scale_factory(self.xscale, experiment, self.xchannel)
-        yscale = scale_factory(self.yscale, experiment, self.ychannel)
+        xscale = util.scale_factory(self.xscale, experiment, self.xchannel)
+        yscale = util.scale_factory(self.yscale, experiment, self.ychannel)
         
         for ax in g.axes.flatten():
             ax.set_xscale(self.xscale, **xscale.mpl_params)

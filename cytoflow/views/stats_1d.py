@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import division
+from __future__ import division, absolute_import
 
 from traits.api import HasStrictTraits, Str, provides, Callable
 import matplotlib.pyplot as plt
@@ -23,8 +23,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 
-from cytoflow.views import IView
-from cytoflow.utility import CytoflowViewError
+import cytoflow.utility as util
+from .i_view import IView
 
 @provides(IView)
 class Stats1DView(HasStrictTraits):
@@ -130,38 +130,38 @@ class Stats1DView(HasStrictTraits):
         """Plot a bar chart"""
         
         if not experiment:
-            raise CytoflowViewError("No experiment specified")
+            raise util.CytoflowViewError("No experiment specified")
         
         if not self.by:
-            raise CytoflowViewError("Stats1DView.by not set")
+            raise util.CytoflowViewError("Stats1DView.by not set")
             
         if self.by not in experiment.conditions:
-            raise CytoflowViewError("'by' variable {0} not in the experiment"
+            raise util.CytoflowViewError("'by' variable {0} not in the experiment"
                                     .format(self.by))
         
         if not (experiment.conditions[self.by] == "float" or
                 experiment.conditions[self.by] == "int"):
-            raise CytoflowViewError("by {0} isn't numeric"
+            raise util.CytoflowViewError("by {0} isn't numeric"
                                     .format(self.by)) 
 
         if not self.ychannel:
-            raise CytoflowViewError("Y channel isn't set.")
+            raise util.CytoflowViewError("Y channel isn't set.")
         
         if self.ychannel not in experiment.data:
-            raise CytoflowViewError("Y channel {0} isn't in the experiment"
+            raise util.CytoflowViewError("Y channel {0} isn't in the experiment"
                                     .format(self.ychannel))
         
         if not self.yfunction:
-            raise CytoflowViewError("Y summary function isn't set")
+            raise util.CytoflowViewError("Y summary function isn't set")
         
         if self.xfacet and self.xfacet not in experiment.conditions:
-            raise CytoflowViewError("X facet {0} not in the experiment")
+            raise util.CytoflowViewError("X facet {0} not in the experiment")
         
         if self.yfacet and self.yfacet not in experiment.conditions:
-            raise CytoflowViewError("Y facet {0} not in the experiment")
+            raise util.CytoflowViewError("Y facet {0} not in the experiment")
         
         if self.huefacet and self.huefacet not in experiment.metadata:
-            raise CytoflowViewError("Hue facet {0} not in the experiment")        
+            raise util.CytoflowViewError("Hue facet {0} not in the experiment")        
         
         kwargs.setdefault('antialiased', True)
 
@@ -169,7 +169,7 @@ class Stats1DView(HasStrictTraits):
             try:
                 data = experiment.query(self.subset)
             except:
-                raise CytoflowViewError("Subset string '{0}' isn't valid"
+                raise util.CytoflowViewError("Subset string '{0}' isn't valid"
                                         .format(self.subset))
                             
             if len(data.index) == 0:

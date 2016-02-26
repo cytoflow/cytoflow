@@ -1,5 +1,4 @@
 #!/usr/bin/env python2.7
-from __builtin__ import False
 
 # (c) Massachusetts Institute of Technology 2015-2016
 #
@@ -22,9 +21,11 @@ Created on Oct 12, 2015
 @author: brian
 '''
 
-from traits.api import BaseInt, BaseFloat, BaseEnum, Property
+from __future__ import absolute_import
 
-from i_scale import _scale_mapping
+from traits.api import BaseInt, BaseFloat, BaseEnum
+
+from .scale import _scale_mapping
 
 class PositiveInt(BaseInt):
     

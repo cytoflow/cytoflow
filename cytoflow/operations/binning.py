@@ -21,17 +21,16 @@ Created on Sep 18, 2015
 @author: brian
 '''
 
-from __future__ import division
+from __future__ import division, absolute_import
 
-from traits.api import HasStrictTraits, Str, CStr, Enum, provides, Undefined, \
-    Instance, DelegatesTo, Constant
+from traits.api import (HasStrictTraits, Str, CStr, Enum, provides, Undefined,
+                        Instance, DelegatesTo, Constant)
 import numpy as np
 
-from cytoflow.operations import IOperation
-from cytoflow.utility import CytoflowOpError, CytoflowViewError, \
-    PositiveInt, PositiveFloat, ScaleEnum, scale_factory
-from cytoflow.views.histogram import HistogramView
-from cytoflow.views import IView
+import cytoflow.views
+import cytoflow.utility as util
+
+from .i_operation import IOperation
 
 @provides(IOperation)
 class BinningOp(HasStrictTraits):
@@ -88,9 +87,9 @@ class BinningOp(HasStrictTraits):
     name = CStr()
     bin_count_name = CStr()
     channel = Str()
-    num_bins = PositiveInt(Undefined)
-    bin_width = PositiveFloat(Undefined)
-    scale = ScaleEnum
+    num_bins = util.PositiveInt(Undefined)
+    bin_width = util.PositiveFloat(Undefined)
+    scale = util.ScaleEnum
 
     def apply(self, experiment):
         """Applies the binning to an experiment.
@@ -108,34 +107,34 @@ class BinningOp(HasStrictTraits):
             less than self.high; it is False otherwise.
         """
         if not experiment:
-            raise CytoflowOpError("no experiment specified")
+            raise util.CytoflowOpError("no experiment specified")
         
         if not self.name:
-            raise CytoflowOpError("name is not set")
+            raise util.CytoflowOpError("name is not set")
         
         if self.name in experiment.data.columns:
-            raise CytoflowOpError("name {0} is in the experiment already"
+            raise util.CytoflowOpError("name {0} is in the experiment already"
                                   .format(self.name))
             
         if self.bin_count_name and self.bin_count_name in experiment.data.columns:
-            raise CytoflowOpError("bin_count_name {0} is in the experiment already"
+            raise util.CytoflowOpError("bin_count_name {0} is in the experiment already"
                                   .format(self.bin_count_name))
         
         if not self.channel:
-            raise CytoflowOpError("channel is not set")
+            raise util.CytoflowOpError("channel is not set")
         
         if self.channel not in experiment.data.columns:
-            raise CytoflowOpError("channel {0} isn't in the experiment"
+            raise util.CytoflowOpError("channel {0} isn't in the experiment"
                                   .format(self.channel))
               
         if self.num_bins is Undefined and self.bin_width is Undefined:
-            raise CytoflowOpError("must set either bin number or width")
+            raise util.CytoflowOpError("must set either bin number or width")
         
         if self.num_bins is Undefined \
            and not (self.scale == "linear" or self.scale == "log"):
-            raise CytoflowOpError("Can only use bin_width with linear or log scale") 
+            raise util.CytoflowOpError("Can only use bin_width with linear or log scale") 
         
-        scale = scale_factory(self.scale, experiment, self.channel)
+        scale = util.scale_factory(self.scale, experiment, self.channel)
         scaled_data = scale(experiment.data[self.channel])
             
         channel_min = np.nanmin(scaled_data)
@@ -177,8 +176,8 @@ class BinningOp(HasStrictTraits):
     def default_view(self):
         return BinningView(op = self)
     
-@provides(IView)
-class BinningView(HistogramView):
+@provides(cytoflow.views.IView)
+class BinningView(cytoflow.views.HistogramView):
     """Plots a histogram of the current binning op, with the bins set to
        the hue facet.
        
@@ -211,10 +210,10 @@ class BinningView(HistogramView):
     
     def plot(self, experiment, **kwargs):
         if not self.huefacet:
-            raise CytoflowViewError("didn't set BinningOp.name")
+            raise util.CytoflowViewError("didn't set BinningOp.name")
         
         try:
             temp_experiment = self.op.apply(experiment)
             super(BinningView, self).plot(temp_experiment, **kwargs)
-        except CytoflowOpError as e:
-            raise CytoflowViewError(e.__str__())
+        except util.CytoflowOpError as e:
+            raise util.CytoflowViewError(e.__str__())

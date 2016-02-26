@@ -15,26 +15,28 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import absolute_import
+"""
+Created on Mar 5, 2015
 
-import matplotlib as mpl
-import seaborn as sns
+@author: brian
+"""
+from __future__ import division, absolute_import
+from exceptions import UserWarning
 
-mpl.rc('legend', markerscale = 5)
-sns.set_style("whitegrid", {
-                "xtick.major.size": 6,
-                "ytick.major.size": 6,
-                "xtick.minor.size": 3,
-                "ytick.minor.size": 3,
-                })
-sns.set_context("talk")
+class CytoflowError(RuntimeError):
+    pass
 
-from .i_view import IView
-from .i_selectionview import ISelectionView
+class CytoflowOpError(CytoflowError):
+    pass
 
-from .bar_chart import BarChartView
-from .hexbin import HexbinView
-from .histogram import HistogramView
-from .scatterplot import ScatterplotView
-from .stats_1d import Stats1DView
-from .stats_2d import Stats2DView
+class CytoflowViewError(CytoflowError):
+    pass
+
+class CytoflowWarning(UserWarning):
+    pass
+
+class CytoflowOpWarning(CytoflowWarning):
+    pass
+
+class CytoflowViewWarning(CytoflowWarning):
+    pass

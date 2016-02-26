@@ -15,15 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import division
+from __future__ import division, absolute_import
 
 from traits.api import HasStrictTraits, Str, provides, Callable
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
 
-from cytoflow.views import IView
-from cytoflow.utility import CytoflowViewError
+import cytoflow.utility as util
+from .i_view import IView
 
 @provides(IView)
 class BarChartView(HasStrictTraits):
@@ -119,34 +119,34 @@ class BarChartView(HasStrictTraits):
         """Plot a bar chart"""
         
         if not experiment:
-            raise CytoflowViewError("No experiment specified")
+            raise util.CytoflowViewError("No experiment specified")
 
         if not self.channel:
-            raise CytoflowViewError("Channel not specified")
+            raise util.CytoflowViewError("Channel not specified")
         
         if self.channel not in experiment.data:
-            raise CytoflowViewError("Channel {0} isn't in the experiment"
+            raise util.CytoflowViewError("Channel {0} isn't in the experiment"
                                     .format(self.channel))
         
         if not self.by:
-            raise CytoflowViewError("Variable not specified")
+            raise util.CytoflowViewError("Variable not specified")
         
         if not self.by in experiment.conditions:
-            raise CytoflowViewError("Variable {0} isn't in the experiment")
+            raise util.CytoflowViewError("Variable {0} isn't in the experiment")
         
         if not self.function:
-            raise CytoflowViewError("Function not specified")
+            raise util.CytoflowViewError("Function not specified")
         
         if self.xfacet and self.xfacet not in experiment.conditions:
-            raise CytoflowViewError("X facet {0} isn't in the experiment"
+            raise util.CytoflowViewError("X facet {0} isn't in the experiment"
                                     .format(self.xfacet))
         
         if self.yfacet and self.yfacet not in experiment.metadata:
-            raise CytoflowViewError("Y facet {0} isn't in the experiment"
+            raise util.CytoflowViewError("Y facet {0} isn't in the experiment"
                                     .format(self.yfacet))
 
         if self.huefacet and self.huefacet not in experiment.metadata:
-            raise CytoflowViewError("Hue facet {0} isn't in the experiment"
+            raise util.CytoflowViewError("Hue facet {0} isn't in the experiment"
                                     .format(self.huefacet))
         
 #         if self.error_bars == 'data' and self.error_function is None:
@@ -161,11 +161,11 @@ class BarChartView(HasStrictTraits):
             try:
                 data = experiment.query(self.subset)
             except:
-                raise CytoflowViewError("Subset string {0} isn't valid"
+                raise util.CytoflowViewError("Subset string {0} isn't valid"
                                         .format(self.subset))
                             
             if len(data.index) == 0:
-                raise CytoflowViewError("Subset string '{0}' returned no events"
+                raise util.CytoflowViewError("Subset string '{0}' returned no events"
                                         .format(self.subset))
         else:
             data = experiment.data

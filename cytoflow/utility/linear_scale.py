@@ -21,19 +21,17 @@ Created on Feb 24, 2016
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import division
+from __future__ import division, absolute_import
 
-from traits.api import HasTraits, Instance, Str, Dict, provides, Constant, Any
-
-#from cytoflow.experiment import Experiment
-from cytoflow.utility.i_scale import register_scale, IScale
+from traits.api import HasTraits, Instance, Str, Dict, provides, Constant
+from .scale import IScale, register_scale
 
 @provides(IScale)
 class LinearScale(HasTraits):
     id = Constant("edu.mit.synbio.cytoflow.utility.linear_scale")
     name = "linear"
     
-    experiment = Any #Instance(Experiment)
+    experiment = Instance("cytoflow.Experiment")
     channel = Str
 
     mpl_params = Dict()

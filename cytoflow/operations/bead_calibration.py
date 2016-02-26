@@ -21,20 +21,21 @@ Created on Aug 31, 2015
 @author: brian
 '''
 
-from __future__ import division
+from __future__ import division, absolute_import
 
-from traits.api import HasStrictTraits, Str, CStr, File, Dict, Python, \
-                       Instance, Int, List, Float, Constant, provides
+from traits.api import (HasStrictTraits, Str, CStr, File, Dict, Python,
+                        Instance, Int, List, Float, Constant, provides)
 import numpy as np
 import math
 import scipy.signal
         
 import matplotlib.pyplot as plt
 
-from cytoflow.operations import IOperation
-from cytoflow.views import IView
-from cytoflow.utility import CytoflowOpError
-from cytoflow.operations.import_op import parse_tube
+import cytoflow.views
+import cytoflow.utility as util
+
+from .i_operation import IOperation
+from .import_op import parse_tube
 
 @provides(IOperation)
 class BeadCalibrationOp(HasStrictTraits):
@@ -168,14 +169,14 @@ class BeadCalibrationOp(HasStrictTraits):
         Estimate the calibration coefficients from the beads file.
         """
         if not experiment:
-            raise CytoflowOpError("No experiment specified")
+            raise util.CytoflowOpError("No experiment specified")
 
         if not set(self.units.keys()) <= set(experiment.channels):
-            raise CytoflowOpError("Specified channels that weren't found in "
+            raise util.CytoflowOpError("Specified channels that weren't found in "
                                   "the experiment.")
             
         if not set(self.units.values()) <= set(self.beads.keys()):
-            raise CytoflowOpError("Units don't match beads.")
+            raise util.CytoflowOpError("Units don't match beads.")
         
         beads_data = parse_tube(self.beads_file, experiment)
         channels = self.units.keys()
@@ -213,15 +214,15 @@ class BeadCalibrationOp(HasStrictTraits):
             mef_unit = self.units[channel]
             
             if not mef_unit in self.beads:
-                raise CytoflowOpError("Invalid unit {0} specified for channel {1}".format(mef_unit, channel))
+                raise util.CytoflowOpError("Invalid unit {0} specified for channel {1}".format(mef_unit, channel))
             
             # "mean equivalent fluorochrome"
             mef = self.beads[mef_unit]
             
             if len(peaks) == 0:
-                raise CytoflowOpError("Didn't find any peaks; check the diagnostic plot")
+                raise util.CytoflowOpError("Didn't find any peaks; check the diagnostic plot")
             elif len(peaks) > len(self.beads):
-                raise CytoflowOpError("Found too many peaks; check the diagnostic plot")
+                raise util.CytoflowOpError("Found too many peaks; check the diagnostic plot")
             elif len(peaks) == 1:
                 # if we only have one peak, assume it's the brightest peak
                 a = mef[-1] / peaks[0]
@@ -281,22 +282,22 @@ class BeadCalibrationOp(HasStrictTraits):
             a new experiment calibrated in physical units.
         """
         if not experiment:
-            raise CytoflowOpError("No experiment specified")
+            raise util.CytoflowOpError("No experiment specified")
         
         channels = self.units.keys()
 
         if not self.units:
-            raise CytoflowOpError("Units not specified.")
+            raise util.CytoflowOpError("Units not specified.")
         
         if not self._calibration_functions:
-            raise CytoflowOpError("Calibration not found. "
+            raise util.CytoflowOpError("Calibration not found. "
                                   "Did you forget to call estimate()?")
         
         if not set(channels) <= set(experiment.channels):
-            raise CytoflowOpError("Module units don't match experiment channels")
+            raise util.CytoflowOpError("Module units don't match experiment channels")
                 
         if set(channels) != set(self._calibration_functions.keys()):
-            raise CytoflowOpError("Calibration doesn't match units. "
+            raise util.CytoflowOpError("Calibration doesn't match units. "
                                   "Did you forget to call estimate()?")
 
         # two things.  first, you can't raise a negative value to a non-integer
@@ -360,7 +361,7 @@ class BeadCalibrationOp(HasStrictTraits):
                   "MEAP" :  [587, 2433, 6720, 17962, 30866, 51704, 146080],
                   "MEAPCY7" : [718, 1920, 5133, 9324, 14210, 26735]}}
     
-@provides(IView)
+@provides(cytoflow.views.IView)
 class BeadCalibrationDiagnostic(HasStrictTraits):
     """
     Plots diagnostic histograms of the peak finding algorithm.

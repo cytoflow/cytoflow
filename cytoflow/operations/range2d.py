@@ -15,18 +15,21 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import division, absolute_import
+
 import pandas as pd
 
 from traits.api import HasStrictTraits, CFloat, Str, CStr, Bool, Instance, \
     provides, on_trait_change, DelegatesTo, Any, Constant
-from cytoflow.operations import IOperation
-from cytoflow.utility import CytoflowOpError, CytoflowViewError
-from cytoflow.views import ISelectionView
-from cytoflow.views.scatterplot import ScatterplotView
 
 from matplotlib.widgets import RectangleSelector
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
+
+import cytoflow.utility as util
+import cytoflow.views
+
+from .i_operation import IOperation
 
 @provides(IOperation)
 class Range2DOp(HasStrictTraits):
@@ -106,35 +109,35 @@ class Range2DOp(HasStrictTraits):
         
         # make sure name got set!
         if not self.name:
-            raise CytoflowOpError("You have to set the gate's name "
+            raise util.CytoflowOpError("You have to set the gate's name "
                                   "before applying it!")
         
         # make sure old_experiment doesn't already have a column named self.name
         if(self.name in experiment.data.columns):
-            raise CytoflowOpError("Experiment already contains a column {0}"
+            raise util.CytoflowOpError("Experiment already contains a column {0}"
                                .format(self.name))
         
         if not self.xchannel or not self.ychannel:
-            raise CytoflowOpError("Must specify xchannel and ychannel")
+            raise util.CytoflowOpError("Must specify xchannel and ychannel")
 
         if not self.xchannel in experiment.channels:
-            raise CytoflowOpError("xchannel isn't in the experiment")
+            raise util.CytoflowOpError("xchannel isn't in the experiment")
         
         if not self.ychannel in experiment.channels:
-            raise CytoflowOpError("ychannel isn't in the experiment")
+            raise util.CytoflowOpError("ychannel isn't in the experiment")
         
         if self.xhigh <= experiment[self.xchannel].min():
-            raise CytoflowOpError("x channel range high must be > {0}"
+            raise util.CytoflowOpError("x channel range high must be > {0}"
                                   .format(experiment[self.xchannel].min()))
         if self.xlow >= experiment[self.xchannel].max:
-            raise CytoflowOpError("x channel range low must be < {0}"
+            raise util.CytoflowOpError("x channel range low must be < {0}"
                                   .format(experiment[self.xchannel].max()))
             
         if self.yhigh <= experiment[self.ychannel].min():
-            raise CytoflowOpError("y channel range high must be > {0}"
+            raise util.CytoflowOpError("y channel range high must be > {0}"
                                   .format(experiment[self.ychannel].min()))
         if self.ylow >= experiment[self.ychannel].max:
-            raise CytoflowOpError("y channel range low must be < {0}"
+            raise util.CytoflowOpError("y channel range low must be < {0}"
                                   .format(experiment[self.ychannel].max()))
         
         x = experiment[self.xchannel].between(self.xlow, self.xhigh)
@@ -149,8 +152,8 @@ class Range2DOp(HasStrictTraits):
     def default_view(self):
         return RangeSelection2D(op = self)
     
-@provides(ISelectionView)
-class RangeSelection2D(ScatterplotView):
+@provides(cytoflow.views.ISelectionView)
+class RangeSelection2D(cytoflow.views.ScatterplotView):
     """Plots, and lets the user interact with, a 2D selection.
     
     Attributes
@@ -205,16 +208,16 @@ class RangeSelection2D(ScatterplotView):
         """Plot the underlying scatterplot and then plot the selection on top of it."""
         
         if not experiment:
-            raise CytoflowOpError("No experiment specified")
+            raise util.CytoflowOpError("No experiment specified")
         
         if not experiment:
-            raise CytoflowViewError("No experiment specified")
+            raise util.CytoflowViewError("No experiment specified")
         
         if self.xfacet:
-            raise CytoflowViewError("RangeSelection.xfacet must be empty or `Undefined`")
+            raise util.CytoflowViewError("RangeSelection.xfacet must be empty or `Undefined`")
         
         if self.yfacet:
-            raise CytoflowViewError("RangeSelection.yfacet must be empty or `Undefined`")
+            raise util.CytoflowViewError("RangeSelection.yfacet must be empty or `Undefined`")
         
         super(RangeSelection2D, self).plot(experiment, **kwargs)
         self._ax = plt.gca()
@@ -260,33 +263,21 @@ class RangeSelection2D(ScatterplotView):
     
 if __name__ == '__main__':
     import cytoflow as flow
-    import fcsparser
     
-    tube1 = fcsparser.parse('../../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs',
-                            reformat_meta = True,
-                            channel_naming = "$PnN")
+    tube1 = flow.Tube(file = '../../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs',
+                      conditions = {"Dox" : 10.0})
+    
+    tube2 = flow.Tube(file = '../../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs',
+                      conditions = {"Dox" : 1.0})                      
 
-    tube2 = fcsparser.parse('../../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs',
-                            reformat_meta = True,
-                            channel_naming = "$PnN")
-    
-    ex = flow.Experiment()
-    ex.add_conditions({"Dox" : "float"})
-    
-    ex.add_tube(tube1, {"Dox" : 10.0})
-    ex.add_tube(tube2, {"Dox" : 1.0})
-    
-    hlog = flow.HlogTransformOp()
-    hlog.name = "Hlog transformation"
-    hlog.channels = ['V2-A', 'Y2-A']
-    ex2 = hlog.apply(ex)
+    ex = flow.ImportOp(conditions = {"Dox" : "float"}, tubes = [tube1, tube2])
     
     r = flow.Range2DOp(xchannel = "V2-A",
                        ychannel = "Y2-A")
     rv = r.default_view()
     
     plt.ioff()
-    rv.plot(ex2)
+    rv.plot(ex)
     rv.interactive = True
     plt.show()
     print "x:({0}, {1})  y:({2}, {3})".format(r.xlow, r.xhigh, r.ylow, r.yhigh)

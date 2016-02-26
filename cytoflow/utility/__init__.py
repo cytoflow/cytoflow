@@ -15,14 +15,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from util import cartesian, iqr, geom_mean, num_hist_bins, sanitize_identifier
-from util import CytoflowError, CytoflowOpError, CytoflowViewError
-from util import CytoflowWarning, CytoflowOpWarning, CytoflowViewWarning
+from __future__ import absolute_import
 
-from i_scale import IScale, scale_factory
-from custom_traits import PositiveInt, PositiveFloat, ScaleEnum
+from .util_functions import cartesian, iqr, geom_mean, num_hist_bins, sanitize_identifier
+from .cytoflow_errors import CytoflowError, CytoflowOpError, CytoflowViewError
+from .cytoflow_errors import CytoflowWarning, CytoflowOpWarning, CytoflowViewWarning
 
-# make sure the scales get registered
-import linear_scale
-import log_scale
-import logicle_scale
+from .scale import scale_factory, IScale
+from .custom_traits import PositiveInt, PositiveFloat, ScaleEnum
+
+# register the new scales
+from . import linear_scale
+from . import log_scale
+from . import logicle_scale

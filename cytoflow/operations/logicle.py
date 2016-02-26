@@ -15,15 +15,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from traits.api import HasStrictTraits, provides, Str, List, Float, Dict, \
-                        Constant
+from traits.api import (HasStrictTraits, provides, Str, List, Float, Dict,
+                        Constant)
 import math
 from warnings import warn
 import numpy as np
 
-from cytoflow.utility import CytoflowOpError, CytoflowOpWarning
-from cytoflow.utility.logicle_ext.Logicle import Logicle
-from cytoflow.operations import IOperation
+import cytoflow.utility as util
+import cytoflow.utility.logicle_ext as logicle_ext
+
+from .i_operation import IOperation
 
 @provides(IOperation)
 class LogicleTransformOp(HasStrictTraits):
@@ -113,10 +114,10 @@ class LogicleTransformOp(HasStrictTraits):
         """
 
         if not experiment:
-            raise CytoflowOpError("no experiment specified")
+            raise util.CytoflowOpError("no experiment specified")
         
         if self.r <= 0 or self.r >= 1:
-            raise CytoflowOpError("r must be between 0 and 1")
+            raise util.CytoflowOpError("r must be between 0 and 1")
         
         if subset:
             data = experiment.query(subset)
@@ -139,54 +140,54 @@ class LogicleTransformOp(HasStrictTraits):
                 warn( "Channel {0} doesn't have any negative data. " 
                       "Try a hlog or a log10 transform instead."
                       .format(channel),
-                      CytoflowOpWarning)
+                      util.CytoflowOpWarning)
     
     def apply(self, experiment):
         """Applies the Logicle transform to channels"""
         
         if not experiment:
-            raise CytoflowOpError("no experiment specified")
+            raise util.CytoflowOpError("no experiment specified")
 
         if not set(self.channels).issubset(set(experiment.channels)):
-            raise CytoflowOpError("self.channels isn't a subset "
+            raise util.CytoflowOpError("self.channels isn't a subset "
                                   "of experiment.channels")
         
         if self.M <= 0:
-            raise CytoflowOpError("M must be > 0")
+            raise util.CytoflowOpError("M must be > 0")
 
         for channel in self.channels:
             # the Logicle C++/SWIG extension is REALLY picky about it
             # being a double
             
             if experiment[channel].dtype != np.float64:
-                raise CytoflowOpError("The dtype for channel {0} MUST be "
+                raise util.CytoflowOpError("The dtype for channel {0} MUST be "
                                       "np.float64.  Please submit a bug report."
                                       .format(channel))
             
             if not channel in self.W: 
-                raise CytoflowOpError("W wasn't set for channel {0}"
+                raise util.CytoflowOpError("W wasn't set for channel {0}"
                                       .format(channel))
                 
             if self.W[channel] <= 0:
-                raise CytoflowOpError("W for channel {0} must be > 0"
+                raise util.CytoflowOpError("W for channel {0} must be > 0"
                                       .format(channel))
             
             if not channel in self.A:
-                raise CytoflowOpError("A wasn't set for channel {0}"
+                raise util.CytoflowOpError("A wasn't set for channel {0}"
                                       .format(channel))
                 
             if self.A[channel] < 0:
-                raise CytoflowOpError("A for channel {0} must be >= 0"
+                raise util.CytoflowOpError("A for channel {0} must be >= 0"
                                       .format(channel))
         
         new_experiment = experiment.clone()
         
         for channel in self.channels:
             
-            el = Logicle(new_experiment.metadata[channel]['range'], 
-                         self.W[channel], 
-                         self.M,
-                         self.A[channel])
+            el = logicle_ext.Logicle(new_experiment.metadata[channel]['range'], 
+                                     self.W[channel], 
+                                     self.M,
+                                     self.A[channel])
             
             logicle_fwd = lambda x: x.apply(el.scale)
             logicle_rev = lambda x: x.apply(el.inverse)

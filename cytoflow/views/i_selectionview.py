@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from traits.api import Bool
-from cytoflow.views import IView
+from .i_view import IView
 
 class ISelectionView(IView):
     """A decorator that lets you add (possibly interactive) selections to an IView.

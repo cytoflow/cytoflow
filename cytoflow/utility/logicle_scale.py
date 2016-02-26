@@ -21,25 +21,24 @@ Created on Feb 21, 2016
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import division
+from __future__ import division, absolute_import
 
-from traits.api import HasTraits, Float, Instance, Property, Instance, Str, \
-                       cached_property, Undefined, provides, Constant, Dict, \
-                       Any
+import math
+from warnings import warn
+
+from traits.api import HasTraits, Float, Property, Instance, Str, \
+                       cached_property, Undefined, provides, Constant, Dict
                        
 import numpy as np
-from warnings import warn
-import math
 
-from matplotlib import scale
+import matplotlib.scale
 from matplotlib import transforms
 from matplotlib.ticker import NullFormatter, ScalarFormatter
 from matplotlib.ticker import Locator
 
-from cytoflow.utility.logicle_ext.Logicle import Logicle
-from cytoflow.utility import CytoflowWarning, CytoflowError
-from cytoflow.utility.i_scale import IScale, register_scale
-#from cytoflow.experiment import Experiment
+from .scale import IScale, register_scale
+from .logicle_ext.Logicle import Logicle
+from .cytoflow_errors import CytoflowError, CytoflowWarning
 
 @provides(IScale)
 class LogicleScale(HasTraits):
@@ -92,7 +91,7 @@ class LogicleScale(HasTraits):
     id = Constant("edu.mit.synbio.cytoflow.utility.logicle_scale")        
     name = "logicle"
     
-    experiment = Any #Instance(Experiment)
+    experiment = Instance("cytoflow.Experiment")
     channel = Str
 
     range = Property(Float, depends_on = "[experiment, channel]")
@@ -112,8 +111,8 @@ class LogicleScale(HasTraits):
         Careful!  May return `NaN` if the scale domain doesn't match the data 
         (ie, applying a log10 scale to negative numbers.
         """
-        scale = np.vectorize(self.logicle.scale)
-        return scale(data)
+        scale_fn = np.vectorize(self.logicle.scale)
+        return scale_fn(data)
         
     def inverse(self, data):
         """
@@ -183,7 +182,7 @@ class LogicleScale(HasTraits):
     
 register_scale(LogicleScale)
         
-class MatplotlibLogicleScale(HasTraits, scale.ScaleBase):   
+class MatplotlibLogicleScale(HasTraits, matplotlib.scale.ScaleBase):   
     name = "logicle"
     logicle = Instance(Logicle)
 
@@ -354,5 +353,3 @@ class LogicleMinorLocator(Locator):
         'Try to choose the view limits intelligently'
         
         return vmin, vmax
-
-scale.register_scale(MatplotlibLogicleScale)

@@ -15,11 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import absolute_import
+
 import pandas as pd
 from traits.api import HasStrictTraits, Dict, List, Instance, Str, Any, \
                        Property, cached_property
 
-from utility import CytoflowError, sanitize_identifier
+import cytoflow.utility as util
 
 class Experiment(HasStrictTraits):
     """An Experiment manages all the data and metadata for a flow experiment.
@@ -198,11 +200,12 @@ class Experiment(HasStrictTraits):
         
         resolvers = {}
         for name, col in self.data.iteritems():
-            new_name = sanitize_identifier(name)
+            new_name = util.sanitize_identifier(name)
             if new_name in resolvers:
-                raise CytoflowError("Tried to sanitize column name {1} to {2} "
-                                    "but it already existed in the DataFrame."
-                                    .format(name, new_name))
+                raise util.CytoflowError("Tried to sanitize column name {1} to "
+                                         "{2} but it already existed in the "
+                                         " DataFrame."
+                                         .format(name, new_name))
             else:
                 resolvers[new_name] = col
 
@@ -257,14 +260,14 @@ class Experiment(HasStrictTraits):
         """
         
         if name in self.data:
-            raise CytoflowError("Already a column named {0} in self.data"
-                                .format(name))
+            raise util.CytoflowError("Already a column named {0} in self.data"
+                                     .format(name))
         
         if data is None and len(self) > 0:
-            raise CytoflowError("If data is None, self.data must be empty!")
+            raise util.CytoflowError("If data is None, self.data must be empty!")
         
         if data is not None and len(self) != len(data):
-            raise CytoflowError("data must be the same length as self.data")
+            raise util.CytoflowError("data must be the same length as self.data")
         
         try:
             if data is not None:
@@ -275,7 +278,7 @@ class Experiment(HasStrictTraits):
             self.metadata[name] = {}
             self.metadata[name]['type'] = dtype                
         except (ValueError, TypeError):
-                raise CytoflowError("Had trouble converting data to type {0}"
+                raise util.CytoflowError("Had trouble converting data to type {0}"
                                     .format(dtype))
             
     def add_channel(self, name, data = None):
@@ -307,14 +310,14 @@ class Experiment(HasStrictTraits):
         """
         
         if name in self.data:
-            raise CytoflowError("Already a column named {0} in self.data"
+            raise util.CytoflowError("Already a column named {0} in self.data"
                                 .format(name))
 
         if data is None and len(self) > 0:
-            raise CytoflowError("If data is None, self.data must be empty!")
+            raise util.CytoflowError("If data is None, self.data must be empty!")
 
         if data is not None and len(self) != len(data):
-            raise CytoflowError("data must be the same length as self.data")
+            raise util.CytoflowError("data must be the same length as self.data")
         
         try:
             if data is not None:
@@ -328,7 +331,7 @@ class Experiment(HasStrictTraits):
             self.metadata[name]['xforms_inv'] = []
                 
         except (ValueError, TypeError):
-                raise CytoflowError("Had trouble converting data to type \"float64\"")
+                raise util.CytoflowError("Had trouble converting data to type \"float64\"")
         
     def add_events(self, data, conditions):
         """
@@ -382,14 +385,14 @@ class Experiment(HasStrictTraits):
         # channels in the Experiment
     
         if len(self) > 0 and set(data.columns) != set(self.channels):
-            raise CytoflowError("New events don't have the same channels")
+            raise util.CytoflowError("New events don't have the same channels")
             
         # check that the conditions for this tube exist in the experiment
         # already
 
         if( any(True for k in conditions if k not in self.conditions) or \
             any(True for k in self.conditions if k not in conditions) ):
-            raise CytoflowError("Metadata for this tube isn't the same as "
+            raise util.CytoflowError("Metadata for this tube isn't the same as "
                                 "self.conditions")
             
         # add the conditions to tube's internal data frame.  specify the conditions
@@ -418,11 +421,11 @@ class Experiment(HasStrictTraits):
                     self.data[meta_name] = self.data[meta_name].cat.set_categories(cats)
                     new_data[meta_name] = new_data[meta_name].cat.set_categories(cats)
             except (ValueError, TypeError):
-                raise CytoflowError("Had trouble converting conditions {1}"
-                                   "(value = {2}) to type {3}" \
-                                   .format(meta_name,
-                                           meta_value,
-                                           meta_type))
+                raise util.CytoflowError("Had trouble converting conditions {1}"
+                                         "(value = {2}) to type {3}" \
+                                         .format(meta_name,
+                                                 meta_value,
+                                                 meta_type))
         
         self.data = self.data.append(new_data, ignore_index = True)
         del new_data
