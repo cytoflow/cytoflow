@@ -120,8 +120,8 @@ class ThresholdOp(HasStrictTraits):
         new_experiment.history.append(self.clone_traits())
         return new_experiment
     
-    def default_view(self):
-        return ThresholdSelection(op = self)
+    def default_view(self, **kwargs):
+        return ThresholdSelection(op = self, **kwargs)
 
 
 @provides(cytoflow.views.ISelectionView)

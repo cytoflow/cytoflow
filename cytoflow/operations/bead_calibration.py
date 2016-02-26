@@ -325,7 +325,7 @@ class BeadCalibrationOp(HasStrictTraits):
         new_experiment.history.append(self.clone_traits()) 
         return new_experiment
     
-    def default_view(self):
+    def default_view(self, **kwargs):
         """
         Returns a diagnostic plot to see if the bleedthrough spline estimation
         is working.
@@ -335,7 +335,7 @@ class BeadCalibrationOp(HasStrictTraits):
             IView : An IView, call plot() to see the diagnostic plots
         """
 
-        return BeadCalibrationDiagnostic(op = self)
+        return BeadCalibrationDiagnostic(op = self, **kwargs)
     
     BEADS = {
              # from http://www.spherotech.com/RCP-30-5a%20%20rev%20H%20ML%20071712.xls

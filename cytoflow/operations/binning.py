@@ -23,7 +23,7 @@ Created on Sep 18, 2015
 
 from __future__ import division, absolute_import
 
-from traits.api import (HasStrictTraits, Str, CStr, Enum, provides, Undefined,
+from traits.api import (HasStrictTraits, Str, CStr, provides, Undefined,
                         Instance, DelegatesTo, Constant)
 import numpy as np
 
@@ -173,8 +173,8 @@ class BinningOp(HasStrictTraits):
         new_experiment.history.append(self.clone_traits())
         return new_experiment
     
-    def default_view(self):
-        return BinningView(op = self)
+    def default_view(self, **kwargs):
+        return BinningView(op = self, **kwargs)
     
 @provides(cytoflow.views.IView)
 class BinningView(cytoflow.views.HistogramView):

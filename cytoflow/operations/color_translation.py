@@ -267,7 +267,7 @@ class ColorTranslationOp(HasStrictTraits):
         new_experiment.history.append(self.clone_traits())
         return new_experiment
     
-    def default_view(self):
+    def default_view(self, **kwargs):
         """
         Returns a diagnostic plot to see if the bleedthrough spline estimation
         is working.
@@ -277,7 +277,7 @@ class ColorTranslationOp(HasStrictTraits):
             IView : An IView, call plot() to see the diagnostic plots
         """
 
-        return ColorTranslationDiagnostic(op = self)
+        return ColorTranslationDiagnostic(op = self, **kwargs)
     
 @provides(cytoflow.views.IView)
 class ColorTranslationDiagnostic(HasStrictTraits):

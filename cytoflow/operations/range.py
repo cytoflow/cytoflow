@@ -20,7 +20,6 @@ from traits.api import (HasStrictTraits, CFloat, Str, CStr, Instance, Bool,
 
 from matplotlib.widgets import SpanSelector, Cursor
 import matplotlib.pyplot as plt
-import matplotlib as mpl
 from matplotlib.lines import Line2D    
 
 import cytoflow.utility as util
@@ -129,8 +128,8 @@ class RangeOp(HasStrictTraits):
             
         return new_experiment
     
-    def default_view(self):
-        return RangeSelection(op = self)
+    def default_view(self, **kwargs):
+        return RangeSelection(op = self, **kwargs)
     
 @provides(cytoflow.views.ISelectionView)
 class RangeSelection(cytoflow.views.HistogramView):
@@ -265,7 +264,7 @@ if __name__ == '__main__':
     ex = flow.ImportOp(conditions = {"Dox" : "float"}, tubes = [tube1, tube2])
     
     r = flow.RangeOp(channel = 'Y2-A')
-    rv = r.default_view()
+    rv = r.default_view(scale = "logicle")
     
     plt.ioff()
     rv.plot(ex)

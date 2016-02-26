@@ -312,7 +312,7 @@ class GaussianMixture1DOp(HasStrictTraits):
         new_experiment.history.append(self.clone_traits())
         return new_experiment
     
-    def default_view(self):
+    def default_view(self, **kwargs):
         """
         Returns a diagnostic plot of the Gaussian mixture model.
         
@@ -320,7 +320,7 @@ class GaussianMixture1DOp(HasStrictTraits):
         -------
             IView : an IView, call plot() to see the diagnostic plot.
         """
-        return GaussianMixture1DView(op = self)
+        return GaussianMixture1DView(op = self, **kwargs)
     
 @provides(cytoflow.views.IView)
 class GaussianMixture1DView(cytoflow.views.HistogramView):

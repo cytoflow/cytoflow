@@ -149,8 +149,8 @@ class Range2DOp(HasStrictTraits):
         new_experiment.history.append(self.clone_traits())    
         return new_experiment
     
-    def default_view(self):
-        return RangeSelection2D(op = self)
+    def default_view(self, **kwargs):
+        return RangeSelection2D(op = self, **kwargs)
     
 @provides(cytoflow.views.ISelectionView)
 class RangeSelection2D(cytoflow.views.ScatterplotView):

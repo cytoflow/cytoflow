@@ -70,13 +70,13 @@ class IOperation(Interface):
         
         Parameters
         ----------
-            experiment : Experiment
-                the Experiment to apply this op to
+        experiment : Experiment
+            the Experiment to apply this op to
                     
         Returns
         -------
-            Experiment
-                the old Experiment with this operation applied
+        Experiment
+            the old Experiment with this operation applied
                 
         Raises
         ------
@@ -85,7 +85,7 @@ class IOperation(Interface):
             parameters.
         """
         
-    def default_view(self):
+    def default_view(self, **kwargs):
         """
         Many operations have a "default" view.  This can either be a diagnostic
         for the operation's estimate() method, an interactive for setting
@@ -94,9 +94,14 @@ class IOperation(Interface):
         is the only way to get the view (ie, it's not useful when it doesn't
         reference an IOperation instance.)
         
+        Parameters
+        ----------
+        **kwargs : Dict
+            The keyword args passed to the view's constructor
+        
         Returns
         -------
-            IView
-                the IView instance
+        IView
+            the IView instance
         """
         

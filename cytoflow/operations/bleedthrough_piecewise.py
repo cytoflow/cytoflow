@@ -311,7 +311,7 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
         new_experiment.history.append(self.clone_traits())
         return new_experiment
     
-    def default_view(self):
+    def default_view(self, **kwargs):
         """
         Returns a diagnostic plot to see if the bleedthrough spline estimation
         is working.
@@ -324,7 +324,7 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
         if set(self.controls.keys()) != set(self._splines.keys()):
             raise util.CytoflowOpError("Must have both the controls and bleedthrough to plot")
 
-        return BleedthroughPiecewiseDiagnostic(op = self)
+        return BleedthroughPiecewiseDiagnostic(op = self, **kwargs)
     
 # module-level "static" function (doesn't require a class instance)
 def _correct_bleedthrough(row, channels, splines):

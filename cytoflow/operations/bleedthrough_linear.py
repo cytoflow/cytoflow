@@ -228,13 +228,13 @@ class BleedthroughLinearOp(HasStrictTraits):
         new_experiment.history.append(self.clone_traits())   
         return new_experiment
     
-    def default_view(self):
+    def default_view(self, **kwargs):
         """
         Returns a diagnostic plot to make sure spillover estimation is working.
         
         Returns
         -------
-            IView : An IView, call plot() to see the diagnostic plots
+        IView : An IView, call plot() to see the diagnostic plots
         """
  
         # the completely arbitrary ordering of the channels
@@ -243,7 +243,7 @@ class BleedthroughLinearOp(HasStrictTraits):
         if set(self.controls.keys()) != set(channels):
             raise util.CytoflowOpError("Must have both the controls and bleedthrough to plot")
 
-        return BleedthroughLinearDiagnostic(op = self)
+        return BleedthroughLinearDiagnostic(op = self, **kwargs)
     
 @provides(cytoflow.views.IView)
 class BleedthroughLinearDiagnostic(HasStrictTraits):

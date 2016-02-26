@@ -160,8 +160,8 @@ class AutofluorescenceOp(HasStrictTraits):
         new_experiment.history.append(self.clone_traits())
         return new_experiment
     
-    def default_view(self):
-        return AutofluorescenceDiagnosticView(op = self)
+    def default_view(self, **kwargs):
+        return AutofluorescenceDiagnosticView(op = self, **kwargs)
     
     
 @provides(cytoflow.views.IView)

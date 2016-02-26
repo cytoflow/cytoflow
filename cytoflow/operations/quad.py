@@ -161,8 +161,8 @@ class QuadOp(HasStrictTraits):
         new_experiment.history.append(self.clone_traits())
         return new_experiment
     
-    def default_view(self):
-        return QuadSelection(op = self)
+    def default_view(self, **kwargs):
+        return QuadSelection(op = self, **kwargs)
     
 @provides(cytoflow.views.ISelectionView)
 class QuadSelection(cytoflow.views.ScatterplotView):
@@ -277,40 +277,29 @@ class QuadSelection(cytoflow.views.ScatterplotView):
     
 if __name__ == '__main__':
     import cytoflow as flow
-    import fcsparser
+    tube1 = flow.Tube(file = '../../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs',
+                      conditions = {"Dox" : 10.0})
     
-    tube1 = fcsparser.parse('../../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs',
-                            reformat_meta = True,
-                            channel_naming = "$PnN")
+    tube2 = flow.Tube(file = '../../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs',
+                      conditions = {"Dox" : 1.0})                      
 
-    tube2 = fcsparser.parse('../../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs',
-                            reformat_meta = True,
-                            channel_naming = "$PnN")
-    
-    ex = flow.Experiment()
-    ex.add_conditions({"Dox" : "float"})
-    
-    ex.add_tube(tube1, {"Dox" : 10.0})
-    ex.add_tube(tube2, {"Dox" : 1.0})
-    
-    hlog = flow.HlogTransformOp()
-    hlog.name = "Hlog transformation"
-    hlog.channels = ['V2-A', 'Y2-A']
-    ex2 = hlog.apply(ex)
-    
+    ex = flow.ImportOp(conditions = {"Dox" : "float"}, tubes = [tube1, tube2])
+
     r = flow.QuadOp(name = "Quad",
                     xchannel = "V2-A",
                     ychannel = "Y2-A")
-    rv = r.default_view()
+    rv = r.default_view(xscale = "logicle", yscale = "logicle")
     
     plt.ioff()
-    rv.plot(ex2)
+    rv.plot(ex)
     rv.interactive = True
     plt.show()
     print "x:{0}  y:{1}".format(r.xthreshold, r.ythreshold)
-    ex3 = r.apply(ex2)
+    ex2 = r.apply(ex)
     
     flow.ScatterplotView(xchannel = "V2-A",
                          ychannel = "Y2-A",
-                         huefacet = "Quad").plot(ex3)
+                         xscale = "logicle",
+                         yscale = "logicle",
+                         huefacet = "Quad").plot(ex2)
     plt.show()
