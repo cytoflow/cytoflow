@@ -152,10 +152,11 @@ class HexbinView(HasStrictTraits):
                           hue_order = (np.sort(data[self.huefacet].unique()) if self.huefacet else None),)
         
         xscale = scale_factory(self.xscale, experiment, self.xchannel)
-        plt.xscale(self.xscale, **xscale.mpl_params)
-        
         yscale = scale_factory(self.yscale, experiment, self.ychannel)
-        plt.yscale(self.yscale, **yscale.mpl_params)
+        
+        for ax in g.axes.flatten():
+            ax.set_xscale(self.xscale, **xscale.mpl_params)
+            ax.set_yscale(self.yscale, **yscale.mpl_params)
         
         g.map(plt.hexbin, self.xchannel, self.ychannel, **kwargs)
         

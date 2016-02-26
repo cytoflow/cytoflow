@@ -141,10 +141,11 @@ class ScatterplotView(HasStrictTraits):
                           legend_out = False)
         
         xscale = scale_factory(self.xscale, experiment, self.xchannel)
-        plt.xscale(self.xscale, **xscale.mpl_params)
-        
         yscale = scale_factory(self.yscale, experiment, self.ychannel)
-        plt.yscale(self.yscale, **yscale.mpl_params)
+        
+        for ax in g.axes.flatten():
+            ax.set_xscale(self.xscale, **xscale.mpl_params)
+            ax.set_yscale(self.yscale, **yscale.mpl_params)
 
         g.map(plt.scatter, self.xchannel, self.ychannel, **kwargs)
         g.add_legend()

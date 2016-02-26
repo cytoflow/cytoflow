@@ -172,9 +172,10 @@ class HistogramView(HasStrictTraits):
                           hue_order = (np.sort(data[self.huefacet].unique()) if self.huefacet else None),
                           legend_out = False)
         
-        # TODO - something odd with the scaling here??
-        
-        plt.xscale(self.scale, **scale.mpl_params)        
+        # set the scale for each set of axes; can't just call plt.xscale() 
+        for ax in g.axes.flatten():
+            ax.set_xscale(self.scale, **scale.mpl_params)  
+                  
         g.map(plt.hist, self.channel, **kwargs)
         g.add_legend()
 
