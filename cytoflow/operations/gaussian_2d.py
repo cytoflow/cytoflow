@@ -310,8 +310,8 @@ class GaussianMixture2DOp(HasStrictTraits):
                 
                 # make a quick dataframe with the value and the predicted
                 # component
-                gate_df = pd.DataFrame({"x" : data_subset[self.xchannel], 
-                                        "y" : data_subset[self.ychannel],
+                gate_df = pd.DataFrame({"x" : x[:, 0], 
+                                        "y" : x[:, 1],
                                         "p" : predicted})
 
                 # for each component, get the ellipse that follows the isoline
@@ -386,6 +386,13 @@ class GaussianMixture2DOp(HasStrictTraits):
         """
         return GaussianMixture2DView(op = self, **kwargs)
     
+    
+# a few more imports for drawing scaled ellipses
+        
+import matplotlib.path as path
+import matplotlib.patches as patches
+import matplotlib.transforms as transforms
+    
 @provides(cytoflow.views.IView)
 class GaussianMixture2DView(cytoflow.views.ScatterplotView):
     """
@@ -459,42 +466,63 @@ class GaussianMixture2DView(cytoflow.views.ScatterplotView):
         # cf. http://scikit-learn.org/stable/auto_examples/mixture/plot_gmm.html
         
         gmm = self.op._gmms[self.group] if self.group else self.op._gmms[True]
-        for i, (mean, covar) in enumerate(zip(gmm.means_, gmm._get_covars())):
+        
+        for i, (mean, covar) in enumerate(zip(gmm.means_, gmm._get_covars())):    
             v, w = linalg.eigh(covar)
             u = w[0] / linalg.norm(w[0])
             
             #rotation angle (in degrees)
             t = np.arctan(u[1] / u[0])
             t = 180 * t / np.pi
-            
+                       
             color_i = i % len(sns.color_palette())
             color = sns.color_palette()[color_i]
-            ell = mpl.patches.Ellipse(mean, 
-                                      np.sqrt(v[0]), 
-                                      np.sqrt(v[1]),
-                                      180 + t, 
-                                      color = color,
-                                      fill = False,
-                                      linewidth = 2)
-            plt.gca().add_artist(ell)
             
-            ell = mpl.patches.Ellipse(mean, 
-                                      np.sqrt(v[0]) * 2, 
-                                      np.sqrt(v[1]) * 2,
-                                      180 + t, 
-                                      color = color,
-                                      fill = False,
-                                      linewidth = 2)
-            ell.set_alpha(0.66)
-            plt.gca().add_artist(ell)
+            # in order to scale the ellipses correctly, we have to make them
+            # ourselves out of an affine-scaled unit circle.  The interface
+            # is the same as matplotlib.patches.Ellipse
             
-            ell = mpl.patches.Ellipse(mean, 
-                                      np.sqrt(v[0]) * 3, 
-                                      np.sqrt(v[1]) * 3,
-                                      180 + t, 
-                                      color = color,
-                                      fill = False,
-                                      linewidth = 2)
-            ell.set_alpha(0.33)
-            plt.gca().add_artist(ell)
+            self._plot_ellipse(mean,
+                               np.sqrt(v[0]),
+                               np.sqrt(v[1]),
+                               180 + t,
+                               color = color,
+                               fill = False,
+                               linewidth = 2)
+
+            self._plot_ellipse(mean,
+                               np.sqrt(v[0]) * 2,
+                               np.sqrt(v[1]) * 2,
+                               180 + t,
+                               color = color,
+                               fill = False,
+                               linewidth = 2,
+                               alpha = 0.66)
+            
+            self._plot_ellipse(mean,
+                               np.sqrt(v[0]) * 3,
+                               np.sqrt(v[1]) * 3,
+                               180 + t,
+                               color = color,
+                               fill = False,
+                               linewidth = 2,
+                               alpha = 0.33)
+                         
+    def _plot_ellipse(self, center, width, height, angle, **kwargs):
+        tf = transforms.Affine2D() \
+             .scale(width * 0.5, height * 0.5) \
+             .rotate_deg(angle) \
+             .translate(*center)
+             
+        tf_path = tf.transform_path(path.Path.unit_circle())
+        v = tf_path.vertices
+        v = np.vstack((self.op._xscale.inverse(v[:, 0]),
+                       self.op._yscale.inverse(v[:, 1]))).T
+
+        scaled_path = path.Path(v, tf_path.codes)
+        scaled_patch = patches.PathPatch(scaled_path, **kwargs)
+        plt.gca().add_patch(scaled_patch)
+            
+             
+
     
