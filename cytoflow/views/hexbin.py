@@ -110,10 +110,10 @@ class HexbinView(HasStrictTraits):
             try: 
                 data = experiment.query(self.subset)
             except:
-                raise CytoflowViewError("Subset string \'{0}\' not valid")
+                raise util.CytoflowViewError("Subset string \'{0}\' not valid")
                             
             if len(data.index) == 0:
-                raise CytoflowViewError("Subset string '{0}' returned no events"
+                raise util.CytoflowViewError("Subset string '{0}' returned no events"
                                         .format(self.subset))
         else:
             data = experiment.data
@@ -161,36 +161,20 @@ class HexbinView(HasStrictTraits):
         
 if __name__ == '__main__':
     import cytoflow as flow
-    import fcsparser
+    tube1 = flow.Tube(file = '../../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs',
+                      conditions = {"Dox" : 10.0})
     
-    import matplotlib as mpl
-    mpl.rcParams['savefig.dpi'] = 2 * mpl.rcParams['savefig.dpi']
-    
-    tube1 = fcsparser.parse('../../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs',
-                            reformat_meta = True,
-                            channel_naming = "$PnN")
+    tube2 = flow.Tube(file = '../../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs',
+                      conditions = {"Dox" : 1.0})                      
 
-    tube2 = fcsparser.parse('../../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs',
-                            reformat_meta = True,
-                            channel_naming = "$PnN")
-    
-    ex = flow.Experiment()
-    ex.add_conditions({"Dox" : "float"})
-    
-    ex.add_tube(tube1, {"Dox" : 10.0})
-    ex.add_tube(tube2, {"Dox" : 1.0})
-    
-    hlog = flow.HlogTransformOp()
-    hlog.name = "Hlog transformation"
-    hlog.channels = ['V2-A', 'Y2-A', 'B1-A', 'FSC-A', 'SSC-A']
-    ex2 = hlog.apply(ex)
+    ex = flow.ImportOp(conditions = {"Dox" : "float"}, tubes = [tube1, tube2])
     
     hexbin = flow.HexbinView()
     hexbin.name = "Hex"
     hexbin.xchannel = "FSC-A"
     hexbin.ychannel = "SSC-A"
     hexbin.huefacet = 'Dox'
-    
+
     plt.ioff()
-    hexbin.plot(ex2)
+    hexbin.plot(ex)
     plt.show()
