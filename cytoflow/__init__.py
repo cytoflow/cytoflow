@@ -48,5 +48,6 @@ from .views.bar_chart import BarChartView
 # from views.logicle_scale import LogicleScale
 
 from cytoflow.utility.util_functions import geom_mean
+from cytoflow.utility.scale import set_default_scale
 
 __version__ = "0.1.11"

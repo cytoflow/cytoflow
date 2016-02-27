@@ -24,8 +24,9 @@ Created on Oct 12, 2015
 from __future__ import absolute_import
 
 from traits.api import BaseInt, BaseFloat, BaseEnum
+from . import scale
 
-from .scale import _scale_mapping
+#from .scale import _scale_mapping, _scale_default
 
 class PositiveInt(BaseInt):
     
@@ -52,19 +53,23 @@ class PositiveFloat(BaseFloat):
         
         self.error(obj, name, value)
         
-
 class ScaleEnum(BaseEnum):
     info_text = 'an enum containing one of the registered scales'
 
     def __init__ ( self, *args, **metadata ):
         """ Returns an Enum trait with values from the registered scales
-        
-        Default Value
-        -------------
-        "linear"
         """
-        
         self.name = ''
-        self.values = _scale_mapping.keys()
+        self.values = scale._scale_mapping.keys()
         self.init_fast_validator( 5, self.values )
-        super( BaseEnum, self ).__init__("linear", **metadata )
+        super( BaseEnum, self ).__init__(scale._scale_default, **metadata )
+        
+    def get_default_value(self):
+        # this is so silly.  get_default_value is ... called once?  as traits
+        # sets up?  idunno.  anyways, instead of returning _scale_default, we
+        # need to return a reference to a function that returns _scale_Default.
+        
+        return (7, (self._get_default_value, (), None))
+    
+    def _get_default_value(self):
+        return scale._scale_default

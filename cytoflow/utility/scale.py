@@ -65,6 +65,7 @@ class IScale(Interface):
     
 # maps name -> scale object
 _scale_mapping = {}
+_scale_default = "linear"
 
 def scale_factory(scale, experiment, channel):
     scale = scale.lower()
@@ -76,6 +77,15 @@ def scale_factory(scale, experiment, channel):
  
 def register_scale(scale_class):
     _scale_mapping[scale_class.name] = scale_class
+    
+def set_default_scale(scale):
+    global _scale_default
+    
+    scale = scale.lower()
+    if scale not in _scale_mapping:
+        raise CytoflowError("Unknown scale type {0}".format(scale))
+    
+    _scale_default = scale
 
 # register the new scales
 import cytoflow.utility.linear_scale   # @UnusedImport
