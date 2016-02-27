@@ -17,27 +17,37 @@
 
 from __future__ import absolute_import
 
+# basics
 from .experiment import Experiment
 from .operations.import_op import ImportOp, Tube
 
+# gates
 from .operations.threshold import ThresholdOp
 from .operations.range import RangeOp
 from .operations.range2d import Range2DOp
 from .operations.polygon import PolygonOp
-# from operations.hlog import HlogTransformOp
-# from operations.logicle import LogicleTransformOp
-# from operations.log import LogTransformOp
+from .operations.quad import QuadOp
 
+# transforms (deprecated!)
+from .operations.hlog import HlogTransformOp
+from .operations.logicle import LogicleTransformOp
+from .operations.log import LogTransformOp
+
+# TASBE
 from .operations.autofluorescence import AutofluorescenceOp
 from .operations.bleedthrough_piecewise import BleedthroughPiecewiseOp
 from .operations.bead_calibration import BeadCalibrationOp
 from .operations.color_translation import ColorTranslationOp
-from .operations.binning import BinningOp
-from .operations.quad import QuadOp
+
+# data-driven
 from .operations.gaussian_1d import GaussianMixture1DOp
 from .operations.gaussian_2d import GaussianMixture2DOp
+
+# misc
+from .operations.binning import BinningOp
 from .operations.bleedthrough_linear import BleedthroughLinearOp
 
+# views
 from .views.histogram import HistogramView
 from .views.hexbin import HexbinView
 from .views.scatterplot import ScatterplotView
@@ -45,8 +55,7 @@ from .views.stats_1d import Stats1DView
 from .views.stats_2d import Stats2DView
 from .views.bar_chart import BarChartView
 
-# from views.logicle_scale import LogicleScale
-
+# util
 from cytoflow.utility.util_functions import geom_mean
 from cytoflow.utility.scale import set_default_scale
 

@@ -237,43 +237,20 @@ class Stats2DView(HasStrictTraits):
     
 if __name__ == '__main__':
     import cytoflow as flow
-    import fcsparser
+    tube1 = flow.Tube(file = '../../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs',
+                      conditions = {"Dox" : 10.0})
+    
+    tube2 = flow.Tube(file = '../../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs',
+                      conditions = {"Dox" : 1.0})                      
 
-    tube1 = fcsparser.parse('../../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs',
-                            reformat_meta = True,
-                            channel_naming = "$PnN")
-
-    tube2 = fcsparser.parse('../../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs',
-                            reformat_meta = True,
-                            channel_naming = "$PnN")
-    
-    tube3 = fcsparser.parse('../../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs',
-                            reformat_meta = True,
-                            channel_naming = "$PnN")
-
-    tube4 = fcsparser.parse('../../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs',
-                            reformat_meta = True,
-                            channel_naming = "$PnN")
-    
-    ex = flow.Experiment()
-    ex.add_conditions({"Dox" : "float"})
-    
-    ex.add_tube(tube1, {"Dox" : 10.0})
-    ex.add_tube(tube2, {"Dox" : 1.0})
-#     ex.add_tube(tube3, {"Dox" : 10.0, "Repl" : 2})
-#     ex.add_tube(tube4, {"Dox" : 1.0, "Repl" : 2})
-    
-    hlog = flow.HlogTransformOp()
-    hlog.name = "Hlog transformation"
-    hlog.channels = ['V2-A', 'Y2-A', 'B1-A', 'FSC-A', 'SSC-A']
-    ex2 = hlog.apply(ex)
+    ex = flow.ImportOp(conditions = {"Dox" : "float"}, tubes = [tube1, tube2])
     
     thresh = flow.ThresholdOp()
     thresh.name = "Y2-A+"
     thresh.channel = 'Y2-A'
     thresh.threshold = 2005.0
 
-    ex3 = thresh.apply(ex2)
+    ex2 = thresh.apply(ex)
     
     s = flow.Stats2DView()
     s.by = "Dox"
@@ -285,5 +262,5 @@ if __name__ == '__main__':
 
     
     plt.ioff()
-    s.plot(ex3)
+    s.plot(ex2)
     plt.show()

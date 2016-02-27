@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import division, absolute_import
+
 from traits.api import (HasStrictTraits, CFloat, Str, CStr, Instance, Bool, 
                         provides, on_trait_change, DelegatesTo, Any, Constant)
 

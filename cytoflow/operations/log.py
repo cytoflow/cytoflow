@@ -17,6 +17,8 @@
 
 from __future__ import division, absolute_import
 
+import warnings, exceptions
+
 import numpy as np
 import pandas as pd
 from traits.api import (HasStrictTraits, Str, List, Enum, Float, Constant,
@@ -29,6 +31,10 @@ from .i_operation import IOperation
 class LogTransformOp(HasStrictTraits):
     """
     An operation that applies a natural log10 transformation to channels.
+    
+    .. note:: Deprecated
+        Use the `scale` attributes to change the way data is plotted; leave
+        the underlying data alone!
     
     It can be configured to mask or clip values less than some threshold.  
     The log10 transform is sometimes okay for basic visualization, but
@@ -66,6 +72,12 @@ class LogTransformOp(HasStrictTraits):
     channels = List(Str)
     mode = Enum("mask", "truncate")
     threshold = Float(1.0)
+    
+    def __init__(self, **kwargs):
+        warnings.warn("Transforming data with LogTransformOp is deprecated; "
+                      "rescale the data with the 'log' scale instead.",
+                      exceptions.DeprecationWarning)
+        super(LogTransformOp, self).__init__(**kwargs)
     
     def apply(self, experiment):
         """Applies the log10 transform to channels in an experiment.

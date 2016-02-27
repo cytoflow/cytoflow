@@ -15,10 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import division, absolute_import
+
+import math, warnings, exceptions
+
 from traits.api import (HasStrictTraits, provides, Str, List, Float, Dict,
                         Constant)
-import math
-from warnings import warn
+
 import numpy as np
 
 import cytoflow.utility as util
@@ -30,6 +33,10 @@ from .i_operation import IOperation
 class LogicleTransformOp(HasStrictTraits):
     """
     An implementation of the Logicle scaling method.
+    
+    .. note:: Deprecated
+        Use the `scale` attributes to change the way data is plotted; leave
+        the underlying data alone!
     
     This scaling method implements a "linear-like" region around 0, and a
     "log-like" region for large values, with a very smooth transition between
@@ -98,6 +105,12 @@ class LogicleTransformOp(HasStrictTraits):
     A = Dict(Str, Float, desc = "additional decades of negative data to include.")
     r = Float(0.05, desc = "quantile to use for estimating the W parameter.")
     
+    def __init__(self, **kwargs):
+        warnings.warn("Transforming data with LogicleTransformOp is deprecated; "
+                      "rescale the data with the 'logicle' scale instead.",
+                      exceptions.DeprecationWarning)
+        super(LogicleTransformOp, self).__init__(**kwargs)
+    
     def estimate(self, experiment, subset = None):
         """Estimate A and W per-channel from the data (given r.)
         
@@ -137,10 +150,10 @@ class LogicleTransformOp(HasStrictTraits):
                 # ... unless there aren't any negative values, in which case
                 # you probably shouldn't use this transform
                 self.W[channel] = 0.5
-                warn( "Channel {0} doesn't have any negative data. " 
-                      "Try a hlog or a log10 transform instead."
-                      .format(channel),
-                      util.CytoflowOpWarning)
+                warnings.warn( "Channel {0} doesn't have any negative data. " 
+                               "Try a hlog or a log10 transform instead."
+                               .format(channel),
+                               util.CytoflowOpWarning)
     
     def apply(self, experiment):
         """Applies the Logicle transform to channels"""

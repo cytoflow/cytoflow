@@ -33,7 +33,6 @@ from sklearn import mixture
 from scipy import linalg
 import pandas as pd
 import seaborn as sns
-import matplotlib as mpl
 
 import cytoflow.views
 import cytoflow.utility as util

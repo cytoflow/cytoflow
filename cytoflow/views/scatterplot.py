@@ -24,7 +24,6 @@ Created on Apr 19, 2015
 from traits.api import HasStrictTraits, provides, Str
 
 import matplotlib.pyplot as plt
-import matplotlib as mpl
 import seaborn as sns
 import numpy as np
 

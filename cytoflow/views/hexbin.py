@@ -21,6 +21,8 @@ Created on Apr 19, 2015
 @author: brian
 """
 
+from __future__ import division, absolute_import
+
 from traits.api import HasStrictTraits, provides, Str
 
 import matplotlib.pyplot as plt

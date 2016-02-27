@@ -26,8 +26,6 @@ from __future__ import absolute_import
 from traits.api import BaseInt, BaseFloat, BaseEnum
 from . import scale
 
-#from .scale import _scale_mapping, _scale_default
-
 class PositiveInt(BaseInt):
     
     allow_zero = False

@@ -17,7 +17,7 @@
 
 from __future__ import absolute_import
 
-from traits.api import Interface, Str, Dict, Instance, provides, HasTraits, Constant
+from traits.api import Interface, Str, Dict, Instance
 
 from .cytoflow_errors import CytoflowError
 

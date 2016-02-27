@@ -17,7 +17,10 @@
 
 from __future__ import division, absolute_import
 
-from traits.api import HasStrictTraits, Str, List, Float, Dict, provides, Constant
+import warnings, exceptions
+
+from traits.api import (HasStrictTraits, Str, List, Float, Dict, provides, 
+                        Constant)
 
 import cytoflow.utility as util
 
@@ -26,6 +29,10 @@ from .i_operation import IOperation
 @provides(IOperation)
 class HlogTransformOp(HasStrictTraits):
     """An operation that applies the Hyperlog transformation to channels.
+    
+    .. note:: Deprecated
+        Use the `scale` attributes to change the way data is plotted; leave
+        the underlying data alone!
     
     Attributes
     ----------
@@ -71,6 +78,12 @@ class HlogTransformOp(HasStrictTraits):
     channels = List(Str)
     b = Dict(Str, Float)
     r = Dict(Str, Float)
+    
+    def __init__(self, **kwargs):
+        warnings.warn("Transforming data with HlogTransformOp is deprecated; "
+                      "rescale the data with the 'logicle' scale instead.",
+                      exceptions.DeprecationWarning)
+        super(HlogTransformOp, self).__init__(**kwargs)
     
     def apply(self, experiment):
         """Applies the hlog transform to channels in an experiment.

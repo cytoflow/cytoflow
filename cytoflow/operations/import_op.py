@@ -32,11 +32,8 @@ import numpy as np
 
 import cytoflow.utility as util
 
-from cytoflow import Experiment
+from ..experiment import Experiment
 from .i_operation import IOperation
-
-#from cytoflow.operations import IOperation
-#from cytoflow.utility import CytoflowError, CytoflowOpError
 
 class Tube(HasStrictTraits):
     """
