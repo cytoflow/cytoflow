@@ -137,11 +137,12 @@ class BinningOp(HasStrictTraits):
         scale = util.scale_factory(self.scale, experiment, self.channel)
         scaled_data = scale(experiment.data[self.channel])
             
-        channel_min = np.nanmin(scaled_data)
-        channel_max = np.nanmax(scaled_data)
+        channel_min = np.nanmin(scaled_data.values)
+        channel_max = np.nanmax(scaled_data.values)
         
         num_bins = self.num_bins if self.num_bins is not Undefined else \
                    (channel_max - channel_min) / self.bin_width
+
         bins = np.linspace(start = channel_min, stop = channel_max,
                            num = num_bins)
             
