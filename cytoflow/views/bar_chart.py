@@ -180,6 +180,7 @@ class BarChartView(HasStrictTraits):
                        hue = (self.huefacet if self.huefacet else None),
                        col_order = (np.sort(data[self.xfacet].unique()) if self.xfacet else None),
                        row_order = (np.sort(data[self.yfacet].unique()) if self.yfacet else None),
+                       hue_order = (np.sort(data[self.huefacet].unique()) if self.huefacet else None),
                        # something buggy here.
                        #orient = ("h" if self.orientation == "horizontal" else "v"),
                        estimator = self.function,
