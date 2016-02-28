@@ -147,7 +147,7 @@ class LogicleScale(HasTraits):
             # ... unless there aren't any negative values, in which case
             # you probably shouldn't use this transform
             warn("Channel {0} doesn't have any negative data. " 
-                 "Try a hlog or a log10 transform instead."
+                 "Try a log transform instead."
                  .format(self.channel),
                  CytoflowWarning)
             return 0.5
@@ -292,7 +292,7 @@ class LogicleMajorLocator(Locator):
 
         if vmax < vmin:
             vmin, vmax = vmax, vmin
-            
+
         # get the nearest tenth-decade that contains the data
         
         if vmax > 0:
@@ -306,7 +306,7 @@ class LogicleMajorLocator(Locator):
         else: 
             logs = np.ceil(np.log10(-1.0 * vmin))
             vmin = np.floor(vmin / (10 ** (logs - 2))) * (10 ** (logs - 2))
-            
+
         return transforms.nonsingular(vmin, vmax)
     
 class LogicleMinorLocator(Locator):
