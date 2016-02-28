@@ -198,7 +198,9 @@ class Stats1DView(HasStrictTraits):
                              col_order = (np.sort(data[self.xfacet].unique()) if self.xfacet else None),
                              row_order = (np.sort(data[self.yfacet].unique()) if self.yfacet else None),
                              hue_order = (np.sort(data[self.huefacet].unique()) if self.huefacet else None),
-                             legend_out = False)
+                             legend_out = False,
+                             sharex = False,
+                             sharey = False)
 
         if 'repr' in experiment.metadata[self.by] and \
             experiment.metadata[self.by]['repr'] == 'log':

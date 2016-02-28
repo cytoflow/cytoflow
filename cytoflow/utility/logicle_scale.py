@@ -273,16 +273,17 @@ class LogicleMajorLocator(Locator):
     def tick_values(self, vmin, vmax):
         'Every decade, including 0 and negative'
         
-        # get us decade-aligned min and max
         vmin, vmax = self.view_limits(vmin, vmax)
+        max_decade = 10 ** np.ceil(np.log10(vmax))
               
         if vmin < 0:
-            ticks = [-1.0 * 10 ** x for x in np.arange(np.log10(-1.0 * vmin), 1, -1)]
+            min_decade = -1.0 * 10 ** np.floor(np.log10(-1.0 * vmin))
+            ticks = [-1.0 * 10 ** x for x in np.arange(np.log10(-1.0 * min_decade), 1, -1)]
             ticks.append(0.0)
-            ticks.extend( [10 ** x for x in np.arange(2, np.log10(vmax), 1)])
+            ticks.extend( [10 ** x for x in np.arange(2, np.log10(max_decade), 1)])
         else:
             ticks = [0.0] if vmin == 0.0 else []
-            ticks.extend( [10 ** x for x in np.arange(1, np.log10(vmax), 1)])
+            ticks.extend( [10 ** x for x in np.arange(1, np.log10(max_decade), 1)])
 
         return self.raise_if_exceeds(np.asarray(ticks))
 
@@ -292,17 +293,20 @@ class LogicleMajorLocator(Locator):
         if vmax < vmin:
             vmin, vmax = vmax, vmin
             
-        # get the nearest decade that contains the data
+        # get the nearest tenth-decade that contains the data
+        
         if vmax > 0:
-            vmax = 10 ** np.ceil(np.log10(vmax))
+            logs = np.ceil(np.log10(vmax))
+            vmax = np.ceil(vmax / (10 ** (logs - 2))) * (10 ** (logs - 2))             
         else: 
-            vmax = -1.0 * 10 ** np.ceil(np.log10(-1.0 * vmax))    
+            vmax = 0  
 
         if vmin > 0:
-            vmin = 10 ** np.ceil(np.log10(vmin))
+            vmin = 0
         else: 
-            vmin = -1.0 * 10 ** np.ceil(np.log10(-1.0 * vmin))           
-
+            logs = np.ceil(np.log10(-1.0 * vmin))
+            vmin = np.floor(vmin / (10 ** (logs - 2))) * (10 ** (logs - 2))
+            
         return transforms.nonsingular(vmin, vmax)
     
 class LogicleMinorLocator(Locator):
@@ -325,10 +329,10 @@ class LogicleMinorLocator(Locator):
         
         # get us decade-aligned min and max
         vmin, vmax = self.view_limits(vmin, vmax)
-              
+                      
         if vmin < 0:
             lt = [np.arange(10 ** x, 10 ** (x - 1), -1.0 * (10 ** (x-1)))
-                  for x in np.arange(np.log10(-1.0 * vmin), 1, -1)]
+                  for x in np.arange(np.ceil(np.log10(-1.0 * vmin)), 1, -1)]
             
             # flatten and take the negative
             lt = [-1.0 * item for sublist in lt for item in sublist]
@@ -342,6 +346,8 @@ class LogicleMinorLocator(Locator):
             # flatten
             gt = [item for sublist in gt for item in sublist]
             
+            #print gt
+            
             ticks = lt
             ticks.extend(gt)
         else:
@@ -351,10 +357,5 @@ class LogicleMinorLocator(Locator):
             ticks = [item for sublist in ticks for item in sublist]
 
         return self.raise_if_exceeds(np.asarray(ticks))
-
-    def view_limits(self, vmin, vmax):
-        'Try to choose the view limits intelligently'
-        
-        return vmin, vmax
     
 matplotlib.scale.register_scale(MatplotlibLogicleScale)

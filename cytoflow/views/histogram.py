@@ -170,7 +170,9 @@ class HistogramView(HasStrictTraits):
                           col_order = (np.sort(data[self.xfacet].unique()) if self.xfacet else None),
                           row_order = (np.sort(data[self.yfacet].unique()) if self.yfacet else None),
                           hue_order = (np.sort(data[self.huefacet].unique()) if self.huefacet else None),
-                          legend_out = False)
+                          legend_out = False,
+                          sharex = False,
+                          sharey = False)
         
         # set the scale for each set of axes; can't just call plt.xscale() 
         for ax in g.axes.flatten():

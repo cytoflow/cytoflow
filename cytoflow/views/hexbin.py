@@ -150,7 +150,9 @@ class HexbinView(HasStrictTraits):
                           hue = (self.huefacet if self.huefacet else None),
                           col_order = (np.sort(data[self.xfacet].unique()) if self.xfacet else None),
                           row_order = (np.sort(data[self.yfacet].unique()) if self.yfacet else None),
-                          hue_order = (np.sort(data[self.huefacet].unique()) if self.huefacet else None),)
+                          hue_order = (np.sort(data[self.huefacet].unique()) if self.huefacet else None),
+                          sharex = False,
+                          sharey = False)
         
         xscale = util.scale_factory(self.xscale, experiment, self.xchannel)
         yscale = util.scale_factory(self.yscale, experiment, self.ychannel)
