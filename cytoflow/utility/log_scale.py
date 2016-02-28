@@ -49,14 +49,14 @@ class LogScale(HasTraits):
         
     def __call__(self, data):
         if self.mode == "mask":
-            mask = (data <= self.threshold)
+            mask = (data < self.threshold)
             if mask.any():
                 return np.log10(np.where(mask, np.nan, data))
             else:
                 return np.log10(data)
         else: # mode == "clip"
             data = np.array(data, float)
-            data[data <= self.threshold] = self.threshold
+            data[data < self.threshold] = self.threshold
             return np.log10(data)
 
     def inverse(self, data):

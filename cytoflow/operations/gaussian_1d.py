@@ -70,8 +70,8 @@ class GaussianMixture1DOp(HasStrictTraits):
     channel : Str
         Which channel to apply the mixture model to.
         
-    num_components : Int (default = 2)
-        How many components to fit to the data?  Must be >= 2.
+    num_components : Int (default = 1)
+        How many components to fit to the data?  Must be positive.
 
     sigma : Float (default = 0.0)
         How many standard deviations on either side of the mean to include
@@ -111,7 +111,7 @@ class GaussianMixture1DOp(HasStrictTraits):
     
     name = CStr()
     channel = Str()
-    num_components = Int(2)
+    num_components = util.PositiveInt(1)
     sigma = Float(0.0)
     by = List(Str)
     scale = util.ScaleEnum
@@ -132,9 +132,6 @@ class GaussianMixture1DOp(HasStrictTraits):
         if self.channel not in experiment.data:
             raise util.CytoflowOpError("Column {0} not found in the experiment"
                                   .format(self.channel))
-            
-        if self.num_components < 2:
-            raise util.CytoflowOpError("num_components must be >= 2") 
        
         for b in self.by:
             if b not in experiment.data:
@@ -219,9 +216,6 @@ class GaussianMixture1DOp(HasStrictTraits):
             raise util.CytoflowOpError("Column {0} already found in the experiment"
                                   .format(self.name + "_Posterior"))
 
-        if self.num_components < 2:
-            raise util.CytoflowOpError("num_components must be >= 2") 
-
         if self.posteriors:
             col_name = "{0}_Posterior".format(self.name)
             if col_name in experiment.data:
@@ -264,10 +258,14 @@ class GaussianMixture1DOp(HasStrictTraits):
             x = data_subset[self.channel]
             x = self._scale(x)
             
+            # which values are missing?
+            x_na = np.isnan(x)
+            
             group_idx = groupby.groups[group]
             
             # make a preliminary assignment
-            predicted = gmm.predict(x[:,np.newaxis])
+            predicted = np.full(len(x), -1, "int")
+            predicted[~x_na] = gmm.predict(x[~x_na, np.newaxis])
             
             # if we're doing sigma-based gating, for each component check
             # to see if the event is in the sigma gate.
@@ -296,7 +294,8 @@ class GaussianMixture1DOp(HasStrictTraits):
             event_assignments.iloc[group_idx] = predicted_str
                                 
             if self.posteriors:
-                probability = gmm.predict_proba(x[:,np.newaxis])
+                probability = np.full((len(x), self.num_components), 0.0, "float")
+                probability[~x_na, :] = gmm.predict_proba(x[~x_na, np.newaxis])
                 posteriors = pd.Series([0.0] * len(predicted))
                 for i in range(0, self.num_components):
                     posteriors[predicted == i] = probability[predicted == i, i]
