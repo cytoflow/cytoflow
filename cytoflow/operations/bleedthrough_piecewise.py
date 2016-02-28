@@ -179,7 +179,7 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
                 tube_data = tube_exp.data
                 
             # polyfit requires sorted data
-            tube_data.sort(channel, inplace = True)
+            tube_data.sort_values(by = channel, inplace = True)
             
             channel_min = tube_data[channel].min()
             channel_max = tube_data[channel].max()
@@ -340,7 +340,7 @@ def _correct_bleedthrough(row, channels, splines):
         ret = [channel_error(x, channel) for channel in channels]
         return ret
     
-    x_0 = row.loc[channels].convert_objects(convert_numeric = True)
+    x_0 = pandas.to_numeric(row.loc[channels])
     x = scipy.optimize.root(row_error, x_0)
     
     ret = row.copy()
