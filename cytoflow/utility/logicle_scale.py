@@ -332,6 +332,9 @@ class LogicleMinorLocator(Locator):
             
             # flatten and take the negative
             lt = [-1.0 * item for sublist in lt for item in sublist]
+            
+            # whoops! missed an endpoint
+            lt.extend([-10.0])
 
             gt = [np.arange(10 ** x, 10 ** (x + 1), 10 ** x)
                   for x in np.arange(1, np.log10(vmax))]
