@@ -52,6 +52,10 @@ class GaussianMixture1DOp(HasStrictTraits):
     with the highest posterior probability.  If the event doesn't fall into
     any category, it is assigned to `name_None`.
     
+    As a special case, if `num_components` is `1` and `sigma` > 0.0, then
+    the new condition is boolean, `True` if the event fell in the gate and
+    `False` otherwise.
+    
     Optionally, if `posteriors` is `True`, this module will also compute the 
     posterior probability of each event in its assigned component, returning
     it in a new colunm named `{Name}_Posterior`.
@@ -212,6 +216,9 @@ class GaussianMixture1DOp(HasStrictTraits):
             raise util.CytoflowOpError("Column {0} not found in the experiment"
                                   .format(self.channel))
             
+        if self.num_components == 1 and self.sigma == 0.0:
+            raise util.CytoflowError("If num_components == 1, sigma must be > 0")
+            
         if (self.name + "_Posterior") in experiment.data:
             raise util.CytoflowOpError("Column {0} already found in the experiment"
                                   .format(self.name + "_Posterior"))
@@ -303,7 +310,12 @@ class GaussianMixture1DOp(HasStrictTraits):
                 event_posteriors.iloc[group_idx] = posteriors
                     
         new_experiment = experiment.clone()
-        new_experiment.add_condition(self.name, "category", event_assignments)
+        
+        if self.num_components == 1:
+            new_experiment.add_condition(self.name, "bool", event_assignments == "{0}_1".format(self.name))
+        else:
+            new_experiment.add_condition(self.name, "category", event_assignments)
+            
         if self.posteriors:
             col_name = "{0}_Posterior".format(self.name)
             new_experiment.add_condition(col_name, "float", event_posteriors)
