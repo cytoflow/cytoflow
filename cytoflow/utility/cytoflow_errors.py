@@ -40,3 +40,10 @@ class CytoflowOpWarning(CytoflowWarning):
 
 class CytoflowViewWarning(CytoflowWarning):
     pass
+
+# make sure these warnings show up all the time, instead of just once.
+
+import warnings
+warnings.simplefilter('always', CytoflowWarning)
+warnings.simplefilter('always', CytoflowOpWarning)
+warnings.simplefilter('always', CytoflowViewWarning)
