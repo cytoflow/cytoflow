@@ -18,11 +18,13 @@
 from __future__ import division, absolute_import
 
 from traits.api import HasStrictTraits, Str, provides
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 import numpy as np
 import seaborn as sns
 import math
+import bottleneck
 
 import cytoflow.utility as util
 from .i_view import IView
@@ -107,15 +109,13 @@ class HistogramView(HasStrictTraits):
                 raise util.CytoflowViewError("Subset string '{0}' returned no events"
                                         .format(self.subset))
         else:
-            data = experiment.data        
+            data = experiment.data
             
         # get the scale
         scale = util.scale_factory(self.scale, experiment, self.channel)
         scaled_data = scale(data[self.channel])
         
-        # drop data that isn't in the scale function's domain
-        data = data[~np.isnan(scaled_data)]
-        scaled_data = scaled_data[~np.isnan(scaled_data)]
+        #print scaled_data
         
         kwargs.setdefault('histtype', 'stepfilled')
         kwargs.setdefault('alpha', 0.5)
@@ -126,8 +126,9 @@ class HistogramView(HasStrictTraits):
         
         num_bins = util.num_hist_bins(scaled_data)
         num_bins = 50 if num_bins < 50 else num_bins
-        xmin = scaled_data.min()
-        xmax = scaled_data.max()
+
+        xmin = bottleneck.nanmin(scaled_data)
+        xmax = bottleneck.nanmax(scaled_data)
                     
         if (self.huefacet 
             and "bins" in experiment.metadata[self.huefacet]
@@ -158,8 +159,11 @@ class HistogramView(HasStrictTraits):
             bin_width = (xmax - xmin) / num_bins
             bins = scale.inverse(np.arange(xmin, xmax, bin_width))
             bins = np.append(bins, scale.inverse(xmax))
-        
+                    
         kwargs.setdefault('bins', bins) 
+        
+        # mask out the data that's not in the scale domain
+        data = data[~np.isnan(scaled_data)]
 
         g = sns.FacetGrid(data, 
                           size = 6,
@@ -179,15 +183,19 @@ class HistogramView(HasStrictTraits):
             ax.set_xscale(self.scale, **scale.mpl_params)  
                   
         g.map(plt.hist, self.channel, **kwargs)
-        g.add_legend()
-
-    
-if __name__ == '__main__':
-   
-    plt.ioff()
-    p = plt.figure(1)
-
-    tips = sns.load_dataset("tips")
-    g = sns.FacetGrid(tips, col="time", fig_kws={"num" : 1})
-    
-    plt.show()
+        
+        # if we have a hue facet and a lot of hues, make a color bar instead
+        # of a super-long legend.
+        
+        if self.huefacet:
+            current_palette = mpl.rcParams['axes.color_cycle']
+            if len(g.hue_names) > len(current_palette):
+                cmap = mpl.colors.ListedColormap(sns.color_palette("husl", 
+                                                                   n_colors = len(g.hue_names)))
+                cax, _ = mpl.colorbar.make_axes(plt.gca())
+                norm = mpl.colors.Normalize(vmin = np.min(g.hue_names), 
+                                            vmax = np.max(g.hue_names), 
+                                            clip = False)
+                mpl.colorbar.ColorbarBase(cax, cmap = cmap, norm = norm)
+            else:
+                g.add_legend()
