@@ -18,6 +18,7 @@
 from __future__ import division, absolute_import
 
 from traits.api import HasStrictTraits, Str, provides, Callable
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 import numpy as np
@@ -234,7 +235,24 @@ class Stats2DView(HasStrictTraits):
                              sharey = False)
 
         grid.map(plt.plot, self.xchannel, self.ychannel, **kwargs)
-        grid.add_legend()
+
+        # if we have a hue facet and a lot of hues, make a color bar instead
+        # of a super-long legend.
+        
+        if self.huefacet:
+            current_palette = mpl.rcParams['axes.color_cycle']
+            if len(grid.hue_names) > len(current_palette):
+                plot_ax = plt.gca()
+                cmap = mpl.colors.ListedColormap(sns.color_palette("husl", 
+                                                                   n_colors = len(grid.hue_names)))
+                cax, _ = mpl.colorbar.make_axes(plt.gca())
+                norm = mpl.colors.Normalize(vmin = np.min(grid.hue_names), 
+                                            vmax = np.max(grid.hue_names), 
+                                            clip = False)
+                mpl.colorbar.ColorbarBase(cax, cmap = cmap, norm = norm)
+                plt.sca(plot_ax)
+            else:
+                grid.add_legend()
 
     
 if __name__ == '__main__':

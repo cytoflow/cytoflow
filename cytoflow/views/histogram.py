@@ -190,6 +190,7 @@ class HistogramView(HasStrictTraits):
         if self.huefacet:
             current_palette = mpl.rcParams['axes.color_cycle']
             if len(g.hue_names) > len(current_palette):
+                plot_ax = plt.gca()
                 cmap = mpl.colors.ListedColormap(sns.color_palette("husl", 
                                                                    n_colors = len(g.hue_names)))
                 cax, _ = mpl.colorbar.make_axes(plt.gca())
@@ -197,5 +198,6 @@ class HistogramView(HasStrictTraits):
                                             vmax = np.max(g.hue_names), 
                                             clip = False)
                 mpl.colorbar.ColorbarBase(cax, cmap = cmap, norm = norm)
+                plt.sca(plot_ax)
             else:
                 g.add_legend()
