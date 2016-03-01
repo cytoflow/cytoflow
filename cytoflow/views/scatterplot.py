@@ -23,6 +23,7 @@ Created on Apr 19, 2015
 
 from traits.api import HasStrictTraits, provides, Str
 
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
@@ -153,7 +154,24 @@ class ScatterplotView(HasStrictTraits):
             ax.set_yscale(self.yscale, **yscale.mpl_params)
 
         g.map(plt.scatter, self.xchannel, self.ychannel, **kwargs)
-        g.add_legend()
+        
+        # if we have a hue facet and a lot of hues, make a color bar instead
+        # of a super-long legend.
+        
+        if self.huefacet:
+            current_palette = mpl.rcParams['axes.color_cycle']
+            if len(g.hue_names) > len(current_palette):
+                plot_ax = plt.gca()
+                cmap = mpl.colors.ListedColormap(sns.color_palette("husl", 
+                                                                   n_colors = len(g.hue_names)))
+                cax, _ = mpl.colorbar.make_axes(plt.gca())
+                norm = mpl.colors.Normalize(vmin = np.min(g.hue_names), 
+                                            vmax = np.max(g.hue_names), 
+                                            clip = False)
+                mpl.colorbar.ColorbarBase(cax, cmap = cmap, norm = norm)
+                plt.sca(plot_ax)
+            else:
+                g.add_legend()
         
 if __name__ == '__main__':
     import cytoflow as flow
