@@ -357,8 +357,9 @@ class GaussianMixture2DOp(HasStrictTraits):
 
                     predicted[np.logical_and(predicted == c, gate_bool == False)] = -1
             
-            predicted_str = pd.Series(["{0}_".format(self.name)] * len(predicted))
-            predicted_str = predicted_str + pd.Series(predicted + 1).apply(str)
+            predicted_str = pd.Series(["(none)"] * len(predicted))
+            for c in range(0, self.num_components):
+                predicted_str[predicted == c] = "{0}_{1}".format(self.name, c + 1)
             predicted_str[predicted == -1] = "{0}_None".format(self.name)
             predicted_str.index = group_idx
 
@@ -368,8 +369,8 @@ class GaussianMixture2DOp(HasStrictTraits):
                 probability = np.full((len(x), self.num_components), 0.0, "float")
                 probability[~x_na, :] = gmm.predict_proba(x[~x_na, :])
                 posteriors = pd.Series([0.0] * len(predicted))
-                for i in range(0, self.num_components):
-                    posteriors[predicted == i] = probability[predicted == i, i]
+                for c in range(0, self.num_components):
+                    posteriors[predicted == c] = probability[predicted == c, c]
                 posteriors.index = group_idx
                 event_posteriors.iloc[group_idx] = posteriors
                     

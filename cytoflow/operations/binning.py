@@ -26,6 +26,7 @@ from __future__ import division, absolute_import
 from traits.api import (HasStrictTraits, Str, CStr, provides, Undefined,
                         Instance, DelegatesTo, Constant)
 import numpy as np
+import bottleneck as bn
 
 import cytoflow.views
 import cytoflow.utility as util
@@ -137,8 +138,8 @@ class BinningOp(HasStrictTraits):
         scale = util.scale_factory(self.scale, experiment, self.channel)
         scaled_data = scale(experiment.data[self.channel])
             
-        channel_min = np.nanmin(scaled_data.values)
-        channel_max = np.nanmax(scaled_data.values)
+        channel_min = bn.nanmin(scaled_data)
+        channel_max = bn.nanmax(scaled_data)
         
         num_bins = self.num_bins if self.num_bins is not Undefined else \
                    (channel_max - channel_min) / self.bin_width

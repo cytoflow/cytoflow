@@ -165,6 +165,7 @@ class GaussianMixture1DOp(HasStrictTraits):
             x = self._scale(x)
             
             # drop data that isn't in the scale range
+            #x = pd.Series(self._scale(x)).dropna()
             x = x[~np.isnan(x)]
             
             gmm = mixture.GMM(n_components = self.num_components,
@@ -293,8 +294,9 @@ class GaussianMixture1DOp(HasStrictTraits):
                     gate_bool = gate_df.eval("p == @c and x >= @lo and x <= @hi").values
                     predicted[np.logical_and(predicted == c, gate_bool == False)] = -1
         
-            predicted_str = pd.Series(["{0}_".format(self.name)] * len(predicted))
-            predicted_str = predicted_str + pd.Series(predicted + 1).apply(str)
+            predicted_str = pd.Series(["(none)"] * len(predicted))
+            for c in range(0, self.num_components):
+                predicted_str[predicted == c] = "{0}_{1}".format(self.name, c + 1)
             predicted_str[predicted == -1] = "{0}_None".format(self.name)
             predicted_str.index = group_idx
 
