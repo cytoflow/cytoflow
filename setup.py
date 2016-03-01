@@ -62,13 +62,14 @@ setup(
     # Project uses reStructuredText, so ensure that the docutils get
     # installed or upgraded on the target machine
     install_requires = ['pandas>=0.17.0',
+                        'bottleneck',
                         'fcsparser>=0.1.1',
                         'numpy>=1.9.0',
                         'numexpr>=2.1',
                         'matplotlib==1.4.3',
                         'scipy>=0.14',
                         'scikit-learn>=0.16',
-                        'seaborn>=0.6.0',
+                        'seaborn>=0.7.0',
                         'pyface==4.4.0',
                         'envisage>=4.0'] \
                 if not on_rtd else None,
