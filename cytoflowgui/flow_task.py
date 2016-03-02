@@ -160,10 +160,6 @@ class FlowTask(Task):
         
             wi.operation.tubes.append(tube1)
             wi.operation.tubes.append(tube2)
-                        
-            self.add_operation('edu.mit.synbio.cytoflowgui.op_plugins.hlog')
-            self.model.selected.operation.channels = ["V2-A", "Y2-A"]
-            self.model.selected.operation.name = "H"
               
             self.add_operation('edu.mit.synbio.cytoflowgui.op_plugins.threshold')
             self.model.selected.operation.channel = "Y2-A"
@@ -185,7 +181,8 @@ class FlowTask(Task):
         return [WorkflowDockPane(model = self.model, 
                                  plugins = self.op_plugins,
                                  task = self), 
-                ViewDockPane(plugins = self.view_plugins,
+                ViewDockPane(model = self.model,
+                             plugins = self.view_plugins,
                              task = self)]
         
     def on_new(self):
@@ -292,7 +289,7 @@ class FlowTask(Task):
     def on_about(self):
         from cytoflow import __version__ as cf_version
         from fcsparser import __version__ as fcs_version
-        from pandas.version import version as pd_version
+        from pandas.version import __version__ as pd_version
         from numpy.version import version as np_version
         from numexpr import __version__ as numexp_version
         from seaborn import __version__ as sns_version
