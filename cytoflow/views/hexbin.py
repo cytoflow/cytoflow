@@ -23,6 +23,8 @@ Created on Apr 19, 2015
 
 from __future__ import division, absolute_import
 
+import warnings
+
 from traits.api import HasStrictTraits, provides, Str
 
 import matplotlib.pyplot as plt
@@ -75,6 +77,8 @@ class HexbinView(HasStrictTraits):
     name = Str
     xchannel = Str
     ychannel = Str
+    xscale = util.ScaleEnum
+    yscale = util.ScaleEnum
     xfacet = Str
     yfacet = Str
     huefacet = Str
@@ -154,6 +158,10 @@ class HexbinView(HasStrictTraits):
                           sharex = False,
                           sharey = False)
         
+        if(self.xscale != "linear" or self.yscale != "linear"):
+            warnings.warn("hexbin is broken with scales other than \"linear\"",
+                          util.CytoflowViewWarning)
+
         xscale = util.scale_factory(self.xscale, experiment, self.xchannel)
         yscale = util.scale_factory(self.yscale, experiment, self.ychannel)
         

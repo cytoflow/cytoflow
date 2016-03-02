@@ -25,7 +25,7 @@ from traits.api import (HasStrictTraits, provides, Str, List, Float, Dict,
 import numpy as np
 
 import cytoflow.utility as util
-import cytoflow.utility.logicle_ext as logicle_ext
+import cytoflow.utility.logicle_ext.Logicle as Logicle
 
 from .i_operation import IOperation
 
@@ -197,10 +197,10 @@ class LogicleTransformOp(HasStrictTraits):
         
         for channel in self.channels:
             
-            el = logicle_ext.Logicle(new_experiment.metadata[channel]['range'], 
-                                     self.W[channel], 
-                                     self.M,
-                                     self.A[channel])
+            el = Logicle.Logicle(new_experiment.metadata[channel]['range'], 
+                                 self.W[channel], 
+                                 self.M,
+                                 self.A[channel])
             
             logicle_fwd = lambda x: x.apply(el.scale)
             logicle_rev = lambda x: x.apply(el.inverse)

@@ -57,6 +57,10 @@ class TestLogicle(unittest.TestCase):
         el.channels = ['Y2-A']
         
         el.estimate(self.ex)
-        ex2 = el.apply(self.ex)
+        el.apply(self.ex)
         
     ### TODO - test the apply function error checking
+    
+if __name__ == "__main__":
+    #import sys;sys.argv = ['', 'Test.testName']
+    unittest.main()

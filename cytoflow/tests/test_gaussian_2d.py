@@ -36,18 +36,14 @@ class Test(unittest.TestCase):
         tube2 = flow.Tube(file= self.cwd + 'CFP_Well_A4.fcs', conditions = {"Dox" : 1.0})
         import_op = flow.ImportOp(conditions = {"Dox" : "float"},
                                   tubes = [tube1, tube2])
-        ex = import_op.apply()
-
-        # this works so much better on transformed data
-        logicle = flow.LogicleTransformOp()
-        logicle.name = "Logicle transformation"
-        logicle.channels = ['V2-A', 'Y2-A', 'B1-A']
-        logicle.estimate(ex)
-        self.ex = logicle.apply(ex)
+        self.ex = import_op.apply()
 
         self.gate = flow.GaussianMixture2DOp(name = "Gauss",
                                              xchannel = "V2-A",
                                              ychannel = "Y2-A",
+                                             xscale = "logicle",
+                                             yscale = "logicle",
+                                             num_components = 2,
                                              sigma = 2.0,
                                              posteriors = True)
 

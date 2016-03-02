@@ -38,21 +38,14 @@ class Test(unittest.TestCase):
         tube2 = flow.Tube(file= self.cwd + 'CFP_Well_A4.fcs', conditions = {"Dox" : 1.0})
         import_op = flow.ImportOp(conditions = {"Dox" : "float"},
                                   tubes = [tube1, tube2])
-        ex = import_op.apply()
-
-        # this works so much better on transformed data
-        logicle = flow.LogicleTransformOp()
-        logicle.name = "Logicle transformation"
-        logicle.channels = ['V2-A', 'Y2-A']
-        logicle.estimate(ex)
-        self.ex = logicle.apply(ex)
+        self.ex = import_op.apply()
         
     def testBarChart(self):
         flow.BarChartView(name = "Bar Chart",
                           channel = "Y2-A",
                           by = "Dox",
                           function = len).plot(self.ex)
-                          
+                    
     def testHexBin(self):
         # suppress unicode warning.
         with warnings.catch_warnings():
@@ -67,10 +60,34 @@ class Test(unittest.TestCase):
                            channel = "V2-A",
                            huefacet = "Dox").plot(self.ex)
                            
+        flow.HistogramView(name = "Histogram",
+                           channel = "V2-A",
+                           huefacet = "Dox",
+                           scale = "log").plot(self.ex)
+                           
+        flow.HistogramView(name = "Histogram",
+                           channel = "V2-A",
+                           huefacet = "Dox",
+                           scale = "logicle").plot(self.ex)
+                           
     def testScatterplot(self):
         flow.ScatterplotView(name = "Scatterplot",
                              xchannel = "V2-A",
                              ychannel = "Y2-A",
+                             huefacet = "Dox").plot(self.ex)
+                             
+        flow.ScatterplotView(name = "Scatterplot",
+                             xchannel = "V2-A",
+                             ychannel = "Y2-A",
+                             xscale = "log",
+                             yscale = "log",
+                             huefacet = "Dox").plot(self.ex)
+                             
+        flow.ScatterplotView(name = "Scatterplot",
+                             xchannel = "V2-A",
+                             ychannel = "Y2-A",
+                             xscale = "logicle",
+                             yscale = "logicle",
                              huefacet = "Dox").plot(self.ex)
                              
     def testStats1D(self):
