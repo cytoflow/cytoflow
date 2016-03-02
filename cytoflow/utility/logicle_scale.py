@@ -33,7 +33,7 @@ import numpy as np
 
 import matplotlib.scale
 from matplotlib import transforms
-from matplotlib.ticker import NullFormatter, ScalarFormatter
+from matplotlib.ticker import NullFormatter, LogFormatterMathtext
 from matplotlib.ticker import Locator
 
 from .scale import IScale, register_scale
@@ -202,7 +202,8 @@ class MatplotlibLogicleScale(HasTraits, matplotlib.scale.ScaleBase):
         linear scaling.
         """
         axis.set_major_locator(LogicleMajorLocator())
-        axis.set_major_formatter(ScalarFormatter())
+        #axis.set_major_formatter(ScalarFormatter())
+        axis.set_major_formatter(LogFormatterMathtext(10))
         axis.set_minor_locator(LogicleMinorLocator())
         axis.set_minor_formatter(NullFormatter())        
 
