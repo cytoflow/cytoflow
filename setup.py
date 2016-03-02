@@ -62,7 +62,7 @@ setup(
     # Project uses reStructuredText, so ensure that the docutils get
     # installed or upgraded on the target machine
     install_requires = ['pandas>=0.17.0',
-                        'bottleneck',
+                        'bottleneck>=1.0',
                         'fcsparser>=0.1.1',
                         'numpy>=1.9.0',
                         'numexpr>=2.1',
@@ -78,14 +78,14 @@ setup(
                         # via pypi and distutils.  Install it locally!
                         
     # try to build the Logicle extension
-    ext_modules = [Extension("cytoflow.operations.logicle_ext._Logicle",
-                             sources = ["cytoflow/operations/logicle_ext/FastLogicle.cpp",
-                                        "cytoflow/operations/logicle_ext/Logicle.cpp",
-                                        "cytoflow/operations/logicle_ext/Logicle.i"],
-                             depends = ["cytoflow/operations/logicle_ext/FastLogicle.cpp",
-                                        "cytoflow/operations/logicle_ext/Logicle.cpp",
-                                        "cytoflow/operations/logicle_ext/Logicle.i",
-                                        "cytoflow/operations/logicle_ext/logicle.h"],
+    ext_modules = [Extension("cytoflow.utility.logicle_ext._Logicle",
+                             sources = ["cytoflow/utility/logicle_ext/FastLogicle.cpp",
+                                        "cytoflow/utility/logicle_ext/Logicle.cpp",
+                                        "cytoflow/utility/logicle_ext/Logicle.i"],
+                             depends = ["cytoflow/utility/logicle_ext/FastLogicle.cpp",
+                                        "cytoflow/utility/logicle_ext/Logicle.cpp",
+                                        "cytoflow/utility/logicle_ext/Logicle.i",
+                                        "cytoflow/utility/logicle_ext/logicle.h"],
                              swig_opts=['-c++'])] \
                 if not (on_rtd or no_logicle) else None,
     

@@ -91,13 +91,14 @@ These are all in the `setuptools` spec.
 For the core `cytoflow` library, you need the following Python packages:
 ```
 python >= 2.7
-pandas >= 0.15.0
+pandas >= 0.17.0
 numpy >= 1.9.0
 numexpr >= 2.1
+bottleneck >= 1.0
 matplotlib == 1.4.3
 scipy >= 0.14
 scikit-learn >= 0.16
-seaborn >= 0.6.0
+seaborn >= 0.7.0
 traits >= 4.0
 fcsparser >= 0.1.1
 ```

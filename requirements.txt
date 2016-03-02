@@ -1,6 +1,6 @@
 pandas>=0.17.0
 numexpr>=2.1
-bottleneck
+bottleneck>=1.0
 fcsparser>=0.1.1
 numpy>=1.9.0
 matplotlib==1.4.3
