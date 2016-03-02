@@ -167,9 +167,13 @@ class BinningOp(HasStrictTraits):
             # TODO - this is a HUGE memory hog?!
             agg_count = new_experiment.data.groupby(self.name).count()
             agg_count = agg_count[agg_count.columns[0]]
+            
+            # have to make the condition a float64, because if we're in log
+            # space there may be events that have NaN as the bin number.
+            
             new_experiment.add_condition(
                 self.bin_count_name,
-                "int",
+                "float64",
                 new_experiment[self.name].map(agg_count))
         
         new_experiment.history.append(self.clone_traits())
