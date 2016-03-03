@@ -273,7 +273,7 @@ class LogicleMajorLocator(Locator):
 
     def tick_values(self, vmin, vmax):
         'Every decade, including 0 and negative'
-        
+     
         vmin, vmax = self.view_limits(vmin, vmax)
         max_decade = 10 ** np.ceil(np.log10(vmax))
               
@@ -298,15 +298,15 @@ class LogicleMajorLocator(Locator):
         
         if vmax > 0:
             logs = np.ceil(np.log10(vmax))
-            vmax = np.ceil(vmax / (10 ** (logs - 2))) * (10 ** (logs - 2))             
+            vmax = np.ceil(vmax / (10 ** (logs - 1))) * (10 ** (logs - 1))             
         else: 
             vmax = 0  
 
-        if vmin > 0:
+        if vmin >= 0:
             vmin = 0
         else: 
             logs = np.ceil(np.log10(-1.0 * vmin))
-            vmin = np.floor(vmin / (10 ** (logs - 2))) * (10 ** (logs - 2))
+            vmin = np.floor(vmin / (10 ** (logs - 1))) * (10 ** (logs - 1))
 
         return transforms.nonsingular(vmin, vmax)
     
@@ -328,7 +328,6 @@ class LogicleMinorLocator(Locator):
     def tick_values(self, vmin, vmax):
         'Every tenth decade, including 0 and negative'
         
-        # get us decade-aligned min and max
         vmin, vmax = self.view_limits(vmin, vmax)
                       
         if vmin < 0:
@@ -352,7 +351,7 @@ class LogicleMinorLocator(Locator):
             ticks = lt
             ticks.extend(gt)
         else:
-            
+            vmin = max((vmin, 1))
             ticks = [np.arange(10 ** x, 10 ** (x + 1), 10 ** x)
                      for x in np.arange(np.log10(vmin), np.log10(vmax))]
             ticks = [item for sublist in ticks for item in sublist]
