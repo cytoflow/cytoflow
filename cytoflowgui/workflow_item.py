@@ -21,6 +21,8 @@ Created on Mar 15, 2015
 @author: brian
 '''
 
+import warnings
+
 from traits.api import HasStrictTraits, Instance, List, DelegatesTo, Enum, \
                        Property, cached_property, on_trait_change, \
                        Str, Dict
@@ -96,6 +98,9 @@ class WorkflowItem(HasStrictTraits):
     # if we errored out, what was the error string?
     error = Str(transient = True)
     
+    # if we got a warning, what was the warning string?
+    warning = Str(transient = True)
+    
     # the icon for the vertical notebook view.  Qt specific, sadly.
     icon = Property(depends_on = 'valid', transient = True)
     
@@ -115,13 +120,16 @@ class WorkflowItem(HasStrictTraits):
         
         prev_result = self.previous.result if self.previous else None
         
-        try:
-            self.result = self.operation.apply(prev_result)
-        except CytoflowError as e:
-            self.valid = "invalid"
-            self.error = e.__str__()    
-            print self.error
-            return
+        with warnings.catch_warnings(record = True) as w:
+            try:
+                self.result = self.operation.apply(prev_result)
+                if w:
+                    self.warning = w[-1].message.__str__()
+            except CytoflowError as e:
+                self.valid = "invalid"
+                self.error = e.__str__()    
+                print self.error
+                return
 
         self.valid = "valid"
            

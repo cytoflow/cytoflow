@@ -29,8 +29,7 @@ from pyface.api import ImageResource
 from cytoflow import LogTransformOp
 
 from cytoflowgui.op_plugins.i_op_plugin \
-    import OpHandlerMixin, IOperationPlugin, OP_PLUGIN_EXT, PluginOpMixin
-from cytoflowgui.color_text_editor import ColorTextEditor
+    import OpHandlerMixin, IOperationPlugin, OP_PLUGIN_EXT, PluginOpMixin, shared_op_traits
 
 class LogHandler(Controller, OpHandlerMixin):
     """
@@ -43,12 +42,7 @@ class LogHandler(Controller, OpHandlerMixin):
                          editor = CheckListEditor(name='handler.previous_channels',
                                                   cols = 2),
                          style = 'custom'),
-                    Item('handler.wi.error',
-                         label = 'Error',
-                         visible_when = 'handler.wi.error',
-                         editor = ColorTextEditor(foreground_color = "#000000",
-                                                  background_color = "#ff9191",
-                                                  word_wrap = True)))
+                    shared_op_traits)
         
 class LogTransformPluginOp(LogTransformOp, PluginOpMixin):
     handler_factory = Callable(LogHandler)

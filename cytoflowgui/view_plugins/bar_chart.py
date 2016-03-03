@@ -34,7 +34,7 @@ from cytoflow import BarChartView, geom_mean
 from cytoflowgui.subset_editor import SubsetEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.view_plugins.i_view_plugin \
-    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin
+    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, shared_view_traits
     
 class BarChartHandler(Controller, ViewHandlerMixin):
     """
@@ -90,13 +90,7 @@ class BarChartHandler(Controller, ViewHandlerMixin):
                     Item('object.subset',
                          label="Subset",
                          editor = SubsetEditor(experiment = "handler.wi.result")),
-                    Item('_'),
-                    Item('object.error',
-                         style = "readonly",
-                         visible_when = "object.error",
-                         editor = ColorTextEditor(foreground_color = "#000000",
-                                                  background_color = "#ff9191",
-                                                  word_wrap = True)))
+                    shared_view_traits)
     
 class BarChartPluginView(BarChartView, PluginViewMixin):
     handler_factory = Callable(BarChartHandler)

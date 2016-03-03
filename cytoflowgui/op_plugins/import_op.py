@@ -39,8 +39,8 @@ from cytoflow.operations.i_operation import IOperation
                        
 from cytoflowgui.import_dialog import ExperimentDialog
 from cytoflowgui.op_plugins.i_op_plugin \
-    import IOperationPlugin, OpHandlerMixin, PluginOpMixin
-from cytoflowgui.color_text_editor import ColorTextEditor
+    import IOperationPlugin, OpHandlerMixin, PluginOpMixin, shared_op_traits
+
 
 class ImportHandler(Controller, OpHandlerMixin):
     """
@@ -68,12 +68,7 @@ class ImportHandler(Controller, OpHandlerMixin):
                     Item('object.coarse_events',
                          label="Events per\nsample",
                          visible_when='handler.wi.result is not None and object.coarse == True'),
-                    Item('handler.wi.error',
-                         label = 'Error',
-                         visible_when = 'handler.wi.error',
-                         editor = ColorTextEditor(foreground_color = "#000000",
-                                                  background_color = "#ff9191",
-                                                  word_wrap = True)))
+                    shared_op_traits)
         
     def _import_event_fired(self):
         """

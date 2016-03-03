@@ -31,7 +31,7 @@ from cytoflow import Stats1DView, geom_mean
 from cytoflowgui.subset_editor import SubsetEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.view_plugins.i_view_plugin \
-    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin
+    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, shared_view_traits
     
 import numpy as np
 import scipy.stats
@@ -53,7 +53,7 @@ class Stats1DHandler(Controller, ViewHandlerMixin):
     
     def default_traits_view(self):
         return View(Item('object.name'),
-                    Item('object.variable',
+                    Item('object.by',
                          editor=EnumEditor(name='handler.conditions'),
                          # TODO - restrict this to NUMERIC values?
                          label = "Variable"),
@@ -89,13 +89,7 @@ class Stats1DHandler(Controller, ViewHandlerMixin):
                     Item('object.subset',
                          label="Subset",
                          editor = SubsetEditor(experiment = "handler.wi.result")),
-                    Item('_'),
-                    Item('object.error',
-                         style = "readonly",
-                         visible_when = "object.error",
-                         editor = ColorTextEditor(foreground_color = "#000000",
-                                                  background_color = "#ff9191",
-                                                  word_wrap = True)))
+                    shared_view_traits)
     
 class Stats1DPluginView(Stats1DView, PluginViewMixin):
     handler_factory = Callable(Stats1DHandler)

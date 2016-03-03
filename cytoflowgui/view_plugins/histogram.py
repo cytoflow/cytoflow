@@ -31,7 +31,7 @@ from cytoflow import HistogramView
 from cytoflowgui.subset_editor import SubsetEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.view_plugins.i_view_plugin \
-    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin
+    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, shared_view_traits
     
 class HistogramHandler(Controller, ViewHandlerMixin):
     """
@@ -43,6 +43,7 @@ class HistogramHandler(Controller, ViewHandlerMixin):
                     Item('object.channel',
                          editor=EnumEditor(name='handler.channels'),
                          label = "Channel"),
+                    Item('object.scale'),
                     Item('object.xfacet',
                          editor=EnumEditor(name='handler.conditions'),
                          label = "Horizontal\nFacet"),
@@ -56,13 +57,7 @@ class HistogramHandler(Controller, ViewHandlerMixin):
                     Item('object.subset',
                          label="Subset",
                          editor = SubsetEditor(experiment = "handler.wi.result")),
-                    Item('_'),
-                    Item('object.error',
-                         style = "readonly",
-                         visible_when = "object.error",
-                         editor = ColorTextEditor(foreground_color = "#000000",
-                                                  background_color = "#ff9191",
-                                                  word_wrap = True)))
+                    shared_view_traits)
     
 class HistogramPluginView(HistogramView, PluginViewMixin):
     handler_factory = Callable(HistogramHandler)

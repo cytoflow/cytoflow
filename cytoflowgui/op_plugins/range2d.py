@@ -30,10 +30,9 @@ from cytoflow.operations.range2d import Range2DOp, RangeSelection2D
 from cytoflow.views.i_selectionview import ISelectionView
 
 from cytoflowgui.op_plugins.i_op_plugin \
-    import IOperationPlugin, OpHandlerMixin, PluginOpMixin, OP_PLUGIN_EXT
-from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
+    import IOperationPlugin, OpHandlerMixin, PluginOpMixin, OP_PLUGIN_EXT, shared_op_traits
+from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin, shared_view_traits
 from cytoflowgui.subset_editor import SubsetEditor
-from cytoflowgui.color_text_editor import ColorTextEditor
 
 class Range2DHandler(Controller, OpHandlerMixin):
     
@@ -49,12 +48,7 @@ class Range2DHandler(Controller, OpHandlerMixin):
                          label = "Y Channel"),
                     Item('object.ylow', label = "Y Low"),
                     Item('object.yhigh', label = "Y High"),
-                    Item('handler.wi.error',
-                         label = 'Error',
-                         visible_when = 'handler.wi.error',
-                         editor = ColorTextEditor(foreground_color = "#000000",
-                                                  background_color = "#ff9191",
-                                                  word_wrap = True))) 
+                    shared_op_traits) 
         
 class RangeView2DHandler(Controller, ViewHandlerMixin):
     def default_traits_view(self):
@@ -63,16 +57,21 @@ class RangeView2DHandler(Controller, ViewHandlerMixin):
                     Item('object.xchannel', 
                          label = "X Channel", 
                          style = 'readonly'),
+                    Item('object.xscale',
+                         label = "X Scale"),
                     Item('object.ychannel',
                          label = "Y Channel",
                          style = 'readonly'),
+                    Item('object.yscale',
+                         label = "Y Scale"),
                     Item('object.huefacet',
                          editor=EnumEditor(name='handler.conditions'),
                          label="Color\nFacet"),
                     Item('_'),
                     Item('object.subset',
                          label = "Subset",
-                         editor = SubsetEditor(experiment = 'handler.wi.previous.result')))
+                         editor = SubsetEditor(experiment = 'handler.wi.previous.result')),
+                    shared_view_traits)
 
 @provides(ISelectionView)
 class Range2DSelectionView(RangeSelection2D, PluginViewMixin):

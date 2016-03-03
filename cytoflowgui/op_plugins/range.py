@@ -24,11 +24,10 @@ from cytoflow.views.i_selectionview import ISelectionView
 from cytoflow.operations.i_operation import IOperation
 from cytoflow.operations.range import RangeOp, RangeSelection
 
-from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT
-from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
+from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
+from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin, shared_view_traits
 from cytoflowgui.subset_editor import SubsetEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
-from cytoflowgui.color_text_editor import ColorTextEditor
 
 class RangeHandler(Controller, OpHandlerMixin):
     
@@ -39,12 +38,7 @@ class RangeHandler(Controller, OpHandlerMixin):
                          label = "Channel"),
                     Item('object.low'),
                     Item('object.high'),
-                    Item('handler.wi.error',
-                         label = 'Error',
-                         visible_when = 'handler.wi.error',
-                         editor = ColorTextEditor(foreground_color = "#000000",
-                                                  background_color = "#ff9191",
-                                                  word_wrap = True))) 
+                    shared_op_traits) 
         
 class RangeViewHandler(Controller, ViewHandlerMixin):
     def default_traits_view(self):
@@ -53,13 +47,15 @@ class RangeViewHandler(Controller, ViewHandlerMixin):
                     Item('object.channel', 
                          label = "Channel",
                          style = "readonly"),
+                    Item('object.scale'),
                     Item('object.huefacet',
                          editor=EnumEditor(name='handler.conditions'),
                          label="Color\nFacet"),
                     Item('_'),
                     Item('object.subset',
                          label = "Subset",
-                         editor = SubsetEditor(experiment = 'handler.wi.previous.result')))
+                         editor = SubsetEditor(experiment = 'handler.wi.previous.result')),
+                    shared_view_traits)
 
 @provides(ISelectionView)
 class RangeSelectionView(RangeSelection, PluginViewMixin):

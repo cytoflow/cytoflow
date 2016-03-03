@@ -29,8 +29,7 @@ from pyface.api import ImageResource
 from cytoflow import LogicleTransformOp
 
 from cytoflowgui.op_plugins.i_op_plugin \
-    import OpHandlerMixin, IOperationPlugin, OP_PLUGIN_EXT, PluginOpMixin
-from cytoflowgui.color_text_editor import ColorTextEditor
+    import OpHandlerMixin, IOperationPlugin, OP_PLUGIN_EXT, PluginOpMixin, shared_op_traits
 
 class LogicleHandler(Controller, OpHandlerMixin):
     """
@@ -47,12 +46,7 @@ class LogicleHandler(Controller, OpHandlerMixin):
                          editor = CheckListEditor(name='handler.previous_channels',
                                                   cols = 2),
                          style = 'custom'),
-                    Item('handler.wi.error',
-                         label = 'Error',
-                         visible_when = 'handler.wi.error',
-                         editor = ColorTextEditor(foreground_color = "#000000",
-                                                  background_color = "#ff9191",
-                                                  word_wrap = True)))
+                    shared_op_traits)
         
     def setattr(self, info, obj, name, value):
         super(LogicleHandler, self).setattr(info, obj, name, value)

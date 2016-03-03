@@ -31,7 +31,7 @@ from cytoflow import ScatterplotView
 from cytoflowgui.subset_editor import SubsetEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.view_plugins.i_view_plugin \
-    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin
+    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, shared_view_traits
 
 class ScatterplotHandler(Controller, ViewHandlerMixin):
     '''
@@ -43,9 +43,13 @@ class ScatterplotHandler(Controller, ViewHandlerMixin):
                     Item('object.xchannel',
                          editor=EnumEditor(name='handler.channels'),
                          label = "X Channel"),
+                    Item('object.xscale',
+                         label = "X Scale"),
                     Item('object.ychannel',
                          editor=EnumEditor(name='handler.channels'),
                          label = "Y Channel"),
+                    Item('object.yscale',
+                         label = "Y Scale"),
                     Item('object.xfacet',
                          editor=EnumEditor(name='handler.conditions'),
                          label = "Horizontal\nFacet"),
@@ -59,13 +63,7 @@ class ScatterplotHandler(Controller, ViewHandlerMixin):
                     Item('object.subset',
                          label="Subset",
                          editor = SubsetEditor(experiment = "handler.wi.result")),
-                    Item('_'),
-                    Item('object.error',
-                         style = "readonly",
-                         visible_when = "object.error",
-                         editor = ColorTextEditor(foreground_color = "#000000",
-                                                  background_color = "#ff9191",
-                                                  word_wrap = True)))
+                    shared_view_traits)
 
 class ScatterplotPluginView(ScatterplotView, PluginViewMixin):
     handler_factory = Callable(ScatterplotHandler)

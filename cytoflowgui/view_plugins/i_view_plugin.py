@@ -22,8 +22,9 @@ Created on Mar 15, 2015
 """
 
 from traits.api import Interface, Str, HasTraits, Property, Instance, List
-from traitsui.api import Handler
+from traitsui.api import Handler, Group, Item
 from cytoflowgui.workflow_item import WorkflowItem
+from cytoflowgui.color_text_editor import ColorTextEditor
 
 VIEW_PLUGIN_EXT = 'edu.mit.synbio.cytoflow.view_plugins'
 
@@ -58,7 +59,21 @@ class IViewPlugin(Interface):
         
 class PluginViewMixin(HasTraits):
     handler = Instance(Handler, transient = True)
+    warning = Str(transient = True)
     error = Str(transient = True)
+    
+shared_view_traits = Group(Item('object.warning',
+                                label = 'Warning',
+                                visible_when = 'object.warning',
+                                editor = ColorTextEditor(foreground_color = "#000000",
+                                                         background_color = "#ffff99",
+                                                         word_wrap = True)),
+                           Item('object.error',
+                                 label = 'Error',
+                                 visible_when = 'object.error',
+                                 editor = ColorTextEditor(foreground_color = "#000000",
+                                                          background_color = "#ff9191",
+                                                          word_wrap = True)))
 
 class ViewHandlerMixin(HasTraits):
     """
@@ -89,3 +104,4 @@ class ViewHandlerMixin(HasTraits):
         if self.wi and self.wi.result and self.wi.result.conditions:
             ret.extend(self.wi.result.conditions.keys())
         return ret
+
