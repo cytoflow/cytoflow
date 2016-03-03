@@ -52,9 +52,9 @@ def run_gui():
 
     plugins = [CorePlugin(), TasksPlugin(), FlowTaskPlugin(debug = debug),
                ImportPlugin(), ThresholdPlugin(), HistogramPlugin(),
-               HLogPlugin(), HexbinPlugin(), ScatterplotPlugin(), RangePlugin(),
+               HexbinPlugin(), ScatterplotPlugin(), RangePlugin(),
                Range2DPlugin(), PolygonPlugin(), BarChartPlugin(), 
-               Stats1DPlugin(), LogiclePlugin(), BinningPlugin(), LogPlugin()]
+               Stats1DPlugin(), BinningPlugin()]
     
     app = CytoflowApplication(id = 'edu.mit.synbio.cytoflow',
                               plugins = plugins)
