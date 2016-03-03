@@ -17,7 +17,7 @@
 
 from traits.api import (Instance, List, on_trait_change, Str, Dict, Bool,
                         DelegatesTo)
-from traitsui.api import UI, View, Item, Handler
+from traitsui.api import UI, View, Item, Handler, Spring, Label
 from pyface.tasks.api import TraitsDockPane, Task
 from pyface.action.api import ToolBarManager
 from pyface.tasks.action.api import TaskAction
@@ -28,6 +28,7 @@ from cytoflowgui.view_plugins import IViewPlugin
 from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.workflow import Workflow
 
+import cytoflow
 import cytoflow.utility as util
 from cytoflow.views.i_view import IView
 
@@ -51,22 +52,26 @@ class ViewDockPane(TraitsDockPane):
     # changed depending on whether the selected wi in the model is valid.
     # would use a direct listener, but valid gets changed outside
     # the UI thread and we can't change UI things from other threads.
-#     enabled = Bool
+    enabled = Bool
     
-    # the UI 
+    # the view's model.  i would rather put these in Workflow, but traitsui
+    # isn't smart about intermediate objects that could be None
     default_scale = util.ScaleEnum
-
+    current_view_handler = Instance(Handler)
+    
     # actions associated with views
     _actions = Dict(Str, TaskAction)
     
     # the default action
     _default_action = Instance(TaskAction)
-    
-    current_view_handler = Instance(Handler)
         
     def default_traits_view(self):
         return View(Item('pane.current_view_handler',
                          style = 'custom',
+                         show_label = False),
+                    Spring(),
+                    Label("Default scale"),
+                    Item('pane.default_scale',
                          show_label = False))
 
     def create_contents(self, parent):
@@ -78,13 +83,13 @@ class ViewDockPane(TraitsDockPane):
                                       show_tool_names = False,
                                       image_size = (32, 32))
         
-#         self._default_action = TaskAction(name = "Setup View",
-#                                           on_perform = lambda: self.task.set_current_view("default"),
-#                                           image = ImageResource('setup'),
-#                                           style = 'toggle',
-#                                           visible = False)
-#         self._actions["default"] = self._default_action
-#         self.toolbar.append(self._default_action)
+        self._default_action = TaskAction(name = "Setup View",
+                                          on_perform = lambda: self.task.set_current_view("default"),
+                                          image = ImageResource('setup'),
+                                          style = 'toggle',
+                                          visible = False)
+        self._actions["default"] = self._default_action
+        self.toolbar.append(self._default_action)
         
         for plugin in self.plugins:
             task_action = TaskAction(name = plugin.short_name,
@@ -92,7 +97,7 @@ class ViewDockPane(TraitsDockPane):
                                                     self.task.set_current_view(id),
                                      image = plugin.get_icon(),
                                      style = 'toggle')
-#             self._actions[plugin.view_id] = task_action
+            self._actions[plugin.view_id] = task_action
             self.toolbar.append(task_action)
             
         window = QtGui.QMainWindow()
@@ -112,25 +117,24 @@ class ViewDockPane(TraitsDockPane):
 #         if new:
 #             self.task.set_current_view(new)
         
-#     def _set_enabled(self, obj, name, old, new):
-#         self._window.setEnabled(new)
-#             
-#     @on_trait_change('task:model:selected.valid')
-#     def _on_model_valid_changed(self, obj, name, old, new):
-# #        print "valid changed: {0}".format(threading.current_thread())
-#         
-#         if not new:
-#             return
-#         
-#         if name == 'selected':
-#             new = new.valid
-#                 
-#         # redirect to the UI thread
-#         self.enabled = True if new == "valid" else False
+    # MAGIC: called when enabled is changed
+    def _enabled_changed(self, name, old, new):
+        self.ui.control.setEnabled(new)
+             
+    @on_trait_change('task:model:selected.valid')
+    def _on_model_valid_changed(self, obj, name, old, new):      
+        if not new:
+            return
+         
+        if name == 'selected':
+            new = new.valid
+                 
+        # redirect to the UI thread
+        self.enabled = True if new == "valid" else False
 
-#     @on_trait_change('task:model:selected.current_view')
-#     def _model_current_view_changed(self, obj, name, old, new):
-
+    # MAGIC: called when default_scale is changed
+    def _default_scale_changed(self, new_scale):
+        cytoflow.set_default_scale(new_scale)
 
     @on_trait_change('task:model:selected.current_view')
     def _model_current_view_changed(self, obj, name, old, new):
@@ -145,11 +149,27 @@ class ViewDockPane(TraitsDockPane):
         if name == 'selected':
             old = old.current_view if old else None
             new = new.current_view if new else None
-            
+        
         try:
             self.current_view_handler = new.handler
+            if new == self.task.model.selected.default_view:
+                self._default_action.checked = True
+            else:
+                self._actions[new.id].checked = True
         except AttributeError:
             self.current_view_handler = None
+            
+    @on_trait_change('task:model:selected.default_view')
+    def _default_view_changed(self, obj, name, old, new):
+        new_view = (new.default_view 
+                    if isinstance(obj, Workflow) 
+                       and isinstance(new, WorkflowItem)
+                    else new)
+         
+        if new_view is None:
+            self._default_action.visible = False
+        else:
+            self._default_action.visible = True
 
 #     @on_trait_change('task:model:selected.default_view')
 #     def _default_view_changed(self, obj, name, old, new):
