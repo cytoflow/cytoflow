@@ -121,13 +121,13 @@ class ViewDockPane(TraitsDockPane):
     def _enabled_changed(self, name, old, new):
         self.ui.control.setEnabled(new)
              
-    @on_trait_change('task:model:selected.valid')
-    def _on_model_valid_changed(self, obj, name, old, new):      
+    @on_trait_change('task:model:selected.status')
+    def _on_model_status_changed(self, obj, name, old, new):      
         if not new:
             return
          
         if name == 'selected':
-            new = new.valid
+            new = new.status
                  
         # redirect to the UI thread
         self.enabled = True if new == "valid" else False

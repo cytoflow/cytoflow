@@ -93,7 +93,7 @@ class WorkflowItem(HasStrictTraits):
     
     # is the wi valid?
     # MAGIC: first value is the default
-    valid = Enum("invalid", "updating", "valid", transient = True)
+    status = Enum("invalid", "estimating", "applying", "valid", transient = True)
     
     # if we errored out, what was the error string?
     error = Str(transient = True)
@@ -102,7 +102,7 @@ class WorkflowItem(HasStrictTraits):
     warning = Str(transient = True)
     
     # the icon for the vertical notebook view.  Qt specific, sadly.
-    icon = Property(depends_on = 'valid', transient = True)
+    icon = Property(depends_on = 'status', transient = True)
     
     def default_traits_view(self):
         return View(Item('handler',
@@ -115,6 +115,7 @@ class WorkflowItem(HasStrictTraits):
         """
     
         self.valid = "updating"
+        self.warning = ""
         self.error = ""
         self.result = None
         
@@ -122,6 +123,10 @@ class WorkflowItem(HasStrictTraits):
         
         with warnings.catch_warnings(record = True) as w:
             try:
+                if (hasattr(self.operation, "estimate") and
+                    callable(getattr(self.operation, "estimate"))):
+                    self.status = "estimating"
+                    self.operation.estimate(prev_result)
                 self.result = self.operation.apply(prev_result)
                 if w:
                     self.warning = w[-1].message.__str__()
@@ -131,13 +136,13 @@ class WorkflowItem(HasStrictTraits):
                 print self.error
                 return
 
-        self.valid = "valid"
+        self.status = "valid"
            
     @cached_property
     def _get_icon(self):
-        if self.valid == "valid":
+        if self.status == "valid":
             return QtGui.QStyle.SP_DialogOkButton
-        elif self.valid == "updating":
+        elif self.status == "estimating" or self.status == "applying":
             return QtGui.QStyle.SP_BrowserReload
         else: # self.valid == "invalid" or None
             return QtGui.QStyle.SP_BrowserStop
