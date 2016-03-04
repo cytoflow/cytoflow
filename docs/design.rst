@@ -28,6 +28,10 @@ Design decisions & justifications
   Then there was the issue of how to track and manipulate this structure as additional operations were performed.  Keep just a single copy and operate on it in-place?  Or copy the output of one operation for the input of the next, with the space penalties that implies?
 
   I finally realized I didn't have to choose; when you copy a pandas.DataFrame, you get a "shallow" copy, with the actual data just linked to by reference.  This was perfect; if I needed to transform the data from one copy to another, I could just replace the transformed channels; and "gating" events didn't have to create new subsets or containers, it could just add another column specifying the gate membership of each event.
+  
+* ``cytoflow`` discourages wholesale transformation of the underlying data, ie. taking the log of the data set.  (Modules for doing so are included, but the throw a deprecation warning and are likely to be removed soon.)  This is of a part with ``cytoflow`` enabling *quantitative* analysis -- if you want a measure of center of data that is log-normal, you should use the geometric mean.  It is frequently useful to transform data before viewing it, or gating it, etc -- those transformations can be passed as parameters to the view modules.
+
+  The obvious exceptions here, of course, are things like bleedthrough correction and standards using beads. These operations transform the data, but they don't cause the same sorts of shift in data *structure* you see with a log transform.  Data that is distributed log-normally before bleedthrough correction, will be distributed log-normally after.
 
 * As is made pretty clear in the example IPython notebook, the semantics for views and operations are
 
