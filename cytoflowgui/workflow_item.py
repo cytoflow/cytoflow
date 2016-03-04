@@ -114,7 +114,7 @@ class WorkflowItem(HasStrictTraits):
         Called by the controller to update this wi
         """
     
-        self.valid = "updating"
+
         self.warning = ""
         self.error = ""
         self.result = None
@@ -127,11 +127,12 @@ class WorkflowItem(HasStrictTraits):
                     callable(getattr(self.operation, "estimate"))):
                     self.status = "estimating"
                     self.operation.estimate(prev_result)
+                self.status = "applying"
                 self.result = self.operation.apply(prev_result)
                 if w:
                     self.warning = w[-1].message.__str__()
             except CytoflowError as e:
-                self.valid = "invalid"
+                self.status = "invalid"
                 self.error = e.__str__()    
                 print self.error
                 return

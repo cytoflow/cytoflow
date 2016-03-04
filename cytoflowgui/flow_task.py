@@ -241,7 +241,7 @@ class FlowTask(Task):
         
         wi = self.model.workflow[0]
         while True:
-            wi.valid = "invalid"
+            wi.status = "invalid"
             with self.worker_lock:
                 self.to_update.put_nowait((self.model.workflow.index(wi), wi))
             if wi.next:
@@ -402,7 +402,7 @@ class FlowTask(Task):
         # invalidate this workflow item and all the ones following it
         wi = self.model.selected
         while True:
-            wi.valid = "invalid"
+            wi.status = "invalid"
             with self.worker_lock:
                 self.to_update.put_nowait((self.model.workflow.index(wi), wi))
             if wi.next:
