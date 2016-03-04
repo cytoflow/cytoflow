@@ -56,6 +56,8 @@ class HistogramView(HasStrictTraits):
         
         .. note: Should this be a param instead?
         
+    Examples
+    --------
     >>> hist = flow.HistogramView()
     >>> hist.name = "Histogram view, grid"
     >>> hist.channel = 'Y2-A'
