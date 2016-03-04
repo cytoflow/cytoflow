@@ -61,8 +61,8 @@ after_test:
 
 artifacts:
   - path: dist\*
-  - path: build\lib.win32-2.7\cytoflow\operations\logicle_ext\_Logicle.pyd
-  - path: build\lib.win-amd64-2.7\cytoflow\operations\logicle_ext\_Logicle.pyd
+  - path: build\lib.win32-2.7\cytoflow\utility\logicle_ext\_Logicle.pyd
+  - path: build\lib.win-amd64-2.7\cytoflow\utility\logicle_ext\_Logicle.pyd
   
 #on_success:
 #  - TODO: upload the content of dist/*.whl to a public wheelhouse
