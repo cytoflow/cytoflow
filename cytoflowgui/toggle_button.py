@@ -22,65 +22,25 @@ Created on Nov 23, 2015
 '''
 from __future__ import absolute_import
 
+# for local debugging
+if __name__ == '__main__':
+    from traits.etsconfig.api import ETSConfig
+    ETSConfig.toolkit = 'qt4'
+
+    import os
+    os.environ['TRAITS_DEBUG'] = "1"
+
 from traits.api import Str, Range, Enum, Property, Trait, Unicode, List, \
                        on_trait_change
 from traitsui.view import View
 from traitsui.ui_traits import AView, Image
-from traitsui.editor_factory import EditorFactory
-from traitsui.editor import Editor
+from traitsui.basic_editor_factory import BasicEditorFactory
+from traitsui.qt4.editor import Editor
 
 from pyface.qt import QtCore, QtGui
 
-
-class ToggleButtonEditorFactory ( EditorFactory ):
-    """ 
-    Editor factory for toggle buttons.  Stolen line-for-line from the button editor. 
-    """
-
-    #---------------------------------------------------------------------------
-    #  Trait definitions:
-    #---------------------------------------------------------------------------
-
-    # Value to set when the button is clicked
-    value = Property
-
-    # Optional label for the button
-    label = Str
-
-    # The name of the external object trait that the button label is synced to
-    label_value = Str
-
-    # (Optional) Image to display on the button
-    image = Image
-
-    #---------------------------------------------------------------------------
-    #  Implementation of the 'value' property:
-    #---------------------------------------------------------------------------
-# 
-#     def _get_value ( self ):
-#         return self._value
-# 
-#     def _set_value ( self, value ):
-#         self._value = value
-#         if isinstance(value, basestring):
-#             try:
-#                 self._value = int( value )
-#             except:
-#                 try:
-#                     self._value = float( value )
-#                 except:
-#                     pass
-
-    #---------------------------------------------------------------------------
-    #  Initializes the object:
-    #---------------------------------------------------------------------------
-
-    def __init__ ( self, **traits ):
-        self._value = 0
-        super( ToggleButtonEditorFactory, self ).__init__( **traits )
         
-        
-class ToggleButtonEditor(Editor):
+class _ToggleButton(Editor):
 
     #---------------------------------------------------------------------------
     #  Trait definitions:
@@ -107,7 +67,9 @@ class ToggleButtonEditor(Editor):
         self.sync_value(self.factory.label_value, 'label', 'from')
         self.control.toggled.connect(self.update_object)
         self.set_tooltip()
+        self.control.setChecked(self.value)
 
+    # MAGIC - called when label is updated
     def _label_changed(self, label):
         self.control.setText(self.string_value(label))
 
@@ -116,27 +78,47 @@ class ToggleButtonEditor(Editor):
             on the object.
         """
         
-        self.value = self.control.toggled()
+        self.value = self.control.isChecked()
 
     def update_editor(self):
         """ Updates the editor when the object trait changes externally to the
             editor.
         """
-        self.control.toggled = self.value
+        self.control.setChecked(self.value)
         
+class ToggleButtonEditor(BasicEditorFactory):
+    """ 
+    Editor factory for toggle buttons.
+    """
+
+    klass = _ToggleButton
+
+    # Value to set when the button is clicked
+    value = Property
+ 
+    # Optional label for the button
+    label = Str
+ 
+    # The name of the external object trait that the button label is synced to
+    label_value = Str
+ 
         
 if __name__ == '__main__':
 
-    from traits.api import HasTraits, Bool
+    from traits.api import HasTraits, Bool, String
     from traitsui.api import View, Group, Item
     
     class TestClass(HasTraits):
-        b = Bool
+        b = Bool(True)
+        b_str = String("teststring")
         
         traits_view = View(Item(name = 'b',
-                                editor = ToggleButtonEditorFactory()))
+                                label = "boooool",
+                                show_label = False,
+                                editor = ToggleButtonEditor(label_value = "b_str")))
         
     test = TestClass()
     test.configure_traits()
+    print test.b
         
         
