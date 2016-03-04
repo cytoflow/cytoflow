@@ -31,7 +31,7 @@ from .gaussian_2d import GaussianMixture2DOp
  
 # transforms
 from .hlog import HlogTransformOp
-#from .logicle import LogicleTransformOp
+from .logicle import LogicleTransformOp
 from .log import LogTransformOp
  
 # TASBE

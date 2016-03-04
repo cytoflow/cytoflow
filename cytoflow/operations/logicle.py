@@ -25,7 +25,7 @@ from traits.api import (HasStrictTraits, provides, Str, List, Float, Dict,
 import numpy as np
 
 import cytoflow.utility as util
-import cytoflow.utility.logicle_ext.Logicle as Logicle
+from cytoflow.utility.logicle_ext.Logicle import Logicle
 
 from .i_operation import IOperation
 
