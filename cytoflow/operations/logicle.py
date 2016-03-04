@@ -197,10 +197,10 @@ class LogicleTransformOp(HasStrictTraits):
         
         for channel in self.channels:
             
-            el = Logicle.Logicle(new_experiment.metadata[channel]['range'], 
-                                 self.W[channel], 
-                                 self.M,
-                                 self.A[channel])
+            el = Logicle(new_experiment.metadata[channel]['range'], 
+                         self.W[channel], 
+                         self.M,
+                         self.A[channel])
             
             logicle_fwd = lambda x: x.apply(el.scale)
             logicle_rev = lambda x: x.apply(el.inverse)
