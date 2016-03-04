@@ -66,7 +66,7 @@ setup(
                         'fcsparser>=0.1.1',
                         'numpy>=1.9.0',
                         'numexpr>=2.1',
-                        'matplotlib==1.4.3',
+                        'matplotlib>=1.4.3',
                         'scipy>=0.14',
                         'scikit-learn>=0.16',
                         'seaborn>=0.7.0',

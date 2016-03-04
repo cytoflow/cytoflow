@@ -1,13 +1,6 @@
 cytoflow.operations package
 ===========================
 
-Subpackages
------------
-
-.. toctree::
-
-    cytoflow.operations.logicle_ext
-
 Submodules
 ----------
 
@@ -59,6 +52,22 @@ cytoflow.operations.color_translation module
     :undoc-members:
     :show-inheritance:
 
+cytoflow.operations.gaussian_1d module
+--------------------------------------
+
+.. automodule:: cytoflow.operations.gaussian_1d
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+cytoflow.operations.gaussian_2d module
+--------------------------------------
+
+.. automodule:: cytoflow.operations.gaussian_2d
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 cytoflow.operations.hlog module
 -------------------------------
 
@@ -103,6 +112,14 @@ cytoflow.operations.polygon module
 ----------------------------------
 
 .. automodule:: cytoflow.operations.polygon
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+cytoflow.operations.quad module
+-------------------------------
+
+.. automodule:: cytoflow.operations.quad
     :members:
     :undoc-members:
     :show-inheritance:
