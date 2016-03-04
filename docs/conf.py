@@ -22,7 +22,7 @@ class Mock(MagicMock):
     def __getattr__(cls, name):
             return Mock()
 
-MOCK_MODULES = ['cytoflow.operations.logicle_ext.Logicle']
+MOCK_MODULES = ['cytoflow.utility.logicle_ext.Logicle']
 
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
  
