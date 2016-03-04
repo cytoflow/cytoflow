@@ -30,7 +30,7 @@ from .operations.quad import QuadOp
 
 # transforms (deprecated!)
 from .operations.hlog import HlogTransformOp
-from .operations.logicle import LogicleTransformOp
+#from .operations.logicle import LogicleTransformOp
 from .operations.log import LogTransformOp
 
 # TASBE
