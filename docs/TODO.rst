@@ -16,21 +16,12 @@ Major features still TODO
   will be in the GUI, not the cytoflow package.
 
 * Operations
-
-  * Gates: for formal definitions see http://flowcyt.sourceforge.net/gating/latest.pdf
-
-    * 2D quad gate
-    * 2D ellipsoid gate: data-driven, estimated from a centroid and a 2D 
-      gaussian fit
-      
   * Transformations (also see http://flowcyt.sourceforge.net/gating/latest.pdf )
-  
-    * Asinh transform
+    * Asinh scale
+       - It's not clear that we need this.  What do we gain over log & logicle?
     * Ratio transform (creates a new channel Z from channels X and Y, Z=X/Y)
-    
-  * Compensation: traditional matrix-based (both square and non-square)
-    
-  * 1D mixture model (from EM clustering)
+       - If you're using the notebook, you can call add_channel().
+
   * K-means clustering?  May want to check out the "fcm" Python package
   * Principle component analysis?
  
@@ -40,14 +31,10 @@ Major features still TODO
     ``matplotlib`` API (``pyplot``).  GUI integration was pretty smooth; 
     but some day it might be nice to move to ``Bokeh``.
   * General cleanup and beautification
-  * Some well-thought-out interface for specifying graphical elements like colors
+  * Some well-thought-out GUI interface for specifying graphical elements like colors
   * 1D kernel density plot
-  
-    * Want "backgating" ability, ie specify color by some gate metadata)
-    
   * Prettier 2D hex bin plot (currently some issues with ``seaborn`` and faceting)
-  * 2D density plot
-
+  * 2D density plots
   * Radar plots!  I just discovered these.  Possibly with principle component analysis?
 
     
