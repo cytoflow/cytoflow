@@ -66,9 +66,11 @@ A few things.
 * **Extensible.**  Adding a new analysis module is simple; the interface to
   implement is only two or three functions.
 
-* **Statistically sound.** Ready access to useful data-driven tools for
+* **Quantitative and tatistically sound.** Ready access to useful data-driven tools for
   analysis, such as fitting 2-dimensional Gaussians for automated gating
-  and mixture modeling.
+  and mixture modeling.  ``cytoflow`` discourages (but does not prevent) wholesale
+  rescaling of data, for example using the ``log10`` operation.  Instead, it
+  encourages rescaling of the data's **plots** instead.
 
 #### Note: this is still beta software!  Caveat emptor!
   
