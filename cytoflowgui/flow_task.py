@@ -309,8 +309,8 @@ class FlowTask(Task):
     def on_about(self):
         from cytoflow import __version__ as cf_version
         from fcsparser import __version__ as fcs_version
-        from pandas.version import __version__ as pd_version
-        from numpy.version import version as np_version
+        from pandas import __version__ as pd_version
+        from numpy import __version__ as np_version
         from numexpr import __version__ as numexp_version
         from seaborn import __version__ as sns_version
         from matplotlib import __version__ as mpl_version
