@@ -10,13 +10,11 @@ from traits.api import HasTraits, Int, on_trait_change, Instance
 from multiprocessing.managers import BaseManager, NamespaceProxy
 import time
 
-
 class T(HasTraits):
     i = Int(3)
     
-    @on_trait_change('i')
-    def pr(self):
-        print("i: {0}".format(self.i))
+    def pr(self, j):
+        print("j: {0}".format(j))
         
 class M(HasTraits):
     t = Instance(T, ())
@@ -27,7 +25,7 @@ class TraitsManager(BaseManager):
 class HasTraitsProxy(NamespaceProxy):
     # We need to expose the same __dunder__ methods as NamespaceProxy,
     # in addition to the b method.
-    _exposed_ = ('__getattribute__', '__setattr__', '__delattr__', 'traits')
+    _exposed_ = ('__getattribute__', '__setattr__', '__delattr__', 'traits', 'pr')
     
     def __getattr__(self, key):
         print("key {0}".format(key))
@@ -68,6 +66,8 @@ if __name__ == '__main__':
     print(t.i)
     t.i = 5
     print(t.i)
+    
+    t.pr(7)
 
     
     #print(t.i)
