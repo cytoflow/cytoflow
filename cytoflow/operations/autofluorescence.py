@@ -109,11 +109,11 @@ class AutofluorescenceOp(HasStrictTraits):
                 blank_data = blank_exp.query(subset)
             except:
                 raise util.CytoflowOpError("Subset string '{0}' isn't valid"
-                                      .format(self.subset))
+                                      .format(subset))
                             
             if len(blank_data.index) == 0:
                 raise util.CytoflowOpError("Subset string '{0}' returned no events"
-                                      .format(self.subset))
+                                      .format(subset))
         else:
             blank_data = blank_exp.data
         
