@@ -26,7 +26,7 @@ from __future__ import division, absolute_import
 import math
 
 from traits.api import (HasStrictTraits, Str, CStr, File, Dict, Python,
-                        Instance, Tuple, Bool, Constant, provides)
+                        Instance, Tuple, Bool, Constant, DelegatesTo, provides)
 import numpy as np
 import matplotlib.pyplot as plt
 import sklearn.mixture
@@ -112,6 +112,10 @@ class ColorTranslationOp(HasStrictTraits):
     # translation (determined by `estimate()`). 
     # TODO - why can't i make the value List(Float)?
     _coefficients = Dict(Tuple(Str, Str), Python)
+    
+    # the subset string used for estimate(), passed to the diagnostic
+    # plot
+    _subset = Str
 
     def estimate(self, experiment, subset = None): 
         """
@@ -153,6 +157,7 @@ class ColorTranslationOp(HasStrictTraits):
                 if subset:
                     try:
                         tube_data = tube_exp.query(subset)
+                        self._subset = subset
                     except:
                         raise util.CytoflowOpError("Subset string '{0}' isn't valid"
                                               .format(self.subset))
@@ -297,6 +302,8 @@ class ColorTranslationDiagnostic(HasStrictTraits):
     
     name = Str
     
+    subset = DelegatesTo("op", "_subset")
+    
     # TODO - why can't I use ColorTranslationOp here?
     op = Instance(IOperation)
     
@@ -322,41 +329,29 @@ class ColorTranslationDiagnostic(HasStrictTraits):
             tube_file = self.op.controls[(from_channel, to_channel)]
             
             if tube_file not in tubes: 
+                 # make a little Experiment
+                check_tube(tube_file, experiment)
+                tube_exp = ImportOp(tubes = [Tube(file = tube_file)]).apply()
                 
-                tube_data = parse_tube(tube_file, experiment)
+                # apply previous operations
+                for op in experiment.history:
+                    tube_exp = op.apply(tube_exp) 
 
-                # autofluorescence correction
-                af = [(channel, (experiment.metadata[channel]['af_median'],
-                                 experiment.metadata[channel]['af_stdev'])) 
-                      for channel in experiment.channels 
-                      if 'af_median' in experiment.metadata[channel]]
-                
-                for af_channel, (af_median, af_stdev) in af:
-                    tube_data[af_channel] = tube_data[af_channel] - af_median
-                    tube_data = tube_data[tube_data[af_channel] > -3 * af_stdev]
-                    
-                tube_data.reset_index(drop = True, inplace = True)
-                    
-                # bleedthrough correction
-                old_tube_data = tube_data.copy()
-                bleedthrough = \
-                    {channel: experiment.metadata[channel]['piecewise_bleedthrough']
-                     for channel in experiment.channels
-                     if 'piecewise_bleedthrough' in experiment.metadata[channel]} 
+                # subset the events
+                if self.subset:
+                    try:
+                        tube_data = tube_exp.query(self.subset)
+                    except:
+                        raise util.CytoflowOpError("Subset string '{0}' isn't valid"
+                                              .format(self.subset))
+                                    
+                    if len(tube_data.index) == 0:
+                        raise util.CytoflowOpError("Subset string '{0}' returned no events"
+                                              .format(self.subset))
+                else:
+                    tube_data = tube_exp.data                
 
-                for channel, (interp_channels, interpolator) in bleedthrough.iteritems():
-                    interp_data = old_tube_data[interp_channels]
-                    tube_data[channel] = interpolator(interp_data)
-                    
-                # bead calibration
-                beads = [(channel, experiment.metadata[channel]['bead_calibration_fn'])
-                         for channel in experiment.channels
-                         if 'bead_calibration_fn' in experiment.metadata[channel]]
-                
-                for channel, calibration_fn in beads:
-                    tube_data[channel] = calibration_fn(tube_data[channel])
-
-                tubes[tube_file] = tube_data
+                tubes[tube_file] = tube_data               
                 
             from_range = experiment.metadata[from_channel]['range']
             to_range = experiment.metadata[to_channel]['range']
