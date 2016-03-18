@@ -163,6 +163,8 @@ class BeadCalibrationOp(HasStrictTraits):
 
     #_coefficients = Dict(Str, Python)
     _calibration_functions = Dict(Str, Python)
+    _peaks = Dict(Str, Python)
+    _mefs = Dict(Str, Python)
 
     def estimate(self, experiment, subset = None): 
         """
@@ -226,9 +228,13 @@ class BeadCalibrationOp(HasStrictTraits):
             elif len(peaks) == 1:
                 # if we only have one peak, assume it's the brightest peak
                 a = mef[-1] / peaks[0]
+                self._peaks[channel] = peaks
+                self._mefs[channel] = [mef[-1]]
                 self._calibration_functions[channel] = lambda x, a=a: a * x
             elif len(peaks) == 2:
                 # if we have only two peaks, assume they're the brightest two
+                self._peaks[channel] = peaks
+                self._mefs[channel] = [mef[-1], mef[-2]]
                 a = (mef[-1] - mef[-2]) / (peaks[1] - peaks[0])
                 self._calibration_functions[channel] = lambda x, a=a: a * x
             else:
@@ -253,6 +259,8 @@ class BeadCalibrationOp(HasStrictTraits):
                     if resid < best_resid:
                         best_lr = lr[0]
                         best_resid = resid
+                        self._peaks[channel] = peaks
+                        self._mefs[channel] = mef_subset
                         
                 
                 # remember, these (linear) coefficients came from logspace, so 
@@ -419,10 +427,27 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
                 [x for x in peak_bins if hist_smooth[x] > peak_threshold
                  and hist[1][x] > self.op.bead_brightness_threshold]
                 
-            plt.subplot(len(channels), 1, idx+1)
+            plt.subplot(len(channels), 2, 2 * idx + 1)
             plt.xscale('log')
             plt.xlabel(channel)
             plt.plot(hist_bins[1:], hist_smooth)
             for peak in peak_bins_filtered:
                 plt.axvline(hist_bins[peak], color = 'r')
 
+            plt.subplot(len(channels), 2, 2 * idx + 2)
+            plt.xscale('log')
+            plt.yscale('log')
+            plt.xlabel(self.op.units[channel])
+            plt.ylabel(channel)
+            plt.plot(self.op._peaks[channel], 
+                     self.op._mefs[channel], 
+                     marker = 'o')
+            
+            xmin, xmax = plt.xlim()
+            x = np.logspace(np.log10(xmin), np.log10(xmax))
+            plt.plot(x, 
+                     self.op._calibration_functions[channel](x), 
+                     color = 'r', linestyle = ':')
+            
+        plt.tight_layout(pad = 0.8)
+            

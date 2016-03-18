@@ -416,3 +416,5 @@ class BleedthroughPiecewiseDiagnostic(HasStrictTraits):
                          spline(xs), 
                          'g-', 
                          lw=3)
+        
+        plt.tight_layout(pad = 0.8)

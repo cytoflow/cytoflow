@@ -413,3 +413,5 @@ class ColorTranslationDiagnostic(HasStrictTraits):
             plt.plot(xs, 10 ** p(np.log10(xs)), "--g")
             
             plt_idx = plt_idx + 1
+        
+        plt.tight_layout(pad = 0.8)

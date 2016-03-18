@@ -312,3 +312,5 @@ class BleedthroughLinearDiagnostic(HasStrictTraits):
                 ys = xs * self.op.spillover[(from_channel, to_channel)]
           
                 plt.plot(xs, ys, 'g-', lw=3)
+                
+        plt.tight_layout(pad = 0.8)
