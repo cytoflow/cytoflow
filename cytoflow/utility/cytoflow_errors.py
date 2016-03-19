@@ -22,6 +22,12 @@ Created on Mar 5, 2015
 """
 from __future__ import division, absolute_import
 from exceptions import UserWarning
+import warnings
+
+# Force warnings.warn() to omit the source code line in the message
+formatwarning_orig = warnings.formatwarning
+warnings.formatwarning = lambda message, category, filename, lineno, line=None: \
+    formatwarning_orig(message, category, filename, lineno, line='')
 
 class CytoflowError(RuntimeError):
     pass
