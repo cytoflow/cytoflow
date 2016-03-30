@@ -110,6 +110,12 @@ class FlowTaskPane(TaskPane):
                         return
                     
                     wi.current_view.plot(wi.result)
+                    plt.subplots_adjust(left = 0.1,
+                                        right = 0.975,
+                                        bottom = 0.075,
+                                        top = 0.9625, 
+                                        wspace = 0.175, 
+                                        hspace = 0.175)
                     
                 if w:
                     wi.current_view.warning = w[-1].message.__str__()
