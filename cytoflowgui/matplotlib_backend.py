@@ -21,30 +21,17 @@ Render to qt from agg
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
-import six
-
-import os  # not used
-import sys
 import ctypes
-import warnings
 
-import matplotlib
 from matplotlib.figure import Figure
 
-from matplotlib.backends.backend_qt5agg import NavigationToolbar2QTAgg
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAggBase
-
-from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.backends.backend_qt4 import QtCore
-from matplotlib.backends.backend_qt4 import FigureManagerQT
-from matplotlib.backends.backend_qt4 import FigureCanvasQT
-from matplotlib.backends.backend_qt4 import NavigationToolbar2QT
+
 ##### not used in this module, but needed for pylab_setup
-from matplotlib.backends.backend_qt4 import show
+from matplotlib.backends.backend_qt4 import show  # @UnusedImport
 from matplotlib.backends.backend_qt4 import draw_if_interactive as qt4_draw_if_interactive
-from matplotlib.backends.backend_qt4 import backend_version
+from matplotlib.backends.backend_qt4 import backend_version  # @UnusedImport
 ######
-from matplotlib.cbook import mplDeprecation
 
 from matplotlib.backend_bases import FigureManagerBase
 
