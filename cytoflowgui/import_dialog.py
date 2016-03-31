@@ -41,7 +41,7 @@ from traitsui.api import UI, Group, View, Item, TableEditor, OKCancelButtons, \
 from traitsui.qt4.table_editor import TableEditor as TableEditorQt
 
 from pyface.i_dialog import IDialog
-from pyface.api import Dialog, GUI, FileDialog
+from pyface.api import Dialog, GUI, FileDialog, error
 
 from pyface.qt import QtCore, QtGui
 from pyface.constant import OK as PyfaceOK
@@ -51,6 +51,9 @@ from pyface.ui.qt4.directory_dialog import DirectoryDialog as QtDirectoryDialog
 from traitsui.table_column import ObjectColumn
 
 from cytoflow import Tube as CytoflowTube
+from cytoflow import Experiment, ImportOp
+from cytoflow.operations.import_op import check_tube
+import cytoflow.utility as util
 
 import fcsparser
 
@@ -160,6 +163,10 @@ class ExperimentDialogModel(HasTraits):
     
     # the tubes.  this is the model; the rest is for communicating with the View
     tubes = List(Tube)
+    
+    # a dummy Experiment, with the first Tube and no events, so we can check
+    # subsequent tubes for voltage etc. and fail early.
+    dummy_experiment = Instance(Experiment)
     
     # the tubes' traits.
     tube_traits = Dict(Str, TraitType)
@@ -305,8 +312,11 @@ class ExperimentDialogHandler(Controller):
     # TODO - this doesn't like column names with spaces (or other invalid
     # python identifiers (??))
 
-    # keep around a ref to the underlying widget so we can add columns dynamically
+    # keep a ref to the table editor so we can add columns dynamically
     table_editor = Instance(TableEditorQt)
+
+    # keep a ref of the add condition button to enable/disable.
+    btn_add_cond = Instance(QtGui.QPushButton)
     
     updating = Bool(False)
     
@@ -343,8 +353,19 @@ class ExperimentDialogHandler(Controller):
         
         if not new_trait.condition_name: 
             return
-        
+
         name = new_trait.condition_name
+        
+        if name in self.model.dummy_experiment.channels:
+            error(None, 
+                  "Condition \"{0}\" conflicts with a channel name.".format(name),
+                  "Error adding condition")
+            return
+        
+        if name in self.model.tube_traits:
+            error(None,
+                  "The experiment already has a condition named \"{0}\".".format(name),
+                  "Error adding condition")
         
         if new_trait.condition_type == "String":
             self._add_metadata(name, name + " (String)", Str(condition = True))
@@ -381,6 +402,19 @@ class ExperimentDialogHandler(Controller):
                 raise RuntimeError("FCS reader threw an error on tube {0}: {1}"\
                                    .format(path, e.value))
                 
+                
+            # if we're the first tube loaded, create a dummy experiment
+            if not self.model.dummy_experiment:
+                self.model.dummy_experiment = ImportOp(tubes = [CytoflowTube(file = path)],
+                                                       coarse_events = 1).apply()
+                                                       
+            # check the next tube against the dummy experiment
+            try:
+                check_tube(path, self.model.dummy_experiment)
+            except util.CytoflowError as e:
+                error(None, e.__str__(), "Error importing tube")
+                return
+                
             tube = Tube()
             
             for trait_name, trait in self.model.tube_traits.items():
@@ -403,6 +437,7 @@ class ExperimentDialogHandler(Controller):
                 tube.Tube = tube_meta['$SMNO']
             
             self.model.tubes.append(tube)
+            self.btn_add_cond.setEnabled(True)
     
     # TODO - plate support.
     
@@ -521,6 +556,7 @@ class ExperimentDialog(Dialog):
     model = DelegatesTo('handler')
 
     ui = Instance(UI)
+
         
     def _create_buttons(self, parent):
         """ 
@@ -543,10 +579,13 @@ class ExperimentDialog(Dialog):
 #         QtCore.QObject.connect(btn_plate, QtCore.SIGNAL('clicked()'),
 #                                self.handler._on_add_plate)
         
+        # start disabled; we enable when a tube is added
         btn_add_cond = QtGui.QPushButton("Add condition...")
         layout.addWidget(btn_add_cond)
         QtCore.QObject.connect(btn_add_cond, QtCore.SIGNAL('clicked()'),
                                self.handler._on_add_condition)
+        btn_add_cond.setEnabled(False)
+        self.handler.btn_add_cond = btn_add_cond
         
         layout.addStretch()
 
