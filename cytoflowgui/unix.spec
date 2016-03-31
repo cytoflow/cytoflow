@@ -4,7 +4,7 @@ block_cipher = None
 
 
 a = Analysis(['run.py'],
-             pathex=['/home/guva/Documents/MIT/research/SuperUROP/cytoflow/cytoflowgui'],
+             pathex=['./'],
              binaries=None,
              datas=[],
              hiddenimports = [
@@ -66,14 +66,6 @@ a = Analysis(['run.py'],
              cipher=block_cipher)
 pyz = PYZ(a.pure, a.zipped_data,
              cipher=block_cipher)
-exe = EXE(pyz,
-          a.scripts,
-          exclude_binaries=True,
-          name='run',
-          debug=False,
-          strip=False,
-          upx=True,
-          console=True )
 
 ##### include mydir in distribution #######
 def extra_datas(mydir):
@@ -100,10 +92,13 @@ a.datas += extra_datas('./op_plugins/images')
 a.datas += extra_datas('./view_plugins/images')
 a.datas += extra_datas('./pyface/images')
 
-coll = COLLECT(exe,
-               a.binaries,
-               a.zipfiles,
-               a.datas,
-               strip=False,
-               upx=True,
-               name='run')
+exe = EXE(pyz,
+          a.scripts,
+          a.binaries,
+          a.zipfiles,
+          a.datas,
+          name='run',
+          debug=False,
+          strip=False,
+          upx=True,
+          console=False )
