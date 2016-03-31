@@ -37,6 +37,9 @@ class BarChartView(HasStrictTraits):
     channel : Str
         the name of the channel we're summarizing 
         
+    scale : Enum("linear", "log", "logicle") (default = "linear")
+        The scale to use on the Y axis.
+        
     by : Str
         the name of the conditioning variable to group the chart's bars
 
@@ -98,6 +101,7 @@ class BarChartView(HasStrictTraits):
     
     name = Str
     channel = Str
+    scale = util.ScaleEnum
     by = Str
     function = Callable
     #orientation = Enum("horizontal", "vertical")
@@ -186,6 +190,16 @@ class BarChartView(HasStrictTraits):
                        estimator = self.function,
                        ci = None,
                        kind = "bar")
+        
+        scale = util.scale_factory(self.scale, experiment, self.channel)
+        
+        # because the bottom of a bar chart is "0", masking out bad
+        # values on a log scale doesn't work.  we must clip instead.
+        if self.scale == "log":
+            scale.mode = "clip"
+
+        plt.yscale(self.scale, **scale.mpl_params)
+
 
 if __name__ == '__main__':
     import cytoflow as flow

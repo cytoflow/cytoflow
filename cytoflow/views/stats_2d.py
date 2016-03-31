@@ -46,11 +46,17 @@ class Stats2DView(HasStrictTraits):
     xchannel : Str
         Apply `xfunction` to `xchannel` for each value of `by`.
         
+    xscale : Enum("linear", "log", "logicle") (default = "linear")
+        What scale to use on the X axis
+        
     xfunction : Callable
         What summary function to apply to `xchannel`
     
     ychannel : Str
         Apply `yfunction` to `ychannel` for each value of `by`
+        
+    yscale : Enum("linear", "log", "logicle") (default = "linear")
+        What scale to use on the Y axis
         
     yfunction : Callable
         What summary function to apply to `ychannel`
@@ -125,8 +131,10 @@ class Stats2DView(HasStrictTraits):
     name = Str
     by = Str
     xchannel = Str
+    xscale = util.ScaleEnum
     xfunction = Callable
     ychannel = Str
+    yscale = util.ScaleEnum
     yfunction = Callable
     xfacet = Str
     yfacet = Str
@@ -233,6 +241,13 @@ class Stats2DView(HasStrictTraits):
                              legend_out = False,
                              sharex = False,
                              sharey = False)
+        
+        xscale = util.scale_factory(self.xscale, experiment, self.xchannel)
+        yscale = util.scale_factory(self.yscale, experiment, self.ychannel)
+        
+        for ax in grid.axes.flatten():
+            ax.set_xscale(self.xscale, **xscale.mpl_params)
+            ax.set_yscale(self.yscale, **yscale.mpl_params)
 
         grid.map(plt.plot, self.xchannel, self.ychannel, **kwargs)
 

@@ -45,6 +45,9 @@ class Stats1DView(HasStrictTraits):
     ychannel : Str
         Apply `yfunction` to `ychannel` for each value of `by`
         
+    yscale : Enum("linear", "log", "logicle") (default = "linear")
+        The scale to use on the Y axis
+        
     yfunction : Callable (list-like --> float)
         What summary function to apply to `ychannel`
         
@@ -109,6 +112,7 @@ class Stats1DView(HasStrictTraits):
     name = Str
     by = Str
     ychannel = Str
+    yscale = util.ScaleEnum
     yfunction = Callable
     xfacet = Str
     yfacet = Str
@@ -206,6 +210,11 @@ class Stats1DView(HasStrictTraits):
         if 'repr' in experiment.metadata[self.by] and \
             experiment.metadata[self.by]['repr'] == 'log':
             plt.xscale('log', nonposx = 'mask')
+            
+        yscale = util.scale_factory(self.yscale, experiment, self.ychannel)
+        
+        for ax in grid.axes.flatten():
+            ax.set_yscale(self.yscale, **yscale.mpl_params)
         
         grid.map(plt.plot, self.by, self.ychannel, **kwargs)
         

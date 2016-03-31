@@ -109,7 +109,7 @@ class LogicleScale(HasTraits):
         Transforms `data` using this scale.
         
         Careful!  May return `NaN` if the scale domain doesn't match the data 
-        (ie, applying a log10 scale to negative numbers.
+        (ie, applying a log10 scale to negative numbers.)
         """
         scale_fn = np.vectorize(self.logicle.scale)
         return scale_fn(data)
@@ -194,6 +194,14 @@ class MatplotlibLogicleScale(HasTraits, matplotlib.scale.ScaleBase):
         Returns the matplotlib.transform instance that does the actual 
         transformation
         """
+        if not self.logicle:
+            # this usually happens when someone tries to say 
+            # plt.xscale("logicle").  you can, in fact, do that, but
+            # you have to get a parameterized instance of the transform
+            # from utility.scale.scale_factory().
+            
+            raise CytoflowError("You can't set a 'logicle' scale directly.")
+        
         return MatplotlibLogicleScale.LogicleTransform(logicle = self.logicle)
     
     def set_default_locators_and_formatters(self, axis):
