@@ -29,11 +29,11 @@ if __name__ == '__main__':
     import os
     os.environ['TRAITS_DEBUG'] = "1"
 
-from collections import Counter
+from collections import Counter, OrderedDict
     
 from traits.api import HasTraits, provides, Instance, Str, Int, List, \
                        Bool, Enum, Float, DelegatesTo, Property, CStr, \
-                       TraitType, Dict
+                       TraitType, Dict, Tuple
                        
 from traitsui.api import UI, Group, View, Item, TableEditor, OKCancelButtons, \
                          Controller
@@ -98,8 +98,8 @@ class Tube(HasTraits):
     (file name, tube name, etc.).  We differentiate them because we enforce
     the invariant that each tube MUST have a unique combination of experimental
     conditions.  We do this with trait metadata: "condition == True" means 
-    "is an experimental condition" (everything but File, Source, Tube, Row, 
-    Column, _parent).
+    "is an experimental condition" (everything but file, source, tube, row, 
+    column, parent).
     
     We also use the "transient" flag to specify traits that shouldn't be 
     displayed in the editor.  This matches well with the traits that
@@ -108,19 +108,12 @@ class Tube(HasTraits):
     
     # these are the traits that every tube has.  every other trait is
     # dynamically created. 
-
-    # the sample source ($SRC FCS keyword).  pulled from FCS metadata
-    Source = Str
-    
-    # the tube label - from TUBE NAME or SMNO FCS keywords
-    Tube = Str
     
     # the file name.
-    # TODO - /sigh show the filename in the editor.  or .... something?
-    _file = Str(transient = True)
+    file = Str(transient = True)
     
     # need a link to the model; needed for row coloring
-    _parent = Instance("ExperimentDialogModel", transient = True)
+    parent = Instance("ExperimentDialogModel", transient = True)
     
     def __hash__(self):
         ret = int(0)
@@ -148,7 +141,7 @@ class ExperimentColumn(ObjectColumn):
     
     # override ObjectColumn.get_cell_color
     def get_cell_color(self, obj):
-        if(obj._parent.tubes_counter[obj] > 1):
+        if(obj.parent.tubes_counter[obj] > 1):
             return QtGui.QColor('lightpink')
         else:
             return super(ObjectColumn, self).get_cell_color(object)
@@ -169,7 +162,7 @@ class ExperimentDialogModel(HasTraits):
     dummy_experiment = Instance(Experiment)
     
     # the tubes' traits.
-    tube_traits = Dict(Str, TraitType)
+    tube_traits = Instance(OrderedDict, ())
     
     # a collections.Counter that keeps track of duplicates for us.  rebuilt
     # whenever the Tube elements of self.tubes changes
@@ -189,12 +182,7 @@ class ExperimentDialogModel(HasTraits):
                                           auto_size = True,
                                           configurable = False,
                                           selection_mode = 'cells',
-                                          selected = 'selected',
-                                          columns = [ExperimentColumn(name = 'Source',
-                                                                      editable = False),
-                                                     ExperimentColumn(name = 'Tube',
-                                                                      editable = False)],
-                                          ),
+                                          selected = 'selected'),
                      enabled_when = "object.tubes"),
                 show_labels = False
             ),
@@ -216,25 +204,40 @@ class ExperimentDialogModel(HasTraits):
                           "bool" : Bool,
                           "int" : Int}
         
-        has_row = any(tube.row for tube in op.tubes)
-        has_col = any(tube.col for tube in op.tubes)
-        
         for op_tube in op.tubes:
-            tube = Tube(Source = op_tube.source,
-                        Tube = op_tube.tube,
-                        _file = op_tube.file,
-                        _parent = self)
-            if has_row:
-                tube.add_trait("Row", Str)
-                tube.Row = op_tube.row
-                if not "Row" in self.tube_traits:
-                    self.tube_traits["Row"] = Str()
-            if has_col:
-                tube.add_trait("Col", Str)
-                tube.Col = op_tube.col
-                if not "Col" in self.tube_traits:
-                    self.tube_traits["Col"] = Str()
+            tube = Tube(file = op_tube.file,
+                        parent = self)
+            
+            # first load the tube's metadata and set special columns
+            try:
+                tube_meta = fcsparser.parse(op_tube.file, 
+                                            meta_data_only = True, 
+                                            reformat_meta = True)
+                #tube_channels = tube_meta["_channels_"].set_index("$PnN")
+            except Exception as e:
+                error(None, "FCS reader threw an error on tube {0}: {1}"\
+                            .format(op_tube.file, e.value),
+                      "Error reading FCS file")
+                return
                 
+            if '$SRC' in tube_meta:    
+                self.tube_traits["$SRC"] = Str(condition = False)
+                tube.add_trait("$SRC", Str(condition = False))
+                tube.trait_set(**{"$SRC" : tube_meta['$SRC']})
+                
+            if 'TUBE NAME' in tube_meta:
+                #self._add_metadata("TUBE NAME", "TUBE NAME", Str(condition = False))
+                self.tube_traits["TUBE NAME"] = Str(condition = False)
+                tube.add_trait("TUBE NAME", Str(condition = False))
+                tube.trait_set(**{"TUBE NAME" : tube_meta['TUBE NAME']})
+                
+            if '$SMNO' in tube_meta:
+                #self._add_metadata("$SMNO", "$SMNO", Str(condition = False))
+                self.tube_traits["$SMNO"] = Str(condition = False)
+                tube.add_trait("$SMNO", Str(condition = False))
+                tube.trait_set(**{"$SMNO" : tube_meta['SMNO']})
+
+            # next set conditions
             for condition in op_tube.conditions:
                 condition_dtype = op.conditions[condition]
                 condition_trait = \
@@ -243,6 +246,12 @@ class ExperimentDialogModel(HasTraits):
                 if not condition in self.tube_traits:
                     self.tube_traits[condition] = condition_trait
             tube.trait_set(**op_tube.conditions)
+            
+            # if we're the first tube loaded, create a dummy experiment
+            # to validate voltage, etc for later tubes
+            if not self.dummy_experiment:
+                self.model.dummy_experiment = ImportOp(tubes = [CytoflowTube(file = op_tube.file)],
+                                                       coarse_events = 1).apply()
             
             self.tubes.append(tube)
     
@@ -254,6 +263,7 @@ class ExperimentDialogModel(HasTraits):
                           "Int" : "int"}
         
         op.conditions.clear()
+        op.tubes = []
         
         for trait_name, trait in self.tube_traits.items():
             if not trait.condition:
@@ -263,17 +273,8 @@ class ExperimentDialogModel(HasTraits):
             op.conditions[trait_name] = trait_to_dtype[trait_type]
             
         for tube in self.tubes:
-            op_tube = CytoflowTube(source = tube.Source,
-                                   tube = tube.Tube,
-                                   file = tube._file)
-            
-            if "Row" in tube.trait_names():
-                op_tube.row = tube.Row
-                
-            if "Col" in tube.trait_names():
-                op_tube.col = tube.Col
-                
-            op_tube.conditions = tube.trait_get(condition = True)
+            op_tube = CytoflowTube(file = tube.file,
+                                   conditions = tube.trait_get(condition = True))
             
             # AFAICT this is going to cause the op to reload THE ENTIRE
             # SET each time a tube is added.  >.>
@@ -285,7 +286,7 @@ class ExperimentDialogModel(HasTraits):
     ## i'd love to cache this, but it screws up the coloring stuff  :-/
     def _get_tubes_counter(self):
         return Counter(self.tubes)
-
+    
 
 class PlateDirectoryDialog(QtDirectoryDialog):
     """
@@ -319,6 +320,27 @@ class ExperimentDialogHandler(Controller):
     btn_add_cond = Instance(QtGui.QPushButton)
     
     updating = Bool(False)
+    
+    def init(self, info):
+        """ Overrides Handler.init() """
+        
+        self.table_editor = info.ui.get_editors('tubes')[0]
+        
+        if self.model.tube_traits:
+            trait_to_col = {"Str" : " (String)",
+                            "Float" : " (Number)",
+                            "LogFloat" : " (Log)",
+                            "Bool" : " (T/F)",
+                            "Int" : " (Int)"}
+            
+            for name, trait in self.model.tube_traits.iteritems():
+                trait_type = trait.__class__.__name__
+                label = name + trait_to_col[trait_type]
+                self.table_editor.columns.append(ExperimentColumn(name = name,
+                                                 label = label,
+                                                 editable = trait.condition))
+                
+        return True
     
     def closed(self, info, is_ok):
         for trait_name, trait in self.model.tube_traits.items():
@@ -426,15 +448,20 @@ class ExperimentDialogHandler(Controller):
                 tube.trait_set(**{trait_name : trait.default_value})
                 if trait.condition:
                     tube.on_trait_change(self._try_multiedit, trait_name)
-                
-            tube.trait_set(Source = tube_meta['$SRC'],
-                           _file = path,
-                           _parent = self.model)
             
+            tube.trait_set(file = path, parent = self.model)
+            
+            if '$SRC' in tube_meta:    
+                self._add_metadata("$SRC", "$SRC", Str(condition = False))
+                tube.trait_set(**{"$SRC" : tube_meta['$SRC']})
+                
             if 'TUBE NAME' in tube_meta:
-                tube.Tube = tube_meta['TUBE NAME']
-            elif '$SMNO' in tube_meta:
-                tube.Tube = tube_meta['$SMNO']
+                self._add_metadata("TUBE NAME", "TUBE NAME", Str(condition = False))
+                tube.trait_set(**{"TUBE NAME" : tube_meta['TUBE NAME']})
+                
+            if '$SMNO' in tube_meta:
+                self._add_metadata("$SMNO", "$SMNO", Str(condition = False))
+                tube.trait_set(**{"$SMNO" : tube_meta['SMNO']})
             
             self.model.tubes.append(tube)
             self.btn_add_cond.setEnabled(True)
@@ -477,11 +504,11 @@ class ExperimentDialogHandler(Controller):
 #                 if trait.condition:
 #                     tube.on_trait_change(self._try_multiedit, trait_name)
 #             
-#             tube.trait_set(_file = well_data.datafile,
+#             tube.trait_set(file = well_data.datafile,
 #                            Row = well_data.position['new plate'][0],
 #                            Col = well_data.position['new plate'][1],
 #                            Source = well_data.meta['$SRC'],
-#                            _parent = self.model)
+#                            parent = self.model)
 #             
 #             if 'TUBE NAME' in well_data.meta:
 #                 tube.Tube = well_data.meta['TUBE NAME']
@@ -533,6 +560,7 @@ class ExperimentDialogHandler(Controller):
             self.table_editor.columns.append(ExperimentColumn(name = name,
                                                               label = label,
                                                               editable = trait.condition))
+
                 
     def _remove_metadata(self, meta_name, column_name, meta_type):
         # TODO - make it possible to remove metadata
@@ -557,7 +585,6 @@ class ExperimentDialog(Dialog):
 
     ui = Instance(UI)
 
-        
     def _create_buttons(self, parent):
         """ 
         Create the buttons at the bottom of the dialog box.
@@ -607,35 +634,11 @@ class ExperimentDialog(Dialog):
         return buttons
     
     def _create_dialog_area(self, parent):
-        
+         
         self.ui = self.model.edit_traits(kind='subpanel', 
                                          parent=parent, 
                                          handler=self.handler)   
-        
-        # need to keep a reference to the table editor so we can dynamically
-        # add columns to it.
-        self.handler.table_editor = self.ui.get_editors('tubes')[0]
-        
-        # and if the Tube class already has traits defined, add them to the 
-        # table editor
-        if len(self.model.tubes) > 0:
-            trait_to_col = {"Str" : " (String)",
-                            "Float" : " (Number)",
-                            "LogFloat" : " (Log)",
-                            "Bool" : " (T/F)",
-                            "Int" : " (Int)"}
-            
-            trait_names = self.model.tubes[0].trait_names(transient = not_true)
-            for trait_name in trait_names:
-                # already have Source and Tube columns
-                if trait_name == "Source" or trait_name == "Tube":
-                    continue
-                trait = self.model.tubes[0].trait(trait_name)
-                trait_type = trait.trait_type.__class__.__name__
-                col_name = trait_name + trait_to_col[trait_type]
-                self.handler.table_editor.columns.append(ExperimentColumn(name = trait_name,
-                                                                          label = col_name))
-      
+       
         return self.ui.control
     
     def destroy(self):

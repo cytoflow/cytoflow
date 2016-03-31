@@ -24,7 +24,7 @@ from __future__ import absolute_import
 
 import warnings
 
-from traits.api import (HasStrictTraits, provides, Str, List, Bool, Int, Any,
+from traits.api import (HasTraits, HasStrictTraits, provides, Str, List, Bool, Int, Any,
                         Dict, File, Constant, Enum)
 
 import fcsparser
@@ -35,7 +35,7 @@ import cytoflow.utility as util
 from ..experiment import Experiment
 from .i_operation import IOperation
 
-class Tube(HasStrictTraits):
+class Tube(HasTraits):
     """
     Represents a tube or plate well we want to import.
     
@@ -47,37 +47,12 @@ class Tube(HasStrictTraits):
     conditions : Dict(Str, Any)
         A dictionary containing this tube's experimental conditions.  Keys
         are condition names, values are condition values.
-    
-    source : Str
-        The sample source, from the $SRC FCS file keyword.  Optional for 
-        interactive use.
-        
-    tube : Str
-        The sample tube, from the TUBE NAME or SMNO FCS keyword.  Optional for
-        interactive use.
-        
-    row : Str
-        If this FCS file was a well from a multi-well plate, `row` contains
-        the well's row.  Optional for interactive use.
-        
-    col : Int
-        If this FCS file was a well from a multi-well plate, `col` contains the
-        well's column.  Optional for interactive use.
         
     Examples
     --------
     >>> tube1 = flow.Tube(file = 'RFP_Well_A3.fcs', conditions = {"Dox" : 10.0})
     >>> tube2 = flow.Tube(file='CFP_Well_A4.fcs', conditions = {"Dox" : 1.0})
     """
-    
-    # source, name, row and col are optional for interactive use 
-    # (needed for GUI persistance)
-    source = Str
-    tube = Str
-    row = Str
-    col = Int
-    
-    # file and conditions are not optional.
     
     # the file name for the FCS file to import
     file = File
