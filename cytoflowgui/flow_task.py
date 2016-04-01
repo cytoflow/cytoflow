@@ -40,7 +40,7 @@ from cytoflowgui.workflow import Workflow
 from cytoflowgui.op_plugins import IOperationPlugin, ImportPlugin, OP_PLUGIN_EXT
 from cytoflowgui.view_plugins import IViewPlugin, VIEW_PLUGIN_EXT
 from cytoflowgui.workflow_item import WorkflowItem
-from cytoflowgui.ipython import IPythonNotebookWriter
+from cytoflowgui.notebook import JupyterNotebookWriter
 
 from util import UniquePriorityQueue
 import threading
@@ -88,8 +88,8 @@ class FlowTask(Task):
                               TaskAction(name='Export image...',
                                          method='on_export',
                                          accelerator='Ctrl+x'),
-                              TaskAction(name='Export IPython notebook...',
-                                         method='on_ipython',
+                              TaskAction(name='Export Jupyter notebook...',
+                                         method='on_notebook',
                                          accelerator='Ctrl+I'),                              
                               TaskAction(name='Preferences...',
                                          method='on_prefs',
@@ -116,9 +116,9 @@ class FlowTask(Task):
                                       name = "Export",
                                       tooltip='Export the current plot',
                                       image=ImageResource('export')),
-                           TaskAction(method='on_ipython',
-                                      name='IPython',
-                                      tooltip="Export to an IPython notebook...",
+                           TaskAction(method='on_notebook',
+                                      name='Notebook',
+                                      tooltip="Export to an Jupyter notebook...",
                                       image=ImageResource('ipython')),
                            TaskAction(method='on_prefs',
                                       name = "Prefs",
@@ -290,16 +290,16 @@ class FlowTask(Task):
         if dialog.open() == OK:
             self.view.export(dialog.path)
             
-    def on_ipython(self):
+    def on_notebook(self):
         """
-        Shows a dialog to export the workflow to an IPython notebook
+        Shows a dialog to export the workflow to an Jupyter notebook
         """
         
         dialog = FileDialog(parent = self.window.control,
                             action = 'save as',
                             wildcard = '*.ipynb')
         if dialog.open() == OK:
-            writer = IPythonNotebookWriter(file = dialog.path)
+            writer = JupyterNotebookWriter(file = dialog.path)
             writer.export(self.workflow)
    
     

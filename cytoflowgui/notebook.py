@@ -6,11 +6,11 @@ Created on May 17, 2015
 
 import os
 from base64 import encodestring
-import IPython.nbformat as nb
+import nbformat as nb
 
 from traits.api import HasTraits, Str
 
-class IPythonNotebookWriter(HasTraits):
+class JupyterNotebookWriter(HasTraits):
     
     """
     see https://github.com/jupyter/nbformat/blob/master/nbformat/v4/tests/nbexamples.py
