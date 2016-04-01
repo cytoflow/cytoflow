@@ -1,12 +1,14 @@
-# -*- mode: python -*-
 
 block_cipher = None
 
-
-a = Analysis(['run.py'],
-             pathex=['./'],
+a = Analysis(['cytoflowgui/run.py'],
+             pathex=['cytoflowgui/'],
              binaries=None,
-             datas=[],
+             datas=[('cytoflowgui/preferences.ini', '.'),
+                    ('cytoflowgui/images', 'images'),
+                    ('cytoflowgui/op_plugins/images', 'op_plugins/images'),
+                    ('cytoflowgui/view_plugins/images', 'view_plugins/images'),
+                    ('cytoflowgui/pyface/images', 'pyface/images')],
              hiddenimports = [
              'matplotlib.backends.backend_qt4agg',
              'matplotlib_backend',
@@ -58,39 +60,43 @@ a = Analysis(['run.py'],
              'sklearn.neighbors.dist_metrics',
              'sklearn.neighbors.typedefs'
              ],
-             hookspath=[],
-             runtime_hooks=['rthook_pyqt4.py'],
-             excludes=[],
+             hookspath=['pyinstaller'],
+             runtime_hooks=['pyinstaller/rthook_pyqt4.py'],
+             excludes=['gi.repository.Gio', 'gi.repository.GModule',
+                       'gi.repository.GObject', 'gi.repository.Gtk',
+                       'gi.repository.Gdk', 'gi.repository.Atk',
+                       'gi.repository.cairo', 'gi.repository.GLib',
+                       'gobject', 'Tkinter', 'FixTk', 'PyQt5',
+                       'PySide', 'PySide.QtCore', 'PySide.QtGui',
+                       'PySide.QtNetwork', 'PySide.QtSvg',
+                       'pyface.wx', 'traitsui.wx', 'OpenGL',
+                       'OpenGL.GLUT', 'OpenGL.platform',
+                       'IPython', 'PyQt4.QtAssistant',
+                       'PyQt4.QtNetwork', 'PyQt4.QtWebKit',
+                       'PyQt4.QtSql', 'PyQt4.QtXml', 'PyQt4.QtTest', 
+                       'PyQt4.QtOpenGL', 'wx',
+                       'gtk', 'gi', 'sphinx', 'twisted', 'zope',
+                       'jinja2', 'httplib2', '_mysql',
+                       'sqlalchemy'],
              win_no_prefer_redirects=False,
              win_private_assemblies=False,
              cipher=block_cipher)
-pyz = PYZ(a.pure, a.zipped_data,
-             cipher=block_cipher)
 
-##### include mydir in distribution #######
-def extra_datas(mydir):
-    def rec_glob(p, files):
-        import os
-        import glob
-        for d in glob.glob(p):
-            if os.path.isfile(d):
-                files.append(d)
-                rec_glob("%s/*" % d, files)
-    files = []
-    rec_glob("%s/*" % mydir, files)
-    extra_datas = []
-    for f in files:
-        extra_datas.append((f, f, 'DATA'))
+# remove a few more egregiously unnecessary libraries and datas
 
-    return extra_datas
-###########################################
+remove_strs = ["nvidia", "Qt3Support", "QtDeclarative", "QtNetwork",
+               "QtOpenGL", "QtScript", "Xml", "xml", "Sql", "sql", 
+               "glib", "gobject", "sample_data"]
 
-# append the 'data' dir
-a.datas.append(('preferences.ini', './preferences.ini', 'DATA'))
-a.datas += extra_datas('./images')
-a.datas += extra_datas('./op_plugins/images')
-a.datas += extra_datas('./view_plugins/images')
-a.datas += extra_datas('./pyface/images')
+lol = [ [x for x in a.binaries if x[0].find(y) >= 0] for y in remove_strs]
+remove_items = [item for sublist in lol for item in sublist]
+a.binaries -= remove_items
+
+lol = [ [x for x in a.datas if x[0].find(y) >= 0] for y in remove_strs]
+remove_items = [item for sublist in lol for item in sublist]
+a.datas -= remove_items
+
+pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 
 exe = EXE(pyz,
           a.scripts,
@@ -102,3 +108,22 @@ exe = EXE(pyz,
           strip=False,
           upx=True,
           console=False )
+
+# for a one-directory install
+
+# exe = EXE(pyz,
+#           a.scripts,
+#           exclude_binaries=True,
+#           name='run',
+#           debug=True,
+#           strip=False,
+#           upx=True,
+#           console=True )
+# 
+# coll = COLLECT(exe,
+#                a.binaries,
+#                a.zipfiles,
+#                a.datas,
+#                strip=False,
+#                upx=True,
+#                name='run')
