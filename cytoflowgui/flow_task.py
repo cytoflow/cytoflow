@@ -41,8 +41,7 @@ from cytoflowgui.op_plugins import IOperationPlugin, ImportPlugin, OP_PLUGIN_EXT
 from cytoflowgui.view_plugins import IViewPlugin, VIEW_PLUGIN_EXT
 from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.ipython import IPythonNotebookWriter
-
-from cytoflowgui.worker_process import start_worker_process
+from cytoflowgui.workflow_manager import WorkflowManager
 
 from util import UniquePriorityQueue
 from multiprocessing import Process, Pipe
@@ -57,7 +56,6 @@ import pickle as pickle
 #                 _, wi = to_update.get_nowait()
 #             wi.update()
 
-
 class FlowTask(Task):
     """
     classdocs
@@ -69,6 +67,8 @@ class FlowTask(Task):
     # the main workflow instance.
     # THIS IS WHERE IT'S INITIALLY INSTANTIATED (note the args=())
     model = Instance(Workflow, args = ())
+    
+    manager = Instance(WorkflowManager, args = ())
     
     # the center pane
     view = Instance(FlowTaskPane)
@@ -147,13 +147,9 @@ class FlowTask(Task):
             
     def activated(self):
         
-        # set up the worker process
-        self.worker_conn, child_conn = Pipe()
-        worker = Process(target = start_worker_process, args = (child_conn,))
-        worker.daemon = True  # so we don't have to worry about shutdown
-        worker.start()
-        
-        
+        # instantiate the workflow manager, which keeps track of
+        # multiprocess computation
+        self.manager = WorkflowManager(model = self.model)
         
         # add an import plugin
         plugin = ImportPlugin()

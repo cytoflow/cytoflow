@@ -109,35 +109,35 @@ class WorkflowItem(HasStrictTraits):
                          style = 'custom',
                          show_label = False))
         
-    def update(self):
-        """
-        Called by the controller to update this wi
-        """
-    
-
-        self.warning = ""
-        self.error = ""
-        self.result = None
-        
-        prev_result = self.previous.result if self.previous else None
-        
-        with warnings.catch_warnings(record = True) as w:
-            try:
-                if (hasattr(self.operation, "estimate") and
-                    callable(getattr(self.operation, "estimate"))):
-                    self.status = "estimating"
-                    self.operation.estimate(prev_result)
-                self.status = "applying"
-                self.result = self.operation.apply(prev_result)
-                if w:
-                    self.warning = w[-1].message.__str__()
-            except CytoflowError as e:
-                self.status = "invalid"
-                self.error = e.__str__()    
-                print self.error
-                return
-
-        self.status = "valid"
+#     def update(self):
+#         """
+#         Called by the controller to update this wi
+#         """
+#     
+# 
+#         self.warning = ""
+#         self.error = ""
+#         self.result = None
+#         
+#         prev_result = self.previous.result if self.previous else None
+#         
+#         with warnings.catch_warnings(record = True) as w:
+#             try:
+#                 if (hasattr(self.operation, "estimate") and
+#                     callable(getattr(self.operation, "estimate"))):
+#                     self.status = "estimating"
+#                     self.operation.estimate(prev_result)
+#                 self.status = "applying"
+#                 self.result = self.operation.apply(prev_result)
+#                 if w:
+#                     self.warning = w[-1].message.__str__()
+#             except CytoflowError as e:
+#                 self.status = "invalid"
+#                 self.error = e.__str__()    
+#                 print self.error
+#                 return
+# 
+#         self.status = "valid"
            
     @cached_property
     def _get_icon(self):

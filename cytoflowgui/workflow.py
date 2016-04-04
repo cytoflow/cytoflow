@@ -15,11 +15,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from traits.api import HasTraits, List, Instance
+from traits.api import HasTraits, List, Instance, on_trait_change
 from traitsui.api import View, Item
 
 from cytoflowgui.vertical_notebook_editor import VerticalNotebookEditor
 from cytoflowgui.workflow_item import WorkflowItem
+
+# threading AND multiprocessing, oh my!
+
+import multiprocessing
+import threading
 
 class Workflow(HasTraits):
     """
@@ -27,7 +32,6 @@ class Workflow(HasTraits):
     """
 
     workflow = List(WorkflowItem)
-    
     selected = Instance(WorkflowItem)
 
     traits_view = View(Item(name='workflow',
@@ -43,3 +47,30 @@ class Workflow(HasTraits):
                             ),
                        #resizable = True
                        )
+    
+    # multiprocessing and multithreading plan:
+    # each time 
+    
+    @on_trait_change('workflow[]')
+    def _on_workflow_changed(self, name, removed, added):
+        pass
+    
+    conn = Any
+    model = List(WorkflowItem)
+    
+    def wait_for_updates(self):
+        while True:
+            (pos, items) = self.conn.recv()
+            del self.workflow[pos:]
+            self.workflow[-1].next = items[0]
+            items[0].previous = self.workflow[-1]
+            self.workflow.extend(items)    
+            
+            
+from util import UniquePriorityQueue
+
+def start_worker_process(conn):
+    p = WorkflowManager(conn = conn)
+    p.wait_for_updates()
+    
+    
