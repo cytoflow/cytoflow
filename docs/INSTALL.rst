@@ -74,6 +74,26 @@ the fastest.**
   type ``import cytoflow`` and press ``Shift+Enter``.  If Python doesn't complain,
   you're good to go.  (If it does, please submit a bug report!)
   
+  
+MacOS
+^^^^^
+
+* Start by installing the Anaconda Python distribution.  **Make sure to install
+  the Python 2.7 version.**  (Some day we will be Python 3 compatible, but not
+  until all of our dependencies are.)
+  
+  `Download Anaconda here <https://www.continuum.io/downloads>`_
+  
+* Install the conda package dependencies.  At the command prompt, type::
+
+    conda install pip pandas numpy numexpr matplotlib scipy scikit-learn seaborn pyface envisage pyqt
+    
+* Install `cytoflow` with pip::
+
+   pip install cytoflow
+   
+* 
+  
 
 DEVELOPERS: To hack on the code
 -------------------------------
