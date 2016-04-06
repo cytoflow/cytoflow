@@ -1,8 +1,8 @@
 Installation notes
 ==================
 
-DEVELOPERS: To use the Cytoflow modules in an IPython notebook or your own code
--------------------------------------------------------------------------------
+USERS AND DEVELOPERS: To use the Cytoflow modules in an IPython notebook or your own code
+-----------------------------------------------------------------------------------------
 
 .. _ubuntu-mod:
 
@@ -63,7 +63,7 @@ the fastest.**
 
 * Install the conda package dependencies.  At the command prompt, type::
 
-    conda install pip pandas numpy numexpr matplotlib scipy scikit-learn seaborn pyface envisage pyqt
+    conda install pip pandas numpy numexpr matplotlib scipy scikit-learn seaborn pyface envisage bottleneck pyqt
 
 * Install the package with pip::
 
@@ -74,6 +74,31 @@ the fastest.**
   type ``import cytoflow`` and press ``Shift+Enter``.  If Python doesn't complain,
   you're good to go.  (If it does, please submit a bug report!)
   
+MacOS
+^^^^^
+
+** As with Windows, this is not the only way to install CytoFlow but it is the fastest.
+
+* Start by installing the Anaconda Python distribution. **Make sure to install
+  version 2.7.**  (Some day we will be Python 3 compatible, but not until 
+  all of our dependencies are.)
+
+  `Download Anaconda here <https://www.continuum.io/downloads>`_
+ 
+* Start the Terminal.
+ 
+* Install the conda package dependencies.  At the Terminal prompt, type::
+     
+     conda install pip pandas numpy numexpr matplotlib scipy scikit-learn seaborn pyface envisage bottleneck pyqt
+     
+* Install the `cytoflow` package with `pip`.  At the Terminal prompt, type::
+     
+     pip install cytoflow
+     
+* To verify the installation, start a Jupyter notebook from the Anaconda Navigator.  A
+  browser window will open.  Create a new Python 2 notebook, and in the first cell type
+  ``import cytoflow`` and press ``Shift+Enter``.  If Python doesn't complain,
+  you're good to go.  (If it does, please submit a bug report!)
 
 DEVELOPERS: To hack on the code
 -------------------------------
@@ -155,7 +180,7 @@ when I roll a release they get posted on the GitHub release page.
 
 * Install the conda package dependencies.  At the Anconda command prompt, type::
 
-    conda install pip pandas numpy numexpr matplotlib scipy scikit-learn seaborn pyface envisage pyqt
+    conda install pip pandas numpy numexpr matplotlib scipy scikit-learn seaborn pyface envisage bottleneck pyqt
 
 * Clone the git repo.  **From git-bash**, say::
 
@@ -186,8 +211,10 @@ when I roll a release they get posted on the GitHub release page.
   is installed properly.  If you get an error, make sure you've followed the
   instructions above carefully then file a bug report!
 
-USERS: Just run the code
-------------------------
+USERS: Just run the point-and-click GUI program
+-----------------------------------------------
+
+**There is a single-click executable under development.**
 
 Ubuntu
 ^^^^^^
