@@ -181,7 +181,7 @@ when I roll a release they get posted on the GitHub release page.
 * Install the conda package dependencies.  At the Anconda command prompt, type::
 
     conda install pip pandas numpy numexpr matplotlib scipy scikit-learn seaborn pyface envisage bottleneck pyqt
-
+    
 * Clone the git repo.  **From git-bash**, say::
 
     git clone https://github.com/bpteague/cytoflow.git
@@ -210,6 +210,57 @@ when I roll a release they get posted on the GitHub release page.
 * Start an IPython notebook.  Say ``import cytoflow`` to make sure that everything
   is installed properly.  If you get an error, make sure you've followed the
   instructions above carefully then file a bug report!
+
+  
+MacOS
+^^^^^
+
+``cytoflow`` has one C++ module, compiled with ``swig``.  On MacOS, you have two options
+to get this file:  you can download `XCode <http://developer.apple.com/xcode/download>`_, 
+with which you should be able to build the C++ extension using the usual ``python setup.py build``.
+
+The other alternative is to suck the compiled extension out of one of the
+pre-built MacOS Python packages.  That's the approach outlined below.
+
+* Install a copy of ``git`` from `the Git website <http://www.git-scm.com>`_.
+
+* Install the Anaconda Python distribution. **Make sure to install
+  version 2.7.**  (Some day we will be Python 3 compatible, but not until 
+  all of our dependencies are.)
+
+  `Download Anaconda here <https://www.continuum.io/downloads>`_
+
+* Install the conda package dependencies.  In a Mac Terminal, type::
+
+    conda install pip pandas numpy numexpr matplotlib scipy scikit-learn seaborn pyface envisage bottleneck pyqt
+    
+* Clone the git repo.  In your working folder, say::
+
+    git clone https://github.com/bpteague/cytoflow.git
+    
+* Now, install it in developers' mode.
+  
+    NO_LOGICLE=True python setup.py develop
+    
+  This should complete successfully.  If it dies with 
+  ``SystemError: Cannot locate working compiler``, make sure you set NO_LOGICLE, try it again,
+  then please file a bug report.
+  
+* Download the ``cytoflow`` wheel from the Github release page or the PyPI release.  These 
+  commands get version 0.2.0 from PyPI; but the Logicle extension hasn't changed in many 
+  releases, and hopefully won't be changing any time soon, so they are likely still valid
+  for the master Git branch.
+  
+    mkdir build
+    cd build
+    curl https://pypi.python.org/packages/cp27/c/cytoflow/cytoflow-0.2.0-cp27-cp27m-macosx_10_5_x86_64.whl -o cytoflow.zip
+    unzip cytoflow.zip
+    cp cytoflow/utility/logicle_ext/_Logicle.so ../cytoflow/utility/logicle_ext/
+
+* Start an IPython notebook.  Say ``import cytoflow`` to make sure that everything
+  is installed properly.  If you get an error, make sure you've followed the
+  instructions above carefully then file a bug report!
+  
 
 USERS: Just run the point-and-click GUI program
 -----------------------------------------------
