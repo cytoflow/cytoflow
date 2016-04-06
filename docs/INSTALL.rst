@@ -238,7 +238,7 @@ pre-built MacOS Python packages.  That's the approach outlined below.
 
     git clone https://github.com/bpteague/cytoflow.git
     
-* Now, install it in developers' mode.
+* Now, install it in developers' mode::
   
     NO_LOGICLE=True python setup.py develop
     
@@ -249,7 +249,7 @@ pre-built MacOS Python packages.  That's the approach outlined below.
 * Download the ``cytoflow`` wheel from the Github release page or the PyPI release.  These 
   commands get version 0.2.0 from PyPI; but the Logicle extension hasn't changed in many 
   releases, and hopefully won't be changing any time soon, so they are likely still valid
-  for the master Git branch.
+  for the master Git branch::
   
     mkdir build
     cd build
