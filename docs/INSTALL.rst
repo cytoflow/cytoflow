@@ -203,7 +203,7 @@ when I roll a release they get posted on the GitHub release page.
   or ``_Logicle-win32.pyd`` if you're running a 32-bit version of Windows.
   
 * Copy the file into your source directory; put it in the 
-  `cytoflow/operations/logicle_ext` subdirectory.
+  `cytoflow/utility/logicle_ext` subdirectory.
   
 * **Rename the file _Logicle.pyd**
 
