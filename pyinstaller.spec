@@ -1,5 +1,4 @@
-
-block_cipher = None
+import sys
 
 a = Analysis(['cytoflowgui/run.py'],
              pathex=['cytoflowgui/'],
@@ -11,56 +10,14 @@ a = Analysis(['cytoflowgui/run.py'],
              hiddenimports = [
              'matplotlib.backends.backend_qt4agg',
              'matplotlib_backend',
-             'pyface.ui.qt4.about_dialog',
-             'pyface.ui.qt4.action.action_item',
-             'pyface.ui.qt4.action.menu_bar_manager',
-             'pyface.ui.qt4.action.menu_manager',
-             'pyface.ui.qt4.action.status_bar_manager',
-             'pyface.ui.qt4.action.tool_bar_manager',
-             'pyface.ui.qt4.action.tool_palette_manager',
-             'pyface.ui.qt4.application_window',
-             'pyface.ui.qt4.beep',
-             'pyface.ui.qt4.clipboard',
-             'pyface.ui.qt4.confirmation_dialog',
-             'pyface.ui.qt4.dialog',
-             'pyface.ui.qt4.directory_dialog',
-             'pyface.ui.qt4.file_dialog',
-             'pyface.ui.qt4.gui',
-             'pyface.ui.qt4.heading_text',
-             'pyface.ui.qt4.image_cache',
-             'pyface.ui.qt4.image_resource',
-             'pyface.ui.qt4.init', 
-             'pyface.ui.qt4.ipython_widget',
-             'pyface.ui.qt4.message_dialog',
-             'pyface.ui.qt4.progress_dialog',
-             'pyface.ui.qt4.python_editor',
-             'pyface.ui.qt4.python_shell',
-             'pyface.ui.qt4.resource_manager',
-             'pyface.ui.qt4.splash_screen',
-             'pyface.ui.qt4.split_widget',
-             'pyface.ui.qt4.system_metrics',
-             'pyface.ui.qt4.tasks.advanced_editor_area_pane',
-             'pyface.ui.qt4.tasks.dock_pane',
-             'pyface.ui.qt4.tasks.editor',
-             'pyface.ui.qt4.tasks.editor_area_pane',
-             'pyface.ui.qt4.tasks.split_editor_area_pane',
-             'pyface.ui.qt4.tasks.task_pane',
-             'pyface.ui.qt4.tasks.task_window_backend',
-             'pyface.ui.qt4.timer.do_later',
-             'pyface.ui.qt4.timer.timer',
-             'pyface.ui.qt4.widget',
-             'pyface.ui.qt4.window',
-             'pyface.ui.qt4.wizard.wizard',
-             'pyface.ui.qt4.wizard.wizard_page',
-             'pyface.ui.qt4.workbench.editor',
-             'pyface.ui.qt4.workbench.view',
              'sklearn.neighbors.ball_tree',
              'sklearn.neighbors.kd_tree',
              'sklearn.neighbors.dist_metrics',
              'sklearn.neighbors.typedefs'
              ],
              hookspath=['pyinstaller'],
-             runtime_hooks=['pyinstaller/rthook_pyqt4.py'],
+             runtime_hooks=['pyinstaller/rthook_pyqt4.py',
+                            'pyinstaller/rthook_qtapi.py'],
              excludes=['gi.repository.Gio', 'gi.repository.GModule',
                        'gi.repository.GObject', 'gi.repository.Gtk',
                        'gi.repository.Gdk', 'gi.repository.Atk',
@@ -79,50 +36,42 @@ a = Analysis(['cytoflowgui/run.py'],
                        'sqlalchemy'],
              win_no_prefer_redirects=False,
              win_private_assemblies=False,
-             cipher=block_cipher)
+             cipher=None)
 
 # remove a few more egregiously unnecessary libraries and datas
 
 remove_strs = ["nvidia", "Qt3Support", "QtDeclarative", "QtNetwork",
                "QtOpenGL", "QtScript", "Xml", "xml", "Sql", "sql", 
-               "glib", "gobject", "sample_data"]
+               "glib", "gobject"]
 
 lol = [ [x for x in a.binaries if x[0].find(y) >= 0] for y in remove_strs]
 remove_items = [item for sublist in lol for item in sublist]
 a.binaries -= remove_items
 
-lol = [ [x for x in a.datas if x[0].find(y) >= 0] for y in remove_strs]
+# for some reason, on a Mac, PyInstaller tries to include the entire
+# source directory, including docs, examples, and build files!
+remove_first = [ "cytoflow", "build", "dist", "doc", ".git"]
+lol = [ [x for x in a.datas if x[0].startswith(y)] for y in remove_first]
 remove_items = [item for sublist in lol for item in sublist]
 a.datas -= remove_items
 
-pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
+pyz = PYZ(a.pure, a.zipped_data, cipher=None)
 
 exe = EXE(pyz,
           a.scripts,
           a.binaries,
           a.zipfiles,
           a.datas,
-          name='run',
+          name='cytoflow',
           debug=False,
           strip=False,
           upx=True,
-          console=False )
+          console=False)
 
-# for a one-directory install
 
-# exe = EXE(pyz,
-#           a.scripts,
-#           exclude_binaries=True,
-#           name='run',
-#           debug=True,
-#           strip=False,
-#           upx=True,
-#           console=True )
-# 
-# coll = COLLECT(exe,
-#                a.binaries,
-#                a.zipfiles,
-#                a.datas,
-#                strip=False,
-#                upx=True,
-#                name='run')
+if sys.platform == 'darwin':
+   app = BUNDLE(exe,
+                name = "Cytoflow.app",
+                icon = None)
+
+
