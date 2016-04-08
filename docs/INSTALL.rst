@@ -1,8 +1,8 @@
 Installation notes
 ==================
 
-DEVELOPERS: To use the Cytoflow modules in an IPython notebook or your own code
--------------------------------------------------------------------------------
+USERS AND DEVELOPERS: To use the Cytoflow modules in an IPython notebook or your own code
+-----------------------------------------------------------------------------------------
 
 .. _ubuntu-mod:
 
@@ -63,7 +63,7 @@ the fastest.**
 
 * Install the conda package dependencies.  At the command prompt, type::
 
-    conda install pip pandas numpy numexpr matplotlib scipy scikit-learn seaborn pyface envisage pyqt
+    conda install pip pandas numpy numexpr matplotlib scipy scikit-learn seaborn pyface envisage bottleneck pyqt
 
 * Install the package with pip::
 
@@ -74,26 +74,31 @@ the fastest.**
   type ``import cytoflow`` and press ``Shift+Enter``.  If Python doesn't complain,
   you're good to go.  (If it does, please submit a bug report!)
   
-  
 MacOS
 ^^^^^
 
-* Start by installing the Anaconda Python distribution.  **Make sure to install
-  the Python 2.7 version.**  (Some day we will be Python 3 compatible, but not
-  until all of our dependencies are.)
-  
+** As with Windows, this is not the only way to install CytoFlow but it is the fastest.
+
+* Start by installing the Anaconda Python distribution. **Make sure to install
+  version 2.7.**  (Some day we will be Python 3 compatible, but not until 
+  all of our dependencies are.)
+
   `Download Anaconda here <https://www.continuum.io/downloads>`_
-  
-* Install the conda package dependencies.  At the command prompt, type::
-
-    conda install pip pandas numpy numexpr matplotlib scipy scikit-learn seaborn pyface envisage pyqt
-    
-* Install `cytoflow` with pip::
-
-   pip install cytoflow
-   
-* 
-  
+ 
+* Start the Terminal.
+ 
+* Install the conda package dependencies.  At the Terminal prompt, type::
+     
+     conda install pip pandas numpy numexpr matplotlib scipy scikit-learn seaborn pyface envisage bottleneck pyqt
+     
+* Install the `cytoflow` package with `pip`.  At the Terminal prompt, type::
+     
+     pip install cytoflow
+     
+* To verify the installation, start a Jupyter notebook from the Anaconda Navigator.  A
+  browser window will open.  Create a new Python 2 notebook, and in the first cell type
+  ``import cytoflow`` and press ``Shift+Enter``.  If Python doesn't complain,
+  you're good to go.  (If it does, please submit a bug report!)
 
 DEVELOPERS: To hack on the code
 -------------------------------
@@ -175,8 +180,8 @@ when I roll a release they get posted on the GitHub release page.
 
 * Install the conda package dependencies.  At the Anconda command prompt, type::
 
-    conda install pip pandas numpy numexpr matplotlib scipy scikit-learn seaborn pyface envisage pyqt
-
+    conda install pip pandas numpy numexpr matplotlib scipy scikit-learn seaborn pyface envisage bottleneck pyqt
+    
 * Clone the git repo.  **From git-bash**, say::
 
     git clone https://github.com/bpteague/cytoflow.git
@@ -198,7 +203,7 @@ when I roll a release they get posted on the GitHub release page.
   or ``_Logicle-win32.pyd`` if you're running a 32-bit version of Windows.
   
 * Copy the file into your source directory; put it in the 
-  `cytoflow/operations/logicle_ext` subdirectory.
+  `cytoflow/utility/logicle_ext` subdirectory.
   
 * **Rename the file _Logicle.pyd**
 
@@ -206,8 +211,61 @@ when I roll a release they get posted on the GitHub release page.
   is installed properly.  If you get an error, make sure you've followed the
   instructions above carefully then file a bug report!
 
-USERS: Just run the code
-------------------------
+  
+MacOS
+^^^^^
+
+``cytoflow`` has one C++ module, compiled with ``swig``.  On MacOS, you have two options
+to get this file:  you can download `XCode <http://developer.apple.com/xcode/download>`_, 
+with which you should be able to build the C++ extension using the usual ``python setup.py build``.
+
+The other alternative is to suck the compiled extension out of one of the
+pre-built MacOS Python packages.  That's the approach outlined below.
+
+* Install a copy of ``git`` from `the Git website <http://www.git-scm.com>`_.
+
+* Install the Anaconda Python distribution. **Make sure to install
+  version 2.7.**  (Some day we will be Python 3 compatible, but not until 
+  all of our dependencies are.)
+
+  `Download Anaconda here <https://www.continuum.io/downloads>`_
+
+* Install the conda package dependencies.  In a Mac Terminal, type::
+
+    conda install pip pandas numpy numexpr matplotlib scipy scikit-learn seaborn pyface envisage bottleneck pyqt
+    
+* Clone the git repo.  In your working folder, say::
+
+    git clone https://github.com/bpteague/cytoflow.git
+    
+* Now, install it in developers' mode::
+  
+    NO_LOGICLE=True python setup.py develop
+    
+  This should complete successfully.  If it dies with 
+  ``SystemError: Cannot locate working compiler``, make sure you set NO_LOGICLE, try it again,
+  then please file a bug report.
+  
+* Download the ``cytoflow`` wheel from the Github release page or the PyPI release.  These 
+  commands get version 0.2.0 from PyPI; but the Logicle extension hasn't changed in many 
+  releases, and hopefully won't be changing any time soon, so they are likely still valid
+  for the master Git branch::
+  
+    mkdir build
+    cd build
+    curl https://pypi.python.org/packages/cp27/c/cytoflow/cytoflow-0.2.0-cp27-cp27m-macosx_10_5_x86_64.whl -o cytoflow.zip
+    unzip cytoflow.zip
+    cp cytoflow/utility/logicle_ext/_Logicle.so ../cytoflow/utility/logicle_ext/
+
+* Start an IPython notebook.  Say ``import cytoflow`` to make sure that everything
+  is installed properly.  If you get an error, make sure you've followed the
+  instructions above carefully then file a bug report!
+  
+
+USERS: Just run the point-and-click GUI program
+-----------------------------------------------
+
+**There is a single-click executable under development.**
 
 Ubuntu
 ^^^^^^
