@@ -29,7 +29,6 @@ from pyface.api import ImageResource
 from cytoflow import Stats1DView, geom_mean
 
 from cytoflowgui.subset_editor import SubsetEditor
-from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.view_plugins.i_view_plugin \
     import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, shared_view_traits
     
@@ -52,25 +51,25 @@ class Stats1DHandler(Controller, ViewHandlerMixin):
                        })
     
     def default_traits_view(self):
-        return View(Item('object.name'),
-                    Item('object.by',
-                         editor=EnumEditor(name='handler.conditions'),
+        return View(Item('name'),
+                    Item('by',
+                         editor=EnumEditor(name='context.conditions_names'),
                          # TODO - restrict this to NUMERIC values?
                          label = "Variable"),
-                    Item('object.ychannel',
-                         editor=EnumEditor(name='handler.channels'),
+                    Item('ychannel',
+                         editor=EnumEditor(name='context.channels'),
                          label = "Y Channel"),
-                    Item('object.yfunction',
+                    Item('yfunction',
                          editor = EnumEditor(name='handler.summary_functions'),
                          label = "Y Summary\nFunction"),
-                    Item('object.xfacet',
-                         editor=EnumEditor(name='handler.conditions'),
+                    Item('xfacet',
+                         editor=EnumEditor(name='context.conditions_names'),
                          label = "Horizontal\nFacet"),
-                    Item('object.yfacet',
-                         editor=EnumEditor(name='handler.conditions'),
+                    Item('yfacet',
+                         editor=EnumEditor(name='context.conditions_names'),
                          label = "Vertical\nFacet"),
-                    Item('object.huefacet',
-                         editor=EnumEditor(name='handler.conditions'),
+                    Item('huefacet',
+                         editor=EnumEditor(name='context.conditions_names'),
                          label="Color\nFacet"),
 #                     Item('object.error_bars',
 #                          editor = EnumEditor(values = {None : "",
@@ -86,9 +85,9 @@ class Stats1DHandler(Controller, ViewHandlerMixin):
 #                          label = "Error bar\nVariable",
 #                          visible_when = 'object.error_bars == "summary"'),
                     Item('_'),
-                    Item('object.subset',
+                    Item('subset',
                          label="Subset",
-                         editor = SubsetEditor(experiment = "handler.wi.result")),
+                         editor = SubsetEditor(experiment = "context.result")),
                     shared_view_traits)
     
 class Stats1DPluginView(Stats1DView, PluginViewMixin):

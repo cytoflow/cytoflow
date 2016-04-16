@@ -37,40 +37,40 @@ from cytoflowgui.subset_editor import SubsetEditor
 class Range2DHandler(Controller, OpHandlerMixin):
     
     def default_traits_view(self):
-        return View(Item('object.name'),
-                    Item('object.xchannel',
-                         editor=EnumEditor(name='handler.previous_channels'),
+        return View(Item('name'),
+                    Item('xchannel',
+                         editor=EnumEditor(name='context.previous.channels'),
                          label = "X Channel"),
-                    Item('object.xlow', label = "X Low"),
-                    Item('object.xhigh', label = "X High"),
-                    Item('object.ychannel',
-                         editor=EnumEditor(name='handler.previous_channels'),
+                    Item('xlow', label = "X Low"),
+                    Item('xhigh', label = "X High"),
+                    Item('ychannel',
+                         editor=EnumEditor(name='context.previous.channels'),
                          label = "Y Channel"),
-                    Item('object.ylow', label = "Y Low"),
-                    Item('object.yhigh', label = "Y High"),
+                    Item('ylow', label = "Y Low"),
+                    Item('yhigh', label = "Y High"),
                     shared_op_traits) 
         
 class RangeView2DHandler(Controller, ViewHandlerMixin):
     def default_traits_view(self):
-        return View(Item('object.name', 
+        return View(Item('name', 
                          style = 'readonly'),
-                    Item('object.xchannel', 
+                    Item('xchannel', 
                          label = "X Channel", 
                          style = 'readonly'),
-                    Item('object.xscale',
+                    Item('xscale',
                          label = "X Scale"),
                     Item('object.ychannel',
                          label = "Y Channel",
                          style = 'readonly'),
-                    Item('object.yscale',
+                    Item('yscale',
                          label = "Y Scale"),
-                    Item('object.huefacet',
-                         editor=EnumEditor(name='handler.conditions'),
+                    Item('huefacet',
+                         editor=EnumEditor(name='context.previous.conditions_names'),
                          label="Color\nFacet"),
                     Item('_'),
                     Item('object.subset',
                          label = "Subset",
-                         editor = SubsetEditor(experiment = 'handler.wi.previous.result')),
+                         editor = SubsetEditor(experiment = 'context.previous.result')),
                     shared_view_traits)
 
 @provides(ISelectionView)

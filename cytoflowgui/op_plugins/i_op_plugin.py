@@ -70,43 +70,44 @@ class IOperationPlugin(Interface):
 class PluginOpMixin(HasTraits):
     pass
 
-shared_op_traits = Group(Item('handler.wi.warning',
+shared_op_traits = Group(Item('context.warning',
                               label = 'Warning',
-                              visible_when = 'handler.wi.warning',
+                              visible_when = 'context.warning',
                               editor = ColorTextEditor(foreground_color = "#000000",
                                                        background_color = "#ffff99",
                                                        word_wrap = True)),
-                         Item('handler.wi.error',
+                         Item('context.error',
                                label = 'Error',
-                               visible_when = 'handler.wi.error',
+                               visible_when = 'context.error',
                                editor = ColorTextEditor(foreground_color = "#000000",
                                                         background_color = "#ff9191",
                                                         word_wrap = True)))
 
         
 class OpHandlerMixin(HasTraits):
-    wi = Instance(WorkflowItem)
-    
-    previous_channels = Property(List, depends_on = 'wi.previous.metadata')
-    previous_conditions = Property(List, depends_on = 'wi.previous.conditions')
-
-    # MAGIC: provides dynamically updated values for the "channels" trait
-    def _get_previous_channels(self):
-        """
-        doc
-        """
-        if self.wi and self.wi.previous and self.wi.previous.channels :
-            return self.wi.previous.channels
-        else:
-            return []
-         
-    # MAGIC: provides dynamically updated values for the "conditions" trait
-    def _get_previous_conditions(self):
-        """
-        doc
-        """
-        if self.wi and self.wi.previous and self.wi.previous.conditions:
-            return self.wi.previous.conditions.keys
-        else:
-            return []
+    pass
+#     wi = Instance(WorkflowItem)
+#     
+#     previous_channels = Property(List, depends_on = 'wi.previous.metadata')
+#     previous_conditions = Property(List, depends_on = 'wi.previous.conditions')
+# 
+#     # MAGIC: provides dynamically updated values for the "channels" trait
+#     def _get_previous_channels(self):
+#         """
+#         doc
+#         """
+#         if self.wi and self.wi.previous and self.wi.previous.channels :
+#             return self.wi.previous.channels
+#         else:
+#             return []
+#          
+#     # MAGIC: provides dynamically updated values for the "conditions" trait
+#     def _get_previous_conditions(self):
+#         """
+#         doc
+#         """
+#         if self.wi and self.wi.previous and self.wi.previous.conditions:
+#             return self.wi.previous.conditions.keys
+#         else:
+#             return []
     

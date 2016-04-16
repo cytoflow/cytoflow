@@ -26,7 +26,7 @@ Created on Feb 11, 2015
 
 import os.path
 
-from traits.api import Instance, List, Bool, Any, on_trait_change
+from traits.api import Instance, List, Bool, on_trait_change
 from pyface.tasks.api import Task, TaskLayout, PaneItem
 from pyface.tasks.action.api import SMenu, SMenuBar, SToolBar, TaskAction
 from pyface.api import FileDialog, OK, ImageResource, AboutDialog
@@ -41,18 +41,7 @@ from cytoflowgui.op_plugins import IOperationPlugin, ImportPlugin, OP_PLUGIN_EXT
 from cytoflowgui.view_plugins import IViewPlugin, VIEW_PLUGIN_EXT
 from cytoflowgui.ipython import IPythonNotebookWriter
 
-from util import UniquePriorityQueue
-from multiprocessing import Process, Pipe
 import pickle as pickle
-
-# setup the worker thread
-# def update_model(flag, lock, to_update):
-#     while flag.wait():
-#         flag.clear()
-#         while not to_update.empty():
-#             with lock:
-#                 _, wi = to_update.get_nowait()
-#             wi.update()
 
 class FlowTask(Task):
     """
@@ -126,30 +115,11 @@ class FlowTask(Task):
     
     # are we debugging?  ie, do we need a default setup?
     debug = Bool
-    
-    worker_conn = Any
-#     to_update = Instance(UniquePriorityQueue, ())
-#     worker_flag = Instance(threading.Event, args = ())
-#     worker_lock = Instance(threading.Lock, args = ())
-        
-#     def initialized(self):
-# 
-#         # make sure that when the result changes we get notified
-#         # can't use a static notifier because selected.result gets updated
-#         # on the worker thread, but we need to dispatch on the UI thread
-#         self.model.on_trait_change(self._result_updated, 
-#                                    "selected:result",
-#                                    dispatch = 'ui')
-            
+
     def activated(self):
         
         # add an import plugin
         import_op = ImportPlugin().get_operation()
-#         wi = WorkflowItem(task = self)
-#         wi.operation = plugin.get_operation()
-# 
-#         self.model.workflow.append(wi)
-#         self.model.selected = wi
         
         # if we're debugging, add a few data bits
         if self.debug:
@@ -193,14 +163,6 @@ class FlowTask(Task):
         import_op = ImportPlugin().get_operation()
         self.model.add_operation(import_op, None)       
         
-#         # add an import plugin
-#         plugin = ImportPlugin()
-#         wi = WorkflowItem(task = self)
-#         wi.operation = plugin.get_operation()
-# 
-#         self.model.workflow.append(wi)
-#         self.model.selected = wi
-        
     def on_open(self):
         """ Shows a dialog to open a file.
         """
@@ -215,14 +177,6 @@ class FlowTask(Task):
         unpickler = pickle.Unpickler(f)
         new_workflow = unpickler.load()
 
-#         # update the link back to the controller (ie, self)
-#         for wi in new_model.workflow:
-#             wi.task = self
-#             
-#             # and set up the view handlers
-#             for view in wi.views:
-#                 view.handler = view.handler_factory(model = view, wi = wi)
-                  
         # replace the current workflow with the one we just loaded
         
         if False:
@@ -230,36 +184,11 @@ class FlowTask(Task):
             
             with record_events() as container:
                 self.model.workflow[:] = new_workflow
-                #self.model.selected = new_model.selected
-                
+                                
             container.save_to_directory(os.getcwd()) 
         else:
             self.model.workflow[:] = new_workflow
-#             self.model.selected = new_model.selected   
-        
-#         wi = self.model.workflow[0]
-#         while True:
-#             wi.status = "invalid"
-#             with self.worker_lock:
-#                 self.to_update.put_nowait((self.model.workflow.index(wi), wi))
-#             if wi.next:
-#                 wi = wi.next
-#             else:
-#                 break
-#             
-        # check to see if we have a worker thread around
-#         if not self.worker or not self.worker.is_alive():
-#             self.worker = threading.Thread(target = update_model, 
-#                                            args = (self.worker_flag, 
-#                                                    self.worker_lock,
-#                                                    self.to_update))
-#             self.worker.daemon = True
-#             self.worker.start()
-            
-        # start the worker thread processing
-#         with self.worker_lock:
-#             if not self.to_update.empty():
-#                 self.worker_flag.set()
+
         
     def on_save(self):
         """ Shows a dialog to open a file.
@@ -349,174 +278,28 @@ class FlowTask(Task):
         """
         called by the view pane 
         """
-#         wi = self.model.selected
-         
+
         if view_id == "default":
-            view_id = self.model.selected.default_view.id
-         
-#         view = next((x for x in wi.views if x.id == view_id), None)
-#          
-#         if not view:
-        plugin = next((x for x in self.view_plugins if x.view_id == view_id))
-        #view = plugin.get_view()
-            
-        self.model.set_current_view(plugin().get_view())
+            self.model.set_current_view(self.model.selected.default_view)
+        else:
+            plugin = next((x for x in self.view_plugins if x.view_id == view_id))
+            self.model.set_current_view(plugin.get_view())
+ 
+ 
+    @on_trait_change("model.selected.current_view.-transient")
+    def _view_changed(self, obj, name, old, new):      
+        wi = self.model.selected
+        if wi is None:
+            wi = self.model.workflow[-1]
+             
+        self.view.plot(wi)
         
-#             view.handler = view.handler_factory(model = view, wi = wi)
-#             wi.views.append(view)
-#         
-#         wi.current_view = view
         
-        
-#         # default to inserting at the end of the list if none selected
-#         after = self.model.selected
-#         if after is None:
-#             after = self.model.workflow[-1]
-#         
-#         idx = self.model.workflow.index(after)
-#         
-#         wi = WorkflowItem(task = self)
-#         wi.operation = plugin.get_operation()
-# 
-#         wi.next = after.next
-#         after.next = wi
-#         wi.previous = after
-#         if wi.next:
-#             wi.next.previous = wi
-#         self.model.workflow.insert(idx+1, wi)
-#         
-#         # set up the default view
-#         wi.default_view = plugin.get_default_view()
-#         if wi.default_view is not None:
-#             wi.default_view.op = wi.operation
-#             wi.default_view.handler = \
-#                 wi.default_view.handler_factory(model = wi.default_view, wi = wi.previous)
-#             wi.views.append(wi.default_view)
-# 
-#         # select (open) the new workflow item
-#         self.model.selected = wi
-#         if wi.default_view:
-#             wi.current_view = wi.default_view
-            
-        # invalidate everything following
-#         self.operation_parameters_updated()
+    @on_trait_change("model:selected.status")
+    def _selected_status_changed(self, obj, name, old, new):
+        if new == "valid" and self.model.selected:
+            self.view.plot(self.model.selected)
 
-#     @on_trait_change("model:workflow[]")
-#     def _on_model_changed(self, obj, name, old, new):
-#         print "obj {0}".format(obj)
-#         print "name {0}".format(name)
-#         print "old {0}".format(old)
-#         print "new {0}".format(new)
-#         
-#     @on_trait_change("model:selected:operation:-transient")
-#     def _on_operation_parameters_changed(self, obj, name, old, new):
-#         print "obj {0}".format(obj)
-#         print "name {0}".format(name)
-#         print "old {0}".format(old)
-#         print "new {0}".format(new)
-        
-#     @on_trait_change("model:workflow[]")
-#     def _on_remove_operation(self, obj, name, old, new):
-#         if name == "workflow_items" and len(new) == 0 and len(old) > 0:
-#             assert len(old) == 1
-#             wi = old[0]
-#             
-#             if self.model.selected == wi:
-#                 self.model.selected = wi.previous
-#             
-#             wi.previous.next = wi.next
-#             if wi.next:
-#                 wi.next.previous = wi.previous
-#             
-#             del wi.default_view
-#             del wi.views
-#             del wi
-# 
-#             self.operation_parameters_updated()
-        
-#     @on_trait_change("model:selected:operation:+")
-#     def operation_parameters_updated(self): 
-#         
-#         # invalidate this workflow item and all the ones following it
-#         wi = self.model.selected
-#         while True:
-#             wi.status = "invalid"
-#             with self.worker_lock:
-#                 self.to_update.put_nowait((self.model.workflow.index(wi), wi))
-#             if wi.next:
-#                 wi = wi.next
-#             else:
-#                 break
-#             
-#         # check to see if we have a worker thread around
-#         if not self.worker or not self.worker.is_alive():
-#             self.worker = threading.Thread(target = update_model, 
-#                                            args = (self.worker_flag, 
-#                                                    self.worker_lock,
-#                                                    self.to_update))
-#             self.worker.daemon = True
-#             self.worker.start()
-#             
-#         # start the worker thread processing
-#         with self.worker_lock:
-#             if not self.to_update.empty():
-#                 self.worker_flag.set()
-        
-
-#     @on_trait_change("model:selected.current_view")
-#     def _current_view_changed(self, obj, name, old, new): 
-#         
-#         # we get notified if *either* the currently selected workflowitem
-#         # *or* the current view changes.
-#         
-#         if name == 'selected':
-#             new = new.current_view if new else None
-#             old = old.current_view if old else None
-#             
-#         # remove the notifications from the old view
-#         if old:
-#             old.on_trait_change(self.view_parameters_updated, remove = True)
-#             
-#             # and if the old view was interactive, turn off its interactivity
-#             # to remove the matplotlib event handlers
-#             if "interactive" in old.traits():
-#                 old.interactive = False
-#             
-#         # whenever the view parameters change, we need to know so we can
-#         # update the plot(s)
-#         if new:
-#             new.on_trait_change(self.view_parameters_updated)
-#             
-#             if self.model.selected:
-#                 self.view.plot(self.model.selected)
-#             else:
-#                 self.view.clear_plot()
-#         else:
-#             self.view.clear_plot()
-
-#     def _result_updated(self, obj, name, old, new):
-#         print "result updated"
-#         if self.model.selected:
-#             self.view.plot(self.model.selected)
-#         else:
-#             self.view.clear_plot()
-        
-#     def view_parameters_updated(self, obj, name, new):
-#         
-#         # i should be able to specify the metadata i want in the listener,
-#         # but there's an odd interaction (bug) between metadata, dynamic 
-#         # trait listeners and instance traits.  so, check for 'transient'
-#         # here instead,
-#         
-#         if obj.trait(name).transient:
-#             return
-#         
-#         print "view parameters updated: {0}".format(name)
-#         wi = self.model.selected
-#         if wi is None:
-#             wi = self.model.workflow[-1]
-#             
-#         self.view.plot(wi)
         
 class FlowTaskPlugin(Plugin):
     """

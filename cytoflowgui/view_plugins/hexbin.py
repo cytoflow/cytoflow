@@ -29,7 +29,6 @@ from pyface.api import ImageResource
 from cytoflow import HexbinView
 
 from cytoflowgui.subset_editor import SubsetEditor
-from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.view_plugins.i_view_plugin \
     import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, shared_view_traits
 
@@ -39,31 +38,31 @@ class HexbinHandler(Controller, ViewHandlerMixin):
     '''
 
     def default_traits_view(self):
-        return View(Item('object.name'),
+        return View(Item('name'),
                     Heading('THE HEXBIN PLUGIN IS BROKEN.'),
-                    Item('object.xchannel',
-                         editor=EnumEditor(name='handler.channels'),
+                    Item('xchannel',
+                         editor=EnumEditor(name='context.channels'),
                          label = "X Channel"),
-                    Item('object.xscale',
+                    Item('xscale',
                          label = "X Scale"),
-                    Item('object.ychannel',
-                         editor=EnumEditor(name='handler.channels'),
+                    Item('ychannel',
+                         editor=EnumEditor(name='context.channels'),
                          label = "Y Channel"),
-                    Item('object.yscale',
+                    Item('yscale',
                          label = "Y Scale"),
-                    Item('object.xfacet',
-                         editor=EnumEditor(name='handler.conditions'),
+                    Item('xfacet',
+                         editor=EnumEditor(name='context.conditions_names'),
                          label = "Horizontal\nFacet"),
                     Item('object.yfacet',
-                         editor=EnumEditor(name='handler.conditions'),
+                         editor=EnumEditor(name='context.conditions_names'),
                          label = "Vertical\nFacet"),
                     Item('object.huefacet',
-                         editor=EnumEditor(name='handler.conditions'),
+                         editor=EnumEditor(name='context.conditions_names'),
                          label="Color\nFacet"),
                     Item('_'),
-                    Item('object.subset',
+                    Item('subset',
                          label="Subset",
-                         editor = SubsetEditor(experiment = "handler.wi.result")),
+                         editor = SubsetEditor(experiment = "context.result")),
                     shared_view_traits)
 
 class HexbinPluginView(HexbinView, PluginViewMixin):

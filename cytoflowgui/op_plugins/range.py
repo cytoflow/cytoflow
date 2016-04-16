@@ -32,29 +32,29 @@ from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
 class RangeHandler(Controller, OpHandlerMixin):
     
     def default_traits_view(self):
-        return View(Item('object.name'),
-                    Item('object.channel',
-                         editor=EnumEditor(name='handler.previous_channels'),
+        return View(Item('name'),
+                    Item('channel',
+                         editor=EnumEditor(name='context.previous.channels'),
                          label = "Channel"),
-                    Item('object.low'),
-                    Item('object.high'),
+                    Item('low'),
+                    Item('high'),
                     shared_op_traits) 
         
 class RangeViewHandler(Controller, ViewHandlerMixin):
     def default_traits_view(self):
-        return View(Item('object.name',
+        return View(Item('name',
                          style = "readonly"),
-                    Item('object.channel', 
+                    Item('channel', 
                          label = "Channel",
                          style = "readonly"),
-                    Item('object.scale'),
-                    Item('object.huefacet',
-                         editor=EnumEditor(name='handler.conditions'),
+                    Item('scale'),
+                    Item('huefacet',
+                         editor=EnumEditor(name='context.previous.conditions_names'),
                          label="Color\nFacet"),
                     Item('_'),
-                    Item('object.subset',
+                    Item('subset',
                          label = "Subset",
-                         editor = SubsetEditor(experiment = 'handler.wi.previous.result')),
+                         editor = SubsetEditor(experiment = 'context.previous.result')),
                     shared_view_traits)
 
 @provides(ISelectionView)

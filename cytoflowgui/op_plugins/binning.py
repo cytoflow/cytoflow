@@ -36,13 +36,13 @@ from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
 
 class BinningHandler(Controller, OpHandlerMixin):
     def default_traits_view(self):
-        return View(Item('object.name'),
-                    Item('object.channel',
-                         editor=EnumEditor(name='handler.previous_channels'),
+        return View(Item('name'),
+                    Item('channel',
+                         editor=EnumEditor(name='context.previous.channels'),
                          label = "Channel"),
-                    Item('object.scale'),
-                    Item('object.num_bins', label = "Num Bins"),
-                    Item('object.bin_width'),
+                    Item('scale'),
+                    Item('num_bins', label = "Num Bins"),
+                    Item('bin_width'),
                     shared_op_traits)
 
 class BinningPluginOp(BinningOp, PluginOpMixin):
@@ -50,16 +50,16 @@ class BinningPluginOp(BinningOp, PluginOpMixin):
 
 class BinningViewHandler(Controller, ViewHandlerMixin):
     def default_traits_view(self):
-        return View(Item('object.name',
+        return View(Item('name',
                          style = 'readonly'),
-                    Item('object.channel',
+                    Item('channel',
                          style = 'readonly'),
-                    Item('object.huefacet',
+                    Item('huefacet',
                          style = 'readonly'),
                     Item('_'),
-                    Item('object.subset',
+                    Item('subset',
                          label = "Subset",
-                         editor = SubsetEditor(experiment = 'handler.wi.previous.result')),
+                         editor = SubsetEditor(experiment = 'context.previous.result')),
                     shared_view_traits)
 
 @provides(IView)

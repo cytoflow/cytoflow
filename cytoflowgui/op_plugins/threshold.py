@@ -29,28 +29,28 @@ from cytoflowgui.subset_editor import SubsetEditor
 
 class ThresholdHandler(Controller, OpHandlerMixin):
     def default_traits_view(self):
-        return View(Item('object.name'),
-                    Item('object.channel',
-                         editor=EnumEditor(name='handler.previous_channels'),
+        return View(Item('name'),
+                    Item('channel',
+                         editor=EnumEditor(name='context.previous.channels'),
                          label = "Channel"),
-                    Item('object.threshold'),
+                    Item('threshold'),
                     shared_op_traits) 
         
 class ThresholdViewHandler(Controller, ViewHandlerMixin):
     def default_traits_view(self):
-        return View(Item('object.name',
+        return View(Item('name',
                          style = "readonly"),
-                    Item('object.channel', 
+                    Item('channel', 
                          label = "Channel",
                          style = "readonly"),
-                    Item('object.scale'),
-                    Item('object.huefacet',
-                         editor=EnumEditor(name='handler.conditions'),
+                    Item('scale'),
+                    Item('huefacet',
+                         editor=EnumEditor(name='context.previous.conditions_names'),
                          label="Color\nFacet"),
                     Item('_'),
                     Item('object.subset',
                          label = "Subset",
-                         editor = SubsetEditor(experiment = 'handler.wi.previous.result')),
+                         editor = SubsetEditor(experiment = 'context.previous.result')),
                     shared_view_traits)
 
 class ThresholdSelectionView(ThresholdSelection, PluginViewMixin):

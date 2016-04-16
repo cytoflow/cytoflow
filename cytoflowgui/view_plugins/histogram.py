@@ -29,7 +29,6 @@ from pyface.api import ImageResource
 from cytoflow import HistogramView
 
 from cytoflowgui.subset_editor import SubsetEditor
-from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.view_plugins.i_view_plugin \
     import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, shared_view_traits
     
@@ -39,24 +38,24 @@ class HistogramHandler(Controller, ViewHandlerMixin):
     """
     
     def default_traits_view(self):
-        return View(Item('object.name'),
-                    Item('object.channel',
-                         editor=EnumEditor(name='handler.channels'),
+        return View(Item('name'),
+                    Item('channel',
+                         editor=EnumEditor(name='context.channels'),
                          label = "Channel"),
-                    Item('object.scale'),
-                    Item('object.xfacet',
-                         editor=EnumEditor(name='handler.conditions'),
+                    Item('scale'),
+                    Item('xfacet',
+                         editor=EnumEditor(name='context.conditions_names'),
                          label = "Horizontal\nFacet"),
-                    Item('object.yfacet',
-                         editor=EnumEditor(name='handler.conditions'),
+                    Item('yfacet',
+                         editor=EnumEditor(name='context.conditions_names'),
                          label = "Vertical\nFacet"),
-                    Item('object.huefacet',
-                         editor=EnumEditor(name='handler.conditions'),
+                    Item('huefacet',
+                         editor=EnumEditor(name='context.conditions_names'),
                          label="Color\nFacet"),
                     Item('_'),
-                    Item('object.subset',
+                    Item('subset',
                          label="Subset",
-                         editor = SubsetEditor(experiment = "handler.wi.result")),
+                         editor = SubsetEditor(experiment = "context.result")),
                     shared_view_traits)
     
 class HistogramPluginView(HistogramView, PluginViewMixin):

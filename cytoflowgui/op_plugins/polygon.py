@@ -36,36 +36,36 @@ from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
 
 class PolygonHandler(Controller, OpHandlerMixin):
     def default_traits_view(self):
-        return View(Item('object.name'),
-                    Item('object.xchannel',
-                         editor=EnumEditor(name='handler.previous_channels'),
+        return View(Item('name'),
+                    Item('xchannel',
+                         editor=EnumEditor(name='context.previous.channels'),
                          label = "X Channel"),
                     Item('object.ychannel',
-                         editor=EnumEditor(name='handler.previous_channels'),
+                         editor=EnumEditor(name='context.previous.channels'),
                          label = "Y Channel"),
                     shared_op_traits) 
         
 class PolygonViewHandler(Controller, ViewHandlerMixin):
     def default_traits_view(self):
-        return View(Item('object.name', 
+        return View(Item('name', 
                          style = 'readonly'),
-                    Item('object.xchannel', 
+                    Item('xchannel', 
                          label = "X Channel", 
                          style = 'readonly'),
-                    Item('object.xscale',
+                    Item('xscale',
                          label = "X Scale"),
-                    Item('object.ychannel',
+                    Item('ychannel',
                          label = "Y Channel",
                          style = 'readonly'),
-                    Item('object.yscale',
+                    Item('yscale',
                          label = "Y Scale"),
-                    Item('object.huefacet',
-                         editor=EnumEditor(name='handler.conditions'),
+                    Item('huefacet',
+                         editor=EnumEditor(name='context.previous.conditions_names'),
                          label="Color\nFacet"),
                     Item('_'),
-                    Item('object.subset',
+                    Item('subset',
                          label = "Subset",
-                         editor = SubsetEditor(experiment = 'handler.wi.previous.result')),
+                         editor = SubsetEditor(experiment = 'context.previous.result')),
                     shared_view_traits)
 
 @provides(ISelectionView)

@@ -29,7 +29,6 @@ from pyface.api import ImageResource
 from cytoflow import ScatterplotView
 
 from cytoflowgui.subset_editor import SubsetEditor
-from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.view_plugins.i_view_plugin \
     import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, shared_view_traits
 
@@ -39,30 +38,30 @@ class ScatterplotHandler(Controller, ViewHandlerMixin):
     '''
 
     def default_traits_view(self):
-        return View(Item('object.name'),
-                    Item('object.xchannel',
-                         editor=EnumEditor(name='handler.channels'),
+        return View(Item('name'),
+                    Item('xchannel',
+                         editor=EnumEditor(name='context.channels'),
                          label = "X Channel"),
-                    Item('object.xscale',
+                    Item('xscale',
                          label = "X Scale"),
-                    Item('object.ychannel',
-                         editor=EnumEditor(name='handler.channels'),
+                    Item('ychannel',
+                         editor=EnumEditor(name='context.channels'),
                          label = "Y Channel"),
-                    Item('object.yscale',
+                    Item('yscale',
                          label = "Y Scale"),
-                    Item('object.xfacet',
-                         editor=EnumEditor(name='handler.conditions'),
+                    Item('xfacet',
+                         editor=EnumEditor(name='context.conditions_names'),
                          label = "Horizontal\nFacet"),
-                    Item('object.yfacet',
-                         editor=EnumEditor(name='handler.conditions'),
+                    Item('yfacet',
+                         editor=EnumEditor(name='context.conditions_names'),
                          label = "Vertical\nFacet"),
-                    Item('object.huefacet',
-                         editor=EnumEditor(name='handler.conditions'),
+                    Item('huefacet',
+                         editor=EnumEditor(name='context.conditions_names'),
                          label="Color\nFacet"),
                     Item('_'),
-                    Item('object.subset',
+                    Item('subset',
                          label="Subset",
-                         editor = SubsetEditor(experiment = "handler.wi.result")),
+                         editor = SubsetEditor(experiment = "context.result")),
                     shared_view_traits)
 
 class ScatterplotPluginView(ScatterplotView, PluginViewMixin):
