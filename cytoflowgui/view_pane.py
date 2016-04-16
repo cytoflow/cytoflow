@@ -25,7 +25,7 @@ from pyface.api import ImageResource
 from pyface.qt import QtGui, QtCore
 
 from cytoflowgui.view_plugins import IViewPlugin
-from cytoflowgui.workflow_item import WorkflowItem
+from cytoflowgui.workflow import WorkflowItem
 from cytoflowgui.workflow import Workflow
 
 import cytoflow

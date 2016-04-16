@@ -15,39 +15,33 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from traits.api import HasTraits, List, Instance, on_trait_change, Any
-from traitsui.api import View, Item
-
-from cytoflowgui.vertical_notebook_editor import VerticalNotebookEditor
-from cytoflowgui.workflow_item import WorkflowItem
-
 import warnings
 
-from traits.api import HasStrictTraits, Instance, List, DelegatesTo, Enum, \
+# threading AND multiprocessing, oh my!
+import threading, multiprocessing
+
+from traits.api import HasTraits, HasStrictTraits, Instance, List, DelegatesTo, Enum, \
                        Property, cached_property, on_trait_change, \
-                       Str, Dict
+                       Str, Dict, Any
+                       
 from traitsui.api import View, Item, Handler
 from pyface.qt import QtGui
-from pyface.tasks.api import Task
+# from pyface.tasks.api import Task
 
 from cytoflow import Experiment
 from cytoflow.operations.i_operation import IOperation
 from cytoflow.views.i_view import IView
 from cytoflow.utility import CytoflowError
 
+from cytoflowgui.vertical_notebook_editor import VerticalNotebookEditor
 
-# threading AND multiprocessing, oh my!
-
-import multiprocessing
-import threading
-
-class Workflow(HasTraits):
+class Workflow(HasStrictTraits):
     """
     A list of WorkflowItems.
     """
 
-    workflow = List(WorkflowItem)
-    selected = Instance(WorkflowItem)
+    workflow = List("WorkflowItem")
+    selected = Instance("WorkflowItem")
 
     traits_view = View(Item(name='workflow',
                             id='table',
@@ -62,6 +56,26 @@ class Workflow(HasTraits):
                             ),
                        #resizable = True
                        )
+    
+    # THE NEW NEW PLAN combines both:
+    # The parent process runs the GUI
+    # The child process holds the data
+    # When a WI needs to run in the child process, it runs the operation
+    # in grandchild process, which sends back just the changed columns.
+    # threads are used to listen for status updates, passed back as new
+    # WI instances (though we'll have to break the update loop somewhere!)
+    
+    # THE NEW PLAN: when a WorkflowItem runs, it will kick off a new process.
+    # that new process will be passed the previous WI's result and the 
+    # operation (which should be FAST because of process cloning, at least on
+    # Linux and Mac.) the new process will run the operation on the data,
+    # collect the result, then do a column-by-column comparison of the two
+    # and send new and changed columns back to the parent process.  the 
+    # parent process's WI will construct a result out of the previous WI's
+    # result and the changed columns from the child process.
+    
+    # THE OLD PLAN:
+    # (the old plan has problems with orphaned processes.)
     
     # multiprocessing and multithreading plan:
     
@@ -99,53 +113,106 @@ class Workflow(HasTraits):
     
     # second, it is not uncommon to have an operation's parameters update
     # while that operation is running.  this is actually the original
-    # movitvation for multiprocessing: when 
+    # motivation for multiprocessing: when a long-running operation is
+    # running, it holds the Python global interpreter lock (GIL) and thus
+    # freezes the GUI.
     
-    # each operation runs in its own process, spawned as a child 
-    # of the operation before it.  when an operation's parameters get 
-    # updated, requiring reprocessing, that operation's process and all 
-    # its children are terminated; the previous operation then spawns a 
-    # subprocess with a copy of its output Experiment as the input of the 
-    # child process's.
-    
-    # i think that on linux and macos, the copy-on-write model will keep the
-    # 
-    # we'll have to see if this keeps things from growing
-    # out of control.
-    
-    def __init__(self, *args, **kwargs):
-        super(Workflow, self).__init__(*args, **kwargs)
+    child_conn = Any
+      
+    def __init__(self, **kwargs):
+        super(Workflow, self).__init__(**kwargs)
+        
+        # assert that we're called before the workflow is
+        # filled.
+        assert not self.workflow
+        
+        # start child process
+        self.child_conn, parent_conn = multiprocessing.Pipe()
+        RemoteWorkflow(parent_conn).start()     
+        
+        # start a thread to handle communications with it
+        threading.Thread(target = self._handle_child_process,
+                         args = (self.child_conn, )).start()
         
     def add_operation(self, operation, default_view):
+        # Called from the PARENT process.
         # add the new operation after the selected workflow item or at the end
         # of the workflow if no wi is selected
+        
+        # make a new workflow item
+        wi = WorkflowItem(operation = operation,
+                          default_view = default_view)
+
+        # set up the default view
+        if wi.default_view is not None:
+            wi.default_view.op = wi.operation
+            wi.default_view.handler = \
+                wi.default_view.handler_factory(model = wi.default_view, 
+                                                wi = wi.previous)
+            wi.views.append(wi.default_view)
+        
+        # insert it into the model 
+        if self.workflow:
+            # default to inserting at the end of the list if none selected
+            after = self.selected
+            if self.selected is None:
+                after = self.model.workflow[-1]
+             
+            idx = self.workflow.index(after)
+     
+            wi.next = after.next
+            after.next = wi
+            wi.previous = after
+            if wi.next:
+                wi.next.previous = wi
+
+            self.workflow.insert(idx+1, wi)
+        else:
+            self.workflow.append(wi)
+ 
+        # select (open) the new workflow item
+        self.model.selected = wi
+        if wi.default_view:
+            wi.current_view = wi.default_view
     
     def set_current_view(self, view):
         pass
+
+    @on_trait_change('workflow')
+    def _on_new_workflow(self, obj, name, old, new):
+        # a whole new workflow (ie loading a saved workflow, etc)
+        if self.child_conn:
         
+            # TODO - remove old dynamic handlers, add new ones
+            self.child_conn.send((0, self.workflow))
+        
+    @on_trait_change('workflow_items')
+    def _on_workflow_add_remove_items(self, list_event):
+        if self.child_conn:
+            # TODO - remove old dynamic handlers, add new ones
+        
+            idx = list_event.index
+            for wi in self.workflow[idx:]:
+                wi.status = "invalid"
+                
+            self.child_conn.send((idx, self.workflow[idx:]))
     
-    @on_trait_change('workflow[]')
-    def _on_workflow_changed(self, name, removed, added):
+    def _on_workflow_item_changed(self, name):
         pass
     
-    parent_connection = Any
-    child_connection = Any
-    
-    def wait_for_updates(self):
+    def _handle_child_process(self, child_conn):
         while True:
-            (pos, items) = self.conn.recv()
-            del self.workflow[pos:]
-            self.workflow[-1].next = items[0]
-            items[0].previous = self.workflow[-1]
-            self.workflow.extend(items)    
-            
-            
-from util import UniquePriorityQueue
+            print "From child :: {}".format(child_conn.recv())
 
-def start_worker_process(conn):
-    p = WorkflowManager(conn = conn)
-    p.wait_for_updates()
-    
+class RemoteWorkflow(multiprocessing.Process):
+    def __init__(self, parent_conn):
+        super(RemoteWorkflow, self).__init__()
+        self.parent_conn = parent_conn
+        
+    def run(self):
+        while True:
+            print "From parent :: {}".format(self.parent_conn.recv())
+
 
 class WorkflowItem(HasStrictTraits):
     """        
@@ -164,7 +231,7 @@ class WorkflowItem(HasStrictTraits):
     name = DelegatesTo('operation')
     
     # the Task instance that serves as controller for this model
-    task = Instance(Task, transient = True)
+    # task = Instance(Task, transient = True)
     
     # the operation this Item wraps
     operation = Instance(IOperation)

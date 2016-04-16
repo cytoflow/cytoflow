@@ -22,7 +22,7 @@ Created on Mar 15, 2015
 """
 from traits.api import Interface, Str, HasTraits, Instance, Property, List
 from traitsui.api import Group, Item
-from cytoflowgui.workflow_item import WorkflowItem
+from cytoflowgui.workflow import WorkflowItem
 from cytoflowgui.color_text_editor import ColorTextEditor
 
 OP_PLUGIN_EXT = 'edu.mit.synbio.cytoflow.op_plugins'
