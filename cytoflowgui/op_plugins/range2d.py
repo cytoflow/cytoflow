@@ -33,6 +33,7 @@ from cytoflowgui.op_plugins.i_op_plugin \
     import IOperationPlugin, OpHandlerMixin, PluginOpMixin, OP_PLUGIN_EXT, shared_op_traits
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin, shared_view_traits
 from cytoflowgui.subset_editor import SubsetEditor
+from cytoflowgui.clearable_enum_editor import ClearableEnumEditor
 
 class Range2DHandler(Controller, OpHandlerMixin):
     
@@ -65,7 +66,7 @@ class RangeView2DHandler(Controller, ViewHandlerMixin):
                     Item('yscale',
                          label = "Y Scale"),
                     Item('huefacet',
-                         editor=EnumEditor(name='context.previous.conditions_names'),
+                         editor=ClearableEnumEditor(name='context.previous.conditions_names'),
                          label="Color\nFacet"),
                     Item('_'),
                     Item('object.subset',

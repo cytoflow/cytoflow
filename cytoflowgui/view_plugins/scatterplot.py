@@ -29,6 +29,7 @@ from pyface.api import ImageResource
 from cytoflow import ScatterplotView
 
 from cytoflowgui.subset_editor import SubsetEditor
+from cytoflowgui.clearable_enum_editor import ClearableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
     import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, shared_view_traits
 
@@ -50,13 +51,13 @@ class ScatterplotHandler(Controller, ViewHandlerMixin):
                     Item('yscale',
                          label = "Y Scale"),
                     Item('xfacet',
-                         editor=EnumEditor(name='context.conditions_names'),
+                         editor=ClearableEnumEditor(name='context.conditions_names'),
                          label = "Horizontal\nFacet"),
                     Item('yfacet',
-                         editor=EnumEditor(name='context.conditions_names'),
+                         editor=ClearableEnumEditor(name='context.conditions_names'),
                          label = "Vertical\nFacet"),
                     Item('huefacet',
-                         editor=EnumEditor(name='context.conditions_names'),
+                         editor=ClearableEnumEditor(name='context.conditions_names'),
                          label="Color\nFacet"),
                     Item('_'),
                     Item('subset',

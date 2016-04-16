@@ -29,6 +29,7 @@ from pyface.api import ImageResource
 from cytoflow import HexbinView
 
 from cytoflowgui.subset_editor import SubsetEditor
+from cytoflowgui.clearable_enum_editor import ClearableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
     import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, shared_view_traits
 
@@ -51,13 +52,13 @@ class HexbinHandler(Controller, ViewHandlerMixin):
                     Item('yscale',
                          label = "Y Scale"),
                     Item('xfacet',
-                         editor=EnumEditor(name='context.conditions_names'),
+                         editor=ClearableEnumEditor(name='context.conditions_names'),
                          label = "Horizontal\nFacet"),
                     Item('object.yfacet',
-                         editor=EnumEditor(name='context.conditions_names'),
+                         editor=ClearableEnumEditor(name='context.conditions_names'),
                          label = "Vertical\nFacet"),
                     Item('object.huefacet',
-                         editor=EnumEditor(name='context.conditions_names'),
+                         editor=ClearableEnumEditor(name='context.conditions_names'),
                          label="Color\nFacet"),
                     Item('_'),
                     Item('subset',
