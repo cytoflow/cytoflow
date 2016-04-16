@@ -44,10 +44,11 @@ class Workflow(HasStrictTraits):
                                                                 page_name = '.name',
                                                                 page_description = '.friendly_id',
                                                                 page_icon = '.icon',
+                                                                delete = True,
+                                                                page_deletable = '.deletable',
                                                                 selected = 'selected',
                                                                 scrollable = True,
-                                                                multiple_open = False,
-                                                                delete = True),
+                                                                multiple_open = False),
                                 show_label = False))
 
     # a view showing the selected workflow item's current view
@@ -133,7 +134,8 @@ class Workflow(HasStrictTraits):
         
         # make a new workflow item
         wi = WorkflowItem(operation = operation,
-                          default_view = default_view)
+                          default_view = default_view,
+                          deletable = (operation.id != "edu.mit.synbio.cytoflow.operations.import"))
 
         # set up the default view
         if wi.default_view is not None:

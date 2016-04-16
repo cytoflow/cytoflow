@@ -204,6 +204,12 @@ class _VerticalNotebookEditor(Editor):
         if page_icon[0:1] == '.':
             if getattr(obj, page_icon[1:], Undefined) is not Undefined:
                 page.register_icon_listener(obj, page_icon[1:])
+                
+        # Is the page deletable?
+        page_deletable = self.factory.page_deletable
+        if page_deletable[0:1] == '.':
+            if getattr(obj, page_deletable[1:], Undefined) is not Undefined:
+                page.register_deletable_listener(obj, page_deletable[1:])
 
         # Save the Traits UI in the page so it can dispose of it later:
         page.ui = ui
@@ -248,6 +254,11 @@ class VerticalNotebookEditor(BasicEditorFactory):
     # The type of this trait is toolkit-specific; for example, the pyface.qt
     # type is a QtGui.QStyle.StandardPixmap
     page_icon = Str
+    
+    # List member trait to specify whether the page is deletable
+    # If the "delete" trait, above, is True, then this list member
+    # trait will enable or disable the "delete" button
+    page_deletable = Str
 
     # Name of the view to use for each page:
     view = AView

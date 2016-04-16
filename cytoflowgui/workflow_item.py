@@ -23,7 +23,7 @@ Created on Mar 15, 2015
 import warnings
 
 from traits.api import HasStrictTraits, Instance, List, DelegatesTo, Enum, \
-                       Property, cached_property, on_trait_change, \
+                       Property, cached_property, on_trait_change, Bool, \
                        Str, Dict
 from traitsui.api import View, Item, Handler
 from pyface.qt import QtGui
@@ -52,6 +52,9 @@ class WorkflowItem(HasStrictTraits):
     
     # the operation this Item wraps
     operation = Instance(IOperation)
+    
+    # for the vertical notebook view, is this page deletable?
+    deletable = Bool(True)
     
     # the handler that's associated with this operation; we get it from the 
     # operation plugin, and it controls what operation traits are in the UI
