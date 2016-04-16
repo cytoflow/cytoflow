@@ -22,9 +22,10 @@ Created on Mar 15, 2015
 """
 
 from traits.api import Interface, Str, HasTraits, Property, Instance, List
-from traitsui.api import Handler, Group, Item
+from traitsui.api import Handler, Group, Item, VGroup
 from cytoflowgui.workflow import WorkflowItem
 from cytoflowgui.color_text_editor import ColorTextEditor
+from cytoflowgui.subset_editor import SubsetEditor
 
 VIEW_PLUGIN_EXT = 'edu.mit.synbio.cytoflow.view_plugins'
 
@@ -62,18 +63,23 @@ class PluginViewMixin(HasTraits):
     warning = Str(transient = True)
     error = Str(transient = True)
     
-shared_view_traits = Group(Item('warning',
-                                label = 'Warning',
-                                visible_when = 'warning',
-                                editor = ColorTextEditor(foreground_color = "#000000",
-                                                         background_color = "#ffff99",
-                                                         word_wrap = True)),
-                           Item('error',
-                                 label = 'Error',
-                                 visible_when = 'error',
-                                 editor = ColorTextEditor(foreground_color = "#000000",
-                                                          background_color = "#ff9191",
-                                                          word_wrap = True)))
+shared_view_traits = VGroup(VGroup(Item('subset',
+                                        show_label = False,
+                                        editor = SubsetEditor(experiment = "context.result")),
+                                   label = "View Subset",
+                                   show_border = True,
+                                   show_labels = False),
+                            VGroup(Item('warning',
+                                        resizable = True,
+                                        visible_when = 'warning',
+                                        editor = ColorTextEditor(foreground_color = "#000000",
+                                                                 background_color = "#ffff99")),
+                                   Item('error',
+                                         resizable = True,
+                                         visible_when = 'error',
+                                         editor = ColorTextEditor(foreground_color = "#000000",
+                                                                  background_color = "#ff9191")),
+                                   show_labels = False))
 
 class ViewHandlerMixin(HasTraits):
     pass

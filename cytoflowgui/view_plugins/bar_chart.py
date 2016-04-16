@@ -22,7 +22,7 @@ Created on Feb 24, 2015
 """
 
 from traits.api import provides, Callable, Dict
-from traitsui.api import View, Item, Controller, EnumEditor
+from traitsui.api import View, Item, VGroup, Controller, EnumEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
@@ -31,7 +31,6 @@ import scipy.stats
 
 from cytoflow import BarChartView, geom_mean
 
-from cytoflowgui.subset_editor import SubsetEditor
 from cytoflowgui.clearable_enum_editor import ClearableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
     import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, shared_view_traits
@@ -52,17 +51,19 @@ class BarChartHandler(Controller, ViewHandlerMixin):
                        })
     
     def default_traits_view(self):
-        return View(Item('name'),
-                    Item('channel',
-                         editor=EnumEditor(name='context.channels'),
-                         label = "Channel"),
-                    Item('by',
-                         editor=EnumEditor(name='context.conditions_names'),
-                         label = "Variable"),
-                    Item('function',
-                         editor = EnumEditor(name='handler.summary_functions'),
-                         label = "Summary\nFunction"),
-                    # TODO - waiting on seaborn v0.6
+        return View(
+                 VGroup(
+                   VGroup(Item('name'),
+                         Item('channel',
+                              editor=EnumEditor(name='context.channels'),
+                              label = "Channel"),
+                         Item('by',
+                              editor=EnumEditor(name='context.conditions_names'),
+                              label = "Variable"),
+                         Item('function',
+                              editor = EnumEditor(name='handler.summary_functions'),
+                              label = "Summary\nFunction"),
+                        # TODO - waiting on seaborn v0.6
 #                    Item('object.orientation')
 #                     Item('object.error_bars',
 #                          editor = EnumEditor(values = {None : "",
@@ -77,20 +78,16 @@ class BarChartHandler(Controller, ViewHandlerMixin):
 #                          editor = EnumEditor(name = 'handler.conditions'),
 #                          label = "Error bar\nVariable",
 #                          visible_when = 'object.error_bars == "summary"'),
-                    Item('xfacet',
-                         editor=ClearableEnumEditor(name='context.conditions_names'),
-                         label = "Horizontal\nFacet"),
-                    Item('yfacet',
-                         editor=ClearableEnumEditor(name='context.conditions_names'),
-                         label = "Vertical\nFacet"),
-                    Item('huefacet',
-                         editor=ClearableEnumEditor(name='context.conditions_names'),
-                         label="Color\nFacet"),
-                    Item('_'),
-                    Item('subset',
-                         label="Subset",
-                         editor = SubsetEditor(experiment = "context.result")),
-                    shared_view_traits)
+                         Item('xfacet',
+                              editor=ClearableEnumEditor(name='context.conditions_names'),
+                              label = "Horizontal\nFacet"),
+                         Item('yfacet',
+                              editor=ClearableEnumEditor(name='context.conditions_names'),
+                              label = "Vertical\nFacet"),
+                         Item('huefacet',
+                              editor=ClearableEnumEditor(name='context.conditions_names'),
+                              label="Color\nFacet")),
+                    shared_view_traits))
     
 class BarChartPluginView(BarChartView, PluginViewMixin):
     handler_factory = Callable(BarChartHandler)

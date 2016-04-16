@@ -24,9 +24,9 @@ Created on Oct 2, 2015
 from pyface.qt import QtGui, QtCore
 from traitsui.qt4.editor_factory import ReadonlyEditor
 from traitsui.api import BasicEditorFactory
-from traits.api import Color, Instance, Str, Undefined, Bool
+from traits.api import Color, Instance, Str, Undefined
 
-class ColorText(ReadonlyEditor):
+class _ColorTextEditor(ReadonlyEditor):
     """ Read-only style of text editor, which displays a read-only text field.
     """
 
@@ -35,41 +35,11 @@ class ColorText(ReadonlyEditor):
     _background_color = Color
 
     def init(self, parent):
-        """ Finishes initializing the editor by creating the underlying toolkit
-            widget.
-        """
-        
-        # I don't seem to be able to just call super() ???
-        
-        self.control = QtGui.QLabel(self.str_value)
-
-        if self.item.resizable is True or self.item.height != -1.0:
-            self.control.setSizePolicy(QtGui.QSizePolicy.Expanding,
-                                       QtGui.QSizePolicy.Expanding)
-            self.control.setWordWrap(True)
-
-        alignment = None
-        for item in self.factory.text_alignment.split(",") :
-            item_alignment = self.text_alignment_map.get(item, None)
-            if item_alignment :
-                if alignment :
-                    alignment = alignment | item_alignment
-                else :
-                    alignment = item_alignment
-
-        if alignment :
-            self.control.setAlignment(alignment)
-
-        self.set_tooltip()   
-        
-        # up to here is copied from traitsui.qt4.editor_factory.ReadonlyEditor     
-
+        super(_ColorTextEditor, self).init(parent)
+ 
         flags = (self.control.textInteractionFlags() |
                  QtCore.Qt.TextSelectableByMouse)
         self.control.setTextInteractionFlags(flags)
-
-        if self.factory.word_wrap:
-            self.control.setWordWrap(True)
 
         fg_color = self.factory.foreground_color
         if fg_color[0:1] == '.':
@@ -102,18 +72,15 @@ class ColorText(ReadonlyEditor):
         self.control.setText(self.str_value)
         
     def _foreground_color_changed(self, old, new):
-        print "foreground color updated: ", self._foreground_color
         self._palette.setColor(self.control.foregroundRole(), self._foreground_color)
         self.control.setPalette(self._palette) 
     
     def _background_color_changed(self, old, new):
-        print "background color updated: ", self._background_color
         self._palette.setColor(self.control.backRole(), self._background_color)
         self.control.setPalette(self._palette) 
         
 # editor factory
 class ColorTextEditor(BasicEditorFactory):
-    klass = ColorText
+    klass = _ColorTextEditor
     foreground_color = Str
     background_color = Str
-    word_wrap = Bool

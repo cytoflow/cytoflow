@@ -40,6 +40,7 @@ from cytoflow.operations.i_operation import IOperation
 from cytoflowgui.import_dialog import ExperimentDialog
 from cytoflowgui.op_plugins.i_op_plugin \
     import IOperationPlugin, OpHandlerMixin, PluginOpMixin, shared_op_traits
+from cytoflowgui.toggle_button import ToggleButtonEditor
 
 
 class ImportHandler(Controller, OpHandlerMixin):
@@ -48,28 +49,30 @@ class ImportHandler(Controller, OpHandlerMixin):
     """
     
     import_event = Button(label="Edit samples...")
-#     samples = Property
-#     events = Property
+    samples = Property
+    events = Property
 #     samples = Property(depends_on = 'wi.result')
 #     events = Property(depends_on = 'wi.result')
     
     def default_traits_view(self):
         return View(Item('handler.import_event',
                          show_label=False),
-#                     Item('handler.samples',
-#                          label='Samples',
-#                          style='readonly'),
-#                          #visible_when='handler.wi.result is not None'),
-#                     Item('handler.events',
-#                          label='Events',
-#                          style='readonly'),
-                         #visible_when='handler.wi.result is not None'),
+                    Item('handler.samples',
+                         label='Samples',
+                         style='readonly',
+                         visible_when='context.result is not None'),
+                    Item('handler.events',
+                         label='Events',
+                         style='readonly',
+                         visible_when='context.result is not None'),
                     Item('object.coarse',
-                         label="Coarse\nimport?"),
-                         #visible_when='handler.wi.result is not None'),
+                         label="Coarse import?",
+                         show_label = False,
+                         editor = ToggleButtonEditor(),
+                         visible_when='context.result is not None'),
                     Item('object.coarse_events',
-                         label="Events per\nsample"),
-                         #visible_when='handler.wi.result is not None and object.coarse == True'),
+                         label="Events per\nsample",
+                         visible_when='context.result is not None and object.coarse == True'),
                     shared_op_traits)
         
     def _import_event_fired(self):
@@ -93,16 +96,13 @@ class ImportHandler(Controller, OpHandlerMixin):
         
     @cached_property
     def _get_samples(self):
-#         if self.wi.result is not None:
-#             return len(self.wi.operation.tubes)
-#         else:
-            return 0
+            return len(self.model.tubes)
      
     @cached_property
     def _get_events(self):
-#         if self.wi.result is not None:
-#             return self.wi.result.data.shape[0]
-#         else:
+        if self.info.ui.context['context'].result:
+            return self.info.ui.context['context'].result.data.shape[0]
+        else:
             return 0
 
 @provides(IOperation)

@@ -72,16 +72,16 @@ class PluginOpMixin(HasTraits):
 
 shared_op_traits = Group(Item('context.warning',
                               label = 'Warning',
+                              resizable = True,
                               visible_when = 'context.warning',
                               editor = ColorTextEditor(foreground_color = "#000000",
-                                                       background_color = "#ffff99",
-                                                       word_wrap = True)),
+                                                       background_color = "#ffff99")),
                          Item('context.error',
                                label = 'Error',
+                               resizable = True,
                                visible_when = 'context.error',
                                editor = ColorTextEditor(foreground_color = "#000000",
-                                                        background_color = "#ff9191",
-                                                        word_wrap = True)))
+                                                        background_color = "#ff9191")))
 
         
 class OpHandlerMixin(HasTraits):

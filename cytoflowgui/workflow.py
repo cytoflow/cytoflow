@@ -39,7 +39,6 @@ class Workflow(HasStrictTraits):
     
     # a view for the entire workflow's list of operations
     operations_view = View(Item(name = 'workflow',
-                                id = 'table',
                                 editor = VerticalNotebookEditor(view = 'operation_view',
                                                                 page_name = '.name',
                                                                 page_description = '.friendly_id',

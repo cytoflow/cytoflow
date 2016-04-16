@@ -22,7 +22,7 @@ Created on Apr 23, 2015
 '''
 
 from traits.api import provides, Callable
-from traitsui.api import View, Item, Controller, EnumEditor
+from traitsui.api import View, Item, Controller, EnumEditor, Label, Group, VGroup
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
@@ -39,31 +39,30 @@ class ScatterplotHandler(Controller, ViewHandlerMixin):
     '''
 
     def default_traits_view(self):
-        return View(Item('name'),
-                    Item('xchannel',
-                         editor=EnumEditor(name='context.channels'),
-                         label = "X Channel"),
-                    Item('xscale',
-                         label = "X Scale"),
-                    Item('ychannel',
-                         editor=EnumEditor(name='context.channels'),
-                         label = "Y Channel"),
-                    Item('yscale',
-                         label = "Y Scale"),
-                    Item('xfacet',
-                         editor=ClearableEnumEditor(name='context.conditions_names'),
-                         label = "Horizontal\nFacet"),
-                    Item('yfacet',
-                         editor=ClearableEnumEditor(name='context.conditions_names'),
-                         label = "Vertical\nFacet"),
-                    Item('huefacet',
-                         editor=ClearableEnumEditor(name='context.conditions_names'),
-                         label="Color\nFacet"),
-                    Item('_'),
-                    Item('subset',
-                         label="Subset",
-                         editor = SubsetEditor(experiment = "context.result")),
-                    shared_view_traits)
+        return View(
+                 VGroup(
+                   VGroup(Item('name'),
+                          Item('xchannel',
+                               editor=EnumEditor(name='context.channels'),
+                               label = "X Channel"),
+                          Item('xscale',
+                               label = "X Scale"),
+                          Item('ychannel',
+                               editor=EnumEditor(name='context.channels'),
+                               label = "Y Channel"),
+                          Item('yscale',
+                               label = "Y Scale"),
+                          Item('xfacet',
+                               editor=ClearableEnumEditor(name='context.conditions_names'),
+                               label = "Horizontal\nFacet"),
+                          Item('yfacet',
+                               editor=ClearableEnumEditor(name='context.conditions_names'),
+                               label = "Vertical\nFacet"),
+                          Item('huefacet',
+                               editor=ClearableEnumEditor(name='context.conditions_names'),
+                               label="Color\nFacet")),
+                   shared_view_traits))
+
 
 class ScatterplotPluginView(ScatterplotView, PluginViewMixin):
     handler_factory = Callable(ScatterplotHandler)
