@@ -22,7 +22,7 @@ Created on Apr 25, 2015
 '''
 
 from traits.api import provides, Callable
-from traitsui.api import View, Item, EnumEditor, Controller
+from traitsui.api import View, Item, EnumEditor, Controller, VGroup
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
@@ -48,26 +48,24 @@ class PolygonHandler(Controller, OpHandlerMixin):
         
 class PolygonViewHandler(Controller, ViewHandlerMixin):
     def default_traits_view(self):
-        return View(Item('name', 
-                         style = 'readonly'),
-                    Item('xchannel', 
-                         label = "X Channel", 
-                         style = 'readonly'),
-                    Item('xscale',
-                         label = "X Scale"),
-                    Item('ychannel',
-                         label = "Y Channel",
-                         style = 'readonly'),
-                    Item('yscale',
-                         label = "Y Scale"),
-                    Item('huefacet',
-                         editor=ClearableEnumEditor(name='context.previous.conditions_names'),
-                         label="Color\nFacet"),
-                    Item('_'),
-                    Item('subset',
-                         label = "Subset",
-                         editor = SubsetEditor(experiment = 'context.previous.result')),
-                    shared_view_traits)
+        return View(
+                 VGroup(
+                   VGroup(Item('name', 
+                               style = 'readonly'),
+                          Item('xchannel', 
+                               label = "X Channel", 
+                               style = 'readonly'),
+                          Item('xscale',
+                               label = "X Scale"),
+                          Item('ychannel',
+                               label = "Y Channel",
+                               style = 'readonly'),
+                          Item('yscale',
+                               label = "Y Scale"),
+                          Item('huefacet',
+                               editor=ClearableEnumEditor(name='context.previous.conditions_names'),
+                               label="Color\nFacet")),
+                   shared_view_traits))
 
 @provides(ISelectionView)
 class PolygonSelectionView(PolygonSelection, PluginViewMixin):

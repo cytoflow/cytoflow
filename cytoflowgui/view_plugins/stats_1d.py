@@ -61,6 +61,8 @@ class Stats1DHandler(Controller, ViewHandlerMixin):
                           Item('ychannel',
                                editor=EnumEditor(name='context.channels'),
                                label = "Y Channel"),
+                          Item('yscale',
+                               label = "Y Scale"),
                           Item('yfunction',
                                editor = EnumEditor(name='handler.summary_functions'),
                                label = "Y Summary\nFunction"),

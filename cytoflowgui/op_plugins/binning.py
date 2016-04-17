@@ -21,7 +21,7 @@ Created on Oct 9, 2015
 @author: brian
 '''
 
-from traitsui.api import View, Item, EnumEditor, Controller
+from traitsui.api import View, Item, EnumEditor, Controller, VGroup
 from envisage.api import Plugin, contributes_to
 from traits.api import provides, Callable
 from pyface.api import ImageResource
@@ -50,17 +50,15 @@ class BinningPluginOp(BinningOp, PluginOpMixin):
 
 class BinningViewHandler(Controller, ViewHandlerMixin):
     def default_traits_view(self):
-        return View(Item('name',
-                         style = 'readonly'),
-                    Item('channel',
-                         style = 'readonly'),
-                    Item('huefacet',
-                         style = 'readonly'),
-                    Item('_'),
-                    Item('subset',
-                         label = "Subset",
-                         editor = SubsetEditor(experiment = 'context.previous.result')),
-                    shared_view_traits)
+        return View(
+                 VGroup(
+                   VGroup(Item('name',
+                               style = 'readonly'),
+                          Item('channel',
+                               style = 'readonly'),
+                          Item('huefacet',
+                               style = 'readonly')),
+                    shared_view_traits))
 
 @provides(IView)
 class BinningPluginView(BinningView, PluginViewMixin):

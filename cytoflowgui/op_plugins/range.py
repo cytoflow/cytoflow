@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from traits.api import provides, Callable
-from traitsui.api import View, Item, EnumEditor, Controller
+from traitsui.api import View, Item, EnumEditor, Controller, VGroup
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
@@ -43,20 +43,18 @@ class RangeHandler(Controller, OpHandlerMixin):
         
 class RangeViewHandler(Controller, ViewHandlerMixin):
     def default_traits_view(self):
-        return View(Item('name',
-                         style = "readonly"),
-                    Item('channel', 
-                         label = "Channel",
-                         style = "readonly"),
-                    Item('scale'),
-                    Item('huefacet',
-                         editor=ClearableEnumEditor(name='context.previous.conditions_names'),
-                         label="Color\nFacet"),
-                    Item('_'),
-                    Item('subset',
-                         label = "Subset",
-                         editor = SubsetEditor(experiment = 'context.previous.result')),
-                    shared_view_traits)
+        return View(
+                 VGroup(
+                   VGroup(Item('name',
+                               style = "readonly"),
+                          Item('channel', 
+                               label = "Channel",
+                               style = "readonly"),
+                          Item('scale'),
+                          Item('huefacet',
+                               editor=ClearableEnumEditor(name='context.previous.conditions_names'),
+                               label="Color\nFacet")),
+                   shared_view_traits))
 
 @provides(ISelectionView)
 class RangeSelectionView(RangeSelection, PluginViewMixin):

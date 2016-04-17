@@ -149,6 +149,9 @@ class BinningOp(HasStrictTraits):
             
         # bins need to be internal; drop the first and last one
         bins = bins[1:-1]
+        
+        if len(bins) < 2:
+            raise util.CytoflowOpError("Must have more than one bin")
             
         new_experiment = experiment.clone()
         new_experiment.add_condition(self.name,
