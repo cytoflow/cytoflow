@@ -183,12 +183,11 @@ class FlowTask(Task):
             from event_tracer import record_events 
             
             with record_events() as container:
-                self.model.workflow[:] = new_workflow
+                self.model.workflow = new_workflow
                                 
             container.save_to_directory(os.getcwd()) 
         else:
-            self.model.workflow[:] = new_workflow
-
+            self.model.workflow = new_workflow
         
     def on_save(self):
         """ Shows a dialog to open a file.
@@ -299,6 +298,7 @@ class FlowTask(Task):
     def _selected_status_changed(self, obj, name, old, new):
         if new == "valid" and self.model.selected:
             self.view.plot(self.model.selected)
+        
 
         
 class FlowTaskPlugin(Plugin):
