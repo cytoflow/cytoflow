@@ -21,17 +21,19 @@ Created on Mar 15, 2015
 @author: brian
 '''
 
+import multiprocessing
+
 from envisage.ui.tasks.api import TasksApplication
 from pyface.tasks.api import TaskWindowLayout
 from traits.api import Bool, Instance, List, Property
 
 from preferences import CytoflowPreferences
+import cytoflowgui.matplotlib_multiprocess_backend as mpl_backend
+import cytoflowgui.workflow as workflow
 
 class CytoflowApplication(TasksApplication):
     """ The cytoflow Tasks application.
     """
-
-    #### 'IApplication' interface #############################################
 
     # The application's globally unique identifier.
     id = 'edu.mit.synbio.cytoflow'
@@ -39,7 +41,7 @@ class CytoflowApplication(TasksApplication):
     # The application's user-visible name.
     name = 'Cytoflow'
 
-    #### 'TasksApplication' interface #########################################
+    # Override two traits from TasksApplication so we can provide defaults, below
 
     # The default window-level layout for the application.
     default_layout = List(TaskWindowLayout)
@@ -47,6 +49,31 @@ class CytoflowApplication(TasksApplication):
     # Whether to restore the previous application-level layout when the
     # applicaton is started.
     always_use_default_layout = Property(Bool)
+    
+    def run(self):
+        # set up the child process
+        workflow_parent_conn, workflow_child_conn = multiprocessing.Pipe()
+        mpl_parent_conn, mpl_child_conn = multiprocessing.Pipe()
+
+        # connect the local pipes
+        workflow.child_conn = workflow_child_conn       
+        mpl_backend.child_conn = mpl_child_conn   
+
+        # start the child process
+        multiprocessing.Process(target = self._remote_main,
+                                args = (workflow_parent_conn, mpl_parent_conn)).start()
+
+        # run the GUI
+        super(CytoflowApplication, self).run()
+        
+    def _remote_main(self, workflow_parent_conn, mpl_parent_conn):
+        # connect the remote pipes
+        workflow.parent_conn = workflow_parent_conn
+        mpl_backend.parent_conn = mpl_parent_conn
+        
+        # run the remote workflow
+        workflow.RemoteWorkflow().run()
+    
 
     #### 'AttractorsApplication' interface ####################################
 

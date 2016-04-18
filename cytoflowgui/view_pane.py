@@ -24,7 +24,7 @@ from pyface.qt import QtGui, QtCore
 
 from cytoflowgui.view_plugins import IViewPlugin
 from cytoflowgui.workflow import WorkflowItem
-from cytoflowgui.workflow import Workflow
+from cytoflowgui.workflow import LocalWorkflow
 
 class ViewDockPane(TraitsDockPane):
     """
@@ -124,8 +124,9 @@ class ViewDockPane(TraitsDockPane):
             
     @on_trait_change('task:model:selected.default_view')
     def _default_view_changed(self, obj, name, old, new):
+        # TODO - this is ugly.  fixme.
         new_view = (new.default_view 
-                    if isinstance(obj, Workflow) 
+                    if isinstance(obj, LocalWorkflow) 
                        and isinstance(new, WorkflowItem)
                     else new)
          

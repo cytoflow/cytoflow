@@ -1,4 +1,5 @@
 #!/usr/bin/env python2.7
+from cytoflowgui import matplotlib_multiprocess_backend
 
 # (c) Massachusetts Institute of Technology 2015-2016
 #
@@ -25,6 +26,7 @@ Created on Feb 11, 2015
 # ETSConfig.toolkit = 'qt4'
 
 import os.path
+import multiprocessing
 
 from traits.api import Instance, List, Bool, on_trait_change
 from pyface.tasks.api import Task, TaskLayout, PaneItem
@@ -36,12 +38,14 @@ from envisage.ui.tasks.api import TaskFactory
 from cytoflowgui.flow_task_pane import FlowTaskPane
 from cytoflowgui.workflow_pane import WorkflowDockPane
 from cytoflowgui.view_pane import ViewDockPane
-from cytoflowgui.workflow import Workflow
+from cytoflowgui.workflow import LocalWorkflow, RemoteWorkflow
 from cytoflowgui.op_plugins import IOperationPlugin, ImportPlugin, OP_PLUGIN_EXT
 from cytoflowgui.view_plugins import IViewPlugin, VIEW_PLUGIN_EXT
 from cytoflowgui.ipython import IPythonNotebookWriter
 
 import pickle as pickle
+
+
 
 class FlowTask(Task):
     """
@@ -52,8 +56,8 @@ class FlowTask(Task):
     name = "Cytometry analysis"
     
     # the main workflow instance.
-    # THIS IS WHERE IT'S INITIALLY INSTANTIATED (note the args=())
-    model = Instance(Workflow, args = ())
+    # THIS IS WHERE IT'S INSTANTIATED (note the args=() )
+    model = Instance(LocalWorkflow, args = ())
         
     # the center pane
     view = Instance(FlowTaskPane)
@@ -115,9 +119,8 @@ class FlowTask(Task):
     
     # are we debugging?  ie, do we need a default setup?
     debug = Bool
-
+    
     def activated(self):
-        
         # add an import plugin
         import_op = ImportPlugin().get_operation()
         
@@ -135,7 +138,7 @@ class FlowTask(Task):
         
             import_op.tubes = [tube1, tube2]
             
-        self.model.add_operation(import_op, None)       
+        self.model.add_operation(import_op, None)      
     
     def prepare_destroy(self):
         self.model = None
@@ -285,7 +288,7 @@ class FlowTask(Task):
             self.model.set_current_view(plugin.get_view())
  
  
-    @on_trait_change("model.selected.current_view.-transient")
+    @on_trait_change("model:selected.current_view.-transient")
     def _view_changed(self, obj, name, old, new):      
         wi = self.model.selected
         if wi is None:

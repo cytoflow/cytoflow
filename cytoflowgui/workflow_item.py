@@ -139,9 +139,8 @@ class WorkflowItem(HasStrictTraits):
                 if w:
                     self.warning = w[-1].message.__str__()
             except CytoflowError as e:
-                self.status = "invalid"
                 self.error = e.__str__()    
-                print self.error
+                self.status = "invalid"
                 return
  
         self.status = "valid"

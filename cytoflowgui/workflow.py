@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # threading AND multiprocessing, oh my!
-import threading, multiprocessing
+import threading, sys
 
 import warnings
 
@@ -29,7 +29,7 @@ import cytoflow.utility as util
 
 from cytoflowgui.vertical_notebook_editor import VerticalNotebookEditor
 from cytoflowgui.workflow_item import WorkflowItem
-from cytoflowgui import matplotlib_multiprocess_backend
+#from cytoflowgui import matplotlib_multiprocess_backend
 
 # THE NEW NEW PLAN combines both:
 # The parent process runs the GUI
@@ -97,6 +97,12 @@ from cytoflowgui import matplotlib_multiprocess_backend
 # running, it holds the Python global interpreter lock (GIL) and thus
 # freezes the GUI.
 
+# pipe connections for communicating between canvases
+# http://stackoverflow.com/questions/1977362/how-to-create-module-wide-variables-in-python
+this = sys.modules[__name__]
+this.parent_conn = None
+this.child_conn = None
+
 class Msg:
     NEW_WORKFLOW = 0
     ADD_ITEMS = 1
@@ -107,7 +113,7 @@ class Msg:
     OP_STATUS = 5
     VIEW_STATUS = 6
                     
-class Workflow(HasStrictTraits):
+class LocalWorkflow(HasStrictTraits):
     """
     A list of WorkflowItems.
     """
@@ -139,42 +145,30 @@ class Workflow(HasStrictTraits):
                              Item('default_scale',
                                   show_label = False))
     
-    child_conn = Any
-    child_process = Instance(multiprocessing.Process)
-    child_conn_thread = Instance(threading.Thread)
-    
     def __init__(self, **kwargs):
-        super(Workflow, self).__init__(**kwargs)
-        
-        self.child_conn, parent_conn = multiprocessing.Pipe()
-        self.child_process = multiprocessing.Process(target = remote_workflow_main,
-                                                     args = (parent_conn, matplotlib_multiprocess_backend.remote_mpl_conn))
-        self.child_process.start()
-         
-        self.child_conn_thread = threading.Thread(target = self.listen_for_remote,
-                                                  args = ())
-        self.child_conn_thread.start()
+        super(LocalWorkflow, self).__init__(**kwargs)         
+        threading.Thread(target = self.listen_for_remote, args = ()).start()
 
     def listen_for_remote(self):
         while True:
-            if self.child_conn.poll(0.3):
-                msg = self.child_conn.recv()
+            if this.child_conn.poll(0.3):
+                msg = this.child_conn.recv()
                 if msg == Msg.OP_STATUS:
-                    idx = self.child_conn.recv()
+                    idx = this.child_conn.recv()
                     wi = self.workflow[idx]
-                    wi.channels = self.child_conn.recv()
-                    wi.conditions = self.child_conn.recv()
-                    wi.conditions_names = self.child_conn.recv()
-                    wi.warning = self.child_conn.recv()
-                    wi.error = self.child_conn.recv()
-                    wi.status = self.child_conn.recv()
+                    wi.channels = this.child_conn.recv()
+                    wi.conditions = this.child_conn.recv()
+                    wi.conditions_names = this.child_conn.recv()
+                    wi.warning = this.child_conn.recv()
+                    wi.error = this.child_conn.recv()
+                    wi.status = this.child_conn.recv()
                 elif msg == Msg.VIEW_STATUS:
-                    idx = self.child_conn.recv()
+                    idx = this.child_conn.recv()
                     wi = self.workflow[idx]
-                    view_id = self.child_conn.recv()
+                    view_id = this.child_conn.recv()
                     view = next((x for x in wi.views if x.id == view_id))
-                    view.warning = self.child_conn.recv()
-                    view.error = self.child_conn.recv()
+                    view.warning = this.child_conn.recv()
+                    view.error = this.child_conn.recv()
 
     def add_operation(self, operation, default_view):
         # add the new operation after the selected workflow item or at the end
@@ -222,8 +216,8 @@ class Workflow(HasStrictTraits):
             wi.status = "invalid"
         
         # send the new workflow to the child process
-        self.child_conn.send(Msg.NEW_WORKFLOW)
-        self.child_conn.send(self.workflow)
+        this.child_conn.send(Msg.NEW_WORKFLOW)
+        this.child_conn.send(self.workflow)
         
         
     @on_trait_change('workflow_items')
@@ -245,8 +239,8 @@ class Workflow(HasStrictTraits):
             if removed.next:
                 removed.next.previous = removed.previous
             
-            self.child_conn.send(Msg.REMOVE_ITEMS)
-            self.child_conn.send(idx)
+            this.child_conn.send(Msg.REMOVE_ITEMS)
+            this.child_conn.send(idx)
         
         # add new items to the linked list
         if event.added:
@@ -259,9 +253,9 @@ class Workflow(HasStrictTraits):
                 self.workflow[idx].next = self.workflow[idx + 1]
                 self.workflow[idx + 1].previous = self.workflow[idx]
                 
-            self.child_conn.send(Msg.ADD_ITEMS)
-            self.child_conn.send(idx)
-            self.child_conn.send(event.added[0])
+            this.child_conn.send(Msg.ADD_ITEMS)
+            this.child_conn.send(idx)
+            this.child_conn.send(event.added[0])
                 
     
     @on_trait_change('workflow.operation.-transient')
@@ -270,9 +264,9 @@ class Workflow(HasStrictTraits):
         wi = next((x for x in self.workflow if x.operation == obj))
         idx = self.workflow.index(wi)
         
-        self.child_conn.send(Msg.UPDATE_OP)
-        self.child_conn.send(idx)
-        self.child_conn.send(wi.operation)
+        this.child_conn.send(Msg.UPDATE_OP)
+        this.child_conn.send(idx)
+        this.child_conn.send(wi.operation)
         
     @on_trait_change('workflow.current_view.-transient')
     def _on_workflow_view_changed(self, obj, name, old, new):
@@ -284,44 +278,38 @@ class Workflow(HasStrictTraits):
         
         idx = self.workflow.index(wi)
         
-        self.child_conn.send(Msg.PLOT)
-        self.child_conn.send(idx)
-        self.child_conn.send(wi.current_view)
+        this.child_conn.send(Msg.PLOT)
+        this.child_conn.send(idx)
+        this.child_conn.send(wi.current_view)
 
     # MAGIC: called when default_scale is changed
     def _default_scale_changed(self, new_scale):
         cytoflow.set_default_scale(new_scale)
-        
-    
-    
-def remote_workflow_main(parent_conn, mpl_conn):
-    matplotlib_multiprocess_backend.remote_mpl_conn = mpl_conn
-    RemoteWorkflow(parent_conn = parent_conn).run()
+
         
 class RemoteWorkflow(HasStrictTraits):
     workflow = List(WorkflowItem)
-    parent_conn = Any
     
     def run(self):
         while True:
-            cmd = self.parent_conn.recv()
+            cmd = this.parent_conn.recv()
             if cmd == Msg.NEW_WORKFLOW:
-                new_items = self.parent_conn.recv()
+                new_items = this.parent_conn.recv()
                 self.new_workflow(new_items)
             elif cmd == Msg.ADD_ITEMS:
-                idx = self.parent_conn.recv()
-                new_item = self.parent_conn.recv()
+                idx = this.parent_conn.recv()
+                new_item = this.parent_conn.recv()
                 self.add_item(idx, new_item)
             elif cmd == Msg.REMOVE_ITEMS:
-                idx = self.parent_conn.recv()
+                idx = this.parent_conn.recv()
                 self.remove_item(idx)
             elif cmd == Msg.UPDATE_OP:
-                idx = self.parent_conn.recv()
-                op = self.parent_conn.recv()
+                idx = this.parent_conn.recv()
+                op = this.parent_conn.recv()
                 self.update_op(idx, op)
             elif cmd == Msg.PLOT:
-                idx = self.parent_conn.recv()
-                view = self.parent_conn.recv()
+                idx = this.parent_conn.recv()
+                view = this.parent_conn.recv()
                 self.plot(idx, view)
             else:
                 raise RuntimeError("Bad command in the remote workflow")
@@ -390,20 +378,20 @@ class RemoteWorkflow(HasStrictTraits):
             except util.CytoflowViewError as e:
                 error = e.__str__()
         
-        self.parent_conn.send(Msg.VIEW_STATUS)
-        self.parent_conn.send(idx)
-        self.parent_conn.send(view.id)
-        self.parent_conn.send(warning)
-        self.parent_conn.send(error)
+        this.parent_conn.send(Msg.VIEW_STATUS)
+        this.parent_conn.send(idx)
+        this.parent_conn.send(view.id)
+        this.parent_conn.send(warning)
+        this.parent_conn.send(error)
             
     @on_trait_change("workflow.status")
     def _on_status_change(self, obj, name, old, new):
         idx = self.workflow.index(obj)
-        self.parent_conn.send(Msg.OP_STATUS)
-        self.parent_conn.send(idx)
-        self.parent_conn.send(obj.channels)
-        self.parent_conn.send(obj.conditions)
-        self.parent_conn.send(obj.conditions_names)
-        self.parent_conn.send(obj.warning)
-        self.parent_conn.send(obj.error)
-        self.parent_conn.send(obj.status)
+        this.parent_conn.send(Msg.OP_STATUS)
+        this.parent_conn.send(idx)
+        this.parent_conn.send(obj.channels)
+        this.parent_conn.send(obj.conditions)
+        this.parent_conn.send(obj.conditions_names)
+        this.parent_conn.send(obj.warning)
+        this.parent_conn.send(obj.error)
+        this.parent_conn.send(obj.status)
