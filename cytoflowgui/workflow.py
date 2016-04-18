@@ -18,7 +18,9 @@
 # threading AND multiprocessing, oh my!
 import threading, multiprocessing
 
-from traits.api import HasStrictTraits, HasTraits, Instance, List, Any, on_trait_change
+import warnings
+
+from traits.api import HasStrictTraits,  Instance, List, Any, on_trait_change
                        
 from traitsui.api import View, Item, InstanceEditor, Spring, Label
 
@@ -95,12 +97,15 @@ from cytoflowgui import matplotlib_multiprocess_backend
 # running, it holds the Python global interpreter lock (GIL) and thus
 # freezes the GUI.
 
-class Cmd:
+class Msg:
     NEW_WORKFLOW = 0
     ADD_ITEMS = 1
     REMOVE_ITEMS = 2
     UPDATE_OP = 3
     PLOT = 4
+    
+    OP_STATUS = 5
+    VIEW_STATUS = 6
                     
 class Workflow(HasStrictTraits):
     """
@@ -153,14 +158,23 @@ class Workflow(HasStrictTraits):
     def listen_for_remote(self):
         while True:
             if self.child_conn.poll(0.3):
-                idx = self.child_conn.recv()
-                wi = self.workflow[idx]
-                wi.channels = self.child_conn.recv()
-                wi.conditions = self.child_conn.recv()
-                wi.conditions_names = self.child_conn.recv()
-                wi.warning = self.child_conn.recv()
-                wi.error = self.child_conn.recv()
-                wi.status = self.child_conn.recv()
+                msg = self.child_conn.recv()
+                if msg == Msg.OP_STATUS:
+                    idx = self.child_conn.recv()
+                    wi = self.workflow[idx]
+                    wi.channels = self.child_conn.recv()
+                    wi.conditions = self.child_conn.recv()
+                    wi.conditions_names = self.child_conn.recv()
+                    wi.warning = self.child_conn.recv()
+                    wi.error = self.child_conn.recv()
+                    wi.status = self.child_conn.recv()
+                elif msg == Msg.VIEW_STATUS:
+                    idx = self.child_conn.recv()
+                    wi = self.workflow[idx]
+                    view_id = self.child_conn.recv()
+                    view = next((x for x in wi.views if x.id == view_id))
+                    view.warning = self.child_conn.recv()
+                    view.error = self.child_conn.recv()
 
     def add_operation(self, operation, default_view):
         # add the new operation after the selected workflow item or at the end
@@ -196,6 +210,7 @@ class Workflow(HasStrictTraits):
         try:
             self.selected.current_view = next((x for x in self.selected.views if x.id == view.id))
         except StopIteration:
+            self.selected.views.append(view)
             self.selected.current_view = view
 
 
@@ -207,7 +222,7 @@ class Workflow(HasStrictTraits):
             wi.status = "invalid"
         
         # send the new workflow to the child process
-        self.child_conn.send(Cmd.NEW_WORKFLOW)
+        self.child_conn.send(Msg.NEW_WORKFLOW)
         self.child_conn.send(self.workflow)
         
         
@@ -230,7 +245,7 @@ class Workflow(HasStrictTraits):
             if removed.next:
                 removed.next.previous = removed.previous
             
-            self.child_conn.send(Cmd.REMOVE_ITEMS)
+            self.child_conn.send(Msg.REMOVE_ITEMS)
             self.child_conn.send(idx)
         
         # add new items to the linked list
@@ -244,7 +259,7 @@ class Workflow(HasStrictTraits):
                 self.workflow[idx].next = self.workflow[idx + 1]
                 self.workflow[idx + 1].previous = self.workflow[idx]
                 
-            self.child_conn.send(Cmd.ADD_ITEMS)
+            self.child_conn.send(Msg.ADD_ITEMS)
             self.child_conn.send(idx)
             self.child_conn.send(event.added[0])
                 
@@ -255,7 +270,7 @@ class Workflow(HasStrictTraits):
         wi = next((x for x in self.workflow if x.operation == obj))
         idx = self.workflow.index(wi)
         
-        self.child_conn.send(Cmd.UPDATE_OP)
+        self.child_conn.send(Msg.UPDATE_OP)
         self.child_conn.send(idx)
         self.child_conn.send(wi.operation)
         
@@ -269,7 +284,7 @@ class Workflow(HasStrictTraits):
         
         idx = self.workflow.index(wi)
         
-        self.child_conn.send(Cmd.PLOT)
+        self.child_conn.send(Msg.PLOT)
         self.child_conn.send(idx)
         self.child_conn.send(wi.current_view)
 
@@ -290,21 +305,21 @@ class RemoteWorkflow(HasStrictTraits):
     def run(self):
         while True:
             cmd = self.parent_conn.recv()
-            if cmd == Cmd.NEW_WORKFLOW:
+            if cmd == Msg.NEW_WORKFLOW:
                 new_items = self.parent_conn.recv()
                 self.new_workflow(new_items)
-            elif cmd == Cmd.ADD_ITEMS:
+            elif cmd == Msg.ADD_ITEMS:
                 idx = self.parent_conn.recv()
                 new_item = self.parent_conn.recv()
                 self.add_item(idx, new_item)
-            elif cmd == Cmd.REMOVE_ITEMS:
+            elif cmd == Msg.REMOVE_ITEMS:
                 idx = self.parent_conn.recv()
                 self.remove_item(idx)
-            elif cmd == Cmd.UPDATE_OP:
+            elif cmd == Msg.UPDATE_OP:
                 idx = self.parent_conn.recv()
                 op = self.parent_conn.recv()
                 self.update_op(idx, op)
-            elif cmd == Cmd.PLOT:
+            elif cmd == Msg.PLOT:
                 idx = self.parent_conn.recv()
                 view = self.parent_conn.recv()
                 self.plot(idx, view)
@@ -363,13 +378,28 @@ class RemoteWorkflow(HasStrictTraits):
             
     def plot(self, idx, view):
         print "remote plot"
-        
         wi = self.workflow[idx]
-        view.plot(wi.result)
+        error = ""
+        warning = ""
+        
+        with warnings.catch_warnings(record = True) as w:
+            try:
+                view.plot(wi.result)
+                if w:
+                    warning = w[-1].message.__str__()
+            except util.CytoflowViewError as e:
+                error = e.__str__()
+        
+        self.parent_conn.send(Msg.VIEW_STATUS)
+        self.parent_conn.send(idx)
+        self.parent_conn.send(view.id)
+        self.parent_conn.send(warning)
+        self.parent_conn.send(error)
             
     @on_trait_change("workflow.status")
     def _on_status_change(self, obj, name, old, new):
         idx = self.workflow.index(obj)
+        self.parent_conn.send(Msg.OP_STATUS)
         self.parent_conn.send(idx)
         self.parent_conn.send(obj.channels)
         self.parent_conn.send(obj.conditions)
