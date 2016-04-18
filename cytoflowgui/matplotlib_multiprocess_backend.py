@@ -23,19 +23,18 @@ from __future__ import (absolute_import, division, print_function,
 
 import ctypes
 
+import multiprocessing
+
 from matplotlib.figure import Figure
 
-from matplotlib.backends.backend_qt4 import QtCore
+from matplotlib.backends.backend_qt4 import QtCore, FigureCanvasQT
+from matplotlib.backends.backend_qt4agg import FigureCanvasQTAggBase
+from matplotlib.backends.backend_agg import FigureCanvasAgg
 
-##### not used in this module, but needed for pylab_setup
-from matplotlib.backends.backend_qt4 import show  # @UnusedImport
-from matplotlib.backends.backend_qt4 import draw_if_interactive as qt4_draw_if_interactive
-from matplotlib.backends.backend_qt4 import backend_version  # @UnusedImport
-######
+# needed for pylab_setup
+backend_version = "0.1.0"
 
 from matplotlib.backend_bases import FigureManagerBase
-
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
 
 DEBUG = False
 
@@ -43,7 +42,56 @@ _decref = ctypes.pythonapi.Py_DecRef
 _decref.argtypes = [ctypes.py_object]
 _decref.restype = None
 
-class FigureManagerCytoflow(FigureManagerBase):
+# multiprocess plotting:  the process boundary is at the canvas.  two canvases
+# will be needed, a local canvas and a remote canvas.  the remote canvas will
+# be the destination of the Agg renderer; when its draw() is called, it will
+# push the image buffer to the UI process, which will draw it on the screen.
+# the local canvas will handle all UI events, and push them to the remote
+# canvas to process (if registered.)
+
+local_mpl_conn, remote_mpl_conn = multiprocessing.Pipe()
+
+class FigureCanvasQTAggLocal(FigureCanvasQTAggBase,
+                             FigureCanvasQT,
+                             FigureCanvasAgg):
+    """
+    The canvas the figure renders into.  Calls the draw and print fig
+    methods, creates the renderers, etc...
+    Public attribute
+      figure - A Figure instance
+   """
+
+    def __init__(self, figure):
+        print("Init local canvas")
+        if DEBUG:
+            print('FigureCanvasQtAgg: ', figure)
+        FigureCanvasQT.__init__(self, figure)
+        FigureCanvasQTAggBase.__init__(self, figure)
+        FigureCanvasAgg.__init__(self, figure)
+        self._drawRect = None
+        self.blitbox = None
+        self.setAttribute(QtCore.Qt.WA_OpaquePaintEvent)    
+
+class FigureCanvasAggRemote(FigureCanvasAgg):
+    """
+    The canvas the figure renders into.  Calls the draw and print fig
+    methods, creates the renderers, etc...
+    Public attribute
+      figure - A Figure instance
+   """
+
+    def __init__(self, figure):
+        if DEBUG:
+            print('FigureCanvasAggRemote: ', figure)
+        FigureCanvasAgg.__init__(self, figure)
+        self.blitbox = None
+        
+    def draw(self):
+        print("Remote draw")
+        FigureCanvasAgg.draw(self)
+        # TODO - send buffer to local process    
+
+class FigureManagerCytoflowRemote(FigureManagerBase):
     """
     Public attributes
 
@@ -65,16 +113,14 @@ class FigureManagerCytoflow(FigureManagerBase):
         # clicked on. 
         # http://qt-project.org/doc/qt-4.8/qt.html#FocusPolicy-enum or
         # http://doc.qt.digia.com/qt/qt.html#FocusPolicy-enum
-        self.canvas.setFocusPolicy(QtCore.Qt.StrongFocus)
-        self.canvas.setFocus()
+        # self.canvas.setFocusPolicy(QtCore.Qt.StrongFocus)
+        #self.canvas.setFocus()
         
     def show(self):
         print("show figure")
-        pass
     
     def destroy(self):
         print ("destroy figure")
-        pass
     
     def resize(self):
         print ("resize figure")
@@ -83,6 +129,8 @@ def new_figure_manager(num, *args, **kwargs):
     """
     Create a new figure manager instance
     """
+    
+    print("new figure manager")
     
     # TODO - register the new figure/canvas with the editor?  the task?
     # anyways, something; then, seaborn can plot at will and render to
@@ -101,15 +149,14 @@ def new_figure_manager(num, *args, **kwargs):
     # we set the dpi and figure size manually here ..... why?  i don't know.
     thisFig.set_dpi(96)
     thisFig.set_size_inches(5, 5)
-    canvas = FigureCanvasQTAgg(thisFig)
-    return FigureManagerCytoflow(canvas, num)
+    canvas = FigureCanvasAggRemote(thisFig)
+    return FigureManagerCytoflowRemote(canvas, num)
 
 def draw_if_interactive():
     print ("draw if interactive")
+    
+def show():
+    print ("show")
 
-    qt4_draw_if_interactive()
-
-
-FigureCanvas = FigureCanvasQTAgg
-FigureManager = FigureManagerCytoflow
-
+FigureCanvas = FigureCanvasAggRemote
+FigureManager = FigureManagerCytoflowRemote

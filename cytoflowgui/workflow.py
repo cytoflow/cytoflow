@@ -27,6 +27,7 @@ import cytoflow.utility as util
 
 from cytoflowgui.vertical_notebook_editor import VerticalNotebookEditor
 from cytoflowgui.workflow_item import WorkflowItem
+from cytoflowgui import matplotlib_multiprocess_backend
 
 # THE NEW NEW PLAN combines both:
 # The parent process runs the GUI
@@ -99,7 +100,7 @@ class Cmd:
     ADD_ITEMS = 1
     REMOVE_ITEMS = 2
     UPDATE_OP = 3
-    UPDATE_VIEW = 4
+    PLOT = 4
                     
 class Workflow(HasStrictTraits):
     """
@@ -142,7 +143,7 @@ class Workflow(HasStrictTraits):
         
         self.child_conn, parent_conn = multiprocessing.Pipe()
         self.child_process = multiprocessing.Process(target = remote_workflow_main,
-                                                     args = (parent_conn, ))
+                                                     args = (parent_conn, matplotlib_multiprocess_backend.remote_mpl_conn))
         self.child_process.start()
          
         self.child_conn_thread = threading.Thread(target = self.listen_for_remote,
@@ -249,7 +250,7 @@ class Workflow(HasStrictTraits):
                 
     
     @on_trait_change('workflow.operation.-transient')
-    def _on_workflow_item_changed(self, obj, name, old, new):
+    def _on_workflow_operation_changed(self, obj, name, old, new):
         # search the workflow for the appropriate wi
         wi = next((x for x in self.workflow if x.operation == obj))
         idx = self.workflow.index(wi)
@@ -257,6 +258,20 @@ class Workflow(HasStrictTraits):
         self.child_conn.send(Cmd.UPDATE_OP)
         self.child_conn.send(idx)
         self.child_conn.send(wi.operation)
+        
+    @on_trait_change('workflow.current_view.-transient')
+    def _on_workflow_view_changed(self, obj, name, old, new):
+        # search the workflow for the appropriate wi
+        if type(obj) is WorkflowItem:
+            wi = obj
+        else: # a view
+            wi = next((x for x in self.workflow if x.current_view == obj))
+        
+        idx = self.workflow.index(wi)
+        
+        self.child_conn.send(Cmd.PLOT)
+        self.child_conn.send(idx)
+        self.child_conn.send(wi.current_view)
 
     # MAGIC: called when default_scale is changed
     def _default_scale_changed(self, new_scale):
@@ -264,7 +279,8 @@ class Workflow(HasStrictTraits):
         
     
     
-def remote_workflow_main(parent_conn):
+def remote_workflow_main(parent_conn, mpl_conn):
+    matplotlib_multiprocess_backend.remote_mpl_conn = mpl_conn
     RemoteWorkflow(parent_conn = parent_conn).run()
         
 class RemoteWorkflow(HasStrictTraits):
@@ -288,10 +304,10 @@ class RemoteWorkflow(HasStrictTraits):
                 idx = self.parent_conn.recv()
                 op = self.parent_conn.recv()
                 self.update_op(idx, op)
-            elif cmd == Cmd.UPDATE_VIEW:
+            elif cmd == Cmd.PLOT:
                 idx = self.parent_conn.recv()
                 view = self.parent_conn.recv()
-                self.update_view(idx, view)
+                self.plot(idx, view)
             else:
                 raise RuntimeError("Bad command in the remote workflow")
             
@@ -344,6 +360,12 @@ class RemoteWorkflow(HasStrictTraits):
 
         for wi in self.workflow[idx:]:
             wi.update()     
+            
+    def plot(self, idx, view):
+        print "remote plot"
+        
+        wi = self.workflow[idx]
+        view.plot(wi.result)
             
     @on_trait_change("workflow.status")
     def _on_status_change(self, obj, name, old, new):
