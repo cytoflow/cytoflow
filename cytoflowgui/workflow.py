@@ -20,7 +20,7 @@ import threading, sys
 
 import warnings
 
-from traits.api import HasStrictTraits,  Instance, List, Any, on_trait_change
+from traits.api import HasStrictTraits, Instance, List, on_trait_change
                        
 from traitsui.api import View, Item, InstanceEditor, Spring, Label
 
@@ -258,18 +258,20 @@ class LocalWorkflow(HasStrictTraits):
             this.child_conn.send(event.added[0])
                 
     
-    @on_trait_change('workflow.operation.-transient')
+    @on_trait_change('selected:operation.-transient')
     def _on_workflow_operation_changed(self, obj, name, old, new):
+        print "op changed"
         # search the workflow for the appropriate wi
-        wi = next((x for x in self.workflow if x.operation == obj))
-        idx = self.workflow.index(wi)
+        #wi = next((x for x in self.workflow if x.operation == obj))
+        idx = self.workflow.index(self.selected)
         
         this.child_conn.send(Msg.UPDATE_OP)
         this.child_conn.send(idx)
-        this.child_conn.send(wi.operation)
+        this.child_conn.send(self.selected.operation)
         
-    @on_trait_change('workflow.current_view.-transient')
+    @on_trait_change('selected.current_view.-transient')
     def _on_workflow_view_changed(self, obj, name, old, new):
+        print "view changed"
         # search the workflow for the appropriate wi
         if type(obj) is WorkflowItem:
             wi = obj
@@ -372,7 +374,7 @@ class RemoteWorkflow(HasStrictTraits):
         
         with warnings.catch_warnings(record = True) as w:
             try:
-                view.plot(wi.result)
+                view.plot_wi(wi)
                 if w:
                     warning = w[-1].message.__str__()
             except util.CytoflowViewError as e:

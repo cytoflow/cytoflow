@@ -63,6 +63,9 @@ class PluginViewMixin(HasTraits):
     warning = Str(transient = True)
     error = Str(transient = True)
     
+    def plot_wi(self, wi):
+        self.plot(wi.result)
+    
 shared_view_traits = VGroup(VGroup(Item('subset',
                                         show_label = False,
                                         editor = SubsetEditor(experiment = "context.result")),

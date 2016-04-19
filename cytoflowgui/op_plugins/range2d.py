@@ -76,6 +76,9 @@ class RangeView2DHandler(Controller, ViewHandlerMixin):
 class Range2DSelectionView(RangeSelection2D, PluginViewMixin):
     handler_factory = Callable(RangeView2DHandler)
     
+    def plot_wi(self, wi):
+        self.plot(wi.previous.result)
+    
 class Range2DPluginOp(Range2DOp, PluginOpMixin):
     handler_factory = Callable(Range2DHandler)
 

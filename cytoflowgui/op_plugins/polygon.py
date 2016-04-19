@@ -71,6 +71,9 @@ class PolygonViewHandler(Controller, ViewHandlerMixin):
 class PolygonSelectionView(PolygonSelection, PluginViewMixin):
     handler_factory = Callable(PolygonViewHandler)
     
+    def plot_wi(self, wi):
+        self.plot(wi.previous.result)
+    
 class PolygonPluginOp(PolygonOp, PluginOpMixin):
     handler_factory = Callable(PolygonHandler)
 

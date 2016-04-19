@@ -60,6 +60,9 @@ class RangeViewHandler(Controller, ViewHandlerMixin):
 class RangeSelectionView(RangeSelection, PluginViewMixin):
     handler_factory = Callable(RangeViewHandler)
     
+    def plot_wi(self, wi):
+        self.plot(wi.previous.result)
+    
 @provides(IOperation)
 class RangePluginOp(RangeOp, PluginOpMixin):
     handler_factory = Callable(RangeHandler)
