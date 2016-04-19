@@ -55,7 +55,8 @@ DEBUG = 1
 
 class Msg:
     DRAW = 0
-    RESIZE_FIGURE = 1
+    DONE_DRAWING = 1
+    RESIZE_FIGURE = 2
 
 class FigureCanvasQTAggLocal(FigureCanvasQTAggBase,
                              FigureCanvasQT,
@@ -85,6 +86,8 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAggBase,
 
         while True:
             msg = this.child_conn.recv()
+            if DEBUG:
+                print("FigureCanvasQTAggLocal.listen_for_remote :: {}".format(msg))
             if msg == Msg.DRAW:
                 self.buffer = this.child_conn.recv()
                 self.buffer_width = this.child_conn.recv()
@@ -92,8 +95,13 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAggBase,
                 self.update()
             else:
                 raise RuntimeError("FigureCanvasQTAggLocal received bad message {}".format(msg))
+            
+    def send_to_remote(self):
+        pass
         
     def draw(self):
+        if DEBUG:
+            print("FigureCanvasQTAggLocal.draw()")
         self.update()
         # print("Local draw")
         # FigureCanvasAgg.draw(self)
@@ -164,7 +172,6 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAggBase,
         w = event.size().width()
         h = event.size().height()
         if DEBUG:
-            print('resize (%d x %d)' % (w, h))
             print("FigureCanvasQTAggLocal.resizeEvent(%d, %d)" % (w, h))
         dpival = self.figure.dpi
         winch = w / dpival
@@ -189,31 +196,45 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
         FigureCanvasAgg.__init__(self, figure)
         self.blitbox = None
         
+        self.update = threading.Event()
+        
         threading.Thread(target = self.listen_for_remote, args = ()).start()
+        threading.Thread(target = self.send_to_remote, args=()).start()
         
     def listen_for_remote(self): 
         while True:
             msg = this.parent_conn.recv()
+            if DEBUG:
+                print("FigureCanvasAggRemote.listen_for_remote :: {}".format(msg))
             if msg == Msg.RESIZE_FIGURE:
                 winch = this.parent_conn.recv()
                 hinch = this.parent_conn.recv()
                 self.figure.set_size_inches(winch, hinch)
+                self.update.set()
             else:
                 raise RuntimeError("FigureCanvasAggRemote received bad message {}".format(msg))
+            
+    def send_to_remote(self):
+        while self.update.wait():
+            self.update.clear()
+            
+            FigureCanvasAgg.draw(self)
+                
+            if QtCore.QSysInfo.ByteOrder == QtCore.QSysInfo.LittleEndian:
+                str_buffer = self.renderer._renderer.tostring_bgra()
+            else:
+                str_buffer = self.renderer._renderer.tostring_argb()    
+                
+            this.parent_conn.send(Msg.DRAW)
+            this.parent_conn.send(str_buffer)
+            this.parent_conn.send(self.renderer.width)
+            this.parent_conn.send(self.renderer.height)
         
     def draw(self):
-        print("Remote draw")
-        FigureCanvasAgg.draw(self)
-            
-        if QtCore.QSysInfo.ByteOrder == QtCore.QSysInfo.LittleEndian:
-            stringBuffer = self.renderer._renderer.tostring_bgra()
-        else:
-            stringBuffer = self.renderer._renderer.tostring_argb()    
-            
-        this.parent_conn.send(Msg.DRAW)
-        this.parent_conn.send(stringBuffer)
-        this.parent_conn.send(self.renderer.width)
-        this.parent_conn.send(self.renderer.height)
+        if DEBUG:
+            print("FigureCanvasAggRemote.draw()")
+
+        self.update.set()
         
     def blit(self, bbox = None):
         print("Tried to blit .... not yet implemented")
@@ -224,23 +245,23 @@ def new_figure_manager(num, *args, **kwargs):
     """
     Create a new figure manager instance
     """
-    
-    print("new figure")
-    
-    # close the current figure (to keep pyplot happy)
-    matplotlib.pyplot.close()
-    
+
     # make a new figure
     FigureClass = kwargs.pop('FigureClass', Figure)
-    thisFig = FigureClass(*args, **kwargs)
+    newFig = FigureClass(*args, **kwargs)
  
     # the canvas is a singleton.
     if not this.remote_canvas:
-        this.remote_canvas = FigureCanvasAggRemote(thisFig)
-    else:
-        this.remote_canvas.figure = thisFig
+        this.remote_canvas = FigureCanvasAggRemote(newFig)
+    else:        
+        oldFig = this.remote_canvas.figure
+        newFig.set_size_inches(oldFig.get_figwidth(), oldFig.get_figheight())
+        this.remote_canvas.figure = newFig
         
-    thisFig.set_canvas(this.remote_canvas)
+    newFig.set_canvas(this.remote_canvas)
+
+    # close the current figure (to keep pyplot happy)
+    matplotlib.pyplot.close()
  
     return FigureManagerBase(this.remote_canvas, num)
 
