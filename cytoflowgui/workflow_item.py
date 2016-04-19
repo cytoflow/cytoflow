@@ -28,6 +28,9 @@ from traits.api import HasStrictTraits, Instance, List, DelegatesTo, Enum, \
 from traitsui.api import View, Item, Handler
 from pyface.qt import QtGui
 
+import numpy as np
+import pandas as pd
+
 from cytoflow import Experiment
 from cytoflow.operations.i_operation import IOperation
 from cytoflow.views.i_view import IView
@@ -73,11 +76,14 @@ class WorkflowItem(HasStrictTraits):
     result = Instance(Experiment, transient = True)
     
     # the channels and conditions from result.  usually these would be
-    # Property traits (ie, determined dynamically), but we need to cache them
-    # so that persistence works properly.
+    # Properties (ie, determined dynamically), but that's currently hard
+    # with the multiprocess model  
+    
+    # TODO - one day, make these Properties again
     channels = List(Str)
     conditions = Dict(Str, Str)
     conditions_names = List(Str)
+    conditions_values = Dict(Str, List)
     
     # the IViews against the output of this operation
     views = List(IView)
@@ -121,7 +127,6 @@ class WorkflowItem(HasStrictTraits):
         Called by the controller to update this wi
         """
      
- 
         self.warning = ""
         self.error = ""
         self.result = None
@@ -138,6 +143,8 @@ class WorkflowItem(HasStrictTraits):
                 self.result = self.operation.apply(prev_result)
                 if w:
                     self.warning = w[-1].message.__str__()
+                    
+                
             except CytoflowError as e:
                 self.error = e.__str__()    
                 self.status = "invalid"
@@ -173,3 +180,7 @@ class WorkflowItem(HasStrictTraits):
             self.channels = experiment.channels
             self.conditions = experiment.conditions
             self.conditions_names = experiment.conditions.keys()
+            
+            for condition in self.conditions.keys():
+                self.conditions_values[condition] = \
+                    list(np.sort(pd.unique(experiment[condition])))

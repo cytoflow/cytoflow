@@ -1,4 +1,5 @@
 #!/usr/bin/env python2.7
+from traits.has_traits import HasStrictTraits
 
 # (c) Massachusetts Institute of Technology 2015-2016
 #
@@ -31,7 +32,7 @@ if __name__ == '__main__':
     import os
     os.environ['TRAITS_DEBUG'] = "1"
 
-from traits.api import Instance, HasTraits, List, CFloat, Str, Dict, Interface, \
+from traits.api import Instance, HasStrictTraits, List, CFloat, Str, Dict, Interface, \
                        Property, Bool, provides, on_trait_change, DelegatesTo
 from traitsui.api import BasicEditorFactory, View, UI, \
                          CheckListEditor, Item, HGroup, ListEditor, InstanceEditor
@@ -43,17 +44,18 @@ import numpy as np
 from cytoflow import Experiment
 from cytoflow.utility import sanitize_identifier
 from cytoflowgui.value_bounds_editor import ValuesBoundsEditor
+from cytoflowgui.workflow_item import WorkflowItem
 
 
 class ISubsetModel(Interface):
     name = Str
     subset_str = Property
-    experiment = Instance(Experiment)
+    wi = Instance(WorkflowItem)
     
 @provides(ISubsetModel)
-class BoolSubsetModel(HasTraits):
+class BoolSubsetModel(HasStrictTraits):
     name = Str
-    experiment = Instance(Experiment)
+    wi = Instance(WorkflowItem)
     selected_t = Bool(False)
     selected_f = Bool(False)
     subset_str = Property(trait = Str,
@@ -87,9 +89,9 @@ class BoolSubsetModel(HasTraits):
             self.selected_f = False
 
 @provides(ISubsetModel)
-class CategorySubsetModel(HasTraits):
+class CategorySubsetModel(HasStrictTraits):
     name = Str
-    experiment = Instance(Experiment)
+    wi = Instance(WorkflowItem)
     selected = List
     values = Property(trait = List,
                       depends_on = 'experiment')
@@ -142,7 +144,7 @@ class CategorySubsetModel(HasTraits):
         self.selected = selected
 
 @provides(ISubsetModel)
-class RangeSubsetModel(HasTraits):
+class RangeSubsetModel(HasStrictTraits):
     name = Str
     experiment = Instance(Experiment)
     values = Property(depends_on = 'experiment')
@@ -192,7 +194,7 @@ class RangeSubsetModel(HasTraits):
     def _low_default(self):
         return self.experiment[self.name].min()
 
-class SubsetModel(HasTraits):
+class SubsetModel(HasStrictTraits):
     
     # the experiment we use to set up the editor
     experiment = Instance(Experiment)
@@ -299,9 +301,9 @@ class _SubsetEditor(Editor):
     # the model object whose View this Editor displays
     model = Instance(SubsetModel, args = ())
     
-    # the cytoflow.Experiment instance to use to construct the UI.  delegates
+    # the cytoflowgui.WorkflowItem instance to use to construct the UI.  delegates
     # to the editor model.
-    experiment = DelegatesTo('model')
+    wi = DelegatesTo('model')
     
     # the UI for the Experiment metadata
     _ui = Instance(UI)
@@ -317,11 +319,11 @@ class _SubsetEditor(Editor):
         # SubsetModel._on_experiment_change.  however, in this case we
         # have to set a dynamic notifier because this is occasionally changed
         # by the processing thread, and we need to re-dispatch to the ui thread
-        self.model.on_trait_change(self.model._on_experiment_change, 
-                             'experiment', 
+        self.model.on_trait_change(self.model._on_wi_change, 
+                             'wi', 
                              dispatch = 'ui')
         
-        self.sync_value(self.factory.experiment, 'experiment', 'from')        
+        self.sync_value(self.factory.wi, 'wi', 'from')        
         self._ui = self.model.edit_traits(kind = 'subpanel',
                                           parent = parent)
         self.control = self._ui.control
@@ -329,8 +331,8 @@ class _SubsetEditor(Editor):
     def dispose(self):
         
         # disconnect the dynamic notifier.
-        self.model.on_trait_change(self.model._on_experiment_change,
-                                   'experiment',
+        self.model.on_trait_change(self.model._on_wi_change,
+                                   'wi',
                                    dispatch = 'ui',
                                    remove = True)
         
@@ -339,15 +341,15 @@ class _SubsetEditor(Editor):
             self._ui = None
             
     def update_editor(self):
-        print "update editor with value: ''{0}''".format(self.value)
+        print "update editor with value :: {}".format(self.value)
         self.model.subset_str = self.value
     
     @on_trait_change('model.subset_str')
     def update_value(self, new):
-        if not self.experiment:
+        if not self.wi:
             return
         
-        print "updating value from editor: ''{0}''".format(new)
+        print "updating value from editor :: {}".format(new)
         self.value = new            
 
 class SubsetEditor(BasicEditorFactory):
@@ -355,41 +357,41 @@ class SubsetEditor(BasicEditorFactory):
     # the editor to be created
     klass = _SubsetEditor
     
-    # the name of the trait containing the cytoflow.Experiment to build the UI
+    # the name of the trait containing the WorkflowItem with subset info
+    wi = Str
     
-    # TODO - the required bits are going to have to come back from the remote
-    # process.  yikes.
+    # leave the experiment in for testing.  TODO remove me soon.
     experiment = Str
     
     
-if __name__ == '__main__':
-     
-    import fcsparser
-     
-    ex = Experiment()
-    ex.add_conditions({"Dox" : "bool"})
-     
-    tube1 = fcsparser.parse('../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs',
-                            reformat_meta = True,
-                            channel_naming = "$PnN")
- 
-    tube2 = fcsparser.parse('../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs',
-                            reformat_meta = True,
-                            channel_naming = "$PnN")
-     
-    ex.add_tube(tube1, {"Dox" : True})
-    ex.add_tube(tube2, {"Dox" : False})
-     
-    class C(HasTraits):
-        val = Str()
-        experiment = Instance(Experiment)
- 
-    c = C(experiment = ex)
-    c.val = "(Dox == True)"
-     
-    c.configure_traits(view=View(Item('val',
-                                      editor = SubsetEditor(experiment = 'experiment'))))
-     
-     
-     
+# if __name__ == '__main__':
+#      
+#     import fcsparser
+#      
+#     ex = Experiment()
+#     ex.add_conditions({"Dox" : "bool"})
+#      
+#     tube1 = fcsparser.parse('../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs',
+#                             reformat_meta = True,
+#                             channel_naming = "$PnN")
+#  
+#     tube2 = fcsparser.parse('../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs',
+#                             reformat_meta = True,
+#                             channel_naming = "$PnN")
+#      
+#     ex.add_tube(tube1, {"Dox" : True})
+#     ex.add_tube(tube2, {"Dox" : False})
+#      
+#     class C(HasStrictTraits):
+#         val = Str()
+#         experiment = Instance(Experiment)
+#  
+#     c = C(experiment = ex)
+#     c.val = "(Dox == True)"
+#      
+#     c.configure_traits(view=View(Item('val',
+#                                       editor = SubsetEditor(experiment = 'experiment'))))
+#      
+#      
+#      
      

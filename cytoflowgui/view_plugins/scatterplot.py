@@ -63,7 +63,7 @@ class ScatterplotHandler(Controller, ViewHandlerMixin):
                                 label="Color\nFacet")),
                     VGroup(Item('subset',
                                 show_label = False,
-                                editor = SubsetEditor(experiment = "context.result")),
+                                editor = SubsetEditor(wi = "context")),
                                 show_border = True,
                                 show_labels = False),
                            Item('warning',
