@@ -356,6 +356,9 @@ class SubsetEditor(BasicEditorFactory):
     klass = _SubsetEditor
     
     # the name of the trait containing the cytoflow.Experiment to build the UI
+    
+    # TODO - the required bits are going to have to come back from the remote
+    # process.  yikes.
     experiment = Str
     
     

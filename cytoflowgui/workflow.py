@@ -269,14 +269,22 @@ class LocalWorkflow(HasStrictTraits):
         this.child_conn.send(idx)
         this.child_conn.send(self.selected.operation)
         
-    @on_trait_change('selected.current_view.-transient')
+    @on_trait_change('selected.current_view.-transient', post_init = True)
     def _on_workflow_view_changed(self, obj, name, old, new):
         print "view changed"
         # search the workflow for the appropriate wi
-        if type(obj) is WorkflowItem:
+        if type(new) is WorkflowItem:
+            # self.selected has changed
+            wi = new
+        elif type(obj) is WorkflowItem:
+            # self.selected.current_view has changed
             wi = obj
-        else: # a view
+        else: 
+            # one of self.selected.current_view's traits has changed
             wi = next((x for x in self.workflow if x.current_view == obj))
+            
+        if not wi.current_view:
+            return
         
         idx = self.workflow.index(wi)
         

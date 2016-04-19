@@ -286,21 +286,6 @@ class FlowTask(Task):
         else:
             plugin = next((x for x in self.view_plugins if x.view_id == view_id))
             self.model.set_current_view(plugin.get_view())
- 
- 
-    @on_trait_change("model:selected.current_view.-transient")
-    def _view_changed(self, obj, name, old, new):      
-        wi = self.model.selected
-        if wi is None:
-            wi = self.model.workflow[-1]
-             
-        self.view.plot(wi)
-        
-        
-    @on_trait_change("model:selected.status")
-    def _selected_status_changed(self, obj, name, old, new):
-        if new == "valid" and self.model.selected:
-            self.view.plot(self.model.selected)
         
 
         
