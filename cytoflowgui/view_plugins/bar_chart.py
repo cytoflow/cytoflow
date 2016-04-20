@@ -31,9 +31,11 @@ import scipy.stats
 
 from cytoflow import BarChartView, geom_mean
 
+from cytoflowgui.subset_editor import SubsetEditor
+from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.clearable_enum_editor import ClearableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
-    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, shared_view_traits
+    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin
     
 class BarChartHandler(Controller, ViewHandlerMixin):
     """
@@ -51,43 +53,60 @@ class BarChartHandler(Controller, ViewHandlerMixin):
                        })
     
     def default_traits_view(self):
-        return View(
-                 VGroup(
-                   VGroup(Item('name'),
-                         Item('channel',
-                              editor=EnumEditor(name='context.channels'),
-                              label = "Channel"),
-                         Item('by',
-                              editor=EnumEditor(name='context.conditions_names'),
-                              label = "Variable"),
-                         Item('function',
-                              editor = EnumEditor(name='handler.summary_functions'),
-                              label = "Summary\nFunction"),
-                        # TODO - waiting on seaborn v0.6
-#                    Item('object.orientation')
-#                     Item('object.error_bars',
-#                          editor = EnumEditor(values = {None : "",
-#                                                        "data" : "Data",
-#                                                        "summary" : "Summary"}),
-#                          label = "Error bars?"),
-#                     Item('object.error_function',
-#                          editor = EnumEditor(name='handler.spread_functions'),
-#                          label = "Error bar\nfunction",
-#                          visible_when = 'object.error_bars is not None'),
-#                     Item('object.error_var',
-#                          editor = EnumEditor(name = 'handler.conditions'),
-#                          label = "Error bar\nVariable",
-#                          visible_when = 'object.error_bars == "summary"'),
-                         Item('xfacet',
-                              editor=ClearableEnumEditor(name='context.conditions_names'),
-                              label = "Horizontal\nFacet"),
-                         Item('yfacet',
-                              editor=ClearableEnumEditor(name='context.conditions_names'),
-                              label = "Vertical\nFacet"),
-                         Item('huefacet',
-                              editor=ClearableEnumEditor(name='context.conditions_names'),
-                              label="Color\nFacet")),
-                    shared_view_traits))
+        return View(VGroup(
+                    VGroup(Item('name'),
+                           Item('channel',
+                                editor=EnumEditor(name='context.channels'),
+                                label = "Channel"),
+                           Item('by',
+                                editor=EnumEditor(name='context.conditions_names'),
+                                label = "Variable"),
+                           Item('function',
+                                editor = EnumEditor(name='handler.summary_functions'),
+                                label = "Summary\nFunction"),
+                          # TODO - waiting on seaborn v0.6
+#                      Item('object.orientation')
+#                       Item('object.error_bars',
+#                            editor = EnumEditor(values = {None : "",
+#                                                          "data" : "Data",
+#                                                          "summary" : "Summary"}),
+#                            label = "Error bars?"),
+#                       Item('object.error_function',
+#                            editor = EnumEditor(name='handler.spread_functions'),
+#                            label = "Error bar\nfunction",
+#                            visible_when = 'object.error_bars is not None'),
+#                       Item('object.error_var',
+#                            editor = EnumEditor(name = 'handler.conditions'),
+#                            label = "Error bar\nVariable",
+#                            visible_when = 'object.error_bars == "summary"'),
+                           Item('xfacet',
+                                editor=ClearableEnumEditor(name='context.conditions_names'),
+                                label = "Horizontal\nFacet"),
+                           Item('yfacet',
+                                editor=ClearableEnumEditor(name='context.conditions_names'),
+                                label = "Vertical\nFacet"),
+                           Item('huefacet',
+                                editor=ClearableEnumEditor(name='context.conditions_names'),
+                                label="Color\nFacet"),
+                             label = "Bar Chart",
+                             show_border = False),
+                    VGroup(Item('subset',
+                                show_label = False,
+                                editor = SubsetEditor(conditions = "context.conditions",
+                                                      values = "context.conditions_values")),
+                           label = "Subset",
+                           show_border = False,
+                           show_labels = False),
+                    Item('warning',
+                         resizable = True,
+                         visible_when = 'warning',
+                         editor = ColorTextEditor(foreground_color = "#000000",
+                                                 background_color = "#ffff99")),
+                    Item('error',
+                         resizable = True,
+                         visible_when = 'error',
+                         editor = ColorTextEditor(foreground_color = "#000000",
+                                                  background_color = "#ff9191"))))
     
 class BarChartPluginView(BarChartView, PluginViewMixin):
     handler_factory = Callable(BarChartHandler)

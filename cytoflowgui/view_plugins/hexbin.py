@@ -31,7 +31,7 @@ from cytoflow import HexbinView
 from cytoflowgui.subset_editor import SubsetEditor
 from cytoflowgui.clearable_enum_editor import ClearableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
-    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, shared_view_traits
+    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin
 
 class HexbinHandler(Controller, ViewHandlerMixin):
     '''
@@ -39,32 +39,31 @@ class HexbinHandler(Controller, ViewHandlerMixin):
     '''
 
     def default_traits_view(self):
-        return View(Item('name'),
-                    Heading('THE HEXBIN PLUGIN IS BROKEN.'),
-                    Item('xchannel',
-                         editor=EnumEditor(name='context.channels'),
-                         label = "X Channel"),
-                    Item('xscale',
-                         label = "X Scale"),
-                    Item('ychannel',
-                         editor=EnumEditor(name='context.channels'),
-                         label = "Y Channel"),
-                    Item('yscale',
-                         label = "Y Scale"),
-                    Item('xfacet',
-                         editor=ClearableEnumEditor(name='context.conditions_names'),
-                         label = "Horizontal\nFacet"),
-                    Item('object.yfacet',
-                         editor=ClearableEnumEditor(name='context.conditions_names'),
-                         label = "Vertical\nFacet"),
-                    Item('object.huefacet',
-                         editor=ClearableEnumEditor(name='context.conditions_names'),
-                         label="Color\nFacet"),
-                    Item('_'),
-                    Item('subset',
-                         label="Subset",
-                         editor = SubsetEditor(experiment = "context.result")),
-                    shared_view_traits)
+        return View(Heading('THE HEXBIN PLUGIN IS BROKEN.'))
+#                     Item('name'),
+#                     Item('xchannel',
+#                          editor=EnumEditor(name='context.channels'),
+#                          label = "X Channel"),
+#                     Item('xscale',
+#                          label = "X Scale"),
+#                     Item('ychannel',
+#                          editor=EnumEditor(name='context.channels'),
+#                          label = "Y Channel"),
+#                     Item('yscale',
+#                          label = "Y Scale"),
+#                     Item('xfacet',
+#                          editor=ClearableEnumEditor(name='context.conditions_names'),
+#                          label = "Horizontal\nFacet"),
+#                     Item('object.yfacet',
+#                          editor=ClearableEnumEditor(name='context.conditions_names'),
+#                          label = "Vertical\nFacet"),
+#                     Item('object.huefacet',
+#                          editor=ClearableEnumEditor(name='context.conditions_names'),
+#                          label="Color\nFacet"),
+#                     Item('_'),
+#                     Item('subset',
+#                          label="Subset",
+#                          editor = SubsetEditor(experiment = "context.result")))
 
 class HexbinPluginView(HexbinView, PluginViewMixin):
     handler_factory = Callable(HexbinHandler)

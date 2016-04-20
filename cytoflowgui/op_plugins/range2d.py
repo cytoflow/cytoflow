@@ -31,8 +31,9 @@ from cytoflow.views.i_selectionview import ISelectionView
 
 from cytoflowgui.op_plugins.i_op_plugin \
     import IOperationPlugin, OpHandlerMixin, PluginOpMixin, OP_PLUGIN_EXT, shared_op_traits
-from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin, shared_view_traits
+from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
 from cytoflowgui.subset_editor import SubsetEditor
+from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.clearable_enum_editor import ClearableEnumEditor
 
 class Range2DHandler(Controller, OpHandlerMixin):
@@ -53,24 +54,41 @@ class Range2DHandler(Controller, OpHandlerMixin):
         
 class RangeView2DHandler(Controller, ViewHandlerMixin):
     def default_traits_view(self):
-        return View(
-                 VGroup(
-                   VGroup(Item('name', 
-                               style = 'readonly'),
-                          Item('xchannel', 
-                               label = "X Channel", 
-                               style = 'readonly'),
-                          Item('xscale',
-                               label = "X Scale"),
-                          Item('object.ychannel',
-                               label = "Y Channel",
-                               style = 'readonly'),
-                          Item('yscale',
-                               label = "Y Scale"),
-                          Item('huefacet',
-                               editor=ClearableEnumEditor(name='context.previous.conditions_names'),
-                               label="Color\nFacet")),
-                   shared_view_traits))
+        return View(VGroup(
+                    VGroup(Item('name', 
+                                style = 'readonly'),
+                           Item('xchannel', 
+                                label = "X Channel", 
+                                style = 'readonly'),
+                           Item('xscale',
+                                label = "X Scale"),
+                           Item('object.ychannel',
+                                label = "Y Channel",
+                                style = 'readonly'),
+                           Item('yscale',
+                                label = "Y Scale"),
+                           Item('huefacet',
+                                editor=ClearableEnumEditor(name='context.previous.conditions_names'),
+                                label="Color\nFacet"),
+                           label = "2D Range Setup View",
+                           show_border = False),
+                    VGroup(Item('subset',
+                                show_label = False,
+                                editor = SubsetEditor(conditions = "context.conditions",
+                                                      values = "context.conditions_values")),
+                           label = "Subset",
+                           show_border = False,
+                           show_labels = False),
+                    Item('warning',
+                         resizable = True,
+                         visible_when = 'warning',
+                         editor = ColorTextEditor(foreground_color = "#000000",
+                                                 background_color = "#ffff99")),
+                    Item('error',
+                         resizable = True,
+                         visible_when = 'error',
+                         editor = ColorTextEditor(foreground_color = "#000000",
+                                                  background_color = "#ff9191"))))
 
 @provides(ISelectionView)
 class Range2DSelectionView(RangeSelection2D, PluginViewMixin):

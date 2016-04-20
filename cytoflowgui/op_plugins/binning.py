@@ -29,7 +29,7 @@ from pyface.api import ImageResource
 from cytoflow.operations.binning import BinningOp, BinningView
 from cytoflow.views.i_selectionview import IView
 
-from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin, shared_view_traits
+from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
 from cytoflowgui.subset_editor import SubsetEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
@@ -50,15 +50,15 @@ class BinningPluginOp(BinningOp, PluginOpMixin):
 
 class BinningViewHandler(Controller, ViewHandlerMixin):
     def default_traits_view(self):
-        return View(
-                 VGroup(
-                   VGroup(Item('name',
-                               style = 'readonly'),
-                          Item('channel',
-                               style = 'readonly'),
-                          Item('huefacet',
-                               style = 'readonly')),
-                    shared_view_traits))
+        return View(VGroup(
+                    VGroup(Item('name',
+                                style = 'readonly'),
+                           Item('channel',
+                                style = 'readonly'),
+                           Item('huefacet',
+                                style = 'readonly'),
+                           label = "Binning Default Plot",
+                           show_border = False)))
 
 @provides(IView)
 class BinningPluginView(BinningView, PluginViewMixin):

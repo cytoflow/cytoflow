@@ -25,8 +25,9 @@ from cytoflow.operations.i_operation import IOperation
 from cytoflow.operations.range import RangeOp, RangeSelection
 
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
-from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin, shared_view_traits
+from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
 from cytoflowgui.subset_editor import SubsetEditor
+from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.clearable_enum_editor import ClearableEnumEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
 
@@ -43,18 +44,35 @@ class RangeHandler(Controller, OpHandlerMixin):
         
 class RangeViewHandler(Controller, ViewHandlerMixin):
     def default_traits_view(self):
-        return View(
-                 VGroup(
-                   VGroup(Item('name',
-                               style = "readonly"),
-                          Item('channel', 
-                               label = "Channel",
-                               style = "readonly"),
-                          Item('scale'),
-                          Item('huefacet',
-                               editor=ClearableEnumEditor(name='context.previous.conditions_names'),
-                               label="Color\nFacet")),
-                   shared_view_traits))
+        return View(VGroup(
+                    VGroup(Item('name',
+                                style = "readonly"),
+                           Item('channel', 
+                                label = "Channel",
+                                style = "readonly"),
+                           Item('scale'),
+                           Item('huefacet',
+                                editor=ClearableEnumEditor(name='context.previous.conditions_names'),
+                                label="Color\nFacet"),
+                            label = "Range Setup View",
+                            show_border = False),
+                    VGroup(Item('subset',
+                                show_label = False,
+                                editor = SubsetEditor(conditions = "context.conditions",
+                                                      values = "context.conditions_values")),
+                           label = "Subset",
+                           show_border = False,
+                           show_labels = False),
+                    Item('warning',
+                         resizable = True,
+                         visible_when = 'warning',
+                         editor = ColorTextEditor(foreground_color = "#000000",
+                                                 background_color = "#ffff99")),
+                    Item('error',
+                         resizable = True,
+                         visible_when = 'error',
+                         editor = ColorTextEditor(foreground_color = "#000000",
+                                                  background_color = "#ff9191"))))
 
 @provides(ISelectionView)
 class RangeSelectionView(RangeSelection, PluginViewMixin):

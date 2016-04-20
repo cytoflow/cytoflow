@@ -25,6 +25,7 @@ import sys, time, threading
 
 import matplotlib.pyplot
 from matplotlib.figure import Figure
+from matplotlib import interactive
 
 from matplotlib.backends.backend_qt4 import FigureCanvasQT
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAggBase
@@ -34,6 +35,8 @@ from pyface.qt import QtCore, QtGui
 
 # needed for pylab_setup
 backend_version = "0.0.1"
+
+interactive(True)
 
 from matplotlib.backend_bases import FigureManagerBase
 
@@ -103,9 +106,6 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAggBase,
         if DEBUG:
             print("FigureCanvasQTAggLocal.draw()")
         self.update()
-        # print("Local draw")
-        # FigureCanvasAgg.draw(self)
-        # TODO - send buffer to local process  
         
     def paintEvent(self, e):
         """
@@ -145,7 +145,7 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAggBase,
             # self.buffer = None
 
         else:
-            pass
+            print("Tried to blit, but that's not implemented yet!")
 #             bbox = self.blitbox
 #             l, b, r, t = bbox.extents
 #             w = int(r) - int(l)
@@ -216,6 +216,8 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
             
     def send_to_remote(self):
         while self.update.wait():
+            if DEBUG:
+                print("FigureCanvasAggRemote.send_to_remote")
             self.update.clear()
             
             FigureCanvasAgg.draw(self)
@@ -230,7 +232,7 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
             this.parent_conn.send(self.renderer.width)
             this.parent_conn.send(self.renderer.height)
         
-    def draw(self):
+    def draw(self, *args, **kwargs):
         if DEBUG:
             print("FigureCanvasAggRemote.draw()")
 
@@ -245,27 +247,34 @@ def new_figure_manager(num, *args, **kwargs):
     """
     Create a new figure manager instance
     """
+    
+    if DEBUG:
+        print("mpl_multiprocess_backend.new_figure_manager()")
 
     # make a new figure
     FigureClass = kwargs.pop('FigureClass', Figure)
-    newFig = FigureClass(*args, **kwargs)
+    new_fig = FigureClass(*args, **kwargs)
  
     # the canvas is a singleton.
     if not this.remote_canvas:
-        this.remote_canvas = FigureCanvasAggRemote(newFig)
+        this.remote_canvas = FigureCanvasAggRemote(new_fig)
     else:        
-        oldFig = this.remote_canvas.figure
-        newFig.set_size_inches(oldFig.get_figwidth(), oldFig.get_figheight())
-        this.remote_canvas.figure = newFig
+        old_fig = this.remote_canvas.figure
+        new_fig.set_size_inches(old_fig.get_figwidth(), 
+                                old_fig.get_figheight())
+        this.remote_canvas.figure = new_fig
         
-    newFig.set_canvas(this.remote_canvas)
+    new_fig.set_canvas(this.remote_canvas)
 
     # close the current figure (to keep pyplot happy)
     matplotlib.pyplot.close()
  
     return FigureManagerBase(this.remote_canvas, num)
 
+
 def draw_if_interactive():
+    if DEBUG:
+        print ("mpl_multiprocess_backend.draw_if_interactive")
     this.remote_canvas.draw()
 
 # make sure pyplot uses the remote canvas
