@@ -72,9 +72,15 @@ class ThresholdViewHandler(Controller, ViewHandlerMixin):
 
 class ThresholdSelectionView(ThresholdSelection, PluginViewMixin):
     handler_factory = Callable(ThresholdViewHandler)
+    interactive = True
     
     def plot_wi(self, wi):
         self.plot(wi.previous.result)
+# 
+#         # re-bind the Cursor to the new Axes object by twiddling
+#         # the "interactive" trait
+#         self.interactive = False
+#         self.interactive = True 
     
 class ThresholdPluginOp(ThresholdOp, PluginOpMixin):
     handler_factory = Callable(ThresholdHandler)

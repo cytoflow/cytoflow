@@ -397,7 +397,7 @@ class RemoteWorkflow(HasStrictTraits):
                 if w:
                     warning = w[-1].message.__str__()
             except util.CytoflowViewError as e:
-                error = e.__str__()
+                error = e.__str__()                
         
         this.parent_conn.send(Msg.VIEW_STATUS)
         this.parent_conn.send(idx)

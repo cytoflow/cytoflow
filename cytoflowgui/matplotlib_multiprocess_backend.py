@@ -60,6 +60,7 @@ class Msg:
     DRAW = 0
     DONE_DRAWING = 1
     RESIZE_FIGURE = 2
+    CONNECT_EVENT = 3
 
 class FigureCanvasQTAggLocal(FigureCanvasQTAggBase,
                              FigureCanvasQT,
@@ -100,16 +101,72 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAggBase,
                 self.buffer_width = this.child_conn.recv()
                 self.buffer_height = this.child_conn.recv()
                 self.update()
+            elif msg == Msg.CONNECT_EVENT:
+                pass
             else:
                 raise RuntimeError("FigureCanvasQTAggLocal received bad message {}".format(msg))
             
     def send_to_remote(self):
         pass
-        
-    def draw(self):
-        if DEBUG:
-            print("FigureCanvasQTAggLocal.draw()")
-        self.update()
+    def enterEvent(self, event):
+        FigureCanvasQT.enter_notify_event(self, guiEvent=event)
+
+    def leaveEvent(self, event):
+        pass
+#         QtWidgets.QApplication.restoreOverrideCursor()
+#         FigureCanvasQT.leave_notify_event(self, guiEvent=event)
+
+    def mousePressEvent(self, event):
+        pass
+#         x = event.pos().x()
+#         # flipy so y=0 is bottom of canvas
+#         y = self.figure.bbox.height - event.pos().y()
+#         button = self.buttond.get(event.button())
+#         if button is not None:
+#             FigureCanvasQT.button_press_event(self, x, y, button,
+#                                                 guiEvent=event)
+#         if DEBUG:
+#             print('button pressed:', event.button())
+
+    def mouseDoubleClickEvent(self, event):
+        pass
+#         x = event.pos().x()
+#         # flipy so y=0 is bottom of canvas
+#         y = self.figure.bbox.height - event.pos().y()
+#         button = self.buttond.get(event.button())
+#         if button is not None:
+#             FigureCanvasQT.button_press_event(self, x, y,
+#                                               button, dblclick=True,
+#                                               guiEvent=event)
+#         if DEBUG:
+#             print('button doubleclicked:', event.button())
+
+    def mouseMoveEvent(self, event):
+        pass
+#         x = event.x()
+#         # flipy so y=0 is bottom of canvas
+#         y = self.figure.bbox.height - event.y()
+#         FigureCanvasQT.motion_notify_event(self, x, y, guiEvent=event)
+#         # if DEBUG: print('mouse move')
+
+    def mouseReleaseEvent(self, event):
+        pass
+#         x = event.x()
+#         # flipy so y=0 is bottom of canvas
+#         y = self.figure.bbox.height - event.y()
+#         button = self.buttond.get(event.button())
+#         if button is not None:
+#             FigureCanvasQT.button_release_event(self, x, y, button,
+#                                                   guiEvent=event)
+#         if DEBUG:
+#             print('button released')
+
+#     def draw(self):
+#         if DEBUG:
+#             print("FigureCanvasQTAggLocal.draw()")
+#         self.update()
+
+
         
     def paintEvent(self, e):
         """
@@ -251,6 +308,11 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
             self.buffer_height = self.renderer.height
 
             self.update_remote.set()
+    
+#     def mpl_connect(self, s, func):
+#         if DEBUG:
+#             print("FigureCanvasAggRemote.mpl_connect()")
+        
 
     def blit(self, bbox = None):
         print("Tried to blit .... not yet implemented")
