@@ -54,8 +54,8 @@ class ThresholdViewHandler(Controller, ViewHandlerMixin):
                            show_border = False),
                     VGroup(Item('subset',
                                 show_label = False,
-                                editor = SubsetEditor(conditions = "context.conditions",
-                                                      values = "context.conditions_values")),
+                                editor = SubsetEditor(conditions = "context.previous.conditions",
+                                                      values = "context.previous.conditions_values")),
                            label = "Subset",
                            show_border = False,
                            show_labels = False),
@@ -78,6 +78,9 @@ class ThresholdSelectionView(ThresholdSelection, PluginViewMixin):
     
 class ThresholdPluginOp(ThresholdOp, PluginOpMixin):
     handler_factory = Callable(ThresholdHandler)
+     
+    def default_view(self, **kwargs):
+        return ThresholdSelectionView(op = self, **kwargs)
 
 @provides(IOperationPlugin)
 class ThresholdPlugin(Plugin):
@@ -93,9 +96,6 @@ class ThresholdPlugin(Plugin):
     
     def get_operation(self):
         return ThresholdPluginOp()
-    
-    def get_default_view(self):
-        return ThresholdSelectionView()
 
     def get_icon(self):
         return ImageResource('threshold')

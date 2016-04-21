@@ -84,6 +84,9 @@ class RangeSelectionView(RangeSelection, PluginViewMixin):
 @provides(IOperation)
 class RangePluginOp(RangeOp, PluginOpMixin):
     handler_factory = Callable(RangeHandler)
+    
+    def default_view(self, **kwargs):
+        return RangeSelectionView(op = self, **kwargs)
 
 @provides(IOperationPlugin)
 class RangePlugin(Plugin):
@@ -99,9 +102,6 @@ class RangePlugin(Plugin):
     
     def get_operation(self):
         return RangePluginOp()
-    
-    def get_default_view(self):
-        return RangeSelectionView()
     
     def get_icon(self):
         return ImageResource('range')

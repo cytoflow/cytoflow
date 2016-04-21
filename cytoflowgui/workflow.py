@@ -173,20 +173,21 @@ class LocalWorkflow(HasStrictTraits):
                     view.warning = this.child_conn.recv()
                     view.error = this.child_conn.recv()
 
-    def add_operation(self, operation, default_view):
+    def add_operation(self, operation):
         # add the new operation after the selected workflow item or at the end
         # of the workflow if no wi is selected
         
         # make a new workflow item
         wi = WorkflowItem(operation = operation,
-                          default_view = default_view,
                           deletable = (operation.id != "edu.mit.synbio.cytoflow.operations.import"))
 
-        # set up the default view
-        if wi.default_view is not None:
-            wi.default_view.op = wi.operation
+        # they say in Python, you should ask for forgiveness instead of permission
+        try:
+            wi.default_view = operation.default_view()
             wi.views.append(wi.default_view)
-            
+        except AttributeError:
+            pass
+
         if self.workflow and self.selected:
             idx = self.workflow.index(self.selected) + 1
         elif self.workflow:
@@ -272,7 +273,7 @@ class LocalWorkflow(HasStrictTraits):
         this.child_conn.send(idx)
         this.child_conn.send(self.selected.operation)
         
-    @on_trait_change('selected.current_view.-transient', post_init = True)
+    @on_trait_change('selected.current_view.+')
     def _on_workflow_view_changed(self, obj, name, old, new):
         print "view changed"
         # search the workflow for the appropriate wi

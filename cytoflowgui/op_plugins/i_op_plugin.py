@@ -55,12 +55,6 @@ class IOperationPlugin(Interface):
         Return an instance of the IOperation that this plugin wraps, along
         with the factory for the handler
         """
-        
-        
-    def get_default_view(self):
-        """
-        Return an IView instance set up to be the default view for the operation.
-        """
 
     def get_icon(self):
         """

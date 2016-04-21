@@ -138,7 +138,7 @@ class FlowTask(Task):
         
             import_op.tubes = [tube1, tube2]
             
-        self.model.add_operation(import_op, None)      
+        self.model.add_operation(import_op)      
     
     def prepare_destroy(self):
         self.model = None
@@ -274,7 +274,7 @@ class FlowTask(Task):
         plugin = next((x for x in self.op_plugins if x.id == op_id))
                 
         # add the operation and the operation's default view
-        self.model.add_operation(plugin.get_operation(), plugin.get_default_view())
+        self.model.add_operation(plugin.get_operation())
         
     def set_current_view(self, view_id):
         """

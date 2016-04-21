@@ -94,6 +94,9 @@ class PolygonSelectionView(PolygonSelection, PluginViewMixin):
     
 class PolygonPluginOp(PolygonOp, PluginOpMixin):
     handler_factory = Callable(PolygonHandler)
+    
+    def default_view(self, **kwargs):
+        return PolygonSelectionView(op = self, **kwargs)
 
 @provides(IOperationPlugin)
 class PolygonPlugin(Plugin):
@@ -110,9 +113,6 @@ class PolygonPlugin(Plugin):
     def get_operation(self):
         return PolygonPluginOp()
     
-    def get_default_view(self):
-        return PolygonSelectionView()
-     
     def get_icon(self):
         return ImageResource('polygon')
     

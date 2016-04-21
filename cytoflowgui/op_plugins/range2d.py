@@ -99,6 +99,9 @@ class Range2DSelectionView(RangeSelection2D, PluginViewMixin):
     
 class Range2DPluginOp(Range2DOp, PluginOpMixin):
     handler_factory = Callable(Range2DHandler)
+    
+    def default_view(self, **kwargs):
+        return Range2DSelectionView(op = self, **kwargs)
 
 @provides(IOperationPlugin)
 class Range2DPlugin(Plugin):
@@ -114,9 +117,6 @@ class Range2DPlugin(Plugin):
     
     def get_operation(self):
         return Range2DPluginOp()
-    
-    def get_default_view(self):
-        return Range2DSelectionView()
 
     def get_icon(self):
         return ImageResource('range2d')

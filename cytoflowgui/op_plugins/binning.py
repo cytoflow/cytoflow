@@ -47,6 +47,9 @@ class BinningHandler(Controller, OpHandlerMixin):
 
 class BinningPluginOp(BinningOp, PluginOpMixin):
     handler_factory = Callable(BinningHandler)
+    
+    def default_view(self, **kwargs):
+        return BinningPluginView(op = self, **kwargs)
 
 class BinningViewHandler(Controller, ViewHandlerMixin):
     def default_traits_view(self):
@@ -63,6 +66,9 @@ class BinningViewHandler(Controller, ViewHandlerMixin):
 @provides(IView)
 class BinningPluginView(BinningView, PluginViewMixin):
     handler_factory = Callable(BinningViewHandler)
+    
+    def plot_wi(self, wi):
+        self.plot(wi.result)
 
 @provides(IOperationPlugin)
 class BinningPlugin(Plugin):
@@ -78,9 +84,6 @@ class BinningPlugin(Plugin):
     
     def get_operation(self):
         return BinningPluginOp()
-    
-    def get_default_view(self):
-        return BinningPluginView()
     
     def get_icon(self):
         return ImageResource('binning')
