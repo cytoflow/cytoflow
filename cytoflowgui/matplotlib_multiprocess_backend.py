@@ -36,7 +36,7 @@ from pyface.qt import QtCore, QtGui
 # needed for pylab_setup
 backend_version = "0.0.1"
 
-interactive(True)
+# matplotlib.interactive(True)
 
 from matplotlib.backend_bases import FigureManagerBase
 
@@ -77,7 +77,11 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAggBase,
         FigureCanvasAgg.__init__(self, figure)
         self._drawRect = None
         self.blitbox = None
+        
+        self.buffer_lock = threading.Lock
         self.buffer = None
+        self.buffer_width = None
+        self.buffer_height = None
 
         self.setAttribute(QtCore.Qt.WA_OpaquePaintEvent)    
         
@@ -196,7 +200,11 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
         FigureCanvasAgg.__init__(self, figure)
         self.blitbox = None
         
-        self.update = threading.Event()
+        self.buffer_lock = threading.Lock()
+        self.buffer = None
+        self.buffer_width = None
+        self.buffer_height = None
+        self.update_remote = threading.Event()
         
         threading.Thread(target = self.listen_for_remote, args = ()).start()
         threading.Thread(target = self.send_to_remote, args=()).start()
@@ -210,34 +218,40 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
                 winch = this.parent_conn.recv()
                 hinch = this.parent_conn.recv()
                 self.figure.set_size_inches(winch, hinch)
-                self.update.set()
+                self.draw()
             else:
                 raise RuntimeError("FigureCanvasAggRemote received bad message {}".format(msg))
             
     def send_to_remote(self):
-        while self.update.wait():
+        while self.update_remote.wait():
             if DEBUG:
                 print("FigureCanvasAggRemote.send_to_remote")
-            self.update.clear()
+                
+            self.update_remote.clear()
             
-            FigureCanvasAgg.draw(self)
-                
-            if QtCore.QSysInfo.ByteOrder == QtCore.QSysInfo.LittleEndian:
-                str_buffer = self.renderer._renderer.tostring_bgra()
-            else:
-                str_buffer = self.renderer._renderer.tostring_argb()    
-                
-            this.parent_conn.send(Msg.DRAW)
-            this.parent_conn.send(str_buffer)
-            this.parent_conn.send(self.renderer.width)
-            this.parent_conn.send(self.renderer.height)
+            with self.buffer_lock:
+                this.parent_conn.send(Msg.DRAW)
+                this.parent_conn.send(self.buffer)
+                this.parent_conn.send(self.buffer_width)
+                this.parent_conn.send(self.buffer_height)
         
     def draw(self, *args, **kwargs):
         if DEBUG:
             print("FigureCanvasAggRemote.draw()")
+            
+        with self.buffer_lock:
+            FigureCanvasAgg.draw(self)
+                
+            if QtCore.QSysInfo.ByteOrder == QtCore.QSysInfo.LittleEndian:
+                self.buffer = self.renderer._renderer.tostring_bgra()
+            else:
+                self.buffer = self.renderer._renderer.tostring_argb()    
+                
+            self.buffer_width = self.renderer.width
+            self.buffer_height = self.renderer.height
 
-        self.update.set()
-        
+            self.update_remote.set()
+
     def blit(self, bbox = None):
         print("Tried to blit .... not yet implemented")
         pass
@@ -275,6 +289,11 @@ def new_figure_manager(num, *args, **kwargs):
 def draw_if_interactive():
     if DEBUG:
         print ("mpl_multiprocess_backend.draw_if_interactive")
+    this.remote_canvas.draw()
+    
+def show():
+    if DEBUG:
+        print ("mpl_multiprocess_backend.show")
     this.remote_canvas.draw()
 
 # make sure pyplot uses the remote canvas

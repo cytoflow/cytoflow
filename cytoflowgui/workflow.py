@@ -20,6 +20,8 @@ import threading, sys
 
 import warnings
 
+import matplotlib.pyplot as plt
+
 from traits.api import HasStrictTraits, Instance, List, on_trait_change
                        
 from traitsui.api import View, Item, InstanceEditor, Spring, Label
@@ -302,6 +304,7 @@ class RemoteWorkflow(HasStrictTraits):
     workflow = List(WorkflowItem)
     
     def run(self):
+        # plt.ioff()
         while True:
             cmd = this.parent_conn.recv()
             if cmd == Msg.NEW_WORKFLOW:
@@ -384,6 +387,12 @@ class RemoteWorkflow(HasStrictTraits):
         with warnings.catch_warnings(record = True) as w:
             try:
                 view.plot_wi(wi)
+                
+                # the remote canvas/pyplot interface of the multiprocess backend
+                # is NOT interactive.  this way we get to batch together all 
+                # the plot updates
+                plt.show()
+                
                 if w:
                     warning = w[-1].message.__str__()
             except util.CytoflowViewError as e:
