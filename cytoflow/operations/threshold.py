@@ -221,7 +221,8 @@ class ThresholdSelection(cytoflow.views.HistogramView):
             self._cursor = Cursor(self._ax, 
                                   horizOn=False,
                                   vertOn=True,
-                                  color='blue')
+                                  color='blue',
+                                  useblit = True)
             self._cursor.connect_event('button_press_event', self._onclick)
             
         elif self._cursor:
@@ -230,7 +231,9 @@ class ThresholdSelection(cytoflow.views.HistogramView):
             
     def _onclick(self, event):
         """Update the threshold location"""
-        self.threshold = event.xdata
+        # sometimes the axes aren't set up and we don't get xdata (??)
+        if event.xdata:
+            self.threshold = event.xdata
         
 if __name__ == '__main__':
     import cytoflow as flow
