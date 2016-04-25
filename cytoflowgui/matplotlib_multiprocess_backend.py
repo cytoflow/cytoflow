@@ -88,7 +88,7 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         self.blit_height = None
         self.blit_top = None
         self.blit_left = None
-
+        
         self.setAttribute(QtCore.Qt.WA_OpaquePaintEvent)    
         
         threading.Thread(target = self.listen_for_remote, args = ()).start()
@@ -102,11 +102,16 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
             if DEBUG:
                 print("FigureCanvasQTAggLocal.listen_for_remote :: {}".format(msg))
             if msg == Msg.DRAW:
-                self.buffer, self.buffer_width, self.buffer_height = payload 
+                (self.buffer, 
+                 self.buffer_width, 
+                 self.buffer_height) = payload 
                 self.update()
             elif msg == Msg.BLIT:
-                self.blit_buffer, self.blit_width, self.blit_height, \
-                    self.blit_top, self.blit_left = payload
+                (self.blit_buffer, 
+                 self.blit_width, 
+                 self.blit_height,
+                 self.blit_top, 
+                 self.blit_left) = payload
                 self.update()
             else:
                 raise RuntimeError("FigureCanvasQTAggLocal received bad message {}".format(msg))
@@ -283,17 +288,17 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
             if DEBUG:
                 print("FigureCanvasAggRemote.listen_for_remote :: {}".format(msg))
             if msg == Msg.RESIZE_EVENT:
-                winch, hinch = payload
+                (winch, hinch) = payload
                 self.figure.set_size_inches(winch, hinch)
                 self.draw()
             elif msg == Msg.MOUSE_PRESS_EVENT:
-                x, y, button = payload
+                (x, y, button) = payload
                 FigureCanvasAgg.button_press_event(self, x, y, button)
             elif msg == Msg.MOUSE_RELEASE_EVENT:
-                x, y, button = payload
+                (x, y, button) = payload
                 FigureCanvasAgg.button_release_event(self, x, y, button)
             elif msg == Msg.MOUSE_MOVE_EVENT:
-                x, y = payload
+                (x, y) = payload
                 FigureCanvasAgg.motion_notify_event(self, x, y)
             else:
                 raise RuntimeError("FigureCanvasAggRemote received bad message {}".format(msg))
@@ -312,7 +317,7 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
                                       self.buffer_height))
                     this.parent_conn.send(msg)
             else:
-                with self.blit_lock:
+                #with self.blit_lock:
                     msg = (Msg.BLIT, (self.blit_buffer,
                                       self.blit_width,
                                       self.blit_height,

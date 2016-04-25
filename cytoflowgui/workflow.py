@@ -154,25 +154,25 @@ class LocalWorkflow(HasStrictTraits):
     def listen_for_remote(self):
         while True:
             if this.child_conn.poll(0.3):
-                msg = this.child_conn.recv()
+                (msg, payload) = this.child_conn.recv()
                 if msg == Msg.OP_STATUS:
-                    idx = this.child_conn.recv()
+                    (idx, wi_status) = payload
                     wi = self.workflow[idx]
-                    wi.channels = this.child_conn.recv()
-                    wi.conditions = this.child_conn.recv()
-                    wi.conditions_names = this.child_conn.recv()
-                    wi.conditions_values = this.child_conn.recv()
-                    wi.warning = this.child_conn.recv()
-                    wi.error = this.child_conn.recv()
-                    wi.status = this.child_conn.recv()
+                    (wi.channels,
+                     wi.conditions,
+                     wi.conditions_names,
+                     wi.conditions_values,
+                     wi.warning,
+                     wi.error,
+                     wi.status) = wi_status
                 elif msg == Msg.VIEW_STATUS:
-                    idx = this.child_conn.recv()
+                    (idx, view_status) = payload
                     wi = self.workflow[idx]
-                    view_id = this.child_conn.recv()
+                    (view_id, view_warning, view_error) = view_status
                     view = next((x for x in wi.views if x.id == view_id))
-                    view.warning = this.child_conn.recv()
-                    view.error = this.child_conn.recv()
-
+                    view.warning = view_warning
+                    view.error = view_error
+                    
     def add_operation(self, operation):
         # add the new operation after the selected workflow item or at the end
         # of the workflow if no wi is selected
@@ -399,21 +399,21 @@ class RemoteWorkflow(HasStrictTraits):
             except util.CytoflowViewError as e:
                 error = e.__str__()                
         
-        this.parent_conn.send(Msg.VIEW_STATUS)
-        this.parent_conn.send(idx)
-        this.parent_conn.send(view.id)
-        this.parent_conn.send(warning)
-        this.parent_conn.send(error)
+        msg = (Msg.VIEW_STATUS,
+               (idx,
+                (view.id, warning, error)))
+        this.parent_conn.send(msg)
             
     @on_trait_change("workflow.status")
     def _on_status_change(self, obj, name, old, new):
         idx = self.workflow.index(obj)
-        this.parent_conn.send(Msg.OP_STATUS)
-        this.parent_conn.send(idx)
-        this.parent_conn.send(obj.channels)
-        this.parent_conn.send(obj.conditions)
-        this.parent_conn.send(obj.conditions_names)
-        this.parent_conn.send(obj.conditions_values)
-        this.parent_conn.send(obj.warning)
-        this.parent_conn.send(obj.error)
-        this.parent_conn.send(obj.status)
+        msg = (Msg.OP_STATUS, 
+               (idx, 
+                (obj.channels,
+                 obj.conditions,
+                 obj.conditions_names,
+                 obj.conditions_values,
+                 obj.warning,
+                 obj.error,
+                 obj.status)))
+        this.parent_conn.send(msg)
