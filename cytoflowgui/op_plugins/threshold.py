@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from traits.api import provides, Callable
+from traits.api import provides, Callable, Constant
 from traitsui.api import View, Item, EnumEditor, Controller, VGroup
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
@@ -72,15 +72,11 @@ class ThresholdViewHandler(Controller, ViewHandlerMixin):
 
 class ThresholdSelectionView(ThresholdSelection, PluginViewMixin):
     handler_factory = Callable(ThresholdViewHandler)
-    interactive = True
+    interactive = Constant(True)
     
     def plot_wi(self, wi):
         self.plot(wi.previous.result)
-# 
-#         # re-bind the Cursor to the new Axes object by twiddling
-#         # the "interactive" trait
-#         self.interactive = False
-#         self.interactive = True 
+
     
 class ThresholdPluginOp(ThresholdOp, PluginOpMixin):
     handler_factory = Callable(ThresholdHandler)

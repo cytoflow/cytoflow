@@ -264,7 +264,8 @@ class QuadSelection(cytoflow.views.ScatterplotView):
             self._cursor = Cursor(self._ax,
                                   horizOn = True,
                                   vertOn = True,
-                                  color = 'blue') 
+                                  color = 'blue',
+                                  useblit = True) 
             self._cursor.connect_event('button_press_event', self._onclick)
         elif self._cursor:
             self._cursor.disconnect_events()

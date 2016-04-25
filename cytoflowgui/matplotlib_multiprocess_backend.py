@@ -25,6 +25,8 @@ import sys, time, threading
 
 import matplotlib.pyplot
 from matplotlib.figure import Figure
+from matplotlib.transforms import TransformedBbox, BboxTransformTo
+
 
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
 #from matplotlib.backends.backend_qt5agg import FigureCanvasQTAggBase
@@ -88,13 +90,19 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         self.blit_height = None
         self.blit_top = None
         self.blit_left = None
-        
-        self.last_move_time = time.time()
+
+        # positions to send
+        self.move_x = None
+        self.move_y = None
+        self.resize_width = None
+        self.resize_height = None
+        self.send_event = threading.Event()
         
         self.setAttribute(QtCore.Qt.WA_OpaquePaintEvent)    
         
         threading.Thread(target = self.listen_for_remote, args = ()).start()
-        #threading.Thread(target = self.send_to_remote, args = ()).start()
+        threading.Thread(target = self.send_to_remote, args = ()).start()
+        
         
     def listen_for_remote(self):
         while this.child_conn is None:
@@ -119,17 +127,36 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
             else:
                 raise RuntimeError("FigureCanvasQTAggLocal received bad message {}".format(msg))
             
+            
     def send_to_remote(self):
-        pass
-    
-#     def enterEvent(self, event):
-#         FigureCanvasQTAgg.enter_notify_event(self, guiEvent=event)
+        while True:
+            self.send_event.wait()
+            self.send_event.clear()
+            
+            if self.move_x:
+                if DEBUG:
+                    print('FigureCanvasQTAggLocal.send_to_remote: {}', (Msg.MOUSE_MOVE_EVENT, self.move_x, self.move_y))
+                msg = (Msg.MOUSE_MOVE_EVENT, (self.move_x, self.move_y))
+                this.child_conn.send(msg)
+                self.move_x = self.move_y = None
+                
+            if self.resize_width:
+                if DEBUG:
+                    print('FigureCanvasQTAggLocal.send_to_remote: {}', (Msg.RESIZE_EVENT, self.resize_width, self.resize_height))
+                msg = (Msg.RESIZE_EVENT, (self.resize_width, self.resize_height))
+                this.child_conn.send(msg)
+                self.resize_width = self.resize_height = None
 
-#     def leaveEvent(self, event):
-#         QtWidgets.QApplication.restoreOverrideCursor()
-#         FigureCanvasQT.leave_notify_event(self, guiEvent=event)
+            time.sleep(0.1)
+            
+
+    def leaveEvent(self, event):
+        QtGui.QApplication.restoreOverrideCursor()
+
 
     def mousePressEvent(self, event):
+        if DEBUG:
+            print('FigureCanvasQTAggLocal.mousePressEvent: {}', event.button())
         x = event.pos().x()
         # flip y so y=0 is bottom of canvas
         y = self.figure.bbox.height - event.pos().y()
@@ -137,54 +164,46 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         if button is not None:
             msg = (Msg.MOUSE_PRESS_EVENT, (x, y, button))
             this.child_conn.send(msg)
-        if DEBUG:
-            print('button pressed:', event.button())
 
-    def mouseDoubleClickEvent(self, event):
-        pass
-#         x = event.pos().x()
-#         # flipy so y=0 is bottom of canvas
-#         y = self.figure.bbox.height - event.pos().y()
-#         button = self.buttond.get(event.button())
-#         if button is not None:
-#             FigureCanvasQT.button_press_event(self, x, y,
-#                                               button, dblclick=True,
-#                                               guiEvent=event)
-#         if DEBUG:
-#             print('button doubleclicked:', event.button())
 
     def mouseMoveEvent(self, event):
-        if time.time() < self.last_move_time + 0.2:
-            return
-        
-        self.last_move_time = time.time()
-        x = event.x()
-        # flipy so y=0 is bottom of canvas
-        y = self.figure.bbox.height - event.y()
-        msg = (Msg.MOUSE_MOVE_EVENT, (x, y))
-        this.child_conn.send(msg)
-#        FigureCanvasQT.motion_notify_event(self, x, y, guiEvent=event)
-#         if DEBUG: 
-#             print('mouse move')
+#         if DEBUG:
+#             print('FigureCanvasQTAggLocal.mouseMoveEvent: {}', (event.x(), event.y()))
+        self.move_x = event.x()
+        # flip y so y=0 is bottom of canvas
+        self.move_y = int(self.figure.bbox.height) - event.y()
+        self.send_event.set()
+
 
     def mouseReleaseEvent(self, event):
+        if DEBUG:
+            print('FigureCanvasQTAggLocal.mouseReleaseEvent: {}', event.button())
         x = event.x()
         # flip y so y=0 is bottom of canvas
         y = self.figure.bbox.height - event.y()
         button = self.buttond.get(event.button())
         if button is not None:
-#             FigureCanvasQT.button_release_event(self, x, y, button,
-#                                                   guiEvent=event)
             msg = (Msg.MOUSE_RELEASE_EVENT, (x, y, button))
             this.child_conn.send(msg)
+
+
+    def resizeEvent(self, event):
+        w = event.size().width()
+        h = event.size().height()
         if DEBUG:
-            print('button released')
+            print("FigureCanvasQTAggLocal.resizeEvent(%d, %d)" % (w, h))
+        dpival = self.figure.dpi
+        winch = w / dpival
+        hinch = h / dpival
+        
+        self.resize_width = winch
+        self.resize_height = hinch
 
-#     def draw(self):
-#         if DEBUG:
-#             print("FigureCanvasQTAggLocal.draw()")
-#         self.update()
-
+        self.send_event.set()
+        
+        self.figure.set_size_inches(winch, hinch)
+        FigureCanvasAgg.resize_event(self)
+        QtGui.QWidget.resizeEvent(self, event)
 
         
     def paintEvent(self, e):
@@ -246,22 +265,6 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
             p.end()
             self.blit_buffer = None
 
-    def resizeEvent(self, event):
-        w = event.size().width()
-        h = event.size().height()
-        if DEBUG:
-            print("FigureCanvasQTAggLocal.resizeEvent(%d, %d)" % (w, h))
-        dpival = self.figure.dpi
-        winch = w / dpival
-        hinch = h / dpival
-        
-        msg = (Msg.RESIZE_EVENT, (winch, hinch))
-        this.child_conn.send(msg)
-        
-        #self.figure.set_size_inches(winch, hinch)
-        FigureCanvasAgg.resize_event(self)
-        #self.draw_idle()
-        #QtWidgets.QWidget.resizeEvent(self, event)
 
 class FigureCanvasAggRemote(FigureCanvasAgg):
     """
@@ -297,6 +300,9 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
             if msg == Msg.RESIZE_EVENT:
                 (winch, hinch) = payload
                 self.figure.set_size_inches(winch, hinch)
+#                 self.figure.bbox = TransformedBbox(self.figure.bbox_inches, self.figure.dpi_scale_trans)
+#                 self.transFigure = BboxTransformTo(self.figure.bbox)
+                FigureCanvasAgg.resize_event(self)
                 self.draw()
             elif msg == Msg.MOUSE_PRESS_EVENT:
                 (x, y, button) = payload
@@ -322,16 +328,16 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
                     msg = (Msg.DRAW, (self.buffer,
                                       self.buffer_width, 
                                       self.buffer_height))
-                    this.parent_conn.send(msg)
+                this.parent_conn.send(msg)
             else:
-                #with self.blit_lock:
+                with self.blit_lock:
                     msg = (Msg.BLIT, (self.blit_buffer,
                                       self.blit_width,
                                       self.blit_height,
                                       self.blit_top,
                                       self.blit_left))
-                    this.parent_conn.send(msg)
-                    self.blit_buffer = None
+                this.parent_conn.send(msg)
+                self.blit_buffer = None
         
     def draw(self, *args, **kwargs):
         if DEBUG:
@@ -348,7 +354,7 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
             self.buffer_width = self.renderer.width
             self.buffer_height = self.renderer.height
 
-            self.update_remote.set()
+        self.update_remote.set()
     
 #     def mpl_connect(self, s, func):
 #         if DEBUG:
@@ -361,17 +367,23 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
         """
         # If bbox is None, blit the entire canvas. Otherwise
         # blit only the area defined by the bbox.
-        if bbox is None and self.figure:
-            bbox = self.figure.bbox
-
-        l, b, r, t = bbox.extents
-        w = int(r) - int(l)
-        h = int(t) - int(b)
-        t = int(b) + h
-        l = int(l)
-        reg = self.copy_from_bbox(bbox)
+        if DEBUG:
+            print("FigureCanvasAggRemote.blit()")
         
+        if bbox is None and self.figure:
+            print("bbox was none")
+            return
+#             bbox = self.figure.bbox
+
         with self.blit_lock:
+            l, b, r, t = bbox.extents
+            w = int(r) - int(l)
+            h = int(t) - int(b)
+            t = int(b) + h
+            l = int(l)
+        
+            reg = self.copy_from_bbox(bbox)
+            
             self.blit_buffer = reg.to_string_argb()
             self.blit_width = w
             self.blit_height = h

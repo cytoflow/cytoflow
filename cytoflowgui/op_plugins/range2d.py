@@ -21,7 +21,7 @@ Created on Apr 25, 2015
 @author: brian
 '''
 
-from traits.api import provides, Callable
+from traits.api import provides, Callable, Constant
 from traitsui.api import View, Item, EnumEditor, Controller, VGroup
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
@@ -93,6 +93,7 @@ class RangeView2DHandler(Controller, ViewHandlerMixin):
 @provides(ISelectionView)
 class Range2DSelectionView(RangeSelection2D, PluginViewMixin):
     handler_factory = Callable(RangeView2DHandler)
+    interactive = Constant(True)
     
     def plot_wi(self, wi):
         self.plot(wi.previous.result)

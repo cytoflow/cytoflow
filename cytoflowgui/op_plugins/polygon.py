@@ -21,7 +21,7 @@ Created on Apr 25, 2015
 @author: brian
 '''
 
-from traits.api import provides, Callable
+from traits.api import provides, Callable, Constant
 from traitsui.api import View, Item, EnumEditor, Controller, VGroup
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
@@ -88,6 +88,7 @@ class PolygonViewHandler(Controller, ViewHandlerMixin):
 @provides(ISelectionView)
 class PolygonSelectionView(PolygonSelection, PluginViewMixin):
     handler_factory = Callable(PolygonViewHandler)
+    interactive = Constant(True)
     
     def plot_wi(self, wi):
         self.plot(wi.previous.result)
