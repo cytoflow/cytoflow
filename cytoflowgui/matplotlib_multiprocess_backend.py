@@ -89,9 +89,12 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         self.blit_top = None
         self.blit_left = None
         
+        self.last_move_time = time.time()
+        
         self.setAttribute(QtCore.Qt.WA_OpaquePaintEvent)    
         
         threading.Thread(target = self.listen_for_remote, args = ()).start()
+        #threading.Thread(target = self.send_to_remote, args = ()).start()
         
     def listen_for_remote(self):
         while this.child_conn is None:
@@ -151,14 +154,18 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
 #             print('button doubleclicked:', event.button())
 
     def mouseMoveEvent(self, event):
+        if time.time() < self.last_move_time + 0.2:
+            return
+        
+        self.last_move_time = time.time()
         x = event.x()
         # flipy so y=0 is bottom of canvas
         y = self.figure.bbox.height - event.y()
         msg = (Msg.MOUSE_MOVE_EVENT, (x, y))
         this.child_conn.send(msg)
 #        FigureCanvasQT.motion_notify_event(self, x, y, guiEvent=event)
-        if DEBUG: 
-            print('mouse move')
+#         if DEBUG: 
+#             print('mouse move')
 
     def mouseReleaseEvent(self, event):
         x = event.x()
