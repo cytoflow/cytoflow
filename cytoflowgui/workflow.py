@@ -113,6 +113,7 @@ class Msg:
     UPDATE_OP = 4
     UPDATE_VIEW = 5
     CHANGE_CURRENT_VIEW = 6
+    UPDATE_WI = 7
 
                     
 class LocalWorkflow(HasStrictTraits):
@@ -151,26 +152,28 @@ class LocalWorkflow(HasStrictTraits):
 
     def listen_for_remote(self):
         while True:
-            if this.child_conn.poll(0.3):
-                (msg, payload) = this.child_conn.recv()
-                # HERE -- listen for UPDATE_OP and UPDATE_VIEW
-#                 if msg == Msg.OP_STATUS:
-#                     (idx, wi_status) = payload
-#                     wi = self.workflow[idx]
-#                     (wi.channels,
-#                      wi.conditions,
-#                      wi.conditions_names,
-#                      wi.conditions_values,
-#                      wi.warning,
-#                      wi.error,
-#                      wi.status) = wi_status
-#                 elif msg == Msg.VIEW_STATUS:
-#                     (idx, view_status) = payload
-#                     wi = self.workflow[idx]
-#                     (view_id, view_warning, view_error) = view_status
-#                     view = next((x for x in wi.views if x.id == view_id))
-#                     view.warning = view_warning
-#                     view.error = view_error
+            (msg, payload) = this.child_conn.recv()
+            if msg == Msg.UPDATE_WI:
+                (idx, trait, new_value) = payload
+                wi = self.workflow[idx]
+                if wi.trait_get(trait)[trait] != new_value:
+                    wi.trait_set(**{trait : new_value})
+            elif msg == Msg.UPDATE_OP:
+                (idx, trait, new_value) = payload
+                wi = self.workflow[idx]
+                if wi.operation.trait_get(trait)[trait] != new_value:
+                    wi.operation.trait_set(**{trait : new_value})
+                    
+            elif msg == Msg.UPDATE_VIEW:
+                (idx, view_id, trait, new_value) = payload
+                wi = self.workflow[idx]
+                view = next((x for x in wi.views if x.id == view_id))
+                
+                if view.trait_get(trait)[trait] != new_value:
+                    view.trait_set(**{trait : new_value})
+            else:
+                raise RuntimeError("Bad message from remote")
+
                     
     def add_operation(self, operation):
         # add the new operation after the selected workflow item or at the end
@@ -180,7 +183,7 @@ class LocalWorkflow(HasStrictTraits):
         wi = WorkflowItem(operation = operation,
                           deletable = (operation.id != "edu.mit.synbio.cytoflow.operations.import"))
 
-        # they say in Python, you should ask for forgiveness instead of permission
+        # they say in Python you should ask for forgiveness instead of permission
         try:
             wi.default_view = operation.default_view()
             wi.views.append(wi.default_view)
@@ -256,25 +259,31 @@ class LocalWorkflow(HasStrictTraits):
                 self.workflow[idx + 1].previous = self.workflow[idx]
                 
             this.child_conn.send((Msg.ADD_ITEMS, (idx, event.added[0])))
-                
-    
+ 
     @on_trait_change('selected')
     def _on_selected_changed(self, obj, name, old, new):
         # TODO - handle closing all the WIs
         idx = self.workflow.index(new)
-        this.child_conn.send((Msg.SELECT, idx))        
+        this.child_conn.send((Msg.SELECT, idx))   
     
-    @on_trait_change('selected:operation:+')
+    @on_trait_change('workflow:operation:+')
     def _on_operation_trait_changed(self, obj, name, old, new):
-        this.child_conn.send((Msg.UPDATE_OP, (name, new)))
+        wi = next((x for x in self.workflow if x.operation == obj))
+        idx = self.workflow.index(wi)
+        this.child_conn.send((Msg.UPDATE_OP, (idx, name, new)))
         
-    @on_trait_change('selected:current_view')
+    @on_trait_change('workflow:current_view')
     def _on_current_view_changed(self, obj, name, old, new):
-        this.child_conn.send((Msg.CHANGE_CURRENT_VIEW, self.selected.current_view))
+        idx = self.workflow.index(obj)
+        view = obj.current_view
+        this.child_conn.send((Msg.CHANGE_CURRENT_VIEW, (idx, view)))
         
-    @on_trait_change('selected:current_view:+')
+    @on_trait_change('workflow:views:+')
     def _on_view_trait_changed(self, obj, name, old, new):
-        this.child_conn.send((Msg.UPDATE_VIEW, (name, new)))
+        wi = next((x for x in self.workflow if obj in x.views))
+        idx = self.workflow.index(wi)
+        view_id = obj.id
+        this.child_conn.send((Msg.UPDATE_VIEW, (idx, view_id, name, new)))
 
     # MAGIC: called when default_scale is changed
     def _default_scale_changed(self, new_scale):
@@ -300,37 +309,42 @@ class RemoteWorkflow(HasStrictTraits):
             elif msg == Msg.REMOVE_ITEMS:
                 idx = payload
                 self.workflow.remove(self.workflow[idx])
-
+                
             elif msg == Msg.SELECT:
                 idx = payload
                 self.selected = self.workflow[idx]
                 
             elif msg == Msg.UPDATE_OP:
-                (trait, new_value) = payload
-                if self.selected.operation.trait_get(trait)[trait] != new_value:
-                    self.selected.operation.trait_set(**{trait : new_value})
+                (idx, trait, new_value) = payload
+                wi = self.workflow[idx]
+                if wi.operation.trait_get(trait)[trait] != new_value:
+                    wi.operation.trait_set(**{trait : new_value})
 
             elif msg == Msg.CHANGE_CURRENT_VIEW:
-                view = payload
+                (idx, view) = payload
+                wi = self.workflow[idx]
                 try:
-                    self.selected.current_view = next((x for x in self.selected.views if x.id == view.id))
+                    wi.current_view = next((x for x in wi.views if x.id == view.id))
                 except StopIteration:
-                    self.selected.views.append(view)
-                    self.selected.current_view = view
+                    wi.views.append(view)
+                    wi.current_view = view
+                
+                if wi == self.selected:
+                    self.plot(wi)
                 
             elif msg == Msg.UPDATE_VIEW:
-                (trait, new_value) = payload
-                if self.selected.current_view.trait_get(trait)[trait] != new_value:
-                    self.selected.current_view.trait_set(**{trait : new_value})
+                (idx, view_id, trait, new_value) = payload
+                wi = self.workflow[idx]
+                view = next((x for x in wi.views if x.id == view_id))
+                if view.trait_get(trait)[trait] != new_value:
+                    view.trait_set(**{trait : new_value})
                 
             else:
                 raise RuntimeError("Bad command in the remote workflow")
 
         
     @on_trait_change('workflow')
-    def _on_new_workflow(self, obj, name, old, new):
-        self.selected = None
-        
+    def _on_new_workflow(self, obj, name, old, new):        
         for wi in self.workflow:
             wi.status = "invalid"
         
@@ -368,70 +382,59 @@ class RemoteWorkflow(HasStrictTraits):
             wi.status = "invalid"
                             
         for wi in self.workflow[idx:]:
-            wi.update()    
+            wi.update()
+            
 
+    @on_trait_change('workflow:status')
+    def _on_workflow_item_status_changed(self, obj, name, old, new):
+        print "status"
+        # TODO why doesn't this work
+        if obj.trait(name).status:
+            idx = self.workflow.index(obj)
+            this.parent_conn.send((Msg.UPDATE_WI, (idx, name, new)))
         
-    @on_trait_change('selected:operation:+')
+    @on_trait_change('workflow:operation:+')
     def _on_operation_trait_changed(self, obj, name, old, new):
-        pass
-    
+        idx = self.workflow.index(obj)
+        this.parent_conn.send((Msg.UPDATE_OP, (idx, name, new)))
         
-    @on_trait_change('selected:current_view')
-    def _on_current_view_changed(self, obj, name, old, new):
-        pass
-    
-    
-    @on_trait_change('selected:current_view:+')
+        if obj.trait(name).transient:
+            return
+        
+        for wi in self.workflow[idx:]:
+            wi.status = "invalid"
+                            
+        for wi in self.workflow[idx:]:
+            wi.update() 
+        
+  
+    @on_trait_change('workflow:views:+')
     def _on_view_trait_changed(self, obj, name, old, new):
-        pass
+        wi = next((x for x in self.workflow if obj in x.views))
+        idx = self.workflow.index(wi)
+        this.parent_conn.send((Msg.UPDATE_VIEW, (idx, obj.id, name, new)))
+        
+        if obj.trait(name).transient:
+            return
+        
+        if wi == self.selected and wi.current_view == obj:
+            self.plot(wi)
 
             
-#     def plot(self, idx, view):
-#         print "remote plot"
-#         wi = self.workflow[idx]
-#         error = ""
-#         warning = ""
-#         
-#         with warnings.catch_warnings(record = True) as w:
-#             try:
-#                 view.plot_wi(wi)
-#                 
-#                 # the remote canvas/pyplot interface of the multiprocess backend
-#                 # is NOT interactive.  this way we get to batch together all 
-#                 # the plot updates
-#                 plt.show()
-#                 
-#                 if w:
-#                     warning = w[-1].message.__str__()
-#             except util.CytoflowViewError as e:
-#                 error = e.__str__()                
-#         
-#         msg = (Msg.VIEW_STATUS,
-#                (idx,
-#                 (view.id, warning, error)))
-#         this.parent_conn.send(msg)
-#             
-#     @on_trait_change("workflow.status")
-#     def _on_status_change(self, obj, name, old, new):
-#         idx = self.workflow.index(obj)
-#         msg = (Msg.OP_STATUS, 
-#                (idx, 
-#                 (obj.channels,
-#                  obj.conditions,
-#                  obj.conditions_names,
-#                  obj.conditions_values,
-#                  obj.warning,
-#                  obj.error,
-#                  obj.status)))
-#         this.parent_conn.send(msg)
-# 
-#     @on_trait_change('workflow.operation.+')
-#     def _on_operation_changed(self, obj, name, old, new):
-#         print "remote op changed"
-# #         # search the workflow for the appropriate wi
-# #         #wi = next((x for x in self.workflow if x.operation == obj))
-# #         idx = self.workflow.index(self.selected)
-# #         
-# #         this.child_conn.send(Msg.UPDATE_OP)
-# #         this.child_conn.send(idx)
-# #         this.child_conn.send(self.selected.operation)
+    def plot(self, wi):
+        print "remote plot"
+         
+        with warnings.catch_warnings(record = True) as w:
+            try:
+                wi.current_view.plot_wi(wi)
+                 
+                # the remote canvas/pyplot interface of the multiprocess backend
+                # is NOT interactive.  this call lets us batch together all 
+                # the plot updates
+                plt.show()
+                 
+                if w:
+                    wi.current_view.warning = w[-1].message.__str__()
+            except util.CytoflowViewError as e:
+                wi.current_view.error = e.__str__()                
+

@@ -17,13 +17,14 @@
 
 """
 Created on Feb 11, 2015
-
 @author: brian
 """
 
 from pyface.tasks.api import TaskPane
-from traits.api import provides
+from traits.api import Instance, provides
 from pyface.tasks.i_task_pane import ITaskPane
+
+from matplotlib_editor import MPLFigureEditor
 
 @provides(ITaskPane)
 class FlowTaskPane(TaskPane):
@@ -36,20 +37,20 @@ class FlowTaskPane(TaskPane):
     id = 'edu.mit.synbio.cytoflow.flow_task_pane'
     name = 'Cytometry Data Viewer'
     
+    editor = Instance(MPLFigureEditor)
+    
     def create(self, parent):
-        
-        self.ui = self.task.model.edit_traits(view = 'selected_view_plot',
-                                              kind = 'subpanel', 
-                                              parent = parent)
-        self.control = self.ui.control
+        self.editor = MPLFigureEditor(parent)
+        self.control = self.editor.control
 
     def destroy(self):
-#         self.ui.destroy()
-        self.control = None 
-#                   
-#     def export(self, filename):
-#         # TODO - eventually give a preview, allow changing size, dpi, aspect 
-#         # ratio, plot layout, etc.  at the moment, just export exactly what's
-#         # on the screen
-#         self.editor.print_figure(filename, bbox_inches = 'tight')
+        self.editor.destroy()
+        self.control = self.editor = None 
+                  
+    def export(self, filename):
+        # TODO - eventually give a preview, allow changing size, dpi, aspect 
+        # ratio, plot layout, etc.  at the moment, just export exactly what's
+        # on the screen
+        self.editor.print_figure(filename, bbox_inches = 'tight')
+        
         

@@ -69,9 +69,9 @@ class WorkflowItem(HasStrictTraits):
                                  trait = Instance(Handler), 
                                  transient = True)
     
-    operation_view = View(Item('operation_handler',
-                               style = 'custom',
-                               show_label = False))
+    operation_traits = View(Item('operation_handler',
+                                 style = 'custom',
+                                 show_label = False))
     
     # the Experiment that is the result of applying *operation* to the
     # previous WorkflowItem's ``result``
@@ -82,10 +82,10 @@ class WorkflowItem(HasStrictTraits):
     # with the multiprocess model  
     
     # TODO - one day, make these Properties again
-    channels = List(Str)
-    conditions = Dict(Str, Str)
-    conditions_names = List(Str)
-    conditions_values = Dict(Str, List)
+    channels = List(Str, status = True)
+    conditions = Dict(Str, Str, status = True)
+    conditions_names = List(Str, status = True)
+    conditions_values = Dict(Str, List, status = True)
     
     # the IViews against the output of this operation
     views = List(IView)
@@ -102,10 +102,6 @@ class WorkflowItem(HasStrictTraits):
                                     style = 'custom',
                                     show_label = False))
     
-    current_view_plot = View(Item('current_view',
-                                  editor = MPLFigureEditor(),
-                                  show_label = False))
-    
     # the default view for this workflow item
     default_view = Instance(IView)
     
@@ -117,13 +113,13 @@ class WorkflowItem(HasStrictTraits):
     
     # is the wi valid?
     # MAGIC: first value is the default
-    status = Enum("invalid", "estimating", "applying", "valid", transient = True)
+    status = Enum("invalid", "estimating", "applying", "valid", transient = True, status = True)
     
     # if we errored out, what was the error string?
-    error = Str(transient = True)
+    error = Str(transient = True, status = True)
     
     # if we got a warning, what was the warning string?
-    warning = Str(transient = True)
+    warning = Str(transient = True, status = True)
     
     # the icon for the vertical notebook view.  Qt specific, sadly.
     icon = Property(depends_on = 'status', transient = True)
@@ -132,7 +128,7 @@ class WorkflowItem(HasStrictTraits):
         """
         Called by the controller to update this wi
         """
-     
+             
         self.warning = ""
         self.error = ""
         self.result = None
