@@ -56,7 +56,7 @@ class WorkflowDockPane(TraitsDockPane):
         window.addToolBar(QtCore.Qt.LeftToolBarArea, 
                           self.toolbar.create_tool_bar(window))
          
-        self.ui = self.model.edit_traits(view = 'operations_view',
+        self.ui = self.model.edit_traits(view = 'operations_traits',
                                          kind = 'subpanel', 
                                          parent = window)
         window.setCentralWidget(self.ui.control)

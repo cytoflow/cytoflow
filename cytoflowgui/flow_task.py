@@ -38,14 +38,12 @@ from envisage.ui.tasks.api import TaskFactory
 from cytoflowgui.flow_task_pane import FlowTaskPane
 from cytoflowgui.workflow_pane import WorkflowDockPane
 from cytoflowgui.view_pane import ViewDockPane
-from cytoflowgui.workflow import LocalWorkflow, RemoteWorkflow
+from cytoflowgui.workflow import LocalWorkflow
 from cytoflowgui.op_plugins import IOperationPlugin, ImportPlugin, OP_PLUGIN_EXT
 from cytoflowgui.view_plugins import IViewPlugin, VIEW_PLUGIN_EXT
 from cytoflowgui.ipython import IPythonNotebookWriter
 
 import pickle as pickle
-
-
 
 class FlowTask(Task):
     """

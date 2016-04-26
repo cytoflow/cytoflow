@@ -36,6 +36,8 @@ from cytoflow.operations.i_operation import IOperation
 from cytoflow.views.i_view import IView
 from cytoflow.utility import CytoflowError
 
+from cytoflowgui.matplotlib_editor import MPLFigureEditor
+
 
 class WorkflowItem(HasStrictTraits):
     """        
@@ -96,8 +98,12 @@ class WorkflowItem(HasStrictTraits):
                                     trait = Instance(Handler),
                                     transient = True) 
     
-    current_view_view = View(Item('current_view_handler',
-                                  style = 'custom',
+    current_view_traits = View(Item('current_view_handler',
+                                    style = 'custom',
+                                    show_label = False))
+    
+    current_view_plot = View(Item('current_view',
+                                  editor = MPLFigureEditor(),
                                   show_label = False))
     
     # the default view for this workflow item

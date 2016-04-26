@@ -84,7 +84,7 @@ class ViewDockPane(TraitsDockPane):
         window.addToolBar(QtCore.Qt.RightToolBarArea, 
                           self.toolbar.create_tool_bar(window))
         
-        self.ui = self.model.edit_traits(view = 'current_view_view',
+        self.ui = self.model.edit_traits(view = 'selected_view_traits',
                                          kind = 'subpanel', 
                                          parent = window)
         window.setCentralWidget(self.ui.control)
