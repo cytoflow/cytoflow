@@ -201,7 +201,7 @@ class ImportOp(HasStrictTraits):
         meta_channels = tube0_meta["_channels_"]
         
         if self.name_metadata:
-            experiment.metadata["name_meta"] = self.name_metadata
+            experiment.metadata["name_metadata"] = self.name_metadata
         else:
             # try to autodetect the metadata
             if "$PnN" in meta_channels and not "$PnS" in meta_channels:
