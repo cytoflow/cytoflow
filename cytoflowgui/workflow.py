@@ -32,7 +32,6 @@ import cytoflow.utility as util
 from cytoflowgui.vertical_notebook_editor import VerticalNotebookEditor
 from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.util import UniquePriorityQueue
-#from cytoflowgui import matplotlib_multiprocess_backend
 
 # THE NEW NEW PLAN combines both:
 # The parent process runs the GUI
@@ -246,6 +245,9 @@ class LocalWorkflow(HasStrictTraits):
                 removed.next.previous = removed.previous
             
             this.child_conn.send((Msg.REMOVE_ITEMS, idx))
+            
+            if removed == self.selected:
+                self.selected = None
 
         
         # add new items to the linked list
@@ -263,13 +265,15 @@ class LocalWorkflow(HasStrictTraits):
  
     @on_trait_change('selected')
     def _on_selected_changed(self, obj, name, old, new):
-        # TODO - handle closing all the WIs
-        idx = self.workflow.index(new)
+        if new is None:
+            idx = -1
+        else:
+            idx = self.workflow.index(new)
+            
         this.child_conn.send((Msg.SELECT, idx))   
     
     @on_trait_change('workflow:operation:-transient')
     def _on_operation_trait_changed(self, obj, name, old, new):
-        print "local operation changed {}".format((name, old, new))
         wi = next((x for x in self.workflow if x.operation == obj))
         idx = self.workflow.index(wi)
         this.child_conn.send((Msg.UPDATE_OP, (idx, name, new)))
@@ -282,7 +286,6 @@ class LocalWorkflow(HasStrictTraits):
         
     @on_trait_change('workflow:views:-transient')
     def _on_view_trait_changed(self, obj, name, old, new):
-        print "local view changed {}".format((name, old, new))
         wi = next((x for x in self.workflow if obj in x.views))
         idx = self.workflow.index(wi)
         view_id = obj.id
@@ -303,9 +306,7 @@ class RemoteWorkflow(HasStrictTraits):
     plot_event = threading.Event()
     
     def run(self):
-        # plt.ioff()
         threading.Thread(target = self._process_queue, args = ()).start()
-        # threading.Thread(target = self._plot_wi, args = ()).start()
 
         while True:
             (msg, payload) = this.parent_conn.recv()
@@ -322,7 +323,10 @@ class RemoteWorkflow(HasStrictTraits):
                 
             elif msg == Msg.SELECT:
                 idx = payload
-                self.selected = self.workflow[idx]
+                if idx == -1:
+                    self.selected = None
+                else:
+                    self.selected = self.workflow[idx]
                 
             elif msg == Msg.UPDATE_OP:
                 (idx, trait, new_value) = payload
@@ -394,8 +398,6 @@ class RemoteWorkflow(HasStrictTraits):
 
     @on_trait_change('workflow:operation:-transient')
     def _on_operation_trait_changed(self, obj, name, old, new):
-        print "remote operation changed {}".format((name, old, new))
-
         wi = next((x for x in self.workflow if x.operation == obj))
         idx = self.workflow.index(wi)
         this.parent_conn.send((Msg.UPDATE_OP, (idx, name, new)))
@@ -406,8 +408,6 @@ class RemoteWorkflow(HasStrictTraits):
         
     @on_trait_change('workflow:views:+')
     def _on_view_trait_changed_plot(self, obj, name, old, new):
-        print "remote view changed {}".format((name, old, new))
-
         # delegate traits are "implicitly" transient; they'll show up here
         # but not in _on_view_trait_changed_send_to_parent, below
         if not obj.trait(name).transient:        
@@ -431,10 +431,14 @@ class RemoteWorkflow(HasStrictTraits):
         wi = next((x for x in self.workflow if obj in x.views))
         idx = self.workflow.index(wi)
         this.parent_conn.send((Msg.UPDATE_VIEW, (idx, obj.id, name, new)))
-
-    def plot(self, wi):
-        print "remote plot"
         
+    @on_trait_change('selected:status')
+    def _on_operation_status_changed(self, obj, name, old, new):
+        if obj is not None and old != "valid" and new == "valid":
+            self.plot(self.selected)
+
+
+    def plot(self, wi):        
         wi.current_view.warning = ""
         wi.current_view.error = ""
          
@@ -450,5 +454,8 @@ class RemoteWorkflow(HasStrictTraits):
                 if w:
                     wi.current_view.warning = w[-1].message.__str__()
             except util.CytoflowViewError as e:
-                wi.current_view.error = e.__str__()                
+                wi.current_view.error = e.__str__()   
+                plt.clf()
+                plt.show()
+             
 
