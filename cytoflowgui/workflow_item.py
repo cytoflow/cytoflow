@@ -36,9 +36,6 @@ from cytoflow.operations.i_operation import IOperation
 from cytoflow.views.i_view import IView
 from cytoflow.utility import CytoflowError
 
-from cytoflowgui.matplotlib_editor import MPLFigureEditor
-
-
 class WorkflowItem(HasStrictTraits):
     """        
     The basic unit of a Workflow: wraps an operation and a list of views.
@@ -82,10 +79,10 @@ class WorkflowItem(HasStrictTraits):
     # with the multiprocess model  
     
     # TODO - one day, make these Properties again
-    channels = List(Str, status = True)
-    conditions = Dict(Str, Str, status = True)
-    conditions_names = List(Str, status = True)
-    conditions_values = Dict(Str, List, status = True)
+    channels = List(Str)
+    conditions = Dict(Str, Str)
+    conditions_names = List(Str)
+    conditions_values = Dict(Str, List)
     
     # the IViews against the output of this operation
     views = List(IView)
@@ -113,13 +110,13 @@ class WorkflowItem(HasStrictTraits):
     
     # is the wi valid?
     # MAGIC: first value is the default
-    status = Enum("invalid", "estimating", "applying", "valid", transient = True, status = True)
+    status = Enum("invalid", "estimating", "applying", "valid", transient = True)
     
     # if we errored out, what was the error string?
-    error = Str(transient = True, status = True)
+    error = Str(transient = True)
     
     # if we got a warning, what was the warning string?
-    warning = Str(transient = True, status = True)
+    warning = Str(transient = True)
     
     # the icon for the vertical notebook view.  Qt specific, sadly.
     icon = Property(depends_on = 'status', transient = True)
@@ -129,6 +126,7 @@ class WorkflowItem(HasStrictTraits):
         Called by the controller to update this wi
         """
              
+        self.status = "invalid"             
         self.warning = ""
         self.error = ""
         self.result = None
@@ -183,6 +181,9 @@ class WorkflowItem(HasStrictTraits):
             self.conditions = experiment.conditions
             self.conditions_names = experiment.conditions.keys()
             
+            cvals = {}
             for condition in self.conditions.keys():
-                self.conditions_values[condition] = \
+                cvals[condition] = \
                     list(np.sort(pd.unique(experiment[condition])))
+                    
+            self.conditions_values = cvals

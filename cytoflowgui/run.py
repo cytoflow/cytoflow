@@ -27,7 +27,7 @@ ETSConfig.toolkit = 'qt4'
 import matplotlib
 
 # We want matplotlib to use our backend
-matplotlib.use('module://cytoflowgui.matplotlib_multiprocess_backend')
+matplotlib.use('module://cytoflowgui.matplotlib_backend')
 
 import logging
 

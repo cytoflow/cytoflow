@@ -249,9 +249,9 @@ class ExperimentDialogModel(HasTraits):
             
             # if we're the first tube loaded, create a dummy experiment
             # to validate voltage, etc for later tubes
-            if not self.dummy_experiment:
-                self.model.dummy_experiment = ImportOp(tubes = [CytoflowTube(file = op_tube.file)],
-                                                       coarse_events = 1).apply()
+#             if not self.dummy_experiment:
+#                 self.model.dummy_experiment = ImportOp(tubes = [CytoflowTube(file = op_tube.file)],
+#                                                        coarse_events = 1).apply()
             
             self.tubes.append(tube)
     

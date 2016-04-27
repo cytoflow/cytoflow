@@ -1,5 +1,5 @@
 #!/usr/bin/env python2.7
-from cytoflowgui import matplotlib_multiprocess_backend
+from cytoflowgui import matplotlib_backend
 
 # (c) Massachusetts Institute of Technology 2015-2016
 #

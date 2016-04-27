@@ -31,6 +31,7 @@ import cytoflow.utility as util
 
 from cytoflowgui.vertical_notebook_editor import VerticalNotebookEditor
 from cytoflowgui.workflow_item import WorkflowItem
+from cytoflowgui.util import UniquePriorityQueue
 #from cytoflowgui import matplotlib_multiprocess_backend
 
 # THE NEW NEW PLAN combines both:
@@ -163,7 +164,6 @@ class LocalWorkflow(HasStrictTraits):
                 wi = self.workflow[idx]
                 if wi.operation.trait_get(trait)[trait] != new_value:
                     wi.operation.trait_set(**{trait : new_value})
-                    
             elif msg == Msg.UPDATE_VIEW:
                 (idx, view_id, trait, new_value) = payload
                 wi = self.workflow[idx]
@@ -268,6 +268,7 @@ class LocalWorkflow(HasStrictTraits):
     
     @on_trait_change('workflow:operation:+')
     def _on_operation_trait_changed(self, obj, name, old, new):
+        print "local operation changed"
         wi = next((x for x in self.workflow if x.operation == obj))
         idx = self.workflow.index(wi)
         this.child_conn.send((Msg.UPDATE_OP, (idx, name, new)))
@@ -293,10 +294,13 @@ class LocalWorkflow(HasStrictTraits):
 class RemoteWorkflow(HasStrictTraits):
     
     workflow = List(WorkflowItem)
+    update_queue = Instance(UniquePriorityQueue, ())
     selected = Instance(WorkflowItem)
     
     def run(self):
         # plt.ioff()
+        threading.Thread(target = self._process_queue, args = ()).start()
+
         while True:
             (msg, payload) = this.parent_conn.recv()
             if msg == Msg.NEW_WORKFLOW:
@@ -341,15 +345,17 @@ class RemoteWorkflow(HasStrictTraits):
                 
             else:
                 raise RuntimeError("Bad command in the remote workflow")
-
+            
+    def _process_queue(self):
+        while True:
+            _, wi = self.update_queue.get()
+            wi.update()
         
     @on_trait_change('workflow')
     def _on_new_workflow(self, obj, name, old, new):        
         for wi in self.workflow:
             wi.status = "invalid"
-        
-        for wi in self.workflow:
-            wi.update()
+            self.update_queue.put_nowait((self.workflow.index(wi), wi))
             
             
     @on_trait_change('workflow_items')
@@ -377,21 +383,17 @@ class RemoteWorkflow(HasStrictTraits):
             if idx < len(self.workflow) - 1:
                 self.workflow[idx].next = self.workflow[idx + 1]
                 self.workflow[idx + 1].previous = self.workflow[idx]
-
+                
         for wi in self.workflow[idx:]:
             wi.status = "invalid"
-                            
-        for wi in self.workflow[idx:]:
-            wi.update()
-            
+            self.update_queue.put_nowait((self.workflow.index(wi), wi))
 
-    @on_trait_change('workflow:status')
+
+    @on_trait_change('workflow:[status,channels,conditions,conditions_names,conditions_values,error,warning]')
     def _on_workflow_item_status_changed(self, obj, name, old, new):
-        print "status"
-        # TODO why doesn't this work
-        if obj.trait(name).status:
-            idx = self.workflow.index(obj)
-            this.parent_conn.send((Msg.UPDATE_WI, (idx, name, new)))
+        idx = self.workflow.index(obj)
+        this.parent_conn.send((Msg.UPDATE_WI, (idx, name, new)))
+            
         
     @on_trait_change('workflow:operation:+')
     def _on_operation_trait_changed(self, obj, name, old, new):
@@ -403,9 +405,7 @@ class RemoteWorkflow(HasStrictTraits):
         
         for wi in self.workflow[idx:]:
             wi.status = "invalid"
-                            
-        for wi in self.workflow[idx:]:
-            wi.update() 
+            self.update_queue.put_nowait((self.workflow.index(wi), wi))
         
   
     @on_trait_change('workflow:views:+')
@@ -427,6 +427,7 @@ class RemoteWorkflow(HasStrictTraits):
         with warnings.catch_warnings(record = True) as w:
             try:
                 wi.current_view.plot_wi(wi)
+                wi.current_view.error = ""
                  
                 # the remote canvas/pyplot interface of the multiprocess backend
                 # is NOT interactive.  this call lets us batch together all 
@@ -435,6 +436,8 @@ class RemoteWorkflow(HasStrictTraits):
                  
                 if w:
                     wi.current_view.warning = w[-1].message.__str__()
+                else:
+                    wi.current_view.warning = ""
             except util.CytoflowViewError as e:
                 wi.current_view.error = e.__str__()                
 

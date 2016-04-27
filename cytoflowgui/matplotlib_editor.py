@@ -31,7 +31,7 @@ with some bits from
 http://matplotlib.org/examples/user_interfaces/embedding_in_qt4.html
 """
 
-from cytoflowgui.matplotlib_multiprocess_backend import FigureCanvasQTAggLocal
+from cytoflowgui.matplotlib_backend import FigureCanvasQTAggLocal
 from matplotlib.figure import Figure
 
 from pyface.widget import Widget

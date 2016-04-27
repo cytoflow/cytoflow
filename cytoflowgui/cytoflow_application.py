@@ -28,7 +28,7 @@ from pyface.tasks.api import TaskWindowLayout
 from traits.api import Bool, Instance, List, Property
 
 from preferences import CytoflowPreferences
-import cytoflowgui.matplotlib_multiprocess_backend as mpl_backend
+import cytoflowgui.matplotlib_backend as mpl_backend
 import cytoflowgui.workflow as workflow
 
 class CytoflowApplication(TasksApplication):
