@@ -65,6 +65,7 @@ class Msg:
     MOUSE_PRESS_EVENT = 3
     MOUSE_MOVE_EVENT = 4
     MOUSE_RELEASE_EVENT = 5
+    MOUSE_DOUBLE_CLICK_EVENT = 6
 
 class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
     """
@@ -163,6 +164,18 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         button = self.buttond.get(event.button())
         if button is not None:
             msg = (Msg.MOUSE_PRESS_EVENT, (x, y, button))
+            this.child_conn.send(msg)
+            
+            
+    def mouseDoubleClickEvent(self, event):
+        if DEBUG:
+            print('FigureCanvasQTAggLocal.mouseDoubleClickEvent: {}', event.button())
+        x = event.pos().x()
+        # flipy so y=0 is bottom of canvas
+        y = self.figure.bbox.height - event.pos().y()
+        button = self.buttond.get(event.button())
+        if button is not None:
+            msg = (Msg.MOUSE_DOUBLE_CLICK_EVENT, (x, y, button))
             this.child_conn.send(msg)
 
 
@@ -307,6 +320,9 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
             elif msg == Msg.MOUSE_PRESS_EVENT:
                 (x, y, button) = payload
                 FigureCanvasAgg.button_press_event(self, x, y, button)
+            elif msg == Msg.MOUSE_DOUBLE_CLICK_EVENT:
+                (x, y, button) = payload
+                FigureCanvasAgg.button_press_event(self, x, y, button, dblclick = True)
             elif msg == Msg.MOUSE_RELEASE_EVENT:
                 (x, y, button) = payload
                 FigureCanvasAgg.button_release_event(self, x, y, button)

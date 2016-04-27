@@ -25,7 +25,6 @@ from traits.api import (HasStrictTraits, Str, CStr, List, Float, provides,
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from matplotlib.widgets import Cursor
 from matplotlib import scale
 import numpy as np
 
@@ -207,17 +206,13 @@ class PolygonSelection(cytoflow.views.ScatterplotView):
     name = DelegatesTo('op')
     xchannel = DelegatesTo('op')
     ychannel = DelegatesTo('op')
+    vertices = DelegatesTo('op')
     interactive = Bool(False, transient = True)
 
     # internal state.
     _ax = Any(transient = True)
-    _cursor = Instance(Cursor, transient = True)
-    _path = Instance(mpl.path.Path, transient = True)
+    _widget = Instance(util.PolygonSelector, transient = True)
     _patch = Instance(mpl.patches.PathPatch, transient = True)
-    _line = Instance(mpl.lines.Line2D, transient = True)
-    _drawing = Bool(transient = True)
-    _last_draw_time = Float(0.0, transient = True)
-    _last_click_time = Float(0.0, transient = True)
         
     def plot(self, experiment, **kwargs):
         """Plot self.view, and then plot the selection on top of it."""
@@ -244,8 +239,7 @@ class PolygonSelection(cytoflow.views.ScatterplotView):
         if self._patch and self._patch in self._ax.patches:
             self._patch.remove()
             
-        if self._drawing or not self.op.vertices or len(self.op.vertices) < 3 \
-                         or any([len(x) != 2 for x in self.op.vertices]):
+        if not self.op.vertices or len(self.op.vertices) < 3:
             return
              
         patch_vert = np.concatenate((np.array(self.op.vertices), 
@@ -254,7 +248,7 @@ class PolygonSelection(cytoflow.views.ScatterplotView):
         self._patch = \
             mpl.patches.PathPatch(mpl.path.Path(patch_vert, closed = True),
                                   edgecolor="black",
-                                  linewidth = 1.5,
+                                  linewidth = 2,
                                   fill = False)
             
         self._ax.add_patch(self._patch)
@@ -263,79 +257,16 @@ class PolygonSelection(cytoflow.views.ScatterplotView):
     @on_trait_change('interactive', post_init = True)
     def _interactive(self):
         if self._ax and self.interactive:
-            self._cursor = Cursor(self._ax, horizOn = False, vertOn = False)            
-            self._cursor.connect_event('button_press_event', self._onclick)
-            self._cursor.connect_event('motion_notify_event', self._onmove)
-        elif self._cursor:
-            self._cursor.disconnect_events()
-            self._cursor = None       
+            self._widget = util.PolygonSelector(self._ax,
+                                                self._onselect,
+                                                useblit = False)
+        elif self._widget:
+            self._widget = None       
     
-    def _onclick(self, event): 
-        """Update selection traits"""      
-        if not self._ax:
-            return
-        
-        if(self._cursor.ignore(event)):
-            return
-        
-        # we have to check the wall clock time because the IPython notebook
-        # doesn't seem to register double-clicks
-        if event.dblclick or (time.clock() - self._last_click_time < 0.5):
-            self._drawing = False
-            self.op.vertices = map(tuple, self._path.vertices)
-            self.op._xscale = plt.gca().get_xscale()
-            self.op._yscale = plt.gca().get_yscale()
-            self._path = None
-            return
-        
-        self._last_click_time = time.clock()
-                
-        self._drawing = True
-        if self._patch and self._patch in self._ax.patches:
-            self._patch.remove()
-            
-        if self._path:
-            vertices = np.concatenate((self._path.vertices,
-                                      np.array((event.xdata, event.ydata), ndmin = 2)))
-        else:
-            vertices = np.array((event.xdata, event.ydata), ndmin = 2)
-
-        self._path = mpl.path.Path(vertices, closed = False)
-        self._patch = mpl.patches.PathPatch(self._path, 
-                                            edgecolor = "black",
-                                            fill = False)
-
-        self._ax.add_patch(self._patch)
-        plt.draw_if_interactive()
-        
-    def _onmove(self, event):       
-         
-        if not self._ax:
-            return
-         
-        if(self._cursor.ignore(event) 
-           or not self._drawing
-           or not self._path
-           or self._path.vertices.shape[0] == 0
-           or not event.xdata
-           or not event.ydata):
-            return
-
-        # only draw 5 times/sec
-        if(time.clock() - self._last_draw_time < 0.2):
-            return
-        
-        self._last_draw_time = time.clock()
-         
-        if self._line and self._line in self._ax.lines:
-            self._line.remove()
-            
-        xdata = [self._path.vertices[-1, 0], event.xdata]
-        ydata = [self._path.vertices[-1, 1], event.ydata]
-        self._line = mpl.lines.Line2D(xdata, ydata, linewidth = 1, color = "black")
-        
-        self._ax.add_line(self._line)
-        plt.gcf().canvas.draw()
+    def _onselect(self, vertices):
+        print "select"
+        self.vertices = vertices
+    
         
         
 if __name__ == '__main__':

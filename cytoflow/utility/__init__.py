@@ -23,3 +23,5 @@ from .cytoflow_errors import CytoflowWarning, CytoflowOpWarning, CytoflowViewWar
 
 from .scale import scale_factory, IScale
 from .custom_traits import PositiveInt, PositiveFloat, ScaleEnum
+
+from .matplotlib_widgets import PolygonSelector
