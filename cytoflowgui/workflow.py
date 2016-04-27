@@ -299,9 +299,13 @@ class RemoteWorkflow(HasStrictTraits):
     update_queue = Instance(UniquePriorityQueue, ())
     selected = Instance(WorkflowItem)
     
+    wi_to_plot = Instance(WorkflowItem)
+    plot_event = threading.Event()
+    
     def run(self):
         # plt.ioff()
         threading.Thread(target = self._process_queue, args = ()).start()
+        # threading.Thread(target = self._plot_wi, args = ()).start()
 
         while True:
             (msg, payload) = this.parent_conn.recv()
@@ -359,7 +363,6 @@ class RemoteWorkflow(HasStrictTraits):
             wi.status = "invalid"
             self.update_queue.put_nowait((self.workflow.index(wi), wi))
             
-            
     @on_trait_change('workflow_items')
     def _on_workflow_add_remove_items(self, event):
         idx = event.index
@@ -389,13 +392,6 @@ class RemoteWorkflow(HasStrictTraits):
             wi.status = "invalid"
             self.update_queue.put_nowait((self.workflow.index(wi), wi))
 
-
-    @on_trait_change('workflow:[status,channels,conditions,conditions_names,conditions_values,error,warning]')
-    def _on_workflow_item_status_changed(self, obj, name, old, new):
-        idx = self.workflow.index(obj)
-        this.parent_conn.send((Msg.UPDATE_WI, (idx, name, new)))
-            
-        
     @on_trait_change('workflow:operation:-transient')
     def _on_operation_trait_changed(self, obj, name, old, new):
         print "remote operation changed {}".format((name, old, new))
@@ -408,17 +404,27 @@ class RemoteWorkflow(HasStrictTraits):
             wi.status = "invalid"
             self.update_queue.put_nowait((self.workflow.index(wi), wi))
         
-  
-    @on_trait_change('workflow:views:-transient')
-    def _on_view_trait_changed(self, obj, name, old, new):
+    @on_trait_change('workflow:views:+')
+    def _on_view_trait_changed_plot(self, obj, name, old, new):
         print "remote view changed {}".format((name, old, new))
 
+        # delegate traits are "implicitly" transient; they'll show up here
+        # but not in _on_view_trait_changed_send_to_parent, below
+        if not obj.trait(name).transient:        
+            wi = next((x for x in self.workflow if obj in x.views))
+            if wi == self.selected and wi.current_view == obj:
+                self.plot(wi)
+            
+    @on_trait_change('workflow:views:-transient')
+    def _on_view_trait_changed_send_to_parent(self, obj, name, old, new):
         wi = next((x for x in self.workflow if obj in x.views))
         idx = self.workflow.index(wi)
         this.parent_conn.send((Msg.UPDATE_VIEW, (idx, obj.id, name, new)))
 
-        if wi == self.selected and wi.current_view == obj:
-            self.plot(wi)
+    @on_trait_change('workflow:[status,channels,conditions,conditions_names,conditions_values,error,warning]')
+    def _on_workflow_item_status_changed(self, obj, name, old, new):
+        idx = self.workflow.index(obj)
+        this.parent_conn.send((Msg.UPDATE_WI, (idx, name, new)))
             
     @on_trait_change('workflow:views:[error,warning]')
     def _on_view_status_changed(self, obj, name, old, new):
@@ -426,7 +432,6 @@ class RemoteWorkflow(HasStrictTraits):
         idx = self.workflow.index(wi)
         this.parent_conn.send((Msg.UPDATE_VIEW, (idx, obj.id, name, new)))
 
-            
     def plot(self, wi):
         print "remote plot"
         
