@@ -113,10 +113,10 @@ class WorkflowItem(HasStrictTraits):
     status = Enum("invalid", "estimating", "applying", "valid", transient = True)
     
     # if we errored out, what was the error string?
-    error = Str(transient = True)
+    error = Str()
     
     # if we got a warning, what was the warning string?
-    warning = Str(transient = True)
+    warning = Str()
     
     # the icon for the vertical notebook view.  Qt specific, sadly.
     icon = Property(depends_on = 'status', transient = True)
