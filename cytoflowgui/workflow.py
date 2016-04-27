@@ -434,11 +434,17 @@ class RemoteWorkflow(HasStrictTraits):
         
     @on_trait_change('selected:status')
     def _on_operation_status_changed(self, obj, name, old, new):
+        print "obj {} name {} old {} new {}".format(obj, name, old, new)
         if obj is not None and old != "valid" and new == "valid":
             self.plot(self.selected)
 
 
-    def plot(self, wi):        
+    def plot(self, wi):      
+        if not wi.current_view:
+            plt.clf()
+            plt.show()
+            return
+          
         wi.current_view.warning = ""
         wi.current_view.error = ""
          
