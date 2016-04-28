@@ -1,4 +1,5 @@
 #!/usr/bin/env python2.7
+from __builtin__ import False
 
 # (c) Massachusetts Institute of Technology 2015-2016
 #
@@ -28,12 +29,11 @@ if __name__ == '__main__':
 
     import os
     os.environ['TRAITS_DEBUG'] = "1"
-
+    
 from collections import Counter, OrderedDict
     
 from traits.api import HasTraits, provides, Instance, Str, Int, List, \
-                       Bool, Enum, Float, DelegatesTo, Property, CStr, \
-                       TraitType, Dict, Tuple
+                       Bool, Enum, Float, DelegatesTo, Property, CStr, Any
                        
 from traitsui.api import UI, Group, View, Item, TableEditor, OKCancelButtons, \
                          Controller
@@ -115,26 +115,35 @@ class Tube(HasTraits):
     # need a link to the model; needed for row coloring
     parent = Instance("ExperimentDialogModel", transient = True)
     
+    # needed for fast hashing
+    conditions = Any({}) # a dict
+    
     def __hash__(self):
         ret = int(0)
-        for trait in self.trait_names(condition = True):
+
+        for key, value in self.conditions.iteritems():
             if not ret:
-                ret = hash(self.trait_get(trait)[trait])
+                ret = hash((key, value))
             else:
-                ret = ret ^ hash(self.trait_get(trait)[trait])
+                ret = ret ^ hash((key, value))
                 
         return ret
     
     def __eq__(self, other):
-        if not (set(self.trait_names(condition = True)) == 
-                set(other.trait_get(condition = True))):
+
+        if set(self.conditions.keys()) != set(other.conditions.keys()):
             return False
         
-        for trait in self.trait_names(condition = True):
-            if not self.trait_get(trait)[trait] == other.trait_get(trait)[trait]:
+        for key in self.conditions:
+            if self.conditions[key] != other.conditions[key]:
                 return False
                 
         return True
+    
+    def _anytrait_changed(self, name, old, new):
+        if self.trait(name).condition:
+            print "adding condition {0} = {1} to tube {2}".format(name, new, self)
+            self.conditions[name] = new
 
     
 class ExperimentColumn(ObjectColumn):
@@ -166,7 +175,7 @@ class ExperimentDialogModel(HasTraits):
     
     # a collections.Counter that keeps track of duplicates for us.  rebuilt
     # whenever the Tube elements of self.tubes changes
-    tubes_counter = Property(depends_on = 'tubes[]')
+    tubes_counter = Property()
     
     # traits to communicate with the TabularEditor
     update = Bool
@@ -533,6 +542,7 @@ class ExperimentDialogHandler(Controller):
             if tube != obj:
                 # update the underlying traits without notifying the editor
                 tube.trait_setq(**{trait_name: new})
+                tube.conditions[trait_name] = new
 
         # now refresh the editor all at once
         self.table_editor.refresh_editor()
@@ -554,6 +564,7 @@ class ExperimentDialogHandler(Controller):
                 # this magic makes sure the trait is actually defined
                 # in tube.__dict__, so it shows up in trait_names etc.
                 tube.trait_set(**{name : trait.default_value})
+                tube.conditions[name] = trait.default_value
                 if trait.condition:
                     tube.on_trait_change(self._try_multiedit, name)
 

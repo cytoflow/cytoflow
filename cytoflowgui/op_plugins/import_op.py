@@ -42,7 +42,6 @@ from cytoflowgui.op_plugins.i_op_plugin \
     import IOperationPlugin, OpHandlerMixin, PluginOpMixin, shared_op_traits
 from cytoflowgui.toggle_button import ToggleButtonEditor
 
-
 class ImportHandler(Controller, OpHandlerMixin):
     """
     A WorkflowItem that handles importing data and making a new Experiment
