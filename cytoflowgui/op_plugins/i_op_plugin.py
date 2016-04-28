@@ -79,29 +79,10 @@ shared_op_traits = Group(Item('context.warning',
 
         
 class OpHandlerMixin(HasTraits):
-    pass
-#     wi = Instance(WorkflowItem)
-#     
-#     previous_channels = Property(List, depends_on = 'wi.previous.metadata')
-#     previous_conditions = Property(List, depends_on = 'wi.previous.conditions')
-# 
-#     # MAGIC: provides dynamically updated values for the "channels" trait
-#     def _get_previous_channels(self):
-#         """
-#         doc
-#         """
-#         if self.wi and self.wi.previous and self.wi.previous.channels :
-#             return self.wi.previous.channels
-#         else:
-#             return []
-#          
-#     # MAGIC: provides dynamically updated values for the "conditions" trait
-#     def _get_previous_conditions(self):
-#         """
-#         doc
-#         """
-#         if self.wi and self.wi.previous and self.wi.previous.conditions:
-#             return self.wi.previous.conditions.keys
-#         else:
-#             return []
+    """
+    This used to hold properties for dynamically updated metadata lists ....
+    but now those are updated elsewhere.  Keep this around in case a mixin
+    becomes useful again.
+    """
     
+    pass
