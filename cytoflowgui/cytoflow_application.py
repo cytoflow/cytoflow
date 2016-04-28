@@ -60,8 +60,11 @@ class CytoflowApplication(TasksApplication):
         mpl_backend.child_conn = mpl_child_conn   
 
         # start the child process
-        multiprocessing.Process(target = self._remote_main,
-                                args = (workflow_parent_conn, mpl_parent_conn)).start()
+        remote_process = multiprocessing.Process(target = self._remote_main,
+                                                 args = (workflow_parent_conn, 
+                                                         mpl_parent_conn))
+        remote_process.daemon = True
+        remote_process.start()
 
         # run the GUI
         super(CytoflowApplication, self).run()

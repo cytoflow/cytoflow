@@ -15,10 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# threading AND multiprocessing, oh my!
-import threading, sys
-
-import warnings
+import threading, sys, warnings
 
 import matplotlib.pyplot as plt
 
@@ -105,6 +102,8 @@ this = sys.modules[__name__]
 this.parent_conn = None
 this.child_conn = None
 
+DEBUG = 1
+
 class Msg:
     NEW_WORKFLOW = 0
     ADD_ITEMS = 1
@@ -148,12 +147,20 @@ class LocalWorkflow(HasStrictTraits):
     
     def __init__(self, **kwargs):
         super(LocalWorkflow, self).__init__(**kwargs)         
-        threading.Thread(target = self.listen_for_remote, args = ()).start()
+        t = threading.Thread(target = self.listen_for_remote, args = ())
+        t.daemon = True
+        t.start()
 
     def listen_for_remote(self):
         while True:
-            (msg, payload) = this.child_conn.recv()
-            print "local msg: {}".format(msg)
+            try:
+                (msg, payload) = this.child_conn.recv()
+            except EOFError:
+                return
+            
+            if DEBUG:
+                print "LocalWorkflow.listen_for_remote :: {}".format(msg)
+            
             if msg == Msg.UPDATE_WI:
                 (idx, trait, new_value) = payload
                 wi = self.workflow[idx]
@@ -306,10 +313,16 @@ class RemoteWorkflow(HasStrictTraits):
     plot_event = threading.Event()
     
     def run(self):
-        threading.Thread(target = self._process_queue, args = ()).start()
+        t = threading.Thread(target = self._process_queue, args = ())
+        t.daemon = True
+        t.start()
 
         while True:
-            (msg, payload) = this.parent_conn.recv()
+            try:
+                (msg, payload) = this.parent_conn.recv()
+            except EOFError:
+                return
+            
             if msg == Msg.NEW_WORKFLOW:
                 self.workflow = payload
 

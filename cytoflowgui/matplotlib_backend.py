@@ -40,6 +40,7 @@ sublcass of QWidget.  The local canvas overrides several of the event handlers,
 passing the event information to the remote canvas which in turn runs the
 matplotlib event handlers.
 """
+
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
@@ -88,18 +89,14 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
    """
 
     def __init__(self, figure):
-        print("Init local canvas")
-
         FigureCanvasQTAgg.__init__(self, figure)
         self._drawRect = None
         self.blitbox = None
         
-        # self.buffer_lock = threading.Lock
         self.buffer = None
         self.buffer_width = None
         self.buffer_height = None
         
-        # self.blit_lock = threading.Lock
         self.blit_buffer = None
         self.blit_width = None
         self.blit_height = None
@@ -115,15 +112,24 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         
         self.setAttribute(QtCore.Qt.WA_OpaquePaintEvent)    
         
-        threading.Thread(target = self.listen_for_remote, args = ()).start()
-        threading.Thread(target = self.send_to_remote, args = ()).start()
+        t = threading.Thread(target = self.listen_for_remote, args = ())
+        t.daemon = True
+        t.start()
         
+        t = threading.Thread(target = self.send_to_remote, args = ())
+        t.daemon = True
+        t.start()
         
     def listen_for_remote(self):
         while True:
-            (msg, payload) = this.child_conn.recv()
+            try:
+                (msg, payload) = this.child_conn.recv()
+            except EOFError:
+                return
+            
             if DEBUG:
                 print("FigureCanvasQTAggLocal.listen_for_remote :: {}".format(msg))
+            
             if msg == Msg.DRAW:
                 (self.buffer, 
                  self.buffer_width, 
@@ -308,14 +314,24 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
         
         self.update_remote = threading.Event()
         
-        threading.Thread(target = self.listen_for_remote, args = ()).start()
-        threading.Thread(target = self.send_to_remote, args=()).start()
+        t = threading.Thread(target = self.listen_for_remote, args = ())
+        t.daemon = True 
+        t.start()
+        
+        t = threading.Thread(target = self.send_to_remote, args=())
+        t.daemon = True
+        t.start()
         
     def listen_for_remote(self): 
         while True:
-            (msg, payload) = this.parent_conn.recv()
+            try:
+                (msg, payload) = this.parent_conn.recv()
+            except EOFError:
+                return
+            
             if DEBUG:
                 print("FigureCanvasAggRemote.listen_for_remote :: {}".format(msg))
+                
             if msg == Msg.RESIZE_EVENT:
                 (winch, hinch) = payload
                 self.figure.set_size_inches(winch, hinch)
