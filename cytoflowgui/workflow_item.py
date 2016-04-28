@@ -181,9 +181,7 @@ class WorkflowItem(HasStrictTraits):
             self.conditions = experiment.conditions
             self.conditions_names = experiment.conditions.keys()
             
-            cvals = {}
             for condition in self.conditions.keys():
-                cvals[condition] = \
+                self.conditions_values[condition] = \
                     list(np.sort(pd.unique(experiment[condition])))
                     
-            self.conditions_values = cvals

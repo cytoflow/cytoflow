@@ -260,6 +260,11 @@ class LocalWorkflow(HasStrictTraits):
         
         wi = next((x for x in self.workflow if x.operation == obj))
         idx = self.workflow.index(wi)
+    
+        if name.endswith("_items"):
+            name = name.replace("_items", "")
+            new = obj.trait_get(name)[name]
+
         this.child_conn.send((Msg.UPDATE_OP, (idx, name, new)))
 
         
@@ -282,6 +287,11 @@ class LocalWorkflow(HasStrictTraits):
         wi = next((x for x in self.workflow if obj in x.views))
         idx = self.workflow.index(wi)
         view_id = obj.id
+        
+        if name.endswith("_items"):
+            name = name.replace("_items", "")
+            new = obj.trait_get(name)[name]
+        
         this.child_conn.send((Msg.UPDATE_VIEW, (idx, view_id, name, new)))
 
     # MAGIC: called when default_scale is changed
@@ -435,6 +445,9 @@ class RemoteWorkflow(HasStrictTraits):
         if (obj, name) in self.updating_traits:
             self.updating_traits.remove((obj, name))
         else:
+            if name.endswith("_items"):
+                name = name.replace("_items", "")
+                new = obj.trait_get(name)[name]
             this.parent_conn.send((Msg.UPDATE_OP, (idx, name, new)))
 
         
@@ -462,6 +475,9 @@ class RemoteWorkflow(HasStrictTraits):
         else:
             wi = next((x for x in self.workflow if obj in x.views))
             idx = self.workflow.index(wi)
+            if name.endswith("_items"):
+                name = name.replace("_items", "")
+                new = obj.trait_get(name)[name]
             this.parent_conn.send((Msg.UPDATE_VIEW, (idx, obj.id, name, new)))
 
     @on_trait_change('workflow:[status,channels,conditions,conditions_names,conditions_values,error,warning]')
@@ -471,6 +487,11 @@ class RemoteWorkflow(HasStrictTraits):
                   .format((obj, name, old, new)))
             
         idx = self.workflow.index(obj)
+        
+        if name.endswith("_items"):
+            name = name.replace("_items", "")
+            new = obj.trait_get(name)[name]
+            
         this.parent_conn.send((Msg.UPDATE_WI, (idx, name, new)))
             
     @on_trait_change('workflow:views:[error,warning]')
