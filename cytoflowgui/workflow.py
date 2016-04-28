@@ -15,6 +15,33 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+The main model for the GUI.
+
+At its core, the model is a list of WorkflowItem instances.  A WorkflowItem
+wraps an operation, its completion status, the result of applying it to
+the previous WorkflowItem's result, and views on that result.  The Workflow
+also maintains a "current" or selected WorkflowItem.
+
+The left panel of the GUI is a View on this object (viewing the list of
+WorkflowItem instances), and the right panel of the GUI is a View of the
+selected WorkflowItem's current view.
+
+So far, so simple.  However, in a single-threaded GUI application, the UI
+freezes when something processor-intensive is happening.  Adding another thread
+doesn't help matters because of the CPython global interpreter lock; while
+Python is otherwise computing, the GUI doesn't update.  To solve this, the 
+Workflow maintains a copy of itself in a separate process.  The local Workflow
+is the one that is viewed by the GUI; the remote Workflow is the one that
+actually loads the data and does the processing.  Thus the GUI remains
+responsive.  Changed attributes in either Workflow are noticed by a set of 
+Traits handlers, which send those changes to the other process.
+
+This process is also where the plotting happens.  For an explanation of how
+the plots are ferried back to the GUI, see the module docstring for
+matplotlib_backend.py
+"""
+
 import threading, sys, warnings
 
 import matplotlib.pyplot as plt
@@ -29,72 +56,6 @@ import cytoflow.utility as util
 from cytoflowgui.vertical_notebook_editor import VerticalNotebookEditor
 from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.util import UniquePriorityQueue
-
-# THE NEW NEW PLAN combines both:
-# The parent process runs the GUI
-# The child process holds the data
-# When a WI needs to run in the child process, it runs the operation
-# in grandchild process, which sends back just the changed columns.
-# threads are used to listen for status updates, passed back as new
-# WI instances (though we'll have to break the update loop somewhere!)
-
-# THE NEW PLAN: when a WorkflowItem runs, it will kick off a new process.
-# that new process will be passed the previous WI's result and the 
-# operation (which should be FAST because of process cloning, at least on
-# Linux and Mac.) the new process will run the operation on the data,
-# collect the result, then do a column-by-column comparison of the two
-# and send new and changed columns back to the parent process.  the 
-# parent process's WI will construct a result out of the previous WI's
-# result and the changed columns from the child process.
-
-# THE OLD PLAN:
-# (the old plan has problems with orphaned processes.)
-
-# multiprocessing and multithreading plan:
-
-# the parent process maintains the GUI and a copy of the model but with 
-# NO DATA.  all the actual data processing happens in a child process, 
-# which maintains its own list of WorkflowItems that actually have the
-# data and do the processing.
-
-# 
-
-# pair of child 
-# processes, the "valid" process and the "running" process.  the "valid"
-# process contains a workflow for which all the WorkflowItems' states
-# are "valid" or "invalid"; the "running" process is allowed to have
-# workflow items that are "estimating" or "applying".
-
-# the order of operations is as follows:  in the parent process, we
-# start with all the WorkflowItems in the "valid" state.  the "valid"
-# process contains a copy of the parent workflow, with actual Experiment
-# instances in the "result" traits.
-
-# assume that the user changes a parameter in one of the operations.
-# the parent process serializes the changed Operation and sends it
-# through a pipe to the "valid" process.  the "valid" process updates
-# its copy of the operation, then spawns a subprocess (the "running"
-# process) and returns its handler and a pipe connection to the parent.
-
-# the "running" process actually runs the operation.  when the operation
-# is finished, it informs the parent process.  the parent process
-# terminates the "valid" process and makes the "running" process the
-# "valid" process.  then, the new "valid" process spawns a new "running"
-# process, which runs the next invalid operation.  the process continues
-# until all the operations have run.
-
-# there are several advantages to this setup.  first, there are never
-# more than two processes that have the actual data, so the in-memory
-# size should never grow beyond twice the size of the same pipeline
-# in a Jupyter notebook.  and it should be very fast, at least on 
-# Linux and MacOS, because spawning a new process gets a copy of all
-# the variables from the old one.
-
-# second, it is not uncommon to have an operation's parameters update
-# while that operation is running.  this is actually the original
-# motivation for multiprocessing: when a long-running operation is
-# running, it holds the Python global interpreter lock (GIL) and thus
-# freezes the GUI.
 
 # pipe connections for communicating between canvases
 # http://stackoverflow.com/questions/1977362/how-to-create-module-wide-variables-in-python
@@ -113,6 +74,7 @@ class Msg:
     UPDATE_VIEW = 5
     CHANGE_CURRENT_VIEW = 6
     UPDATE_WI = 7
+    CHANGE_DEFAULT_SCALE = 8
 
                     
 class LocalWorkflow(HasStrictTraits):
@@ -223,6 +185,9 @@ class LocalWorkflow(HasStrictTraits):
 
     @on_trait_change('workflow')
     def _on_new_workflow(self, obj, name, old, new):
+        if DEBUG:
+            print "LocalWorkflow._on_new_workflow"
+            
         self.selected = None
         
         for wi in self.workflow:
@@ -234,7 +199,10 @@ class LocalWorkflow(HasStrictTraits):
         
     @on_trait_change('workflow_items')
     def _on_workflow_add_remove_items(self, event):
-        #print "workflow items changed"
+        if DEBUG:
+            print("LocalWorkflow._on_workflow_add_remove_items :: {}"
+                  .format((event.index, event.removed, event.added)))
+
         idx = event.index
 
         # invalidate icons
@@ -272,6 +240,10 @@ class LocalWorkflow(HasStrictTraits):
  
     @on_trait_change('selected')
     def _on_selected_changed(self, obj, name, old, new):
+        if DEBUG:
+            print("LocalWorkflow._on_selected_changed :: {}"
+                  .format((obj, name, old, new)))
+            
         if new is None:
             idx = -1
         else:
@@ -281,18 +253,30 @@ class LocalWorkflow(HasStrictTraits):
     
     @on_trait_change('workflow:operation:-transient')
     def _on_operation_trait_changed(self, obj, name, old, new):
+        if DEBUG:
+            print("LocalWorkflow._on_operation_trait_changed :: {}"
+                  .format((obj, name, old, new)))
+            
         wi = next((x for x in self.workflow if x.operation == obj))
         idx = self.workflow.index(wi)
         this.child_conn.send((Msg.UPDATE_OP, (idx, name, new)))
         
     @on_trait_change('workflow:current_view')
     def _on_current_view_changed(self, obj, name, old, new):
+        if DEBUG:
+            print("LocalWorkflow._on_current_view_changed :: {}"
+                  .format((obj, name, old, new)))                  
+                  
         idx = self.workflow.index(obj)
         view = obj.current_view
         this.child_conn.send((Msg.CHANGE_CURRENT_VIEW, (idx, view)))
         
     @on_trait_change('workflow:views:-transient')
     def _on_view_trait_changed(self, obj, name, old, new):
+        if DEBUG:
+            print("LocalWorkflow._on_view_trait_changed :: {}"
+                  .format((obj, name, old, new)))
+             
         wi = next((x for x in self.workflow if obj in x.views))
         idx = self.workflow.index(wi)
         view_id = obj.id
@@ -300,7 +284,12 @@ class LocalWorkflow(HasStrictTraits):
 
     # MAGIC: called when default_scale is changed
     def _default_scale_changed(self, new_scale):
+        if DEBUG:
+            print("LocalWorkflow._default_scale_changed :: {}"
+                  .format((new_scale)))
+            
         cytoflow.set_default_scale(new_scale)
+        this.child_conn.send((Msg.CHANGE_DEFAULT_SCALE, new_scale))
 
         
 class RemoteWorkflow(HasStrictTraits):
@@ -322,6 +311,9 @@ class RemoteWorkflow(HasStrictTraits):
                 (msg, payload) = this.parent_conn.recv()
             except EOFError:
                 return
+            
+            if DEBUG:
+                print "RemoteWorkflow.run :: {}".format(msg)
             
             if msg == Msg.NEW_WORKFLOW:
                 self.workflow = payload
@@ -365,6 +357,10 @@ class RemoteWorkflow(HasStrictTraits):
                 view = next((x for x in wi.views if x.id == view_id))
                 if view.trait_get(trait)[trait] != new_value:
                     view.trait_set(**{trait : new_value})
+                    
+            elif msg == Msg.CHANGE_DEFAULT_SCALE:
+                new_scale = payload
+                cytoflow.set_default_scale(new_scale)
                 
             else:
                 raise RuntimeError("Bad command in the remote workflow")
@@ -375,13 +371,21 @@ class RemoteWorkflow(HasStrictTraits):
             wi.update()
         
     @on_trait_change('workflow')
-    def _on_new_workflow(self, obj, name, old, new):        
+    def _on_new_workflow(self, obj, name, old, new):     
+        if DEBUG:
+            print("RemoteWorkflow._on_new_workflow :: {}"
+                  .format((obj, name, old, new)))
+               
         for wi in self.workflow:
             wi.status = "invalid"
             self.update_queue.put_nowait((self.workflow.index(wi), wi))
             
     @on_trait_change('workflow_items')
     def _on_workflow_add_remove_items(self, event):
+        if DEBUG:
+            print("RemoteWorkflow._on_workflow_add_remove_items :: {}"
+                  .format((event.index, event.removed, event.added)))
+            
         idx = event.index
 
         # remove deleted items from the linked list
@@ -411,6 +415,10 @@ class RemoteWorkflow(HasStrictTraits):
 
     @on_trait_change('workflow:operation:-transient')
     def _on_operation_trait_changed(self, obj, name, old, new):
+        if DEBUG:
+            print("RemoteWorkflow._on_operation_trait_changed :: {}"
+                  .format((obj, name, old, new))) 
+            
         wi = next((x for x in self.workflow if x.operation == obj))
         idx = self.workflow.index(wi)
         this.parent_conn.send((Msg.UPDATE_OP, (idx, name, new)))
@@ -421,6 +429,10 @@ class RemoteWorkflow(HasStrictTraits):
         
     @on_trait_change('workflow:views:+')
     def _on_view_trait_changed_plot(self, obj, name, old, new):
+        if DEBUG:
+            print("RemoteWorkflow._on_view_trait_changed_plot :: {}"
+                  .format((obj, name, old, new)))
+            
         # delegate traits are "implicitly" transient; they'll show up here
         # but not in _on_view_trait_changed_send_to_parent, below
         if not obj.trait(name).transient:        
@@ -430,29 +442,49 @@ class RemoteWorkflow(HasStrictTraits):
             
     @on_trait_change('workflow:views:-transient')
     def _on_view_trait_changed_send_to_parent(self, obj, name, old, new):
+        if DEBUG:
+            print("RemoteWorkflow._on_view_trait_changed_send_to_parent :: {}"
+                  .format((obj, name, old, new)))
+            
         wi = next((x for x in self.workflow if obj in x.views))
         idx = self.workflow.index(wi)
         this.parent_conn.send((Msg.UPDATE_VIEW, (idx, obj.id, name, new)))
 
     @on_trait_change('workflow:[status,channels,conditions,conditions_names,conditions_values,error,warning]')
     def _on_workflow_item_status_changed(self, obj, name, old, new):
+        if DEBUG:
+            print("RemoteWorkflow._on_workflow_item_status_changed :: {}"
+                  .format((obj, name, old, new)))
+            
         idx = self.workflow.index(obj)
         this.parent_conn.send((Msg.UPDATE_WI, (idx, name, new)))
             
     @on_trait_change('workflow:views:[error,warning]')
     def _on_view_status_changed(self, obj, name, old, new):
+        if DEBUG:
+            print("RemoteWorkflow._on_view_status_changed :: {}"
+                  .format((obj, name, old, new)))
+            
         wi = next((x for x in self.workflow if obj in x.views))
         idx = self.workflow.index(wi)
         this.parent_conn.send((Msg.UPDATE_VIEW, (idx, obj.id, name, new)))
         
     @on_trait_change('selected:status')
     def _on_operation_status_changed(self, obj, name, old, new):
-        print "obj {} name {} old {} new {}".format(obj, name, old, new)
+        if DEBUG:
+            print("RemoteWorkflow._on_operation_status_changed :: {}"
+                  .format((obj, name, old, new)))
+
         if obj is not None and old != "valid" and new == "valid":
             self.plot(self.selected)
 
 
     def plot(self, wi):      
+        
+        if DEBUG:
+            print("RemoteWorkflow.plot :: {}"
+                  .format((wi)))
+            
         if not wi.current_view:
             plt.clf()
             plt.show()

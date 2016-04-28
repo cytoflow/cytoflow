@@ -26,9 +26,8 @@ Created on Feb 11, 2015
 # ETSConfig.toolkit = 'qt4'
 
 import os.path
-import multiprocessing
 
-from traits.api import Instance, List, Bool, on_trait_change
+from traits.api import Instance, List, Bool
 from pyface.tasks.api import Task, TaskLayout, PaneItem
 from pyface.tasks.action.api import SMenu, SMenuBar, SToolBar, TaskAction
 from pyface.api import FileDialog, OK, ImageResource, AboutDialog
