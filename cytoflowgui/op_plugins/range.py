@@ -77,7 +77,6 @@ class RangeViewHandler(Controller, ViewHandlerMixin):
 @provides(ISelectionView)
 class RangeSelectionView(RangeSelection, PluginViewMixin):
     handler_factory = Callable(RangeViewHandler)
-    interactive = Constant(True)
     
     def plot_wi(self, wi):
         self.plot(wi.previous.result)

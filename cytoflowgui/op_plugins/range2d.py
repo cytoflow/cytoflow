@@ -93,7 +93,6 @@ class RangeView2DHandler(Controller, ViewHandlerMixin):
 @provides(ISelectionView)
 class Range2DSelectionView(RangeSelection2D, PluginViewMixin):
     handler_factory = Callable(RangeView2DHandler)
-    interactive = Constant(True)
     
     def plot_wi(self, wi):
         self.plot(wi.previous.result)

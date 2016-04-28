@@ -313,7 +313,7 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
         self.blit_left = None
         
         self.update_remote = threading.Event()
-        
+                
         t = threading.Thread(target = self.listen_for_remote, args = ())
         t.daemon = True 
         t.start()
@@ -331,7 +331,7 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
             
             if DEBUG:
                 print("FigureCanvasAggRemote.listen_for_remote :: {}".format(msg))
-                
+                            
             if msg == Msg.RESIZE_EVENT:
                 (winch, hinch) = payload
                 self.figure.set_size_inches(winch, hinch)

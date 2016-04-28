@@ -88,7 +88,6 @@ class PolygonViewHandler(Controller, ViewHandlerMixin):
 @provides(ISelectionView)
 class PolygonSelectionView(PolygonSelection, PluginViewMixin):
     handler_factory = Callable(PolygonViewHandler)
-    interactive = Constant(True)
     
     def plot_wi(self, wi):
         self.plot(wi.previous.result)

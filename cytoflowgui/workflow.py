@@ -46,12 +46,13 @@ import threading, sys, warnings
 
 import matplotlib.pyplot as plt
 
-from traits.api import HasStrictTraits, Instance, List, on_trait_change
+from traits.api import HasStrictTraits, Instance, List, Set, on_trait_change
                        
 from traitsui.api import View, Item, InstanceEditor, Spring, Label
 
 import cytoflow
 import cytoflow.utility as util
+from cytoflow.views import IView
 
 from cytoflowgui.vertical_notebook_editor import VerticalNotebookEditor
 from cytoflowgui.workflow_item import WorkflowItem
@@ -83,7 +84,7 @@ class LocalWorkflow(HasStrictTraits):
     selected = Instance(WorkflowItem)
 
     default_scale = util.ScaleEnum
-
+    
     # a view for the entire workflow's list of operations
     operations_traits = View(Item('workflow',
                                   editor = VerticalNotebookEditor(view = 'operation_traits',
@@ -256,10 +257,11 @@ class LocalWorkflow(HasStrictTraits):
         if DEBUG:
             print("LocalWorkflow._on_operation_trait_changed :: {}"
                   .format((obj, name, old, new)))
-            
+        
         wi = next((x for x in self.workflow if x.operation == obj))
         idx = self.workflow.index(wi)
         this.child_conn.send((Msg.UPDATE_OP, (idx, name, new)))
+
         
     @on_trait_change('workflow:current_view')
     def _on_current_view_changed(self, obj, name, old, new):
@@ -276,7 +278,7 @@ class LocalWorkflow(HasStrictTraits):
         if DEBUG:
             print("LocalWorkflow._on_view_trait_changed :: {}"
                   .format((obj, name, old, new)))
-             
+    
         wi = next((x for x in self.workflow if obj in x.views))
         idx = self.workflow.index(wi)
         view_id = obj.id
@@ -300,6 +302,9 @@ class RemoteWorkflow(HasStrictTraits):
     
     wi_to_plot = Instance(WorkflowItem)
     plot_event = threading.Event()
+    last_view_plotted = Instance(IView)
+
+    updating_traits = Set()
     
     def run(self):
         t = threading.Thread(target = self._process_queue, args = ())
@@ -337,6 +342,7 @@ class RemoteWorkflow(HasStrictTraits):
                 (idx, trait, new_value) = payload
                 wi = self.workflow[idx]
                 if wi.operation.trait_get(trait)[trait] != new_value:
+                    self.updating_traits.add((wi.operation, trait))
                     wi.operation.trait_set(**{trait : new_value})
 
             elif msg == Msg.CHANGE_CURRENT_VIEW:
@@ -356,6 +362,7 @@ class RemoteWorkflow(HasStrictTraits):
                 wi = self.workflow[idx]
                 view = next((x for x in wi.views if x.id == view_id))
                 if view.trait_get(trait)[trait] != new_value:
+                    self.updating_traits.add((view, trait))
                     view.trait_set(**{trait : new_value})
                     
             elif msg == Msg.CHANGE_DEFAULT_SCALE:
@@ -418,14 +425,19 @@ class RemoteWorkflow(HasStrictTraits):
         if DEBUG:
             print("RemoteWorkflow._on_operation_trait_changed :: {}"
                   .format((obj, name, old, new))) 
-            
+
         wi = next((x for x in self.workflow if x.operation == obj))
         idx = self.workflow.index(wi)
-        this.parent_conn.send((Msg.UPDATE_OP, (idx, name, new)))
 
         for wi in self.workflow[idx:]:
             wi.status = "invalid"
             self.update_queue.put_nowait((self.workflow.index(wi), wi))
+
+        if (obj, name) in self.updating_traits:
+            self.updating_traits.remove((obj, name))
+        else:
+            this.parent_conn.send((Msg.UPDATE_OP, (idx, name, new)))
+
         
     @on_trait_change('workflow:views:+')
     def _on_view_trait_changed_plot(self, obj, name, old, new):
@@ -446,9 +458,12 @@ class RemoteWorkflow(HasStrictTraits):
             print("RemoteWorkflow._on_view_trait_changed_send_to_parent :: {}"
                   .format((obj, name, old, new)))
             
-        wi = next((x for x in self.workflow if obj in x.views))
-        idx = self.workflow.index(wi)
-        this.parent_conn.send((Msg.UPDATE_VIEW, (idx, obj.id, name, new)))
+        if (obj, name) in self.updating_traits:
+            self.updating_traits.remove((obj, name))
+        else:
+            wi = next((x for x in self.workflow if obj in x.views))
+            idx = self.workflow.index(wi)
+            this.parent_conn.send((Msg.UPDATE_VIEW, (idx, obj.id, name, new)))
 
     @on_trait_change('workflow:[status,channels,conditions,conditions_names,conditions_values,error,warning]')
     def _on_workflow_item_status_changed(self, obj, name, old, new):
@@ -465,9 +480,12 @@ class RemoteWorkflow(HasStrictTraits):
             print("RemoteWorkflow._on_view_status_changed :: {}"
                   .format((obj, name, old, new)))
             
-        wi = next((x for x in self.workflow if obj in x.views))
-        idx = self.workflow.index(wi)
-        this.parent_conn.send((Msg.UPDATE_VIEW, (idx, obj.id, name, new)))
+        if (obj, name) in self.updating_traits:
+            self.updating_traits.remove((obj, name))
+        else:
+            wi = next((x for x in self.workflow if obj in x.views))
+            idx = self.workflow.index(wi)
+            this.parent_conn.send((Msg.UPDATE_VIEW, (idx, obj.id, name, new)))
         
     @on_trait_change('selected:status')
     def _on_operation_status_changed(self, obj, name, old, new):
@@ -489,13 +507,20 @@ class RemoteWorkflow(HasStrictTraits):
             plt.clf()
             plt.show()
             return
-          
+        
         wi.current_view.warning = ""
         wi.current_view.error = ""
          
         with warnings.catch_warnings(record = True) as w:
             try:
                 wi.current_view.plot_wi(wi)
+                
+                if self.last_view_plotted and "interactive" in self.last_view_plotted.traits():
+                    self.last_view_plotted.interactive = False
+                
+                if "interactive" in wi.current_view.traits():
+                    wi.current_view.interactive = True
+                self.last_view_plotted = wi.current_view
                  
                 # the remote canvas/pyplot interface of the multiprocess backend
                 # is NOT interactive.  this call lets us batch together all 
