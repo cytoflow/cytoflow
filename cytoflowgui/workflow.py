@@ -300,8 +300,7 @@ class RemoteWorkflow(HasStrictTraits):
     update_queue = Instance(UniquePriorityQueue, ())
     selected = Instance(WorkflowItem)
     
-    wi_to_plot = Instance(WorkflowItem)
-    plot_event = threading.Event()
+    plot_lock = Instance(threading.Lock, ())
     last_view_plotted = Instance(IView)
 
     updating_traits = Set()
@@ -513,7 +512,8 @@ class RemoteWorkflow(HasStrictTraits):
          
         with warnings.catch_warnings(record = True) as w:
             try:
-                wi.current_view.plot_wi(wi)
+                with self.plot_lock:
+                    wi.current_view.plot_wi(wi)
                 
                 if self.last_view_plotted and "interactive" in self.last_view_plotted.traits():
                     self.last_view_plotted.interactive = False
