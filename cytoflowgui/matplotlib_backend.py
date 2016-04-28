@@ -16,7 +16,29 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Render to qt from agg
+A matplotlib backend that renders across a process boundary.
+
+By default, matplotlib only works in one thread.  For a GUI application, this
+is a problem because when matplotlib is working (ie, scaling a bunch of data
+points) the GUI freezes.
+
+This module implements a matplotlib backend where the plotting done in one
+process (ie via pyplot, etc) shows up in a canvas running in another process
+(the GUI).  The canvas is the interface across the process boundary: a "local"
+canvas, which is a GUI widget (in this case a QWidget) and a "remote" canvas
+(running in the process where pyplot.plot() etc. are used.)  The remote canvas
+is a subclass of the Agg renderer; when draw() is called, the remote canvas
+pulls the current buffer out of the renderer and pushes it through a pipe
+to the local canvas, which draws it on the screen.  blit() is implemented
+too.
+
+This takes care of one direction of data flow, and would be enough if we were
+just plotting.  However, we want to use matplotlib widgets as well, which
+means there's data flowing from the local canvas to the remote canvas too.
+The local canvas is a subclass of FigureCanvasQTAgg, which is itself a 
+sublcass of QWidget.  The local canvas overrides several of the event handlers,
+passing the event information to the remote canvas which in turn runs the
+matplotlib event handlers.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -25,37 +47,29 @@ import sys, time, threading
 
 import matplotlib.pyplot
 from matplotlib.figure import Figure
-from matplotlib.transforms import TransformedBbox, BboxTransformTo
-
 
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
-#from matplotlib.backends.backend_qt5agg import FigureCanvasQTAggBase
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 
 from pyface.qt import QtCore, QtGui
 
 # needed for pylab_setup
-backend_version = "0.0.1"
-
-# matplotlib.interactive(True)
+backend_version = "0.0.2"
 
 from matplotlib.backend_bases import FigureManagerBase
 
-# multiprocess plotting:  the process boundary is at the canvas.  two canvases
-# will be needed, a local canvas and a remote canvas.  the remote canvas will
-# be the destination of the Agg renderer; when its draw() is called, it will
-# push the image buffer to the UI process, which will draw it on the screen.
-# the local canvas will handle all UI events, and push them to the remote
-# canvas to process (if registered.)
 
-# pipe connections for communicating between canvases
+# module-level pipe connections for communicating between canvases.
+# these are initialized in cytoflow_application, which starts the remote
+# process.
+
 # http://stackoverflow.com/questions/1977362/how-to-create-module-wide-variables-in-python
 this = sys.modules[__name__]
 this.parent_conn = None
 this.child_conn = None
 this.remote_canvas = None
 
-DEBUG = 1
+DEBUG = 0
 
 class Msg:
     DRAW = 0
@@ -106,9 +120,6 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         
         
     def listen_for_remote(self):
-        while this.child_conn is None:
-            time.sleep(0.5)
-
         while True:
             (msg, payload) = this.child_conn.recv()
             if DEBUG:
@@ -148,6 +159,8 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
                 this.child_conn.send(msg)
                 self.resize_width = self.resize_height = None
 
+            # for performance reasons, make sure there are no more than
+            # 10 updates per second
             time.sleep(0.1)
             
 
@@ -250,13 +263,9 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
             # draw the zoom rectangle to the QPainter
             if self._drawRect is not None:
                 print("drawRect not yet implemented (local)")
-#                 p.setPen(QtGui.QPen(QtCore.Qt.black, 1, QtCore.Qt.DotLine))
-#                 x, y, w, h = self._drawRect
-#                 p.drawRect(x, y, w, h)
+
             p.end()
             
-            # self.buffer = None
-
         else:
             qImage = QtGui.QImage(self.blit_buffer, 
                                   self.blit_width,
@@ -272,9 +281,6 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
             # draw the zoom rectangle to the QPainter
             if self._drawRect is not None:
                 print("drawRect isn't implemented yet")
-#                 p.setPen(QtGui.QPen(QtCore.Qt.black, 1, QtCore.Qt.DotLine))
-#                 x, y, w, h = self._drawRect
-#                 p.drawRect(x, y, w, h)
             p.end()
             self.blit_buffer = None
 
@@ -313,8 +319,6 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
             if msg == Msg.RESIZE_EVENT:
                 (winch, hinch) = payload
                 self.figure.set_size_inches(winch, hinch)
-#                 self.figure.bbox = TransformedBbox(self.figure.bbox_inches, self.figure.dpi_scale_trans)
-#                 self.transFigure = BboxTransformTo(self.figure.bbox)
                 FigureCanvasAgg.resize_event(self)
                 self.draw()
             elif msg == Msg.MOUSE_PRESS_EVENT:
@@ -371,10 +375,6 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
             self.buffer_height = self.renderer.height
 
         self.update_remote.set()
-    
-#     def mpl_connect(self, s, func):
-#         if DEBUG:
-#             print("FigureCanvasAggRemote.mpl_connect()")
         
 
     def blit(self, bbox=None):
@@ -389,7 +389,6 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
         if bbox is None and self.figure:
             print("bbox was none")
             return
-#             bbox = self.figure.bbox
 
         with self.blit_lock:
             l, b, r, t = bbox.extents
@@ -407,9 +406,6 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
             self.blit_left = l
             
         self.update_remote.set()
-#         l, b, w, h = bbox.bounds
-#         t = b + h
-#         self.repaint(l, self.renderer.height-t, w, h)
     
 
 def new_figure_manager(num, *args, **kwargs):
@@ -427,9 +423,7 @@ def new_figure_manager(num, *args, **kwargs):
     # the canvas is a singleton.
     if not this.remote_canvas:
         this.remote_canvas = FigureCanvasAggRemote(new_fig)
-    else:        
-        # TODO - this doesn't update the canvas patch, so we
-        # don't get mouse events.  
+    else:         
         old_fig = this.remote_canvas.figure
         new_fig.set_size_inches(old_fig.get_figwidth(), 
                                 old_fig.get_figheight())
