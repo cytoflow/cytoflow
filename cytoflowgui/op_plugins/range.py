@@ -15,8 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from traits.api import provides, Callable, Constant
-from traitsui.api import View, Item, EnumEditor, Controller, VGroup
+from traits.api import provides, Callable
+from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
@@ -34,12 +34,15 @@ from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
 class RangeHandler(Controller, OpHandlerMixin):
     
     def default_traits_view(self):
-        return View(Item('name'),
+        return View(Item('name',
+                         editor = TextEditor(auto_set = False)),
                     Item('channel',
                          editor=EnumEditor(name='context.previous.channels'),
                          label = "Channel"),
-                    Item('low'),
-                    Item('high'),
+                    Item('low',
+                         editor = TextEditor(auto_set = False)),
+                    Item('high',
+                         editor = TextEditor(auto_set = False)),
                     shared_op_traits) 
         
 class RangeViewHandler(Controller, ViewHandlerMixin):

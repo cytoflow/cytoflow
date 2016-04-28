@@ -21,8 +21,8 @@ Created on Apr 25, 2015
 @author: brian
 '''
 
-from traits.api import provides, Callable, Constant
-from traitsui.api import View, Item, EnumEditor, Controller, VGroup
+from traits.api import provides, Callable
+from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
@@ -39,17 +39,26 @@ from cytoflowgui.clearable_enum_editor import ClearableEnumEditor
 class Range2DHandler(Controller, OpHandlerMixin):
     
     def default_traits_view(self):
-        return View(Item('name'),
+        return View(Item('name',
+                         editor = TextEditor(auto_set = False)),
                     Item('xchannel',
                          editor=EnumEditor(name='context.previous.channels'),
                          label = "X Channel"),
-                    Item('xlow', label = "X Low"),
-                    Item('xhigh', label = "X High"),
+                    Item('xlow', 
+                         editor = TextEditor(auto_set = False),
+                         label = "X Low"),
+                    Item('xhigh', 
+                         editor = TextEditor(auto_set = False),
+                         label = "X High"),
                     Item('ychannel',
                          editor=EnumEditor(name='context.previous.channels'),
                          label = "Y Channel"),
-                    Item('ylow', label = "Y Low"),
-                    Item('yhigh', label = "Y High"),
+                    Item('ylow', 
+                         editor = TextEditor(auto_set = False),
+                         label = "Y Low"),
+                    Item('yhigh', 
+                         editor = TextEditor(auto_set = False),
+                         label = "Y High"),
                     shared_op_traits) 
         
 class RangeView2DHandler(Controller, ViewHandlerMixin):

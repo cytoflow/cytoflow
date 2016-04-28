@@ -28,7 +28,7 @@ Created on Mar 15, 2015
 #     import os
 #     os.environ['TRAITS_DEBUG'] = "1"
 
-from traitsui.api import View, Item, Controller
+from traitsui.api import View, Item, Controller, TextEditor
 from traits.api import Button, Property, cached_property, provides, Callable, \
                        Bool
 from pyface.api import OK as PyfaceOK
@@ -48,10 +48,8 @@ class ImportHandler(Controller, OpHandlerMixin):
     """
     
     import_event = Button(label="Edit samples...")
-    samples = Property
-    events = Property
-#     samples = Property(depends_on = 'wi.result')
-#     events = Property(depends_on = 'wi.result')
+    samples = Property(depends_on = 'model.tubes')
+#     events = Property
     
     def default_traits_view(self):
         return View(Item('handler.import_event',
@@ -59,19 +57,20 @@ class ImportHandler(Controller, OpHandlerMixin):
                     Item('handler.samples',
                          label='Samples',
                          style='readonly',
-                         visible_when='context.result is not None'),
-                    Item('handler.events',
-                         label='Events',
-                         style='readonly',
-                         visible_when='context.result is not None'),
+                         visible_when='context.status == "valid"'),
+#                     Item('handler.events',
+#                          label='Events',
+#                          style='readonly',
+#                          visible_when='context.status == "valid"'),
                     Item('object.coarse',
                          label="Coarse import?",
                          show_label = False,
                          editor = ToggleButtonEditor(),
-                         visible_when='context.result is not None'),
+                         visible_when='context.status == "valid"'),
                     Item('object.coarse_events',
+                         editor = TextEditor(auto_set = False),
                          label="Events per\nsample",
-                         visible_when='context.result is not None and object.coarse == True'),
+                         visible_when='context.status == "valid" and object.coarse == True'),
                     shared_op_traits)
         
     def _import_event_fired(self):
@@ -95,7 +94,7 @@ class ImportHandler(Controller, OpHandlerMixin):
         
     @cached_property
     def _get_samples(self):
-            return len(self.model.tubes)
+        return len(self.model.tubes)
      
     @cached_property
     def _get_events(self):

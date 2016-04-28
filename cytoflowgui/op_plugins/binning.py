@@ -21,7 +21,7 @@ Created on Oct 9, 2015
 @author: brian
 '''
 
-from traitsui.api import View, Item, EnumEditor, Controller, VGroup
+from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor
 from envisage.api import Plugin, contributes_to
 from traits.api import provides, Callable
 from pyface.api import ImageResource
@@ -32,17 +32,23 @@ from cytoflow.views.i_selectionview import IView
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
 from cytoflowgui.subset_editor import SubsetEditor
+from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
 
 class BinningHandler(Controller, OpHandlerMixin):
     def default_traits_view(self):
-        return View(Item('name'),
+        return View(Item('name',
+                         editor = TextEditor(auto_set = False)),
                     Item('channel',
                          editor=EnumEditor(name='context.previous.channels'),
                          label = "Channel"),
                     Item('scale'),
-                    Item('num_bins', label = "Num Bins"),
-                    Item('bin_width'),
+                    Item('num_bins', 
+                         editor = TextEditor(auto_set = False),
+                         label = "Num Bins"),
+                    Item('bin_width',
+                         editor = TextEditor(auto_set = False),
+                         label = "Bin Width"),
                     shared_op_traits)
 
 class BinningPluginOp(BinningOp, PluginOpMixin):
@@ -61,7 +67,24 @@ class BinningViewHandler(Controller, ViewHandlerMixin):
                            Item('huefacet',
                                 style = 'readonly'),
                            label = "Binning Default Plot",
-                           show_border = False)))
+                           show_border = False)),
+                    VGroup(Item('subset',
+                                show_label = False,
+                                editor = SubsetEditor(conditions = "context.conditions",
+                                                      values = "context.conditions_values")),
+                           label = "Subset",
+                           show_border = False,
+                           show_labels = False),
+                    Item('warning',
+                         resizable = True,
+                         visible_when = 'warning',
+                         editor = ColorTextEditor(foreground_color = "#000000",
+                                                 background_color = "#ffff99")),
+                    Item('error',
+                         resizable = True,
+                         visible_when = 'error',
+                         editor = ColorTextEditor(foreground_color = "#000000",
+                                                  background_color = "#ff9191")))
 
 @provides(IView)
 class BinningPluginView(BinningView, PluginViewMixin):

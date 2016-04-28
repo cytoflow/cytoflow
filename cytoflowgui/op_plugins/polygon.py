@@ -21,8 +21,8 @@ Created on Apr 25, 2015
 @author: brian
 '''
 
-from traits.api import provides, Callable, Constant
-from traitsui.api import View, Item, EnumEditor, Controller, VGroup
+from traits.api import provides, Callable
+from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
@@ -38,7 +38,8 @@ from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
 
 class PolygonHandler(Controller, OpHandlerMixin):
     def default_traits_view(self):
-        return View(Item('name'),
+        return View(Item('name',
+                         editor = TextEditor(auto_set = False)),
                     Item('xchannel',
                          editor=EnumEditor(name='context.previous.channels'),
                          label = "X Channel"),
