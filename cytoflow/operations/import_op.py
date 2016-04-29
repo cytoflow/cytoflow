@@ -23,7 +23,7 @@ Created on Mar 20, 2015
 from __future__ import absolute_import
 
 import warnings
-from traits.api import (HasTraits, HasStrictTraits, provides, Str, List, Bool, Int, Any,
+from traits.api import (HasTraits, HasStrictTraits, provides, Str, List, Bool, CInt, Any,
                         Dict, File, Constant, Enum)
 
 import fcsparser
@@ -144,7 +144,7 @@ class ImportOp(HasStrictTraits):
     name_metadata = Enum(None, "$PnN", "$PnS")
 
     # are we subsetting?
-    coarse_events = Int(0)
+    coarse_events = util.PositiveInt(0, allow_zero = True)
         
     # DON'T DO THIS
     ignore_v = Bool(False)

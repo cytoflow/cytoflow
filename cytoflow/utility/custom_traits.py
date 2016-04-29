@@ -23,12 +23,11 @@ Created on Oct 12, 2015
 
 from __future__ import absolute_import
 
-from traits.api import BaseInt, BaseFloat, BaseEnum
+from traits.api import BaseCInt, BaseCFloat, BaseEnum
 from . import scale
 
-class PositiveInt(BaseInt):
+class PositiveInt(BaseCInt):
     
-    allow_zero = False
     info_text = 'a positive integer'
     
     def validate(self, obj, name, value):
@@ -39,9 +38,8 @@ class PositiveInt(BaseInt):
         self.error(obj, name, value)
         
         
-class PositiveFloat(BaseFloat):
+class PositiveFloat(BaseCFloat):
     
-    allow_zero = False
     info_text = 'a positive float'
     
     def validate(self, obj, name, value):

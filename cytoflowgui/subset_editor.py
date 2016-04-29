@@ -143,7 +143,8 @@ class RangeSubsetModel(HasStrictTraits):
                          editor = ValuesBoundsEditor(
                                      values = self.values,
                                      low_name = 'low',
-                                     high_name = 'high')))
+                                     high_name = 'high',
+                                     auto_set = False)))
     
     # MAGIC: gets the value of the Property trait "subset_str"
     def _get_subset_str(self):
