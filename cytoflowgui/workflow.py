@@ -369,7 +369,11 @@ class RemoteWorkflow(HasStrictTraits):
             elif msg == Msg.UPDATE_VIEW:
                 (idx, view_id, trait, new_value) = payload
                 wi = self.workflow[idx]
-                view = next((x for x in wi.views if x.id == view_id))
+                try:
+                    view = next((x for x in wi.views if x.id == view_id))
+                except StopIteration as e:
+                    raise RuntimeError("RemoteWorkflow: Couldn't find view {}".format(view_id))
+                    
                 if view.trait_get(trait)[trait] != new_value:
                     self.updating_traits.add((view, trait))
                     view.trait_set(**{trait : new_value})
@@ -480,7 +484,7 @@ class RemoteWorkflow(HasStrictTraits):
                 new = obj.trait_get(name)[name]
             this.parent_conn.send((Msg.UPDATE_VIEW, (idx, obj.id, name, new)))
 
-    @on_trait_change('workflow:[status,channels,conditions,conditions_names,conditions_values,error,warning]')
+    @on_trait_change('workflow:[status,channels,conditions,conditions_types,conditions_values,error,warning]')
     def _on_workflow_item_status_changed(self, obj, name, old, new):
         if DEBUG:
             print("RemoteWorkflow._on_workflow_item_status_changed :: {}"

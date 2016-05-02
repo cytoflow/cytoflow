@@ -76,12 +76,13 @@ class WorkflowItem(HasStrictTraits):
     
     # the channels and conditions from result.  usually these would be
     # Properties (ie, determined dynamically), but that's currently hard
-    # with the multiprocess model  
+    # with the multiprocess model.
     
-    # TODO - one day, make these Properties again
     channels = List(Str)
-    conditions = Dict(Str, Str)
-    conditions_names = List(Str)
+    conditions = List(Str)
+        
+    # we need the types and the values to set up the subset editor
+    conditions_types = Dict(Str, Str)
     conditions_values = Dict(Str, List)
     
     # the IViews against the output of this operation
@@ -178,10 +179,11 @@ class WorkflowItem(HasStrictTraits):
   
         if experiment:
             self.channels = experiment.channels
-            self.conditions = experiment.conditions
-            self.conditions_names = experiment.conditions.keys()
+            self.conditions = experiment.conditions.keys()
             
-            for condition in self.conditions.keys():
+            self.conditions_types = experiment.conditions
+            
+            for condition in self.conditions_types.keys():
                 self.conditions_values[condition] = \
                     list(np.sort(pd.unique(experiment[condition])))
                     
