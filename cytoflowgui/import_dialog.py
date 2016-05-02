@@ -1,5 +1,4 @@
 #!/usr/bin/env python2.7
-from __builtin__ import False
 
 # (c) Massachusetts Institute of Technology 2015-2016
 #
@@ -117,10 +116,10 @@ class Tube(HasTraits):
     
     # needed for fast hashing
     conditions = Any({}) # a dict
-    
-    def __hash__(self):
+            
+    def conditions_hash(self):
         ret = int(0)
-
+    
         for key, value in self.conditions.iteritems():
             if not ret:
                 ret = hash((key, value))
@@ -129,8 +128,8 @@ class Tube(HasTraits):
                 
         return ret
     
-    def __eq__(self, other):
-
+    def conditions_eq(self, other):
+    
         if set(self.conditions.keys()) != set(other.conditions.keys()):
             return False
         
@@ -147,14 +146,12 @@ class Tube(HasTraits):
 
     
 class ExperimentColumn(ObjectColumn):
-    
     # override ObjectColumn.get_cell_color
     def get_cell_color(self, obj):
-        if(obj.parent.tubes_counter[obj] > 1):
-            return QtGui.QColor('lightpink')
-        else:
+        if obj.parent.is_tube_unique(obj):
             return super(ObjectColumn, self).get_cell_color(object)
-        
+        else:
+            return QtGui.QColor('lightpink')        
     
 class ExperimentDialogModel(HasTraits):
     """
@@ -173,14 +170,10 @@ class ExperimentDialogModel(HasTraits):
     # the tubes' traits.
     tube_traits = Instance(OrderedDict, ())
     
-    # a collections.Counter that keeps track of duplicates for us.  rebuilt
-    # whenever the Tube elements of self.tubes changes
-    tubes_counter = Property()
-    
     # traits to communicate with the TabularEditor
     update = Bool
     refresh = Bool
-    selected = List
+    selected = List()
     
     view = View(
             Group(
@@ -203,9 +196,6 @@ class ExperimentDialogModel(HasTraits):
         )
     
     def init_model(self, op):
-        
-        # I DON'T KNOW WHY THIS STICKS AROUND ACROSS DIALOG INVOCATIONS.
-        del self.tubes[:]
         
         dtype_to_trait = {"category" : Str,
                           "float" : Float,
@@ -291,11 +281,14 @@ class ExperimentDialogModel(HasTraits):
             # TODO - FIX THIS.  need a general strategy for only updating
             # if there's a "pause" in the action.
             op.tubes.append(op_tube)
-    
-    ## i'd love to cache this, but it screws up the coloring stuff  :-/
-    def _get_tubes_counter(self):
-        return Counter(self.tubes)
-    
+            
+    def is_tube_unique(self, tube):
+        for other in self.tubes:
+            if tube != other and tube.conditions_eq(other):
+                return False
+            
+        return True
+   
 
 class PlateDirectoryDialog(QtDirectoryDialog):
     """
@@ -590,11 +583,15 @@ class ExperimentDialog(Dialog):
     style = 'modal'
     title = 'Experiment setup'
 
-    handler = Instance(ExperimentDialogHandler, 
-                       kw = {'model' : ExperimentDialogModel()})
+    handler = Instance(ExperimentDialogHandler)
     model = DelegatesTo('handler')
 
     ui = Instance(UI)
+    
+    def __init__(self, **kwargs):
+        super(ExperimentDialog, self).__init__(**kwargs)
+        self.handler = ExperimentDialogHandler()
+        self.model = ExperimentDialogModel()
 
     def _create_buttons(self, parent):
         """ 

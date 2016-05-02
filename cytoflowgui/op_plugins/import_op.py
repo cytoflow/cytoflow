@@ -80,6 +80,7 @@ class ImportHandler(Controller, OpHandlerMixin):
 
         d = ExperimentDialog()
 
+        # self.model is an instance of cytoflow.ImportOp
         d.model.init_model(self.model)
             
         d.size = (550, 500)
