@@ -1,5 +1,4 @@
 #!/usr/bin/env python2.7
-from cytoflowgui import matplotlib_backend
 
 # (c) Massachusetts Institute of Technology 2015-2016
 #
@@ -161,7 +160,7 @@ class FlowTask(Task):
         
         # add an import operation
         import_op = ImportPlugin().get_operation()
-        self.model.add_operation(import_op, None)       
+        self.model.add_operation(import_op)       
         
     def on_open(self):
         """ Shows a dialog to open a file.
