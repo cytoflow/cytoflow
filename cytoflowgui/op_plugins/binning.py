@@ -70,8 +70,8 @@ class BinningViewHandler(Controller, ViewHandlerMixin):
                            show_border = False)),
                     VGroup(Item('subset',
                                 show_label = False,
-                                editor = SubsetEditor(conditions = "context.conditions",
-                                                      values = "context.conditions_values")),
+                                editor = SubsetEditor(conditions_types = "context.previous.conditions_types",
+                                                      conditions_values = "context.previous.conditions_values")),
                            label = "Subset",
                            show_border = False,
                            show_labels = False),
@@ -91,7 +91,7 @@ class BinningPluginView(BinningView, PluginViewMixin):
     handler_factory = Callable(BinningViewHandler)
     
     def plot_wi(self, wi):
-        self.plot(wi.result)
+        self.plot(wi.previous.result)
 
 @provides(IOperationPlugin)
 class BinningPlugin(Plugin):
