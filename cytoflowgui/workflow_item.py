@@ -178,12 +178,13 @@ class WorkflowItem(HasStrictTraits):
         """Update channels and conditions"""
   
         if experiment:
-            self.channels = experiment.channels
+            self.channels = list(np.sort(experiment.channels))
             self.conditions = experiment.conditions.keys()
             
             self.conditions_types = experiment.conditions
             
             for condition in self.conditions_types.keys():
-                self.conditions_values[condition] = \
-                    list(np.sort(pd.unique(experiment[condition])))
+                el = np.sort(pd.unique(experiment[condition]))
+                el = el[pd.notnull(el)]
+                self.conditions_values[condition] = list(el)
                     
