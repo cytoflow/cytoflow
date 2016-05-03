@@ -50,3 +50,6 @@ class MPLFigureEditor(Widget):
         
         # initialize the local canvas with a dummy figure
         self.control = FigureCanvasQTAggLocal(Figure()) 
+        
+    def print_figure(self, *args, **kwargs):
+        self.control.print_figure(*args, **kwargs)
