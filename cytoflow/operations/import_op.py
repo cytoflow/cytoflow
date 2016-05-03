@@ -23,8 +23,7 @@ Created on Mar 20, 2015
 from __future__ import absolute_import
 
 import warnings
-
-from traits.api import (HasTraits, HasStrictTraits, provides, Str, List, Bool, Int, Any,
+from traits.api import (HasTraits, HasStrictTraits, provides, Str, List, Bool, CInt, Any,
                         Dict, File, Constant, Enum)
 
 import fcsparser
@@ -145,7 +144,7 @@ class ImportOp(HasStrictTraits):
     name_metadata = Enum(None, "$PnN", "$PnS")
 
     # are we subsetting?
-    coarse_events = Int(0)
+    coarse_events = util.PositiveInt(0, allow_zero = True)
         
     # DON'T DO THIS
     ignore_v = Bool(False)
@@ -247,9 +246,14 @@ class ImportOp(HasStrictTraits):
             tube_data = parse_tube(tube.file, experiment, self.ignore_v)
 
             if self.coarse_events:
-                tube_data = tube_data.loc[np.random.choice(tube_data.index,
-                                                           self.coarse_events,
-                                                           replace = False)]
+                if self.coarse_events <= len(tube_data):
+                    tube_data = tube_data.loc[np.random.choice(tube_data.index,
+                                                               self.coarse_events,
+                                                               replace = False)]
+                else:
+                    warnings.warn("Only {0} events in tube {1}"
+                                  .format(len(tube_data), tube.file),
+                                  util.CytoflowWarning)
 
             experiment.add_events(tube_data, tube.conditions)
             

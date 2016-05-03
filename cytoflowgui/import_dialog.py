@@ -28,20 +28,19 @@ if __name__ == '__main__':
 
     import os
     os.environ['TRAITS_DEBUG'] = "1"
-
-from collections import Counter, OrderedDict
     
-from traits.api import HasTraits, provides, Instance, Str, Int, List, \
-                       Bool, Enum, Float, DelegatesTo, Property, CStr, \
-                       TraitType, Dict, Tuple
+from collections import OrderedDict
+    
+from traits.api import HasTraits, HasStrictTraits, provides, Instance, Str, Int, List, \
+                       Bool, Enum, Float, DelegatesTo, CStr, Any, Property, BaseCStr
                        
 from traitsui.api import UI, Group, View, Item, TableEditor, OKCancelButtons, \
-                         Controller
+                         Controller, Menu, Action
 
 from traitsui.qt4.table_editor import TableEditor as TableEditorQt
 
 from pyface.i_dialog import IDialog
-from pyface.api import Dialog, GUI, FileDialog, error
+from pyface.api import Dialog, GUI, FileDialog, error, OK
 
 from pyface.qt import QtCore, QtGui
 from pyface.constant import OK as PyfaceOK
@@ -115,47 +114,62 @@ class Tube(HasTraits):
     # need a link to the model; needed for row coloring
     parent = Instance("ExperimentDialogModel", transient = True)
     
-    def __hash__(self):
+    # needed for fast hashing
+    conditions = Any({}) # a dict
+            
+    def conditions_hash(self):
         ret = int(0)
-        for trait in self.trait_names(condition = True):
+    
+        for key, value in self.conditions.iteritems():
             if not ret:
-                ret = hash(self.trait_get(trait)[trait])
+                ret = hash((key, value))
             else:
-                ret = ret ^ hash(self.trait_get(trait)[trait])
+                ret = ret ^ hash((key, value))
                 
         return ret
     
-    def __eq__(self, other):
-        if not (set(self.trait_names(condition = True)) == 
-                set(other.trait_get(condition = True))):
+    def conditions_eq(self, other):
+    
+        if set(self.conditions.keys()) != set(other.conditions.keys()):
             return False
         
-        for trait in self.trait_names(condition = True):
-            if not self.trait_get(trait)[trait] == other.trait_get(trait)[trait]:
+        for key in self.conditions:
+            if self.conditions[key] != other.conditions[key]:
                 return False
                 
         return True
+    
+    def _anytrait_changed(self, name, old, new):
+        if self.trait(name).condition:
+            self.conditions[name] = new
 
     
 class ExperimentColumn(ObjectColumn):
-    
     # override ObjectColumn.get_cell_color
     def get_cell_color(self, obj):
-        if(obj.parent.tubes_counter[obj] > 1):
-            return QtGui.QColor('lightpink')
-        else:
+        if obj.parent.is_tube_unique(obj):
             return super(ObjectColumn, self).get_cell_color(object)
+        else:
+            return QtGui.QColor('lightpink')
         
+    # override the context menu
+    def get_menu(self, obj):
+        return Menu(Action(name = "Remove Tubes",
+                           action = "_on_remove_tubes"),
+                    Action(name = "Remove Column",
+                           action = "_on_remove_column"))
+                
     
-class ExperimentDialogModel(HasTraits):
+class ExperimentDialogModel(HasStrictTraits):
     """
     The model for the Experiment setup dialog.
     """
-    
-    # TODO - there's some bug here with categorical things
-    
-    # the tubes.  this is the model; the rest is for communicating with the View
+        
+    # the heart of the model, a list of Tubes
     tubes = List(Tube)
+    
+    # are all the tubes unique?
+    valid = Property()
     
     # a dummy Experiment, with the first Tube and no events, so we can check
     # subsequent tubes for voltage etc. and fail early.
@@ -164,14 +178,10 @@ class ExperimentDialogModel(HasTraits):
     # the tubes' traits.
     tube_traits = Instance(OrderedDict, ())
     
-    # a collections.Counter that keeps track of duplicates for us.  rebuilt
-    # whenever the Tube elements of self.tubes changes
-    tubes_counter = Property(depends_on = 'tubes[]')
-    
     # traits to communicate with the TabularEditor
     update = Bool
     refresh = Bool
-    selected = List
+    selected = List()
     
     view = View(
             Group(
@@ -194,9 +204,6 @@ class ExperimentDialogModel(HasTraits):
         )
     
     def init_model(self, op):
-        
-        # I DON'T KNOW WHY THIS STICKS AROUND ACROSS DIALOG INVOCATIONS.
-        del self.tubes[:]
         
         dtype_to_trait = {"category" : Str,
                           "float" : Float,
@@ -247,12 +254,6 @@ class ExperimentDialogModel(HasTraits):
                     self.tube_traits[condition] = condition_trait
             tube.trait_set(**op_tube.conditions)
             
-            # if we're the first tube loaded, create a dummy experiment
-            # to validate voltage, etc for later tubes
-            if not self.dummy_experiment:
-                self.model.dummy_experiment = ImportOp(tubes = [CytoflowTube(file = op_tube.file)],
-                                                       coarse_events = 1).apply()
-            
             self.tubes.append(tube)
     
     def update_import_op(self, op):
@@ -262,31 +263,37 @@ class ExperimentDialogModel(HasTraits):
                           "Bool" : "bool",
                           "Int" : "int"}
         
-        op.conditions.clear()
-        op.tubes = []
-        
+        conditions = {}
         for trait_name, trait in self.tube_traits.items():
             if not trait.condition:
                 continue
 
             trait_type = trait.__class__.__name__
-            op.conditions[trait_name] = trait_to_dtype[trait_type]
+            conditions[trait_name] = trait_to_dtype[trait_type]
             
+        tubes = []
         for tube in self.tubes:
             op_tube = CytoflowTube(file = tube.file,
                                    conditions = tube.trait_get(condition = True))
+            tubes.append(op_tube)
             
-            # AFAICT this is going to cause the op to reload THE ENTIRE
-            # SET each time a tube is added.  >.>
+        op.conditions = conditions
+        op.tubes = tubes
             
-            # TODO - FIX THIS.  need a general strategy for only updating
-            # if there's a "pause" in the action.
-            op.tubes.append(op_tube)
+    def is_tube_unique(self, tube):
+        for other in self.tubes:
+            if tube != other and tube.conditions_eq(other):
+                return False
+            
+        return True
     
-    ## i'd love to cache this, but it screws up the coloring stuff  :-/
-    def _get_tubes_counter(self):
-        return Counter(self.tubes)
+    def _get_valid(self):
+        for tube in self.tubes:
+            if not self.is_tube_unique(tube):
+                return False
     
+        return True
+   
 
 class PlateDirectoryDialog(QtDirectoryDialog):
     """
@@ -309,9 +316,6 @@ class PlateDirectoryDialog(QtDirectoryDialog):
         return self.dlg.selectedNameFilter()
 
 class ExperimentDialogHandler(Controller):
-
-    # TODO - this doesn't like column names with spaces (or other invalid
-    # python identifiers (??))
 
     # keep a ref to the table editor so we can add columns dynamically
     table_editor = Instance(TableEditorQt)
@@ -351,17 +355,25 @@ class ExperimentDialogHandler(Controller):
                                      trait_name, 
                                      remove = True)
 
-    def _on_delete_column(self, obj, column, info):
-        # TODO - be able to remove traits.....
-        pass
         
     def _on_add_condition(self):
         """
         Add a new condition.  Use TraitsUI to make a simple dialog box.
         """
         
+        class ValidPythonIdentifier(BaseCStr):
+    
+            info_text = 'a valid python identifier'
+    
+            def validate(self, obj, name, value):
+                value = super(ValidPythonIdentifier, self).validate(obj, name, value)
+                if util.sanitize_identifier(value) == value:
+                    return value 
+                
+                self.error(obj, name, value)
+        
         class NewTrait(HasTraits):    
-            condition_name = CStr
+            condition_name = ValidPythonIdentifier()
             condition_type = Enum(["String", "Number", "Number (Log)", "True/False"])
     
             view = View(Item(name = 'condition_name'),
@@ -369,6 +381,10 @@ class ExperimentDialogHandler(Controller):
                         buttons = OKCancelButtons,
                         title = "Add a trait",
                         close_result = False)
+            
+            def _validate_condition_name(self, x):
+                return util.sanitize_identifier(x)
+            
         
         new_trait = NewTrait()
         new_trait.edit_traits(kind = 'modal')
@@ -402,9 +418,6 @@ class ExperimentDialogHandler(Controller):
         """
         Handle "Add tubes..." button.  Add tubes to the experiment.
         """
-        
-        # TODO - adding a set of files, then a condition, then another
-        # set doesn't work.
         
         file_dialog = FileDialog()
         file_dialog.wildcard = "Flow cytometry files (*.fcs)|*.fcs|"
@@ -440,7 +453,6 @@ class ExperimentDialogHandler(Controller):
             tube = Tube()
             
             for trait_name, trait in self.model.tube_traits.items():
-                # TODO - do we still need to check for transient?
                 tube.add_trait(trait_name, trait)
                 
                 # this magic makes sure the trait is actually defined
@@ -516,6 +528,19 @@ class ExperimentDialogHandler(Controller):
 #                 tube.Tube = well_data.meta['$SMNO']
 # 
 #             self.model.tubes.append(tube)
+
+        
+    def _on_remove_tubes(self, info, selection):
+        for (tube, _) in info.ui.context['object'].selected:
+            self.model.tubes.remove(tube)
+                
+                
+    def _on_remove_column(self, info, selection):         
+        col = info.ui.context['object'].selected[0][1]
+        if self.model.tubes[0].trait(col).condition == True:
+            self._remove_metadata(col)
+        else:
+            error(None, "Can't remove column {}".format(col), "Error")
             
     def _try_multiedit(self, obj, name, old, new):
         """
@@ -533,6 +558,7 @@ class ExperimentDialogHandler(Controller):
             if tube != obj:
                 # update the underlying traits without notifying the editor
                 tube.trait_setq(**{trait_name: new})
+                tube.conditions[trait_name] = new
 
         # now refresh the editor all at once
         self.table_editor.refresh_editor()
@@ -554,17 +580,29 @@ class ExperimentDialogHandler(Controller):
                 # this magic makes sure the trait is actually defined
                 # in tube.__dict__, so it shows up in trait_names etc.
                 tube.trait_set(**{name : trait.default_value})
+                tube.conditions[name] = trait.default_value
                 if trait.condition:
                     tube.on_trait_change(self._try_multiedit, name)
 
             self.table_editor.columns.append(ExperimentColumn(name = name,
                                                               label = label,
                                                               editable = trait.condition))
-
+            
+    def _remove_metadata(self, name):
+        if name in self.model.tube_traits:
+            del self.model.tube_traits[name]
+             
+            for tube in self.model.tubes:
+                if tube.trait(name).condition:
+                    tube.on_trait_change(self._try_multiedit, name, remove = True)
+                    
+                tube.remove_trait(name)
+                del tube.conditions[name]
                 
-    def _remove_metadata(self, meta_name, column_name, meta_type):
-        # TODO - make it possible to remove metadata
-        pass
+        table_column = next((x for x in self.table_editor.columns if x.name == name))
+        self.table_editor.columns.remove(table_column)
+        
+
         
 @provides(IDialog)
 class ExperimentDialog(Dialog):
@@ -579,11 +617,27 @@ class ExperimentDialog(Dialog):
     style = 'modal'
     title = 'Experiment setup'
 
-    handler = Instance(ExperimentDialogHandler, 
-                       kw = {'model' : ExperimentDialogModel()})
+    handler = Instance(ExperimentDialogHandler)
     model = DelegatesTo('handler')
 
     ui = Instance(UI)
+    
+    def __init__(self, **kwargs):
+        super(ExperimentDialog, self).__init__(**kwargs)
+        self.handler = ExperimentDialogHandler()
+        self.model = ExperimentDialogModel()
+        
+    def open(self):
+        super(ExperimentDialog, self).open()
+        
+        if self.return_code == OK and not self.model.valid:
+            error(None, "Invalid experiment setup.\n"
+                        "Was each tube's metadata unique?",
+                        "Invalid experiment!")
+            self.open()
+            
+        return self.return_code
+        
 
     def _create_buttons(self, parent):
         """ 
@@ -606,12 +660,12 @@ class ExperimentDialog(Dialog):
 #         QtCore.QObject.connect(btn_plate, QtCore.SIGNAL('clicked()'),
 #                                self.handler._on_add_plate)
         
-        # start disabled; we enable when a tube is added
+        # start disabled if there aren't any tubes in the model
         btn_add_cond = QtGui.QPushButton("Add condition...")
         layout.addWidget(btn_add_cond)
         QtCore.QObject.connect(btn_add_cond, QtCore.SIGNAL('clicked()'),
                                self.handler._on_add_condition)
-        btn_add_cond.setEnabled(False)
+        btn_add_cond.setEnabled(len(self.model.tubes) > 0)
         self.handler.btn_add_cond = btn_add_cond
         
         layout.addStretch()
@@ -622,7 +676,7 @@ class ExperimentDialog(Dialog):
         layout.addWidget(btn_ok)
         QtCore.QObject.connect(btn_ok, QtCore.SIGNAL('clicked()'),
                                self.control, QtCore.SLOT('accept()'))
-
+        
         # 'Cancel' button.
         btn_cancel = QtGui.QPushButton("Cancel")
         layout.addWidget(btn_cancel)
@@ -649,12 +703,8 @@ class ExperimentDialog(Dialog):
         
     
 if __name__ == '__main__':
-
-    gui = GUI()
     
-    # create a Task and add it to a TaskWindow
     d = ExperimentDialog()
     d.size = (550, 500)
     d.open()
     
-    gui.start_event_loop()        

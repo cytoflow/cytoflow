@@ -22,7 +22,7 @@ Created on Feb 24, 2015
 """
 
 from traits.api import provides, Callable
-from traitsui.api import View, Item, Controller, EnumEditor
+from traitsui.api import View, Item, Controller, EnumEditor, VGroup
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
@@ -30,8 +30,9 @@ from cytoflow import HistogramView
 
 from cytoflowgui.subset_editor import SubsetEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
+from cytoflowgui.clearable_enum_editor import ClearableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
-    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, shared_view_traits
+    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin
     
 class HistogramHandler(Controller, ViewHandlerMixin):
     """
@@ -39,25 +40,40 @@ class HistogramHandler(Controller, ViewHandlerMixin):
     """
     
     def default_traits_view(self):
-        return View(Item('object.name'),
-                    Item('object.channel',
-                         editor=EnumEditor(name='handler.channels'),
-                         label = "Channel"),
-                    Item('object.scale'),
-                    Item('object.xfacet',
-                         editor=EnumEditor(name='handler.conditions'),
-                         label = "Horizontal\nFacet"),
-                    Item('object.yfacet',
-                         editor=EnumEditor(name='handler.conditions'),
-                         label = "Vertical\nFacet"),
-                    Item('object.huefacet',
-                         editor=EnumEditor(name='handler.conditions'),
-                         label="Color\nFacet"),
-                    Item('_'),
-                    Item('object.subset',
-                         label="Subset",
-                         editor = SubsetEditor(experiment = "handler.wi.result")),
-                    shared_view_traits)
+        return View(VGroup(
+                    VGroup(Item('name'),
+                           Item('channel',
+                                editor=EnumEditor(name='context.channels'),
+                                label = "Channel"),
+                           Item('scale'),
+                           Item('xfacet',
+                                editor=ClearableEnumEditor(name='context.conditions'),
+                                label = "Horizontal\nFacet"),
+                            Item('yfacet',
+                                editor=ClearableEnumEditor(name='context.conditions'),
+                                label = "Vertical\nFacet"),
+                           Item('huefacet',
+                                editor=ClearableEnumEditor(name='context.conditions'),
+                                label="Color\nFacet"),
+                            label = "Histogram Plot",
+                            show_border = False),
+                    VGroup(Item('subset',
+                                show_label = False,
+                                editor = SubsetEditor(conditions_types = "context.conditions_types",
+                                                      conditions_values = "context.conditions_values")),
+                           label = "Subset",
+                           show_border = False,
+                           show_labels = False),
+                    Item('warning',
+                         resizable = True,
+                         visible_when = 'warning',
+                         editor = ColorTextEditor(foreground_color = "#000000",
+                                                 background_color = "#ffff99")),
+                    Item('error',
+                         resizable = True,
+                         visible_when = 'error',
+                         editor = ColorTextEditor(foreground_color = "#000000",
+                                                  background_color = "#ff9191"))))
     
 class HistogramPluginView(HistogramView, PluginViewMixin):
     handler_factory = Callable(HistogramHandler)

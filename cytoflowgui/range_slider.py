@@ -142,6 +142,7 @@ class RangeSlider(QtGui.QSlider):
                 self.setRepeatAction(self.SliderNoAction)
         else:
             event.ignore()
+            
 
     def mouseMoveEvent(self, event):
         if self.pressed_control != QtGui.QStyle.SC_SliderHandle:
@@ -179,6 +180,10 @@ class RangeSlider(QtGui.QSlider):
         self.update()
 
         self.emit(QtCore.SIGNAL('sliderMoved(int)'), new_pos)
+        
+    def mouseReleaseEvent(self, event):
+        event.accept()
+        self.emit(QtCore.SIGNAL('sliderReleased()'))
 
     def __pick(self, pt):
         if self.orientation() == QtCore.Qt.Horizontal:

@@ -1,4 +1,5 @@
 #!/usr/bin/env python2.7
+from traits.has_traits import on_trait_change
 
 # (c) Massachusetts Institute of Technology 2015-2016
 #
@@ -28,19 +29,22 @@ Created on Mar 15, 2015
 #     import os
 #     os.environ['TRAITS_DEBUG'] = "1"
 
-from traitsui.api import View, Item, Controller
+from traitsui.api import View, Item, Controller, TextEditor
 from traits.api import Button, Property, cached_property, provides, Callable, \
                        Bool
 from pyface.api import OK as PyfaceOK
 from envisage.api import Plugin
 
+import cytoflow.utility as util
 from cytoflow import ImportOp
 from cytoflow.operations.i_operation import IOperation
                        
 from cytoflowgui.import_dialog import ExperimentDialog
 from cytoflowgui.op_plugins.i_op_plugin \
     import IOperationPlugin, OpHandlerMixin, PluginOpMixin, shared_op_traits
+from cytoflowgui.toggle_button import ToggleButtonEditor
 
+import cytoflowgui.workflow
 
 class ImportHandler(Controller, OpHandlerMixin):
     """
@@ -48,26 +52,29 @@ class ImportHandler(Controller, OpHandlerMixin):
     """
     
     import_event = Button(label="Edit samples...")
-    samples = Property(depends_on = 'wi.result')
-    events = Property(depends_on = 'wi.result')
+    samples = Property(depends_on = 'model.tubes')
+
+    # is the "
+    coarse = Bool
+    coarse_events = util.PositiveInt(0, allow_zero = True)
     
     def default_traits_view(self):
         return View(Item('handler.import_event',
                          show_label=False),
                     Item('handler.samples',
                          label='Samples',
-                         style='readonly',
-                         visible_when='handler.wi.result is not None'),
-                    Item('handler.events',
+                         style='readonly'),
+                    Item('events',
                          label='Events',
-                         style='readonly',
-                         visible_when='handler.wi.result is not None'),
-                    Item('object.coarse',
-                         label="Coarse\nimport?",
-                         visible_when='handler.wi.result is not None'),
+                         style='readonly'),
+                    Item('handler.coarse',
+                         label="Random subsample?",
+                         show_label = False,
+                         editor = ToggleButtonEditor()),
                     Item('object.coarse_events',
+                         editor = TextEditor(auto_set = False),
                          label="Events per\nsample",
-                         visible_when='handler.wi.result is not None and object.coarse == True'),
+                         visible_when='handler.coarse == True'),
                     shared_op_traits)
         
     def _import_event_fired(self):
@@ -77,6 +84,7 @@ class ImportHandler(Controller, OpHandlerMixin):
 
         d = ExperimentDialog()
 
+        # self.model is an instance of cytoflow.ImportOp
         d.model.init_model(self.model)
             
         d.size = (550, 500)
@@ -91,22 +99,32 @@ class ImportHandler(Controller, OpHandlerMixin):
         
     @cached_property
     def _get_samples(self):
-        if self.wi.result is not None:
-            return len(self.wi.operation.tubes)
-        else:
-            return 0
+        return len(self.model.tubes)
      
-    @cached_property
-    def _get_events(self):
-        if self.wi.result is not None:
-            return self.wi.result.data.shape[0]
+        
+    @on_trait_change('coarse')    
+    def _on_coarse_changed(self):
+        if self.coarse:
+            self.model.coarse_events = self.coarse_events
         else:
-            return 0
+            self.coarse_events = self.model.coarse_events
+            self.model.coarse_events = 0
+        
 
 @provides(IOperation)
 class ImportPluginOp(ImportOp, PluginOpMixin):
     handler_factory = Callable(ImportHandler)
-    coarse = Bool(False)
+    events = util.PositiveInt(0, allow_zero = True, transient = True)
+    
+    def apply(self, experiment = None):
+        ret = super(ImportPluginOp, self).apply(experiment = experiment)
+        
+        # this is NOT RECOMMENDED as general practice.  we can only do this
+        # because we know a priori where in the workflow this operation is!
+        cytoflowgui.workflow.parent_conn.send((cytoflowgui.workflow.Msg.UPDATE_OP, 
+                          (0, 'events', len(ret.data) )))
+        return ret
+    
             
 @provides(IOperationPlugin)
 class ImportPlugin(Plugin):

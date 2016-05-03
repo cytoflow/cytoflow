@@ -21,10 +21,8 @@ Created on Mar 15, 2015
 @author: brian
 """
 
-from traits.api import Interface, Str, HasTraits, Property, Instance, List
-from traitsui.api import Handler, Group, Item
-from cytoflowgui.workflow_item import WorkflowItem
-from cytoflowgui.color_text_editor import ColorTextEditor
+from traits.api import Interface, Str, HasTraits, Instance
+from traitsui.api import Handler
 
 VIEW_PLUGIN_EXT = 'edu.mit.synbio.cytoflow.view_plugins'
 
@@ -62,46 +60,14 @@ class PluginViewMixin(HasTraits):
     warning = Str(transient = True)
     error = Str(transient = True)
     
-shared_view_traits = Group(Item('object.warning',
-                                label = 'Warning',
-                                visible_when = 'object.warning',
-                                editor = ColorTextEditor(foreground_color = "#000000",
-                                                         background_color = "#ffff99",
-                                                         word_wrap = True)),
-                           Item('object.error',
-                                 label = 'Error',
-                                 visible_when = 'object.error',
-                                 editor = ColorTextEditor(foreground_color = "#000000",
-                                                          background_color = "#ff9191",
-                                                          word_wrap = True)))
+    def plot_wi(self, wi):
+        self.plot(wi.result)
+
 
 class ViewHandlerMixin(HasTraits):
     """
-    Common bits useful for View wrappers.
+    This used to contain shared useful bits for view handlers.  There's
+    nothing here now, but we'll keep it around in case it again becomes useful
     """
-     
-    channels = Property(List, depends_on = 'wi.channels')
-    conditions = Property(List, depends_on = 'wi.conditions')
-    
-    wi = Instance(WorkflowItem)
 
-    # MAGIC: provides dynamically updated values for the "channels" trait
-    def _get_channels(self):
-        """
-        doc
-        """
-        if self.wi and self.wi.result and self.wi.result.channels:
-            return self.wi.result.channels
-        else:
-            return []
-         
-    # MAGIC: provides dynamically updated values for the "conditions" trait
-    def _get_conditions(self):
-        """
-        doc
-        """
-        ret = [""]
-        if self.wi and self.wi.result and self.wi.result.conditions:
-            ret.extend(self.wi.result.conditions.keys())
-        return ret
 

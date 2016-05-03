@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from traits.api import provides, Callable
-from traitsui.api import View, Item, EnumEditor, Controller
+from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
@@ -25,45 +25,72 @@ from cytoflow.operations.i_operation import IOperation
 from cytoflow.operations.range import RangeOp, RangeSelection
 
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
-from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin, shared_view_traits
+from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
 from cytoflowgui.subset_editor import SubsetEditor
+from cytoflowgui.color_text_editor import ColorTextEditor
+from cytoflowgui.clearable_enum_editor import ClearableEnumEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
 
 class RangeHandler(Controller, OpHandlerMixin):
     
     def default_traits_view(self):
-        return View(Item('object.name'),
-                    Item('object.channel',
-                         editor=EnumEditor(name='handler.previous_channels'),
+        return View(Item('name',
+                         editor = TextEditor(auto_set = False)),
+                    Item('channel',
+                         editor=EnumEditor(name='context.previous.channels'),
                          label = "Channel"),
-                    Item('object.low'),
-                    Item('object.high'),
+                    Item('low',
+                         editor = TextEditor(auto_set = False)),
+                    Item('high',
+                         editor = TextEditor(auto_set = False)),
                     shared_op_traits) 
         
 class RangeViewHandler(Controller, ViewHandlerMixin):
     def default_traits_view(self):
-        return View(Item('object.name',
-                         style = "readonly"),
-                    Item('object.channel', 
-                         label = "Channel",
-                         style = "readonly"),
-                    Item('object.scale'),
-                    Item('object.huefacet',
-                         editor=EnumEditor(name='handler.conditions'),
-                         label="Color\nFacet"),
-                    Item('_'),
-                    Item('object.subset',
-                         label = "Subset",
-                         editor = SubsetEditor(experiment = 'handler.wi.previous.result')),
-                    shared_view_traits)
+        return View(VGroup(
+                    VGroup(Item('name',
+                                style = "readonly"),
+                           Item('channel', 
+                                label = "Channel",
+                                style = "readonly"),
+                           Item('scale'),
+                           Item('huefacet',
+                                editor=ClearableEnumEditor(name='context.previous.conditions'),
+                                label="Color\nFacet"),
+                            label = "Range Setup View",
+                            show_border = False),
+                    VGroup(Item('subset',
+                                show_label = False,
+                                editor = SubsetEditor(conditions_types = "context.previous.conditions_types",
+                                                      conditions_values = "context.previous.conditions_values")),
+                           label = "Subset",
+                           show_border = False,
+                           show_labels = False),
+                    Item('warning',
+                         resizable = True,
+                         visible_when = 'warning',
+                         editor = ColorTextEditor(foreground_color = "#000000",
+                                                 background_color = "#ffff99")),
+                    Item('error',
+                         resizable = True,
+                         visible_when = 'error',
+                         editor = ColorTextEditor(foreground_color = "#000000",
+                                                  background_color = "#ff9191"))))
 
 @provides(ISelectionView)
 class RangeSelectionView(RangeSelection, PluginViewMixin):
     handler_factory = Callable(RangeViewHandler)
     
+    def plot_wi(self, wi):
+        self.plot(wi.previous.result)
+    
+    
 @provides(IOperation)
 class RangePluginOp(RangeOp, PluginOpMixin):
     handler_factory = Callable(RangeHandler)
+    
+    def default_view(self, **kwargs):
+        return RangeSelectionView(op = self, **kwargs)
 
 @provides(IOperationPlugin)
 class RangePlugin(Plugin):
@@ -79,9 +106,6 @@ class RangePlugin(Plugin):
     
     def get_operation(self):
         return RangePluginOp()
-    
-    def get_default_view(self):
-        return RangeSelectionView()
     
     def get_icon(self):
         return ImageResource('range')

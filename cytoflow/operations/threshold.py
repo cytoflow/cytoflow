@@ -169,6 +169,7 @@ class ThresholdSelection(cytoflow.views.HistogramView):
     op = Instance(IOperation)
     name = DelegatesTo('op')
     channel = DelegatesTo('op')
+    threshold = DelegatesTo('op')
     interactive = Bool(False, transient = True)
 
     # internal state
@@ -193,9 +194,9 @@ class ThresholdSelection(cytoflow.views.HistogramView):
         self._draw_threshold()
         self._interactive()
     
-    @on_trait_change('op.threshold', post_init = True)
+    @on_trait_change('threshold', post_init = True)
     def _draw_threshold(self):
-        if not self._ax or not self.op.threshold:
+        if not self._ax or not self.threshold:
             return
         
         if self._line:
@@ -209,8 +210,8 @@ class ThresholdSelection(cytoflow.views.HistogramView):
  
             self._line = None
         
-        if self.op.threshold:    
-            self._line = plt.axvline(self.op.threshold, linewidth=3, color='blue')
+        if self.threshold:    
+            self._line = plt.axvline(self.threshold, linewidth=3, color='blue')
             
         plt.draw_if_interactive()
         
@@ -220,7 +221,8 @@ class ThresholdSelection(cytoflow.views.HistogramView):
             self._cursor = Cursor(self._ax, 
                                   horizOn=False,
                                   vertOn=True,
-                                  color='blue')
+                                  color='blue',
+                                  useblit = True)
             self._cursor.connect_event('button_press_event', self._onclick)
             
         elif self._cursor:
@@ -229,7 +231,9 @@ class ThresholdSelection(cytoflow.views.HistogramView):
             
     def _onclick(self, event):
         """Update the threshold location"""
-        self.op.threshold = event.xdata
+        # sometimes the axes aren't set up and we don't get xdata (??)
+        if event.xdata:
+            self.threshold = event.xdata
         
 if __name__ == '__main__':
     import cytoflow as flow

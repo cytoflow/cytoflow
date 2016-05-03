@@ -21,29 +21,26 @@ Created on Feb 11, 2015
 @author: brian
 """
 
+import logging, sys
+
 from traits.etsconfig.api import ETSConfig
 ETSConfig.toolkit = 'qt4'
 
 import matplotlib
 
 # We want matplotlib to use our backend
-matplotlib.use('module://matplotlib_backend')
-
-import logging
+matplotlib.use('module://cytoflowgui.matplotlib_backend')
 
 from envisage.core_plugin import CorePlugin
 from envisage.ui.tasks.tasks_plugin import TasksPlugin
 
 from flow_task import FlowTaskPlugin
 from cytoflow_application import CytoflowApplication
-from op_plugins import ImportPlugin, ThresholdPlugin, HLogPlugin, RangePlugin, \
-                       Range2DPlugin, PolygonPlugin, LogiclePlugin, \
-                       BinningPlugin, LogPlugin
+from op_plugins import ImportPlugin, ThresholdPlugin, RangePlugin, \
+                       Range2DPlugin, PolygonPlugin, BinningPlugin
 from view_plugins import HistogramPlugin, HexbinPlugin, ScatterplotPlugin, \
                          BarChartPlugin, Stats1DPlugin
                          
-import sys
-
 def run_gui():
     
     logging.basicConfig(level=logging.DEBUG)

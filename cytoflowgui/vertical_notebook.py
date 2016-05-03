@@ -63,6 +63,9 @@ class VerticalNotebookPage(HasPrivateTraits):
     # The name of the *description_object* trait that signals a page description
     # change [Set by client]
     description_object_trait = Str
+
+    # The icon for the page open/closed button
+    icon = Int(QtGui.QStyle.SP_ArrowRight)
     
     # The HasTraits object whose trait we look at to set the page icon
     icon_object = Instance(HasTraits)
@@ -70,8 +73,15 @@ class VerticalNotebookPage(HasPrivateTraits):
     # The name of the *icon_object* trait that signals an icon change
     icon_object_trait = Str
     
-    # The icon for the page open/closed button
-    icon = Int(QtGui.QStyle.SP_ArrowRight)
+    # If the notebook has "delete" buttons, can this page be deleted?
+    deletable = Bool(False)
+    
+    # The HasTraits object whose trait we look at to set the delete button
+    # enabled or disabled
+    deletable_object = Instance(HasTraits)
+    
+    # The name of the *deletable_object* trait that signals a deletable change
+    deletable_object_trait = Str
 
     # The parent window for the client page [Get by client]:
     parent = Property
@@ -98,10 +108,9 @@ class VerticalNotebookPage(HasPrivateTraits):
     # the control representing the command button.  need to keep it around
     # so we can update its name, desc, and icon dynamaically
     cmd_button = Instance(QtGui.QCommandLinkButton)
-
-    # The control representing the button that opens and closes the control
-    #button = Property
-    #close_button = Property
+    
+    # the control representing the "delete" button, if the notebook has them
+    del_button = Instance(QtGui.QPushButton)
 
     #-- Public Methods -------------------------------------------------------
 
@@ -117,6 +126,7 @@ class VerticalNotebookPage(HasPrivateTraits):
         self.on_trait_change(self._on_name_changed, 'name', dispatch = 'ui')
         self.on_trait_change(self._on_description_changed, 'description', dispatch = 'ui')
         self.on_trait_change(self._on_icon_changed, 'icon', dispatch = 'ui')
+        self.on_trait_change(self._on_deletable_changed, 'deletable', dispatch = 'ui')
 
     def dispose(self):
         """ Removes this notebook page. """
@@ -151,6 +161,11 @@ class VerticalNotebookPage(HasPrivateTraits):
                              remove = True)
         self.on_trait_change(self._on_icon_changed, 
                              'icon', 
+                             dispatch = 'ui',
+                             remove = True)
+
+        self.on_trait_change(self._on_deletable_changed, 
+                             'deletable', 
                              dispatch = 'ui',
                              remove = True)
         
@@ -216,6 +231,21 @@ class VerticalNotebookPage(HasPrivateTraits):
         
         # make sure the icon gets initialized
         self._icon_updated()
+        
+    def register_deletable_listener(self, model, trait):
+        """
+        Registers a listener on the specified object trait for the delete
+        button enable/disable
+        """
+        
+        # save the info so we can unregister it later
+        self.deletable_object, self.deletable_object_trait = model, trait
+        
+        # register the listener
+        self.deletable_object.on_trait_change(self._deletable_updated, trait)
+        
+        # make sure the bool gets initialized
+        self._deletable_updated()
 
     def _handle_page_toggle(self):
         if self.is_open:
@@ -255,13 +285,14 @@ class VerticalNotebookPage(HasPrivateTraits):
         buttons_layout.addWidget(self.cmd_button)
         
         if self.notebook.delete:
-            del_button = QtGui.QPushButton(buttons_container)
-            del_button.setVisible(True)
-            del_button.setFlat(True)
-            del_button.setIcon(del_button.style().standardIcon(QtGui.QStyle.SP_TitleBarCloseButton))
-            del_button.clicked.connect(self._handle_close_button)
+            self.del_button = QtGui.QPushButton(buttons_container)
+            self.del_button.setVisible(True)
+            self.del_button.setFlat(True)
+            self.del_button.setEnabled(self.deletable)
+            self.del_button.setIcon(self.del_button.style().standardIcon(QtGui.QStyle.SP_TitleBarCloseButton))
+            self.del_button.clicked.connect(self._handle_close_button)
             
-            buttons_layout.addWidget(del_button)
+            buttons_layout.addWidget(self.del_button)
         buttons_container.setLayout(buttons_layout)
         
         self.layout.addWidget(buttons_container)
@@ -313,6 +344,10 @@ class VerticalNotebookPage(HasPrivateTraits):
     def _on_icon_changed(self, icon):
         if self.cmd_button:
             self.cmd_button.setIcon(self.cmd_button.style().standardIcon(icon))
+        
+    def _on_deletable_changed(self, deletable):
+        if self.del_button:
+            self.del_button.setEnabled(deletable)
         
     def _name_updated(self):
         """ 
@@ -384,6 +419,30 @@ class VerticalNotebookPage(HasPrivateTraits):
             self.icon = handler_icon
         else:
             self.icon = getattr(self.icon_object, self.icon_object_trait, None)
+
+    def _deletable_updated(self):
+        """
+        Handles the signal that the associated object's deletable state has changed.
+        """
+        nb = self.notebook
+        handler_deletable = None
+         
+        method = None
+        editor = nb.editor
+        if editor is not None:
+            method = getattr(editor.ui.handler,
+                             '%s_%s_page_deletable' % 
+                             (editor.object_name, editor.name),
+                             None)
+         
+        if method is not None:
+            handler_deletable = method(editor.ui.info, self.deletable_object)
+             
+        if handler_deletable is not None:
+            self.deletable = handler_deletable
+        else:
+            self.deletable = getattr(self.deletable_object, self.deletable_object_trait, False)
+
 
 #-------------------------------------------------------------------------
 #  'VerticalNotebook' class:

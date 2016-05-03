@@ -37,9 +37,9 @@ class LogHandler(Controller, OpHandlerMixin):
     """
     
     def default_traits_view(self):
-        return View(Item('object.name'),
-                    Item('object.channels',
-                         editor = CheckListEditor(name='handler.previous_channels',
+        return View(Item('name'),
+                    Item('channels',
+                         editor = CheckListEditor(name='context.previous.channels',
                                                   cols = 2),
                          style = 'custom'),
                     shared_op_traits)

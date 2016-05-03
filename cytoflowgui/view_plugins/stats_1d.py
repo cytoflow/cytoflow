@@ -22,7 +22,7 @@ Created on Feb 24, 2015
 """
 
 from traits.api import provides, Callable, Dict
-from traitsui.api import View, Item, Controller, EnumEditor
+from traitsui.api import View, Item, Controller, EnumEditor, VGroup
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
@@ -30,8 +30,9 @@ from cytoflow import Stats1DView, geom_mean
 
 from cytoflowgui.subset_editor import SubsetEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
+from cytoflowgui.clearable_enum_editor import ClearableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
-    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, shared_view_traits
+    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin
     
 import numpy as np
 import scipy.stats
@@ -52,26 +53,48 @@ class Stats1DHandler(Controller, ViewHandlerMixin):
                        })
     
     def default_traits_view(self):
-        return View(Item('object.name'),
-                    Item('object.by',
-                         editor=EnumEditor(name='handler.conditions'),
-                         # TODO - restrict this to NUMERIC values?
-                         label = "Variable"),
-                    Item('object.ychannel',
-                         editor=EnumEditor(name='handler.channels'),
-                         label = "Y Channel"),
-                    Item('object.yfunction',
-                         editor = EnumEditor(name='handler.summary_functions'),
-                         label = "Y Summary\nFunction"),
-                    Item('object.xfacet',
-                         editor=EnumEditor(name='handler.conditions'),
-                         label = "Horizontal\nFacet"),
-                    Item('object.yfacet',
-                         editor=EnumEditor(name='handler.conditions'),
-                         label = "Vertical\nFacet"),
-                    Item('object.huefacet',
-                         editor=EnumEditor(name='handler.conditions'),
-                         label="Color\nFacet"),
+        return View(VGroup(
+                    VGroup(Item('name'),
+                           Item('by',
+                                editor=EnumEditor(name='context.conditions'),
+                                # TODO - restrict this to NUMERIC values?
+                                label = "Variable"),
+                           Item('ychannel',
+                                editor=EnumEditor(name='context.channels'),
+                                label = "Y Channel"),
+                           Item('yscale',
+                                label = "Y Scale"),
+                           Item('yfunction',
+                                editor = EnumEditor(name='handler.summary_functions'),
+                                label = "Y Summary\nFunction"),
+                           Item('xfacet',
+                                editor=ClearableEnumEditor(name='context.conditions'),
+                                label = "Horizontal\nFacet"),
+                           Item('yfacet',
+                                editor=ClearableEnumEditor(name='context.conditions'),
+                                label = "Vertical\nFacet"),
+                           Item('huefacet',
+                                editor=ClearableEnumEditor(name='context.conditions'),
+                                label="Color\nFacet"),
+                           label = "One-Dimensional Statistics Plot",
+                           show_border = False),
+                    VGroup(Item('subset',
+                                show_label = False,
+                                editor = SubsetEditor(conditions_types = "context.conditions_types",
+                                                      conditions_values = "context.conditions_values")),
+                           label = "Subset",
+                           show_border = False,
+                           show_labels = False),
+                    Item('warning',
+                         resizable = True,
+                         visible_when = 'warning',
+                         editor = ColorTextEditor(foreground_color = "#000000",
+                                                 background_color = "#ffff99")),
+                    Item('error',
+                         resizable = True,
+                         visible_when = 'error',
+                         editor = ColorTextEditor(foreground_color = "#000000",
+                                                  background_color = "#ff9191"))))
 #                     Item('object.error_bars',
 #                          editor = EnumEditor(values = {None : "",
 #                                                        "data" : "Data",
@@ -85,11 +108,7 @@ class Stats1DHandler(Controller, ViewHandlerMixin):
 #                          editor = EnumEditor(name = 'handler.conditions'),
 #                          label = "Error bar\nVariable",
 #                          visible_when = 'object.error_bars == "summary"'),
-                    Item('_'),
-                    Item('object.subset',
-                         label="Subset",
-                         editor = SubsetEditor(experiment = "handler.wi.result")),
-                    shared_view_traits)
+                    
     
 class Stats1DPluginView(Stats1DView, PluginViewMixin):
     handler_factory = Callable(Stats1DHandler)

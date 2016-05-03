@@ -22,7 +22,7 @@ Created on Mar 15, 2015
 """
 from traits.api import Interface, Str, HasTraits, Instance, Property, List
 from traitsui.api import Group, Item
-from cytoflowgui.workflow_item import WorkflowItem
+from cytoflowgui.workflow import WorkflowItem
 from cytoflowgui.color_text_editor import ColorTextEditor
 
 OP_PLUGIN_EXT = 'edu.mit.synbio.cytoflow.op_plugins'
@@ -55,12 +55,6 @@ class IOperationPlugin(Interface):
         Return an instance of the IOperation that this plugin wraps, along
         with the factory for the handler
         """
-        
-        
-    def get_default_view(self):
-        """
-        Return an IView instance set up to be the default view for the operation.
-        """
 
     def get_icon(self):
         """
@@ -70,43 +64,25 @@ class IOperationPlugin(Interface):
 class PluginOpMixin(HasTraits):
     pass
 
-shared_op_traits = Group(Item('handler.wi.warning',
+shared_op_traits = Group(Item('context.warning',
                               label = 'Warning',
-                              visible_when = 'handler.wi.warning',
+                              resizable = True,
+                              visible_when = 'context.warning',
                               editor = ColorTextEditor(foreground_color = "#000000",
-                                                       background_color = "#ffff99",
-                                                       word_wrap = True)),
-                         Item('handler.wi.error',
+                                                       background_color = "#ffff99")),
+                         Item('context.error',
                                label = 'Error',
-                               visible_when = 'handler.wi.error',
+                               resizable = True,
+                               visible_when = 'context.error',
                                editor = ColorTextEditor(foreground_color = "#000000",
-                                                        background_color = "#ff9191",
-                                                        word_wrap = True)))
+                                                        background_color = "#ff9191")))
 
         
 class OpHandlerMixin(HasTraits):
-    wi = Instance(WorkflowItem)
+    """
+    This used to hold properties for dynamically updated metadata lists ....
+    but now those are updated elsewhere.  Keep this around in case a mixin
+    becomes useful again.
+    """
     
-    previous_channels = Property(List, depends_on = 'wi.previous.metadata')
-    previous_conditions = Property(List, depends_on = 'wi.previous.conditions')
-
-    # MAGIC: provides dynamically updated values for the "channels" trait
-    def _get_previous_channels(self):
-        """
-        doc
-        """
-        if self.wi and self.wi.previous and self.wi.previous.channels :
-            return self.wi.previous.channels
-        else:
-            return []
-         
-    # MAGIC: provides dynamically updated values for the "conditions" trait
-    def _get_previous_conditions(self):
-        """
-        doc
-        """
-        if self.wi and self.wi.previous and self.wi.previous.conditions:
-            return self.wi.previous.conditions.keys
-        else:
-            return []
-    
+    pass

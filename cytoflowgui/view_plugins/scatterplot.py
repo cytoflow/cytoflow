@@ -22,7 +22,7 @@ Created on Apr 23, 2015
 '''
 
 from traits.api import provides, Callable
-from traitsui.api import View, Item, Controller, EnumEditor
+from traitsui.api import View, Item, Controller, EnumEditor, VGroup
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
@@ -30,8 +30,9 @@ from cytoflow import ScatterplotView
 
 from cytoflowgui.subset_editor import SubsetEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
+from cytoflowgui.clearable_enum_editor import ClearableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
-    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, shared_view_traits
+    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin
 
 class ScatterplotHandler(Controller, ViewHandlerMixin):
     '''
@@ -39,31 +40,47 @@ class ScatterplotHandler(Controller, ViewHandlerMixin):
     '''
 
     def default_traits_view(self):
-        return View(Item('object.name'),
-                    Item('object.xchannel',
-                         editor=EnumEditor(name='handler.channels'),
-                         label = "X Channel"),
-                    Item('object.xscale',
-                         label = "X Scale"),
-                    Item('object.ychannel',
-                         editor=EnumEditor(name='handler.channels'),
-                         label = "Y Channel"),
-                    Item('object.yscale',
-                         label = "Y Scale"),
-                    Item('object.xfacet',
-                         editor=EnumEditor(name='handler.conditions'),
-                         label = "Horizontal\nFacet"),
-                    Item('object.yfacet',
-                         editor=EnumEditor(name='handler.conditions'),
-                         label = "Vertical\nFacet"),
-                    Item('object.huefacet',
-                         editor=EnumEditor(name='handler.conditions'),
-                         label="Color\nFacet"),
-                    Item('_'),
-                    Item('object.subset',
-                         label="Subset",
-                         editor = SubsetEditor(experiment = "handler.wi.result")),
-                    shared_view_traits)
+        return View(VGroup(
+                    VGroup(Item('name'),
+                           Item('xchannel',
+                                editor=EnumEditor(name='context.channels'),
+                                label = "X Channel"),
+                           Item('xscale',
+                                label = "X Scale"),
+                           Item('ychannel',
+                                editor=EnumEditor(name='context.channels'),
+                                label = "Y Channel"),
+                           Item('yscale',
+                                label = "Y Scale"),
+                           Item('xfacet',
+                                editor=ClearableEnumEditor(name='context.conditions'),
+                                label = "Horizontal\nFacet"),
+                           Item('yfacet',
+                                editor=ClearableEnumEditor(name='context.conditions'),
+                                label = "Vertical\nFacet"),
+                           Item('huefacet',
+                                editor=ClearableEnumEditor(name='context.conditions'),
+                                label="Color\nFacet"),
+                           label = "Scatter Plot",
+                           show_border = False),
+                    VGroup(Item('subset',
+                                show_label = False,
+                                editor = SubsetEditor(conditions_types = "context.conditions_types",
+                                                      conditions_values = "context.conditions_values")),
+                           label = "Subset",
+                           show_border = False,
+                           show_labels = False),
+                    Item('warning',
+                         resizable = True,
+                         visible_when = 'warning',
+                         editor = ColorTextEditor(foreground_color = "#000000",
+                                                 background_color = "#ffff99")),
+                    Item('error',
+                         resizable = True,
+                         visible_when = 'error',
+                         editor = ColorTextEditor(foreground_color = "#000000",
+                                                  background_color = "#ff9191"))))
+
 
 class ScatterplotPluginView(ScatterplotView, PluginViewMixin):
     handler_factory = Callable(ScatterplotHandler)

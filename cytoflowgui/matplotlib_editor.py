@@ -31,67 +31,25 @@ with some bits from
 http://matplotlib.org/examples/user_interfaces/embedding_in_qt4.html
 """
 
-import matplotlib
-
-# We want matplotlib to use our backend
-matplotlib.use('module://matplotlib_backend')
-from matplotlib_backend import FigureCanvas
+from cytoflowgui.matplotlib_backend import FigureCanvasQTAggLocal
 from matplotlib.figure import Figure
 
-from traits.api import Instance, Event
-
 from pyface.widget import Widget
-from pyface.qt import QtGui
 
 class MPLFigureEditor(Widget):
  
     id = 'edu.mit.synbio.matplotlib_editor'
     name = 'QT widget to display matplotlib plots'
  
-    scrollable = True
-    
-    figure = Instance(Figure)
-    _canvas = Instance(FigureCanvas)
-    _layout = Instance(QtGui.QStackedLayout)
-    
-    clear = Event
-    draw = Event    
+    scrollable = True  
  
     def __init__(self, parent, **traits):
         super(MPLFigureEditor, self).__init__(**traits)
         
         self.parent = parent
-        self.control = QtGui.QWidget(parent)    # the layout that manages the pane
-        self._layout = QtGui.QStackedLayout()
-        self.control.setLayout(self._layout)
         
-        self.on_trait_event(self._clear, 'clear', dispatch = 'ui')
-        self.on_trait_event(self._draw, 'draw', dispatch = 'ui')
- 
-    def update_editor(self):
-        pass
-    
-    def _clear(self):
-        if self.figure:
-            self.figure.clear()
+        # initialize the local canvas with a dummy figure
+        self.control = FigureCanvasQTAggLocal(Figure()) 
         
-    def _draw(self):
-        if self.figure:
-            self.figure.canvas.draw()
- 
-    # MAGIC: listens for a change in the 'figure' trait.
-    def _figure_changed(self, old, new):
-        if old:
-            # remove the view's widget from the layout
-            self._layout.takeAt(self._layout.indexOf(self._canvas))           
-            self._canvas.setParent(None)
-            del self._canvas
-            
-        if new:
-            self._canvas = new.canvas
-            self._layout.addWidget(self._canvas)
-            self._canvas.setParent(self.control)
-
-        
-    
-
+    def save_figure(self, *args, **kwargs):
+        self.control.print_figure(*args, **kwargs)

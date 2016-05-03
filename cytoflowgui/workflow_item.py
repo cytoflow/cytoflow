@@ -17,18 +17,19 @@
 
 '''
 Created on Mar 15, 2015
-
 @author: brian
 '''
 
 import warnings
 
 from traits.api import HasStrictTraits, Instance, List, DelegatesTo, Enum, \
-                       Property, cached_property, on_trait_change, \
+                       Property, cached_property, on_trait_change, Bool, \
                        Str, Dict
 from traitsui.api import View, Item, Handler
 from pyface.qt import QtGui
-from pyface.tasks.api import Task
+
+import numpy as np
+import pandas as pd
 
 from cytoflow import Experiment
 from cytoflow.operations.i_operation import IOperation
@@ -51,41 +52,58 @@ class WorkflowItem(HasStrictTraits):
     # the operation's name
     name = DelegatesTo('operation')
     
-    # the Task instance that serves as controller for this model
-    task = Instance(Task, transient = True)
-    
     # the operation this Item wraps
     operation = Instance(IOperation)
+    
+    # for the vertical notebook view, is this page deletable?
+    deletable = Bool(True)
     
     # the handler that's associated with this operation; we get it from the 
     # operation plugin, and it controls what operation traits are in the UI
     # and any special handling (heh) of them.  since the handler doesn't 
     # maintain any state, we can make and destroy as needed.
-    handler = Property(depends_on = 'operation', 
-                       trait = Instance(Handler), 
-                       transient = True)
+    operation_handler = Property(depends_on = 'operation', 
+                                 trait = Instance(Handler), 
+                                 transient = True)
+    
+    operation_traits = View(Item('operation_handler',
+                                 style = 'custom',
+                                 show_label = False))
     
     # the Experiment that is the result of applying *operation* to the
     # previous WorkflowItem's ``result``
     result = Instance(Experiment, transient = True)
     
     # the channels and conditions from result.  usually these would be
-    # Property traits (ie, determined dynamically), but we need to cache them
-    # so that persistence works properly.
+    # Properties (ie, determined dynamically), but that's currently hard
+    # with the multiprocess model.
+    
     channels = List(Str)
-    conditions = Dict(Str, Str)
+    conditions = List(Str)
+        
+    # we need the types and the values to set up the subset editor
+    conditions_types = Dict(Str, Str)
+    conditions_values = Dict(Str, List)
     
     # the IViews against the output of this operation
     views = List(IView)
     
-    # the view currently displayed (or selected) by the central pane
+    # the currently selected view
     current_view = Instance(IView)
+    
+    # the handler for the currently selected view
+    current_view_handler = Property(depends_on = 'current_view',
+                                    trait = Instance(Handler),
+                                    transient = True) 
+    
+    current_view_traits = View(Item('current_view_handler',
+                                    style = 'custom',
+                                    show_label = False))
     
     # the default view for this workflow item
     default_view = Instance(IView)
     
     # the previous WorkflowItem in the workflow
-    # self.result = self.apply(previous.result)
     previous = Instance('WorkflowItem')
     
     # the next WorkflowItem in the workflow
@@ -96,31 +114,26 @@ class WorkflowItem(HasStrictTraits):
     status = Enum("invalid", "estimating", "applying", "valid", transient = True)
     
     # if we errored out, what was the error string?
-    error = Str(transient = True)
+    error = Str()
     
     # if we got a warning, what was the warning string?
-    warning = Str(transient = True)
+    warning = Str()
     
     # the icon for the vertical notebook view.  Qt specific, sadly.
     icon = Property(depends_on = 'status', transient = True)
-    
-    def default_traits_view(self):
-        return View(Item('handler',
-                         style = 'custom',
-                         show_label = False))
         
     def update(self):
         """
         Called by the controller to update this wi
         """
-    
-
+             
+        self.status = "invalid"             
         self.warning = ""
         self.error = ""
         self.result = None
-        
+         
         prev_result = self.previous.result if self.previous else None
-        
+         
         with warnings.catch_warnings(record = True) as w:
             try:
                 if (hasattr(self.operation, "estimate") and
@@ -131,12 +144,13 @@ class WorkflowItem(HasStrictTraits):
                 self.result = self.operation.apply(prev_result)
                 if w:
                     self.warning = w[-1].message.__str__()
+                    
+                
             except CytoflowError as e:
-                self.status = "invalid"
                 self.error = e.__str__()    
-                print self.error
+                self.status = "invalid"
                 return
-
+ 
         self.status = "valid"
            
     @cached_property
@@ -149,16 +163,28 @@ class WorkflowItem(HasStrictTraits):
             return QtGui.QStyle.SP_BrowserStop
 
     @cached_property
-    def _get_handler(self):
-        return self.operation.handler_factory(model = self.operation,
-                                              wi = self)
+    def _get_operation_handler(self):
+        return self.operation.handler_factory(model = self.operation)
+
+    @cached_property
+    def _get_current_view_handler(self):
+        if self.current_view:
+            return self.current_view.handler_factory(model = self.current_view)
+        else:
+            return None
          
     @on_trait_change('result')
     def _result_changed(self, experiment):
         """Update channels and conditions"""
   
         if experiment:
-            self.channels = experiment.channels
-            self.conditions = experiment.conditions
-
-                        
+            self.channels = list(np.sort(experiment.channels))
+            self.conditions = experiment.conditions.keys()
+            
+            self.conditions_types = experiment.conditions
+            
+            for condition in self.conditions_types.keys():
+                el = np.sort(pd.unique(experiment[condition]))
+                el = el[pd.notnull(el)]
+                self.conditions_values[condition] = list(el)
+                    

@@ -22,7 +22,7 @@ Created on Apr 25, 2015
 '''
 
 from traits.api import provides, Callable
-from traitsui.api import View, Item, EnumEditor, Controller
+from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
@@ -31,54 +31,86 @@ from cytoflow.views.i_selectionview import ISelectionView
 
 from cytoflowgui.op_plugins.i_op_plugin \
     import IOperationPlugin, OpHandlerMixin, PluginOpMixin, OP_PLUGIN_EXT, shared_op_traits
-from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin, shared_view_traits
+from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
 from cytoflowgui.subset_editor import SubsetEditor
+from cytoflowgui.color_text_editor import ColorTextEditor
+from cytoflowgui.clearable_enum_editor import ClearableEnumEditor
 
 class Range2DHandler(Controller, OpHandlerMixin):
     
     def default_traits_view(self):
-        return View(Item('object.name'),
-                    Item('object.xchannel',
-                         editor=EnumEditor(name='handler.previous_channels'),
+        return View(Item('name',
+                         editor = TextEditor(auto_set = False)),
+                    Item('xchannel',
+                         editor=EnumEditor(name='context.previous.channels'),
                          label = "X Channel"),
-                    Item('object.xlow', label = "X Low"),
-                    Item('object.xhigh', label = "X High"),
-                    Item('object.ychannel',
-                         editor=EnumEditor(name='handler.previous_channels'),
+                    Item('xlow', 
+                         editor = TextEditor(auto_set = False),
+                         label = "X Low"),
+                    Item('xhigh', 
+                         editor = TextEditor(auto_set = False),
+                         label = "X High"),
+                    Item('ychannel',
+                         editor=EnumEditor(name='context.previous.channels'),
                          label = "Y Channel"),
-                    Item('object.ylow', label = "Y Low"),
-                    Item('object.yhigh', label = "Y High"),
+                    Item('ylow', 
+                         editor = TextEditor(auto_set = False),
+                         label = "Y Low"),
+                    Item('yhigh', 
+                         editor = TextEditor(auto_set = False),
+                         label = "Y High"),
                     shared_op_traits) 
         
 class RangeView2DHandler(Controller, ViewHandlerMixin):
     def default_traits_view(self):
-        return View(Item('object.name', 
-                         style = 'readonly'),
-                    Item('object.xchannel', 
-                         label = "X Channel", 
-                         style = 'readonly'),
-                    Item('object.xscale',
-                         label = "X Scale"),
-                    Item('object.ychannel',
-                         label = "Y Channel",
-                         style = 'readonly'),
-                    Item('object.yscale',
-                         label = "Y Scale"),
-                    Item('object.huefacet',
-                         editor=EnumEditor(name='handler.conditions'),
-                         label="Color\nFacet"),
-                    Item('_'),
-                    Item('object.subset',
-                         label = "Subset",
-                         editor = SubsetEditor(experiment = 'handler.wi.previous.result')),
-                    shared_view_traits)
+        return View(VGroup(
+                    VGroup(Item('name', 
+                                style = 'readonly'),
+                           Item('xchannel', 
+                                label = "X Channel", 
+                                style = 'readonly'),
+                           Item('xscale',
+                                label = "X Scale"),
+                           Item('object.ychannel',
+                                label = "Y Channel",
+                                style = 'readonly'),
+                           Item('yscale',
+                                label = "Y Scale"),
+                           Item('huefacet',
+                                editor=ClearableEnumEditor(name='context.previous.conditions'),
+                                label="Color\nFacet"),
+                           label = "2D Range Setup View",
+                           show_border = False),
+                    VGroup(Item('subset',
+                                show_label = False,
+                                editor = SubsetEditor(conditions_types = "context.previous.conditions_types",
+                                                      conditions_values = "context.previous.conditions_values")),
+                           label = "Subset",
+                           show_border = False,
+                           show_labels = False),
+                    Item('warning',
+                         resizable = True,
+                         visible_when = 'warning',
+                         editor = ColorTextEditor(foreground_color = "#000000",
+                                                 background_color = "#ffff99")),
+                    Item('error',
+                         resizable = True,
+                         visible_when = 'error',
+                         editor = ColorTextEditor(foreground_color = "#000000",
+                                                  background_color = "#ff9191"))))
 
 @provides(ISelectionView)
 class Range2DSelectionView(RangeSelection2D, PluginViewMixin):
     handler_factory = Callable(RangeView2DHandler)
     
+    def plot_wi(self, wi):
+        self.plot(wi.previous.result)
+    
 class Range2DPluginOp(Range2DOp, PluginOpMixin):
     handler_factory = Callable(Range2DHandler)
+    
+    def default_view(self, **kwargs):
+        return Range2DSelectionView(op = self, **kwargs)
 
 @provides(IOperationPlugin)
 class Range2DPlugin(Plugin):
@@ -94,9 +126,6 @@ class Range2DPlugin(Plugin):
     
     def get_operation(self):
         return Range2DPluginOp()
-    
-    def get_default_view(self):
-        return Range2DSelectionView()
 
     def get_icon(self):
         return ImageResource('range2d')

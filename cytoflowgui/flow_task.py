@@ -26,7 +26,7 @@ Created on Feb 11, 2015
 
 import os.path
 
-from traits.api import Instance, List, Bool, on_trait_change
+from traits.api import Instance, List, Bool
 from pyface.tasks.api import Task, TaskLayout, PaneItem
 from pyface.tasks.action.api import SMenu, SMenuBar, SToolBar, TaskAction
 from pyface.api import FileDialog, OK, ImageResource, AboutDialog
@@ -36,25 +36,12 @@ from envisage.ui.tasks.api import TaskFactory
 from cytoflowgui.flow_task_pane import FlowTaskPane
 from cytoflowgui.workflow_pane import WorkflowDockPane
 from cytoflowgui.view_pane import ViewDockPane
-from cytoflowgui.workflow import Workflow
+from cytoflowgui.workflow import LocalWorkflow
 from cytoflowgui.op_plugins import IOperationPlugin, ImportPlugin, OP_PLUGIN_EXT
 from cytoflowgui.view_plugins import IViewPlugin, VIEW_PLUGIN_EXT
-from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.ipython import IPythonNotebookWriter
 
-from util import UniquePriorityQueue
-import threading
 import pickle as pickle
-
-# setup the worker thread
-def update_model(flag, lock, to_update):
-    while flag.wait():
-        flag.clear()
-        while not to_update.empty():
-            with lock:
-                _, wi = to_update.get_nowait()
-            wi.update()
-
 
 class FlowTask(Task):
     """
@@ -65,9 +52,9 @@ class FlowTask(Task):
     name = "Cytometry analysis"
     
     # the main workflow instance.
-    # THIS IS WHERE IT'S INITIALLY INSTANTIATED (note the args=())
-    model = Instance(Workflow, args = ())
-    
+    # THIS IS WHERE IT'S INSTANTIATED (note the args=() )
+    model = Instance(LocalWorkflow, args = ())
+        
     # the center pane
     view = Instance(FlowTaskPane)
     
@@ -85,7 +72,7 @@ class FlowTask(Task):
                               TaskAction(name='Save As...',
                                          method='on_save_as',
                                          accelerator='Ctrl+e'),
-                              TaskAction(name='Export image...',
+                              TaskAction(name='Save Plot...',
                                          method='on_export',
                                          accelerator='Ctrl+x'),
                               TaskAction(name='Export IPython notebook...',
@@ -113,8 +100,8 @@ class FlowTask(Task):
                                       tooltip='Save the current file',
                                       image=ImageResource('save')),
                            TaskAction(method='on_export',
-                                      name = "Export",
-                                      tooltip='Export the current plot',
+                                      name = "Save Plot",
+                                      tooltip='Save the current plot',
                                       image=ImageResource('export')),
                            TaskAction(method='on_ipython',
                                       name='IPython',
@@ -129,35 +116,15 @@ class FlowTask(Task):
     # are we debugging?  ie, do we need a default setup?
     debug = Bool
     
-    worker = Instance(threading.Thread)
-    to_update = Instance(UniquePriorityQueue, ())
-    worker_flag = Instance(threading.Event, args = ())
-    worker_lock = Instance(threading.Lock, args = ())
-        
-    def initialized(self):
-
-        # make sure that when the result changes we get notified
-        # can't use a static notifier because selected.result gets updated
-        # on the worker thread, but we need to dispatch on the UI thread
-        self.model.on_trait_change(self._result_updated, 
-                                   "selected:result",
-                                   dispatch = 'ui')
-
-            
     def activated(self):
         # add an import plugin
-        plugin = ImportPlugin()
-        wi = WorkflowItem(task = self)
-        wi.operation = plugin.get_operation()
-
-        self.model.workflow.append(wi)
-        self.model.selected = wi
+        import_op = ImportPlugin().get_operation()
         
         # if we're debugging, add a few data bits
         if self.debug:
             from cytoflow import Tube
                      
-            wi.operation.conditions["Dox"] = "log"
+            import_op.conditions["Dox"] = "log"
         
             tube1 = Tube(file = "../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs",
                          conditions = {"Dox" : 0.1})
@@ -165,13 +132,9 @@ class FlowTask(Task):
             tube2 = Tube(file = "../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs",
                          conditions = {"Dox" : 1.0})
         
-            wi.operation.tubes.append(tube1)
-            wi.operation.tubes.append(tube2)
-              
-            self.add_operation('edu.mit.synbio.cytoflowgui.op_plugins.threshold')
-            self.model.selected.operation.channel = "Y2-A"
-            self.model.selected.operation.threshold = 2000
-            self.model.selected.operation.name = "T"        
+            import_op.tubes = [tube1, tube2]
+            
+        self.model.add_operation(import_op)      
     
     def prepare_destroy(self):
         self.model = None
@@ -195,13 +158,9 @@ class FlowTask(Task):
     def on_new(self):
         self.model.workflow = []
         
-        # add an import plugin
-        plugin = ImportPlugin()
-        wi = WorkflowItem(task = self)
-        wi.operation = plugin.get_operation()
-
-        self.model.workflow.append(wi)
-        self.model.selected = wi
+        # add an import operation
+        import_op = ImportPlugin().get_operation()
+        self.model.add_operation(import_op)       
         
     def on_open(self):
         """ Shows a dialog to open a file.
@@ -215,53 +174,19 @@ class FlowTask(Task):
     def open_file(self, path):
         f = open(path, 'r')
         unpickler = pickle.Unpickler(f)
-        new_model = unpickler.load()
+        new_workflow = unpickler.load()
 
-        # update the link back to the controller (ie, self)
-        for wi in new_model.workflow:
-            wi.task = self
-            
-            # and set up the view handlers
-            for view in wi.views:
-                view.handler = view.handler_factory(model = view, wi = wi)
-                  
         # replace the current workflow with the one we just loaded
         
         if False:
             from event_tracer import record_events 
             
             with record_events() as container:
-                self.model.workflow[:] = new_model.workflow
-                self.model.selected = new_model.selected
-                
+                self.model.workflow = new_workflow
+                                
             container.save_to_directory(os.getcwd()) 
         else:
-            self.model.workflow[:] = new_model.workflow
-            self.model.selected = new_model.selected   
-        
-        wi = self.model.workflow[0]
-        while True:
-            wi.status = "invalid"
-            with self.worker_lock:
-                self.to_update.put_nowait((self.model.workflow.index(wi), wi))
-            if wi.next:
-                wi = wi.next
-            else:
-                break
-            
-        # check to see if we have a worker thread around
-        if not self.worker or not self.worker.is_alive():
-            self.worker = threading.Thread(target = update_model, 
-                                           args = (self.worker_flag, 
-                                                   self.worker_lock,
-                                                   self.to_update))
-            self.worker.daemon = True
-            self.worker.start()
-            
-        # start the worker thread processing
-        with self.worker_lock:
-            if not self.to_update.empty():
-                self.worker_flag.set()
+            self.model.workflow = new_workflow
         
     def on_save(self):
         """ Shows a dialog to open a file.
@@ -279,7 +204,7 @@ class FlowTask(Task):
         # TODO - error handling
         f = open(path, 'w')
         pickler = pickle.Pickler(f, 0)  # text protocol for now
-        pickler.dump(self.model)
+        pickler.dump(self.model.workflow)
         
     def on_export(self):
         """
@@ -343,160 +268,22 @@ class FlowTask(Task):
     def add_operation(self, op_id):
         # first, find the matching plugin
         plugin = next((x for x in self.op_plugins if x.id == op_id))
-        
-        # default to inserting at the end of the list if none selected
-        after = self.model.selected
-        if after is None:
-            after = self.model.workflow[-1]
-        
-        idx = self.model.workflow.index(after)
-        
-        wi = WorkflowItem(task = self)
-        wi.operation = plugin.get_operation()
-
-        wi.next = after.next
-        after.next = wi
-        wi.previous = after
-        if wi.next:
-            wi.next.previous = wi
-        self.model.workflow.insert(idx+1, wi)
-        
-        # set up the default view
-        wi.default_view = plugin.get_default_view()
-        if wi.default_view is not None:
-            wi.default_view.op = wi.operation
-            wi.default_view.handler = \
-                wi.default_view.handler_factory(model = wi.default_view, wi = wi.previous)
-            wi.views.append(wi.default_view)
-
-        # select (open) the new workflow item
-        self.model.selected = wi
-        if wi.default_view:
-            wi.current_view = wi.default_view
-            
-        # invalidate everything following
-        self.operation_parameters_updated()
-        
-    @on_trait_change("model:workflow[]")
-    def _on_remove_operation(self, obj, name, old, new):
-        if name == "workflow_items" and len(new) == 0 and len(old) > 0:
-            assert len(old) == 1
-            wi = old[0]
-            
-            if self.model.selected == wi:
-                self.model.selected = wi.previous
-            
-            wi.previous.next = wi.next
-            if wi.next:
-                wi.next.previous = wi.previous
-            
-            del wi.default_view
-            del wi.views
-            del wi
-
-            self.operation_parameters_updated()
-        
-    @on_trait_change("model:selected:operation:+")
-    def operation_parameters_updated(self): 
-        
-        # invalidate this workflow item and all the ones following it
-        wi = self.model.selected
-        while True:
-            wi.status = "invalid"
-            with self.worker_lock:
-                self.to_update.put_nowait((self.model.workflow.index(wi), wi))
-            if wi.next:
-                wi = wi.next
-            else:
-                break
-            
-        # check to see if we have a worker thread around
-        if not self.worker or not self.worker.is_alive():
-            self.worker = threading.Thread(target = update_model, 
-                                           args = (self.worker_flag, 
-                                                   self.worker_lock,
-                                                   self.to_update))
-            self.worker.daemon = True
-            self.worker.start()
-            
-        # start the worker thread processing
-        with self.worker_lock:
-            if not self.to_update.empty():
-                self.worker_flag.set()
+                
+        # add the operation and the operation's default view
+        self.model.add_operation(plugin.get_operation())
         
     def set_current_view(self, view_id):
         """
         called by the view pane 
         """
-        wi = self.model.selected
-        
-        if view_id == "default":
-            view_id = self.model.selected.default_view.id
-        
-        view = next((x for x in wi.views if x.id == view_id), None)
-        
-        if not view:
-            plugin = next((x for x in self.view_plugins if x.view_id == view_id))
-            view = plugin.get_view()
-            view.handler = view.handler_factory(model = view, wi = wi)
-            wi.views.append(view)
-        
-        wi.current_view = view
-        
-    @on_trait_change("model:selected.current_view")
-    def _current_view_changed(self, obj, name, old, new): 
-        
-        # we get notified if *either* the currently selected workflowitem
-        # *or* the current view changes.
-        
-        if name == 'selected':
-            new = new.current_view if new else None
-            old = old.current_view if old else None
-            
-        # remove the notifications from the old view
-        if old:
-            old.on_trait_change(self.view_parameters_updated, remove = True)
-            
-            # and if the old view was interactive, turn off its interactivity
-            # to remove the matplotlib event handlers
-            if "interactive" in old.traits():
-                old.interactive = False
-            
-        # whenever the view parameters change, we need to know so we can
-        # update the plot(s)
-        if new:
-            new.on_trait_change(self.view_parameters_updated)
-            
-            if self.model.selected:
-                self.view.plot(self.model.selected)
-            else:
-                self.view.clear_plot()
-        else:
-            self.view.clear_plot()
 
-    def _result_updated(self, obj, name, old, new):
-        print "result updated"
-        if self.model.selected:
-            self.view.plot(self.model.selected)
+        if view_id == "default":
+            self.model.set_current_view(self.model.selected.default_view)
         else:
-            self.view.clear_plot()
+            plugin = next((x for x in self.view_plugins if x.view_id == view_id))
+            self.model.set_current_view(plugin.get_view())
         
-    def view_parameters_updated(self, obj, name, new):
-        
-        # i should be able to specify the metadata i want in the listener,
-        # but there's an odd interaction (bug) between metadata, dynamic 
-        # trait listeners and instance traits.  so, check for 'transient'
-        # here instead,
-        
-        if obj.trait(name).transient:
-            return
-        
-        print "view parameters updated: {0}".format(name)
-        wi = self.model.selected
-        if wi is None:
-            wi = self.model.workflow[-1]
-            
-        self.view.plot(wi)
+
         
 class FlowTaskPlugin(Plugin):
     """
