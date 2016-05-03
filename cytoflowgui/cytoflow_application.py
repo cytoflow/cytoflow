@@ -61,6 +61,7 @@ class CytoflowApplication(TasksApplication):
 
         # start the child process
         remote_process = multiprocessing.Process(target = self._remote_main,
+                                                 name = "remote",
                                                  args = (workflow_parent_conn, 
                                                          mpl_parent_conn))
         remote_process.daemon = True
