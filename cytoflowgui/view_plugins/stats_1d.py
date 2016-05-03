@@ -56,7 +56,7 @@ class Stats1DHandler(Controller, ViewHandlerMixin):
         return View(VGroup(
                     VGroup(Item('name'),
                            Item('by',
-                                editor=EnumEditor(name='context.conditions_names'),
+                                editor=EnumEditor(name='context.conditions'),
                                 # TODO - restrict this to NUMERIC values?
                                 label = "Variable"),
                            Item('ychannel',
