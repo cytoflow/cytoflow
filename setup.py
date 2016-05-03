@@ -71,7 +71,9 @@ setup(
                         'scikit-learn>=0.16',
                         'seaborn>=0.7.0',
                         'pyface==4.4.0',
-                        'envisage>=4.0'] \
+                        'envisage>=4.0',
+                        'nbformat>=4.0',
+                        'python-dateutil>=2.5.2'] \
                 if not on_rtd else None,
                         
                         # ALSO requires PyQt4 >= 4.10, but it's not available

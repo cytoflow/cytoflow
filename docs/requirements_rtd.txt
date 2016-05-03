@@ -9,3 +9,5 @@ scipy
 scikit-learn
 seaborn
 traits
+nbformat
+python-dateutil
