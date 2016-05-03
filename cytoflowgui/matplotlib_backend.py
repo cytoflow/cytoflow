@@ -73,14 +73,16 @@ this.remote_canvas = None
 DEBUG = 0
 
 class Msg:
-    DRAW = 0
-    BLIT = 1
+    DRAW = "DRAW"
+    BLIT = "BLIT"
     
-    RESIZE_EVENT = 2
-    MOUSE_PRESS_EVENT = 3
-    MOUSE_MOVE_EVENT = 4
-    MOUSE_RELEASE_EVENT = 5
-    MOUSE_DOUBLE_CLICK_EVENT = 6
+    RESIZE_EVENT = "RESIZE"
+    MOUSE_PRESS_EVENT = "MOUSE_PRESS"
+    MOUSE_MOVE_EVENT = "MOUSE_MOVE"
+    MOUSE_RELEASE_EVENT = "MOUSE_RELEASE"
+    MOUSE_DOUBLE_CLICK_EVENT = "MOUSE_DOUBLE_CLICK"
+    
+    PRINT = "PRINT"
 
 class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
     """
@@ -293,6 +295,9 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
                 print("drawRect isn't implemented yet")
             p.end()
             self.blit_buffer = None
+            
+    def print_figure(self, *args, **kwargs):
+        this.child_conn.send((Msg.PRINT, (args, kwargs)))
 
 
 class FigureCanvasAggRemote(FigureCanvasAgg):
@@ -357,6 +362,9 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
             elif msg == Msg.MOUSE_MOVE_EVENT:
                 (x, y) = payload
                 FigureCanvasAgg.motion_notify_event(self, x, y)
+            elif msg == Msg.PRINT:
+                (args, kwargs) = payload
+                FigureCanvasAgg.print_figure(self, *args, **kwargs)
             else:
                 raise RuntimeError("FigureCanvasAggRemote received bad message {}".format(msg))
             

@@ -51,6 +51,6 @@ class FlowTaskPane(TaskPane):
         # TODO - eventually give a preview, allow changing size, dpi, aspect 
         # ratio, plot layout, etc.  at the moment, just export exactly what's
         # on the screen
-        self.editor.print_figure(filename, bbox_inches = 'tight')
+        self.editor.save_figure(filename, bbox_inches = 'tight')
         
         
