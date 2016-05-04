@@ -21,15 +21,13 @@ Created on Mar 15, 2015
 @author: brian
 '''
 
-import multiprocessing
-
 from envisage.ui.tasks.api import TasksApplication
 from pyface.tasks.api import TaskWindowLayout
 from traits.api import Bool, Instance, List, Property
 
 from preferences import CytoflowPreferences
-import cytoflowgui.matplotlib_backend as mpl_backend
-import cytoflowgui.workflow as workflow
+
+
 
 class CytoflowApplication(TasksApplication):
     """ The cytoflow Tasks application.
@@ -51,32 +49,8 @@ class CytoflowApplication(TasksApplication):
     always_use_default_layout = Property(Bool)
     
     def run(self):
-        # set up the child process
-        workflow_parent_conn, workflow_child_conn = multiprocessing.Pipe()
-        mpl_parent_conn, mpl_child_conn = multiprocessing.Pipe()
-
-        # connect the local pipes
-        workflow.child_conn = workflow_child_conn       
-        mpl_backend.child_conn = mpl_child_conn   
-
-        # start the child process
-        remote_process = multiprocessing.Process(target = self._remote_main,
-                                                 name = "remote",
-                                                 args = (workflow_parent_conn, 
-                                                         mpl_parent_conn))
-        remote_process.daemon = True
-        remote_process.start()
-
         # run the GUI
         super(CytoflowApplication, self).run()
-        
-    def _remote_main(self, workflow_parent_conn, mpl_parent_conn):
-        # connect the remote pipes
-        workflow.parent_conn = workflow_parent_conn
-        mpl_backend.parent_conn = mpl_parent_conn
-        
-        # run the remote workflow
-        workflow.RemoteWorkflow().run()
     
 
     #### 'AttractorsApplication' interface ####################################

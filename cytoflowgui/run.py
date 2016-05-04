@@ -21,7 +21,7 @@ Created on Feb 11, 2015
 @author: brian
 """
 
-import logging, sys
+import logging, sys, multiprocessing
 
 from traits.etsconfig.api import ETSConfig
 ETSConfig.toolkit = 'qt4'
@@ -40,6 +40,9 @@ from op_plugins import ImportPlugin, ThresholdPlugin, RangePlugin, \
                        Range2DPlugin, PolygonPlugin, BinningPlugin
 from view_plugins import HistogramPlugin, HexbinPlugin, ScatterplotPlugin, \
                          BarChartPlugin, Stats1DPlugin
+
+import cytoflowgui.matplotlib_backend as mpl_backend
+import cytoflowgui.workflow as workflow
                          
 def run_gui():
     
@@ -58,8 +61,19 @@ def run_gui():
     app.run()
     
     logging.shutdown()
+    
+def remote_main(workflow_parent_conn, mpl_parent_conn):
+    # connect the remote pipes
+    workflow.parent_conn = workflow_parent_conn
+    mpl_backend.parent_conn = mpl_parent_conn
+    
+    # run the remote workflow
+    workflow.RemoteWorkflow().run()
+
 
 if __name__ == '__main__':
+    multiprocessing.freeze_support()
+    
     from pyface.qt import qt_api
     
     if qt_api == "pyside":
@@ -74,6 +88,21 @@ if __name__ == '__main__':
         print "     setx QT_API \"pyqt\""
 
         sys.exit(1)
-    
+        
+    # set up the child process
+    workflow_parent_conn, workflow_child_conn = multiprocessing.Pipe()
+    mpl_parent_conn, mpl_child_conn = multiprocessing.Pipe()
 
+    # connect the local pipes
+    workflow.child_conn = workflow_child_conn       
+    mpl_backend.child_conn = mpl_child_conn   
+
+    # start the child process
+    remote_process = multiprocessing.Process(target = remote_main,
+                                             name = "remote",
+                                             args = (workflow_parent_conn, 
+                                                     mpl_parent_conn))
+    remote_process.daemon = True
+    remote_process.start()    
+    
     run_gui()
