@@ -23,27 +23,28 @@ Created on Feb 11, 2015
 
 import logging, sys, multiprocessing
 
-                         
-def run_gui(workflow_child_conn, mpl_child_conn):
-    
-    from traits.etsconfig.api import ETSConfig
-    ETSConfig.toolkit = 'qt4'
-    
-    import matplotlib
-    
-    # We want matplotlib to use our backend
-    matplotlib.use('module://cytoflowgui.matplotlib_backend')
-    
-    from envisage.core_plugin import CorePlugin
-    from envisage.ui.tasks.tasks_plugin import TasksPlugin
-    
-    from flow_task import FlowTaskPlugin
-    from cytoflow_application import CytoflowApplication
-    from op_plugins import ImportPlugin, ThresholdPlugin, RangePlugin, \
-                           Range2DPlugin, PolygonPlugin, BinningPlugin
-    from view_plugins import HistogramPlugin, HexbinPlugin, ScatterplotPlugin, \
-                             BarChartPlugin, Stats1DPlugin
+from traits.etsconfig.api import ETSConfig
+ETSConfig.toolkit = 'qt4'
 
+import matplotlib
+
+# We want matplotlib to use our backend
+matplotlib.use('module://cytoflowgui.matplotlib_backend')
+
+from envisage.core_plugin import CorePlugin
+from envisage.ui.tasks.tasks_plugin import TasksPlugin
+
+from flow_task import FlowTaskPlugin
+from cytoflow_application import CytoflowApplication
+from op_plugins import ImportPlugin, ThresholdPlugin, RangePlugin, \
+                       Range2DPlugin, PolygonPlugin, BinningPlugin
+from view_plugins import HistogramPlugin, HexbinPlugin, ScatterplotPlugin, \
+                         BarChartPlugin, Stats1DPlugin
+
+import cytoflowgui.matplotlib_backend as mpl_backend
+import cytoflowgui.workflow as workflow
+                         
+def run_gui():
     
     logging.basicConfig(level=logging.DEBUG)
     
@@ -57,29 +58,11 @@ def run_gui(workflow_child_conn, mpl_child_conn):
     
     app = CytoflowApplication(id = 'edu.mit.synbio.cytoflow',
                               plugins = plugins)
-            
-        
-    import cytoflowgui.matplotlib_backend as mpl_backend
-    import cytoflowgui.workflow as workflow
-    
-    # connect the local pipes
-    workflow.child_conn = workflow_child_conn       
-    mpl_backend.child_conn = mpl_child_conn
-    
     app.run()
     
     logging.shutdown()
     
 def remote_main(workflow_parent_conn, mpl_parent_conn):
-    import matplotlib
-    
-    # We want matplotlib to use our backend
-    matplotlib.use('module://cytoflowgui.matplotlib_backend')
-        
-    import cytoflowgui.matplotlib_backend as mpl_backend
-    import cytoflowgui.workflow as workflow
-    
-    
     # connect the remote pipes
     workflow.parent_conn = workflow_parent_conn
     mpl_backend.parent_conn = mpl_parent_conn
@@ -105,11 +88,14 @@ if __name__ == '__main__':
         print "     setx QT_API \"pyqt\""
 
         sys.exit(1)
-
         
     # set up the child process
     workflow_parent_conn, workflow_child_conn = multiprocessing.Pipe()
     mpl_parent_conn, mpl_child_conn = multiprocessing.Pipe()
+
+    # connect the local pipes
+    workflow.child_conn = workflow_child_conn       
+    mpl_backend.child_conn = mpl_child_conn   
 
     # start the child process
     remote_process = multiprocessing.Process(target = remote_main,
@@ -119,4 +105,4 @@ if __name__ == '__main__':
     remote_process.daemon = True
     remote_process.start()    
     
-    run_gui(workflow_child_conn, mpl_child_conn)
+    run_gui()
