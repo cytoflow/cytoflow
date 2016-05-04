@@ -127,7 +127,7 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         t.start()
         
     def listen_for_remote(self):
-        while True:
+        while this.child_conn.poll():
             try:
                 (msg, payload) = this.child_conn.recv()
             except EOFError:
@@ -336,7 +336,7 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
         t.start()
         
     def listen_for_remote(self): 
-        while True:
+        while this.parent_conn.poll():
             try:
                 (msg, payload) = this.parent_conn.recv()
             except EOFError:
