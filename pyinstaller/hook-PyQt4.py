@@ -2,7 +2,9 @@ import PyInstaller
 from PyInstaller.utils.hooks import logger
 from os import listdir
 
-extra_paths = ["/anaconda/lib"]
+# TODO - this fixes a bug in PyInstaller (see Github bug #1514 and 
+# PR #1965.)  When the fix is applied upstream, remove this monkey
+# patch.
 
 def getImports_macholib(pth):
     """
@@ -44,9 +46,12 @@ def getImports_macholib(pth):
                 # Remove trailing '\x00' characters.
                 # e.g. '../lib\x00\x00'
                 rpath = rpath.rstrip('\x00')
+                executable_path = os.path.dirname(pth)
+                rpath = rpath.replace('@executable_path', executable_path)
+                rpath = rpath.replace('@loader_path', executable_path)
                 # Make rpath absolute. According to Apple doc LC_RPATH
                 # is always relative to the binary location.
-                rpath = os.path.normpath(os.path.join(os.path.dirname(pth), rpath))
+                rpath = os.path.normpath(os.path.join(executable_path, rpath))
                 run_paths.update([rpath])
             else:
                 # Frameworks that have this structure Name.framework/Versions/N/Name
@@ -62,9 +67,6 @@ def getImports_macholib(pth):
     # try to look in the same directory as the checked binary is.
     # This seems to work in most cases.
     exec_path = os.path.abspath(os.path.dirname(pth))
-
-    # Add additional paths to library search
-    run_paths.update(extra_paths)
 
     for lib in seen:
 
@@ -108,4 +110,5 @@ def getImports_macholib(pth):
 if PyInstaller.compat.is_darwin:
    logger.info("Monkey-patching bindep._getImports_macholib")
    PyInstaller.depend.bindepend._getImports_macholib = getImports_macholib
+
 
