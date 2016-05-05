@@ -21,7 +21,7 @@ Created on Mar 23, 2015
 @author: brian
 '''
 
-import re
+import logging, re
 
 # for local debugging
 if __name__ == '__main__':
@@ -247,8 +247,6 @@ class SubsetModel(HasStrictTraits):
             
             
     def _on_types_change(self, obj, name, old, new):
-        print "types changed: {}".format((obj, name, old, new))
-
         model_map = {"bool" : BoolCondition,
                     "category" : CategoryCondition,
                     "float" : RangeCondition,
@@ -267,9 +265,7 @@ class SubsetModel(HasStrictTraits):
             self.initial_subset_str = ""
         
     
-    def _on_values_change(self, obj, name, old, new):
-        print "values changed: {}".format((obj, name, old, new))
-        
+    def _on_values_change(self, obj, name, old, new):        
         model_map = {"bool" : BoolCondition,
                     "category" : CategoryCondition,
                     "float" : RangeCondition,
@@ -302,9 +298,7 @@ class _SubsetEditor(Editor):
         """
         Finishes initializing the editor and make the toolkit control
         """
-
-        self.model = SubsetModel(initial_subset_str = self.value)
-                  
+    
         # usually, we'd make these static notifiers.  however, in this case we
         # have to set a dynamic notifier because this is changed by the 
         # receiving thread in LocalWorkflow, and we need to re-dispatch
@@ -321,7 +315,10 @@ class _SubsetEditor(Editor):
 
         self.sync_value(self.factory.conditions_types, 'conditions_types', 'from')
         self.sync_value(self.factory.conditions_values, 'conditions_values', 'from')
-      
+                
+        # now start listening for changed values
+        self.model.on_trait_change(self.update_value, "subset_str")
+              
         self._ui = self.model.edit_traits(kind = 'subpanel',
                                           parent = parent)
         self.control = self._ui.control
@@ -329,6 +326,8 @@ class _SubsetEditor(Editor):
     def dispose(self):
         
         # disconnect the dynamic notifiers
+        
+        self.model.on_trait_change(self.update_value, "subset_str", remove = True)
 
         self.model.on_trait_change(self.model._on_types_change, "conditions_types", 
                                    dispatch = 'ui', remove = True)
@@ -341,15 +340,12 @@ class _SubsetEditor(Editor):
             self._ui = None
             
     def update_editor(self):
-        print "update editor with value :: {}".format(self.value)
+        logging.debug("subset_editor: Setting editor to {}".format(self.value))
         self.model.subset_str = self.value
     
     @on_trait_change('model.subset_str')
     def update_value(self, new):
-#         if not self.conditions:
-#             return
-#         
-        print "updating value from editor :: {}".format(new)
+        logging.debug("subset_editor: Setting value to {}".format(new))
         self.value = new            
 
 class SubsetEditor(BasicEditorFactory):
