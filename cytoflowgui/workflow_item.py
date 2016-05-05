@@ -78,12 +78,12 @@ class WorkflowItem(HasStrictTraits):
     # Properties (ie, determined dynamically), but that's currently hard
     # with the multiprocess model.
     
-    channels = List(Str)
-    conditions = List(Str)
+    channels = List(Str, status = True)
+    conditions = List(Str, status = True)
         
     # we need the types and the values to set up the subset editor
-    conditions_types = Dict(Str, Str)
-    conditions_values = Dict(Str, List)
+    conditions_types = Dict(Str, Str, status = True)
+    conditions_values = Dict(Str, List, status = True)
     
     # the IViews against the output of this operation
     views = List(IView)
@@ -111,13 +111,13 @@ class WorkflowItem(HasStrictTraits):
     
     # is the wi valid?
     # MAGIC: first value is the default
-    status = Enum("invalid", "estimating", "applying", "valid", transient = True)
+    status = Enum("invalid", "estimating", "applying", "valid", transient = True, status = True)
     
     # if we errored out, what was the error string?
-    error = Str()
+    error = Str(transient = True, status = True)
     
     # if we got a warning, what was the warning string?
-    warning = Str()
+    warning = Str(transient = True, status = True)
     
     # the icon for the vertical notebook view.  Qt specific, sadly.
     icon = Property(depends_on = 'status', transient = True)
