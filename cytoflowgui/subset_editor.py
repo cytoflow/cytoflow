@@ -191,10 +191,6 @@ class SubsetModel(HasStrictTraits):
     # can feed to pandas.DataFrame.subset()    
     subset_str = Property(trait = Str,
                           depends_on = "conditions.subset_str")
-    
-    # if we're unpickling, say, and try to set the subset str before we 
-    # have a WorkflowItem to set up the rest of the model, save it here.
-    initial_subset_str = Str
       
     traits_view = View(Item('conditions',
                             style = 'custom',
@@ -212,11 +208,6 @@ class SubsetModel(HasStrictTraits):
     # MAGIC: when the Property trait "subset_string" is assigned to,
     # update the view
     def _set_subset_str(self, value):
-        # do we have a valid wi yet?
-        if not self.conditions_types or not self.conditions_values:
-            self.initial_subset_str = value
-            return
-        
         # reset everything
         for condition in self.conditions:
             condition.subset_str = ""
@@ -259,10 +250,6 @@ class SubsetModel(HasStrictTraits):
                 
                 self.conditions.append(condition)
                 self.conditions_map[name] = condition
-         
-        if self.initial_subset_str:
-            self.subset_str = self.initial_subset_str
-            self.initial_subset_str = ""
         
     
     def _on_values_change(self, obj, name, old, new):        
@@ -343,7 +330,6 @@ class _SubsetEditor(Editor):
         logging.debug("subset_editor: Setting editor to {}".format(self.value))
         self.model.subset_str = self.value
     
-    @on_trait_change('model.subset_str')
     def update_value(self, new):
         logging.debug("subset_editor: Setting value to {}".format(new))
         self.value = new            
