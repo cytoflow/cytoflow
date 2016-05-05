@@ -17,8 +17,6 @@
 
 from __future__ import division, absolute_import
 
-import time
-
 from traits.api import (HasStrictTraits, Str, CStr, List, Float, provides,
                         Instance, Bool, on_trait_change, DelegatesTo, Any,
                         Constant)
@@ -264,7 +262,6 @@ class PolygonSelection(cytoflow.views.ScatterplotView):
             self._widget = None       
     
     def _onselect(self, vertices):
-        print "select"
         self.vertices = vertices
     
         
@@ -287,4 +284,3 @@ if __name__ == '__main__':
     v.plot(ex)
     v.interactive = True
     plt.show()
-    print p.vertices

@@ -43,8 +43,6 @@ class PolygonSelector(AxesWidget):
         if self.ignore(event):
             return
 
-        print("click")
-
         if not self.drawing:
             # start over
             self.verts = [(event.xdata, event.ydata)]

@@ -442,5 +442,3 @@ if __name__ == "__main__":
     ex.add_tube(tube1, {"time" : "one"})
     ex.add_tube(tube2, {"time" : "two"})
     
-    print(ex.data)
-

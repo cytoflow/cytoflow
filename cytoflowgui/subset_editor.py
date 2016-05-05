@@ -219,9 +219,7 @@ class SubsetModel(HasStrictTraits):
         # this parser is ugly and brittle.  TODO - replace me with
         # something from pyparsing.  ie, see
         # http://pyparsing.wikispaces.com/file/view/simpleBool.py
-        
-        print "set overall subset str ''{0}''".format(value)
-        
+                
         phrases = value.split(r") and (")
         if phrases[0] == "":  # only had one phrase, not a conjunction
             phrases = [value]
