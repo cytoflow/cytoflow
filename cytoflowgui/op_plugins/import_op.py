@@ -114,15 +114,12 @@ class ImportHandler(Controller, OpHandlerMixin):
 @provides(IOperation)
 class ImportPluginOp(ImportOp, PluginOpMixin):
     handler_factory = Callable(ImportHandler)
-    events = util.PositiveInt(0, allow_zero = True, transient = True)
+    events = util.PositiveInt(0, allow_zero = True, transient = True, status = True)
     
     def apply(self, experiment = None):
         ret = super(ImportPluginOp, self).apply(experiment = experiment)
-        
-        # this is NOT RECOMMENDED as general practice.  we can only do this
-        # because we know a priori where in the workflow this operation is!
-        cytoflowgui.workflow.parent_conn.send((cytoflowgui.workflow.Msg.UPDATE_OP, 
-                          (0, 'events', len(ret.data) )))
+        self.events = len(ret.data)
+
         return ret
     
             
