@@ -58,6 +58,8 @@ from cytoflowgui.vertical_notebook_editor import VerticalNotebookEditor
 from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.util import UniquePriorityQueue
 
+import cytoflowgui.matplotlib_backend as mpl_backend
+
 # pipe connections for communicating between canvases
 # http://stackoverflow.com/questions/1977362/how-to-create-module-wide-variables-in-python
 this = sys.modules[__name__]
@@ -569,6 +571,8 @@ class RemoteWorkflow(HasStrictTraits):
          
         with warnings.catch_warnings(record = True) as w:
             try:
+                mpl_backend.process_events.clear()
+                
                 with self.plot_lock:
                     wi.current_view.plot_wi(wi)
                 
@@ -583,6 +587,8 @@ class RemoteWorkflow(HasStrictTraits):
                 # is NOT interactive.  this call lets us batch together all 
                 # the plot updates
                 plt.show()
+                
+                mpl_backend.process_events.set()
                  
                 if w:
                     wi.current_view.warning = w[-1].message.__str__()

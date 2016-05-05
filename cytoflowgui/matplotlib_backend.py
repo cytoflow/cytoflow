@@ -69,6 +69,9 @@ this = sys.modules[__name__]
 this.parent_conn = None
 this.child_conn = None
 this.remote_canvas = None
+this.process_events = threading.Event()
+
+this.process_events.set()
 
 DEBUG = 0
 
@@ -352,19 +355,24 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
                 self.draw()
             elif msg == Msg.MOUSE_PRESS_EVENT:
                 (x, y, button) = payload
-                FigureCanvasAgg.button_press_event(self, x, y, button)
+                if this.process_events.is_set():
+                    FigureCanvasAgg.button_press_event(self, x, y, button)
             elif msg == Msg.MOUSE_DOUBLE_CLICK_EVENT:
                 (x, y, button) = payload
-                FigureCanvasAgg.button_press_event(self, x, y, button, dblclick = True)
+                if this.process_events.is_set():
+                    FigureCanvasAgg.button_press_event(self, x, y, button, dblclick = True)
             elif msg == Msg.MOUSE_RELEASE_EVENT:
                 (x, y, button) = payload
-                FigureCanvasAgg.button_release_event(self, x, y, button)
+                if this.process_events.is_set():
+                    FigureCanvasAgg.button_release_event(self, x, y, button)
             elif msg == Msg.MOUSE_MOVE_EVENT:
                 (x, y) = payload
-                FigureCanvasAgg.motion_notify_event(self, x, y)
+                if this.process_events.is_set():
+                    FigureCanvasAgg.motion_notify_event(self, x, y)
             elif msg == Msg.PRINT:
                 (args, kwargs) = payload
-                FigureCanvasAgg.print_figure(self, *args, **kwargs)
+                if this.process_events.is_set():
+                    FigureCanvasAgg.print_figure(self, *args, **kwargs)
             else:
                 raise RuntimeError("FigureCanvasAggRemote received bad message {}".format(msg))
             
