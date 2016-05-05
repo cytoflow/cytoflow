@@ -8,6 +8,7 @@ a = Analysis(['cytoflowgui/run.py'],
                     ('cytoflowgui/op_plugins/images', 'op_plugins/images'),
                     ('cytoflowgui/view_plugins/images', 'view_plugins/images')],
              hiddenimports = [
+             'pyinstaller.override_pyface_qt',
              'matplotlib.backends.backend_qt4agg',
              'matplotlib_backend',
              'sklearn.neighbors.ball_tree',
@@ -17,7 +18,8 @@ a = Analysis(['cytoflowgui/run.py'],
              ],
              hookspath=['pyinstaller'],
              runtime_hooks=['pyinstaller/rthook_pyqt4.py',
-                            'pyinstaller/rthook_qtapi.py'],
+                            'pyinstaller/rthook_qtapi.py',
+                            'pyinstaller/rthook_override_pyface_qt.py'], 
              excludes=['gi.repository.Gio', 'gi.repository.GModule',
                        'gi.repository.GObject', 'gi.repository.Gtk',
                        'gi.repository.Gdk', 'gi.repository.Atk',
@@ -59,14 +61,24 @@ pyz = PYZ(a.pure, a.zipped_data, cipher=None)
 
 exe = EXE(pyz,
           a.scripts,
-          a.binaries,
-          a.zipfiles,
-          a.datas,
+          #a.binaries,
+          #a.zipfiles,
+          #a.datas,
+          exclude_binaries=True,
           name='cytoflow',
           debug=False,
           strip=False,
-          upx=True,
+          upx=False,
           console=False)
+
+coll = COLLECT(exe,
+               a.binaries,
+               a.zipfiles,
+               a.datas,
+               strip=False,
+               upx=False,
+               name = 'cytoflow')
+
 
 
 if sys.platform == 'darwin':
