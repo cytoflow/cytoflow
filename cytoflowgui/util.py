@@ -22,7 +22,12 @@ Created on Apr 18, 2015
 '''
 
 from Queue import PriorityQueue
-import heapq
+import heapq, sys
+
+# http://stackoverflow.com/questions/1977362/how-to-create-module-wide-variables-in-python
+this = sys.modules[__name__]
+this.parent_log = None
+this.child_log = None
 
 class UniquePriorityQueue(PriorityQueue):
     """
@@ -45,3 +50,5 @@ class UniquePriorityQueue(PriorityQueue):
         item = PriorityQueue._get(self, heappop)
         self.values.remove(item[1])
         return item
+
+

@@ -26,10 +26,10 @@ Created on Feb 11, 2015
 
 import os.path
 
-from traits.api import Instance, List, Bool
+from traits.api import Instance, List, Bool, Str, HasStrictTraits
 from pyface.tasks.api import Task, TaskLayout, PaneItem
 from pyface.tasks.action.api import SMenu, SMenuBar, SToolBar, TaskAction
-from pyface.api import FileDialog, OK, ImageResource, AboutDialog
+from pyface.api import FileDialog, OK, ImageResource, AboutDialog, information
 from envisage.api import Plugin, ExtensionPoint, contributes_to
 from envisage.ui.tasks.api import TaskFactory
 
@@ -40,6 +40,8 @@ from cytoflowgui.workflow import LocalWorkflow
 from cytoflowgui.op_plugins import IOperationPlugin, ImportPlugin, OP_PLUGIN_EXT
 from cytoflowgui.view_plugins import IViewPlugin, VIEW_PLUGIN_EXT
 from cytoflowgui.notebook import JupyterNotebookWriter
+import cytoflowgui.util as guiutil
+import mailto
 
 import pickle as pickle
 
@@ -82,9 +84,10 @@ class FlowTask(Task):
                                          method='on_prefs',
                                          accelerator='Ctrl+P'),
                               id='File', name='&File'),
-                        SMenu(TaskAction(name='About...',
-                                         method='on_about',
-                                         accelerator="Ctrl+A"),
+                        SMenu(TaskAction(name = 'Report a problem....',
+                                         method = 'on_problem'),
+                                         TaskAction(name='About...',
+                                         method='on_about'),
                               id="Help", name ="&Help"))
     
     tool_bars = [ SToolBar(TaskAction(method='on_new',
@@ -231,35 +234,98 @@ class FlowTask(Task):
     def on_prefs(self):
         pass
     
-    def on_about(self):
+    def on_problem(self):
+        
+        information(None, "Your email client will now create a new message to the "
+                    "developer.  Debugging logs are attached.  Please fill "
+                    "out the template bug report and send -- thank you for "
+                    "reporting a bug!")
+        
+#         import tempfile
+        log = guiutil.parent_log.getvalue()
+        log += self.model.get_child_log()
+# 
+#         logfile = tempfile.NamedTemporaryFile(delete = False)
+#         logfile.write(parent_log)
+#         logfile.write(child_log)
+#         logfile.close()
+        
+        versions = ["{0} {1}".format(key, value) for key, value in self._get_package_versions().iteritems()]
+
+        body = """
+Thank you for your bug report!  Please fill out the following template.
+
+PLATFORM (Mac, PC, Linux, other):
+
+OPERATING SYSTEM (eg OSX 10.7, Windows 8.1):
+
+SEVERITY (Critical? Major? Minor? Enhancement?):
+
+DESCRIPTION:
+  - What were you trying to do?
+  - What happened?
+  - What did you expect to happen?
+  
+
+PACKAGE VERSIONS: {0}
+
+DEBUG LOG: {1}
+""".format(versions, log)
+
+        mailto.mailto("teague@mit.edu", 
+                      subject = "Cytoflow bug report",
+                      body = body)
+    
+    def _get_package_versions(self):
+    
+        import sys
         from cytoflow import __version__ as cf_version
         from fcsparser import __version__ as fcs_version
         from pandas import __version__ as pd_version
         from numpy import __version__ as np_version
-        from numexpr import __version__ as numexp_version
+        from numexpr import __version__ as nxp_version
+        from bottleneck import __version__ as btl_version
         from seaborn import __version__ as sns_version
         from matplotlib import __version__ as mpl_version
-        from pyface import __version__ as py_version
+        from scipy import __version__ as scipy_version
+        from sklearn import __version__ as skl_version
+        from pyface import __version__ as pyf_version
         from envisage import __version__ as env_version
         from traits import __version__ as trt_version
         from traitsui import __version__ as trt_ui_version
-
-        text = ["<b>Cytoflow {0}</b>".format(cf_version),
-                "<p>",
-                "fcsversion {0}".format(fcs_version),
-                "pandas {0}".format(pd_version),
-                "numpy {0}".format(np_version),
-                "numexpr {0}".format(numexp_version),
-                "seaborn {0}".format(sns_version),
-                "matplotlib {0}".format(mpl_version),
-                "pyface {0}".format(py_version),
-                "envisage {0}".format(env_version),
-                "traits {0}".format(trt_version),
-                "traitsui {0}".format(trt_ui_version),
-                "Icons from the <a href=http://tango.freedesktop.org>Tango Desktop Project</a>",
+        
+        return {"python" : sys.version,
+                "cytoflow" : cf_version,
+                "fcsparser" : fcs_version,
+                "pandas" : pd_version,
+                "numpy" : np_version,
+                "numexpr" : nxp_version,
+                "bottleneck" : btl_version,
+                "seaborn" : sns_version,
+                "matplotlib" : mpl_version,
+                "scipy" : scipy_version,
+                "scikit-learn" : skl_version,
+                "pyface" : pyf_version,
+                "envisage" : env_version,
+                "traits" : trt_version,
+                "traitsui" : trt_ui_version}
+        
+        
+    def on_about(self):
+        versions = self._get_package_versions()
+        text = ["<b>Cytoflow {0}</b>".format(versions['cytoflow']),
+                "<p>"]
+        
+        ver_text = ["{0} {1}".format(key, value) for key, value in versions.iteritems()]
+        
+        text.extend(ver_text)
+        
+        text.extend(["Icons from the <a href=http://tango.freedesktop.org>Tango Desktop Project</a>",
                 "<a href=https://thenounproject.com/search/?q=setup&i=14287>Settings icon</a> by Paulo Sa Ferreira from <a href=https://thenounproject.com>The Noun Project</a>",
-                "Cuvette image from Wikimedia Commons user <a href=http://commons.wikimedia.org/wiki/File:Hellma_Large_cone_cytometry_cell.JPG>HellmaUSA</a>"]
-        dialog = AboutDialog(parent = self.window.control,
+                "Cuvette image from Wikimedia Commons user <a href=http://commons.wikimedia.org/wiki/File:Hellma_Large_cone_cytometry_cell.JPG>HellmaUSA</a>"])
+        
+        dialog = AboutDialog(text = text,
+                             parent = self.window.control,
                              title = "About",
                              image = ImageResource('cuvette'),
                              additions = text)

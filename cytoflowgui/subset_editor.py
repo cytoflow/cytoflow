@@ -32,7 +32,7 @@ if __name__ == '__main__':
     os.environ['TRAITS_DEBUG'] = "1"
 
 from traits.api import Instance, HasStrictTraits, List, CFloat, Str, Dict, Interface, \
-                       Property, Bool, provides, on_trait_change, DelegatesTo, Any
+                       Property, Bool, provides, DelegatesTo, Any
 from traitsui.api import BasicEditorFactory, View, UI, \
                          CheckListEditor, Item, HGroup, ListEditor, InstanceEditor
 from traitsui.qt4.editor import Editor

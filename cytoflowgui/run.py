@@ -21,7 +21,7 @@ Created on Feb 11, 2015
 @author: brian
 """
 
-import logging, sys, multiprocessing
+import logging, sys, multiprocessing, StringIO
 
 from traits.etsconfig.api import ETSConfig
 ETSConfig.toolkit = 'qt4'
@@ -43,10 +43,16 @@ from view_plugins import HistogramPlugin, HexbinPlugin, ScatterplotPlugin, \
 
 import cytoflowgui.matplotlib_backend as mpl_backend
 import cytoflowgui.workflow as workflow
+
+import cytoflowgui.util as util
                          
 def run_gui():
     
     logging.basicConfig(level=logging.DEBUG)
+    util.parent_log = StringIO.StringIO()
+    log_handler = logging.StreamHandler(util.parent_log)
+    log_handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s:%(name)s:%(message)s"))
+    logging.getLogger().addHandler(log_handler)
     
     debug = ("--debug" in sys.argv)
 
@@ -63,6 +69,13 @@ def run_gui():
     logging.shutdown()
     
 def remote_main(workflow_parent_conn, mpl_parent_conn):
+    
+    logging.basicConfig(level=logging.DEBUG)
+    util.child_log = StringIO.StringIO()
+    log_handler = logging.StreamHandler(util.child_log)
+    log_handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s:%(name)s:%(message)s"))
+    logging.getLogger().addHandler(log_handler)
+    
     # connect the remote pipes
     workflow.parent_conn = workflow_parent_conn
     mpl_backend.parent_conn = mpl_parent_conn

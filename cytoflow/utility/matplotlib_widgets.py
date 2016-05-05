@@ -7,7 +7,6 @@ Created on Apr 27, 2016
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import time
-import logging
 from matplotlib.lines import Line2D
 from matplotlib.widgets import AxesWidget
 

@@ -160,8 +160,8 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
             self.send_event.clear()
             
             if self.move_x:
-                logging.debug('FigureCanvasQTAggLocal.send_to_remote: {}'
-                              .format((Msg.MOUSE_MOVE_EVENT, self.move_x, self.move_y)))
+#                 logging.debug('FigureCanvasQTAggLocal.send_to_remote: {}'
+#                               .format((Msg.MOUSE_MOVE_EVENT, self.move_x, self.move_y)))
                 msg = (Msg.MOUSE_MOVE_EVENT, (self.move_x, self.move_y))
                 this.child_conn.send(msg)
                 self.move_x = self.move_y = None
@@ -346,8 +346,9 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
             except EOFError:
                 return
             
-            logging.debug("FigureCanvasAggRemote.listen_for_remote :: {}"
-                          .format(msg, payload))
+            if msg != Msg.MOUSE_MOVE_EVENT:
+                logging.debug("FigureCanvasAggRemote.listen_for_remote :: {}"
+                              .format(msg, payload))
                             
             if msg == Msg.RESIZE_EVENT:
                 (winch, hinch) = payload

@@ -42,11 +42,11 @@ the plots are ferried back to the GUI, see the module docstring for
 matplotlib_backend.py
 """
 
-import threading, sys, warnings, logging, pickle, Queue
+import threading, sys, warnings, logging, Queue
 
 import matplotlib.pyplot as plt
 
-from traits.api import HasStrictTraits, Instance, List, Set, on_trait_change
+from traits.api import HasStrictTraits, Instance, List, Set, on_trait_change, Str
                        
 from traitsui.api import View, Item, InstanceEditor, Spring, Label
 
@@ -57,6 +57,7 @@ from cytoflow.views import IView
 from cytoflowgui.vertical_notebook_editor import VerticalNotebookEditor
 from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.util import UniquePriorityQueue
+import cytoflowgui.util as guiutil
 
 import cytoflowgui.matplotlib_backend as mpl_backend
 
@@ -78,6 +79,8 @@ class Msg:
     CHANGE_CURRENT_VIEW = "CHANGE_CURRENT_VIEW"
     UPDATE_WI = "UPDATE_WI"
     CHANGE_DEFAULT_SCALE = "CHANGE_DEFAULT_SCALE"
+    
+    GET_LOG = "GET_LOG"
 
                     
 class LocalWorkflow(HasStrictTraits):
@@ -114,6 +117,10 @@ class LocalWorkflow(HasStrictTraits):
     send_thread = Instance(threading.Thread)
     message_q = Instance(Queue.Queue, ())
     
+    # the child log
+    child_log = Str
+    child_log_cond = Instance(threading.Condition, ())
+    
     def __init__(self, **kwargs):
         super(LocalWorkflow, self).__init__(**kwargs)         
         self.recv_thread = threading.Thread(target = self.recv_main, 
@@ -136,7 +143,7 @@ class LocalWorkflow(HasStrictTraits):
             except EOFError:
                 return
             
-            logging.debug("LocalWorkflow.recv_main :: {}".format((msg, payload)))
+            logging.debug("LocalWorkflow.recv_main :: {}".format(msg))
             
             if msg == Msg.UPDATE_WI:
                 (idx, trait, new_value) = payload
@@ -155,6 +162,10 @@ class LocalWorkflow(HasStrictTraits):
                 
                 if view.trait_get(trait)[trait] != new_value:
                     view.trait_set(**{trait : new_value})
+            elif msg == Msg.GET_LOG:
+                with self.child_log_cond:
+                    self.child_log = payload
+                    self.child_log_cond.notify()
             else:
                 raise RuntimeError("Bad message from remote")
 
@@ -164,6 +175,15 @@ class LocalWorkflow(HasStrictTraits):
             msg = self.message_q.get()
             this.child_conn.send(msg)
             
+    def get_child_log(self):
+        self.message_q.put((Msg.GET_LOG,"none"))
+        with self.child_log_cond:
+            while not self.child_log:
+                self.child_log_cond.wait()
+            child_log = self.child_log
+            self.child_log = ""
+        return child_log
+         
                  
     def add_operation(self, operation):
         # add the new operation after the selected workflow item or at the end
@@ -414,6 +434,9 @@ class RemoteWorkflow(HasStrictTraits):
                 new_scale = payload
                 cytoflow.set_default_scale(new_scale)
                 
+            elif msg == Msg.GET_LOG:
+                self.message_q.put((Msg.GET_LOG, guiutil.child_log.getvalue()))
+
             else:
                 raise RuntimeError("Bad command in the remote workflow")
             
