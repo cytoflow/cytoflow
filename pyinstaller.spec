@@ -59,25 +59,38 @@ a.datas -= remove_items
 
 pyz = PYZ(a.pure, a.zipped_data, cipher=None)
 
+# one-file
 exe = EXE(pyz,
           a.scripts,
-          #a.binaries,
-          #a.zipfiles,
-          #a.datas,
-          exclude_binaries=True,
+          a.binaries,
+          a.zipfiles,
+          a.datas,
           name='cytoflow',
           debug=False,
           strip=False,
-          upx=False,
+          upx=True,
           console=False)
 
-coll = COLLECT(exe,
-               a.binaries,
-               a.zipfiles,
-               a.datas,
-               strip=False,
-               upx=False,
-               name = 'cytoflow')
+# one-dirctory
+# exe = EXE(pyz,
+#           a.scripts,
+#           #a.binaries,
+#           #a.zipfiles,
+#           #a.datas,
+#           exclude_binaries=True,
+#           name='cytoflow',
+#           debug=False,
+#           strip=False,
+#           upx=False,
+#           console=False)
+# 
+# coll = COLLECT(exe,
+#                a.binaries,
+#                a.zipfiles,
+#                a.datas,
+#                strip=False,
+#                upx=False,
+#                name = 'cytoflow')
 
 
 
