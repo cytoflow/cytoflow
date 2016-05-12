@@ -19,43 +19,44 @@ a = Analysis(['cytoflowgui/run.py'],
              hookspath=['pyinstaller'],
              runtime_hooks=['pyinstaller/rthook_pyqt4.py',
                             'pyinstaller/rthook_qtapi.py',
-                            'pyinstaller/rthook_override_pyface_qt.py'], 
-             excludes=['gi.repository.Gio', 'gi.repository.GModule',
-                       'gi.repository.GObject', 'gi.repository.Gtk',
-                       'gi.repository.Gdk', 'gi.repository.Atk',
-                       'gi.repository.cairo', 'gi.repository.GLib',
-                       'gobject', 'Tkinter', 'FixTk', 'PyQt5',
-                       'PySide', 'PySide.QtCore', 'PySide.QtGui',
-                       'PySide.QtNetwork', 'PySide.QtSvg',
-                       'pyface.wx', 'traitsui.wx', 'OpenGL',
-                       'OpenGL.GLUT', 'OpenGL.platform',
-                       'IPython', 'PyQt4.QtAssistant',
-                       'PyQt4.QtNetwork', 'PyQt4.QtWebKit',
-                       'PyQt4.QtSql', 'PyQt4.QtXml', 'PyQt4.QtTest', 
-                       'PyQt4.QtOpenGL', 'wx',
-                       'gtk', 'gi', 'sphinx', 'twisted', 'zope',
-                       'jinja2', 'httplib2', '_mysql',
-                       'sqlalchemy'],
+                            'pyinstaller/rthook_override_pyface_qt.py',
+                            'pyinstaller/rthook_seaborn.py'], 
+             #excludes=['gi.repository.Gio', 'gi.repository.GModule',
+             #          'gi.repository.GObject', 'gi.repository.Gtk',
+             #          'gi.repository.Gdk', 'gi.repository.Atk',
+             #          'gi.repository.cairo', 'gi.repository.GLib',
+             #          'gobject', 'Tkinter', 'FixTk', 'PyQt5',
+             #          'PySide', 'PySide.QtCore', 'PySide.QtGui',
+             #          'PySide.QtNetwork', 'PySide.QtSvg',
+             #          'pyface.wx', 'traitsui.wx', 'OpenGL',
+             #          'OpenGL.GLUT', 'OpenGL.platform',
+             #          'IPython', 'PyQt4.QtAssistant',
+             #          'PyQt4.QtNetwork', 'PyQt4.QtWebKit',
+             #          'PyQt4.QtSql', 'PyQt4.QtXml', 'PyQt4.QtTest', 
+             #          'PyQt4.QtOpenGL', 'wx',
+             #          'gtk', 'gi', 'sphinx', 'twisted', 'zope',
+             #          'jinja2', 'httplib2', '_mysql',
+             #          'sqlalchemy'],
              win_no_prefer_redirects=False,
              win_private_assemblies=False,
              cipher=None)
 
 # remove a few more egregiously unnecessary libraries and datas
 
-remove_strs = ["nvidia", "Qt3Support", "QtDeclarative", "QtNetwork",
-               "QtOpenGL", "QtScript", "Xml", "xml", "Sql", "sql", 
-               "glib", "gobject"]
-
-lol = [ [x for x in a.binaries if x[0].find(y) >= 0] for y in remove_strs]
-remove_items = [item for sublist in lol for item in sublist]
-a.binaries -= remove_items
-
-# for some reason, on a Mac, PyInstaller tries to include the entire
-# source directory, including docs, examples, and build files!
-remove_first = [ "cytoflow", "build", "dist", "doc", ".git"]
-lol = [ [x for x in a.datas if x[0].startswith(y)] for y in remove_first]
-remove_items = [item for sublist in lol for item in sublist]
-a.datas -= remove_items
+#remove_strs = ["nvidia", "Qt3Support", "QtDeclarative", "QtNetwork",
+#               "QtOpenGL", "QtScript", "Xml", "xml", "Sql", "sql", 
+#               "glib", "gobject"]
+#
+#lol = [ [x for x in a.binaries if x[0].find(y) >= 0] for y in remove_strs]
+#remove_items = [item for sublist in lol for item in sublist]
+#a.binaries -= remove_items
+#
+## for some reason, on a Mac, PyInstaller tries to include the entire
+## source directory, including docs, examples, and build files!
+#remove_first = [ "cytoflow", "build", "dist", "doc", ".git"]
+#lol = [ [x for x in a.datas if x[0].startswith(y)] for y in remove_first]
+#remove_items = [item for sublist in lol for item in sublist]
+#a.datas -= remove_items
 
 pyz = PYZ(a.pure, a.zipped_data, cipher=None)
 
@@ -74,9 +75,6 @@ exe = EXE(pyz,
 # one-dirctory
 # exe = EXE(pyz,
 #           a.scripts,
-#           #a.binaries,
-#           #a.zipfiles,
-#           #a.datas,
 #           exclude_binaries=True,
 #           name='cytoflow',
 #           debug=False,
