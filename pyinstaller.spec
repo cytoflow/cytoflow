@@ -70,7 +70,8 @@ exe = EXE(pyz,
           debug=False,
           strip=False,
           upx=True,
-          console=False)
+          console=False,
+          icon='cytoflowgui/images/icon.ico')
 
 # one-dirctory
 # exe = EXE(pyz,
