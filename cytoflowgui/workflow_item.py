@@ -156,11 +156,11 @@ class WorkflowItem(HasStrictTraits):
     @cached_property
     def _get_icon(self):
         if self.status == "valid":
-            return QtGui.QStyle.SP_DialogOkButton
+            return QtGui.QStyle.SP_DialogApplyButton
         elif self.status == "estimating" or self.status == "applying":
             return QtGui.QStyle.SP_BrowserReload
         else: # self.valid == "invalid" or None
-            return QtGui.QStyle.SP_BrowserStop
+            return QtGui.QStyle.SP_DialogCancelButton
 
     @cached_property
     def _get_operation_handler(self):
