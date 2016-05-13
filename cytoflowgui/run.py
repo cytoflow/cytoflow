@@ -33,6 +33,7 @@ matplotlib.use('module://cytoflowgui.matplotlib_backend')
 
 from envisage.core_plugin import CorePlugin
 from envisage.ui.tasks.tasks_plugin import TasksPlugin
+from pyface.image_resource import ImageResource
 
 from flow_task import FlowTaskPlugin
 from cytoflow_application import CytoflowApplication
@@ -98,7 +99,8 @@ def run_gui():
                Stats1DPlugin(), BinningPlugin()]
     
     app = CytoflowApplication(id = 'edu.mit.synbio.cytoflow',
-                              plugins = plugins)
+                              plugins = plugins,
+                              icon = ImageResource('icon'))
     app.run()
     
     logging.shutdown()

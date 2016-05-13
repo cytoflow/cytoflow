@@ -322,6 +322,7 @@ DEBUG LOG: {1}
         
         text.extend(["Icons from the <a href=http://tango.freedesktop.org>Tango Desktop Project</a>",
                 "<a href=https://thenounproject.com/search/?q=setup&i=14287>Settings icon</a> by Paulo Sa Ferreira from <a href=https://thenounproject.com>The Noun Project</a>",
+                "<a href=http://www.freepik.com/free-photos-vectors/background>App icon from Starline - Freepik.com</a>",
                 "Cuvette image from Wikimedia Commons user <a href=http://commons.wikimedia.org/wiki/File:Hellma_Large_cone_cytometry_cell.JPG>HellmaUSA</a>"])
         
         dialog = AboutDialog(text = text,
