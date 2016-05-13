@@ -89,6 +89,11 @@ def run_gui():
     log_handler = logging.StreamHandler(util.parent_log)
     log_handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s:%(name)s:%(message)s"))
     logging.getLogger().addHandler(log_handler)
+
+    # if we're frozen, add _MEIPASS to the pyface search path for icons etc
+    if getattr(sys, 'frozen', False):
+        from pyface.resource_manager import resource_manager
+        resource_manager.extra_paths.append(sys._MEIPASS)
     
     debug = ("--debug" in sys.argv)
 

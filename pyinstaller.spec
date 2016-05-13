@@ -95,6 +95,6 @@ exe = EXE(pyz,
 if sys.platform == 'darwin':
    app = BUNDLE(exe,
                 name = "Cytoflow.app",
-                icon = None)
+                icon = "cytoflowgui/images/icon.icns")
 
 
