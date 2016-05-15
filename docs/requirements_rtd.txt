@@ -11,3 +11,4 @@ seaborn
 traits
 nbformat
 python-dateutil
+statsmodels
