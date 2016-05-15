@@ -25,14 +25,13 @@ from __future__ import division, absolute_import
 
 import warnings
 
-from traits.api import HasStrictTraits, provides, Str
+from traits.api import HasStrictTraits, provides, Str, Bool
 
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
-#import matplotlib.transforms as mtrans
 from matplotlib.colors import Colormap
-import matplotlib.cbook as cbook
+from scipy.interpolate import griddata
 
 import cytoflow.utility as util
 from .i_view import IView
@@ -67,7 +66,9 @@ class Histogram2DView(HasStrictTraits):
         A string passed to pandas.DataFrame.query() to subset the data before
         we plot it.
         
-        .. note: should this be a param instead?
+    smoothed = Bool(False)
+        Smooth the histogram with a cubic spline
+
     """
     
     id = 'edu.mit.synbio.cytoflow.view.histogram2d'
@@ -138,8 +139,8 @@ class Histogram2DView(HasStrictTraits):
         scaled_ydata = scaled_ydata[~np.isnan(scaled_ydata)]
         
         # find good bin counts
-        num_xbins = util.num_hist_bins(scaled_xdata)
-        num_ybins = util.num_hist_bins(scaled_ydata)
+        num_xbins = util.num_hist_bins(scaled_xdata) / 2
+        num_ybins = util.num_hist_bins(scaled_ydata) / 2
         
         _, xedges, yedges = np.histogram2d(scaled_xdata, 
                                            scaled_ydata, 
@@ -147,7 +148,8 @@ class Histogram2DView(HasStrictTraits):
 
         kwargs['xedges'] = xscale.inverse(xedges)
         kwargs['yedges'] = yscale.inverse(yedges)
-
+        
+        kwargs.setdefault('smoothed', False)
         kwargs.setdefault('antialiased', True)
 
         g = sns.FacetGrid(data,
@@ -169,7 +171,7 @@ class Histogram2DView(HasStrictTraits):
         g.map(_hist2d, self.xchannel, self.ychannel, **kwargs)
         
 
-def _hist2d(x, y, xedges = None, yedges = None, xscale = None, yscale = None, **kwargs):
+def _hist2d(x, y, xedges = None, yedges = None, xscale = None, yscale = None, smoothed = False, **kwargs):
 
     ax = plt.gca()
     
@@ -178,13 +180,22 @@ def _hist2d(x, y, xedges = None, yedges = None, xscale = None, yscale = None, **
     h, _, _ = np.histogram2d(x, y, 
                              bins = (xscale(xedges), 
                                      yscale(yedges)))
+    X, Y = np.meshgrid(xedges[1:], yedges[1:])
+    
+    if smoothed:
+        grid_x, grid_y = np.mgrid[xscale(xedges[0]):xscale(xedges[-1]):100j, 
+                                  yscale(yedges[0]):yscale(yedges[-1]):100j]
+        
+        loc = [(x, y) for x in xscale(xedges[1:]) for y in yscale(yedges[1:])]
+         
+        h = griddata(loc, h.flatten(), (grid_x, grid_y), method = "cubic", fill_value = 0)
+         
+        X, Y = xscale.inverse(grid_x), yscale.inverse(grid_y)
+    else:
+        h = h.T
 
-    X, Y = np.meshgrid(xedges, yedges)
-    
-    color = kwargs.pop("color")
-    print kwargs
-    
-    ax.pcolormesh(X, Y, h.transpose(), cmap = AlphaColormap("AlphaColor", color), **kwargs)
+    color = kwargs.pop("color")   
+    ax.pcolormesh(X, Y, h, cmap = AlphaColormap("AlphaColor", color), **kwargs)
         
     return ax
 
