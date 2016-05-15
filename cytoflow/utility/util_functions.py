@@ -162,3 +162,4 @@ def sanitize_identifier(name):
             new_name[i] = '_'
 
     return  "".join(new_name)
+

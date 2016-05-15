@@ -171,7 +171,7 @@ def _bivariate_kdeplot(x, y, xscale=None, yscale=None, shade=False, kernel="gau"
     
     # Determine the clipping
     clip = [(-np.inf, np.inf), (-np.inf, np.inf)]
-        
+         
     x = xscale(x)
     y = yscale(y)
 
@@ -190,7 +190,6 @@ def _bivariate_kdeplot(x, y, xscale=None, yscale=None, shade=False, kernel="gau"
     xx, yy = np.meshgrid(x_support, y_support)
     z = kde.pdf([xx.ravel(), yy.ravel()]).reshape(xx.shape)
 
-    # Plot the contours
     n_levels = kwargs.pop("n_levels", 10)
     color = kwargs.pop("color")
     kwargs['colors'] = (color, )
@@ -227,6 +226,7 @@ def _kde_support(data, bw, gridsize, cut, clip):
     support_max = min(data.max() + bw * cut, clip[1])
     return np.linspace(support_min, support_max, gridsize)
 
+
 if __name__ == '__main__':
     import cytoflow as flow
     tube1 = flow.Tube(file = '../../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs',
@@ -256,20 +256,3 @@ if __name__ == '__main__':
     scatter.plot(ex2)
     plt.show()
     
-
-# modified from http://stackoverflow.com/questions/16834861/create-own-colormap-using-matplotlib-and-plot-color-scale
-def _make_colormap(seq):
-    """Return a LinearSegmentedColormap
-    seq: a sequence of floats and RGB-tuples. The floats should be increasing
-    and in the interval (0,1).
-    """
-    seq = [(None,) * 3, 0.0] + list(seq) + [1.0, (None,) * 3]
-    cdict = {'red': [], 'green': [], 'blue': []}
-    for i, item in enumerate(seq):
-        if isinstance(item, float):
-            r1, g1, b1 = seq[i - 1]
-            r2, g2, b2 = seq[i + 1]
-            cdict['red'].append([item, r1, r2])
-            cdict['green'].append([item, g1, g2])
-            cdict['blue'].append([item, b1, b2])
-    return mcolors.LinearSegmentedColormap('CustomMap', cdict)

@@ -58,6 +58,8 @@ from .views.bar_chart import BarChartView
 from .views.kde_1d import Kde1DView
 from .views.kde_2d import Kde2DView
 
+from .views.histogram_2d import Histogram2DView
+
 # util
 from cytoflow.utility.util_functions import geom_mean
 from cytoflow.utility.scale import set_default_scale
