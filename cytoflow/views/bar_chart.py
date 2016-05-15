@@ -133,7 +133,7 @@ class BarChartView(HasStrictTraits):
                                     .format(self.channel))
         
         if not self.by:
-            raise util.CytoflowViewError("Variable not specified")
+            raise util.CytoflowViewError("by variable not specified")
         
         if not self.by in experiment.conditions:
             raise util.CytoflowViewError("Variable {0} isn't in the experiment")
