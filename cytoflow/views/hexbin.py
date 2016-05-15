@@ -123,6 +123,20 @@ class HexbinView(HasStrictTraits):
                                         .format(self.subset))
         else:
             data = experiment.data
+            
+        xscale = util.scale_factory(self.xscale, experiment, self.xchannel)
+        yscale = util.scale_factory(self.yscale, experiment, self.ychannel)
+        
+        scaled_xdata = xscale(data[self.xchannel])
+        data = data[~np.isnan(scaled_xdata)]
+        scaled_xdata = scaled_xdata[~np.isnan(scaled_xdata)]
+
+        scaled_ydata = yscale(data[self.ychannel])
+        data = data[~np.isnan(scaled_ydata)]
+        scaled_ydata = scaled_ydata[~np.isnan(scaled_ydata)]
+
+        kwargs['xscale'] = self.xscale
+        kwargs['yscale'] = self.yscale
         
         #kwargs.setdefault('histtype', 'stepfilled')
         #kwargs.setdefault('alpha', 0.5)
@@ -131,20 +145,18 @@ class HexbinView(HasStrictTraits):
         #kwargs.setdefault('bins', 'log')
         kwargs.setdefault('antialiased', True)
             
-        xmin, xmax = (np.amin(data[self.xchannel]), np.amax(data[self.xchannel]))
-        ymin, ymax = (np.amin(data[self.ychannel]), np.amax(data[self.ychannel]))
-        # to avoid issues with singular data, expand the min/max pairs
-        xmin, xmax = mtrans.nonsingular(xmin, xmax, expander=0.1)
-        ymin, ymax = mtrans.nonsingular(ymin, ymax, expander=0.1)
-        
-        extent = (xmin, xmax, ymin, ymax)
-        kwargs.setdefault('extent', extent)
-        
-        xbins = util.num_hist_bins(experiment[self.xchannel])
-        ybins = util.num_hist_bins(experiment[self.ychannel])
-        bins = np.mean([xbins, ybins])
-        
-        kwargs.setdefault('bins', bins) # Do not move above.  don't ask.
+#         xmin, xmax = (np.amin(data[self.xchannel]), np.amax(data[self.xchannel]))
+#         ymin, ymax = (np.amin(data[self.ychannel]), np.amax(data[self.ychannel]))
+#         # to avoid issues with singular data, expand the min/max pairs
+#         xmin, xmax = mtrans.nonsingular(xmin, xmax, expander=0.1)
+#         ymin, ymax = mtrans.nonsingular(ymin, ymax, expander=0.1)
+#          
+#         extent = (xmin, xmax, ymin, ymax)
+#         kwargs.setdefault('extent', extent)
+# #         
+#         xbins = util.num_hist_bins(scaled_xdata)
+#         ybins = util.num_hist_bins(scaled_ydata)
+#         kwargs.setdefault('bins', (xbins, ybins)) # Do not move above.  don't ask.
 
         g = sns.FacetGrid(data,
                           size = 6,
@@ -161,32 +173,11 @@ class HexbinView(HasStrictTraits):
         if(self.xscale != "linear" or self.yscale != "linear"):
             warnings.warn("hexbin is broken with scales other than \"linear\"",
                           util.CytoflowViewWarning)
-
-        xscale = util.scale_factory(self.xscale, experiment, self.xchannel)
-        yscale = util.scale_factory(self.yscale, experiment, self.ychannel)
-        
+         
         for ax in g.axes.flatten():
             ax.set_xscale(self.xscale, **xscale.mpl_params)
             ax.set_yscale(self.yscale, **yscale.mpl_params)
         
         g.map(plt.hexbin, self.xchannel, self.ychannel, **kwargs)
         
-if __name__ == '__main__':
-    import cytoflow as flow
-    tube1 = flow.Tube(file = '../../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs',
-                      conditions = {"Dox" : 10.0})
-    
-    tube2 = flow.Tube(file = '../../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs',
-                      conditions = {"Dox" : 1.0})                      
 
-    ex = flow.ImportOp(conditions = {"Dox" : "float"}, tubes = [tube1, tube2])
-    
-    hexbin = flow.HexbinView()
-    hexbin.name = "Hex"
-    hexbin.xchannel = "FSC-A"
-    hexbin.ychannel = "SSC-A"
-    hexbin.huefacet = 'Dox'
-
-    plt.ioff()
-    hexbin.plot(ex)
-    plt.show()
