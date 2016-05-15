@@ -138,10 +138,16 @@ class Histogram2DView(HasStrictTraits):
         data = data[~np.isnan(scaled_ydata)]
         scaled_ydata = scaled_ydata[~np.isnan(scaled_ydata)]
         
+
         # find good bin counts
-        num_xbins = util.num_hist_bins(scaled_xdata) / 2
-        num_ybins = util.num_hist_bins(scaled_ydata) / 2
+        num_xbins = util.num_hist_bins(scaled_xdata)
+        num_ybins = util.num_hist_bins(scaled_ydata)
         
+        kwargs.setdefault('smoothed', False)
+        if kwargs['smoothed']:
+            num_xbins /= 2
+            num_ybins /= 2
+                
         _, xedges, yedges = np.histogram2d(scaled_xdata, 
                                            scaled_ydata, 
                                            bins = (num_xbins, num_ybins))
@@ -149,7 +155,6 @@ class Histogram2DView(HasStrictTraits):
         kwargs['xedges'] = xscale.inverse(xedges)
         kwargs['yedges'] = yscale.inverse(yedges)
         
-        kwargs.setdefault('smoothed', False)
         kwargs.setdefault('antialiased', True)
 
         g = sns.FacetGrid(data,
@@ -188,7 +193,7 @@ def _hist2d(x, y, xedges = None, yedges = None, xscale = None, yscale = None, sm
         
         loc = [(x, y) for x in xscale(xedges[1:]) for y in yscale(yedges[1:])]
          
-        h = griddata(loc, h.flatten(), (grid_x, grid_y), method = "cubic", fill_value = 0)
+        h = griddata(loc, h.flatten(), (grid_x, grid_y), method = "linear", fill_value = 0)
          
         X, Y = xscale.inverse(grid_x), yscale.inverse(grid_y)
     else:
