@@ -38,3 +38,5 @@ from .histogram import HistogramView
 from .scatterplot import ScatterplotView
 from .stats_1d import Stats1DView
 from .stats_2d import Stats2DView
+from .kde_1d import Kde1DView
+from .kde_2d import Kde2DView
