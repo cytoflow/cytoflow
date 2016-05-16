@@ -17,6 +17,8 @@
 
 from __future__ import division, absolute_import
 
+import logging
+
 from traits.api import HasStrictTraits, Str, provides
 
 import numpy as np
@@ -123,7 +125,7 @@ class ViolinPlotView(HasStrictTraits):
         else:
             data = experiment.data.copy()
                     
-        # get the scale.  this time we actually scale the data here; we'll deal with axes later.
+        # get the scale
         scale = util.scale_factory(self.scale, experiment, self.channel)
         kwargs['data_scale'] = scale
         
@@ -147,7 +149,7 @@ class ViolinPlotView(HasStrictTraits):
             else:
                 ax.set_yscale(self.scale, **scale.mpl_params)  
             
-        # this order-dependent thing wierds me out.      
+        # this order-dependent thing weirds me out.      
         if kwargs['orient'] == 'h':
             violin_args = [self.channel, self.by]
         else:
@@ -185,7 +187,13 @@ def _violinplot(x=None, y=None, hue=None, data=None, order=None, hue_order=None,
                              color, palette, saturation)
 
     for i in range(len(plotter.support)):
-        plotter.support[i] = data_scale.inverse(plotter.support[i])
+        if plotter.hue_names is None:       
+            if plotter.support[i].shape[0] > 0:
+                plotter.support[i] = data_scale.inverse(plotter.support[i])
+        else:
+            for j in range(len(plotter.support[i])):
+                if plotter.support[i][j].shape[0] > 0:
+                    plotter.support[i][j] = data_scale.inverse(plotter.support[i][j])
 
     for i in range(len(plotter.plot_data)):
         plotter.plot_data[i] = data_scale.inverse(plotter.plot_data[i])

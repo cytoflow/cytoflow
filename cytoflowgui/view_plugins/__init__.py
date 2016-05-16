@@ -17,7 +17,10 @@
 
 from i_view_plugin import IViewPlugin, PluginViewMixin, VIEW_PLUGIN_EXT
 from histogram import HistogramPlugin
-from hexbin import HexbinPlugin
+from histogram_2d import Histogram2DPlugin
 from scatterplot import ScatterplotPlugin
 from bar_chart import BarChartPlugin
 from stats_1d import Stats1DPlugin
+from kde_1d import Kde1DPlugin
+from kde_2d import Kde2DPlugin
+from violin import ViolinPlotPlugin

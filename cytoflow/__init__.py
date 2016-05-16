@@ -49,7 +49,6 @@ from .operations.bleedthrough_linear import BleedthroughLinearOp
 
 # views
 from .views.histogram import HistogramView
-from .views.hexbin import HexbinView
 from .views.scatterplot import ScatterplotView
 from .views.stats_1d import Stats1DView
 from .views.stats_2d import Stats2DView
@@ -59,7 +58,6 @@ from .views.kde_1d import Kde1DView
 from .views.kde_2d import Kde2DView
 
 from .views.histogram_2d import Histogram2DView
-
 from .views.violin import ViolinPlotView
 
 # util

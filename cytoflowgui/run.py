@@ -39,8 +39,9 @@ from flow_task import FlowTaskPlugin
 from cytoflow_application import CytoflowApplication
 from op_plugins import ImportPlugin, ThresholdPlugin, RangePlugin, \
                        Range2DPlugin, PolygonPlugin, BinningPlugin
-from view_plugins import HistogramPlugin, HexbinPlugin, ScatterplotPlugin, \
-                         BarChartPlugin, Stats1DPlugin
+from view_plugins import HistogramPlugin, Histogram2DPlugin, ScatterplotPlugin, \
+                         BarChartPlugin, Stats1DPlugin, Kde1DPlugin, Kde2DPlugin, \
+                         ViolinPlotPlugin
 
 import cytoflowgui.matplotlib_backend as mpl_backend
 import cytoflowgui.workflow as workflow
@@ -99,9 +100,10 @@ def run_gui():
 
     plugins = [CorePlugin(), TasksPlugin(), FlowTaskPlugin(debug = debug),
                ImportPlugin(), ThresholdPlugin(), HistogramPlugin(),
-               HexbinPlugin(), ScatterplotPlugin(), RangePlugin(),
+               Histogram2DPlugin(), ScatterplotPlugin(), RangePlugin(),
                Range2DPlugin(), PolygonPlugin(), BarChartPlugin(), 
-               Stats1DPlugin(), BinningPlugin()]
+               Stats1DPlugin(), BinningPlugin(), Kde1DPlugin(), Kde2DPlugin(),
+               ViolinPlotPlugin()]
     
     app = CytoflowApplication(id = 'edu.mit.synbio.cytoflow',
                               plugins = plugins,

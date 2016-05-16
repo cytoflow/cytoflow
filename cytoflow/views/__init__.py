@@ -33,7 +33,6 @@ from .i_view import IView
 from .i_selectionview import ISelectionView
 
 from .bar_chart import BarChartView
-from .hexbin import HexbinView
 from .histogram import HistogramView
 from .scatterplot import ScatterplotView
 from .stats_1d import Stats1DView
