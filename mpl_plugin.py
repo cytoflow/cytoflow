@@ -21,17 +21,16 @@ Created on Dec 2, 2015
 @author: brian
 '''
 
-from nose.plugins import Plugin
+from nose2.events import Plugin
 import logging
 
-log = logging.getLogger('nose.plugins.mplplugin')
+log = logging.getLogger('nose2.plugins.mplplugin')
 
 class MplPlugin(Plugin):
-    name = 'mplplugin'
-    enabled = True
-    def configure(self, options, conf):
-        pass # always on
-    def begin(self):
+    configSection = "mplplugin"
+    commandLineSwitch = (None, 'mplplugin', 'Use agg backend')
+
+    def pluginsLoaded(self, event):
         log.info ('Loading the matplotlib Agg backend')
         import matplotlib
         matplotlib.use("Agg")

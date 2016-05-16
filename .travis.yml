@@ -27,12 +27,12 @@ before_install:
   - conda update --yes conda
 
 install:
-  - conda install --yes python=$TRAVIS_PYTHON_VERSION numpy numexpr scipy matplotlib nose dateutil pandas statsmodels scikit-learn seaborn pyface envisage
+  - conda install --yes python=$TRAVIS_PYTHON_VERSION numpy numexpr scipy nose2 matplotlib dateutil pandas statsmodels scikit-learn seaborn pyface envisage
   - python setup.py develop
   - pip install pyinstaller
   - pyinstaller pyinstaller.spec
 
-script: python setup.py nosetests
+script: nose2
 
 deploy:
   provider: pypi
