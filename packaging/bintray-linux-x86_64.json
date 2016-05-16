@@ -2,18 +2,18 @@
     "package": {
         "name": "cytoflow-linux.x86_64",
         "repo": "cytoflow",
-        "subject": "bpteague",
+        "subject": "bpteague"
     },
 
     "version": {
         "name": "0.2.1",
         "desc": "Version 0.2.1",
-        "released": "2016-04-16",
+        "released": "2016-04-16"
     },
 
     "files":
         [
-        {"includePattern": "dist/cytoflow"},
+        {"includePattern": "dist/cytoflow"}
         ],
     "publish": true
 }
