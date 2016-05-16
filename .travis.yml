@@ -1,4 +1,8 @@
-language: python
+language: generic
+
+os:
+  - linux
+  - osx
 
 sudo: false
 
@@ -19,12 +23,19 @@ python:
 before_install:
   - pip install --quiet --upgrade pip
 
-  # setup platform-specific swig, conda
-  - ./packaging/travis-install-platform.sh
+  # setup anaconda 
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update          ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install swig; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then wget http://repo.continuum.io/miniconda/Miniconda-3.5.2-MacOSX-x86_64.sh -O miniconda.sh; else wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh; fi
+
+  - chmod +x miniconda.sh
+  - ./miniconda.sh -b
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export PATH=/home/travis/miniconda/bin:$PATH; else export PATH=/home/travis/miniconda2/bin; fi
+  - conda update --yes conda
 
 install:
-  - conda install --yes python=$TRAVIS_PYTHON_VERSION pandas bottleneck numpy numexpr matplotlib scipy scikit-learn seaborn pyface envisage dateutil statsmodels
-  - python setup.py develop
+  - conda install --yes python=$TRAVIS_PYTHON_VERSION pandas bottleneck numpy numexpr matplotlib dateutil scipy scikit-learn seaborn pyface envisage statsmodels
+  - python setup.py develop bdist_wheel
   - pip install pyinstaller nose2
   - pyinstaller packaging/pyinstaller.spec
 
@@ -47,6 +58,7 @@ deploy:
     key:
       secure: "ign6ESQuyEYnp1LJ0i/S+h2ZXtEP5P89EbmW7nRmFK1vvBAgD72sVI2y6tji+sErEErIke/ERZHRtLh4q8LvZT4J7LhJradRGYXa6Y1S56wb/bn2xRS1lKXJz3HUD+WxqYD3ZZ+q7AEcD51TkDv6Bmo5hXlkyHEzATBRwZl7kC2GPIatCva+KWd1YB1kUBPvrhCvgn1fCE0Xzcdzf5EKu7/uN2KkKLghUJKhOsXkWyREvfSlsMDSn/NWDp2KBIh1sv9JzRXmZhFAAaiVT74LfSPTwJKEAIV1RgAmSbEX60iS/5gCs2ntwoG8D6q5va+gSXwGjpk97kf9qhsocbf8w0L6vEq1Iw5CJwxY9P3gISGPmOGN6l3geksnpQgewNXMgIeZ0HvtxFJWc4HpiEZZZc0ZpVrGJY+WZZ5Bi3njNIbnW8A8g5+llJf+g2U7xnsqEs/oqzAKhbCnZvpXUH3TQjs58FmDegGCOI1hhZtxu4Vf0fE1yOu9nDW1nqxke7a8et3wLPGLXODR/zP+jz2opJe/UY87EstSSR6e7JMnGmgKbkImGrkvY0s4ul2ITeGTWoaZVKrWW7CKXS/MexVjDpKBdwUHhKeYcEszMOhyK1t3K75WTla3YIQW6Xmf5Nhxte6qCq1SDaamic6hjW9vCRSrlhcAqMuauja0MiKNxKc="
     dry-run: true
+    skip_cleanup: true
     on:
       all_branches: true
 
