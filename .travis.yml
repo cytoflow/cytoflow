@@ -29,7 +29,7 @@ before_install:
 
   - chmod +x miniconda.sh
   - ./miniconda.sh -b
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export PATH=/home/travis/miniconda/bin:$PATH; else export PATH=/home/travis/miniconda2/bin:$PATH; fi
+  - export PATH=/Users/travis/miniconda/bin:/home/travis/miniconda2/bin:$PATH
   - conda update --yes conda
 
 install:
