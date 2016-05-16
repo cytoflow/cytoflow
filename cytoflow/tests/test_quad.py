@@ -55,10 +55,10 @@ class Test(unittest.TestCase):
         ex2 = self.gate.apply(self.ex)
         
         # how many events ended up in the gate?
-        self.assertEqual(ex2.data.groupby("Quad").size().loc["Quad_1"][0], 6125)
-        self.assertEqual(ex2.data.groupby("Quad").size().loc["Quad_2"][0], 154)
-        self.assertEqual(ex2.data.groupby("Quad").size().loc["Quad_3"][0], 778)
-        self.assertEqual(ex2.data.groupby("Quad").size().loc["Quad_4"][0], 12943)
+        self.assertEqual(ex2.data.groupby("Quad").size().loc["Quad_1"], 6125)
+        self.assertEqual(ex2.data.groupby("Quad").size().loc["Quad_2"], 154)
+        self.assertEqual(ex2.data.groupby("Quad").size().loc["Quad_3"], 778)
+        self.assertEqual(ex2.data.groupby("Quad").size().loc["Quad_4"], 12943)
         
     def testPlot(self):
         self.gate.default_view().plot(self.ex)

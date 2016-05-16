@@ -71,9 +71,9 @@ class Test(unittest.TestCase):
         self.gate.estimate(self.ex)
         ex2 = self.gate.apply(self.ex) 
                  
-        self.assertEqual(ex2.data.groupby("Gauss").size().loc["Gauss_1"][0], 6153)
-        self.assertEqual(ex2.data.groupby("Gauss").size().loc["Gauss_2"][0], 2395)
-        self.assertEqual(ex2.data.groupby("Gauss").size().loc["Gauss_None"][0], 11452)
+        self.assertEqual(ex2.data.groupby("Gauss").size().loc["Gauss_1"], 6153)
+        self.assertEqual(ex2.data.groupby("Gauss").size().loc["Gauss_2"], 2395)
+        self.assertEqual(ex2.data.groupby("Gauss").size().loc["Gauss_None"], 11452)
         
     def testApplyBy(self):
         self.gate.by = ["Dox"]
