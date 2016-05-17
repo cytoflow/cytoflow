@@ -35,7 +35,7 @@ before_install:
 install:
   - conda install --yes setuptools pip six cython pyqt pandas bottleneck numpy numexpr matplotlib dateutil scipy scikit-learn seaborn pyface envisage statsmodels
   - python setup.py develop bdist_wheel
-  - pip install pyinstaller==3.1.1 nose2
+  - pip install pyinstaller nose2
   - pyinstaller packaging/pyinstaller.spec
 
 script: nose2 -c packaging/nose2.cfg
