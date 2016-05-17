@@ -1,6 +1,5 @@
 import PyInstaller
 from PyInstaller.utils.hooks import logger
-from os import listdir
 
 # TODO - this fixes a bug in PyInstaller (see Github bug #1514 and 
 # PR #1965.)  When the fix is applied upstream, remove this monkey
@@ -14,6 +13,11 @@ def getImports_macholib(pth):
     from PyInstaller.lib.macholib.MachO import MachO
     from PyInstaller.lib.macholib.mach_o import LC_RPATH
     from PyInstaller.lib.macholib.dyld import dyld_find
+    import os
+    import re
+    import logging
+    logger = logging.getLogger(__name__)
+
     rslt = set()
     seen = set()  # Libraries read from binary headers.
 
@@ -42,13 +46,15 @@ def getImports_macholib(pth):
             #    '../lib\x00\x00')
             cmd_type = command[0].cmd
             if cmd_type == LC_RPATH:
-                rpath = str(command[2])
+                rpath = command[2].decode('utf-8')
                 # Remove trailing '\x00' characters.
                 # e.g. '../lib\x00\x00'
                 rpath = rpath.rstrip('\x00')
+                # Replace the @executable_path and @loader_path keywords
+                # with the actual path to the binary.
                 executable_path = os.path.dirname(pth)
-                rpath = rpath.replace('@executable_path', executable_path)
-                rpath = rpath.replace('@loader_path', executable_path)
+                rpath = re.sub('^@(executable_path|loader_path|rpath)/',
+                               executable_path + '/', rpath)
                 # Make rpath absolute. According to Apple doc LC_RPATH
                 # is always relative to the binary location.
                 rpath = os.path.normpath(os.path.join(executable_path, rpath))
@@ -105,7 +111,6 @@ def getImports_macholib(pth):
                 logger.error('Can not find path %s (needed by %s)', lib, pth)
 
     return rslt
-
 
 if PyInstaller.compat.is_darwin:
    logger.info("Monkey-patching bindep._getImports_macholib")
