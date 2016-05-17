@@ -29,13 +29,13 @@ before_install:
 
   - chmod +x miniconda.sh
   - ./miniconda.sh -b
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export PATH=/home/travis/miniconda/bin:$PATH; else export PATH=/home/travis/miniconda2/bin:$PATH; fi
+  - export PATH=/Users/travis/miniconda/bin:/home/travis/miniconda2/bin:$PATH
   - conda update --yes conda
 
 install:
   - conda install --yes setuptools pip six cython pyqt pandas bottleneck numpy numexpr matplotlib dateutil scipy scikit-learn seaborn pyface envisage statsmodels
   - python setup.py develop bdist_wheel
-  - pip install pyinstaller nose2
+  - pip install pyinstaller==3.1.1 nose2
   - pyinstaller packaging/pyinstaller.spec
 
 script: nose2 -c packaging/nose2.cfg
