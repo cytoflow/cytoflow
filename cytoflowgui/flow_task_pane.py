@@ -40,17 +40,21 @@ class FlowTaskPane(TaskPane):
     editor = Instance(MPLFigureEditor)
     
     def create(self, parent):
-        self.editor = MPLFigureEditor(parent)
-        self.control = self.editor.control
+        self.ui = self.model.edit_traits(view = 'plot_view',
+                                         kind = 'subpanel',
+                                         parent = parent)
+        self.control = self.ui.control
 
     def destroy(self):
-        self.editor.destroy()
-        self.control = self.editor = None 
+        if self.ui:
+            self.ui.dispose()
+            
+        self.control = self.ui = None 
                   
     def export(self, filename):
         # TODO - eventually give a preview, allow changing size, dpi, aspect 
         # ratio, plot layout, etc.  at the moment, just export exactly what's
         # on the screen
-        self.editor.save_figure(filename, bbox_inches = 'tight')
-        
+        # self.editor.save_figure(filename, bbox_inches = 'tight')
+        pass
         

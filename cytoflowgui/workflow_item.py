@@ -24,7 +24,7 @@ import warnings
 
 from traits.api import HasStrictTraits, Instance, List, DelegatesTo, Enum, \
                        Property, cached_property, on_trait_change, Bool, \
-                       Str, Dict
+                       Str, Dict, Any, CStr
 from traitsui.api import View, Item, Handler
 from pyface.qt import QtGui
 
@@ -35,6 +35,8 @@ from cytoflow import Experiment
 from cytoflow.operations.i_operation import IOperation
 from cytoflow.views.i_view import IView
 from cytoflow.utility import CytoflowError
+
+from cytoflowgui.matplotlib_editor import MPLFigureEditor
 
 class WorkflowItem(HasStrictTraits):
     """        
@@ -99,6 +101,18 @@ class WorkflowItem(HasStrictTraits):
     current_view_traits = View(Item('current_view_handler',
                                     style = 'custom',
                                     show_label = False))
+    
+    # the plot names for the currently selected view
+    current_view_plot_names = List(Any, status = True)
+    #current_view_plot_names = List(["hello", "world"])
+    
+    # if there are multiple plots, which are we viewing?
+    current_plot = Any
+    
+    # the view for the current plot
+    current_plot_view = View(Item('current_view_plot_names',
+                                  editor = MPLFigureEditor(selected = 'current_plot'),
+                                  show_label = False))
     
     # the default view for this workflow item
     default_view = Instance(IView)
@@ -187,4 +201,14 @@ class WorkflowItem(HasStrictTraits):
                 el = np.sort(pd.unique(experiment[condition]))
                 el = el[pd.notnull(el)]
                 self.conditions_values[condition] = list(el)
+                
+    @on_trait_change('result,current_view')
+    def _update_plot_names(self):
+        if self.result and self.current_view and hasattr(self.current_view, 'enum_plots'):
+            try:
+                self.current_view_plot_names = [x for x in self.current_view.enum_plots(self.result)]
+            except:
+                self.current_view_plot_names = []
+        else:
+            self.current_view_plot_names = []
                     

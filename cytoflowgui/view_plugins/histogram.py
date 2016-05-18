@@ -21,12 +21,17 @@ Created on Feb 24, 2015
 @author: brian
 """
 
-from traits.api import provides, Callable
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+from traits.api import provides, Callable, Str
 from traitsui.api import View, Item, Controller, EnumEditor, VGroup
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
 from cytoflow import HistogramView
+import cytoflow.utility as util
 
 from cytoflowgui.subset_editor import SubsetEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
@@ -55,6 +60,9 @@ class HistogramHandler(Controller, ViewHandlerMixin):
                            Item('huefacet',
                                 editor=ClearableEnumEditor(name='context.conditions'),
                                 label="Color\nFacet"),
+                           Item('plotfacet',
+                                editor=ClearableEnumEditor(name='context.conditions'),
+                                label = "Tab\nFacet"),
                             label = "Histogram Plot",
                             show_border = False),
                     VGroup(Item('subset',
@@ -77,6 +85,27 @@ class HistogramHandler(Controller, ViewHandlerMixin):
     
 class HistogramPluginView(HistogramView, PluginViewMixin):
     handler_factory = Callable(HistogramHandler)
+
+    plotfacet = Str
+
+    def enum_plots(self, experiment):
+        if not self.plotfacet:
+            return iter([])
+        
+        if self.plotfacet and self.plotfacet not in experiment.conditions:
+            raise util.CytoflowViewError("Plot facet {0} not in the experiment"
+                                    .format(self.huefacet))
+        values = np.sort(pd.unique(experiment[self.plotfacet]))
+        return iter(values)
+    
+    def plot(self, experiment, plot_name = None, **kwargs):
+        if self.plotfacet and plot_name:
+            experiment = experiment.query("{0} == {1}".format(self.plotfacet, plot_name))
+
+        HistogramView.plot(self, experiment, **kwargs)
+        
+        if self.plotfacet and plot_name:
+            plt.title("{0} = {1}".format(self.plotfacet, plot_name))
 
 @provides(IViewPlugin)
 class HistogramPlugin(Plugin):

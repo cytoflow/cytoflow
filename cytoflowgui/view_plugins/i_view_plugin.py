@@ -61,7 +61,10 @@ class PluginViewMixin(HasTraits):
     error = Str(transient = True)
     
     def plot_wi(self, wi):
-        self.plot(wi.result)
+        if hasattr(self, 'enum_plots'):
+            self.plot(wi.result, wi.current_plot)
+        else:
+            self.plot(wi.result)
 
 
 class ViewHandlerMixin(HasTraits):

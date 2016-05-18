@@ -77,6 +77,7 @@ class Msg:
     UPDATE_OP = "UPDATE_OP"
     UPDATE_VIEW = "UPDATE_VIEW"
     CHANGE_CURRENT_VIEW = "CHANGE_CURRENT_VIEW"
+    CHANGE_CURRENT_PLOT = "CHANGE_CURRENT_PLOT"
     UPDATE_WI = "UPDATE_WI"
     CHANGE_DEFAULT_SCALE = "CHANGE_DEFAULT_SCALE"
     
@@ -112,6 +113,12 @@ class LocalWorkflow(HasStrictTraits):
                                 Label("Default scale"),
                                 Item('default_scale',
                                      show_label = False))
+    
+    # the view for the center pane
+    plot_view = View(Item('selected',
+                          editor = InstanceEditor(view = 'current_plot_view'),
+                          style = 'custom',
+                          show_label = False))
     
     recv_thread = Instance(threading.Thread)
     send_thread = Instance(threading.Thread)
@@ -312,6 +319,15 @@ class LocalWorkflow(HasStrictTraits):
         idx = self.workflow.index(obj)
         view = obj.current_view
         self.message_q.put((Msg.CHANGE_CURRENT_VIEW, (idx, view)))
+
+    @on_trait_change('workflow:current_plot')
+    def _on_current_plot_changed(self, obj, name, old, new):
+        logging.debug("LocalWorkflow._on_current_plot_changed :: {}"
+                      .format((obj, name, old, new)))                  
+                  
+        idx = self.workflow.index(obj)
+        plot = obj.current_plot
+        self.message_q.put((Msg.CHANGE_CURRENT_PLOT, (idx, plot)))
         
     @on_trait_change('workflow:views:-transient')
     def _on_view_trait_changed(self, obj, name, old, new):
@@ -413,6 +429,14 @@ class RemoteWorkflow(HasStrictTraits):
                 except StopIteration:
                     wi.views.append(view)
                     wi.current_view = view
+                
+                if wi == self.selected:
+                    self.plot(wi)
+                    
+            elif msg == Msg.CHANGE_CURRENT_PLOT:
+                (idx, plot) = payload
+                wi = self.workflow[idx]
+                wi.current_plot = plot
                 
                 if wi == self.selected:
                     self.plot(wi)
@@ -520,8 +544,15 @@ class RemoteWorkflow(HasStrictTraits):
             
         # delegate traits are "implicitly" transient; they'll show up here
         # but not in _on_view_trait_changed_send_to_parent, below
-        if not obj.trait(name).transient:        
+        if not obj.trait(name).transient:      
             wi = next((x for x in self.workflow if obj in x.views))
+
+            if hasattr(obj, 'enum_plots'):
+                plot_names = list(obj.enum_plots(wi.result))
+                if set(plot_names) != set(wi.current_view_plot_names):
+                    wi.current_view_plot_names = plot_names
+                    return
+
             if wi == self.selected and wi.current_view == obj:
                 self.plot(wi)
             

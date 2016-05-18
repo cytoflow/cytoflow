@@ -77,17 +77,9 @@ class HistogramView(HasStrictTraits):
     xfacet = Str
     yfacet = Str
     huefacet = Str
-    plotfacet = Str
     subset = Str
     
-    def enum_plots(self, experiment):
-        if self.plotfacet and self.plotfacet not in experiment.conditions:
-            raise util.CytoflowViewError("Plot facet {0} not in the experiment"
-                                    .format(self.huefacet))
-        values = np.sort(pd.unique(experiment[self.plotfacet]))
-        return iter(values)
-    
-    def plot(self, experiment, plot_name = None, **kwargs):
+    def plot(self, experiment, **kwargs):
         """Plot a faceted histogram view of a channel"""
         
         if not experiment:
@@ -111,15 +103,6 @@ class HistogramView(HasStrictTraits):
         if self.huefacet and self.huefacet not in experiment.conditions:
             raise util.CytoflowViewError("Hue facet {0} not in the experiment"
                                     .format(self.huefacet))
-            
-        if self.plotfacet:
-            if plot_name:
-                experiment = experiment.query("{0} == {1}".format(self.plotfacet, plot_name))
-            else:
-                for p in self.enum_plots(experiment):
-                    self.plot(experiment, p, **kwargs)
-                    plt.title("{0} = {1}".format(self.plotfacet, p))
-                return
 
         if self.subset:
             try:
