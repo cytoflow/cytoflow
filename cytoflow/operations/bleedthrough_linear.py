@@ -134,16 +134,17 @@ class BleedthroughLinearOp(HasStrictTraits):
             # subset it
             if subset:
                 try:
-                    tube_data = tube_exp.query(subset)
+                    tube_exp = tube_exp.query(subset)
                 except:
                     raise util.CytoflowOpError("Subset string '{0}' isn't valid"
                                           .format(self.subset))
                                 
-                if len(tube_data.index) == 0:
+                if len(tube_exp.data) == 0:
                     raise util.CytoflowOpError("Subset string '{0}' returned no events"
                                           .format(self.subset))
-            else:
-                tube_data = tube_exp.data
+            
+            
+            tube_data = tube_exp.data
                 
             # polyfit requires sorted data
             tube_data.sort(channel, inplace = True)

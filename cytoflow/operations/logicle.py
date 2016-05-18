@@ -133,7 +133,7 @@ class LogicleTransformOp(HasStrictTraits):
             raise util.CytoflowOpError("r must be between 0 and 1")
         
         if subset:
-            data = experiment.query(subset)
+            data = experiment.query(subset).data
         else:
             data = experiment.data
         

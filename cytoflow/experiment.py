@@ -181,7 +181,7 @@ class Experiment(HasStrictTraits):
     
     def query(self, expr, **kwargs):
         """
-        Expose pandas.DataFrame.query() to the outside world
+        Expose pandas.DataFrame.query() to the outside world.
 
         This method "sanitizes" column names first, replacing characters that
         are not valid in a Python identifier with an underscore '_'. So, the
@@ -196,6 +196,11 @@ class Experiment(HasStrictTraits):
             
         **kwargs : dict
             Other named parameters to pass to `pandas.DataFrame.query()`.
+            
+        Returns
+        -------
+        A new `Experiment`, a clone of this one with the data returned by
+        `pandas.DataFrame.query()`
         """
         
         resolvers = {}
@@ -208,8 +213,10 @@ class Experiment(HasStrictTraits):
                                          .format(name, new_name))
             else:
                 resolvers[new_name] = col
-
-        return self.data.query(expr, resolvers = ({}, resolvers), **kwargs)
+                
+        ret = self.clone()
+        ret.data = self.data.query(expr, resolvers = ({}, resolvers), **kwargs)
+        return ret
     
     def clone(self):
         """Clone this experiment"""

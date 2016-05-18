@@ -157,17 +157,17 @@ class ColorTranslationOp(HasStrictTraits):
                 # subset the events
                 if subset:
                     try:
-                        tube_data = tube_exp.query(subset)
+                        tube_exp = tube_exp.query(subset)
                         self._subset = subset
                     except:
                         raise util.CytoflowOpError("Subset string '{0}' isn't valid"
                                               .format(self.subset))
                                     
-                    if len(tube_data.index) == 0:
+                    if len(tube_exp.data) == 0:
                         raise util.CytoflowOpError("Subset string '{0}' returned no events"
                                               .format(self.subset))
-                else:
-                    tube_data = tube_exp.data                
+                
+                tube_data = tube_exp.data                
 
                 tubes[tube_file] = tube_data
 
@@ -345,16 +345,16 @@ class ColorTranslationDiagnostic(HasStrictTraits):
                 # subset the events
                 if self.subset:
                     try:
-                        tube_data = tube_exp.query(self.subset)
+                        tube_exp = tube_exp.query(self.subset)
                     except:
                         raise util.CytoflowOpError("Subset string '{0}' isn't valid"
                                               .format(self.subset))
                                     
-                    if len(tube_data.index) == 0:
+                    if len(tube_exp.data) == 0:
                         raise util.CytoflowOpError("Subset string '{0}' returned no events"
                                               .format(self.subset))
-                else:
-                    tube_data = tube_exp.data                
+                
+                tube_data = tube_exp.data                
 
                 tubes[tube_file] = tube_data               
                 

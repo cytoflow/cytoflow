@@ -22,6 +22,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 import numpy as np
+import pandas as pd
 import seaborn as sns
 import math
 import bottleneck
@@ -76,9 +77,17 @@ class HistogramView(HasStrictTraits):
     xfacet = Str
     yfacet = Str
     huefacet = Str
+    plotfacet = Str
     subset = Str
     
-    def plot(self, experiment, **kwargs):
+    def enum_plots(self, experiment):
+        if self.plotfacet and self.plotfacet not in experiment.conditions:
+            raise util.CytoflowViewError("Plot facet {0} not in the experiment"
+                                    .format(self.huefacet))
+        values = np.sort(pd.unique(experiment[self.plotfacet]))
+        return iter(values)
+    
+    def plot(self, experiment, plot_name = None, **kwargs):
         """Plot a faceted histogram view of a channel"""
         
         if not experiment:
@@ -102,20 +111,29 @@ class HistogramView(HasStrictTraits):
         if self.huefacet and self.huefacet not in experiment.conditions:
             raise util.CytoflowViewError("Hue facet {0} not in the experiment"
                                     .format(self.huefacet))
+            
+        if self.plotfacet:
+            if plot_name:
+                experiment = experiment.query("{0} == {1}".format(self.plotfacet, plot_name))
+            else:
+                for p in self.enum_plots(experiment):
+                    self.plot(experiment, p, **kwargs)
+                    plt.title("{0} = {1}".format(self.plotfacet, p))
+                return
 
         if self.subset:
             try:
-                data = experiment.query(self.subset)
+                experiment = experiment.query(self.subset)
             except:
                 raise util.CytoflowViewError("Subset string '{0}' isn't valid"
                                         .format(self.subset))
                 
-            if len(data.index) == 0:
+            if len(experiment.data) == 0:
                 raise util.CytoflowViewError("Subset string '{0}' returned no events"
                                         .format(self.subset))
-        else:
-            data = experiment.data
             
+        data = experiment.data
+        
         # get the scale
         scale = util.scale_factory(self.scale, experiment, self.channel)
         scaled_data = scale(data[self.channel])

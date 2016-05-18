@@ -107,20 +107,18 @@ class AutofluorescenceOp(HasStrictTraits):
         # subset it
         if subset:
             try:
-                blank_data = blank_exp.query(subset)
+                blank_exp = blank_exp.query(subset)
             except:
                 raise util.CytoflowOpError("Subset string '{0}' isn't valid"
                                       .format(subset))
                             
-            if len(blank_data.index) == 0:
+            if len(blank_exp.data) == 0:
                 raise util.CytoflowOpError("Subset string '{0}' returned no events"
                                       .format(subset))
-        else:
-            blank_data = blank_exp.data
         
         for channel in self.channels:
-            self._af_median[channel] = np.median(blank_data[channel])
-            self._af_stdev[channel] = np.std(blank_data[channel])    
+            self._af_median[channel] = np.median(blank_exp[channel])
+            self._af_stdev[channel] = np.std(blank_exp[channel])    
                 
     def apply(self, experiment):
         """Applies the threshold to an experiment.
