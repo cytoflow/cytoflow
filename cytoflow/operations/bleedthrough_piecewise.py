@@ -30,7 +30,7 @@ from traits.api import (HasStrictTraits, Str, CStr, File, Dict, Python,
 import numpy as np
 import scipy.interpolate
 import scipy.optimize
-import pandas
+import pandas as pd
 
 import matplotlib.pyplot as plt
 
@@ -240,8 +240,8 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
                                                           k = 1)
          
         
-        mesh = pandas.DataFrame(util.cartesian(mesh_axes), 
-                                columns = [x for x in self._channels])
+        mesh = pd.DataFrame(util.cartesian(mesh_axes), 
+                            columns = [x for x in self._channels])
          
         mesh_corrected = mesh.apply(_correct_bleedthrough,
                                     axis = 1,
@@ -341,7 +341,7 @@ def _correct_bleedthrough(row, channels, splines):
         ret = [channel_error(x, channel) for channel in channels]
         return ret
     
-    x_0 = pandas.to_numeric(row.loc[channels])
+    x_0 = pd.to_numeric(row.loc[channels])
     x = scipy.optimize.root(row_error, x_0)
     
     ret = row.copy()

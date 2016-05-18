@@ -374,10 +374,10 @@ class GaussianMixture1DView(cytoflow.views.HistogramView):
         """
         
         class plot_enum(object):
-            self._iter = None
-            self._returned = False
             
             def __init__(self, op, experiment):
+                self._iter = None
+                self._returned = False
                 if op.by:
                     self._iter = experiment.data.groupby(op.by).__iter__()
                 
