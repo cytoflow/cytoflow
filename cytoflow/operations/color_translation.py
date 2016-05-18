@@ -35,7 +35,7 @@ import cytoflow.views
 import cytoflow.utility as util
 
 from .i_operation import IOperation
-from .import_op import Tube, ImportOp, check_tube, parse_tube
+from .import_op import Tube, ImportOp, check_tube
 
 @provides(IOperation)
 class ColorTranslationOp(HasStrictTraits):
@@ -147,7 +147,8 @@ class ColorTranslationOp(HasStrictTraits):
             if tube_file not in tubes: 
                 # make a little Experiment
                 check_tube(tube_file, experiment)
-                tube_exp = ImportOp(tubes = [Tube(file = tube_file)]).apply()
+                tube_exp = ImportOp(tubes = [Tube(file = tube_file)],
+                                    name_metadata = experiment.metadata['name_metadata']).apply()
                 
                 # apply previous operations
                 for op in experiment.history:
@@ -329,13 +330,17 @@ class ColorTranslationDiagnostic(HasStrictTraits):
             tube_file = self.op.controls[(from_channel, to_channel)]
             
             if tube_file not in tubes: 
-                 # make a little Experiment
+                # make a little Experiment
                 check_tube(tube_file, experiment)
-                tube_exp = ImportOp(tubes = [Tube(file = tube_file)]).apply()
+                tube_exp = ImportOp(tubes = [Tube(file = tube_file)],
+                                    name_metadata = experiment.metadata['name_metadata']).apply()
                 
                 # apply previous operations
                 for op in experiment.history:
-                    tube_exp = op.apply(tube_exp) 
+                    tube_exp = op.apply(tube_exp)
+                    
+                tube_data = tube_exp.data
+
 
                 # subset the events
                 if self.subset:

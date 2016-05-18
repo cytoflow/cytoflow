@@ -26,7 +26,7 @@ import cytoflow.views
 import cytoflow.utility as util
 
 from .i_operation import IOperation
-from .import_op import Tube, ImportOp, check_tube, parse_tube
+from .import_op import Tube, ImportOp, check_tube
 
 @provides(IOperation)
 class AutofluorescenceOp(HasStrictTraits):
@@ -97,7 +97,8 @@ class AutofluorescenceOp(HasStrictTraits):
         
         # make a little Experiment
         check_tube(self.blank_file, experiment)
-        blank_exp = ImportOp(tubes = [Tube(file = self.blank_file)]).apply()
+        blank_exp = ImportOp(tubes = [Tube(file = self.blank_file)], 
+                             name_metadata = experiment.metadata['name_metadata']).apply()
         
         # apply previous operations
         for op in experiment.history:
@@ -198,12 +199,19 @@ class AutofluorescenceDiagnosticView(HasStrictTraits):
         kwargs.setdefault('alpha', 0.5)
         kwargs.setdefault('antialiased', True)
            
-        blank_data = parse_tube(self.op.blank_file, experiment)
+        # make a little Experiment
+        check_tube(self.op.blank_file, experiment)
+        blank_exp = ImportOp(tubes = [Tube(file = self.op.blank_file)], 
+                             name_metadata = experiment.metadata['name_metadata']).apply()
+        
+        # apply previous operations
+        for op in experiment.history:
+            blank_exp = op.apply(blank_exp)
 
         plt.figure()
         
         for idx, channel in enumerate(self.op.channels):
-            d = blank_data[channel]
+            d = blank_exp.data[channel]
             plt.subplot(len(self.op.channels), 1, idx+1)
             plt.title(channel)
             plt.hist(d, bins = 200, **kwargs)

@@ -35,7 +35,7 @@ import cytoflow.views
 import cytoflow.utility as util
 
 from .i_operation import IOperation
-from .import_op import Tube, ImportOp, check_tube, parse_tube
+from .import_op import Tube, ImportOp, check_tube
 
 @provides(IOperation)
 class BleedthroughLinearOp(HasStrictTraits):
@@ -124,7 +124,8 @@ class BleedthroughLinearOp(HasStrictTraits):
             
             # make a little Experiment
             check_tube(self.controls[channel], experiment)
-            tube_exp = ImportOp(tubes = [Tube(file = self.controls[channel])]).apply()
+            tube_exp = ImportOp(tubes = [Tube(file = self.controls[channel])],
+                                name_metadata = experiment.metadata['name_metadata']).apply()
             
             # apply previous operations
             for op in experiment.history:
@@ -291,8 +292,15 @@ class BleedthroughLinearDiagnostic(HasStrictTraits):
                 if from_idx == to_idx:
                     continue
                 
-                tube_data = parse_tube(self.op.controls[from_channel],
-                                       experiment)
+                check_tube(self.op.controls[from_channel], experiment)
+                tube_exp = ImportOp(tubes = [Tube(file = self.op.controls[from_channel])],
+                                    name_metadata = experiment.metadata['name_metadata']).apply()
+                
+                # apply previous operations
+                for op in experiment.history:
+                    tube_exp = op.apply(tube_exp)
+                    
+                tube_data = tube_exp.data
 
                 plt.subplot(num_channels, 
                             num_channels, 
