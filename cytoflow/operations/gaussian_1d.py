@@ -23,6 +23,8 @@ Created on Dec 16, 2015
 
 from __future__ import division, absolute_import
 
+import random, string, warnings
+
 from traits.api import (HasStrictTraits, Str, CStr, Dict, Any, Instance, Bool, 
                         Constant, Float, List, provides, DelegatesTo)
 import numpy as np
@@ -345,7 +347,11 @@ class GaussianMixture1DView(cytoflow.views.HistogramView):
     op : Instance(GaussianMixture1DOp)
         The op whose parameters we're viewing.
         
-    group : Python (default: None)
+    num_plots: Property(Int)
+        A read-only property that computes the number of plots from the 
+        
+        
+    plot_idx : Python (default: None)
         The subset of data to display.  Must match one of the keys of 
         `op._gmms`.  If `None` (the default), display a plot for each subset.
     """
@@ -359,46 +365,69 @@ class GaussianMixture1DView(cytoflow.views.HistogramView):
     channel = DelegatesTo('op')
     scale = DelegatesTo('op')
     huefacet = DelegatesTo('op', 'name')
-    group = Any(None)
     
-    def plot(self, experiment, **kwargs):
+        
+    def enum_plots(self, experiment):
+        """
+        Returns an iterator over the possible plots that this View can
+        produce.  The values returned can be passed to "plot".
+        """
+        
+        class plot_enum(object):
+            self._iter = None
+            self._returned = False
+            
+            def __init__(self, op, experiment):
+                if op.by:
+                    self._iter = experiment.data.groupby(op.by).__iter__()
+                
+            def __iter__(self):
+                return self
+            
+            def next(self):
+                if self._iter:
+                    return self._iter.next()[0]
+                else:
+                    if self._returned:
+                        raise StopIteration
+                    else:
+                        self._returned = True
+                        return None
+            
+        return plot_enum(self.op, experiment)
+    
+    
+    def plot(self, experiment, plot_name = None, **kwargs):
         """
         Plot the plots.
         """
         
-        if not self.huefacet:
-            raise util.CytoflowViewError("didn't set GaussianMixture1DOp.name")
-        
-        if not self.op._gmms:
-            raise util.CytoflowViewError("Didn't find a model. Did you call "
-                                    "estimate()?")
-            
-        if self.group and self.group not in self.op._gmms:
-            raise util.CytoflowViewError("didn't find group {0} in op._gmms"
-                                    .format(self.group))
-        
-        # if `group` wasn't specified, make a new plot per group.
-        if self.op.by and not self.group:
-            groupby = experiment.data.groupby(self.op.by)
-            for group, _ in groupby:
-                GaussianMixture1DView(op = self.op,
-                                      group = group).plot(experiment, **kwargs)
-                plt.title("{0} = {1}".format(self.op.by, group))
+        if self.op.by and not plot_name:
+            for plot in self.enum_plots(experiment):
+                self.plot(experiment, plot, **kwargs)
+                plt.title("{0} = {1}".format(self.op.by, plot_name))
             return
                 
         temp_experiment = experiment.clone()
-        if self.group:
+        
+        if plot_name:
             groupby = experiment.data.groupby(self.op.by)
-            temp_experiment.data = groupby.get_group(self.group)
+            temp_experiment.data = groupby.get_group(plot_name)
             temp_experiment.data.reset_index(drop = True, inplace = True)
         
         try:
-            temp_experiment = self.op.apply(temp_experiment)
+            if self.op._gmms:
+                temp_experiment = self.op.apply(temp_experiment)
         except util.CytoflowOpError as e:
             raise util.CytoflowViewError(e.__str__())
 
         # plot the group's histogram, colored by component
-        super(GaussianMixture1DView, self).plot(temp_experiment, **kwargs)
+        cytoflow.HistogramView.plot(self, temp_experiment, **kwargs)
+        
+        if not self.op._gmms:
+            warnings.warn("Didn't find a model.  Did you call estimate()?",
+                          util.CytoflowViewWarning)
+            return
         
         # get the scale back from the op
         scale = self.op._scale
@@ -411,7 +440,7 @@ class GaussianMixture1DView(cytoflow.views.HistogramView):
         # really, if we just plotted the damn thing already, we can get the
         # area of the plot from the Polygon patch that we just plotted!
 
-        gmm = self.op._gmms[self.group] if self.group else self.op._gmms[True]
+        gmm = self.op._gmms[plot_name] if plot_name else self.op._gmms[True]
                               
         for i in range(0, len(gmm.means_)):
             patch = plt.gca().patches[i]

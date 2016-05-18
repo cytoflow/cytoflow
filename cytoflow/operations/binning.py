@@ -23,8 +23,10 @@ Created on Sep 18, 2015
 
 from __future__ import division, absolute_import
 
+import warnings
+
 from traits.api import (HasStrictTraits, Str, CStr, provides, Undefined,
-                        Instance, DelegatesTo, Constant)
+                        Instance, DelegatesTo, Constant, Disallow)
 import numpy as np
 import bottleneck as bn
 
@@ -88,8 +90,8 @@ class BinningOp(HasStrictTraits):
     name = CStr()
     bin_count_name = CStr()
     channel = Str()
-    num_bins = util.PositiveInt(Undefined)
-    bin_width = util.PositiveFloat(Undefined)
+    num_bins = util.PositiveInt(0, allow_zero = True)
+    bin_width = util.PositiveFloat(0, allow_zero = True)
     scale = util.ScaleEnum
 
     def apply(self, experiment):
@@ -128,10 +130,10 @@ class BinningOp(HasStrictTraits):
             raise util.CytoflowOpError("channel {0} isn't in the experiment"
                                   .format(self.channel))
               
-        if self.num_bins is Undefined and self.bin_width is Undefined:
+        if not self.num_bins and not self.bin_width:
             raise util.CytoflowOpError("must set either bin number or width")
         
-        if self.num_bins is Undefined \
+        if self.bin_width \
            and not (self.scale == "linear" or self.scale == "log"):
             raise util.CytoflowOpError("Can only use bin_width with linear or log scale") 
         
@@ -141,7 +143,7 @@ class BinningOp(HasStrictTraits):
         channel_min = bn.nanmin(scaled_data)
         channel_max = bn.nanmax(scaled_data)
         
-        num_bins = self.num_bins if self.num_bins is not Undefined else \
+        num_bins = self.num_bins if self.num_bins else \
                    (channel_max - channel_min) / self.bin_width
 
         bins = np.linspace(start = channel_min, stop = channel_max,
@@ -218,11 +220,11 @@ class BinningView(cytoflow.views.HistogramView):
     huefacet = DelegatesTo('op', 'name')
     
     def plot(self, experiment, **kwargs):
-        if not self.huefacet:
-            raise util.CytoflowViewError("didn't set BinningOp.name")
         
         try:
-            temp_experiment = self.op.apply(experiment)
-            super(BinningView, self).plot(temp_experiment, **kwargs)
+            experiment = self.op.apply(experiment)
         except util.CytoflowOpError as e:
-            raise util.CytoflowViewError(e.__str__())
+            warnings.warn(e.__str__(), util.CytoflowViewWarning)
+        
+        cytoflow.HistogramView.plot(self, experiment, **kwargs)
+
