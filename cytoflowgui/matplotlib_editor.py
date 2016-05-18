@@ -40,6 +40,8 @@ from pyface.qt import QtCore, QtGui
 from cytoflowgui.matplotlib_backend import FigureCanvasQTAggLocal
 from matplotlib.figure import Figure
 
+local_canvas = None  # singleton
+
 class _MPLFigureEditor(Editor):
     
     # the currently selected notebook page
@@ -48,6 +50,8 @@ class _MPLFigureEditor(Editor):
     tab_widget = Instance(QtGui.QTabBar)
     
     def init(self, parent):
+        global local_canvas
+        
         # create a layout for the tab widget and the main view
         layout = QtGui.QVBoxLayout()
         self.control = QtGui.QWidget()
@@ -63,10 +67,11 @@ class _MPLFigureEditor(Editor):
         layout.addWidget(tab_widget)
          
         # add the main plot
-        canvas = FigureCanvasQTAggLocal(Figure())
-        canvas.setSizePolicy(QtGui.QSizePolicy.Expanding,
-                             QtGui.QSizePolicy.Expanding)
-        layout.addWidget(canvas)
+        if not local_canvas:
+            local_canvas = FigureCanvasQTAggLocal(Figure())
+            local_canvas.setSizePolicy(QtGui.QSizePolicy.Expanding,
+                                 QtGui.QSizePolicy.Expanding)
+        layout.addWidget(local_canvas)
          
         # Set up the additional 'list items changed' event handler needed for
         # a list based trait. Note that we want to fire the update_editor_item
@@ -104,7 +109,10 @@ class _MPLFigureEditor(Editor):
         """ Handles a notebook tab being "activated" (i.e. clicked on) by the
             user.
         """
-        self.selected = self.value[idx]
+        if idx == -1:
+            self.selected = None
+        else:
+            self.selected = self.value[idx]
     
     def dispose ( self ):
         """ Disposes of the contents of an editor.
@@ -113,6 +121,7 @@ class _MPLFigureEditor(Editor):
                                 self.name + '_items?', remove = True )
 
         super(_MPLFigureEditor, self).dispose()
+        
 # editor factory
 class MPLFigureEditor(BasicEditorFactory):
     klass = _MPLFigureEditor

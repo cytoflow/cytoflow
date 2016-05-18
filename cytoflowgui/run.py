@@ -38,7 +38,8 @@ from pyface.image_resource import ImageResource
 from flow_task import FlowTaskPlugin
 from cytoflow_application import CytoflowApplication
 from op_plugins import ImportPlugin, ThresholdPlugin, RangePlugin, \
-                       Range2DPlugin, PolygonPlugin, BinningPlugin
+                       Range2DPlugin, PolygonPlugin, BinningPlugin, \
+                       GaussianMixture1DPlugin
 from view_plugins import HistogramPlugin, Histogram2DPlugin, ScatterplotPlugin, \
                          BarChartPlugin, Stats1DPlugin, Kde1DPlugin, Kde2DPlugin, \
                          ViolinPlotPlugin
@@ -103,7 +104,7 @@ def run_gui():
                Histogram2DPlugin(), ScatterplotPlugin(), RangePlugin(),
                Range2DPlugin(), PolygonPlugin(), BarChartPlugin(), 
                Stats1DPlugin(), BinningPlugin(), Kde1DPlugin(), Kde2DPlugin(),
-               ViolinPlotPlugin()]
+               ViolinPlotPlugin(), GaussianMixture1DPlugin()]
     
     app = CytoflowApplication(id = 'edu.mit.synbio.cytoflow',
                               plugins = plugins,

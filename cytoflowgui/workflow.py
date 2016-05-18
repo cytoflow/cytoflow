@@ -549,6 +549,9 @@ class RemoteWorkflow(HasStrictTraits):
 
             if hasattr(obj, 'enum_plots'):
                 plot_names = list(obj.enum_plots(wi.result))
+                if plot_names == [None]:
+                    plot_names = []
+                    
                 if set(plot_names) != set(wi.current_view_plot_names):
                     wi.current_view_plot_names = plot_names
                     return
@@ -602,7 +605,7 @@ class RemoteWorkflow(HasStrictTraits):
         logging.debug("RemoteWorkflow._on_operation_status_changed :: {}"
                       .format((obj, name, old, new)))
 
-        if self.selected is not None:
+        if self.selected is not None and new != "estimating" and new != "applying":
             self.plot(self.selected)
         else:
             plt.clf()

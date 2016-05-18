@@ -103,7 +103,7 @@ class WorkflowItem(HasStrictTraits):
                                     show_label = False))
     
     # the plot names for the currently selected view
-    current_view_plot_names = List(Any, status = True)
+    current_view_plot_names = List(Any, status = True, transient = True)
     #current_view_plot_names = List(["hello", "world"])
     
     # if there are multiple plots, which are we viewing?
@@ -134,8 +134,8 @@ class WorkflowItem(HasStrictTraits):
     warning = Str(transient = True, status = True)
     
     # the icon for the vertical notebook view.  Qt specific, sadly.
-    icon = Property(depends_on = 'status', transient = True)
-        
+    icon = Property(depends_on = 'status', transient = True)   
+            
     def update(self):
         """
         Called by the controller to update this wi
@@ -150,10 +150,12 @@ class WorkflowItem(HasStrictTraits):
          
         with warnings.catch_warnings(record = True) as w:
             try:
-                if (hasattr(self.operation, "estimate") and
-                    callable(getattr(self.operation, "estimate"))):
+                if ("do_estimate" in self.operation.trait_names()
+                    and self.operation.do_estimate):
                     self.status = "estimating"
                     self.operation.estimate(prev_result)
+                    self.operation.do_estimate = False
+                    
                 self.status = "applying"
                 self.result = self.operation.apply(prev_result)
                 if w:
@@ -206,7 +208,11 @@ class WorkflowItem(HasStrictTraits):
     def _update_plot_names(self):
         if self.result and self.current_view and hasattr(self.current_view, 'enum_plots'):
             try:
-                self.current_view_plot_names = [x for x in self.current_view.enum_plots(self.result)]
+                plot_names = [x for x in self.current_view.enum_plots(self.result)]
+                if plot_names == [None]:
+                    self.current_view_plot_names = []
+                else:
+                    self.current_view_plot_names = plot_names
             except:
                 self.current_view_plot_names = []
         else:

@@ -23,10 +23,10 @@ Created on Dec 16, 2015
 
 from __future__ import division, absolute_import
 
-import random, string, warnings
+import warnings, logging
 
 from traits.api import (HasStrictTraits, Str, CStr, Dict, Any, Instance, Bool, 
-                        Constant, Float, List, provides, DelegatesTo)
+                        Constant, List, provides, DelegatesTo, CFloat)
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn import mixture
@@ -117,14 +117,14 @@ class GaussianMixture1DOp(HasStrictTraits):
     name = CStr()
     channel = Str()
     num_components = util.PositiveInt(1)
-    sigma = Float(0.0)
+    sigma = CFloat(0.0)
     by = List(Str)
     scale = util.ScaleEnum
     posteriors = Bool(False)
     
     # the key is either a single value or a tuple
-    _gmms = Dict(Any, Instance(mixture.GMM))
-    _scale = Instance(util.IScale)
+    _gmms = Dict(Any, Instance(mixture.GMM), transient = True)
+    _scale = Instance(util.IScale, transient = True)
     
     def estimate(self, experiment, subset = None):
         """
@@ -148,6 +148,10 @@ class GaussianMixture1DOp(HasStrictTraits):
                                       " aggregation metadata {0}.  Did you"
                                       " accidentally specify a data channel?"
                                       .format(b))
+                
+            
+        if self.num_components == 1 and self.sigma == 0.0:
+            raise util.CytoflowOpError("If num_components == 1, sigma must be > 0")
                 
         if self.by:
             groupby = experiment.data.groupby(self.by)
@@ -197,6 +201,10 @@ class GaussianMixture1DOp(HasStrictTraits):
             
         if not experiment:
             raise util.CytoflowOpError("No experiment specified")
+
+        if not self._gmms:
+            raise util.CytoflowOpError("No model found.  Did you forget to "
+                                       "call estimate()?")
         
         # make sure name got set!
         if not self.name:
@@ -206,20 +214,14 @@ class GaussianMixture1DOp(HasStrictTraits):
         if self.name in experiment.data.columns:
             raise util.CytoflowOpError("Experiment already has a column named {0}"
                                   .format(self.name))
-        
-        if not self._gmms:
-            raise util.CytoflowOpError("No components found.  Did you forget to "
-                                  "call estimate()?")
-            
+
         if not self._scale:
             raise util.CytoflowOpError("Couldn't find _scale.  What happened??")
 
         if self.channel not in experiment.data:
             raise util.CytoflowOpError("Column {0} not found in the experiment"
                                   .format(self.channel))
-            
-        if self.num_components == 1 and self.sigma == 0.0:
-            raise util.CytoflowError("If num_components == 1, sigma must be > 0")
+
             
         if (self.name + "_Posterior") in experiment.data:
             raise util.CytoflowOpError("Column {0} already found in the experiment"
@@ -246,6 +248,18 @@ class GaussianMixture1DOp(HasStrictTraits):
         if self.sigma < 0.0:
             raise util.CytoflowOpError("sigma must be >= 0.0")
 
+        if self.by:
+            groupby = experiment.data.groupby(self.by)
+        else:
+            # use a lambda expression to return a group that
+            # contains all the events
+            groupby = experiment.data.groupby(lambda x: True)
+
+        for group, data_subset in groupby:
+            if group not in self._gmms:
+                raise util.CytoflowOpError("Can't find group in model. "
+                                           "Did you call estimate()?")
+
         event_assignments = pd.Series([None] * len(experiment), dtype = "object")
                                       
         if self.posteriors:
@@ -254,13 +268,7 @@ class GaussianMixture1DOp(HasStrictTraits):
         # what we DON'T want to do is iterate through event-by-event.
         # the more of this we can push into numpy, sklearn and pandas,
         # the faster it's going to be.
-        
-        if self.by:
-            groupby = experiment.data.groupby(self.by)
-        else:
-            # use a lambda expression to return a group that
-            # contains all the events
-            groupby = experiment.data.groupby(lambda x: True)
+
         
         for group, data_subset in groupby:
             gmm = self._gmms[group]
@@ -361,10 +369,10 @@ class GaussianMixture1DView(cytoflow.views.HistogramView):
     
     # TODO - why can't I use GaussianMixture1DOp here?
     op = Instance(IOperation)
-    name = DelegatesTo('op')
-    channel = DelegatesTo('op')
-    scale = DelegatesTo('op')
-    huefacet = DelegatesTo('op', 'name')
+    name = DelegatesTo('op', transient = True)
+    channel = DelegatesTo('op', transient = True)
+    scale = DelegatesTo('op', transient = True)
+    huefacet = DelegatesTo('op', 'name', transient = True)
     
         
     def enum_plots(self, experiment):
@@ -402,6 +410,8 @@ class GaussianMixture1DView(cytoflow.views.HistogramView):
         Plot the plots.
         """
         
+        logging.debug("PLOTTING")
+        
         if self.op.by and not plot_name:
             for plot in self.enum_plots(experiment):
                 self.plot(experiment, plot, **kwargs)
@@ -416,17 +426,12 @@ class GaussianMixture1DView(cytoflow.views.HistogramView):
             temp_experiment.data.reset_index(drop = True, inplace = True)
         
         try:
-            if self.op._gmms:
-                temp_experiment = self.op.apply(temp_experiment)
+            temp_experiment = self.op.apply(temp_experiment)
+            cytoflow.HistogramView.plot(self, temp_experiment, **kwargs)
         except util.CytoflowOpError as e:
-            raise util.CytoflowViewError(e.__str__())
-
-        # plot the group's histogram, colored by component
-        cytoflow.HistogramView.plot(self, temp_experiment, **kwargs)
-        
-        if not self.op._gmms:
-            warnings.warn("Didn't find a model.  Did you call estimate()?",
-                          util.CytoflowViewWarning)
+            warnings.warn(e.__str__(), util.CytoflowViewWarning)
+            cytoflow.HistogramView(channel = self.channel,
+                                   scale = self.scale).plot(temp_experiment, **kwargs)
             return
         
         # get the scale back from the op
