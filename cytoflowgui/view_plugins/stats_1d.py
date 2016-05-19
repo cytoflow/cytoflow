@@ -21,12 +21,13 @@ Created on Feb 24, 2015
 @author: brian
 """
 
-from traits.api import provides, Callable, Dict
+from traits.api import provides, Callable, Dict, List, Str
 from traitsui.api import View, Item, Controller, EnumEditor, VGroup
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
 from cytoflow import Stats1DView, geom_mean
+import cytoflow.utility as util
 
 from cytoflowgui.subset_editor import SubsetEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
@@ -42,15 +43,7 @@ class Stats1DHandler(Controller, ViewHandlerMixin):
     docs
     """
     
-    summary_functions = Dict({np.mean : "Mean",
-                             # TODO - add count and proportion
-                             geom_mean : "Geom.Mean",
-                             len : "Count"})
-    
-    spread_functions = Dict({np.std : "Std.Dev.",
-                             scipy.stats.sem : "S.E.M"
-                       # TODO - add 95% CI
-                       })
+
     
     def default_traits_view(self):
         return View(VGroup(
@@ -64,8 +57,8 @@ class Stats1DHandler(Controller, ViewHandlerMixin):
                                 label = "Y Channel"),
                            Item('yscale',
                                 label = "Y Scale"),
-                           Item('yfunction',
-                                editor = EnumEditor(name='handler.summary_functions'),
+                           Item('yfunction_name',
+                                editor = EnumEditor(name='summary_function_names'),
                                 label = "Y Summary\nFunction"),
                            Item('xfacet',
                                 editor=ClearableEnumEditor(name='context.conditions'),
@@ -112,6 +105,30 @@ class Stats1DHandler(Controller, ViewHandlerMixin):
     
 class Stats1DPluginView(Stats1DView, PluginViewMixin):
     handler_factory = Callable(Stats1DHandler)
+    
+    
+    # functions aren't picklable, so send the name instead
+    summary_functions = Dict({"Mean" : np.mean,
+                             "Geom.Mean" : geom_mean,
+                             "Count" : len})
+    
+#     spread_functions = Dict({np.std : "Std.Dev.",
+#                              scipy.stats.sem : "S.E.M"
+#                        # TODO - add 95% CI
+#                        })
+    
+    summary_function_names = List(["Mean", "Geom.Mean", "Count"])
+    yfunction_name = Str()
+    yfunction = Callable(transient = True)
+    
+    def plot(self, experiment, **kwargs):
+        
+        if not self.yfunction_name:
+            raise util.CytoflowViewError("Summary function isn't set")
+        
+        self.yfunction = self.summary_functions[self.yfunction_name]
+        Stats1DView.plot(self, experiment, **kwargs)
+        
 
 @provides(IViewPlugin)
 class Stats1DPlugin(Plugin):
