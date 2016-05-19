@@ -99,12 +99,12 @@ class HistogramPluginView(HistogramView, PluginViewMixin):
         return iter(values)
     
     def plot(self, experiment, plot_name = None, **kwargs):
-        if self.plotfacet and plot_name:
-            experiment = experiment.query("{0} == {1}".format(self.plotfacet, plot_name))
+        if self.plotfacet and plot_name is not None:
+            experiment = experiment.subset(self.plotfacet, plot_name)
 
         HistogramView.plot(self, experiment, **kwargs)
         
-        if self.plotfacet and plot_name:
+        if self.plotfacet and plot_name is not None:
             plt.title("{0} = {1}".format(self.plotfacet, plot_name))
 
 @provides(IViewPlugin)
