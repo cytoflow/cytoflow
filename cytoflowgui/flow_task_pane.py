@@ -61,10 +61,7 @@ class FlowTaskPane(TaskPane):
         layout.addWidget(canvas)
 
     def destroy(self):
-        if self.ui:
-            self.ui.dispose()
-            
-        self.control = self.ui = None 
+        self.layout = self.control = None 
                   
     def export(self, filename):
         # TODO - eventually give a preview, allow changing size, dpi, aspect 
