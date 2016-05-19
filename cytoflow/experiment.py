@@ -178,6 +178,35 @@ class Experiment(HasStrictTraits):
         return {x : self.metadata[x]['type'] for x in self.metadata
                 if x in self.data
                 and self.metadata[x]['type'] != "channel"}
+        
+    def subset(self, name, value):
+        """
+        A fast way to get a subset of the data where a condition equals a 
+        particular value.
+        
+        This method "sanitizes" column names first, replacing characters that
+        are not valid in a Python identifier with an underscore '_'. So, the
+        column name `a column` becomes `a_column`, and can be queried with
+        an `a_column == True` or such.
+        
+        Parameters
+        ----------
+        name : Str
+            A condition; ie, a key in `self.conditions`.
+            
+        value : Any
+            The value to look for.  Will be checked with equality, ie `==`
+        """
+        new_name = util.sanitize_identifier(name)
+        
+        if new_name not in self.conditions:
+            raise util.CytoflowError("Can't find condition '{}'"
+                                     .format(name))
+            
+        ret = self.clone()
+        ret.data = self.data[ self.data[new_name] == value ]
+        return ret
+    
     
     def query(self, expr, **kwargs):
         """
