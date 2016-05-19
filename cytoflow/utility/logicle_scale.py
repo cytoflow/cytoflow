@@ -308,7 +308,7 @@ class LogicleMajorLocator(Locator):
             logs = np.ceil(np.log10(vmax))
             vmax = np.ceil(vmax / (10 ** (logs - 1))) * (10 ** (logs - 1))             
         else: 
-            vmax = 0  
+            vmax = 100  
 
         if vmin >= 0:
             vmin = 0
