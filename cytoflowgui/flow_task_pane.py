@@ -20,11 +20,15 @@ Created on Feb 11, 2015
 @author: brian
 """
 
-from pyface.tasks.api import TaskPane
-from traits.api import Instance, provides
-from pyface.tasks.i_task_pane import ITaskPane
+from traits.api import Instance, provides, Str, Any
+from traitsui.api import BasicEditorFactory
+from traitsui.qt4.editor import Editor
 
-from matplotlib_editor import MPLFigureEditor
+from pyface.qt import QtCore, QtGui
+from pyface.tasks.api import TaskPane, ITaskPane
+
+from cytoflowgui.matplotlib_backend import FigureCanvasQTAggLocal
+from matplotlib.figure import Figure
 
 @provides(ITaskPane)
 class FlowTaskPane(TaskPane):
@@ -37,13 +41,24 @@ class FlowTaskPane(TaskPane):
     id = 'edu.mit.synbio.cytoflow.flow_task_pane'
     name = 'Cytometry Data Viewer'
     
-    editor = Instance(MPLFigureEditor)
-    
+    layout = Instance(QtGui.QVBoxLayout)
+        
     def create(self, parent):
-        self.ui = self.model.edit_traits(view = 'plot_view',
+        # create a layout for the tab widget and the main view
+        self.layout = layout = QtGui.QVBoxLayout()
+        self.control = QtGui.QWidget()
+        self.control.setLayout(layout)
+        
+        tabs_ui = self.model.edit_traits(view = 'plot_view',
                                          kind = 'subpanel',
                                          parent = parent)
-        self.control = self.ui.control
+        self.layout.addWidget(tabs_ui.control) 
+        
+        # add the main plot
+        canvas = FigureCanvasQTAggLocal(Figure())
+        canvas.setSizePolicy(QtGui.QSizePolicy.Expanding,
+                             QtGui.QSizePolicy.Expanding)
+        layout.addWidget(canvas)
 
     def destroy(self):
         if self.ui:
@@ -57,4 +72,65 @@ class FlowTaskPane(TaskPane):
         # on the screen
         # self.editor.save_figure(filename, bbox_inches = 'tight')
         pass
+    
+class _TabListEditor(Editor):
+    
+    # the currently selected notebook page
+    selected = Any
+    
+    def init(self, parent):        
+        self.control = QtGui.QTabBar()
+        QtCore.QObject.connect(self.control, 
+                               QtCore.SIGNAL('currentChanged(int)'), 
+                               self._tab_activated )
+        self.control.setDocumentMode(True)
+         
+        # Set up the additional 'list items changed' event handler needed for
+        # a list based trait. Note that we want to fire the update_editor_item
+        # only when the items in the list change and not when intermediate
+        # traits change. Therefore, replace "." by ":" in the extended_name
+        # when setting up the listener.
+        extended_name = self.extended_name.replace('.', ':')
+        self.context_object.on_trait_change( self.update_editor_item,
+                               extended_name + '_items?', dispatch = 'ui' )  
+         
+        # Set of selection synchronization:
+        self.sync_value( self.factory.selected, 'selected' ) 
+
+
+    def update_editor(self):
+        while self.control.count() > 0:
+            self.control.removeTab(0)
+            
+        for v in self.value:
+            self.control.addTab(str(v))
+
+
+    def update_editor_item (self, event):
+        """ Handles an update to some subset of the trait's list.
+        """
+        self.update_editor()
+
+    
+    def _tab_activated(self, idx):
+        """ Handles a notebook tab being "activated" (i.e. clicked on) by the
+            user.
+        """
+        if idx == -1:
+            self.selected = None
+        else:
+            self.selected = self.value[idx]
+    
+    def dispose ( self ):
+        """ Disposes of the contents of an editor.
+        """
+        self.context_object.on_trait_change( self.update_editor_item,
+                                self.name + '_items?', remove = True )
+
+        super(_TabListEditor, self).dispose()
+        
+# editor factory
+class TabListEditor(BasicEditorFactory):
+    klass = _TabListEditor
+    selected = Str
         
