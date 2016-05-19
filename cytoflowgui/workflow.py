@@ -44,6 +44,8 @@ matplotlib_backend.py
 
 import threading, sys, warnings, logging, Queue
 
+import pandas as pd
+
 import matplotlib.pyplot as plt
 
 from traits.api import HasStrictTraits, Instance, List, Set, on_trait_change, Str
@@ -168,7 +170,10 @@ class LocalWorkflow(HasStrictTraits):
                 wi = self.workflow[idx]
                 view = next((x for x in wi.views if x.id == view_id))
                 
-                if view.trait_get(trait)[trait] != new_value:
+                if isinstance(new_value, pd.Series): # stupid spaghetti code
+                    if not new_value.equals(view.trait_get(trait)[trait]):
+                        view.trait_set(**{trait: new_value})
+                elif view.trait_get(trait)[trait] != new_value:
                     view.trait_set(**{trait : new_value})
             elif msg == Msg.GET_LOG:
                 with self.child_log_cond:
@@ -569,8 +574,9 @@ class RemoteWorkflow(HasStrictTraits):
 
             if wi == self.selected and wi.current_view == obj:
                 self.plot(wi)
+
             
-    @on_trait_change('workflow:views:-transient')
+    @on_trait_change('workflow:views:[-transient,+status]')
     def _on_view_trait_changed_send_to_parent(self, obj, name, old, new):
         logging.debug("RemoteWorkflow._on_view_trait_changed_send_to_parent :: {}"
                       .format((obj, name, old, new)))

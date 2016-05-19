@@ -18,19 +18,15 @@
 from __future__ import division, absolute_import
 
 from traits.api import HasStrictTraits, Str, provides, Callable
-import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 from matplotlib.table import Table
 
 import numpy as np
-import seaborn as sns
 import pandas as pd
 
 from .i_view import IView
 import cytoflow.utility as util
-
-
 
 @provides(IView)
 class TableView(HasStrictTraits):
@@ -123,14 +119,13 @@ class TableView(HasStrictTraits):
         if self.subcolumn_facet: group_vars.append(self.subcolumn_facet)
                 
         agg = data.groupby(by = group_vars)[self.channel].aggregate(self.function)
-        
+
         # agg is a multi-index series; we can get a particular value from it
         # with get(idx1, idx2...)
 
-        row_offset = (self.column_facet is not None) + (self.subcolumn_facet is not None)        
-        col_offset = (self.row_facet is not None) + (self.subrow_facet is not None)
+        row_offset = (self.column_facet != "") + (self.subcolumn_facet != "")        
+        col_offset = (self.row_facet != "") + (self.subrow_facet != "")
         
-        num_rows = len(row_groups) * len(subrow_groups) + row_offset
         num_cols = len(col_groups) * len(subcol_groups) + col_offset
         
         fig = plt.figure()
@@ -149,6 +144,7 @@ class TableView(HasStrictTraits):
         t = Table(ax, loc, bbox, **kwargs)
         width = [1.0 / num_cols] * num_cols
         height = t._approx_text_height() * 1.8
+        
          
         # make the main table       
         for (ri, r) in enumerate(row_groups):
@@ -214,4 +210,3 @@ class TableView(HasStrictTraits):
                                text = text)                
                         
         ax.add_table(t)
-        plt.show()
