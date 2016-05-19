@@ -191,6 +191,8 @@ class SubsetModel(HasStrictTraits):
     # can feed to pandas.DataFrame.subset()    
     subset_str = Property(trait = Str,
                           depends_on = "conditions.subset_str")
+    
+    _subset_str = Str()
       
     traits_view = View(Item('conditions',
                             style = 'custom',
@@ -208,21 +210,25 @@ class SubsetModel(HasStrictTraits):
     # MAGIC: when the Property trait "subset_string" is assigned to,
     # update the view
     def _set_subset_str(self, value):
+        self._subset_str = value
+        self._update_subeditors()
+        
+    def _update_subeditors(self):
         # reset everything
         for condition in self.conditions:
             condition.subset_str = ""
             
         # abort if there's nothing to parse
-        if not value:
+        if not self._subset_str:
             return
         
         # this parser is ugly and brittle.  TODO - replace me with
         # something from pyparsing.  ie, see
         # http://pyparsing.wikispaces.com/file/view/simpleBool.py
                 
-        phrases = value.split(r") and (")
+        phrases = self._subset_str.split(r") and (")
         if phrases[0] == "":  # only had one phrase, not a conjunction
-            phrases = [value]
+            phrases = [self._subset_str]
             
         for phrase in phrases:
             if not phrase.startswith("("):
@@ -232,7 +238,8 @@ class SubsetModel(HasStrictTraits):
             name = re.match(r"\((\w+) ", phrase).group(1)
             
             # update the subset editor ui
-            self.conditions_map[name].subset_str = phrase
+            if name in self.conditions_map:
+                self.conditions_map[name].subset_str = phrase
             
             
     def _on_types_change(self, obj, name, old, new):
@@ -248,6 +255,8 @@ class SubsetModel(HasStrictTraits):
                 
                 self.conditions.append(condition)
                 self.conditions_map[name] = condition
+                
+        self._update_subeditors()
         
     
     def _on_values_change(self, obj, name, old, new):        
@@ -266,6 +275,8 @@ class SubsetModel(HasStrictTraits):
                  
                 self.conditions.append(condition)
                 self.conditions_map[name] = condition
+                
+        self._update_subeditors()
 
 
 class _SubsetEditor(Editor):
