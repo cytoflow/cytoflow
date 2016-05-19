@@ -77,6 +77,12 @@ class GaussianMixture2DOp(HasStrictTraits):
         
     ychannel : Str
         The Y channel to apply the mixture model to.
+
+    xscale : Enum("linear", "logicle", "log") (default = "linear")
+        Re-scale the data on the X acis before fitting the data?  
+
+    yscale : Enum("linear", "logicle", "log") (default = "linear")
+        Re-scale the data on the Y axis before fitting the data?  
         
     num_components : Int (default = 1)
         How many components to fit to the data?  Must be positive.
@@ -94,11 +100,7 @@ class GaussianMixture2DOp(HasStrictTraits):
         `Time` and `Dox`, setting `by = ["Time", "Dox"]` will fit the model 
         separately to each subset of the data with a unique combination of
         `Time` and `Dox`.
-        
-    scale : Enum("linear", "log") (default = "linear")
-        Re-scale the data before fitting the data?  
-        TODO - not currently implemented.
-        
+
     posteriors : Bool (default = False)
         If `True`, add a column named `{Name}_Posterior` giving the posterior
         probability that the event is in the component to which it was
