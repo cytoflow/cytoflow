@@ -114,7 +114,7 @@ class ViolinPlotView(HasStrictTraits):
 
         if self.subset:
             try:
-                data = experiment.query(self.subset).data
+                data = experiment.query(self.subset).data.reset_index()
             except:
                 raise util.CytoflowViewError("Subset string '{0}' isn't valid"
                                         .format(self.subset))

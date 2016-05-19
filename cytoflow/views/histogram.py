@@ -106,7 +106,7 @@ class HistogramView(HasStrictTraits):
 
         if self.subset:
             try:
-                experiment = experiment.query(self.subset)
+                data = experiment.query(self.subset).data.reset_index()
             except:
                 raise util.CytoflowViewError("Subset string '{0}' isn't valid"
                                         .format(self.subset))
@@ -114,8 +114,8 @@ class HistogramView(HasStrictTraits):
             if len(experiment.data) == 0:
                 raise util.CytoflowViewError("Subset string '{0}' returned no events"
                                         .format(self.subset))
-            
-        data = experiment.data
+        else:
+            data = experiment.data
         
         # get the scale
         scale = util.scale_factory(self.scale, experiment, self.channel)
