@@ -80,6 +80,7 @@ class Msg:
     CHANGE_CURRENT_PLOT = "CHANGE_CURRENT_PLOT"
     UPDATE_WI = "UPDATE_WI"
     CHANGE_DEFAULT_SCALE = "CHANGE_DEFAULT_SCALE"
+    ESTIMATE = "ESTIMATE"
     
     GET_LOG = "GET_LOG"
 
@@ -343,6 +344,13 @@ class LocalWorkflow(HasStrictTraits):
             new = obj.trait_get(name)[name]
         
         self.message_q.put((Msg.UPDATE_VIEW, (idx, view_id, name, new)))
+        
+    @on_trait_change('workflow:estimate')
+    def _on_estimate(self, obj, name, old, new):
+        logging.debug("LocalWorkflow._on_estimate :: {}"
+                      .format((obj, name, old, new)))
+        idx = self.workflow.index(obj)
+        self.message_q.put((Msg.ESTIMATE, idx))
 
     # MAGIC: called when default_scale is changed
     def _default_scale_changed(self, new_scale):
@@ -458,6 +466,10 @@ class RemoteWorkflow(HasStrictTraits):
                 new_scale = payload
                 cytoflow.set_default_scale(new_scale)
                 
+            elif msg == Msg.ESTIMATE:
+                idx = payload
+                self.workflow[idx].estimate = True
+                
             elif msg == Msg.GET_LOG:
                 self.message_q.put((Msg.GET_LOG, guiutil.child_log.getvalue()))
 
@@ -521,14 +533,13 @@ class RemoteWorkflow(HasStrictTraits):
         wi = next((x for x in self.workflow if x.operation == obj))
         idx = self.workflow.index(wi)
     
-        # some traits don't need to trigger a re-apply...
-        if not obj.trait(name).status:
+        # some traits don't need to trigger a re-apply
+        if not obj.trait(name).later and not obj.trait(name).status:
             for wi in self.workflow[idx:]:
                 wi.status = "invalid"
                 self.update_queue.put_nowait((self.workflow.index(wi), wi))
-
-        # ... but they do need to be sent to the parent process
-        if (obj, name) in self.updating_traits:
+        
+        if (obj, name) in self.updating_traits:        
             self.updating_traits.remove((obj, name))
         else:
             if name.endswith("_items"):
@@ -610,7 +621,20 @@ class RemoteWorkflow(HasStrictTraits):
         else:
             plt.clf()
             plt.show()
+            
+    @on_trait_change('workflow:estimate')
+    def _on_estimate(self, obj, name, old, new):
+        logging.debug("RemoteWorkflow._on_estimate :: {}"
+                      .format((obj, name, old, new)))
+        idx = self.workflow.index(obj)
 
+        if not obj.trait(name).later and not obj.trait(name).status:
+            for wi in self.workflow[idx:]:
+                if wi == obj:
+                    wi.status = "estimating"
+                else:
+                    wi.status = "invalid"
+                self.update_queue.put_nowait((self.workflow.index(wi), wi))
 
     def plot(self, wi):      
         

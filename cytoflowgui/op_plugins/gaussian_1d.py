@@ -56,7 +56,7 @@ class GaussianMixture1DHandler(Controller, OpHandlerMixin):
                                                   name = 'context.previous.conditions'),
                          label = 'Group\nEstimates\nBy',
                          style = 'custom'),
-                    Item('do_estimate',
+                    Item('context.estimate',
                          editor = ButtonEditor(value = True,
                                                label = "Estimate!"),
                          show_label = False),
@@ -68,7 +68,7 @@ class GaussianMixture1DPluginOp(GaussianMixture1DOp, PluginOpMixin):
     num_components = util.PositiveInt(1, later = True)
     sigma = CFloat(0.0, later = True)
     by = List(Str, later = True)
-    do_estimate = Bool()
+#     do_estimate = Bool(transient = True)
     
     def default_view(self, **kwargs):
         return GaussianMixture1DPluginView(op = self, **kwargs)

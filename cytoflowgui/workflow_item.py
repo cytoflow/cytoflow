@@ -24,7 +24,7 @@ import warnings
 
 from traits.api import HasStrictTraits, Instance, List, DelegatesTo, Enum, \
                        Property, cached_property, on_trait_change, Bool, \
-                       Str, Dict, Any, CStr
+                       Str, Dict, Any, CStr, Event
 from traitsui.api import View, Item, Handler
 from pyface.qt import QtGui
 
@@ -36,7 +36,7 @@ from cytoflow.operations.i_operation import IOperation
 from cytoflow.views.i_view import IView
 from cytoflow.utility import CytoflowError
 
-from cytoflowgui.matplotlib_editor import MPLFigureEditor
+from cytoflowgui.flow_task_pane import TabListEditor
 
 class WorkflowItem(HasStrictTraits):
     """        
@@ -111,7 +111,7 @@ class WorkflowItem(HasStrictTraits):
     
     # the view for the current plot
     current_plot_view = View(Item('current_view_plot_names',
-                                  editor = MPLFigureEditor(selected = 'current_plot'),
+                                  editor = TabListEditor(selected = 'current_plot'),
                                   show_label = False))
     
     # the default view for this workflow item
@@ -133,6 +133,9 @@ class WorkflowItem(HasStrictTraits):
     # if we got a warning, what was the warning string?
     warning = Str(transient = True, status = True)
     
+    # the event to make the workflow item re-estimate its internal model
+    estimate = Event
+    
     # the icon for the vertical notebook view.  Qt specific, sadly.
     icon = Property(depends_on = 'status', transient = True)   
             
@@ -141,7 +144,6 @@ class WorkflowItem(HasStrictTraits):
         Called by the controller to update this wi
         """
              
-        self.status = "invalid"             
         self.warning = ""
         self.error = ""
         self.result = None
@@ -150,11 +152,8 @@ class WorkflowItem(HasStrictTraits):
          
         with warnings.catch_warnings(record = True) as w:
             try:
-                if ("do_estimate" in self.operation.trait_names()
-                    and self.operation.do_estimate):
-                    self.status = "estimating"
+                if self.status == "estimating":
                     self.operation.estimate(prev_result)
-                    self.operation.do_estimate = False
                     
                 self.status = "applying"
                 self.result = self.operation.apply(prev_result)
