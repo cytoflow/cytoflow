@@ -42,6 +42,7 @@ class FlowTaskPane(TaskPane):
     name = 'Cytometry Data Viewer'
     
     layout = Instance(QtGui.QVBoxLayout)
+    canvas = Instance(FigureCanvasQTAggLocal)
         
     def create(self, parent):
         # create a layout for the tab widget and the main view
@@ -55,10 +56,10 @@ class FlowTaskPane(TaskPane):
         self.layout.addWidget(tabs_ui.control) 
         
         # add the main plot
-        canvas = FigureCanvasQTAggLocal(Figure())
-        canvas.setSizePolicy(QtGui.QSizePolicy.Expanding,
-                             QtGui.QSizePolicy.Expanding)
-        layout.addWidget(canvas)
+        self.canvas = FigureCanvasQTAggLocal(Figure())
+        self.canvas.setSizePolicy(QtGui.QSizePolicy.Expanding,
+                                  QtGui.QSizePolicy.Expanding)
+        layout.addWidget(self.canvas)
 
     def destroy(self):
         self.layout = self.control = None 
@@ -67,8 +68,8 @@ class FlowTaskPane(TaskPane):
         # TODO - eventually give a preview, allow changing size, dpi, aspect 
         # ratio, plot layout, etc.  at the moment, just export exactly what's
         # on the screen
-        # self.editor.save_figure(filename, bbox_inches = 'tight')
-        pass
+        
+        self.canvas.print_figure(filename, bbox_inches = 'tight')
     
 class _TabListEditor(Editor):
     
