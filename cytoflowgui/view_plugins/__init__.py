@@ -24,3 +24,4 @@ from stats_1d import Stats1DPlugin
 from kde_1d import Kde1DPlugin
 from kde_2d import Kde2DPlugin
 from violin import ViolinPlotPlugin
+from table import TablePlugin

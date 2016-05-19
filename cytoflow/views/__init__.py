@@ -41,3 +41,4 @@ from .kde_1d import Kde1DView
 from .kde_2d import Kde2DView
 from .histogram_2d import Histogram2DView
 from .violin import ViolinPlotView
+from .table import TableView

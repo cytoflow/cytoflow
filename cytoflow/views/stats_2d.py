@@ -146,11 +146,7 @@ class Stats2DView(HasStrictTraits):
 #     y_error_function = Callable
 #     y_error_var = Str
     subset = Str
-    
-    # TODO - think carefully about transformed values.
-    # ie, if we transform with Hlog, take the mean, then return the reverse
-    # transformed mean, is that the same as taking the ... um .... geometric
-    # mean of the untransformed data?  hm.
+
     
     def plot(self, experiment, **kwargs):
         """Plot a bar chart"""
@@ -215,12 +211,9 @@ class Stats2DView(HasStrictTraits):
             data = experiment.data
             
         group_vars = [self.by]
-        if self.xfacet:
-            group_vars.append(self.xfacet)
-        if self.yfacet:
-            group_vars.append(self.yfacet)
-        if self.huefacet:
-            group_vars.append(self.huefacet)
+        if self.xfacet: group_vars.append(self.xfacet)
+        if self.yfacet: group_vars.append(self.yfacet)
+        if self.huefacet: group_vars.append(self.huefacet)
             
         g = data.groupby(by = group_vars)
         

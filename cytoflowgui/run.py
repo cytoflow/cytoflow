@@ -42,7 +42,7 @@ from op_plugins import ImportPlugin, ThresholdPlugin, RangePlugin, \
                        GaussianMixture1DPlugin, GaussianMixture2DPlugin
 from view_plugins import HistogramPlugin, Histogram2DPlugin, ScatterplotPlugin, \
                          BarChartPlugin, Stats1DPlugin, Kde1DPlugin, Kde2DPlugin, \
-                         ViolinPlotPlugin
+                         ViolinPlotPlugin, TablePlugin
 
 import cytoflowgui.matplotlib_backend as mpl_backend
 import cytoflowgui.workflow as workflow
@@ -104,7 +104,8 @@ def run_gui():
                Histogram2DPlugin(), ScatterplotPlugin(), RangePlugin(),
                Range2DPlugin(), PolygonPlugin(), BarChartPlugin(), 
                Stats1DPlugin(), BinningPlugin(), Kde1DPlugin(), Kde2DPlugin(),
-               ViolinPlotPlugin(), GaussianMixture1DPlugin(), GaussianMixture2DPlugin()]
+               ViolinPlotPlugin(), GaussianMixture1DPlugin(), 
+               GaussianMixture2DPlugin(), TablePlugin()]
     
     app = CytoflowApplication(id = 'edu.mit.synbio.cytoflow',
                               plugins = plugins,
