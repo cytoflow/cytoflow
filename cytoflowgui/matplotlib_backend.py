@@ -477,7 +477,7 @@ def new_figure_manager(num, *args, **kwargs):
 
 def draw_if_interactive():
     logging.debug("mpl_multiprocess_backend.draw_if_interactive")
-    this.remote_canvas.draw()
+    #this.remote_canvas.draw()
     
 def show():
     logging.debug("mpl_multiprocess_backend.show")
