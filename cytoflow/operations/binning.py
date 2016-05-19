@@ -26,7 +26,7 @@ from __future__ import division, absolute_import
 import warnings
 
 from traits.api import (HasStrictTraits, Str, CStr, provides, Undefined,
-                        Instance, DelegatesTo, Constant, Disallow)
+                        Instance, DelegatesTo, Constant, Disallow, Int)
 import numpy as np
 import bottleneck as bn
 
@@ -93,6 +93,8 @@ class BinningOp(HasStrictTraits):
     num_bins = util.PositiveInt(0, allow_zero = True)
     bin_width = util.PositiveFloat(0, allow_zero = True)
     scale = util.ScaleEnum
+    
+    _max_num_bins = Int(100)
 
     def apply(self, experiment):
         """Applies the binning to an experiment.
@@ -145,6 +147,11 @@ class BinningOp(HasStrictTraits):
         
         num_bins = self.num_bins if self.num_bins else \
                    (channel_max - channel_min) / self.bin_width
+                   
+        if num_bins > self._max_num_bins:
+            raise util.CytoflowOpError("Too many bins! To increase this limit, "
+                                       "change _max_num_bins (currently {})"
+                                       .format(self._max_num_bins))
 
         bins = np.linspace(start = channel_min, stop = channel_max,
                            num = num_bins)
