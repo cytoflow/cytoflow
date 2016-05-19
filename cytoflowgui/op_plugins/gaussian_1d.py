@@ -22,7 +22,7 @@ Created on Oct 9, 2015
 '''
 
 from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor, \
-                         CheckListEditor, ButtonEditor
+                         CheckListEditor, ButtonEditor, Heading
 from envisage.api import Plugin, contributes_to
 from traits.api import provides, Callable, Bool, CFloat, List, Str
 from pyface.api import ImageResource
@@ -46,6 +46,7 @@ class GaussianMixture1DHandler(Controller, OpHandlerMixin):
                          editor=EnumEditor(name='context.previous.channels'),
                          label = "Channel"),
                     Item('scale'),
+                    VGroup(
                     Item('num_components', 
                          editor = TextEditor(auto_set = False),
                          label = "Num\nComponents"),
@@ -60,6 +61,8 @@ class GaussianMixture1DHandler(Controller, OpHandlerMixin):
                          editor = ButtonEditor(value = True,
                                                label = "Estimate!"),
                          show_label = False),
+                    label = "Estimation parameters",
+                    show_border = False),
                     shared_op_traits)
 
 class GaussianMixture1DPluginOp(GaussianMixture1DOp, PluginOpMixin):
@@ -68,7 +71,6 @@ class GaussianMixture1DPluginOp(GaussianMixture1DOp, PluginOpMixin):
     num_components = util.PositiveInt(1, later = True)
     sigma = CFloat(0.0, later = True)
     by = List(Str, later = True)
-#     do_estimate = Bool(transient = True)
     
     def default_view(self, **kwargs):
         return GaussianMixture1DPluginView(op = self, **kwargs)
