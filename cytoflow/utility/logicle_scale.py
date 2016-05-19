@@ -25,6 +25,7 @@ from __future__ import division, absolute_import
 
 import math
 from warnings import warn
+import logging
 
 from traits.api import HasTraits, Float, Property, Instance, Str, \
                        cached_property, Undefined, provides, Constant, Dict
@@ -118,6 +119,9 @@ class LogicleScale(HasTraits):
         """
         Transforms 'data' using the inverse of this scale.
         """
+        if data.size == 0:
+            return
+        
         inverse = np.vectorize(self.logicle.inverse)
         return inverse(data)
     
