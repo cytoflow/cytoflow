@@ -117,7 +117,7 @@ class GaussianMixture1DOp(HasStrictTraits):
     name = CStr()
     channel = Str()
     num_components = util.PositiveInt(1)
-    sigma = CFloat(0.0)
+    sigma = util.PositiveFloat(0.0, allow_zero = True)
     by = List(Str)
     scale = util.ScaleEnum
     posteriors = Bool(False)

@@ -23,9 +23,10 @@ Created on Dec 16, 2015
 
 from __future__ import division, absolute_import
 
-from traits.api import (HasStrictTraits, Str, CStr, Dict, Any,
-                        Instance, Bool, Constant, Int, Float, List,
-                        provides, DelegatesTo)
+import warnings
+
+from traits.api import (HasStrictTraits, Str, CStr, Dict, Any, Instance, Bool, 
+                        Constant, List, provides, DelegatesTo)
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -133,9 +134,9 @@ class GaussianMixture2DOp(HasStrictTraits):
     posteriors = Bool(False)
     
     # the key is either a single value or a tuple
-    _gmms = Dict(Any, Instance(mixture.GMM))
-    _xscale = Instance(util.IScale)
-    _yscale = Instance(util.IScale)
+    _gmms = Dict(Any, Instance(mixture.GMM), transient = True)
+    _xscale = Instance(util.IScale, transient = True)
+    _yscale = Instance(util.IScale, transient = True)
     
     def estimate(self, experiment, subset = None):
         """
@@ -221,6 +222,12 @@ class GaussianMixture2DOp(HasStrictTraits):
             
         if not experiment:
             raise util.CytoflowOpError("No experiment specified")
+        
+        if not self.xchannel:
+            raise util.CytoflowOpError("Must set X channel")
+
+        if not self.ychannel:
+            raise util.CytoflowOpError("Must set Y channel")
         
         # make sure name got set!
         if not self.name:
@@ -428,59 +435,86 @@ class GaussianMixture2DView(cytoflow.views.ScatterplotView):
     
     # TODO - why can't I use GaussianMixture2DOp here?
     op = Instance(IOperation)
-    name = DelegatesTo('op')
-    xchannel = DelegatesTo('op')
-    ychannel = DelegatesTo('op')
-    xscale = DelegatesTo('op')
-    yscale = DelegatesTo('op')
-    huefacet = DelegatesTo('op', 'name')
-    group = Any(None)
+    name = DelegatesTo('op', transient = True)
+    xchannel = DelegatesTo('op', transient = True)
+    ychannel = DelegatesTo('op', transient = True)
+    xscale = DelegatesTo('op', transient = True)
+    yscale = DelegatesTo('op', transient = True)
+    huefacet = DelegatesTo('op', 'name', transient = True)
     
-    def plot(self, experiment, **kwargs):
+    def enum_plots(self, experiment):
+        """
+        Returns an iterator over the possible plots that this View can
+        produce.  The values returned can be passed to "plot".
+        """
+        
+        class plot_enum(object):
+            
+            def __init__(self, op, experiment):
+                self._iter = None
+                self._returned = False
+                if op.by:
+                    self._iter = experiment.data.groupby(op.by).__iter__()
+                
+            def __iter__(self):
+                return self
+            
+            def next(self):
+                if self._iter:
+                    return self._iter.next()[0]
+                else:
+                    if self._returned:
+                        raise StopIteration
+                    else:
+                        self._returned = True
+                        return None
+            
+        return plot_enum(self.op, experiment)
+    
+    def plot(self, experiment, plot_name = None, **kwargs):
         """
         Plot the plots.
         """
         
-        if not self.huefacet:
-            raise util.CytoflowViewError("didn't set GaussianMixture2DOp.name")
+        if not experiment:
+            raise util.CytoflowViewError("No experiment specified")
         
-        if not self.op._gmms:
-            raise util.CytoflowViewError("Didn't find a model. Did you call "
-                                    "estimate()?")
-            
-        if self.group and self.group not in self.op._gmms:
-            raise util.CytoflowViewError("didn't find group {0} in op._gmms"
-                                    .format(self.group))
+        if self.xfacet:
+            raise util.CytoflowViewError("ThresholdSelection.xfacet must be empty")
         
-        # if `group` wasn't specified, make a new plot per group.
-        if self.op.by and not self.group:
-            groupby = experiment.data.groupby(self.op.by)
-            for group, _ in groupby:
-                GaussianMixture2DView(op = self.op,
-                                      group = group).plot(experiment, **kwargs)
-                plt.title("{0} = {1}".format(self.op.by, group))
+        if self.yfacet:
+            raise util.CytoflowViewError("ThresholdSelection.yfacet must be empty") 
+        
+        if self.op.by and not plot_name:
+            for plot in self.enum_plots(experiment):
+                self.plot(experiment, plot, **kwargs)
+                plt.title("{0} = {1}".format(self.op.by, plot_name))
             return
-                
+        
         temp_experiment = experiment.clone()
         
-        if self.group:
+        if plot_name:
             groupby = experiment.data.groupby(self.op.by)
-            temp_experiment.data = groupby.get_group(self.group)
+            temp_experiment.data = groupby.get_group(plot_name)
             temp_experiment.data.reset_index(drop = True, inplace = True)
-        
+            
         try:
             temp_experiment = self.op.apply(temp_experiment)
+            cytoflow.ScatterplotView.plot(self, temp_experiment, **kwargs)
         except util.CytoflowOpError as e:
-            raise util.CytoflowViewError(e.__str__())
+            warnings.warn(e.__str__(), util.CytoflowViewWarning)
+            cytoflow.ScatterplotView(xchannel = self.xchannel,
+                                     ychannel = self.ychannel,
+                                     xscale = self.xscale,
+                                     yscale = self.yscale).plot(temp_experiment, **kwargs)
+            return
 
-        # plot the group's scatterplot, colored by component
-        super(GaussianMixture2DView, self).plot(temp_experiment, **kwargs)
         
         # plot the actual distribution on top of it.  display as a "contour"
         # plot with ellipses at 1, 2, and 3 standard deviations
         # cf. http://scikit-learn.org/stable/auto_examples/mixture/plot_gmm.html
         
-        gmm = self.op._gmms[self.group] if self.group else self.op._gmms[True]
+        gmm = self.op._gmms[plot_name] if plot_name else self.op._gmms[True]
         
         for i, (mean, covar) in enumerate(zip(gmm.means_, gmm._get_covars())):    
             v, w = linalg.eigh(covar)

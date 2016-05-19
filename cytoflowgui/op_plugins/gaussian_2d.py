@@ -24,8 +24,10 @@ Created on Oct 9, 2015
 from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor, \
                          CheckListEditor, ButtonEditor
 from envisage.api import Plugin, contributes_to
-from traits.api import provides, Callable, Bool
+from traits.api import provides, Callable, List, Str
 from pyface.api import ImageResource
+
+import cytoflow.utility as util
 
 from cytoflow.operations.gaussian_2d import GaussianMixture2DOp, GaussianMixture2DView
 from cytoflow.views.i_selectionview import IView
@@ -42,12 +44,13 @@ class GaussianMixture2DHandler(Controller, OpHandlerMixin):
                          editor = TextEditor(auto_set = False)),
                     Item('xchannel',
                          editor=EnumEditor(name='context.previous.channels'),
-                         label = "Channel"),
+                         label = "X Channel"),
                     Item('ychannel',
                          editor=EnumEditor(name='context.previous.channels'),
-                         label = "Channel"),
+                         label = "Y Channel"),
                     Item('xscale'),
                     Item('yscale'),
+                    VGroup(
                     Item('num_components', 
                          editor = TextEditor(auto_set = False),
                          label = "Num\nComponents"),
@@ -58,15 +61,19 @@ class GaussianMixture2DHandler(Controller, OpHandlerMixin):
                                                   name = 'context.previous.conditions'),
                          label = 'Group\nEstimates\nBy',
                          style = 'custom'),
-                    Item('do_estimate',
+                    Item('context.estimate',
                          editor = ButtonEditor(value = True,
                                                label = "Estimate!"),
                          show_label = False),
+                    label = "Estimation parameters",
+                    show_border = False),
                     shared_op_traits)
 
 class GaussianMixture2DPluginOp(GaussianMixture2DOp, PluginOpMixin):
     handler_factory = Callable(GaussianMixture2DHandler)
-    do_estimate = Bool()
+    num_components = util.PositiveInt(1, later = True)
+    sigma = util.PositiveFloat(0.0, allow_zero = True, later = True)
+    by = List(Str, later = True)
     
     def default_view(self, **kwargs):
         return GaussianMixture2DPluginView(op = self, **kwargs)
