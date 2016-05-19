@@ -276,7 +276,7 @@ class BleedthroughLinearDiagnostic(HasStrictTraits):
         """Plot a faceted histogram view of a channel"""
         
         if not experiment:
-            raise util.CytoflowOpError("No experiment specified")
+            raise util.CytoflowViewError("No experiment specified")
         
         kwargs.setdefault('histtype', 'stepfilled')
         kwargs.setdefault('alpha', 0.5)

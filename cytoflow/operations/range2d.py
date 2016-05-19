@@ -208,7 +208,7 @@ class RangeSelection2D(cytoflow.views.ScatterplotView):
         """Plot the underlying scatterplot and then plot the selection on top of it."""
         
         if not experiment:
-            raise util.CytoflowOpError("No experiment specified")
+            raise util.CytoflowViewError("No experiment specified")
         
         if not experiment:
             raise util.CytoflowViewError("No experiment specified")

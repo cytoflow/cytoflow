@@ -409,9 +409,15 @@ class GaussianMixture1DView(cytoflow.views.HistogramView):
         """
         Plot the plots.
         """
+        if not experiment:
+            raise util.CytoflowViewError("No experiment specified")
         
-        logging.debug("PLOTTING")
+        if self.xfacet:
+            raise util.CytoflowViewError("ThresholdSelection.xfacet must be empty")
         
+        if self.yfacet:
+            raise util.CytoflowViewError("ThresholdSelection.yfacet must be empty")  
+              
         if self.op.by and not plot_name:
             for plot in self.enum_plots(experiment):
                 self.plot(experiment, plot, **kwargs)

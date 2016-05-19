@@ -24,8 +24,10 @@ Created on Oct 9, 2015
 from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor, \
                          CheckListEditor, ButtonEditor
 from envisage.api import Plugin, contributes_to
-from traits.api import provides, Callable, Bool
+from traits.api import provides, Callable, Bool, CFloat, List, Str
 from pyface.api import ImageResource
+
+import cytoflow.utility as util
 
 from cytoflow.operations.gaussian_1d import GaussianMixture1DOp, GaussianMixture1DView
 from cytoflow.views.i_selectionview import IView
@@ -62,6 +64,10 @@ class GaussianMixture1DHandler(Controller, OpHandlerMixin):
 
 class GaussianMixture1DPluginOp(GaussianMixture1DOp, PluginOpMixin):
     handler_factory = Callable(GaussianMixture1DHandler)
+    
+    num_components = util.PositiveInt(1, later = True)
+    sigma = CFloat(0.0, later = True)
+    by = List(Str, later = True)
     do_estimate = Bool()
     
     def default_view(self, **kwargs):
