@@ -21,6 +21,7 @@ from histogram_2d import Histogram2DPlugin
 from scatterplot import ScatterplotPlugin
 from bar_chart import BarChartPlugin
 from stats_1d import Stats1DPlugin
+from stats_2d import Stats2DPlugin
 from kde_1d import Kde1DPlugin
 from kde_2d import Kde2DPlugin
 from violin import ViolinPlotPlugin
