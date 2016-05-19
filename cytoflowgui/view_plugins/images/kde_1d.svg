@@ -13,7 +13,7 @@
    height="500"
    id="svg2"
    version="1.1"
-   inkscape:version="0.48.4 r9939"
+   inkscape:version="0.91 r"
    inkscape:export-filename="/home/brian/src/cytoflow/cytoflowgui/view_plugins/images/kde_1d.png"
    inkscape:export-xdpi="5.8299999"
    inkscape:export-ydpi="5.8299999"
@@ -28,8 +28,8 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.7"
-     inkscape:cx="216.74607"
-     inkscape:cy="282.36358"
+     inkscape:cx="231.03178"
+     inkscape:cy="260.93501"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -48,7 +48,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -58,8 +58,8 @@
      id="layer1"
      transform="translate(0,-552.36218)">
     <path
-       style="fill:#a6b9d8;fill-opacity:1;stroke:#4c72b0;stroke-width:45;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:0;stroke-opacity:1;stroke-dasharray:none"
-       d="M -17.47512,1017.2302 C 130.53785,787.9998 104.23029,706.71289 148.90442,619.51021 c 44.6741,-87.20269 128.44374,-42.28707 157.73643,99.29794 16.57365,80.10813 36.6864,139.9752 66.98396,185.91954 30.29756,45.94434 141.04833,112.50251 141.04833,112.50251"
+       style="fill:#a6b9d8;fill-opacity:1;stroke:#4c72b0;stroke-width:20;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:0;stroke-dasharray:none;stroke-opacity:1"
+       d="M -17.47512,1055.6656 C 130.53785,800.813 104.23029,710.44024 148.90442,613.49049 c 44.6741,-96.94977 128.44374,-47.01371 157.73643,110.39696 16.57365,89.06222 36.6864,155.62093 66.98396,206.7007 30.29756,51.07976 141.04833,125.07745 141.04833,125.07745"
        id="path2997"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="czszc"
