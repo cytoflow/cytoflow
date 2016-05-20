@@ -25,8 +25,9 @@ from __future__ import division, absolute_import
 
 import warnings
 
-from traits.api import HasStrictTraits, provides, Str, Bool
+from traits.api import HasStrictTraits, provides, Str, Int
 
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
@@ -83,6 +84,8 @@ class Histogram2DView(HasStrictTraits):
     yfacet = Str
     huefacet = Str
     subset = Str
+    
+    _max_bins = Int(100)
     
     def plot(self, experiment, **kwargs):
         """Plot a faceted histogram view of a channel"""
@@ -143,6 +146,19 @@ class Histogram2DView(HasStrictTraits):
         num_xbins = util.num_hist_bins(scaled_xdata)
         num_ybins = util.num_hist_bins(scaled_ydata)
         
+        # there are situations where this produces an unreasonable estimate.
+        if num_xbins > self._max_bins:
+            warnings.warn("Capping X bins to {}! To increase this limit, "
+                          "change _max_bins"
+                          .format(self._max_bins))
+            num_xbins = self._max_bins
+            
+        if num_ybins > self._max_bins:
+            warnings.warn("Capping Y bins to {}! To increase this limit, "
+                          "change _max_bins"
+                          .format(self._max_bins))
+            num_ybins = self._max_bins
+      
         kwargs.setdefault('smoothed', False)
         if kwargs['smoothed']:
             num_xbins /= 2
@@ -174,6 +190,26 @@ class Histogram2DView(HasStrictTraits):
             ax.set_yscale(self.yscale, **yscale.mpl_params)
         
         g.map(_hist2d, self.xchannel, self.ychannel, **kwargs)
+        # if we have a hue facet and a lot of hues, make a color bar instead
+        # of a super-long legend.
+        
+        if self.huefacet:
+            current_palette = mpl.rcParams['axes.color_cycle']
+            if len(g.hue_names) > len(current_palette):
+                plot_ax = plt.gca()
+                cmap = mpl.colors.ListedColormap(sns.color_palette("husl", 
+                                                                   n_colors = len(g.hue_names)))
+                cax, _ = mpl.colorbar.make_axes(plt.gca())
+                norm = mpl.colors.Normalize(vmin = np.min(g.hue_names), 
+                                            vmax = np.max(g.hue_names), 
+                                            clip = False)
+                mpl.colorbar.ColorbarBase(cax, 
+                                          cmap = cmap, 
+                                          norm = norm,
+                                          label = self.huefacet)
+                plt.sca(plot_ax)
+            else:
+                g.add_legend()
         
 
 def _hist2d(x, y, xedges = None, yedges = None, xscale = None, yscale = None, smoothed = False, **kwargs):

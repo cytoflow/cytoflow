@@ -32,7 +32,7 @@ if __name__ == '__main__':
 from collections import OrderedDict
     
 from traits.api import HasTraits, HasStrictTraits, provides, Instance, Str, Int, List, \
-                       Bool, Enum, Float, DelegatesTo, CStr, Any, Property, BaseCStr
+                       Bool, Enum, Float, DelegatesTo, Any, Property, BaseCStr
                        
 from traitsui.api import UI, Group, View, Item, TableEditor, OKCancelButtons, \
                          Controller, Menu, Action
@@ -40,7 +40,7 @@ from traitsui.api import UI, Group, View, Item, TableEditor, OKCancelButtons, \
 from traitsui.qt4.table_editor import TableEditor as TableEditorQt
 
 from pyface.i_dialog import IDialog
-from pyface.api import Dialog, GUI, FileDialog, error, OK
+from pyface.api import Dialog, FileDialog, error, OK
 
 from pyface.qt import QtCore, QtGui
 from pyface.constant import OK as PyfaceOK
@@ -61,15 +61,6 @@ def not_true ( value ):
 
 def not_false ( value ):
     return (value is not False)
-
-class LogFloat(Float):
-    """
-    A trait to represent a numeric condition on a log scale.
-    
-    Since I can't figure out how to add metadata to a trait class (just an
-    instance), we'll subclass it instead.  Don't need to override anything;
-    all we're really looking to change is the name.
-    """
 
 class Tube(HasTraits):
     """
@@ -207,7 +198,6 @@ class ExperimentDialogModel(HasStrictTraits):
         
         dtype_to_trait = {"category" : Str,
                           "float" : Float,
-                          "log" : LogFloat,
                           "bool" : Bool,
                           "int" : Int}
         
@@ -259,7 +249,6 @@ class ExperimentDialogModel(HasStrictTraits):
     def update_import_op(self, op):
         trait_to_dtype = {"Str" : "category",
                           "Float" : "float",
-                          "LogFloat" : "log",
                           "Bool" : "bool",
                           "Int" : "int"}
         
@@ -331,9 +320,8 @@ class ExperimentDialogHandler(Controller):
         self.table_editor = info.ui.get_editors('tubes')[0]
         
         if self.model.tube_traits:
-            trait_to_col = {"Str" : " (String)",
+            trait_to_col = {"Str" : " (Category)",
                             "Float" : " (Number)",
-                            "LogFloat" : " (Log)",
                             "Bool" : " (T/F)",
                             "Int" : " (Int)"}
             
@@ -374,12 +362,12 @@ class ExperimentDialogHandler(Controller):
         
         class NewTrait(HasTraits):    
             condition_name = ValidPythonIdentifier()
-            condition_type = Enum(["String", "Number", "Number (Log)", "True/False"])
+            condition_type = Enum(["Category", "Number", "True/False"])
     
             view = View(Item(name = 'condition_name'),
                         Item(name = 'condition_type'),
                         buttons = OKCancelButtons,
-                        title = "Add a trait",
+                        title = "Add a condition",
                         close_result = False)
             
             def _validate_condition_name(self, x):
@@ -405,12 +393,10 @@ class ExperimentDialogHandler(Controller):
                   "The experiment already has a condition named \"{0}\".".format(name),
                   "Error adding condition")
         
-        if new_trait.condition_type == "String":
-            self._add_metadata(name, name + " (String)", Str(condition = True))
+        if new_trait.condition_type == "Category":
+            self._add_metadata(name, name + " (Category)", Str(condition = True))
         elif new_trait.condition_type == "Number":
             self._add_metadata(name, name + " (Number)", Float(condition = True))
-        elif new_trait.condition_type == "Number (Log)":
-            self._add_metadata(name, name + " (Log)", LogFloat(condition = True))
         else:
             self._add_metadata(name, name + " (T/F)", Bool(condition = True))       
         

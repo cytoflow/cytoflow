@@ -40,7 +40,7 @@ class ViolinPlotView(HasStrictTraits):
     channel : Str
         the name of the channel we're plotting
         
-    by : Str
+    xvariable : Str
         the main variable by which we're faceting
     
     xfacet : Str 
@@ -74,7 +74,7 @@ class ViolinPlotView(HasStrictTraits):
     
     name = Str
     channel = Str
-    by = Str
+    variable = Str
     scale = util.ScaleEnum
     xfacet = Str
     yfacet = Str
@@ -94,10 +94,10 @@ class ViolinPlotView(HasStrictTraits):
             raise util.CytoflowViewError("Channel {0} not in the experiment"
                                     .format(self.channel))
         
-        if not self.by:
-            raise util.CytoflowViewError("by variable not specified")
+        if not self.variable:
+            raise util.CytoflowViewError("Variable not specified")
         
-        if not self.by in experiment.conditions:
+        if not self.variable in experiment.conditions:
             raise util.CytoflowViewError("Variable {0} isn't in the experiment")
         
         if self.xfacet and self.xfacet not in experiment.conditions:
@@ -151,16 +151,16 @@ class ViolinPlotView(HasStrictTraits):
             
         # this order-dependent thing weirds me out.      
         if kwargs['orient'] == 'h':
-            violin_args = [self.channel, self.by]
+            violin_args = [self.channel, self.variable]
         else:
-            violin_args = [self.by, self.channel]
+            violin_args = [self.variable, self.channel]
             
         if self.huefacet:
             violin_args.append(self.huefacet)
             
         g.map(_violinplot,   
               *violin_args,      
-              order = np.sort(data[self.by].unique()),
+              order = np.sort(data[self.variable].unique()),
               hue_order = (np.sort(data[self.huefacet].unique()) if self.huefacet else None),
               **kwargs)
         

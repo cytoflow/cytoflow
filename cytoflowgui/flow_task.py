@@ -86,7 +86,7 @@ class FlowTask(Task):
                               id='File', name='&File'),
                         SMenu(TaskAction(name = 'Report a problem....',
                                          method = 'on_problem'),
-                                         TaskAction(name='About...',
+                              TaskAction(name='About...',
                                          method='on_about'),
                               id="Help", name ="&Help"))
     
@@ -113,7 +113,8 @@ class FlowTask(Task):
                            TaskAction(method='on_prefs',
                                       name = "Prefs",
                                       tooltip='Preferences',
-                                      image=ImageResource('prefs')),
+                                      image=ImageResource('prefs'),
+                                      enabled = False),
                            image_size = (32, 32))]
     
     # are we debugging?  ie, do we need a default setup?
@@ -127,10 +128,10 @@ class FlowTask(Task):
         if self.debug:
             from cytoflow import Tube
                      
-            import_op.conditions["Dox"] = "log"
+            import_op.conditions["Dox"] = "float"
         
             tube1 = Tube(file = "../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs",
-                         conditions = {"Dox" : 0.1})
+                         conditions = {"Dox" : 0.0})
         
             tube2 = Tube(file = "../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs",
                          conditions = {"Dox" : 1.0})
@@ -213,8 +214,14 @@ class FlowTask(Task):
         """
         Shows a dialog to export a file
         """
+        
+        information(None, "This will save exactly what you see on the screen "
+                          "to a file. Choose the file type via the file " 
+                          "extension (ie .png, .pdf, .jpg)", "Export")
+        
         dialog = FileDialog(parent = self.window.control,
                             action = 'save as')
+        
         if dialog.open() == OK:
             self.view.export(dialog.path)
             
@@ -223,6 +230,8 @@ class FlowTask(Task):
         Shows a dialog to export the workflow to an Jupyter notebook
         """
         
+        return
+    
         dialog = FileDialog(parent = self.window.control,
                             action = 'save as',
                             wildcard = '*.ipynb')

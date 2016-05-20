@@ -69,9 +69,7 @@ class ImportOp(HasStrictTraits):
     An operation for importing data and making an `Experiment`.
     
     To use, set the `conditions` dict to a mapping between condition name and
-    NumPy `dtype`.  Useful dtypes include `category`, `float`, `int`, `bool`, 
-    and `log`. (`log` is not a NumPy `dtype`: instead, it is converted to 
-    `float`, but all plots are displayed on a log scale.)
+    NumPy `dtype`.  Useful dtypes include `category`, `float`, `int`, `bool`.
     
     Next, set `tubes` to a list of `Tube` containing FCS filenames and the
     corresponding conditions.
@@ -87,9 +85,7 @@ class ImportOp(HasStrictTraits):
     
     conditions : Dict(Str, Str)
         A dictionary mapping condition names (keys) to NumPy `dtype`s (values).
-        Useful `dtype`s include "category", "float", "int", "bool", and "log". 
-        ("log" is not a NumPy `dtype`: instead, it is converted to `float`, 
-        but all plots are displayed on a log scale.)
+        Useful `dtype`s include "category", "float", "int", and "bool".
         
     tubes : List(Tube)
         A list of `Tube` instances, which map FCS files to their corresponding
@@ -134,7 +130,7 @@ class ImportOp(HasStrictTraits):
     friendly_id = Constant("Import")
     name = Constant("Import Data")
 
-    # experimental conditions: name --> dtype.  can also be "log"
+    # experimental conditions: name --> dtype. 
     conditions = Dict(Str, Str)
     
     # the tubes
@@ -176,13 +172,7 @@ class ImportOp(HasStrictTraits):
         experiment.metadata["ignore_v"] = self.ignore_v
             
         for condition, dtype in self.conditions.items():
-            is_log = False
-            if dtype == "log":
-                is_log = True
-                dtype = "float"
             experiment.add_condition(condition, dtype)
-            if is_log:
-                experiment.metadata[condition]["repr"] = "log"
 
         try:
             # silence warnings about duplicate channels;

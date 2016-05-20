@@ -683,5 +683,9 @@ class RemoteWorkflow(HasStrictTraits):
                 wi.current_view.error = e.__str__()   
                 plt.clf()
                 plt.show()
+            except Exception as e:
+                wi.current_view.error = e.__str__()   
+                plt.clf()
+                plt.show()                
              
 

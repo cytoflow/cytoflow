@@ -331,7 +331,7 @@ class GaussianMixture1DOp(HasStrictTraits):
             col_name = "{0}_Posterior".format(self.name)
             new_experiment.add_condition(col_name, "float", event_posteriors)
             
-        new_experiment.history.append(self.clone_traits())
+        new_experiment.history.append(self.clone_traits(transient = lambda t: True))
         return new_experiment
     
     def default_view(self, **kwargs):
@@ -421,7 +421,7 @@ class GaussianMixture1DView(cytoflow.views.HistogramView):
         if self.op.by and not plot_name:
             for plot in self.enum_plots(experiment):
                 self.plot(experiment, plot, **kwargs)
-                plt.title("{0} = {1}".format(self.op.by, plot_name))
+                plt.title("{0} = {1}".format(self.op.by, plot))
             return
                 
         temp_experiment = experiment.clone()

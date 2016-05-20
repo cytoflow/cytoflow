@@ -26,7 +26,7 @@ import cytoflow.utility as util
 class Experiment(HasStrictTraits):
     """An Experiment manages all the data and metadata for a flow experiment.
     
-    An `Experiment` is `cytoflow`'s central data structure: it wraps a huge 
+    An `Experiment` is `cytoflow`'s central data structure: it wraps a 
     `pandas.DataFrame` containing all the data from a flow experiment. Each 
     row in the table is an event.  Each column is either a measurement from one 
     of the detectors (or a "derived" measurement such as a transformed value or
@@ -72,8 +72,6 @@ class Experiment(HasStrictTraits):
             FCS keyword "$PnV".
         * range (float) : for raw and transformed channels, the maximum possible
             value.  from the FCS keyword "$PnR"
-        * repr : for float conditions, whether to plot it linearly or on
-            a log scale.
         * xforms, xforms_inv: for channels, a list of (parameterized!) 
             transformations that have been applied.  each must be a
             one-parameter function that takes either a single value or a list 

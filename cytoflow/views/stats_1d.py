@@ -17,7 +17,7 @@
 
 from __future__ import division, absolute_import
 
-from traits.api import HasStrictTraits, Str, provides, Callable
+from traits.api import HasStrictTraits, Str, provides, Callable, Enum
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
@@ -39,8 +39,11 @@ class Stats1DView(HasStrictTraits):
     name : Str
         The plot's name 
     
-    by : Str
+    xvariable : Str
         the name of the conditioning variable to put on the X axis
+        
+    xscale : Enum("linear", "log") (default = "linear")
+        The scale to use on the X axis
 
     ychannel : Str
         Apply `yfunction` to `ychannel` for each value of `by`
@@ -110,7 +113,8 @@ class Stats1DView(HasStrictTraits):
     friendly_id = "1D Statistics View" 
     
     name = Str
-    by = Str
+    xvariable = Str
+    xscale = Enum("linear", "log")
     ychannel = Str
     yscale = util.ScaleEnum
     yfunction = Callable
@@ -137,17 +141,17 @@ class Stats1DView(HasStrictTraits):
         if not experiment:
             raise util.CytoflowViewError("No experiment specified")
         
-        if not self.by:
-            raise util.CytoflowViewError("Stats1DView.by not set")
+        if not self.xvariable:
+            raise util.CytoflowViewError("X variable not set")
             
-        if self.by not in experiment.conditions:
-            raise util.CytoflowViewError("'by' variable {0} not in the experiment"
-                                    .format(self.by))
+        if self.xvariable not in experiment.conditions:
+            raise util.CytoflowViewError("X variable {0} not in the experiment"
+                                    .format(self.xvariable))
         
-        if not (experiment.conditions[self.by] == "float" or
-                experiment.conditions[self.by] == "int"):
-            raise util.CytoflowViewError("by {0} isn't numeric"
-                                    .format(self.by)) 
+        if not (experiment.conditions[self.xvariable] == "float" or
+                experiment.conditions[self.xvariable] == "int"):
+            raise util.CytoflowViewError("X variable {0} isn't numeric"
+                                    .format(self.xvariable))
 
         if not self.ychannel:
             raise util.CytoflowViewError("Y channel isn't set.")
@@ -183,7 +187,7 @@ class Stats1DView(HasStrictTraits):
         else:
             data = experiment.data
             
-        group_vars = [self.by]
+        group_vars = [self.xvariable]
         if self.xfacet:
             group_vars.append(self.xfacet)
         if self.yfacet:
@@ -192,7 +196,7 @@ class Stats1DView(HasStrictTraits):
             group_vars.append(self.huefacet)
             
         g = data.groupby(by = group_vars)
-        plot_data = g[self.ychannel].aggregate(self.yfunction).reset_index()        
+        plot_data = g[self.ychannel].aggregate(self.yfunction).reset_index()
   
         grid = sns.FacetGrid(plot_data,
                              size = 6,
@@ -206,17 +210,14 @@ class Stats1DView(HasStrictTraits):
                              legend_out = False,
                              sharex = False,
                              sharey = False)
-
-        if 'repr' in experiment.metadata[self.by] and \
-            experiment.metadata[self.by]['repr'] == 'log':
-            plt.xscale('log', nonposx = 'mask')
             
         yscale = util.scale_factory(self.yscale, experiment, self.ychannel)
         
         for ax in grid.axes.flatten():
+            ax.set_xscale(self.xscale)
             ax.set_yscale(self.yscale, **yscale.mpl_params)
         
-        grid.map(plt.plot, self.by, self.ychannel, **kwargs)
+        grid.map(plt.plot, self.xvariable, self.ychannel, **kwargs)
         
         # if we have a hue facet and a lot of hues, make a color bar instead
         # of a super-long legend.
@@ -231,7 +232,11 @@ class Stats1DView(HasStrictTraits):
                 norm = mpl.colors.Normalize(vmin = np.min(grid.hue_names), 
                                             vmax = np.max(grid.hue_names), 
                                             clip = False)
-                mpl.colorbar.ColorbarBase(cax, cmap = cmap, norm = norm, **kw)
+                mpl.colorbar.ColorbarBase(cax, 
+                                          cmap = cmap, 
+                                          norm = norm,
+                                          label = self.huefacet, 
+                                          **kw)
                 plt.sca(plot_ax)
             else:
                 grid.add_legend()

@@ -257,7 +257,10 @@ class Stats2DView(HasStrictTraits):
                 norm = mpl.colors.Normalize(vmin = np.min(grid.hue_names), 
                                             vmax = np.max(grid.hue_names), 
                                             clip = False)
-                mpl.colorbar.ColorbarBase(cax, cmap = cmap, norm = norm)
+                mpl.colorbar.ColorbarBase(cax, 
+                                          cmap = cmap, 
+                                          norm = norm,
+                                          label = self.huefacet)
                 plt.sca(plot_ax)
             else:
                 grid.add_legend()

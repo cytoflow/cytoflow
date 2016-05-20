@@ -203,7 +203,10 @@ class HistogramView(HasStrictTraits):
                 norm = mpl.colors.Normalize(vmin = np.min(g.hue_names), 
                                             vmax = np.max(g.hue_names), 
                                             clip = False)
-                mpl.colorbar.ColorbarBase(cax, cmap = cmap, norm = norm)
+                mpl.colorbar.ColorbarBase(cax, 
+                                          cmap = cmap, 
+                                          norm = norm, 
+                                          label = self.huefacet)
                 plt.sca(plot_ax)
             else:
                 g.add_legend()

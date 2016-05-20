@@ -93,7 +93,13 @@ class Test(unittest.TestCase):
     def testStats1D(self):
         import numpy as np
         flow.Stats1DView(name = "Stats1D",
-                         by = "Dox",
+                         xchannel = "Dox",
+                         ychannel = "V2-A",
+                         yfunction = np.mean).plot(self.ex)
+
+        flow.Stats1DView(name = "Stats1D",
+                         xchannel = "Dox",
+                         xscale = "log",
                          ychannel = "V2-A",
                          yfunction = np.mean).plot(self.ex)
                          
