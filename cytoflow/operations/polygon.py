@@ -154,7 +154,7 @@ class PolygonOp(HasStrictTraits):
         new_experiment.add_condition(self.name, 
                                      "bool", 
                                      path.contains_points(xy_data))
-        new_experiment.history.append(self.clone_traits())
+        new_experiment.history.append(self.clone_traits(transient = lambda t: True))
             
         return new_experiment
     

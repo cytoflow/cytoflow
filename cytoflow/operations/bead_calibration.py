@@ -334,7 +334,7 @@ class BeadCalibrationOp(HasStrictTraits):
             if 'range' in experiment.metadata[channel]:
                 new_experiment.metadata[channel]['range'] = calibration_fn(experiment.metadata[channel]['range'])
             
-        new_experiment.history.append(self.clone_traits()) 
+        new_experiment.history.append(self.clone_traits(transient = lambda t: True)) 
         return new_experiment
     
     def default_view(self, **kwargs):

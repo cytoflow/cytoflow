@@ -227,7 +227,7 @@ class BleedthroughLinearOp(HasStrictTraits):
                 {x : self.spillover[(x, channel)]
                      for x in channels if x != channel}
      
-        new_experiment.history.append(self.clone_traits())   
+        new_experiment.history.append(self.clone_traits(transient = lambda t: True))   
         return new_experiment
     
     def default_view(self, **kwargs):

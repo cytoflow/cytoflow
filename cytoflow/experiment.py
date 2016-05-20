@@ -249,6 +249,9 @@ class Experiment(HasStrictTraits):
         """Clone this experiment"""
         new_exp = self.clone_traits()
         new_exp.data = self.data.copy()
+
+        # shallow copy of the history
+        new_exp.history = self.history[:]
         return new_exp
             
     def add_condition(self, name, dtype, data = None):

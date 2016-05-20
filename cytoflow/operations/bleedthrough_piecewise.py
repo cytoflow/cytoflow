@@ -173,7 +173,7 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
                     raise util.CytoflowOpError("Subset string '{0}' isn't valid"
                                           .format(self.subset))
                                 
-                if len(tube_exp.index) == 0:
+                if len(tube_exp.data) == 0:
                     raise util.CytoflowOpError("Subset string '{0}' returned no events"
                                           .format(self.subset))
             
@@ -309,7 +309,7 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
             new_experiment.metadata[channel]['piecewise_bleedthrough'] = \
                 (self._channels, self._interpolators[channel])
 
-        new_experiment.history.append(self.clone_traits())
+        new_experiment.history.append(self.clone_traits(transient = lambda t: True))
         return new_experiment
     
     def default_view(self, **kwargs):

@@ -270,7 +270,7 @@ class ColorTranslationOp(HasStrictTraits):
             new_experiment.metadata[from_channel]['channel_translation_fn'] = trans_fn
             new_experiment.metadata[from_channel]['channel_translation'] = to_channel
 
-        new_experiment.history.append(self.clone_traits())
+        new_experiment.history.append(self.clone_traits(transient = lambda t: True))
         return new_experiment
     
     def default_view(self, **kwargs):
