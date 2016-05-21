@@ -1,0 +1,17 @@
+# Setup
+title:        Cytoflow
+tagline:      Better quantitative flow cytometry.
+baseurl:      "/cytoflow"
+paginate:     1
+
+# About/contact
+author:  
+  name:       Brian Teague
+  url:        https://brian.teague.name
+
+# Gems
+gems:
+  - jekyll-paginate
+
+#Others
+markdown: kramdown
