@@ -3,11 +3,11 @@
 
 Welcome to a different style of flow cytometry analysis.  Take a look at some example [Jupyter](http://jupyter.org/) notebooks:
 
-* [Basic flow cytometry analysis](http://nbviewer.ipython.org/github/bpteague/cytoflow/blob/master/docs/examples-basic/Basic%20Cytometry.ipynb)
-* [An small-molecule induction curve with yeast](http://nbviewer.ipython.org/github/bpteague/cytoflow/blob/master/docs/examples-basic/Yeast%20Dose%20Reponse.ipynb)
+* [Basic flow cytometry analysis](https://github.com/bpteague/cytoflow/blob/master/docs/examples-basic/Basic%20Cytometry.ipynb)
+* [An small-molecule induction curve with yeast](https://github.com/bpteague/cytoflow/blob/master/docs/examples-basic/Yeast%20Dose%20Reponse.ipynb)
 * [Data-driven gating with gaussian mixture models](https://github.com/bpteague/cytoflow/blob/master/docs/examples-basic/Machine%20Learning.ipynb)
-* [Reproduced some analysis from a published paper](http://nbviewer.jupyter.org/github/bpteague/cytoflow-examples/blob/master/kiani/Kiani%20Nature%20Methods%202014.ipynb)
-* [Calibrated flow cytometry in MEFLs](http://nbviewer.jupyter.org/github/bpteague/cytoflow-examples/blob/master/tasbe/TASBE%20Workflow.ipynb)
+* [Reproduced some analysis from a published paper](https://github.com/bpteague/cytoflow-examples/blob/master/kiani/Kiani%20Nature%20Methods%202014.ipynb)
+* [Calibrated flow cytometry in MEFLs](https://github.com/bpteague/cytoflow-examples/blob/master/tasbe/TASBE%20Workflow.ipynb)
 
 ### What's wrong with other packages?  
 
