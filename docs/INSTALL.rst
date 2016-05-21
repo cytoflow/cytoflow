@@ -1,8 +1,10 @@
+.. _install:
+
 Installation notes
 ==================
 
-USERS AND DEVELOPERS: To use the Cytoflow modules in an IPython notebook or your own code
------------------------------------------------------------------------------------------
+To use the Cytoflow modules in an IPython notebook or your own code
+-------------------------------------------------------------------
 
 .. _ubuntu-mod:
 
@@ -100,7 +102,9 @@ MacOS
   ``import cytoflow`` and press ``Shift+Enter``.  If Python doesn't complain,
   you're good to go.  (If it does, please submit a bug report!)
 
-DEVELOPERS: To hack on the code
+.. _hacking:
+
+To hack on the code
 -------------------------------
 
 Ubuntu
@@ -262,10 +266,12 @@ pre-built MacOS Python packages.  That's the approach outlined below.
   instructions above carefully then file a bug report!
   
 
-USERS: Just run the point-and-click GUI program
+Running the point-and-click GUI program
 -----------------------------------------------
 
-**There is a single-click executable under development.**
+**If you just want to run a pre-built program, there are one-click bundles 
+available at** 
+`http://bpteague.github.io/cytoflow <http://bpteague.github.io/cytoflow>`_.
 
 Ubuntu
 ^^^^^^
