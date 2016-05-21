@@ -51,6 +51,14 @@ cytoflow.utility.logicle_scale module
     :undoc-members:
     :show-inheritance:
 
+cytoflow.utility.matplotlib_widgets module
+------------------------------------------
+
+.. automodule:: cytoflow.utility.matplotlib_widgets
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 cytoflow.utility.scale module
 -----------------------------
 

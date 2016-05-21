@@ -74,7 +74,7 @@ setup(
                         'envisage>=4.0',
                         'nbformat>=4.0',
                         'python-dateutil>=2.5.2',
-                        'statsmodels>=0.6'] \
+                        'statsmodels>=0.6.1'] \
                 if not on_rtd else None,
                         
                         # ALSO requires PyQt4 >= 4.10, but it's not available
@@ -99,7 +99,7 @@ setup(
 
     # metadata for upload to PyPI
     author = "Brian Teague",
-    author_email = "teague@mit.edu",
+    author_email = "bpteague@gmail.edu",
     description = "Python tools for quantitative, reproducible flow cytometry analysis",
     long_description = long_description,
     license = "GPLv2",

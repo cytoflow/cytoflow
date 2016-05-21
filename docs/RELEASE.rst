@@ -2,6 +2,7 @@ Spinning a new release
 ----------------------
 
 - Update the version in ``cytoflow/__init__.py``
+- Update the version in ``docs/conf.py``
 - Make sure ``install_requires`` in ``setup.py`` matches ``requirements.txt``
 - Update the README.rst from the README.md.  From the project root, say
 

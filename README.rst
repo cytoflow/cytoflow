@@ -8,15 +8,15 @@ Welcome to a different style of flow cytometry analysis. Take a look at
 some example `Jupyter <http://jupyter.org/>`__ notebooks:
 
 -  `Basic flow cytometry
-   analysis <http://nbviewer.ipython.org/github/bpteague/cytoflow/blob/master/docs/examples-basic/Basic%20Cytometry.ipynb>`__
+   analysis <https://github.com/bpteague/cytoflow/blob/master/docs/examples-basic/Basic%20Cytometry.ipynb>`__
 -  `An small-molecule induction curve with
-   yeast <http://nbviewer.ipython.org/github/bpteague/cytoflow/blob/master/docs/examples-basic/Yeast%20Dose%20Reponse.ipynb>`__
+   yeast <https://github.com/bpteague/cytoflow/blob/master/docs/examples-basic/Yeast%20Dose%20Reponse.ipynb>`__
 -  `Data-driven gating with gaussian mixture
    models <https://github.com/bpteague/cytoflow/blob/master/docs/examples-basic/Machine%20Learning.ipynb>`__
 -  `Reproduced some analysis from a published
-   paper <http://nbviewer.jupyter.org/github/bpteague/cytoflow-examples/blob/master/kiani/Kiani%20Nature%20Methods%202014.ipynb>`__
+   paper <https://github.com/bpteague/cytoflow-examples/blob/master/kiani/Kiani%20Nature%20Methods%202014.ipynb>`__
 -  `Calibrated flow cytometry in
-   MEFLs <http://nbviewer.jupyter.org/github/bpteague/cytoflow-examples/blob/master/tasbe/TASBE%20Workflow.ipynb>`__
+   MEFLs <https://github.com/bpteague/cytoflow-examples/blob/master/tasbe/TASBE%20Workflow.ipynb>`__
 
 What's wrong with other packages?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
