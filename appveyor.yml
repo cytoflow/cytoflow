@@ -22,7 +22,7 @@ environment:
 
 init:
   - "ECHO %PYTHON% %PYTHON_VERSION% %PYTHON_ARCH%"
-  - ps: Update-AppveyorBuild -Version "0.0.$env:appveyor_build_number-$($env:appveyor_repo_commit.substring(0,7))"
+  - ps: Update-AppveyorBuild -Version "$($env:appveyor_repo_commit.substring(0,7))"
 
 install:
   - ECHO "Filesystem root:"
@@ -48,7 +48,8 @@ install:
   - choco install swig -y
 
   # Install the build and runtime dependencies of the project.
-  - conda install --yes --quiet numpy numexpr scipy matplotlib=1.4.3 nose dateutil pandas statsmodels scikit-learn seaborn pyface=4.4.0 envisage
+  - conda install --yes --quiet numpy numexpr scipy matplotlib nose dateutil pandas statsmodels scikit-learn seaborn pyface=4.4.0 envisage pip
+  - pip.exe install pyinstaller
 
   - "%WITH_COMPILER% python setup.py develop"
 
@@ -59,6 +60,7 @@ test_script:
 
 after_test:
   - "%WITH_COMPILER% %PYTHON%/python setup.py bdist_wheel bdist_wininst"
+  - "pyinstaller.exe packaging/pyinstaller.spec"
 
 artifacts:
   - path: dist\*
@@ -77,5 +79,3 @@ deploy:
   publish: false
   override: true
   
-#on_success:
-#  - TODO: upload the content of dist/*.whl to a public wheelhouse
