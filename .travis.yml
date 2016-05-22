@@ -37,6 +37,7 @@ install:
   - python setup.py develop sdist bdist_wheel 
   - pip install pyinstaller nose2
   - pyinstaller packaging/pyinstaller.spec
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then cd dist/ zip -r cytoflow.macos.zip Cytoflow.app/; cd ..; fi
   - python packaging/make-bintray.py > packaging/bintray.json
   - cat packaging/bintray.json
 
