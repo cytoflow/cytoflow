@@ -19,7 +19,8 @@ json_dev = """
     "files":
         [
             {{"includePattern": "dist/(.*)", 
-             "matrixParams": {{"override": 1 }} }}
+              "uploadPattern" : "$1",
+              "matrixParams": {{"override": 1 }} }}
         ]
 }}
 """
@@ -41,8 +42,9 @@ json_release = """
    
     "files":
         [
-            {{"includePattern": "dist/(.*)", 
-             "matrixParams": {{"override": 1 }} }}
+            {{"includePattern" : "dist/(.*)", 
+              "uploadPattern" : "$1",
+              "matrixParams": {{"override": 1 }} }}
         ],
 
    "publish": true 

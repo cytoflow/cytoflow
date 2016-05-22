@@ -38,6 +38,7 @@ install:
   - pip install pyinstaller nose2
   - pyinstaller packaging/pyinstaller.spec
   - python packaging/make-bintray.py > packaging/bintray.json
+  - cat packaging/bintray.json
 
 script: nose2 -c packaging/nose2.cfg
 
