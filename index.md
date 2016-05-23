@@ -36,14 +36,14 @@ packages don't handle this gracefully!
   tired of FACSDiva plots.
 
 * The point-and-click interface is built on **Python modules**.  Do you 
-  analyze data with Python?  If so, head over to the [developer documentation]
-  (https://cytoflow.readthedocs.io/) to use these modules in your own 
-  workflow.  They have been designed to work well in a 
+  analyze data with Python?  If so, head over to the 
+  [developer documentation](https://cytoflow.readthedocs.io/) to use these 
+  modules in your own workflow.  They have been designed to work well in a 
   [Jupyter notebook](http://jupyter.org/); in fact, the GUI will export a 
   workflow directly to a notebook!
 
 * **Free and open-source.**  Download the source code from 
-  (the GitHub project page)[https://github.com/bpteague/cytoflow]; modify it 
+  (the GitHub project page)[https://github.com/bpteague/cytoflow] and modify it 
   to suit your own needs, then contribute your changes back so the rest of 
   the community can benefit from them.
 
