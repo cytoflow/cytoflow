@@ -3,6 +3,16 @@ layout: default
 title: Screenshots
 ---
 
+The GUI.
+
+![GUI]({{ site.baseurl }}/assets/gui.png)
+
+The experiment editor.
+
+![Experiment editor]({{ site.baseurl }}/assets/experiment-editor.png)
+
+One-dimensional gaussian mixture models.
+
 One-dimensional gaussian mixture models.
 
 ![1D GMM]({{ site.baseurl }}/assets/gmm.png)
