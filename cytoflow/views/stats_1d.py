@@ -101,7 +101,7 @@ class Stats1DView(HasStrictTraits):
     ...                            scale = "log",
     ...                            bin_width = 0.1).apply(ex)
     >>> view = Stats1DView(name = "Dox vs IFP",
-    ...                    by = "Dox",
+    ...                    xchannel = "Dox",
     ...                    ychannel = "Pacific Blue-A",
     ...                    huefacet = "CFP_Bin",
     ...                    yfunction = flow.geom_mean)
@@ -128,12 +128,6 @@ class Stats1DView(HasStrictTraits):
 #     y_error_var = Str
 
     subset = Str
-    
-    # TODO - think carefully about how to handle transformations.
-    # ie, if we transform with Hlog, take the mean, then return the reverse
-    # transformed mean, is that the same as taking the ... um .... geometric
-    # mean of the untransformed data?  or maybe just plot the appropriate
-    # axes (ie the Y axis) with the transformed ticker?
     
     def plot(self, experiment, **kwargs):
         """Plot a bar chart"""

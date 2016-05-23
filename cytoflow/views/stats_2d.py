@@ -31,7 +31,7 @@ import cytoflow.utility as util
 @provides(IView)
 class Stats2DView(HasStrictTraits):
     """
-    Divide the data up by `by`, then plot a scatter plot of a summary
+    Divide the data by the variable `by`, then plot a scatter plot of a summary
     statistic `xfunction` on the x axis vs a summary statistic `yfunction` of
     the same data on the y axis.
     
