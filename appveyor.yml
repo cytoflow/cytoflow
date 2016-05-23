@@ -4,7 +4,7 @@ environment:
     # SDK v7.0 MSVC Express 2008's SetEnv.cmd script will fail if the
     # /E:ON and /V:ON options are not enabled in the batch script intepreter
     # See: http://stackoverflow.com/a/13751649/163740
-    WITH_COMPILER: "cmd /E:ON /V:ON /C .\\dist\\appveyor\\run_with_compiler.cmd"
+    WITH_COMPILER: "cmd /E:ON /V:ON /C .\\packaging\\appveyor\\run_with_compiler.cmd"
 
   matrix:
 
@@ -22,6 +22,7 @@ environment:
 
 init:
   - "ECHO %PYTHON% %PYTHON_VERSION% %PYTHON_ARCH%"
+  - ps: Update-AppveyorBuild -Version "$($env:appveyor_repo_commit.substring(0,7))"
 
 install:
   - ECHO "Filesystem root:"
@@ -47,7 +48,8 @@ install:
   - choco install swig -y
 
   # Install the build and runtime dependencies of the project.
-  - conda install --yes --quiet numpy numexpr scipy matplotlib=1.4.3 nose dateutil pandas statsmodels scikit-learn seaborn pyface=4.4.0 envisage
+  - conda install --yes --quiet numpy numexpr scipy matplotlib nose dateutil pandas statsmodels scikit-learn seaborn pyface=4.4.0 envisage pip
+  - pip.exe install pyinstaller
 
   - "%WITH_COMPILER% python setup.py develop"
 
@@ -58,11 +60,22 @@ test_script:
 
 after_test:
   - "%WITH_COMPILER% %PYTHON%/python setup.py bdist_wheel bdist_wininst"
+  - "pyinstaller.exe packaging/pyinstaller.spec"
 
 artifacts:
   - path: dist\*
   - path: build\lib.win32-2.7\cytoflow\utility\logicle_ext\_Logicle.pyd
   - path: build\lib.win-amd64-2.7\cytoflow\utility\logicle_ext\_Logicle.pyd
+
+deploy:
+- provider: BinTray
+  username: bpteague
+  api_key:
+    secure: BLgrF3vno40XZMvXZ+DGzxeO8xzQJP1Y/ndUVPEycNlNB2puWDGdPDJ8d4DxDTEj
+  subject: bpteague
+  repo: cytoflow
+  package: cytoflow-dev
+  #version: use the build version
+  publish: false
+  override: true
   
-#on_success:
-#  - TODO: upload the content of dist/*.whl to a public wheelhouse
