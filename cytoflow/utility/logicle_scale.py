@@ -23,7 +23,7 @@ Created on Feb 21, 2016
 
 from __future__ import division, absolute_import
 
-import math
+import math, sys
 from warnings import warn
 import logging
 
@@ -31,6 +31,7 @@ from traits.api import HasTraits, Float, Property, Instance, Str, \
                        cached_property, Undefined, provides, Constant, Dict
                        
 import numpy as np
+import pandas as pd
 
 import matplotlib.scale
 from matplotlib import transforms
@@ -112,7 +113,16 @@ class LogicleScale(HasTraits):
         Careful!  May return `NaN` if the scale domain doesn't match the data 
         (ie, applying a log10 scale to negative numbers.)
         """
-        scale_fn = np.vectorize(self.logicle.scale)
+        
+        logicle_min = self.logicle.inverse(0.0)
+        logicle_max = self.logicle.inverse(1.0 - sys.float_info.epsilon) 
+        def clip_scale(x):
+            return 0.0 if x <= logicle_min else \
+                   1.0 if x >= logicle_max else \
+                   self.logicle.scale(x)
+                          
+        scale_fn = np.vectorize(clip_scale)
+
         return scale_fn(data)
         
     def inverse(self, data):
@@ -120,7 +130,7 @@ class LogicleScale(HasTraits):
         Transforms 'data' using the inverse of this scale.
         """
         inverse = np.vectorize(self.logicle.inverse)
-        return inverse(data)
+        return inverse(pd.Series(data).clip(0, 1.0 - sys.float_info.epsilon))
     
     @cached_property
     def _get_range(self):

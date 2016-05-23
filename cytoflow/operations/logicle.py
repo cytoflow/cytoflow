@@ -17,7 +17,7 @@
 
 from __future__ import division, absolute_import
 
-import math, warnings, exceptions
+import math, warnings, exceptions, sys
 
 from traits.api import (HasStrictTraits, provides, Str, List, Float, Dict,
                         Constant)
@@ -25,7 +25,7 @@ from traits.api import (HasStrictTraits, provides, Str, List, Float, Dict,
 import numpy as np
 
 import cytoflow.utility as util
-from cytoflow.utility.logicle_ext.Logicle import Logicle
+from cytoflow.utility.logicle_ext.Logicle import FastLogicle
 
 from .i_operation import IOperation
 
@@ -139,7 +139,7 @@ class LogicleTransformOp(HasStrictTraits):
         
         for channel in self.channels:          
             t = experiment.metadata[channel]['range']
-            self.A[channel] = 0.0
+            self.A[channel] = 0
             
             # get the range by finding the rth quantile of the negative values
             neg_values = data[data[channel] < 0][channel]
@@ -197,12 +197,14 @@ class LogicleTransformOp(HasStrictTraits):
         
         for channel in self.channels:
             
-            el = Logicle(new_experiment.metadata[channel]['range'], 
-                         self.W[channel], 
-                         self.M,
-                         self.A[channel])
+            el = FastLogicle(new_experiment.metadata[channel]['range'], 
+                             self.W[channel], 
+                             self.M,
+                             self.A[channel])
             
-            logicle_fwd = lambda x: x.apply(el.scale)
+            el_min = el.inverse(0.0)
+            el_max = el.inverse(1.0 - sys.float_info.epsilon)
+            logicle_fwd = lambda x: x.clip(el_min, el_max).apply(el.scale)
             logicle_rev = lambda x: x.apply(el.inverse)
             
             new_experiment[channel] = logicle_fwd(new_experiment[channel])
