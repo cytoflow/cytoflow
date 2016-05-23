@@ -71,24 +71,23 @@ class Test(unittest.TestCase):
         self.gate.estimate(self.ex)
         ex2 = self.gate.apply(self.ex) 
                  
-        self.assertAlmostEqual(ex2.data.groupby("Gauss").size().loc["Gauss_1"], 6153, delta = 8)
-        self.assertAlmostEqual(ex2.data.groupby("Gauss").size().loc["Gauss_2"], 2395, delta = 8)
-        self.assertAlmostEqual(ex2.data.groupby("Gauss").size().loc["Gauss_None"], 11452, delta = 8)
+        self.assertAlmostEqual(ex2.data.groupby("Gauss").size().loc["Gauss_1"], 6149)
+        self.assertAlmostEqual(ex2.data.groupby("Gauss").size().loc["Gauss_2"], 2395)
+        self.assertAlmostEqual(ex2.data.groupby("Gauss").size().loc["Gauss_None"], 11456)
         
     def testApplyBy(self):
         self.gate.by = ["Dox"]
         self.gate.estimate(self.ex)
         ex2 = self.gate.apply(self.ex)
          
-        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_1", 1], 3126, delta = 8)
-        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_1", 10], 2452, delta = 8)
- 
-        # i'm not sure why this one gives such different answers locally vs on travis
-        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_2", 1], 2026, delta = 20)
-        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_2", 10], 2398, delta = 8)
+        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_1", 1], 3121)
+        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_1", 10], 2451)
+        
+        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_2", 1], 2044)
+        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_2", 10], 2398)
          
-        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_None", 1], 4848, delta = 8)        
-        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_None", 10], 5150, delta = 8)        
+        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_None", 1], 4835)        
+        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_None", 10], 5151)        
     
     def testPlot(self):
         self.gate.estimate(self.ex)
