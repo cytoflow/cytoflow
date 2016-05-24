@@ -57,7 +57,7 @@ install:
 build: off
 
 test_script:
-  - "%WITH_COMPILER% %PYTHON%/python setup.py nose2"
+  - "%WITH_COMPILER% %PYTHON%/python nose2 -c packaging\\nose2.cfg"
 
 after_test:
   - "%WITH_COMPILER% %PYTHON%/python setup.py bdist_wheel bdist_wininst"
