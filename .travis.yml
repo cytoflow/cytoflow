@@ -33,9 +33,9 @@ before_install:
   - conda update --yes conda
 
 install:
-  - conda install --yes setuptools pip six cython pyqt pandas bottleneck numpy numexpr matplotlib dateutil scipy scikit-learn seaborn pyface envisage statsmodels
+  - conda install --yes setuptools==19.2 pip six cython pyqt pandas bottleneck numpy numexpr matplotlib dateutil scipy scikit-learn seaborn pyface envisage statsmodels
   - python setup.py develop sdist bdist_wheel 
-  - pip install pyinstaller nose2 setuptools==19.2
+  - pip install pyinstaller nose2 
   - pyinstaller packaging/pyinstaller.spec
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then cd dist/; zip -r cytoflow.macos.zip Cytoflow.app/; rm -rf Cytoflow.app; cd ..; fi
   - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then mv dist/cytoflow dist/cytoflow-linux.x86_64; fi

@@ -48,7 +48,7 @@ install:
   - choco install swig -y
 
   # Install the build and runtime dependencies of the project.
-  - conda install --yes --quiet numpy numexpr scipy matplotlib nose dateutil pandas statsmodels scikit-learn seaborn pyface=4.4.0 envisage pip
+  - conda install --yes --quiet numpy numexpr scipy matplotlib nose dateutil pandas statsmodels scikit-learn seaborn pyface=4.4.0 envisage pip setuptools==19.2
   - pip.exe install pyinstaller
 
   - "%WITH_COMPILER% python setup.py develop"
@@ -61,21 +61,24 @@ test_script:
 after_test:
   - "%WITH_COMPILER% %PYTHON%/python setup.py bdist_wheel bdist_wininst"
   - "pyinstaller.exe packaging/pyinstaller.spec"
+  - "mkdir %APPVEYOR_BUILD_VERSION%"
+  - "move dist\\* %APPVEYOR_BUILD_VERSION%"
+  - "move build\\lib.win32-2.7\\cytoflow\\utility\\logicle_ext\\_Logicle.pyd %APPVEYOR_BUILD_VERSION%\\_Logicle-32.pyd"
+  - "move build\\lib.win-amd64-2.7\\cytoflow\\utility\\logicle_ext\\_Logicle.pyd %APPVEYOR_BUILD_VERSION%\\_Logicle-64.pyd"
 
 artifacts:
-  - path: dist\*
-  - path: build\lib.win32-2.7\cytoflow\utility\logicle_ext\_Logicle.pyd
-  - path: build\lib.win-amd64-2.7\cytoflow\utility\logicle_ext\_Logicle.pyd
+  - path: $(appveyor_build_version)
 
 deploy:
-- provider: BinTray
-  username: bpteague
-  api_key:
-    secure: BLgrF3vno40XZMvXZ+DGzxeO8xzQJP1Y/ndUVPEycNlNB2puWDGdPDJ8d4DxDTEj
-  subject: bpteague
-  repo: cytoflow
-  package: cytoflow-dev
-  #version: use the build version
-  publish: false
-  override: true
+  - provider: BinTray
+    username: bpteague
+    api_key:
+      secure: BLgrF3vno40XZMvXZ+DGzxeO8xzQJP1Y/ndUVPEycNlNB2puWDGdPDJ8d4DxDTEj
+    subject: bpteague
+    repo: cytoflow
+    package: cytoflow-dev
+    #version: use the build version
+    publish: false
+    override: true
+    explode: true
   

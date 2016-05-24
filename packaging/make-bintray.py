@@ -18,9 +18,10 @@ json_dev = """
    
     "files":
         [
-            {{"includePattern": "dist/(.*)", 
-              "uploadPattern" : "$1",
-              "matrixParams": {{"override": 1 }} }}
+            {{ 
+                "includePattern": "dist/(.*)", 
+                "uploadPattern" : "{0}/$1"
+            }}
         ]
 }}
 """
@@ -43,7 +44,7 @@ json_release = """
     "files":
         [
             {{"includePattern" : "dist/(.*)", 
-              "uploadPattern" : "$1",
+              "uploadPattern" : "{0}/$1",
               "matrixParams": {{"override": 1 }} }}
         ],
 
