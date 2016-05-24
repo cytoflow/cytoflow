@@ -50,14 +50,14 @@ install:
   # Install the build and runtime dependencies of the project.
   - conda install --yes --file=packaging\conda-requirements.txt
   - conda install --yes setuptools pip six
-  - pip.exe install pyinstaller
+  - pip.exe install pyinstaller nose2
 
   - "%WITH_COMPILER% python setup.py develop"
 
 build: off
 
 test_script:
-  - "%WITH_COMPILER% %PYTHON%/python setup.py nosetests"
+  - "%WITH_COMPILER% %PYTHON%/python setup.py nose2"
 
 after_test:
   - "%WITH_COMPILER% %PYTHON%/python setup.py bdist_wheel bdist_wininst"

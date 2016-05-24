@@ -35,7 +35,8 @@ before_install:
 install:
   - conda install --yes --file=packaging/conda-requirements.txt
   - conda install --yes setuptools pip six 
-  - python setup.py develop sdist bdist_wheel 
+  - python setup.py develop bdist_wheel 
+  - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then python setup.py sdist; fi
   - pip install pyinstaller nose2 
   - pyinstaller packaging/pyinstaller.spec
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then cd dist/; zip -r cytoflow.macos.zip Cytoflow.app/; rm -rf Cytoflow.app; cd ..; fi
