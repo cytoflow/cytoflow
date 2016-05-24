@@ -48,7 +48,8 @@ install:
   - choco install swig -y
 
   # Install the build and runtime dependencies of the project.
-  - conda install --yes --quiet numpy numexpr scipy matplotlib nose dateutil pandas statsmodels scikit-learn seaborn pyface=4.4.0 envisage pip setuptools==19.2
+  - conda install --yes --file=packaging\conda-requirements.txt
+  - conda install --yes setuptools pip six
   - pip.exe install pyinstaller
 
   - "%WITH_COMPILER% python setup.py develop"

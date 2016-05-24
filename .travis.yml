@@ -33,7 +33,8 @@ before_install:
   - conda update --yes conda
 
 install:
-  - conda install --yes setuptools==19.2 pip six cython pyqt pandas bottleneck numpy numexpr matplotlib dateutil scipy scikit-learn seaborn pyface envisage statsmodels
+  - conda install --yes --file=packaging/conda-requirements.txt
+  - conda install --yes setuptools pip six 
   - python setup.py develop sdist bdist_wheel 
   - pip install pyinstaller nose2 
   - pyinstaller packaging/pyinstaller.spec
