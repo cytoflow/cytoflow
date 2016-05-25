@@ -34,7 +34,7 @@ before_install:
 
 install:
   - conda install --yes --file=packaging/conda-requirements.txt
-  - conda install --yes setuptools pip six 
+  - conda install --yes setuptools==19.2 pip six 
   - python setup.py develop bdist_wheel 
   - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then python setup.py sdist; fi
   - pip install pyinstaller nose2 
