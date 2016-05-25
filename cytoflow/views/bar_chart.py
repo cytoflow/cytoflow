@@ -17,7 +17,9 @@
 
 from __future__ import division, absolute_import
 
-from traits.api import HasStrictTraits, Str, provides, Callable
+from warnings import warn
+
+from traits.api import HasStrictTraits, Str, provides, Callable, Property
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
@@ -48,24 +50,18 @@ class BarChartView(HasStrictTraits):
         parameter, a 1-dimensional numpy.ndarray, and returns a single float. 
         useful suggestions: np.mean, cytoflow.geom_mean
         
-    error_bars : Enum(None, "data", "summary")
-        draw error bars?  if "data", apply *error_function* to the same
-        data that was summarized with *function*.  if "summary", apply
-        *function* to subsets defined by *error_var*  
-        TODO - unimplemented
-        
-    error_var : Str
-        the conditioning variable used to determine summary subsets.  take the
-        data that was used to draw the bar; subdivide it further by error_var;
-        compute the summary statistic for each subset, then apply error_function
-        to the resulting list.
-        TODO - unimplemented
+    error_bars : Str
+        Draw error bars?  If the name of a condition, subdivide each data set
+        further by the condition, apply `function` to each subset, then 
+        apply `error_function` (below) to the values of `function` and plot
+        that as the error bars.  If `data`, then apply `error_function` to
+        the same data subsets that `function` was applied to, and plot those
+        as error bars.
         
     error_function : Callable (1D numpy.ndarray --> float)
         for each group/subgroup subset, call this function to compute the 
         error bars.  whether it is called on the data or the summary function
         is determined by the value of *error_bars*
-        TODO - unimplemented
         
     xfacet : Str
         the conditioning variable for horizontal subplots
@@ -102,23 +98,27 @@ class BarChartView(HasStrictTraits):
     name = Str
     channel = Str
     scale = util.ScaleEnum
-    by = Str
+    by = Property
+    variable = Str
     function = Callable
     #orientation = Enum("horizontal", "vertical")
     xfacet = Str
     yfacet = Str
     huefacet = Str
-    # TODO - make error bars work properly.
-#     error_bars = Enum(None, "data", "summary")
-#     error_function = Callable
-#     error_var = Str
+    error_bars = Str
+    error_function = Callable
     subset = Str
     
-    # TODO - return the un-transformed values?  is this even valid?
-    # ie, if we transform with Hlog, take the mean, then return the reverse
-    # transformed mean, is that the same as taking the ... um .... geometric
-    # mean of the untransformed data?  hm.
-    
+    def _get_by(self):
+        warn("'by' is deprecated; please use 'variable'",
+             util.CytoflowViewWarning)
+        return self.variable
+
+    def _set_by(self, val):
+        warn("'by' is deprecated; please use 'variable'",
+             util.CytoflowViewWarning)
+        self.variable = val
+        
     def plot(self, experiment, **kwargs):
         """Plot a bar chart"""
         
@@ -132,10 +132,10 @@ class BarChartView(HasStrictTraits):
             raise util.CytoflowViewError("Channel {0} isn't in the experiment"
                                     .format(self.channel))
         
-        if not self.by:
-            raise util.CytoflowViewError("by variable not specified")
+        if not self.variable:
+            raise util.CytoflowViewError("variable not specified")
         
-        if not self.by in experiment.conditions:
+        if not self.variable in experiment.conditions:
             raise util.CytoflowViewError("Variable {0} isn't in the experiment")
         
         if not self.function:
@@ -145,21 +145,21 @@ class BarChartView(HasStrictTraits):
             raise util.CytoflowViewError("X facet {0} isn't in the experiment"
                                     .format(self.xfacet))
         
-        if self.yfacet and self.yfacet not in experiment.metadata:
+        if self.yfacet and self.yfacet not in experiment.conditions:
             raise util.CytoflowViewError("Y facet {0} isn't in the experiment"
                                     .format(self.yfacet))
 
-        if self.huefacet and self.huefacet not in experiment.metadata:
+        if self.huefacet and self.huefacet not in experiment.conditions:
             raise util.CytoflowViewError("Hue facet {0} isn't in the experiment"
                                     .format(self.huefacet))
+            
+        if self.error_bars and self.error_bars != "data" \
+                           and self.error_bars not in experiment.conditions:
+            raise util.CytoflowViewError("error_bars must be either 'data' or "
+                                         "a condition in the experiment")            
         
-#         if self.error_bars == 'data' and self.error_function is None:
-#             return False
-#         
-#         if self.error_bars == 'summary' \
-#             and (self.error_function is None 
-#                  or not self.error_var in experiment.metadata):
-#             return False
+        if self.error_bars and self.error_function is None:
+            raise util.CytoflowViewError("didn't set an error function")
         
         if self.subset:
             try:
@@ -174,31 +174,73 @@ class BarChartView(HasStrictTraits):
         else:
             data = experiment.data
             
-        sns.factorplot(x = self.by,
-                       y = self.channel,
-                       data = data,
-                       size = 6,
-                       aspect = 1.5,
-                       row = (self.yfacet if self.yfacet else None),
-                       col = (self.xfacet if self.xfacet else None),
-                       hue = (self.huefacet if self.huefacet else None),
-                       col_order = (np.sort(data[self.xfacet].unique()) if self.xfacet else None),
-                       row_order = (np.sort(data[self.yfacet].unique()) if self.yfacet else None),
-                       hue_order = (np.sort(data[self.huefacet].unique()) if self.huefacet else None),
-                       # something buggy here.
-                       #orient = ("h" if self.orientation == "horizontal" else "v"),
-                       estimator = self.function,
-                       ci = None,
-                       kind = "bar")
-        
+        # get the scale
         scale = util.scale_factory(self.scale, experiment, self.channel)
+        # kwargs['data_scale'] = scale
+        kwargs['estimator'] = self.function
         
-        # because the bottom of a bar chart is "0", masking out bad
-        # values on a log scale doesn't work.  we must clip instead.
-        if self.scale == "log":
-            scale.mode = "clip"
-
-        plt.yscale(self.scale, **scale.mpl_params)
+        kwargs.setdefault('orient', 'v')
+                
+        g = sns.FacetGrid(data, 
+                          size = 6,
+                          aspect = 1.5,
+                          col = (self.xfacet if self.xfacet else None),
+                          row = (self.yfacet if self.yfacet else None),
+                          col_order = (np.sort(data[self.xfacet].unique()) if self.xfacet else None),
+                          row_order = (np.sort(data[self.yfacet].unique()) if self.yfacet else None),
+                          legend_out = False,
+                          sharex = False,
+                          sharey = False)
+                
+        # set the scale for each set of axes; can't just call plt.xscale() 
+        for ax in g.axes.flatten():
+            if kwargs['orient'] == 'h':
+                ax.set_xscale(self.scale, **scale.mpl_params)  
+            else:
+                ax.set_yscale(self.scale, **scale.mpl_params)  
+            
+        # this order-dependent thing weirds me out.      
+        if kwargs['orient'] == 'h':
+            plot_args = [self.channel, self.variable]
+        else:
+            plot_args = [self.variable, self.channel]
+            
+        if self.huefacet:
+            plot_args.append(self.huefacet)
+            
+        g.map(sns.barplot, 
+              *plot_args,      
+              order = np.sort(data[self.variable].unique()),
+              hue_order = (np.sort(data[self.huefacet].unique()) if self.huefacet else None),
+              **kwargs)
+        
+        g.add_legend()
+#             
+#         plot = sns.factorplot(x = self.by,
+#                        y = self.channel,
+#                        data = data,
+#                        size = 6,
+#                        aspect = 1.5,
+#                        row = (self.yfacet if self.yfacet else None),
+#                        col = (self.xfacet if self.xfacet else None),
+#                        hue = (self.huefacet if self.huefacet else None),
+#                        col_order = (np.sort(data[self.xfacet].unique()) if self.xfacet else None),
+#                        row_order = (np.sort(data[self.yfacet].unique()) if self.yfacet else None),
+#                        hue_order = (np.sort(data[self.huefacet].unique()) if self.huefacet else None),
+#                        # something buggy here.
+#                        #orient = ("h" if self.orientation == "horizontal" else "v"),
+#                        estimator = self.function,
+#                        ci = None,
+#                        kind = "bar")
+#         
+#         scale = util.scale_factory(self.scale, experiment, self.channel)
+#         
+#         # because the bottom of a bar chart is "0", masking out bad
+#         # values on a log scale doesn't work.  we must clip instead.
+#         if self.scale == "log":
+#             scale.mode = "clip"
+# 
+#         plt.yscale(self.scale, **scale.mpl_params)
 
 
 if __name__ == '__main__':
