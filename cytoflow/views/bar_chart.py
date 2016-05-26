@@ -208,10 +208,11 @@ class BarChartView(HasStrictTraits):
         if self.huefacet:
             plot_args.append(self.huefacet)
             
-        g.map(sns.barplot, 
+        g.map(_barplot, 
               *plot_args,      
               order = np.sort(data[self.variable].unique()),
               hue_order = (np.sort(data[self.huefacet].unique()) if self.huefacet else None),
+#              ci = None,
               **kwargs)
         
         g.add_legend()
@@ -242,6 +243,25 @@ class BarChartView(HasStrictTraits):
 # 
 #         plt.yscale(self.scale, **scale.mpl_params)
 
+from seaborn.categorical import _BarPlotter
+
+def _barplot(x=None, y=None, hue=None, data=None, order=None, hue_order=None,
+            estimator=np.mean, ci=95, n_boot=1000, units=None,
+            orient=None, color=None, palette=None, saturation=.75,
+            errcolor=".26", ax=None, confint=(), **kwargs):
+ 
+    plotter = _BarPlotter(x, y, hue, data, order, hue_order,
+                          estimator, ci, n_boot, units,
+                          orient, color, palette, saturation,
+                          errcolor)
+    
+    plotter.confint = confint
+
+    if ax is None:
+        ax = plt.gca()
+
+    plotter.plot(ax, kwargs)
+    return ax
 
 if __name__ == '__main__':
     import cytoflow as flow
