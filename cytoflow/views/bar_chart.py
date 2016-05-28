@@ -60,10 +60,10 @@ class BarChartView(HasStrictTraits):
         the same data subsets that `function` was applied to, and plot those
         as error bars.
         
-    error_function : Callable (1D numpy.ndarray --> float)
+    error_function : Callable (1D numpy.ndarray --> (float, float))
         for each group/subgroup subset, call this function to compute the 
-        error bars.  whether it is called on the data or the summary function
-        is determined by the value of *error_bars*
+        error bars.  must return a (low, high) tuple.  whether it is called on 
+        the data or the summary function is determined by the value of *error_bars*
         
     xfacet : Str
         the conditioning variable for horizontal subplots
@@ -215,7 +215,8 @@ class BarChartView(HasStrictTraits):
               view = self,
               **kwargs)
         
-        g.add_legend()
+        if self.huefacet:
+            g.add_legend(title = self.huefacet)
 
 # in Py3k i could have named arguments after *args, but not in py2.  :-(
 def _barplot(*args, **kwargs):
@@ -306,13 +307,10 @@ def _barplot(*args, **kwargs):
                 
             if view.error_bars:
                 confint = error_stat[error_stat[view.huefacet] == hue_level][view.channel]
-                confint_low = statistic[statistic[view.huefacet] == hue_level][view.channel] - confint
-                confint_high = statistic[statistic[view.huefacet] == hue_level][view.channel] + confint
                 errcolors = [errcolor] * len(offpos)
                 _draw_confints(ax,
                                offpos,
-                               confint_low,
-                               confint_high,
+                               confint,
                                errcolors,
                                view.orientation,
                                errwidth = errwidth,
@@ -324,13 +322,10 @@ def _barplot(*args, **kwargs):
         
         if view.error_bars:
             confint = error_stat[view.channel]
-            confint_low = statistic[view.channel] - confint
-            confint_high = statistic[view.channel] + confint
             errcolors = [errcolor] * len(barpos)
             _draw_confints(ax,
                            barpos,
-                           confint_low,
-                           confint_high,
+                           confint,
                            errcolors,
                            view.orientation,
                            errwidth = errwidth,
@@ -361,24 +356,24 @@ def _barplot(*args, **kwargs):
         ax.yaxis.grid(False)
         ax.set_ylim(-.5, len(categories) - .5)
 
-    if hue_names is not None:
-        leg = ax.legend(loc="best")
-        if view.huefacet is not None:
-            leg.set_title(view.huefacet)
- 
-            # Set the title size a roundabout way to maintain
-            # compatability with matplotlib 1.1
-            try:
-                title_size = mpl.rcParams["axes.labelsize"] * .85
-            except TypeError:  # labelsize is something like "large"
-                title_size = mpl.rcParams["axes.labelsize"]
-            prop = mpl.font_manager.FontProperties(size=title_size)
-            leg._legend_title_box._text.set_font_properties(prop)   
+#     if hue_names is not None:
+#         leg = ax.legend(loc="best")
+#         if view.huefacet is not None:
+#             leg.set_title(view.huefacet)
+#  
+#             # Set the title size a roundabout way to maintain
+#             # compatability with matplotlib 1.1
+#             try:
+#                 title_size = mpl.rcParams["axes.labelsize"] * .85
+#             except TypeError:  # labelsize is something like "large"
+#                 title_size = mpl.rcParams["axes.labelsize"]
+#             prop = mpl.font_manager.FontProperties(size=title_size)
+#             leg._legend_title_box._text.set_font_properties(prop)   
             
     return ax 
 
 
-def _draw_confints(ax, at_group, confint_low, confint_high, colors, 
+def _draw_confints(ax, at_group, confints, colors, 
                    orientation, errwidth=None, capsize=None, **kws):
 
     if errwidth is not None:
@@ -386,9 +381,8 @@ def _draw_confints(ax, at_group, confint_low, confint_high, colors,
     else:
         kws.setdefault("lw", mpl.rcParams["lines.linewidth"] * 1.8)
 
-    for at, ci_low, ci_high, color in zip(at_group,
-                                            confint_low,
-                                            confint_high,
+    for at, (ci_low, ci_high), color in zip(at_group,
+                                            confints,
                                             colors):
         if orientation == "vertical":
             ax.plot([at, at], [ci_low, ci_high], color=color, **kws)
@@ -406,56 +400,3 @@ def _draw_confints(ax, at_group, confint_low, confint_high, colors,
                 ax.plot([ci_high, ci_high],
                         [at - capsize / 2, at + capsize / 2],
                         color=color, **kws)
-
-if __name__ == '__main__':
-    import cytoflow as flow
-    import fcsparser
-    
-    tube1 = fcsparser.parse('../../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs',
-                            reformat_meta = True,
-                            channel_naming = "$PnN")
-
-    tube2 = fcsparser.parse('../../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs',
-                            reformat_meta = True,
-                            channel_naming = "$PnN")
-    
-    tube3 = fcsparser.parse('../../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs',
-                            reformat_meta = True,
-                            channel_naming = "$PnN")
-
-    tube4 = fcsparser.parse('../../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs',
-                            reformat_meta = True,
-                            channel_naming = "$PnN")
-    
-    ex = flow.Experiment()
-    ex.add_conditions({"Dox" : "float", "Repl" : "int"})
-    
-    ex.add_tube(tube1, {"Dox" : 10.0, "Repl" : 1})
-    ex.add_tube(tube2, {"Dox" : 1.0, "Repl" : 1})
-    ex.add_tube(tube3, {"Dox" : 10.0, "Repl" : 2})
-    ex.add_tube(tube4, {"Dox" : 1.0, "Repl" : 2})
-    
-    hlog = flow.HlogTransformOp()
-    hlog.name = "Hlog transformation"
-    hlog.channels = ['V2-A', 'Y2-A', 'B1-A', 'FSC-A', 'SSC-A']
-    ex2 = hlog.apply(ex)
-    
-    thresh = flow.ThresholdOp()
-    thresh.name = "Y2-A+"
-    thresh.channel = 'Y2-A'
-    thresh.threshold = 2005.0
-
-    ex3 = thresh.apply(ex2)
-    
-    s = flow.BarChartView()
-    s.channel = "V2-A"
-    s.function = flow.geom_mean
-    s.by = "Dox"
-    s.huefacet = "Y2-A+"
-    #s.error_bars = "data"
-    #s.error_var = "Repl"
-    #s.error_function = np.std
-    
-    plt.ioff()
-    s.plot(ex3)
-    plt.show()
