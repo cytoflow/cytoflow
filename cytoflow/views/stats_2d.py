@@ -263,7 +263,7 @@ class Stats2DView(HasStrictTraits):
                                           label = self.huefacet)
                 plt.sca(plot_ax)
             else:
-                grid.add_legend()
+                grid.add_legend(title = self.huefacet)
 
     
 if __name__ == '__main__':

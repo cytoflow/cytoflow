@@ -213,4 +213,4 @@ class HistogramView(HasStrictTraits):
                                           label = self.huefacet)
                 plt.sca(plot_ax)
             else:
-                g.add_legend()
+                g.add_legend(title = self.huefacet)

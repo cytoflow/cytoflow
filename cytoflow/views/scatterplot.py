@@ -174,7 +174,7 @@ class ScatterplotView(HasStrictTraits):
                                           label = self.huefacet)
                 plt.sca(plot_ax)
             else:
-                g.add_legend()
+                g.add_legend(title = self.huefacet)
         
 if __name__ == '__main__':
     import cytoflow as flow

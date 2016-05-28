@@ -233,7 +233,7 @@ class Stats1DView(HasStrictTraits):
                                           **kw)
                 plt.sca(plot_ax)
             else:
-                grid.add_legend()
+                grid.add_legend(title = self.huefacet)
 
 if __name__ == '__main__':
     import cytoflow as flow

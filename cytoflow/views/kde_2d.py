@@ -161,7 +161,9 @@ class Kde2DView(HasStrictTraits):
         kwargs['yscale'] = yscale
 
         g.map(_bivariate_kdeplot, self.xchannel, self.ychannel, **kwargs)
-        g.add_legend()
+        
+        if self.huefacet:
+            g.add_legend(title = self.huefacet)
         
 # yoinked from seaborn/distributions.py, with modifications for scaling.
 def _bivariate_kdeplot(x, y, xscale=None, yscale=None, shade=False, kernel="gau",
