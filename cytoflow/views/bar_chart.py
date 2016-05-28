@@ -19,10 +19,12 @@ from __future__ import division, absolute_import
 
 from warnings import warn
 
-from traits.api import HasStrictTraits, Str, provides, Callable, Property
+from traits.api import HasStrictTraits, Str, provides, Callable, Property, Enum
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
+import pandas as pd
 
 import cytoflow.utility as util
 from .i_view import IView
@@ -101,7 +103,7 @@ class BarChartView(HasStrictTraits):
     by = Property
     variable = Str
     function = Callable
-    #orientation = Enum("horizontal", "vertical")
+    orientation = Enum("vertical", "horizontal")
     xfacet = Str
     yfacet = Str
     huefacet = Str
@@ -177,10 +179,8 @@ class BarChartView(HasStrictTraits):
         # get the scale
         scale = util.scale_factory(self.scale, experiment, self.channel)
         # kwargs['data_scale'] = scale
-        kwargs['estimator'] = self.function
-        
-        kwargs.setdefault('orient', 'v')
-                
+        # kwargs['estimator'] = self.function
+                        
         g = sns.FacetGrid(data, 
                           size = 6,
                           aspect = 1.5,
@@ -192,76 +192,220 @@ class BarChartView(HasStrictTraits):
                           sharex = False,
                           sharey = False)
                 
+        # because the bottom of a bar chart is "0", masking out bad
+        # values on a log scale doesn't work.  we must clip instead.
+        if self.scale == "log":
+            scale.mode = "clip"
+                
         # set the scale for each set of axes; can't just call plt.xscale() 
         for ax in g.axes.flatten():
-            if kwargs['orient'] == 'h':
+            if self.orientation == 'horizontal':
                 ax.set_xscale(self.scale, **scale.mpl_params)  
             else:
                 ax.set_yscale(self.scale, **scale.mpl_params)  
-            
-        # this order-dependent thing weirds me out.      
-        if kwargs['orient'] == 'h':
-            plot_args = [self.channel, self.variable]
-        else:
-            plot_args = [self.variable, self.channel]
-            
+                
+        map_args = [self.channel, self.variable]
         if self.huefacet:
-            plot_args.append(self.huefacet)
+            map_args.append(self.huefacet)
+        if self.error_bars and self.error_bars != "data":
+            map_args.append(self.error_bars)
             
         g.map(_barplot, 
-              *plot_args,      
-              order = np.sort(data[self.variable].unique()),
-              hue_order = (np.sort(data[self.huefacet].unique()) if self.huefacet else None),
-#              ci = None,
+              *map_args,
+              view = self,
               **kwargs)
         
         g.add_legend()
-#             
-#         plot = sns.factorplot(x = self.by,
-#                        y = self.channel,
-#                        data = data,
-#                        size = 6,
-#                        aspect = 1.5,
-#                        row = (self.yfacet if self.yfacet else None),
-#                        col = (self.xfacet if self.xfacet else None),
-#                        hue = (self.huefacet if self.huefacet else None),
-#                        col_order = (np.sort(data[self.xfacet].unique()) if self.xfacet else None),
-#                        row_order = (np.sort(data[self.yfacet].unique()) if self.yfacet else None),
-#                        hue_order = (np.sort(data[self.huefacet].unique()) if self.huefacet else None),
-#                        # something buggy here.
-#                        #orient = ("h" if self.orientation == "horizontal" else "v"),
-#                        estimator = self.function,
-#                        ci = None,
-#                        kind = "bar")
-#         
-#         scale = util.scale_factory(self.scale, experiment, self.channel)
-#         
-#         # because the bottom of a bar chart is "0", masking out bad
-#         # values on a log scale doesn't work.  we must clip instead.
-#         if self.scale == "log":
-#             scale.mode = "clip"
-# 
-#         plt.yscale(self.scale, **scale.mpl_params)
 
-from seaborn.categorical import _BarPlotter
+# in Py3k i could have named arguments after *args, but not in py2.  :-(
+def _barplot(*args, **kwargs):
+    data = pd.DataFrame({s.name: s for s in args})
+    view = kwargs.pop('view')
 
-def _barplot(x=None, y=None, hue=None, data=None, order=None, hue_order=None,
-            estimator=np.mean, ci=95, n_boot=1000, units=None,
-            orient=None, color=None, palette=None, saturation=.75,
-            errcolor=".26", ax=None, confint=(), **kwargs):
+    # discard the 'color' we were passed by FacetGrid
+    kwargs.pop('color', None)
  
-    plotter = _BarPlotter(x, y, hue, data, order, hue_order,
-                          estimator, ci, n_boot, units,
-                          orient, color, palette, saturation,
-                          errcolor)
+    # group the data and compute the summary statistic
+    group_vars = [view.variable]
+    if view.huefacet: group_vars.append(view.huefacet)
     
-    plotter.confint = confint
+    g = data.groupby(by = group_vars)
+    statistic = g[view.channel].aggregate(view.function).reset_index()
+    categories = util.categorical_order(statistic[view.variable])
+    
+    # compute the error statistic
+    if view.error_bars:
+        if view.error_bars == 'data':
+            # compute the error statistic on the same subsets as the summary
+            # statistic
+            error_stat = g[view.channel].aggregate(view.error_function).reset_index()
+        else:
+            # subdivide the data set further by the error_bars condition
+            err_vars = list(group_vars)
+            err_vars.append(view.error_bars)
+            
+            # apply the summary statistic to each subgroup
+            data_g = data.groupby(by = err_vars)
+            data_stat = data_g[view.channel].aggregate(view.function).reset_index()
+            
+            # apply the error function to the summary statistics
+            err_g = data_stat.groupby(by = group_vars)
+            error_stat = err_g[view.channel].aggregate(view.error_function).reset_index()
+    
+    # figure out the colors
+    if view.huefacet:
+        hue_names = util.categorical_order(data[view.huefacet])
+        n_colors = len(hue_names)
+    else:
+        hue_names = None
+        n_colors = len(statistic) 
+        
+    current_palette = mpl.rcParams['axes.color_cycle']
+    if n_colors <= len(current_palette):
+        colors = sns.color_palette(n_colors = n_colors)
+    else:
+        colors = sns.husl_palette(n_colors, l=.7)
+    
+    colors = sns.color_palette(colors)
+ 
+    # plot the bars
+    orientation = kwargs.pop('orientation', 'vertical')
+    width = kwargs.pop('width', 0.8)
+    ax = kwargs.pop('ax', None)
+    
+    err_kws = {}
+    errwidth = kwargs.pop('errwidth', None)
+    if errwidth:
+        err_kws['lw'] = errwidth
+    else:
+        err_kws['lw'] = mpl.rcParams["lines.linewidth"] * 1.8
+        
+    errcolor = kwargs.pop('errcolor', '0.2')
+    capsize = kwargs.pop('capsize', None)
 
     if ax is None:
         ax = plt.gca()
 
-    plotter.plot(ax, kwargs)
-    return ax
+    # Get the right matplotlib function depending on the orientation
+    barfunc = ax.bar if orientation == "vertical" else ax.barh
+    barpos = np.arange(len(categories))
+    
+    if view.huefacet:
+        hue_offsets = np.linspace(0, width - (width / n_colors), n_colors)
+        hue_offsets -= hue_offsets.mean()
+        nested_width = width / len(hue_names) * 0.98
+        for j, hue_level in enumerate(hue_names):
+            offpos = barpos + hue_offsets[j]
+            barfunc(offpos,
+                    statistic[statistic[view.huefacet] == hue_level][view.channel], 
+                    nested_width,
+                    color=colors[j], 
+                    align="center",
+                    label=hue_level, 
+                    **kwargs)
+                
+            if view.error_bars:
+                confint = error_stat[error_stat[view.huefacet] == hue_level][view.channel]
+                confint_low = statistic[statistic[view.huefacet] == hue_level][view.channel] - confint
+                confint_high = statistic[statistic[view.huefacet] == hue_level][view.channel] + confint
+                errcolors = [errcolor] * len(offpos)
+                _draw_confints(ax,
+                               offpos,
+                               confint_low,
+                               confint_high,
+                               errcolors,
+                               view.orientation,
+                               errwidth = errwidth,
+                               capsize = capsize)
+                
+    else:
+        barfunc(barpos, statistic[view.channel], width,
+                color=colors, align="center", **kwargs)
+        
+        if view.error_bars:
+            confint = error_stat[view.channel]
+            confint_low = statistic[view.channel] - confint
+            confint_high = statistic[view.channel] + confint
+            errcolors = [errcolor] * len(barpos)
+            _draw_confints(ax,
+                           barpos,
+                           confint_low,
+                           confint_high,
+                           errcolors,
+                           view.orientation,
+                           errwidth = errwidth,
+                           capsize = capsize)
+
+    # do axes
+    if orientation == "vertical":
+        xlabel, ylabel = view.variable, view.channel
+    else:
+        xlabel, ylabel = view.channel, view.variable
+
+    if xlabel is not None:
+        ax.set_xlabel(xlabel)
+    if ylabel is not None:
+        ax.set_ylabel(ylabel)
+
+    if orientation == "vertical":
+        ax.set_xticks(np.arange(len(categories)))
+        ax.set_xticklabels(categories)
+    else:
+        ax.set_yticks(np.arange(len(categories)))
+        ax.set_yticklabels(categories)
+
+    if orientation == "vertical":
+        ax.xaxis.grid(False)
+        ax.set_xlim(-.5, len(categories) - .5)
+    else:
+        ax.yaxis.grid(False)
+        ax.set_ylim(-.5, len(categories) - .5)
+
+    if hue_names is not None:
+        leg = ax.legend(loc="best")
+        if view.huefacet is not None:
+            leg.set_title(view.huefacet)
+ 
+            # Set the title size a roundabout way to maintain
+            # compatability with matplotlib 1.1
+            try:
+                title_size = mpl.rcParams["axes.labelsize"] * .85
+            except TypeError:  # labelsize is something like "large"
+                title_size = mpl.rcParams["axes.labelsize"]
+            prop = mpl.font_manager.FontProperties(size=title_size)
+            leg._legend_title_box._text.set_font_properties(prop)   
+            
+    return ax 
+
+
+def _draw_confints(ax, at_group, confint_low, confint_high, colors, 
+                   orientation, errwidth=None, capsize=None, **kws):
+
+    if errwidth is not None:
+        kws.setdefault("lw", errwidth)
+    else:
+        kws.setdefault("lw", mpl.rcParams["lines.linewidth"] * 1.8)
+
+    for at, ci_low, ci_high, color in zip(at_group,
+                                            confint_low,
+                                            confint_high,
+                                            colors):
+        if orientation == "vertical":
+            ax.plot([at, at], [ci_low, ci_high], color=color, **kws)
+            if capsize is not None:
+                ax.plot([at - capsize / 2, at + capsize / 2],
+                        [ci_low, ci_low], color=color, **kws)
+                ax.plot([at - capsize / 2, at + capsize / 2],
+                        [ci_high, ci_high], color=color, **kws)
+        else:
+            ax.plot([ci_low, ci_high], [at, at], color=color, **kws)
+            if capsize is not None:
+                ax.plot([ci_low, ci_low],
+                        [at - capsize / 2, at + capsize / 2],
+                        color=color, **kws)
+                ax.plot([ci_high, ci_high],
+                        [at - capsize / 2, at + capsize / 2],
+                        color=color, **kws)
 
 if __name__ == '__main__':
     import cytoflow as flow
