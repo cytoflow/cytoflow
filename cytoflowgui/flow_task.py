@@ -129,14 +129,21 @@ class FlowTask(Task):
             from cytoflow import Tube
                      
             import_op.conditions["Dox"] = "float"
+            import_op.conditions["Replicate"] = "int"
         
             tube1 = Tube(file = "../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs",
-                         conditions = {"Dox" : 0.0})
+                         conditions = {"Dox" : 1.0, "Replicate" : 1})
         
             tube2 = Tube(file = "../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs",
-                         conditions = {"Dox" : 1.0})
+                         conditions = {"Dox" : 10.0, "Replicate" : 1})
+            
+            tube3 = Tube(file = "../cytoflow/tests/data/Plate01/CFP_Well_B4.fcs",
+                         conditions = {"Dox" : 1.0, "Replicate" : 2})
         
-            import_op.tubes = [tube1, tube2]
+            tube4 = Tube(file = "../cytoflow/tests/data/Plate01/RFP_Well_A6.fcs",
+                         conditions = {"Dox" : 10.0, "Replicate" : 2})
+        
+            import_op.tubes = [tube1, tube2, tube3, tube4]
             
         self.model.add_operation(import_op)      
     

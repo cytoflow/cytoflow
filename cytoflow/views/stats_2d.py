@@ -17,7 +17,9 @@
 
 from __future__ import division, absolute_import
 
-from traits.api import HasStrictTraits, Str, provides, Callable
+from warnings import warn
+
+from traits.api import HasStrictTraits, Str, provides, Callable, Property
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
@@ -124,7 +126,8 @@ class Stats2DView(HasStrictTraits):
     friendly_id = "2D Statistics View" 
     
     name = Str
-    by = Str
+    by = Property
+    variable = Str
     xchannel = Str
     xscale = util.ScaleEnum
     xfunction = Callable
@@ -140,6 +143,15 @@ class Stats2DView(HasStrictTraits):
     y_error_function = Callable
     subset = Str
 
+    def _get_by(self):
+        warn("'by' is deprecated; please use 'variable'",
+             util.CytoflowViewWarning)
+        return self.variable
+
+    def _set_by(self, val):
+        warn("'by' is deprecated; please use 'variable'",
+             util.CytoflowViewWarning)
+        self.variable = val
     
     def plot(self, experiment, **kwargs):
         """Plot a bar chart"""
@@ -147,17 +159,17 @@ class Stats2DView(HasStrictTraits):
         if not experiment:
             raise util.CytoflowViewError("No experiment specified")
         
-        if not self.by:
-            raise util.CytoflowViewError("Independent variable 'by' not set")
+        if not self.variable:
+            raise util.CytoflowViewError("variable not set")
             
-        if self.by not in experiment.conditions:
-            raise util.CytoflowViewError("Independent variable {0} not in the experiment"
-                                    .format(self.by))
+        if self.variable not in experiment.conditions:
+            raise util.CytoflowViewError("variable {0} not in the experiment"
+                                    .format(self.variable))
         
-        if not (experiment.conditions[self.by] == "float" or
-                experiment.conditions[self.by] == "int"):
-            raise util.CytoflowViewError("by variable {0} isn't numeric"
-                                    .format(self.by)) 
+        if not (experiment.conditions[self.variable] == "float" or
+                experiment.conditions[self.variable] == "int"):
+            raise util.CytoflowViewError("variable {0} isn't numeric"
+                                    .format(self.variable)) 
             
         if not self.xchannel:
             raise util.CytoflowViewError("X channel isn't set.")
@@ -219,7 +231,7 @@ class Stats2DView(HasStrictTraits):
         else:
             data = experiment.data
             
-        group_vars = [self.by]
+        group_vars = [self.variable]
         if self.xfacet: group_vars.append(self.xfacet)
         if self.yfacet: group_vars.append(self.yfacet)
         if self.huefacet: group_vars.append(self.huefacet)
@@ -266,11 +278,11 @@ class Stats2DView(HasStrictTraits):
                 
                 # apply the summary statistic to each subgroup
                 data_g = data.groupby(by = err_vars)
-                data_stat = data_g[self.channel].aggregate(self.yfunction).reset_index()
+                data_stat = data_g[self.ychannel].aggregate(self.yfunction).reset_index()
                 
                 # apply the error function to the summary statistics
                 err_g = data_stat.groupby(by = group_vars)
-                error_stat = err_g[self.channel].aggregate(self.y_error_function).reset_index()
+                error_stat = err_g[self.ychannel].aggregate(self.y_error_function).reset_index()
         
             y_err_name = util.random_string(6)
             plot_data[y_err_name] = error_stat[self.ychannel]
@@ -298,10 +310,10 @@ class Stats2DView(HasStrictTraits):
         
         # plot the error bars first so the axis labels don't get overwritten
         if self.x_error_bars:
-            grid.map(_x_error_bars, x_err_name, self.ychannel)
+            grid.map(_x_error_bars, self.xchannel, x_err_name, self.ychannel)
             
         if self.y_error_bars:
-            grid.map(_y_error_bars, self.xchannel, y_err_name)
+            grid.map(_y_error_bars, self.xchannel, self.ychannel, y_err_name)
 
         grid.map(plt.plot, self.xchannel, self.ychannel, **kwargs)
 
@@ -327,15 +339,27 @@ class Stats2DView(HasStrictTraits):
             else:
                 grid.add_legend(title = self.huefacet)
 
-def _x_error_bars(xerr, y, ax = None, color = None, **kwargs):
-    x_lo = [x[0] for x in xerr]
-    x_hi = [x[1] for x in xerr]
+def _x_error_bars(x, xerr, y, ax = None, color = None, **kwargs):
+    
+    if isinstance(xerr.iloc[0], tuple):
+        x_lo = [xe[0] for xe in xerr]
+        x_hi = [xe[1] for xe in xerr]
+    else:
+        x_lo = [x.iloc[i] - xe for i, xe in xerr.iteritems()]
+        x_hi = [x.iloc[i] + xe for i, xe in xerr.iteritems()]
+        
     plt.hlines(y, x_lo, x_hi, color = color, **kwargs)
     
     
-def _y_error_bars(x, yerr, ax = None, color = None, **kwargs):
-    y_lo = [y[0] for y in yerr]
-    y_hi = [y[1] for y in yerr]
+def _y_error_bars(x, y, yerr, ax = None, color = None, **kwargs):
+    
+    if isinstance(yerr.iloc[0], tuple):
+        y_lo = [ye[0] for ye in yerr]
+        y_hi = [ye[1] for ye in yerr]
+    else:
+        y_lo = [y.iloc[i] - ye for i, ye in yerr.iteritems()]
+        y_hi = [y.iloc[i] + ye for i, ye in yerr.iteritems()]
+        
     plt.vlines(x, y_lo, y_hi, color = color, **kwargs)
     
     
@@ -357,7 +381,7 @@ if __name__ == '__main__':
     ex2 = thresh.apply(ex)
     
     s = flow.Stats2DView()
-    s.by = "Dox"
+    s.variable = "Dox"
     s.xchannel = "V2-A"
     s.xfunction = np.mean
     s.ychannel = "Y2-A"

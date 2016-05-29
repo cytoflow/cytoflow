@@ -44,7 +44,7 @@ class BarChartView(HasStrictTraits):
     scale : Enum("linear", "log", "logicle") (default = "linear")
         The scale to use on the Y axis.
         
-    by : Str
+    variable : Str
         the name of the conditioning variable to group the chart's bars
 
     function : Callable (1D numpy.ndarray --> float)
@@ -60,10 +60,11 @@ class BarChartView(HasStrictTraits):
         the same data subsets that `function` was applied to, and plot those
         as error bars.
         
-    error_function : Callable (list-like --> (float, float))
+    error_function : Callable (list-like --> float or (float, float))
         for each group/subgroup subset, call this function to compute the 
-        error bars.  must return a (low, high) tuple.  whether it is called on 
-        the data or the summary function is determined by the value of *error_bars*
+        error bars.  must return a single float or a (low, high) tuple.  whether
+        it is called on the data or the summary function is determined by the 
+        value of *error_bars*
         
     xfacet : Str
         the conditioning variable for horizontal subplots
@@ -115,7 +116,7 @@ class BarChartView(HasStrictTraits):
         warn("'by' is deprecated; please use 'variable'",
              util.CytoflowViewWarning)
         return self.variable
-
+ 
     def _set_by(self, val):
         warn("'by' is deprecated; please use 'variable'",
              util.CytoflowViewWarning)
@@ -178,8 +179,6 @@ class BarChartView(HasStrictTraits):
             
         # get the scale
         scale = util.scale_factory(self.scale, experiment, self.channel)
-        # kwargs['data_scale'] = scale
-        # kwargs['estimator'] = self.function
                         
         g = sns.FacetGrid(data, 
                           size = 6,
@@ -315,6 +314,7 @@ def _barplot(*args, **kwargs):
                 errcolors = [errcolor] * len(offpos)
                 _draw_confints(ax,
                                offpos,
+                               statistic[statistic[view.huefacet] == hue_level][view.channel],
                                confint,
                                errcolors,
                                view.orientation,
@@ -330,6 +330,7 @@ def _barplot(*args, **kwargs):
             errcolors = [errcolor] * len(barpos)
             _draw_confints(ax,
                            barpos,
+                           statistic[view.channel],
                            confint,
                            errcolors,
                            view.orientation,
@@ -378,30 +379,38 @@ def _barplot(*args, **kwargs):
     return ax 
 
 
-def _draw_confints(ax, at_group, confints, colors, 
+def _draw_confints(ax, at_group, stat, confints, colors, 
                    orientation, errwidth=None, capsize=None, **kws):
 
     if errwidth is not None:
         kws.setdefault("lw", errwidth)
     else:
         kws.setdefault("lw", mpl.rcParams["lines.linewidth"] * 1.8)
+        
+    if isinstance(confints.iloc[0], tuple):
+        ci_lo = [x[0] for x in confints]
+        ci_hi = [x[1] for x in confints]
+    else:
+        ci_lo = [stat.iloc[i] - x for i, x in confints.iteritems()]
+        ci_hi = [stat.iloc[i] + x for i, x in confints.iteritems()]
 
-    for at, (ci_low, ci_high), color in zip(at_group,
-                                            confints,
-                                            colors):
+    for at, lo, hi, color in zip(at_group,
+                                 ci_lo,
+                                 ci_hi,
+                                 colors):
         if orientation == "vertical":
-            ax.plot([at, at], [ci_low, ci_high], color=color, **kws)
+            ax.plot([at, at], [lo, hi], color=color, **kws)
             if capsize is not None:
                 ax.plot([at - capsize / 2, at + capsize / 2],
-                        [ci_low, ci_low], color=color, **kws)
+                        [lo, lo], color=color, **kws)
                 ax.plot([at - capsize / 2, at + capsize / 2],
-                        [ci_high, ci_high], color=color, **kws)
+                        [hi, hi], color=color, **kws)
         else:
-            ax.plot([ci_low, ci_high], [at, at], color=color, **kws)
+            ax.plot([lo, hi], [at, at], color=color, **kws)
             if capsize is not None:
-                ax.plot([ci_low, ci_low],
+                ax.plot([lo, lo],
                         [at - capsize / 2, at + capsize / 2],
                         color=color, **kws)
-                ax.plot([ci_high, ci_high],
+                ax.plot([hi, hi],
                         [at - capsize / 2, at + capsize / 2],
                         color=color, **kws)

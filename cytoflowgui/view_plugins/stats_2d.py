@@ -45,10 +45,9 @@ class Stats2DHandler(Controller, ViewHandlerMixin):
     def default_traits_view(self):
         return View(VGroup(
                     VGroup(Item('name'),
-                           Item('by',
-                                editor=EnumEditor(name='context.conditions'),
-                                # TODO - restrict this to NUMERIC values?
-                                label = "Variable"),
+                           Item('variable',
+                                # TODO - restrict this to numeric values?
+                                editor=EnumEditor(name='context.conditions')),
                            Item('xchannel',
                                 editor=EnumEditor(name='context.channels'),
                                 label = "X Channel"),

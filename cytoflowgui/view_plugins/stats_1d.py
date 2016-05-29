@@ -113,14 +113,15 @@ class Stats1DPluginView(Stats1DView, PluginViewMixin):
     # functions aren't picklable, so send the name instead
     summary_functions = Dict({"Mean" : np.mean,
                              "Geom.Mean" : geom_mean,
-                             "Count" : len})
+                             "Count" : len},
+                             transient = True)
     
 #     spread_functions = Dict({np.std : "Std.Dev.",
 #                              scipy.stats.sem : "S.E.M"
 #                        # TODO - add 95% CI
 #                        })
     
-    summary_function_names = List(["Mean", "Geom.Mean", "Count"])
+    summary_function_names = List(["Mean", "Geom.Mean", "Count"], transient = True)
     yfunction_name = Str()
     yfunction = Callable(transient = True)
     

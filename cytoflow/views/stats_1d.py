@@ -237,7 +237,7 @@ class Stats1DView(HasStrictTraits):
 
         # plot the error bars first so the axis labels don't get overwritten
         if self.y_error_bars:
-            grid.map(_error_bars, self.xvariable, y_err_name)
+            grid.map(_error_bars, self.xvariable, self.ychannel, y_err_name)
         
         grid.map(plt.plot, self.xvariable, self.ychannel, **kwargs)
         
@@ -263,9 +263,15 @@ class Stats1DView(HasStrictTraits):
             else:
                 grid.add_legend(title = self.huefacet)
                 
-def _error_bars(x, yerr, ax = None, color = None, **kwargs):
-    lo = [y[0] for y in yerr]
-    hi = [y[1] for y in yerr]
+def _error_bars(x, y, yerr, ax = None, color = None, **kwargs):
+    
+    if isinstance(yerr.iloc[0], tuple):
+        lo = [ye[0] for ye in yerr]
+        hi = [ye[1] for ye in yerr]
+    else:
+        lo = [y.iloc[i] - ye for i, ye in yerr.iteritems()]
+        hi = [y.iloc[i] + ye for i, ye in yerr.iteritems()]
+
     plt.vlines(x, lo, hi, color = color, **kwargs)
     
 
