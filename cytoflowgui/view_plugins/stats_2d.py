@@ -31,7 +31,7 @@ import cytoflow.utility as util
 
 from cytoflowgui.subset_editor import SubsetEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
-from cytoflowgui.clearable_enum_editor import ClearableEnumEditor
+from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
     import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin
     
@@ -66,13 +66,16 @@ class Stats2DHandler(Controller, ViewHandlerMixin):
                                 editor = EnumEditor(name='summary_function_names'),
                                 label = "Y Summary\nFunction"),
                            Item('xfacet',
-                                editor=ClearableEnumEditor(name='context.conditions'),
+                                editor=ExtendableEnumEditor(name='context.conditions',
+                                                            extra_items = {"None" : ""}),
                                 label = "Horizontal\nFacet"),
                            Item('yfacet',
-                                editor=ClearableEnumEditor(name='context.conditions'),
+                                editor=ExtendableEnumEditor(name='context.conditions',
+                                                            extra_items = {"None" : ""}),
                                 label = "Vertical\nFacet"),
                            Item('huefacet',
-                                editor=ClearableEnumEditor(name='context.conditions'),
+                                editor=ExtendableEnumEditor(name='context.conditions',
+                                                            extra_items = {"None" : ""}),
                                 label="Color\nFacet"),
                            label = "One-Dimensional Statistics Plot",
                            show_border = False),

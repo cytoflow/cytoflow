@@ -33,7 +33,7 @@ from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_E
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
 from cytoflowgui.subset_editor import SubsetEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
-from cytoflowgui.clearable_enum_editor import ClearableEnumEditor
+from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
 
 class PolygonHandler(Controller, OpHandlerMixin):
@@ -64,7 +64,8 @@ class PolygonViewHandler(Controller, ViewHandlerMixin):
                            Item('yscale',
                                 label = "Y Scale"),
                            Item('huefacet',
-                                editor=ClearableEnumEditor(name='context.previous.conditions'),
+                                editor=ExtendableEnumEditor(name='context.previous.conditions',
+                                                            extra_items = {"None" : ""}),
                                 label="Color\nFacet"),
                            label = "Polygon Setup View",
                            show_border = False),
