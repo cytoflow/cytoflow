@@ -60,7 +60,7 @@ class BarChartView(HasStrictTraits):
         the same data subsets that `function` was applied to, and plot those
         as error bars.
         
-    error_function : Callable (1D numpy.ndarray --> (float, float))
+    error_function : Callable (list-like --> (float, float))
         for each group/subgroup subset, call this function to compute the 
         error bars.  must return a (low, high) tuple.  whether it is called on 
         the data or the summary function is determined by the value of *error_bars*
@@ -160,7 +160,7 @@ class BarChartView(HasStrictTraits):
             raise util.CytoflowViewError("error_bars must be either 'data' or "
                                          "a condition in the experiment")            
         
-        if self.error_bars and self.error_function is None:
+        if self.error_bars and not self.error_function:
             raise util.CytoflowViewError("didn't set an error function")
         
         if self.subset:
@@ -220,6 +220,11 @@ class BarChartView(HasStrictTraits):
 
 # in Py3k i could have named arguments after *args, but not in py2.  :-(
 def _barplot(*args, **kwargs):
+    """ 
+    A custom barchart function.  This is assembled from pieces cobbled
+    together from seaborn v0.7.1.
+    """
+     
     data = pd.DataFrame({s.name: s for s in args})
     view = kwargs.pop('view')
 

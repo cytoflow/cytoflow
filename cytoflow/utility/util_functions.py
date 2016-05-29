@@ -22,6 +22,8 @@ Created on Mar 5, 2015
 """
 from __future__ import division
 
+import random, string
+
 import numpy as np
 import pandas as pd
 from scipy import stats
@@ -202,3 +204,6 @@ def categorical_order(values, order=None):
         order = filter(pd.notnull, order)
     return list(order)
 
+def random_string(n):
+    """from http://stackoverflow.com/questions/2257441/random-string-generation-with-upper-case-letters-and-digits-in-python"""
+    return ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(n))
