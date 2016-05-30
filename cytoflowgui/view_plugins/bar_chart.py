@@ -21,15 +21,12 @@ Created on Feb 24, 2015
 @author: brian
 """
 
-from traits.api import provides, Callable, Dict, Str, Property
+from traits.api import provides, Callable, Str
 from traitsui.api import View, Item, VGroup, Controller, EnumEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
-import numpy as np
-import scipy.stats
-
-from cytoflow import BarChartView, geom_mean
+from cytoflow import BarChartView
 import cytoflow.utility as util
 
 from cytoflowgui.subset_editor import SubsetEditor
@@ -37,6 +34,8 @@ from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
     import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin
+    
+from cytoflowgui.util import summary_functions, error_functions
     
 class BarChartHandler(Controller, ViewHandlerMixin):
     """
@@ -53,16 +52,16 @@ class BarChartHandler(Controller, ViewHandlerMixin):
                                 editor=EnumEditor(name='context.conditions'),
                                 label = "Variable"),
                            Item('function_name',
-                                editor = EnumEditor(name='summary_function_names'),
+                                editor = EnumEditor(values = summary_functions.keys()),
                                 label = "Summary\nFunction"),
-                           Item('object.orientation'),
-                           Item('object.error_bars',
+                           Item('orientation'),
+                           Item('error_bars',
                                 editor = ExtendableEnumEditor(name='context.conditions',
                                                               extra_items = {"None" : "",
                                                                              "DATA" : "data"}),
                                  label = "Error bars"),
                            Item('error_function_name',
-                                editor = EnumEditor(name='error_function_names'),
+                                editor = EnumEditor(values = error_functions.keys()),
                                 label = "Error\nfunction",
                                 visible_when = 'object.error_bars'),
                            Item('xfacet',
@@ -100,34 +99,12 @@ class BarChartHandler(Controller, ViewHandlerMixin):
 class BarChartPluginView(BarChartView, PluginViewMixin):
     handler_factory = Callable(BarChartHandler)
     
-    # functions aren't pickleable, so send the name instead
-    summary_functions = Dict({"Mean" : np.mean,
-                              "Geom.Mean" : geom_mean,
-                              "Count" : len},
-                             transient = True)
-    
-    summary_function_names = Property()
-    
-    def _get_summary_function_names(self):
-        return self.summary_functions.keys()
+    # functions aren't pickleable, so send the name instead.  must make
+    # the callables transient so we don't get a loop!
     
     function_name = Str()
     function = Callable(transient = True)
-    
-    mean_95ci = lambda x: util.ci(x, np.mean, boots = 100)
-    geomean_95ci = lambda x: util.ci(x, geom_mean, boots = 100)
- 
-    error_functions = Dict({"Std.Dev." : np.std,
-                            "S.E.M" : scipy.stats.sem,
-                            "Mean 95% CI" : mean_95ci,
-                            "Geom.Mean 95% CI" : geomean_95ci},
-                           transient = True)
-     
-    error_function_names = Property()
-     
-    def _get_error_function_names(self):
-        return self.error_functions.keys()
-     
+
     error_function_name = Str()
     error_function = Callable(transient = True)
     
@@ -136,10 +113,10 @@ class BarChartPluginView(BarChartView, PluginViewMixin):
         if not self.function_name:
             raise util.CytoflowViewError("Summary function isn't set")
         
-        self.function = self.summary_functions[self.function_name]
+        self.function = summary_functions[self.function_name]
          
         if self.error_bars and self.error_function_name:
-            self.error_function = self.error_functions[self.error_function_name]
+            self.error_function = error_functions[self.error_function_name]
              
         BarChartView.plot(self, experiment, **kwargs)
 

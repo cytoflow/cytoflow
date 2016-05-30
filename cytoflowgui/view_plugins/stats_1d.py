@@ -21,12 +21,12 @@ Created on Feb 24, 2015
 @author: brian
 """
 
-from traits.api import provides, Callable, Dict, List, Str
+from traits.api import provides, Callable, Str
 from traitsui.api import View, Item, Controller, EnumEditor, VGroup
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
-from cytoflow import Stats1DView, geom_mean
+from cytoflow import Stats1DView
 import cytoflow.utility as util
 
 from cytoflowgui.subset_editor import SubsetEditor
@@ -35,8 +35,7 @@ from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
     import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin
     
-import numpy as np
-import scipy.stats
+from cytoflowgui.util import summary_functions, error_functions
     
 class Stats1DHandler(Controller, ViewHandlerMixin):
     """
@@ -58,8 +57,17 @@ class Stats1DHandler(Controller, ViewHandlerMixin):
                            Item('yscale',
                                 label = "Y Scale"),
                            Item('yfunction_name',
-                                editor = EnumEditor(name='summary_function_names'),
+                                editor = EnumEditor(values = summary_functions.keys()),
                                 label = "Y Summary\nFunction"),
+                           Item('y_error_bars',
+                                editor = ExtendableEnumEditor(name='context.conditions',
+                                                              extra_items = {"None" : "",
+                                                                             "DATA" : "data"}),
+                                 label = "Y Error bars"),
+                           Item('y_error_function_name',
+                                editor = EnumEditor(values = error_functions.keys()),
+                                label = "Y Error\nfunction",
+                                visible_when = 'y_error_bars'),
                            Item('xfacet',
                                 editor=ExtendableEnumEditor(name='context.conditions',
                                                             extra_items = {"None" : ""}),
@@ -91,46 +99,29 @@ class Stats1DHandler(Controller, ViewHandlerMixin):
                          visible_when = 'error',
                          editor = ColorTextEditor(foreground_color = "#000000",
                                                   background_color = "#ff9191"))))
-#                     Item('object.error_bars',
-#                          editor = EnumEditor(values = {None : "",
-#                                                        "data" : "Data",
-#                                                        "summary" : "Summary"}),
-#                          label = "Error bars?"),
-#                     Item('object.error_function',
-#                          editor = EnumEditor(name='handler.spread_functions'),
-#                          label = "Error bar\nfunction",
-#                          visible_when = 'object.error_bars is not None'),
-#                     Item('object.error_var',
-#                          editor = EnumEditor(name = 'handler.conditions'),
-#                          label = "Error bar\nVariable",
-#                          visible_when = 'object.error_bars == "summary"'),
-                    
-    
+
 class Stats1DPluginView(Stats1DView, PluginViewMixin):
     handler_factory = Callable(Stats1DHandler)
     
     
     # functions aren't picklable, so send the name instead
-    summary_functions = Dict({"Mean" : np.mean,
-                             "Geom.Mean" : geom_mean,
-                             "Count" : len},
-                             transient = True)
     
-#     spread_functions = Dict({np.std : "Std.Dev.",
-#                              scipy.stats.sem : "S.E.M"
-#                        # TODO - add 95% CI
-#                        })
-    
-    summary_function_names = List(["Mean", "Geom.Mean", "Count"], transient = True)
     yfunction_name = Str()
     yfunction = Callable(transient = True)
+    
+    y_error_function_name = Str()
+    y_error_function = Callable(transient = True)
     
     def plot(self, experiment, **kwargs):
         
         if not self.yfunction_name:
             raise util.CytoflowViewError("Summary function isn't set")
         
-        self.yfunction = self.summary_functions[self.yfunction_name]
+        self.yfunction = summary_functions[self.yfunction_name]
+        
+        if self.y_error_bars and self.y_error_function_name:
+            self.y_error_function = error_functions[self.y_error_function_name]
+        
         Stats1DView.plot(self, experiment, **kwargs)
         
 
