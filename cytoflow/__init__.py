@@ -17,6 +17,10 @@
 
 from __future__ import absolute_import
 
+# suppress a meaningless warning from seaborn
+import warnings
+warnings.filterwarnings('ignore', '.*IPython widgets are experimental.*')
+
 # basics
 from .experiment import Experiment
 from .operations.import_op import ImportOp, Tube
