@@ -274,7 +274,6 @@ def _barplot(*args, **kwargs):
     colors = sns.color_palette(colors)
  
     # plot the bars
-    orientation = kwargs.pop('orientation', 'vertical')
     width = kwargs.pop('width', 0.8)
     ax = kwargs.pop('ax', None)
     
@@ -292,7 +291,7 @@ def _barplot(*args, **kwargs):
         ax = plt.gca()
 
     # Get the right matplotlib function depending on the orientation
-    barfunc = ax.bar if orientation == "vertical" else ax.barh
+    barfunc = ax.bar if view.orientation == "vertical" else ax.barh
     barpos = np.arange(len(categories))
     
     if view.huefacet:
@@ -338,7 +337,7 @@ def _barplot(*args, **kwargs):
                            capsize = capsize)
 
     # do axes
-    if orientation == "vertical":
+    if view.orientation == "vertical":
         xlabel, ylabel = view.variable, view.channel
     else:
         xlabel, ylabel = view.channel, view.variable
@@ -348,14 +347,14 @@ def _barplot(*args, **kwargs):
     if ylabel is not None:
         ax.set_ylabel(ylabel)
 
-    if orientation == "vertical":
+    if view.orientation == "vertical":
         ax.set_xticks(np.arange(len(categories)))
         ax.set_xticklabels(categories)
     else:
         ax.set_yticks(np.arange(len(categories)))
         ax.set_yticklabels(categories)
 
-    if orientation == "vertical":
+    if view.orientation == "vertical":
         ax.xaxis.grid(False)
         ax.set_xlim(-.5, len(categories) - .5)
     else:
