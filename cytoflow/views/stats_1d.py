@@ -269,8 +269,8 @@ def _error_bars(x, y, yerr, ax = None, color = None, **kwargs):
         lo = [ye[0] for ye in yerr]
         hi = [ye[1] for ye in yerr]
     else:
-        lo = [y.iloc[i] - ye for i, ye in yerr.iteritems()]
-        hi = [y.iloc[i] + ye for i, ye in yerr.iteritems()]
+        lo = [y.iloc[i] - ye for i, ye in yerr.reset_index(drop = True).iteritems()]
+        hi = [y.iloc[i] + ye for i, ye in yerr.reset_index(drop = True).iteritems()]
 
     plt.vlines(x, lo, hi, color = color, **kwargs)
     

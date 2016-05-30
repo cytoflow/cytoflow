@@ -345,8 +345,8 @@ def _x_error_bars(x, xerr, y, ax = None, color = None, **kwargs):
         x_lo = [xe[0] for xe in xerr]
         x_hi = [xe[1] for xe in xerr]
     else:
-        x_lo = [x.iloc[i] - xe for i, xe in xerr.iteritems()]
-        x_hi = [x.iloc[i] + xe for i, xe in xerr.iteritems()]
+        x_lo = [x.iloc[i] - xe for i, xe in xerr.reset_index(drop = True).iteritems()]
+        x_hi = [x.iloc[i] + xe for i, xe in xerr.reset_index(drop = True).iteritems()]
         
     plt.hlines(y, x_lo, x_hi, color = color, **kwargs)
     
@@ -357,8 +357,8 @@ def _y_error_bars(x, y, yerr, ax = None, color = None, **kwargs):
         y_lo = [ye[0] for ye in yerr]
         y_hi = [ye[1] for ye in yerr]
     else:
-        y_lo = [y.iloc[i] - ye for i, ye in yerr.iteritems()]
-        y_hi = [y.iloc[i] + ye for i, ye in yerr.iteritems()]
+        y_lo = [y.iloc[i] - ye for i, ye in yerr.reset_index(drop = True).iteritems()]
+        y_hi = [y.iloc[i] + ye for i, ye in yerr.reset_index(drop = True).iteritems()]
         
     plt.vlines(x, y_lo, y_hi, color = color, **kwargs)
     

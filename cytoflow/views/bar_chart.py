@@ -215,8 +215,10 @@ class BarChartView(HasStrictTraits):
               **kwargs)
         
         if self.huefacet:
-            g.add_legend(title = self.huefacet)
-
+            labels = np.sort(data[self.huefacet].unique())
+            labels = [str(x) for x in labels]
+            g.add_legend(title = self.huefacet, label_order = labels)
+            
 # in Py3k i could have named arguments after *args, but not in py2.  :-(
 def _barplot(*args, **kwargs):
     """ 
@@ -390,8 +392,8 @@ def _draw_confints(ax, at_group, stat, confints, colors,
         ci_lo = [x[0] for x in confints]
         ci_hi = [x[1] for x in confints]
     else:
-        ci_lo = [stat.iloc[i] - x for i, x in confints.iteritems()]
-        ci_hi = [stat.iloc[i] + x for i, x in confints.iteritems()]
+        ci_lo = [stat.iloc[i] - x for i, x in confints.reset_index(drop = True).iteritems()]
+        ci_hi = [stat.iloc[i] + x for i, x in confints.reset_index(drop = True).iteritems()]
 
     for at, lo, hi, color in zip(at_group,
                                  ci_lo,
