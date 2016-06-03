@@ -257,7 +257,7 @@ class PolygonSelection(cytoflow.views.ScatterplotView):
         if self._ax and self.interactive:
             self._widget = util.PolygonSelector(self._ax,
                                                 self._onselect,
-                                                useblit = False)
+                                                useblit = True)
         elif self._widget:
             self._widget = None       
     
