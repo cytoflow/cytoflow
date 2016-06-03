@@ -92,6 +92,14 @@ cytoflow.views.table module
     :undoc-members:
     :show-inheritance:
 
+cytoflow.views.test module
+--------------------------
+
+.. automodule:: cytoflow.views.test
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 cytoflow.views.violin module
 ----------------------------
 

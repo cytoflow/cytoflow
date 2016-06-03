@@ -11,6 +11,14 @@ Subpackages
 Submodules
 ----------
 
+cytoflow.utility.algorithms module
+----------------------------------
+
+.. automodule:: cytoflow.utility.algorithms
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 cytoflow.utility.custom_traits module
 -------------------------------------
 
