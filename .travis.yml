@@ -33,8 +33,8 @@ before_install:
   - conda update --yes conda
 
 install:
-  - conda install --yes --file=packaging/conda-requirements.txt
-  - conda install --yes setuptools==19.2 pip six 
+  - conda install --yes --quiet --file=packaging/conda-requirements.txt
+  - conda install --yes --quiet setuptools==19.2 pip six 
   - python setup.py develop bdist_wheel 
   - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then python setup.py sdist; fi
   - pip install pyinstaller nose2 
@@ -51,10 +51,10 @@ deploy:
     #      secure: P2kebBOVixLdfWV0UYKPa8Y87YIqWc4I1TAr6myTiTL1OGdHvAsoBL3hxP+84F8ZL52hnqUWL/GuRO+IIf4R4IJbIF8Nj8DQG28dN/jBNK/EgBd0ut6myv4yFht5aL5o7qsCpTZxxwDori0+7y8wkvAd/Dz5T+UNb5TzOT2W/aYBz2LRwJaJ2lmGPktCJfopVUxGD9iWCJV1imaw9IqBZof8v1bbkFGf06Lpgb8TKeGZGikiFiiDhDjXuVmsH8FysJV5KmiWUxNOvzZ6xNU+gqOLkVP3bZwM764ZKlU5GEkKP4Yfdru/ixicwm2bAENSQ4B9OZKnhrx8oycJLyrIMlEctWByva8Yj+zBvxPsSjwc+DvIjmbfJVnhAY0aWpMVfbfASlTny+dMjPesuGb/kieSD7rF4S82Zfs4mcNXF25QFteyjcTswp/WSdZMg7jmU23fi8XVMZxNHeYuZFciJW4DSpMM8nSWUXb5tT9NPUQmRKLGYGY4mFh+F2P6/exZwISzWkDIVZNAmOhGec8D00YmceVHe1dk4nX+i6BWojsP6KGmbAgIrZxmDJ8T/mWVWu0yAnU2QpyJMsbrPIaM7otNQaVoHwSk4c5IFcON2ZEdz/gs6KRd99M+fQBJzOEYS8WqNlOS+TpQhkmOhyU4xFuKv4ieyWLXu7PofQR9nAQ=
     #    on:
     #      repo: bpteague/cytoflow
-    #      branch: master
     #      tags: true
     #    server: https://pypi.python.org/pypi
     #    skip_cleanup: true
+    #    distributions: "sdist bdist_wheel"
 
   - provider: releases
     api_key: 

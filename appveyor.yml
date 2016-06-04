@@ -31,10 +31,6 @@ install:
   - ECHO "Installed SDKs:"
   - ps: "ls \"C:/Program Files/Microsoft SDKs/Windows\""
 
-  # Install Python (from the official .msi of http://python.org) and pip when
-  # not already installed.
-  # - "powershell ./appveyor/install.ps1"
-
   # Prepend newly installed Python to the PATH of this build (this cannot be
   # done from inside the powershell script as it would require to restart
   # the parent CMD process).
@@ -45,11 +41,11 @@ install:
   - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
   
   # install swig
-  - choco install swig -y
+  - choco install swig --yes --limit-output
 
   # Install the build and runtime dependencies of the project.
-  - conda install --yes --file=packaging\conda-requirements.txt
-  - conda install --yes setuptools==19.2 pip six
+  - conda install --yes --quiet --file=packaging\conda-requirements.txt
+  - conda install --yes --quiet setuptools==19.2 pip six
   - pip.exe install pyinstaller nose2
 
   - "%WITH_COMPILER% python setup.py develop"
@@ -75,8 +71,9 @@ deploy:
     auth_token:
       secure: VVuhKeMWCRbcFWTVdrIbOuKkgnOqsQnCF3ZXl9SsE5YiCmuuYP1YxmII2ZuAp0lv
     artifact: dist\*.*
-    draft: true
+    draft: false
     prerelease: false
+    force_update: true
     on:
       #branch: master                 # release from master branch only
       appveyor_repo_tag: true        # deploy on tag push only   
