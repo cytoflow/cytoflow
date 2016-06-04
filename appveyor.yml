@@ -64,6 +64,8 @@ after_test:
   - "pyinstaller packaging/pyinstaller.spec"
   - "mkdir %APPVEYOR_BUILD_VERSION%"
   - "move dist\\cytoflow.exe %APPVEYOR_BUILD_VERSION%\\cytoflow-%PYTHON_ARCH%.exe"
+  - "move dist\\*.whl %APPVEYOR_BUILD_VERSION%"
+  - "move dist\\*.exe %APPVEYOR_BUILD_VERSION%"
   - "IF %PYTHON_ARCH% EQU 32 move build\\lib.win32-2.7\\cytoflow\\utility\\logicle_ext\\_Logicle.pyd %APPVEYOR_BUILD_VERSION%\\_Logicle-32.pyd"
   - "IF %PYTHON_ARCH% EQU 64 move build\\lib.win-amd64-2.7\\cytoflow\\utility\\logicle_ext\\_Logicle.pyd %APPVEYOR_BUILD_VERSION%\\_Logicle-64.pyd"
 
