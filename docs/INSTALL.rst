@@ -65,7 +65,7 @@ the fastest.**
 
 * Install the conda package dependencies.  At the command prompt, type::
 
-    conda install pip pandas numpy numexpr matplotlib scipy scikit-learn seaborn pyface envisage bottleneck pyqt
+    conda install pandas bottleneck numpy numexpr matplotlib scipy scikit-learn seaborn pyface envisage nbformat python-dateutil statsmodels pip
 
 * Install the package with pip::
 
@@ -91,7 +91,7 @@ MacOS
  
 * Install the conda package dependencies.  At the Terminal prompt, type::
      
-     conda install pip pandas numpy numexpr matplotlib scipy scikit-learn seaborn pyface envisage bottleneck pyqt
+     conda install pandas bottleneck numpy numexpr matplotlib scipy scikit-learn seaborn pyface envisage nbformat python-dateutil statsmodels pip
      
 * Install the `cytoflow` package with `pip`.  At the Terminal prompt, type::
      
@@ -184,7 +184,7 @@ when I roll a release they get posted on the GitHub release page.
 
 * Install the conda package dependencies.  At the Anconda command prompt, type::
 
-    conda install pip pandas numpy numexpr matplotlib scipy scikit-learn seaborn pyface envisage bottleneck pyqt
+    conda install install pandas bottleneck numpy numexpr matplotlib scipy scikit-learn seaborn pyface envisage nbformat python-dateutil statsmodels pip
     
 * Clone the git repo.  **From git-bash**, say::
 
@@ -236,7 +236,7 @@ pre-built MacOS Python packages.  That's the approach outlined below.
 
 * Install the conda package dependencies.  In a Mac Terminal, type::
 
-    conda install pip pandas numpy numexpr matplotlib scipy scikit-learn seaborn pyface envisage bottleneck pyqt
+    conda install install pandas bottleneck numpy numexpr matplotlib scipy scikit-learn seaborn pyface envisage nbformat python-dateutil statsmodels pip
     
 * Clone the git repo.  In your working folder, say::
 

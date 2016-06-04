@@ -1,6 +1,5 @@
 pandas>=0.18.0
 bottleneck>=1.0
-fcsparser>=0.1.1
 numpy>=1.9.0
 numexpr>=2.4.6
 matplotlib>=1.4.3
@@ -12,3 +11,6 @@ envisage>=4.0
 nbformat>=4.0
 python-dateutil>=2.5.2
 statsmodels>=0.6.1
+
+# not in conda
+fcsparser>=0.1.1

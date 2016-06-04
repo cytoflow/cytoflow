@@ -41,8 +41,6 @@ install:
   - pyinstaller packaging/pyinstaller.spec
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then cd dist/; zip -r cytoflow.macos.zip Cytoflow.app/; rm -rf Cytoflow.app cytoflow; cd ..; fi
   - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then mv dist/cytoflow dist/cytoflow-linux.x86_64; fi
-  - python packaging/make-bintray.py > packaging/bintray.json
-  - cat packaging/bintray.json
 
 script: nose2 -c packaging/nose2.cfg
 
