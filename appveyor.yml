@@ -62,27 +62,23 @@ test_script:
 after_test:
   - "%WITH_COMPILER% %PYTHON%/python setup.py bdist_wheel bdist_wininst"
   - "pyinstaller packaging/pyinstaller.spec"
-  - "mkdir %APPVEYOR_BUILD_VERSION%"
-  - "move dist\\cytoflow.exe %APPVEYOR_BUILD_VERSION%\\cytoflow-%PYTHON_ARCH%.exe"
-  - "move dist\\*.whl %APPVEYOR_BUILD_VERSION%"
-  - "move dist\\*.exe %APPVEYOR_BUILD_VERSION%"
-  - "IF %PYTHON_ARCH% EQU 32 move build\\lib.win32-2.7\\cytoflow\\utility\\logicle_ext\\_Logicle.pyd %APPVEYOR_BUILD_VERSION%\\_Logicle-32.pyd"
-  - "IF %PYTHON_ARCH% EQU 64 move build\\lib.win-amd64-2.7\\cytoflow\\utility\\logicle_ext\\_Logicle.pyd %APPVEYOR_BUILD_VERSION%\\_Logicle-64.pyd"
-  - "7z a %APPVEYOR_BUILD_VERSION%.zip %APPVEYOR_BUILD_VERSION%"
+  - "move dist\\cytoflow.exe dist\\cytoflow-%PYTHON_ARCH%.exe"
+  - "IF %PYTHON_ARCH% EQU 32 move build\\lib.win32-2.7\\cytoflow\\utility\\logicle_ext\\_Logicle.pyd dist\\_Logicle-32.pyd"
+  - "IF %PYTHON_ARCH% EQU 64 move build\\lib.win-amd64-2.7\\cytoflow\\utility\\logicle_ext\\_Logicle.pyd dist\\_Logicle-64.pyd"
 
 artifacts:
-  - path: $(appveyor_build_version).zip
+  - path: dist\*.*
 
 deploy:
-  - provider: BinTray
-    username: bpteague
-    api_key:
-      secure: BLgrF3vno40XZMvXZ+DGzxeO8xzQJP1Y/ndUVPEycNlNB2puWDGdPDJ8d4DxDTEj
-    subject: bpteague
-    repo: cytoflow
-    package: cytoflow-dev
-    #version: use the build version
-    publish: false
-    override: true
-    explode: true
+  - provider: GitHub
+    description: 'Cytoflow release $(appveyor_build_version)'
+    auth_token:
+      secure: VVuhKeMWCRbcFWTVdrIbOuKkgnOqsQnCF3ZXl9SsE5YiCmuuYP1YxmII2ZuAp0lv
+    artifact: dist\*.*
+    draft: true
+    prerelease: false
+    on:
+      #branch: master                 # release from master branch only
+      appveyor_repo_tag: true        # deploy on tag push only   
+
   
