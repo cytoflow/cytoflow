@@ -17,6 +17,8 @@
 
 from __future__ import division, absolute_import
 
+import types
+
 from traits.api import HasStrictTraits, Str, provides, Callable, Enum
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -63,24 +65,17 @@ class Stats1DView(HasStrictTraits):
     huefacet : 
         the conditioning variable for color.
         
-    y_error_bars : Enum(None, "data", "summary")
-        draw error bars?  if `data`, apply `y_error_function` to the same
-        data that was summarized with `function`.  if `summary`, apply
-        `y_error_function` to subsets defined by `y_error_var` 
-        TODO - unimplemented
+    y_error_bars : Str
+        draw error bars?  if the name of a condition, subdivide each data
+        set further by the condition, apply 'yfunction' to each subset, then
+        apply `y_error_function` to the values and plot them as error bars.
+        if `data`, then apply `y_error_function` to the same data subsets that
+        `function` was applied to and plot those as error bars.    
         
-    y_error_var : Str
-        the conditioning variable used to determine summary subsets.  take the
-        data that was used to draw the bar; subdivide it further by 
-        `y_error_var`; compute the summary statistic for each subset, then 
-        apply `y_error_function` to the resulting list.  See the example.
-        TODO - unimplemented
-        
-    y_error_function : Callable (list-like --> float)
+    y_error_function : Callable (list-like --> (float, float))
         for each group/subgroup subset, call this function to compute the 
         error bars.  whether it is called on the data or the summary function
         is determined by the value of `y_error_bars`
-        TODO - unimplemented
         
     subset : Str
         a string passed to Experiment.query() to subset the data before 
@@ -122,10 +117,8 @@ class Stats1DView(HasStrictTraits):
     yfacet = Str
     huefacet = Str
     
-    # TODO - implement me pls?
-#     y_error_bars = Enum(None, "data", "summary")
-#     y_error_function = Callable
-#     y_error_var = Str
+    y_error_bars = Str
+    y_error_function = Callable
 
     subset = Str
     
@@ -166,6 +159,14 @@ class Stats1DView(HasStrictTraits):
         if self.huefacet and self.huefacet not in experiment.metadata:
             raise util.CytoflowViewError("Hue facet {0} not in the experiment")        
         
+        if self.y_error_bars and self.y_error_bars != 'data' \
+                             and self.y_error_bars not in experiment.conditions:
+            raise util.CytoflowViewError("y_error_bars must be either 'data' or "
+                                         "a condition in the experiment") 
+            
+        if self.y_error_bars and not self.y_error_function:
+            raise util.CytoflowViewError("didn't set an error function")
+                
         kwargs.setdefault('antialiased', True)
 
         if self.subset:
@@ -192,6 +193,29 @@ class Stats1DView(HasStrictTraits):
         g = data.groupby(by = group_vars)
         plot_data = g[self.ychannel].aggregate(self.yfunction).reset_index()
   
+        # compute the error statistic
+        if self.y_error_bars:
+            if self.y_error_bars == 'data':
+                # compute the error statistic on the same subsets as the summary
+                # statistic
+                error_stat = g[self.ychannel].aggregate(self.y_error_function).reset_index()
+            else:
+                # subdivide the data set further by the error_bars condition
+                err_vars = list(group_vars)
+                err_vars.append(self.y_error_bars)
+                
+                # apply the summary statistic to each subgroup
+                data_g = data.groupby(by = err_vars)
+                data_stat = data_g[self.ychannel].aggregate(self.yfunction).reset_index()
+                
+                # apply the error function to the summary statistics
+                err_g = data_stat.groupby(by = group_vars)
+                error_stat = err_g[self.ychannel].aggregate(self.y_error_function).reset_index()
+        
+            y_err_name = util.random_string(6)
+            plot_data[y_err_name] = error_stat[self.ychannel]
+        
+  
         grid = sns.FacetGrid(plot_data,
                              size = 6,
                              aspect = 1.5,
@@ -210,6 +234,10 @@ class Stats1DView(HasStrictTraits):
         for ax in grid.axes.flatten():
             ax.set_xscale(self.xscale)
             ax.set_yscale(self.yscale, **yscale.mpl_params)
+
+        # plot the error bars first so the axis labels don't get overwritten
+        if self.y_error_bars:
+            grid.map(_error_bars, self.xvariable, self.ychannel, y_err_name)
         
         grid.map(plt.plot, self.xvariable, self.ychannel, **kwargs)
         
@@ -233,7 +261,19 @@ class Stats1DView(HasStrictTraits):
                                           **kw)
                 plt.sca(plot_ax)
             else:
-                grid.add_legend()
+                grid.add_legend(title = self.huefacet)
+                
+def _error_bars(x, y, yerr, ax = None, color = None, **kwargs):
+    
+    if isinstance(yerr.iloc[0], tuple):
+        lo = [ye[0] for ye in yerr]
+        hi = [ye[1] for ye in yerr]
+    else:
+        lo = [y.iloc[i] - ye for i, ye in yerr.reset_index(drop = True).iteritems()]
+        hi = [y.iloc[i] + ye for i, ye in yerr.reset_index(drop = True).iteritems()]
+
+    plt.vlines(x, lo, hi, color = color, **kwargs)
+    
 
 if __name__ == '__main__':
     import cytoflow as flow

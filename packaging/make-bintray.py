@@ -38,7 +38,7 @@ json_release = """
         "name": "{0}",
         "desc": "Binaries for git tag {0}",
         "released": "{1}",
-        "vcs_tag" : "{0}",
+        "vcs_tag" : "{0}"
     }},
    
     "files":
@@ -53,14 +53,14 @@ json_release = """
 """
 
 import subprocess
-git_tag = subprocess.check_output(['git', 'describe', '--tags'])
-git_hash = subprocess.check_output(['git', 'rev-parse', 'HEAD'])[0:7]
+git_tag = subprocess.check_output(['git', 'describe', '--tags']).strip()
+git_hash = subprocess.check_output(['git', 'rev-parse', 'HEAD'])[0:7].strip()
 
 from datetime import date
 d = date.today().isoformat()
 
 if git_tag.find('-') == -1:
     print(json_release.format(git_tag, d))
-else:
+elif git_tag.find('rc'):
     print(json_dev.format(git_hash, d))
 

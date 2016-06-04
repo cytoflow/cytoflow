@@ -3,6 +3,7 @@ Spinning a new release
 
 - Update the version in ``cytoflow/__init__.py``
 - Update the version in ``docs/conf.py``
+- On branch ``gh-pages``, update the version in ``_config.yml``
 - Make sure ``install_requires`` in ``setup.py`` matches ``requirements.txt``
 - Update the README.rst from the README.md.  From the project root, say
 
@@ -26,7 +27,3 @@ Spinning a new release
 - Create a new tag on the master branch matching the new version in 
   ``cytoflow/__init__.py``.  This will cause travis-ci to
   upload a new source dist to PyPI from a linux worker.
-- Create the SAME TAG on the project cytoflow-wheels.  This will cause a
-  travis-ci mac worker to upload a binary wheel to PyPI.
-- Log on to Appveyor.  Download the two Windows wheels from the "artifacts"
-  tab in the tagged build; upload to PyPI.

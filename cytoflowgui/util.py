@@ -24,6 +24,10 @@ Created on Apr 18, 2015
 from Queue import PriorityQueue
 import heapq, sys
 
+import numpy as np
+import scipy.stats
+import cytoflow.utility as util
+
 # http://stackoverflow.com/questions/1977362/how-to-create-module-wide-variables-in-python
 this = sys.modules[__name__]
 this.parent_log = None
@@ -51,4 +55,13 @@ class UniquePriorityQueue(PriorityQueue):
         self.values.remove(item[1])
         return item
 
+summary_functions = {"Mean" : np.mean,
+                     "Geom.Mean" : util.geom_mean,
+                     "Count" : len}
 
+mean_95ci = lambda x: util.ci(x, np.mean, boots = 100)
+geomean_95ci = lambda x: util.ci(x, util.geom_mean, boots = 100)
+error_functions = {"Std.Dev." : np.std,
+                   "S.E.M" : scipy.stats.sem,
+                   "Mean 95% CI" : mean_95ci,
+                   "Geom.Mean 95% CI" : geomean_95ci}

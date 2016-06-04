@@ -21,21 +21,20 @@ Created on Feb 24, 2015
 @author: brian
 """
 
-from traits.api import provides, Callable, Dict, List, Str
+from traits.api import provides, Callable, Str
 from traitsui.api import View, Item, Controller, EnumEditor, VGroup
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
-from cytoflow import Stats2DView, geom_mean
+from cytoflow import Stats2DView
 import cytoflow.utility as util
 
 from cytoflowgui.subset_editor import SubsetEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
-from cytoflowgui.clearable_enum_editor import ClearableEnumEditor
+from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
     import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin
-    
-import numpy as np
+from cytoflowgui.util import summary_functions, error_functions
     
 class Stats2DHandler(Controller, ViewHandlerMixin):
     """
@@ -45,34 +44,54 @@ class Stats2DHandler(Controller, ViewHandlerMixin):
     def default_traits_view(self):
         return View(VGroup(
                     VGroup(Item('name'),
-                           Item('by',
-                                editor=EnumEditor(name='context.conditions'),
-                                # TODO - restrict this to NUMERIC values?
-                                label = "Variable"),
+                           Item('variable',
+                                # TODO - restrict this to numeric values?
+                                editor=EnumEditor(name='context.conditions')),
                            Item('xchannel',
                                 editor=EnumEditor(name='context.channels'),
                                 label = "X Channel"),
                            Item('xscale',
                                 label = "X Scale"),
                            Item('xfunction_name',
-                                editor = EnumEditor(name='summary_function_names'),
+                                editor = EnumEditor(values = summary_functions.keys()),
                                 label = "X Summary\nFunction"),
+                           Item('x_error_bars',
+                                editor = ExtendableEnumEditor(name='context.conditions',
+                                                              extra_items = {"None" : "",
+                                                                             "DATA" : "data"}),
+                                 label = "X Error bars"),
+                           Item('x_error_function_name',
+                                editor = EnumEditor(values = error_functions.keys()),
+                                label = "X Error\nfunction",
+                                visible_when = 'x_error_bars'),
                            Item('ychannel',
                                 editor=EnumEditor(name='context.channels'),
                                 label = "Y Channel"),
                            Item('yscale',
                                 label = "Y Scale"),
                            Item('yfunction_name',
-                                editor = EnumEditor(name='summary_function_names'),
+                                editor = EnumEditor(values = summary_functions.keys()),
                                 label = "Y Summary\nFunction"),
+                           Item('y_error_bars',
+                                editor = ExtendableEnumEditor(name='context.conditions',
+                                                              extra_items = {"None" : "",
+                                                                             "DATA" : "data"}),
+                                 label = "Y Error bars"),
+                           Item('y_error_function_name',
+                                editor = EnumEditor(values = error_functions.keys()),
+                                label = "Y Error\nfunction",
+                                visible_when = 'y_error_bars'),
                            Item('xfacet',
-                                editor=ClearableEnumEditor(name='context.conditions'),
+                                editor=ExtendableEnumEditor(name='context.conditions',
+                                                            extra_items = {"None" : ""}),
                                 label = "Horizontal\nFacet"),
                            Item('yfacet',
-                                editor=ClearableEnumEditor(name='context.conditions'),
+                                editor=ExtendableEnumEditor(name='context.conditions',
+                                                            extra_items = {"None" : ""}),
                                 label = "Vertical\nFacet"),
                            Item('huefacet',
-                                editor=ClearableEnumEditor(name='context.conditions'),
+                                editor=ExtendableEnumEditor(name='context.conditions',
+                                                            extra_items = {"None" : ""}),
                                 label="Color\nFacet"),
                            label = "One-Dimensional Statistics Plot",
                            show_border = False),
@@ -93,50 +112,39 @@ class Stats2DHandler(Controller, ViewHandlerMixin):
                          visible_when = 'error',
                          editor = ColorTextEditor(foreground_color = "#000000",
                                                   background_color = "#ff9191"))))
-#                     Item('object.error_bars',
-#                          editor = EnumEditor(values = {None : "",
-#                                                        "data" : "Data",
-#                                                        "summary" : "Summary"}),
-#                          label = "Error bars?"),
-#                     Item('object.error_function',
-#                          editor = EnumEditor(name='handler.spread_functions'),
-#                          label = "Error bar\nfunction",
-#                          visible_when = 'object.error_bars is not None'),
-#                     Item('object.error_var',
-#                          editor = EnumEditor(name = 'handler.conditions'),
-#                          label = "Error bar\nVariable",
-#                          visible_when = 'object.error_bars == "summary"'),
-                    
+
     
 class Stats2DPluginView(Stats2DView, PluginViewMixin):
     handler_factory = Callable(Stats2DHandler)
     
     # functions aren't picklable, so send the name instead
-    summary_functions = Dict({"Mean" : np.mean,
-                             "Geom.Mean" : geom_mean,
-                             "Count" : len})
     
-#     spread_functions = Dict({np.std : "Std.Dev.",
-#                              scipy.stats.sem : "S.E.M"
-#                        # TODO - add 95% CI
-#                        })
-    
-    summary_function_names = List(["Mean", "Geom.Mean", "Count"])
     xfunction_name = Str()
     xfunction = Callable(transient = True)
+    x_error_function_name = Str()
+    x_error_function = Callable(transient = True)
     yfunction_name = Str()
     yfunction = Callable(transient = True)
+    y_error_function_name = Str()
+    y_error_function = Callable(transient = True)
     
     def plot(self, experiment, **kwargs):
         if not self.xfunction_name:
             raise util.CytoflowViewError("X Summary function isn't set")
         
-        self.xfunction = self.summary_functions[self.xfunction_name]
+        self.xfunction = summary_functions[self.xfunction_name]
         
         if not self.yfunction_name:
             raise util.CytoflowViewError("Y Summary function isn't set")
         
-        self.yfunction = self.summary_functions[self.yfunction_name]
+        self.yfunction = summary_functions[self.yfunction_name]
+        
+        if self.x_error_bars and self.x_error_function_name:
+            self.x_error_function = error_functions[self.x_error_function_name]
+
+        if self.y_error_bars and self.y_error_function_name:
+            self.y_error_function = error_functions[self.y_error_function_name]
+             
         
         Stats2DView.plot(self, experiment, **kwargs)
         

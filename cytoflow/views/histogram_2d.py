@@ -209,7 +209,7 @@ class Histogram2DView(HasStrictTraits):
                                           label = self.huefacet)
                 plt.sca(plot_ax)
             else:
-                g.add_legend()
+                g.add_legend(title = self.huefacet)
         
 
 def _hist2d(x, y, xedges = None, yedges = None, xscale = None, yscale = None, smoothed = False, **kwargs):

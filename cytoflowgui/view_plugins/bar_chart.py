@@ -21,72 +21,60 @@ Created on Feb 24, 2015
 @author: brian
 """
 
-from traits.api import provides, Callable, Dict
+from traits.api import provides, Callable, Str
 from traitsui.api import View, Item, VGroup, Controller, EnumEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
-import numpy as np
-import scipy.stats
-
-from cytoflow import BarChartView, geom_mean
+from cytoflow import BarChartView
+import cytoflow.utility as util
 
 from cytoflowgui.subset_editor import SubsetEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
-from cytoflowgui.clearable_enum_editor import ClearableEnumEditor
+from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
     import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin
+    
+from cytoflowgui.util import summary_functions, error_functions
     
 class BarChartHandler(Controller, ViewHandlerMixin):
     """
     docs
     """
-    
-    summary_functions = Dict({np.mean : "Mean",
-                             # TODO - add count and proportion
-                             geom_mean : "Geom.Mean",
-                             len : "Count"})
-    
-    spread_functions = Dict({np.std : "Std.Dev.",
-                             scipy.stats.sem : "S.E.M"
-                       # TODO - add 95% CI
-                       })
-    
+
     def default_traits_view(self):
         return View(VGroup(
                     VGroup(Item('name'),
                            Item('channel',
                                 editor=EnumEditor(name='context.channels'),
                                 label = "Channel"),
-                           Item('by',
+                           Item('variable',
                                 editor=EnumEditor(name='context.conditions'),
                                 label = "Variable"),
-                           Item('function',
-                                editor = EnumEditor(name='handler.summary_functions'),
+                           Item('function_name',
+                                editor = EnumEditor(values = summary_functions.keys()),
                                 label = "Summary\nFunction"),
-                          # TODO - waiting on seaborn v0.6
-#                      Item('object.orientation')
-#                       Item('object.error_bars',
-#                            editor = EnumEditor(values = {None : "",
-#                                                          "data" : "Data",
-#                                                          "summary" : "Summary"}),
-#                            label = "Error bars?"),
-#                       Item('object.error_function',
-#                            editor = EnumEditor(name='handler.spread_functions'),
-#                            label = "Error bar\nfunction",
-#                            visible_when = 'object.error_bars is not None'),
-#                       Item('object.error_var',
-#                            editor = EnumEditor(name = 'handler.conditions'),
-#                            label = "Error bar\nVariable",
-#                            visible_when = 'object.error_bars == "summary"'),
+                           Item('orientation'),
+                           Item('error_bars',
+                                editor = ExtendableEnumEditor(name='context.conditions',
+                                                              extra_items = {"None" : "",
+                                                                             "DATA" : "data"}),
+                                 label = "Error bars"),
+                           Item('error_function_name',
+                                editor = EnumEditor(values = error_functions.keys()),
+                                label = "Error\nfunction",
+                                visible_when = 'object.error_bars'),
                            Item('xfacet',
-                                editor=ClearableEnumEditor(name='context.conditions'),
+                                editor=ExtendableEnumEditor(name='context.conditions',
+                                                            extra_items = {"None" : ""}),
                                 label = "Horizontal\nFacet"),
                            Item('yfacet',
-                                editor=ClearableEnumEditor(name='context.conditions'),
+                                editor=ExtendableEnumEditor(name='context.conditions',
+                                                            extra_items = {"None" : ""}),
                                 label = "Vertical\nFacet"),
                            Item('huefacet',
-                                editor=ClearableEnumEditor(name='context.conditions'),
+                                editor=ExtendableEnumEditor(name='context.conditions',
+                                                            extra_items = {"None" : ""}),
                                 label="Color\nFacet"),
                              label = "Bar Chart",
                              show_border = False),
@@ -110,6 +98,27 @@ class BarChartHandler(Controller, ViewHandlerMixin):
     
 class BarChartPluginView(BarChartView, PluginViewMixin):
     handler_factory = Callable(BarChartHandler)
+    
+    # functions aren't pickleable, so send the name instead.  must make
+    # the callables transient so we don't get a loop!
+    
+    function_name = Str()
+    function = Callable(transient = True)
+
+    error_function_name = Str()
+    error_function = Callable(transient = True)
+    
+    def plot(self, experiment, **kwargs):
+        
+        if not self.function_name:
+            raise util.CytoflowViewError("Summary function isn't set")
+        
+        self.function = summary_functions[self.function_name]
+         
+        if self.error_bars and self.error_function_name:
+            self.error_function = error_functions[self.error_function_name]
+             
+        BarChartView.plot(self, experiment, **kwargs)
 
 @provides(IViewPlugin)
 class BarChartPlugin(Plugin):

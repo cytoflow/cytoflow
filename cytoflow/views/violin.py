@@ -164,7 +164,8 @@ class ViolinPlotView(HasStrictTraits):
               hue_order = (np.sort(data[self.huefacet].unique()) if self.huefacet else None),
               **kwargs)
         
-        g.add_legend()
+        if self.huefacet:
+            g.add_legend(title = self.huefacet)
         
 # this uses an internal interface to seaborn's violin plot.
 

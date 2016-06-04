@@ -273,7 +273,7 @@ class GaussianMixture1DOp(HasStrictTraits):
         for group, data_subset in groupby:
             gmm = self._gmms[group]
             x = data_subset[self.channel]
-            x = self._scale(x)
+            x = self._scale(x).values
             
             # which values are missing?
             x_na = np.isnan(x)

@@ -27,7 +27,7 @@ from cytoflowgui.op_plugins.i_op_plugin \
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
 from cytoflowgui.subset_editor import SubsetEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
-from cytoflowgui.clearable_enum_editor import ClearableEnumEditor
+from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 
 class ThresholdHandler(Controller, OpHandlerMixin):
     def default_traits_view(self):
@@ -50,7 +50,8 @@ class ThresholdViewHandler(Controller, ViewHandlerMixin):
                                 style = "readonly"),
                            Item('scale'),
                            Item('huefacet',
-                                editor=ClearableEnumEditor(name='context.previous.conditions'),
+                                editor=ExtendableEnumEditor(name='context.previous.conditions',
+                                                            extra_items = {"None" : ""}),
                                 label="Color\nFacet"),
                            label = "Range Setup View",
                            show_border = False),

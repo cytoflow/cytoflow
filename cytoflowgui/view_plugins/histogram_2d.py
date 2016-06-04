@@ -29,7 +29,7 @@ from pyface.api import ImageResource
 from cytoflow import Histogram2DView
 
 from cytoflowgui.subset_editor import SubsetEditor
-from cytoflowgui.clearable_enum_editor import ClearableEnumEditor
+from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.view_plugins.i_view_plugin \
     import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin
@@ -53,13 +53,16 @@ class Histogram2DHandler(Controller, ViewHandlerMixin):
                            Item('yscale',
                                 label = "Y Scale"),
                            Item('xfacet',
-                                editor=ClearableEnumEditor(name='context.conditions'),
+                                editor=ExtendableEnumEditor(name='context.conditions',
+                                                            extra_items = {"None" : ""}),
                                 label = "Horizontal\nFacet"),
                            Item('yfacet',
-                                editor=ClearableEnumEditor(name='context.conditions'),
+                                editor=ExtendableEnumEditor(name='context.conditions',
+                                                            extra_items = {"None" : ""}),
                                 label = "Vertical\nFacet"),
                            Item('huefacet',
-                                editor=ClearableEnumEditor(name='context.conditions'),
+                                editor=ExtendableEnumEditor(name='context.conditions',
+                                                            extra_items = {"None" : ""}),
                                 label="Color\nFacet"),
                            label = "2D Histogram",
                            show_border = False),

@@ -31,6 +31,10 @@ import matplotlib
 # We want matplotlib to use our backend
 matplotlib.use('module://cytoflowgui.matplotlib_backend')
 
+# getting real tired of the matplotlib deprecation warnings
+import warnings
+warnings.filterwarnings('ignore', '.*is deprecated and replaced with.*')
+
 from envisage.core_plugin import CorePlugin
 from envisage.ui.tasks.tasks_plugin import TasksPlugin
 from pyface.image_resource import ImageResource

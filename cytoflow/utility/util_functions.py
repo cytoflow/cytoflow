@@ -22,7 +22,10 @@ Created on Mar 5, 2015
 """
 from __future__ import division
 
+import random, string
+
 import numpy as np
+import pandas as pd
 from scipy import stats
 
 def iqr(a):
@@ -163,3 +166,44 @@ def sanitize_identifier(name):
 
     return  "".join(new_name)
 
+def categorical_order(values, order=None):
+    """Return a list of unique data values.
+    Determine an ordered list of levels in ``values``.
+    
+    Parameters
+    ----------
+    values : list, array, Categorical, or Series
+        Vector of "categorical" values
+    order : list-like, optional
+        Desired order of category levels to override the order determined
+        from the ``values`` object.
+        
+    Returns
+    -------
+    order : list
+        Ordered list of category levels not including null values.
+        
+    From seaborn: https://github.com/mwaskom/seaborn/blob/master/seaborn/utils.py
+    """
+    if order is None:
+        if hasattr(values, "categories"):
+            order = values.categories
+        else:
+            try:
+                order = values.cat.categories
+            except (TypeError, AttributeError):
+                try:
+                    order = values.unique()
+                except AttributeError:
+                    order = pd.unique(values)
+                try:
+                    np.asarray(values).astype(np.float)
+                    order = np.sort(order)
+                except (ValueError, TypeError):
+                    order = order
+        order = filter(pd.notnull, order)
+    return list(order)
+
+def random_string(n):
+    """from http://stackoverflow.com/questions/2257441/random-string-generation-with-upper-case-letters-and-digits-in-python"""
+    return ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(n))

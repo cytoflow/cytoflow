@@ -35,7 +35,7 @@ import cytoflow.utility as util
 
 from cytoflowgui.subset_editor import SubsetEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
-from cytoflowgui.clearable_enum_editor import ClearableEnumEditor
+from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
     import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin
 
@@ -54,16 +54,20 @@ class TableHandler(Controller, ViewHandlerMixin):
                                 editor = EnumEditor(name='function_names'),
                                 label = "Summary\nFunction"),
                            Item('row_facet',
-                                editor = ClearableEnumEditor(name='context.conditions'),
+                                editor = ExtendableEnumEditor(name='context.conditions',
+                                                            extra_items = {"None" : ""}),
                                 label = "Rows"),
                            Item('subrow_facet',
-                                editor = ClearableEnumEditor(name='context.conditions'),
+                                editor = ExtendableEnumEditor(name='context.conditions',
+                                                            extra_items = {"None" : ""}),
                                 label = "Subrows"),
                            Item('column_facet',
-                                editor = ClearableEnumEditor(name='context.conditions'),
+                                editor = ExtendableEnumEditor(name='context.conditions',
+                                                            extra_items = {"None" : ""}),
                                 label = "Columns"),
                            Item('subcolumn_facet',
-                                editor = ClearableEnumEditor(name='context.conditions'),
+                                editor = ExtendableEnumEditor(name='context.conditions',
+                                                            extra_items = {"None" : ""}),
                                 label = "Subcolumn"),
                            Item('export',
                                 editor = ButtonEditor(label = "Export...")),

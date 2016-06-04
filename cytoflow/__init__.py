@@ -17,6 +17,10 @@
 
 from __future__ import absolute_import
 
+# suppress a meaningless warning from seaborn
+import warnings
+warnings.filterwarnings('ignore', '.*IPython widgets are experimental.*')
+
 # basics
 from .experiment import Experiment
 from .operations.import_op import ImportOp, Tube
@@ -65,4 +69,4 @@ from .views.table import TableView
 from cytoflow.utility.util_functions import geom_mean
 from cytoflow.utility.scale import set_default_scale
 
-__version__ = "0.3.0"
+__version__ = "0.3.2"

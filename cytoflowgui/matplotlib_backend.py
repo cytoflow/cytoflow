@@ -276,10 +276,6 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
             # draw the rendered image on to the canvas
             p.drawPixmap(QtCore.QPoint(0, 0), QtGui.QPixmap.fromImage(qImage))
 
-            # draw the zoom rectangle to the QPainter
-            if self._drawRect is not None:
-                logging.warn("drawRect not yet implemented (local)")
-
             p.end()
             
         else:
@@ -293,10 +289,7 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
             p.drawPixmap(QtCore.QPoint(self.blit_left, 
                                        self.buffer_height - self.blit_top), 
                          pixmap)
- 
-            # draw the zoom rectangle to the QPainter
-            if self._drawRect is not None:
-                logging.warn("drawRect isn't implemented yet")
+
             p.end()
             self.blit_buffer = None
             

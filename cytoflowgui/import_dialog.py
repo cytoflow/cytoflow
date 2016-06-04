@@ -216,6 +216,12 @@ class ExperimentDialogModel(HasStrictTraits):
                             .format(op_tube.file, e.value),
                       "Error reading FCS file")
                 return
+            
+            # if we're the first tube loaded, create a dummy experiment
+            if not self.dummy_experiment:
+                self.dummy_experiment = ImportOp(tubes = [op_tube],
+                                                 conditions = op.conditions,
+                                                 coarse_events = 1).apply()
                 
             if '$SRC' in tube_meta:    
                 self.tube_traits["$SRC"] = Str(condition = False)
@@ -392,6 +398,7 @@ class ExperimentDialogHandler(Controller):
             error(None,
                   "The experiment already has a condition named \"{0}\".".format(name),
                   "Error adding condition")
+            return
         
         if new_trait.condition_type == "Category":
             self._add_metadata(name, name + " (Category)", Str(condition = True))
@@ -459,7 +466,7 @@ class ExperimentDialogHandler(Controller):
                 
             if '$SMNO' in tube_meta:
                 self._add_metadata("$SMNO", "$SMNO", Str(condition = False))
-                tube.trait_set(**{"$SMNO" : tube_meta['SMNO']})
+                tube.trait_set(**{"$SMNO" : tube_meta['$SMNO']})
             
             self.model.tubes.append(tube)
             self.btn_add_cond.setEnabled(True)

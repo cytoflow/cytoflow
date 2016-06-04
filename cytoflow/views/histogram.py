@@ -131,8 +131,10 @@ class HistogramView(HasStrictTraits):
         # for a reference.
         
         num_bins = util.num_hist_bins(scaled_data)
-        num_bins = 50 if num_bins < 50 else num_bins
-
+        
+        # clip num_bins to (50, 1000)
+        num_bins = max(min(num_bins, 1000), 50)
+        
         xmin = bottleneck.nanmin(scaled_data)
         xmax = bottleneck.nanmax(scaled_data)
                     
@@ -213,4 +215,4 @@ class HistogramView(HasStrictTraits):
                                           label = self.huefacet)
                 plt.sca(plot_ax)
             else:
-                g.add_legend()
+                g.add_legend(title = self.huefacet)

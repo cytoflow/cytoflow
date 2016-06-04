@@ -49,7 +49,7 @@ install:
 
   # Install the build and runtime dependencies of the project.
   - conda install --yes --file=packaging\conda-requirements.txt
-  - conda install --yes setuptools pip six
+  - conda install --yes setuptools==19.2 pip six
   - pip.exe install pyinstaller nose2
 
   - "%WITH_COMPILER% python setup.py develop"
@@ -68,9 +68,10 @@ after_test:
   - "move dist\\*.exe %APPVEYOR_BUILD_VERSION%"
   - "IF %PYTHON_ARCH% EQU 32 move build\\lib.win32-2.7\\cytoflow\\utility\\logicle_ext\\_Logicle.pyd %APPVEYOR_BUILD_VERSION%\\_Logicle-32.pyd"
   - "IF %PYTHON_ARCH% EQU 64 move build\\lib.win-amd64-2.7\\cytoflow\\utility\\logicle_ext\\_Logicle.pyd %APPVEYOR_BUILD_VERSION%\\_Logicle-64.pyd"
+  - "7z a %APPVEYOR_BUILD_VERSION%.zip %APPVEYOR_BUILD_VERSION%"
 
 artifacts:
-  - path: $(appveyor_build_version)
+  - path: $(appveyor_build_version).zip
 
 deploy:
   - provider: BinTray

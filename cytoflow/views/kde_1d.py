@@ -141,7 +141,8 @@ class Kde1DView(HasStrictTraits):
             ax.set_xscale(self.scale, **scale.mpl_params)  
                   
         g.map(_univariate_kdeplot, self.channel, **kwargs)
-        g.add_legend()
+        if self.huefacet:
+            g.add_legend(title = self.huefacet)
 
 # yoinked from seaborn/distributions.py, with modifications for scaling.
 
