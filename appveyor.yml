@@ -67,15 +67,13 @@ artifacts:
 
 deploy:
   - provider: GitHub
-    description: 'Cytoflow release $(appveyor_build_version)'
+    description: 'Cytoflow release'
     auth_token:
       secure: VVuhKeMWCRbcFWTVdrIbOuKkgnOqsQnCF3ZXl9SsE5YiCmuuYP1YxmII2ZuAp0lv
-    artifact: dist\*.*
     draft: false
     prerelease: false
     force_update: true
     on:
-      #branch: master                 # release from master branch only
       appveyor_repo_tag: true        # deploy on tag push only   
 
   
