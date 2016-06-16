@@ -84,6 +84,7 @@ class FlowTask(Task):
                                          method='on_prefs',
                                          accelerator='Ctrl+P'),
                               id='File', name='&File'),
+                        SMenu(id = 'View', name = '&View'),
                         SMenu(TaskAction(name = 'Report a problem....',
                                          method = 'on_problem'),
                               TaskAction(name='About...',
