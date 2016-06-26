@@ -85,6 +85,15 @@ class Experiment(HasStrictTraits):
     history : List(IOperation)
         A list of the operations that have been applied to the raw data that
         have led to this Experiment.
+        
+    statistics : Dict(Str : pandas.DataFrame)
+        A dictionary of statistics and parameters computed by models that were
+        fit to the data.  The key is the name of the statistic, set by the
+        operation that computed it.  The value is a multi-indexed pandas
+        DataFrame; each level of the index is a facet for which the statistic
+        was computed.  The column names of the DataFrame are the channels on
+        which the statistic was computed; and the values in the columns are
+        the values of the statistic.
     
     channels : List(String)
         A read-only `List` containing the channels that this experiment tracks.
@@ -147,6 +156,9 @@ class Experiment(HasStrictTraits):
     
     # potentially mutable.  deep copy required
     metadata = Dict(Str, Any, copy = "deep")
+    
+    # statistics.  mutable, deep copy required
+    statistics = Dict(Str, pd.DataFrame, copy = "deep")
     
     history = List(Any)
     
