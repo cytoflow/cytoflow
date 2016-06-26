@@ -86,14 +86,14 @@ class Experiment(HasStrictTraits):
         A list of the operations that have been applied to the raw data that
         have led to this Experiment.
         
-    statistics : Dict(Str : pandas.DataFrame)
+    statistics : Dict(Str : pandas.Series)
         A dictionary of statistics and parameters computed by models that were
         fit to the data.  The key is the name of the statistic, set by the
         operation that computed it.  The value is a multi-indexed pandas
-        DataFrame; each level of the index is a facet for which the statistic
-        was computed.  The column names of the DataFrame are the channels on
-        which the statistic was computed; and the values in the columns are
-        the values of the statistic.
+        Series: each level of the index is a facet, and each combination of
+        indices is a subset for which the statistic was computed.  The values 
+        of the series, of course, are the values of the computed parameters or
+        statistics for each subset.
     
     channels : List(String)
         A read-only `List` containing the channels that this experiment tracks.
