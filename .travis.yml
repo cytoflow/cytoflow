@@ -33,16 +33,14 @@ before_install:
   - conda update --yes conda
 
 install:
-  - conda install --yes --file=packaging/conda-requirements.txt
-  - conda install --yes setuptools==19.2 pip six 
+  - conda install --yes --quiet --file=packaging/conda-requirements.txt
+  - conda install --yes --quiet setuptools==19.2 pip six 
   - python setup.py develop bdist_wheel 
   - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then python setup.py sdist; fi
   - pip install pyinstaller nose2 
   - pyinstaller packaging/pyinstaller.spec
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then cd dist/; zip -r cytoflow.macos.zip Cytoflow.app/; rm -rf Cytoflow.app; cd ..; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then cd dist/; zip -r cytoflow.macos.zip Cytoflow.app/; rm -rf Cytoflow.app cytoflow; cd ..; fi
   - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then mv dist/cytoflow dist/cytoflow-linux.x86_64; fi
-  - python packaging/make-bintray.py > packaging/bintray.json
-  - cat packaging/bintray.json
 
 script: nose2 -c packaging/nose2.cfg
 
@@ -53,11 +51,21 @@ deploy:
       secure: P2kebBOVixLdfWV0UYKPa8Y87YIqWc4I1TAr6myTiTL1OGdHvAsoBL3hxP+84F8ZL52hnqUWL/GuRO+IIf4R4IJbIF8Nj8DQG28dN/jBNK/EgBd0ut6myv4yFht5aL5o7qsCpTZxxwDori0+7y8wkvAd/Dz5T+UNb5TzOT2W/aYBz2LRwJaJ2lmGPktCJfopVUxGD9iWCJV1imaw9IqBZof8v1bbkFGf06Lpgb8TKeGZGikiFiiDhDjXuVmsH8FysJV5KmiWUxNOvzZ6xNU+gqOLkVP3bZwM764ZKlU5GEkKP4Yfdru/ixicwm2bAENSQ4B9OZKnhrx8oycJLyrIMlEctWByva8Yj+zBvxPsSjwc+DvIjmbfJVnhAY0aWpMVfbfASlTny+dMjPesuGb/kieSD7rF4S82Zfs4mcNXF25QFteyjcTswp/WSdZMg7jmU23fi8XVMZxNHeYuZFciJW4DSpMM8nSWUXb5tT9NPUQmRKLGYGY4mFh+F2P6/exZwISzWkDIVZNAmOhGec8D00YmceVHe1dk4nX+i6BWojsP6KGmbAgIrZxmDJ8T/mWVWu0yAnU2QpyJMsbrPIaM7otNQaVoHwSk4c5IFcON2ZEdz/gs6KRd99M+fQBJzOEYS8WqNlOS+TpQhkmOhyU4xFuKv4ieyWLXu7PofQR9nAQ=
     on:
       repo: bpteague/cytoflow
-      branch: master
       tags: true
     server: https://pypi.python.org/pypi
     skip_cleanup: true
-    
+    distributions: "sdist bdist_wheel"
+
+  - provider: releases
+    api_key: 
+      secure: "EiLTgjYPi2qgQWhxZzljvi8rLpJg7Seu6LQXAxqeQFCthkonsyzr+Wg44jLQfVKo5Y4KjiPN/QXbpmfvjT2wlTE1qhEwu8q9hDWhXtaHoQ8nDMEABVosvNWbCZc5xT8qSydglmtK2gkUfW7wICkgFEw7Tp7eOXN0XQOMph5LXDdnR0vrk7qR9TU3Ld3pbbCEliA02SZi0a2Es9+S72dwIJhjkhNlrVc0mqwZ5q3SAFGD+Txol/ZydWijN2iuvhDGzemOCAPi+3lyZvc7kcUSkdTNWjO8pwVn7MiYx+JDMsKxEL0yHLX0425TJMT+ptpNio6k+xk1Zmn2PmHLyWC+JcBfXG0qnvOjaVQ61hssSgb+ku3oDxO5UJpEmPOOP6A/f6x+PZPo9nm4s+2vU6dHH4YU/5CjZPF0/GuNBTYL5jJengATNVq2TQ368FPu+lUuYkUyrH2+jFLTprvE7iaEJAebb7KMiz5wBqn12uoybhKshV8v6PjXXHjDlIu7iDEnhZlY9pdhmFCNEmMLkvjzaUGjLBPG/WbeIiUuDyEt9xk7qP99fij8olJYxCDTa7JglZXytNj/VSo2BR+kY/cPPJimR4VX+U/82UVs/D3i3vmBf3/yf/vhRXGkozo616Vt2O8TS3xpj6LUNdOydiOPfIj+zAAu1NYeedZjkKpiy1M="
+    file_glob: true
+    file: "dist/*"
+    skip_cleanup: true
+    on: 
+      branch: master
+      tags: true
+      
   - provider: bintray
     file: packaging/bintray.json
     user: bpteague
@@ -65,6 +73,5 @@ deploy:
       secure: "ign6ESQuyEYnp1LJ0i/S+h2ZXtEP5P89EbmW7nRmFK1vvBAgD72sVI2y6tji+sErEErIke/ERZHRtLh4q8LvZT4J7LhJradRGYXa6Y1S56wb/bn2xRS1lKXJz3HUD+WxqYD3ZZ+q7AEcD51TkDv6Bmo5hXlkyHEzATBRwZl7kC2GPIatCva+KWd1YB1kUBPvrhCvgn1fCE0Xzcdzf5EKu7/uN2KkKLghUJKhOsXkWyREvfSlsMDSn/NWDp2KBIh1sv9JzRXmZhFAAaiVT74LfSPTwJKEAIV1RgAmSbEX60iS/5gCs2ntwoG8D6q5va+gSXwGjpk97kf9qhsocbf8w0L6vEq1Iw5CJwxY9P3gISGPmOGN6l3geksnpQgewNXMgIeZ0HvtxFJWc4HpiEZZZc0ZpVrGJY+WZZ5Bi3njNIbnW8A8g5+llJf+g2U7xnsqEs/oqzAKhbCnZvpXUH3TQjs58FmDegGCOI1hhZtxu4Vf0fE1yOu9nDW1nqxke7a8et3wLPGLXODR/zP+jz2opJe/UY87EstSSR6e7JMnGmgKbkImGrkvY0s4ul2ITeGTWoaZVKrWW7CKXS/MexVjDpKBdwUHhKeYcEszMOhyK1t3K75WTla3YIQW6Xmf5Nhxte6qCq1SDaamic6hjW9vCRSrlhcAqMuauja0MiKNxKc="
     dry-run: false
     skip_cleanup: true
-    on:
-      all_branches: true
+
 

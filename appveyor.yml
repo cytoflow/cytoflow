@@ -31,10 +31,6 @@ install:
   - ECHO "Installed SDKs:"
   - ps: "ls \"C:/Program Files/Microsoft SDKs/Windows\""
 
-  # Install Python (from the official .msi of http://python.org) and pip when
-  # not already installed.
-  # - "powershell ./appveyor/install.ps1"
-
   # Prepend newly installed Python to the PATH of this build (this cannot be
   # done from inside the powershell script as it would require to restart
   # the parent CMD process).
@@ -45,11 +41,11 @@ install:
   - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
   
   # install swig
-  - choco install swig -y
+  - choco install swig --yes --limit-output
 
   # Install the build and runtime dependencies of the project.
-  - conda install --yes --file=packaging\conda-requirements.txt
-  - conda install --yes setuptools==19.2 pip six
+  - conda install --yes --quiet --file=packaging\conda-requirements.txt
+  - conda install --yes --quiet setuptools==19.2 pip six
   - pip.exe install pyinstaller nose2
 
   - "%WITH_COMPILER% python setup.py develop"
@@ -62,25 +58,33 @@ test_script:
 after_test:
   - "%WITH_COMPILER% %PYTHON%/python setup.py bdist_wheel bdist_wininst"
   - "pyinstaller packaging/pyinstaller.spec"
-  - "mkdir %APPVEYOR_BUILD_VERSION%"
-  - "move dist\\cytoflow.exe %APPVEYOR_BUILD_VERSION%\\cytoflow-%PYTHON_ARCH%.exe"
-  - "IF %PYTHON_ARCH% EQU 32 move build\\lib.win32-2.7\\cytoflow\\utility\\logicle_ext\\_Logicle.pyd %APPVEYOR_BUILD_VERSION%\\_Logicle-32.pyd"
-  - "IF %PYTHON_ARCH% EQU 64 move build\\lib.win-amd64-2.7\\cytoflow\\utility\\logicle_ext\\_Logicle.pyd %APPVEYOR_BUILD_VERSION%\\_Logicle-64.pyd"
-  - "7z a %APPVEYOR_BUILD_VERSION%.zip %APPVEYOR_BUILD_VERSION%"
+  - "move dist\\cytoflow.exe dist\\cytoflow-%PYTHON_ARCH%.exe"
+  - "IF %PYTHON_ARCH% EQU 32 move build\\lib.win32-2.7\\cytoflow\\utility\\logicle_ext\\_Logicle.pyd dist\\_Logicle-32.pyd"
+  - "IF %PYTHON_ARCH% EQU 64 move build\\lib.win-amd64-2.7\\cytoflow\\utility\\logicle_ext\\_Logicle.pyd dist\\_Logicle-64.pyd"
 
 artifacts:
-  - path: $(appveyor_build_version).zip
+  - path: dist\*.*
 
 deploy:
+  - provider: GitHub
+    description: 'Cytoflow release'
+    auth_token:
+      secure: VVuhKeMWCRbcFWTVdrIbOuKkgnOqsQnCF3ZXl9SsE5YiCmuuYP1YxmII2ZuAp0lv
+    draft: false
+    prerelease: false
+    force_update: true
+    on:
+      appveyor_repo_tag: true        # deploy on tag push only   
+
+
   - provider: BinTray
     username: bpteague
     api_key:
       secure: BLgrF3vno40XZMvXZ+DGzxeO8xzQJP1Y/ndUVPEycNlNB2puWDGdPDJ8d4DxDTEj
     subject: bpteague
     repo: cytoflow
-    package: cytoflow-dev
-    #version: use the build version
-    publish: false
+    package: cytoflow
+    version: latest
+    publish: true
     override: true
-    explode: true
-  
+    explode: false
