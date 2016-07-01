@@ -158,7 +158,7 @@ class Experiment(HasStrictTraits):
     metadata = Dict(Str, Any, copy = "deep")
     
     # statistics.  mutable, deep copy required
-    statistics = Dict(Str, pd.DataFrame, copy = "deep")
+    statistics = Dict(Str, pd.Series)
     
     history = List(Any)
     
