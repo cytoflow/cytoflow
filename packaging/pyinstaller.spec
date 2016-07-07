@@ -41,23 +41,6 @@ a = Analysis(['../cytoflowgui/run.py'],
              win_private_assemblies=False,
              cipher=None)
 
-# remove a few more egregiously unnecessary libraries and datas
-
-remove_strs = ["nvidia", "Qt3Support", "QtDeclarative", "QtNetwork",
-               "QtOpenGL", "QtScript", "Xml", "xml", "Sql", "sql", 
-               "glib", "gobject"]
-
-lol = [ [x for x in a.binaries if x[0].find(y) >= 0] for y in remove_strs]
-remove_items = [item for sublist in lol for item in sublist]
-a.binaries -= remove_items
-
-# for some reason, on a Mac, PyInstaller tries to include the entire
-# source directory, including docs, examples, and build files!
-remove_first = [ "cytoflow", "build", "dist", "doc", ".git"]
-lol = [ [x for x in a.datas if x[0].startswith(y)] for y in remove_first]
-remove_items = [item for sublist in lol for item in sublist]
-a.datas -= remove_items
-
 pyz = PYZ(a.pure, a.zipped_data, cipher=None)
 
 # one-file
