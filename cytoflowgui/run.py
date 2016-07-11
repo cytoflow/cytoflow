@@ -43,7 +43,8 @@ from flow_task import FlowTaskPlugin
 from cytoflow_application import CytoflowApplication
 from op_plugins import ImportPlugin, ThresholdPlugin, RangePlugin, \
                        Range2DPlugin, PolygonPlugin, BinningPlugin, \
-                       GaussianMixture1DPlugin, GaussianMixture2DPlugin
+                       GaussianMixture1DPlugin, GaussianMixture2DPlugin, \
+                       BleedthroughLinearPlugin
 from view_plugins import HistogramPlugin, Histogram2DPlugin, ScatterplotPlugin, \
                          BarChartPlugin, Stats1DPlugin, Kde1DPlugin, Kde2DPlugin, \
                          ViolinPlotPlugin, TablePlugin, Stats2DPlugin
@@ -119,7 +120,8 @@ def run_gui():
     
     plugins.extend(view_plugins)
     
-    op_plugins = [GaussianMixture2DPlugin(),
+    op_plugins = [BleedthroughLinearPlugin(),
+                  GaussianMixture2DPlugin(),
                   GaussianMixture1DPlugin(),
                   BinningPlugin(),
                   PolygonPlugin(),
