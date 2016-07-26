@@ -196,6 +196,12 @@ class HistogramView(HasStrictTraits):
                   
         g.map(plt.hist, self.channel, **kwargs)
         
+        # if we have a hue facet, the y scaling is frequently wrong.
+        if self.huefacet:
+            h = np.histogram(data[self.channel], bins = bins)
+            ymax = np.max(h[0])
+            plt.ylim(0, 1.1 * ymax)
+        
         # if we have a hue facet and a lot of hues, make a color bar instead
         # of a super-long legend.
         
