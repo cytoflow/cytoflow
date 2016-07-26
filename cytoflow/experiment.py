@@ -206,6 +206,7 @@ class Experiment(HasStrictTraits):
             
         value : Any
             The value to look for.  Will be checked with equality, ie `==`
+            
         """
         new_name = util.sanitize_identifier(name)
         
@@ -215,6 +216,7 @@ class Experiment(HasStrictTraits):
             
         ret = self.clone()
         ret.data = self.data[ self.data[new_name] == value ]
+        ret.data.reset_index(drop = True, inplace = True)
         return ret
     
     
@@ -255,6 +257,7 @@ class Experiment(HasStrictTraits):
                 
         ret = self.clone()
         ret.data = self.data.query(expr, resolvers = ({}, resolvers), **kwargs)
+        ret.data.reset_index(drop = True, inplace = True)
         return ret
     
     def clone(self):
