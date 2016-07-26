@@ -42,7 +42,7 @@ class Stats2DView(HasStrictTraits):
     name : Str
         The plot's name 
     
-    by : Str
+    variable : Str
         the name of the conditioning variable
         
     xchannel : Str
