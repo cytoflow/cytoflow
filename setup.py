@@ -122,6 +122,7 @@ setup(
                  'Topic :: Scientific/Engineering :: Bio-Informatics',
                  'Topic :: Software Development :: Libraries :: Python Modules'],
     
-    entry_points={'gui_scripts' : ['cytoflow = cytoflowgui:run_gui'],
+    entry_points={'console_scripts' : ['cf-channel_voltages = cytoflow.scripts.channel_voltages:main'],
+                  'gui_scripts' : ['cytoflow = cytoflowgui:run_gui'],
                   'nose.plugins.0.10' : ['mplplugin = nose_plugins:MplPlugin']}
 )
