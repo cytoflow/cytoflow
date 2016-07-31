@@ -106,16 +106,18 @@ class ImportOp(HasStrictTraits):
         Which FCS metadata is the channel name?  If `None`, attempt to  
         autodetect.
         
-    ignore_v : Bool
-        **CytoFlow** is designed to operate on an `Experiment` containing tubes
-        that were all collected under the instrument settings.  In particular,
-        the same PMT voltages ensure that data can be compared across samples.
+    ignore_v : Bool or List(Str)
+        **Cytoflow** is designed to operate on an `Experiment` containing
+        tubes that were all collected under the same instrument settings.
+        In particular, the same PMT voltages ensure that data can be
+        compared across samples.
         
         *Very rarely*, you may need to set up an Experiment with different 
         voltage settings.  This is likely only to be the case when you are
         trying to figure out which voltages should be used in future
-        experiments.  If so, set `ignore_v` to `True` to disable the voltage
-        sanity check.  **BE WARNED - THIS WILL BREAK REAL EXPERIMENTS.**
+        experiments.  If so, set `ignore_v` to a List of channel names
+        to ignore particular channels.  **BE WARNED - THIS WILL BREAK REAL 
+        EXPERIMENTS.**
         
     Examples
     --------
@@ -143,7 +145,7 @@ class ImportOp(HasStrictTraits):
     coarse_events = util.PositiveInt(0, allow_zero = True)
         
     # DON'T DO THIS
-    ignore_v = Bool(False)
+    ignore_v = List(Str)
       
     def apply(self, experiment = None):
         
@@ -250,7 +252,7 @@ class ImportOp(HasStrictTraits):
         return experiment
 
 
-def check_tube(filename, experiment, ignore_v = False):
+def check_tube(filename, experiment, ignore_v = []):
     try:
         tube_meta = fcsparser.parse( filename, 
                                      channel_naming = experiment.metadata["name_metadata"],
@@ -281,7 +283,7 @@ def check_tube(filename, experiment, ignore_v = False):
             old_v = experiment.metadata[channel]["voltage"]
             new_v = tube_channels.ix[channel]['$PnV']
             
-            if old_v != new_v and not ignore_v:
+            if old_v != new_v and not channel in ignore_v:
                 raise util.CytoflowError("Tube {0} doesn't have the same voltages"
                                     .format(filename))
 
@@ -289,7 +291,7 @@ def check_tube(filename, experiment, ignore_v = False):
             
 
 # module-level, so we can reuse it in other modules
-def parse_tube(filename, experiment, ignore_v = False):   
+def parse_tube(filename, experiment, ignore_v = []):   
     
     check_tube(filename, experiment, ignore_v)
          
