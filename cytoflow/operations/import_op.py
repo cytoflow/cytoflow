@@ -106,7 +106,7 @@ class ImportOp(HasStrictTraits):
         Which FCS metadata is the channel name?  If `None`, attempt to  
         autodetect.
         
-    ignore_v : Bool or List(Str)
+    ignore_v : List(Str)
         **Cytoflow** is designed to operate on an `Experiment` containing
         tubes that were all collected under the same instrument settings.
         In particular, the same PMT voltages ensure that data can be
@@ -235,7 +235,7 @@ class ImportOp(HasStrictTraits):
             experiment.metadata[channel]['range'] = data_range
         
         for tube in self.tubes:
-            tube_data = parse_tube(tube.file, experiment, self.ignore_v)
+            tube_data = parse_tube(tube.file, experiment)
 
             if self.coarse_events:
                 if self.coarse_events <= len(tube_data):
@@ -252,7 +252,10 @@ class ImportOp(HasStrictTraits):
         return experiment
 
 
-def check_tube(filename, experiment, ignore_v = []):
+def check_tube(filename, experiment):
+    
+    ignore_v = experiment.metadata['ignore_v']
+    
     try:
         tube_meta = fcsparser.parse( filename, 
                                      channel_naming = experiment.metadata["name_metadata"],
@@ -291,9 +294,9 @@ def check_tube(filename, experiment, ignore_v = []):
             
 
 # module-level, so we can reuse it in other modules
-def parse_tube(filename, experiment, ignore_v = []):   
-    
-    check_tube(filename, experiment, ignore_v)
+def parse_tube(filename, experiment):   
+        
+    check_tube(filename, experiment)
          
     try:
         _, tube_data = fcsparser.parse(
