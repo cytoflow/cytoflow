@@ -71,13 +71,13 @@ class HistogramView(HasStrictTraits):
     id = "edu.mit.synbio.cytoflow.view.histogram"
     friendly_id = "Histogram" 
     
-    name = Str
-    channel = Str
-    scale = util.ScaleEnum
-    xfacet = Str
-    yfacet = Str
-    huefacet = Str
-    subset = Str
+    name = Str(api = True)
+    channel = Str(api = True)
+    scale = util.ScaleEnum(api = True)
+    xfacet = Str(api = True)
+    yfacet = Str(api = True)
+    huefacet = Str(api = True)
+    subset = Str(api = True)
     
     def plot(self, experiment, **kwargs):
         """Plot a faceted histogram view of a channel"""

@@ -21,7 +21,7 @@ Created on Mar 15, 2015
 @author: brian
 """
 
-from traits.api import Interface, Str, HasTraits, Instance
+from traits.api import Interface, Str, HasTraits, Instance, Event
 from traitsui.api import Handler
 
 VIEW_PLUGIN_EXT = 'edu.mit.synbio.cytoflow.view_plugins'
@@ -57,8 +57,10 @@ class IViewPlugin(Interface):
         
 class PluginViewMixin(HasTraits):
     handler = Instance(Handler, transient = True)
-    warning = Str(transient = True)
-    error = Str(transient = True)
+    warning = Str(status = True)
+    error = Str(status = True)
+    
+    changed = Event
     
     def plot_wi(self, wi):
         if hasattr(self, 'enum_plots'):

@@ -169,15 +169,12 @@ class LocalWorkflow(HasStrictTraits):
                 wi.operation.copy_traits(new_op, status = True)
                 
             elif msg == Msg.UPDATE_VIEW:
-                (idx, view_id, trait, new_value) = payload
+                (idx, new_view) = payload
+                view_id = new_view.id
                 wi = self.workflow[idx]
                 view = next((x for x in wi.views if x.id == view_id))
-                
-                if isinstance(new_value, pd.Series): # stupid spaghetti code
-                    if not new_value.equals(view.trait_get(trait)[trait]):
-                        view.trait_set(**{trait: new_value})
-                elif view.trait_get(trait)[trait] != new_value:
-                    view.trait_set(**{trait : new_value})
+                view.copy_traits(new_view, status = True)
+                    
             elif msg == Msg.GET_LOG:
                 with self.child_log_cond:
                     self.child_log = payload
@@ -306,14 +303,24 @@ class LocalWorkflow(HasStrictTraits):
         self.message_q.put((Msg.SELECT, idx))
         
     @on_trait_change('workflow:operation:changed')
-    def _on_operation_changed(self, obj):
-        logging.debug("LocalWorkflow._on_operation_changed :: {}"
+    def _operation_changed(self, obj, name, new):
+        logging.debug("LocalWorkflow._operation_changed :: {}"
                       .format(obj))
          
         wi = next((x for x in self.workflow if x.operation == obj))
         idx = self.workflow.index(wi)
   
         self.message_q.put((Msg.UPDATE_OP, (idx, obj)))
+
+    @on_trait_change('workflow:views:changed')
+    def _view_changed(self, obj, name, new):
+        logging.debug("LocalWorkflow._view_changed :: {}"
+                      .format((obj, name, new)))
+    
+        wi = next((x for x in self.workflow if obj in x.views))
+        idx = self.workflow.index(wi)
+        
+        self.message_q.put((Msg.UPDATE_VIEW, (idx, obj)))
         
     @on_trait_change('workflow:current_view')
     def _on_current_view_changed(self, obj, name, old, new):
@@ -332,21 +339,6 @@ class LocalWorkflow(HasStrictTraits):
         idx = self.workflow.index(obj)
         plot = obj.current_plot
         self.message_q.put((Msg.CHANGE_CURRENT_PLOT, (idx, plot)))
-        
-    @on_trait_change('workflow:views:-transient')
-    def _on_view_trait_changed(self, obj, name, old, new):
-        logging.debug("LocalWorkflow._on_view_trait_changed :: {}"
-                      .format((obj, name, old, new)))
-    
-        wi = next((x for x in self.workflow if obj in x.views))
-        idx = self.workflow.index(wi)
-        view_id = obj.id
-        
-        if name.endswith("_items"):
-            name = name.replace("_items", "")
-            new = obj.trait_get(name)[name]
-        
-        self.message_q.put((Msg.UPDATE_VIEW, (idx, view_id, name, new)))
         
     @on_trait_change('workflow:estimate')
     def _on_estimate(self, obj, name, old, new):
@@ -430,14 +422,24 @@ class RemoteWorkflow(HasStrictTraits):
                 (idx, new_op) = payload
                 wi = self.workflow[idx]
                 #self.updating.add(wi.operation)
-                wi.operation.copy_traits(new_op, status = lambda t: t is not True,
-                                                 transient = lambda t: t is not True)
+                wi.operation.copy_traits(new_op, api = True)
                 #self.updating.discard(wi.operation)
                 
                 for wi in self.workflow[idx:]:
                     wi.status = "invalid"
                     self.update_queue.put_nowait((self.workflow.index(wi), wi))
-        
+                    
+            elif msg == Msg.UPDATE_VIEW:
+                (idx, new_view) = payload
+                view_id = new_view.id
+                wi = self.workflow[idx]
+                try:
+                    view = next((x for x in wi.views if x.id == view_id))
+                except StopIteration:
+                    logging.warn("RemoteWorkflow: Couldn't find view {}".format(view_id))
+                    continue
+                
+                view.copy_traits(new_view, api = True)        
 
             elif msg == Msg.CHANGE_CURRENT_VIEW:
                 (idx, view) = payload
@@ -459,18 +461,7 @@ class RemoteWorkflow(HasStrictTraits):
                 if wi == self.selected:
                     self.plot(wi)
                 
-            elif msg == Msg.UPDATE_VIEW:
-                (idx, view_id, trait, new_value) = payload
-                wi = self.workflow[idx]
-                try:
-                    view = next((x for x in wi.views if x.id == view_id))
-                except StopIteration:
-                    logging.warn("RemoteWorkflow: Couldn't find view {}".format(view_id))
-                    continue
-                    
-                if view.trait_get(trait)[trait] != new_value:
-                    self.updating_traits.add((view, trait))
-                    view.trait_set(**{trait : new_value})
+
                     
             elif msg == Msg.CHANGE_DEFAULT_SCALE:
                 new_scale = payload
@@ -535,6 +526,16 @@ class RemoteWorkflow(HasStrictTraits):
             wi.status = "invalid"
             self.update_queue.put_nowait((self.workflow.index(wi), wi))
 
+    @on_trait_change('workflow:operation:changed')
+    def _operation_changed(self, obj, name, new):
+        logging.debug("LocalWorkflow._operation_changed :: {}"
+                      .format(obj))
+         
+        wi = next((x for x in self.workflow if x.operation == obj))
+        idx = self.workflow.index(wi)
+  
+        self.message_q.put((Msg.UPDATE_OP, (idx, obj)))
+
 #     @on_trait_change('workflow:operation:changed')
 #     def _on_operation_changed(self, obj, name, old, new):
 #         logging.debug("RemoteWorkflow._on_operation_changed :: {}"
@@ -564,15 +565,15 @@ class RemoteWorkflow(HasStrictTraits):
 #                 new = obj.trait_get(name)[name]
 #             self.message_q.put((Msg.UPDATE_OP, (idx, name, new)))        
         
-    @on_trait_change('workflow:operation:+status')
-    def _on_operation_trait_changed(self, obj, name, old, new):
-        logging.debug("RemoteWorkflow._on_operation_trait_changed :: {}"
-                      .format((obj, name, old, new))) 
- 
-        wi = next((x for x in self.workflow if x.operation == obj))
-        idx = self.workflow.index(wi)
-
-        self.message_q.put((Msg.UPDATE_OP, (idx, obj)))
+#     @on_trait_change('workflow:operation:+status')
+#     def _on_operation_trait_changed(self, obj, name, old, new):
+#         logging.debug("RemoteWorkflow._on_operation_trait_changed :: {}"
+#                       .format((obj, name, old, new))) 
+#  
+#         wi = next((x for x in self.workflow if x.operation == obj))
+#         idx = self.workflow.index(wi)
+# 
+#         self.message_q.put((Msg.UPDATE_OP, (idx, obj)))
 
 #      
 #         # some traits don't need to trigger a re-apply
@@ -613,20 +614,15 @@ class RemoteWorkflow(HasStrictTraits):
                 self.plot(wi)
 
             
-    @on_trait_change('workflow:views:[-transient,+status]')
-    def _on_view_trait_changed_send_to_parent(self, obj, name, old, new):
-        logging.debug("RemoteWorkflow._on_view_trait_changed_send_to_parent :: {}"
-                      .format((obj, name, old, new)))
-            
-        if (obj, name) in self.updating_traits:
-            self.updating_traits.remove((obj, name))
-        else:
-            wi = next((x for x in self.workflow if obj in x.views))
-            idx = self.workflow.index(wi)
-            if name.endswith("_items"):
-                name = name.replace("_items", "")
-                new = obj.trait_get(name)[name]
-            self.message_q.put((Msg.UPDATE_VIEW, (idx, obj.id, name, new)))
+    @on_trait_change('workflow:views:changed')
+    def _view_changed(self, obj, name, new):
+        logging.debug("RemoteWorkflow._view_changed :: {}"
+                      .format((obj, name, new)))
+
+        wi = next((x for x in self.workflow if obj in x.views))
+        idx = self.workflow.index(wi)
+
+        self.message_q.put((Msg.UPDATE_VIEW, (idx, obj)))
 
     @on_trait_change('workflow:+status')
     def _on_workflow_item_status_changed(self, obj, name, old, new):

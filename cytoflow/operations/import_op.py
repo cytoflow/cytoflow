@@ -132,22 +132,22 @@ class ImportOp(HasStrictTraits):
     name = Constant("Import Data")
 
     # experimental conditions: name --> dtype. 
-    conditions = Dict(Str, Str)
+    conditions = Dict(Str, Str, api = True)
     
     # the tubes
-    tubes = List(Tube)
+    tubes = List(Tube, api = True)
     
     # which channels do we import?
-    channels = List(Str)
+    channels = List(Str, api = True)
     
     # which FCS metadata has the channel names in it?
-    name_metadata = Enum(None, "$PnN", "$PnS")
+    name_metadata = Enum(None, "$PnN", "$PnS", api = True)
 
     # are we subsetting?
-    coarse_events = util.PositiveInt(0, allow_zero = True)
+    coarse_events = util.PositiveInt(0, allow_zero = True, api = True)
         
     # DON'T DO THIS
-    ignore_v = Bool(False)
+    ignore_v = Bool(False, api = True)
       
     def apply(self, experiment = None):
         

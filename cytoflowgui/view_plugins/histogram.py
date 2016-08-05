@@ -25,7 +25,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from traits.api import provides, Callable, Str
+from traits.api import provides, Callable, Str, on_trait_change
 from traitsui.api import View, Item, Controller, EnumEditor, VGroup
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
@@ -91,6 +91,10 @@ class HistogramPluginView(HistogramView, PluginViewMixin):
     handler_factory = Callable(HistogramHandler)
 
     plotfacet = Str
+    
+    @on_trait_change('name,channel,scale,xfacet,yfacet,huefacet,plotfacet,subset')
+    def _changed(self):
+        self.changed = True
 
     def enum_plots(self, experiment):
         if not self.plotfacet:

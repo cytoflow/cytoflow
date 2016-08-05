@@ -112,12 +112,12 @@ class ImportHandler(Controller, OpHandlerMixin):
 
 @provides(IOperation)
 class ImportPluginOp(ImportOp, PluginOpMixin):
-    handler_factory = Callable(ImportHandler)
+    handler_factory = Callable(ImportHandler, transient = True)
     events = util.PositiveInt(0, allow_zero = True, status = True)
     
-    @on_trait_change('conditions,tubes,channels,coarse_events')
+    @on_trait_change('conditions,tubes,channels,name_metadata,coarse_events,ignore_v,events')
     def _changed(self):
-        self.changed = True
+        self.changed = self
     
     def apply(self, experiment = None):
         ret = super(ImportPluginOp, self).apply(experiment = experiment)
