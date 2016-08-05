@@ -103,8 +103,7 @@ class WorkflowItem(HasStrictTraits):
                                     show_label = False))
     
     # the plot names for the currently selected view
-    current_view_plot_names = List(Any, status = True, transient = True)
-    #current_view_plot_names = List(["hello", "world"])
+    current_view_plot_names = List(Any, status = True)
     
     # if there are multiple plots, which are we viewing?
     current_plot = Any
@@ -125,13 +124,13 @@ class WorkflowItem(HasStrictTraits):
     
     # is the wi valid?
     # MAGIC: first value is the default
-    status = Enum("invalid", "estimating", "applying", "valid", transient = True, status = True)
+    status = Enum("invalid", "estimating", "applying", "valid", status = True)
     
     # if we errored out, what was the error string?
-    error = Str(transient = True, status = True)
+    error = Str(status = True)
     
     # if we got a warning, what was the warning string?
-    warning = Str(transient = True, status = True)
+    warning = Str(status = True)
     
     # the event to make the workflow item re-estimate its internal model
     estimate = Event

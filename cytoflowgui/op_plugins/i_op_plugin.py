@@ -20,7 +20,7 @@ Created on Mar 15, 2015
 
 @author: brian
 """
-from traits.api import Interface, Str, HasTraits, Instance, Property, List
+from traits.api import Interface, Str, HasTraits, Event
 from traitsui.api import Group, Item
 from cytoflowgui.workflow import WorkflowItem
 from cytoflowgui.color_text_editor import ColorTextEditor
@@ -62,7 +62,7 @@ class IOperationPlugin(Interface):
         """
 
 class PluginOpMixin(HasTraits):
-    pass
+    changed = Event
 
 shared_op_traits = Group(Item('context.warning',
                               label = 'Warning',
