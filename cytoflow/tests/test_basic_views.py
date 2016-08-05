@@ -43,7 +43,7 @@ class Test(unittest.TestCase):
     def testBarChart(self):
         flow.BarChartView(name = "Bar Chart",
                           channel = "Y2-A",
-                          by = "Dox",
+                          variable = "Dox",
                           function = len).plot(self.ex)
                     
     def testHexBin(self):
@@ -106,7 +106,7 @@ class Test(unittest.TestCase):
     def testStats2D(self):
         import numpy as np
         flow.Stats2DView(name = "Stats2D",
-                         by = "Dox",
+                         variable = "Dox",
                          xchannel = "V2-A",
                          xfunction = np.mean,
                          ychannel = "Y2-A",
