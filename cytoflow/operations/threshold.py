@@ -76,9 +76,9 @@ class ThresholdOp(HasStrictTraits):
     id = Constant('edu.mit.synbio.cytoflow.operations.threshold')
     friendly_id = Constant("Threshold")
     
-    name = CStr(api = True)
-    channel = Str(api = True)
-    threshold = CFloat(api = True)
+    name = CStr
+    channel = Str
+    threshold = CFloat
         
     def apply(self, experiment):
         """Applies the threshold to an experiment.

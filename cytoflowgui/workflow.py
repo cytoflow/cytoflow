@@ -415,7 +415,7 @@ class RemoteWorkflow(HasStrictTraits):
             elif msg == Msg.UPDATE_OP:
                 (idx, new_op) = payload
                 wi = self.workflow[idx]
-                wi.operation.copy_traits(new_op, api = True)
+                wi.operation.copy_traits(new_op, status = lambda t: t is not True)
                 
                 for wi in self.workflow[idx:]:
                     wi.status = "invalid"
@@ -431,7 +431,7 @@ class RemoteWorkflow(HasStrictTraits):
                     logging.warn("RemoteWorkflow: Couldn't find view {}".format(view_id))
                     continue
                 
-                view.copy_traits(new_view, api = True) 
+                view.copy_traits(new_view, status = lambda t: t is not True) 
                 
                 if wi == self.selected:
                     self.plot(wi)       

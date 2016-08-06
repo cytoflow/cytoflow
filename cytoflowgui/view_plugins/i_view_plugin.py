@@ -66,7 +66,7 @@ class PluginViewMixin(HasTraits):
     def _status_changed(self):
         self.changed = "status"
         
-    @on_trait_change("+api")
+    @on_trait_change("-status")
     def _api_changed(self):
         self.changed = "api"
     

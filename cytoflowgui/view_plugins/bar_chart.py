@@ -85,14 +85,14 @@ class BarChartHandler(Controller, ViewHandlerMixin):
                            label = "Subset",
                            show_border = False,
                            show_labels = False),
-                    Item('warning',
+                    Item('context.view_warning',
                          resizable = True,
-                         visible_when = 'warning',
+                         visible_when = 'context.view_warning',
                          editor = ColorTextEditor(foreground_color = "#000000",
                                                  background_color = "#ffff99")),
-                    Item('error',
+                    Item('context.view_error',
                          resizable = True,
-                         visible_when = 'error',
+                         visible_when = 'context.view_error',
                          editor = ColorTextEditor(foreground_color = "#000000",
                                                   background_color = "#ff9191"))))
     
@@ -102,11 +102,11 @@ class BarChartPluginView(BarChartView, PluginViewMixin):
     # functions aren't pickleable, so send the name instead.  must make
     # the callables transient so we don't get a loop!
     
-    function_name = Str()
-    function = Callable(transient = True)
+    function_name = Str
+    #function = Callable(transient = True)
 
-    error_function_name = Str()
-    error_function = Callable(transient = True)
+    error_function_name = Str
+    #error_function = Callable(transient = True)
     
     def plot(self, experiment, **kwargs):
         
