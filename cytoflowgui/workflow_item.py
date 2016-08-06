@@ -77,8 +77,8 @@ class WorkflowItem(HasStrictTraits):
     result = Instance(Experiment, transient = True)
     
     # the channels and conditions from result.  usually these would be
-    # Properties (ie, determined dynamically), but that's currently hard
-    # with the multiprocess model.
+    # Properties (ie, determined dynamically), but that's hard with the
+    # multiprocess model.
     
     channels = List(Str, status = True)
     conditions = List(Str, status = True)
@@ -126,11 +126,11 @@ class WorkflowItem(HasStrictTraits):
     # MAGIC: first value is the default
     status = Enum("invalid", "estimating", "applying", "valid", status = True)
     
-    # if we errored out, what was the error string?
-    error = Str(status = True)
-    
-    # if we got a warning, what was the warning string?
-    warning = Str(status = True)
+    # report the errors and warnings
+    op_error = Str(status = True)
+    op_warning = Str(status = True)    
+    view_error = Str(status = True)
+    view_warning = Str(status = True)
     
     # the event to make the workflow item re-estimate its internal model
     estimate = Event
@@ -143,8 +143,8 @@ class WorkflowItem(HasStrictTraits):
         Called by the controller to update this wi
         """
              
-        self.warning = ""
-        self.error = ""
+        self.op_warning = ""
+        self.op_error = ""
         self.result = None
          
         prev_result = self.previous.result if self.previous else None
@@ -157,11 +157,11 @@ class WorkflowItem(HasStrictTraits):
                 self.status = "applying"
                 self.result = self.operation.apply(prev_result)
                 if w:
-                    self.warning = w[-1].message.__str__()
+                    self.op_warning = w[-1].message.__str__()
                     
                 
             except CytoflowError as e:
-                self.error = e.__str__()    
+                self.op_error = e.__str__()    
                 self.status = "invalid"
                 return
  

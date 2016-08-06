@@ -21,7 +21,7 @@ Created on Mar 15, 2015
 @author: brian
 """
 
-from traits.api import Interface, Str, HasTraits, Instance, Event
+from traits.api import Interface, Str, HasTraits, Instance, Event, on_trait_change
 from traitsui.api import Handler
 
 VIEW_PLUGIN_EXT = 'edu.mit.synbio.cytoflow.view_plugins'
@@ -56,11 +56,19 @@ class IViewPlugin(Interface):
         """
         
 class PluginViewMixin(HasTraits):
-    handler = Instance(Handler, transient = True)
-    warning = Str(status = True)
-    error = Str(status = True)
-    
+    handler = Instance(Handler, transient = True)    
     changed = Event
+    
+    # why can't we just put this in a workflow listener?  it's because
+    # we sometimes need to override it on a per-module basis
+    
+    @on_trait_change("+status")
+    def _status_changed(self):
+        self.changed = "status"
+        
+    @on_trait_change("+api")
+    def _api_changed(self):
+        self.changed = "api"
     
     def plot_wi(self, wi):
         if hasattr(self, 'enum_plots'):

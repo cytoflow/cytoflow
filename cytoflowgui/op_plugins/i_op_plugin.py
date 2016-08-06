@@ -20,7 +20,7 @@ Created on Mar 15, 2015
 
 @author: brian
 """
-from traits.api import Interface, Str, HasTraits, Event
+from traits.api import Interface, Str, HasTraits, Event, on_trait_change
 from traitsui.api import Group, Item
 from cytoflowgui.workflow import WorkflowItem
 from cytoflowgui.color_text_editor import ColorTextEditor
@@ -63,17 +63,28 @@ class IOperationPlugin(Interface):
 
 class PluginOpMixin(HasTraits):
     changed = Event
+    
+    # why can't we just put this in a workflow listener?  it's because
+    # we sometimes need to override it on a per-module basis
+    
+    @on_trait_change("+status")
+    def _status_changed(self):
+        self.changed = "status"
+        
+    @on_trait_change("+api")
+    def _api_changed(self):
+        self.changed = "api"
 
-shared_op_traits = Group(Item('context.warning',
+shared_op_traits = Group(Item('context.op_warning',
                               label = 'Warning',
                               resizable = True,
-                              visible_when = 'context.warning',
+                              visible_when = 'context.op_warning',
                               editor = ColorTextEditor(foreground_color = "#000000",
                                                        background_color = "#ffff99")),
-                         Item('context.error',
+                         Item('context.op_error',
                                label = 'Error',
                                resizable = True,
-                               visible_when = 'context.error',
+                               visible_when = 'context.op_error',
                                editor = ColorTextEditor(foreground_color = "#000000",
                                                         background_color = "#ff9191")))
 
