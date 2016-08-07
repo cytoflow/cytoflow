@@ -24,6 +24,7 @@ from traits.api import Interface, Str, HasTraits, Event, on_trait_change
 from traitsui.api import Group, Item
 from cytoflowgui.workflow import WorkflowItem
 from cytoflowgui.color_text_editor import ColorTextEditor
+from cytoflowgui.util import DelayedEvent
 
 OP_PLUGIN_EXT = 'edu.mit.synbio.cytoflow.op_plugins'
 
@@ -62,7 +63,7 @@ class IOperationPlugin(Interface):
         """
 
 class PluginOpMixin(HasTraits):
-    changed = Event
+    changed = DelayedEvent(delay = 0.1)
     
     # why can't we just put this in a workflow listener?  it's because
     # we sometimes need to override it on a per-module basis
@@ -72,8 +73,9 @@ class PluginOpMixin(HasTraits):
         self.changed = "status"
         
     @on_trait_change("-status", post_init = True)
-    def _api_changed(self):
-        self.changed = "api"
+    def _api_changed(self, obj, name, old, new):
+        if not obj.trait(name).transient:
+            self.changed = "api"
 
 shared_op_traits = Group(Item('context.op_warning',
                               label = 'Warning',

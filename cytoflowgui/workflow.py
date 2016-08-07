@@ -383,6 +383,8 @@ class RemoteWorkflow(HasStrictTraits):
         while True:
             _, wi = self.update_queue.get()
             wi.update()
+            if wi == self.selected:
+                self.plot(wi)
             
 
     def recv_main(self):
@@ -529,7 +531,25 @@ class RemoteWorkflow(HasStrictTraits):
             idx = self.workflow.index(wi)
       
             self.message_q.put((Msg.UPDATE_OP, (idx, obj)))
+            
+    @on_trait_change('workflow:views:changed')
+    def _view_changed(self, obj, name, new):
+        logging.debug("RemoteWorkflow._view_changed :: {}"
+                      .format((obj, name, new)))
+        
+        if new == "status":
+            wi = next((x for x in self.workflow if obj in x.views))
+            idx = self.workflow.index(wi)
+            self.message_q.put((Msg.UPDATE_VIEW, (idx, obj)))
 
+    @on_trait_change('workflow:changed')
+    def _workflow_item_changed(self, obj, name, old, new):
+        logging.debug("RemoteWorkflow._on_workflow_item_changed :: {}"
+                      .format((obj, name, old, new)))
+            
+        idx = self.workflow.index(obj)            
+        self.message_q.put((Msg.UPDATE_WI, (idx, obj)))
+        
 #     @on_trait_change('workflow:operation:changed')
 #     def _on_operation_changed(self, obj, name, old, new):
 #         logging.debug("RemoteWorkflow._on_operation_changed :: {}"
@@ -607,24 +627,7 @@ class RemoteWorkflow(HasStrictTraits):
 #         if wi == self.selected and wi.current_view == obj:
 #             self.plot(wi)
 
-            
-    @on_trait_change('workflow:views:changed')
-    def _view_changed(self, obj, name, new):
-        logging.debug("RemoteWorkflow._view_changed :: {}"
-                      .format((obj, name, new)))
-        
-        if new == "status":
-            wi = next((x for x in self.workflow if obj in x.views))
-            idx = self.workflow.index(wi)
-            self.message_q.put((Msg.UPDATE_VIEW, (idx, obj)))
 
-    @on_trait_change('workflow:+status')
-    def _on_workflow_item_status_changed(self, obj, name, old, new):
-        logging.debug("RemoteWorkflow._on_workflow_item_status_changed :: {}"
-                      .format((obj, name, old, new)))
-            
-        idx = self.workflow.index(obj)            
-        self.message_q.put((Msg.UPDATE_WI, (idx, obj)))
             
 #     @on_trait_change('workflow:views:[error,warning]')
 #     def _on_view_status_changed(self, obj, name, old, new):
@@ -664,10 +667,7 @@ class RemoteWorkflow(HasStrictTraits):
 #                     wi.status = "invalid"
 #                 self.update_queue.put_nowait((self.workflow.index(wi), wi))
 
-    def plot(self, wi):      
-        
-        # TODO - replot if the selected wi changes!
-        
+    def plot(self, wi):              
         logging.debug("RemoteWorkflow.plot :: {}".format((wi)))
             
         if not wi.current_view:

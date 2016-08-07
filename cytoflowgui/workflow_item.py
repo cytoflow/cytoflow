@@ -37,6 +37,7 @@ from cytoflow.views.i_view import IView
 from cytoflow.utility import CytoflowError
 
 from cytoflowgui.flow_task_pane import TabListEditor
+from cytoflowgui.util import DelayedEvent
 
 class WorkflowItem(HasStrictTraits):
     """        
@@ -137,6 +138,13 @@ class WorkflowItem(HasStrictTraits):
     
     # the icon for the vertical notebook view.  Qt specific, sadly.
     icon = Property(depends_on = 'status', transient = True)   
+    
+    # has the wi status changed?
+    changed = DelayedEvent(delay = 0.1)
+    
+    @on_trait_change('+status', post_init=True)
+    def _changed(self):
+        self.changed = True
             
     def update(self):
         """

@@ -24,6 +24,8 @@ Created on Mar 15, 2015
 from traits.api import Interface, Str, HasTraits, Instance, Event, on_trait_change
 from traitsui.api import Handler
 
+from cytoflowgui.util import DelayedEvent
+
 VIEW_PLUGIN_EXT = 'edu.mit.synbio.cytoflow.view_plugins'
 
 class IViewPlugin(Interface):
@@ -57,7 +59,7 @@ class IViewPlugin(Interface):
         
 class PluginViewMixin(HasTraits):
     handler = Instance(Handler, transient = True)    
-    changed = Event
+    changed = DelayedEvent(delay = 0.1)
     
     # why can't we just put this in a workflow listener?  it's because
     # we sometimes need to override it on a per-module basis
