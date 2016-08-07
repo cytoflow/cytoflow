@@ -23,7 +23,11 @@ Created on Dec 1, 2015
 import unittest
 import os
 
+import numpy as np
+import pandas as pd
+
 import cytoflow as flow
+import cytoflow.utility as util
 
 class Test(unittest.TestCase):
     
@@ -33,11 +37,19 @@ class Test(unittest.TestCase):
                                 tubes = [flow.Tube(file = self.cwd + '/data/tasbe/mkate.fcs',
                                                    conditions = {})]).apply()
         
-        self.op = flow.LogTransformOp(channels = ["FSC-A", "Pacific Blue-A"])
 
     def test_run(self):
-        self.op.apply(self.ex)
-
+        scale = util.scale_factory("log", self.ex, "Pacific Blue-A")
+        x = scale(20.0)
+        self.assertTrue(isinstance(x, float))
+        
+        x = scale([20])
+        self.assertTrue(isinstance(x, np.ndarray))
+        
+        x = scale(pd.Series([20]))
+        self.assertTrue(isinstance(x, pd.Series))
+                        
+        
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']

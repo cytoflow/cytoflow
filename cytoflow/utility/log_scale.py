@@ -27,8 +27,11 @@ from traits.api import (HasTraits, Instance, Str, Dict, provides, Constant,
                         Enum, Float, Property, cached_property) 
                        
 import numpy as np
+import pandas as pd
 
 from .scale import IScale, register_scale
+from .cytoflow_errors import CytoflowError, CytoflowWarning
+
 
 @provides(IScale)
 class LogScale(HasTraits):
@@ -48,17 +51,20 @@ class LogScale(HasTraits):
         return {"nonposx" : self.mode, "nonposy" : self.mode}
         
     def __call__(self, data):
-        if self.mode == "mask":
-            mask = (data < self.threshold)
-            if mask.any():
-                return np.log10(np.where(mask, np.nan, data))
+        
+        if isinstance(data, (int, float)):
+            if data < self.threshold:
+                raise CytoflowError("data <= scale.threshold (currently: {})".format(self.threshold))
             else:
                 return np.log10(data)
-        else: # mode == "clip"
-            data = np.array(data, float)
-            data[data < self.threshold] = self.threshold
-            return np.log10(data)
+            
+        mask_value = np.nan if self.mode == "mask" else self.threshold
+        x = pd.Series(data)
+        x = x.mask(lambda x: x < self.threshold, other = mask_value)
+        ret = np.log10(x)
 
+        return (ret if isinstance(ret, pd.Series) else ret.values)
+                        
     def inverse(self, data):
         return np.power(10, data)
 

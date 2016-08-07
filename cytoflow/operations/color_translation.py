@@ -25,8 +25,11 @@ from __future__ import division, absolute_import
 
 import math
 
+from warnings import warn, catch_warnings
+
 from traits.api import (HasStrictTraits, Str, CStr, File, Dict, Python,
-                        Instance, Tuple, Bool, Constant, DelegatesTo, provides)
+                        Instance, Tuple, Bool, Constant, DelegatesTo, provides,
+                        Property)
 import numpy as np
 import matplotlib.pyplot as plt
 import sklearn.mixture
@@ -53,15 +56,11 @@ class ColorTranslationOp(HasStrictTraits):
     name : Str
         The operation name (for UI representation; optional for interactive use)
         
-    translation : Dict(Str, Str)
-        Specifies the desired translation.  The keys are the channel names
-        to map *from*; the values are the channel names to map *to*.
-        
     controls : Dict((Str, Str), File)
         Two-color controls used to determine the mapping.  They keys are 
-        tuples of *from-channel* and *to-channel* (corresponding to key-value
-        pairs in `translation`).  The values are FCS files containing two-color 
-        constitutive fluorescent expression for the mapping.
+        tuples of *from-channel* and *to-channel*.  The values are FCS files 
+        containing two-color constitutive fluorescent expression data 
+        for the mapping.
         
     mixture_model : Bool (default = False)
         If "True", try to model the "from" channel as a mixture of expressing
@@ -83,9 +82,7 @@ class ColorTranslationOp(HasStrictTraits):
 
     Examples
     --------
-    >>> ct_op = flow.ColorTranslationOp()
-    >>> ct_op.translation = {"Pacific Blue-A" : "FITC-A",
-    ...                      "PE-Tx-Red-YG-A" : "FITC-A"}
+    >>> ct_op = flow.ColorOp()
     >>> ct_op.controls = {("Pacific Blue-A", "FITC-A") : "merged/rby.fcs",
     ...                   ("PE-Tx-Red-YG-A", "FITC-A") : "merged/rby.fcs"}
     >>> ct_op.mixture_model = True
@@ -101,7 +98,7 @@ class ColorTranslationOp(HasStrictTraits):
     
     name = CStr()
 
-    translation = Dict(Str, Str)
+    translation = Property
     controls = Dict(Tuple(Str, Str), File, transient = True)
     mixture_model = Bool(False, transient = True)
 
@@ -116,6 +113,10 @@ class ColorTranslationOp(HasStrictTraits):
     # the subset string used for estimate(), passed to the diagnostic
     # plot
     _subset = Str
+        
+    def _set_translation(self):
+        warn("'translation' is deprecated; same info found in 'controls'",
+             util.CytoflowViewWarning)
 
     def estimate(self, experiment, subset = None): 
         """
@@ -126,8 +127,10 @@ class ColorTranslationOp(HasStrictTraits):
             raise util.CytoflowOpError("No experiment specified")
 
         tubes = {}
+        
+        translation = {x[0] : x[1] for x in self.controls.keys()}
 
-        for from_channel, to_channel in self.translation.iteritems():
+        for from_channel, to_channel in translation.iteritems():
             
             if from_channel not in experiment.channels:
                 raise util.CytoflowOpError("Channel {0} not in the experiment"
@@ -234,23 +237,17 @@ class ColorTranslationOp(HasStrictTraits):
         if not self._coefficients:
             raise util.CytoflowOpError("Coefficients aren't set. "
                                   "Did you call estimate()?")
-        
-        if not set(self.translation.keys()) <= set(experiment.channels):
-            raise util.CytoflowOpError("Translation keys don't match "
-                                  "experiment channels")
-        
-        if not set(self.translation.values()) <= set(experiment.channels):
-            raise util.CytoflowOpError("Translation values don't match "
-                                  "experiment channels")
-        
-        for key, val in self.translation.iteritems():
+            
+        translation = {x[0] : x[1] for x in self.controls.keys()}
+
+        for key, val in translation.iteritems():
             if (key, val) not in self._coefficients:
                 raise util.CytoflowOpError("Coefficients aren't set for translation "
                                       "{1} --> {2}.  Did you call estimate()?"
                                       .format(key, val))
-       
+                       
         new_experiment = experiment.clone()
-        for from_channel, to_channel in self.translation.iteritems():
+        for from_channel, to_channel in translation.iteritems():
             coeff = self._coefficients[(from_channel, to_channel)]
             
             # remember, these (linear) coefficients came from logspace, so 
@@ -265,12 +262,13 @@ class ColorTranslationOp(HasStrictTraits):
             a = coeff[0]
             b = 10 ** coeff[1]
             trans_fn = lambda x, a=a, b=b: b * np.power(x, a)
-            
+                        
             new_experiment[from_channel] = trans_fn(experiment[from_channel])
             new_experiment.metadata[from_channel]['channel_translation_fn'] = trans_fn
             new_experiment.metadata[from_channel]['channel_translation'] = to_channel
-
+            
         new_experiment.history.append(self.clone_traits(transient = lambda t: True))
+            
         return new_experiment
     
     def default_view(self, **kwargs):
@@ -318,11 +316,13 @@ class ColorTranslationDiagnostic(HasStrictTraits):
 
         tubes = {}
         
+        translation = {x[0] : x[1] for x in self.op.controls.keys()}
+        
         plt.figure()
-        num_plots = len(self.op.translation.keys())
+        num_plots = len(self.op.controls.keys())
         plt_idx = 0
         
-        for from_channel, to_channel in self.op.translation.iteritems():
+        for from_channel, to_channel in translation.iteritems():
             
             if (from_channel, to_channel) not in self.op.controls:
                 raise util.CytoflowOpError("Control file for {0} --> {1} not specified"
