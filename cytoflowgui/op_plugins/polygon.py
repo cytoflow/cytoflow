@@ -1,4 +1,5 @@
 #!/usr/bin/env python2.7
+from traits.has_traits import on_trait_change
 
 # (c) Massachusetts Institute of Technology 2015-2016
 #
@@ -21,7 +22,7 @@ Created on Apr 25, 2015
 @author: brian
 '''
 
-from traits.api import provides, Callable
+from traits.api import provides, Callable, List, Float, on_trait_change
 from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
@@ -76,20 +77,26 @@ class PolygonViewHandler(Controller, ViewHandlerMixin):
                            label = "Subset",
                            show_border = False,
                            show_labels = False),
-                    Item('warning',
+                    Item('context.view_warning',
                          resizable = True,
-                         visible_when = 'warning',
+                         visible_when = 'context.view_warning',
                          editor = ColorTextEditor(foreground_color = "#000000",
                                                  background_color = "#ffff99")),
-                    Item('error',
+                    Item('context.view_error',
                          resizable = True,
-                         visible_when = 'error',
+                         visible_when = 'context.view_error',
                          editor = ColorTextEditor(foreground_color = "#000000",
                                                   background_color = "#ff9191"))))
 
 @provides(ISelectionView)
 class PolygonSelectionView(PolygonSelection, PluginViewMixin):
     handler_factory = Callable(PolygonViewHandler)
+    
+    vertices = List((Float, Float), status = True)
+    
+    @on_trait_change('vertices[]')
+    def _vertices_changed(self):
+        self.changed = "status"
     
     def plot_wi(self, wi):
         self.plot(wi.previous.result)
@@ -98,7 +105,9 @@ class PolygonPluginOp(PolygonOp, PluginOpMixin):
     handler_factory = Callable(PolygonHandler)
     
     def default_view(self, **kwargs):
-        return PolygonSelectionView(op = self, **kwargs)
+        v = PolygonSelectionView(op = self, **kwargs)
+        self.sync_trait('vertices', v)
+        return v
 
 @provides(IOperationPlugin)
 class PolygonPlugin(Plugin):

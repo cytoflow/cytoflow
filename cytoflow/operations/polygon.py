@@ -229,7 +229,7 @@ class PolygonSelection(cytoflow.views.ScatterplotView):
         self._draw_poly()
         self._interactive()
     
-    @on_trait_change('op.vertices', post_init = True)
+    @on_trait_change('vertices', post_init = True)
     def _draw_poly(self):
         if not self._ax:
             return
@@ -237,10 +237,10 @@ class PolygonSelection(cytoflow.views.ScatterplotView):
         if self._patch and self._patch in self._ax.patches:
             self._patch.remove()
             
-        if not self.op.vertices or len(self.op.vertices) < 3:
+        if not self.vertices or len(self.vertices) < 3:
             return
              
-        patch_vert = np.concatenate((np.array(self.op.vertices), 
+        patch_vert = np.concatenate((np.array(self.vertices), 
                                     np.array((0,0), ndmin = 2)))
                                     
         self._patch = \
