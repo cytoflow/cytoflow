@@ -67,11 +67,11 @@ class PluginOpMixin(HasTraits):
     # why can't we just put this in a workflow listener?  it's because
     # we sometimes need to override it on a per-module basis
     
-    @on_trait_change("+status")
+    @on_trait_change("+status", post_init = True)
     def _status_changed(self):
         self.changed = "status"
         
-    @on_trait_change("-status")
+    @on_trait_change("-status", post_init = True)
     def _api_changed(self):
         self.changed = "api"
 
