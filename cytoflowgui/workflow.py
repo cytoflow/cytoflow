@@ -680,24 +680,24 @@ class RemoteWorkflow(HasStrictTraits):
          
         with warnings.catch_warnings(record = True) as w:
             try:
-                mpl_backend.process_events.clear()
-                
                 with self.plot_lock:
+                    mpl_backend.process_events.clear()
+
                     wi.current_view.plot_wi(wi)
                 
-                if self.last_view_plotted and "interactive" in self.last_view_plotted.traits():
-                    self.last_view_plotted.interactive = False
-                
-                if "interactive" in wi.current_view.traits():
-                    wi.current_view.interactive = True
-                self.last_view_plotted = wi.current_view
-                 
-                # the remote canvas/pyplot interface of the multiprocess backend
-                # is NOT interactive.  this call lets us batch together all 
-                # the plot updates
-                plt.show()
-                
-                mpl_backend.process_events.set()
+                    if self.last_view_plotted and "interactive" in self.last_view_plotted.traits():
+                        self.last_view_plotted.interactive = False
+                     
+                    if "interactive" in wi.current_view.traits():
+                        wi.current_view.interactive = True
+                    self.last_view_plotted = wi.current_view
+                      
+                    # the remote canvas/pyplot interface of the multiprocess backend
+                    # is NOT interactive.  this call lets us batch together all 
+                    # the plot updates
+                    plt.show()
+                     
+                    mpl_backend.process_events.set()
                  
                 if w:
                     wi.view_warning = w[-1].message.__str__()

@@ -71,8 +71,6 @@ this.child_conn = None
 this.remote_canvas = None
 this.process_events = threading.Event()
 
-this.process_events.set()
-
 DEBUG = 0
 
 class Msg:
