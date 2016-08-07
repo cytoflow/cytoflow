@@ -21,7 +21,7 @@ Created on Apr 25, 2015
 @author: brian
 '''
 
-from traits.api import provides, Callable
+from traits.api import provides, Callable, Float, Str
 from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
@@ -71,7 +71,7 @@ class RangeView2DHandler(Controller, ViewHandlerMixin):
                                 style = 'readonly'),
                            Item('xscale',
                                 label = "X Scale"),
-                           Item('object.ychannel',
+                           Item('ychannel',
                                 label = "Y Channel",
                                 style = 'readonly'),
                            Item('yscale',
@@ -89,29 +89,42 @@ class RangeView2DHandler(Controller, ViewHandlerMixin):
                            label = "Subset",
                            show_border = False,
                            show_labels = False),
-                    Item('warning',
+                    Item('context.view_warning',
                          resizable = True,
-                         visible_when = 'warning',
+                         visible_when = 'context.view_warning',
                          editor = ColorTextEditor(foreground_color = "#000000",
                                                  background_color = "#ffff99")),
-                    Item('error',
+                    Item('context.view_error',
                          resizable = True,
-                         visible_when = 'error',
+                         visible_when = 'context.view_error',
                          editor = ColorTextEditor(foreground_color = "#000000",
                                                   background_color = "#ff9191"))))
 
 @provides(ISelectionView)
 class Range2DSelectionView(RangeSelection2D, PluginViewMixin):
-    handler_factory = Callable(RangeView2DHandler)
+    handler_factory = Callable(RangeView2DHandler, transient = True)
+    
+    xlow = Float(status = True)
+    xhigh = Float(status = True)
+    ylow = Float(status = True)
+    yhigh = Float(status = True)
     
     def plot_wi(self, wi):
         self.plot(wi.previous.result)
     
 class Range2DPluginOp(Range2DOp, PluginOpMixin):
-    handler_factory = Callable(Range2DHandler)
+    handler_factory = Callable(Range2DHandler, transient = True)
     
     def default_view(self, **kwargs):
-        return Range2DSelectionView(op = self, **kwargs)
+        v = Range2DSelectionView(op = self, **kwargs)
+
+        self.sync_trait('xlow', v)
+        self.sync_trait('xhigh', v)
+
+        self.sync_trait('ylow', v)
+        self.sync_trait('yhigh', v)
+        
+        return v
 
 @provides(IOperationPlugin)
 class Range2DPlugin(Plugin):
