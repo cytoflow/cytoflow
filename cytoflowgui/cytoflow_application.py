@@ -21,13 +21,21 @@ Created on Mar 15, 2015
 @author: brian
 '''
 
+import sys
+from traceback import format_exception
+
 from envisage.ui.tasks.api import TasksApplication
+from pyface.api import error
 from pyface.tasks.api import TaskWindowLayout
-from traits.api import Bool, Instance, List, Property
+from traits.api import Bool, Instance, List, Property, push_exception_handler
 
 from preferences import CytoflowPreferences
 
-
+def gui_notification_handler(obj, name, old, new):
+    (exc_type, exc_value, tb) = sys.exc_info()
+    error(None, "An exception has occurred.  Please report a problem from the Help menu!\n\n" +
+                ''.join(format_exception(exc_type, exc_value, tb, 0)))
+    
 
 class CytoflowApplication(TasksApplication):
     """ The cytoflow Tasks application.
@@ -49,6 +57,11 @@ class CytoflowApplication(TasksApplication):
     always_use_default_layout = Property(Bool)
     
     def run(self):
+        # install a global (gui) error handler for traits notifications
+        push_exception_handler(handler = gui_notification_handler,
+                               reraise_exceptions = True, 
+                               main = True)
+        
         # run the GUI
         super(CytoflowApplication, self).run()
     

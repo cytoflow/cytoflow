@@ -26,7 +26,7 @@ from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor,
                          TableColumn, ObjectColumn
 from envisage.api import Plugin, contributes_to
 from traits.api import provides, Callable, Bool, CFloat, List, Str, HasTraits, \
-                       File, Event
+                       File, Event, on_trait_change
 from pyface.api import ImageResource
 
 import cytoflow.utility as util
@@ -54,6 +54,7 @@ class BleedthroughLinearHandler(Controller, OpHandlerMixin):
                                               editor = EnumEditor(name = 'context.previous.channels')),
                                  ObjectColumn(name = 'file')],
                             row_factory = _Control,
+                            auto_add = True,
                             auto_size = False,
                             sortable = False),
                          show_label = False),
@@ -73,9 +74,15 @@ class BleedthroughLinearPluginOp(BleedthroughLinearOp, PluginOpMixin):
     add_control = Event
     controls_list = List(_Control)
     
+    changed = Event
+    
     # MAGIC: called when add_control is set
     def _add_control_fired(self):
         self.controls_list.append(_Control())
+        
+    @on_trait_change('controls_list_items,controls_list.+')
+    def _changed(self, obj, name, old, new):
+        self.changed = True
     
     def default_view(self, **kwargs):
         return BleedthroughLinearPluginView(op = self, **kwargs)

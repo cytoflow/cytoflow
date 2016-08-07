@@ -31,7 +31,7 @@ Created on Mar 15, 2015
 
 from traitsui.api import View, Item, Controller, TextEditor
 from traits.api import Button, Property, cached_property, provides, Callable, \
-                       Bool
+                       Bool, on_trait_change
 from pyface.api import OK as PyfaceOK
 from envisage.api import Plugin
 
@@ -52,9 +52,8 @@ class ImportHandler(Controller, OpHandlerMixin):
     """
     
     import_event = Button(label="Edit samples...")
-    samples = Property(depends_on = 'model.tubes')
+    samples = Property(depends_on = 'model.tubes', status = True)
 
-    # is the "
     coarse = Bool
     coarse_events = util.PositiveInt(0, allow_zero = True)
     
@@ -113,8 +112,8 @@ class ImportHandler(Controller, OpHandlerMixin):
 
 @provides(IOperation)
 class ImportPluginOp(ImportOp, PluginOpMixin):
-    handler_factory = Callable(ImportHandler)
-    events = util.PositiveInt(0, allow_zero = True, transient = True, status = True)
+    handler_factory = Callable(ImportHandler, transient = True)
+    events = util.PositiveInt(0, allow_zero = True, status = True)
     
     def apply(self, experiment = None):
         ret = super(ImportPluginOp, self).apply(experiment = experiment)

@@ -37,6 +37,7 @@ from cytoflow.views.i_view import IView
 from cytoflow.utility import CytoflowError
 
 from cytoflowgui.flow_task_pane import TabListEditor
+from cytoflowgui.util import DelayedEvent
 
 class WorkflowItem(HasStrictTraits):
     """        
@@ -77,8 +78,8 @@ class WorkflowItem(HasStrictTraits):
     result = Instance(Experiment, transient = True)
     
     # the channels and conditions from result.  usually these would be
-    # Properties (ie, determined dynamically), but that's currently hard
-    # with the multiprocess model.
+    # Properties (ie, determined dynamically), but that's hard with the
+    # multiprocess model.
     
     channels = List(Str, status = True)
     conditions = List(Str, status = True)
@@ -103,8 +104,7 @@ class WorkflowItem(HasStrictTraits):
                                     show_label = False))
     
     # the plot names for the currently selected view
-    current_view_plot_names = List(Any, status = True, transient = True)
-    #current_view_plot_names = List(["hello", "world"])
+    current_view_plot_names = List(Any, status = True)
     
     # if there are multiple plots, which are we viewing?
     current_plot = Any
@@ -125,27 +125,34 @@ class WorkflowItem(HasStrictTraits):
     
     # is the wi valid?
     # MAGIC: first value is the default
-    status = Enum("invalid", "estimating", "applying", "valid", transient = True, status = True)
+    status = Enum("invalid", "estimating", "applying", "valid", status = True)
     
-    # if we errored out, what was the error string?
-    error = Str(transient = True, status = True)
-    
-    # if we got a warning, what was the warning string?
-    warning = Str(transient = True, status = True)
+    # report the errors and warnings
+    op_error = Str(status = True)
+    op_warning = Str(status = True)    
+    view_error = Str(status = True)
+    view_warning = Str(status = True)
     
     # the event to make the workflow item re-estimate its internal model
     estimate = Event
     
     # the icon for the vertical notebook view.  Qt specific, sadly.
     icon = Property(depends_on = 'status', transient = True)   
+    
+    # has the wi status changed?
+    changed = DelayedEvent(delay = 0.1)
+    
+    @on_trait_change('+status', post_init=True)
+    def _changed(self):
+        self.changed = True
             
     def update(self):
         """
         Called by the controller to update this wi
         """
              
-        self.warning = ""
-        self.error = ""
+        self.op_warning = ""
+        self.op_error = ""
         self.result = None
          
         prev_result = self.previous.result if self.previous else None
@@ -158,11 +165,11 @@ class WorkflowItem(HasStrictTraits):
                 self.status = "applying"
                 self.result = self.operation.apply(prev_result)
                 if w:
-                    self.warning = w[-1].message.__str__()
+                    self.op_warning = w[-1].message.__str__()
                     
                 
             except CytoflowError as e:
-                self.error = e.__str__()    
+                self.op_error = e.__str__()    
                 self.status = "invalid"
                 return
  

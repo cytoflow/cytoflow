@@ -195,8 +195,15 @@ class RangeSelection2D(cytoflow.views.ScatterplotView):
     
     op = Instance(IOperation)
     name = DelegatesTo('op')
+    
     xchannel = DelegatesTo('op')
+    xlow = DelegatesTo('op')
+    xhigh = DelegatesTo('op')
+    
     ychannel = DelegatesTo('op')
+    ylow = DelegatesTo('op')
+    yhigh = DelegatesTo('op')
+    
     interactive = Bool(False, transient = True)
     
     # internal state.
@@ -224,7 +231,7 @@ class RangeSelection2D(cytoflow.views.ScatterplotView):
         self._draw_rect()
         self._interactive()
 
-    @on_trait_change('op.xlow, op.xhigh, op.ylow, op.yhigh', post_init = True)
+    @on_trait_change('xlow, xhigh, ylow, yhigh', post_init = True)
     def _draw_rect(self):
         if not self._ax:
             return
@@ -232,10 +239,10 @@ class RangeSelection2D(cytoflow.views.ScatterplotView):
         if self._box and self._box in self._ax.patches:
             self._box.remove()
             
-        if self.op.xlow and self.op.xhigh and self.op.ylow and self.op.yhigh:
-            self._box = Rectangle((self.op.xlow, self.op.ylow), 
-                                  (self.op.xhigh - self.op.xlow), 
-                                  (self.op.yhigh - self.op.ylow), 
+        if self.xlow and self.xhigh and self.ylow and self.yhigh:
+            self._box = Rectangle((self.xlow, self.ylow), 
+                                  (self.xhigh - self.xlow), 
+                                  (self.yhigh - self.ylow), 
                                   facecolor="grey",
                                   alpha = 0.2)
             self._ax.add_patch(self._box)
@@ -256,10 +263,10 @@ class RangeSelection2D(cytoflow.views.ScatterplotView):
     
     def _onselect(self, pos1, pos2): 
         """Update selection traits"""
-        self.op.xlow = min(pos1.xdata, pos2.xdata)
-        self.op.xhigh = max(pos1.xdata, pos2.xdata)
-        self.op.ylow = min(pos1.ydata, pos2.ydata)
-        self.op.yhigh = max(pos1.ydata, pos2.ydata)
+        self.xlow = min(pos1.xdata, pos2.xdata)
+        self.xhigh = max(pos1.xdata, pos2.xdata)
+        self.ylow = min(pos1.ydata, pos2.ydata)
+        self.yhigh = max(pos1.ydata, pos2.ydata)
     
 if __name__ == '__main__':
     import cytoflow as flow

@@ -21,8 +21,10 @@ Created on Apr 18, 2015
 @author: brian
 '''
 
-from Queue import PriorityQueue
-import heapq, sys
+from traits.api import Event, Undefined
+
+from Queue import Queue, PriorityQueue
+import heapq, sys, threading
 
 import numpy as np
 import scipy.stats
@@ -54,6 +56,45 @@ class UniquePriorityQueue(PriorityQueue):
         item = PriorityQueue._get(self, heappop)
         self.values.remove(item[1])
         return item
+
+class UniqueQueue(Queue):
+    """
+    A Queue that only allows one copy of each item.
+    """
+    
+    def _init(self, maxsize):
+        Queue._init(self, maxsize)
+        self.values = set()
+
+    def _put(self, item, heappush=heapq.heappush):
+        if item[1] not in self.values:
+            self.values.add(item[1])
+            Queue._put(self, item, heappush)
+        else:
+            pass
+
+    def _get(self, heappop=heapq.heappop):
+        item = Queue._get(self, heappop)
+        self.values.remove(item[1])
+        return item
+    
+class DelayedEvent(Event):
+    def set ( self, obj, name, value ):
+        delay = self._metadata['delay']
+        
+        def fire(self, obj, name, value):
+            self.value = Undefined
+            obj.trait_property_changed( name, Undefined, value )
+            
+        if self._timer and self._timer.is_alive():
+            return
+        
+        self._timer = threading.Timer(delay, fire, (self, obj, name, value))
+        self._timer.start()
+
+    def get ( self, obj, name ):
+        return Undefined           
+        
 
 summary_functions = {"Mean" : np.mean,
                      "Geom.Mean" : util.geom_mean,
