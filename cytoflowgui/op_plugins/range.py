@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from traits.api import provides, Callable
+from traits.api import provides, Callable, Float
 from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
@@ -67,20 +67,23 @@ class RangeViewHandler(Controller, ViewHandlerMixin):
                            label = "Subset",
                            show_border = False,
                            show_labels = False),
-                    Item('warning',
+                    Item('context.view_warning',
                          resizable = True,
-                         visible_when = 'warning',
+                         visible_when = 'context.view_warning',
                          editor = ColorTextEditor(foreground_color = "#000000",
                                                  background_color = "#ffff99")),
-                    Item('error',
+                    Item('context.view_error',
                          resizable = True,
-                         visible_when = 'error',
+                         visible_when = 'context.view_error',
                          editor = ColorTextEditor(foreground_color = "#000000",
                                                   background_color = "#ff9191"))))
 
 @provides(ISelectionView)
 class RangeSelectionView(RangeSelection, PluginViewMixin):
     handler_factory = Callable(RangeViewHandler)
+    
+    low = Float(status = True)
+    high = Float(status = True)
     
     def plot_wi(self, wi):
         self.plot(wi.previous.result)
@@ -91,7 +94,10 @@ class RangePluginOp(RangeOp, PluginOpMixin):
     handler_factory = Callable(RangeHandler)
     
     def default_view(self, **kwargs):
-        return RangeSelectionView(op = self, **kwargs)
+        v = RangeSelectionView(op = self, **kwargs)
+        self.sync_trait('low', v)
+        self.sync_trait('high', v)
+        return v
 
 @provides(IOperationPlugin)
 class RangePlugin(Plugin):

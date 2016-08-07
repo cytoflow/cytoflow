@@ -180,6 +180,8 @@ class RangeSelection(cytoflow.views.HistogramView):
     op = Instance(IOperation)
     name = DelegatesTo('op')
     channel = DelegatesTo('op')
+    low = DelegatesTo('op')
+    high = DelegatesTo('op')
     interactive = Bool(False, transient = True)
 
     # internal state.
@@ -207,9 +209,9 @@ class RangeSelection(cytoflow.views.HistogramView):
         self._draw_span()
         self._interactive()
 
-    @on_trait_change('op.low, op.high', post_init = True)
+    @on_trait_change('low,high', post_init = True)
     def _draw_span(self):
-        if not (self._ax and self.op.low and self.op.high):
+        if not (self._ax and self.low and self.high):
             return
         
         if self._low_line and self._low_line in self._ax.lines:
@@ -222,12 +224,12 @@ class RangeSelection(cytoflow.views.HistogramView):
             self._hline.remove()
             
 
-        self._low_line = plt.axvline(self.op.low, linewidth=3, color='blue')
-        self._high_line = plt.axvline(self.op.high, linewidth=3, color='blue')
+        self._low_line = plt.axvline(self.low, linewidth=3, color='blue')
+        self._high_line = plt.axvline(self.high, linewidth=3, color='blue')
             
         ymin, ymax = plt.ylim()
         y = (ymin + ymax) / 2.0
-        self._hline = plt.plot([self.op.low, self.op.high], 
+        self._hline = plt.plot([self.low, self.high], 
                                [y, y], 
                                color='blue', 
                                linewidth = 2)[0]
@@ -252,8 +254,8 @@ class RangeSelection(cytoflow.views.HistogramView):
     
     def _onselect(self, xmin, xmax): 
         """Update selection traits"""
-        self.op.low = xmin
-        self.op.high = xmax
+        self.low = xmin
+        self.high = xmax
         
 if __name__ == '__main__':
     import cytoflow as flow
