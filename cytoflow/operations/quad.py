@@ -208,7 +208,9 @@ class QuadSelection(cytoflow.views.ScatterplotView):
     op = Instance(IOperation)
     name = DelegatesTo('op')
     xchannel = DelegatesTo('op')
+    xthreshold = DelegatesTo('op')
     ychannel = DelegatesTo('op')
+    ythreshold = DelegatesTo('op')
     interactive = Bool(False, transient = True)
     
     # internal state.
@@ -234,7 +236,7 @@ class QuadSelection(cytoflow.views.ScatterplotView):
         self._draw_lines()
         self._interactive()
 
-    @on_trait_change('op.xthreshold, op.ythreshold', post_init = True)
+    @on_trait_change('xthreshold, ythreshold', post_init = True)
     def _draw_lines(self):
         if not self._ax:
             return
@@ -245,11 +247,11 @@ class QuadSelection(cytoflow.views.ScatterplotView):
         if self._vline and self._vline in self._ax.lines:
             self._vline.remove()
             
-        if self.op.xthreshold and self.op.ythreshold:
-            self._hline = plt.axhline(self.op.ythreshold, 
+        if self.xthreshold and self.ythreshold:
+            self._hline = plt.axhline(self.ythreshold, 
                                       linewidth = 3, 
                                       color = 'blue')
-            self._vline = plt.axvline(self.op.xthreshold,
+            self._vline = plt.axvline(self.xthreshold,
                                       linewidth = 3,
                                       color = 'blue')
 
@@ -270,8 +272,8 @@ class QuadSelection(cytoflow.views.ScatterplotView):
             
     def _onclick(self, event):
         """Update the threshold location"""
-        self.op.xthreshold = event.xdata
-        self.op.ythreshold = event.ydata    
+        self.xthreshold = event.xdata
+        self.ythreshold = event.ydata    
     
 if __name__ == '__main__':
     import cytoflow as flow
