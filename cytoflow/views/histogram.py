@@ -22,7 +22,6 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 import numpy as np
-import pandas as pd
 import seaborn as sns
 import math
 import bottleneck
@@ -194,6 +193,7 @@ class HistogramView(HasStrictTraits):
         for ax in g.axes.flatten():
             ax.set_xscale(self.scale, **scale.mpl_params)  
                   
+        legend = kwargs.pop('legend', True)
         g.map(plt.hist, self.channel, **kwargs)
         
         # if we have a hue facet, the y scaling is frequently wrong.
@@ -205,7 +205,7 @@ class HistogramView(HasStrictTraits):
         # if we have a hue facet and a lot of hues, make a color bar instead
         # of a super-long legend.
         
-        if self.huefacet:
+        if self.huefacet and legend:
             current_palette = mpl.rcParams['axes.color_cycle']
             if len(g.hue_names) > len(current_palette):
                 plot_ax = plt.gca()

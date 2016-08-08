@@ -15,12 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from traits.api import provides, Callable, Float
+from traits.api import provides, Callable, Float, Instance
 from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
 from cytoflow.views.i_selectionview import ISelectionView
+from cytoflow.operations import IOperation
 from cytoflow.operations.i_operation import IOperation
 from cytoflow.operations.range import RangeOp, RangeSelection
 
@@ -81,7 +82,7 @@ class RangeViewHandler(Controller, ViewHandlerMixin):
 @provides(ISelectionView)
 class RangeSelectionView(RangeSelection, PluginViewMixin):
     handler_factory = Callable(RangeViewHandler)
-    
+    op = Instance(IOperation, fixed = True)
     low = Float(status = True)
     high = Float(status = True)
     

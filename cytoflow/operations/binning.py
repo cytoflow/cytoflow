@@ -227,11 +227,7 @@ class BinningView(cytoflow.views.HistogramView):
     huefacet = DelegatesTo('op', 'name')
     
     def plot(self, experiment, **kwargs):
-        
-        try:
-            experiment = self.op.apply(experiment)
-        except util.CytoflowOpError as e:
-            warnings.warn(e.__str__(), util.CytoflowViewWarning)
-        
+                
+        experiment = self.op.apply(experiment)
         cytoflow.HistogramView.plot(self, experiment, **kwargs)
 

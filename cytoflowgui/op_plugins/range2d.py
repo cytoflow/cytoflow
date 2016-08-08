@@ -21,11 +21,12 @@ Created on Apr 25, 2015
 @author: brian
 '''
 
-from traits.api import provides, Callable, Float, Str
+from traits.api import provides, Callable, Float, Instance
 from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
+from cytoflow.operations import IOperation
 from cytoflow.operations.range2d import Range2DOp, RangeSelection2D
 from cytoflow.views.i_selectionview import ISelectionView
 
@@ -103,7 +104,7 @@ class RangeView2DHandler(Controller, ViewHandlerMixin):
 @provides(ISelectionView)
 class Range2DSelectionView(RangeSelection2D, PluginViewMixin):
     handler_factory = Callable(RangeView2DHandler, transient = True)
-    
+    op = Instance(IOperation, fixed = True)
     xlow = Float(status = True)
     xhigh = Float(status = True)
     ylow = Float(status = True)

@@ -15,11 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from traits.api import provides, Callable, Float, on_trait_change
+from traits.api import provides, Callable, Float, Instance
 from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
+from cytoflow.operations import IOperation
 from cytoflow.operations.threshold import ThresholdOp, ThresholdSelection
 
 from cytoflowgui.op_plugins.i_op_plugin \
@@ -77,16 +78,15 @@ class ThresholdViewHandler(Controller, ViewHandlerMixin):
                                                   background_color = "#ff9191"))))
 
 class ThresholdSelectionView(ThresholdSelection, PluginViewMixin):
-    handler_factory = Callable(ThresholdViewHandler)
-    
-    # override this to be a 'status' variable
+    handler_factory = Callable(ThresholdViewHandler, transient = True)    
+    op = Instance(IOperation, fixed = True)
     threshold = Float(status = True)
     
     def plot_wi(self, wi):
         self.plot(wi.previous.result)
     
 class ThresholdPluginOp(ThresholdOp, PluginOpMixin):
-    handler_factory = Callable(ThresholdHandler)
+    handler_factory = Callable(ThresholdHandler, transient = True)
      
     def default_view(self, **kwargs):
         v = ThresholdSelectionView(op = self, **kwargs)

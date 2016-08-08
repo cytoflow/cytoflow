@@ -21,13 +21,18 @@ Created on Oct 9, 2015
 @author: brian
 '''
 
+import random, string, warnings
+
 from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor
 from envisage.api import Plugin, contributes_to
-from traits.api import provides, Callable
+from traits.api import provides, Callable, Str, Instance
 from pyface.api import ImageResource
 
+from cytoflow.operations import IOperation
 from cytoflow.operations.binning import BinningOp, BinningView
+from cytoflow.views.histogram import HistogramView
 from cytoflow.views.i_selectionview import IView
+import cytoflow.utility as util
 
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
@@ -75,23 +80,46 @@ class BinningViewHandler(Controller, ViewHandlerMixin):
                            label = "Subset",
                            show_border = False,
                            show_labels = False),
-                    Item('warning',
+                    Item('context.view_warning',
                          resizable = True,
-                         visible_when = 'warning',
+                         visible_when = 'context.view_warning',
                          editor = ColorTextEditor(foreground_color = "#000000",
                                                  background_color = "#ffff99")),
-                    Item('error',
+                    Item('context.view_error',
                          resizable = True,
-                         visible_when = 'error',
+                         visible_when = 'context.view_error',
                          editor = ColorTextEditor(foreground_color = "#000000",
                                                   background_color = "#ff9191")))
 
 @provides(IView)
 class BinningPluginView(BinningView, PluginViewMixin):
     handler_factory = Callable(BinningViewHandler)
+    op = Instance(IOperation, fixed = True)
+    huefacet = Str(status = True)
     
     def plot_wi(self, wi):
         self.plot(wi.previous.result)
+
+    def plot(self, experiment, **kwargs):
+    
+        if self.op.name:
+            op = self.op
+            self.huefacet = op.name
+            legend = True
+        else:
+            op = self.op.clone_traits()
+            op.name = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
+            self.huefacet = op.name     
+            legend = False      
+
+        try:
+            experiment = op.apply(experiment)
+        except util.CytoflowOpError as e:
+            warnings.warn(e.__str__(), util.CytoflowViewWarning)
+            self.huefacet = ""
+        
+        HistogramView.plot(self, experiment, legend = legend, **kwargs)
+
 
 @provides(IOperationPlugin)
 class BinningPlugin(Plugin):

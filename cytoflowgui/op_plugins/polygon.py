@@ -22,11 +22,12 @@ Created on Apr 25, 2015
 @author: brian
 '''
 
-from traits.api import provides, Callable, List, Float, on_trait_change
+from traits.api import provides, Callable, List, Float, Instance
 from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
+from cytoflow.operations import IOperation
 from cytoflow.views.i_selectionview import ISelectionView
 from cytoflow.operations.polygon import PolygonOp, PolygonSelection
 
@@ -91,7 +92,7 @@ class PolygonViewHandler(Controller, ViewHandlerMixin):
 @provides(ISelectionView)
 class PolygonSelectionView(PolygonSelection, PluginViewMixin):
     handler_factory = Callable(PolygonViewHandler)
-    
+    op = Instance(IOperation, fixed = True)
     vertices = List((Float, Float), status = True)
     
     @on_trait_change('vertices[]')

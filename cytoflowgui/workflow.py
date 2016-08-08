@@ -163,14 +163,18 @@ class LocalWorkflow(HasStrictTraits):
             elif msg == Msg.UPDATE_OP:
                 (idx, new_op) = payload
                 wi = self.workflow[idx]
-                wi.operation.copy_traits(new_op, status = True)
+                wi.operation.copy_traits(new_op, 
+                                         status = True,
+                                         fixed = lambda t: t is not True)
                 
             elif msg == Msg.UPDATE_VIEW:
                 (idx, new_view) = payload
                 view_id = new_view.id
                 wi = self.workflow[idx]
                 view = next((x for x in wi.views if x.id == view_id))
-                view.copy_traits(new_view, status = True)
+                view.copy_traits(new_view, 
+                                 status = True,
+                                 fixed = lambda t: t is not True)
                     
             elif msg == Msg.GET_LOG:
                 with self.child_log_cond:
@@ -402,6 +406,12 @@ class RemoteWorkflow(HasStrictTraits):
             elif msg == Msg.ADD_ITEMS:
                 (idx, new_item) = payload
                 self.workflow.insert(idx, new_item)
+#                 
+#                 if new_item.default_view:
+#                     view = next((x for x in new_item.views if x.id == new_item.default_view.id))
+#                     new_item.views.remove(view)
+#                     new_item.default_view = new_item.operation.default_view()
+#                     new_item.views.append(new_item.default_view)
 
             elif msg == Msg.REMOVE_ITEMS:
                 idx = payload
@@ -417,7 +427,9 @@ class RemoteWorkflow(HasStrictTraits):
             elif msg == Msg.UPDATE_OP:
                 (idx, new_op) = payload
                 wi = self.workflow[idx]
-                wi.operation.copy_traits(new_op, status = lambda t: t is not True)
+                wi.operation.copy_traits(new_op, 
+                                         status = lambda t: t is not True,
+                                         fixed = lambda t: t is not True)
                 
                 for wi in self.workflow[idx:]:
                     wi.status = "invalid"
@@ -433,7 +445,9 @@ class RemoteWorkflow(HasStrictTraits):
                     logging.warn("RemoteWorkflow: Couldn't find view {}".format(view_id))
                     continue
                 
-                view.copy_traits(new_view, status = lambda t: t is not True) 
+                view.copy_traits(new_view, 
+                                 status = lambda t: t is not True,
+                                 fixed = lambda t: t is not True) 
                 
                 if wi == self.selected:
                     self.plot(wi)       
