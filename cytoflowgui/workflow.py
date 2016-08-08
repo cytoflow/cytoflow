@@ -423,6 +423,7 @@ class RemoteWorkflow(HasStrictTraits):
                     self.selected = None
                 else:
                     self.selected = self.workflow[idx]
+                    self.plot(wi)
                 
             elif msg == Msg.UPDATE_OP:
                 (idx, new_op) = payload
