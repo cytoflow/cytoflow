@@ -86,7 +86,7 @@ class DelayedEvent(Event):
             self.value = Undefined
             obj.trait_property_changed( name, Undefined, value )
             
-        if self._timer and self._timer.is_alive():
+        if self.value is not Undefined and self._timer and self._timer.is_alive():
             return
         
         self._timer = threading.Timer(delay, fire, (self, obj, name, value))
