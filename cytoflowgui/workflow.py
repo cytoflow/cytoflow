@@ -667,19 +667,18 @@ class RemoteWorkflow(HasStrictTraits):
 #             plt.clf()
 #             plt.show()
 #             
-#     @on_trait_change('workflow:estimate')
-#     def _on_estimate(self, obj, name, old, new):
-#         logging.debug("RemoteWorkflow._on_estimate :: {}"
-#                       .format((obj, name, old, new)))
-#         idx = self.workflow.index(obj)
-# 
-#         if not obj.trait(name).later and not obj.trait(name).status:
-#             for wi in self.workflow[idx:]:
-#                 if wi == obj:
-#                     wi.status = "estimating"
-#                 else:
-#                     wi.status = "invalid"
-#                 self.update_queue.put_nowait((self.workflow.index(wi), wi))
+    @on_trait_change('workflow:estimate')
+    def _on_estimate(self, obj, name, old, new):
+        logging.debug("RemoteWorkflow._on_estimate :: {}"
+                      .format((obj, name, old, new)))
+        idx = self.workflow.index(obj)
+ 
+        for wi in self.workflow[idx:]:
+            if wi == obj:
+                wi.status = "estimating"
+            else:
+                wi.status = "invalid"
+            self.update_queue.put_nowait((self.workflow.index(wi), wi))
 
     def plot(self, wi):              
         logging.debug("RemoteWorkflow.plot :: {}".format((wi)))

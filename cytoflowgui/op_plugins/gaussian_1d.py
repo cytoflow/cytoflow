@@ -22,13 +22,12 @@ Created on Oct 9, 2015
 '''
 
 from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor, \
-                         CheckListEditor, ButtonEditor, Heading
+                         CheckListEditor, ButtonEditor
 from envisage.api import Plugin, contributes_to
-from traits.api import provides, Callable, Bool, CFloat, List, Str
+from traits.api import provides, Callable, Instance
 from pyface.api import ImageResource
 
-import cytoflow.utility as util
-
+from cytoflow.operations import IOperation
 from cytoflow.operations.gaussian_1d import GaussianMixture1DOp, GaussianMixture1DView
 from cytoflow.views.i_selectionview import IView
 
@@ -68,12 +67,15 @@ class GaussianMixture1DHandler(Controller, OpHandlerMixin):
 class GaussianMixture1DPluginOp(GaussianMixture1DOp, PluginOpMixin):
     handler_factory = Callable(GaussianMixture1DHandler)
     
-    num_components = util.PositiveInt(1, later = True)
-    sigma = util.PositiveFloat(0.0, allow_zero = True, later = True)
-    by = List(Str, later = True)
+    #num_components = util.PositiveInt(1, later = True)
+    #sigma = util.PositiveFloat(0.0, allow_zero = True, later = True)
+    #by = List(Str)
     
     def default_view(self, **kwargs):
         return GaussianMixture1DPluginView(op = self, **kwargs)
+    
+    def clear_estimate(self):
+        self._gmms.clear()
 
 class GaussianMixture1DViewHandler(Controller, ViewHandlerMixin):
     def default_traits_view(self):
@@ -93,21 +95,22 @@ class GaussianMixture1DViewHandler(Controller, ViewHandlerMixin):
                            label = "Subset",
                            show_border = False,
                            show_labels = False),
-                    Item('warning',
+                    Item('context.view_warning',
                          resizable = True,
-                         visible_when = 'warning',
+                         visible_when = 'context.view_warning',
                          editor = ColorTextEditor(foreground_color = "#000000",
                                                  background_color = "#ffff99")),
-                    Item('error',
+                    Item('context.view_error',
                          resizable = True,
-                         visible_when = 'error',
+                         visible_when = 'context.view_error',
                          editor = ColorTextEditor(foreground_color = "#000000",
                                                   background_color = "#ff9191")))
 
 @provides(IView)
 class GaussianMixture1DPluginView(GaussianMixture1DView, PluginViewMixin):
-    handler_factory = Callable(GaussianMixture1DViewHandler)
-    
+    handler_factory = Callable(GaussianMixture1DViewHandler, transient = True)
+    op = Instance(IOperation, fixed = True)
+
     def plot_wi(self, wi):
         if self.op.by and not wi.current_plot:
             return

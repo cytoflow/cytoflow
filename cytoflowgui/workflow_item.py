@@ -164,6 +164,14 @@ class WorkflowItem(HasStrictTraits):
                     
                 self.status = "applying"
                 self.result = self.operation.apply(prev_result)
+                
+                # if this workflow data changed, and the next op has
+                # a model estimate, clear it.
+                try:
+                    self.next.operation.clear_estimate()
+                except AttributeError:
+                    pass
+                
                 if w:
                     self.op_warning = w[-1].message.__str__()
                     
