@@ -57,27 +57,6 @@ class UniquePriorityQueue(PriorityQueue):
         self.values.remove(item[1])
         return item
 
-class UniqueQueue(Queue):
-    """
-    A Queue that only allows one copy of each item.
-    """
-    
-    def _init(self, maxsize):
-        Queue._init(self, maxsize)
-        self.values = set()
-
-    def _put(self, item, heappush=heapq.heappush):
-        if item[1] not in self.values:
-            self.values.add(item[1])
-            Queue._put(self, item, heappush)
-        else:
-            pass
-
-    def _get(self, heappop=heapq.heappop):
-        item = Queue._get(self, heappop)
-        self.values.remove(item[1])
-        return item
-    
 class DelayedEvent(Event):
     def __init__(self, **kwargs):
         self._lock = threading.Lock()
