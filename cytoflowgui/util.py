@@ -79,18 +79,27 @@ class UniqueQueue(Queue):
         return item
     
 class DelayedEvent(Event):
+    def __init__(self, **kwargs):
+        self._lock = threading.Lock()
+        super(DelayedEvent, self).__init__(**kwargs)
+        
     def set ( self, obj, name, value ):
         delay = self._metadata['delay']
         
         def fire(self, obj, name, value):
+            self._lock.acquire()
             self.value = Undefined
             obj.trait_property_changed( name, Undefined, value )
+            self._lock.release()
             
+        self._lock.acquire()
         if self.value is not Undefined and self._timer and self._timer.is_alive():
+            self._lock.release()
             return
         
         self._timer = threading.Timer(delay, fire, (self, obj, name, value))
         self._timer.start()
+        self._lock.release()
 
     def get ( self, obj, name ):
         return Undefined           
