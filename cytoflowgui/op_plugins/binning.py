@@ -109,7 +109,7 @@ class BinningPluginView(BinningView, PluginViewMixin):
         else:
             op = self.op.clone_traits()
             op.name = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
-            self.huefacet = op.name     
+            self.huefacet = op.name
             legend = False      
 
         try:
