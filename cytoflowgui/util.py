@@ -23,7 +23,7 @@ Created on Apr 18, 2015
 
 from traits.api import Event, Undefined
 
-from Queue import Queue, PriorityQueue
+from Queue import PriorityQueue
 import heapq, sys, threading
 
 import numpy as np
