@@ -21,14 +21,17 @@ Created on Oct 9, 2015
 @author: brian
 '''
 
+import random, string
+
 from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor, \
                          CheckListEditor, ButtonEditor
 from envisage.api import Plugin, contributes_to
-from traits.api import provides, Callable, List, Str
+from traits.api import provides, Callable, List, Str, Instance
 from pyface.api import ImageResource
 
 import cytoflow.utility as util
 
+from cytoflow.operations import IOperation
 from cytoflow.operations.gaussian_2d import GaussianMixture2DOp, GaussianMixture2DView
 from cytoflow.views.i_selectionview import IView
 
@@ -98,25 +101,45 @@ class GaussianMixture2DViewHandler(Controller, ViewHandlerMixin):
                            label = "Subset",
                            show_border = False,
                            show_labels = False),
-                    Item('warning',
+                    Item('context.view_warning',
                          resizable = True,
-                         visible_when = 'warning',
+                         visible_when = 'context.view_warning',
                          editor = ColorTextEditor(foreground_color = "#000000",
                                                  background_color = "#ffff99")),
-                    Item('error',
+                    Item('context.view_error',
                          resizable = True,
-                         visible_when = 'error',
+                         visible_when = 'context.view_error',
                          editor = ColorTextEditor(foreground_color = "#000000",
                                                   background_color = "#ff9191")))
 
 @provides(IView)
 class GaussianMixture2DPluginView(GaussianMixture2DView, PluginViewMixin):
     handler_factory = Callable(GaussianMixture2DViewHandler)
+    op = Instance(IOperation, fixed = True)
     
     def plot_wi(self, wi):
         if self.op.by and not wi.current_plot:
             return
         self.plot(wi.previous.result, wi.current_plot)
+        
+    def plot(self, experiment, plot_name = None, **kwargs):
+        
+        orig_op = self.op
+        
+        if self.op.name:
+            op = self.op
+            legend = True
+        else:
+            op = self.op.clone_traits()
+            op.copy_traits(self.op, transient = True)
+            op.name = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
+            self.op = op
+            legend = False      
+
+        try:
+            GaussianMixture2DView.plot(self, experiment, plot_name = plot_name, legend = legend, **kwargs)
+        finally:
+            self.op = orig_op
 
 @provides(IOperationPlugin)
 class GaussianMixture2DPlugin(Plugin):

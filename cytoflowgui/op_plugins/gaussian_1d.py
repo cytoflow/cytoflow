@@ -21,15 +21,18 @@ Created on Oct 9, 2015
 @author: brian
 '''
 
+import random, string, warnings
+
 from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor, \
                          CheckListEditor, ButtonEditor
 from envisage.api import Plugin, contributes_to
-from traits.api import provides, Callable, Instance
+from traits.api import provides, Callable, Instance, Str
 from pyface.api import ImageResource
 
 from cytoflow.operations import IOperation
 from cytoflow.operations.gaussian_1d import GaussianMixture1DOp, GaussianMixture1DView
 from cytoflow.views.i_selectionview import IView
+import cytoflow.utility as util
 
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
@@ -114,7 +117,26 @@ class GaussianMixture1DPluginView(GaussianMixture1DView, PluginViewMixin):
     def plot_wi(self, wi):
         if self.op.by and not wi.current_plot:
             return
-        self.plot(wi.previous.result, wi.current_plot)
+        self.plot(wi.previous.result, plot_name = wi.current_plot)
+        
+    def plot(self, experiment, plot_name = None, **kwargs):
+        
+        orig_op = self.op
+        
+        if self.op.name:
+            op = self.op
+            legend = True
+        else:
+            op = self.op.clone_traits()
+            op.copy_traits(self.op, transient = True)
+            op.name = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
+            self.op = op
+            legend = False      
+
+        try:
+            GaussianMixture1DView.plot(self, experiment, plot_name = plot_name, legend = legend, **kwargs)
+        finally:
+            self.op = orig_op
 
 @provides(IOperationPlugin)
 class GaussianMixture1DPlugin(Plugin):
