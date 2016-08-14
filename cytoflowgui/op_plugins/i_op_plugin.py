@@ -65,6 +65,16 @@ class IOperationPlugin(Interface):
 class PluginOpMixin(HasTraits):
     changed = DelayedEvent(delay = 0.1)
     
+    # there are a few pieces of metadata that determine which traits get
+    # copied between processes and when.  if a trait has "status = True",
+    # it is only copied from the remote process to the local one.
+    # this is for traits that report an operation's status.  if a trait
+    # has "estimate = True", it is copied local --> remote but the workflow
+    # item IS NOT UPDATED in real-time.  these are for traits that are used
+    # for estimating other parameters, which is assumed to be a very slow 
+    # process.  if a trait has "fixed = True", then it is assigned when the
+    # operation is first copied over AND NEVER SUBSEQUENTLY CHANGED.
+    
     # why can't we just put this in a workflow listener?  it's because
     # we sometimes need to override it on a per-module basis
     
@@ -75,7 +85,11 @@ class PluginOpMixin(HasTraits):
     @on_trait_change("-status", post_init = True)
     def _api_changed(self, obj, name, old, new):
         if not obj.trait(name).transient:
-            self.changed = "api"
+            if obj.trait(name).estimate:
+                self.changed = "estimate"
+            else:
+                self.changed = "api"
+            
 
 shared_op_traits = Group(Item('context.op_warning',
                               label = 'Warning',

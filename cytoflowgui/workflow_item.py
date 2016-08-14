@@ -134,7 +134,7 @@ class WorkflowItem(HasStrictTraits):
     view_warning = Str(status = True)
     
     # the event to make the workflow item re-estimate its internal model
-    estimate = Event
+    do_estimate = Event
     
     # the icon for the vertical notebook view.  Qt specific, sadly.
     icon = Property(depends_on = 'status', transient = True)   
@@ -145,36 +145,43 @@ class WorkflowItem(HasStrictTraits):
     @on_trait_change('+status', post_init=True)
     def _changed(self):
         self.changed = True
+        
+    def estimate(self):
+        prev_result = self.previous.result if self.previous else None
+         
+        with warnings.catch_warnings(record = True) as w:
+            try:    
+                self.status = "estimating"
+                self.result = self.operation.estimate(prev_result)
+
+                self.op_error = ""
+                if w:
+                    self.op_warning = w[-1].message.__str__()
+                else:
+                    self.op_warning = ""
+                
+            except CytoflowError as e:
+                self.op_error = e.__str__()    
+                self.status = "invalid"
+                return        
             
     def update(self):
         """
         Called by the controller to update this wi
         """
-             
-        self.op_warning = ""
-        self.op_error = ""
-        self.result = None
          
         prev_result = self.previous.result if self.previous else None
          
         with warnings.catch_warnings(record = True) as w:
-            try:
-                if self.status == "estimating":
-                    self.operation.estimate(prev_result)
-                    
+            try:    
                 self.status = "applying"
                 self.result = self.operation.apply(prev_result)
-                
-                # if this workflow data changed, and the next op has
-                # a model estimate, clear it.
-                try:
-                    self.next.operation.clear_estimate()
-                except AttributeError:
-                    pass
-                
+
+                self.op_error = ""
                 if w:
                     self.op_warning = w[-1].message.__str__()
-                    
+                else:
+                    self.op_warning = ""
                 
             except CytoflowError as e:
                 self.op_error = e.__str__()    
@@ -182,6 +189,17 @@ class WorkflowItem(HasStrictTraits):
                 return
  
         self.status = "valid"
+        
+    def reset(self):
+        self.op_warning = ""
+        self.op_error = ""
+        self.status = "invalid"
+        self.result = None
+
+        try:
+            self.next.operation.clear_estimate()
+        except AttributeError:
+            pass        
            
     @cached_property
     def _get_icon(self):

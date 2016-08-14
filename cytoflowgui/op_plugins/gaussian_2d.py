@@ -64,7 +64,7 @@ class GaussianMixture2DHandler(Controller, OpHandlerMixin):
                                                   name = 'context.previous.conditions'),
                          label = 'Group\nEstimates\nBy',
                          style = 'custom'),
-                    Item('context.estimate',
+                    Item('context.do_estimate',
                          editor = ButtonEditor(value = True,
                                                label = "Estimate!"),
                          show_label = False),
@@ -74,9 +74,9 @@ class GaussianMixture2DHandler(Controller, OpHandlerMixin):
 
 class GaussianMixture2DPluginOp(GaussianMixture2DOp, PluginOpMixin):
     handler_factory = Callable(GaussianMixture2DHandler)
-    num_components = util.PositiveInt(1, later = True)
-    sigma = util.PositiveFloat(0.0, allow_zero = True, later = True)
-    by = List(Str, later = True)
+    num_components = util.PositiveInt(1, estimate = True)
+    sigma = util.PositiveFloat(0.0, allow_zero = True, estimate = True)
+    by = List(Str, estimate = True)
     
     def default_view(self, **kwargs):
         return GaussianMixture2DPluginView(op = self, **kwargs)
