@@ -26,7 +26,7 @@ import random, string, warnings
 from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor, \
                          CheckListEditor, ButtonEditor
 from envisage.api import Plugin, contributes_to
-from traits.api import provides, Callable, Instance, Str
+from traits.api import provides, Callable, Instance, Str, List
 from pyface.api import ImageResource
 
 from cytoflow.operations import IOperation
@@ -59,7 +59,7 @@ class GaussianMixture1DHandler(Controller, OpHandlerMixin):
                                                   name = 'context.previous.conditions'),
                          label = 'Group\nEstimates\nBy',
                          style = 'custom'),
-                    Item('context.estimate',
+                    Item('context.do_estimate',
                          editor = ButtonEditor(value = True,
                                                label = "Estimate!"),
                          show_label = False),
@@ -69,6 +69,11 @@ class GaussianMixture1DHandler(Controller, OpHandlerMixin):
 
 class GaussianMixture1DPluginOp(GaussianMixture1DOp, PluginOpMixin):
     handler_factory = Callable(GaussianMixture1DHandler)
+    
+    # add "estimate" metadata
+    num_components = util.PositiveInt(1, estimate = True)
+    sigma = util.PositiveFloat(0.0, allow_zero = True, estimate = True)
+    by = List(Str, estimate = True)
     
     #num_components = util.PositiveInt(1, later = True)
     #sigma = util.PositiveFloat(0.0, allow_zero = True, later = True)

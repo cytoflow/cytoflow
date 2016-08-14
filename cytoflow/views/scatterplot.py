@@ -160,8 +160,6 @@ class ScatterplotView(HasStrictTraits):
         # if we have a hue facet and a lot of hues, make a color bar instead
         # of a super-long legend.
         
-
-        
         if self.huefacet and legend:
             current_palette = mpl.rcParams['axes.color_cycle']
             if len(g.hue_names) > len(current_palette):

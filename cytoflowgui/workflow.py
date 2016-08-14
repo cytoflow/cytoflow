@@ -161,7 +161,7 @@ class LocalWorkflow(HasStrictTraits):
                 wi.copy_traits(new_wi, status = True)
                     
             elif msg == Msg.UPDATE_OP:
-                (idx, new_op) = payload
+                (idx, new_op, _) = payload
                 wi = self.workflow[idx]
                 wi.operation.copy_traits(new_op, 
                                          status = True,
@@ -308,10 +308,10 @@ class LocalWorkflow(HasStrictTraits):
         logging.debug("LocalWorkflow._operation_changed :: {}"
                       .format(obj, new))
         
-        if new == "api":         
+        if new == "api" or new == "estimate":         
             wi = next((x for x in self.workflow if x.operation == obj))
             idx = self.workflow.index(wi)
-            self.message_q.put((Msg.UPDATE_OP, (idx, obj)))
+            self.message_q.put((Msg.UPDATE_OP, (idx, obj, new)))
 
     @on_trait_change('workflow:views:changed')
     def _view_changed(self, obj, name, new):
@@ -341,7 +341,7 @@ class LocalWorkflow(HasStrictTraits):
         plot = obj.current_plot
         self.message_q.put((Msg.CHANGE_CURRENT_PLOT, (idx, plot)))
         
-    @on_trait_change('workflow:estimate')
+    @on_trait_change('workflow:do_estimate')
     def _on_estimate(self, obj, name, old, new):
         logging.debug("LocalWorkflow._on_estimate :: {}"
                       .format((obj, name, old, new)))
@@ -385,8 +385,9 @@ class RemoteWorkflow(HasStrictTraits):
         
         # loop and process updates
         while True:
-            _, wi = self.update_queue.get()
-            wi.update()
+            _, fn = self.update_queue.get()
+            fn()
+            wi = fn.im_self
             if wi == self.selected:
                 self.plot(wi)
             
@@ -406,12 +407,6 @@ class RemoteWorkflow(HasStrictTraits):
             elif msg == Msg.ADD_ITEMS:
                 (idx, new_item) = payload
                 self.workflow.insert(idx, new_item)
-#                 
-#                 if new_item.default_view:
-#                     view = next((x for x in new_item.views if x.id == new_item.default_view.id))
-#                     new_item.views.remove(view)
-#                     new_item.default_view = new_item.operation.default_view()
-#                     new_item.views.append(new_item.default_view)
 
             elif msg == Msg.REMOVE_ITEMS:
                 idx = payload
@@ -423,18 +418,19 @@ class RemoteWorkflow(HasStrictTraits):
                     self.selected = None
                 else:
                     self.selected = self.workflow[idx]
-                    self.plot(wi)
+                    self.plot(self.selected)
                 
             elif msg == Msg.UPDATE_OP:
-                (idx, new_op) = payload
+                (idx, new_op, update_type) = payload
                 wi = self.workflow[idx]
                 wi.operation.copy_traits(new_op, 
                                          status = lambda t: t is not True,
                                          fixed = lambda t: t is not True)
                 
-                for wi in self.workflow[idx:]:
-                    wi.status = "invalid"
-                    self.update_queue.put_nowait((self.workflow.index(wi), wi))
+                if update_type == "api":
+                    for wi in self.workflow[idx:]:
+                        wi.reset()
+                        self.update_queue.put_nowait((self.workflow.index(wi), wi.update))
                     
             elif msg == Msg.UPDATE_VIEW:
                 (idx, new_view) = payload
@@ -479,7 +475,12 @@ class RemoteWorkflow(HasStrictTraits):
                 
             elif msg == Msg.ESTIMATE:
                 idx = payload
-                self.workflow[idx].estimate = True
+                
+                for wi in self.workflow[idx:]:
+                    wi.reset()
+                    if wi == self.workflow[idx]:
+                        self.update_queue.put_nowait((self.workflow.index(wi), wi.estimate))
+                    self.update_queue.put_nowait((self.workflow.index(wi) + 0.1, wi.update))
                 
             elif msg == Msg.GET_LOG:
                 self.message_q.put((Msg.GET_LOG, guiutil.child_log.getvalue()))
@@ -501,7 +502,7 @@ class RemoteWorkflow(HasStrictTraits):
                
         for wi in self.workflow:
             wi.status = "invalid"
-            self.update_queue.put_nowait((self.workflow.index(wi), wi))
+            self.update_queue.put_nowait((self.workflow.index(wi), wi.update))
             
             
     @on_trait_change('workflow_items')
@@ -534,7 +535,7 @@ class RemoteWorkflow(HasStrictTraits):
                 
         for wi in self.workflow[idx:]:
             wi.status = "invalid"
-            self.update_queue.put_nowait((self.workflow.index(wi), wi))
+            self.update_queue.put_nowait((self.workflow.index(wi), wi.update))
 
     @on_trait_change('workflow:operation:changed')
     def _operation_changed(self, obj, name, new):
@@ -545,7 +546,7 @@ class RemoteWorkflow(HasStrictTraits):
             wi = next((x for x in self.workflow if x.operation == obj))
             idx = self.workflow.index(wi)
       
-            self.message_q.put((Msg.UPDATE_OP, (idx, obj)))
+            self.message_q.put((Msg.UPDATE_OP, (idx, obj, new)))
             
     @on_trait_change('workflow:views:changed')
     def _view_changed(self, obj, name, new):
@@ -668,18 +669,6 @@ class RemoteWorkflow(HasStrictTraits):
 #             plt.clf()
 #             plt.show()
 #             
-    @on_trait_change('workflow:estimate')
-    def _on_estimate(self, obj, name, old, new):
-        logging.debug("RemoteWorkflow._on_estimate :: {}"
-                      .format((obj, name, old, new)))
-        idx = self.workflow.index(obj)
- 
-        for wi in self.workflow[idx:]:
-            if wi == obj:
-                wi.status = "estimating"
-            else:
-                wi.status = "invalid"
-            self.update_queue.put_nowait((self.workflow.index(wi), wi))
 
     def plot(self, wi):              
         logging.debug("RemoteWorkflow.plot :: {}".format((wi)))
