@@ -73,14 +73,14 @@ class ScatterplotHandler(Controller, ViewHandlerMixin):
                            label = "Subset",
                            show_border = False,
                            show_labels = False),
-                    Item('warning',
+                    Item('context.view_warning',
                          resizable = True,
-                         visible_when = 'warning',
+                         visible_when = 'context.view_warning',
                          editor = ColorTextEditor(foreground_color = "#000000",
                                                  background_color = "#ffff99")),
-                    Item('error',
+                    Item('context.view_error',
                          resizable = True,
-                         visible_when = 'error',
+                         visible_when = 'context.view_error',
                          editor = ColorTextEditor(foreground_color = "#000000",
                                                   background_color = "#ff9191"))))
 
