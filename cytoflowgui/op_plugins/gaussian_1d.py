@@ -75,10 +75,6 @@ class GaussianMixture1DPluginOp(GaussianMixture1DOp, PluginOpMixin):
     sigma = util.PositiveFloat(0.0, allow_zero = True, estimate = True)
     by = List(Str, estimate = True)
     
-    #num_components = util.PositiveInt(1, later = True)
-    #sigma = util.PositiveFloat(0.0, allow_zero = True, later = True)
-    #by = List(Str)
-    
     def default_view(self, **kwargs):
         return GaussianMixture1DPluginView(op = self, **kwargs)
     
