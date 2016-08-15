@@ -51,11 +51,13 @@ class BleedthroughLinearHandler(Controller, OpHandlerMixin):
                          editor=TableEditor(
                             columns = 
                                 [ObjectColumn(name = 'channel',
-                                              editor = EnumEditor(name = 'context.previous.channels')),
-                                 ObjectColumn(name = 'file')],
+                                              editor = EnumEditor(name = 'context.previous.channels'),
+                                              resize_mode = 'fixed',
+                                              width = 80),
+                                 ObjectColumn(name = 'file',
+                                              # 'fixed' with no width stretches to fill table
+                                              resize_mode = 'fixed')],
                             row_factory = _Control,
-                            auto_add = True,
-                            auto_size = False,
                             sortable = False),
                          show_label = False),
                     Item('add_control',
