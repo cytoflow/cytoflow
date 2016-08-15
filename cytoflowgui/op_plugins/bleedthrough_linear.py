@@ -62,7 +62,14 @@ class BleedthroughLinearHandler(Controller, OpHandlerMixin):
                          editor = ButtonEditor(value = True,
                                                label = "Add a control"),
                          show_label = False),
-                    Item('context.estimate',
+                    VGroup(Item('subset',
+                                show_label = False,
+                                editor = SubsetEditor(conditions_types = "context.previous.conditions_types",
+                                                      conditions_values = "context.previous.conditions_values")),
+                           label = "Subset",
+                           show_border = False,
+                           show_labels = False),
+                    Item('context.do_estimate',
                          editor = ButtonEditor(value = True,
                                                label = "Estimate!"),
                          show_label = False),
@@ -72,22 +79,21 @@ class BleedthroughLinearPluginOp(BleedthroughLinearOp, PluginOpMixin):
     handler_factory = Callable(BleedthroughLinearHandler)
 
     add_control = Event
-    controls_list = List(_Control)
-    
-    changed = Event
-    
+    controls_list = List(_Control, estimate = True)
+    subset = Str(estimate = True)
+        
     # MAGIC: called when add_control is set
     def _add_control_fired(self):
         self.controls_list.append(_Control())
         
     @on_trait_change('controls_list_items,controls_list.+')
-    def _changed(self, obj, name, old, new):
-        self.changed = True
+    def _controls_changed(self, obj, name, old, new):
+        self.changed = "estimate"
     
     def default_view(self, **kwargs):
         return BleedthroughLinearPluginView(op = self, **kwargs)
     
-    def estimate(self, experiment, subset = None):
+    def estimate(self, experiment):
         for i, control_i in enumerate(self.controls_list):
             for j, control_j in enumerate(self.controls_list):
                 if control_i.channel == control_j.channel and i != j:
@@ -100,20 +106,20 @@ class BleedthroughLinearPluginOp(BleedthroughLinearOp, PluginOpMixin):
             
         self.controls = controls
         
-        BleedthroughLinearOp.estimate(self, experiment, subset)
+        BleedthroughLinearOp.estimate(self, experiment, subset = self.subset)
 
 class BleedthroughLinearViewHandler(Controller, ViewHandlerMixin):
     def default_traits_view(self):
         return View(Item('name',
                          style = 'readonly'),
-                    Item('warning',
+                    Item('context.view_warning',
                          resizable = True,
-                         visible_when = 'warning',
+                         visible_when = 'context.view_warning',
                          editor = ColorTextEditor(foreground_color = "#000000",
                                                  background_color = "#ffff99")),
-                    Item('error',
+                    Item('context.view_error',
                          resizable = True,
-                         visible_when = 'error',
+                         visible_when = 'context.view_error',
                          editor = ColorTextEditor(foreground_color = "#000000",
                                                   background_color = "#ff9191")))
 
@@ -122,9 +128,7 @@ class BleedthroughLinearPluginView(BleedthroughLinearDiagnostic, PluginViewMixin
     handler_factory = Callable(BleedthroughLinearViewHandler)
     
     def plot_wi(self, wi):
-        if self.op.by and not wi.current_plot:
-            return
-        self.plot(wi.previous.result, wi.current_plot)
+        self.plot(wi.previous.result)
 
 @provides(IOperationPlugin)
 class BleedthroughLinearPlugin(Plugin):

@@ -121,7 +121,7 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
     id = Constant('edu.mit.synbio.cytoflow.operations.bleedthrough_piecewise')
     friendly_id = Constant("Piecewise Bleedthrough Correction")
     
-    name = CStr()
+    name = Constant("Bleedthrough")
 
     controls = Dict(Str, File)
     num_knots = Int(7)

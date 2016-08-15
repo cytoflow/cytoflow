@@ -37,3 +37,4 @@ from gaussian_2d import GaussianMixture2DPlugin
 
 # tasbe
 from bleedthrough_linear import BleedthroughLinearPlugin
+from bleedthrough_piecewise import BleedthroughPiecewisePlugin

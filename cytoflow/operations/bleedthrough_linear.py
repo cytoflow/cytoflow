@@ -97,7 +97,7 @@ class BleedthroughLinearOp(HasStrictTraits):
     id = Constant('edu.mit.synbio.cytoflow.operations.bleedthrough_linear')
     friendly_id = Constant("Linear Bleedthrough Correction")
     
-    name = CStr()
+    name = Constant("Bleedthrough")
 
     controls = Dict(Str, File)
     spillover = Dict(Tuple(Str, Str), Float)

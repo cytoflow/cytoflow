@@ -31,7 +31,7 @@ Created on Mar 15, 2015
 
 from traitsui.api import View, Item, Controller, TextEditor
 from traits.api import Button, Property, cached_property, provides, Callable, \
-                       Bool, on_trait_change
+                       Bool
 from pyface.api import OK as PyfaceOK
 from envisage.api import Plugin
 
@@ -43,8 +43,6 @@ from cytoflowgui.import_dialog import ExperimentDialog
 from cytoflowgui.op_plugins.i_op_plugin \
     import IOperationPlugin, OpHandlerMixin, PluginOpMixin, shared_op_traits
 from cytoflowgui.toggle_button import ToggleButtonEditor
-
-import cytoflowgui.workflow
 
 class ImportHandler(Controller, OpHandlerMixin):
     """
