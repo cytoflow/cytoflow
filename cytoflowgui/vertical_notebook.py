@@ -180,7 +180,8 @@ class VerticalNotebookPage(HasPrivateTraits):
         
         while buttons_layout.count() > 0:
             child = buttons_layout.takeAt(0)
-            child.widget().setParent(None)
+            if child.widget():  # spacers don't have widgets
+                child.widget().setParent(None)
             
         buttons_container.setParent(None)
         
@@ -293,6 +294,7 @@ class VerticalNotebookPage(HasPrivateTraits):
             self.del_button.clicked.connect(self._handle_close_button)
             
             buttons_layout.addWidget(self.del_button)
+        buttons_layout.addStretch(1)
         buttons_container.setLayout(buttons_layout)
         
         self.layout.addWidget(buttons_container)
@@ -488,7 +490,6 @@ class VerticalNotebook(HasPrivateTraits):
         """
 
         self.layout = QtGui.QVBoxLayout()
-        self.layout.setSizeConstraint(QtGui.QLayout.SetFixedSize)
 
         # Create the correct type of window based on whether or not it should
         # be scrollable:
@@ -577,7 +578,8 @@ class VerticalNotebook(HasPrivateTraits):
 
         for page in self.pages:
             self.layout.addWidget(page.control)
-
+            
+        self.layout.addStretch(1)
         self.control.setUpdatesEnabled(True)
 
 
