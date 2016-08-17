@@ -44,7 +44,8 @@ from cytoflow_application import CytoflowApplication
 from op_plugins import ImportPlugin, ThresholdPlugin, RangePlugin, \
                        Range2DPlugin, PolygonPlugin, BinningPlugin, \
                        GaussianMixture1DPlugin, GaussianMixture2DPlugin, \
-                       BleedthroughLinearPlugin, BleedthroughPiecewisePlugin
+                       BleedthroughLinearPlugin, BleedthroughPiecewisePlugin, \
+                       BeadCalibrationPlugin
 from view_plugins import HistogramPlugin, Histogram2DPlugin, ScatterplotPlugin, \
                          BarChartPlugin, Stats1DPlugin, Kde1DPlugin, Kde2DPlugin, \
                          ViolinPlotPlugin, TablePlugin, Stats2DPlugin
@@ -120,7 +121,8 @@ def run_gui():
     
     plugins.extend(view_plugins)
     
-    op_plugins = [BleedthroughPiecewisePlugin(),
+    op_plugins = [BeadCalibrationPlugin(),
+                  BleedthroughPiecewisePlugin(),
                   BleedthroughLinearPlugin(),
                   GaussianMixture2DPlugin(),
                   GaussianMixture1DPlugin(),

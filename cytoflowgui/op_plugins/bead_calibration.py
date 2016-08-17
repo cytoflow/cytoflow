@@ -26,7 +26,8 @@ from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor,
                          TableColumn, ObjectColumn
 from envisage.api import Plugin, contributes_to
 from traits.api import provides, Callable, Bool, CFloat, List, Str, HasTraits, \
-                       File, Event, on_trait_change
+                       File, Event, on_trait_change, Property, Instance, \
+                       Dict, Int, Float
 from pyface.api import ImageResource
 
 import cytoflow.utility as util
@@ -40,65 +41,97 @@ from cytoflowgui.subset_editor import SubsetEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
 
-class _Control(HasTraits):
+class _Unit(HasTraits):
     channel = Str
-    file = File
+    unit = Str
 
 class BeadCalibrationHandler(Controller, OpHandlerMixin):
     
+    beads_name_choices = Property(transient = True)
+    beads_units = Property(transient = True)
+    
+    def _get_beads_name_choices(self):
+        return self.model.BEADS.keys()
+    
+    def _get_beads_units(self):
+        if self.model.beads_name:
+            return self.model.BEADS[self.model.beads_name].keys()
+        else:
+            return []
+        
+    
     def default_traits_view(self):
         return View(Item('beads_name',
-                         editor = EnumEditor(name = 'beads_name_choices')),
-                    Item('beads_name',
-                         editor = 
+                         editor = EnumEditor(name = 'handler.beads_name_choices'),
+                         label = "Beads"),
+                    Item('beads_file'),
+                    Item('units_list',
+                         editor=TableEditor(
+                            columns = 
+                                [ObjectColumn(name = 'channel',
+                                              editor = EnumEditor(name = 'context.previous.channels'),
+                                              resize_mode = 'fixed',
+                                              width = 80),
+                                 ObjectColumn(name = 'unit',
+                                              editor = EnumEditor(name = 'handler.beads_units'),
+                                              # 'fixed' with no width stretches to fill table
+                                              resize_mode = 'fixed')],
+                            row_factory = _Unit,
+                            sortable = False),
                          show_label = False),
-                    VGroup(Item('subset',
-                                show_label = False,
-                                editor = SubsetEditor(conditions_types = "context.previous.conditions_types",
-                                                      conditions_values = "context.previous.conditions_values")),
-                           label = "Subset",
-                           show_border = False,
-                           show_labels = False),
+                    Item('add_channel',
+                         editor = ButtonEditor(value = True,
+                                               label = "Add a channel"),
+                         show_label = False),
+                    Item('bead_peak_quantile',
+                         label = "Bead Peak\nQuantile"),
+                    Item('bead_brightness_threshold',
+                         label = "Bead\nThreshold "),
                     Item('context.do_estimate',
                          editor = ButtonEditor(value = True,
                                                label = "Estimate!"),
                          show_label = False),
                     shared_op_traits)
 
-class BleedthroughLinearPluginOp(BleedthroughLinearOp, PluginOpMixin):
-    handler_factory = Callable(BleedthroughLinearHandler)
+class BeadCalibrationPluginOp(BeadCalibrationOp, PluginOpMixin):
+    handler_factory = Callable(BeadCalibrationHandler)
+    add_channel = Event
 
-    add_control = Event
-    controls_list = List(_Control, estimate = True)
-    subset = Str(estimate = True)
-        
-    # MAGIC: called when add_control is set
-    def _add_control_fired(self):
-        self.controls_list.append(_Control())
-        
-    @on_trait_change('controls_list_items,controls_list.+')
+    beads_name = Str(estimate = True)    
+    beads_file = File(estimate = True)
+    units_list = List(_Unit, estimate = True)
+
+    bead_peak_quantile = Int(80, estimate = True)
+    bead_brightness_threshold = Float(100, estimate = True)
+
+    @on_trait_change('units_list_items,units_list.+')
     def _controls_changed(self, obj, name, old, new):
         self.changed = "estimate"
+        
+    # MAGIC: called when add_control is set
+    def _add_channel_fired(self):
+        self.units_list.append(_Unit(op = self))
     
     def default_view(self, **kwargs):
-        return BleedthroughLinearPluginView(op = self, **kwargs)
+        return BeadCalibrationPluginView(op = self, **kwargs)
     
     def estimate(self, experiment):
-        for i, control_i in enumerate(self.controls_list):
-            for j, control_j in enumerate(self.controls_list):
-                if control_i.channel == control_j.channel and i != j:
+        for i, unit_i in enumerate(self.units_list):
+            for j, unit_j in enumerate(self.units_list):
+                if unit_i.channel == unit_j.channel and i != j:
                     raise util.CytoflowOpError("Channel {0} is included more than once"
-                                               .format(control_i.channel))
+                                               .format(unit_i.channel))
                                                
-        controls = {}
-        for control in self.controls_list:
-            controls[control.channel] = control.file
+        units = {}
+        for unit in self.units_list:
+            units[unit.channel] = unit.unit
             
-        self.controls = controls
+        self.units = units
         
-        BleedthroughLinearOp.estimate(self, experiment, subset = self.subset)
+        self.beads = self.BEADS[self.beads_name]
+        BeadCalibrationOp.estimate(self, experiment)
 
-class BleedthroughLinearViewHandler(Controller, ViewHandlerMixin):
+class BeadCalibrationViewHandler(Controller, ViewHandlerMixin):
     def default_traits_view(self):
         return View(Item('name',
                          style = 'readonly'),
@@ -114,29 +147,29 @@ class BleedthroughLinearViewHandler(Controller, ViewHandlerMixin):
                                                   background_color = "#ff9191")))
 
 @provides(IView)
-class BleedthroughLinearPluginView(BleedthroughLinearDiagnostic, PluginViewMixin):
-    handler_factory = Callable(BleedthroughLinearViewHandler)
+class BeadCalibrationPluginView(BeadCalibrationDiagnostic, PluginViewMixin):
+    handler_factory = Callable(BeadCalibrationViewHandler)
     
     def plot_wi(self, wi):
         self.plot(wi.previous.result)
 
 @provides(IOperationPlugin)
-class BleedthroughLinearPlugin(Plugin):
+class BeadCalibrationPlugin(Plugin):
     """
     class docs
     """
     
-    id = 'edu.mit.synbio.cytoflowgui.op_plugins.bleedthrough_linear'
-    operation_id = 'edu.mit.synbio.cytoflow.operations.bleedthrough_linear'
+    id = 'edu.mit.synbio.cytoflowgui.op_plugins.bead_calibrate'
+    operation_id = 'edu.mit.synbio.cytoflow.operations.bead_calibrate'
 
-    short_name = "Linear Compensation"
-    menu_group = "Gates"
+    short_name = "Bead Calibration"
+    menu_group = "Calibration"
     
     def get_operation(self):
-        return BleedthroughLinearPluginOp()
+        return BeadCalibrationPluginOp()
     
     def get_icon(self):
-        return ImageResource('bleedthrough_linear')
+        return ImageResource('bead_calibration')
     
     @contributes_to(OP_PLUGIN_EXT)
     def get_plugin(self):

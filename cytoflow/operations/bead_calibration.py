@@ -149,7 +149,7 @@ class BeadCalibrationOp(HasStrictTraits):
     id = Constant('edu.mit.synbio.cytoflow.operations.beads_calibrate')
     friendly_id = Constant("Bead Calibration")
     
-    name = CStr()
+    name = Constant("Bead Calibration")
     units = Dict(Str, Str)
     
     beads_file = File(transient = True)
@@ -162,9 +162,9 @@ class BeadCalibrationOp(HasStrictTraits):
     beads = Dict(Str, List(Float), transient = True)
 
     #_coefficients = Dict(Str, Python)
-    _calibration_functions = Dict(Str, Python)
-    _peaks = Dict(Str, Python)
-    _mefs = Dict(Str, Python)
+    _calibration_functions = Dict(Str, Python, transient = True)
+    _peaks = Dict(Str, Python, transient = True)
+    _mefs = Dict(Str, Python, transient = True)
 
     def estimate(self, experiment, subset = None): 
         """
