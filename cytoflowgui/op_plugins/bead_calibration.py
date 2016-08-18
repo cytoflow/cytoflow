@@ -61,10 +61,14 @@ class BeadCalibrationHandler(Controller, OpHandlerMixin):
         
     
     def default_traits_view(self):
-        return View(Item('beads_name',
+        return View(VGroup(
+                    Item('beads_name',
                          editor = EnumEditor(name = 'handler.beads_name_choices'),
-                         label = "Beads"),
-                    Item('beads_file'),
+                         label = "Beads",
+                         width = -125),
+                    Item('beads_file',
+                         width = -125)),
+                    VGroup(
                     Item('units_list',
                          editor=TableEditor(
                             columns = 
@@ -82,7 +86,7 @@ class BeadCalibrationHandler(Controller, OpHandlerMixin):
                     Item('add_channel',
                          editor = ButtonEditor(value = True,
                                                label = "Add a channel"),
-                         show_label = False),
+                         show_label = False)),
                     Item('bead_peak_quantile',
                          label = "Bead Peak\nQuantile"),
                     Item('bead_brightness_threshold',
@@ -97,9 +101,12 @@ class BeadCalibrationPluginOp(BeadCalibrationOp, PluginOpMixin):
     handler_factory = Callable(BeadCalibrationHandler)
     add_channel = Event
 
-    beads_name = Str(estimate = True)    
+    beads_name = Str(estimate = True)   
+    beads = Dict(Str, List(Float), estimate = True)
+ 
     beads_file = File(estimate = True)
     units_list = List(_Unit, estimate = True)
+    units = Dict(Str, Str, estimate = True)
 
     bead_peak_quantile = Int(80, estimate = True)
     bead_brightness_threshold = Float(100, estimate = True)
@@ -116,6 +123,9 @@ class BeadCalibrationPluginOp(BeadCalibrationOp, PluginOpMixin):
         return BeadCalibrationPluginView(op = self, **kwargs)
     
     def estimate(self, experiment):
+        if not self.beads_name:
+            raise util.CytoflowOpError("Specify which beads to calibrate with.")
+                
         for i, unit_i in enumerate(self.units_list):
             for j, unit_j in enumerate(self.units_list):
                 if unit_i.channel == unit_j.channel and i != j:
@@ -130,6 +140,12 @@ class BeadCalibrationPluginOp(BeadCalibrationOp, PluginOpMixin):
         
         self.beads = self.BEADS[self.beads_name]
         BeadCalibrationOp.estimate(self, experiment)
+        
+    def clear_estimate(self):
+        self._calibration_functions.clear()
+        self._peaks.clear()
+        self._mefs.clear()
+        self.changed = "estimate"
 
 class BeadCalibrationViewHandler(Controller, ViewHandlerMixin):
     def default_traits_view(self):

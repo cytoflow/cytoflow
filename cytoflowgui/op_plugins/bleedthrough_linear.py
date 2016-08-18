@@ -109,6 +109,9 @@ class BleedthroughLinearPluginOp(BleedthroughLinearOp, PluginOpMixin):
         self.controls = controls
         
         BleedthroughLinearOp.estimate(self, experiment, subset = self.subset)
+        
+    def clear_estimate(self):
+        self.spillover.clear()
 
 class BleedthroughLinearViewHandler(Controller, ViewHandlerMixin):
     def default_traits_view(self):

@@ -80,6 +80,9 @@ class GaussianMixture2DPluginOp(GaussianMixture2DOp, PluginOpMixin):
     
     def default_view(self, **kwargs):
         return GaussianMixture2DPluginView(op = self, **kwargs)
+    
+    def clear_estimate(self):
+        self._gmms.clear()
 
 class GaussianMixture2DViewHandler(Controller, ViewHandlerMixin):
     def default_traits_view(self):

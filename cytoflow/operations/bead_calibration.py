@@ -35,7 +35,7 @@ import cytoflow.views
 import cytoflow.utility as util
 
 from .i_operation import IOperation
-from .import_op import check_tube, parse_tube, Tube, ImportOp
+from .import_op import check_tube, Tube, ImportOp
 
 @provides(IOperation)
 class BeadCalibrationOp(HasStrictTraits):
@@ -152,16 +152,15 @@ class BeadCalibrationOp(HasStrictTraits):
     name = Constant("Bead Calibration")
     units = Dict(Str, Str)
     
-    beads_file = File(transient = True)
+    beads_file = File
     bead_peak_quantile = Int(80)
 
     bead_brightness_threshold = Float(100)
     # TODO - bead_brightness_threshold should probably be different depending
     # on the data range of the input.
     
-    beads = Dict(Str, List(Float), transient = True)
+    beads = Dict(Str, List(Float))
 
-    #_coefficients = Dict(Str, Python)
     _calibration_functions = Dict(Str, Python, transient = True)
     _peaks = Dict(Str, Python, transient = True)
     _mefs = Dict(Str, Python, transient = True)
@@ -172,6 +171,9 @@ class BeadCalibrationOp(HasStrictTraits):
         """
         if not experiment:
             raise util.CytoflowOpError("No experiment specified")
+        
+        if not self.beads_file:
+            raise util.CytoflowOpError("No beads file specified")
 
         if not set(self.units.keys()) <= set(experiment.channels):
             raise util.CytoflowOpError("Specified channels that weren't found in "
@@ -299,7 +301,7 @@ class BeadCalibrationOp(HasStrictTraits):
         channels = self.units.keys()
 
         if not self.units:
-            raise util.CytoflowOpError("Units not specified.")
+            raise util.CytoflowOpError("No channels to calibrate.")
         
         if not self._calibration_functions:
             raise util.CytoflowOpError("Calibration not found. "

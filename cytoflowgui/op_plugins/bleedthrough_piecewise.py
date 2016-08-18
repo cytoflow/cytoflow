@@ -109,6 +109,11 @@ class BleedthroughPiecewisePluginOp(BleedthroughPiecewiseOp, PluginOpMixin):
         self.controls = controls
         
         BleedthroughPiecewiseOp.estimate(self, experiment, subset = self.subset)
+        
+    def clear_estimate(self):
+        self._splines.clear()
+        self._interpolators.clear()
+        self._channels.clear()
 
 class BleedthroughPiecewiseViewHandler(Controller, ViewHandlerMixin):
     def default_traits_view(self):

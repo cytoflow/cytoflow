@@ -159,6 +159,8 @@ class WorkflowItem(HasStrictTraits):
                     self.op_warning = w[-1].message.__str__()
                 else:
                     self.op_warning = ""
+                    
+                self.operation.changed = "api"
                 
             except CytoflowError as e:
                 self.op_error = e.__str__()    
@@ -197,7 +199,7 @@ class WorkflowItem(HasStrictTraits):
         self.result = None
 
         try:
-            self.next.operation.clear_estimate()
+            self.operation.clear_estimate()
         except AttributeError:
             pass        
            

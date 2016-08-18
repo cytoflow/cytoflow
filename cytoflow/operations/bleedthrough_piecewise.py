@@ -127,13 +127,13 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
     num_knots = Int(7)
     mesh_size = Int(32)
 
-    _splines = Dict(Str, Dict(Str, Python))
-    _interpolators = Dict(Str, Python)
+    _splines = Dict(Str, Dict(Str, Python), transient = True)
+    _interpolators = Dict(Str, Python, transient = True)
     
     # because the order of the channels is important, we can't just call
     # _interpolators.keys()
     # TODO - this is ugly and unpythonic.  :-/
-    _channels = List(Str)
+    _channels = List(Str, transient = True)
     
     def estimate(self, experiment, subset = None): 
         """

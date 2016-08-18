@@ -278,14 +278,14 @@ def check_tube(filename, experiment):
                                      meta_data_only = True,
                                      reformat_meta = True)
     except Exception as e:
-        raise util.CytoflowOpError("FCS reader threw an error reading metadata "
+        raise util.CytoflowOpError("FCS reader threw an error reading metadata"
                               " for tube {0}: {1}"
                               .format(filename, str(e)))
     
     # first make sure the tube has the right channels    
     if not set(experiment.channels) <= set(tube_meta["_channel_names_"]):
-        raise util.CytoflowError("Tube {0} doesn't have the same channels "
-                           "as the first tube added".format(filename))
+        raise util.CytoflowError("Tube {0} doesn't have the same channels"
+                                 .format(filename))
      
     tube_channels = tube_meta["_channels_"]
     tube_channels.set_index(experiment.metadata["name_metadata"], 

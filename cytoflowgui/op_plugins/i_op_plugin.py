@@ -63,7 +63,7 @@ class IOperationPlugin(Interface):
         """
 
 class PluginOpMixin(HasTraits):
-    changed = DelayedEvent(delay = 0.1)
+    changed = DelayedEvent(delay = 0.2)
     
     # there are a few pieces of metadata that determine which traits get
     # copied between processes and when.  if a trait has "status = True",
@@ -90,7 +90,6 @@ class PluginOpMixin(HasTraits):
             else:
                 self.changed = "api"
             
-
 shared_op_traits = Group(Item('context.op_warning',
                               label = 'Warning',
                               resizable = True,

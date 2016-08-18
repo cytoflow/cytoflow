@@ -431,6 +431,11 @@ class RemoteWorkflow(HasStrictTraits):
                     for wi in self.workflow[idx:]:
                         wi.reset()
                         self.update_queue.put_nowait((self.workflow.index(wi), wi.update))
+                elif update_type == "estimate":
+                    try:
+                        wi.operation.clear_estimate()
+                    except AttributeError:
+                        pass   
                     
             elif msg == Msg.UPDATE_VIEW:
                 (idx, new_view) = payload
@@ -475,12 +480,12 @@ class RemoteWorkflow(HasStrictTraits):
                 
             elif msg == Msg.ESTIMATE:
                 idx = payload
-                
-                for wi in self.workflow[idx:]:
-                    wi.reset()
-                    if wi == self.workflow[idx]:
-                        self.update_queue.put_nowait((self.workflow.index(wi), wi.estimate))
-                    self.update_queue.put_nowait((self.workflow.index(wi) + 0.1, wi.update))
+                self.update_queue.put_nowait((self.workflow.index(wi), wi.estimate))
+#                 for wi in self.workflow[idx:]:
+#                     wi.reset()
+#                     if wi == self.workflow[idx]:
+#                         self.update_queue.put_nowait((self.workflow.index(wi), wi.estimate))
+#                     self.update_queue.put_nowait((self.workflow.index(wi) + 0.1, wi.update))
                 
             elif msg == Msg.GET_LOG:
                 self.message_q.put((Msg.GET_LOG, guiutil.child_log.getvalue()))
@@ -541,12 +546,20 @@ class RemoteWorkflow(HasStrictTraits):
     def _operation_changed(self, obj, name, new):
         logging.debug("LocalWorkflow._operation_changed :: {}"
                       .format(obj))
-         
+        
+        wi = next((x for x in self.workflow if x.operation == obj))
+        idx = self.workflow.index(wi)      
+           
         if new == "status":
-            wi = next((x for x in self.workflow if x.operation == obj))
-            idx = self.workflow.index(wi)
-      
             self.message_q.put((Msg.UPDATE_OP, (idx, obj, new)))
+        elif new == "estimate":
+            for wi in self.workflow[idx:]:
+                wi.reset()            
+        elif new == "api":
+            for wi in self.workflow[idx:]:
+                wi.reset()
+                #wi.status = "invalid"
+                self.update_queue.put_nowait((self.workflow.index(wi), wi.update))            
             
     @on_trait_change('workflow:views:changed')
     def _view_changed(self, obj, name, new):
