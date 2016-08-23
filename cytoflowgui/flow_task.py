@@ -40,6 +40,7 @@ from cytoflowgui.workflow import LocalWorkflow
 from cytoflowgui.op_plugins import IOperationPlugin, ImportPlugin, OP_PLUGIN_EXT
 from cytoflowgui.view_plugins import IViewPlugin, VIEW_PLUGIN_EXT
 from cytoflowgui.notebook import JupyterNotebookWriter
+from cytoflowgui.workflow_item import WorkflowItem
 import cytoflowgui.util as guiutil
 import mailto
 
@@ -122,32 +123,30 @@ class FlowTask(Task):
     debug = Bool
     
     def activated(self):
-        # add an import plugin
-        import_op = ImportPlugin().get_operation()
+        self.on_new()
         
         # if we're debugging, add a few data bits
         if self.debug:
             from cytoflow import Tube
-                     
+            
+            import_op = self.model.items[0].operation
             import_op.conditions["Dox"] = "float"
             import_op.conditions["Replicate"] = "int"
-        
+         
             tube1 = Tube(file = "../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs",
                          conditions = {"Dox" : 1.0, "Replicate" : 1})
-        
+         
             tube2 = Tube(file = "../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs",
                          conditions = {"Dox" : 10.0, "Replicate" : 1})
-            
+             
             tube3 = Tube(file = "../cytoflow/tests/data/Plate01/CFP_Well_B4.fcs",
                          conditions = {"Dox" : 1.0, "Replicate" : 2})
-        
+         
             tube4 = Tube(file = "../cytoflow/tests/data/Plate01/RFP_Well_A6.fcs",
                          conditions = {"Dox" : 10.0, "Replicate" : 2})
-        
+         
             import_op.tubes = [tube1, tube2, tube3, tube4]
-            
-        self.model.add_operation(import_op)      
-    
+                 
     def prepare_destroy(self):
         self.model = None
     
@@ -168,11 +167,17 @@ class FlowTask(Task):
                              task = self)]
         
     def on_new(self):
-        self.model.workflow = []
+        # clear the workflow
+        self.model.items = []
         
-        # add an import operation
-        import_op = ImportPlugin().get_operation()
-        self.model.add_operation(import_op)       
+        # next, get an operation
+        op = ImportPlugin().get_operation()
+        
+        # make a new workflow item
+        wi = WorkflowItem(op)
+        
+        # put it in the workflow
+        self.workflow.items.insert(0, wi)       
         
     def on_open(self):
         """ Shows a dialog to open a file.
@@ -352,20 +357,43 @@ DEBUG LOG: {1}
     def add_operation(self, op_id):
         # first, find the matching plugin
         plugin = next((x for x in self.op_plugins if x.id == op_id))
-                
-        # add the operation and the operation's default view
-        self.model.add_operation(plugin.get_operation())
+        
+        # next, get an operation
+        op = plugin.get_operation()
+        
+        # make a new workflow item
+        wi = WorkflowItem(op)
+        
+        # figure out where to add it
+        if self.workflow.selected:
+            idx = self.workflow.items.index(self.selected) + 1
+        else:
+            idx = len(self.workflow.items)
+             
+        # the add_remove_items handler takes care of updating the linked list
+        self.workflow.items.insert(idx, wi)
         
     def set_current_view(self, view_id):
         """
         called by the view pane 
         """
+        
+        
 
-        if view_id == "default":
-            self.model.set_current_view(self.model.selected.default_view)
-        else:
-            plugin = next((x for x in self.view_plugins if x.view_id == view_id))
-            self.model.set_current_view(plugin.get_view())
+#         if view_id == "default":
+#             self.model.set_current_view(self.model.selected.default_view)
+#         else:
+#             plugin = next((x for x in self.view_plugins if x.view_id == view_id))
+#             self.model.set_current_view(plugin.get_view())
+        
+#     def set_current_view(self, view):
+#         try:
+#             self.selected.current_view = next((x for x in self.selected.views if x.id == view.id))
+#         except StopIteration:
+#             self.selected.views.append(view)
+#             self.selected.current_view = view
+
+
         
 
         
@@ -379,7 +407,7 @@ class FlowTaskPlugin(Plugin):
     PREFERENCES_PANES = 'envisage.ui.tasks.preferences_panes'
     TASKS             = 'envisage.ui.tasks.tasks'
     
-    # these need to be declared in a Plugin instance; we pass them to h
+    # these need to be declared in a Plugin instance; we pass them to
     # the task instance thru its factory, below.
     op_plugins = ExtensionPoint(List(IOperationPlugin), OP_PLUGIN_EXT)
     view_plugins = ExtensionPoint(List(IViewPlugin), VIEW_PLUGIN_EXT)

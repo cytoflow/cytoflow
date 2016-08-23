@@ -140,11 +140,13 @@ class WorkflowItem(HasStrictTraits):
     icon = Property(depends_on = 'status', transient = True)   
     
     # has the wi status changed?
-    changed = DelayedEvent(delay = 0.1)
+    changed = DelayedEvent(delay = 0.2)
     
     @on_trait_change('+status', post_init=True)
     def _changed(self):
         self.changed = True
+        
+    @on_trait_change('previous.result', post_init = True)
         
     def estimate(self):
         prev_result = self.previous.result if self.previous else None
@@ -152,7 +154,7 @@ class WorkflowItem(HasStrictTraits):
         with warnings.catch_warnings(record = True) as w:
             try:    
                 self.status = "estimating"
-                self.result = self.operation.estimate(prev_result)
+                self.operation.estimate(prev_result)
 
                 self.op_error = ""
                 if w:
@@ -160,7 +162,7 @@ class WorkflowItem(HasStrictTraits):
                 else:
                     self.op_warning = ""
                     
-                self.operation.changed = "api"
+#                 self.operation.changed = "api"
                 
             except CytoflowError as e:
                 self.op_error = e.__str__()    
@@ -192,16 +194,16 @@ class WorkflowItem(HasStrictTraits):
  
         self.status = "valid"
         
-    def reset(self):
-        self.op_warning = ""
-        self.op_error = ""
-        self.status = "invalid"
-        self.result = None
-
-        try:
-            self.operation.clear_estimate()
-        except AttributeError:
-            pass        
+#     def reset(self):
+#         self.op_warning = ""
+#         self.op_error = ""
+#         self.status = "invalid"
+#         self.result = None
+# 
+#         try:
+#             self.operation.clear_estimate()
+#         except AttributeError:
+#             pass        
            
     @cached_property
     def _get_icon(self):
