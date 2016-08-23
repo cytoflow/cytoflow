@@ -26,7 +26,7 @@ Created on Feb 11, 2015
 
 import os.path
 
-from traits.api import Instance, List, Bool, Str, HasStrictTraits
+from traits.api import Instance, List, Bool, on_trait_change
 from pyface.tasks.api import Task, TaskLayout, PaneItem
 from pyface.tasks.action.api import SMenu, SMenuBar, SToolBar, TaskAction
 from pyface.api import FileDialog, OK, ImageResource, AboutDialog, information
@@ -59,7 +59,9 @@ class FlowTask(Task):
     model = Instance(LocalWorkflow, args = ())
         
     # the center pane
-    view = Instance(FlowTaskPane)
+    plot_pane = Instance(FlowTaskPane)
+    workflow_pane = Instance(WorkflowDockPane)
+    view_pane = Instance(ViewDockPane)
     
     # plugin lists, to setup the interface
     op_plugins = List(IOperationPlugin)
@@ -123,7 +125,8 @@ class FlowTask(Task):
     debug = Bool
     
     def activated(self):
-        self.on_new()
+        # add the import op
+        self.add_operation(ImportPlugin().id) 
         
         # if we're debugging, add a few data bits
         if self.debug:
@@ -155,29 +158,26 @@ class FlowTask(Task):
                           right = PaneItem("edu.mit.synbio.view_traits_pane"))
      
     def create_central_pane(self):
-        self.view = FlowTaskPane(model = self.model)
-        return self.view
+        self.plot_pane = FlowTaskPane(model = self.model)
+        return self.plot_pane
      
     def create_dock_panes(self):
-        return [WorkflowDockPane(model = self.model, 
-                                 plugins = self.op_plugins,
-                                 task = self), 
-                ViewDockPane(model = self.model,
-                             plugins = self.view_plugins,
-                             task = self)]
+        self.workflow_pane = WorkflowDockPane(model = self.model, 
+                                              plugins = self.op_plugins,
+                                              task = self)
+        
+        self.view_pane = ViewDockPane(model = self.model,
+                                      plugins = self.view_plugins,
+                                      task = self)
+        
+        return [self.workflow_pane, self.view_pane]
         
     def on_new(self):
         # clear the workflow
         self.model.items = []
         
-        # next, get an operation
-        op = ImportPlugin().get_operation()
-        
-        # make a new workflow item
-        wi = WorkflowItem(op)
-        
-        # put it in the workflow
-        self.workflow.items.insert(0, wi)       
+        # add the import op
+        self.add_operation(ImportPlugin().id)      
         
     def on_open(self):
         """ Shows a dialog to open a file.
@@ -236,7 +236,7 @@ class FlowTask(Task):
                             action = 'save as')
         
         if dialog.open() == OK:
-            self.view.export(dialog.path)
+            self.plot_pane.export(dialog.path)
             
     def on_notebook(self):
         """
@@ -353,6 +353,27 @@ DEBUG LOG: {1}
                              image = ImageResource('cuvette'),
                              additions = text)
         dialog.open()
+        
+    @on_trait_change('model.selected')
+    def _on_select_op(self, selected):
+        if selected:
+            self.view_pane.enabled = (selected.current_view is not None)
+            self.view_pane.selected_view = selected.current_view
+        else:
+            self.view_pane.enabled = False
+            
+    @on_trait_change('view_pane.selected_view')
+    def _on_select_view(self, view_id):
+        
+        # if we already have an instantiated view object, find it
+        try:
+            self.model.selected.current_view = next((x for x in self.model.selected.views if x.id == view_id))
+        except StopIteration:
+            # else make the new view
+            plugin = next((x for x in self.view_plugins if x.view_id == view_id))
+            view = plugin.get_view()
+            self.model.selected.views.append(view)
+            self.model.selected.current_view = view
     
     def add_operation(self, op_id):
         # first, find the matching plugin
@@ -364,6 +385,14 @@ DEBUG LOG: {1}
         # make a new workflow item
         wi = WorkflowItem(op)
         
+        # if the op has a default view, add it to the wi
+        try:
+            default_view = op.default_view()
+            wi.views.append(default_view)
+            wi.current_view = default_view
+        except AttributeError:
+            pass
+        
         # figure out where to add it
         if self.workflow.selected:
             idx = self.workflow.items.index(self.selected) + 1
@@ -373,29 +402,6 @@ DEBUG LOG: {1}
         # the add_remove_items handler takes care of updating the linked list
         self.workflow.items.insert(idx, wi)
         
-    def set_current_view(self, view_id):
-        """
-        called by the view pane 
-        """
-        
-        
-
-#         if view_id == "default":
-#             self.model.set_current_view(self.model.selected.default_view)
-#         else:
-#             plugin = next((x for x in self.view_plugins if x.view_id == view_id))
-#             self.model.set_current_view(plugin.get_view())
-        
-#     def set_current_view(self, view):
-#         try:
-#             self.selected.current_view = next((x for x in self.selected.views if x.id == view.id))
-#         except StopIteration:
-#             self.selected.views.append(view)
-#             self.selected.current_view = view
-
-
-        
-
         
 class FlowTaskPlugin(Plugin):
     """

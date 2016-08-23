@@ -194,45 +194,6 @@ class LocalWorkflow(HasStrictTraits):
             child_log = self.child_log
             self.child_log = ""
         return child_log
-         
-                 
-#     def add_operation(self, operation):
-#         # add the new operation after the selected workflow item or at the end
-#         # of the workflow if no wi is selected
-#         
-#         # make a new workflow item
-#         wi = WorkflowItem(operation = operation,
-#                           deletable = (operation.id != "edu.mit.synbio.cytoflow.operations.import"))
-# 
-#         # they say in Python you should ask for forgiveness instead of permission
-#         try:
-#             wi.default_view = operation.default_view()
-#             wi.views.append(wi.default_view)
-#         except AttributeError:
-#             pass
-# 
-#         if self.items and self.selected:
-#             idx = self.items.index(self.selected) + 1
-#         elif self.items:
-#             idx = len(self.items)
-#         else:
-#             idx = 0
-#             
-#         # the add_remove_items handler takes care of updating the linked list
-#         self.items.insert(idx, wi)
-#  
-#         # select (open) the new workflow item
-#         self.selected = wi
-#         if wi.default_view:
-#             wi.current_view = wi.default_view
-            
-            
-#     def set_current_view(self, view):
-#         try:
-#             self.selected.current_view = next((x for x in self.selected.views if x.id == view.id))
-#         except StopIteration:
-#             self.selected.views.append(view)
-#             self.selected.current_view = view
 
 
     @on_trait_change('workflow')
@@ -502,11 +463,11 @@ class RemoteWorkflow(HasStrictTraits):
             this.parent_conn.send(msg)
             
         
-    @on_trait_change('workflow')
-    def _on_new_workflow(self, obj, name, old, new):     
-        logging.debug("RemoteWorkflow._on_new_workflow :: {}"
-                      .format((obj, name, old, new)))
-               
+#     @on_trait_change('workflow')
+#     def _on_new_workflow(self, obj, name, old, new):     
+#         logging.debug("RemoteWorkflow._on_new_workflow :: {}"
+#                       .format((obj, name, old, new)))
+#                
 #         for wi in self.items:
 #             wi.status = "invalid"
 #             self.update_queue.put_nowait((self.items.index(wi), wi.update))

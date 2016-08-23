@@ -20,7 +20,7 @@ Created on Mar 15, 2015
 @author: brian
 '''
 
-import warnings
+import warnings, logging
 
 from traits.api import HasStrictTraits, Instance, List, DelegatesTo, Enum, \
                        Property, cached_property, on_trait_change, Bool, \
@@ -28,16 +28,19 @@ from traits.api import HasStrictTraits, Instance, List, DelegatesTo, Enum, \
 from traitsui.api import View, Item, Handler
 from pyface.qt import QtGui
 
+import matplotlib.pyplot as plt
+
 import numpy as np
 import pandas as pd
 
 from cytoflow import Experiment
 from cytoflow.operations.i_operation import IOperation
 from cytoflow.views.i_view import IView
-from cytoflow.utility import CytoflowError
+from cytoflow.utility import CytoflowOpError, CytoflowViewError
 
 from cytoflowgui.flow_task_pane import TabListEditor
 from cytoflowgui.util import DelayedEvent
+import cytoflowgui.matplotlib_backend as mpl_backend
 
 class WorkflowItem(HasStrictTraits):
     """        
@@ -146,8 +149,8 @@ class WorkflowItem(HasStrictTraits):
     def _changed(self):
         self.changed = True
         
-    @on_trait_change('previous.result', post_init = True)
-        
+    #@on_trait_change('previous.result', post_init = True)
+    
     def estimate(self):
         prev_result = self.previous.result if self.previous else None
          
@@ -164,7 +167,7 @@ class WorkflowItem(HasStrictTraits):
                     
 #                 self.operation.changed = "api"
                 
-            except CytoflowError as e:
+            except CytoflowOpError as e:
                 self.op_error = e.__str__()    
                 self.status = "invalid"
                 return        
@@ -187,12 +190,58 @@ class WorkflowItem(HasStrictTraits):
                 else:
                     self.op_warning = ""
                 
-            except CytoflowError as e:
+            except CytoflowOpError as e:
                 self.op_error = e.__str__()    
                 self.status = "invalid"
                 return
  
         self.status = "valid"
+        
+    def plot(self):              
+        logging.debug("WorkflowItem.plot :: {}".format((self)))
+             
+        if not self.current_view:
+            plt.clf()
+            plt.show()
+            return
+         
+        self.view_warning = ""
+        self.view_error = ""
+          
+        with warnings.catch_warnings(record = True) as w:
+            try:
+                with self.plot_lock:
+                    mpl_backend.process_events.clear()
+ 
+                    self.current_view.plot_wi(self)
+                 
+                    if self.last_view_plotted and "interactive" in self.last_view_plotted.traits():
+                        self.last_view_plotted.interactive = False
+                      
+                    if "interactive" in self.current_view.traits():
+                        self.current_view.interactive = True
+                        
+                    self.last_view_plotted = self.current_view
+                       
+                    # the remote canvas/pyplot interface of the multiprocess backend
+                    # is NOT interactive.  this call lets us batch together all 
+                    # the plot updates
+                    plt.show()
+                      
+                    mpl_backend.process_events.set()
+                  
+                if w:
+                    self.view_warning = w[-1].message.__str__()
+            except CytoflowViewError as e:
+                self.view_error = e.__str__()   
+                plt.clf()
+                plt.show()
+                
+#             except Exception as e:
+#                 self.view_error = e.__str__()   
+#                 plt.clf()
+#                 plt.show()                
+             
         
 #     def reset(self):
 #         self.op_warning = ""
@@ -242,14 +291,14 @@ class WorkflowItem(HasStrictTraits):
                 
     @on_trait_change('result,current_view')
     def _update_plot_names(self):
-        if self.result and self.current_view and hasattr(self.current_view, 'enum_plots'):
+        if self.result and self.current_view:
             try:
                 plot_names = [x for x in self.current_view.enum_plots(self.result)]
                 if plot_names == [None]:
                     self.current_view_plot_names = []
                 else:
                     self.current_view_plot_names = plot_names
-            except:
+            except AttributeError:
                 self.current_view_plot_names = []
         else:
             self.current_view_plot_names = []
