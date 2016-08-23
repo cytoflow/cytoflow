@@ -357,13 +357,16 @@ DEBUG LOG: {1}
     @on_trait_change('model.selected')
     def _on_select_op(self, selected):
         if selected:
-            self.view_pane.enabled = (selected.current_view is not None)
-            self.view_pane.selected_view = selected.current_view
+            self.view_pane.enabled = (selected is not None)
+            self.view_pane.selected_view = selected.current_view.id if selected.current_view else ""
         else:
             self.view_pane.enabled = False
             
-    @on_trait_change('view_pane.selected_view')
+    @on_trait_change('view_pane.selected_view', post_init = True)
     def _on_select_view(self, view_id):
+        
+        if not view_id:
+            return
         
         # if we already have an instantiated view object, find it
         try:
@@ -374,6 +377,7 @@ DEBUG LOG: {1}
             view = plugin.get_view()
             self.model.selected.views.append(view)
             self.model.selected.current_view = view
+
     
     def add_operation(self, op_id):
         # first, find the matching plugin
@@ -383,7 +387,7 @@ DEBUG LOG: {1}
         op = plugin.get_operation()
         
         # make a new workflow item
-        wi = WorkflowItem(op)
+        wi = WorkflowItem(operation = op)
         
         # if the op has a default view, add it to the wi
         try:
@@ -394,13 +398,13 @@ DEBUG LOG: {1}
             pass
         
         # figure out where to add it
-        if self.workflow.selected:
-            idx = self.workflow.items.index(self.selected) + 1
+        if self.model.selected:
+            idx = self.model.items.index(self.model.selected) + 1
         else:
-            idx = len(self.workflow.items)
+            idx = len(self.model.items)
              
         # the add_remove_items handler takes care of updating the linked list
-        self.workflow.items.insert(idx, wi)
+        self.model.items.insert(idx, wi)
         
         
 class FlowTaskPlugin(Plugin):

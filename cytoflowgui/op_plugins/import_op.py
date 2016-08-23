@@ -33,16 +33,17 @@ from traitsui.api import View, Item, Controller, TextEditor
 from traits.api import Button, Property, cached_property, provides, Callable, \
                        Bool
 from pyface.api import OK as PyfaceOK
-from envisage.api import Plugin
+from envisage.api import Plugin, contributes_to
 
 import cytoflow.utility as util
 from cytoflow import ImportOp
 from cytoflow.operations.i_operation import IOperation
                        
 from cytoflowgui.import_dialog import ExperimentDialog
-from cytoflowgui.op_plugins.i_op_plugin \
-    import IOperationPlugin, OpHandlerMixin, PluginOpMixin, shared_op_traits
+from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
 from cytoflowgui.toggle_button import ToggleButtonEditor
+from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
+
 
 class ImportHandler(Controller, OpHandlerMixin):
     """
@@ -135,5 +136,9 @@ class ImportPlugin(Plugin):
     def get_operation(self):
         return ImportPluginOp()
     
-    def get_default_view(self):
-        None
+    def get_icon(self):
+        return None
+        
+    @contributes_to(OP_PLUGIN_EXT)
+    def get_plugin(self):
+        return self

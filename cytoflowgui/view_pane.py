@@ -58,6 +58,8 @@ class ViewDockPane(TraitsDockPane):
     
     # the default task action
     _default_action = Instance(TaskAction)
+    
+    _window = Instance(QtGui.QMainWindow)
 
     def create_contents(self, parent):
         """ 
@@ -85,7 +87,7 @@ class ViewDockPane(TraitsDockPane):
             self._actions[plugin.view_id] = task_action
             self.toolbar.append(task_action)
             
-        window = QtGui.QMainWindow()
+        self._window = window = QtGui.QMainWindow()
         window.addToolBar(QtCore.Qt.RightToolBarArea, 
                           self.toolbar.create_tool_bar(window))
         
@@ -96,16 +98,17 @@ class ViewDockPane(TraitsDockPane):
         
         window.setParent(parent)
         parent.setWidget(window)
+        window.setEnabled = False
         
         return window
         
     @on_trait_change('enabled', enabled)
     def _enabled_changed(self, enabled):
-        self.window.setEnabled(enabled)
+        self._window.setEnabled(enabled)
         self.ui.control.setEnabled(enabled)
     
     @on_trait_change('default_view_id')
-    def set_default_view(self, _, _, old_view_id, new_view_id):
+    def set_default_view(self, obj, name, old_view_id, new_view_id):
         if old_view_id:
             del self._actions[old_view_id]
             
@@ -121,4 +124,5 @@ class ViewDockPane(TraitsDockPane):
             action.checked = False
 
         # toggle the right button
-        self._actions[view_id].checked = True
+        if view_id:
+            self._actions[view_id].checked = True

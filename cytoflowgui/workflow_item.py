@@ -24,7 +24,7 @@ import warnings, logging
 
 from traits.api import HasStrictTraits, Instance, List, DelegatesTo, Enum, \
                        Property, cached_property, on_trait_change, Bool, \
-                       Str, Dict, Any, CStr, Event
+                       Str, Dict, Any, Event
 from traitsui.api import View, Item, Handler
 from pyface.qt import QtGui
 
@@ -141,22 +141,79 @@ class WorkflowItem(HasStrictTraits):
     
     # the icon for the vertical notebook view.  Qt specific, sadly.
     icon = Property(depends_on = 'status', transient = True)   
+
+           
+    @cached_property
+    def _get_icon(self):
+        if self.status == "valid":
+            return QtGui.QStyle.SP_DialogApplyButton
+        elif self.status == "estimating" or self.status == "applying":
+            return QtGui.QStyle.SP_BrowserReload
+        else: # self.valid == "invalid" or None
+            return QtGui.QStyle.SP_DialogCancelButton
+
+    @cached_property
+    def _get_operation_handler(self):
+        return self.operation.handler_factory(model = self.operation)
+
+    @cached_property
+    def _get_current_view_handler(self):
+        if self.current_view:
+            return self.current_view.handler_factory(model = self.current_view)
+        else:
+            return None
+
     
-    # has the wi status changed?
-    changed = DelayedEvent(delay = 0.2)
+class RemoteWorkflowItem(WorkflowItem):
+
+    # the Event we use to cause the remote process to run one of our 
+    # functions in the main thread
     
-    @on_trait_change('+status', post_init=True)
-    def _changed(self):
-        self.changed = True
+    command = DelayedEvent(delay = 0.2)
         
-    #@on_trait_change('previous.result', post_init = True)
-    
+    @on_trait_change('operation:changed')
+    def _operation_changed(self, new):
+        logging.debug("RemoteWorkflowItem._operation_changed :: {}"
+                      .format((self.name, new)))
+            
+        if new == "api":
+            self.status = "invalid"
+            self.command = "update"
+            
+            
+    @on_trait_change('previous.result')
+    def _prev_result_changed(self):
+        logging.debug("RemoteWorkflowItem._prev_result_changed :: {}"
+                      .format(self.name))
+        
+        self.status = "invalid"
+        self.command = "update"
+                                    
+            
+    @on_trait_change('current_view')
+    def _current_view_changed(self, new):
+        logging.debug("RemoteWorkflow._current_view_changed :: {}"
+                      .format((self.name, new.id)))
+        
+        self.command = "plot"        
+        
+        
+    @on_trait_change('current_view:changed')
+    def _current_view_trait_changed(self, new):
+        logging.debug("RemoteWorkflow._current_view_trait_changed :: {}"
+                      .format((self.name, new)))       
+         
+        if new == "api":
+            self.command = "plot"            
+
+
     def estimate(self):
         prev_result = self.previous.result if self.previous else None
          
         with warnings.catch_warnings(record = True) as w:
             try:    
                 self.status = "estimating"
+                self.result = None
                 self.operation.estimate(prev_result)
 
                 self.op_error = ""
@@ -165,7 +222,6 @@ class WorkflowItem(HasStrictTraits):
                 else:
                     self.op_warning = ""
                     
-#                 self.operation.changed = "api"
                 
             except CytoflowOpError as e:
                 self.op_error = e.__str__()    
@@ -253,26 +309,7 @@ class WorkflowItem(HasStrictTraits):
 #             self.operation.clear_estimate()
 #         except AttributeError:
 #             pass        
-           
-    @cached_property
-    def _get_icon(self):
-        if self.status == "valid":
-            return QtGui.QStyle.SP_DialogApplyButton
-        elif self.status == "estimating" or self.status == "applying":
-            return QtGui.QStyle.SP_BrowserReload
-        else: # self.valid == "invalid" or None
-            return QtGui.QStyle.SP_DialogCancelButton
 
-    @cached_property
-    def _get_operation_handler(self):
-        return self.operation.handler_factory(model = self.operation)
-
-    @cached_property
-    def _get_current_view_handler(self):
-        if self.current_view:
-            return self.current_view.handler_factory(model = self.current_view)
-        else:
-            return None
          
     @on_trait_change('result')
     def _result_changed(self, experiment):

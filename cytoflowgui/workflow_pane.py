@@ -46,6 +46,11 @@ class WorkflowDockPane(TraitsDockPane):
                                       image_size = (32, 32))
                  
         for plugin in self.plugins:
+            
+            # don't include the import plugin
+            if plugin.id == 'edu.mit.synbio.cytoflowgui.op_plugins.import':
+                continue
+            
             task_action = TaskAction(name=plugin.short_name,
                                      on_perform = lambda pid=plugin.id: 
                                                     self.task.add_operation(pid),
