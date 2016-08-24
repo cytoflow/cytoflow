@@ -20,9 +20,8 @@ Created on Mar 15, 2015
 
 @author: brian
 """
-from traits.api import Interface, Str, HasTraits, Event, on_trait_change
+from traits.api import Interface, Str, HasTraits, on_trait_change
 from traitsui.api import Group, Item
-from cytoflowgui.workflow import WorkflowItem
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.util import DelayedEvent
 

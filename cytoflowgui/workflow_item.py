@@ -20,7 +20,7 @@ Created on Mar 15, 2015
 @author: brian
 '''
 
-import warnings, logging
+import warnings, logging, sys
 
 from traits.api import HasStrictTraits, Instance, List, DelegatesTo, Enum, \
                        Property, cached_property, on_trait_change, Bool, \
@@ -41,6 +41,10 @@ from cytoflow.utility import CytoflowOpError, CytoflowViewError
 from cytoflowgui.flow_task_pane import TabListEditor
 from cytoflowgui.util import DelayedEvent
 import cytoflowgui.matplotlib_backend as mpl_backend
+
+# http://stackoverflow.com/questions/1977362/how-to-create-module-wide-variables-in-python
+this = sys.modules[__name__]
+this.last_view_plotted = None
 
 class WorkflowItem(HasStrictTraits):
     """        
@@ -266,26 +270,26 @@ class RemoteWorkflowItem(WorkflowItem):
           
         with warnings.catch_warnings(record = True) as w:
             try:
-                with self.plot_lock:
-                    mpl_backend.process_events.clear()
- 
-                    self.current_view.plot_wi(self)
+                #with self.plot_lock:
+                mpl_backend.process_events.clear()
+
+                self.current_view.plot_wi(self)
+            
+                if this.last_view_plotted and "interactive" in this.last_view_plotted.traits():
+                    this.last_view_plotted.interactive = False
                  
-                    if self.last_view_plotted and "interactive" in self.last_view_plotted.traits():
-                        self.last_view_plotted.interactive = False
-                      
-                    if "interactive" in self.current_view.traits():
-                        self.current_view.interactive = True
-                        
-                    self.last_view_plotted = self.current_view
-                       
-                    # the remote canvas/pyplot interface of the multiprocess backend
-                    # is NOT interactive.  this call lets us batch together all 
-                    # the plot updates
-                    plt.show()
-                      
-                    mpl_backend.process_events.set()
+                if "interactive" in self.current_view.traits():
+                    self.current_view.interactive = True
+                   
+                this.last_view_plotted = self.current_view
                   
+                # the remote canvas/pyplot interface of the multiprocess backend
+                # is NOT interactive.  this call lets us batch together all 
+                # the plot updates
+                plt.show()
+                  
+                mpl_backend.process_events.set()
+                   
                 if w:
                     self.view_warning = w[-1].message.__str__()
             except CytoflowViewError as e:

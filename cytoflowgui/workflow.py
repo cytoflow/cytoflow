@@ -80,14 +80,13 @@ class Msg:
                     
 class LocalWorkflow(HasStrictTraits):
     
-    items = List(WorkflowItem)
+    workflow = List(WorkflowItem)
     selected = Instance(WorkflowItem)
 
     default_scale = util.ScaleEnum
     
     # a view for the entire workflow's list of operations 
-    # (by default, the left panel of the flow task)
-    operations_traits = View(Item('items',
+    operations_traits = View(Item('workflow',
                                   editor = VerticalNotebookEditor(view = 'operation_traits',
                                                                   page_name = '.name',
                                                                   page_description = '.friendly_id',
@@ -100,8 +99,7 @@ class LocalWorkflow(HasStrictTraits):
                                 show_label = False))
 
     # a view showing the selected workflow item's current view
-    # (by default, the right panel of the flow task)
-    selected_view_traits = View(Item('items',
+    selected_view_traits = View(Item('selected',
                                      editor = InstanceEditor(view = 'current_view_traits'),
                                      style = 'custom',
                                      show_label = False),
@@ -150,12 +148,12 @@ class LocalWorkflow(HasStrictTraits):
             
             if msg == Msg.UPDATE_WI:
                 (idx, new_wi) = payload
-                wi = self.items[idx]
+                wi = self.workflow[idx]
                 wi.copy_traits(new_wi, status = True)
                     
             elif msg == Msg.UPDATE_OP:
                 (idx, new_op, update_type) = payload
-                wi = self.items[idx]
+                wi = self.workflow[idx]
                 wi.operation.copy_traits(new_op, 
                                          status = True,
                                          fixed = lambda t: t is not True)
@@ -165,7 +163,7 @@ class LocalWorkflow(HasStrictTraits):
             elif msg == Msg.UPDATE_VIEW:
                 (idx, new_view, update_type) = payload
                 view_id = new_view.id
-                wi = self.items[idx]
+                wi = self.workflow[idx]
                 view = next((x for x in wi.views if x.id == view_id))
                 view.copy_traits(new_view, 
                                  status = True,
@@ -196,20 +194,20 @@ class LocalWorkflow(HasStrictTraits):
         return child_log
 
 
-    @on_trait_change('items')
+    @on_trait_change('workflow')
     def _on_new_workflow(self, obj, name, old, new):
         logging.debug("LocalWorkflow._on_new_workflow")
             
         self.selected = None
 #         
-#         for wi in self.items:
+#         for wi in self.workflow:
 #             wi.status = "invalid"
         
         # send the new workflow to the child process
-        self.message_q.put((Msg.NEW_WORKFLOW, self.items))
+        self.message_q.put((Msg.NEW_WORKFLOW, self.workflow))
         
         
-    @on_trait_change('items_items')
+    @on_trait_change('workflow_items')
     def _on_workflow_add_remove_items(self, event):
         logging.debug("LocalWorkflow._on_workflow_add_remove_items :: {}"
                       .format((event.index, event.removed, event.added)))
@@ -236,12 +234,12 @@ class LocalWorkflow(HasStrictTraits):
         if event.added:
             assert len(event.added) == 1
             if idx > 0:
-                self.items[idx - 1].next = self.items[idx]
-                self.items[idx].previous = self.items[idx - 1]
+                self.workflow[idx - 1].next = self.workflow[idx]
+                self.workflow[idx].previous = self.workflow[idx - 1]
                 
-            if idx < len(self.items) - 1:
-                self.items[idx].next = self.items[idx + 1]
-                self.items[idx + 1].previous = self.items[idx]
+            if idx < len(self.workflow) - 1:
+                self.workflow[idx].next = self.workflow[idx + 1]
+                self.workflow[idx + 1].previous = self.workflow[idx]
                 
             self.message_q.put((Msg.ADD_ITEMS, (idx, event.added[0])))
  
@@ -253,7 +251,7 @@ class LocalWorkflow(HasStrictTraits):
         if new is None:
             idx = -1
         else:
-            idx = self.items.index(new)
+            idx = self.workflow.index(new)
             
         self.message_q.put((Msg.SELECT, idx))
         
@@ -263,8 +261,8 @@ class LocalWorkflow(HasStrictTraits):
                       .format(obj, new))
         
         if new == "api" or new == "estimate":         
-            wi = next((x for x in self.items if x.operation == obj))
-            idx = self.items.index(wi)
+            wi = next((x for x in self.workflow if x.operation == obj))
+            idx = self.workflow.index(wi)
             self.message_q.put((Msg.UPDATE_OP, (idx, obj, new)))
 
     @on_trait_change('workflow:views:changed')
@@ -273,8 +271,8 @@ class LocalWorkflow(HasStrictTraits):
                       .format((obj, name, new)))
         
         if new == "api":
-            wi = next((x for x in self.items if obj in x.views))
-            idx = self.items.index(wi)
+            wi = next((x for x in self.workflow if obj in x.views))
+            idx = self.workflow.index(wi)
             self.message_q.put((Msg.UPDATE_VIEW, (idx, obj, new)))
         
     @on_trait_change('workflow:current_view')
@@ -282,7 +280,7 @@ class LocalWorkflow(HasStrictTraits):
         logging.debug("LocalWorkflow._on_current_view_changed :: {}"
                       .format((obj, name, old, new)))                  
                   
-        idx = self.items.index(obj)
+        idx = self.workflow.index(obj)
         view = obj.current_view
         self.message_q.put((Msg.CHANGE_CURRENT_VIEW, (idx, view)))
 
@@ -291,7 +289,7 @@ class LocalWorkflow(HasStrictTraits):
         logging.debug("LocalWorkflow._on_current_plot_changed :: {}"
                       .format((obj, name, old, new)))                  
                   
-        idx = self.items.index(obj)
+        idx = self.workflow.index(obj)
         plot = obj.current_plot
         self.message_q.put((Msg.CHANGE_CURRENT_PLOT, (idx, plot)))
         
@@ -299,7 +297,7 @@ class LocalWorkflow(HasStrictTraits):
     def _on_estimate(self, obj, name, old, new):
         logging.debug("LocalWorkflow._on_estimate :: {}"
                       .format((obj, name, old, new)))
-        idx = self.items.index(obj)
+        idx = self.workflow.index(obj)
         self.message_q.put((Msg.ESTIMATE, idx))
 
     # MAGIC: called when default_scale is changed
@@ -313,7 +311,7 @@ class LocalWorkflow(HasStrictTraits):
         
 class RemoteWorkflow(HasStrictTraits):
     
-    items = List(RemoteWorkflowItem)
+    workflow = List(RemoteWorkflowItem)
     selected = Instance(RemoteWorkflowItem)
     
     plot_lock = Instance(threading.Lock, ())
@@ -356,28 +354,28 @@ class RemoteWorkflow(HasStrictTraits):
             if msg == Msg.NEW_WORKFLOW:
                 for wi in payload:
                     rwi = RemoteWorkflowItem().copy_traits(wi)
-                    self.items.append(rwi)
+                    self.workflow.append(rwi)
 
             elif msg == Msg.ADD_ITEMS:
                 (idx, new_item) = payload
                 new_remote_item = RemoteWorkflowItem()
                 new_remote_item.copy_traits(new_item)
-                self.items.insert(idx, new_remote_item)
+                self.workflow.insert(idx, new_remote_item)
 
             elif msg == Msg.REMOVE_ITEMS:
                 idx = payload
-                self.items.remove(self.items[idx])
+                self.workflow.remove(self.workflow[idx])
                 
             elif msg == Msg.SELECT:
                 idx = payload
                 if idx == -1:
                     self.selected = None
                 else:
-                    self.selected = self.items[idx]
+                    self.selected = self.workflow[idx]
                 
             elif msg == Msg.UPDATE_OP:
                 (idx, new_op, update_type) = payload
-                wi = self.items[idx]
+                wi = self.workflow[idx]
                 wi.operation.copy_traits(new_op, 
                                          status = lambda t: t is not True,
                                          fixed = lambda t: t is not True)
@@ -387,7 +385,7 @@ class RemoteWorkflow(HasStrictTraits):
             elif msg == Msg.UPDATE_VIEW:
                 (idx, new_view, update_type) = payload
                 view_id = new_view.id
-                wi = self.items[idx]
+                wi = self.workflow[idx]
                 try:
                     view = next((x for x in wi.views if x.id == view_id))
                 except StopIteration:
@@ -402,7 +400,7 @@ class RemoteWorkflow(HasStrictTraits):
 
             elif msg == Msg.CHANGE_CURRENT_VIEW:
                 (idx, view) = payload
-                wi = self.items[idx]
+                wi = self.workflow[idx]
                 try:
                     wi.current_view = next((x for x in wi.views if x.id == view.id))
                 except StopIteration:
@@ -411,7 +409,7 @@ class RemoteWorkflow(HasStrictTraits):
                     
             elif msg == Msg.CHANGE_CURRENT_PLOT:
                 (idx, plot) = payload
-                wi = self.items[idx]
+                wi = self.workflow[idx]
                 wi.current_plot = plot
                 
                 self.exec_q.put_nowait((0, wi.plot))
@@ -422,7 +420,7 @@ class RemoteWorkflow(HasStrictTraits):
                 
             elif msg == Msg.ESTIMATE:
                 idx = payload
-                wi = self.items[idx]
+                wi = self.workflow[idx]
                 
                 this.exec_q.put_nowait((idx - 0.1, wi.estimate))
                 
@@ -460,12 +458,12 @@ class RemoteWorkflow(HasStrictTraits):
         if event.added:
             assert len(event.added) == 1
             if idx > 0:
-                self.items[idx - 1].next = self.items[idx]
-                self.items[idx].previous = self.items[idx - 1]
+                self.workflow[idx - 1].next = self.workflow[idx]
+                self.workflow[idx].previous = self.workflow[idx - 1]
                 
-            if idx < len(self.items) - 1:
-                self.items[idx].next = self.items[idx + 1]
-                self.items[idx + 1].previous = self.items[idx]
+            if idx < len(self.workflow) - 1:
+                self.workflow[idx].next = self.workflow[idx + 1]
+                self.workflow[idx + 1].previous = self.workflow[idx]
                 
                 
     @on_trait_change('workflow:views:changed')
@@ -473,8 +471,8 @@ class RemoteWorkflow(HasStrictTraits):
         logging.debug("RemoteWorkflow._view_changed :: {}"
                       .format((obj, name, new)))
 
-        wi = next((x for x in self.items if obj in x.views))
-        idx = self.items.index(wi)
+        wi = next((x for x in self.workflow if obj in x.views))
+        idx = self.workflow.index(wi)
         
         if new == "status":
             self.message_q.put((Msg.UPDATE_VIEW, (idx, obj)))
@@ -485,8 +483,8 @@ class RemoteWorkflow(HasStrictTraits):
         logging.debug("LocalWorkflow._operation_changed :: {}"
                       .format(obj))
         
-        wi = next((x for x in self.items if x.operation == obj))
-        idx = self.items.index(wi)      
+        wi = next((x for x in self.workflow if x.operation == obj))
+        idx = self.workflow.index(wi)      
             
         if new == "status":
             self.message_q.put((Msg.UPDATE_OP, (idx, obj, new)))
@@ -497,7 +495,7 @@ class RemoteWorkflow(HasStrictTraits):
         logging.debug("RemoteWorkflow._workflow_status_changed :: {}"
                       .format((obj, name, old, new)))
             
-        idx = self.items.index(obj)            
+        idx = self.workflow.index(obj)            
         self.message_q.put((Msg.UPDATE_WI, (idx, obj)))
             
     @on_trait_change('workflow:command')
@@ -505,7 +503,7 @@ class RemoteWorkflow(HasStrictTraits):
         logging.debug("RemoteWorkflow._workflow_command :: {}"
                       .format((obj, name, cmd)))
         
-        idx = self.items.index(obj)            
+        idx = self.workflow.index(obj)            
 
         if cmd == "update":
             self.exec_q.put_nowait((idx, obj.update))

@@ -34,7 +34,7 @@ from preferences import CytoflowPreferences
 def gui_notification_handler(obj, name, old, new):
     (exc_type, exc_value, tb) = sys.exc_info()
     error(None, "An exception has occurred.  Please report a problem from the Help menu!\n\n" +
-                ''.join(format_exception(exc_type, exc_value, tb, 0)))
+                ''.join(format_exception(exc_type, exc_value, tb, 3)))
     
 
 class CytoflowApplication(TasksApplication):

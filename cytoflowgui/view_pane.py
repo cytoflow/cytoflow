@@ -23,8 +23,6 @@ from pyface.api import ImageResource
 from pyface.qt import QtGui, QtCore
 
 from cytoflowgui.view_plugins import IViewPlugin
-from cytoflowgui.workflow import WorkflowItem
-from cytoflowgui.workflow import LocalWorkflow
 
 class ViewDockPane(TraitsDockPane):
     """
@@ -44,7 +42,7 @@ class ViewDockPane(TraitsDockPane):
     view_plugins = List(IViewPlugin)
     
     # changed depending on whether the selected wi in the model is valid.
-    enabled = Bool(True)
+    enabled = Bool(False)
     
     # the currently selected view id
     selected_view = Str
@@ -98,7 +96,7 @@ class ViewDockPane(TraitsDockPane):
         
         window.setParent(parent)
         parent.setWidget(window)
-        window.setEnabled = False
+        window.setEnabled(False)
         
         return window
         

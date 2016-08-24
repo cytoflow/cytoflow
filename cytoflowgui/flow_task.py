@@ -127,12 +127,13 @@ class FlowTask(Task):
     def activated(self):
         # add the import op
         self.add_operation(ImportPlugin().id) 
+        self.model.selected = self.model.workflow[0]
         
         # if we're debugging, add a few data bits
         if self.debug:
             from cytoflow import Tube
             
-            import_op = self.model.items[0].operation
+            import_op = self.model.workflow[0].operation
             import_op.conditions["Dox"] = "float"
             import_op.conditions["Replicate"] = "int"
          
@@ -150,8 +151,8 @@ class FlowTask(Task):
          
             import_op.tubes = [tube1, tube2, tube3, tube4]
                  
-    def prepare_destroy(self):
-        self.model = None
+#     def prepare_destroy(self):
+#         self.model = None
     
     def _default_layout_default(self):
         return TaskLayout(left = PaneItem("edu.mit.synbio.workflow_pane"),
@@ -174,10 +175,14 @@ class FlowTask(Task):
         
     def on_new(self):
         # clear the workflow
-        self.model.items = []
+        self.model.workflow = []
         
         # add the import op
-        self.add_operation(ImportPlugin().id)      
+        self.add_operation(ImportPlugin().id) 
+        
+        # and select the operation
+        self.model.selected = self.model.workflow[0]
+     
         
     def on_open(self):
         """ Shows a dialog to open a file.
@@ -250,7 +255,7 @@ class FlowTask(Task):
                             wildcard = '*.ipynb')
         if dialog.open() == OK:
             writer = JupyterNotebookWriter(file = dialog.path)
-            writer.export(self.workflow)
+            writer.export(self.model.workflow)
    
     
     def on_prefs(self):
@@ -399,12 +404,12 @@ DEBUG LOG: {1}
         
         # figure out where to add it
         if self.model.selected:
-            idx = self.model.items.index(self.model.selected) + 1
+            idx = self.model.workflow.index(self.model.selected) + 1
         else:
-            idx = len(self.model.items)
+            idx = len(self.model.workflow)
              
         # the add_remove_items handler takes care of updating the linked list
-        self.model.items.insert(idx, wi)
+        self.model.workflow.insert(idx, wi)
         
         
 class FlowTaskPlugin(Plugin):

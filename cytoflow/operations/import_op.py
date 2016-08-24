@@ -223,21 +223,19 @@ class ImportOp(HasStrictTraits):
         meta_channels.set_index(experiment.metadata["name_metadata"], 
                                 inplace = True)
         
-        if not self.channels:
-            self.channels = list(tube0_meta["_channel_names_"])
-            
-#             list(meta_channels.index.format())
-        
+        channels = self.channels if self.channels \
+                   else list(tube0_meta["_channel_names_"])
+
         # make sure everything in self.channels is in the tube channels
         
-        for channel in self.channels:
+        for channel in channels:
             if channel not in meta_channels.index:
                 raise util.CytoflowOpError("Channel {0} not in tube {1}"
                                            .format(channel, self.tubes[0].file))                         
         
         # now that we have the metadata, load it into experiment
 
-        for channel in self.channels:
+        for channel in channels:
             experiment.add_channel(channel)
             
             # keep track of the channel's PMT voltage
@@ -263,7 +261,7 @@ class ImportOp(HasStrictTraits):
                                   .format(len(tube_data), tube.file),
                                   util.CytoflowWarning)
 
-            experiment.add_events(tube_data[self.channels], tube.conditions)
+            experiment.add_events(tube_data[channels], tube.conditions)
             
         return experiment
 
