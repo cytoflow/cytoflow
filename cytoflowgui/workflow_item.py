@@ -166,49 +166,36 @@ class WorkflowItem(HasStrictTraits):
             return self.current_view.handler_factory(model = self.current_view)
         else:
             return None
-
-    
-class RemoteWorkflowItem(WorkflowItem):
-
-    # the Event we use to cause the remote process to run one of our 
-    # functions in the main thread
-    
-    command = DelayedEvent(delay = 0.2)
         
-    @on_trait_change('operation:changed')
-    def _operation_changed(self, new):
-        logging.debug("RemoteWorkflowItem._operation_changed :: {}"
-                      .format((self.name, new)))
+    @on_trait_change('result', post_init = True)
+    def _result_changed(self, experiment):
+        """Update channels and conditions"""
+  
+        if experiment:
+            self.channels = list(np.sort(experiment.channels))
+            self.conditions = experiment.conditions.keys()
             
-        if new == "api":
-            self.status = "invalid"
-            self.command = "update"
+            self.conditions_types = experiment.conditions
             
-            
-    @on_trait_change('previous.result')
-    def _prev_result_changed(self):
-        logging.debug("RemoteWorkflowItem._prev_result_changed :: {}"
-                      .format(self.name))
-        
-        self.status = "invalid"
-        self.command = "update"
-                                    
-            
-    @on_trait_change('current_view')
-    def _current_view_changed(self, new):
-        logging.debug("RemoteWorkflow._current_view_changed :: {}"
-                      .format((self.name, new.id)))
-        
-        self.command = "plot"        
-        
-        
-    @on_trait_change('current_view:changed')
-    def _current_view_trait_changed(self, new):
-        logging.debug("RemoteWorkflow._current_view_trait_changed :: {}"
-                      .format((self.name, new)))       
-         
-        if new == "api":
-            self.command = "plot"            
+            for condition in self.conditions_types.keys():
+                el = np.sort(pd.unique(experiment[condition]))
+                el = el[pd.notnull(el)]
+                self.conditions_values[condition] = list(el)
+                
+                
+    @on_trait_change('result,current_view', post_init = True)
+    def _update_plot_names(self):
+        if self.result and self.current_view:
+            try:
+                plot_names = [x for x in self.current_view.enum_plots(self.result)]
+                if plot_names == [None]:
+                    self.current_view_plot_names = []
+                else:
+                    self.current_view_plot_names = plot_names
+            except AttributeError:
+                self.current_view_plot_names = []
+        else:
+            self.current_view_plot_names = []         
 
 
     def estimate(self):
@@ -231,6 +218,7 @@ class RemoteWorkflowItem(WorkflowItem):
                 self.op_error = e.__str__()    
                 self.status = "invalid"
                 return        
+            
             
     def update(self):
         """
@@ -256,6 +244,7 @@ class RemoteWorkflowItem(WorkflowItem):
                 return
  
         self.status = "valid"
+        
         
     def plot(self):              
         logging.debug("WorkflowItem.plot :: {}".format((self)))
@@ -295,52 +284,49 @@ class RemoteWorkflowItem(WorkflowItem):
             except CytoflowViewError as e:
                 self.view_error = e.__str__()   
                 plt.clf()
-                plt.show()
-                
-#             except Exception as e:
-#                 self.view_error = e.__str__()   
-#                 plt.clf()
-#                 plt.show()                
-             
-        
-#     def reset(self):
-#         self.op_warning = ""
-#         self.op_error = ""
-#         self.status = "invalid"
-#         self.result = None
-# 
-#         try:
-#             self.operation.clear_estimate()
-#         except AttributeError:
-#             pass        
+                plt.show()     
 
+
+    
+class RemoteWorkflowItem(WorkflowItem):
+
+    # the Event we use to cause the remote process to run one of our 
+    # functions in the main thread
+    
+    command = DelayedEvent(delay = 0.2)
+        
+    @on_trait_change('operation:changed', post_init = True)
+    def _operation_changed(self, new):
+        logging.debug("RemoteWorkflowItem._operation_changed :: {}"
+                      .format((self.name, new)))
+            
+        if new == "api":
+            self.status = "invalid"
+            self.command = "update"
+            
+            
+    @on_trait_change('previous.result', post_init = True)
+    def _prev_result_changed(self):
+        logging.debug("RemoteWorkflowItem._prev_result_changed :: {}"
+                      .format(self.name))
+        
+        self.status = "invalid"
+        self.command = "update"
+                                    
+            
+    @on_trait_change('current_view', post_init = True)
+    def _current_view_changed(self, new):
+        logging.debug("RemoteWorkflow._current_view_changed :: {}"
+                      .format((self.name, new.id)))
+        
+        self.command = "plot"        
+        
+        
+    @on_trait_change('current_view:changed', post_init = True)
+    def _current_view_trait_changed(self, new):
+        logging.debug("RemoteWorkflow._current_view_trait_changed :: {}"
+                      .format((self.name, new)))       
          
-    @on_trait_change('result')
-    def _result_changed(self, experiment):
-        """Update channels and conditions"""
-  
-        if experiment:
-            self.channels = list(np.sort(experiment.channels))
-            self.conditions = experiment.conditions.keys()
-            
-            self.conditions_types = experiment.conditions
-            
-            for condition in self.conditions_types.keys():
-                el = np.sort(pd.unique(experiment[condition]))
-                el = el[pd.notnull(el)]
-                self.conditions_values[condition] = list(el)
-                
-    @on_trait_change('result,current_view')
-    def _update_plot_names(self):
-        if self.result and self.current_view:
-            try:
-                plot_names = [x for x in self.current_view.enum_plots(self.result)]
-                if plot_names == [None]:
-                    self.current_view_plot_names = []
-                else:
-                    self.current_view_plot_names = plot_names
-            except AttributeError:
-                self.current_view_plot_names = []
-        else:
-            self.current_view_plot_names = []
+        if new == "api":
+            self.command = "plot"   
                     

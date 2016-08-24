@@ -21,20 +21,34 @@ Created on Mar 15, 2015
 @author: brian
 '''
 
-import sys
-from traceback import format_exception
+import sys, threading, logging, multiprocessing
+
+from traceback import format_exception_only, format_tb
 
 from envisage.ui.tasks.api import TasksApplication
 from pyface.api import error
 from pyface.tasks.api import TaskWindowLayout
-from traits.api import Bool, Instance, List, Property, push_exception_handler
+from traits.api import Bool, Instance, List, Property, push_exception_handler, Str
 
 from preferences import CytoflowPreferences
 
-def gui_notification_handler(obj, name, old, new):
+from StringIO import StringIO
+
+# pipe connections for communicating between processes
+# http://stackoverflow.com/questions/1977362/how-to-create-module-wide-variables-in-python
+this = sys.modules[__name__]
+this.parent_conn = None
+this.child_conn = None
+
+def gui_notification_handler(obj, trait_name, old_value, new_value, app):
+    
     (exc_type, exc_value, tb) = sys.exc_info()
-    error(None, "An exception has occurred.  Please report a problem from the Help menu!\n\n" +
-                ''.join(format_exception(exc_type, exc_value, tb, 3)))
+    err_string = format_exception_only(exc_type, exc_value)[0]
+    err_loc = format_tb(tb)[-1]
+    err_ctx = threading.current_thread().name
+    
+    app.application_error = "Error: {0}\nLocation: {1}\nThread: {2}" \
+                            .format(err_string, err_loc, err_ctx)
     
 
 class CytoflowApplication(TasksApplication):
@@ -56,15 +70,43 @@ class CytoflowApplication(TasksApplication):
     # applicaton is started.
     always_use_default_layout = Property(Bool)
     
+    application_error = Str
+    
+    application_log = Instance(StringIO, ())
+        
     def run(self):
+        ## set up the root logger
+        logger = logging.getLogger()
+        logger.setLevel(logging.DEBUG)
+        
+        # set the multiprocessing logger to propogate messages
+        multiprocessing.get_logger().propagate = True
+
+        ## send the log to STDERR
+        console_handler = logging.StreamHandler()
+        console_handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s:%(name)s:%(message)s"))
+        logger.addHandler(console_handler)
+        
+        ## capture the local log
+        mem_handler = logging.StreamHandler(self.application_log)
+        mem_handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s:%(name)s:%(message)s"))
+        logger.addHandler(mem_handler)
+        
         # install a global (gui) error handler for traits notifications
-        push_exception_handler(handler = gui_notification_handler,
+        push_exception_handler(handler = lambda obj, trait, old, new, app = self: \
+                                            gui_notification_handler(obj, trait, old, new, app),
                                reraise_exceptions = True, 
                                main = True)
         
+        # must redirect to the gui thread
+        self.on_trait_change(self.show_error, 'application_error', dispatch = 'ui')
+        
         # run the GUI
         super(CytoflowApplication, self).run()
-    
+        
+    def show_error(self, error_string):
+        error(None, "An exception has occurred.  Please report a problem from the Help menu!\n\n" 
+                    + error_string)
 
     #### 'AttractorsApplication' interface ####################################
 

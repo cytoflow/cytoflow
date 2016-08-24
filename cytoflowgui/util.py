@@ -31,9 +31,9 @@ import scipy.stats
 import cytoflow.utility as util
 
 # http://stackoverflow.com/questions/1977362/how-to-create-module-wide-variables-in-python
-this = sys.modules[__name__]
-this.parent_log = None
-this.child_log = None
+# this = sys.modules[__name__]
+# this.parent_log = None
+# this.child_log = None
 
 class UniquePriorityQueue(PriorityQueue):
     """

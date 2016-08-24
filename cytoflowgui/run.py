@@ -52,7 +52,6 @@ from view_plugins import HistogramPlugin, Histogram2DPlugin, ScatterplotPlugin, 
 
 import cytoflowgui.matplotlib_backend as mpl_backend
 import cytoflowgui.workflow as workflow
-
 import cytoflowgui.util as util
 
 # from https://github.com/pyinstaller/pyinstaller/wiki/Recipe-Multiprocessing
@@ -92,12 +91,6 @@ if sys.platform.startswith('win'):
     forking.Popen = _Popen
                          
 def run_gui():
-    logging.basicConfig(level=logging.DEBUG)
-    util.parent_log = StringIO.StringIO()
-    log_handler = logging.StreamHandler(util.parent_log)
-    log_handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s:%(name)s:%(message)s"))
-    logging.getLogger().addHandler(log_handler)
-
     # if we're frozen, add _MEIPASS to the pyface search path for icons etc
     if getattr(sys, 'frozen', False):
         from pyface.resource_manager import resource_manager
@@ -144,12 +137,6 @@ def run_gui():
     
 def remote_main(workflow_parent_conn, mpl_parent_conn):
     
-    logging.basicConfig(level=logging.DEBUG)
-    util.child_log = StringIO.StringIO()
-    log_handler = logging.StreamHandler(util.child_log)
-    log_handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s:%(name)s:%(message)s"))
-    logging.getLogger().addHandler(log_handler)
-    
     # connect the remote pipes
     workflow.parent_conn = workflow_parent_conn
     mpl_backend.parent_conn = mpl_parent_conn
@@ -183,6 +170,7 @@ if __name__ == '__main__':
     # connect the local pipes
     workflow.child_conn = workflow_child_conn       
     mpl_backend.child_conn = mpl_child_conn   
+    
 
     # start the child process
     remote_process = multiprocessing.Process(target = remote_main,

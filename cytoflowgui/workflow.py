@@ -42,7 +42,7 @@ the plots are ferried back to the GUI, see the module docstring for
 matplotlib_backend.py
 """
 
-import threading, sys, logging, Queue
+import threading, sys, multiprocessing, Queue
 
 from traits.api import HasStrictTraits, Instance, List, on_trait_change, Str
                        
@@ -62,6 +62,8 @@ import cytoflowgui.util as guiutil
 this = sys.modules[__name__]
 this.parent_conn = None
 this.child_conn = None
+
+logger = multiprocessing.get_logger()
 
 class Msg:
     NEW_WORKFLOW = "NEW_WORKFLOW"
@@ -144,7 +146,7 @@ class LocalWorkflow(HasStrictTraits):
             except EOFError:
                 return
             
-            logging.debug("LocalWorkflow.recv_main :: {}".format(msg))
+            logger.debug("LocalWorkflow.recv_main :: {}".format(msg))
             
             if msg == Msg.UPDATE_WI:
                 (idx, new_wi) = payload
@@ -196,7 +198,7 @@ class LocalWorkflow(HasStrictTraits):
 
     @on_trait_change('workflow')
     def _on_new_workflow(self, obj, name, old, new):
-        logging.debug("LocalWorkflow._on_new_workflow")
+        logger.debug("LocalWorkflow._on_new_workflow")
             
         self.selected = None
 #         
@@ -209,7 +211,7 @@ class LocalWorkflow(HasStrictTraits):
         
     @on_trait_change('workflow_items')
     def _on_workflow_add_remove_items(self, event):
-        logging.debug("LocalWorkflow._on_workflow_add_remove_items :: {}"
+        logger.debug("LocalWorkflow._on_workflow_add_remove_items :: {}"
                       .format((event.index, event.removed, event.added)))
 
         idx = event.index
@@ -245,7 +247,7 @@ class LocalWorkflow(HasStrictTraits):
  
     @on_trait_change('selected')
     def _on_selected_changed(self, obj, name, old, new):
-        logging.debug("LocalWorkflow._on_selected_changed :: {}"
+        logger.debug("LocalWorkflow._on_selected_changed :: {}"
                       .format((obj, name, old, new)))
             
         if new is None:
@@ -257,7 +259,7 @@ class LocalWorkflow(HasStrictTraits):
         
     @on_trait_change('workflow:operation:changed')
     def _operation_changed(self, obj, name, new):
-        logging.debug("LocalWorkflow._operation_changed :: {}"
+        logger.debug("LocalWorkflow._operation_changed :: {}"
                       .format(obj, new))
         
         if new == "api" or new == "estimate":         
@@ -267,7 +269,7 @@ class LocalWorkflow(HasStrictTraits):
 
     @on_trait_change('workflow:views:changed')
     def _view_changed(self, obj, name, new):
-        logging.debug("LocalWorkflow._view_changed :: {}"
+        logger.debug("LocalWorkflow._view_changed :: {}"
                       .format((obj, name, new)))
         
         if new == "api":
@@ -277,7 +279,7 @@ class LocalWorkflow(HasStrictTraits):
         
     @on_trait_change('workflow:current_view')
     def _on_current_view_changed(self, obj, name, old, new):
-        logging.debug("LocalWorkflow._on_current_view_changed :: {}"
+        logger.debug("LocalWorkflow._on_current_view_changed :: {}"
                       .format((obj, name, old, new)))                  
                   
         idx = self.workflow.index(obj)
@@ -286,7 +288,7 @@ class LocalWorkflow(HasStrictTraits):
 
     @on_trait_change('workflow:current_plot')
     def _on_current_plot_changed(self, obj, name, old, new):
-        logging.debug("LocalWorkflow._on_current_plot_changed :: {}"
+        logger.debug("LocalWorkflow._on_current_plot_changed :: {}"
                       .format((obj, name, old, new)))                  
                   
         idx = self.workflow.index(obj)
@@ -295,14 +297,14 @@ class LocalWorkflow(HasStrictTraits):
         
     @on_trait_change('workflow:do_estimate')
     def _on_estimate(self, obj, name, old, new):
-        logging.debug("LocalWorkflow._on_estimate :: {}"
+        logger.debug("LocalWorkflow._on_estimate :: {}"
                       .format((obj, name, old, new)))
         idx = self.workflow.index(obj)
         self.message_q.put((Msg.ESTIMATE, idx))
 
     # MAGIC: called when default_scale is changed
     def _default_scale_changed(self, new_scale):
-        logging.debug("LocalWorkflow._default_scale_changed :: {}"
+        logger.debug("LocalWorkflow._default_scale_changed :: {}"
                       .format((new_scale)))
             
         cytoflow.set_default_scale(new_scale)
@@ -349,7 +351,7 @@ class RemoteWorkflow(HasStrictTraits):
             except EOFError:
                 return
             
-            logging.debug("RemoteWorkflow.recv_main :: {}".format(msg))
+            logger.debug("RemoteWorkflow.recv_main :: {}".format(msg))
             
             if msg == Msg.NEW_WORKFLOW:
                 for wi in payload:
@@ -389,7 +391,7 @@ class RemoteWorkflow(HasStrictTraits):
                 try:
                     view = next((x for x in wi.views if x.id == view_id))
                 except StopIteration:
-                    logging.warn("RemoteWorkflow: Couldn't find view {}".format(view_id))
+                    logger.warn("RemoteWorkflow: Couldn't find view {}".format(view_id))
                     continue
                 
                 view.copy_traits(new_view, 
@@ -439,7 +441,7 @@ class RemoteWorkflow(HasStrictTraits):
             
     @on_trait_change('workflow_items')
     def _on_workflow_add_remove_items(self, event):
-        logging.debug("RemoteWorkflow._on_workflow_add_remove_items :: {}"
+        logger.debug("RemoteWorkflow._on_workflow_add_remove_items :: {}"
                       .format((event.index, event.removed, event.added)))
             
         idx = event.index
@@ -468,7 +470,7 @@ class RemoteWorkflow(HasStrictTraits):
                 
     @on_trait_change('workflow:views:changed')
     def _view_trait_changed(self, obj, name, new):
-        logging.debug("RemoteWorkflow._view_changed :: {}"
+        logger.debug("RemoteWorkflow._view_changed :: {}"
                       .format((obj, name, new)))
 
         wi = next((x for x in self.workflow if obj in x.views))
@@ -480,7 +482,7 @@ class RemoteWorkflow(HasStrictTraits):
             
     @on_trait_change('workflow:operation:changed')
     def _operation_changed(self, obj, name, new):
-        logging.debug("LocalWorkflow._operation_changed :: {}"
+        logger.debug("LocalWorkflow._operation_changed :: {}"
                       .format(obj))
         
         wi = next((x for x in self.workflow if x.operation == obj))
@@ -492,7 +494,7 @@ class RemoteWorkflow(HasStrictTraits):
 
     @on_trait_change('workflow:+status')
     def _workflow_item_changed(self, obj, name, old, new):
-        logging.debug("RemoteWorkflow._workflow_status_changed :: {}"
+        logger.debug("RemoteWorkflow._workflow_status_changed :: {}"
                       .format((obj, name, old, new)))
             
         idx = self.workflow.index(obj)            
@@ -500,7 +502,7 @@ class RemoteWorkflow(HasStrictTraits):
             
     @on_trait_change('workflow:command')
     def _workflow_command(self, obj, name, cmd):
-        logging.debug("RemoteWorkflow._workflow_command :: {}"
+        logger.debug("RemoteWorkflow._workflow_command :: {}"
                       .format((obj, name, cmd)))
         
         idx = self.workflow.index(obj)            
