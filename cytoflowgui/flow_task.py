@@ -36,7 +36,7 @@ from envisage.ui.tasks.api import TaskFactory
 from cytoflowgui.flow_task_pane import FlowTaskPane
 from cytoflowgui.workflow_pane import WorkflowDockPane
 from cytoflowgui.view_pane import ViewDockPane
-from cytoflowgui.workflow import LocalWorkflow
+from cytoflowgui.workflow import Workflow
 from cytoflowgui.op_plugins import IOperationPlugin, ImportPlugin, OP_PLUGIN_EXT
 from cytoflowgui.view_plugins import IViewPlugin, VIEW_PLUGIN_EXT
 from cytoflowgui.notebook import JupyterNotebookWriter
@@ -56,7 +56,7 @@ class FlowTask(Task):
     
     # the main workflow instance.
     # THIS IS WHERE IT'S INSTANTIATED (note the args=() )
-    model = Instance(LocalWorkflow, args = ())
+    model = Instance(Workflow, args = ())
         
     # the center pane
     plot_pane = Instance(FlowTaskPane)

@@ -42,11 +42,13 @@ the plots are ferried back to the GUI, see the module docstring for
 matplotlib_backend.py
 """
 
-import threading, sys, Queue, logging
+import threading, sys, Queue, logging, multiprocessing
 
 from traits.api import HasStrictTraits, Instance, List, on_trait_change, Str
                        
 from traitsui.api import View, Item, InstanceEditor, Spring, Label
+
+import matplotlib.pyplot as plt
 
 import cytoflow
 import cytoflow.utility as util
@@ -59,9 +61,9 @@ import cytoflowgui.util as guiutil
 
 # pipe connections for communicating between processes
 # http://stackoverflow.com/questions/1977362/how-to-create-module-wide-variables-in-python
-this = sys.modules[__name__]
-this.parent_conn = None
-this.child_conn = None
+#this = sys.modules[__name__]
+#this.parent_conn = None
+#this.child_conn = None
 
 class Msg:
     NEW_WORKFLOW = "NEW_WORKFLOW"
@@ -77,7 +79,7 @@ class Msg:
     ESTIMATE = "ESTIMATE"
 
                     
-class LocalWorkflow(HasStrictTraits):
+class Workflow(HasStrictTraits):
     
     workflow = List(WorkflowItem)
     selected = Instance(WorkflowItem)
@@ -118,28 +120,47 @@ class LocalWorkflow(HasStrictTraits):
     message_q = Instance(Queue.Queue, ())
     
     # the child log
-    child_log = Str
-    child_log_cond = Instance(threading.Condition, ())
+#     child_log = Str
+#     child_log_cond = Instance(threading.Condition, ())
     
     def __init__(self, **kwargs):
-        super(LocalWorkflow, self).__init__(**kwargs)         
+        super(Workflow, self).__init__(**kwargs)  
+        
+        # communications channels
+        parent_workflow_conn, child_workflow_conn = multiprocessing.Pipe()  
+        parent_mpl_conn, child_mpl_conn = multiprocessing.Pipe()
+        
+             
         self.recv_thread = threading.Thread(target = self.recv_main, 
                                             name = "local workflow recv",
-                                            args = ())
+                                            args = [child_workflow_conn])
         self.recv_thread.daemon = True
         self.recv_thread.start()
         
         self.send_thread = threading.Thread(target = self.send_main,
                                             name = "local workflow send",
-                                            args = ())
+                                            args = [child_workflow_conn])
         self.send_thread.daemon = True
         self.send_thread.start()
+        
+        remote_workflow = RemoteWorkflow()
+        
+        remote_process = multiprocessing.Process(target = remote_workflow.run,
+                                                 name = "remote",
+                                                 args = [parent_workflow_conn,
+                                                         parent_mpl_conn])
+        remote_process.daemon = True
+        remote_process.start()    
+        
+# 
+#         mpl_parent_conn, mpl_child_conn = multiprocessing.Pipe()
+#         log_q = multiprocessing.Queue()
+ 
 
-
-    def recv_main(self):
-        while this.child_conn.poll(None):
+    def recv_main(self, child_conn):
+        while child_conn.poll(None):
             try:
-                (msg, payload) = this.child_conn.recv()
+                (msg, payload) = child_conn.recv()
             except EOFError:
                 return
             
@@ -174,10 +195,10 @@ class LocalWorkflow(HasStrictTraits):
                 raise RuntimeError("Bad message from remote")
 
     
-    def send_main(self):
+    def send_main(self, child_conn):
         while True:
             msg = self.message_q.get()
-            this.child_conn.send(msg)
+            child_conn.send(msg)
 
 
     @on_trait_change('workflow')
@@ -309,16 +330,16 @@ class RemoteWorkflow(HasStrictTraits):
     
     exec_q = Instance(UniquePriorityQueue, ())
     
-    def run(self):
+    def run(self, parent_conn):
         self.recv_thread = threading.Thread(target = self.recv_main, 
                              name = "remote recv thread",
-                             args = ())
+                             args = [parent_conn])
         self.recv_thread.daemon = True
         self.recv_thread.start()
         
         self.send_thread = threading.Thread(target = self.send_main,
                                             name = "remote send thread",
-                                            args = ())
+                                            args = [parent_conn])
         self.send_thread.daemon = True
         self.send_thread.start()
         
@@ -328,10 +349,10 @@ class RemoteWorkflow(HasStrictTraits):
             fn()
             
 
-    def recv_main(self):
-        while this.parent_conn.poll(None):
+    def recv_main(self, parent_conn):
+        while parent_conn.poll(None):
             try:
-                (msg, payload) = this.parent_conn.recv()
+                (msg, payload) = parent_conn.recv()
             except EOFError:
                 return
             
@@ -408,16 +429,16 @@ class RemoteWorkflow(HasStrictTraits):
                 idx = payload
                 wi = self.workflow[idx]
                 
-                this.exec_q.put_nowait((idx - 0.1, wi.estimate))
+                self.exec_q.put_nowait((idx - 0.1, wi.estimate))
 
             else:
                 raise RuntimeError("Bad command in the remote workflow")
             
             
-    def send_main(self):
+    def send_main(self, parent_conn):
         while True:
             msg = self.message_q.get()
-            this.parent_conn.send(msg)
+            parent_conn.send(msg)
             
             
     @on_trait_change('workflow_items')

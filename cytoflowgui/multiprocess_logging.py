@@ -22,7 +22,7 @@ Created on Aug 24, 2016
 @author: brian
 '''
 
-import logging, queue, threading
+import logging, Queue, threading
 
 # from the Python 3.5 standard library
 
@@ -171,7 +171,7 @@ class QueueListener(object):
                 self.handle(record)
                 if has_task_done:
                     q.task_done()
-            except queue.Empty:
+            except Queue.Empty:
                 pass
         # There might still be records in the queue.
         while True:
@@ -182,7 +182,7 @@ class QueueListener(object):
                 self.handle(record)
                 if has_task_done:
                     q.task_done()
-            except queue.Empty:
+            except Queue.Empty:
                 break
 
     def enqueue_sentinel(self):

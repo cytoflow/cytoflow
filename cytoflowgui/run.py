@@ -52,8 +52,8 @@ from view_plugins import HistogramPlugin, Histogram2DPlugin, ScatterplotPlugin, 
                          ViolinPlotPlugin, TablePlugin, Stats2DPlugin
 
 import cytoflowgui.matplotlib_backend as mpl_backend
-import cytoflowgui.workflow as workflow
-from cytoflowgui import multiprocess_logging
+# import cytoflowgui.workflow as workflow
+from cytoflowgui import multiprocess_logging 
 
 # from https://github.com/pyinstaller/pyinstaller/wiki/Recipe-Multiprocessing
 
@@ -116,7 +116,24 @@ def log_excepthook(typ, val, tb):
                   .format(typ, val, tb_str))
     
                          
-def run_gui(log_q):
+def run_gui():
+    multiprocessing.freeze_support()
+    
+    from pyface.qt import qt_api
+    
+    if qt_api == "pyside":
+        print "Cytoflow uses PyQT; but it is trying to use PySide instead."
+        print " - Make sure PyQT is installed."
+        print " - If both are installed, and you don't need both, uninstall PySide."
+        print " - If you must have both installed, select PyQT by setting the"
+        print "   environment variable QT_API to \"pyqt\""
+        print "   * eg, on Linux, type on the command line:"
+        print "     QT_API=\"pyqt\" python run.py"
+        print "   * on Windows, try: "
+        print "     setx QT_API \"pyqt\""
+
+        sys.exit(1)
+    
     # if we're frozen, add _MEIPASS to the pyface search path for icons etc
     if getattr(sys, 'frozen', False):
         from pyface.resource_manager import resource_manager
@@ -164,68 +181,52 @@ def run_gui(log_q):
     app = CytoflowApplication(id = 'edu.mit.synbio.cytoflow',
                               plugins = plugins,
                               icon = ImageResource('icon'))
-    app.run(log_q)
+    app.run()
     
     logging.shutdown()
     
-def remote_main(workflow_parent_conn, mpl_parent_conn, log_q):
+# def remote_main(workflow_parent_conn, mpl_parent_conn, log_q):
     
-    # connect the remote pipes
-    workflow.parent_conn = workflow_parent_conn
-    mpl_backend.parent_conn = mpl_parent_conn
-    
-    # setup logging
-    h = multiprocess_logging.QueueHandler(log_q)  # Just the one handler needed
-    logging.getLogger().addHandler(h)
-    logging.getLogger().setLevel(logging.DEBUG)
-    
-    # install a global (gui) error handler for traits notifications
-    push_exception_handler(handler = log_notification_handler,
-                           reraise_exceptions = False, 
-                           main = True)
-    
-    sys.excepthook = log_excepthook
+#     # connect the remote pipes
+#     workflow.parent_conn = workflow_parent_conn
+#     mpl_backend.parent_conn = mpl_parent_conn
+#     
+#     # setup logging
+#     h = multiprocess_logging.QueueHandler(log_q)  # Just the one handler needed
+#     logging.getLogger().addHandler(h)
+#     logging.getLogger().setLevel(logging.DEBUG)
+#     
+#     # install a global (gui) error handler for traits notifications
+#     push_exception_handler(handler = log_notification_handler,
+#                            reraise_exceptions = False, 
+#                            main = True)
+#     
+#     sys.excepthook = log_excepthook
     
     # run the remote workflow
-    workflow.RemoteWorkflow().run()
+    #workflow.RemoteWorkflow().run()
 
 
 if __name__ == '__main__':
-    multiprocessing.freeze_support()
-    
-    from pyface.qt import qt_api
-    
-    if qt_api == "pyside":
-        print "Cytoflow uses PyQT; but it is trying to use PySide instead."
-        print " - Make sure PyQT is installed."
-        print " - If both are installed, and you don't need both, uninstall PySide."
-        print " - If you must have both installed, select PyQT by setting the"
-        print "   environment variable QT_API to \"pyqt\""
-        print "   * eg, on Linux, type on the command line:"
-        print "     QT_API=\"pyqt\" python run.py"
-        print "   * on Windows, try: "
-        print "     setx QT_API \"pyqt\""
+    run_gui()
 
-        sys.exit(1)
         
     # set up the child process
-    workflow_parent_conn, workflow_child_conn = multiprocessing.Pipe()
-    mpl_parent_conn, mpl_child_conn = multiprocessing.Pipe()
-    log_q = multiprocessing.Queue()
+
 
     # connect the local pipes
-    workflow.child_conn = workflow_child_conn       
-    mpl_backend.child_conn = mpl_child_conn   
+#     workflow.child_conn = workflow_child_conn       
+#     mpl_backend.child_conn = mpl_child_conn   
 
 
         
     # start the child process
-    remote_process = multiprocessing.Process(target = remote_main,
-                                             name = "remote",
-                                             args = (workflow_parent_conn, 
-                                                     mpl_parent_conn, 
-                                                     log_q))
-    remote_process.daemon = True
-    remote_process.start()    
+#     remote_process = multiprocessing.Process(target = remote_main,
+#                                              name = "remote",
+#                                              args = (workflow_parent_conn, 
+#                                                      mpl_parent_conn, 
+#                                                      log_q))
+#     remote_process.daemon = True
+#     remote_process.start()    
     
-    run_gui(log_q)
+

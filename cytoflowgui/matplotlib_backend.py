@@ -115,17 +115,17 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         
         self.setAttribute(QtCore.Qt.WA_OpaquePaintEvent)    
         
-        t = threading.Thread(target = self.listen_for_remote, 
-                             name = "canvas listen",
-                             args = ())
-        t.daemon = True
-        t.start()
-        
-        t = threading.Thread(target = self.send_to_remote, 
-                             name = "canvas send",
-                             args = ())
-        t.daemon = True
-        t.start()
+#         t = threading.Thread(target = self.listen_for_remote, 
+#                              name = "canvas listen",
+#                              args = ())
+#         t.daemon = True
+#         t.start()
+#         
+#         t = threading.Thread(target = self.send_to_remote, 
+#                              name = "canvas send",
+#                              args = ())
+#         t.daemon = True
+#         t.start()
         
     def listen_for_remote(self):
         while this.child_conn.poll(None):
