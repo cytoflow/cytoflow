@@ -21,7 +21,7 @@ Created on Feb 11, 2015
 @author: brian
 """
 
-import logging, sys, multiprocessing, StringIO, os
+import sys, multiprocessing, StringIO, os, logging, traceback, threading
 
 from traits.etsconfig.api import ETSConfig
 ETSConfig.toolkit = 'qt4'
@@ -35,6 +35,7 @@ matplotlib.use('module://cytoflowgui.matplotlib_backend')
 import warnings
 warnings.filterwarnings('ignore', '.*is deprecated and replaced with.*')
 
+from traits.api import push_exception_handler
 from envisage.core_plugin import CorePlugin
 from envisage.ui.tasks.tasks_plugin import TasksPlugin
 from pyface.image_resource import ImageResource
@@ -52,7 +53,7 @@ from view_plugins import HistogramPlugin, Histogram2DPlugin, ScatterplotPlugin, 
 
 import cytoflowgui.matplotlib_backend as mpl_backend
 import cytoflowgui.workflow as workflow
-import cytoflowgui.util as util
+from cytoflowgui import multiprocess_logging
 
 # from https://github.com/pyinstaller/pyinstaller/wiki/Recipe-Multiprocessing
 
@@ -89,13 +90,45 @@ if sys.platform.startswith('win'):
 
     # Second override 'Popen' class with our modified version.
     forking.Popen = _Popen
+    
+def log_notification_handler(obj, trait_name, old, new):
+    
+    (exc_type, exc_value, tb) = sys.exc_info()
+    logging.debug('Exception occurred in traits notification '
+                  'handler for object: %s, trait: %s, old value: %s, '
+                  'new value: %s.\n%s\n' % ( object, trait_name, old, new,
+                  ''.join( traceback.format_exception(exc_type, exc_value, tb) ) ) )
+
+    err_string = traceback.format_exception_only(exc_type, exc_value)[0]
+    err_loc = traceback.format_tb(tb)[-1]
+    err_ctx = threading.current_thread().name
+    
+    logging.error("Error: {0}\nLocation: {1}Thread: {2}" \
+                  .format(err_string, err_loc, err_ctx) )
+    
+def log_excepthook(typ, val, tb):
+    tb_str = "".join(traceback.format_tb(tb))
+    logging.debug("Global exception: {0}\n{1}: {2}"
+                  .format(tb_str, typ, val))
+    
+    tb_str = traceback.format_tb(tb)[-1]
+    logging.error("Error: {0}: {1}\nLocation: {2}Thread: Main"
+                  .format(typ, val, tb_str))
+    
                          
-def run_gui():
+def run_gui(log_q):
     # if we're frozen, add _MEIPASS to the pyface search path for icons etc
     if getattr(sys, 'frozen', False):
         from pyface.resource_manager import resource_manager
         resource_manager.extra_paths.append(sys._MEIPASS)
+        
+    # install a global (gui) error handler for traits notifications
+    push_exception_handler(handler = log_notification_handler,
+                           reraise_exceptions = False, 
+                           main = True)
     
+    sys.excepthook = log_excepthook
+        
     debug = ("--debug" in sys.argv)
 
     plugins = [CorePlugin(), TasksPlugin(), FlowTaskPlugin(debug = debug)]    
@@ -131,15 +164,27 @@ def run_gui():
     app = CytoflowApplication(id = 'edu.mit.synbio.cytoflow',
                               plugins = plugins,
                               icon = ImageResource('icon'))
-    app.run()
+    app.run(log_q)
     
     logging.shutdown()
     
-def remote_main(workflow_parent_conn, mpl_parent_conn):
+def remote_main(workflow_parent_conn, mpl_parent_conn, log_q):
     
     # connect the remote pipes
     workflow.parent_conn = workflow_parent_conn
     mpl_backend.parent_conn = mpl_parent_conn
+    
+    # setup logging
+    h = multiprocess_logging.QueueHandler(log_q)  # Just the one handler needed
+    logging.getLogger().addHandler(h)
+    logging.getLogger().setLevel(logging.DEBUG)
+    
+    # install a global (gui) error handler for traits notifications
+    push_exception_handler(handler = log_notification_handler,
+                           reraise_exceptions = False, 
+                           main = True)
+    
+    sys.excepthook = log_excepthook
     
     # run the remote workflow
     workflow.RemoteWorkflow().run()
@@ -166,18 +211,21 @@ if __name__ == '__main__':
     # set up the child process
     workflow_parent_conn, workflow_child_conn = multiprocessing.Pipe()
     mpl_parent_conn, mpl_child_conn = multiprocessing.Pipe()
+    log_q = multiprocessing.Queue()
 
     # connect the local pipes
     workflow.child_conn = workflow_child_conn       
     mpl_backend.child_conn = mpl_child_conn   
-    
 
+
+        
     # start the child process
     remote_process = multiprocessing.Process(target = remote_main,
                                              name = "remote",
                                              args = (workflow_parent_conn, 
-                                                     mpl_parent_conn))
+                                                     mpl_parent_conn, 
+                                                     log_q))
     remote_process.daemon = True
     remote_process.start()    
     
-    run_gui()
+    run_gui(log_q)

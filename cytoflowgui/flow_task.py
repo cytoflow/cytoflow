@@ -267,15 +267,8 @@ class FlowTask(Task):
                     "developer.  Debugging logs are attached.  Please fill "
                     "out the template bug report and send -- thank you for "
                     "reporting a bug!")
-        
-#         import tempfile
-        log = guiutil.parent_log.getvalue()
-        log += self.model.get_child_log()
-# 
-#         logfile = tempfile.NamedTemporaryFile(delete = False)
-#         logfile.write(parent_log)
-#         logfile.write(child_log)
-#         logfile.close()
+
+        log = self.application.application_log.getvalue()
         
         versions = ["{0} {1}".format(key, value) for key, value in self._get_package_versions().iteritems()]
 

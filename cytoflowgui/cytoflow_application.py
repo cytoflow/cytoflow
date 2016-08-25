@@ -21,9 +21,8 @@ Created on Mar 15, 2015
 @author: brian
 '''
 
-import sys, threading, logging, multiprocessing
-
-from traceback import format_exception_only, format_tb
+import sys, logging, StringIO, traceback, threading
+from cytoflowgui import multiprocess_logging
 
 from envisage.ui.tasks.api import TasksApplication
 from pyface.api import error
@@ -32,24 +31,15 @@ from traits.api import Bool, Instance, List, Property, push_exception_handler, S
 
 from preferences import CytoflowPreferences
 
-from StringIO import StringIO
-
 # pipe connections for communicating between processes
 # http://stackoverflow.com/questions/1977362/how-to-create-module-wide-variables-in-python
 this = sys.modules[__name__]
 this.parent_conn = None
 this.child_conn = None
 
-def gui_notification_handler(obj, trait_name, old_value, new_value, app):
-    
-    (exc_type, exc_value, tb) = sys.exc_info()
-    err_string = format_exception_only(exc_type, exc_value)[0]
-    err_loc = format_tb(tb)[-1]
-    err_ctx = threading.current_thread().name
-    
-    app.application_error = "Error: {0}\nLocation: {1}\nThread: {2}" \
-                            .format(err_string, err_loc, err_ctx)
-    
+ 
+def gui_handler_callback(msg, app):
+    app.application_error = msg
 
 class CytoflowApplication(TasksApplication):
     """ The cytoflow Tasks application.
@@ -72,37 +62,39 @@ class CytoflowApplication(TasksApplication):
     
     application_error = Str
     
-    application_log = Instance(StringIO, ())
+    application_log = Instance(StringIO.StringIO, ())
+            
+    def run(self, log_q):
         
-    def run(self):
-        ## set up the root logger
-        logger = logging.getLogger()
-        logger.setLevel(logging.DEBUG)
+        # setup the root logger
+        h = multiprocess_logging.QueueHandler(log_q)  # Just the one handler needed
+        logging.getLogger().addHandler(h)
+        logging.getLogger().setLevel(logging.DEBUG)
         
-        # set the multiprocessing logger to propogate messages
-        multiprocessing.get_logger().propagate = True
-
         ## send the log to STDERR
         console_handler = logging.StreamHandler()
         console_handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s:%(name)s:%(message)s"))
-        logger.addHandler(console_handler)
-        
-        ## capture the local log
+         
+        ## capture log in memory
         mem_handler = logging.StreamHandler(self.application_log)
         mem_handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s:%(name)s:%(message)s"))
-        logger.addHandler(mem_handler)
         
-        # install a global (gui) error handler for traits notifications
-        push_exception_handler(handler = lambda obj, trait, old, new, app = self: \
-                                            gui_notification_handler(obj, trait, old, new, app),
-                               reraise_exceptions = True, 
-                               main = True)
+        ## and display gui messages for exceprions
+        gui_handler = multiprocess_logging.CallbackHandler( lambda msg, app = self: gui_handler_callback(msg, app))
+        gui_handler.setLevel(logging.ERROR)
+        
+        # start the queue listener to process log records from all processes
+        log_listener = multiprocess_logging.QueueListener(log_q, console_handler, mem_handler, gui_handler)
+        log_listener.start()
+
         
         # must redirect to the gui thread
         self.on_trait_change(self.show_error, 'application_error', dispatch = 'ui')
         
         # run the GUI
         super(CytoflowApplication, self).run()
+        
+        log_listener.stop()
         
     def show_error(self, error_string):
         error(None, "An exception has occurred.  Please report a problem from the Help menu!\n\n" 
