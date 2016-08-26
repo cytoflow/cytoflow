@@ -277,6 +277,12 @@ class BleedthroughLinearDiagnostic(HasStrictTraits):
         
         if not experiment:
             raise util.CytoflowViewError("No experiment specified")
+
+        if not self.op.controls:
+            raise util.CytoflowViewError("No controls specified")
+        
+        if not self.op.spillover:
+            raise util.CytoflowViewError("No spillover matrix specified")
         
         kwargs.setdefault('histtype', 'stepfilled')
         kwargs.setdefault('alpha', 0.5)

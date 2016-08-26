@@ -381,6 +381,12 @@ class BleedthroughPiecewiseDiagnostic(HasStrictTraits):
         if not experiment:
             raise util.CytoflowViewError("No experiment specified")
         
+        if not self.op.controls:
+            raise util.CytoflowViewError("No controls specified")
+        
+        if not self.op._splines:
+            raise util.CytoflowViewError("No splines. Did you forget to call estimate()?")
+        
         kwargs.setdefault('histtype', 'stepfilled')
         kwargs.setdefault('alpha', 0.5)
         kwargs.setdefault('antialiased', True)
