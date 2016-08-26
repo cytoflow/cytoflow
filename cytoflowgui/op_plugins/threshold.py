@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from traits.api import provides, Callable, Float, Instance
+from traits.api import provides, Callable, Float, Instance, on_trait_change
 from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
@@ -81,8 +81,8 @@ class ThresholdSelectionView(ThresholdSelection, PluginViewMixin):
     handler_factory = Callable(ThresholdViewHandler, transient = True)    
     op = Instance(IOperation, fixed = True)
     threshold = Float(status = True)
-    
-    def plot_wi(self, wi):
+        
+    def plot_wi(self, wi):        
         self.plot(wi.previous.result)
     
 class ThresholdPluginOp(ThresholdOp, PluginOpMixin):
@@ -90,10 +90,11 @@ class ThresholdPluginOp(ThresholdOp, PluginOpMixin):
      
     def default_view(self, **kwargs):
         v = ThresholdSelectionView(op = self, **kwargs)
-        
+         
         # because ThresholdSelectionView.threshold is no longer a Delegate,
         # we need to maintain the synchronization
         self.sync_trait('threshold', v)
+
         return v
 
 @provides(IOperationPlugin)

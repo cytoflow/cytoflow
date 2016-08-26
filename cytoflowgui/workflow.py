@@ -354,7 +354,12 @@ class RemoteWorkflow(HasStrictTraits):
     recv_thread = Instance(threading.Thread)
     message_q = Instance(Queue.Queue, ())
     
+    # synchronization primitives for plotting
+    matplotlib_events = Any
+    plot_lock = Any
+    
     exec_q = Instance(UniquePriorityQueue, ())
+    
     
     def run(self, parent_workflow_conn, parent_mpl_conn, log_q):
         
@@ -369,9 +374,17 @@ class RemoteWorkflow(HasStrictTraits):
         rootLogger.addHandler(h)
         rootLogger.setLevel(logging.DEBUG)
         
+        # set up the plotting synchronization primitives
+        self.matplotlib_events = threading.Event()
+        self.plot_lock = threading.Lock()
+        
         # configure matplotlib backend to use the pipe
-        plt.new_figure_manager = lambda num, parent_conn = parent_mpl_conn, *args, **kwargs: \
-                                    cytoflowgui.matplotlib_backend.new_figure_manager(num, parent_conn = parent_conn, *args, **kwargs)
+        plt.new_figure_manager = lambda num, parent_conn = parent_mpl_conn, process_events = self.matplotlib_events, *args, **kwargs: \
+                                    cytoflowgui.matplotlib_backend.new_figure_manager(num, 
+                                                                                      parent_conn = parent_conn, 
+                                                                                      process_events = process_events, 
+                                                                                      *args, 
+                                                                                      **kwargs)
         
         # start threads
         self.recv_thread = threading.Thread(target = self.recv_main, 
@@ -408,9 +421,24 @@ class RemoteWorkflow(HasStrictTraits):
 
             elif msg == Msg.ADD_ITEMS:
                 (idx, new_item) = payload
-                new_remote_item = RemoteWorkflowItem()
-                new_remote_item.copy_traits(new_item)
-                self.workflow.insert(idx, new_remote_item)
+                wi = RemoteWorkflowItem()
+                wi.copy_traits(new_item)
+                wi.matplotlib_events = self.matplotlib_events
+                wi.plot_lock = self.plot_lock
+                
+                # in order to keep the the interactive views synchronized
+                # with the operation parameters, we need to call default_view()
+                # here again.
+                try:
+                    default_view = wi.operation.default_view()
+                    wi.views.remove(wi.default_view)
+                    wi.default_view = default_view
+                    wi.views.append(default_view)
+                    wi.current_view = default_view
+                except AttributeError:
+                    pass
+                
+                self.workflow.insert(idx, wi)
 
             elif msg == Msg.REMOVE_ITEMS:
                 idx = payload
@@ -522,7 +550,7 @@ class RemoteWorkflow(HasStrictTraits):
         idx = self.workflow.index(wi)
         
         if new == "status":
-            self.message_q.put((Msg.UPDATE_VIEW, (idx, obj)))
+            self.message_q.put((Msg.UPDATE_VIEW, (idx, obj, new)))
             
             
     @on_trait_change('workflow:operation:changed')

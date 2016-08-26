@@ -302,10 +302,11 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
     where someone is calling pyplot.plot()
    """
 
-    def __init__(self, parent_conn, figure):
+    def __init__(self, parent_conn, process_events, figure):
         FigureCanvasAgg.__init__(self, figure)
         
         self.parent_conn = parent_conn
+        self.process_events = process_events
         
         self.buffer_lock = threading.Lock()
         self.buffer = None
@@ -351,24 +352,24 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
                 self.draw()
             elif msg == Msg.MOUSE_PRESS_EVENT:
                 (x, y, button) = payload
-#                 if this.process_events.is_set():
-                FigureCanvasAgg.button_press_event(self, x, y, button)
+                if self.process_events.is_set():
+                    FigureCanvasAgg.button_press_event(self, x, y, button)
             elif msg == Msg.MOUSE_DOUBLE_CLICK_EVENT:
                 (x, y, button) = payload
-#                 if this.process_events.is_set():
-                FigureCanvasAgg.button_press_event(self, x, y, button, dblclick = True)
+                if self.process_events.is_set():
+                    FigureCanvasAgg.button_press_event(self, x, y, button, dblclick = True)
             elif msg == Msg.MOUSE_RELEASE_EVENT:
                 (x, y, button) = payload
-#                 if this.process_events.is_set():
-                FigureCanvasAgg.button_release_event(self, x, y, button)
+                if self.process_events.is_set():
+                    FigureCanvasAgg.button_release_event(self, x, y, button)
             elif msg == Msg.MOUSE_MOVE_EVENT:
                 (x, y) = payload
-#                 if this.process_events.is_set():
-                FigureCanvasAgg.motion_notify_event(self, x, y)
+                if self.process_events.is_set():
+                    FigureCanvasAgg.motion_notify_event(self, x, y)
             elif msg == Msg.PRINT:
                 (args, kwargs) = payload
-#                 if this.process_events.is_set():
-                FigureCanvasAgg.print_figure(self, *args, **kwargs)
+                if self.process_events.is_set():
+                    FigureCanvasAgg.print_figure(self, *args, **kwargs)
             else:
                 raise RuntimeError("FigureCanvasAggRemote received bad message {}".format(msg))
             
@@ -454,13 +455,16 @@ def new_figure_manager(num, *args, **kwargs):
     # get the pipe connection
     parent_conn = kwargs.pop('parent_conn')
 
+    # and the threading.Event for turning events on and off
+    process_events = kwargs.pop('process_events')
+
     # make a new figure
     FigureClass = kwargs.pop('FigureClass', Figure)
     new_fig = FigureClass(*args, **kwargs)
  
     # the canvas is a singleton.
     if not remote_canvas:
-        remote_canvas = FigureCanvasAggRemote(parent_conn, new_fig)
+        remote_canvas = FigureCanvasAggRemote(parent_conn, process_events, new_fig)
     else:         
         old_fig = remote_canvas.figure
         new_fig.set_size_inches(old_fig.get_figwidth(), 
@@ -477,7 +481,7 @@ def new_figure_manager(num, *args, **kwargs):
 
 def draw_if_interactive():
     logging.debug("mpl_multiprocess_backend.draw_if_interactive")
-    #this.remote_canvas.draw()
+    remote_canvas.draw()
     
 def show():
     logging.debug("mpl_multiprocess_backend.show")

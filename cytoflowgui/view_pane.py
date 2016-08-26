@@ -49,7 +49,7 @@ class ViewDockPane(TraitsDockPane):
     
     # if there is a default view for the currently selected operation, this
     # is its view id
-    default_view_id = Str
+    default_view = Str
 
     # task actions associated with views
     _actions = Dict(Str, TaskAction)
@@ -70,7 +70,7 @@ class ViewDockPane(TraitsDockPane):
         
         self._default_action = TaskAction(name = "Setup View",
                                           on_perform = lambda s=self: 
-                                                         self.trait_set(selected_view = s._default_view_id),
+                                                         self.trait_set(selected_view = s.default_view),
                                           image = ImageResource('setup'),
                                           style = 'toggle',
                                           visible = False)
@@ -105,7 +105,7 @@ class ViewDockPane(TraitsDockPane):
         self._window.setEnabled(enabled)
         self.ui.control.setEnabled(enabled)
     
-    @on_trait_change('default_view_id')
+    @on_trait_change('default_view')
     def set_default_view(self, obj, name, old_view_id, new_view_id):
         if old_view_id:
             del self._actions[old_view_id]

@@ -133,15 +133,15 @@ def run_gui():
     if getattr(sys, 'frozen', False):
         from pyface.resource_manager import resource_manager
         resource_manager.extra_paths.append(sys._MEIPASS)
+
+    debug = ("--debug" in sys.argv)
         
     # install a global (gui) error handler for traits notifications
     push_exception_handler(handler = log_notification_handler,
-                           reraise_exceptions = False, 
+                           reraise_exceptions = debug, 
                            main = True)
     
     sys.excepthook = log_excepthook
-        
-    debug = ("--debug" in sys.argv)
 
     plugins = [CorePlugin(), TasksPlugin(), FlowTaskPlugin(debug = debug)]    
     

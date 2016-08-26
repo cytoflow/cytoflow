@@ -65,11 +65,11 @@ class PluginViewMixin(HasTraits):
     # we sometimes need to override it on a per-module basis
     
     @on_trait_change("+status", post_init = True)
-    def _status_changed(self, obj, name, old, new):
+    def status_changed(self, obj, name, old, new):
         self.changed = "status"
         
     @on_trait_change("-status", post_init = True)
-    def _api_changed(self, obj, name, old, new):
+    def api_changed(self, obj, name, old, new):
         if not obj.trait(name).transient:
             self.changed = "api"
     

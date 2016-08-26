@@ -26,7 +26,7 @@ Created on Feb 11, 2015
 
 import os.path
 
-from traits.api import Instance, List, Bool, on_trait_change
+from traits.api import Instance, List, Bool, on_trait_change, Undefined
 from pyface.tasks.api import Task, TaskLayout, PaneItem
 from pyface.tasks.action.api import SMenu, SMenuBar, SToolBar, TaskAction
 from pyface.api import FileDialog, OK, ImageResource, AboutDialog, information
@@ -356,6 +356,7 @@ DEBUG LOG: {1}
     def _on_select_op(self, selected):
         if selected:
             self.view_pane.enabled = (selected is not None)
+            self.view_pane.default_view = selected.default_view.id if selected.default_view else ""
             self.view_pane.selected_view = selected.current_view.id if selected.current_view else ""
         else:
             self.view_pane.enabled = False
@@ -389,9 +390,9 @@ DEBUG LOG: {1}
         
         # if the op has a default view, add it to the wi
         try:
-            default_view = op.default_view()
-            wi.views.append(default_view)
-            wi.current_view = default_view
+            wi.default_view = op.default_view()
+            wi.views.append(wi.default_view)
+            wi.current_view = wi.default_view
         except AttributeError:
             pass
         
@@ -403,6 +404,9 @@ DEBUG LOG: {1}
              
         # the add_remove_items handler takes care of updating the linked list
         self.model.workflow.insert(idx, wi)
+        
+        # and make sure to actually select the new wi
+        self.model.selected = wi
         
         
 class FlowTaskPlugin(Plugin):

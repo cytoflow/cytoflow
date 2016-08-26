@@ -20,7 +20,7 @@ Created on Mar 15, 2015
 @author: brian
 '''
 
-import warnings, logging, sys
+import warnings, logging, sys, threading
 
 from traits.api import HasStrictTraits, Instance, List, DelegatesTo, Enum, \
                        Property, cached_property, on_trait_change, Bool, \
@@ -95,10 +95,10 @@ class WorkflowItem(HasStrictTraits):
     conditions_values = Dict(Str, List, status = True)
     
     # the IViews against the output of this operation
-    views = List(IView)
+    views = List(IView, copy = "ref")
     
     # the currently selected view
-    current_view = Instance(IView)
+    current_view = Instance(IView, copy = "ref")
     
     # the handler for the currently selected view
     current_view_handler = Property(depends_on = 'current_view',
@@ -113,7 +113,7 @@ class WorkflowItem(HasStrictTraits):
     current_view_plot_names = List(Any, status = True)
     
     # if there are multiple plots, which are we viewing?
-    current_plot = Any
+    current_plot = Str
     
     # the view for the current plot
     current_plot_view = View(Item('current_view_plot_names',
@@ -121,7 +121,7 @@ class WorkflowItem(HasStrictTraits):
                                   show_label = False))
     
     # the default view for this workflow item
-    default_view = Instance(IView)
+    default_view = Instance(IView, copy = "ref")
     
     # the previous WorkflowItem in the workflow
     previous = Instance('WorkflowItem')
@@ -143,8 +143,10 @@ class WorkflowItem(HasStrictTraits):
     do_estimate = Event
     
     # the icon for the vertical notebook view.  Qt specific, sadly.
-    icon = Property(depends_on = 'status', transient = True)   
-
+    icon = Property(depends_on = 'status', transient = True)  
+    
+    matplotlib_events = Any(transient = True)
+    plot_lock = Any(transient = True)
            
     @cached_property
     def _get_icon(self):
@@ -198,6 +200,8 @@ class WorkflowItem(HasStrictTraits):
 
 
     def estimate(self):
+        logging.debug("WorkflowItem.update :: {}".format((self)))
+
         prev_result = self.previous.result if self.previous else None
          
         with warnings.catch_warnings(record = True) as w:
@@ -223,6 +227,7 @@ class WorkflowItem(HasStrictTraits):
         """
         Called by the controller to update this wi
         """
+        logging.debug("WorkflowItem.update :: {}".format((self)))
          
         prev_result = self.previous.result if self.previous else None
          
@@ -258,25 +263,25 @@ class WorkflowItem(HasStrictTraits):
           
         with warnings.catch_warnings(record = True) as w:
             try:
-                #with self.plot_lock:
-                #mpl_backend.process_events.clear()
-
-                self.current_view.plot_wi(self)
-            
-                if this.last_view_plotted and "interactive" in this.last_view_plotted.traits():
-                    this.last_view_plotted.interactive = False
-                 
-                if "interactive" in self.current_view.traits():
-                    self.current_view.interactive = True
-                   
-                this.last_view_plotted = self.current_view
-                  
-                # the remote canvas/pyplot interface of the multiprocess backend
-                # is NOT interactive.  this call lets us batch together all 
-                # the plot updates
-                plt.show()
-                  
-                #mpl_backend.process_events.set()
+                with self.plot_lock:
+                    self.matplotlib_events.clear()
+    
+                    self.current_view.plot_wi(self)
+                
+                    if this.last_view_plotted and "interactive" in this.last_view_plotted.traits():
+                        this.last_view_plotted.interactive = False
+                     
+                    if "interactive" in self.current_view.traits():
+                        self.current_view.interactive = True
+                       
+                    this.last_view_plotted = self.current_view
+                      
+                    # the remote canvas/pyplot interface of the multiprocess backend
+                    # is NOT interactive.  this call lets us batch together all 
+                    # the plot updates
+                    plt.show()
+                     
+                    self.matplotlib_events.set() 
                    
                 if w:
                     self.view_warning = w[-1].message.__str__()
@@ -295,9 +300,9 @@ class RemoteWorkflowItem(WorkflowItem):
     command = DelayedEvent(delay = 0.2)
         
     @on_trait_change('operation:changed', post_init = True)
-    def _operation_changed(self, new):
+    def _operation_changed(self, obj, name, old, new):
         logging.debug("RemoteWorkflowItem._operation_changed :: {}"
-                      .format((self.name, new)))
+                      .format((self, new)))
             
         if new == "api":
             self.status = "invalid"
@@ -305,26 +310,26 @@ class RemoteWorkflowItem(WorkflowItem):
             
             
     @on_trait_change('previous.result', post_init = True)
-    def _prev_result_changed(self):
+    def _prev_result_changed(self, obj, name, old, new):
         logging.debug("RemoteWorkflowItem._prev_result_changed :: {}"
-                      .format(self.name))
+                      .format(self, new))
         
         self.status = "invalid"
         self.command = "update"
                                     
             
     @on_trait_change('current_view', post_init = True)
-    def _current_view_changed(self, new):
-        logging.debug("RemoteWorkflow._current_view_changed :: {}"
-                      .format((self.name, new.id)))
+    def _current_view_changed(self, obj, name, old, new):
+        logging.debug("RemoteWorkflowItem._current_view_changed :: {}"
+                      .format((self, new.id)))
         
         self.command = "plot"        
         
         
     @on_trait_change('current_view:changed', post_init = True)
-    def _current_view_trait_changed(self, new):
-        logging.debug("RemoteWorkflow._current_view_trait_changed :: {}"
-                      .format((self.name, new)))       
+    def _current_view_trait_changed(self, obj, name, old, new):
+        logging.debug("RemoteWorkflowItem._current_view_trait_changed :: {}"
+                      .format((self, new)))       
          
         if new == "api":
             self.command = "plot"   
