@@ -358,10 +358,16 @@ class RemoteWorkflow(HasStrictTraits):
     
     def run(self, parent_workflow_conn, parent_mpl_conn, log_q):
         
+        # we inherit a root logger config from the parent process.
+        # clear it.
+        rootLogger = logging.getLogger()
+        map(rootLogger.removeHandler, rootLogger.handlers[:])
+        map(rootLogger.removeFilter, rootLogger.filters[:])
+        
         # make queue messages go to log_q
         h = QueueHandler(log_q) 
-        logging.getLogger().addHandler(h)
-        logging.getLogger().setLevel(logging.DEBUG)
+        rootLogger.addHandler(h)
+        rootLogger.setLevel(logging.DEBUG)
         
         # configure matplotlib backend to use the pipe
         plt.new_figure_manager = lambda num, parent_conn = parent_mpl_conn, *args, **kwargs: \
