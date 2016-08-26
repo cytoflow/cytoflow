@@ -21,7 +21,7 @@ Created on Feb 11, 2015
 @author: brian
 """
 
-import sys, multiprocessing, StringIO, os, logging, traceback, threading
+import sys, multiprocessing, os, logging, traceback, threading
 
 from traits.etsconfig.api import ETSConfig
 ETSConfig.toolkit = 'qt4'
@@ -51,12 +51,7 @@ from view_plugins import HistogramPlugin, Histogram2DPlugin, ScatterplotPlugin, 
                          BarChartPlugin, Stats1DPlugin, Kde1DPlugin, Kde2DPlugin, \
                          ViolinPlotPlugin, TablePlugin, Stats2DPlugin
 
-import cytoflowgui.matplotlib_backend as mpl_backend
-# import cytoflowgui.workflow as workflow
-from cytoflowgui import multiprocess_logging 
-
 # from https://github.com/pyinstaller/pyinstaller/wiki/Recipe-Multiprocessing
-
 # Module multiprocessing is organized differently in Python 3.4+
 try:
     # Python 3.4+
@@ -184,49 +179,6 @@ def run_gui():
     app.run()
     
     logging.shutdown()
-    
-# def remote_main(workflow_parent_conn, mpl_parent_conn, log_q):
-    
-#     # connect the remote pipes
-#     workflow.parent_conn = workflow_parent_conn
-#     mpl_backend.parent_conn = mpl_parent_conn
-#     
-#     # setup logging
-#     h = multiprocess_logging.QueueHandler(log_q)  # Just the one handler needed
-#     logging.getLogger().addHandler(h)
-#     logging.getLogger().setLevel(logging.DEBUG)
-#     
-#     # install a global (gui) error handler for traits notifications
-#     push_exception_handler(handler = log_notification_handler,
-#                            reraise_exceptions = False, 
-#                            main = True)
-#     
-#     sys.excepthook = log_excepthook
-    
-    # run the remote workflow
-    #workflow.RemoteWorkflow().run()
-
 
 if __name__ == '__main__':
     run_gui()
-
-        
-    # set up the child process
-
-
-    # connect the local pipes
-#     workflow.child_conn = workflow_child_conn       
-#     mpl_backend.child_conn = mpl_child_conn   
-
-
-        
-    # start the child process
-#     remote_process = multiprocessing.Process(target = remote_main,
-#                                              name = "remote",
-#                                              args = (workflow_parent_conn, 
-#                                                      mpl_parent_conn, 
-#                                                      log_q))
-#     remote_process.daemon = True
-#     remote_process.start()    
-    
-

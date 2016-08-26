@@ -56,7 +56,7 @@ class FlowTaskPane(TaskPane):
         self.layout.addWidget(tabs_ui.control) 
         
         # add the main plot
-        self.canvas = FigureCanvasQTAggLocal(Figure())
+        self.canvas = FigureCanvasQTAggLocal(Figure(), self.model.child_matplotlib_conn)
         self.canvas.setSizePolicy(QtGui.QSizePolicy.Expanding,
                                   QtGui.QSizePolicy.Expanding)
         layout.addWidget(self.canvas)

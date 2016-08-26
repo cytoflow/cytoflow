@@ -44,7 +44,7 @@ matplotlib_backend.py
 
 import threading, sys, Queue, logging, multiprocessing
 
-from traits.api import HasStrictTraits, Instance, List, on_trait_change, Str
+from traits.api import HasStrictTraits, Instance, List, on_trait_change, Any
                        
 from traitsui.api import View, Item, InstanceEditor, Spring, Label
 
@@ -57,7 +57,9 @@ from cytoflow.views import IView
 from cytoflowgui.vertical_notebook_editor import VerticalNotebookEditor
 from cytoflowgui.workflow_item import WorkflowItem, RemoteWorkflowItem
 from cytoflowgui.util import UniquePriorityQueue
-import cytoflowgui.util as guiutil
+from cytoflowgui.multiprocess_logging import QueueHandler
+import cytoflowgui.matplotlib_backend
+# import cytoflowgui.util as guiutil
 
 # pipe connections for communicating between processes
 # http://stackoverflow.com/questions/1977362/how-to-create-module-wide-variables-in-python
@@ -117,7 +119,11 @@ class Workflow(HasStrictTraits):
     
     recv_thread = Instance(threading.Thread)
     send_thread = Instance(threading.Thread)
+    log_thread = Instance(threading.Thread)
     message_q = Instance(Queue.Queue, ())
+    
+    # the Pipe connection object to pass to the matplotlib canvas
+    child_matplotlib_conn = Any
     
     # the child log
 #     child_log = Str
@@ -128,7 +134,8 @@ class Workflow(HasStrictTraits):
         
         # communications channels
         parent_workflow_conn, child_workflow_conn = multiprocessing.Pipe()  
-        parent_mpl_conn, child_mpl_conn = multiprocessing.Pipe()
+        parent_mpl_conn, self.child_matplotlib_conn = multiprocessing.Pipe()
+        log_q = multiprocessing.Queue()
         
              
         self.recv_thread = threading.Thread(target = self.recv_main, 
@@ -143,18 +150,21 @@ class Workflow(HasStrictTraits):
         self.send_thread.daemon = True
         self.send_thread.start()
         
+        self.log_thread = threading.Thread(target = self.log_main,
+                                           name = "log listener thread",
+                                           args = [log_q])
+        self.log_thread.daemon = True
+        self.log_thread.start()
+        
         remote_workflow = RemoteWorkflow()
         
         remote_process = multiprocessing.Process(target = remote_workflow.run,
                                                  name = "remote",
                                                  args = [parent_workflow_conn,
-                                                         parent_mpl_conn])
+                                                         parent_mpl_conn,
+                                                         log_q])
         remote_process.daemon = True
         remote_process.start()    
-        
-# 
-#         mpl_parent_conn, mpl_child_conn = multiprocessing.Pipe()
-#         log_q = multiprocessing.Queue()
  
 
     def recv_main(self, child_conn):
@@ -199,6 +209,23 @@ class Workflow(HasStrictTraits):
         while True:
             msg = self.message_q.get()
             child_conn.send(msg)
+            
+    def log_main(self, log_q):
+        # from http://plumberjack.blogspot.com/2010/09/using-logging-with-multiprocessing.html
+        while True:
+            try:
+                record = log_q.get()
+                if record is None: # We send this as a sentinel to tell the listener to quit.
+                    break
+                logger = logging.getLogger(record.name)
+                logger.handle(record) # No level or filter logic applied - just do it!
+            except (KeyboardInterrupt, SystemExit):
+                raise
+            except:
+                import traceback
+                print >> sys.stderr, 'Whoops! Problem:'
+                traceback.print_exc(file=sys.stderr)
+        pass
 
 
     @on_trait_change('workflow')
@@ -317,7 +344,6 @@ class Workflow(HasStrictTraits):
 
         
 class RemoteWorkflow(HasStrictTraits):
-    
     workflow = List(RemoteWorkflowItem)
     selected = Instance(RemoteWorkflowItem)
     
@@ -330,16 +356,27 @@ class RemoteWorkflow(HasStrictTraits):
     
     exec_q = Instance(UniquePriorityQueue, ())
     
-    def run(self, parent_conn):
+    def run(self, parent_workflow_conn, parent_mpl_conn, log_q):
+        
+        # make queue messages go to log_q
+        h = QueueHandler(log_q) 
+        logging.getLogger().addHandler(h)
+        logging.getLogger().setLevel(logging.DEBUG)
+        
+        # configure matplotlib backend to use the pipe
+        plt.new_figure_manager = lambda num, parent_conn = parent_mpl_conn, *args, **kwargs: \
+                                    cytoflowgui.matplotlib_backend.new_figure_manager(num, parent_conn = parent_conn, *args, **kwargs)
+        
+        # start threads
         self.recv_thread = threading.Thread(target = self.recv_main, 
                              name = "remote recv thread",
-                             args = [parent_conn])
+                             args = [parent_workflow_conn])
         self.recv_thread.daemon = True
         self.recv_thread.start()
         
         self.send_thread = threading.Thread(target = self.send_main,
                                             name = "remote send thread",
-                                            args = [parent_conn])
+                                            args = [parent_workflow_conn])
         self.send_thread.daemon = True
         self.send_thread.start()
         

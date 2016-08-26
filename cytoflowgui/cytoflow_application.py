@@ -30,16 +30,9 @@ from pyface.tasks.api import TaskWindowLayout
 from traits.api import Bool, Instance, List, Property, push_exception_handler, Str
 
 from preferences import CytoflowPreferences
-
-# pipe connections for communicating between processes
-# http://stackoverflow.com/questions/1977362/how-to-create-module-wide-variables-in-python
-# this = sys.modules[__name__]
-# this.parent_conn = None
-# this.child_conn = None
-
-#  
-# def gui_handler_callback(msg, app):
-#     app.application_error = msg
+  
+def gui_handler_callback(msg, app):
+    app.application_error = msg
 
 class CytoflowApplication(TasksApplication):
     """ The cytoflow Tasks application.
@@ -59,40 +52,38 @@ class CytoflowApplication(TasksApplication):
     # Whether to restore the previous application-level layout when the
     # applicaton is started.
     always_use_default_layout = Property(Bool)
-#     
-#     application_error = Str
-#     application_log = Instance(StringIO.StringIO, ())
+
+    # if there's an ERROR-level log message, drop it here     
+    application_error = Str
+    
+    # keep the application log in memory
+    application_log = Instance(StringIO.StringIO, ())
             
     def run(self):
+
+        ##### set up logging
+        logging.getLogger().setLevel(logging.DEBUG)
         
-#         # setup the root logger
-#         h = multiprocess_logging.QueueHandler(log_q)  # Just the one handler needed
-#         logging.getLogger().addHandler(h)
-#         logging.getLogger().setLevel(logging.DEBUG)
-#         
-#         ## send the log to STDERR
-#         console_handler = logging.StreamHandler()
-#         console_handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s:%(name)s:%(message)s"))
-#          
-#         ## capture log in memory
-#         mem_handler = logging.StreamHandler(self.application_log)
-#         mem_handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s:%(name)s:%(message)s"))
-#         
-#         ## and display gui messages for exceprions
-#         gui_handler = multiprocess_logging.CallbackHandler( lambda msg, app = self: gui_handler_callback(msg, app))
-#         gui_handler.setLevel(logging.ERROR)
-#         
-#         # start the queue listener to process log records from all processes
-#         log_listener = multiprocess_logging.QueueListener(log_q, console_handler, mem_handler, gui_handler)
-#         log_listener.start()
-#         
-#         # must redirect to the gui thread
-#         self.on_trait_change(self.show_error, 'application_error', dispatch = 'ui')
+        ## send the log to STDERR
+        console_handler = logging.StreamHandler()
+        console_handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s:%(name)s:%(message)s"))
+        logging.getLogger().addHandler(console_handler)
+          
+        ## capture log in memory
+        mem_handler = logging.StreamHandler(self.application_log)
+        mem_handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s:%(name)s:%(message)s"))
+        logging.getLogger().addHandler(mem_handler)
+         
+        ## and display gui messages for exceprions
+        gui_handler = multiprocess_logging.CallbackHandler( lambda msg, app = self: gui_handler_callback(msg, app))
+        gui_handler.setLevel(logging.ERROR)
+        logging.getLogger().addHandler(gui_handler)
+         
+        # must redirect to the gui thread
+        self.on_trait_change(self.show_error, 'application_error', dispatch = 'ui')
         
         # run the GUI
         super(CytoflowApplication, self).run()
-        
-#         log_listener.stop()
         
     def show_error(self, error_string):
         error(None, "An exception has occurred.  Please report a problem from the Help menu!\n\n" 

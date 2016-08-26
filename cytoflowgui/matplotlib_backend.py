@@ -65,11 +65,11 @@ from matplotlib.backend_bases import FigureManagerBase
 # process.
 
 # http://stackoverflow.com/questions/1977362/how-to-create-module-wide-variables-in-python
-this = sys.modules[__name__]
-this.parent_conn = None
-this.child_conn = None
-this.remote_canvas = None
-this.process_events = threading.Event()
+#this = sys.modules[__name__]
+#this.parent_conn = None
+#self.child_conn = None
+#this.remote_canvas = None
+#this.process_events = threading.Event()
 
 DEBUG = 0
 
@@ -91,10 +91,11 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
       figure - A Figure instance
    """
 
-    def __init__(self, figure):
+    def __init__(self, figure, child_conn):
         FigureCanvasQTAgg.__init__(self, figure)
         self._drawRect = None
         self.blitbox = None
+        self.child_conn = child_conn
         
         self.buffer = None
         self.buffer_width = None
@@ -115,22 +116,22 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         
         self.setAttribute(QtCore.Qt.WA_OpaquePaintEvent)    
         
-#         t = threading.Thread(target = self.listen_for_remote, 
-#                              name = "canvas listen",
-#                              args = ())
-#         t.daemon = True
-#         t.start()
-#         
-#         t = threading.Thread(target = self.send_to_remote, 
-#                              name = "canvas send",
-#                              args = ())
-#         t.daemon = True
-#         t.start()
+        t = threading.Thread(target = self.listen_for_remote, 
+                             name = "canvas listen",
+                             args = ())
+        t.daemon = True
+        t.start()
+         
+        t = threading.Thread(target = self.send_to_remote, 
+                             name = "canvas send",
+                             args = ())
+        t.daemon = True
+        t.start()
         
     def listen_for_remote(self):
-        while this.child_conn.poll(None):
+        while self.child_conn.poll(None):
             try:
-                (msg, payload) = this.child_conn.recv()
+                (msg, payload) = self.child_conn.recv()
             except EOFError:
                 return
             
@@ -161,14 +162,14 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
 #                 logging.debug('FigureCanvasQTAggLocal.send_to_remote: {}'
 #                               .format((Msg.MOUSE_MOVE_EVENT, self.move_x, self.move_y)))
                 msg = (Msg.MOUSE_MOVE_EVENT, (self.move_x, self.move_y))
-                this.child_conn.send(msg)
+                self.child_conn.send(msg)
                 self.move_x = self.move_y = None
                 
             if self.resize_width:
                 logging.debug('FigureCanvasQTAggLocal.send_to_remote: {}'
                               .format((Msg.RESIZE_EVENT, self.resize_width, self.resize_height)))
                 msg = (Msg.RESIZE_EVENT, (self.resize_width, self.resize_height))
-                this.child_conn.send(msg)
+                self.child_conn.send(msg)
                 self.resize_width = self.resize_height = None
 
             # for performance reasons, make sure there are no more than
@@ -189,7 +190,7 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         button = self.buttond.get(event.button())
         if button is not None:
             msg = (Msg.MOUSE_PRESS_EVENT, (x, y, button))
-            this.child_conn.send(msg)
+            self.child_conn.send(msg)
             
             
     def mouseDoubleClickEvent(self, event):
@@ -201,7 +202,7 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         button = self.buttond.get(event.button())
         if button is not None:
             msg = (Msg.MOUSE_DOUBLE_CLICK_EVENT, (x, y, button))
-            this.child_conn.send(msg)
+            self.child_conn.send(msg)
 
 
     def mouseMoveEvent(self, event):
@@ -223,7 +224,7 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         button = self.buttond.get(event.button())
         if button is not None:
             msg = (Msg.MOUSE_RELEASE_EVENT, (x, y, button))
-            this.child_conn.send(msg)
+            self.child_conn.send(msg)
 
 
     def resizeEvent(self, event):
@@ -292,7 +293,7 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
             self.blit_buffer = None
             
     def print_figure(self, *args, **kwargs):
-        this.child_conn.send((Msg.PRINT, (args, kwargs)))
+        self.child_conn.send((Msg.PRINT, (args, kwargs)))
 
 
 class FigureCanvasAggRemote(FigureCanvasAgg):
@@ -301,8 +302,10 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
     where someone is calling pyplot.plot()
    """
 
-    def __init__(self, figure):
+    def __init__(self, parent_conn, figure):
         FigureCanvasAgg.__init__(self, figure)
+        
+        self.parent_conn = parent_conn
         
         self.buffer_lock = threading.Lock()
         self.buffer = None
@@ -331,9 +334,9 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
         t.start()
         
     def listen_for_remote(self): 
-        while this.parent_conn.poll(None):
+        while self.parent_conn.poll(None):
             try:
-                (msg, payload) = this.parent_conn.recv()
+                (msg, payload) = self.parent_conn.recv()
             except EOFError:
                 return
             
@@ -348,24 +351,24 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
                 self.draw()
             elif msg == Msg.MOUSE_PRESS_EVENT:
                 (x, y, button) = payload
-                if this.process_events.is_set():
-                    FigureCanvasAgg.button_press_event(self, x, y, button)
+#                 if this.process_events.is_set():
+                FigureCanvasAgg.button_press_event(self, x, y, button)
             elif msg == Msg.MOUSE_DOUBLE_CLICK_EVENT:
                 (x, y, button) = payload
-                if this.process_events.is_set():
-                    FigureCanvasAgg.button_press_event(self, x, y, button, dblclick = True)
+#                 if this.process_events.is_set():
+                FigureCanvasAgg.button_press_event(self, x, y, button, dblclick = True)
             elif msg == Msg.MOUSE_RELEASE_EVENT:
                 (x, y, button) = payload
-                if this.process_events.is_set():
-                    FigureCanvasAgg.button_release_event(self, x, y, button)
+#                 if this.process_events.is_set():
+                FigureCanvasAgg.button_release_event(self, x, y, button)
             elif msg == Msg.MOUSE_MOVE_EVENT:
                 (x, y) = payload
-                if this.process_events.is_set():
-                    FigureCanvasAgg.motion_notify_event(self, x, y)
+#                 if this.process_events.is_set():
+                FigureCanvasAgg.motion_notify_event(self, x, y)
             elif msg == Msg.PRINT:
                 (args, kwargs) = payload
-                if this.process_events.is_set():
-                    FigureCanvasAgg.print_figure(self, *args, **kwargs)
+#                 if this.process_events.is_set():
+                FigureCanvasAgg.print_figure(self, *args, **kwargs)
             else:
                 raise RuntimeError("FigureCanvasAggRemote received bad message {}".format(msg))
             
@@ -380,7 +383,7 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
                     msg = (Msg.DRAW, (self.buffer,
                                       self.buffer_width, 
                                       self.buffer_height))
-                this.parent_conn.send(msg)
+                self.parent_conn.send(msg)
             else:
                 with self.blit_lock:
                     msg = (Msg.BLIT, (self.blit_buffer,
@@ -388,7 +391,7 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
                                       self.blit_height,
                                       self.blit_top,
                                       self.blit_left))
-                this.parent_conn.send(msg)
+                self.parent_conn.send(msg)
                 self.blit_buffer = None
         
     def draw(self, *args, **kwargs):
@@ -436,34 +439,40 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
             self.blit_left = l
             
         self.update_remote.set()
-    
+        
+remote_canvas = None
 
 def new_figure_manager(num, *args, **kwargs):
     """
     Create a new figure manager instance
     """
     
+    global remote_canvas
+    
     logging.debug("mpl_multiprocess_backend.new_figure_manager()")
+    
+    # get the pipe connection
+    parent_conn = kwargs.pop('parent_conn')
 
     # make a new figure
     FigureClass = kwargs.pop('FigureClass', Figure)
     new_fig = FigureClass(*args, **kwargs)
  
     # the canvas is a singleton.
-    if not this.remote_canvas:
-        this.remote_canvas = FigureCanvasAggRemote(new_fig)
+    if not remote_canvas:
+        remote_canvas = FigureCanvasAggRemote(parent_conn, new_fig)
     else:         
-        old_fig = this.remote_canvas.figure
+        old_fig = remote_canvas.figure
         new_fig.set_size_inches(old_fig.get_figwidth(), 
                                 old_fig.get_figheight())
-        this.remote_canvas.figure = new_fig
+        remote_canvas.figure = new_fig
         
-    new_fig.set_canvas(this.remote_canvas)
+    new_fig.set_canvas(remote_canvas)
 
     # close the current figure (to keep pyplot happy)
     matplotlib.pyplot.close()
  
-    return FigureManagerBase(this.remote_canvas, num)
+    return FigureManagerBase(remote_canvas, num)
 
 
 def draw_if_interactive():
@@ -472,7 +481,7 @@ def draw_if_interactive():
     
 def show():
     logging.debug("mpl_multiprocess_backend.show")
-    this.remote_canvas.draw()
+    remote_canvas.draw()
 
 # make sure pyplot uses the remote canvas
 FigureCanvas = FigureCanvasAggRemote

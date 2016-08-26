@@ -40,7 +40,6 @@ from cytoflow.utility import CytoflowOpError, CytoflowViewError
 
 from cytoflowgui.flow_task_pane import TabListEditor
 from cytoflowgui.util import DelayedEvent
-import cytoflowgui.matplotlib_backend as mpl_backend
 
 # http://stackoverflow.com/questions/1977362/how-to-create-module-wide-variables-in-python
 this = sys.modules[__name__]
@@ -260,7 +259,7 @@ class WorkflowItem(HasStrictTraits):
         with warnings.catch_warnings(record = True) as w:
             try:
                 #with self.plot_lock:
-                mpl_backend.process_events.clear()
+                #mpl_backend.process_events.clear()
 
                 self.current_view.plot_wi(self)
             
@@ -277,7 +276,7 @@ class WorkflowItem(HasStrictTraits):
                 # the plot updates
                 plt.show()
                   
-                mpl_backend.process_events.set()
+                #mpl_backend.process_events.set()
                    
                 if w:
                     self.view_warning = w[-1].message.__str__()
