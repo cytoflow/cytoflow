@@ -250,7 +250,7 @@ class PolygonSelection(cytoflow.views.ScatterplotView):
                                   fill = False)
             
         self._ax.add_patch(self._patch)
-        plt.draw_if_interactive()
+        plt.draw()
     
     @on_trait_change('interactive', post_init = True)
     def _interactive(self):

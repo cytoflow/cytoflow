@@ -246,7 +246,7 @@ class RangeSelection2D(cytoflow.views.ScatterplotView):
                                   facecolor="grey",
                                   alpha = 0.2)
             self._ax.add_patch(self._box)
-            plt.draw_if_interactive()
+            plt.draw()
     
     @on_trait_change('interactive', post_init = True)
     def _interactive(self):

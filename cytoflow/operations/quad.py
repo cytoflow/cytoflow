@@ -255,7 +255,7 @@ class QuadSelection(cytoflow.views.ScatterplotView):
                                       linewidth = 3,
                                       color = 'blue')
 
-            plt.draw_if_interactive()
+            plt.draw()
 
     @on_trait_change('interactive', post_init = True)
     def _interactive(self):

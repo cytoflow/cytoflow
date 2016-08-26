@@ -234,7 +234,7 @@ class RangeSelection(cytoflow.views.HistogramView):
                                color='blue', 
                                linewidth = 2)[0]
                                    
-        plt.draw_if_interactive()
+        plt.draw()
     
     @on_trait_change('interactive', post_init = True)
     def _interactive(self):
