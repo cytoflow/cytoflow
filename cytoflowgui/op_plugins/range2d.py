@@ -21,7 +21,7 @@ Created on Apr 25, 2015
 @author: brian
 '''
 
-from traits.api import provides, Callable, Float, Instance
+from traits.api import provides, Callable, Str, Instance, DelegatesTo
 from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
@@ -105,10 +105,17 @@ class RangeView2DHandler(Controller, ViewHandlerMixin):
 class Range2DSelectionView(RangeSelection2D, PluginViewMixin):
     handler_factory = Callable(RangeView2DHandler, transient = True)
     op = Instance(IOperation, fixed = True)
-    xlow = Float(status = True)
-    xhigh = Float(status = True)
-    ylow = Float(status = True)
-    yhigh = Float(status = True)
+    xlow = DelegatesTo('op', status = True)
+    xhigh = DelegatesTo('op', status = True)
+    ylow = DelegatesTo('op', status = True)
+    yhigh = DelegatesTo('op', status = True)
+    name = Str
+    
+    def should_plot(self, changed):
+        if changed == "prev_result" or changed == "view":
+            return True
+        else:
+            return False
     
     def plot_wi(self, wi):
         self.plot(wi.previous.result)
@@ -117,15 +124,7 @@ class Range2DPluginOp(Range2DOp, PluginOpMixin):
     handler_factory = Callable(Range2DHandler, transient = True)
     
     def default_view(self, **kwargs):
-        v = Range2DSelectionView(op = self, **kwargs)
-
-        self.sync_trait('xlow', v)
-        self.sync_trait('xhigh', v)
-
-        self.sync_trait('ylow', v)
-        self.sync_trait('yhigh', v)
-        
-        return v
+        return Range2DSelectionView(op = self, **kwargs)
 
 @provides(IOperationPlugin)
 class Range2DPlugin(Plugin):

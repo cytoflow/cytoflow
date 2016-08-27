@@ -20,11 +20,11 @@ Created on Mar 15, 2015
 @author: brian
 '''
 
-import warnings, logging, sys, threading
+import warnings, logging, sys
 
 from traits.api import HasStrictTraits, Instance, List, DelegatesTo, Enum, \
                        Property, cached_property, on_trait_change, Bool, \
-                       Str, Dict, Any, Event
+                       Str, Dict, Any
 from traitsui.api import View, Item, Handler
 from pyface.qt import QtGui
 
@@ -62,7 +62,7 @@ class WorkflowItem(HasStrictTraits):
     name = DelegatesTo('operation')
     
     # the operation this Item wraps
-    operation = Instance(IOperation)
+    operation = Instance(IOperation, copy = "ref")
     
     # for the vertical notebook view, is this page deletable?
     deletable = Bool(True)
@@ -110,7 +110,7 @@ class WorkflowItem(HasStrictTraits):
                                     show_label = False))
     
     # the plot names for the currently selected view
-    current_view_plot_names = List(Any, status = True)
+    current_view_plot_names = List(Str, status = True)
     
     # if there are multiple plots, which are we viewing?
     current_plot = Str
@@ -140,13 +140,15 @@ class WorkflowItem(HasStrictTraits):
     view_warning = Str(status = True)
     
     # the event to make the workflow item re-estimate its internal model
-    do_estimate = Event
+    # do_estimate = Event
     
     # the icon for the vertical notebook view.  Qt specific, sadly.
     icon = Property(depends_on = 'status', transient = True)  
     
+    # synchronization primitives for plotting
     matplotlib_events = Any(transient = True)
     plot_lock = Any(transient = True)
+    
            
     @cached_property
     def _get_icon(self):
@@ -156,10 +158,12 @@ class WorkflowItem(HasStrictTraits):
             return QtGui.QStyle.SP_BrowserReload
         else: # self.valid == "invalid" or None
             return QtGui.QStyle.SP_DialogCancelButton
+        
 
     @cached_property
     def _get_operation_handler(self):
         return self.operation.handler_factory(model = self.operation)
+    
 
     @cached_property
     def _get_current_view_handler(self):
@@ -167,36 +171,103 @@ class WorkflowItem(HasStrictTraits):
             return self.current_view.handler_factory(model = self.current_view)
         else:
             return None
+
+    
+class RemoteWorkflowItem(WorkflowItem):
+
+    changed = DelayedEvent(delay = 0.1)
+    
+    # the Event we use to cause the remote process to run one of our 
+    # functions in the main thread
+    command = DelayedEvent(delay = 0.1)
+    
+    @on_trait_change('+status')
+    def _wi_changed(self, obj, name, old, new):
+        self.changed = "status"
         
-    @on_trait_change('result', post_init = True)
-    def _result_changed(self, experiment):
-        """Update channels and conditions"""
-  
-        if experiment:
-            self.channels = list(np.sort(experiment.channels))
-            self.conditions = experiment.conditions.keys()
+    @on_trait_change('operation:changed', post_init = True)
+    def _operation_changed(self, obj, name, old, new):
+        logging.debug("RemoteWorkflowItem._operation_changed :: {}"
+                      .format((self, new)))
             
-            self.conditions_types = experiment.conditions
+        if (new == "api" and self.operation.should_apply("operation")) or \
+           (new == "estimate" and self.operation.should_apply("estimate")):
+            self.status = "invalid"
+            self.command = "apply"
+            
+        if new == "estimate" and self.current_view and self.current_view.should_plot("estimate"):
+            self.command = "plot"
+            
+            
+    @on_trait_change('previous.result', post_init = True)
+    def _prev_result_changed(self, obj, name, old, new):
+        logging.debug("RemoteWorkflowItem._prev_result_changed :: {}"
+                      .format(self, new))
+        
+        if self.operation.should_apply("prev_result"):
+            self.status = "invalid"
+            self.command = "apply"
+            
+        if self.operation.should_clear_estimate("prev_result"):
+            try:
+                self.operation.clear_estimate()
+            except AttributeError:
+                pass
+            
+        if self.current_view and self.current_view.should_plot("prev_result"):
+            self.command = "plot"
+            
+            
+    @on_trait_change('result', post_init = True)
+    def _result_changed(self, obj, name, old, new):
+        logging.debug("RemoteWorkflowItem._result_changed :: {}"
+                      .format(self))   
+        
+        if self.current_view and self.current_view.should_plot("result"):
+            self.command = "plot"   
+            
+        if self.result:
+            self.channels = list(np.sort(self.result.channels))
+            self.conditions = self.result.conditions.keys()
+            
+            self.conditions_types = self.result.conditions
             
             for condition in self.conditions_types.keys():
-                el = np.sort(pd.unique(experiment[condition]))
+                el = np.sort(pd.unique(self.result[condition]))
                 el = el[pd.notnull(el)]
                 self.conditions_values[condition] = list(el)
                 
-                
-    @on_trait_change('result,current_view', post_init = True)
-    def _update_plot_names(self):
-        if self.result and self.current_view:
-            try:
-                plot_names = [x for x in self.current_view.enum_plots(self.result)]
-                if plot_names == [None]:
-                    self.current_view_plot_names = []
-                else:
-                    self.current_view_plot_names = plot_names
-            except AttributeError:
-                self.current_view_plot_names = []
-        else:
-            self.current_view_plot_names = []         
+            
+    @on_trait_change('current_view', post_init = True)
+    def _current_view_changed(self, obj, name, old, new):
+        logging.debug("RemoteWorkflowItem._current_view_changed :: {}"
+                      .format((self, new.id)))
+        
+        self.command = "plot"        
+        
+        
+    @on_trait_change('current_view:changed', post_init = True)
+    def _current_view_trait_changed(self, obj, name, old, new):
+        logging.debug("RemoteWorkflowItem._current_view_trait_changed :: {}"
+                      .format((self, new)))       
+         
+        if new == "api" and self.current_view.should_plot("view"):
+            self.command = "plot"
+
+             
+#     @on_trait_change('result,current_view', post_init = True)
+#     def _update_plot_names(self):
+#         if self.result and self.current_view:
+#             try:
+#                 plot_names = [x for x in self.current_view.enum_plots(self.result)]
+#                 if plot_names == [None]:
+#                     self.current_view_plot_names = []
+#                 else:
+#                     self.current_view_plot_names = plot_names
+#             except AttributeError:
+#                 self.current_view_plot_names = []
+#         else:
+#             self.current_view_plot_names = []         
 
 
     def estimate(self):
@@ -223,11 +294,11 @@ class WorkflowItem(HasStrictTraits):
                 return        
             
             
-    def update(self):
+    def apply(self):
         """
-        Called by the controller to update this wi
+        Apply this wi's operation to the previous wi's result
         """
-        logging.debug("WorkflowItem.update :: {}".format((self)))
+        logging.debug("WorkflowItem.apply :: {}".format((self)))
          
         prev_result = self.previous.result if self.previous else None
          
@@ -288,49 +359,5 @@ class WorkflowItem(HasStrictTraits):
             except CytoflowViewError as e:
                 self.view_error = e.__str__()   
                 plt.clf()
-                plt.show()     
-
-
-    
-class RemoteWorkflowItem(WorkflowItem):
-
-    # the Event we use to cause the remote process to run one of our 
-    # functions in the main thread
-    
-    command = DelayedEvent(delay = 0.2)
-        
-    @on_trait_change('operation:changed', post_init = True)
-    def _operation_changed(self, obj, name, old, new):
-        logging.debug("RemoteWorkflowItem._operation_changed :: {}"
-                      .format((self, new)))
+                plt.show()   
             
-        if new == "api":
-            self.status = "invalid"
-            self.command = "update"
-            
-            
-    @on_trait_change('previous.result', post_init = True)
-    def _prev_result_changed(self, obj, name, old, new):
-        logging.debug("RemoteWorkflowItem._prev_result_changed :: {}"
-                      .format(self, new))
-        
-        self.status = "invalid"
-        self.command = "update"
-                                    
-            
-    @on_trait_change('current_view', post_init = True)
-    def _current_view_changed(self, obj, name, old, new):
-        logging.debug("RemoteWorkflowItem._current_view_changed :: {}"
-                      .format((self, new.id)))
-        
-        self.command = "plot"        
-        
-        
-    @on_trait_change('current_view:changed', post_init = True)
-    def _current_view_trait_changed(self, obj, name, old, new):
-        logging.debug("RemoteWorkflowItem._current_view_trait_changed :: {}"
-                      .format((self, new)))       
-         
-        if new == "api":
-            self.command = "plot"   
-                    

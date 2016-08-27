@@ -15,14 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from traits.api import provides, Callable, Float, Instance
+from traits.api import provides, Callable, Str, Instance, DelegatesTo
 from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
 from cytoflow.views.i_selectionview import ISelectionView
 from cytoflow.operations import IOperation
-from cytoflow.operations.i_operation import IOperation
 from cytoflow.operations.range import RangeOp, RangeSelection
 
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
@@ -83,8 +82,15 @@ class RangeViewHandler(Controller, ViewHandlerMixin):
 class RangeSelectionView(RangeSelection, PluginViewMixin):
     handler_factory = Callable(RangeViewHandler)
     op = Instance(IOperation, fixed = True)
-    low = Float(status = True)
-    high = Float(status = True)
+    low = DelegatesTo('op', status = True)
+    high = DelegatesTo('op', status = True)
+    name = Str
+    
+    def should_plot(self, changed):
+        if changed == "prev_result" or changed == "view":
+            return True
+        else:
+            return False
     
     def plot_wi(self, wi):
         self.plot(wi.previous.result)
@@ -95,10 +101,7 @@ class RangePluginOp(RangeOp, PluginOpMixin):
     handler_factory = Callable(RangeHandler)
     
     def default_view(self, **kwargs):
-        v = RangeSelectionView(op = self, **kwargs)
-        self.sync_trait('low', v)
-        self.sync_trait('high', v)
-        return v
+        return RangeSelectionView(op = self, **kwargs)
 
 @provides(IOperationPlugin)
 class RangePlugin(Plugin):

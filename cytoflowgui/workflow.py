@@ -212,6 +212,7 @@ class Workflow(HasStrictTraits):
             
     def log_main(self, log_q):
         # from http://plumberjack.blogspot.com/2010/09/using-logging-with-multiprocessing.html
+        
         while True:
             try:
                 record = log_q.get()
@@ -233,9 +234,6 @@ class Workflow(HasStrictTraits):
         logging.debug("LocalWorkflow._on_new_workflow")
             
         self.selected = None
-#         
-#         for wi in self.workflow:
-#             wi.status = "invalid"
         
         # send the new workflow to the child process
         self.message_q.put((Msg.NEW_WORKFLOW, self.workflow))
@@ -426,18 +424,6 @@ class RemoteWorkflow(HasStrictTraits):
                 wi.matplotlib_events = self.matplotlib_events
                 wi.plot_lock = self.plot_lock
                 
-                # in order to keep the the interactive views synchronized
-                # with the operation parameters, we need to call default_view()
-                # here again.
-                try:
-                    default_view = wi.operation.default_view()
-                    wi.views.remove(wi.default_view)
-                    wi.default_view = default_view
-                    wi.views.append(default_view)
-                    wi.current_view = default_view
-                except AttributeError:
-                    pass
-                
                 self.workflow.insert(idx, wi)
 
             elif msg == Msg.REMOVE_ITEMS:
@@ -565,7 +551,7 @@ class RemoteWorkflow(HasStrictTraits):
             self.message_q.put((Msg.UPDATE_OP, (idx, obj, new)))
             
 
-    @on_trait_change('workflow:+status')
+    @on_trait_change('workflow:changed')
     def _workflow_item_changed(self, obj, name, old, new):
         logging.debug("RemoteWorkflow._workflow_status_changed :: {}"
                       .format((obj, name, old, new)))
@@ -580,8 +566,8 @@ class RemoteWorkflow(HasStrictTraits):
         
         idx = self.workflow.index(obj)            
 
-        if cmd == "update":
-            self.exec_q.put_nowait((idx, obj.update))
+        if cmd == "apply":
+            self.exec_q.put_nowait((idx, obj.apply))
         elif cmd == "estimate":
             self.exec_q.put_nowait((idx - 0.1, obj.estimate))
         elif cmd == "plot":

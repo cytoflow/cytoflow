@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from traits.api import provides, Callable, Float, Instance, on_trait_change
+from traits.api import provides, Callable, Instance, Str, DelegatesTo
 from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
@@ -80,7 +80,14 @@ class ThresholdViewHandler(Controller, ViewHandlerMixin):
 class ThresholdSelectionView(ThresholdSelection, PluginViewMixin):
     handler_factory = Callable(ThresholdViewHandler, transient = True)    
     op = Instance(IOperation, fixed = True)
-    threshold = Float(status = True)
+    threshold = DelegatesTo('op', status = True)
+    name = Str
+    
+    def should_plot(self, changed):
+        if changed == "prev_result" or changed == "view":
+            return True
+        else:
+            return False
         
     def plot_wi(self, wi):        
         self.plot(wi.previous.result)
@@ -89,13 +96,7 @@ class ThresholdPluginOp(ThresholdOp, PluginOpMixin):
     handler_factory = Callable(ThresholdHandler, transient = True)
      
     def default_view(self, **kwargs):
-        v = ThresholdSelectionView(op = self, **kwargs)
-         
-        # because ThresholdSelectionView.threshold is no longer a Delegate,
-        # we need to maintain the synchronization
-        self.sync_trait('threshold', v)
-
-        return v
+        return ThresholdSelectionView(op = self, **kwargs)
 
 @provides(IOperationPlugin)
 class ThresholdPlugin(Plugin):

@@ -1,5 +1,4 @@
 #!/usr/bin/env python2.7
-from traits.has_traits import on_trait_change
 
 # (c) Massachusetts Institute of Technology 2015-2016
 #
@@ -22,7 +21,7 @@ Created on Apr 25, 2015
 @author: brian
 '''
 
-from traits.api import provides, Callable, List, Float, Instance
+from traits.api import provides, Callable, Str, Instance, DelegatesTo
 from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
@@ -93,11 +92,14 @@ class PolygonViewHandler(Controller, ViewHandlerMixin):
 class PolygonSelectionView(PolygonSelection, PluginViewMixin):
     handler_factory = Callable(PolygonViewHandler)
     op = Instance(IOperation, fixed = True)
-    vertices = List((Float, Float), status = True)
+    vertices = DelegatesTo('op', status = True)
+    name = Str
     
-    @on_trait_change('vertices[]')
-    def _vertices_changed(self):
-        self.changed = "status"
+    def should_plot(self, changed):
+        if changed == "prev_result" or changed == "view":
+            return True
+        else:
+            return False
     
     def plot_wi(self, wi):
         self.plot(wi.previous.result)
@@ -106,9 +108,7 @@ class PolygonPluginOp(PolygonOp, PluginOpMixin):
     handler_factory = Callable(PolygonHandler)
     
     def default_view(self, **kwargs):
-        v = PolygonSelectionView(op = self, **kwargs)
-        self.sync_trait('vertices', v)
-        return v
+        return PolygonSelectionView(op = self, **kwargs)
 
 @provides(IOperationPlugin)
 class PolygonPlugin(Plugin):

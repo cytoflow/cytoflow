@@ -21,7 +21,7 @@ Created on Mar 15, 2015
 @author: brian
 """
 
-from traits.api import Interface, Str, HasTraits, Instance, Event, on_trait_change
+from traits.api import Interface, Str, HasTraits, Instance, on_trait_change
 from traitsui.api import Handler
 
 from cytoflowgui.util import DelayedEvent
@@ -63,15 +63,17 @@ class PluginViewMixin(HasTraits):
     
     # why can't we just put this in a workflow listener?  it's because
     # we sometimes need to override it on a per-module basis
-    
-    @on_trait_change("+status", post_init = True)
-    def status_changed(self, obj, name, old, new):
-        self.changed = "status"
         
     @on_trait_change("-status", post_init = True)
-    def api_changed(self, obj, name, old, new):
+    def _changed(self, obj, name, old, new):
         if not obj.trait(name).transient:
-            self.changed = "api"
+            if obj.trait(name).status:
+                self.changed = "status"
+            else:
+                self.changed = "api"
+            
+    def should_plot(self, changed):
+        return True
     
     def plot_wi(self, wi):
         if hasattr(self, 'enum_plots'):
