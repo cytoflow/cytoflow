@@ -64,7 +64,7 @@ class PluginViewMixin(HasTraits):
     # why can't we just put this in a workflow listener?  it's because
     # we sometimes need to override or supplement it on a per-module basis
         
-    @on_trait_change("-status", post_init = True)
+    @on_trait_change("+", post_init = True)
     def _changed(self, obj, name, old, new):
         if not obj.trait(name).transient:
             if obj.trait(name).status:
