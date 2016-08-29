@@ -191,9 +191,14 @@ class RemoteWorkflowItem(WorkflowItem):
     def _operation_changed(self, obj, name, old, new):
         logging.debug("RemoteWorkflowItem._operation_changed :: {}"
                       .format((self, new)))
+        
+        if new == "estimate" and self.operation.should_clear_estimate("estimate"):
+            try:
+                self.operation.clear_estimate()
+            except AttributeError:
+                pass
             
         if new == "api" and self.operation.should_apply("operation"):
-            self.status = "invalid"
             self.command = "apply"
             
         if new == "estimate_result" and self.operation.should_apply("estimate_result"):
