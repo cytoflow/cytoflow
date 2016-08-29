@@ -23,7 +23,7 @@ Created on Dec 16, 2015
 
 from __future__ import division, absolute_import
 
-import warnings
+import warnings, random, string
 
 from traits.api import (HasStrictTraits, Str, CStr, Dict, Any, Instance, Bool, 
                         Constant, List, provides, DelegatesTo)
@@ -268,7 +268,6 @@ class GaussianMixture1DOp(HasStrictTraits):
         # what we DON'T want to do is iterate through event-by-event.
         # the more of this we can push into numpy, sklearn and pandas,
         # the faster it's going to be.
-
         
         for group, data_subset in groupby:
             gmm = self._gmms[group]
@@ -345,7 +344,7 @@ class GaussianMixture1DOp(HasStrictTraits):
         return GaussianMixture1DView(op = self, **kwargs)
     
 @provides(cytoflow.views.IView)
-class GaussianMixture1DView(cytoflow.views.HistogramView):
+class GaussianMixture1DView(HasStrictTraits):
     """
     Attributes
     ----------
@@ -359,7 +358,7 @@ class GaussianMixture1DView(cytoflow.views.HistogramView):
         A read-only property that computes the number of plots from the 
         
         
-    plot_idx : Python (default: None)
+    plot_idx : Python expression (default: None)
         The subset of data to display.  Must match one of the keys of 
         `op._gmms`.  If `None` (the default), display a plot for each subset.
     """
@@ -369,11 +368,10 @@ class GaussianMixture1DView(cytoflow.views.HistogramView):
     
     # TODO - why can't I use GaussianMixture1DOp here?
     op = Instance(IOperation)
-    name = DelegatesTo('op', transient = True)
-    channel = DelegatesTo('op', transient = True)
-    scale = DelegatesTo('op', transient = True)
-    huefacet = DelegatesTo('op', 'name', transient = True)
-    
+    name = DelegatesTo('op')
+    channel = DelegatesTo('op')
+    scale = DelegatesTo('op')
+    subset = Str
         
     def enum_plots(self, experiment):
         """
@@ -412,35 +410,46 @@ class GaussianMixture1DView(cytoflow.views.HistogramView):
         if not experiment:
             raise util.CytoflowViewError("No experiment specified")
         
-        if self.xfacet:
-            raise util.CytoflowViewError("ThresholdSelection.xfacet must be empty")
-        
-        if self.yfacet:
-            raise util.CytoflowViewError("ThresholdSelection.yfacet must be empty")  
+        if not self.channel:
+            raise util.CytoflowViewError("No channel specified")
+                   
+        if self.channel not in experiment.data:
+            raise util.CytoflowViewError("Channel {0} not found in the experiment"
+                                  .format(self.channel))
               
         if self.op.by and not plot_name:
             for plot in self.enum_plots(experiment):
                 self.plot(experiment, plot, **kwargs)
                 plt.title("{0} = {1}".format(self.op.by, plot))
             return
-                
+                                
         temp_experiment = experiment.clone()
         
         if plot_name:
             groupby = experiment.data.groupby(self.op.by)
             temp_experiment.data = groupby.get_group(plot_name)
             temp_experiment.data.reset_index(drop = True, inplace = True)
-        
+            
         try:
-            temp_experiment = self.op.apply(temp_experiment)
-            cytoflow.HistogramView.plot(self, temp_experiment, **kwargs)
+            temp_op = GaussianMixture1DOp()
+            temp_op.copy_traits(self.op, transient = lambda x: True)
+            if not self.name:
+                warnings.warn("Operation name not set!", util.CytoflowViewWarning)
+                temp_op.name = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
+                kwargs.setdefault("legend", False)
+            temp_experiment = temp_op.apply(temp_experiment)
+            cytoflow.HistogramView(channel = self.channel,
+                                   scale = self.scale,
+                                   subset = self.subset,
+                                   huefacet = temp_op.name).plot(temp_experiment, **kwargs)
         except util.CytoflowOpError as e:
             warnings.warn(e.__str__(), util.CytoflowViewWarning)
             cytoflow.HistogramView(channel = self.channel,
-                                   scale = self.scale).plot(temp_experiment, **kwargs)
-            return
+                                   scale = self.scale,
+                                   subset = self.subset).plot(temp_experiment, **kwargs)
+            return  
         
-        # get the scale back from the op
+        # get the parameterized scale object back from the op
         scale = self.op._scale
         
         # plot the actual distribution on top of it.

@@ -73,6 +73,14 @@ class PluginViewMixin(HasTraits):
                 self.changed = "api"
             
     def should_plot(self, changed):
+        """
+        Should the owning WorkflowItem refresh the plot when certain things
+        change?  `changed` can be:
+         - "view" -- the view's parameters changed
+         - "result" -- this WorkflowItem's result changed
+         - "prev_result" -- the previous WorkflowItem's result changed
+         - "estimate_result" -- the results of calling "estimate" changed
+        """
         return True
     
     def plot_wi(self, wi):

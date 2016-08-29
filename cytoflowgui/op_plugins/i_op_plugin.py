@@ -84,10 +84,11 @@ class PluginOpMixin(HasTraits):
                 self.changed = "status"
             elif obj.trait(name).estimate:
                 self.changed = "estimate"
-            elif obj.trait(name).estimate_result:
-                self.changed = "estimate_result"
             else:
                 self.changed = "api"
+        
+        if obj.trait(name).estimate_result:
+            self.changed = "estimate_result"
                 
     def should_apply(self, changed):
         """

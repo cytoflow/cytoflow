@@ -23,7 +23,7 @@ Created on Dec 16, 2015
 
 from __future__ import division, absolute_import
 
-import warnings
+import warnings, random, string
 
 from traits.api import (HasStrictTraits, Str, CStr, Dict, Any, Instance, Bool, 
                         Constant, List, provides, DelegatesTo)
@@ -415,7 +415,7 @@ import matplotlib.patches as patches
 import matplotlib.transforms as transforms
     
 @provides(cytoflow.views.IView)
-class GaussianMixture2DView(cytoflow.views.ScatterplotView):
+class GaussianMixture2DView(HasStrictTraits):
     """
     Attributes
     ----------
@@ -435,12 +435,12 @@ class GaussianMixture2DView(cytoflow.views.ScatterplotView):
     
     # TODO - why can't I use GaussianMixture2DOp here?
     op = Instance(IOperation)
-    name = DelegatesTo('op', transient = True)
-    xchannel = DelegatesTo('op', transient = True)
-    ychannel = DelegatesTo('op', transient = True)
-    xscale = DelegatesTo('op', transient = True)
-    yscale = DelegatesTo('op', transient = True)
-    huefacet = DelegatesTo('op', 'name', transient = True)
+    name = DelegatesTo('op')
+    xchannel = DelegatesTo('op')
+    ychannel = DelegatesTo('op')
+    xscale = DelegatesTo('op')
+    yscale = DelegatesTo('op')
+    subset = Str
     
     def enum_plots(self, experiment):
         """
@@ -479,11 +479,19 @@ class GaussianMixture2DView(cytoflow.views.ScatterplotView):
         if not experiment:
             raise util.CytoflowViewError("No experiment specified")
         
-        if self.xfacet:
-            raise util.CytoflowViewError("ThresholdSelection.xfacet must be empty")
-        
-        if self.yfacet:
-            raise util.CytoflowViewError("ThresholdSelection.yfacet must be empty") 
+        if not self.xchannel:
+            raise util.CytoflowViewError("No X channel specified")
+                   
+        if self.xchannel not in experiment.data:
+            raise util.CytoflowViewError("X channel {0} not found in the experiment"
+                                  .format(self.channel))
+
+        if not self.ychannel:
+            raise util.CytoflowViewError("No Y channel specified")
+                   
+        if self.ychannel not in experiment.data:
+            raise util.CytoflowViewError("Y channel {0} not found in the experiment"
+                                  .format(self.channel))
         
         if self.op.by and not plot_name:
             for plot in self.enum_plots(experiment):
@@ -499,14 +507,26 @@ class GaussianMixture2DView(cytoflow.views.ScatterplotView):
             temp_experiment.data.reset_index(drop = True, inplace = True)
             
         try:
-            temp_experiment = self.op.apply(temp_experiment)
-            cytoflow.ScatterplotView.plot(self, temp_experiment, **kwargs)
+            temp_op = GaussianMixture2DOp()
+            temp_op.copy_traits(self.op, transient = lambda x: True)
+            if not self.name:
+                warnings.warn("Operation name not set!", util.CytoflowViewWarning)
+                temp_op.name = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
+                kwargs.setdefault("legend", False)
+            temp_experiment = temp_op.apply(temp_experiment)
+            cytoflow.ScatterplotView(xchannel = self.xchannel,
+                                     ychannel = self.ychannel,
+                                     xscale = self.xscale,
+                                     yscale = self.yscale,
+                                     huefacet = temp_op.name,
+                                     subset = self.subset).plot(temp_experiment, **kwargs)
         except util.CytoflowOpError as e:
             warnings.warn(e.__str__(), util.CytoflowViewWarning)
             cytoflow.ScatterplotView(xchannel = self.xchannel,
                                      ychannel = self.ychannel,
                                      xscale = self.xscale,
-                                     yscale = self.yscale).plot(temp_experiment, **kwargs)
+                                     yscale = self.yscale,
+                                     subset = self.subset).plot(temp_experiment, **kwargs)
             return
 
         

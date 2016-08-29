@@ -21,12 +21,12 @@ Created on Oct 9, 2015
 @author: brian
 '''
 
-import random, string
+from sklearn import mixture
 
 from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor, \
                          CheckListEditor, ButtonEditor
 from envisage.api import Plugin, contributes_to
-from traits.api import provides, Callable, List, Str, Instance
+from traits.api import provides, Callable, List, Str, Dict, Any, Instance, on_trait_change
 from pyface.api import ImageResource
 
 import cytoflow.utility as util
@@ -74,12 +74,20 @@ class GaussianMixture2DHandler(Controller, OpHandlerMixin):
 
 class GaussianMixture2DPluginOp(GaussianMixture2DOp, PluginOpMixin):
     handler_factory = Callable(GaussianMixture2DHandler)
+    
+    # add "estimate" metadata
     num_components = util.PositiveInt(1, estimate = True)
     sigma = util.PositiveFloat(0.0, allow_zero = True, estimate = True)
     by = List(Str, estimate = True)
     
+    _gmms = Dict(Any, Instance(mixture.GMM), transient = True, estimate_result = True)
+
     def default_view(self, **kwargs):
         return GaussianMixture2DPluginView(op = self, **kwargs)
+
+    @on_trait_change('_gmms[]')
+    def _gmms_changed(self):
+        self.changed = "estimate_result"
     
     def clear_estimate(self):
         self._gmms.clear()
@@ -92,8 +100,6 @@ class GaussianMixture2DViewHandler(Controller, ViewHandlerMixin):
                            Item('xchannel',
                                 style = 'readonly'),
                            Item('ychannel',
-                                style = 'readonly'),
-                           Item('huefacet',
                                 style = 'readonly'),
                            label = "2D Mixture Model Default Plot",
                            show_border = False)),
@@ -125,24 +131,24 @@ class GaussianMixture2DPluginView(GaussianMixture2DView, PluginViewMixin):
             return
         self.plot(wi.previous.result, wi.current_plot)
         
-    def plot(self, experiment, plot_name = None, **kwargs):
-        
-        orig_op = self.op
-        
-        if self.op.name:
-            op = self.op
-            legend = True
-        else:
-            op = self.op.clone_traits()
-            op.copy_traits(self.op, transient = True)
-            op.name = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
-            self.op = op
-            legend = False      
-
-        try:
-            GaussianMixture2DView.plot(self, experiment, plot_name = plot_name, legend = legend, **kwargs)
-        finally:
-            self.op = orig_op
+#     def plot(self, experiment, plot_name = None, **kwargs):
+#         
+#         orig_op = self.op
+#         
+#         if self.op.name:
+#             op = self.op
+#             legend = True
+#         else:
+#             op = self.op.clone_traits()
+#             op.copy_traits(self.op, transient = True)
+#             op.name = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
+#             self.op = op
+#             legend = False      
+# 
+#         try:
+#             GaussianMixture2DView.plot(self, experiment, plot_name = plot_name, legend = legend, **kwargs)
+#         finally:
+#             self.op = orig_op
 
 @provides(IOperationPlugin)
 class GaussianMixture2DPlugin(Plugin):

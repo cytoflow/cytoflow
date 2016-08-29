@@ -21,14 +21,12 @@ Created on Oct 9, 2015
 @author: brian
 '''
 
-import random, string
-
 from sklearn import mixture
 
 from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor, \
                          CheckListEditor, ButtonEditor
 from envisage.api import Plugin, contributes_to
-from traits.api import provides, Callable, Instance, Str, List, Dict, Any
+from traits.api import provides, Callable, Instance, Str, List, Dict, Any, on_trait_change
 from pyface.api import ImageResource
 
 from cytoflow.operations import IOperation
@@ -61,7 +59,7 @@ class GaussianMixture1DHandler(Controller, OpHandlerMixin):
                                                   name = 'context.previous.conditions'),
                          label = 'Group\nEstimates\nBy',
                          style = 'custom'),
-                    Item('context.estimate',
+                    Item('context.do_estimate',
                          editor = ButtonEditor(value = True,
                                                label = "Estimate!"),
                          show_label = False),
@@ -78,13 +76,13 @@ class GaussianMixture1DPluginOp(GaussianMixture1DOp, PluginOpMixin):
     by = List(Str, estimate = True)
     
     _gmms = Dict(Any, Instance(mixture.GMM), transient = True, estimate_result = True)
-    _scale = Instance(util.IScale, transient = True, estimate_result = True)
-    
-#     def _estimate_changed(self):
-#         self.changed = "estimate_result"
     
     def default_view(self, **kwargs):
         return GaussianMixture1DPluginView(op = self, **kwargs)
+    
+    @on_trait_change('_gmms[]')
+    def _gmms_changed(self):
+        self.changed = "estimate_result"
     
     def clear_estimate(self):
         self._gmms.clear()
@@ -95,8 +93,6 @@ class GaussianMixture1DViewHandler(Controller, ViewHandlerMixin):
                     VGroup(Item('name',
                                 style = 'readonly'),
                            Item('channel',
-                                style = 'readonly'),
-                           Item('huefacet',
                                 style = 'readonly'),
                            label = "1D Mixture Model Default Plot",
                            show_border = False)),
@@ -127,25 +123,6 @@ class GaussianMixture1DPluginView(GaussianMixture1DView, PluginViewMixin):
         if self.op.by and not wi.current_plot:
             return
         self.plot(wi.previous.result, plot_name = wi.current_plot)
-        
-#     def plot(self, experiment, plot_name = None, **kwargs):
-#         
-#         orig_op = self.op
-#         
-#         if self.op.name:
-#             op = self.op
-#             legend = True
-#         else:
-#             op = self.op.clone_traits()
-#             op.copy_traits(self.op, transient = True)
-#             op.name = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
-#             self.op = op
-#             legend = False      
-# 
-#         try:
-#             GaussianMixture1DView.plot(self, experiment, plot_name = plot_name, legend = legend, **kwargs)
-#         finally:
-#             self.op = orig_op
 
 @provides(IOperationPlugin)
 class GaussianMixture1DPlugin(Plugin):

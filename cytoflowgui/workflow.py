@@ -325,7 +325,7 @@ class Workflow(HasStrictTraits):
         plot = obj.current_plot
         self.message_q.put((Msg.CHANGE_CURRENT_PLOT, (idx, plot)))
         
-    @on_trait_change('workflow:estimate')
+    @on_trait_change('workflow:do_estimate')
     def _on_estimate(self, obj, name, old, new):
         logging.debug("LocalWorkflow._on_estimate :: {}"
                       .format((obj, name, old, new)))
@@ -475,7 +475,9 @@ class RemoteWorkflow(HasStrictTraits):
                 wi = self.workflow[idx]
                 wi.current_plot = plot
                 
-                self.exec_q.put_nowait((0, wi.plot))
+                #wi.command = "plot"
+                
+                #self.exec_q.put_nowait((0, wi.plot))
                     
             elif msg == Msg.CHANGE_DEFAULT_SCALE:
                 new_scale = payload
@@ -485,7 +487,8 @@ class RemoteWorkflow(HasStrictTraits):
                 idx = payload
                 wi = self.workflow[idx]
                 
-                self.exec_q.put_nowait((idx - 0.1, wi.estimate))
+                wi.command = "estimate"
+                #self.exec_q.put_nowait((idx - 0.1, wi.estimate))
 
             else:
                 raise RuntimeError("Bad command in the remote workflow")

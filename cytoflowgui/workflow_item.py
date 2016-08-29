@@ -142,7 +142,7 @@ class WorkflowItem(HasStrictTraits):
     view_warning = Str(status = True)
     
     # the event to make the workflow item re-estimate its internal model
-    estimate = Event
+    do_estimate = Event
     
     # the icon for the vertical notebook view.  Qt specific, sadly.
     icon = Property(depends_on = 'status', transient = True)  
@@ -196,8 +196,11 @@ class RemoteWorkflowItem(WorkflowItem):
             self.status = "invalid"
             self.command = "apply"
             
-#         if new == "estimate" and self.current_view and self.current_view.should_plot("estimate"):
-#             self.command = "plot"
+        if new == "estimate_result" and self.operation.should_apply("estimate_result"):
+            self.command = "apply"
+            
+        if new == "estimate_result" and self.current_view.should_plot("estimate_result"):
+            self.command = "plot"
             
             
     @on_trait_change('previous.result', post_init = True)
