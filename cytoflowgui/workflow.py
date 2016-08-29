@@ -574,4 +574,9 @@ class RemoteWorkflow(HasStrictTraits):
             self.exec_q.put_nowait((idx - 0.1, obj.estimate))
         elif cmd == "plot":
             self.exec_q.put_nowait((0, obj.plot))
+            
+    @on_trait_change('selected')
+    def _selected_changed(self, obj, name, new):
+        if new:
+            new.command = "plot"
         
