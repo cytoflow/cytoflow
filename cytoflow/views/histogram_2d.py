@@ -121,7 +121,7 @@ class Histogram2DView(HasStrictTraits):
             except:
                 raise util.CytoflowViewError("Subset string \'{0}\' not valid")
                             
-            if len(data.index) == 0:
+            if len(data) == 0:
                 raise util.CytoflowViewError("Subset string '{0}' returned no events"
                                         .format(self.subset))
         else:

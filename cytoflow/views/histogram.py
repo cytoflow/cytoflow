@@ -110,7 +110,7 @@ class HistogramView(HasStrictTraits):
                 raise util.CytoflowViewError("Subset string '{0}' isn't valid"
                                         .format(self.subset))
                 
-            if len(experiment.data) == 0:
+            if len(data) == 0:
                 raise util.CytoflowViewError("Subset string '{0}' returned no events"
                                         .format(self.subset))
         else:
