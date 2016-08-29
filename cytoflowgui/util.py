@@ -24,7 +24,7 @@ Created on Apr 18, 2015
 from traits.api import Event, Undefined
 
 from Queue import PriorityQueue
-import heapq, sys, threading
+import heapq, threading
 
 import numpy as np
 import scipy.stats
@@ -59,7 +59,7 @@ class UniquePriorityQueue(PriorityQueue):
 
 class DelayedEvent(Event):
     def __init__(self, **kwargs):
-        self._lock = threading.Lock()
+        self._lock = threading.RLock()
         super(DelayedEvent, self).__init__(**kwargs)
         
     def set ( self, obj, name, value ):
@@ -68,7 +68,7 @@ class DelayedEvent(Event):
         def fire(self, obj, name, value):
             self._lock.acquire()
             self.value = Undefined
-            obj.trait_property_changed( name, Undefined, value )
+            obj.trait_property_changed(name, Undefined, value)
             self._lock.release()
             
         self._lock.acquire()
