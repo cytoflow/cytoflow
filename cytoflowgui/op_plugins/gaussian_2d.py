@@ -26,7 +26,7 @@ from sklearn import mixture
 from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor, \
                          CheckListEditor, ButtonEditor
 from envisage.api import Plugin, contributes_to
-from traits.api import provides, Callable, List, Str, Dict, Any, Instance, on_trait_change
+from traits.api import provides, Callable, List, Str, Dict, Any, Instance, DelegatesTo
 from pyface.api import ImageResource
 
 import cytoflow.utility as util
@@ -64,6 +64,13 @@ class GaussianMixture2DHandler(Controller, OpHandlerMixin):
                                                   name = 'context.previous.conditions'),
                          label = 'Group\nEstimates\nBy',
                          style = 'custom'),
+                    VGroup(Item('subset',
+                                show_label = False,
+                                editor = SubsetEditor(conditions_types = "context.previous.conditions_types",
+                                                      conditions_values = "context.previous.conditions_values")),
+                           label = "Subset",
+                           show_border = False,
+                           show_labels = False),
                     Item('context.do_estimate',
                          editor = ButtonEditor(value = True,
                                                label = "Estimate!"),
@@ -74,6 +81,7 @@ class GaussianMixture2DHandler(Controller, OpHandlerMixin):
 
 class GaussianMixture2DPluginOp(GaussianMixture2DOp, PluginOpMixin):
     handler_factory = Callable(GaussianMixture2DHandler)
+    subset = Str
     
     # add "estimate" metadata
     num_components = util.PositiveInt(1, estimate = True)
@@ -84,6 +92,9 @@ class GaussianMixture2DPluginOp(GaussianMixture2DOp, PluginOpMixin):
 
     def default_view(self, **kwargs):
         return GaussianMixture2DPluginView(op = self, **kwargs)
+    
+    def estimate(self, experiment):
+        GaussianMixture2DOp.estimate(self, experiment, subset = self.subset)
     
     def clear_estimate(self):
         self._gmms.clear()
@@ -99,13 +110,6 @@ class GaussianMixture2DViewHandler(Controller, ViewHandlerMixin):
                                 style = 'readonly'),
                            label = "2D Mixture Model Default Plot",
                            show_border = False)),
-                    VGroup(Item('subset',
-                                show_label = False,
-                                editor = SubsetEditor(conditions_types = "context.previous.conditions_types",
-                                                      conditions_values = "context.previous.conditions_values")),
-                           label = "Subset",
-                           show_border = False,
-                           show_labels = False),
                     Item('context.view_warning',
                          resizable = True,
                          visible_when = 'context.view_warning',
@@ -121,6 +125,7 @@ class GaussianMixture2DViewHandler(Controller, ViewHandlerMixin):
 class GaussianMixture2DPluginView(GaussianMixture2DView, PluginViewMixin):
     handler_factory = Callable(GaussianMixture2DViewHandler)
     op = Instance(IOperation, fixed = True)
+    subset = DelegatesTo('op')
     
     def plot_wi(self, wi):
         if self.op.by and not wi.current_plot:
