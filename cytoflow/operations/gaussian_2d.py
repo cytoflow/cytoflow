@@ -165,6 +165,17 @@ class GaussianMixture2DOp(HasStrictTraits):
                                       " accidentally specify a data channel?"
                                       .format(b))
                 
+        if subset:
+            try:
+                experiment = experiment.query(subset)
+            except:
+                raise util.CytoflowViewError("Subset string '{0}' isn't valid"
+                                        .format(subset))
+                
+            if len(experiment) == 0:
+                raise util.CytoflowViewError("Subset string '{0}' returned no events"
+                                        .format(subset))
+                
         if self.by:
             groupby = experiment.data.groupby(self.by)
         else:
@@ -181,6 +192,9 @@ class GaussianMixture2DOp(HasStrictTraits):
         gmms = {}
             
         for group, data_subset in groupby:
+            if len(data_subset) == 0:
+                raise util.CytoflowOpError("Group {} had no data"
+                                           .format(group))
             x = data_subset.loc[:, [self.xchannel, self.ychannel]]
             x[self.xchannel] = self._xscale(x[self.xchannel])
             x[self.ychannel] = self._yscale(x[self.ychannel])

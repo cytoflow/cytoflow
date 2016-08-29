@@ -152,6 +152,17 @@ class GaussianMixture1DOp(HasStrictTraits):
             
         if self.num_components == 1 and self.sigma == 0.0:
             raise util.CytoflowOpError("If num_components == 1, sigma must be > 0")
+        
+        if subset:
+            try:
+                experiment = experiment.query(subset)
+            except:
+                raise util.CytoflowViewError("Subset string '{0}' isn't valid"
+                                        .format(subset))
+                
+            if len(experiment) == 0:
+                raise util.CytoflowViewError("Subset string '{0}' returned no events"
+                                        .format(subset))
                 
         if self.by:
             groupby = experiment.data.groupby(self.by)
@@ -168,6 +179,9 @@ class GaussianMixture1DOp(HasStrictTraits):
         gmms = {}
             
         for group, data_subset in groupby:
+            if len(data_subset) == 0:
+                raise util.CytoflowOpError("Group {} had no data"
+                                           .format(group))
             x = data_subset[self.channel].reset_index(drop = True)
             x = self._scale(x)
             
