@@ -21,12 +21,14 @@ Created on Oct 9, 2015
 @author: brian
 '''
 
-import random, string, warnings
+import random, string
+
+from sklearn import mixture
 
 from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor, \
                          CheckListEditor, ButtonEditor
 from envisage.api import Plugin, contributes_to
-from traits.api import provides, Callable, Instance, Str, List
+from traits.api import provides, Callable, Instance, Str, List, Dict, Any
 from pyface.api import ImageResource
 
 from cytoflow.operations import IOperation
@@ -59,7 +61,7 @@ class GaussianMixture1DHandler(Controller, OpHandlerMixin):
                                                   name = 'context.previous.conditions'),
                          label = 'Group\nEstimates\nBy',
                          style = 'custom'),
-                    Item('context.do_estimate',
+                    Item('context.estimate',
                          editor = ButtonEditor(value = True,
                                                label = "Estimate!"),
                          show_label = False),
@@ -74,6 +76,12 @@ class GaussianMixture1DPluginOp(GaussianMixture1DOp, PluginOpMixin):
     num_components = util.PositiveInt(1, estimate = True)
     sigma = util.PositiveFloat(0.0, allow_zero = True, estimate = True)
     by = List(Str, estimate = True)
+    
+    _gmms = Dict(Any, Instance(mixture.GMM), transient = True, estimate_result = True)
+    _scale = Instance(util.IScale, transient = True, estimate_result = True)
+    
+#     def _estimate_changed(self):
+#         self.changed = "estimate_result"
     
     def default_view(self, **kwargs):
         return GaussianMixture1DPluginView(op = self, **kwargs)
@@ -120,24 +128,24 @@ class GaussianMixture1DPluginView(GaussianMixture1DView, PluginViewMixin):
             return
         self.plot(wi.previous.result, plot_name = wi.current_plot)
         
-    def plot(self, experiment, plot_name = None, **kwargs):
-        
-        orig_op = self.op
-        
-        if self.op.name:
-            op = self.op
-            legend = True
-        else:
-            op = self.op.clone_traits()
-            op.copy_traits(self.op, transient = True)
-            op.name = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
-            self.op = op
-            legend = False      
-
-        try:
-            GaussianMixture1DView.plot(self, experiment, plot_name = plot_name, legend = legend, **kwargs)
-        finally:
-            self.op = orig_op
+#     def plot(self, experiment, plot_name = None, **kwargs):
+#         
+#         orig_op = self.op
+#         
+#         if self.op.name:
+#             op = self.op
+#             legend = True
+#         else:
+#             op = self.op.clone_traits()
+#             op.copy_traits(self.op, transient = True)
+#             op.name = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
+#             self.op = op
+#             legend = False      
+# 
+#         try:
+#             GaussianMixture1DView.plot(self, experiment, plot_name = plot_name, legend = legend, **kwargs)
+#         finally:
+#             self.op = orig_op
 
 @provides(IOperationPlugin)
 class GaussianMixture1DPlugin(Plugin):

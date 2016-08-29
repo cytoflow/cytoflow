@@ -325,7 +325,7 @@ class Workflow(HasStrictTraits):
         plot = obj.current_plot
         self.message_q.put((Msg.CHANGE_CURRENT_PLOT, (idx, plot)))
         
-    @on_trait_change('workflow:do_estimate')
+    @on_trait_change('workflow:estimate')
     def _on_estimate(self, obj, name, old, new):
         logging.debug("LocalWorkflow._on_estimate :: {}"
                       .format((obj, name, old, new)))
@@ -357,7 +357,6 @@ class RemoteWorkflow(HasStrictTraits):
     plot_lock = Any
     
     exec_q = Instance(UniquePriorityQueue, ())
-    
     
     def run(self, parent_workflow_conn, parent_mpl_conn, log_q):
         

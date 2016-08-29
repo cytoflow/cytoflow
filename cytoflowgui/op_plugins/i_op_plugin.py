@@ -84,16 +84,45 @@ class PluginOpMixin(HasTraits):
                 self.changed = "status"
             elif obj.trait(name).estimate:
                 self.changed = "estimate"
+            elif obj.trait(name).estimate_result:
+                self.changed = "estimate_result"
             else:
                 self.changed = "api"
                 
     def should_apply(self, changed):
+        """
+        Should the owning WorkflowItem apply this operation when certain things
+        change?  `changed` can be:
+         - "operation" -- the operation's parameters changed
+         - "prev_result" -- the previous WorkflowItem's result changed
+         - "estimate_result" -- the results of calling "estimate" changed
+        """
         return True
     
     def should_clear_estimate(self, changed):
+        """
+        Should the owning WorkflowItem clear the estimated model by calling
+        op.clear_estimate()?  `changed` can be:
+         - "estimate" -- the parameters required to call 'estimate()' (ie
+            traits with estimate = True metadata) have changed
+         - "prev_result" -- the previous WorkflowItem's result changed
+         """
         return True
+
             
-shared_op_traits = Group(Item('context.op_warning',
+shared_op_traits = Group(Item('context.estimate_warning',
+                              label = 'Warning',
+                              resizable = True,
+                              visible_when = 'context.estimate_warning',
+                              editor = ColorTextEditor(foreground_color = "#000000",
+                                                       background_color = "#ffff99")),
+                         Item('context.estimate_error',
+                               label = 'Error',
+                               resizable = True,
+                               visible_when = 'context.estimate_error',
+                               editor = ColorTextEditor(foreground_color = "#000000",
+                                                        background_color = "#ff9191")),
+                         Item('context.op_warning',
                               label = 'Warning',
                               resizable = True,
                               visible_when = 'context.op_warning',

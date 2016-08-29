@@ -24,7 +24,7 @@ import warnings, logging, sys
 
 from traits.api import HasStrictTraits, Instance, List, DelegatesTo, Enum, \
                        Property, cached_property, on_trait_change, Bool, \
-                       Str, Dict, Any
+                       Str, Dict, Any, Event
 from traitsui.api import View, Item, Handler
 from pyface.qt import QtGui
 
@@ -136,11 +136,13 @@ class WorkflowItem(HasStrictTraits):
     # report the errors and warnings
     op_error = Str(status = True)
     op_warning = Str(status = True)    
+    estimate_error = Str(status = True)
+    estimate_warning = Str(status = True)
     view_error = Str(status = True)
     view_warning = Str(status = True)
     
     # the event to make the workflow item re-estimate its internal model
-    # do_estimate = Event
+    estimate = Event
     
     # the icon for the vertical notebook view.  Qt specific, sadly.
     icon = Property(depends_on = 'status', transient = True)  
@@ -190,33 +192,31 @@ class RemoteWorkflowItem(WorkflowItem):
         logging.debug("RemoteWorkflowItem._operation_changed :: {}"
                       .format((self, new)))
             
-        if (new == "api" and self.operation.should_apply("operation")) or \
-           (new == "estimate" and self.operation.should_apply("estimate")):
+        if new == "api" and self.operation.should_apply("operation"):
             self.status = "invalid"
             self.command = "apply"
             
-        if new == "estimate" and self.current_view and self.current_view.should_plot("estimate"):
-            self.command = "plot"
+#         if new == "estimate" and self.current_view and self.current_view.should_plot("estimate"):
+#             self.command = "plot"
             
             
     @on_trait_change('previous.result', post_init = True)
     def _prev_result_changed(self, obj, name, old, new):
         logging.debug("RemoteWorkflowItem._prev_result_changed :: {}"
                       .format(self, new))
-        
-        if self.operation.should_apply("prev_result"):
-            self.status = "invalid"
-            self.command = "apply"
-            
+
         if self.operation.should_clear_estimate("prev_result"):
             try:
                 self.operation.clear_estimate()
             except AttributeError:
                 pass
-            
+        
+        if self.operation.should_apply("prev_result"):
+            self.status = "invalid"
+            self.command = "apply"
+      
         if self.current_view and self.current_view.should_plot("prev_result"):
-            self.command = "plot"
-            
+            self.command = "plot"            
             
     @on_trait_change('result', post_init = True)
     def _result_changed(self, obj, name, old, new):
@@ -271,25 +271,23 @@ class RemoteWorkflowItem(WorkflowItem):
 
 
     def estimate(self):
-        logging.debug("WorkflowItem.update :: {}".format((self)))
+        logging.debug("WorkflowItem.estimate :: {}".format((self)))
 
         prev_result = self.previous.result if self.previous else None
-         
+                 
         with warnings.catch_warnings(record = True) as w:
             try:    
                 self.status = "estimating"
-                self.result = None
                 self.operation.estimate(prev_result)
 
-                self.op_error = ""
+                self.estimate_error = ""
                 if w:
-                    self.op_warning = w[-1].message.__str__()
+                    self.estimate_warning = w[-1].message.__str__()
                 else:
-                    self.op_warning = ""
-                    
+                    self.estimate_warning = ""
                 
             except CytoflowOpError as e:
-                self.op_error = e.__str__()    
+                self.estimate_error = e.__str__()    
                 self.status = "invalid"
                 return        
             

@@ -23,10 +23,10 @@ Created on Dec 16, 2015
 
 from __future__ import division, absolute_import
 
-import warnings, logging
+import warnings
 
 from traits.api import (HasStrictTraits, Str, CStr, Dict, Any, Instance, Bool, 
-                        Constant, List, provides, DelegatesTo, CFloat)
+                        Constant, List, provides, DelegatesTo)
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn import mixture
