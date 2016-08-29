@@ -113,7 +113,7 @@ class ViewDockPane(TraitsDockPane):
         if new_view_id:
             self._actions[new_view_id] = self._default_action 
             
-        self._default_action.visible = (new_view_id is not None)
+        self._default_action.visible = (new_view_id is not "")
             
     @on_trait_change('selected_view')
     def _selected_view_changed(self, view_id):         
