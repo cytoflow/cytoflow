@@ -88,6 +88,9 @@ class PluginViewMixin(HasTraits):
             self.plot(wi.result, wi.current_plot)
         else:
             self.plot(wi.result)
+            
+    def enum_plots_wi(self, wi):
+        return []
 
 
 class ViewHandlerMixin(HasTraits):

@@ -132,6 +132,9 @@ class GaussianMixture2DPluginView(GaussianMixture2DView, PluginViewMixin):
             return
         self.plot(wi.previous.result, wi.current_plot)
         
+    def enum_plots_wi(self, wi):
+        return self.enum_plots(wi.previous.result)
+        
     def should_plot(self, changed):
         """
         Should the owning WorkflowItem refresh the plot when certain things

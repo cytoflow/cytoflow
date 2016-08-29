@@ -263,19 +263,13 @@ class RemoteWorkflowItem(WorkflowItem):
             self.command = "plot"
 
              
-#     @on_trait_change('result,current_view', post_init = True)
-#     def _update_plot_names(self):
-#         if self.result and self.current_view:
-#             try:
-#                 plot_names = [x for x in self.current_view.enum_plots(self.result)]
-#                 if plot_names == [None]:
-#                     self.current_view_plot_names = []
-#                 else:
-#                     self.current_view_plot_names = plot_names
-#             except AttributeError:
-#                 self.current_view_plot_names = []
-#         else:
-#             self.current_view_plot_names = []         
+    @on_trait_change('current_view', post_init = True)
+    def _update_plot_names(self):
+        plot_names = [x for x in self.current_view.enum_plots_wi(self)]
+        if plot_names == [None] or plot_names == []:
+            self.current_view_plot_names = []
+        else:
+            self.current_view_plot_names = plot_names      
 
 
     def estimate(self):
