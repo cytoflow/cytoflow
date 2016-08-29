@@ -20,6 +20,8 @@ Created on Mar 15, 2015
 
 @author: brian
 """
+import logging
+
 from traits.api import Interface, Str, HasTraits, on_trait_change
 from traitsui.api import Group, Item
 from cytoflowgui.color_text_editor import ColorTextEditor
@@ -79,6 +81,8 @@ class PluginOpMixin(HasTraits):
         
     @on_trait_change("+", post_init = True)
     def _trait_changed(self, obj, name, old, new):
+        logging.debug("PluginOpMixin::_trait_changed :: {}"
+                      .format((obj, name, old, new)))
         if not obj.trait(name).transient:
             if obj.trait(name).status:
                 self.changed = "status"

@@ -26,7 +26,7 @@ from sklearn import mixture
 from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor, \
                          CheckListEditor, ButtonEditor
 from envisage.api import Plugin, contributes_to
-from traits.api import provides, Callable, Instance, Str, List, Dict, Any, on_trait_change
+from traits.api import provides, Callable, Instance, Str, List, Dict, Any
 from pyface.api import ImageResource
 
 from cytoflow.operations import IOperation
@@ -80,13 +80,9 @@ class GaussianMixture1DPluginOp(GaussianMixture1DOp, PluginOpMixin):
     def default_view(self, **kwargs):
         return GaussianMixture1DPluginView(op = self, **kwargs)
     
-    @on_trait_change('_gmms[]')
-    def _gmms_changed(self):
-        self.changed = "estimate_result"
-    
     def clear_estimate(self):
-        self._gmms.clear()
-
+        self._gmms = {}
+        
 class GaussianMixture1DViewHandler(Controller, ViewHandlerMixin):
     def default_traits_view(self):
         return View(VGroup(
@@ -123,6 +119,20 @@ class GaussianMixture1DPluginView(GaussianMixture1DView, PluginViewMixin):
         if self.op.by and not wi.current_plot:
             return
         self.plot(wi.previous.result, plot_name = wi.current_plot)
+        
+    def should_plot(self, changed):
+        """
+        Should the owning WorkflowItem refresh the plot when certain things
+        change?  `changed` can be:
+         - "view" -- the view's parameters changed
+         - "result" -- this WorkflowItem's result changed
+         - "prev_result" -- the previous WorkflowItem's result changed
+         - "estimate_result" -- the results of calling "estimate" changed
+        """
+        if changed == "result":
+            return False
+        
+        return True
 
 @provides(IOperationPlugin)
 class GaussianMixture1DPlugin(Plugin):

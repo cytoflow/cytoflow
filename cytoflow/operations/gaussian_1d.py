@@ -164,6 +164,8 @@ class GaussianMixture1DOp(HasStrictTraits):
         # not subsets we get from groupby().  And we need to save it so that
         # the data is transformed the same way when we apply()
         self._scale = util.scale_factory(self.scale, experiment, self.channel)
+        
+        gmms = {}
             
         for group, data_subset in groupby:
             x = data_subset[self.channel].reset_index(drop = True)
@@ -191,7 +193,9 @@ class GaussianMixture1DOp(HasStrictTraits):
             gmm.weights_ = gmm.weights_[sort_idx]
             gmm.covars_ = gmm.covars_[sort_idx]
            
-            self._gmms[group] = gmm
+            gmms[group] = gmm
+            
+        self._gmms = gmms
     
     def apply(self, experiment):
         """

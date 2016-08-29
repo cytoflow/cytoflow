@@ -84,10 +84,6 @@ class GaussianMixture2DPluginOp(GaussianMixture2DOp, PluginOpMixin):
 
     def default_view(self, **kwargs):
         return GaussianMixture2DPluginView(op = self, **kwargs)
-
-    @on_trait_change('_gmms[]')
-    def _gmms_changed(self):
-        self.changed = "estimate_result"
     
     def clear_estimate(self):
         self._gmms.clear()
@@ -131,24 +127,20 @@ class GaussianMixture2DPluginView(GaussianMixture2DView, PluginViewMixin):
             return
         self.plot(wi.previous.result, wi.current_plot)
         
-#     def plot(self, experiment, plot_name = None, **kwargs):
-#         
-#         orig_op = self.op
-#         
-#         if self.op.name:
-#             op = self.op
-#             legend = True
-#         else:
-#             op = self.op.clone_traits()
-#             op.copy_traits(self.op, transient = True)
-#             op.name = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
-#             self.op = op
-#             legend = False      
-# 
-#         try:
-#             GaussianMixture2DView.plot(self, experiment, plot_name = plot_name, legend = legend, **kwargs)
-#         finally:
-#             self.op = orig_op
+    def should_plot(self, changed):
+        """
+        Should the owning WorkflowItem refresh the plot when certain things
+        change?  `changed` can be:
+         - "view" -- the view's parameters changed
+         - "result" -- this WorkflowItem's result changed
+         - "prev_result" -- the previous WorkflowItem's result changed
+         - "estimate_result" -- the results of calling "estimate" changed
+        """
+        if changed == "result":
+            return False
+        
+        return True
+    
 
 @provides(IOperationPlugin)
 class GaussianMixture2DPlugin(Plugin):

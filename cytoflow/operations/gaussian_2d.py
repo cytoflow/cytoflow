@@ -177,6 +177,8 @@ class GaussianMixture2DOp(HasStrictTraits):
         # the data is transformed the same way when we apply()
         self._xscale = util.scale_factory(self.xscale, experiment, self.xchannel)
         self._yscale = util.scale_factory(self.yscale, experiment, self.ychannel)
+        
+        gmms = {}
             
         for group, data_subset in groupby:
             x = data_subset.loc[:, [self.xchannel, self.ychannel]]
@@ -212,7 +214,9 @@ class GaussianMixture2DOp(HasStrictTraits):
             gmm.weights_ = gmm.weights_[sort_idx]
             gmm.covars_ = gmm.covars_[sort_idx]
             
-            self._gmms[group] = gmm
+            gmms[group] = gmm
+            
+        self._gmms = gmms
     
     def apply(self, experiment):
         """
