@@ -82,12 +82,12 @@ class GaussianMixture2DHandler(Controller, OpHandlerMixin):
 
 class GaussianMixture2DPluginOp(GaussianMixture2DOp, PluginOpMixin):
     handler_factory = Callable(GaussianMixture2DHandler)
-    subset = Str
     
     # add "estimate" metadata
     num_components = util.PositiveInt(1, estimate = True)
     sigma = util.PositiveFloat(0.0, allow_zero = True, estimate = True)
     by = List(Str, estimate = True)
+    subset = Str(estimate = True)
     
     _gmms = Dict(Any, Instance(mixture.GMM), transient = True, estimate_result = True)
 

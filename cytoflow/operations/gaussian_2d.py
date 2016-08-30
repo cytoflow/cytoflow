@@ -279,7 +279,7 @@ class GaussianMixture2DOp(HasStrictTraits):
                                   .format(self.name + "_Posterior"))
             
         if self.num_components == 1 and self.sigma == 0.0:
-            raise util.CytoflowError("If num_components == 1, sigma must be > 0")
+            raise util.CytoflowOpError("If num_components == 1, sigma must be > 0")
 
         if self.posteriors:
             col_name = "{0}_Posterior".format(self.name)
