@@ -84,10 +84,7 @@ class PluginViewMixin(HasTraits):
         return True
     
     def plot_wi(self, wi):
-        if hasattr(self, 'enum_plots'):
-            self.plot(wi.result, wi.current_plot)
-        else:
-            self.plot(wi.result)
+        self.plot(wi.result)
             
     def enum_plots_wi(self, wi):
         return []

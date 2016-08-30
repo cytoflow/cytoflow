@@ -110,10 +110,10 @@ class WorkflowItem(HasStrictTraits):
                                     show_label = False))
     
     # the plot names for the currently selected view
-    current_view_plot_names = List(Str, status = True)
+    current_view_plot_names = List(Any, status = True)
     
     # if there are multiple plots, which are we viewing?
-    current_plot = Str
+    current_plot = Any
     
     # the view for the current plot
     current_plot_view = View(Item('current_view_plot_names',
@@ -261,15 +261,19 @@ class RemoteWorkflowItem(WorkflowItem):
          
         if new == "api" and self.current_view.should_plot("view"):
             self.command = "plot"
-
+            
              
-    @on_trait_change('current_view', post_init = True)
+    @on_trait_change('current_view.changed', post_init = True)
     def _update_plot_names(self):
         plot_names = [x for x in self.current_view.enum_plots_wi(self)]
         if plot_names == [None] or plot_names == []:
             self.current_view_plot_names = []
         else:
             self.current_view_plot_names = plot_names      
+            
+    @on_trait_change('current_plot', post_init = True)
+    def _current_plot_changed(self):
+        self.command = "plot"
 
 
     def estimate(self):

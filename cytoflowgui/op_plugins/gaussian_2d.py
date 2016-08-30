@@ -26,7 +26,8 @@ from sklearn import mixture
 from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor, \
                          CheckListEditor, ButtonEditor
 from envisage.api import Plugin, contributes_to
-from traits.api import provides, Callable, List, Str, Dict, Any, Instance, DelegatesTo
+from traits.api import provides, Callable, List, Str, Dict, Any, Instance, \
+                       DelegatesTo, on_trait_change
 from pyface.api import ImageResource
 
 import cytoflow.utility as util
@@ -126,11 +127,14 @@ class GaussianMixture2DPluginView(GaussianMixture2DView, PluginViewMixin):
     handler_factory = Callable(GaussianMixture2DViewHandler)
     op = Instance(IOperation, fixed = True)
     subset = DelegatesTo('op')
+    by = DelegatesTo('op', status = True)
+    
+    @on_trait_change('by[]', post_init = True)
+    def _by_changed(self):
+        self.changed = "plot_names"
     
     def plot_wi(self, wi):
-        if self.op.by and not wi.current_plot:
-            return
-        self.plot(wi.previous.result, wi.current_plot)
+        self.plot(wi.previous.result, plot_name = wi.current_plot)
         
     def enum_plots_wi(self, wi):
         return self.enum_plots(wi.previous.result)

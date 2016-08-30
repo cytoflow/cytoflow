@@ -320,6 +320,11 @@ class GaussianMixture2DOp(HasStrictTraits):
             groupby = experiment.data.groupby(lambda x: True)
         
         for group, data_subset in groupby:
+            if group not in self._gmms:
+                # there weren't any events in this group, so we didn't get
+                # a gmm.
+                continue
+            
             gmm = self._gmms[group]
             x = data_subset.loc[:, [self.xchannel, self.ychannel]]
             x[self.xchannel] = self._xscale(x[self.xchannel])
@@ -520,7 +525,16 @@ class GaussianMixture2DView(HasStrictTraits):
         temp_experiment = experiment.clone()
         
         if plot_name:
+            if plot_name and not self.op.by:
+                raise util.CytoflowViewError("Plot {} not from plot_enum"
+                                             .format(plot_name))
+                
             groupby = experiment.data.groupby(self.op.by)
+            
+            if plot_name not in set(groupby.groups.keys()):
+                raise util.CytoflowViewError("Plot {} not from plot_enum"
+                                             .format(plot_name))
+            
             temp_experiment.data = groupby.get_group(plot_name)
             temp_experiment.data.reset_index(drop = True, inplace = True)
             
@@ -538,6 +552,9 @@ class GaussianMixture2DView(HasStrictTraits):
                                      yscale = self.yscale,
                                      huefacet = temp_op.name,
                                      subset = self.subset).plot(temp_experiment, **kwargs)
+            if plot_name:
+                plt.title("{0} = {1}".format(self.op.by, plot_name))
+
         except util.CytoflowOpError as e:
             warnings.warn(e.__str__(), util.CytoflowViewWarning)
             cytoflow.ScatterplotView(xchannel = self.xchannel,
@@ -545,6 +562,9 @@ class GaussianMixture2DView(HasStrictTraits):
                                      xscale = self.xscale,
                                      yscale = self.yscale,
                                      subset = self.subset).plot(temp_experiment, **kwargs)
+            if plot_name:
+                plt.title("{0} = {1}".format(self.op.by, plot_name))
+                
             return
 
         
@@ -552,7 +572,13 @@ class GaussianMixture2DView(HasStrictTraits):
         # plot with ellipses at 1, 2, and 3 standard deviations
         # cf. http://scikit-learn.org/stable/auto_examples/mixture/plot_gmm.html
         
-        gmm = self.op._gmms[plot_name] if plot_name else self.op._gmms[True]
+        if plot_name in self.op._gmms:
+            gmm = self.op._gmms[plot_name] if plot_name else self.op._gmms[True]
+        else:
+            # there weren't any events in this subset to estimate a GMM from
+            warnings.warn("No estimated GMM for plot {}".format(plot_name),
+                          util.CytoflowViewWarning)
+            return
         
         for i, (mean, covar) in enumerate(zip(gmm.means_, gmm._get_covars())):    
             v, w = linalg.eigh(covar)

@@ -288,6 +288,11 @@ class GaussianMixture1DOp(HasStrictTraits):
         # the faster it's going to be.
         
         for group, data_subset in groupby:
+            if group not in self._gmms:
+                # there weren't any events in this group, so we didn't get
+                # a gmm.
+                continue
+            
             gmm = self._gmms[group]
             x = data_subset[self.channel]
             x = self._scale(x).values
@@ -444,7 +449,15 @@ class GaussianMixture1DView(HasStrictTraits):
         temp_experiment = experiment.clone()
         
         if plot_name:
+            if plot_name and not self.op.by:
+                raise util.CytoflowViewError("Plot {} not from plot_enum"
+                                             .format(plot_name))
+                               
             groupby = experiment.data.groupby(self.op.by)
+
+            if plot_name not in set(groupby.groups.keys()):
+                raise util.CytoflowViewError("Plot {} not from plot_enum"
+                                             .format(plot_name))
             temp_experiment.data = groupby.get_group(plot_name)
             temp_experiment.data.reset_index(drop = True, inplace = True)
             
@@ -460,11 +473,17 @@ class GaussianMixture1DView(HasStrictTraits):
                                    scale = self.scale,
                                    subset = self.subset,
                                    huefacet = temp_op.name).plot(temp_experiment, **kwargs)
+            if plot_name:
+                plt.title("{0} = {1}".format(self.op.by, plot_name))
+
         except util.CytoflowOpError as e:
             warnings.warn(e.__str__(), util.CytoflowViewWarning)
             cytoflow.HistogramView(channel = self.channel,
                                    scale = self.scale,
                                    subset = self.subset).plot(temp_experiment, **kwargs)
+            if plot_name:
+                plt.title("{0} = {1}".format(self.op.by, plot_name))
+
             return  
         
         # get the parameterized scale object back from the op
@@ -478,7 +497,13 @@ class GaussianMixture1DView(HasStrictTraits):
         # really, if we just plotted the damn thing already, we can get the
         # area of the plot from the Polygon patch that we just plotted!
 
-        gmm = self.op._gmms[plot_name] if plot_name else self.op._gmms[True]
+        if plot_name in self.op._gmms:
+            gmm = self.op._gmms[plot_name] if plot_name else self.op._gmms[True]
+        else:
+            # there weren't any events in this subset to estimate a GMM from
+            warnings.warn("No estimated GMM for plot {}".format(plot_name),
+                          util.CytoflowViewWarning)
+            return
                               
         for i in range(0, len(gmm.means_)):
             patch = plt.gca().patches[i]

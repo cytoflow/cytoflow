@@ -92,18 +92,21 @@ class HistogramPluginView(HistogramView, PluginViewMixin):
 
     plotfacet = Str
 
-    def enum_plots(self, experiment):
+    def enum_plots_wi(self, wi):
         if not self.plotfacet:
             return iter([])
         
-        if self.plotfacet and self.plotfacet not in experiment.conditions:
+        if self.plotfacet and self.plotfacet not in wi.result.conditions:
             raise util.CytoflowViewError("Plot facet {0} not in the experiment"
                                     .format(self.huefacet))
-        values = np.sort(pd.unique(experiment[self.plotfacet]))
+        values = np.sort(pd.unique(wi.result[self.plotfacet]))
         return iter(values)
     
+    def plot_wi(self, wi):
+        self.plot(wi.result, wi.current_plot)
+    
     def plot(self, experiment, plot_name = None, **kwargs):
-        if self.plotfacet and plot_name is not None:
+        if self.plotfacet and plot_name:
             experiment = experiment.subset(self.plotfacet, plot_name)
 
         HistogramView.plot(self, experiment, **kwargs)

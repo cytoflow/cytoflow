@@ -102,6 +102,9 @@ class _TabListEditor(Editor):
             
         for v in self.value:
             self.control.addTab(str(v))
+            
+        if not self.value:
+            self.selected = None
 
 
     def update_editor_item (self, event):
@@ -114,10 +117,9 @@ class _TabListEditor(Editor):
         """ Handles a notebook tab being "activated" (i.e. clicked on) by the
             user.
         """
-        if idx == -1:
-            self.selected = None
-        else:
+        if idx >= 0 and idx < len(self.value):
             self.selected = self.value[idx]
+
     
     def dispose ( self ):
         """ Disposes of the contents of an editor.
