@@ -179,6 +179,16 @@ class Workflow(HasStrictTraits):
             if msg == Msg.UPDATE_WI:
                 (idx, new_wi) = payload
                 wi = self.workflow[idx]
+#                 (<cytoflowgui.workflow_item.RemoteWorkflowItem object at 0x7f0120a3f6b0>, 'changed', <undefined>, 'status')
+# Exception in thread local workflow recv:
+# Traceback (most recent call last):
+#   File "/usr/lib/python2.7/threading.py", line 810, in __bootstrap_inner
+#     self.run()
+#   File "/usr/lib/python2.7/threading.py", line 763, in run
+#     self.__target(*self.__args, **self.__kwargs)
+#   File "/home/brian/src/cytoflow/cytoflowgui/workflow.py", line 181, in recv_main
+#     wi = self.workflow[idx]
+# IndexError: list index out of range
                 wi.copy_traits(new_wi, status = True)
                     
             elif msg == Msg.UPDATE_OP:

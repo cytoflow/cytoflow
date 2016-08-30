@@ -386,7 +386,8 @@ DEBUG LOG: {1}
         op = plugin.get_operation()
         
         # make a new workflow item
-        wi = WorkflowItem(operation = op)
+        wi = WorkflowItem(operation = op,
+                          deletable = (op_id != 'edu.mit.synbio.cytoflowgui.op_plugins.import'))
         
         # if the op has a default view, add it to the wi
         try:
