@@ -403,10 +403,12 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
         """Plot a faceted histogram view of a channel"""
       
         # make a little Experiment
-        check_tube(self.op.beads_file, experiment)
-        beads_exp = ImportOp(tubes = [Tube(file = self.op.beads_file)],
-                             name_metadata = experiment.metadata['name_metadata']).apply()
-
+        try:
+            check_tube(self.op.beads_file, experiment)
+            beads_exp = ImportOp(tubes = [Tube(file = self.op.beads_file)],
+                                 name_metadata = experiment.metadata['name_metadata']).apply()
+        except util.CytoflowOpError as e:
+            raise util.CytoflowViewError(e.__str__())
 
         plt.figure()
         

@@ -102,16 +102,16 @@ class BeadCalibrationPluginOp(BeadCalibrationOp, PluginOpMixin):
     add_channel = Event
 
     beads_name = Str(estimate = True)   
-    beads = Dict(Str, List(Float), estimate = True)
+    beads = Dict(Str, List(Float), transient = True)
  
     beads_file = File(estimate = True)
     units_list = List(_Unit, estimate = True)
-    units = Dict(Str, Str, estimate = True)
+    units = Dict(Str, Str, transient = True)
 
     bead_peak_quantile = Int(80, estimate = True)
     bead_brightness_threshold = Float(100, estimate = True)
 
-    @on_trait_change('units_list_items,units_list.+')
+    @on_trait_change('units_list_items,units_list.+', post_init = True)
     def _controls_changed(self, obj, name, old, new):
         self.changed = "estimate"
         
@@ -132,12 +132,10 @@ class BeadCalibrationPluginOp(BeadCalibrationOp, PluginOpMixin):
                     raise util.CytoflowOpError("Channel {0} is included more than once"
                                                .format(unit_i.channel))
                                                
-        units = {}
+        self.units = {}
         for unit in self.units_list:
-            units[unit.channel] = unit.unit
-            
-        self.units = units
-        
+            self.units[unit.channel] = unit.unit
+                    
         self.beads = self.BEADS[self.beads_name]
         BeadCalibrationOp.estimate(self, experiment)
         
@@ -145,7 +143,6 @@ class BeadCalibrationPluginOp(BeadCalibrationOp, PluginOpMixin):
         self._calibration_functions.clear()
         self._peaks.clear()
         self._mefs.clear()
-        self.changed = "estimate"
 
 class BeadCalibrationViewHandler(Controller, ViewHandlerMixin):
     def default_traits_view(self):

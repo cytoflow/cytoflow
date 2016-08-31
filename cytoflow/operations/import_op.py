@@ -282,7 +282,7 @@ def check_tube(filename, experiment):
     
     # first make sure the tube has the right channels    
     if not set(experiment.channels) <= set(tube_meta["_channel_names_"]):
-        raise util.CytoflowError("Tube {0} doesn't have the same channels"
+        raise util.CytoflowOpError("Tube {0} doesn't have the same channels"
                                  .format(filename))
      
     tube_channels = tube_meta["_channels_"]
@@ -294,14 +294,14 @@ def check_tube(filename, experiment):
         # first check voltage
         if "voltage" in experiment.metadata[channel]:    
             if not "$PnV" in tube_channels.ix[channel]:
-                raise util.CytoflowError("Didn't find a voltage for channel {0}" \
+                raise util.CytoflowOpError("Didn't find a voltage for channel {0}" \
                                    "in tube {1}".format(channel, filename))
             
             old_v = experiment.metadata[channel]["voltage"]
             new_v = tube_channels.ix[channel]['$PnV']
             
             if old_v != new_v and not channel in ignore_v:
-                raise util.CytoflowError("Tube {0} doesn't have the same voltages"
+                raise util.CytoflowOpError("Tube {0} doesn't have the same voltages"
                                     .format(filename))
 
         # TODO check the delay -- and any other params?
