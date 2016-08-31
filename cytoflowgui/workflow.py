@@ -179,7 +179,21 @@ class Workflow(HasStrictTraits):
             if msg == Msg.UPDATE_WI:
                 (idx, new_wi) = payload
                 wi = self.workflow[idx]
-#                 (<cytoflowgui.workflow_item.RemoteWorkflowItem object at 0x7f0120a3f6b0>, 'changed', <undefined>, 'status')
+# 2016-08-30 19:43:42,266 DEBUG:root:LocalWorkflow._on_new_workflow
+# 2016-08-30 19:43:42,266 DEBUG:root:LocalWorkflow._on_selected_changed :: (<cytoflowgui.workflow.Workflow object at 0x7fc162680710>, 'selected', <cytoflowgui.workflow_item.WorkflowItem object at 0x7fc1605d0230>, None)
+# 2016-08-30 19:43:42,266 DEBUG:root:RemoteWorkflow.recv_main :: SELECT
+# 2016-08-30 19:43:42,273 DEBUG:root:RemoteWorkflow.recv_main :: NEW_WORKFLOW
+# 2016-08-30 19:43:42,286 DEBUG:root:LocalWorkflow._on_workflow_add_remove_items :: (0, [], [<cytoflowgui.workflow_item.WorkflowItem object at 0x7fc1605d07d0>])
+# 2016-08-30 19:43:42,304 DEBUG:root:RemoteWorkflow.recv_main :: ADD_ITEMS
+# 2016-08-30 19:43:42,309 DEBUG:root:RemoteWorkflow._on_workflow_add_remove_items :: (0, [], [<cytoflowgui.workflow_item.RemoteWorkflowItem object at 0x7fc16269e230>])
+# 2016-08-30 19:43:42,309 DEBUG:root:RemoteWorkflowItem._prev_result_changed :: <cytoflowgui.workflow_item.RemoteWorkflowItem object at 0x7fc16269e6b0>
+# 2016-08-30 19:43:42,364 DEBUG:root:LocalWorkflow._on_selected_changed :: (<cytoflowgui.workflow.Workflow object at 0x7fc162680710>, 'selected', None, <cytoflowgui.workflow_item.WorkflowItem object at 0x7fc1605d07d0>)
+# 2016-08-30 19:43:42,364 DEBUG:root:RemoteWorkflow.recv_main :: SELECT
+# 2016-08-30 19:43:42,410 DEBUG:root:RemoteWorkflow._workflow_status_changed :: (<cytoflowgui.workflow_item.RemoteWorkflowItem object at 0x7fc16269e6b0>, 'changed', <undefined>, 'status')
+# 2016-08-30 19:43:42,419 DEBUG:root:RemoteWorkflow._workflow_command :: (<cytoflowgui.workflow_item.RemoteWorkflowItem object at 0x7fc16269e6b0>, 'command', 'apply')
+# 2016-08-30 19:43:42,420 DEBUG:root:WorkflowItem.apply :: <cytoflowgui.workflow_item.RemoteWorkflowItem object at 0x7fc16269e6b0>
+# 2016-08-30 19:43:42,467 DEBUG:root:RemoteWorkflow._workflow_command :: (<cytoflowgui.workflow_item.RemoteWorkflowItem object at 0x7fc16269e230>, 'command', 'plot')
+# 2016-08-30 19:43:42,516 DEBUG:root:LocalWorkflow.recv_main :: UPDATE_WI
 # Exception in thread local workflow recv:
 # Traceback (most recent call last):
 #   File "/usr/lib/python2.7/threading.py", line 810, in __bootstrap_inner
@@ -422,9 +436,13 @@ class RemoteWorkflow(HasStrictTraits):
             logging.debug("RemoteWorkflow.recv_main :: {}".format(msg))
             
             if msg == Msg.NEW_WORKFLOW:
-                for wi in payload:
-                    rwi = RemoteWorkflowItem().copy_traits(wi)
-                    self.workflow.append(rwi)
+                self.workflow = []
+                for new_item in payload:
+                    wi = RemoteWorkflowItem()
+                    wi.copy_traits(new_item)
+                    wi.matplotlib_events = self.matplotlib_events
+                    wi.plot_lock = self.plot_lock
+                    self.workflow.append(wi)
 
             elif msg == Msg.ADD_ITEMS:
                 (idx, new_item) = payload
@@ -553,7 +571,7 @@ class RemoteWorkflow(HasStrictTraits):
             
     @on_trait_change('workflow:operation:changed')
     def _operation_changed(self, obj, name, new):
-        logging.debug("LocalWorkflow._operation_changed :: {}"
+        logging.debug("RemoteWorkflow._operation_changed :: {}"
                       .format(obj))
         
         wi = next((x for x in self.workflow if x.operation == obj))
