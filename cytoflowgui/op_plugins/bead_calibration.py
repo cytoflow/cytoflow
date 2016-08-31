@@ -138,11 +138,13 @@ class BeadCalibrationPluginOp(BeadCalibrationOp, PluginOpMixin):
                     
         self.beads = self.BEADS[self.beads_name]
         BeadCalibrationOp.estimate(self, experiment)
+        self.changed = "estimate_result"
         
     def clear_estimate(self):
         self._calibration_functions.clear()
         self._peaks.clear()
         self._mefs.clear()
+        self.changed = "estimate_result"
 
 class BeadCalibrationViewHandler(Controller, ViewHandlerMixin):
     def default_traits_view(self):

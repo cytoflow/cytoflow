@@ -401,6 +401,15 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
     
     def plot(self, experiment, **kwargs):
         """Plot a faceted histogram view of a channel"""
+
+        channels = self.op.units.keys()
+
+        if not channels:
+            raise util.CytoflowViewError("No channels to plot")
+        
+        if set(channels) != set(self.op._calibration_functions.keys()):
+            raise util.CytoflowViewError("Calibration doesn't match units. "
+                                  "Did you forget to call estimate()?")        
       
         # make a little Experiment
         try:
@@ -412,7 +421,6 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
 
         plt.figure()
         
-        channels = self.op.units.keys()
         
         for idx, channel in enumerate(channels):
             data = beads_exp.data[channel]
