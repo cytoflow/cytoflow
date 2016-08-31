@@ -120,6 +120,7 @@ class Workflow(HasStrictTraits):
     recv_thread = Instance(threading.Thread)
     send_thread = Instance(threading.Thread)
     log_thread = Instance(threading.Thread)
+    remote_process_thread = Instance(threading.Thread)
     message_q = Instance(Queue.Queue, ())
     
     # the Pipe connection object to pass to the matplotlib canvas
@@ -156,6 +157,17 @@ class Workflow(HasStrictTraits):
         self.log_thread.daemon = True
         self.log_thread.start()
         
+
+        self.remote_process_thread = threading.Thread(target = self.run_remote_process,
+                                                  name = "run remote process",
+                                                  args = [parent_workflow_conn,
+                                                          parent_mpl_conn,
+                                                          log_q])
+        self.remote_process_thread.daemon = True
+        self.remote_process_thread.start()
+        
+        
+    def run_remote_process(self, parent_workflow_conn, parent_mpl_conn, log_q):
         remote_workflow = RemoteWorkflow()
         
         remote_process = multiprocessing.Process(target = remote_workflow.run,
@@ -164,7 +176,9 @@ class Workflow(HasStrictTraits):
                                                          parent_mpl_conn,
                                                          log_q])
         remote_process.daemon = True
-        remote_process.start()    
+        remote_process.start() 
+        remote_process.join()
+        logging.error("Remote process exited with {}".format(remote_process.exitcode))
  
 
     def recv_main(self, child_conn):
@@ -179,30 +193,6 @@ class Workflow(HasStrictTraits):
             if msg == Msg.UPDATE_WI:
                 (idx, new_wi) = payload
                 wi = self.workflow[idx]
-# 2016-08-30 19:43:42,266 DEBUG:root:LocalWorkflow._on_new_workflow
-# 2016-08-30 19:43:42,266 DEBUG:root:LocalWorkflow._on_selected_changed :: (<cytoflowgui.workflow.Workflow object at 0x7fc162680710>, 'selected', <cytoflowgui.workflow_item.WorkflowItem object at 0x7fc1605d0230>, None)
-# 2016-08-30 19:43:42,266 DEBUG:root:RemoteWorkflow.recv_main :: SELECT
-# 2016-08-30 19:43:42,273 DEBUG:root:RemoteWorkflow.recv_main :: NEW_WORKFLOW
-# 2016-08-30 19:43:42,286 DEBUG:root:LocalWorkflow._on_workflow_add_remove_items :: (0, [], [<cytoflowgui.workflow_item.WorkflowItem object at 0x7fc1605d07d0>])
-# 2016-08-30 19:43:42,304 DEBUG:root:RemoteWorkflow.recv_main :: ADD_ITEMS
-# 2016-08-30 19:43:42,309 DEBUG:root:RemoteWorkflow._on_workflow_add_remove_items :: (0, [], [<cytoflowgui.workflow_item.RemoteWorkflowItem object at 0x7fc16269e230>])
-# 2016-08-30 19:43:42,309 DEBUG:root:RemoteWorkflowItem._prev_result_changed :: <cytoflowgui.workflow_item.RemoteWorkflowItem object at 0x7fc16269e6b0>
-# 2016-08-30 19:43:42,364 DEBUG:root:LocalWorkflow._on_selected_changed :: (<cytoflowgui.workflow.Workflow object at 0x7fc162680710>, 'selected', None, <cytoflowgui.workflow_item.WorkflowItem object at 0x7fc1605d07d0>)
-# 2016-08-30 19:43:42,364 DEBUG:root:RemoteWorkflow.recv_main :: SELECT
-# 2016-08-30 19:43:42,410 DEBUG:root:RemoteWorkflow._workflow_status_changed :: (<cytoflowgui.workflow_item.RemoteWorkflowItem object at 0x7fc16269e6b0>, 'changed', <undefined>, 'status')
-# 2016-08-30 19:43:42,419 DEBUG:root:RemoteWorkflow._workflow_command :: (<cytoflowgui.workflow_item.RemoteWorkflowItem object at 0x7fc16269e6b0>, 'command', 'apply')
-# 2016-08-30 19:43:42,420 DEBUG:root:WorkflowItem.apply :: <cytoflowgui.workflow_item.RemoteWorkflowItem object at 0x7fc16269e6b0>
-# 2016-08-30 19:43:42,467 DEBUG:root:RemoteWorkflow._workflow_command :: (<cytoflowgui.workflow_item.RemoteWorkflowItem object at 0x7fc16269e230>, 'command', 'plot')
-# 2016-08-30 19:43:42,516 DEBUG:root:LocalWorkflow.recv_main :: UPDATE_WI
-# Exception in thread local workflow recv:
-# Traceback (most recent call last):
-#   File "/usr/lib/python2.7/threading.py", line 810, in __bootstrap_inner
-#     self.run()
-#   File "/usr/lib/python2.7/threading.py", line 763, in run
-#     self.__target(*self.__args, **self.__kwargs)
-#   File "/home/brian/src/cytoflow/cytoflowgui/workflow.py", line 181, in recv_main
-#     wi = self.workflow[idx]
-# IndexError: list index out of range
                 wi.copy_traits(new_wi, status = True)
                     
             elif msg == Msg.UPDATE_OP:
