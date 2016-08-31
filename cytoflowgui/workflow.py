@@ -42,7 +42,7 @@ the plots are ferried back to the GUI, see the module docstring for
 matplotlib_backend.py
 """
 
-import threading, sys, Queue, logging, multiprocessing
+import threading, sys, Queue, logging, multiprocessing, traceback
 
 from traits.api import HasStrictTraits, Instance, List, on_trait_change, Any
                        
@@ -79,8 +79,18 @@ class Msg:
     UPDATE_WI = "UPDATE_WI"
     CHANGE_DEFAULT_SCALE = "CHANGE_DEFAULT_SCALE"
     ESTIMATE = "ESTIMATE"
+    
+def log_exception():
+    (exc_type, exc_value, tb) = sys.exc_info()
 
-                    
+    err_string = traceback.format_exception_only(exc_type, exc_value)[0]
+    err_loc = traceback.format_tb(tb)[-1]
+    err_ctx = threading.current_thread().name
+    
+    logging.error("Error: {0}\nLocation: {1}Thread: {2}" \
+                  .format(err_string, err_loc, err_ctx) )
+    
+
 class Workflow(HasStrictTraits):
     
     workflow = List(WorkflowItem)
@@ -178,7 +188,7 @@ class Workflow(HasStrictTraits):
         remote_process.daemon = True
         remote_process.start() 
         remote_process.join()
-        logging.error("Remote process exited with {}".format(remote_process.exitcode))
+        logging.debug("Remote process exited with {}".format(remote_process.exitcode))
  
 
     def recv_main(self, child_conn):
@@ -190,39 +200,44 @@ class Workflow(HasStrictTraits):
             
             logging.debug("LocalWorkflow.recv_main :: {}".format(msg))
             
-            if msg == Msg.UPDATE_WI:
-                (idx, new_wi) = payload
-                wi = self.workflow[idx]
-                wi.copy_traits(new_wi, status = True)
+        
+            try: 
+                if msg == Msg.UPDATE_WI:
+                    (idx, new_wi) = payload
+                    wi = self.workflow[idx]
+                    wi.copy_traits(new_wi, status = True)
+                        
+                elif msg == Msg.UPDATE_OP:
+                    (idx, new_op, update_type) = payload
+                    wi = self.workflow[idx]
+                    wi.operation.copy_traits(new_op, 
+                                             status = True,
+                                             fixed = lambda t: t is not True)
                     
-            elif msg == Msg.UPDATE_OP:
-                (idx, new_op, update_type) = payload
-                wi = self.workflow[idx]
-                wi.operation.copy_traits(new_op, 
-                                         status = True,
-                                         fixed = lambda t: t is not True)
-                
-                wi.operation.changed = update_type
-                
-            elif msg == Msg.UPDATE_VIEW:
-                (idx, new_view, update_type) = payload
-                view_id = new_view.id
-                wi = self.workflow[idx]
-                view = next((x for x in wi.views if x.id == view_id))
-                view.copy_traits(new_view, 
-                                 status = True,
-                                 fixed = lambda t: t is not True)
-                
-                view.changed = update_type
-
-            else:
-                raise RuntimeError("Bad message from remote")
+                    wi.operation.changed = update_type
+                    
+                elif msg == Msg.UPDATE_VIEW:
+                    (idx, new_view, update_type) = payload
+                    view_id = new_view.id
+                    wi = self.workflow[idx]
+                    view = next((x for x in wi.views if x.id == view_id))
+                    view.copy_traits(new_view, 
+                                     status = True,
+                                     fixed = lambda t: t is not True)
+                    
+                    view.changed = update_type
+                else:
+                    raise RuntimeError("Bad message from remote")
+            
+            except Exception:
+                log_exception()
 
     
     def send_main(self, child_conn):
         while True:
             msg = self.message_q.get()
             child_conn.send(msg)
+
             
     def log_main(self, log_q):
         # from http://plumberjack.blogspot.com/2010/09/using-logging-with-multiprocessing.html
@@ -237,11 +252,8 @@ class Workflow(HasStrictTraits):
             except (KeyboardInterrupt, SystemExit):
                 raise
             except:
-                import traceback
                 print >> sys.stderr, 'Whoops! Problem:'
                 traceback.print_exc(file=sys.stderr)
-        pass
-
 
     @on_trait_change('workflow')
     def _on_new_workflow(self, obj, name, old, new):
@@ -412,8 +424,11 @@ class RemoteWorkflow(HasStrictTraits):
         
         # loop and process updates
         while True:
-            _, fn = self.exec_q.get()
-            fn()
+            try:
+                _, fn = self.exec_q.get()
+                fn()
+            except Exception:
+                log_exception()
             
 
     def recv_main(self, parent_conn):
@@ -425,92 +440,95 @@ class RemoteWorkflow(HasStrictTraits):
             
             logging.debug("RemoteWorkflow.recv_main :: {}".format(msg))
             
-            if msg == Msg.NEW_WORKFLOW:
-                self.workflow = []
-                for new_item in payload:
+            try:
+                if msg == Msg.NEW_WORKFLOW:
+                    self.workflow = []
+                    for new_item in payload:
+                        wi = RemoteWorkflowItem()
+                        wi.copy_traits(new_item)
+                        wi.matplotlib_events = self.matplotlib_events
+                        wi.plot_lock = self.plot_lock
+                        self.workflow.append(wi)
+    
+                elif msg == Msg.ADD_ITEMS:
+                    (idx, new_item) = payload
                     wi = RemoteWorkflowItem()
                     wi.copy_traits(new_item)
                     wi.matplotlib_events = self.matplotlib_events
                     wi.plot_lock = self.plot_lock
-                    self.workflow.append(wi)
-
-            elif msg == Msg.ADD_ITEMS:
-                (idx, new_item) = payload
-                wi = RemoteWorkflowItem()
-                wi.copy_traits(new_item)
-                wi.matplotlib_events = self.matplotlib_events
-                wi.plot_lock = self.plot_lock
-                
-                self.workflow.insert(idx, wi)
-
-            elif msg == Msg.REMOVE_ITEMS:
-                idx = payload
-                self.workflow.remove(self.workflow[idx])
-                
-            elif msg == Msg.SELECT:
-                idx = payload
-                if idx == -1:
-                    self.selected = None
+                    
+                    self.workflow.insert(idx, wi)
+    
+                elif msg == Msg.REMOVE_ITEMS:
+                    idx = payload
+                    self.workflow.remove(self.workflow[idx])
+                    
+                elif msg == Msg.SELECT:
+                    idx = payload
+                    if idx == -1:
+                        self.selected = None
+                    else:
+                        self.selected = self.workflow[idx]
+                    
+                elif msg == Msg.UPDATE_OP:
+                    (idx, new_op, update_type) = payload
+                    wi = self.workflow[idx]
+                    wi.operation.copy_traits(new_op, 
+                                             status = lambda t: t is not True,
+                                             fixed = lambda t: t is not True)
+                    
+                    wi.operation.changed = update_type
+                        
+                elif msg == Msg.UPDATE_VIEW:
+                    (idx, new_view, update_type) = payload
+                    view_id = new_view.id
+                    wi = self.workflow[idx]
+                    try:
+                        view = next((x for x in wi.views if x.id == view_id))
+                    except StopIteration:
+                        logging.warn("RemoteWorkflow: Couldn't find view {}".format(view_id))
+                        continue
+                    
+                    view.copy_traits(new_view, 
+                                     status = lambda t: t is not True,
+                                     fixed = lambda t: t is not True) 
+                    
+                    view.changed = update_type
+    
+                elif msg == Msg.CHANGE_CURRENT_VIEW:
+                    (idx, view) = payload
+                    wi = self.workflow[idx]
+                    try:
+                        wi.current_view = next((x for x in wi.views if x.id == view.id))
+                    except StopIteration:
+                        wi.views.append(view)
+                        wi.current_view = view
+                        
+                elif msg == Msg.CHANGE_CURRENT_PLOT:
+                    (idx, plot) = payload
+                    wi = self.workflow[idx]
+                    wi.current_plot = plot
+                    
+                    #wi.command = "plot"
+                    
+                    #self.exec_q.put_nowait((0, wi.plot))
+                        
+                elif msg == Msg.CHANGE_DEFAULT_SCALE:
+                    new_scale = payload
+                    cytoflow.set_default_scale(new_scale)
+                    
+                elif msg == Msg.ESTIMATE:
+                    idx = payload
+                    wi = self.workflow[idx]
+                    
+                    wi.command = "estimate"
+                    #self.exec_q.put_nowait((idx - 0.1, wi.estimate))
+    
                 else:
-                    self.selected = self.workflow[idx]
-                
-            elif msg == Msg.UPDATE_OP:
-                (idx, new_op, update_type) = payload
-                wi = self.workflow[idx]
-                wi.operation.copy_traits(new_op, 
-                                         status = lambda t: t is not True,
-                                         fixed = lambda t: t is not True)
-                
-                wi.operation.changed = update_type
-                    
-            elif msg == Msg.UPDATE_VIEW:
-                (idx, new_view, update_type) = payload
-                view_id = new_view.id
-                wi = self.workflow[idx]
-                try:
-                    view = next((x for x in wi.views if x.id == view_id))
-                except StopIteration:
-                    logging.warn("RemoteWorkflow: Couldn't find view {}".format(view_id))
-                    continue
-                
-                view.copy_traits(new_view, 
-                                 status = lambda t: t is not True,
-                                 fixed = lambda t: t is not True) 
-                
-                view.changed = update_type
-
-            elif msg == Msg.CHANGE_CURRENT_VIEW:
-                (idx, view) = payload
-                wi = self.workflow[idx]
-                try:
-                    wi.current_view = next((x for x in wi.views if x.id == view.id))
-                except StopIteration:
-                    wi.views.append(view)
-                    wi.current_view = view
-                    
-            elif msg == Msg.CHANGE_CURRENT_PLOT:
-                (idx, plot) = payload
-                wi = self.workflow[idx]
-                wi.current_plot = plot
-                
-                #wi.command = "plot"
-                
-                #self.exec_q.put_nowait((0, wi.plot))
-                    
-            elif msg == Msg.CHANGE_DEFAULT_SCALE:
-                new_scale = payload
-                cytoflow.set_default_scale(new_scale)
-                
-            elif msg == Msg.ESTIMATE:
-                idx = payload
-                wi = self.workflow[idx]
-                
-                wi.command = "estimate"
-                #self.exec_q.put_nowait((idx - 0.1, wi.estimate))
-
-            else:
-                raise RuntimeError("Bad command in the remote workflow")
+                    raise RuntimeError("Bad command in the remote workflow")
             
+            except Exception:
+                log_exception()
             
     def send_main(self, parent_conn):
         while True:

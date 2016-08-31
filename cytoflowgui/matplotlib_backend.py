@@ -44,7 +44,7 @@ matplotlib event handlers.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
-import sys, time, threading, logging
+import time, threading, logging, sys, traceback
 
 import matplotlib.pyplot
 from matplotlib.figure import Figure
@@ -84,6 +84,17 @@ class Msg:
     MOUSE_DOUBLE_CLICK_EVENT = "MOUSE_DOUBLE_CLICK"
     
     PRINT = "PRINT"
+    
+def log_exception():
+    (exc_type, exc_value, tb) = sys.exc_info()
+
+    err_string = traceback.format_exception_only(exc_type, exc_value)[0]
+    err_loc = traceback.format_tb(tb)[-1]
+    err_ctx = threading.current_thread().name
+    
+    logging.error("Error: {0}\nLocation: {1}Thread: {2}" \
+                  .format(err_string, err_loc, err_ctx) )
+    
 
 class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
     """
@@ -137,20 +148,23 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
             
             logging.debug("FigureCanvasQTAggLocal.listen_for_remote :: {}".format(msg))
             
-            if msg == Msg.DRAW:
-                (self.buffer, 
-                 self.buffer_width, 
-                 self.buffer_height) = payload 
-                self.update()
-            elif msg == Msg.BLIT:
-                (self.blit_buffer, 
-                 self.blit_width, 
-                 self.blit_height,
-                 self.blit_top, 
-                 self.blit_left) = payload
-                self.update()
-            else:
-                raise RuntimeError("FigureCanvasQTAggLocal received bad message {}".format(msg))
+            try:
+                if msg == Msg.DRAW:
+                    (self.buffer, 
+                     self.buffer_width, 
+                     self.buffer_height) = payload 
+                    self.update()
+                elif msg == Msg.BLIT:
+                    (self.blit_buffer, 
+                     self.blit_width, 
+                     self.blit_height,
+                     self.blit_top, 
+                     self.blit_left) = payload
+                    self.update()
+                else:
+                    raise RuntimeError("FigureCanvasQTAggLocal received bad message {}".format(msg))
+            except Exception:
+                log_exception()
             
             
     def send_to_remote(self):
@@ -159,8 +173,6 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
             self.send_event.clear()
             
             if self.move_x:
-#                 logging.debug('FigureCanvasQTAggLocal.send_to_remote: {}'
-#                               .format((Msg.MOUSE_MOVE_EVENT, self.move_x, self.move_y)))
                 msg = (Msg.MOUSE_MOVE_EVENT, (self.move_x, self.move_y))
                 self.child_conn.send(msg)
                 self.move_x = self.move_y = None
@@ -230,7 +242,7 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
     def resizeEvent(self, event):
         w = event.size().width()
         h = event.size().height()
-        
+                
         logging.debug("FigureCanvasQTAggLocal.resizeEvent : {}" 
                       .format((w, h)))
         
@@ -344,34 +356,37 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
             if msg != Msg.MOUSE_MOVE_EVENT:
                 logging.debug("FigureCanvasAggRemote.listen_for_remote :: {}"
                               .format(msg, payload))
-                            
-            if msg == Msg.RESIZE_EVENT:
-                (winch, hinch) = payload
-                self.figure.set_size_inches(winch, hinch)
-                FigureCanvasAgg.resize_event(self)
-                self.draw()
-            elif msg == Msg.MOUSE_PRESS_EVENT:
-                (x, y, button) = payload
-                if self.process_events.is_set():
-                    FigureCanvasAgg.button_press_event(self, x, y, button)
-            elif msg == Msg.MOUSE_DOUBLE_CLICK_EVENT:
-                (x, y, button) = payload
-                if self.process_events.is_set():
-                    FigureCanvasAgg.button_press_event(self, x, y, button, dblclick = True)
-            elif msg == Msg.MOUSE_RELEASE_EVENT:
-                (x, y, button) = payload
-                if self.process_events.is_set():
-                    FigureCanvasAgg.button_release_event(self, x, y, button)
-            elif msg == Msg.MOUSE_MOVE_EVENT:
-                (x, y) = payload
-                if self.process_events.is_set():
-                    FigureCanvasAgg.motion_notify_event(self, x, y)
-            elif msg == Msg.PRINT:
-                (args, kwargs) = payload
-                if self.process_events.is_set():
-                    FigureCanvasAgg.print_figure(self, *args, **kwargs)
-            else:
-                raise RuntimeError("FigureCanvasAggRemote received bad message {}".format(msg))
+                
+            try:              
+                if msg == Msg.RESIZE_EVENT:
+                    (winch, hinch) = payload
+                    self.figure.set_size_inches(winch, hinch)
+                    FigureCanvasAgg.resize_event(self)
+                    self.draw()
+                elif msg == Msg.MOUSE_PRESS_EVENT:
+                    (x, y, button) = payload
+                    if self.process_events.is_set():
+                        FigureCanvasAgg.button_press_event(self, x, y, button)
+                elif msg == Msg.MOUSE_DOUBLE_CLICK_EVENT:
+                    (x, y, button) = payload
+                    if self.process_events.is_set():
+                        FigureCanvasAgg.button_press_event(self, x, y, button, dblclick = True)
+                elif msg == Msg.MOUSE_RELEASE_EVENT:
+                    (x, y, button) = payload
+                    if self.process_events.is_set():
+                        FigureCanvasAgg.button_release_event(self, x, y, button)
+                elif msg == Msg.MOUSE_MOVE_EVENT:
+                    (x, y) = payload
+                    if self.process_events.is_set():
+                        FigureCanvasAgg.motion_notify_event(self, x, y)
+                elif msg == Msg.PRINT:
+                    (args, kwargs) = payload
+                    if self.process_events.is_set():
+                        FigureCanvasAgg.print_figure(self, *args, **kwargs)
+                else:
+                    raise RuntimeError("FigureCanvasAggRemote received bad message {}".format(msg))
+            except Exception:
+                log_exception()
             
     def send_to_remote(self):
         while self.update_remote.wait():

@@ -27,7 +27,7 @@ from cytoflowgui import multiprocess_logging
 from envisage.ui.tasks.api import TasksApplication
 from pyface.api import error
 from pyface.tasks.api import TaskWindowLayout
-from traits.api import Bool, Instance, List, Property, push_exception_handler, Str
+from traits.api import Bool, Instance, List, Property, Str
 
 from preferences import CytoflowPreferences
   
@@ -86,7 +86,8 @@ class CytoflowApplication(TasksApplication):
         super(CytoflowApplication, self).run()
         
     def show_error(self, error_string):
-        error(None, "An exception has occurred.  Please report a problem from the Help menu!\n\n" 
+        error(None, "An exception has occurred.  Please report a problem from the Help menu!\n\n"
+                    "Afterwards, may need to restart Cytoflow to continue working.\n\n" 
                     + error_string)
 
     #### 'AttractorsApplication' interface ####################################

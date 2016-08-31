@@ -327,7 +327,7 @@ class RemoteWorkflowItem(WorkflowItem):
         
     def plot(self):              
         logging.debug("WorkflowItem.plot :: {}".format((self)))
-             
+                     
         if not self.current_view:
             plt.clf()
             plt.show()
