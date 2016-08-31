@@ -21,12 +21,14 @@ Created on Oct 9, 2015
 @author: brian
 '''
 
+import warnings
+
 from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor, \
                          CheckListEditor, ButtonEditor, Heading, TableEditor, \
                          TableColumn, ObjectColumn
 from envisage.api import Plugin, contributes_to
 from traits.api import provides, Callable, Bool, CFloat, List, Str, HasTraits, \
-                       File, Event, on_trait_change
+                       File, Event, Dict, on_trait_change
 from pyface.api import ImageResource
 
 import cytoflow.utility as util
@@ -64,6 +66,10 @@ class BleedthroughPiecewiseHandler(Controller, OpHandlerMixin):
                          editor = ButtonEditor(value = True,
                                                label = "Add a control"),
                          show_label = False),
+                    Item('remove_control',
+                         editor = ButtonEditor(value = True,
+                                               label = "Remove a control"),
+                         show_label = False),
                     VGroup(Item('subset',
                                 show_label = False,
                                 editor = SubsetEditor(conditions_types = "context.previous.conditions_types",
@@ -71,6 +77,8 @@ class BleedthroughPiecewiseHandler(Controller, OpHandlerMixin):
                            label = "Subset",
                            show_border = False,
                            show_labels = False),
+                    Heading("WARNING: Very slow!"),
+                    Heading("Give it a few minutes..."),
                     Item('context.do_estimate',
                          editor = ButtonEditor(value = True,
                                                label = "Estimate!"),
@@ -81,6 +89,9 @@ class BleedthroughPiecewisePluginOp(BleedthroughPiecewiseOp, PluginOpMixin):
     handler_factory = Callable(BleedthroughPiecewiseHandler)
 
     add_control = Event
+    remove_control = Event
+
+    controls = Dict(Str, File, transient = True)
     controls_list = List(_Control, estimate = True)
     subset = Str(estimate = True)
         
@@ -88,7 +99,11 @@ class BleedthroughPiecewisePluginOp(BleedthroughPiecewiseOp, PluginOpMixin):
     def _add_control_fired(self):
         self.controls_list.append(_Control())
         
-    @on_trait_change('controls_list_items,controls_list.+')
+    # MAGIC: called when remove_control is set
+    def _remove_control_fired(self):
+        self.controls_list.pop()
+        
+    @on_trait_change('controls_list_items,controls_list.+', post_init = True)
     def _controls_changed(self, obj, name, old, new):
         self.changed = "estimate"
     
@@ -102,18 +117,25 @@ class BleedthroughPiecewisePluginOp(BleedthroughPiecewiseOp, PluginOpMixin):
                     raise util.CytoflowOpError("Channel {0} is included more than once"
                                                .format(control_i.channel))
                                                
-        controls = {}
+        self.controls = {}
         for control in self.controls_list:
-            controls[control.channel] = control.file
+            self.controls[control.channel] = control.file
             
-        self.controls = controls
-        
+        if not self.subset:
+            warnings.warn("Are you sure you don't want to specify a subset "
+                          "used to estimate the model?",
+                          util.CytoflowOpWarning)
+                    
         BleedthroughPiecewiseOp.estimate(self, experiment, subset = self.subset)
+        
+        self.changed = "estimate_result"
         
     def clear_estimate(self):
         self._splines.clear()
         self._interpolators.clear()
         self._channels.clear()
+        
+        self.changed = "estimate_result"
 
 class BleedthroughPiecewiseViewHandler(Controller, ViewHandlerMixin):
     def default_traits_view(self):

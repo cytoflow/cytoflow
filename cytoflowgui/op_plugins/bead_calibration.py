@@ -21,12 +21,11 @@ Created on Oct 9, 2015
 @author: brian
 '''
 
-from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor, \
-                         CheckListEditor, ButtonEditor, Heading, TableEditor, \
-                         TableColumn, ObjectColumn
+from traitsui.api import (View, Item, EnumEditor, Controller, VGroup, 
+                          ButtonEditor, TableEditor, ObjectColumn)
 from envisage.api import Plugin, contributes_to
-from traits.api import provides, Callable, Bool, CFloat, List, Str, HasTraits, \
-                       File, Event, on_trait_change, Property, Instance, \
+from traits.api import provides, Callable, List, Str, HasTraits, \
+                       File, Event, on_trait_change, Property, \
                        Dict, Int, Float
 from pyface.api import ImageResource
 
@@ -86,6 +85,10 @@ class BeadCalibrationHandler(Controller, OpHandlerMixin):
                     Item('add_channel',
                          editor = ButtonEditor(value = True,
                                                label = "Add a channel"),
+                         show_label = False),
+                    Item('remove_channel',
+                         editor = ButtonEditor(value = True,
+                                               label = "Remove a channel"),
                          show_label = False)),
                     Item('bead_peak_quantile',
                          label = "Bead Peak\nQuantile"),
@@ -100,6 +103,7 @@ class BeadCalibrationHandler(Controller, OpHandlerMixin):
 class BeadCalibrationPluginOp(BeadCalibrationOp, PluginOpMixin):
     handler_factory = Callable(BeadCalibrationHandler)
     add_channel = Event
+    remove_channel = Event
 
     beads_name = Str(estimate = True)   
     beads = Dict(Str, List(Float), transient = True)
@@ -118,6 +122,10 @@ class BeadCalibrationPluginOp(BeadCalibrationOp, PluginOpMixin):
     # MAGIC: called when add_control is set
     def _add_channel_fired(self):
         self.units_list.append(_Unit(op = self))
+        
+    def _remove_channel_fired(self):
+        if len(self.units_list) > 0:
+            self.units_list.pop()
     
     def default_view(self, **kwargs):
         return BeadCalibrationPluginView(op = self, **kwargs)

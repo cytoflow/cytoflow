@@ -147,7 +147,7 @@ class BleedthroughLinearOp(HasStrictTraits):
             tube_data = tube_exp.data
                 
             # polyfit requires sorted data
-            tube_data.sort(channel, inplace = True)
+            tube_data.sort_values(channel, inplace = True)
 
             for to_channel in channels:
                 from_channel = channel

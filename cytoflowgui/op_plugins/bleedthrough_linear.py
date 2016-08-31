@@ -21,12 +21,14 @@ Created on Oct 9, 2015
 @author: brian
 '''
 
+import warnings
+
 from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor, \
                          CheckListEditor, ButtonEditor, Heading, TableEditor, \
                          TableColumn, ObjectColumn
 from envisage.api import Plugin, contributes_to
 from traits.api import provides, Callable, Bool, CFloat, List, Str, HasTraits, \
-                       File, Event, on_trait_change
+                       File, Event, Dict, Tuple, Float, on_trait_change
 from pyface.api import ImageResource
 
 import cytoflow.utility as util
@@ -64,6 +66,10 @@ class BleedthroughLinearHandler(Controller, OpHandlerMixin):
                          editor = ButtonEditor(value = True,
                                                label = "Add a control"),
                          show_label = False),
+                    Item('remove_control',
+                         editor = ButtonEditor(value = True,
+                                               label = "Remove a control"),
+                         show_label = False),
                     VGroup(Item('subset',
                                 show_label = False,
                                 editor = SubsetEditor(conditions_types = "context.previous.conditions_types",
@@ -81,6 +87,11 @@ class BleedthroughLinearPluginOp(BleedthroughLinearOp, PluginOpMixin):
     handler_factory = Callable(BleedthroughLinearHandler)
 
     add_control = Event
+    remove_control = Event
+    
+    controls = Dict(Str, File, transient = True)
+    spillover = Dict(Tuple(Str, Str), Float, transient = True)
+
     controls_list = List(_Control, estimate = True)
     subset = Str(estimate = True)
         
@@ -88,7 +99,10 @@ class BleedthroughLinearPluginOp(BleedthroughLinearOp, PluginOpMixin):
     def _add_control_fired(self):
         self.controls_list.append(_Control())
         
-    @on_trait_change('controls_list_items,controls_list.+')
+    def _remove_control_fired(self):
+        self.controls_list.pop()
+        
+    @on_trait_change('controls_list_items,controls_list.+', post_init = True)
     def _controls_changed(self, obj, name, old, new):
         self.changed = "estimate"
     
@@ -102,16 +116,22 @@ class BleedthroughLinearPluginOp(BleedthroughLinearOp, PluginOpMixin):
                     raise util.CytoflowOpError("Channel {0} is included more than once"
                                                .format(control_i.channel))
                                                
-        controls = {}
+        self.controls = {}
         for control in self.controls_list:
-            controls[control.channel] = control.file
+            self.controls[control.channel] = control.file
             
-        self.controls = controls
-        
+        if not self.subset:
+            warnings.warn("Are you sure you don't want to specify a subset "
+                          "used to estimate the model?",
+                          util.CytoflowOpWarning)
+                    
         BleedthroughLinearOp.estimate(self, experiment, subset = self.subset)
+        
+        self.changed = "estimate_result"
         
     def clear_estimate(self):
         self.spillover.clear()
+        self.changed = "estimate_result"
 
 class BleedthroughLinearViewHandler(Controller, ViewHandlerMixin):
     def default_traits_view(self):
