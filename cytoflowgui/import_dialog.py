@@ -32,7 +32,7 @@ if __name__ == '__main__':
 from collections import OrderedDict
     
 from traits.api import HasTraits, HasStrictTraits, provides, Instance, Str, Int, List, \
-                       Bool, Enum, Float, DelegatesTo, Any, Property, BaseCStr
+                       Bool, Enum, Float, DelegatesTo, Any, Property, BaseCStr, on_trait_change
                        
 from traitsui.api import UI, Group, View, Item, TableEditor, OKCancelButtons, \
                          Controller, Menu, Action
@@ -40,7 +40,7 @@ from traitsui.api import UI, Group, View, Item, TableEditor, OKCancelButtons, \
 from traitsui.qt4.table_editor import TableEditor as TableEditorQt
 
 from pyface.i_dialog import IDialog
-from pyface.api import Dialog, FileDialog, error, OK
+from pyface.api import Dialog, FileDialog, error, OK, confirm
 
 from pyface.qt import QtCore, QtGui
 from pyface.constant import OK as PyfaceOK
@@ -144,11 +144,11 @@ class ExperimentColumn(ObjectColumn):
             return QtGui.QColor('lightpink')
         
     # override the context menu
-    def get_menu(self, obj):
-        return Menu(Action(name = "Remove Tubes",
-                           action = "_on_remove_tubes"),
-                    Action(name = "Remove Column",
-                           action = "_on_remove_column"))
+#     def get_menu(self, obj):
+#         return Menu(Action(name = "Remove Tubes",
+#                            action = "_on_remove_tubes"),
+#                     Action(name = "Remove Column",
+#                            action = "_on_remove_column"))
                 
     
 class ExperimentDialogModel(HasStrictTraits):
@@ -229,19 +229,33 @@ class ExperimentDialogModel(HasStrictTraits):
                 tube.trait_set(**{"$SRC" : tube_meta['$SRC']})
                 
             if 'TUBE NAME' in tube_meta:
-                #self._add_metadata("TUBE NAME", "TUBE NAME", Str(condition = False))
                 self.tube_traits["TUBE NAME"] = Str(condition = False)
                 tube.add_trait("TUBE NAME", Str(condition = False))
                 tube.trait_set(**{"TUBE NAME" : tube_meta['TUBE NAME']})
                 
             if '$SMNO' in tube_meta:
-                #self._add_metadata("$SMNO", "$SMNO", Str(condition = False))
                 self.tube_traits["$SMNO"] = Str(condition = False)
                 tube.add_trait("$SMNO", Str(condition = False))
                 tube.trait_set(**{"$SMNO" : tube_meta['SMNO']})
+                
+            if 'WELL ID' in tube_meta:                
+                pos = tube_meta['WELL ID']
+                row = pos[0]
+                col = int(pos[1:3])
+                
+                self.tube_traits["Row"] = Str(condition = False)
+                self.tube_traits["Col"] = Int(condition = False)
+                tube.add_trait("Row", Str(condition = False))
+                tube.add_trait("Col", Int(condition = False))
+                tube.trait_set(**{"Row" : row, "Col" : col})
 
             # next set conditions
-            for condition in op_tube.conditions:
+            try:
+                conditions_list = op_tube.conditions_list
+            except:
+                conditions_list = op_tube.conditions.keys()
+                
+            for condition in conditions_list:
                 condition_dtype = op.conditions[condition]
                 condition_trait = \
                     dtype_to_trait[condition_dtype](condition = True)
@@ -269,7 +283,8 @@ class ExperimentDialogModel(HasStrictTraits):
         tubes = []
         for tube in self.tubes:
             op_tube = CytoflowTube(file = tube.file,
-                                   conditions = tube.trait_get(condition = True))
+                                   conditions = tube.trait_get(condition = True),
+                                   conditions_list = [x for x in self.tube_traits.keys() if self.tube_traits[x].condition])
             tubes.append(op_tube)
             
         op.conditions = conditions
@@ -315,8 +330,10 @@ class ExperimentDialogHandler(Controller):
     # keep a ref to the table editor so we can add columns dynamically
     table_editor = Instance(TableEditorQt)
 
-    # keep a ref of the add condition button to enable/disable.
+    # keep a refs to enable/disable.
     btn_add_cond = Instance(QtGui.QPushButton)
+    btn_remove_cond = Instance(QtGui.QPushButton)
+    btn_remove_tubes = Instance(QtGui.QPushButton)
     
     updating = Bool(False)
     
@@ -333,7 +350,9 @@ class ExperimentDialogHandler(Controller):
             
             for name, trait in self.model.tube_traits.iteritems():
                 trait_type = trait.__class__.__name__
-                label = name + trait_to_col[trait_type]
+                label = name + trait_to_col[trait_type] \
+                        if trait.condition \
+                        else name
                 self.table_editor.columns.append(ExperimentColumn(name = name,
                                                  label = label,
                                                  editable = trait.condition))
@@ -407,6 +426,21 @@ class ExperimentDialogHandler(Controller):
         else:
             self._add_metadata(name, name + " (T/F)", Bool(condition = True))       
         
+    def _on_remove_condition(self):
+        pass
+        col = self.model.selected[0][1]
+        if self.model.tubes[0].trait(col).condition == True:
+            conf = confirm(None,
+                           "Are you sure you want to remove condition \"{}\"?".format(col),
+                           "Remove condition?")
+            if conf:
+                self._remove_metadata(col)
+        else:
+            error(None, 
+                  "Can't remove column {}".format(col),
+                  "Error")
+
+        
     def _on_add_tubes(self):
         """
         Handle "Add tubes..." button.  Add tubes to the experiment.
@@ -467,73 +501,56 @@ class ExperimentDialogHandler(Controller):
             if '$SMNO' in tube_meta:
                 self._add_metadata("$SMNO", "$SMNO", Str(condition = False))
                 tube.trait_set(**{"$SMNO" : tube_meta['$SMNO']})
+                
+            if 'WELL ID' in tube_meta:
+                self._add_metadata("Row", "Row", Str(condition = False))
+                self._add_metadata("Col", "Col", Int(condition = False))
+                
+                pos = tube_meta['WELL ID']
+                row = pos[0]
+                col = int(pos[1:3])
+                
+                tube.trait_set(**{"Row" : row, "Col" : col})
+                
             
             self.model.tubes.append(tube)
-            self.btn_add_cond.setEnabled(True)
+#             self.btn_add_cond.setEnabled(True)
+            
+    def _on_remove_tubes(self):
+        conf = confirm(None,
+                       "Are you sure you want to remove the selected tube(s)?",
+                       "Remove tubes?")
+        if conf:
+            for (tube, _) in self.model.selected:
+                self.model.tubes.remove(tube)
+
     
-    # TODO - plate support.
+    @on_trait_change('model.tubes_items', post_init = True)
+    def _tubes_count(self):
+        if self.btn_add_cond:
+            if len(self.model.tubes) == 0:
+                self.btn_add_cond.setEnabled(False)
+                self.btn_remove_cond.setEnabled(False)
+                self.btn_remove_tubes.setEnabled(False)
+            else:
+                self.btn_add_cond.setEnabled(True)
+                self.btn_remove_cond.setEnabled(True)
+                self.btn_remove_tubes.setEnabled(True)
+
     
-#     def _on_add_plate(self):
-#         # TODO - add alternate manufacturer's plate types (to the name filters)
-#         
-#         dir_dialog = PlateDirectoryDialog()
-#         dir_dialog.open()
-#         
-#         print dir_dialog.selectedNameFilter()
-#         
-#         if dir_dialog.return_code != PyfaceOK:
-#             return
-#                 
-#         self._add_metadata("Row", "Row", Str(condition = False))
-#         self._add_metadata("Col", "Col", Int(condition = False))
-#         
-#         # TODO - error handling!
-#         # TODO - allow for different file name prototypes or manufacturers
-#         plate = FCPlate.from_dir(ID='new plate', 
-#                                  path=dir_dialog.path,
-#                                  parser = 'name',
-#                                  ID_kwargs={'pre':'_',
-#                                             'post':'_'} )
-#         
-#         for well_name in plate.data:
-#             well_data = plate[well_name]
-#             
-#             tube = Tube()
-#             
-#             for trait_name, trait in self.tube_traits.items():
-#                 tube.add_trait(trait_name, trait)
-#                 
-#                 # this magic makes sure the trait is actually defined
-#                 # in tube.__dict__, so it shows up in trait_names etc.
-#                 tube.trait_set(**{trait_name : trait.default_value})
-#                 if trait.condition:
-#                     tube.on_trait_change(self._try_multiedit, trait_name)
-#             
-#             tube.trait_set(file = well_data.datafile,
-#                            Row = well_data.position['new plate'][0],
-#                            Col = well_data.position['new plate'][1],
-#                            Source = well_data.meta['$SRC'],
-#                            parent = self.model)
-#             
-#             if 'TUBE NAME' in well_data.meta:
-#                 tube.Tube = well_data.meta['TUBE NAME']
-#             elif '$SMNO' in well_data.meta:
-#                 tube.Tube = well_data.meta['$SMNO']
-# 
-#             self.model.tubes.append(tube)
 
         
-    def _on_remove_tubes(self, info, selection):
-        for (tube, _) in info.ui.context['object'].selected:
-            self.model.tubes.remove(tube)
-                
-                
-    def _on_remove_column(self, info, selection):         
-        col = info.ui.context['object'].selected[0][1]
-        if self.model.tubes[0].trait(col).condition == True:
-            self._remove_metadata(col)
-        else:
-            error(None, "Can't remove column {}".format(col), "Error")
+#     def _on_remove_tubes(self, info, selection):
+#         for (tube, _) in info.ui.context['object'].selected:
+#             self.model.tubes.remove(tube)
+#                 
+#                 
+#     def _on_remove_column(self, info, selection):         
+#         col = info.ui.context['object'].selected[0][1]
+#         if self.model.tubes[0].trait(col).condition == True:
+#             self._remove_metadata(col)
+#         else:
+#             error(None, "Can't remove column {}".format(col), "Error")
             
     def _try_multiedit(self, obj, name, old, new):
         """
@@ -641,38 +658,52 @@ class ExperimentDialog(Dialog):
         """
          
         buttons = QtGui.QWidget()
-        layout = QtGui.QHBoxLayout()
+        #layout = QtGui.QHBoxLayout()
+        layout = QtGui.QGridLayout()
         
-        btn_tube = QtGui.QPushButton("Add tubes...")
-        layout.addWidget(btn_tube)
-        QtCore.QObject.connect(btn_tube, QtCore.SIGNAL('clicked()'),
+        btn_add_tube = QtGui.QPushButton("Add tubes...")
+        layout.addWidget(btn_add_tube, 0, 0)
+        QtCore.QObject.connect(btn_add_tube, QtCore.SIGNAL('clicked()'),
                                self.handler._on_add_tubes)
         
-#         btn_plate = QtGui.QPushButton("Add plate...")
-#         layout.addWidget(btn_plate)
-#         QtCore.QObject.connect(btn_plate, QtCore.SIGNAL('clicked()'),
-#                                self.handler._on_add_plate)
+        btn_remove_tubes = QtGui.QPushButton("Remove tubes")
+        layout.addWidget(btn_remove_tubes, 1, 0)
+        QtCore.QObject.connect(btn_remove_tubes, QtCore.SIGNAL('clicked()'),
+                               self.handler._on_remove_tubes)
+        btn_remove_tubes.setEnabled(len(self.model.tubes) > 0)
+        self.handler.btn_remove_tubes = btn_remove_tubes
+
         
         # start disabled if there aren't any tubes in the model
         btn_add_cond = QtGui.QPushButton("Add condition...")
-        layout.addWidget(btn_add_cond)
+        layout.addWidget(btn_add_cond, 0, 1)
         QtCore.QObject.connect(btn_add_cond, QtCore.SIGNAL('clicked()'),
                                self.handler._on_add_condition)
         btn_add_cond.setEnabled(len(self.model.tubes) > 0)
         self.handler.btn_add_cond = btn_add_cond
         
-        layout.addStretch()
+        btn_remove_cond = QtGui.QPushButton("Remove condition")
+        layout.addWidget(btn_remove_cond, 1, 1)
+        QtCore.QObject.connect(btn_remove_cond, QtCore.SIGNAL('clicked()'),
+                               self.handler._on_remove_condition)
+        btn_remove_cond.setEnabled(len(self.model.tubes) > 0)
+        self.handler.btn_remove_cond = btn_remove_cond
+        
+        layout.addItem(QtGui.QSpacerItem(0, 0, QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Maximum), 0, 2)
+        layout.addItem(QtGui.QSpacerItem(0, 0, QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Maximum), 1, 2)
+        
+        #layout.addStretch()
 
         # 'OK' button.
         btn_ok = QtGui.QPushButton("OK")
         btn_ok.setDefault(True)
-        layout.addWidget(btn_ok)
+        layout.addWidget(btn_ok, 0, 3)
         QtCore.QObject.connect(btn_ok, QtCore.SIGNAL('clicked()'),
                                self.control, QtCore.SLOT('accept()'))
         
         # 'Cancel' button.
         btn_cancel = QtGui.QPushButton("Cancel")
-        layout.addWidget(btn_cancel)
+        layout.addWidget(btn_cancel, 0, 4)
         QtCore.QObject.connect(btn_cancel, QtCore.SIGNAL('clicked()'),
                                self.control, QtCore.SLOT('reject()'))   
         
