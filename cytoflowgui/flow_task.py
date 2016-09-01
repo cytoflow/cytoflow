@@ -29,7 +29,7 @@ import os.path
 from traits.api import Instance, List, Bool, on_trait_change
 from pyface.tasks.api import Task, TaskLayout, PaneItem
 from pyface.tasks.action.api import SMenu, SMenuBar, SToolBar, TaskAction
-from pyface.api import FileDialog, ImageResource, AboutDialog, information, ConfirmationDialog, OK, YES
+from pyface.api import FileDialog, ImageResource, AboutDialog, information, confirm, OK, YES
 from envisage.api import Plugin, ExtensionPoint, contributes_to
 from envisage.ui.tasks.api import TaskFactory
 
@@ -136,13 +136,13 @@ class FlowTask(Task):
             import_op.conditions["Replicate"] = "int"
          
             tube1 = Tube(file = "../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs",
-                         conditions = {"Dox" : 1.0, "Replicate" : 1})
+                         conditions = {"Dox" : 0.0, "Replicate" : 1})
          
             tube2 = Tube(file = "../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs",
                          conditions = {"Dox" : 10.0, "Replicate" : 1})
              
             tube3 = Tube(file = "../cytoflow/tests/data/Plate01/CFP_Well_B4.fcs",
-                         conditions = {"Dox" : 1.0, "Replicate" : 2})
+                         conditions = {"Dox" : 0.0, "Replicate" : 2})
          
             tube4 = Tube(file = "../cytoflow/tests/data/Plate01/RFP_Well_A6.fcs",
                          conditions = {"Dox" : 10.0, "Replicate" : 2})
@@ -173,11 +173,11 @@ class FlowTask(Task):
         
     def on_new(self):
         
-        dialog = ConfirmationDialog(message = "Are you sure you want to clear the current workflow?",
-                                    title = "Clear workflow?",
-                                    severity = "warning")
+        ret = confirm(parent = None,
+                      message = "Are you sure you want to clear the current workflow?",
+                      title = "Clear workflow?")
         
-        if dialog.open() != YES:
+        if ret != YES:
             return
         
         # clear the workflow
