@@ -26,10 +26,10 @@ Created on Feb 11, 2015
 
 import os.path
 
-from traits.api import Instance, List, Bool, on_trait_change, Undefined
+from traits.api import Instance, List, Bool, on_trait_change
 from pyface.tasks.api import Task, TaskLayout, PaneItem
 from pyface.tasks.action.api import SMenu, SMenuBar, SToolBar, TaskAction
-from pyface.api import FileDialog, OK, ImageResource, AboutDialog, information
+from pyface.api import FileDialog, ImageResource, AboutDialog, information, ConfirmationDialog, OK, YES
 from envisage.api import Plugin, ExtensionPoint, contributes_to
 from envisage.ui.tasks.api import TaskFactory
 
@@ -41,7 +41,6 @@ from cytoflowgui.op_plugins import IOperationPlugin, ImportPlugin, OP_PLUGIN_EXT
 from cytoflowgui.view_plugins import IViewPlugin, VIEW_PLUGIN_EXT
 from cytoflowgui.notebook import JupyterNotebookWriter
 from cytoflowgui.workflow_item import WorkflowItem
-import cytoflowgui.util as guiutil
 import mailto
 
 import pickle as pickle
@@ -174,6 +173,14 @@ class FlowTask(Task):
         return [self.workflow_pane, self.view_pane]
         
     def on_new(self):
+        
+        dialog = ConfirmationDialog(message = "Are you sure you want to clear the current workflow?",
+                                    title = "Clear workflow?",
+                                    severity = "warning")
+        
+        if dialog.open() != YES:
+            return
+        
         # clear the workflow
         self.model.workflow = []
         
