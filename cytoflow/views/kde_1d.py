@@ -141,6 +141,33 @@ class Kde1DView(HasStrictTraits):
             ax.set_xscale(self.scale, **scale.mpl_params)  
                   
         g.map(_univariate_kdeplot, self.channel, **kwargs)
+        
+        # if we have an xfacet, make sure the y scale is the same for each
+        fig = plt.gcf()
+        fig_y_max = float("-inf")
+        for ax in fig.get_axes():
+            _, ax_y_max = ax.get_ylim()
+            if ax_y_max > fig_y_max:
+                fig_y_max = ax_y_max
+                
+        for ax in fig.get_axes():
+            ax.set_ylim(None, fig_y_max)
+            
+        # if we have a yfacet, make sure the x scale is the same for each
+        fig = plt.gcf()
+        fig_x_min = float("inf")
+        fig_x_max = float("-inf")
+        
+        for ax in fig.get_axes():
+            ax_x_min, ax_x_max = ax.get_xlim()
+            if ax_x_min < fig_x_min:
+                fig_x_min = ax_x_min
+            if ax_x_max > fig_x_max:
+                fig_x_max = ax_x_max
+                
+        for ax in fig.get_axes():
+            ax.set_xlim(fig_x_min, fig_x_max)
+        
         if self.huefacet:
             g.add_legend(title = self.huefacet)
 

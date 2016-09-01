@@ -164,6 +164,32 @@ class ViolinPlotView(HasStrictTraits):
               hue_order = (np.sort(data[self.huefacet].unique()) if self.huefacet else None),
               **kwargs)
         
+        # if we have an xfacet, make sure the y scale is the same for each
+        fig = plt.gcf()
+        fig_y_min = float("inf")
+        fig_y_max = float("-inf")
+        for ax in fig.get_axes():
+            ax_y_min, ax_y_max = ax.get_ylim()
+            if ax_y_min < fig_y_min:
+                fig_y_min = ax_y_min
+            if ax_y_max > fig_y_max:
+                fig_y_max = ax_y_max
+                
+        for ax in fig.get_axes():
+            ax.set_ylim(fig_y_min, fig_y_max)
+            
+        # if we have a yfacet, make sure the x scale is the same for each
+        fig = plt.gcf()
+        fig_x_min = float("inf")
+        fig_x_max = float("-inf")
+        
+        for ax in fig.get_axes():
+            ax_x_min, ax_x_max = ax.get_xlim()
+            if ax_x_min < fig_x_min:
+                fig_x_min = ax_x_min
+            if ax_x_max > fig_x_max:
+                fig_x_max = ax_x_max
+        
         if self.huefacet:
             g.add_legend(title = self.huefacet)
         
