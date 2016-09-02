@@ -11,6 +11,7 @@ envisage>=4.0
 nbformat>=4.0
 python-dateutil>=2.5.2
 statsmodels>=0.6.1
+faulthandler>=2.4
 
 # not in conda
 fcsparser>=0.1.1
