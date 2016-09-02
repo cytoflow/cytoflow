@@ -70,7 +70,8 @@ class TableHandler(Controller, ViewHandlerMixin):
                                                             extra_items = {"None" : ""}),
                                 label = "Subcolumn"),
                            Item('export',
-                                editor = ButtonEditor(label = "Export...")),
+                                editor = ButtonEditor(label = "Export..."),
+                                enabled_when = 'result is not None'),
                            label = "Table View",
                            show_border = False),
                     VGroup(Item('subset',
@@ -108,9 +109,10 @@ class TablePluginView(TableView, PluginViewMixin):
     function = Callable(transient = True)
     
     # return the result for export
-    result = Instance(pd.Series, transient = True, status = True)
+    result = Instance(pd.Series, status = True)
     
     def plot(self, experiment, **kwargs):
+        self.result = None
         if not self.function_name:
             raise util.CytoflowViewError("Summary function isn't set")
         
@@ -132,10 +134,6 @@ class TablePluginView(TableView, PluginViewMixin):
     
     @on_trait_change('export')
     def _on_export(self):
-        
-        if not self.result:
-            error(None, "Nothing to save yet!", "Error")
-            return
         
         dialog = FileDialog(parent = None,
                             action = 'save as',
