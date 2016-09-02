@@ -167,9 +167,11 @@ class HistogramView(HasStrictTraits):
             bins = scale.inverse(np.arange(xmin, xmax, bin_width))
             bins = np.append(bins, scale.inverse(xmax))
             
-        # take care of a rare rounding error, where the last observation is
-        # a liiiitle bit more than the last bin, which makes plt.hist() puke
+        # take care of a rare rounding error, where the first observation is
+        # less than the first bin or the last observation is more than the last 
+        # bin, which makes plt.hist() puke
         bins[-1] += 1
+        bins[0] -= 1
                     
         kwargs.setdefault('bins', bins) 
         
