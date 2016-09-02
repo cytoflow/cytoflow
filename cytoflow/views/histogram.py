@@ -235,7 +235,10 @@ class HistogramView(HasStrictTraits):
         
         if self.huefacet and legend:
             current_palette = mpl.rcParams['axes.color_cycle']
-            if len(g.hue_names) > len(current_palette):
+            if (experiment.conditions[self.huefacet] == "int" or 
+                experiment.conditions[self.huefacet] == "float") and \
+                len(g.hue_names) > len(current_palette):
+                
                 plot_ax = plt.gca()
                 cmap = mpl.colors.ListedColormap(sns.color_palette("husl", 
                                                                    n_colors = len(g.hue_names)))

@@ -272,7 +272,10 @@ class Stats1DView(HasStrictTraits):
         
         if self.huefacet:
             current_palette = mpl.rcParams['axes.color_cycle']
-            if len(grid.hue_names) > len(current_palette):
+            if (experiment.conditions[self.huefacet] == "int" or 
+                experiment.conditions[self.huefacet] == "float") and \
+                len(grid.hue_names) > len(current_palette):
+                
                 plot_ax = plt.gca()
                 cmap = mpl.colors.ListedColormap(sns.color_palette("husl", 
                                                                    n_colors = len(grid.hue_names)))
