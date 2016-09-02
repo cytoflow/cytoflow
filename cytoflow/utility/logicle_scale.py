@@ -25,10 +25,10 @@ from __future__ import division, absolute_import
 
 import math, sys
 from warnings import warn
-import logging
 
 from traits.api import HasTraits, Float, Property, Instance, Str, \
-                       cached_property, Undefined, provides, Constant, Dict
+                       cached_property, Undefined, provides, Constant, Dict, \
+                       Tuple
                        
 import numpy as np
 import pandas as pd
@@ -95,6 +95,10 @@ class LogicleScale(HasTraits):
     
     experiment = Instance("cytoflow.Experiment")
     channel = Str
+    
+    quantiles = Tuple((0.001, 0.999))
+    range_min = Property(Float)
+    range_max = Property(Float)
 
     range = Property(Float, depends_on = "[experiment, channel]")
     W = Property(Float, depends_on = "[experiment, channel, r]")
@@ -154,6 +158,18 @@ class LogicleScale(HasTraits):
         else:
             return Undefined
         
+    def _get_range_min(self):
+        if self.experiment and self.channel:
+            return self.experiment[self.channel].quantile(self.quantiles[0])
+        else:
+            return Undefined
+    
+    def _get_range_max(self):
+        if self.experiment and self.channel:
+            return self.experiment[self.channel].quantile(self.quantiles[1])
+        else:
+            return Undefined
+        
     @cached_property
     def _get_W(self):
         if not (self.experiment and self.channel):
@@ -204,13 +220,18 @@ class LogicleScale(HasTraits):
     
     @cached_property
     def _get_mpl_params(self):
-        return {"logicle" : self.logicle}
+        return {"logicle" : self.logicle,
+                "range_min" : self.range_min,
+                "range_max" : self.range_max}
     
 register_scale(LogicleScale)
         
 class MatplotlibLogicleScale(HasTraits, matplotlib.scale.ScaleBase):   
     name = "logicle"
     logicle = Instance(FastLogicle)
+    
+    range_min = Float
+    range_max = Float
 
     def __init__(self, axis, **kwargs):
         HasTraits.__init__(self, **kwargs)
@@ -235,10 +256,10 @@ class MatplotlibLogicleScale(HasTraits, matplotlib.scale.ScaleBase):
         Set the locators and formatters to reasonable defaults for
         linear scaling.
         """
-        axis.set_major_locator(LogicleMajorLocator())
+        axis.set_major_locator(LogicleMajorLocator(range_min = self.range_min, range_max = self.range_max))
         #axis.set_major_formatter(ScalarFormatter())
         axis.set_major_formatter(LogFormatterMathtext(10))
-        axis.set_minor_locator(LogicleMinorLocator())
+        axis.set_minor_locator(LogicleMinorLocator(range_min = self.range_min, range_max = self.range_max))
         axis.set_minor_formatter(NullFormatter())        
 
     class LogicleTransform(HasTraits, transforms.Transform):
@@ -320,6 +341,12 @@ class LogicleMajorLocator(Locator):
     Determine the tick locations for logicle axes.
     Based on matplotlib.LogLocator
     """
+    
+    def __init__(self, *args, **kwargs):
+        self.range_min = kwargs.pop('range_min')
+        self.range_max = kwargs.pop('range_max')
+        
+        super(LogicleMajorLocator, self).__init__(*args, **kwargs)
 
     def set_params(self):
         """Empty"""
@@ -352,6 +379,9 @@ class LogicleMajorLocator(Locator):
 
         if vmax < vmin:
             vmin, vmax = vmax, vmin
+            
+        vmin = max(vmin, self.range_min)
+        vmax = min(vmax, self.range_max)
 
         # get the nearest tenth-decade that contains the data
         
@@ -374,6 +404,12 @@ class LogicleMinorLocator(Locator):
     Determine the tick locations for logicle axes.
     Based on matplotlib.LogLocator
     """
+    
+    def __init__(self, *args, **kwargs):
+        self.range_min = kwargs.pop('range_min')
+        self.range_max = kwargs.pop('range_max')
+        
+        super(LogicleMinorLocator, self).__init__(*args, **kwargs)
 
     def set_params(self):
         """Empty"""
@@ -383,6 +419,13 @@ class LogicleMinorLocator(Locator):
         'Return the locations of the ticks'
         vmin, vmax = self.axis.get_view_interval()
         return self.tick_values(vmin, vmax)
+    
+    def view_limits(self, vmin, vmax):
+        vmin, vmax = Locator.view_limits(self, vmin, vmax)
+        vmin = max(vmin, self.range_min)
+        vmax = min(vmax, self.range_max)
+        
+        return (vmin, vmax)
 
     def tick_values(self, vmin, vmax):
         'Every tenth decade, including 0 and negative'
