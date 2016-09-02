@@ -50,7 +50,7 @@ class LogScale(HasTraits):
 
     mode = Enum("mask", "clip")
     threshold = Float(1.0)
-    quantile = Tuple(0.01, 0.999)
+    quantiles = Tuple(0.001, 0.999)
     
     range_min = Property(Float)
     range_max = Property(Float)
@@ -67,13 +67,13 @@ class LogScale(HasTraits):
     def _get_range_min(self):
         if self.experiment and self.channel:
             c = self.experiment[self.channel]
-            return c[c > 0].quantile(self.quantile[0])
+            return c[c > 0].quantile(self.quantiles[0])
         else:
             return Undefined
     
     def _get_range_max(self):
         if self.experiment and self.channel:
-            return self.experiment[self.channel].quantile(self.quantile[1])
+            return self.experiment[self.channel].quantile(self.quantiles[1])
         else:
             return Undefined
         
@@ -90,7 +90,7 @@ class LogScale(HasTraits):
         x = x.mask(lambda x: x < self.threshold, other = mask_value)
         ret = np.log10(x)
 
-        return (ret if isinstance(ret, pd.Series) else ret.values)
+        return (ret if isinstance(data, pd.Series) else ret.values)
                         
     def inverse(self, data):
         return np.power(10, data)
@@ -107,11 +107,13 @@ class RangeLogLocator(LogLocator):
         
     def view_limits(self, vmin, vmax):
         vmin, vmax = LogLocator.view_limits(self, vmin, vmax)
-        vmin = max(vmin, self.range_min)
-        vmax = min(vmax, self.range_max)
         
-#         vmin = vmin * 0.5
-        vmax = vmax * 2.0
+        if self.range_min and self.range_max:
+            vmin = max(vmin, self.range_min)
+            vmax = min(vmax, self.range_max)
+        
+#             vmin = vmin * 0.5
+            vmax = vmax * 2.0
         
         return (vmin, vmax)
  
