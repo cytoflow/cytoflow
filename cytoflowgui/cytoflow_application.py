@@ -21,7 +21,7 @@ Created on Mar 15, 2015
 @author: brian
 '''
 
-import sys, logging, StringIO, traceback, threading
+import sys, logging, StringIO
 from cytoflowgui import multiprocess_logging
 
 from envisage.ui.tasks.api import TasksApplication
