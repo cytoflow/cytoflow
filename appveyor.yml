@@ -89,8 +89,8 @@ deploy:
     override: true
     explode: false
     on:
-      branch: master
-    	
+        branch: master
+
   - provider: BinTray
     username: bpteague
     api_key:
@@ -103,4 +103,4 @@ deploy:
     override: true
     explode: false
     on:
-      branch: packaging
+        branch: packaging
