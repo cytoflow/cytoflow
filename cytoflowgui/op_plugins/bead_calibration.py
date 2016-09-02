@@ -26,7 +26,7 @@ from traitsui.api import (View, Item, EnumEditor, Controller, VGroup,
 from envisage.api import Plugin, contributes_to
 from traits.api import provides, Callable, List, Str, HasTraits, \
                        File, Event, on_trait_change, Property, \
-                       Dict, Int, Float
+                       Dict, Int, Float, Undefined
 from pyface.api import ImageResource
 
 import cytoflow.utility as util
@@ -36,7 +36,6 @@ from cytoflow.views.i_selectionview import IView
 
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
-from cytoflowgui.subset_editor import SubsetEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
 
@@ -91,9 +90,11 @@ class BeadCalibrationHandler(Controller, OpHandlerMixin):
                                                label = "Remove a channel"),
                          show_label = False)),
                     Item('bead_peak_quantile',
-                         label = "Bead Peak\nQuantile"),
+                         label = "Peak\nQuantile"),
                     Item('bead_brightness_threshold',
-                         label = "Bead\nThreshold "),
+                         label = "Peak\nThreshold "),
+                    Item('bead_brightness_cutoff',
+                         label = "Peak\nCutoff"),
                     Item('context.do_estimate',
                          editor = ButtonEditor(value = True,
                                                label = "Estimate!"),
@@ -114,6 +115,7 @@ class BeadCalibrationPluginOp(BeadCalibrationOp, PluginOpMixin):
 
     bead_peak_quantile = Int(80, estimate = True)
     bead_brightness_threshold = Float(100, estimate = True)
+    bead_brightness_cutoff = Float(Undefined, estimate = True)
 
     @on_trait_change('units_list_items,units_list.+', post_init = True)
     def _controls_changed(self, obj, name, old, new):
