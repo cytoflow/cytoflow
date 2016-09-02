@@ -24,7 +24,7 @@ Created on Aug 31, 2015
 from __future__ import division, absolute_import
 
 from traits.api import (HasStrictTraits, Str, CStr, File, Dict, Python,
-                        Instance, Int, List, Float, Constant, provides)
+                        Instance, Int, List, Float, Constant, provides, Undefined)
 import numpy as np
 import math
 import scipy.signal
@@ -91,6 +91,10 @@ class BeadCalibrationOp(HasStrictTraits):
         How bright must a bead peak be to be considered?  Default == 100.
         Must be set to use `estimate()`.
         
+    bead_brightness_cutoff : Float
+        If a bead peak is above this, then don't consider it.  Takes care of
+        clipping saturated detection.  Defaults to 70% of the detector range.
+        
     Notes
     -----
     The peak finding is rather sophisticated.  
@@ -156,6 +160,7 @@ class BeadCalibrationOp(HasStrictTraits):
     bead_peak_quantile = Int(80)
 
     bead_brightness_threshold = Float(100)
+    bead_brightness_cutoff = Float(Undefined)
     # TODO - bead_brightness_threshold should probably be different depending
     # on the data range of the input.
     
@@ -181,7 +186,7 @@ class BeadCalibrationOp(HasStrictTraits):
             
         if not set(self.units.values()) <= set(self.beads.keys()):
             raise util.CytoflowOpError("Units don't match beads.")
-                
+                        
         # make a little Experiment
         check_tube(self.beads_file, experiment)
         beads_exp = ImportOp(tubes = [Tube(file = self.beads_file)],
@@ -193,9 +198,15 @@ class BeadCalibrationOp(HasStrictTraits):
             data = beads_exp.data[channel]
             
             # TODO - this assumes the data is on a linear scale.  check it!
-            
-            # bin the data on a log scale
             data_range = experiment.metadata[channel]['range']
+
+            if self.bead_brightness_cutoff is Undefined:
+                cutoff = 0.7 * data_range
+            else:
+                cutoff = self.bead_brightness_cutoff
+                                            
+            # bin the data on a log scale
+
             hist_bins = np.logspace(1, math.log(data_range, 2), num = 256, base = 2)
             hist = np.histogram(data, bins = hist_bins)
             
@@ -215,7 +226,8 @@ class BeadCalibrationOp(HasStrictTraits):
             peak_threshold = np.percentile(hist_smooth, self.bead_peak_quantile)
             peak_bins_filtered = \
                 [x for x in peak_bins if hist_smooth[x] > peak_threshold 
-                 and hist[1][x] > self.bead_brightness_threshold]
+                 and hist[1][x] > self.bead_brightness_threshold
+                 and hist[1][x] < cutoff]
             
             peaks = [hist_bins[x] for x in peak_bins_filtered]
             
@@ -424,9 +436,15 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
         
         for idx, channel in enumerate(channels):
             data = beads_exp.data[channel]
-            
-            # bin the data on a log scale
+
             data_range = experiment.metadata[channel]['range']
+            
+            if self.op.bead_brightness_cutoff is Undefined:
+                cutoff = 0.7 * data_range
+            else:
+                cutoff = self.op.bead_brightness_cutoff
+                
+            # bin the data on a log scale            
             hist_bins = np.logspace(1, math.log(data_range, 2), num = 256, base = 2)
             hist = np.histogram(data, bins = hist_bins)
             
@@ -445,7 +463,8 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
             peak_threshold = np.percentile(hist_smooth, self.op.bead_peak_quantile)
             peak_bins_filtered = \
                 [x for x in peak_bins if hist_smooth[x] > peak_threshold
-                 and hist[1][x] > self.op.bead_brightness_threshold]
+                 and hist[1][x] > self.op.bead_brightness_threshold
+                 and hist[1][x] < cutoff]
                 
             plt.subplot(len(channels), 2, 2 * idx + 1)
             plt.xscale('log')
