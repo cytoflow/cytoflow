@@ -38,8 +38,6 @@ class Test(unittest.TestCase):
                                                    conditions = {})]).apply()        
         
         self.op = flow.ColorTranslationOp(
-                        translation = {"PE-Tx-Red-YG-A" : "FITC-A",
-                                       "Pacific Blue-A" : "FITC-A"},
                         controls = {("PE-Tx-Red-YG-A", "FITC-A") :
                                     self.cwd + '/data/tasbe/rby.fcs',
                                     ("Pacific Blue-A", "FITC-A") :

@@ -25,7 +25,7 @@ from __future__ import division, absolute_import
 
 import math
 
-from warnings import warn, catch_warnings
+from warnings import warn
 
 from traits.api import (HasStrictTraits, Str, CStr, File, Dict, Python,
                         Instance, Tuple, Bool, Constant, DelegatesTo, provides,

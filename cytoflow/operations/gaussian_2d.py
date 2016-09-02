@@ -572,13 +572,16 @@ class GaussianMixture2DView(HasStrictTraits):
         # plot with ellipses at 1, 2, and 3 standard deviations
         # cf. http://scikit-learn.org/stable/auto_examples/mixture/plot_gmm.html
         
-        if plot_name in self.op._gmms:
-            gmm = self.op._gmms[plot_name] if plot_name else self.op._gmms[True]
+        if plot_name:
+            if plot_name in self.op._gmms:
+                gmm = self.op._gmms[plot_name]
+            else:
+                # there weren't any events in this subset to estimate a GMM from
+                warnings.warn("No estimated GMM for plot {}".format(plot_name),
+                              util.CytoflowViewWarning)
+                return
         else:
-            # there weren't any events in this subset to estimate a GMM from
-            warnings.warn("No estimated GMM for plot {}".format(plot_name),
-                          util.CytoflowViewWarning)
-            return
+            gmm = self.op._gmms[True] 
         
         for i, (mean, covar) in enumerate(zip(gmm.means_, gmm._get_covars())):    
             v, w = linalg.eigh(covar)

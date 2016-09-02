@@ -497,13 +497,16 @@ class GaussianMixture1DView(HasStrictTraits):
         # really, if we just plotted the damn thing already, we can get the
         # area of the plot from the Polygon patch that we just plotted!
 
-        if plot_name in self.op._gmms:
-            gmm = self.op._gmms[plot_name] if plot_name else self.op._gmms[True]
+        if plot_name:
+            if plot_name in self.op._gmms:
+                gmm = self.op._gmms[plot_name]
+            else:
+                # there weren't any events in this subset to estimate a GMM from
+                warnings.warn("No estimated GMM for plot {}".format(plot_name),
+                              util.CytoflowViewWarning)
+                return
         else:
-            # there weren't any events in this subset to estimate a GMM from
-            warnings.warn("No estimated GMM for plot {}".format(plot_name),
-                          util.CytoflowViewWarning)
-            return
+            gmm = self.op._gmms[True]                
                               
         for i in range(0, len(gmm.means_)):
             patch = plt.gca().patches[i]
