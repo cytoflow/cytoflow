@@ -21,6 +21,10 @@ Created on Feb 11, 2015
 @author: brian
 """
 
+import faulthandler
+faulthandler.enable()
+
+
 import sys, multiprocessing, os, logging, traceback, threading
 
 from traits.etsconfig.api import ETSConfig
@@ -50,6 +54,14 @@ from op_plugins import ImportPlugin, ThresholdPlugin, RangePlugin, \
 from view_plugins import HistogramPlugin, Histogram2DPlugin, ScatterplotPlugin, \
                          BarChartPlugin, Stats1DPlugin, Kde1DPlugin, Kde2DPlugin, \
                          ViolinPlotPlugin, TablePlugin, Stats2DPlugin
+                         
+def QtMsgHandler(msg_type, msg_string):
+    # Convert Qt msg type to logging level
+    log_level = [logging.DEBUG,
+                 logging.WARN,
+                 logging.ERROR,
+                 logging.FATAL] [ int(msg_type) ]
+    logging.log(log_level, 'Qt message: '+msg_string)
 
 # from https://github.com/pyinstaller/pyinstaller/wiki/Recipe-Multiprocessing
 # Module multiprocessing is organized differently in Python 3.4+
@@ -128,6 +140,9 @@ def run_gui():
         print "     setx QT_API \"pyqt\""
 
         sys.exit(1)
+        
+    from pyface.qt.QtCore import qInstallMsgHandler
+    qInstallMsgHandler(QtMsgHandler)
     
     # if we're frozen, add _MEIPASS to the pyface search path for icons etc
     if getattr(sys, 'frozen', False):

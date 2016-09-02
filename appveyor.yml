@@ -88,3 +88,19 @@ deploy:
     publish: true
     override: true
     explode: false
+    on:
+    	branch: master
+    	
+  - provider: BinTray
+    username: bpteague
+    api_key:
+      secure: BLgrF3vno40XZMvXZ+DGzxeO8xzQJP1Y/ndUVPEycNlNB2puWDGdPDJ8d4DxDTEj
+    subject: bpteague
+    repo: cytoflow
+    package: cytoflow
+    version: latest
+    publish: true
+    override: true
+    explode: false
+    on:
+    	branch: packaging

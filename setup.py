@@ -74,7 +74,8 @@ setup(
                         'envisage>=4.0',
                         'nbformat>=4.0',
                         'python-dateutil>=2.5.2',
-                        'statsmodels>=0.6.1'] \
+                        'statsmodels>=0.6.1',
+                        'faulthandler>=2.4'] \
                 if not on_rtd else None,
                         
                         # ALSO requires PyQt4 >= 4.10, but it's not available
