@@ -40,6 +40,14 @@ a = Analysis(['../cytoflowgui/run.py'],
              win_no_prefer_redirects=False,
              win_private_assemblies=False,
              cipher=None)
+             
+# for some reason, on a Mac, PyInstaller tries to include the entire
+# source directory, including docs, examples, and build files!
+
+remove_first = [ "cytoflow", "build", "dist", "doc", ".git"]
+lol = [ [x for x in a.datas if x[0].startswith(y)] for y in remove_first]
+remove_items = [item for sublist in lol for item in sublist]
+a.datas -= remove_items
 
 pyz = PYZ(a.pure, a.zipped_data, cipher=None)
 
