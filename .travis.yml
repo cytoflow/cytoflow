@@ -39,7 +39,7 @@ install:
   - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then python setup.py sdist; fi
   - pip install pyinstaller nose2 
   - pyinstaller --log-level=DEBUG packaging/pyinstaller.spec
-  -  pyi-archive_viewer -l dist/cytoflow
+  - pyi-archive_viewer -l dist/cytoflow
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then cd dist/; zip -r cytoflow.macos.zip Cytoflow.app/; rm -rf Cytoflow.app cytoflow; cd ..; fi
   - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then mv dist/cytoflow dist/cytoflow-linux.x86_64; fi
   - ls -al dist/*
