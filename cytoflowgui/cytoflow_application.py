@@ -53,6 +53,9 @@ class CytoflowApplication(TasksApplication):
     # applicaton is started.
     always_use_default_layout = Property(Bool)
 
+    # are we debugging? at the moment, just for sending logs to the console
+    debug = Bool
+
     # if there's an ERROR-level log message, drop it here     
     application_error = Str
     
@@ -65,9 +68,10 @@ class CytoflowApplication(TasksApplication):
         logging.getLogger().setLevel(logging.DEBUG)
         
         ## send the log to STDERR
-        console_handler = logging.StreamHandler()
-        console_handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s:%(name)s:%(message)s"))
-        logging.getLogger().addHandler(console_handler)
+        if self.debug:
+            console_handler = logging.StreamHandler()
+            console_handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s:%(name)s:%(message)s"))
+            logging.getLogger().addHandler(console_handler)
           
         ## capture log in memory
         mem_handler = logging.StreamHandler(self.application_log)

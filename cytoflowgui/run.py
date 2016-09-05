@@ -197,7 +197,8 @@ def run_gui():
     
     app = CytoflowApplication(id = 'edu.mit.synbio.cytoflow',
                               plugins = plugins,
-                              icon = ImageResource('icon'))
+                              icon = ImageResource('icon'),
+                              debug = debug)
     app.run()
     
     logging.shutdown()
