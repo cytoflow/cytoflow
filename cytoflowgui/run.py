@@ -55,6 +55,9 @@ from view_plugins import HistogramPlugin, Histogram2DPlugin, ScatterplotPlugin, 
                          BarChartPlugin, Stats1DPlugin, Kde1DPlugin, Kde2DPlugin, \
                          ViolinPlotPlugin, TablePlugin, Stats2DPlugin
                          
+
+debug = False
+                         
 def QtMsgHandler(msg_type, msg_string):
     # Convert Qt msg type to logging level
     log_level = [logging.DEBUG,
@@ -141,6 +144,8 @@ def run_gui():
 
         sys.exit(1)
         
+    remote_connection = start_remote_process()
+        
     from pyface.qt.QtCore import qInstallMsgHandler
     qInstallMsgHandler(QtMsgHandler)
     
@@ -149,6 +154,7 @@ def run_gui():
         from pyface.resource_manager import resource_manager
         resource_manager.extra_paths.append(sys._MEIPASS)
 
+    global debug
     debug = ("--debug" in sys.argv)
         
     # install a global (gui) error handler for traits notifications
@@ -158,7 +164,8 @@ def run_gui():
     
     sys.excepthook = log_excepthook
 
-    plugins = [CorePlugin(), TasksPlugin(), FlowTaskPlugin(debug = debug)]    
+    plugins = [CorePlugin(), TasksPlugin(), FlowTaskPlugin(debug = debug,
+                                                           remote_connection = remote_connection)]    
     
     # reverse of the order on the toolbar
     view_plugins = [TablePlugin(),
@@ -194,6 +201,49 @@ def run_gui():
     app.run()
     
     logging.shutdown()
+    
+def start_remote_process():
+
+        # communications channels
+        parent_workflow_conn, child_workflow_conn = multiprocessing.Pipe()  
+        parent_mpl_conn, child_matplotlib_conn = multiprocessing.Pipe()
+        log_q = multiprocessing.Queue()
+                
+        remote_process = multiprocessing.Process(target = remote_main,
+                                                 name = "remote process",
+                                                 args = [parent_workflow_conn,
+                                                         parent_mpl_conn,
+                                                         log_q])
+        
+        remote_process.daemon = True
+        remote_process.start() 
+        
+        remote_process_thread = threading.Thread(target = monitor_remote_process,
+                                                 name = "monitor remote process",
+                                                 args = [remote_process])
+        remote_process_thread.daemon = True
+        remote_process_thread.start()
+        
+        return (child_workflow_conn, child_matplotlib_conn, log_q)
+    
+def remote_main(parent_workflow_conn, parent_mpl_conn, log_q):    
+    from cytoflowgui.workflow import RemoteWorkflow
+    
+    # install a global (gui) error handler for traits notifications
+    push_exception_handler(handler = log_notification_handler,
+                           reraise_exceptions = debug, 
+                           main = True)
+    
+    sys.excepthook = log_excepthook
+    
+    RemoteWorkflow().run(parent_workflow_conn, parent_mpl_conn, log_q)
+    
+        
+def monitor_remote_process(proc):
+    
+        proc.join()
+        logging.error("Remote process exited with {}".format(proc.exitcode))
+    
 
 if __name__ == '__main__':
     run_gui()

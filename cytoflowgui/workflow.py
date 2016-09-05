@@ -42,7 +42,7 @@ the plots are ferried back to the GUI, see the module docstring for
 matplotlib_backend.py
 """
 
-import threading, sys, Queue, logging, multiprocessing, traceback
+import threading, sys, Queue, logging, traceback
 
 from traits.api import HasStrictTraits, Instance, List, on_trait_change, Any
                        
@@ -140,19 +140,11 @@ class Workflow(HasStrictTraits):
     # the Pipe connection object to pass to the matplotlib canvas
     child_matplotlib_conn = Any
     
-    # the child log
-#     child_log = Str
-#     child_log_cond = Instance(threading.Condition, ())
-    
-    def __init__(self, **kwargs):
+    def __init__(self, remote_connection, **kwargs):
         super(Workflow, self).__init__(**kwargs)  
         
-        # communications channels
-        parent_workflow_conn, child_workflow_conn = multiprocessing.Pipe()  
-        parent_mpl_conn, self.child_matplotlib_conn = multiprocessing.Pipe()
-        log_q = multiprocessing.Queue()
+        child_workflow_conn, self.child_matplotlib_conn, log_q = remote_connection
         
-             
         self.recv_thread = threading.Thread(target = self.recv_main, 
                                             name = "local workflow recv",
                                             args = [child_workflow_conn])
@@ -171,29 +163,6 @@ class Workflow(HasStrictTraits):
         self.log_thread.daemon = True
         self.log_thread.start()
         
-
-        self.remote_process_thread = threading.Thread(target = self.run_remote_process,
-                                                  name = "run remote process",
-                                                  args = [parent_workflow_conn,
-                                                          parent_mpl_conn,
-                                                          log_q])
-        self.remote_process_thread.daemon = True
-        self.remote_process_thread.start()
-        
-        
-    def run_remote_process(self, parent_workflow_conn, parent_mpl_conn, log_q):
-        remote_workflow = RemoteWorkflow()
-        
-        remote_process = multiprocessing.Process(target = remote_workflow.run,
-                                                 name = "remote",
-                                                 args = [parent_workflow_conn,
-                                                         parent_mpl_conn,
-                                                         log_q])
-        remote_process.daemon = True
-        remote_process.start() 
-        remote_process.join()
-        logging.debug("Remote process exited with {}".format(remote_process.exitcode))
- 
 
     def recv_main(self, child_conn):
         while child_conn.poll(None):
@@ -390,8 +359,9 @@ class RemoteWorkflow(HasStrictTraits):
     
     def run(self, parent_workflow_conn, parent_mpl_conn, log_q):
         
-        # we inherit a root logger config from the parent process.
-        # clear it.
+        # if we're on MacOS or Linux, we inherit a root logger config from the 
+        # parent process.  clear it.
+        
         rootLogger = logging.getLogger()
         map(rootLogger.removeHandler, rootLogger.handlers[:])
         map(rootLogger.removeFilter, rootLogger.filters[:])

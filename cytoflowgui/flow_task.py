@@ -26,7 +26,7 @@ Created on Feb 11, 2015
 
 import os.path
 
-from traits.api import Instance, List, Bool, on_trait_change
+from traits.api import Instance, List, Bool, on_trait_change, Any
 from pyface.tasks.api import Task, TaskLayout, PaneItem
 from pyface.tasks.action.api import SMenu, SMenuBar, SToolBar, TaskAction
 from pyface.api import FileDialog, ImageResource, AboutDialog, information, confirm, OK, YES
@@ -55,7 +55,7 @@ class FlowTask(Task):
     
     # the main workflow instance.
     # THIS IS WHERE IT'S INSTANTIATED (note the args=() )
-    model = Instance(Workflow, args = ())
+    model = Instance(Workflow)
         
     # the center pane
     plot_pane = Instance(FlowTaskPane)
@@ -358,7 +358,7 @@ DEBUG LOG: {1}
                              additions = text)
         dialog.open()
         
-    @on_trait_change('model.selected')
+    @on_trait_change('model.selected', post_init = True)
     def _on_select_op(self, selected):
         if selected:
             self.view_pane.enabled = (selected is not None)
@@ -432,6 +432,7 @@ class FlowTaskPlugin(Plugin):
     view_plugins = ExtensionPoint(List(IViewPlugin), VIEW_PLUGIN_EXT)
     
     debug = Bool(False)
+    remote_connection = Any
 
     #### 'IPlugin' interface ##################################################
 
@@ -462,5 +463,6 @@ class FlowTaskPlugin(Plugin):
                             factory = lambda **x: FlowTask(application = self.application,
                                                            op_plugins = self.op_plugins,
                                                            view_plugins = self.view_plugins,
+                                                           model = Workflow(self.remote_connection),
                                                            debug = self.debug,
                                                            **x))]
