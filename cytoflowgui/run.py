@@ -21,8 +21,12 @@ Created on Feb 11, 2015
 @author: brian
 """
 
-import faulthandler
-faulthandler.enable()
+try:
+    import faulthandler
+    faulthandler.enable()
+except:
+    # if there's no console, this fails
+    pass
 
 
 import sys, multiprocessing, os, logging, traceback, threading
