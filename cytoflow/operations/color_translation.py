@@ -27,7 +27,7 @@ import math
 
 from warnings import warn
 
-from traits.api import (HasStrictTraits, Str, CStr, File, Dict, Python,
+from traits.api import (HasStrictTraits, Str, File, Dict, Any,
                         Instance, Tuple, Bool, Constant, DelegatesTo, provides,
                         Property)
 import numpy as np
@@ -75,10 +75,6 @@ class ColorTranslationOp(HasStrictTraits):
     estimated; the autofluorescence and bleedthrough parameters for each channel 
     are retrieved from the channel metadata and applied in `estimate()`.
     
-    However, because there are possible workflows for which the autofluorescence
-    and bleedthrough corrections are not necessary, `estimate()` does NOT fail
-    if those parameters are not available; it simply does not apply the
-    corresponding corrections.
 
     Examples
     --------
@@ -96,11 +92,11 @@ class ColorTranslationOp(HasStrictTraits):
     id = Constant('edu.mit.synbio.cytoflow.operations.color_translation')
     friendly_id = Constant("Color translation")
     
-    name = CStr()
+    name = Constant("Color Translation")
 
-    translation = Property
-    controls = Dict(Tuple(Str, Str), File, transient = True)
-    mixture_model = Bool(False, transient = True)
+    translation = Property(transient = True)
+    controls = Dict(Tuple(Str, Str), File)
+    mixture_model = Bool(False)
 
     # The regression coefficients determined by `estimate()`, used to map 
     # colors between channels.  The keys are tuples of (*from-channel*,
@@ -108,7 +104,7 @@ class ColorTranslationOp(HasStrictTraits):
     # values are lists of Float, the log-log coefficients for the color 
     # translation (determined by `estimate()`). 
     # TODO - why can't i make the value List(Float)?
-    _coefficients = Dict(Tuple(Str, Str), Python)
+    _coefficients = Dict(Tuple(Str, Str), Any, transient = True)
     
     # the subset string used for estimate(), passed to the diagnostic
     # plot
@@ -125,6 +121,9 @@ class ColorTranslationOp(HasStrictTraits):
 
         if not experiment:
             raise util.CytoflowOpError("No experiment specified")
+        
+        if not self.controls:
+            raise util.CytoflowOpError("No controls specified")
 
         tubes = {}
         
@@ -234,6 +233,9 @@ class ColorTranslationOp(HasStrictTraits):
         if not experiment:
             raise util.CytoflowOpError("No experiment specified")
         
+        if not self.controls:
+            raise util.CytoflowOpError("No controls specified")
+        
         if not self._coefficients:
             raise util.CytoflowOpError("Coefficients aren't set. "
                                   "Did you call estimate()?")
@@ -313,6 +315,13 @@ class ColorTranslationDiagnostic(HasStrictTraits):
         
         if not experiment:
             raise util.CytoflowViewError("No experiment specified")
+        
+        if not self.op.controls:
+            raise util.CytoflowViewError("No controls specified")
+        
+        if not self.op._coefficients:
+            raise util.CytoflowViewError("Coefficients aren't set. "
+                                  "Did you call estimate()?")
 
         tubes = {}
         
@@ -325,15 +334,18 @@ class ColorTranslationDiagnostic(HasStrictTraits):
         for from_channel, to_channel in translation.iteritems():
             
             if (from_channel, to_channel) not in self.op.controls:
-                raise util.CytoflowOpError("Control file for {0} --> {1} not specified"
+                raise util.CytoflowViewError("Control file for {0} --> {1} not specified"
                                    .format(from_channel, to_channel))
             tube_file = self.op.controls[(from_channel, to_channel)]
             
             if tube_file not in tubes: 
                 # make a little Experiment
-                check_tube(tube_file, experiment)
-                tube_exp = ImportOp(tubes = [Tube(file = tube_file)],
-                                    name_metadata = experiment.metadata['name_metadata']).apply()
+                try:
+                    check_tube(tube_file, experiment)
+                    tube_exp = ImportOp(tubes = [Tube(file = tube_file)],
+                                        name_metadata = experiment.metadata['name_metadata']).apply()
+                except util.CytoflowOpError as e:
+                    raise util.CytoflowViewError(e.__str__())
                 
                 # apply previous operations
                 for op in experiment.history:
@@ -347,11 +359,11 @@ class ColorTranslationDiagnostic(HasStrictTraits):
                     try:
                         tube_exp = tube_exp.query(self.subset)
                     except:
-                        raise util.CytoflowOpError("Subset string '{0}' isn't valid"
+                        raise util.CytoflowViewError("Subset string '{0}' isn't valid"
                                               .format(self.subset))
                                     
                     if len(tube_exp.data) == 0:
-                        raise util.CytoflowOpError("Subset string '{0}' returned no events"
+                        raise util.CytoflowViewError("Subset string '{0}' returned no events"
                                               .format(self.subset))
                 
                 tube_data = tube_exp.data                

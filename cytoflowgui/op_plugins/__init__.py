@@ -40,3 +40,4 @@ from bleedthrough_linear import BleedthroughLinearPlugin
 from bleedthrough_piecewise import BleedthroughPiecewisePlugin
 from bead_calibration import BeadCalibrationPlugin
 from autofluorescence import AutofluorescencePlugin
+from color_translation import ColorTranslationPlugin

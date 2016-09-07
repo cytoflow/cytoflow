@@ -27,13 +27,13 @@ from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor,
                          CheckListEditor, ButtonEditor, Heading, TableEditor, \
                          TableColumn, ObjectColumn
 from envisage.api import Plugin, contributes_to
-from traits.api import provides, Callable, Bool, CFloat, List, Str, HasTraits, \
-                       File, Event, Dict, Tuple, Float, on_trait_change
+from traits.api import provides, Callable, Tuple, CFloat, List, Str, HasTraits, \
+                       File, Event, Dict, on_trait_change, Bool, Constant
 from pyface.api import ImageResource
 
 import cytoflow.utility as util
 
-from cytoflow.operations.bleedthrough_linear import BleedthroughLinearOp, BleedthroughLinearDiagnostic
+from cytoflow.operations.color_translation import ColorTranslationOp, ColorTranslationDiagnostic
 from cytoflow.views.i_selectionview import IView
 
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
@@ -43,22 +43,28 @@ from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
 
 class _Control(HasTraits):
-    channel = Str
+    from_channel = Str
+    to_channel = Str
     file = File
 
-class BleedthroughLinearHandler(Controller, OpHandlerMixin):
+class ColorTranslationHandler(Controller, OpHandlerMixin):
     
     def default_traits_view(self):
-        return View(Item('controls_list',
+        return View(VGroup(
+                    Item('controls_list',
                          editor=TableEditor(
                             columns = 
-                                [ObjectColumn(name = 'channel',
+                                [ObjectColumn(name = 'from_channel',
                                               editor = EnumEditor(name = 'context.previous.channels'),
-                                              resize_mode = 'fixed',
+                                              resize_mode = "fixed",
+                                              width = 80),
+                                 ObjectColumn(name = 'to_channel',
+                                              editor = EnumEditor(name = 'context.previous.channels'),
+                                              resize_mode = "fixed",
                                               width = 80),
                                  ObjectColumn(name = 'file',
-                                              # 'fixed' with no width stretches to fill table
-                                              resize_mode = 'fixed')],
+                                              # "fixed" with no width stretches to fill rest of table
+                                              resize_mode = "fixed")],
                             row_factory = _Control,
                             sortable = False),
                          show_label = False),
@@ -69,7 +75,9 @@ class BleedthroughLinearHandler(Controller, OpHandlerMixin):
                     Item('remove_control',
                          editor = ButtonEditor(value = True,
                                                label = "Remove a control"),
-                         show_label = False),
+                         show_label = False)),
+                    Item('mixture_model',
+                         label = "Use mixture\nmodel?"),
                     VGroup(Item('subset',
                                 show_label = False,
                                 editor = SubsetEditor(conditions_types = "context.previous.conditions_types",
@@ -83,22 +91,23 @@ class BleedthroughLinearHandler(Controller, OpHandlerMixin):
                          show_label = False),
                     shared_op_traits)
 
-class BleedthroughLinearPluginOp(BleedthroughLinearOp, PluginOpMixin):
-    handler_factory = Callable(BleedthroughLinearHandler)
+class ColorTranslationPluginOp(ColorTranslationOp, PluginOpMixin):
+    handler_factory = Callable(ColorTranslationHandler)
 
     add_control = Event
     remove_control = Event
-    
-    controls = Dict(Str, File, transient = True)
-    spillover = Dict(Tuple(Str, Str), Float, transient = True)
 
+    controls = Dict(Tuple(Str, Str), File, transient = True)
     controls_list = List(_Control, estimate = True)
+    mixture_model = Bool(False, estimate = True)
     subset = Str(estimate = True)
+    translation = Constant(None)
         
     # MAGIC: called when add_control is set
     def _add_control_fired(self):
         self.controls_list.append(_Control())
         
+    # MAGIC: called when remove_control is set
     def _remove_control_fired(self):
         self.controls_list.pop()
         
@@ -107,46 +116,35 @@ class BleedthroughLinearPluginOp(BleedthroughLinearOp, PluginOpMixin):
         self.changed = "estimate"
     
     def default_view(self, **kwargs):
-        return BleedthroughLinearPluginView(op = self, **kwargs)
+        return ColorTranslationPluginView(op = self, **kwargs)
     
     def estimate(self, experiment):
         for i, control_i in enumerate(self.controls_list):
             for j, control_j in enumerate(self.controls_list):
-                if control_i.channel == control_j.channel and i != j:
+                if control_i.from_channel == control_j.from_channel and i != j:
                     raise util.CytoflowOpError("Channel {0} is included more than once"
-                                               .format(control_i.channel))
+                                               .format(control_i.from_channel))
                                                
         self.controls = {}
         for control in self.controls_list:
-            self.controls[control.channel] = control.file
+            self.controls[(control.from_channel, control.to_channel)] = control.file
             
         if not self.subset:
             warnings.warn("Are you sure you don't want to specify a subset "
                           "used to estimate the model?",
                           util.CytoflowOpWarning)
                     
-        BleedthroughLinearOp.estimate(self, experiment, subset = self.subset)
+        ColorTranslationOp.estimate(self, experiment, subset = self.subset)
         
         self.changed = "estimate_result"
-        
-    def should_clear_estimate(self, changed):
-        """
-        Should the owning WorkflowItem clear the estimated model by calling
-        op.clear_estimate()?  `changed` can be:
-         - "estimate" -- the parameters required to call 'estimate()' (ie
-            traits with estimate = True metadata) have changed
-         - "prev_result" -- the previous WorkflowItem's result changed
-        """
-        if changed == "prev_result":
-            return False
-        
-        return True
         
     def clear_estimate(self):
-        self.spillover.clear()
+        self._coefficients.clear()
+        self._subset.clear()
+        
         self.changed = "estimate_result"
 
-class BleedthroughLinearViewHandler(Controller, ViewHandlerMixin):
+class ColorTranslationViewHandler(Controller, ViewHandlerMixin):
     def default_traits_view(self):
         return View(Item('name',
                          style = 'readonly'),
@@ -162,29 +160,42 @@ class BleedthroughLinearViewHandler(Controller, ViewHandlerMixin):
                                                   background_color = "#ff9191")))
 
 @provides(IView)
-class BleedthroughLinearPluginView(BleedthroughLinearDiagnostic, PluginViewMixin):
-    handler_factory = Callable(BleedthroughLinearViewHandler)
+class ColorTranslationPluginView(ColorTranslationDiagnostic, PluginViewMixin):
+    handler_factory = Callable(ColorTranslationViewHandler)
     
     def plot_wi(self, wi):
         self.plot(wi.previous.result)
+        
+    def should_clear_estimate(self, changed):
+        """
+        Should the owning WorkflowItem clear the estimated model by calling
+        op.clear_estimate()?  `changed` can be:
+         - "estimate" -- the parameters required to call 'estimate()' (ie
+            traits with estimate = True metadata) have changed
+         - "prev_result" -- the previous WorkflowItem's result changed
+        """
+        if changed == "prev_result":
+            return False
+        
+        return True
 
 @provides(IOperationPlugin)
-class BleedthroughLinearPlugin(Plugin):
+class ColorTranslationPlugin(Plugin):
     """
     class docs
     """
     
-    id = 'edu.mit.synbio.cytoflowgui.op_plugins.bleedthrough_linear'
-    operation_id = 'edu.mit.synbio.cytoflow.operations.bleedthrough_linear'
+    id = 'edu.mit.synbio.cytoflowgui.op_plugins.color_translation'
+    operation_id = 'edu.mit.synbio.cytoflow.operations.color_translation'
 
-    short_name = "Linear Compensation"
+    short_name = "Color Translation"
     menu_group = "Gates"
     
     def get_operation(self):
-        return BleedthroughLinearPluginOp()
+        return ColorTranslationPluginOp()
     
     def get_icon(self):
-        return ImageResource('bleedthrough_linear')
+        return ImageResource('color_translation')
     
     @contributes_to(OP_PLUGIN_EXT)
     def get_plugin(self):

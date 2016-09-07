@@ -50,14 +50,16 @@ from pyface.image_resource import ImageResource
 
 from flow_task import FlowTaskPlugin
 from cytoflow_application import CytoflowApplication
-from op_plugins import ImportPlugin, ThresholdPlugin, RangePlugin, \
-                       Range2DPlugin, PolygonPlugin, BinningPlugin, \
-                       GaussianMixture1DPlugin, GaussianMixture2DPlugin, \
-                       BleedthroughLinearPlugin, BleedthroughPiecewisePlugin, \
-                       BeadCalibrationPlugin, AutofluorescencePlugin
-from view_plugins import HistogramPlugin, Histogram2DPlugin, ScatterplotPlugin, \
-                         BarChartPlugin, Stats1DPlugin, Kde1DPlugin, Kde2DPlugin, \
-                         ViolinPlotPlugin, TablePlugin, Stats2DPlugin
+from op_plugins import (ImportPlugin, ThresholdPlugin, RangePlugin,
+                        Range2DPlugin, PolygonPlugin, BinningPlugin,
+                        GaussianMixture1DPlugin, GaussianMixture2DPlugin,
+                        BleedthroughLinearPlugin, BleedthroughPiecewisePlugin,
+                        BeadCalibrationPlugin, AutofluorescencePlugin,
+                        ColorTranslationPlugin)
+
+from view_plugins import (HistogramPlugin, Histogram2DPlugin, ScatterplotPlugin,
+                          BarChartPlugin, Stats1DPlugin, Kde1DPlugin, Kde2DPlugin,
+                          ViolinPlotPlugin, TablePlugin, Stats2DPlugin)
                          
 
 debug = False
@@ -185,7 +187,8 @@ def run_gui():
     
     plugins.extend(view_plugins)
     
-    op_plugins = [AutofluorescencePlugin(),
+    op_plugins = [ColorTranslationPlugin(),
+                  AutofluorescencePlugin(),
                   BeadCalibrationPlugin(),
                   BleedthroughPiecewisePlugin(),
                   BleedthroughLinearPlugin(),
