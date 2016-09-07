@@ -39,3 +39,4 @@ from gaussian_2d import GaussianMixture2DPlugin
 from bleedthrough_linear import BleedthroughLinearPlugin
 from bleedthrough_piecewise import BleedthroughPiecewisePlugin
 from bead_calibration import BeadCalibrationPlugin
+from autofluorescence import AutofluorescencePlugin

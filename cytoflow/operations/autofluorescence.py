@@ -17,7 +17,7 @@
 
 from __future__ import division, absolute_import
 
-from traits.api import (HasStrictTraits, Str, CStr, CFloat, File, Dict,
+from traits.api import (HasStrictTraits, Str, CFloat, File, Dict,
                         Instance, List, Constant, provides)
                        
 import numpy as np
@@ -74,11 +74,11 @@ class AutofluorescenceOp(HasStrictTraits):
     id = Constant('edu.mit.synbio.cytoflow.operations.autofluorescence')
     friendly_id = Constant("Autofluorescence correction")
     
-    name = CStr()
+    name = Constant("Autofluorescence")
     channels = List(Str)
-    blank_file = File(filter = "*.fcs", exists = True, transient = True)
+    blank_file = File(exists = True)
 
-    _af_median = Dict(Str, CFloat)
+    _af_median = Dict(Str, CFloat, transient = True)
     _af_stdev = Dict(Str, CFloat)
     
     def estimate(self, experiment, subset = None): 
@@ -87,6 +87,9 @@ class AutofluorescenceOp(HasStrictTraits):
         """
         if not experiment:
             raise util.CytoflowOpError("No experiment specified")
+        
+        if not self.channels:
+            raise util.CytoflowOpError("No channels specified")
 
         if not set(self.channels) <= set(experiment.channels):
             raise util.CytoflowOpError("Specified channels that weren't found in "
@@ -135,6 +138,13 @@ class AutofluorescenceOp(HasStrictTraits):
         """
         if not experiment:
             raise util.CytoflowOpError("No experiment specified")
+        
+        if not self.channels:
+            raise util.CytoflowOpError("No channels specified")
+        
+        if not self._af_median:
+            raise util.CytoflowOpError("Autofluorescence values aren't set. Did "
+                                       "you forget to run estimate()?")
         
         if not set(self._af_median.keys()) <= set(experiment.channels) or \
            not set(self._af_stdev.keys()) <= set(experiment.channels):
@@ -190,6 +200,30 @@ class AutofluorescenceDiagnosticView(HasStrictTraits):
     def plot(self, experiment, **kwargs):
         """Plot a faceted histogram view of a channel"""
         
+        if not experiment:
+            raise util.CytoflowViewError("No experiment specified")
+        
+        if not self.op.channels:
+            raise util.CytoflowViewError("No channels specified")
+        
+        if not self.op._af_median:
+            raise util.CytoflowViewError("Autofluorescence values aren't set. Did "
+                                       "you forget to run estimate()?")
+            
+        if not set(self.op._af_median.keys()) <= set(experiment.channels) or \
+           not set(self.op._af_stdev.keys()) <= set(experiment.channels):
+            raise util.CytoflowOpError("Autofluorescence estimates aren't set, or are "
+                               "different than those in the experiment "
+                               "parameter. Did you forget to run estimate()?")
+
+        if not set(self.op._af_median.keys()) == set(self.op._af_stdev.keys()):
+            raise util.CytoflowOpError("Median and stdev keys are different! "
+                                  "What the hell happened?!")
+        
+        if not set(self.op.channels) == set(self.op._af_median.keys()):
+            raise util.CytoflowOpError("Estimated channels differ from the channels "
+                               "parameter.  Did you forget to (re)run estimate()?")
+        
         import matplotlib.pyplot as plt
         import seaborn as sns  # @UnusedImport
         
@@ -198,9 +232,12 @@ class AutofluorescenceDiagnosticView(HasStrictTraits):
         kwargs.setdefault('antialiased', True)
            
         # make a little Experiment
-        check_tube(self.op.blank_file, experiment)
-        blank_exp = ImportOp(tubes = [Tube(file = self.op.blank_file)], 
-                             name_metadata = experiment.metadata['name_metadata']).apply()
+        try:
+            check_tube(self.op.blank_file, experiment)
+            blank_exp = ImportOp(tubes = [Tube(file = self.op.blank_file)], 
+                                 name_metadata = experiment.metadata['name_metadata']).apply()
+        except util.CytoflowOpError as e:
+            raise util.CytoflowViewError(e.__str__())
         
         # apply previous operations
         for op in experiment.history:

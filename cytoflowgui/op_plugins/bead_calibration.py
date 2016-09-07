@@ -109,7 +109,7 @@ class BeadCalibrationPluginOp(BeadCalibrationOp, PluginOpMixin):
     beads_name = Str(estimate = True)   
     beads = Dict(Str, List(Float), transient = True)
  
-    beads_file = File(estimate = True)
+    beads_file = File(filter = ["*.fcs"], estimate = True)
     units_list = List(_Unit, estimate = True)
     units = Dict(Str, Str, transient = True)
 
@@ -150,6 +150,19 @@ class BeadCalibrationPluginOp(BeadCalibrationOp, PluginOpMixin):
         BeadCalibrationOp.estimate(self, experiment)
         self.changed = "estimate_result"
         
+    def should_clear_estimate(self, changed):
+        """
+        Should the owning WorkflowItem clear the estimated model by calling
+        op.clear_estimate()?  `changed` can be:
+         - "estimate" -- the parameters required to call 'estimate()' (ie
+            traits with estimate = True metadata) have changed
+         - "prev_result" -- the previous WorkflowItem's result changed
+        """
+        if changed == "prev_result":
+            return False
+        
+        return True
+        
     def clear_estimate(self):
         self._calibration_functions.clear()
         self._peaks.clear()
@@ -177,6 +190,20 @@ class BeadCalibrationPluginView(BeadCalibrationDiagnostic, PluginViewMixin):
     
     def plot_wi(self, wi):
         self.plot(wi.previous.result)
+        
+    def should_plot(self, changed):
+        """
+        Should the owning WorkflowItem refresh the plot when certain things
+        change?  `changed` can be:
+         - "view" -- the view's parameters changed
+         - "result" -- this WorkflowItem's result changed
+         - "prev_result" -- the previous WorkflowItem's result changed
+         - "estimate_result" -- the results of calling "estimate" changed
+        """
+        if changed == "prev_result" or changed == "result":
+            return False
+        
+        return True
 
 @provides(IOperationPlugin)
 class BeadCalibrationPlugin(Plugin):

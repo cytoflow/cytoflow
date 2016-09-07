@@ -156,7 +156,7 @@ class BeadCalibrationOp(HasStrictTraits):
     name = Constant("Bead Calibration")
     units = Dict(Str, Str)
     
-    beads_file = File
+    beads_file = File(exists = True)
     bead_peak_quantile = Int(80)
 
     bead_brightness_threshold = Float(100)

@@ -1,0 +1,394 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="500"
+   height="500"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.48.4 r9939"
+   inkscape:export-filename="/home/brian/src/cytoflow/cytoflowgui/op_plugins/images/autofluorescence.png"
+   inkscape:export-xdpi="5.8299999"
+   inkscape:export-ydpi="5.8299999"
+   sodipodi:docname="autofluorescence.svg">
+  <defs
+     id="defs4">
+    <clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath5006">
+      <rect
+         style="opacity:1;fill:none;fill-opacity:0.56078384;stroke:#000000;stroke-width:1.25;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:0;stroke-dasharray:none;stroke-dashoffset:5.69999981;stroke-opacity:1"
+         id="rect5008"
+         width="498.74997"
+         height="498.75"
+         x="0.625"
+         y="552.98724" />
+    </clipPath>
+    <clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath5010">
+      <rect
+         style="opacity:1;fill:none;fill-opacity:0.56078384;stroke:#000000;stroke-width:1.25;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:0;stroke-dasharray:none;stroke-dashoffset:5.69999981;stroke-opacity:1"
+         id="rect5012"
+         width="498.74997"
+         height="498.75"
+         x="0.625"
+         y="552.98724" />
+    </clipPath>
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.7"
+     inkscape:cx="261.0564"
+     inkscape:cy="172.74762"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="1354"
+     inkscape:window-height="848"
+     inkscape:window-x="66"
+     inkscape:window-y="200"
+     inkscape:window-maximized="0"
+     showguides="true"
+     inkscape:guide-bbox="true" />
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-552.36218)">
+    <rect
+       inkscape:tile-y0="-1.0356619"
+       inkscape:tile-x0="-2.0203052"
+       y="553.36121"
+       x="1.7578122e-07"
+       height="499.00098"
+       width="15.647999"
+       id="use4065"
+       style="opacity:0.33;fill:#ff0000;fill-opacity:1;stroke:none" />
+    <rect
+       inkscape:tile-y0="-1.0356619"
+       inkscape:tile-x0="-2.0203052"
+       y="553.36121"
+       x="15.64801"
+       height="499.00098"
+       width="15.647999"
+       id="use4067"
+       style="opacity:0.33;fill:#ff2600;fill-opacity:1;stroke:none" />
+    <rect
+       inkscape:tile-y0="-1.0356619"
+       inkscape:tile-x0="-2.0203052"
+       y="553.36121"
+       x="31.296021"
+       height="499.00098"
+       width="15.647999"
+       id="use4069"
+       style="opacity:0.33;fill:#ff4d00;fill-opacity:1;stroke:none" />
+    <rect
+       inkscape:tile-y0="-1.0356619"
+       inkscape:tile-x0="-2.0203052"
+       y="553.36121"
+       x="46.94397"
+       height="499.00098"
+       width="15.647999"
+       id="use4071"
+       style="opacity:0.33;fill:#ff7300;fill-opacity:1;stroke:none" />
+    <rect
+       inkscape:tile-y0="-1.0356619"
+       inkscape:tile-x0="-2.0203052"
+       y="553.36121"
+       x="62.59198"
+       height="499.00098"
+       width="15.647999"
+       id="use4073"
+       style="opacity:0.33;fill:#ff9900;fill-opacity:1;stroke:none" />
+    <rect
+       inkscape:tile-y0="-1.0356619"
+       inkscape:tile-x0="-2.0203052"
+       y="553.36121"
+       x="78.23999"
+       height="499.00098"
+       width="15.647999"
+       id="use4075"
+       style="opacity:0.33;fill:#ffbf00;fill-opacity:1;stroke:none" />
+    <rect
+       inkscape:tile-y0="-1.0356619"
+       inkscape:tile-x0="-2.0203052"
+       y="553.36121"
+       x="93.888"
+       height="499.00098"
+       width="15.647999"
+       id="use4077"
+       style="opacity:0.33;fill:#ffe600;fill-opacity:1;stroke:none" />
+    <rect
+       inkscape:tile-y0="-1.0356619"
+       inkscape:tile-x0="-2.0203052"
+       y="553.36121"
+       x="109.53601"
+       height="499.00098"
+       width="15.647999"
+       id="use4079"
+       style="opacity:0.33;fill:#f2ff00;fill-opacity:1;stroke:none" />
+    <rect
+       inkscape:tile-y0="-1.0356619"
+       inkscape:tile-x0="-2.0203052"
+       y="553.36121"
+       x="125.18399"
+       height="499.00098"
+       width="15.647999"
+       id="use4081"
+       style="opacity:0.33;fill:#ccff00;fill-opacity:1;stroke:none" />
+    <rect
+       inkscape:tile-y0="-1.0356619"
+       inkscape:tile-x0="-2.0203052"
+       y="553.36121"
+       x="140.83197"
+       height="499.00098"
+       width="15.647999"
+       id="use4083"
+       style="opacity:0.33;fill:#a6ff00;fill-opacity:1;stroke:none" />
+    <rect
+       inkscape:tile-y0="-1.0356619"
+       inkscape:tile-x0="-2.0203052"
+       y="553.36121"
+       x="156.47998"
+       height="499.00098"
+       width="15.647999"
+       id="use4085"
+       style="opacity:0.33;fill:#80ff00;fill-opacity:1;stroke:none" />
+    <rect
+       inkscape:tile-y0="-1.0356619"
+       inkscape:tile-x0="-2.0203052"
+       y="553.36121"
+       x="172.12799"
+       height="499.00098"
+       width="15.647999"
+       id="use4087"
+       style="opacity:0.33;fill:#59ff00;fill-opacity:1;stroke:none" />
+    <rect
+       inkscape:tile-y0="-1.0356619"
+       inkscape:tile-x0="-2.0203052"
+       y="553.36121"
+       x="187.77597"
+       height="499.00098"
+       width="15.647999"
+       id="use4089"
+       style="opacity:0.33;fill:#33ff00;fill-opacity:1;stroke:none" />
+    <rect
+       inkscape:tile-y0="-1.0356619"
+       inkscape:tile-x0="-2.0203052"
+       y="553.36121"
+       x="203.42398"
+       height="499.00098"
+       width="15.647999"
+       id="use4091"
+       style="opacity:0.33;fill:#0dff00;fill-opacity:1;stroke:none" />
+    <rect
+       inkscape:tile-y0="-1.0356619"
+       inkscape:tile-x0="-2.0203052"
+       y="553.36121"
+       x="219.07199"
+       height="499.00098"
+       width="15.647999"
+       id="use4093"
+       style="opacity:0.33;fill:#00ff19;fill-opacity:1;stroke:none" />
+    <rect
+       inkscape:tile-y0="-1.0356619"
+       inkscape:tile-x0="-2.0203052"
+       y="553.36121"
+       x="234.71997"
+       height="499.00098"
+       width="15.647999"
+       id="use4095"
+       style="opacity:0.33;fill:#00ff40;fill-opacity:1;stroke:none" />
+    <rect
+       inkscape:tile-y0="-1.0356619"
+       inkscape:tile-x0="-2.0203052"
+       y="553.36121"
+       x="250.36798"
+       height="499.00098"
+       width="15.647999"
+       id="use4097"
+       style="opacity:0.33;fill:#00ff66;fill-opacity:1;stroke:none" />
+    <rect
+       inkscape:tile-y0="-1.0356619"
+       inkscape:tile-x0="-2.0203052"
+       y="553.36121"
+       x="266.01599"
+       height="499.00098"
+       width="15.647999"
+       id="use4099"
+       style="opacity:0.33;fill:#00ff8c;fill-opacity:1;stroke:none" />
+    <rect
+       inkscape:tile-y0="-1.0356619"
+       inkscape:tile-x0="-2.0203052"
+       y="553.36121"
+       x="281.66397"
+       height="499.00098"
+       width="15.647999"
+       id="use4101"
+       style="opacity:0.33;fill:#00ffb2;fill-opacity:1;stroke:none" />
+    <rect
+       inkscape:tile-y0="-1.0356619"
+       inkscape:tile-x0="-2.0203052"
+       y="553.36121"
+       x="297.31198"
+       height="499.00098"
+       width="15.647999"
+       id="use4103"
+       style="opacity:0.33;fill:#00ffd9;fill-opacity:1;stroke:none" />
+    <rect
+       inkscape:tile-y0="-1.0356619"
+       inkscape:tile-x0="-2.0203052"
+       y="553.36121"
+       x="312.95996"
+       height="499.00098"
+       width="15.647999"
+       id="use4105"
+       style="opacity:0.33;fill:#00ffff;fill-opacity:1;stroke:none" />
+    <rect
+       inkscape:tile-y0="-1.0356619"
+       inkscape:tile-x0="-2.0203052"
+       y="553.36121"
+       x="328.60797"
+       height="499.00098"
+       width="15.647999"
+       id="use4107"
+       style="opacity:0.33;fill:#00d9ff;fill-opacity:1;stroke:none" />
+    <rect
+       inkscape:tile-y0="-1.0356619"
+       inkscape:tile-x0="-2.0203052"
+       y="553.36121"
+       x="344.25595"
+       height="499.00098"
+       width="15.647999"
+       id="use4109"
+       style="opacity:0.33;fill:#00b2ff;fill-opacity:1;stroke:none" />
+    <rect
+       inkscape:tile-y0="-1.0356619"
+       inkscape:tile-x0="-2.0203052"
+       y="553.36121"
+       x="359.90396"
+       height="499.00098"
+       width="15.647999"
+       id="use4111"
+       style="opacity:0.33;fill:#008cff;fill-opacity:1;stroke:none" />
+    <rect
+       inkscape:tile-y0="-1.0356619"
+       inkscape:tile-x0="-2.0203052"
+       y="553.36121"
+       x="375.55197"
+       height="499.00098"
+       width="15.647999"
+       id="use4113"
+       style="opacity:0.33;fill:#0066ff;fill-opacity:1;stroke:none" />
+    <rect
+       inkscape:tile-y0="-1.0356619"
+       inkscape:tile-x0="-2.0203052"
+       y="553.36121"
+       x="391.19998"
+       height="499.00098"
+       width="15.647999"
+       id="use4115"
+       style="opacity:0.33;fill:#0040ff;fill-opacity:1;stroke:none" />
+    <rect
+       inkscape:tile-y0="-1.0356619"
+       inkscape:tile-x0="-2.0203052"
+       y="553.36121"
+       x="406.84796"
+       height="499.00098"
+       width="15.647999"
+       id="use4117"
+       style="opacity:0.33;fill:#001aff;fill-opacity:1;stroke:none" />
+    <rect
+       inkscape:tile-y0="-1.0356619"
+       inkscape:tile-x0="-2.0203052"
+       y="553.36121"
+       x="422.49597"
+       height="499.00098"
+       width="15.647999"
+       id="use4119"
+       style="opacity:0.33;fill:#0d00ff;fill-opacity:1;stroke:none" />
+    <rect
+       inkscape:tile-y0="-1.0356619"
+       inkscape:tile-x0="-2.0203052"
+       y="553.36121"
+       x="438.14398"
+       height="499.00098"
+       width="15.647999"
+       id="use4121"
+       style="opacity:0.33;fill:#3300ff;fill-opacity:1;stroke:none" />
+    <rect
+       inkscape:tile-y0="-1.0356619"
+       inkscape:tile-x0="-2.0203052"
+       y="553.36121"
+       x="453.79196"
+       height="499.00098"
+       width="15.647999"
+       id="use4123"
+       style="opacity:0.33;fill:#5900ff;fill-opacity:1;stroke:none" />
+    <rect
+       inkscape:tile-y0="-1.0356619"
+       inkscape:tile-x0="-2.0203052"
+       y="553.36121"
+       x="469.43997"
+       height="499.00098"
+       width="15.647999"
+       id="use4125"
+       style="opacity:0.33;fill:#8000ff;fill-opacity:1;stroke:none" />
+    <rect
+       inkscape:tile-y0="-1.0356619"
+       inkscape:tile-x0="-2.0203052"
+       y="553.36121"
+       x="485.08798"
+       height="499.00098"
+       width="15.647999"
+       id="use4127"
+       style="opacity:0.33;fill:#a600ff;fill-opacity:1;stroke:none" />
+    <text
+       xml:space="preserve"
+       style="font-size:88.74449921px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="30.571722"
+       y="919.41132"
+       id="text3019"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3021"
+         x="30.571722"
+         y="919.41132"
+         style="font-size:319.48019409px;font-weight:bold;-inkscape-font-specification:Sans Bold">AF</tspan></text>
+    <flowRoot
+       xml:space="preserve"
+       id="flowRoot3023"
+       style="fill:black;stroke:none;stroke-opacity:1;stroke-width:1px;stroke-linejoin:miter;stroke-linecap:butt;fill-opacity:1;font-family:Sans;font-style:normal;font-weight:normal;font-size:40px;line-height:125%;letter-spacing:0px;word-spacing:0px"><flowRegion
+         id="flowRegion3025"><rect
+           id="rect3027"
+           width="34.285713"
+           height="121.42857"
+           x="-282.85715"
+           y="-108.57143" /></flowRegion><flowPara
+         id="flowPara3029"></flowPara></flowRoot>  </g>
+</svg>
