@@ -423,6 +423,7 @@ class RemoteWorkflow(HasStrictTraits):
                         wi.matplotlib_events = self.matplotlib_events
                         wi.plot_lock = self.plot_lock
                         self.workflow.append(wi)
+                    self.workflow[0].command = "apply"
     
                 elif msg == Msg.ADD_ITEMS:
                     (idx, new_item) = payload
@@ -477,6 +478,8 @@ class RemoteWorkflow(HasStrictTraits):
                     except StopIteration:
                         wi.views.append(view)
                         wi.current_view = view
+                        
+                    wi.command = "plot"
                         
                 elif msg == Msg.CHANGE_CURRENT_PLOT:
                     (idx, plot) = payload
@@ -582,7 +585,7 @@ class RemoteWorkflow(HasStrictTraits):
             self.exec_q.put_nowait((idx, obj.apply))
         elif cmd == "estimate":
             self.exec_q.put_nowait((idx - 0.1, obj.estimate))
-        elif cmd == "plot":
+        elif cmd == "plot" and obj == self.selected:
             self.exec_q.put_nowait((0, obj.plot))
             
     @on_trait_change('selected')
