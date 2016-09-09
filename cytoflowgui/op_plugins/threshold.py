@@ -57,7 +57,7 @@ class ThresholdViewHandler(Controller, ViewHandlerMixin):
                                 editor=ExtendableEnumEditor(name='context.previous.conditions',
                                                             extra_items = {"None" : ""}),
                                 label="Color\nFacet"),
-                           label = "Range Setup View",
+                           label = "Threshold Setup View",
                            show_border = False),
                     VGroup(Item('subset',
                                 show_label = False,

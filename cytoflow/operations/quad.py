@@ -135,26 +135,26 @@ class QuadOp(HasStrictTraits):
         gate = pd.Series([None] * len(experiment))
         
         # perhaps there's some more pythonic way to do this?
-        
-        # upper-left
-        ul = np.logical_and(experiment[self.xchannel] < self.xthreshold,
-                            experiment[self.ychannel] > self.ythreshold)
-        gate.loc[ul] = self.name + '_1'
-
-        # upper-right
-        ur = np.logical_and(experiment[self.xchannel] > self.xthreshold,
-                            experiment[self.ychannel] > self.ythreshold)
-        gate.loc[ur] = self.name + '_2'
-        
-        # lower-right
-        lr = np.logical_and(experiment[self.xchannel] > self.xthreshold,
-                            experiment[self.ychannel] < self.ythreshold)
-        gate.loc[lr] = self.name + '_3'
 
         # lower-left
         ll = np.logical_and(experiment[self.xchannel] < self.xthreshold,
                             experiment[self.ychannel] < self.ythreshold)
-        gate.loc[ll] = self.name + '_4'
+        gate.loc[ll] = self.name + '_1'
+        
+        # upper-left
+        ul = np.logical_and(experiment[self.xchannel] < self.xthreshold,
+                            experiment[self.ychannel] > self.ythreshold)
+        gate.loc[ul] = self.name + '_2'
+
+        # upper-right
+        ur = np.logical_and(experiment[self.xchannel] > self.xthreshold,
+                            experiment[self.ychannel] > self.ythreshold)
+        gate.loc[ur] = self.name + '_3'
+        
+        # lower-right
+        lr = np.logical_and(experiment[self.xchannel] > self.xthreshold,
+                            experiment[self.ychannel] < self.ythreshold)
+        gate.loc[lr] = self.name + '_4'
 
         new_experiment = experiment.clone()
         new_experiment.add_condition(self.name, "category", gate)

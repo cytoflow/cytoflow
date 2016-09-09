@@ -50,7 +50,7 @@ from pyface.image_resource import ImageResource
 
 from flow_task import FlowTaskPlugin
 from cytoflow_application import CytoflowApplication
-from op_plugins import (ImportPlugin, ThresholdPlugin, RangePlugin,
+from op_plugins import (ImportPlugin, ThresholdPlugin, RangePlugin, QuadPlugin,
                         Range2DPlugin, PolygonPlugin, BinningPlugin,
                         GaussianMixture1DPlugin, GaussianMixture2DPlugin,
                         BleedthroughLinearPlugin, BleedthroughPiecewisePlugin,
@@ -197,6 +197,7 @@ def run_gui():
                   GaussianMixture1DPlugin(),
                   BinningPlugin(),
                   PolygonPlugin(),
+                  QuadPlugin(),
                   Range2DPlugin(),
                   RangePlugin(),
                   ThresholdPlugin(),
