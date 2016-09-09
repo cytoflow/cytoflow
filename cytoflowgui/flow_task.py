@@ -238,16 +238,34 @@ class FlowTask(Task):
         """
         Shows a dialog to export a file
         """
-        
+                
         information(None, "This will save exactly what you see on the screen "
-                          "to a file. Choose the file type via the file " 
-                          "extension (ie .png, .pdf, .jpg)", "Export")
+                          "to a file.", "Export")
+        
+        f = ""
+        filetypes_groups = self.plot_pane.canvas.get_supported_filetypes_grouped()
+        filename_exts = []
+        for name, ext in filetypes_groups.iteritems():
+            if f:
+                f += ";"
+            f += FileDialog.create_wildcard(name, " ".join(["*." + e for e in ext]))
+            filename_exts.append(ext)
         
         dialog = FileDialog(parent = self.window.control,
-                            action = 'save as')
+                            action = 'save as',
+                            wildcard = f)
         
         if dialog.open() == OK:
+            filetypes = self.plot_pane.canvas.get_supported_filetypes().keys()
+            if not filter(lambda ext: dialog.path.endswith(ext), ["." + ext for ext in filetypes]):
+                selected_exts = filename_exts[dialog.wildcard_index]
+                ext = sorted(selected_exts, key = len)[0]
+                dialog.path += "."
+                dialog.path += ext
+                
             self.plot_pane.export(dialog.path)
+
+                
             
     def on_notebook(self):
         """
