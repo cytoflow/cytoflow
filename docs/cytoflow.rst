@@ -7,6 +7,7 @@ Subpackages
 .. toctree::
 
     cytoflow.operations
+    cytoflow.scripts
     cytoflow.utility
     cytoflow.views
 

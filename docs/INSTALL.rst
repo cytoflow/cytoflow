@@ -156,8 +156,7 @@ On a fresh Ubuntu 14.04 install::
 	brian@vm:~/cytoflow$ python setup.py develop --user
 	
 Now you can use whatever development environment floats your boat.  I'm a fan
-of Eclipse and PyDev; there's probably some Eclipse cruft (``.project`` and
-``.pydevproject``) in the GitHub repo.
+of Eclipse and PyDev.
 
 
 Windows
@@ -174,6 +173,10 @@ when I roll a release they get posted on the GitHub release page.
 
 * Install a copy of ``git``.  I use `git-for-windows <http://git-for-windows.github.io>`_
 
+* Clone the git repo.  **From git-bash**, say::
+
+    git clone https://github.com/bpteague/cytoflow.git
+
 * Install the Anaconda Python distribution. **Make sure to install
   version 2.7.**  (Some day we will be Python 3 compatible, but not until 
   all of our dependencies are.)
@@ -182,16 +185,12 @@ when I roll a release they get posted on the GitHub release page.
 
 * From the Start menu, in the Anaconda folder, run ``Anaconda Command Prompt``
 
-* Install the conda package dependencies.  At the Anconda command prompt, type::
+* Install the conda package dependencies.  From the cytoflow source directory, say::
 
-    conda install install pandas bottleneck numpy numexpr matplotlib scipy scikit-learn seaborn pyface envisage nbformat python-dateutil statsmodels pip
+    conda install --file=packaging/conda-requirements.txt
+    conda install pip
     
-* Clone the git repo.  **From git-bash**, say::
-
-    git clone https://github.com/bpteague/cytoflow.git
-    
-* Now, install it in developers' mode.  From the **Anaconda prompt**, navigate
-  to the directory you checked out ``cytoflow`` into and say::
+* Now, install it in developers' mode.  From the cytoflow source dirctory, say::
   
     pip install --user -r requirements.txt
     set NO_LOGICLE=True
@@ -228,6 +227,10 @@ pre-built MacOS Python packages.  That's the approach outlined below.
 
 * Install a copy of ``git`` from `the Git website <http://www.git-scm.com>`_.
 
+* Clone the git repo.  In your working folder, say::
+
+    git clone https://github.com/bpteague/cytoflow.git
+
 * Install the Anaconda Python distribution. **Make sure to install
   version 2.7.**  (Some day we will be Python 3 compatible, but not until 
   all of our dependencies are.)
@@ -236,14 +239,12 @@ pre-built MacOS Python packages.  That's the approach outlined below.
 
 * Install the conda package dependencies.  In a Mac Terminal, type::
 
-    conda install install pandas bottleneck numpy numexpr matplotlib scipy scikit-learn seaborn pyface envisage nbformat python-dateutil statsmodels pip
-    
-* Clone the git repo.  In your working folder, say::
-
-    git clone https://github.com/bpteague/cytoflow.git
+    conda install --file=packaging/conda-requirements.txt
+    conda install pip
     
 * Now, install it in developers' mode::
-  
+    
+    pip install --user -r requirements.txt
     NO_LOGICLE=True python setup.py develop
     
   This should complete successfully.  If it dies with 
@@ -251,13 +252,13 @@ pre-built MacOS Python packages.  That's the approach outlined below.
   then please file a bug report.
   
 * Download the ``cytoflow`` wheel from the Github release page or the PyPI release.  These 
-  commands get version 0.2.0 from PyPI; but the Logicle extension hasn't changed in many 
+  commands get version 0.3.2 from PyPI; but the Logicle extension hasn't changed in many 
   releases, and hopefully won't be changing any time soon, so they are likely still valid
   for the master Git branch::
   
     mkdir build
     cd build
-    curl https://pypi.python.org/packages/cp27/c/cytoflow/cytoflow-0.2.0-cp27-cp27m-macosx_10_5_x86_64.whl -o cytoflow.zip
+    curl https://pypi.python.org/packages/ee/bd/5426bd210d5c03066783091da2a529233d20c16b2548b0b404a3602ca188/cytoflow-0.3.2-cp27-cp27m-macosx_10_5_x86_64.whl#md5=0340aeac94e05aa9c8fd1acec12a56af -o cytoflow.zip
     unzip cytoflow.zip
     cp cytoflow/utility/logicle_ext/_Logicle.so ../cytoflow/utility/logicle_ext/
 

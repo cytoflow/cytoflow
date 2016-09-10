@@ -69,4 +69,4 @@ from .views.table import TableView
 from cytoflow.utility.util_functions import geom_mean
 from cytoflow.utility.scale import set_default_scale
 
-__version__ = "0.3.2"
+__version__ = "0.4.0"

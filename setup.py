@@ -63,7 +63,6 @@ setup(
     # installed or upgraded on the target machine
     install_requires = ['pandas>=0.18.0',
                         'bottleneck>=1.0',
-                        'fcsparser>=0.1.1',
                         'numpy>=1.9.0',
                         'numexpr>=2.4.6',
                         'matplotlib>=1.4.3',
@@ -75,7 +74,9 @@ setup(
                         'nbformat>=4.0',
                         'python-dateutil>=2.5.2',
                         'statsmodels>=0.6.1',
-                        'faulthandler>=2.4'] \
+                        'faulthandler>=2.4',
+                        
+                        'fcsparser>=0.1.1',] \
                 if not on_rtd else None,
                         
                         # ALSO requires PyQt4 >= 4.10, but it's not available
