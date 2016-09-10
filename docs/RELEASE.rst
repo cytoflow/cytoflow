@@ -4,8 +4,8 @@ Spinning a new release
 - Update the version in ``cytoflow/__init__.py``
 - Update the version in ``docs/conf.py``
 - Make sure ``install_requires`` in ``setup.py`` matches ``requirements.txt``
-- Make sure the ``conda`` commands in ``docs/INSTALL.rst`` match 
-  ``requirements.txt``.
+- Make sure the ``install_requires`` in ``setup.py`` matches ``packaging/conda-requirements.txt``
+- Make sure the ``conda --install`` commands in ``INSTALL.rst`` match ``packaging/conda_requirements.txt``
 - Update the README.rst from the README.md.  From the project root, say
 
 ::
@@ -28,7 +28,7 @@ Spinning a new release
 - Optionally, perform functional testing on the latest platform binaries
   at Bintray_
 
-  .. _Bintray: https://bintray.com/bpteague/cytoflow/cytoflow
+  .. _Bintray: https://bintray.com/bpteague/cytoflow/cytoflow#files
 
 - Create a new tag on the master branch matching the new version in 
   ``cytoflow/__init__.py``.  This will re-build everything on the CI

@@ -1,7 +1,0 @@
-Dependencies:
-
-Gore Lab FlowCytometryTools
-Scipy
-Numpy
-Pandas
-scikit-learn
