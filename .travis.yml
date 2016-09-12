@@ -47,16 +47,16 @@ install:
 script: nose2 -c packaging/nose2.cfg
 
 deploy:
-  - provider: pypi
-    user: Brian.Teague
-    password:
-      secure: P2kebBOVixLdfWV0UYKPa8Y87YIqWc4I1TAr6myTiTL1OGdHvAsoBL3hxP+84F8ZL52hnqUWL/GuRO+IIf4R4IJbIF8Nj8DQG28dN/jBNK/EgBd0ut6myv4yFht5aL5o7qsCpTZxxwDori0+7y8wkvAd/Dz5T+UNb5TzOT2W/aYBz2LRwJaJ2lmGPktCJfopVUxGD9iWCJV1imaw9IqBZof8v1bbkFGf06Lpgb8TKeGZGikiFiiDhDjXuVmsH8FysJV5KmiWUxNOvzZ6xNU+gqOLkVP3bZwM764ZKlU5GEkKP4Yfdru/ixicwm2bAENSQ4B9OZKnhrx8oycJLyrIMlEctWByva8Yj+zBvxPsSjwc+DvIjmbfJVnhAY0aWpMVfbfASlTny+dMjPesuGb/kieSD7rF4S82Zfs4mcNXF25QFteyjcTswp/WSdZMg7jmU23fi8XVMZxNHeYuZFciJW4DSpMM8nSWUXb5tT9NPUQmRKLGYGY4mFh+F2P6/exZwISzWkDIVZNAmOhGec8D00YmceVHe1dk4nX+i6BWojsP6KGmbAgIrZxmDJ8T/mWVWu0yAnU2QpyJMsbrPIaM7otNQaVoHwSk4c5IFcON2ZEdz/gs6KRd99M+fQBJzOEYS8WqNlOS+TpQhkmOhyU4xFuKv4ieyWLXu7PofQR9nAQ=
-    on:
-      repo: bpteague/cytoflow
-      tags: true
-    server: https://pypi.python.org/pypi
-    skip_cleanup: true
-    distributions: "sdist bdist_wheel"
+#  - provider: pypi
+#    user: Brian.Teague
+#    password:
+#      secure: P2kebBOVixLdfWV0UYKPa8Y87YIqWc4I1TAr6myTiTL1OGdHvAsoBL3hxP+84F8ZL52hnqUWL/GuRO+IIf4R4IJbIF8Nj8DQG28dN/jBNK/EgBd0ut6myv4yFht5aL5o7qsCpTZxxwDori0+7y8wkvAd/Dz5T+UNb5TzOT2W/aYBz2LRwJaJ2lmGPktCJfopVUxGD9iWCJV1imaw9IqBZof8v1bbkFGf06Lpgb8TKeGZGikiFiiDhDjXuVmsH8FysJV5KmiWUxNOvzZ6xNU+gqOLkVP3bZwM764ZKlU5GEkKP4Yfdru/ixicwm2bAENSQ4B9OZKnhrx8oycJLyrIMlEctWByva8Yj+zBvxPsSjwc+DvIjmbfJVnhAY0aWpMVfbfASlTny+dMjPesuGb/kieSD7rF4S82Zfs4mcNXF25QFteyjcTswp/WSdZMg7jmU23fi8XVMZxNHeYuZFciJW4DSpMM8nSWUXb5tT9NPUQmRKLGYGY4mFh+F2P6/exZwISzWkDIVZNAmOhGec8D00YmceVHe1dk4nX+i6BWojsP6KGmbAgIrZxmDJ8T/mWVWu0yAnU2QpyJMsbrPIaM7otNQaVoHwSk4c5IFcON2ZEdz/gs6KRd99M+fQBJzOEYS8WqNlOS+TpQhkmOhyU4xFuKv4ieyWLXu7PofQR9nAQ=
+#    on:
+#      repo: bpteague/cytoflow
+#      tags: true
+#    server: https://pypi.python.org/pypi
+#    skip_cleanup: true
+#    distributions: "sdist bdist_wheel"
 
   - provider: releases
     api_key: 
@@ -68,23 +68,23 @@ deploy:
       branch: master
       tags: true
       
-  - provider: bintray
-    file: packaging/bintray.json
-    user: bpteague
-    key:
-      secure: "ign6ESQuyEYnp1LJ0i/S+h2ZXtEP5P89EbmW7nRmFK1vvBAgD72sVI2y6tji+sErEErIke/ERZHRtLh4q8LvZT4J7LhJradRGYXa6Y1S56wb/bn2xRS1lKXJz3HUD+WxqYD3ZZ+q7AEcD51TkDv6Bmo5hXlkyHEzATBRwZl7kC2GPIatCva+KWd1YB1kUBPvrhCvgn1fCE0Xzcdzf5EKu7/uN2KkKLghUJKhOsXkWyREvfSlsMDSn/NWDp2KBIh1sv9JzRXmZhFAAaiVT74LfSPTwJKEAIV1RgAmSbEX60iS/5gCs2ntwoG8D6q5va+gSXwGjpk97kf9qhsocbf8w0L6vEq1Iw5CJwxY9P3gISGPmOGN6l3geksnpQgewNXMgIeZ0HvtxFJWc4HpiEZZZc0ZpVrGJY+WZZ5Bi3njNIbnW8A8g5+llJf+g2U7xnsqEs/oqzAKhbCnZvpXUH3TQjs58FmDegGCOI1hhZtxu4Vf0fE1yOu9nDW1nqxke7a8et3wLPGLXODR/zP+jz2opJe/UY87EstSSR6e7JMnGmgKbkImGrkvY0s4ul2ITeGTWoaZVKrWW7CKXS/MexVjDpKBdwUHhKeYcEszMOhyK1t3K75WTla3YIQW6Xmf5Nhxte6qCq1SDaamic6hjW9vCRSrlhcAqMuauja0MiKNxKc="
-    dry-run: false
-    skip_cleanup: true
-    on:
-      branch: packaging
+#  - provider: bintray
+#    file: packaging/bintray.json
+#    user: bpteague
+#    key:
+#      secure: "ign6ESQuyEYnp1LJ0i/S+h2ZXtEP5P89EbmW7nRmFK1vvBAgD72sVI2y6tji+sErEErIke/ERZHRtLh4q8LvZT4J7LhJradRGYXa6Y1S56wb/bn2xRS1lKXJz3HUD+WxqYD3ZZ+q7AEcD51TkDv6Bmo5hXlkyHEzATBRwZl7kC2GPIatCva+KWd1YB1kUBPvrhCvgn1fCE0Xzcdzf5EKu7/uN2KkKLghUJKhOsXkWyREvfSlsMDSn/NWDp2KBIh1sv9JzRXmZhFAAaiVT74LfSPTwJKEAIV1RgAmSbEX60iS/5gCs2ntwoG8D6q5va+gSXwGjpk97kf9qhsocbf8w0L6vEq1Iw5CJwxY9P3gISGPmOGN6l3geksnpQgewNXMgIeZ0HvtxFJWc4HpiEZZZc0ZpVrGJY+WZZ5Bi3njNIbnW8A8g5+llJf+g2U7xnsqEs/oqzAKhbCnZvpXUH3TQjs58FmDegGCOI1hhZtxu4Vf0fE1yOu9nDW1nqxke7a8et3wLPGLXODR/zP+jz2opJe/UY87EstSSR6e7JMnGmgKbkImGrkvY0s4ul2ITeGTWoaZVKrWW7CKXS/MexVjDpKBdwUHhKeYcEszMOhyK1t3K75WTla3YIQW6Xmf5Nhxte6qCq1SDaamic6hjW9vCRSrlhcAqMuauja0MiKNxKc="
+#    dry-run: false
+#    skip_cleanup: true
+#    on:
+#      branch: packaging
       
-  - provider: bintray
-    file: packaging/bintray.json
-    user: bpteague
-    key:
-      secure: "ign6ESQuyEYnp1LJ0i/S+h2ZXtEP5P89EbmW7nRmFK1vvBAgD72sVI2y6tji+sErEErIke/ERZHRtLh4q8LvZT4J7LhJradRGYXa6Y1S56wb/bn2xRS1lKXJz3HUD+WxqYD3ZZ+q7AEcD51TkDv6Bmo5hXlkyHEzATBRwZl7kC2GPIatCva+KWd1YB1kUBPvrhCvgn1fCE0Xzcdzf5EKu7/uN2KkKLghUJKhOsXkWyREvfSlsMDSn/NWDp2KBIh1sv9JzRXmZhFAAaiVT74LfSPTwJKEAIV1RgAmSbEX60iS/5gCs2ntwoG8D6q5va+gSXwGjpk97kf9qhsocbf8w0L6vEq1Iw5CJwxY9P3gISGPmOGN6l3geksnpQgewNXMgIeZ0HvtxFJWc4HpiEZZZc0ZpVrGJY+WZZ5Bi3njNIbnW8A8g5+llJf+g2U7xnsqEs/oqzAKhbCnZvpXUH3TQjs58FmDegGCOI1hhZtxu4Vf0fE1yOu9nDW1nqxke7a8et3wLPGLXODR/zP+jz2opJe/UY87EstSSR6e7JMnGmgKbkImGrkvY0s4ul2ITeGTWoaZVKrWW7CKXS/MexVjDpKBdwUHhKeYcEszMOhyK1t3K75WTla3YIQW6Xmf5Nhxte6qCq1SDaamic6hjW9vCRSrlhcAqMuauja0MiKNxKc="
-    dry-run: false
-    skip_cleanup: true
-    on:
-      branch: master
+#  - provider: bintray
+#    file: packaging/bintray.json
+#    user: bpteague
+#    key:
+#      secure: "ign6ESQuyEYnp1LJ0i/S+h2ZXtEP5P89EbmW7nRmFK1vvBAgD72sVI2y6tji+sErEErIke/ERZHRtLh4q8LvZT4J7LhJradRGYXa6Y1S56wb/bn2xRS1lKXJz3HUD+WxqYD3ZZ+q7AEcD51TkDv6Bmo5hXlkyHEzATBRwZl7kC2GPIatCva+KWd1YB1kUBPvrhCvgn1fCE0Xzcdzf5EKu7/uN2KkKLghUJKhOsXkWyREvfSlsMDSn/NWDp2KBIh1sv9JzRXmZhFAAaiVT74LfSPTwJKEAIV1RgAmSbEX60iS/5gCs2ntwoG8D6q5va+gSXwGjpk97kf9qhsocbf8w0L6vEq1Iw5CJwxY9P3gISGPmOGN6l3geksnpQgewNXMgIeZ0HvtxFJWc4HpiEZZZc0ZpVrGJY+WZZ5Bi3njNIbnW8A8g5+llJf+g2U7xnsqEs/oqzAKhbCnZvpXUH3TQjs58FmDegGCOI1hhZtxu4Vf0fE1yOu9nDW1nqxke7a8et3wLPGLXODR/zP+jz2opJe/UY87EstSSR6e7JMnGmgKbkImGrkvY0s4ul2ITeGTWoaZVKrWW7CKXS/MexVjDpKBdwUHhKeYcEszMOhyK1t3K75WTla3YIQW6Xmf5Nhxte6qCq1SDaamic6hjW9vCRSrlhcAqMuauja0MiKNxKc="
+#    dry-run: false
+#    skip_cleanup: true
+#    on:
+#      branch: master
 
