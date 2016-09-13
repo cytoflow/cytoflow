@@ -35,8 +35,10 @@ Major features still TODO
   of the statistic (because some operations can make multiple statistics!).
   Will need to add a new module to compute basic 1-dimensional statistics 
   (are there interesting multidimensional statistics too?  Like R^2?  Hrm.)
-  Still to figure out -- how to deal with error bars?  How to deal with 
-  subsets?
+  Plots and analyses that consume statistics must do something (facet or axis
+  or error bars) with EVERY LEVEL of the Series index.  Subsets: keep track
+  of which subset was used to compute a statistic and when analyzing or plotting
+  multiple statistics, warn (but don't die!) if the subsets are different.
   
 * For the GUI -- an online HELP function.  Something cross-platform, please?
 
