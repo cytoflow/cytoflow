@@ -25,10 +25,11 @@ import warnings
 
 from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor, \
                          CheckListEditor, ButtonEditor, Heading, TableEditor, \
-                         TableColumn, ObjectColumn
+                         TableColumn, ObjectColumn, ListEditor, InstanceEditor, \
+                         HGroup
 from envisage.api import Plugin, contributes_to
 from traits.api import provides, Callable, Bool, CFloat, List, Str, HasTraits, \
-                       File, Event, Dict, Tuple, Float, on_trait_change
+                       File, Event, Dict, Tuple, Float, on_trait_change, Instance
 from pyface.api import ImageResource
 
 import cytoflow.utility as util
@@ -41,35 +42,49 @@ from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_E
 from cytoflowgui.subset_editor import SubsetEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
+from cytoflowgui.workflow_item import WorkflowItem
+
+class _ControlHandler(Controller):
+    wi = Instance(WorkflowItem)
 
 class _Control(HasTraits):
     channel = Str
     file = File
+    handler = Instance(_ControlHandler, transient = True)
 
+    def default_traits_view(self):
+        return View(HGroup(Item('channel',
+                                editor = EnumEditor(name = 'handler.wi.previous.channels')),
+                           Item('file',
+                                show_label = False)),
+                    handler = self.handler)
+    
 class BleedthroughLinearHandler(Controller, OpHandlerMixin):
     
+    add_control = Event
+    remove_control = Event
+    
+    # MAGIC: called when add_control is set
+    def _add_control_fired(self):
+        self.model.controls_list.append(_Control(handler = _ControlHandler(wi = self.info.ui.context['context'])))
+        
+    def _remove_control_fired(self):
+        self.model.controls_list.pop()
+    
     def default_traits_view(self):
-        return View(Item('controls_list',
-                         editor=TableEditor(
-                            columns = 
-                                [ObjectColumn(name = 'channel',
-                                              editor = EnumEditor(name = 'context.previous.channels'),
-                                              resize_mode = 'fixed',
-                                              width = 80),
-                                 ObjectColumn(name = 'file',
-                                              # 'fixed' with no width stretches to fill table
-                                              resize_mode = 'fixed')],
-                            row_factory = _Control,
-                            sortable = False),
-                         show_label = False),
-                    Item('add_control',
+        return View(VGroup(Item('controls_list',
+                                editor = ListEditor(editor = InstanceEditor(view = 'control_handler'),
+                                                    style = 'custom',
+                                                    mutable = False),
+                                style = 'custom'),
+                    Item('handler.add_control',
                          editor = ButtonEditor(value = True,
-                                               label = "Add a control"),
-                         show_label = False),
-                    Item('remove_control',
+                                               label = "Add a control")),
+                    Item('handler.remove_control',
                          editor = ButtonEditor(value = True,
-                                               label = "Remove a control"),
-                         show_label = False),
+                                               label = "Remove a control")),
+                    label = "Controls",
+                    show_labels = False),
                     VGroup(Item('subset',
                                 show_label = False,
                                 editor = SubsetEditor(conditions_types = "context.previous.conditions_types",
@@ -86,21 +101,11 @@ class BleedthroughLinearHandler(Controller, OpHandlerMixin):
 class BleedthroughLinearPluginOp(BleedthroughLinearOp, PluginOpMixin):
     handler_factory = Callable(BleedthroughLinearHandler)
 
-    add_control = Event
-    remove_control = Event
-    
     controls = Dict(Str, File, transient = True)
     spillover = Dict(Tuple(Str, Str), Float, transient = True)
 
     controls_list = List(_Control, estimate = True)
     subset = Str(estimate = True)
-        
-    # MAGIC: called when add_control is set
-    def _add_control_fired(self):
-        self.controls_list.append(_Control())
-        
-    def _remove_control_fired(self):
-        self.controls_list.pop()
         
     @on_trait_change('controls_list_items,controls_list.+', post_init = True)
     def _controls_changed(self, obj, name, old, new):
