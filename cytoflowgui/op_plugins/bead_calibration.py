@@ -26,7 +26,7 @@ from traitsui.api import (View, Item, EnumEditor, Controller, VGroup,
 from envisage.api import Plugin, contributes_to
 from traits.api import provides, Callable, List, Str, HasTraits, \
                        File, Event, on_trait_change, Property, \
-                       Dict, Int, Float, Undefined
+                       Dict, Int, Float, Undefined, Instance
 from pyface.api import ImageResource
 
 import cytoflow.utility as util
@@ -38,15 +38,29 @@ from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewM
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
+from cytoflowgui.workflow_item import WorkflowItem
+
+class _UnitHandler(Controller):
+    wi = Instance(WorkflowItem)
 
 class _Unit(HasTraits):
     channel = Str
     unit = Str
+    handler = Instance(_UnitHandler, transient = True)
 
 class BeadCalibrationHandler(Controller, OpHandlerMixin):
     
-    beads_name_choices = Property(transient = True)
-    beads_units = Property(transient = True)
+
+    
+    add_channel = Event
+    remove_channel = Event
+    
+    # MAGIC: called when add_control is set
+    def _add_channel_fired(self):
+        self.model.controls_list.append(_Unit(handler = _UnitHandler(wi = self.info.ui.context['context'])))
+        
+    def _remove_channel_fired(self):
+        self.model.controls_list.pop()
     
     def _get_beads_name_choices(self):
         return self.model.BEADS.keys()
@@ -88,6 +102,7 @@ class BeadCalibrationHandler(Controller, OpHandlerMixin):
                     Item('remove_channel',
                          editor = ButtonEditor(value = True,
                                                label = "Remove a channel"),
+                         enabled_when = "len(units_list) > 0",
                          show_label = False)),
                     Item('bead_peak_quantile',
                          label = "Peak\nQuantile"),
@@ -103,8 +118,6 @@ class BeadCalibrationHandler(Controller, OpHandlerMixin):
 
 class BeadCalibrationPluginOp(BeadCalibrationOp, PluginOpMixin):
     handler_factory = Callable(BeadCalibrationHandler)
-    add_channel = Event
-    remove_channel = Event
 
     beads_name = Str(estimate = True)   
     beads = Dict(Str, List(Float), transient = True)
@@ -126,8 +139,7 @@ class BeadCalibrationPluginOp(BeadCalibrationOp, PluginOpMixin):
         self.units_list.append(_Unit(op = self))
         
     def _remove_channel_fired(self):
-        if len(self.units_list) > 0:
-            self.units_list.pop()
+        self.units_list.pop()
     
     def default_view(self, **kwargs):
         return BeadCalibrationPluginView(op = self, **kwargs)
