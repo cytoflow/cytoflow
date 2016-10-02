@@ -423,7 +423,9 @@ class RemoteWorkflow(HasStrictTraits):
                         wi.matplotlib_events = self.matplotlib_events
                         wi.plot_lock = self.plot_lock
                         self.workflow.append(wi)
-                    self.workflow[0].command = "apply"
+                        
+                    if self.workflow:
+                        self.workflow[0].command = "apply"
     
                 elif msg == Msg.ADD_ITEMS:
                     (idx, new_item) = payload
