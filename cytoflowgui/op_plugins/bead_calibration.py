@@ -22,7 +22,8 @@ Created on Oct 9, 2015
 '''
 
 from traitsui.api import (View, Item, EnumEditor, Controller, VGroup, 
-                          ButtonEditor, TableEditor, ObjectColumn)
+                          ButtonEditor, TableEditor, ObjectColumn, HGroup,
+                          ListEditor, InstanceEditor)
 from envisage.api import Plugin, contributes_to
 from traits.api import provides, Callable, List, Str, HasTraits, \
                        File, Event, on_trait_change, Property, \
@@ -40,27 +41,32 @@ from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
 from cytoflowgui.workflow_item import WorkflowItem
 
-class _UnitHandler(Controller):
-    wi = Instance(WorkflowItem)
-
 class _Unit(HasTraits):
     channel = Str
     unit = Str
-    handler = Instance(_UnitHandler, transient = True)
 
 class BeadCalibrationHandler(Controller, OpHandlerMixin):
-    
-
     
     add_channel = Event
     remove_channel = Event
     
+    beads_name_choices = Property(transient = True)
+    beads_units = Property(transient = True)
+    
+    wi = Instance(WorkflowItem)
+    
+    def init_info(self, info):
+        # this is ugly, but it works.
+        if not self.wi:
+            self.wi = info.ui.context['context']
+    
     # MAGIC: called when add_control is set
     def _add_channel_fired(self):
-        self.model.controls_list.append(_Unit(handler = _UnitHandler(wi = self.info.ui.context['context'])))
+        self.model.units_list.append(_Unit())
         
     def _remove_channel_fired(self):
-        self.model.controls_list.pop()
+        if self.model.units_list:
+            self.model.units_list.pop()    
     
     def _get_beads_name_choices(self):
         return self.model.BEADS.keys()
@@ -70,7 +76,14 @@ class BeadCalibrationHandler(Controller, OpHandlerMixin):
             return self.model.BEADS[self.model.beads_name].keys()
         else:
             return []
-        
+    
+    def unit_traits_view(self):
+        return View(HGroup(Item('channel',
+                                editor = EnumEditor(name = 'handler.wi.previous.channels')),
+                           Item('unit',
+                                editor = EnumEditor(name = 'handler.beads_units'),
+                                show_label = False)),
+                    handler = self)
     
     def default_traits_view(self):
         return View(VGroup(
@@ -80,30 +93,19 @@ class BeadCalibrationHandler(Controller, OpHandlerMixin):
                          width = -125),
                     Item('beads_file',
                          width = -125)),
-                    VGroup(
-                    Item('units_list',
-                         editor=TableEditor(
-                            columns = 
-                                [ObjectColumn(name = 'channel',
-                                              editor = EnumEditor(name = 'context.previous.channels'),
-                                              resize_mode = 'fixed',
-                                              width = 80),
-                                 ObjectColumn(name = 'unit',
-                                              editor = EnumEditor(name = 'handler.beads_units'),
-                                              # 'fixed' with no width stretches to fill table
-                                              resize_mode = 'fixed')],
-                            row_factory = _Unit,
-                            sortable = False),
-                         show_label = False),
-                    Item('add_channel',
+                    VGroup(Item('units_list',
+                                editor = ListEditor(editor = InstanceEditor(view = self.unit_traits_view()),
+                                                    style = 'custom',
+                                                    mutable = False),
+                                style = 'custom'),
+                    Item('handler.add_channel',
                          editor = ButtonEditor(value = True,
-                                               label = "Add a channel"),
-                         show_label = False),
-                    Item('remove_channel',
+                                               label = "Add a channel")),
+                    Item('handler.remove_channel',
                          editor = ButtonEditor(value = True,
-                                               label = "Remove a channel"),
-                         enabled_when = "len(units_list) > 0",
-                         show_label = False)),
+                                               label = "Remove a channel")),
+                    label = "Controls",
+                    show_labels = False),
                     Item('bead_peak_quantile',
                          label = "Peak\nQuantile"),
                     Item('bead_brightness_threshold',
@@ -133,13 +135,6 @@ class BeadCalibrationPluginOp(BeadCalibrationOp, PluginOpMixin):
     @on_trait_change('units_list_items,units_list.+', post_init = True)
     def _controls_changed(self, obj, name, old, new):
         self.changed = "estimate"
-        
-    # MAGIC: called when add_control is set
-    def _add_channel_fired(self):
-        self.units_list.append(_Unit(op = self))
-        
-    def _remove_channel_fired(self):
-        self.units_list.pop()
     
     def default_view(self, **kwargs):
         return BeadCalibrationPluginView(op = self, **kwargs)

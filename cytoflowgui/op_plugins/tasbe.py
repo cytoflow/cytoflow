@@ -25,22 +25,22 @@ import warnings
 
 import matplotlib.pyplot as plt
 
-from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor, \
-                         CheckListEditor, ButtonEditor, Heading, TableEditor, \
-                         TableColumn, ObjectColumn
+from traitsui.api import (View, Item, EnumEditor, Controller, VGroup, 
+                          CheckListEditor, ButtonEditor, Heading, 
+                          HGroup, ListEditor, InstanceEditor)
 from envisage.api import Plugin, contributes_to
-from traits.api import provides, Callable, Bool, CFloat, List, Str, HasTraits, \
-                       File, Event, Dict, on_trait_change, File, Constant, \
-                       Property, Instance, Int, Float, Undefined
+from traits.api import (provides, Callable, Bool, List, Str, HasTraits,
+                        on_trait_change, File, Constant,
+                        Property, Instance, Int, Float, Undefined)
 from pyface.api import ImageResource
 
 import cytoflow.utility as util
 
 from cytoflow.operations import IOperation
-from cytoflow.operations.autofluorescence import AutofluorescenceOp, AutofluorescenceDiagnosticView
-from cytoflow.operations.bleedthrough_piecewise import BleedthroughPiecewiseOp, BleedthroughPiecewiseDiagnostic
-from cytoflow.operations.bead_calibration import BeadCalibrationOp, BeadCalibrationDiagnostic
-from cytoflow.operations.color_translation import ColorTranslationOp, ColorTranslationDiagnostic
+from cytoflow.operations.autofluorescence import AutofluorescenceOp
+from cytoflow.operations.bleedthrough_piecewise import BleedthroughPiecewiseOp
+from cytoflow.operations.bead_calibration import BeadCalibrationOp
+from cytoflow.operations.color_translation import ColorTranslationOp
 from cytoflow.views.i_selectionview import IView
 
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
@@ -48,6 +48,7 @@ from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_E
 from cytoflowgui.subset_editor import SubsetEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
+from cytoflowgui.workflow_item import WorkflowItem
 
 class _BleedthroughControl(HasTraits):
     channel = Str
@@ -64,6 +65,13 @@ class TasbeHandler(Controller, OpHandlerMixin):
     beads_units = Property(depends_on = 'model.beads_name',
                            transient = True)
     
+    wi = Instance(WorkflowItem)
+    
+    def init_info(self, info):
+        # this is ugly, but it works.
+        if not self.wi:
+            self.wi = info.ui.context['context']
+    
     def _get_beads_name_choices(self):
         return BeadCalibrationOp.BEADS.keys()
     
@@ -72,6 +80,17 @@ class TasbeHandler(Controller, OpHandlerMixin):
             return BeadCalibrationOp.BEADS[self.model.beads_name].keys()
         else:
             return []
+        
+    def bleedthrough_traits_view(self):
+        return View(HGroup(Item('channel', style = 'readonly'),
+                           Item('file', show_label = False)),
+                    handler = self)
+        
+    def translation_traits_view(self):
+        return View(HGroup(Item('from_channel', style = 'readonly'),
+                           Item('to_channel', style = 'readonly'),
+                           Item('file', show_label = False)),
+                    handler = self)
     
     def default_traits_view(self):
         return View(Item("channels",
@@ -83,17 +102,10 @@ class TasbeHandler(Controller, OpHandlerMixin):
                         label = "Autofluorescence"),
                     VGroup(
                         Item('bleedthrough_list',
-                             editor=TableEditor(
-                                columns = 
-                                    [ObjectColumn(name = 'channel',
-                                                  resize_mode = "fixed",
-                                                  width = 80,
-                                                  style = "readonly"),
-                                     ObjectColumn(name = 'file',
-                                                  # "fixed" with no width stretches to fill rest of table
-                                                  resize_mode = "fixed")],
-                                row_factory = _BleedthroughControl,
-                                sortable = False)),
+                                editor = ListEditor(editor = InstanceEditor(view = self.bleedthrough_traits_view()),
+                                                    style = 'custom',
+                                                    mutable = False),
+                                style = 'custom'),
                         label = "Bleedthrough Correction",
                         show_border = False,
                         show_labels = False),
@@ -121,21 +133,10 @@ class TasbeHandler(Controller, OpHandlerMixin):
                            label = "Color Translation"),
                     VGroup(
                         Item('translation_list',
-                             editor=TableEditor(
-                                columns = 
-                                [ObjectColumn(name = 'from_channel',
-                                              resize_mode = "fixed",
-                                              width = 80,
-                                              style = "readonly"),
-                                 ObjectColumn(name = 'to_channel',
-                                              resize_mode = "fixed",
-                                              width = 80,
-                                              style = "readonly"),
-                                 ObjectColumn(name = 'file',
-                                              # "fixed" with no width stretches to fill rest of table
-                                              resize_mode = "fixed")],
-                            row_factory = _TranslationControl,
-                            sortable = False)),
+                                editor = ListEditor(editor = InstanceEditor(view = self.translation_traits_view()),
+                                                    style = 'custom',
+                                                    mutable = False),
+                                style = 'custom'),
 
                         show_labels = False),
                     VGroup(Item('subset',

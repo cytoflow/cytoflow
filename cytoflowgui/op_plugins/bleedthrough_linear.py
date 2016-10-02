@@ -23,12 +23,11 @@ Created on Oct 9, 2015
 
 import warnings
 
-from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor, \
-                         CheckListEditor, ButtonEditor, Heading, TableEditor, \
-                         TableColumn, ObjectColumn, ListEditor, InstanceEditor, \
+from traitsui.api import View, Item, EnumEditor, Controller, VGroup, \
+                         ButtonEditor, ListEditor, InstanceEditor, \
                          HGroup
 from envisage.api import Plugin, contributes_to
-from traits.api import provides, Callable, Bool, CFloat, List, Str, HasTraits, \
+from traits.api import provides, Callable, List, Str, HasTraits, \
                        File, Event, Dict, Tuple, Float, on_trait_change, Instance
 from pyface.api import ImageResource
 
@@ -44,36 +43,40 @@ from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
 from cytoflowgui.workflow_item import WorkflowItem
 
-class _ControlHandler(Controller):
-    wi = Instance(WorkflowItem)
-
 class _Control(HasTraits):
     channel = Str
     file = File
-    handler = Instance(_ControlHandler, transient = True)
-
-    def default_traits_view(self):
-        return View(HGroup(Item('channel',
-                                editor = EnumEditor(name = 'handler.wi.previous.channels')),
-                           Item('file',
-                                show_label = False)),
-                    handler = self.handler)
     
 class BleedthroughLinearHandler(Controller, OpHandlerMixin):
     
     add_control = Event
     remove_control = Event
     
+    wi = Instance(WorkflowItem)
+    
+    def init_info(self, info):
+        # this is ugly, but it works.
+        if not self.wi:
+            self.wi = info.ui.context['context']
+    
     # MAGIC: called when add_control is set
     def _add_control_fired(self):
-        self.model.controls_list.append(_Control(handler = _ControlHandler(wi = self.info.ui.context['context'])))
+        self.model.controls_list.append(_Control())
         
     def _remove_control_fired(self):
-        self.model.controls_list.pop()
+        if self.model.controls_list:
+            self.model.controls_list.pop()
+            
+    def control_traits_view(self):
+        return View(HGroup(Item('channel',
+                                editor = EnumEditor(name = 'handler.wi.previous.channels')),
+                           Item('file',
+                                show_label = False)),
+                    handler = self)
     
     def default_traits_view(self):
         return View(VGroup(Item('controls_list',
-                                editor = ListEditor(editor = InstanceEditor(view = 'control_handler'),
+                                editor = ListEditor(editor = InstanceEditor(view = self.control_traits_view()),
                                                     style = 'custom',
                                                     mutable = False),
                                 style = 'custom'),
