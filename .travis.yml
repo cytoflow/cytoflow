@@ -1,10 +1,11 @@
 language: generic
 
-os:
-  - linux
-  - osx
-
-sudo: false
+matrix:
+  include:
+    - os: linux
+      sudo: false
+    - os: osx
+      osx_image: xcode6.4
 
 addons:
   apt:
