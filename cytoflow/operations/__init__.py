@@ -28,6 +28,7 @@ from .quad import QuadOp
 # data-driven
 from .gaussian_1d import GaussianMixture1DOp
 from .gaussian_2d import GaussianMixture2DOp
+from .stats_1d import Statistics1DOp
  
 # transforms
 from .hlog import HlogTransformOp
@@ -37,9 +38,9 @@ from .log import LogTransformOp
 # TASBE
 from .autofluorescence import AutofluorescenceOp
 from .bleedthrough_piecewise import BleedthroughPiecewiseOp
+from .bleedthrough_linear import BleedthroughLinearOp
 from .bead_calibration import BeadCalibrationOp
 from .color_translation import ColorTranslationOp
 
 # etc 
 from .binning import BinningOp
-from .bleedthrough_linear import BleedthroughLinearOp

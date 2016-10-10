@@ -1,6 +1,4 @@
 #!/usr/bin/env python2.7
-from samba.dcerpc.mgmt import statistics
-from numpy import take
 
 # (c) Massachusetts Institute of Technology 2015-2016
 #
@@ -92,9 +90,15 @@ class Statistics1DOp(HasStrictTraits):
         if not experiment:
             raise util.CytoflowOpError("No experiment specified")
 
+        if not self.name:
+            raise util.CytoflowOpError("Name isn't specified")
+
         if self.channel not in experiment.data:
             raise util.CytoflowOpError("Column {0} not found in the experiment"
                                   .format(self.channel))
+            
+        if not self.by:
+            raise util.CytoflowOpError("No variables specified in 'by'")
        
         for b in self.by:
             if b not in experiment.data:
@@ -118,16 +122,14 @@ class Statistics1DOp(HasStrictTraits):
                 raise util.CytoflowViewError("Subset string '{0}' returned no events"
                                         .format(self.subset))
                 
-        if self.by:
-            groupby = experiment.data.groupby(self.by)
-        else:
-            # use a lambda expression to return a group that contains
-            # all the events
-            groupby = experiment.data.groupby(lambda x: True)
-         
+        groupby = experiment.data.groupby(self.by)
+        
+
         for group, data_subset in groupby:
             if len(data_subset) == 0:
                 raise util.CytoflowOpError("Group {} had no data"
                                            .format(group))
-                
-            x = data_subset[self.channel].reset_index(drop = True)
+        
+        stat = groupby[self.channel].aggregate(self.function).reset_index()
+            
+        
