@@ -43,20 +43,19 @@ class Statistics1DOp(HasStrictTraits):
     Attributes
     ----------
     name : Str
-        The operation name.  Necessary for GUI, but not for notebook or script-
-        based use.
+        The operation name.  Becomes the 
     
     channel : Str
         The channel to apply the function to.
         
     function : Callable
         The function used to compute the statistic.  Must take a Series and
-        return a float.
+        return a float.  Th
         
     by : List(Str)
         A list of metadata attributes to aggregate the data before applying the
         function.  For example, if the experiment has two pieces of metadata,
-        `Time` and `Dox`, setting `by = ["Time", "Dox"]` will fit the model 
+        `Time` and `Dox`, setting `by = ["Time", "Dox"]` will apply `function` 
         separately to each subset of the data with a unique combination of
         `Time` and `Dox`.
         
@@ -96,9 +95,6 @@ class Statistics1DOp(HasStrictTraits):
         if self.channel not in experiment.data:
             raise util.CytoflowOpError("Column {0} not found in the experiment"
                                   .format(self.channel))
-            
-        if not self.by:
-            raise util.CytoflowOpError("No variables specified in 'by'")
        
         for b in self.by:
             if b not in experiment.data:
@@ -122,14 +118,23 @@ class Statistics1DOp(HasStrictTraits):
                 raise util.CytoflowViewError("Subset string '{0}' returned no events"
                                         .format(self.subset))
                 
-        groupby = experiment.data.groupby(self.by)
-        
-
+        if self.by:
+            groupby = experiment.data.groupby(self.by)
+        else:
+            # use a lambda expression to return a group that contains
+            # all the events
+            groupby = experiment.data.groupby(lambda x: True)
+                        
         for group, data_subset in groupby:
             if len(data_subset) == 0:
                 raise util.CytoflowOpError("Group {} had no data"
                                            .format(group))
         
-        stat = groupby[self.channel].aggregate(self.function).reset_index()
-            
+        stat = groupby[self.channel].aggregate(self.function)
         
+        new_experiment = experiment.clone()
+        
+        new_experiment.history.append(self.clone_traits(transient = lambda t: True))
+        new_experiment.statistics[(self.name, self.function.__name__)] = stat
+        
+        return new_experiment

@@ -40,16 +40,17 @@ from .operations.log import LogTransformOp
 # TASBE
 from .operations.autofluorescence import AutofluorescenceOp
 from .operations.bleedthrough_piecewise import BleedthroughPiecewiseOp
+from .operations.bleedthrough_linear import BleedthroughLinearOp
 from .operations.bead_calibration import BeadCalibrationOp
 from .operations.color_translation import ColorTranslationOp
 
 # data-driven
 from .operations.gaussian_1d import GaussianMixture1DOp
 from .operations.gaussian_2d import GaussianMixture2DOp
+from .operations.stats_1d import Statistics1DOp
 
 # misc
 from .operations.binning import BinningOp
-from .operations.bleedthrough_linear import BleedthroughLinearOp
 
 # views
 from .views.histogram import HistogramView

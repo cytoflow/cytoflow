@@ -19,7 +19,7 @@ from __future__ import absolute_import
 
 import pandas as pd
 from traits.api import HasStrictTraits, Dict, List, Instance, Str, Any, \
-                       Property, cached_property
+                       Property, cached_property, Tuple
 
 import cytoflow.utility as util
 
@@ -86,11 +86,11 @@ class Experiment(HasStrictTraits):
         A list of the operations that have been applied to the raw data that
         have led to this Experiment.
         
-    statistics : Dict((Instance(IOperation), Str) : pandas.Series)
+    statistics : Dict((Str, Str) : pandas.Series)
         A dictionary of statistics and parameters computed by models that were
-        fit to the data.  The key is an (IOperation, Str) tuple, where the
-        IOperation is the op that created the statistic and the Str is the name
-        of the statistic.  The Dict value is a multi-indexed pandas
+        fit to the data.  The key is an (Str, Str) tuple, where the first Str
+        is the name of the operation that supplied the statistic, and the second
+        Str is the name of the statistic. The value is a multi-indexed pandas
         Series: each level of the index is a facet, and each combination of
         indices is a subset for which the statistic was computed.  The values 
         of the series, of course, are the values of the computed parameters or
@@ -159,7 +159,7 @@ class Experiment(HasStrictTraits):
     metadata = Dict(Str, Any, copy = "deep")
     
     # statistics.  mutable, deep copy required
-    statistics = Dict(Str, pd.Series)
+    statistics = Dict(Tuple(Str, Str), pd.Series)
     
     history = List(Any)
     
