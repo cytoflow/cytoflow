@@ -23,6 +23,9 @@ Created on Sep 13, 2016
 
 from __future__ import division, absolute_import
 
+from warnings import warn
+import pandas as pd
+
 from traits.api import (HasStrictTraits, Str, List, Constant, provides, 
                         Callable, CStr)
 
@@ -31,26 +34,36 @@ import cytoflow.utility as util
 from .i_operation import IOperation
 
 @provides(IOperation)
-class Statistics1DOp(HasStrictTraits):
+class StatisticsOp(HasStrictTraits):
     """
-    Apply a function to subsets of a channel, and add it as a statistic
+    Apply a function to subsets of a data set, and add it as a statistic
     to the experiment.
     
     The `apply()` function groups the data by the variables in `by`, then
     applies the `function` callable to each subset.  The callable should take
-    a Series and return a float.
+    a Series or a DataFrame and return a float.
     
     Attributes
     ----------
     name : Str
-        The operation name.  Becomes the 
+        The operation name.  Becomes the first element in the
+        Experiment.statistics key tuple.
     
-    channel : Str
-        The channel to apply the function to.
+    channel : Str, optional
+        The channel to apply the function to.  If specified, `function` must
+        take a Series and return a float; otherwise, `function` must take
+        a `pandas.DataFrame` and return a float.
         
     function : Callable
-        The function used to compute the statistic.  Must take a Series and
-        return a float.  Th
+        The function used to compute the statistic.  If `channel` is set,
+        `function` takes a Series and returns a float; otherwise, `function`
+        takes a `pandas.DataFrame` and returns a float. If `function_name` is 
+        empty, the name of the function becomes the second in element in the 
+        Experiment.statistics key tuple.
+        
+    function_name : Str
+        The name of the function; if present, becomes the second element in
+        the Experiment.statistics key tuple.
         
     by : List(Str)
         A list of metadata attributes to aggregate the data before applying the
@@ -66,18 +79,20 @@ class Statistics1DOp(HasStrictTraits):
     Examples
     --------
     
-    >>> stats_op = Statistics1DOp(name = "Mean",
-    ...                           channel = "Y2-A",
-    ...                           by = ["Dox"])
+    >>> stats_op = StatisticsOp(name = "Mean",
+    ...                         channel = "Y2-A",
+    ...                         function = np.mean,
+    ...                         by = ["Dox"])
     >>> ex2 = stats_op.apply(ex)
     """
     
-    id = Constant('edu.mit.synbio.cytoflow.operations.statistics1d')
-    friendly_id = Constant("1D Statistics")
+    id = Constant('edu.mit.synbio.cytoflow.operations.statistics')
+    friendly_id = Constant("Statistics")
     
     name = CStr()
     channel = Str()
     function = Callable()
+    function_name = Str()
     by = List(Str)
     subset = Str()
     
@@ -92,8 +107,8 @@ class Statistics1DOp(HasStrictTraits):
         if not self.name:
             raise util.CytoflowOpError("Name isn't specified")
 
-        if self.channel not in experiment.data:
-            raise util.CytoflowOpError("Column {0} not found in the experiment"
+        if self.channel and self.channel not in experiment.data:
+            raise util.CytoflowOpError("Channel {0} not found in the experiment"
                                   .format(self.channel))
        
         for b in self.by:
@@ -127,14 +142,28 @@ class Statistics1DOp(HasStrictTraits):
                         
         for group, data_subset in groupby:
             if len(data_subset) == 0:
-                raise util.CytoflowOpError("Group {} had no data"
-                                           .format(group))
+                warn("Group {} had no data"
+                     .format(group), 
+                     util.CytoflowOpWarning)
         
-        stat = groupby[self.channel].aggregate(self.function)
+        if self.channel:
+            stat = groupby[self.channel].aggregate(self.function)
+        else:
+            idx = pd.MultiIndex(levels = [[]] * len(self.by), 
+                                labels = [[]] * len(self.by), 
+                                names = self.by)
+            stat = pd.Series(index = idx)
+            
+            for group, data_subset in groupby:
+                stat[group] = self.function(data_subset)
         
         new_experiment = experiment.clone()
         
         new_experiment.history.append(self.clone_traits(transient = lambda t: True))
-        new_experiment.statistics[(self.name, self.function.__name__)] = stat
+        if self.function_name:
+            new_experiment.statistics[(self.name, self.function_name)] = stat
+        else:
+            new_experiment.statistics[(self.name, self.function.__name__)] = stat
+
         
         return new_experiment

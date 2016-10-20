@@ -47,7 +47,7 @@ from .operations.color_translation import ColorTranslationOp
 # data-driven
 from .operations.gaussian_1d import GaussianMixture1DOp
 from .operations.gaussian_2d import GaussianMixture2DOp
-from .operations.stats_1d import Statistics1DOp
+from .operations.statistics import StatisticsOp
 
 # misc
 from .operations.binning import BinningOp

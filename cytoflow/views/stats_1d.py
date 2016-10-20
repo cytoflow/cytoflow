@@ -17,8 +17,6 @@
 
 from __future__ import division, absolute_import
 
-import types
-
 from traits.api import HasStrictTraits, Str, provides, Callable, Enum
 import matplotlib as mpl
 import matplotlib.pyplot as plt
