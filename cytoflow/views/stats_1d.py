@@ -17,7 +17,7 @@
 
 from __future__ import division, absolute_import
 
-from traits.api import HasStrictTraits, Str, provides, Callable, Enum
+from traits.api import HasStrictTraits, Tuple, Str, provides, Callable, Enum
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
@@ -30,29 +30,29 @@ from .i_view import IView
 @provides(IView)
 class Stats1DView(HasStrictTraits):
     """
-    Divide the data up by `by`, then plot a line plot of `by`
-    on the x axis with a summary statistic `yfunction` of the same data in 
-    `ychannel` on the y axis. 
+    Plot a statistic.  The value of the statistic will be plotted on the
+    Y axis; a numeric conditioning variable must be chosen for the X axis.
+    Every variable in the statistic must be specified as either the `xvariable`
+    or one of the plot facets.
     
     Attributes
     ----------
     name : Str
         The plot's name 
+        
+    statistic : Tuple(Str, Str)
+        The statistic to plot.  The first element is the name of the module that
+        added the statistic, and the second element is the name of the statistic.
     
     xvariable : Str
-        the name of the conditioning variable to put on the X axis
+        the name of the conditioning variable to put on the X axis.  Must be
+        numeric (float or int).
         
     xscale : Enum("linear", "log") (default = "linear")
         The scale to use on the X axis
-
-    ychannel : Str
-        Apply `yfunction` to `ychannel` for each value of `by`
         
     yscale : Enum("linear", "log", "logicle") (default = "linear")
         The scale to use on the Y axis
-        
-    yfunction : Callable (list-like --> float)
-        What summary function to apply to `ychannel`
         
     xfacet : Str
         the conditioning variable for horizontal subplots
@@ -63,21 +63,10 @@ class Stats1DView(HasStrictTraits):
     huefacet : 
         the conditioning variable for color.
         
-    y_error_bars : Str
-        draw error bars?  if the name of a condition, subdivide each data
-        set further by the condition, apply 'yfunction' to each subset, then
-        apply `y_error_function` to the values and plot them as error bars.
-        if `data`, then apply `y_error_function` to the same data subsets that
-        `function` was applied to and plot those as error bars.    
-        
-    y_error_function : Callable (list-like --> (float, float))
-        for each group/subgroup subset, call this function to compute the 
-        error bars.  whether it is called on the data or the summary function
-        is determined by the value of `y_error_bars`
-        
-    subset : Str
-        a string passed to Experiment.query() to subset the data before 
-        we plot it.
+    error_statistic : Tuple(Str, Str)
+        A statistic to use to draw error bars; the bars are +- the value of
+        the statistic.
+
         
     Examples
     --------
@@ -106,25 +95,29 @@ class Stats1DView(HasStrictTraits):
     friendly_id = "1D Statistics View" 
     
     name = Str
+    statistic = Tuple(Str, Str)
     xvariable = Str
-    xscale = Enum("linear", "log")
-    ychannel = Str
+    xscale = util.ScaleEnum
     yscale = util.ScaleEnum
-    yfunction = Callable
     xfacet = Str
     yfacet = Str
     huefacet = Str
     
-    y_error_bars = Str
-    y_error_function = Callable
+    error_statistic = Tuple(Str, Str)
 
     subset = Str
     
     def plot(self, experiment, **kwargs):
-        """Plot a bar chart"""
+        """Plot a chart"""
         
         if not experiment:
             raise util.CytoflowViewError("No experiment specified")
+        
+        if not self.statistic:
+            raise util.CytoflowViewError("Statistic not set")
+        
+        if self.statistic not in experiment.statistics:
+            raise util.CytoflowViewError("Can't find the statistic in the experiment")
         
         if not self.xvariable:
             raise util.CytoflowViewError("X variable not set")
@@ -132,39 +125,48 @@ class Stats1DView(HasStrictTraits):
         if self.xvariable not in experiment.conditions:
             raise util.CytoflowViewError("X variable {0} not in the experiment"
                                     .format(self.xvariable))
+            
+        stat = experiment.statistics[self.statistic]
+            
+        if self.xvariable not in stat.index.names:
+            raise util.CytoflowViewError("X variable {} is not a statistic index; "
+                                         "must be one of {}".format(self.xvariable, stat.index.names))
         
         if not (experiment.conditions[self.xvariable] == "float" or
                 experiment.conditions[self.xvariable] == "int"):
             raise util.CytoflowViewError("X variable {0} isn't numeric"
                                     .format(self.xvariable))
-
-        if not self.ychannel:
-            raise util.CytoflowViewError("Y channel isn't set.")
-        
-        if self.ychannel not in experiment.data:
-            raise util.CytoflowViewError("Y channel {0} isn't in the experiment"
-                                    .format(self.ychannel))
-        
-        if not self.yfunction:
-            raise util.CytoflowViewError("Y summary function isn't set")
         
         if self.xfacet and self.xfacet not in experiment.conditions:
             raise util.CytoflowViewError("X facet {0} not in the experiment")
         
+        if self.xfacet and self.xfacet not in stat.index.names:
+            raise util.CytoflowViewError("X facet {} is not a statistic index; "
+                                         "must be one of {}".format(self.xfacet, stat.index.names))
+        
         if self.yfacet and self.yfacet not in experiment.conditions:
             raise util.CytoflowViewError("Y facet {0} not in the experiment")
         
-        if self.huefacet and self.huefacet not in experiment.metadata:
-            raise util.CytoflowViewError("Hue facet {0} not in the experiment")        
+        if self.yfacet and self.yfacet not in stat.index.names:
+            raise util.CytoflowViewError("Y facet {} is not a statistic index; "
+                                         "must be one of {}".format(self.yfacet, stat.index.names))
         
-        if self.y_error_bars and self.y_error_bars != 'data' \
-                             and self.y_error_bars not in experiment.conditions:
-            raise util.CytoflowViewError("y_error_bars must be either 'data' or "
-                                         "a condition in the experiment") 
+        if self.huefacet and self.huefacet not in experiment.metadata:
+            raise util.CytoflowViewError("Hue facet {0} not in the experiment")   
+        
+        if self.huefacet and self.huefacet not in stat.index.names:
+            raise util.CytoflowViewError("Hue facet {} is not a statistic index; "
+                                         "must be one of {}".format(self.huefacet, stat.index.names))  
             
-        if self.y_error_bars and not self.y_error_function:
-            raise util.CytoflowViewError("didn't set an error function")
-                
+        if self.error_statistic and self.error_statistic not in experiment.statistics:
+            raise util.CytoflowViewError("Can't find the error statistic in the experiment")
+        
+        if self.error_statistic:
+            error_stat = experiment.statistics[self.error_statistic]
+            if not stat.index.equals(error_stat.index):
+                raise util.CytoflowViewError("Data statistic and error statistic "
+                                             " don't have the same index.")
+               
         kwargs.setdefault('antialiased', True)
 
         if self.subset:
