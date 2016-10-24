@@ -23,16 +23,20 @@ Created on Feb 24, 2016
 
 from __future__ import division, absolute_import
 
-from traits.api import HasTraits, Instance, Str, Dict, provides, Constant
+from traits.api import HasTraits, HasStrictTraits, Instance, Str, Dict, provides, Constant, Tuple
 from .scale import IScale, register_scale
 
 @provides(IScale)
-class LinearScale(HasTraits):
+class LinearScale(HasStrictTraits):
     id = Constant("edu.mit.synbio.cytoflow.utility.linear_scale")
     name = "linear"
     
     experiment = Instance("cytoflow.Experiment")
+    
+    # none of these are actually used
     channel = Str
+    condition = Str
+    statistic = Tuple(Str, Str)
 
     mpl_params = Dict()
 

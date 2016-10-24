@@ -103,7 +103,7 @@ class Stats1DView(HasStrictTraits):
     yfacet = Str
     huefacet = Str
     
-    #error_statistic = Tuple(Str, Str)
+    error_statistic = Tuple(Str, Str)
     
     def plot(self, experiment, **kwargs):
         """Plot a chart"""
@@ -155,66 +155,33 @@ class Stats1DView(HasStrictTraits):
         if self.huefacet and self.huefacet not in stat.index.names:
             raise util.CytoflowViewError("Hue facet {} is not a statistic index; "
                                          "must be one of {}".format(self.huefacet, stat.index.names))  
-#             
-#         if self.error_statistic and self.error_statistic not in experiment.statistics:
-#             raise util.CytoflowViewError("Can't find the error statistic in the experiment")
-#         
-#         if self.error_statistic:
-#             error_stat = experiment.statistics[self.error_statistic]
-#             if not stat.index.equals(error_stat.index):
-#                 raise util.CytoflowViewError("Data statistic and error statistic "
-#                                              " don't have the same index.")
+            
+        facets = filter(lambda x: x, [self.xvariable, self.xfacet, self.yfacet, self.huefacet])
+        if set(facets) != set(stat.index.names):
+            raise util.CytoflowViewError("Must use all the statistic indices as variables or facets: {}"
+                                         .format(stat.index.names))
+             
+        if self.error_statistic[0] and self.error_statistic not in experiment.statistics:
+            raise util.CytoflowViewError("Can't find the error statistic in the experiment")
+        elif self.error_statistic[0]:
+            error_stat = experiment.statistics[self.error_statistic]
+        else:
+            error_stat = None
+         
+        if error_stat is not None:
+            if not stat.index.equals(error_stat.index):
+                raise util.CytoflowViewError("Data statistic and error statistic "
+                                             " don't have the same index.")
                
         kwargs.setdefault('antialiased', True)
-# 
-#         if self.subset:
-#             try:
-#                 data = experiment.query(self.subset).data.reset_index()
-#             except:
-#                 raise util.CytoflowViewError("Subset string '{0}' isn't valid"
-#                                         .format(self.subset))
-#                             
-#             if len(data) == 0:
-#                 raise util.CytoflowViewError("Subset string '{0}' returned no events"
-#                                         .format(self.subset))
-#         else:
-#             data = experiment.data
-#             
-#         group_vars = [self.xvariable]
-#         if self.xfacet:
-#             group_vars.append(self.xfacet)
-#         if self.yfacet:
-#             group_vars.append(self.yfacet)
-#         if self.huefacet:
-#             group_vars.append(self.huefacet)
-#             
-#         g = data.groupby(by = group_vars)
-#         plot_data = g[self.ychannel].aggregate(self.yfunction).reset_index()
-#   
-#         # compute the error statistic
-#         if self.y_error_bars:
-#             if self.y_error_bars == 'data':
-#                 # compute the error statistic on the same subsets as the summary
-#                 # statistic
-#                 error_stat = g[self.ychannel].aggregate(self.y_error_function).reset_index()
-#             else:
-#                 # subdivide the data set further by the error_bars condition
-#                 err_vars = list(group_vars)
-#                 err_vars.append(self.y_error_bars)
-#                 
-#                 # apply the summary statistic to each subgroup
-#                 data_g = data.groupby(by = err_vars)
-#                 data_stat = data_g[self.ychannel].aggregate(self.yfunction).reset_index()
-#                 
-#                 # apply the error function to the summary statistics
-#                 err_g = data_stat.groupby(by = group_vars)
-#                 error_stat = err_g[self.ychannel].aggregate(self.y_error_function).reset_index()
-#         
-#             y_err_name = util.random_string(6)
-#             plot_data[y_err_name] = error_stat[self.ychannel]
 
         data = stat.reset_index()  # make the series into a dataframe
         
+        if error_stat is not None:
+            error_data = error_stat.reset_index()
+            error_name = util.random_string(6)
+            data[error_name] = error_data[error_stat.name]
+                    
         grid = sns.FacetGrid(data,
                              size = 6,
                              aspect = 1.5,
@@ -227,16 +194,17 @@ class Stats1DView(HasStrictTraits):
                              legend_out = False,
                              sharex = False,
                              sharey = False)
-            
-        #yscale = util.scale_factory(self.yscale, experiment, self.ychannel)
+        
+        xscale = util.scale_factory(self.xscale, experiment, condition = self.xvariable) 
+        yscale = util.scale_factory(self.yscale, experiment, statistic = self.statistic)
         
         for ax in grid.axes.flatten():
-            ax.set_xscale(self.xscale)
-            ax.set_yscale(self.yscale)#, **yscale.mpl_params)
+            ax.set_xscale(self.xscale, **xscale.mpl_params)
+            ax.set_yscale(self.yscale, **yscale.mpl_params)
 
         # plot the error bars first so the axis labels don't get overwritten
-#         if self.y_error_bars:
-#             grid.map(_error_bars, self.xvariable, self.ychannel, y_err_name)
+        if error_stat is not None:
+            grid.map(_error_bars, self.xvariable, stat.name, error_name, **kwargs)
         
         grid.map(plt.plot, self.xvariable, stat.name, **kwargs)
         

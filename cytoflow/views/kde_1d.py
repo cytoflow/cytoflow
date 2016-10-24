@@ -134,7 +134,7 @@ class Kde1DView(HasStrictTraits):
                           sharey = False)
         
         # get the scale     
-        kwargs['scale'] = scale = util.scale_factory(self.scale, experiment, self.channel)
+        kwargs['scale'] = scale = util.scale_factory(self.scale, experiment, channel = self.channel)
         
         # set the scale for each set of axes; can't just call plt.xscale() 
         for ax in g.axes.flatten():

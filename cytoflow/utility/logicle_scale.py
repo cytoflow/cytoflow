@@ -26,7 +26,7 @@ from __future__ import division, absolute_import
 import math, sys
 from warnings import warn
 
-from traits.api import HasTraits, Float, Property, Instance, Str, \
+from traits.api import HasStrictTraits, HasTraits, Float, Property, Instance, Str, \
                        cached_property, Undefined, provides, Constant, Dict, \
                        Tuple
                        
@@ -43,7 +43,7 @@ from .logicle_ext.Logicle import FastLogicle
 from .cytoflow_errors import CytoflowError, CytoflowWarning
 
 @provides(IScale)
-class LogicleScale(HasTraits):
+class LogicleScale(HasStrictTraits):
     """
     A scale that transforms the data using the `logicle` function.
     
@@ -94,7 +94,11 @@ class LogicleScale(HasTraits):
     name = "logicle"
     
     experiment = Instance("cytoflow.Experiment")
+    
+    # what data do we use to compute scale parameters?  set one.
     channel = Str
+    condition = Str
+    statistic = Tuple(Str, Str)
     
     quantiles = Tuple((0.001, 0.999))
     range_min = Property(Float)
@@ -153,45 +157,72 @@ class LogicleScale(HasTraits):
     
     @cached_property
     def _get_range(self):
-        if self.experiment and self.channel:
-            return self.experiment.metadata[self.channel]["range"]
+        if self.experiment:
+            if self.channel and self.channel in self.experiment.channels:
+                if "range" in self.experiment.metadata[self.channel]:
+                    return self.experiment.metadata[self.channel]["range"]
+                else:
+                    return self.experiment.data[self.channel].max()
+            elif self.condition and self.condition in self.experiment.conditions:
+                return self.experiment.data[self.condition].max()
+            elif self.statistic and self.statistic in self.experiment.statistics:
+                return self.experiment.statistics[self.statistic].max()
+            else:
+                return Undefined
         else:
             return Undefined
         
     def _get_range_min(self):
-        if self.experiment and self.channel:
-            return self.experiment[self.channel].quantile(self.quantiles[0])
+        if self.experiment:
+            if self.channel and self.channel in self.experiment.channels:
+                return self.experiment[self.channel].quantile(self.quantiles[0])
+            elif self.condition and self.condition in self.experiment.conditions:
+                return self.experiment.data[self.condition].min()
+            elif self.statistic and self.statistic in self.experiment.statistics:
+                return self.experiment.statistics[self.statistic].min()
+            else:
+                return Undefined
         else:
             return Undefined
     
     def _get_range_max(self):
-        if self.experiment and self.channel:
-            return self.experiment[self.channel].quantile(self.quantiles[1])
+        if self.experiment:
+            if self.channel and self.channel in self.experiment.channels:
+                return self.experiment[self.channel].quantile(self.quantiles[1])
+            elif self.condition and self.condition in self.experiment.conditions:
+                return self.experiment.data[self.condition].max()
+            elif self.statistic and self.statistic in self.experiment.statistics:
+                return self.experiment.statistics[self.statistic].max()
+            else:
+                return Undefined
         else:
             return Undefined
         
     @cached_property
     def _get_W(self):
-        if not (self.experiment and self.channel):
+        if not self.experiment:
             return Undefined
         
-        data = self.experiment[self.channel]
-        
-        if self.r <= 0 or self.r >= 1:
-            raise CytoflowError("r must be between 0 and 1")
-        
-        # get the range by finding the rth quantile of the negative values
-        neg_values = data[data < 0]
-        if(not neg_values.empty):
-            r_value = neg_values.quantile(self.r).item()
-            return (self.M - math.log10(self.range/math.fabs(r_value)))/2
+        if self.channel and self.channel in self.experiment.channels:
+            data = self.experiment[self.channel]
+            
+            if self.r <= 0 or self.r >= 1:
+                raise CytoflowError("r must be between 0 and 1")
+            
+            # get the range by finding the rth quantile of the negative values
+            neg_values = data[data < 0]
+            if(not neg_values.empty):
+                r_value = neg_values.quantile(self.r).item()
+                return (self.M - math.log10(self.range/math.fabs(r_value)))/2
+            else:
+                # ... unless there aren't any negative values, in which case
+                # you probably shouldn't use this transform
+                warn("Channel {0} doesn't have any negative data. " 
+                     "Try a log transform instead."
+                     .format(self.channel),
+                     CytoflowWarning)
+                return 0.5
         else:
-            # ... unless there aren't any negative values, in which case
-            # you probably shouldn't use this transform
-            warn("Channel {0} doesn't have any negative data. " 
-                 "Try a log transform instead."
-                 .format(self.channel),
-                 CytoflowWarning)
             return 0.5
         
     @cached_property

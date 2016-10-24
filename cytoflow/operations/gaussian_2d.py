@@ -186,8 +186,8 @@ class GaussianMixture2DOp(HasStrictTraits):
         # get the scale. estimate the scale params for the ENTIRE data set,
         # not subsets we get from groupby().  And we need to save it so that
         # the data is transformed the same way when we apply()
-        self._xscale = util.scale_factory(self.xscale, experiment, self.xchannel)
-        self._yscale = util.scale_factory(self.yscale, experiment, self.ychannel)
+        self._xscale = util.scale_factory(self.xscale, experiment, channel = self.xchannel)
+        self._yscale = util.scale_factory(self.yscale, experiment, channel = self.ychannel)
         
         gmms = {}
             

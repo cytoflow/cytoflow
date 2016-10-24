@@ -23,7 +23,7 @@ Created on Feb 24, 2016
 
 from __future__ import division, absolute_import
 
-from traits.api import (HasTraits, Instance, Str, Dict, provides, Constant,
+from traits.api import (HasTraits, HasStrictTraits, Instance, Str, Dict, provides, Constant,
                         Enum, Float, Property, cached_property, Tuple, Undefined) 
                        
 import numpy as np
@@ -41,12 +41,16 @@ from .cytoflow_errors import CytoflowError
 
 
 @provides(IScale)
-class LogScale(HasTraits):
+class LogScale(HasStrictTraits):
     id = Constant("edu.mit.synbio.cytoflow.utility.log_scale")
     name = "log"
     
     experiment = Instance("cytoflow.Experiment")
+    
+    # must set one of these.  they're considered in order.
     channel = Str
+    condition = Str
+    statistic = Tuple(Str, Str)
 
     mode = Enum("mask", "clip")
     threshold = Float(1.0)
@@ -65,15 +69,29 @@ class LogScale(HasTraits):
                 "range_max" : self.range_max}
         
     def _get_range_min(self):
-        if self.experiment and self.channel:
-            c = self.experiment[self.channel]
-            return c[c > 0].quantile(self.quantiles[0])
+        if self.experiment:
+            if self.channel and self.channel in self.experiment.channels:
+                c = self.experiment[self.channel]
+                return c[c > 0].quantile(self.quantiles[0])
+            elif self.condition and self.condition in self.experiment.conditions:
+                return self.experiment.data[self.condition].min()
+            elif self.statistic and self.statistic in self.experiment.statistics:
+                return self.experiment.statistics[self.statistic].min()
+            else:
+                return Undefined
         else:
             return Undefined
     
     def _get_range_max(self):
-        if self.experiment and self.channel:
-            return self.experiment[self.channel].quantile(self.quantiles[1])
+        if self.experiment:
+            if self.channel in self.experiment.channels:
+                return self.experiment[self.channel].quantile(self.quantiles[1])
+            elif self.condition and self.condition in self.experiment.conditions:
+                return self.experiment.data[self.condition].max()
+            elif self.statistic and self.statistic in self.experiment.statistics:
+                return self.experiment.statistics[self.statistic].max()
+            else:
+                return Undefined
         else:
             return Undefined
         

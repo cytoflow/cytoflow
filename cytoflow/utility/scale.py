@@ -17,7 +17,7 @@
 
 from __future__ import absolute_import
 
-from traits.api import Interface, Str, Dict, Instance
+from traits.api import Interface, Str, Dict, Instance, Tuple
 
 from .cytoflow_errors import CytoflowError
 
@@ -46,7 +46,12 @@ class IScale(Interface):
     name = Str
     
     experiment = Instance("cytoflow.experiment.Experiment")
+    
+    # what are we using to parameterize the scale?  set one of these; if
+    # multiple are set, the first is used.
     channel = Str
+    condition = Str
+    statistic = Tuple(Str, Str)
 
     mpl_params = Dict()
 
@@ -67,13 +72,13 @@ class IScale(Interface):
 _scale_mapping = {}
 _scale_default = "linear"
 
-def scale_factory(scale, experiment, channel):
+def scale_factory(scale, experiment, **scale_params):
     scale = scale.lower()
         
     if scale not in _scale_mapping:
         raise CytoflowError("Unknown scale type {0}".format(scale))
-         
-    return _scale_mapping[scale](experiment = experiment, channel = channel)
+        
+    return _scale_mapping[scale](experiment = experiment, **scale_params)
  
 def register_scale(scale_class):
     _scale_mapping[scale_class.name] = scale_class

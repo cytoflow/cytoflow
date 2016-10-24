@@ -174,7 +174,7 @@ class GaussianMixture1DOp(HasStrictTraits):
         # get the scale. estimate the scale params for the ENTIRE data set,
         # not subsets we get from groupby().  And we need to save it so that
         # the data is transformed the same way when we apply()
-        self._scale = util.scale_factory(self.scale, experiment, self.channel)
+        self._scale = util.scale_factory(self.scale, experiment, channel = self.channel)
         
         gmms = {}
             

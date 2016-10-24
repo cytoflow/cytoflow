@@ -139,7 +139,7 @@ class BinningOp(HasStrictTraits):
            and not (self.scale == "linear" or self.scale == "log"):
             raise util.CytoflowOpError("Can only use bin_width with linear or log scale") 
         
-        scale = util.scale_factory(self.scale, experiment, self.channel)
+        scale = util.scale_factory(self.scale, experiment, channel = self.channel)
         scaled_data = scale(experiment.data[self.channel])
             
         channel_min = bn.nanmin(scaled_data)

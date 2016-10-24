@@ -127,8 +127,8 @@ class Histogram2DView(HasStrictTraits):
         else:
             data = experiment.data
             
-        xscale = util.scale_factory(self.xscale, experiment, self.xchannel)
-        yscale = util.scale_factory(self.yscale, experiment, self.ychannel)
+        xscale = util.scale_factory(self.xscale, experiment, channel = self.xchannel)
+        yscale = util.scale_factory(self.yscale, experiment, channel = self.ychannel)
 
         kwargs['xscale'] = xscale
         kwargs['yscale'] = yscale

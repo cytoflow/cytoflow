@@ -178,7 +178,7 @@ class BarChartView(HasStrictTraits):
             data = experiment.data
             
         # get the scale
-        scale = util.scale_factory(self.scale, experiment, self.channel)
+        scale = util.scale_factory(self.scale, experiment, channel = self.channel)
                         
         g = sns.FacetGrid(data, 
                           size = 6,

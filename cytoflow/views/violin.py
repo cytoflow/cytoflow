@@ -126,7 +126,7 @@ class ViolinPlotView(HasStrictTraits):
             data = experiment.data
                     
         # get the scale
-        scale = util.scale_factory(self.scale, experiment, self.channel)
+        scale = util.scale_factory(self.scale, experiment, channel = self.channel)
         kwargs['data_scale'] = scale
         
         kwargs.setdefault('orient', 'v')
