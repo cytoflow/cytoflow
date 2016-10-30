@@ -19,7 +19,7 @@ from __future__ import division, absolute_import
 
 from warnings import warn
 
-from traits.api import HasStrictTraits, Str, provides, Callable, Property
+from traits.api import HasStrictTraits, Str, provides, Callable, Property, Tuple
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
@@ -33,9 +33,9 @@ import cytoflow.utility as util
 @provides(IView)
 class Stats2DView(HasStrictTraits):
     """
-    Divide the data by the variable `by`, then plot a scatter plot of a summary
-    statistic `xfunction` on the x axis vs a summary statistic `yfunction` of
-    the same data on the y axis.
+    Plot two statistics on a scatter plot.  A point (X,Y) is drawn for every
+    pair of elements with the same value of `variable`; the X value is from 
+    `xstatistic` and the Y value is from `ystatistic`.
     
     Attributes
     ----------
@@ -45,23 +45,19 @@ class Stats2DView(HasStrictTraits):
     variable : Str
         the name of the conditioning variable
         
-    xchannel : Str
-        Apply `xfunction` to `xchannel` for each value of `by`.
+    xstatistic : Tuple(Str, Str)
+        The statistic to plot on the X axis.  Must have the same indices
+        as `ystatistic`.
         
     xscale : Enum("linear", "log", "logicle") (default = "linear")
         What scale to use on the X axis
-        
-    xfunction : Callable
-        What summary function to apply to `xchannel`
     
-    ychannel : Str
-        Apply `yfunction` to `ychannel` for each value of `by`
+    ystatistic : Tuple(Str, Str)
+       The statistic to plot on the Y axis.  Must have the same indices
+       as `xstatistic`.
         
     yscale : Enum("linear", "log", "logicle") (default = "linear")
         What scale to use on the Y axis
-        
-    yfunction : Callable
-        What summary function to apply to `ychannel`
         
     xfacet : Str
         the conditioning variable for horizontal subplots
@@ -72,23 +68,12 @@ class Stats2DView(HasStrictTraits):
     huefacet : 
         the conditioning variable for color.
         
-    x_error_bars, y_error_bars : Str
-        draw error bars?  if the name of a condition, subdivide each data set
-        further by the condition, apply `{x,y}function` to each subset,
-        then apply `{x,y}_error_function` to the summary statistics and plot
-        them as error bars.  if `data`, apply `{x,y}_error_function` to the 
-        same data subsets as `{x,y}function` and plot those as error bars.
-
-    x_error_function, y_error_function : Callable (list-like --> (float, float))
-        for each group/subgroup subset, call this function to compute the 
-        error bars. the function must take a list-like (Series, 1D ndarray, etc)
-        and return a (lo, hi) tuple of floats. whether it is called on the 
-        data or the summary function is determined by the value of 
-        `{x,y}_error_bars`
+    huescale : Enum("linear", "log", "logicle") (default = "linear")
+        scale for the hue facet, if there are a lot of hue values.
         
-    subset : Str
-        a string passed to Experiment.query() to subset the data before 
-        we plot it.
+    x_error_statistic, y_error_statistic : Tuple(Str, Str)
+        if specified, draw error bars.  must be the name of a statistic,
+        with the same indices as `xstatistic` and `ystatistic`.
         
     Examples
     --------
@@ -128,20 +113,18 @@ class Stats2DView(HasStrictTraits):
     name = Str
     by = Property
     variable = Str
-    xchannel = Str
+    xstatistic = Tuple(Str, Str)
     xscale = util.ScaleEnum
-    xfunction = Callable
-    ychannel = Str
+    ystatistic = Tuple(Str, Str)
     yscale = util.ScaleEnum
-    yfunction = Callable
+
     xfacet = Str
     yfacet = Str
     huefacet = Str
-    x_error_bars = Str
-    x_error_function = Callable
-    y_error_bars = Str
-    y_error_function = Callable
-    subset = Str
+    huescale = util.ScaleEnum
+    
+    x_error_statistic = Tuple(Str, Str)
+    y_error_statistic = Tuple(Str, Str)
 
     def _get_by(self):
         warn("'by' is deprecated; please use 'variable'",
@@ -165,130 +148,128 @@ class Stats2DView(HasStrictTraits):
         if self.variable not in experiment.conditions:
             raise util.CytoflowViewError("variable {0} not in the experiment"
                                     .format(self.variable))
-        
-        if not (experiment.conditions[self.variable] == "float" or
-                experiment.conditions[self.variable] == "int"):
-            raise util.CytoflowViewError("variable {0} isn't numeric"
-                                    .format(self.variable)) 
             
-        if not self.xchannel:
-            raise util.CytoflowViewError("X channel isn't set.")
+        if not self.xstatistic:
+            raise util.CytoflowViewError("X statistic not set")
         
-        if self.xchannel not in experiment.data:
-            raise util.CytoflowViewError("X channel {0} isn't in the experiment"
-                                    .format(self.xchannel))
+        if self.xstatistic not in experiment.statistics:
+            raise util.CytoflowViewError("Can't find X statistic {} in experiment"
+                                         .format(self.ystatistic))
+        else:
+            xstat = experiment.statistics[self.xstatistic]
+
+        if not self.ystatistic:
+            raise util.CytoflowViewError("Y statistic not set")
         
-        if not self.xfunction:
-            raise util.CytoflowViewError("X summary function isn't set")
-                
-        if not self.ychannel:
-            raise util.CytoflowViewError("Y channel isn't set.")
+        if self.ystatistic not in experiment.statistics:
+            raise util.CytoflowViewError("Can't find Y statistic {} in experiment"
+                                         .format(self.ystatistic))
+        else:
+            ystat = experiment.statistics[self.ystatistic]  
+            
+        if not xstat.index.equals(ystat.index):
+            raise util.CytoflowViewError("X statistic and Y statistic must have "
+                                         "the same indices: {}"
+                                         .format(xstat.index.names))
+            
+        if not self.variable in experiment.conditions:
+            raise util.CytoflowViewError("Variable {} not in experiment"
+                                         .format(self.variable))
+            
+        if not self.variable in xstat.index.names:
+            raise util.CytoflowViewError("Variable {} not in xstatistic"
+                                         .format(self.variable))
         
-        if self.ychannel not in experiment.data:
-            raise util.CytoflowViewError("Y channel {0} isn't in the experiment"
-                                    .format(self.ychannel))
+        if not self.variable in ystat.index.names:
+            raise util.CytoflowViewError("Variable {} not in ystatistic"
+                                         .format(self.variable))
         
-        if not self.yfunction:
-            raise util.CytoflowViewError("Y summary function isn't set")
-        
+#         if not (experiment.conditions[self.variable] == "float" or
+#                 experiment.conditions[self.variable] == "int"):
+#             raise util.CytoflowViewError("variable {0} isn't numeric"
+#                                     .format(self.variable)) 
+            
+
         if self.xfacet and self.xfacet not in experiment.conditions:
-            raise util.CytoflowViewError("X facet {0} not in the experiment")
+            raise util.CytoflowViewError("X facet {} not in the experiment"
+                                         .format(self.xfacet))
+        
+        if self.xfacet and self.xfacet not in xstat.index.names:
+            raise util.CytoflowViewError("X facet {} not in X and Y statistics"
+                                         .format(self.xfacet))
         
         if self.yfacet and self.yfacet not in experiment.conditions:
-            raise util.CytoflowViewError("Y facet {0} not in the experiment")
+            raise util.CytoflowViewError("Y facet {} not in the experiment"
+                                         .format(self.yfacet))
+            
+        if self.yfacet and self.yfacet not in xstat.index.names:
+            raise util.CytoflowViewError("Y facet {} not in X and Y statistics"
+                                         .format(self.yfacet))
         
         if self.huefacet and self.huefacet not in experiment.metadata:
-            raise util.CytoflowViewError("Hue facet {0} not in the experiment")        
+            raise util.CytoflowViewError("Hue facet {0} not in the experiment"
+                                         .format(self.huefacet))        
 
-        if self.x_error_bars and self.x_error_bars != 'data' \
-                             and self.x_error_bars not in experiment.conditions:
-            raise util.CytoflowViewError("x_error_bars must be either 'data' or "
-                                         "a condition in the experiment") 
+        if self.huefacet and self.huefacet not in xstat.index.names:
+            raise util.CytoflowViewError("Hue facet {} not in the X and Y statistics"
+                                         .format(self.huefacet))
             
-        if self.x_error_bars and not self.x_error_function:
-            raise util.CytoflowViewError("didn't set an x error function")
-
-        if self.y_error_bars and self.y_error_bars != 'data' \
-                             and self.y_error_bars not in experiment.conditions:
-            raise util.CytoflowViewError("y_error_bars must be either 'data' or "
-                                         "a condition in the experiment") 
-            
-        if self.y_error_bars and not self.y_error_function:
-            raise util.CytoflowViewError("didn't set an error function")
+        facets = filter(lambda x: x, [self.variable, self.xfacet, self.yfacet, self.huefacet])
+        if set(facets) != set(xstat.index.names):
+            raise util.CytoflowViewError("Must use all the statistic indices as variables or facets: {}"
+                                         .format(xstat.index.names))
+             
+        if self.x_error_statistic[0]:
+            if self.x_error_statistic not in experiment.statistics:
+                raise util.CytoflowViewError("X error statistic not in experiment")
+            else:
+                x_error_stat = experiment.statistics[self.x_error_statistic]
                 
-        kwargs.setdefault('antialiased', True)
-        
-        if self.subset:
-            try:
-                data = experiment.query(self.subset).data.reset_index()
-            except:
-                raise util.CytoflowViewError("Subset string '{0}' isn't valid"
-                                        .format(self.subset))
-                
-            if len(data) == 0:
-                raise util.CytoflowViewError("Subset string '{0}' returned no events"
-                                        .format(self.subset))
+            if not x_error_stat.index.equals(xstat.index):
+                raise util.CytoflowViewError("X error statistic doesn't have the "
+                                             "same indices as the X statistic")
         else:
-            data = experiment.data
-            
-        group_vars = [self.variable]
-        if self.xfacet: group_vars.append(self.xfacet)
-        if self.yfacet: group_vars.append(self.yfacet)
-        if self.huefacet: group_vars.append(self.huefacet)
-            
-        g = data.groupby(by = group_vars)
-        
-        plot_data = pd.DataFrame(
-                {self.xchannel : g[self.xchannel].aggregate(self.xfunction), 
-                 self.ychannel : g[self.ychannel].aggregate(self.yfunction)}) \
-                      .reset_index()
-                      
-        # compute the x error statistic
-        if self.x_error_bars:
-            if self.x_error_bars == 'data':
-                # compute the error statistic on the same subsets as the summary
-                # statistic
-                error_stat = g[self.xchannel].aggregate(self.x_error_function).reset_index()
+            x_error_stat = None
+
+        if self.y_error_statistic[0]:
+            if self.y_error_statistic not in experiment.statistics:
+                raise util.CytoflowViewError("Y error statistic not in experiment")
             else:
-                # subdivide the data set further by the error_bars condition
-                err_vars = list(group_vars)
-                err_vars.append(self.x_error_bars)
+                y_error_stat = experiment.statistics[self.y_error_statistic]
                 
-                # apply the summary statistic to each subgroup
-                data_g = data.groupby(by = err_vars)
-                data_stat = data_g[self.xchannel].aggregate(self.xfunction).reset_index()
-                
-                # apply the error function to the summary statistics
-                err_g = data_stat.groupby(by = group_vars)
-                error_stat = err_g[self.xchannel].aggregate(self.x_error_function).reset_index()
-        
-            x_err_name = util.random_string(6)
-            plot_data[x_err_name] = error_stat[self.xchannel]
+            if not y_error_stat.index.equals(ystat.index):
+                raise util.CytoflowViewError("Y error statistic doesn't have the "
+                                             "same indices as the Y statistic")
+        else:
+            y_error_stat = None
+
+        kwargs.setdefault('antialiased', True)
             
-        # compute the y error statistic
-        if self.y_error_bars:
-            if self.y_error_bars == 'data':
-                # compute the error statistic on the same subsets as the summary
-                # statistic
-                error_stat = g[self.ychannel].aggregate(self.y_error_function).reset_index()
-            else:
-                # subdivide the data set further by the error_bars condition
-                err_vars = list(group_vars)
-                err_vars.append(self.y_error_bars)
-                
-                # apply the summary statistic to each subgroup
-                data_g = data.groupby(by = err_vars)
-                data_stat = data_g[self.ychannel].aggregate(self.yfunction).reset_index()
-                
-                # apply the error function to the summary statistics
-                err_g = data_stat.groupby(by = group_vars)
-                error_stat = err_g[self.ychannel].aggregate(self.y_error_function).reset_index()
+        data = pd.DataFrame(index = xstat.index)
+            
+        xname = util.random_string(6)
+        data[xname] = xstat
         
-            y_err_name = util.random_string(6)
-            plot_data[y_err_name] = error_stat[self.ychannel]
-        
- 
-        grid = sns.FacetGrid(plot_data,
+        yname = util.random_string(6)
+        data[yname] = ystat
+                 
+        if x_error_stat is not None:
+            #x_error_data = x_error_stat.reset_index()
+            x_error_name = util.random_string(6)
+            data[x_error_name] = x_error_stat
+            
+        if y_error_stat is not None:
+            y_error_name = util.random_string(6)
+            data[y_error_name] = y_error_stat
+            
+        if y_error_stat is not None:
+            y_error_data = y_error_stat.reset_index()
+            y_error_name = util.random_string()
+            data[y_error_name] = y_error_data[y_error_stat.name]
+            
+        data.reset_index(inplace = True)
+                 
+        grid = sns.FacetGrid(data,
                              size = 6,
                              aspect = 1.5,
                              col = (self.xfacet if self.xfacet else None),
@@ -301,21 +282,21 @@ class Stats2DView(HasStrictTraits):
                              sharex = False,
                              sharey = False)
         
-        xscale = util.scale_factory(self.xscale, experiment, channel = self.xchannel)
-        yscale = util.scale_factory(self.yscale, experiment, channel = self.ychannel)
+        xscale = util.scale_factory(self.xscale, experiment, statistic = self.xstatistic)
+        yscale = util.scale_factory(self.yscale, experiment, statistic = self.ystatistic)
         
         for ax in grid.axes.flatten():
             ax.set_xscale(self.xscale, **xscale.mpl_params)
             ax.set_yscale(self.yscale, **yscale.mpl_params)
         
         # plot the error bars first so the axis labels don't get overwritten
-        if self.x_error_bars:
-            grid.map(_x_error_bars, self.xchannel, x_err_name, self.ychannel)
+        if x_error_stat:
+            grid.map(_x_error_bars, xname, yname, x_error_name)
             
-        if self.y_error_bars:
-            grid.map(_y_error_bars, self.xchannel, self.ychannel, y_err_name)
+        if y_error_stat:
+            grid.map(_y_error_bars, xname, yname, y_error_name)
 
-        grid.map(plt.plot, self.xchannel, self.ychannel, **kwargs)
+        grid.map(plt.plot, xname, yname, **kwargs)
         
         # if we have an xfacet, make sure the y scale is the same for each
         fig = plt.gcf()
@@ -368,7 +349,7 @@ class Stats2DView(HasStrictTraits):
             else:
                 grid.add_legend(title = self.huefacet)
 
-def _x_error_bars(x, xerr, y, ax = None, color = None, **kwargs):
+def _x_error_bars(x, y, xerr, ax = None, color = None, **kwargs):
     
     if isinstance(xerr.iloc[0], tuple):
         x_lo = [xe[0] for xe in xerr]

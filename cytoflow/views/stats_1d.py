@@ -23,6 +23,7 @@ import matplotlib.pyplot as plt
 
 import numpy as np
 import seaborn as sns
+import pandas as pd
 
 import cytoflow.utility as util
 from .i_view import IView
@@ -63,6 +64,10 @@ class Stats1DView(HasStrictTraits):
     huefacet : 
         the conditioning variable for color.
         
+    huescale :
+        the scale to use on the "hue" axis, if there are many values of
+        the hue facet.
+        
     error_statistic : Tuple(Str, Str)
         A statistic to use to draw error bars; the bars are +- the value of
         the statistic.
@@ -78,16 +83,20 @@ class Stats1DView(HasStrictTraits):
     constitutive expression level, then plot the dose-response (geometric mean)
     curve in each bin. 
     
-    >>> ex_binned = flow.BinningOp(name = "CFP_Bin",
-    ...                            channel = "PE-Tx-Red-YG-A",
-    ...                            scale = "log",
-    ...                            bin_width = 0.1).apply(ex)
-    >>> view = Stats1DView(name = "Dox vs IFP",
-    ...                    xchannel = "Dox",
-    ...                    ychannel = "Pacific Blue-A",
-    ...                    huefacet = "CFP_Bin",
-    ...                    yfunction = flow.geom_mean)
-    >>> view.plot(ex_binned)
+    >>> ex_bin = flow.BinningOp(name = "CFP_Bin",
+    ...                         channel = "PE-Tx-Red-YG-A",
+    ...                         scale = "log",
+    ...                         bin_width = 0.1).apply(ex)
+    >>> ex_stat = flow.StatisticsOp(name = "DoxCFP",
+    ...                             by = ["Dox", "CFP_Bin"],
+    ...                             channel = "Pacific Blue-A",
+    ...                             function = flow.geom_mean).apply(ex_bin)
+    >>> view = flow.Stats1DView(name = "Dox vs IFP",
+    ...                         statistic = ("DoxCFP", "geom_mean"),
+    ...                         xvariable = "Dox",
+    ...                         xscale = "log",
+    ...                         huefacet = "CFP_Bin").plot(ex_stat)
+    >>> view.plot(ex_stat)
     """
     
     # traits   
@@ -102,6 +111,7 @@ class Stats1DView(HasStrictTraits):
     xfacet = Str
     yfacet = Str
     huefacet = Str
+    huescale = util.ScaleEnum
     
     error_statistic = Tuple(Str, Str)
     
@@ -115,7 +125,8 @@ class Stats1DView(HasStrictTraits):
             raise util.CytoflowViewError("Statistic not set")
         
         if self.statistic not in experiment.statistics:
-            raise util.CytoflowViewError("Can't find the statistic in the experiment")
+            raise util.CytoflowViewError("Can't find the statistic {} in the experiment"
+                                         .format(self.statistic))
         else:
             stat = experiment.statistics[self.statistic]
         
@@ -161,10 +172,11 @@ class Stats1DView(HasStrictTraits):
             raise util.CytoflowViewError("Must use all the statistic indices as variables or facets: {}"
                                          .format(stat.index.names))
              
-        if self.error_statistic[0] and self.error_statistic not in experiment.statistics:
-            raise util.CytoflowViewError("Can't find the error statistic in the experiment")
-        elif self.error_statistic[0]:
-            error_stat = experiment.statistics[self.error_statistic]
+        if self.error_statistic[0]:
+            if self.error_statistic not in experiment.statistics:
+                raise util.CytoflowViewError("Can't find the error statistic in the experiment")
+            else:
+                error_stat = experiment.statistics[self.error_statistic]
         else:
             error_stat = None
          
@@ -175,12 +187,17 @@ class Stats1DView(HasStrictTraits):
                
         kwargs.setdefault('antialiased', True)
 
-        data = stat.reset_index()  # make the series into a dataframe
+        data = pd.DataFrame(index = stat.index)
         
+        data[stat.name] = stat
+                
         if error_stat is not None:
-            error_data = error_stat.reset_index()
             error_name = util.random_string(6)
-            data[error_name] = error_data[error_stat.name]
+            data[error_name] = error_stat
+            
+        #print data
+            
+        data.reset_index(inplace = True)
                     
         grid = sns.FacetGrid(data,
                              size = 6,

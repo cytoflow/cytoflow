@@ -126,11 +126,11 @@ class StatisticsOp(HasStrictTraits):
             try:
                 experiment = experiment.query(self.subset)
             except:
-                raise util.CytoflowViewError("Subset string '{0}' isn't valid"
+                raise util.CytoflowOpError("Subset string '{0}' isn't valid"
                                         .format(self.subset))
                 
             if len(experiment) == 0:
-                raise util.CytoflowViewError("Subset string '{0}' returned no events"
+                raise util.CytoflowOpError("Subset string '{0}' returned no events"
                                         .format(self.subset))
                 
         if self.by:
@@ -147,7 +147,11 @@ class StatisticsOp(HasStrictTraits):
                      util.CytoflowOpWarning)
         
         if self.channel:
-            stat = groupby[self.channel].aggregate(self.function)
+            try:
+                stat = groupby[self.channel].aggregate(self.function)
+            except Exception as e:
+                raise util.CytoflowOpError("Your function threw an error: {}"
+                                      .format(e))
         else:
             idx = pd.MultiIndex(levels = [[]] * len(self.by), 
                                 labels = [[]] * len(self.by), 
@@ -155,7 +159,11 @@ class StatisticsOp(HasStrictTraits):
             stat = pd.Series(index = idx)
             
             for group, data_subset in groupby:
-                stat[group] = self.function(data_subset)
+                try:
+                    stat[group] = self.function(data_subset)
+                except Exception as e:
+                    raise util.CytoflowOpError("Your function through an error: {}"
+                                          .format(e))
         
         new_experiment = experiment.clone()
         
