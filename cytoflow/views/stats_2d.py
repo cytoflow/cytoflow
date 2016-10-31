@@ -109,9 +109,18 @@ class Stats2DView(HasStrictTraits):
     # traits   
     id = "edu.mit.synbio.cytoflow.view.stats2d"
     friendly_id = "2D Statistics View" 
+
+    # deprecated or removed attributes give warnings & errors, respectively
+    by = util.Deprecated(new = 'variable', error = "'by' is deprecated, please use 'variable'")
     
+    STATS_REMOVED = "{} has been removed. Statistics changed dramatically in 0.5; please see the documentation."
+    
+    xchannel = util.Removed(error = STATS_REMOVED)
+    xfunction = util.Removed(error = STATS_REMOVED)
+    ychannel = util.Removed(error = STATS_REMOVED)
+    yfunction = util.Removed(error = STATS_REMOVED)
+        
     name = Str
-    by = Property
     variable = Str
     xstatistic = Tuple(Str, Str)
     xscale = util.ScaleEnum
@@ -135,7 +144,7 @@ class Stats2DView(HasStrictTraits):
         warn("'by' is deprecated; please use 'variable'",
              util.CytoflowViewWarning)
         self.variable = val
-    
+            
     def plot(self, experiment, **kwargs):
         """Plot a bar chart"""
         

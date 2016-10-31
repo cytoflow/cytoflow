@@ -22,9 +22,12 @@ Created on Oct 12, 2015
 '''
 
 from __future__ import absolute_import
+from warnings import warn
 
-from traits.api import BaseCInt, BaseCFloat, BaseEnum
+from traits.api import BaseCInt, BaseCFloat, BaseEnum, TraitType
 from . import scale
+from . import CytoflowError, CytoflowWarning
+
 
 class PositiveInt(BaseCInt):
     
@@ -69,3 +72,27 @@ class ScaleEnum(BaseEnum):
     
     def _get_default_value(self):
         return scale._scale_default
+
+class Removed(TraitType):
+    
+    error = 'Trait {} has been removed'
+    
+    def get(self, obj, name):
+        raise CytoflowError(self.error.format(name))
+    
+    def set(self, obj, name, value):
+        raise CytoflowError(self.error.format(name))
+    
+class Deprecated(TraitType):
+    new = ''
+    error = 'Trait {} is deprecated; please use {}'
+    
+    def get(self, obj, name):
+        warn(self.error.format(name, self.new), CytoflowWarning)
+        return getattr(obj, self.new)
+    
+    def set(self, obj, name, value):
+        warn(self.error.format(name, self.new), CytoflowWarning)
+        setattr(obj, self.new, value)
+        
+    
