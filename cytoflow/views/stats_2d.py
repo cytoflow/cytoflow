@@ -111,14 +111,14 @@ class Stats2DView(HasStrictTraits):
     friendly_id = "2D Statistics View" 
 
     # deprecated or removed attributes give warnings & errors, respectively
-    by = util.Deprecated(new = 'variable', error = "'by' is deprecated, please use 'variable'")
+    by = util.Deprecated(new = 'variable', err_string = "'by' is deprecated, please use 'variable'")
     
     STATS_REMOVED = "{} has been removed. Statistics changed dramatically in 0.5; please see the documentation."
     
-    xchannel = util.Removed(error = STATS_REMOVED)
-    xfunction = util.Removed(error = STATS_REMOVED)
-    ychannel = util.Removed(error = STATS_REMOVED)
-    yfunction = util.Removed(error = STATS_REMOVED)
+    xchannel = util.Removed(err_string = STATS_REMOVED)
+    xfunction = util.Removed(err_string = STATS_REMOVED)
+    ychannel = util.Removed(err_string = STATS_REMOVED)
+    yfunction = util.Removed(err_string = STATS_REMOVED)
         
     name = Str
     variable = Str

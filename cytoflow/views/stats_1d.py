@@ -17,7 +17,7 @@
 
 from __future__ import division, absolute_import
 
-from traits.api import HasStrictTraits, Tuple, Str, provides, Callable, Enum
+from traits.api import HasStrictTraits, Tuple, Str, provides
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
@@ -102,6 +102,12 @@ class Stats1DView(HasStrictTraits):
     # traits   
     id = "edu.mit.synbio.cytoflow.view.stats1d"
     friendly_id = "1D Statistics View" 
+    
+    REMOVED_ERROR = "Statistics have changed dramatically in 0.5; please see the documentation"
+    by = util.Removed(err_string = REMOVED_ERROR)
+    yfunction = util.Removed(err_string = REMOVED_ERROR)
+    ychannel = util.Removed(err_string = REMOVED_ERROR)
+    subset = util.Removed(err_string = REMOVED_ERROR)
     
     name = Str
     statistic = Tuple(Str, Str)

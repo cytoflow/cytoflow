@@ -74,25 +74,27 @@ class ScaleEnum(BaseEnum):
         return scale._scale_default
 
 class Removed(TraitType):
-    
-    error = 'Trait {} has been removed'
+    def __init__(self, **metadata):
+        metadata.setdefault('err_string', 'Trait {} has been removed')
+        super(Removed, self).__init__(**metadata)
     
     def get(self, obj, name):
-        raise CytoflowError(self.error.format(name))
+        raise CytoflowError(self.err_string.format(name))
     
     def set(self, obj, name, value):
-        raise CytoflowError(self.error.format(name))
+        raise CytoflowError(self.err_string.format(name))
     
-class Deprecated(TraitType):
-    new = ''
-    error = 'Trait {} is deprecated; please use {}'
-    
+class Deprecated(TraitType):  
+    def __init__(self, **metadata):
+        metadata.setdefault('err_string', 'Trait {} is deprecated; please use {}')
+        super(Deprecated, self).__init__(**metadata)
+      
     def get(self, obj, name):
-        warn(self.error.format(name, self.new), CytoflowWarning)
+        warn(self.err_string.format(name, self.new), CytoflowWarning)
         return getattr(obj, self.new)
     
     def set(self, obj, name, value):
-        warn(self.error.format(name, self.new), CytoflowWarning)
+        warn(self.err_string.format(name, self.new), CytoflowWarning)
         setattr(obj, self.new, value)
         
     
