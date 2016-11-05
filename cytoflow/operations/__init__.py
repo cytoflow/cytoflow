@@ -28,7 +28,7 @@ from .quad import QuadOp
 # data-driven
 from .gaussian_1d import GaussianMixture1DOp
 from .gaussian_2d import GaussianMixture2DOp
-from .statistics import StatisticsOp
+from .statistics_1d import Statistics1DOp
  
 # transforms
 from .hlog import HlogTransformOp

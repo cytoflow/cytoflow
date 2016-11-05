@@ -201,8 +201,6 @@ class Stats1DView(HasStrictTraits):
             error_name = util.random_string(6)
             data[error_name] = error_stat
             
-        #print data
-            
         data.reset_index(inplace = True)
                     
         grid = sns.FacetGrid(data,

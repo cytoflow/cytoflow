@@ -17,9 +17,10 @@
 
 from __future__ import absolute_import
 
-# suppress a meaningless warning from seaborn
+# suppress meaningless warnings from seaborn
 import warnings
 warnings.filterwarnings('ignore', '.*IPython widgets are experimental.*')
+warnings.filterwarnings('ignore', 'axes.color_cycle is deprecated and replaced with axes.prop_cycle')
 
 # basics
 from .experiment import Experiment
@@ -47,7 +48,7 @@ from .operations.color_translation import ColorTranslationOp
 # data-driven
 from .operations.gaussian_1d import GaussianMixture1DOp
 from .operations.gaussian_2d import GaussianMixture2DOp
-from .operations.statistics import StatisticsOp
+from .operations.statistics_1d import Statistics1DOp
 
 # misc
 from .operations.binning import BinningOp

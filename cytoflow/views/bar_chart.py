@@ -19,7 +19,7 @@ from __future__ import division, absolute_import
 
 from warnings import warn
 
-from traits.api import HasStrictTraits, Str, provides, Callable, Property, Enum
+from traits.api import HasStrictTraits, Str, provides, Callable, Tuple, Enum
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -38,33 +38,20 @@ class BarChartView(HasStrictTraits):
     name : Str
         The bar chart's name 
     
-    channel : Str
-        the name of the channel we're summarizing 
+    statistic : Tuple(Str, Str)
+        the statistic we're plotting
         
     scale : Enum("linear", "log", "logicle") (default = "linear")
         The scale to use on the Y axis.
         
     variable : Str
         the name of the conditioning variable to group the chart's bars
-
-    function : Callable (1D numpy.ndarray --> float)
-        per facet, call this function to summarize the data.  takes a single
-        parameter, a 1-dimensional numpy.ndarray, and returns a single float. 
-        useful suggestions: np.mean, cytoflow.geom_mean
         
-    error_bars : Str
-        Draw error bars?  If the name of a condition, subdivide each data set
-        further by the condition, apply `function` to each subset, then 
-        apply `error_function` (below) to the values of `function` and plot
-        that as the error bars.  If `data`, then apply `error_function` to
-        the same data subsets that `function` was applied to, and plot those
-        as error bars.
-        
-    error_function : Callable (list-like --> float or (float, float))
-        for each group/subgroup subset, call this function to compute the 
-        error bars.  must return a single float or a (low, high) tuple.  whether
-        it is called on the data or the summary function is determined by the 
-        value of *error_bars*
+    error_statistic : Tuple(Str, Str)
+        if specified, a statistic to draw error bars.  if values are numeric,
+        the bars are drawn +/- the value.  if the values are tuples, then
+        the first element is the low error and the second element is the
+        high error.
         
     xfacet : Str
         the conditioning variable for horizontal subplots
@@ -78,10 +65,6 @@ class BarChartView(HasStrictTraits):
     orientation : Enum("horizontal", "vertical")
         do we plot the bar chart horizontally or vertically?
         TODO - waiting on seaborn v0.6
-
-    subset : Str
-        a string passed to pandas.DataFrame.query() to subset the data before 
-        we plot it.
         
     Examples
     --------
@@ -98,88 +81,100 @@ class BarChartView(HasStrictTraits):
     id = "edu.mit.synbio.cytoflow.view.barchart"
     friendly_id = "Bar Chart" 
     
+    REMOVED_ERROR = "Statistics have changed dramatically in 0.5; please see the documentation"
+    channel = util.Removed(err_string = REMOVED_ERROR)
+    function = util.Removed(err_string = REMOVED_ERROR)
+    subset = util.Removed(err_string = REMOVED_ERROR)
+    error_bars = util.Removed(err_string = REMOVED_ERROR)
+    
+    by = util.Deprecated(new = 'variable')
+        
     name = Str
-    channel = Str
+    statistic = Tuple(Str, Str)
     scale = util.ScaleEnum
-    by = Property
     variable = Str
-    function = Callable
     orientation = Enum("vertical", "horizontal")
+    
     xfacet = Str
     yfacet = Str
     huefacet = Str
-    error_bars = Str
-    error_function = Callable
-    subset = Str
     
-    def _get_by(self):
-        warn("'by' is deprecated; please use 'variable'",
-             util.CytoflowViewWarning)
-        return self.variable
- 
-    def _set_by(self, val):
-        warn("'by' is deprecated; please use 'variable'",
-             util.CytoflowViewWarning)
-        self.variable = val
+    error_statistic = Tuple(Str, Str)
         
     def plot(self, experiment, **kwargs):
         """Plot a bar chart"""
         
         if not experiment:
             raise util.CytoflowViewError("No experiment specified")
+        
+        if self.statistic not in experiment.statistics:
+            raise util.CytoflowViewError("Can't find the statistic {} in the experiment"
+                                         .format(self.statistic))
+        else:
+            stat = experiment.statistics[self.statistic]
 
-        if not self.channel:
-            raise util.CytoflowViewError("Channel not specified")
-        
-        if self.channel not in experiment.data:
-            raise util.CytoflowViewError("Channel {0} isn't in the experiment"
-                                    .format(self.channel))
-        
         if not self.variable:
             raise util.CytoflowViewError("variable not specified")
         
-        if not self.variable in experiment.conditions:
-            raise util.CytoflowViewError("Variable {0} isn't in the experiment")
-        
-        if not self.function:
-            raise util.CytoflowViewError("Function not specified")
+        if not self.variable in stat.index.names:
+            raise util.CytoflowViewError("Variable {} isn't in the statistic; "
+                                         "must be one of {}"
+                                         .format(self.variable, stat.index.names))
         
         if self.xfacet and self.xfacet not in experiment.conditions:
             raise util.CytoflowViewError("X facet {0} isn't in the experiment"
                                     .format(self.xfacet))
+            
+        if self.xfacet and self.xfacet not in stat.index.names:
+            raise util.CytoflowViewError("X facet {} is not a statistic index; "
+                                         "must be one of {}".format(self.xfacet, stat.index.names))
         
         if self.yfacet and self.yfacet not in experiment.conditions:
             raise util.CytoflowViewError("Y facet {0} isn't in the experiment"
                                     .format(self.yfacet))
 
+        if self.yfacet and self.yfacet not in stat.index.names:
+            raise util.CytoflowViewError("Y facet {} is not a statistic index; "
+                                         "must be one of {}".format(self.yfacet, stat.index.names))
+
         if self.huefacet and self.huefacet not in experiment.conditions:
             raise util.CytoflowViewError("Hue facet {0} isn't in the experiment"
                                     .format(self.huefacet))
             
-        if self.error_bars and self.error_bars != "data" \
-                           and self.error_bars not in experiment.conditions:
-            raise util.CytoflowViewError("error_bars must be either 'data' or "
-                                         "a condition in the experiment")            
-        
-        if self.error_bars and not self.error_function:
-            raise util.CytoflowViewError("didn't set an error function")
-        
-        if self.subset:
-            try:
-                data = experiment.query(self.subset).data.reset_index()
-            except:
-                raise util.CytoflowViewError("Subset string {0} isn't valid"
-                                        .format(self.subset))
-                            
-            if len(data) == 0:
-                raise util.CytoflowViewError("Subset string '{0}' returned no events"
-                                        .format(self.subset))
-        else:
-            data = experiment.data
+        if self.huefacet and self.huefacet not in stat.index.names:
+            raise util.CytoflowViewError("Hue facet {} is not a statistic index; "
+                                         "must be one of {}".format(self.huefacet, stat.index.names))  
             
-        # get the scale
-        scale = util.scale_factory(self.scale, experiment, channel = self.channel)
-                        
+        facets = filter(lambda x: x, [self.variable, self.xfacet, self.yfacet, self.huefacet])
+        if set(facets) != set(stat.index.names):
+            raise util.CytoflowViewError("Must use all the statistic indices as variables or facets: {}"
+                                         .format(stat.index.names))
+             
+        if self.error_statistic[0]:
+            if self.error_statistic not in experiment.statistics:
+                raise util.CytoflowViewError("Can't find the error statistic in the experiment")
+            else:
+                error_stat = experiment.statistics[self.error_statistic]
+        else:
+            error_stat = None
+         
+        if error_stat is not None:
+            if not stat.index.equals(error_stat.index):
+                raise util.CytoflowViewError("Data statistic and error statistic "
+                                             " don't have the same index.")
+               
+        data = pd.DataFrame(index = stat.index)
+        
+        data[stat.name] = stat
+                
+        if error_stat is not None:
+            error_name = util.random_string(6)
+            data[error_name] = error_stat 
+        else:
+            error_name = None
+            
+        data.reset_index(inplace = True)           
+          
         g = sns.FacetGrid(data, 
                           size = 6,
                           aspect = 1.5,
@@ -190,6 +185,8 @@ class BarChartView(HasStrictTraits):
                           legend_out = False,
                           sharex = False,
                           sharey = False)
+        
+        scale = util.scale_factory(self.scale, experiment, statistic = self.statistic)
                 
         # because the bottom of a bar chart is "0", masking out bad
         # values on a log scale doesn't work.  we must clip instead.
@@ -203,15 +200,19 @@ class BarChartView(HasStrictTraits):
             else:
                 ax.set_yscale(self.scale, **scale.mpl_params)  
                 
-        map_args = [self.channel, self.variable]
+        map_args = [self.variable, stat.name]
+        
         if self.huefacet:
-            map_args.append(self.huefacet)
-        if self.error_bars and self.error_bars != "data":
-            map_args.append(self.error_bars)
+            map_args.append(self.huefacet)  
+        
+        if error_stat is not None:
+            map_args.append(error_name)
             
         g.map(_barplot, 
               *map_args,
               view = self,
+              stat_name = stat.name,
+              error_name = error_name,
               **kwargs)
         
         if self.huefacet:
@@ -225,39 +226,16 @@ def _barplot(*args, **kwargs):
     A custom barchart function.  This is assembled from pieces cobbled
     together from seaborn v0.7.1.
     """
-     
+         
     data = pd.DataFrame({s.name: s for s in args})
     view = kwargs.pop('view')
+    stat_name = kwargs.pop('stat_name', None)
+    error_name = kwargs.pop('error_name', None)
 
     # discard the 'color' we were passed by FacetGrid
     kwargs.pop('color', None)
  
-    # group the data and compute the summary statistic
-    group_vars = [view.variable]
-    if view.huefacet: group_vars.append(view.huefacet)
-    
-    g = data.groupby(by = group_vars)
-    statistic = g[view.channel].aggregate(view.function).reset_index()
-    categories = util.categorical_order(statistic[view.variable])
-    
-    # compute the error statistic
-    if view.error_bars:
-        if view.error_bars == 'data':
-            # compute the error statistic on the same subsets as the summary
-            # statistic
-            error_stat = g[view.channel].aggregate(view.error_function).reset_index()
-        else:
-            # subdivide the data set further by the error_bars condition
-            err_vars = list(group_vars)
-            err_vars.append(view.error_bars)
-            
-            # apply the summary statistic to each subgroup
-            data_g = data.groupby(by = err_vars)
-            data_stat = data_g[view.channel].aggregate(view.function).reset_index()
-            
-            # apply the error function to the summary statistics
-            err_g = data_stat.groupby(by = group_vars)
-            error_stat = err_g[view.channel].aggregate(view.error_function).reset_index()
+    categories = util.categorical_order(data[view.variable])
     
     # figure out the colors
     if view.huefacet:
@@ -265,7 +243,7 @@ def _barplot(*args, **kwargs):
         n_colors = len(hue_names)
     else:
         hue_names = None
-        n_colors = len(statistic) 
+        n_colors = len(data)
         
     current_palette = mpl.rcParams['axes.color_cycle']
     if n_colors <= len(current_palette):
@@ -303,19 +281,19 @@ def _barplot(*args, **kwargs):
         for j, hue_level in enumerate(hue_names):
             offpos = barpos + hue_offsets[j]
             barfunc(offpos,
-                    statistic[statistic[view.huefacet] == hue_level][view.channel], 
+                    data[data[view.huefacet] == hue_level][stat_name], 
                     nested_width,
                     color=colors[j], 
                     align="center",
                     label=hue_level, 
                     **kwargs)
                 
-            if view.error_bars:
-                confint = error_stat[error_stat[view.huefacet] == hue_level][view.channel]
+            if error_name:
+                confint = data[data[view.huefacet] == hue_level][error_name]
                 errcolors = [errcolor] * len(offpos)
                 _draw_confints(ax,
                                offpos,
-                               statistic[statistic[view.huefacet] == hue_level][view.channel],
+                               data[data[view.huefacet] == hue_level][stat_name],
                                confint,
                                errcolors,
                                view.orientation,
@@ -323,15 +301,15 @@ def _barplot(*args, **kwargs):
                                capsize = capsize)
                 
     else:
-        barfunc(barpos, statistic[view.channel], width,
+        barfunc(barpos, data[stat_name], width,
                 color=colors, align="center", **kwargs)
         
-        if view.error_bars:
-            confint = error_stat[view.channel]
+        if error_name:
+            confint = data[error_name]
             errcolors = [errcolor] * len(barpos)
             _draw_confints(ax,
                            barpos,
-                           statistic[view.channel],
+                           data[stat_name],
                            confint,
                            errcolors,
                            view.orientation,
@@ -340,9 +318,9 @@ def _barplot(*args, **kwargs):
 
     # do axes
     if view.orientation == "vertical":
-        xlabel, ylabel = view.variable, view.channel
+        xlabel, ylabel = view.variable, stat_name
     else:
-        xlabel, ylabel = view.channel, view.variable
+        xlabel, ylabel = stat_name, view.variable
 
     if xlabel is not None:
         ax.set_xlabel(xlabel)
@@ -382,19 +360,19 @@ def _barplot(*args, **kwargs):
 
 def _draw_confints(ax, at_group, stat, confints, colors, 
                    orientation, errwidth=None, capsize=None, **kws):
-
+ 
     if errwidth is not None:
         kws.setdefault("lw", errwidth)
     else:
         kws.setdefault("lw", mpl.rcParams["lines.linewidth"] * 1.8)
-        
+         
     if isinstance(confints.iloc[0], tuple):
         ci_lo = [x[0] for x in confints]
         ci_hi = [x[1] for x in confints]
     else:
         ci_lo = [stat.iloc[i] - x for i, x in confints.reset_index(drop = True).iteritems()]
         ci_hi = [stat.iloc[i] + x for i, x in confints.reset_index(drop = True).iteritems()]
-
+ 
     for at, lo, hi, color in zip(at_group,
                                  ci_lo,
                                  ci_hi,
