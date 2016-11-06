@@ -24,7 +24,6 @@ Created on Sep 13, 2016
 from __future__ import division, absolute_import
 
 from warnings import warn
-import pandas as pd
 
 from traits.api import (HasStrictTraits, Str, List, Constant, provides, 
                         Callable, CStr)
