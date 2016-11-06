@@ -18,7 +18,7 @@
 from __future__ import absolute_import
 
 from .util_functions import (cartesian, iqr, geom_mean, geom_sd, geom_sd_range,
-                             num_hist_bins, sanitize_identifier,
+                             geom_sem, num_hist_bins, sanitize_identifier, 
                              categorical_order, random_string)
 from .algorithms import ci
 from .cytoflow_errors import CytoflowError, CytoflowOpError, CytoflowViewError

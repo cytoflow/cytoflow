@@ -156,6 +156,47 @@ def geom_sd_range(a):
     sd = geom_sd(a)
     
     return (u / sd, u * sd)
+
+def geom_sem(a):
+    """
+    Compute the geometric standard error of the mean for an "arbirary" data set,
+    ie one that contains zeros and negative numbers.
+    
+    Parameters
+    ----------
+     Parameters
+    ----------
+    
+    a : array-like
+        A numpy.ndarray, or something that can be converted to an ndarray
+        
+    Returns
+    -------
+    The geometric mean of the distribution.
+    
+    Notes
+    -----
+    As with `geom_mean`, non-positive numbers pose a problem.  The approach
+    here, though less rigorously validated than the one above, is to replace
+    negative numbers with their absolute value plus 2 * geometric mean.  The
+    geometric SEM is computed as in [1].
+    
+    References
+    ----------
+    [1] The Standard Errors of the Geometric and Harmonic Means and Their Application to Index Numbers
+        Nilan Norris
+        The Annals of Mathematical Statistics
+        Vol. 11, No. 4 (Dec., 1940), pp. 445-448
+    
+        http://www.jstor.org/stable/2235723?seq=1#page_scan_tab_contents
+    """
+    
+    a = np.array(a)
+    u = geom_mean(a)
+    a[a <= 0] = np.abs(a[a <= 0]) + 2 * u
+    
+    return u * np.std(np.log(a)) / np.sqrt(a.size)
+
     
 def cartesian(arrays, out=None):
     """
