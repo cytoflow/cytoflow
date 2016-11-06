@@ -100,6 +100,62 @@ def geom_mean(a):
     neg_prop = neg.size / a.size
     
     return (pos_mean * pos_prop) - (neg_mean * neg_prop)
+
+def geom_sd(a):
+    """
+    Compute the geometric standard deviation for an "abitrary" data set, ie one
+    that contains zeros and negative numbers.  Since we're in log space, this
+    gives a *dimensionless scaling factor*, not a measure.  If you want 
+    traditional "error bars", don't plot `[geom_mean - geom_sd, geom_mean + sd]`;
+    rather, plot `[geom_mean / geom_sd, geom_mean * geom_sd]`.
+    
+    Parameters
+    ----------
+    
+    a : array-like
+        A numpy.ndarray, or something that can be converted to an ndarray
+        
+    Returns
+    -------
+    The geometric mean of the distribution.
+    
+    Notes
+    -----
+    As with `geom_mean`, non-positive numbers pose a problem.  The approach
+    here, though less rigorously validated than the one above, is to replace
+    negative numbers with their absolute value plus 2 * geometric mean, then
+    go about our business as per the Wikipedia page for geometric sd[1].
+    
+    References
+    ----------
+    [1] https://en.wikipedia.org/wiki/Geometric_standard_deviation
+    """
+    
+    a = np.array(a)
+    u = geom_mean(a)
+    a[a <= 0] = np.abs(a[a <= 0]) + 2 * u
+    
+    return np.exp(np.std(np.log(a)))
+    
+def geom_sd_range(a):
+    """
+    A convenience function to compute [geom_mean / geom_sd, geom_mean * geom_sd].
+    
+    Parameters
+    ----------
+    
+    a : array-like
+        A numpy.ndarray, or something that can be converted to an ndarray
+        
+    Returns
+    -------
+    A tuple, with `(geom_mean / geom_sd, geom_mean * geom_sd)`
+    """
+    
+    u = geom_mean(a)
+    sd = geom_sd(a)
+    
+    return (u / sd, u * sd)
     
 def cartesian(arrays, out=None):
     """
