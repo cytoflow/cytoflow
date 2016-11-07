@@ -48,7 +48,8 @@ from .operations.color_translation import ColorTranslationOp
 # data-driven
 from .operations.gaussian_1d import GaussianMixture1DOp
 from .operations.gaussian_2d import GaussianMixture2DOp
-from .operations.statistics_1d import Statistics1DOp
+from .operations.channel_stat import ChannelStatisticOp
+from .operations.frame_stat import FrameStatisticOp
 
 # misc
 from .operations.binning import BinningOp
