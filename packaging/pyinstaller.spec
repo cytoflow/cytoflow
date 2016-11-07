@@ -40,6 +40,16 @@ a = Analysis(['../cytoflowgui/run.py'],
              win_no_prefer_redirects=False,
              win_private_assemblies=False,
              cipher=None)
+
+# remove a few libraries that cause crashes if we don't use the system
+# versions
+
+remove_strs = ["glib", "gobject", "gthread", "libX", "libICE", "libdrm", 
+               "fontconfig"]
+
+lol = [ [x for x in a.binaries if x[0].find(y) >= 0] for y in remove_strs]
+remove_items = [item for sublist in lol for item in sublist]
+a.binaries -= remove_items
              
 # for some reason, on a Mac, PyInstaller tries to include the entire
 # source directory, including docs, examples, and build files!
