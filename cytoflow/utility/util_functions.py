@@ -207,3 +207,59 @@ def categorical_order(values, order=None):
 def random_string(n):
     """from http://stackoverflow.com/questions/2257441/random-string-generation-with-upper-case-letters-and-digits-in-python"""
     return ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(n))
+
+
+def acc__threshold_histogram(data,cutoff):
+    '''An accessory function to cleanup low-abundance contamination from a control sample.
+    Operates by dropping low-count bins up to a fractional threshold.  Returns data subset.'''
+    
+    # generate a lot of lin-space bins, calculate event-count limit
+    hist,bins = np.histogram(data,normed=False,bins=5000)
+    endpoint = (1-cutoff)*sum(hist)
+
+    # add lowest-count bins to the drop list until the endpoint is reached
+    thresh = 0
+    drops = []
+    for y,x in sorted(zip(hist,bins[:-1])):
+        if thresh < endpoint:
+            thresh += y
+            drops.append(x)
+    drops = sorted(drops)
+    
+    # merge the contiguous bins, generate drop ranges for faster subsetting.  
+    # NOTE: while it looks a little convoluted, this is the fastest solution 
+    # I've found that is robust to floating point errors and bin sizes.
+    b,d = 0,0
+    ranges = []
+    trigger = False
+    while b < len(bins)-1:
+        if not trigger:
+            if bins[b] == drops[d]:
+                ranges.append([bins[b]])
+                trigger = True
+                b += 1
+                d += 1
+            else:
+                b += 1
+        else:
+            if bins[b] == drops[d]:
+                b += 1
+                d += 1
+            else:
+                ranges[-1].append(bins[b])
+                trigger = False
+                b += 1
+    if len(ranges[-1]) < 2:
+        ranges[-1].append(bins[-1])
+
+    # subset the data.  ranges should have very few windows, so it's fast.
+    threshold_mask = pd.Series([False]*len(data))
+    for start,end in ranges:
+        threshold_mask = threshold_mask | (data>=start) & (data<end)
+
+    threshold_mask.iloc[data.idxmax()] = True # drop the single max value which is not otherwise excluded
+    # flip the mask from True ==  'value in contiguous window to be dropped (from the drop list)'
+    # to True == 'value that we want to keep'
+    threshold_mask = ~threshold_mask
+
+    return threshold_mask

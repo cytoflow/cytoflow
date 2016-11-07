@@ -307,6 +307,9 @@ class BleedthroughLinearDiagnostic(HasStrictTraits):
                 for op in experiment.history:
                     tube_exp = op.apply(tube_exp)
                     
+                # if kwargs.get('scale') == 'log':
+                #     tube_data = np.log10(tube_exp.data[[from_channel,to_channel]]).dropna()
+                # else:
                 tube_data = tube_exp.data
 
                 plt.subplot(num_channels, 

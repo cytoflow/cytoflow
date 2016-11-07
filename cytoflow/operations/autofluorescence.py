@@ -25,6 +25,7 @@ import numpy as np
 import cytoflow.views
 import cytoflow.utility as util
 
+
 from .i_operation import IOperation
 from .import_op import Tube, ImportOp, check_tube
 
@@ -77,11 +78,12 @@ class AutofluorescenceOp(HasStrictTraits):
     name = Constant("Autofluorescence")
     channels = List(Str)
     blank_file = File(exists = True)
+    threshold_masks = Dict()
 
     _af_median = Dict(Str, CFloat, transient = True)
     _af_stdev = Dict(Str, CFloat)
     
-    def estimate(self, experiment, subset = None): 
+    def estimate(self, experiment, subset = None, threshold = None): 
         """
         Estimate the autofluorescence from *blank_file*
         """
@@ -118,10 +120,17 @@ class AutofluorescenceOp(HasStrictTraits):
             if len(blank_exp.data) == 0:
                 raise util.CytoflowOpError("Subset string '{0}' returned no events"
                                       .format(subset))
-        
-        for channel in self.channels:
-            self._af_median[channel] = np.median(blank_exp[channel])
-            self._af_stdev[channel] = np.std(blank_exp[channel])    
+
+        if threshold:
+            self.threshold_masks = {}
+            for channel,cutoff in zip(self.channels,threshold):
+                self.threshold_masks[channel] = util.util_functions.acc__threshold_histogram(blank_exp[channel],cutoff)
+                self._af_median[channel] = np.median(blank_exp[channel][self.threshold_masks[channel]])
+                self._af_stdev[channel] = np.std(blank_exp[channel][self.threshold_masks[channel]])
+        else:
+            for channel in self.channels:
+                self._af_median[channel] = np.median(blank_exp[channel])
+                self._af_stdev[channel] = np.std(blank_exp[channel])
                 
     def apply(self, experiment):
         """Applies the threshold to an experiment.
@@ -197,7 +206,7 @@ class AutofluorescenceDiagnosticView(HasStrictTraits):
     name = Str
     op = Instance(IOperation)
     
-    def plot(self, experiment, **kwargs):
+    def plot(self, experiment, subset=None, use_threshold=None, **kwargs):
         """Plot a faceted histogram view of a channel"""
         
         if not experiment:
@@ -223,6 +232,9 @@ class AutofluorescenceDiagnosticView(HasStrictTraits):
         if not set(self.op.channels) == set(self.op._af_median.keys()):
             raise util.CytoflowOpError("Estimated channels differ from the channels "
                                "parameter.  Did you forget to (re)run estimate()?")
+
+        if use_threshold and not self.op.threshold_masks:
+            raise util.CytoflowViewError("No thresholds defined")
         
         import matplotlib.pyplot as plt
         import seaborn as sns  # @UnusedImport
@@ -243,10 +255,22 @@ class AutofluorescenceDiagnosticView(HasStrictTraits):
         for op in experiment.history:
             blank_exp = op.apply(blank_exp)
 
+        # subset it
+        if subset:
+            try:
+                blank_exp = blank_exp.query(subset)
+            except:
+                raise util.CytoflowOpError("Subset string '{0}' isn't valid"
+                                      .format(subset))
+                            
+            if len(blank_exp.data) == 0:
+                raise util.CytoflowOpError("Subset string '{0}' returned no events"
+                                      .format(subset))
+
         plt.figure()
         
         for idx, channel in enumerate(self.op.channels):
-            d = blank_exp.data[channel]
+            d = blank_exp.data[channel][self.op.threshold_masks[channel]] if use_threshold else blank_exp[channel]
             plt.subplot(len(self.op.channels), 1, idx+1)
             plt.title(channel)
             plt.hist(d, bins = 200, **kwargs)

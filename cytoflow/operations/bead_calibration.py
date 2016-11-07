@@ -28,6 +28,7 @@ from traits.api import (HasStrictTraits, Str, CStr, File, Dict, Python,
 import numpy as np
 import math
 import scipy.signal
+from scipy.optimize import curve_fit
         
 import matplotlib.pyplot as plt
 
@@ -170,7 +171,7 @@ class BeadCalibrationOp(HasStrictTraits):
     _peaks = Dict(Str, Python, transient = True)
     _mefs = Dict(Str, Python, transient = True)
 
-    def estimate(self, experiment, subset = None): 
+    def estimate(self, experiment, subset = None, use_3param=False): 
         """
         Estimate the calibration coefficients from the beads file.
         """
@@ -203,7 +204,7 @@ class BeadCalibrationOp(HasStrictTraits):
             if self.bead_brightness_cutoff is Undefined:
                 cutoff = 0.7 * data_range
             else:
-                cutoff = self.bead_brightness_cutoff
+                cutoff = self.bead_brightness_cutoff * data_range
                                             
             # bin the data on a log scale
 
@@ -266,21 +267,31 @@ class BeadCalibrationOp(HasStrictTraits):
                 best_resid = np.inf
                 for start, end in [(x, x+len(peaks)) for x in range(len(mef) - len(peaks) + 1)]:
                     mef_subset = mef[start:end]
-                    
+
+                    if use_3param:
+                    # This is a 3-parameter replacement for the original lm fit seen below.
+                    # I am using all the same peak values, but this model accommodates 
+                    # background signal of the beads (low-end non-linearity).  However, I
+                    # pass only the a,b parameters (cell data is separately bkgrd corrected).
+                        func_3param = lambda x,a,b,c: x**a*10**b+c
+                        curve,_ = curve_fit(func_3param,peaks,mef_subset)
+                        resid = sum([(func_3param(x,*curve[:-1],c=0)-y)**2 for x,y in zip(peaks,mef_subset)])
+                    # NOTE: apparently this occasionally fails to find the right subset... 
+                    # need to fix before useful.
+                    else:                   
                     # linear regression of the peak locations against mef subset
-                    lr = np.polyfit(np.log10(peaks), 
-                                    np.log10(mef_subset), 
-                                    deg = 1, 
-                                    full = True)
-                    
-                    resid = lr[1][0]
+                        lr = np.polyfit(np.log10(peaks), 
+                                        np.log10(mef_subset), 
+                                        deg = 1, 
+                                        full = True)
+                        resid = lr[1][0]
+
                     if resid < best_resid:
-                        best_lr = lr[0]
+                        best_lr = curve[:-1] if use_3param else lr[0]
                         best_resid = resid
                         self._peaks[channel] = peaks
                         self._mefs[channel] = mef_subset
-                        
-                
+
                 # remember, these (linear) coefficients came from logspace, so 
                 # if the relationship in log10 space is Y = aX + b, then in
                 # linear space the relationship is x = 10**X, y = 10**Y,
@@ -365,7 +376,7 @@ class BeadCalibrationOp(HasStrictTraits):
     
     BEADS = {
              # from http://www.spherotech.com/RCP-30-5a%20%20rev%20H%20ML%20071712.xls
-             "Spherotech RCP-30-5A Lot AG01, AF02, AD04 and AAE01" :
+             "Spherotech RCP-30-5A Lot AG01, AF02, AH01, AD04 and AAE01" :
                 { "MECSB" : [216, 464, 1232, 2940, 7669, 19812, 35474],
                   "MEBFP" : [861, 1997, 5776, 15233, 45389, 152562, 396759],
                   "MEFL" :  [792, 2079, 6588, 16471, 47497, 137049, 271647],
@@ -432,7 +443,7 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
             raise util.CytoflowViewError(e.__str__())
 
         plt.figure()
-        
+        plt.suptitle(kwargs.get('title',''),fontsize=16,y=1.05)
         
         for idx, channel in enumerate(channels):
             data = beads_exp.data[channel]
@@ -442,7 +453,7 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
             if self.op.bead_brightness_cutoff is Undefined:
                 cutoff = 0.7 * data_range
             else:
-                cutoff = self.op.bead_brightness_cutoff
+                cutoff = self.op.bead_brightness_cutoff * data_range
                 
             # bin the data on a log scale            
             hist_bins = np.logspace(1, math.log(data_range, 2), num = 256, base = 2)
@@ -487,6 +498,6 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
             plt.plot(x, 
                      self.op._calibration_functions[channel](x), 
                      color = 'r', linestyle = ':')
-            
+        
         plt.tight_layout(pad = 0.8)
             
