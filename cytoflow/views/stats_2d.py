@@ -17,9 +17,7 @@
 
 from __future__ import division, absolute_import
 
-from warnings import warn
-
-from traits.api import HasStrictTraits, Str, provides, Callable, Property, Tuple
+from traits.api import HasStrictTraits, Str, provides, Tuple
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
@@ -88,20 +86,30 @@ class Stats2DView(HasStrictTraits):
     input channel intensity) as we vary Dox, faceted by constitutive channel 
     bin.
     
-    >>> ex_cfp_binned = flow.BinningOp(name = "CFP_Bin",
-    ...                                channel = "PE-Tx-Red-YG-A",
-    ...                                scale = "log",
-    ...                                bin_width = 0.1).apply(ex)
-    >>> ex_ifp_binned = flow.BinningOp(name = "IFP_Bin",
-    ...                                channel = "Pacific Blue-A",
-    ...                                scale = "log",
-    ...                                bin_width = 0.1).apply(ex_cfp_binned)
+    >>> cfp_bin_op = flow.BinningOp(name = "CFP_Bin",
+    ...                             channel = "PE-Tx-Red-YG-A",
+    ...                             scale = "log",
+    ...                             bin_width = 0.1)
+    >>> ifp_bin_op = flow.BinningOp(name = "IFP_Bin",
+    ...                             channel = "Pacific Blue-A",
+    ...                             scale = "log",
+    ...                             bin_width = 0.1).apply(ex_cfp_binned)
+    >>> ifp_mean = flow.ChannelStatisticOp(name = "IFP",
+    ...                                    channel = "FITC-A",
+    ...                                    by = ["IFP_Bin", "CFP_Bin"],
+    ...                                    function = flow.geom_mean)
+    >>> ofp_mean = flow.ChannelStatisticOp(name = "OFP",
+    ...                                    channel = "Pacific_Blue-A",
+    ...                                    by = ["IFP_Bin", "CFP_Bin"],
+    ...                                    function = flow.geom_mean)
+    >>> ex = cfp_bin_op.apply(ex)
+    >>> ex = ifp_bin_op.apply(ex)
+    >>> ex = ifp_mean.apply(ex)
+    >>> ex = ofp_mean.apply(ex)
     >>> view = flow.Stats2DView(name = "IFP vs OFP",
-    ...                         by = "IFP_Bin",
-    ...                         xchannel = "Pacific Blue-A",
-    ...                         xfunction = flow.geom_mean,
-    ...                         ychannel = "FITC-A",
-    ...                         yfunction = flow.geom_mean,
+    ...                         variable = "IFP_Bin",
+    ...                         xstatistic = ("IFP", "geom_mean"),
+    ...                         ystatistic = ("OFP", "geom_mean"),
     ...                         huefacet = "CFP_Bin").plot(ex_ifp_binned)
     >>> view.plot(ex_binned)
     """
@@ -130,20 +138,10 @@ class Stats2DView(HasStrictTraits):
     xfacet = Str
     yfacet = Str
     huefacet = Str
-    huescale = util.ScaleEnum
+    huescale = util.ScaleEnum # TODO - make this work
     
     x_error_statistic = Tuple(Str, Str)
     y_error_statistic = Tuple(Str, Str)
-
-    def _get_by(self):
-        warn("'by' is deprecated; please use 'variable'",
-             util.CytoflowViewWarning)
-        return self.variable
-
-    def _set_by(self, val):
-        warn("'by' is deprecated; please use 'variable'",
-             util.CytoflowViewWarning)
-        self.variable = val
             
     def plot(self, experiment, **kwargs):
         """Plot a bar chart"""
@@ -192,12 +190,6 @@ class Stats2DView(HasStrictTraits):
         if not self.variable in ystat.index.names:
             raise util.CytoflowViewError("Variable {} not in ystatistic"
                                          .format(self.variable))
-        
-#         if not (experiment.conditions[self.variable] == "float" or
-#                 experiment.conditions[self.variable] == "int"):
-#             raise util.CytoflowViewError("variable {0} isn't numeric"
-#                                     .format(self.variable)) 
-            
 
         if self.xfacet and self.xfacet not in experiment.conditions:
             raise util.CytoflowViewError("X facet {} not in the experiment"
@@ -357,6 +349,9 @@ class Stats2DView(HasStrictTraits):
                 plt.sca(plot_ax)
             else:
                 grid.add_legend(title = self.huefacet)
+                
+        plt.xlabel(self.xstatistic)
+        plt.ylabel(self.ystatistic)
 
 def _x_error_bars(x, y, xerr, ax = None, color = None, **kwargs):
     

@@ -87,10 +87,10 @@ class Stats1DView(HasStrictTraits):
     ...                         channel = "PE-Tx-Red-YG-A",
     ...                         scale = "log",
     ...                         bin_width = 0.1).apply(ex)
-    >>> ex_stat = flow.StatisticsOp(name = "DoxCFP",
-    ...                             by = ["Dox", "CFP_Bin"],
-    ...                             channel = "Pacific Blue-A",
-    ...                             function = flow.geom_mean).apply(ex_bin)
+    >>> ex_stat = flow.ChannelStatisticOp(name = "DoxCFP",
+    ...                                   by = ["Dox", "CFP_Bin"],
+    ...                                   channel = "Pacific Blue-A",
+    ...                                   function = flow.geom_mean).apply(ex_bin)
     >>> view = flow.Stats1DView(name = "Dox vs IFP",
     ...                         statistic = ("DoxCFP", "geom_mean"),
     ...                         xvariable = "Dox",
@@ -117,7 +117,7 @@ class Stats1DView(HasStrictTraits):
     xfacet = Str
     yfacet = Str
     huefacet = Str
-    huescale = util.ScaleEnum
+    huescale = util.ScaleEnum # TODO - make this actually work
     
     error_statistic = Tuple(Str, Str)
     
@@ -282,6 +282,8 @@ class Stats1DView(HasStrictTraits):
                 plt.sca(plot_ax)
             else:
                 grid.add_legend(title = self.huefacet)
+                
+        plt.ylabel(self.statistic)
                 
 def _error_bars(x, y, yerr, ax = None, color = None, **kwargs):
     
