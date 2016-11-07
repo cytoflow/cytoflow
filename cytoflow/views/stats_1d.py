@@ -255,6 +255,9 @@ class Stats1DView(HasStrictTraits):
             if ax_x_max > fig_x_max:
                 fig_x_max = ax_x_max
         
+        for ax in fig.get_axes():
+            ax.set_xlim(fig_x_min, fig_x_max)
+        
         # if we have a hue facet and a lot of hues, make a color bar instead
         # of a super-long legend.
         
