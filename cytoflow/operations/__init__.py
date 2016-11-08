@@ -30,6 +30,7 @@ from .gaussian_1d import GaussianMixture1DOp
 from .gaussian_2d import GaussianMixture2DOp
 from .channel_stat import ChannelStatisticOp
 from .frame_stat import FrameStatisticOp
+from .xform_stat import TransformStatisticOp
  
 # transforms
 from .hlog import HlogTransformOp

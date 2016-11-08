@@ -50,6 +50,7 @@ from .operations.gaussian_1d import GaussianMixture1DOp
 from .operations.gaussian_2d import GaussianMixture2DOp
 from .operations.channel_stat import ChannelStatisticOp
 from .operations.frame_stat import FrameStatisticOp
+from .operations.xform_stat import TransformStatisticOp
 
 # misc
 from .operations.binning import BinningOp
