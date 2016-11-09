@@ -40,4 +40,4 @@ def main():
             print "{0}\t{1}".format(c, m["voltage"])
     
 if __name__ == '__main__':
-    run()
+    main()
