@@ -25,6 +25,7 @@ from __future__ import division, absolute_import
 
 from warnings import warn
 import pandas as pd
+import numpy as np
 
 from traits.api import (HasStrictTraits, Str, List, Constant, provides, 
                         Callable, CStr, Tuple)
@@ -127,7 +128,29 @@ class TransformStatisticOp(HasStrictTraits):
                                       .format(b))
                 
         old_stat = experiment.statistics[self.statistic]
-        groupby = old_stat.reset_index().groupby(self.by)
+        data = old_stat.reset_index()
+        
+        idx = pd.MultiIndex.from_product([data[x].unique() for x in self.by], 
+                                         names = self.by)
+        new_stat = pd.Series(index = idx, dtype = np.dtype(object))
+        
+        for group in data[self.by].itertuples(index = False):
+            group = list(group)
+            s = old_stat.xs(group, level = self.by)
+            
+            try:
+                x = self.function(s)
+            except Exception as e:
+                raise util.CytoflowOpError("Your function through an error: {}"
+                                      .format(e))
+                
+            print x
+            new_stat.loc[group] = x
+            print new_stat
+        
+        
+        
+#         groupby = old_stat.reset_index().groupby(self.by)
 
 #         for group, data_subset in groupby:
 #             if len(data_subset) == 0:
@@ -135,20 +158,24 @@ class TransformStatisticOp(HasStrictTraits):
 #                      .format(group), 
 #                      util.CytoflowOpWarning)
                 
-        idx = pd.MultiIndex(levels = [[]] * len(self.by), 
-                            labels = [[]] * len(self.by), 
-                            names = self.by)
-        new_stat = pd.Series(index = idx)
-        
-        for group, data_subset in groupby:
-            try:
-                print data_subset
-                x = self.function(data_subset[0])
-                print x
-                new_stat[group] = x
-            except Exception as e:
-                raise util.CytoflowOpError("Your function through an error: {}"
-                                      .format(e))
+#         idx = pd.MultiIndex(levels = [[]] * len(self.by), 
+#                             labels = [[]] * len(self.by), 
+#                             names = self.by)
+
+#         
+#         for group, _ in groupby:
+#             print group
+#             print old_stat.xs(list(group), level = self.by)
+#             try:
+#                 print data_subset
+#                 print "---"
+#                 x = self.function(data_subset[0])
+#                 print x
+#                 print "-----------"
+#                 new_stat[group] = x
+#             except Exception as e:
+#                 raise util.CytoflowOpError("Your function through an error: {}"
+#                                       .format(e))
                 
         # special handling for lists
         if type(new_stat.iloc[0]) is pd.Series:

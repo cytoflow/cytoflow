@@ -25,9 +25,10 @@ from __future__ import division, absolute_import
 
 from warnings import warn
 import pandas as pd
+import numpy as np
 
 from traits.api import (HasStrictTraits, Str, List, Constant, provides, 
-                        Callable, CStr)
+                        Callable, CStr, Any, Undefined)
 
 import cytoflow.utility as util
 
@@ -71,6 +72,15 @@ class FrameStatisticOp(HasStrictTraits):
     subset : Str
         A Python expression sent to Experiment.query() to subset the data before
         computing the statistic.
+        
+    fill : Any (default = 0)
+        The pandas.Series that this module creates has an entry for every
+        combination of conditions in the Experiment (after subsetting.)
+        However, sometimes there aren't any values for a particular combination
+        of conditions; in this case, we need a value to fill these rows.  The
+        default value, `0`, works well in many cases, but not always (and
+        especially when `function` returns something other than a number!)
+
    
     Examples
     --------
@@ -90,6 +100,7 @@ class FrameStatisticOp(HasStrictTraits):
     statistic_name = Str()
     by = List(Str)
     subset = Str()
+    fill = Any(Undefined)
     
     def apply(self, experiment):
         """
@@ -140,10 +151,9 @@ class FrameStatisticOp(HasStrictTraits):
                      .format(group), 
                      util.CytoflowOpWarning)
         
+        idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by], 
+                                         names = self.by)
 
-        idx = pd.MultiIndex(levels = [[]] * len(self.by), 
-                            labels = [[]] * len(self.by), 
-                            names = self.by)
         stat = pd.Series(index = idx)
         
         for group, data_subset in groupby:
@@ -152,6 +162,21 @@ class FrameStatisticOp(HasStrictTraits):
             except Exception as e:
                 raise util.CytoflowOpError("Your function through an error: {}"
                                       .format(e))
+                
+        # fill in NaNs; in general, we don't want those.
+        if self.fill is Undefined:
+            if self.function is util.geom_mean or self.function is util.geom_sd:
+                fill = None
+            elif self.function is util.geom_sd_range:
+                fill = (None, None)
+            else:
+                fill = 0
+        else:
+            fill = self.fill
+            
+        print fill
+            
+        stat.fillna(fill, inplace = True)
                 
         # special handling for lists
         if type(stat.iloc[0]) is pd.Series:
