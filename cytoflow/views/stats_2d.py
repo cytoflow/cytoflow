@@ -269,6 +269,9 @@ class Stats2DView(HasStrictTraits):
             data[y_error_name] = y_error_data[y_error_stat.name]
             
         data.reset_index(inplace = True)
+        
+        # sort by the data in the x variable
+        data.sort_values(by = [xname])
                  
         grid = sns.FacetGrid(data,
                              size = 6,
