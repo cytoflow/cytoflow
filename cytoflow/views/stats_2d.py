@@ -271,7 +271,7 @@ class Stats2DView(HasStrictTraits):
         data.reset_index(inplace = True)
         
         # sort by the data in the x variable
-        data.sort_values(by = [xname])
+        data.sort_values(by = [xname], inplace = True)
                  
         grid = sns.FacetGrid(data,
                              size = 6,
