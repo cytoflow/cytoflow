@@ -24,10 +24,12 @@ Created on Aug 31, 2015
 from __future__ import division, absolute_import
 
 from traits.api import (HasStrictTraits, Str, CStr, File, Dict, Python,
-                        Instance, Int, List, Float, Constant, provides, Undefined)
+                        Instance, Int, List, Float, Constant, provides, 
+                        Bool, Undefined)
 import numpy as np
 import math
 import scipy.signal
+import scipy.optimize
         
 import matplotlib.pyplot as plt
 
@@ -95,6 +97,13 @@ class BeadCalibrationOp(HasStrictTraits):
         If a bead peak is above this, then don't consider it.  Takes care of
         clipping saturated detection.  Defaults to 70% of the detector range.
         
+    force_linear : Bool(False)
+        A linear fit in log space doesn't always go through the origin, which 
+        means that the calibration function isn't strictly a multiplicative
+        scaling operation.  Set `force_linear` to force the such
+        behavior.  Keep an eye on the diagnostic plot, though, to see how much
+        error you're introducing!
+        
     Notes
     -----
     The peak finding is rather sophisticated.  
@@ -161,8 +170,11 @@ class BeadCalibrationOp(HasStrictTraits):
 
     bead_brightness_threshold = Float(100)
     bead_brightness_cutoff = Float(Undefined)
+    
     # TODO - bead_brightness_threshold should probably be different depending
     # on the data range of the input.
+    
+    force_linear = Bool(False)
     
     beads = Dict(Str, List(Float))
 
@@ -280,20 +292,44 @@ class BeadCalibrationOp(HasStrictTraits):
                         self._peaks[channel] = peaks
                         self._mefs[channel] = mef_subset
                         
-                
-                # remember, these (linear) coefficients came from logspace, so 
-                # if the relationship in log10 space is Y = aX + b, then in
-                # linear space the relationship is x = 10**X, y = 10**Y,
-                # and y = (10**b) * x ^ a
-                
-                # also remember that the result of np.polyfit is a list of
-                # coefficients with the highest power first!  so if we
-                # solve y=ax + b, coeff #0 is a and coeff #1 is b
-                
-                a = best_lr[0]
-                b = 10 ** best_lr[1]
-                self._calibration_functions[channel] = \
-                    lambda x, a=a, b=b: b * np.power(x, a)
+                        
+                if self.force_linear:
+                    # if we're forcing a linear scale for the calibration
+                    # function, find that scale with an optimization.  (we can't
+                    # use this above, to find the MEFs from the peaks, because
+                    # when i tried it mis-identified the proper subset.)
+                    
+                    # even though this keeps things a linear scale, it can
+                    # actually introduce *more* errors because "blank" beads
+                    # still fluoresce.
+                    
+                    def s(x):
+                        p = np.multiply(self._peaks[channel], x)
+                        return np.sum(np.abs(np.subtract(p, self._mefs[channel])))
+                    
+                    res = scipy.optimize.minimize(s, [1])
+                    
+                    print res
+                    a = res.x[0]
+                    self._calibration_functions[channel] = \
+                        lambda x, a=a: a * x
+                              
+                else:              
+                    # remember, these (linear) coefficients came from logspace, so 
+                    # if the relationship in log10 space is Y = aX + b, then in
+                    # linear space the relationship is x = 10**X, y = 10**Y,
+                    # and y = (10**b) * x ^ a
+                    
+                    # also remember that the result of np.polyfit is a list of
+                    # coefficients with the highest power first!  so if we
+                    # solve y=ax + b, coeff #0 is a and coeff #1 is b
+                    
+                    a = best_lr[0]
+                    b = 10 ** best_lr[1]
+                    self._calibration_functions[channel] = \
+                        lambda x, a=a, b=b: b * np.power(x, a)
+                    
+
 
     def apply(self, experiment):
         """Applies the bleedthrough correction to an experiment.
