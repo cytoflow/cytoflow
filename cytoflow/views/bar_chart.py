@@ -66,6 +66,10 @@ class BarChartView(HasStrictTraits):
         do we plot the bar chart horizontally or vertically?
         TODO - waiting on seaborn v0.6
         
+    subset : String
+        Passed to pandas.DataFrame.query(), to get a subset of the statistic
+        before we plot it.
+        
     Examples
     --------
     >>> bar = flow.BarChartView()
@@ -84,7 +88,6 @@ class BarChartView(HasStrictTraits):
     REMOVED_ERROR = "Statistics have changed dramatically in 0.5; please see the documentation"
     channel = util.Removed(err_string = REMOVED_ERROR)
     function = util.Removed(err_string = REMOVED_ERROR)
-    subset = util.Removed(err_string = REMOVED_ERROR)
     error_bars = util.Removed(err_string = REMOVED_ERROR)
     
     by = util.Deprecated(new = 'variable')
@@ -100,6 +103,8 @@ class BarChartView(HasStrictTraits):
     huefacet = Str
     
     error_statistic = Tuple(Str, Str)
+    subset = Str
+
         
     def plot(self, experiment, **kwargs):
         """Plot a bar chart"""
@@ -172,6 +177,19 @@ class BarChartView(HasStrictTraits):
             data[error_name] = error_stat 
         else:
             error_name = None
+            
+        if self.subset:
+            try:
+                # TODO - either sanitize column names, or check to see that
+                # all conditions are valid Python variables
+                data = data.query(self.subset)
+            except:
+                raise util.CytoflowViewError("Subset string '{0}' isn't valid"
+                                        .format(self.subset))
+                
+            if len(data) == 0:
+                raise util.CytoflowViewError("Subset string '{0}' returned no values"
+                                        .format(self.subset))
             
         data.reset_index(inplace = True)           
           

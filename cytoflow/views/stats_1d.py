@@ -71,6 +71,10 @@ class Stats1DView(HasStrictTraits):
     error_statistic : Tuple(Str, Str)
         A statistic to use to draw error bars; the bars are +- the value of
         the statistic.
+        
+    subset : String
+        Passed to pandas.DataFrame.query(), to get a subset of the statistic
+        before we plot it.
 
         
     Examples
@@ -107,7 +111,6 @@ class Stats1DView(HasStrictTraits):
     by = util.Removed(err_string = REMOVED_ERROR)
     yfunction = util.Removed(err_string = REMOVED_ERROR)
     ychannel = util.Removed(err_string = REMOVED_ERROR)
-    subset = util.Removed(err_string = REMOVED_ERROR)
     
     name = Str
     statistic = Tuple(Str, Str)
@@ -120,6 +123,7 @@ class Stats1DView(HasStrictTraits):
     huescale = util.ScaleEnum # TODO - make this actually work
     
     error_statistic = Tuple(Str, Str)
+    subset = Str
     
     def plot(self, experiment, **kwargs):
         """Plot a chart"""
@@ -194,12 +198,24 @@ class Stats1DView(HasStrictTraits):
         kwargs.setdefault('antialiased', True)
 
         data = pd.DataFrame(index = stat.index)
-        
         data[stat.name] = stat
-                
+
         if error_stat is not None:
             error_name = util.random_string(6)
             data[error_name] = error_stat
+        
+        if self.subset:
+            try:
+                # TODO - either sanitize column names, or check to see that
+                # all conditions are valid Python variables
+                data = data.query(self.subset)
+            except:
+                raise util.CytoflowViewError("Subset string '{0}' isn't valid"
+                                        .format(self.subset))
+                
+            if len(data) == 0:
+                raise util.CytoflowViewError("Subset string '{0}' returned no values"
+                                        .format(self.subset))
             
         data.reset_index(inplace = True)
                     

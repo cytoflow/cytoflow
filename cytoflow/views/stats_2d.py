@@ -72,6 +72,9 @@ class Stats2DView(HasStrictTraits):
     x_error_statistic, y_error_statistic : Tuple(Str, Str)
         if specified, draw error bars.  must be the name of a statistic,
         with the same indices as `xstatistic` and `ystatistic`.
+    
+    subset : Str
+        What subset of the data to plot?
         
     Examples
     --------
@@ -142,6 +145,8 @@ class Stats2DView(HasStrictTraits):
     
     x_error_statistic = Tuple(Str, Str)
     y_error_statistic = Tuple(Str, Str)
+    
+    subset = Str
             
     def plot(self, experiment, **kwargs):
         """Plot a bar chart"""
@@ -267,6 +272,19 @@ class Stats2DView(HasStrictTraits):
             y_error_data = y_error_stat.reset_index()
             y_error_name = util.random_string()
             data[y_error_name] = y_error_data[y_error_stat.name]
+            
+        if self.subset:
+            try:
+                # TODO - either sanitize column names, or check to see that
+                # all conditions are valid Python variables
+                data = data.query(self.subset)
+            except:
+                raise util.CytoflowViewError("Subset string '{0}' isn't valid"
+                                        .format(self.subset))
+                
+            if len(data) == 0:
+                raise util.CytoflowViewError("Subset string '{0}' returned no values"
+                                        .format(self.subset))
             
         data.reset_index(inplace = True)
         
