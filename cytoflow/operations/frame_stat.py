@@ -154,7 +154,7 @@ class FrameStatisticOp(HasStrictTraits):
         idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by], 
                                          names = self.by)
 
-        stat = pd.Series(index = idx)
+        stat = pd.Series(index = idx).sort_index()
         
         for group, data_subset in groupby:
             try:

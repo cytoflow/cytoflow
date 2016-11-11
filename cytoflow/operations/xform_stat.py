@@ -28,7 +28,7 @@ import pandas as pd
 import numpy as np
 
 from traits.api import (HasStrictTraits, Str, List, Constant, provides, 
-                        Callable, CStr, Tuple)
+                        Callable, CStr, Tuple, Any, Undefined)
 
 import cytoflow.utility as util
 
@@ -67,6 +67,9 @@ class TransformStatisticOp(HasStrictTraits):
         `Time` and `Dox`, setting `by = ["Time", "Dox"]` will apply `function` 
         separately to each subset of the data with a unique combination of
         `Time` and `Dox`.
+        
+    fill : Any (default = 0)
+        Value to fill NaNs in the output
    
     Examples
     --------
@@ -89,7 +92,9 @@ class TransformStatisticOp(HasStrictTraits):
     statistic = Tuple(Str, Str)
     function = Callable()
     statistic_name = Str()
-    by = List(Str)
+    by = List(Str)    
+    fill = Any(Undefined)
+
     
     def apply(self, experiment):
         """
@@ -132,50 +137,24 @@ class TransformStatisticOp(HasStrictTraits):
         
         idx = pd.MultiIndex.from_product([data[x].unique() for x in self.by], 
                                          names = self.by)
-        new_stat = pd.Series(index = idx, dtype = np.dtype(object))
         
+        new_stat = pd.Series(index = idx, dtype = np.dtype(object)).sort_index()
+                
         for group in data[self.by].itertuples(index = False):
-            group = list(group)
             s = old_stat.xs(group, level = self.by)
-            
             try:
-                x = self.function(s)
+                new_stat[group] = self.function(s)
             except Exception as e:
-                raise util.CytoflowOpError("Your function through an error: {}"
+                raise util.CytoflowOpError("Your function threw an error: {}"
                                       .format(e))
+        
+        # fill in NaNs; in general, we don't want those.
+        if self.fill is Undefined:
+            fill = 0
+        else:
+            fill = self.fill
                 
-            print x
-            new_stat.loc[group] = x
-            print new_stat
-        
-        
-        
-#         groupby = old_stat.reset_index().groupby(self.by)
-
-#         for group, data_subset in groupby:
-#             if len(data_subset) == 0:
-#                 warn("Group {} had no data"
-#                      .format(group), 
-#                      util.CytoflowOpWarning)
-                
-#         idx = pd.MultiIndex(levels = [[]] * len(self.by), 
-#                             labels = [[]] * len(self.by), 
-#                             names = self.by)
-
-#         
-#         for group, _ in groupby:
-#             print group
-#             print old_stat.xs(list(group), level = self.by)
-#             try:
-#                 print data_subset
-#                 print "---"
-#                 x = self.function(data_subset[0])
-#                 print x
-#                 print "-----------"
-#                 new_stat[group] = x
-#             except Exception as e:
-#                 raise util.CytoflowOpError("Your function through an error: {}"
-#                                       .format(e))
+        new_stat.fillna(fill, inplace = True)
                 
         # special handling for lists
         if type(new_stat.iloc[0]) is pd.Series:
