@@ -23,7 +23,7 @@ Created on Mar 20, 2015
 from __future__ import absolute_import
 
 import warnings
-from traits.api import (HasTraits, HasStrictTraits, provides, Str, List, Bool, CInt, Any,
+from traits.api import (HasTraits, HasStrictTraits, provides, Str, List, Any,
                         Dict, File, Constant, Enum)
 
 import fcsparser
@@ -75,8 +75,7 @@ class ImportOp(HasStrictTraits):
     corresponding conditions.
     
     If you would rather not analyze every single event in every FCS file,
-    set `coarse` to `True` and `coarse_events` to the number of events from
-    each FCS file you want to load.
+    set events` to the number of events from each FCS file you want to load.
     
     Call `apply()` to load the data.
     
@@ -97,10 +96,10 @@ class ImportOp(HasStrictTraits):
         specify them here.  If `channels` is empty, load all the channels in
         the FCS files.
         
-    coarse_events : Int (default = 0)
-        If >= 0, import only a random subset of events of size `coarse_events`. 
+    events : Int (default = 0)
+        If >= 0, import only a random subset of events of size `events`. 
         Presumably the analysis will go faster but less precisely; good for
-        interactive data exploration.  Then, set `coarse_events = 0` and re-run
+        interactive data exploration.  Then, unset `events` and re-run
         the analysis non-interactively.
         
     name_metadata : Enum(None, "$PnN", "$PnS") (default = None)
@@ -146,7 +145,8 @@ class ImportOp(HasStrictTraits):
     name_metadata = Enum(None, "$PnN", "$PnS")
 
     # are we subsetting?
-    coarse_events = util.PositiveInt(0, allow_zero = True)
+    events = util.PositiveInt(0, allow_zero = True)
+    coarse_events = util.Deprecated('events')
         
     # DON'T DO THIS
     ignore_v = List(Str)
@@ -251,10 +251,10 @@ class ImportOp(HasStrictTraits):
         for tube in self.tubes:
             tube_data = parse_tube(tube.file, experiment)
 
-            if self.coarse_events:
-                if self.coarse_events <= len(tube_data):
+            if self.events:
+                if self.events <= len(tube_data):
                     tube_data = tube_data.loc[np.random.choice(tube_data.index,
-                                                               self.coarse_events,
+                                                               self.events,
                                                                replace = False)]
                 else:
                     warnings.warn("Only {0} events in tube {1}"
