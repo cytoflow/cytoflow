@@ -32,11 +32,6 @@ from .channel_stat import ChannelStatisticOp
 from .frame_stat import FrameStatisticOp
 from .xform_stat import TransformStatisticOp
  
-# transforms
-from .hlog import HlogTransformOp
-from .logicle import LogicleTransformOp
-from .log import LogTransformOp
- 
 # TASBE
 from .autofluorescence import AutofluorescenceOp
 from .bleedthrough_piecewise import BleedthroughPiecewiseOp

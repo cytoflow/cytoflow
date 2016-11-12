@@ -33,11 +33,6 @@ from .operations.range2d import Range2DOp
 from .operations.polygon import PolygonOp
 from .operations.quad import QuadOp
 
-# transforms (deprecated!)
-from .operations.hlog import HlogTransformOp
-from .operations.logicle import LogicleTransformOp
-from .operations.log import LogTransformOp
-
 # TASBE
 from .operations.autofluorescence import AutofluorescenceOp
 from .operations.bleedthrough_piecewise import BleedthroughPiecewiseOp
