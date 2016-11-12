@@ -165,8 +165,12 @@ class AutofluorescenceOp(HasStrictTraits):
         for channel in self.channels:
             new_experiment[channel] = \
                 experiment[channel] - self._af_median[channel]
+                
+            new_experiment.metadata[channel]['af_median'] = self._af_median[channel]
+            new_experiment.metadata[channel]['af_stdev'] = self._af_stdev[channel]
 
         new_experiment.history.append(self.clone_traits(transient = lambda t: True))
+
         return new_experiment
     
     def default_view(self, **kwargs):

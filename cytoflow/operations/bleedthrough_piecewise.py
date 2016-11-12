@@ -24,8 +24,9 @@ Created on Aug 26, 2015
 from __future__ import division, absolute_import
 
 import math
+from warnings import warn
 
-from traits.api import (HasStrictTraits, Str, CStr, File, Dict, Python,
+from traits.api import (HasStrictTraits, Str, File, Dict, Python,
                         Instance, Int, List, Constant, provides)
 import numpy as np
 import scipy.interpolate
@@ -38,7 +39,6 @@ import cytoflow.views
 import cytoflow.utility as util
 
 from .i_operation import IOperation
-from .hlog import hlog, hlog_inv
 from .import_op import Tube, ImportOp, check_tube
 
 @provides(IOperation)
@@ -129,6 +129,7 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
 
     _splines = Dict(Str, Dict(Str, Python), transient = True)
     _interpolators = Dict(Str, Python, transient = True)
+    _subset = Str
     
     # because the order of the channels is important, we can't just call
     # _interpolators.keys()
@@ -149,6 +150,11 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
 
         if len(self._channels) < 2:
             raise util.CytoflowOpError("Need at least two channels to correct bleedthrough.")
+        
+        for channel in self.controls.keys():
+            if 'range' not in experiment.metadata[channel]:
+                raise util.CytoflowOpError("Can't find range for channel {}"
+                                           .format(channel))
 
         self._splines = {}
         mesh_axes = []
@@ -169,6 +175,7 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
             if subset:
                 try:
                     tube_exp = tube_exp.query(subset)
+                    self._subset = subset
                 except:
                     raise util.CytoflowOpError("Subset string '{0}' isn't valid"
                                           .format(self.subset))
@@ -185,27 +192,21 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
             channel_min = tube_data[channel].min()
             channel_max = tube_data[channel].max()
             
-            # we're going to set the knots and splines evenly across the hlog-
-            # transformed data, so as to capture both the "linear" aspect
-            # of near-0 and negative values, and the "log" aspect of large
-            # values
-
-            # parameterize the hlog transform
-            r = experiment.metadata[channel]['range']  # instrument range
-            d = np.log10(r)  # maximum display scale, in decades
+            # we're going to set the knots and splines evenly across the 
+            # logicle-transformed data, so as to captur both the "linear"
+            # aspect of the near-0 and negative values, and the "log"
+            # aspect of large values.
             
-            # the transition point from linear --> log scale
-            # use half of the log-transformed scale as "linear".
-            b = 2 ** (np.log2(r) / 2)
+            scale = util.scale_factory("logicle", experiment, channel = channel)
             
             # the splines' knots
             knot_min = channel_min
-            knot_max = channel_max
+            knot_max = channel_max            
             
-            hlog_knot_min, hlog_knot_max = \
-                hlog((knot_min, knot_max), b = b, r = r, d = d)
-            hlog_knots = np.linspace(hlog_knot_min, hlog_knot_max, self.num_knots)
-            knots = hlog_inv(hlog_knots, b = b, r = r, d = d)
+            lg_knot_min = scale(knot_min)
+            lg_knot_max = scale(knot_max)
+            lg_knots = np.linspace(lg_knot_min, lg_knot_max, self.num_knots)
+            knots = scale.inverse(lg_knots)
             
             # only keep the interior knots
             knots = knots[1:-1] 
@@ -215,17 +216,19 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
                'af_stdev' in experiment.metadata[channel]:     
                 mesh_min = experiment.metadata[channel]['af_median'] - \
                            3 * experiment.metadata[channel]['af_stdev']
-            else:
-                mesh_min = -0.01 * r  # TODO - does this even work?
+            elif 'range' in experiment.metadata[channel]:
+                mesh_min = -0.01 * experiment.metadata[channel]['range'] # TODO - does this even work?
+                warn("This works best if you apply AutofluorescenceOp before "
+                     "computing bleedthrough", util.CytoflowOpWarning)
                 
-            mesh_max = r
-                
-            hlog_mesh_min, hlog_mesh_max = \
-                hlog((mesh_min, mesh_max), b = b, r = r, d = d)
-            hlog_mesh_axis = \
-                np.linspace(hlog_mesh_min, hlog_mesh_max, self.mesh_size)
+            mesh_max = experiment.metadata[channel]['range']
+
+            lg_mesh_min = scale(mesh_min)
+            lg_mesh_max = scale(mesh_max)
+            lg_mesh_axis = \
+                np.linspace(lg_mesh_min, lg_mesh_max, self.mesh_size)
             
-            mesh_axis = hlog_inv(hlog_mesh_axis, b = b, r = r, d = d)
+            mesh_axis = scale.inverse(lg_mesh_axis)
             mesh_axes.append(mesh_axis)
             
             for to_channel in self._channels:
@@ -404,24 +407,41 @@ class BleedthroughPiecewiseDiagnostic(HasStrictTraits):
                 # make a little Experiment
                 check_tube(self.op.controls[from_channel], experiment)
                 tube_exp = ImportOp(tubes = [Tube(file = self.op.controls[from_channel])],
-                                    name_metadata = experiment.metadata['name_metadata']).apply()
+                                    name_metadata = experiment.metadata['name_metadata'],
+                                    coarse_events = 10000).apply()
                 
                 # apply previous operations
                 for op in experiment.history:
                     tube_exp = op.apply(tube_exp)
+                    
+                # subset it
+                if self.op._subset:
+                    try:
+                        tube_exp = tube_exp.query(self.op._subset)
+                    except:
+                        raise util.CytoflowOpError("Subset string '{0}' isn't valid"
+                                              .format(self.op._subset))
+                                    
+                    if len(tube_exp.data) == 0:
+                        raise util.CytoflowOpError("Subset string '{0}' returned no events"
+                                              .format(self.op._subset))
+                    
+                # get scales
+                xscale = util.scale_factory("logicle", tube_exp, channel = from_channel)
+                yscale = util.scale_factory("logicle", tube_exp, channel = to_channel)
                     
                 tube_data = tube_exp.data
 
                 plt.subplot(num_channels, 
                             num_channels, 
                             from_idx + (to_idx * num_channels) + 1)
-                plt.xscale('log', nonposx='mask')
-                plt.yscale('log', nonposy='mask')
+                plt.xscale('logicle', **xscale.mpl_params)
+                plt.yscale('logicle', **yscale.mpl_params)
                 plt.xlabel(from_channel)
                 plt.ylabel(to_channel)
                 plt.scatter(tube_data[from_channel],
                             tube_data[to_channel],
-                            alpha = 0.1,
+                            alpha = 0.5,
                             s = 1,
                             marker = 'o')
                 
