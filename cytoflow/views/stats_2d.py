@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import division, absolute_import
-
+from warnings import warn
 from traits.api import HasStrictTraits, Str, provides, Tuple
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -183,47 +183,6 @@ class Stats2DView(HasStrictTraits):
             raise util.CytoflowViewError("X statistic and Y statistic must have "
                                          "the same indices: {}"
                                          .format(xstat.index.names))
-            
-        if not self.variable in experiment.conditions:
-            raise util.CytoflowViewError("Variable {} not in experiment"
-                                         .format(self.variable))
-            
-        if not self.variable in xstat.index.names:
-            raise util.CytoflowViewError("Variable {} not in xstatistic"
-                                         .format(self.variable))
-        
-        if not self.variable in ystat.index.names:
-            raise util.CytoflowViewError("Variable {} not in ystatistic"
-                                         .format(self.variable))
-
-        if self.xfacet and self.xfacet not in experiment.conditions:
-            raise util.CytoflowViewError("X facet {} not in the experiment"
-                                         .format(self.xfacet))
-        
-        if self.xfacet and self.xfacet not in xstat.index.names:
-            raise util.CytoflowViewError("X facet {} not in X and Y statistics"
-                                         .format(self.xfacet))
-        
-        if self.yfacet and self.yfacet not in experiment.conditions:
-            raise util.CytoflowViewError("Y facet {} not in the experiment"
-                                         .format(self.yfacet))
-            
-        if self.yfacet and self.yfacet not in xstat.index.names:
-            raise util.CytoflowViewError("Y facet {} not in X and Y statistics"
-                                         .format(self.yfacet))
-        
-        if self.huefacet and self.huefacet not in experiment.metadata:
-            raise util.CytoflowViewError("Hue facet {0} not in the experiment"
-                                         .format(self.huefacet))        
-
-        if self.huefacet and self.huefacet not in xstat.index.names:
-            raise util.CytoflowViewError("Hue facet {} not in the X and Y statistics"
-                                         .format(self.huefacet))
-            
-        facets = filter(lambda x: x, [self.variable, self.xfacet, self.yfacet, self.huefacet])
-        if set(facets) != set(xstat.index.names):
-            raise util.CytoflowViewError("Must use all the statistic indices as variables or facets: {}"
-                                         .format(xstat.index.names))
              
         if self.x_error_statistic[0]:
             if self.x_error_statistic not in experiment.statistics:
@@ -248,8 +207,6 @@ class Stats2DView(HasStrictTraits):
                                              "same indices as the Y statistic")
         else:
             y_error_stat = None
-
-        kwargs.setdefault('antialiased', True)
             
         data = pd.DataFrame(index = xstat.index)
             
@@ -285,11 +242,57 @@ class Stats2DView(HasStrictTraits):
             if len(data) == 0:
                 raise util.CytoflowViewError("Subset string '{0}' returned no values"
                                         .format(self.subset))
+                
+        names = list(data.index.names)
+        for name in names:
+            unique_values = data.index.get_level_values(name).unique()
+            if len(unique_values) == 1:
+                warn("Only one value for level {}; dropping it.".format(name),
+                     util.CytoflowViewWarning)
+                data.index = data.index.droplevel(name)    
             
-        data.reset_index(inplace = True)
+        if not self.variable in experiment.conditions:
+            raise util.CytoflowViewError("Variable {} not in experiment"
+                                         .format(self.variable))
+            
+        if not self.variable in data.index.names:
+            raise util.CytoflowViewError("Variable {} not in statistic; must be one of {}"
+                                         .format(self.variable, data.index.names))
+
+        if self.xfacet and self.xfacet not in experiment.conditions:
+            raise util.CytoflowViewError("X facet {} not in the experiment"
+                                         .format(self.xfacet))
         
+        if self.xfacet and self.xfacet not in data.index.names:
+            raise util.CytoflowViewError("X facet {} not in statistics; must be one of {}"
+                                         .format(self.xfacet, data.index.names))
+        
+        if self.yfacet and self.yfacet not in experiment.conditions:
+            raise util.CytoflowViewError("Y facet {} not in the experiment"
+                                         .format(self.yfacet))
+            
+        if self.yfacet and self.yfacet not in data.index.names:
+            raise util.CytoflowViewError("Y facet {} not in statistics; must be one of {}"
+                                         .format(self.yfacet, data.index.names))
+        
+        if self.huefacet and self.huefacet not in experiment.metadata:
+            raise util.CytoflowViewError("Hue facet {} not in the experiment"
+                                         .format(self.huefacet))        
+
+        if self.huefacet and self.huefacet not in data.index.names:
+            raise util.CytoflowViewError("Hue facet {} not in statistics; must be one of {}"
+                                         .format(self.huefacet, data.index.names))
+            
+        facets = filter(lambda x: x, [self.variable, self.xfacet, self.yfacet, self.huefacet])
+        if set(facets) != set(data.index.names):
+            raise util.CytoflowViewError("Must use all the statistic indices as variables or facets: {}"
+                                         .format(data.index.names))
+
+        data.reset_index(inplace = True)
         # sort by the data in the x variable
         data.sort_values(by = [xname], inplace = True)
+                      
+        kwargs.setdefault('antialiased', True)
                  
         grid = sns.FacetGrid(data,
                              size = 6,

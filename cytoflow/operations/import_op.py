@@ -119,6 +119,13 @@ class ImportOp(HasStrictTraits):
         to ignore particular channels.  **BE WARNED - THIS WILL BREAK REAL 
         EXPERIMENTS.**
         
+    Metadata
+    --------
+    
+    This operation adds `voltage` and `range` metadata for each channel, 
+    corresponding to the `$PnV` and `$PnR` FCS fields.  If `ignore_v` is
+    specified, it also gets added as experiment-wide metadata.
+        
     Examples
     --------
     >>> tube1 = flow.Tube(file = 'RFP_Well_A3.fcs', conditions = {"Dox" : 10.0})
