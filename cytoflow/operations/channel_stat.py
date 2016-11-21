@@ -62,7 +62,8 @@ class ChannelStatisticOp(HasStrictTraits):
         
     statistic_name : Str
         The name of the function; if present, becomes the second element in
-        the Experiment.statistics key tuple.
+        the Experiment.statistics key tuple.  Particularly useful if `function`
+        is a lambda.
         
     by : List(Str)
         A list of metadata attributes to aggregate the data before applying the
@@ -102,10 +103,6 @@ class ChannelStatisticOp(HasStrictTraits):
     fill = Any(Undefined)
     
     def apply(self, experiment):
-        """
-        Estimate the Gaussian mixture model parameters
-        """
-        
         if not experiment:
             raise util.CytoflowOpError("Must specify an experiment")
 
@@ -125,18 +122,7 @@ class ChannelStatisticOp(HasStrictTraits):
         if not self.by:
             raise util.CytoflowOpError("Must specify some grouping conditions "
                                        "in 'by'")
-       
-        for b in self.by:
-            if b not in experiment.data:
-                raise util.CytoflowOpError("Aggregation metadata {0} not found"
-                                      " in the experiment"
-                                      .format(b))
-            if len(experiment.data[b].unique()) > 100: #WARNING - magic number
-                raise util.CytoflowOpError("More than 100 unique values found for"
-                                      " aggregation metadata {0}.  Did you"
-                                      " accidentally specify a data channel?"
-                                      .format(b))
-                
+
         if self.subset:
             try:
                 experiment = experiment.query(self.subset)
@@ -147,7 +133,21 @@ class ChannelStatisticOp(HasStrictTraits):
             if len(experiment) == 0:
                 raise util.CytoflowOpError("Subset string '{0}' returned no events"
                                         .format(self.subset))
-                
+       
+        for b in self.by:
+            if b not in experiment.data:
+                raise util.CytoflowOpError("Aggregation metadata {} not found"
+                                      " in the experiment"
+                                      .format(b))
+            unique = experiment.data[b].unique()
+            if len(unique) > 100: #WARNING - magic number
+                raise util.CytoflowOpError("More than 100 unique values found for"
+                                      " aggregation metadata {}.  Did you"
+                                      " accidentally specify a data channel?"
+                                      .format(b))
+            if len(unique) == 1:
+                warn("Only one category for {}".format(b), util.CytoflowOpWarning)
+
         groupby = experiment.data.groupby(self.by)
 
         for group, data_subset in groupby:
@@ -165,7 +165,7 @@ class ChannelStatisticOp(HasStrictTraits):
             try:
                 stat[group] = self.function(data_subset[self.channel])
             except Exception as e:
-                raise util.CytoflowOpError("Your function through an error: {}"
+                raise util.CytoflowOpError("Your function threw an error: {}"
                                       .format(e))
             
         # fill in NaNs; in general, we don't want those.

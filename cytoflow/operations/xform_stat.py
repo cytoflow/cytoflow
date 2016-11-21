@@ -62,8 +62,8 @@ class TransformStatisticOp(HasStrictTraits):
         the Experiment.statistics key tuple.
         
     by : List(Str)
-        A list of metadata attributes to aggregate the data before applying the
-        function.  For example, if the experiment has two pieces of metadata,
+        A list of metadata attributes to aggregate the input statistic before 
+        applying the function.  For example, if the statistic has two indices
         `Time` and `Dox`, setting `by = ["Time", "Dox"]` will apply `function` 
         separately to each subset of the data with a unique combination of
         `Time` and `Dox`.
@@ -95,11 +95,7 @@ class TransformStatisticOp(HasStrictTraits):
     by = List(Str)    
     fill = Any(Undefined)
 
-    
     def apply(self, experiment):
-        """
-        Estimate the Gaussian mixture model parameters
-        """
         
         if not experiment:
             raise util.CytoflowOpError("Must specify an experiment")
@@ -108,32 +104,28 @@ class TransformStatisticOp(HasStrictTraits):
             raise util.CytoflowOpError("Must specify a name")
         
         if not self.statistic:
-            raise util.CytoflowOpError("Must specify a statistic")
+            raise util.CytoflowViewError("Statistic not set")
+        
+        if self.statistic not in experiment.statistics:
+            raise util.CytoflowViewError("Can't find the statistic {} in the experiment"
+                                         .format(self.statistic))
+        else:
+            stat = experiment.statistics[self.statistic]
 
         if not self.function:
             raise util.CytoflowOpError("Must specify a function")
-
-        if self.statistic not in experiment.statistics:
-            raise util.CytoflowOpError("Statistic {0} not found in the experiment"
-                                  .format(self.channel))
 
         if not self.by:
             raise util.CytoflowOpError("Must specify some grouping conditions "
                                        "in 'by'")
        
         for b in self.by:
-            if b not in experiment.data:
-                raise util.CytoflowOpError("Aggregation metadata {0} not found"
-                                      " in the experiment"
-                                      .format(b))
-            if len(experiment.data[b].unique()) > 100: #WARNING - magic number
-                raise util.CytoflowOpError("More than 100 unique values found for"
-                                      " aggregation metadata {0}.  Did you"
-                                      " accidentally specify a data channel?"
-                                      .format(b))
+            if b not in stat.index.names:
+                raise util.CytoflowOpError("{} is not a statistic index; "
+                                           " must be one of {}"
+                                           .format(b, stat.index.names))
                 
-        old_stat = experiment.statistics[self.statistic]
-        data = old_stat.reset_index()
+        data = stat.reset_index()
         
         idx = pd.MultiIndex.from_product([data[x].unique() for x in self.by], 
                                          names = self.by)
@@ -141,7 +133,7 @@ class TransformStatisticOp(HasStrictTraits):
         new_stat = pd.Series(index = idx, dtype = np.dtype(object)).sort_index()
                 
         for group in data[self.by].itertuples(index = False):
-            s = old_stat.xs(group, level = self.by)
+            s = stat.xs(group, level = self.by)
             try:
                 new_stat[group] = self.function(s)
             except Exception as e:
@@ -167,5 +159,4 @@ class TransformStatisticOp(HasStrictTraits):
         else:
             new_experiment.statistics[(self.name, self.function.__name__)] = new_stat
 
-        
         return new_experiment
