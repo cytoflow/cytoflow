@@ -288,7 +288,7 @@ class Stats1DView(HasStrictTraits):
         
         if self.huefacet:
             current_palette = mpl.rcParams['axes.color_cycle']
-            if experiment.conditions[self.huefacet].dtype.kind in 'biufc' and \
+            if util.is_numeric(experiment.conditions[self.huefacet]) and \
                len(grid.hue_names) > len(current_palette):
                 
                 plot_ax = plt.gca()
