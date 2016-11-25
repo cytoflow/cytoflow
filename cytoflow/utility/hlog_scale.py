@@ -23,9 +23,6 @@ Created on Feb 21, 2016
 
 from __future__ import division, absolute_import
 
-import math, sys
-from warnings import warn
-
 from traits.api import HasStrictTraits, HasTraits, Float, Property, Instance, Str, \
                        cached_property, Undefined, provides, Constant, Dict, \
                        Tuple
@@ -39,8 +36,7 @@ from matplotlib.ticker import NullFormatter, LogFormatterMathtext
 from matplotlib.ticker import Locator
 
 from .scale import IScale, register_scale
-from .logicle_ext.Logicle import FastLogicle
-from .cytoflow_errors import CytoflowError, CytoflowWarning
+from .cytoflow_errors import CytoflowError
 
 @provides(IScale)
 class HlogScale(HasStrictTraits):
@@ -52,19 +48,13 @@ class HlogScale(HasStrictTraits):
     them.
     
     The transformation has one parameter, `b`, which specifies the location of
-    the transition from linear to log-like.
+    the transition from linear to log-like.  The default, `500`, is good for
+    18-bit scales and not good for other scales.
     
     Attributes
     ----------
-    range : Float
-        the input range of the channel.  no default!
     b : Float (default = 500)
         the location of the transition from linear to log-like.
-    M : Float (default = 4.5)
-        The width of the entire display, in log10 decades
-    A : Float (default = 0.0)
-        for each channel, additional decades of negative data to include.  
-        the display usually captures all the data, so 0 is fine to start.
     
     References
     ----------
@@ -85,15 +75,11 @@ class HlogScale(HasStrictTraits):
     channel = Str
     condition = Str
     statistic = Tuple(Str, Str)
-    
-    quantiles = Tuple((0.001, 0.999))
-    range_min = Property(Float)
-    range_max = Property(Float)
 
-    range = Property(Float, depends_on = "[experiment, channel]")
-    b = Float(500, desc = "location of the log transition")
+    range = Property(Float)
+    b = Float(200, desc = "location of the log transition")
     
-    mpl_params = Property(Dict, depends_on = "logicle")
+    mpl_params = Property(Dict, depends_on = "[b, range, scale_min, scale_max]")
 
     def __call__(self, data):
         """
@@ -103,19 +89,13 @@ class HlogScale(HasStrictTraits):
         (ie, applying a log10 scale to negative numbers.)
         """
         
-        f = _make_hlog_numeric(self.b, 1.0, self.range)
-        
-        hlog_min = hlog_inv(0.0, self.b, 1.0, self.range)
-        hlog_max = hlog_inv(1.0 - sys.float_info.epsilon , self.b, 1.0, self.range)
+        f = _make_hlog_numeric(self.b, 1.0, np.log10(self.range))
 
         if isinstance(data, pd.Series):            
-            data = data.clip(hlog_min, hlog_max)
             return data.apply(f)
         elif isinstance(data, np.ndarray):
-            data = np.clip(data, hlog_min, hlog_max)
             return f(data)
         elif isinstance(data, float):
-            data = max(min(data, hlog_max), hlog_min)
             return f(data)
         else:
             raise CytoflowError("Unknown data type in HlogScale.__call__")
@@ -126,22 +106,18 @@ class HlogScale(HasStrictTraits):
         Transforms 'data' using the inverse of this scale.
         """
         
-        f_inv = lambda y, b = self.b, d = self.range: hlog_inv(y, b, 1.0, d)
+        f_inv = lambda y, b = self.b, d = np.log10(self.range): hlog_inv(y, b, 1.0, d)
         
         if isinstance(data, pd.Series):            
-            data = data.clip(0, 1.0 - sys.float_info.epsilon)
             return data.apply(f_inv)
         elif isinstance(data, np.ndarray):
-            data = np.clip(data, 0, 1.0 - sys.float_info.epsilon)
             inverse = np.vectorize(f_inv)
             return inverse(data)
         elif isinstance(data, float):
-            data = max(min(data, 1.0 - sys.float_info.epsilon), 0.0)
             return f_inv(data)
         else:
             raise CytoflowError("Unknown data type in HlogScale.inverse")
     
-    @cached_property
     def _get_range(self):
         if self.experiment:
             if self.channel and self.channel in self.experiment.channels:
@@ -157,47 +133,19 @@ class HlogScale(HasStrictTraits):
                 return Undefined
         else:
             return Undefined
-        
-    def _get_range_min(self):
-        if self.experiment:
-            if self.channel and self.channel in self.experiment.channels:
-                return self.experiment[self.channel].quantile(self.quantiles[0])
-            elif self.condition and self.condition in self.experiment.conditions:
-                return self.experiment.data[self.condition].min()
-            elif self.statistic and self.statistic in self.experiment.statistics:
-                return self.experiment.statistics[self.statistic].min()
-            else:
-                return Undefined
-        else:
-            return Undefined
-    
-    def _get_range_max(self):
-        if self.experiment:
-            if self.channel and self.channel in self.experiment.channels:
-                return self.experiment[self.channel].quantile(self.quantiles[1])
-            elif self.condition and self.condition in self.experiment.conditions:
-                return self.experiment.data[self.condition].max()
-            elif self.statistic and self.statistic in self.experiment.statistics:
-                return self.experiment.statistics[self.statistic].max()
-            else:
-                return Undefined
-        else:
-            return Undefined
 
     @cached_property
     def _get_mpl_params(self):
         return {"b" : self.b,
-                "range_min" : self.range_min,
-                "range_max" : self.range_max}
+                "range" : self.range}
     
 register_scale(HlogScale)
         
 class MatplotlibHlogScale(HasTraits, matplotlib.scale.ScaleBase):   
     name = "hlog"
-    b = Float(500)
     
-    range_min = Float
-    range_max = Float
+    b = Float
+    range = Float
 
     def __init__(self, axis, **kwargs):
         HasTraits.__init__(self, **kwargs)
@@ -207,28 +155,27 @@ class MatplotlibHlogScale(HasTraits, matplotlib.scale.ScaleBase):
         Returns the matplotlib.transform instance that does the actual 
         transformation
         """
-        if not self.logicle:
+        if self.b is Undefined:
             # this usually happens when someone tries to say 
-            # plt.xscale("logicle").  you can, in fact, do that, but
+            # plt.xscale("hlog").  you can, in fact, do that, but
             # you have to get a parameterized instance of the transform
             # from utility.scale.scale_factory().
             
-            raise CytoflowError("You can't set a 'logicle' scale directly.")
+            raise CytoflowError("You can't set a 'hlog' scale directly.")
         
-        return MatplotlibLogicleScale.LogicleTransform(logicle = self.logicle)
+        return MatplotlibHlogScale.HlogTransform(b = self.b, range = self.range)
     
     def set_default_locators_and_formatters(self, axis):
         """
         Set the locators and formatters to reasonable defaults for
         linear scaling.
         """
-        axis.set_major_locator(LogicleMajorLocator(range_min = self.range_min, range_max = self.range_max))
-        #axis.set_major_formatter(ScalarFormatter())
+        axis.set_major_locator(HlogMajorLocator())
         axis.set_major_formatter(LogFormatterMathtext(10))
-        axis.set_minor_locator(LogicleMinorLocator(range_min = self.range_min, range_max = self.range_max))
+        axis.set_minor_locator(HlogMinorLocator())
         axis.set_minor_formatter(NullFormatter())        
 
-    class LogicleTransform(HasTraits, transforms.Transform):
+    class HlogTransform(HasTraits, transforms.Transform):
         # There are two value members that must be defined.
         # ``input_dims`` and ``output_dims`` specify number of input
         # dimensions and output dimensions to the transformation.
@@ -242,8 +189,9 @@ class MatplotlibHlogScale(HasTraits, matplotlib.scale.ScaleBase):
         is_separable = True
         has_inverse = True
         
-        # the Logicle instance
-        logicle = Instance(FastLogicle)
+        # the hyperlog params
+        b = Float
+        range = Float
         
         def __init__(self, **kwargs):
             transforms.Transform.__init__(self)
@@ -251,24 +199,20 @@ class MatplotlibHlogScale(HasTraits, matplotlib.scale.ScaleBase):
         
         def transform_non_affine(self, values):
             
-            logicle_min = self.logicle.inverse(0.0)
-            logicle_max = self.logicle.inverse(1.0 - sys.float_info.epsilon)
+            f = _make_hlog_numeric(self.b, 1.0, np.log10(self.range))
+
             if isinstance(values, pd.Series):            
-                values = values.clip(logicle_min, logicle_max)
-                return values.apply(self.logicle.scale)
+                return values.apply(f)
             elif isinstance(values, np.ndarray):
-                values = np.clip(values, logicle_min, logicle_max)
-                scale = np.vectorize(self.logicle.scale)
-                return scale(values)
+                return f(values)
             elif isinstance(values, float):
-                data = max(min(values, logicle_max), logicle_min)
-                return self.logicle.scale(data)
+                return f(values)
             else:
-                raise CytoflowError("Unknown data type in MatplotlibLogicleScale.transform_non_affine")
+                raise CytoflowError("Unknown data type in MatplotlibHlogScale.HlogTransform.transform_non_affine")
 
 
         def inverted(self):
-            return MatplotlibLogicleScale.InvertedLogicleTransform(logicle = self.logicle)
+            return MatplotlibHlogScale.InvertedHlogTransform(b = self.b, range = self.range)
         
     class InvertedLogicleTransform(HasTraits, transforms.Transform):
         input_dims = 1
@@ -276,43 +220,38 @@ class MatplotlibHlogScale(HasTraits, matplotlib.scale.ScaleBase):
         is_separable = True
         has_inverse = True
      
-        # the Logicle instance
-        logicle = Instance(FastLogicle)
+        # the hyperlog params
+        b = Float
+        range = Float
         
         def __init__(self, **kwargs):
             transforms.Transform.__init__(self)
             HasTraits.__init__(self, **kwargs)
         
         def transform_non_affine(self, values):
+            
+            f_inv = lambda y, b = self.b, d = np.log10(self.range): hlog_inv(y, b, 1.0, d)
+            
             if isinstance(values, pd.Series):            
-                values = values.clip(0, 1.0 - sys.float_info.epsilon)
-                return values.apply(self.logicle.inverse)
+                return values.apply(f_inv)
             elif isinstance(values, np.ndarray):
-                values = np.clip(values, 0, 1.0 - sys.float_info.epsilon)
-                inverse = np.vectorize(self.logicle.inverse)
+                inverse = np.vectorize(f_inv)
                 return inverse(values)
             elif isinstance(values, float):
-                values = max(min(values, 1.0 - sys.float_info.epsilon), 0.0)
-                return self.logicle.inverse(values)
+                return f_inv(values)
             else:
-                raise CytoflowError("Unknown data type in LogicleScale.inverse")
+                raise CytoflowError("Unknown data type in MatplotlibHlogScale.InvertedLogicleTransform.transform_non_affine")
         
         
         def inverted(self):
-            return MatplotlibLogicleScale.LogicleTransform(logicle = self.logicle)
+            return MatplotlibHlogScale.HlogTransform(b = self.b, range = self.range)
         
         
-class LogicleMajorLocator(Locator):
+class HlogMajorLocator(Locator):
     """
-    Determine the tick locations for logicle axes.
+    Determine the tick locations for hlog axes.
     Based on matplotlib.LogLocator
     """
-    
-    def __init__(self, *args, **kwargs):
-        self.range_min = kwargs.pop('range_min')
-        self.range_max = kwargs.pop('range_max')
-        
-        super(LogicleMajorLocator, self).__init__(*args, **kwargs)
 
     def set_params(self):
         """Empty"""
@@ -340,42 +279,35 @@ class LogicleMajorLocator(Locator):
 
         return self.raise_if_exceeds(np.asarray(ticks))
 
-    def view_limits(self, vmin, vmax):
+    def view_limits(self, data_min, data_max):
         'Try to choose the view limits intelligently'
 
-        if vmax < vmin:
-            vmin, vmax = vmax, vmin
-            
-        vmin = max(vmin, self.range_min)
-        vmax = min(vmax, self.range_max)
+        if data_max < data_min:
+            data_min, data_max = data_max, data_min
 
         # get the nearest tenth-decade that contains the data
         
-        if vmax > 0:
-            logs = np.ceil(np.log10(vmax))
-            vmax = np.ceil(vmax / (10 ** (logs - 1))) * (10 ** (logs - 1))             
+        if data_max > 0:
+            logs = np.ceil(np.log10(data_max))
+            vmax = np.ceil(data_max / (10 ** (logs - 1))) * (10 ** (logs - 1))             
         else: 
             vmax = 100  
 
-        if vmin >= 0:
+        if data_min >= 0:
             vmin = 0
         else: 
-            logs = np.ceil(np.log10(-1.0 * vmin))
-            vmin = np.floor(vmin / (10 ** (logs - 1))) * (10 ** (logs - 1))
+            logs = np.ceil(np.log10(-1.0 * data_min))
+            vmin = np.floor(data_min / (10 ** (logs - 1))) * (10 ** (logs - 1))
+            
+        print (data_min, data_max, vmin, vmax)
 
         return transforms.nonsingular(vmin, vmax)
     
-class LogicleMinorLocator(Locator):
+class HlogMinorLocator(Locator):
     """
     Determine the tick locations for logicle axes.
     Based on matplotlib.LogLocator
     """
-    
-    def __init__(self, *args, **kwargs):
-        self.range_min = kwargs.pop('range_min')
-        self.range_max = kwargs.pop('range_max')
-        
-        super(LogicleMinorLocator, self).__init__(*args, **kwargs)
 
     def set_params(self):
         """Empty"""
@@ -385,13 +317,6 @@ class LogicleMinorLocator(Locator):
         'Return the locations of the ticks'
         vmin, vmax = self.axis.get_view_interval()
         return self.tick_values(vmin, vmax)
-    
-    def view_limits(self, vmin, vmax):
-        vmin, vmax = Locator.view_limits(self, vmin, vmax)
-        vmin = max(vmin, self.range_min)
-        vmax = min(vmax, self.range_max)
-        
-        return (vmin, vmax)
 
     def tick_values(self, vmin, vmax):
         'Every tenth decade, including 0 and negative'
@@ -413,9 +338,7 @@ class LogicleMinorLocator(Locator):
             
             # flatten
             gt = [item for sublist in gt for item in sublist]
-            
-            #print gt
-            
+                        
             ticks = lt
             ticks.extend(gt)
         else:
@@ -426,7 +349,7 @@ class LogicleMinorLocator(Locator):
 
         return self.raise_if_exceeds(np.asarray(ticks))
     
-matplotlib.scale.register_scale(MatplotlibLogicleScale)
+matplotlib.scale.register_scale(MatplotlibHlogScale)
 
     
 # the following functions were taken from Eugene Yurtsev's FlowCytometryTools

@@ -96,4 +96,5 @@ def set_default_scale(scale):
 import cytoflow.utility.linear_scale   # @UnusedImport
 import cytoflow.utility.log_scale      # @UnusedImport
 import cytoflow.utility.logicle_scale  # @UnusedImport
+import cytoflow.utility.hlog_scale     # @UnusedImport
 
