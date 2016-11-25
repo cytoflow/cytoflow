@@ -173,11 +173,18 @@ class HistogramView(HasStrictTraits):
                     
         kwargs.setdefault('bins', bins) 
 
-
-        
         # mask out the data that's not in the scale domain
         data = data[~np.isnan(scaled_data)]
 
+        # adjust the limits to clip extreme values
+        min_quantile = kwargs.pop("min_quantile", 0.001)
+        max_quantile = kwargs.pop("max_quantile", 0.999) 
+                
+        xlim = kwargs.pop("xlim", None)
+        if xlim is None:
+            xlim = (data[self.channel].quantile(min_quantile),
+                    data[self.channel].quantile(max_quantile))
+            
         g = sns.FacetGrid(data, 
                           size = 6,
                           aspect = 1.5,
@@ -189,7 +196,8 @@ class HistogramView(HasStrictTraits):
                           hue_order = (np.sort(data[self.huefacet].unique()) if self.huefacet else None),
                           legend_out = False,
                           sharex = False,
-                          sharey = False)
+                          sharey = False,
+                          xlim = xlim)
         
         # set the scale for each set of axes; can't just call plt.xscale() 
         for ax in g.axes.flatten():
@@ -235,9 +243,9 @@ class HistogramView(HasStrictTraits):
         
         if self.huefacet and legend:
             current_palette = mpl.rcParams['axes.color_cycle']
-            if (experiment.conditions[self.huefacet] == "int" or 
-                experiment.conditions[self.huefacet] == "float") and \
-                len(g.hue_names) > len(current_palette):
+        
+            if util.is_numeric(experiment.conditions[self.huefacet]) and \
+               len(g.hue_names) > len(current_palette):
                 
                 plot_ax = plt.gca()
                 cmap = mpl.colors.ListedColormap(sns.color_palette("husl", 

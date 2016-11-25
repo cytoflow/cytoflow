@@ -113,12 +113,18 @@ class Kde1DView(HasStrictTraits):
                                         .format(self.subset))
         else:
             data = experiment.data
-            
 
-        #print scaled_data
-        
         kwargs.setdefault('shade', True)
         kwargs['label'] = self.name
+
+        # adjust the limits to clip extreme values
+        min_quantile = kwargs.pop("min_quantile", 0.001)
+        max_quantile = kwargs.pop("max_quantile", 0.999) 
+                
+        xlim = kwargs.pop("xlim", None)
+        if xlim is None:
+            xlim = (data[self.channel].quantile(min_quantile),
+                    data[self.channel].quantile(max_quantile))
         
         g = sns.FacetGrid(data, 
                           size = 6,
@@ -131,7 +137,8 @@ class Kde1DView(HasStrictTraits):
                           hue_order = (np.sort(data[self.huefacet].unique()) if self.huefacet else None),
                           legend_out = False,
                           sharex = False,
-                          sharey = False)
+                          sharey = False,
+                          xlim = xlim)
         
         # get the scale     
         kwargs['scale'] = scale = util.scale_factory(self.scale, experiment, channel = self.channel)
@@ -141,6 +148,17 @@ class Kde1DView(HasStrictTraits):
             ax.set_xscale(self.scale, **scale.mpl_params)  
                   
         g.map(_univariate_kdeplot, self.channel, **kwargs)
+        
+        # adjust the limits to clip extreme values
+        min_quantile = kwargs.pop("min_quantile", 0.001)
+        max_quantile = kwargs.pop("max_quantile", 0.999)
+        
+        def autoscale_x(*args, **kwargs):
+            d = args[0]
+            plt.gca().set_xlim(d.quantile(min_quantile),
+                               d.quantile(max_quantile))
+            
+        g.map(autoscale_x, self.channel)
         
         # if we have an xfacet, make sure the y scale is the same for each
         fig = plt.gcf()

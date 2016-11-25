@@ -137,6 +137,20 @@ class Kde2DView(HasStrictTraits):
         kwargs.setdefault('max_alpha', 0.9)
         kwargs.setdefault('n_levels', 10)
 
+        # adjust the limits to clip extreme values
+        min_quantile = kwargs.pop("min_quantile", 0.001)
+        max_quantile = kwargs.pop("max_quantile", 0.999) 
+                
+        xlim = kwargs.pop("xlim", None)
+        if xlim is None:
+            xlim = (data[self.xchannel].quantile(min_quantile),
+                    data[self.xchannel].quantile(max_quantile))
+                      
+        ylim = kwargs.pop("ylim", None)
+        if ylim is None:
+            ylim = (data[self.ychannel].quantile(min_quantile),
+                    data[self.ychannel].quantile(max_quantile))
+
         g = sns.FacetGrid(data, 
                           size = 6,
                           aspect = 1.5,
@@ -148,7 +162,9 @@ class Kde2DView(HasStrictTraits):
                           hue_order = (np.sort(data[self.huefacet].unique()) if self.huefacet else None),
                           legend_out = False,
                           sharex = False,
-                          sharey = False)
+                          sharey = False,
+                          xlim = xlim,
+                          ylim = ylim)
         
         xscale = util.scale_factory(self.xscale, experiment, channel = self.xchannel)
         yscale = util.scale_factory(self.yscale, experiment, channel = self.ychannel)

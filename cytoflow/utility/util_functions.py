@@ -304,3 +304,7 @@ def categorical_order(values, order=None):
 def random_string(n):
     """from http://stackoverflow.com/questions/2257441/random-string-generation-with-upper-case-letters-and-digits-in-python"""
     return ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(n))
+
+def is_numeric(s):
+    """s is a pandas.Series or a numpy.ndarray; determines if it's numeric from its dtype"""
+    return issubclass(s.dtype.type, np.number)
