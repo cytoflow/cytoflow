@@ -115,13 +115,20 @@ class HistogramView(HasStrictTraits):
                                         .format(self.subset))
         else:
             data = experiment.data
+            
+        # clip extreme values
+        min_quantile = kwargs.pop("min_quantile", 0.001)
+        min_quantile_val = data[self.channel].quantile(min_quantile)
+        max_quantile = kwargs.pop("max_quantile", 0.999)
+        max_quantile_val = data[self.channel].quantile(max_quantile)
+        
+        data = data[data[self.channel] > min_quantile_val]
+        data = data[data[self.channel] < max_quantile_val]
         
         # get the scale
         scale = util.scale_factory(self.scale, experiment, channel = self.channel)
         scaled_data = scale(data[self.channel])
-        
-        #print scaled_data
-        
+                
         kwargs.setdefault('histtype', 'stepfilled')
         kwargs.setdefault('alpha', 0.5)
         kwargs.setdefault('antialiased', True)
@@ -174,6 +181,8 @@ class HistogramView(HasStrictTraits):
         bins[0] -= 1
                     
         kwargs.setdefault('bins', bins) 
+
+
         
         # mask out the data that's not in the scale domain
         data = data[~np.isnan(scaled_data)]

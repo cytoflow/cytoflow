@@ -298,8 +298,6 @@ class HlogMajorLocator(Locator):
         else: 
             logs = np.ceil(np.log10(-1.0 * data_min))
             vmin = np.floor(data_min / (10 ** (logs - 1))) * (10 ** (logs - 1))
-            
-        print (data_min, data_max, vmin, vmax)
 
         return transforms.nonsingular(vmin, vmax)
     
