@@ -213,7 +213,15 @@ class LogicleScale(HasStrictTraits):
             neg_values = data[data < 0]
             if(not neg_values.empty):
                 r_value = neg_values.quantile(self.r).item()
-                return (self.M - math.log10(self._T/math.fabs(r_value)))/2
+                W = (self.M - math.log10(self._T/math.fabs(r_value)))/2
+                if W <= 0:
+                    warn("Channel {0} doesn't have enough negative data. " 
+                         "Try a log transform instead."
+                         .format(self.channel),
+                         CytoflowWarning)
+                    return 0.5
+                else:
+                    return W
             else:
                 # ... unless there aren't any negative values, in which case
                 # you probably shouldn't use this transform
