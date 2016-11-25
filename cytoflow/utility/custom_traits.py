@@ -79,9 +79,14 @@ class Removed(TraitType):
         super(Removed, self).__init__(**metadata)
     
     def get(self, obj, name):
-        raise CytoflowError(self.err_string.format(name))
+        if self.warning:
+            warn(self.err_string.format(name), CytoflowWarning)
+        else:
+            raise CytoflowError(self.err_string.format(name))
     
     def set(self, obj, name, value):
+        if self.warning:
+            warn(self.err_string.format(name), CytoflowWarning)
         raise CytoflowError(self.err_string.format(name))
     
 class Deprecated(TraitType):  

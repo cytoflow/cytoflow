@@ -70,13 +70,23 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
         FCS files to estimate the correction splines with.  Must be set to
         use `estimate()`.
         
-    num_knots : Int (default = 7)
+    num_knots : Int (default = 12)
         The number of internal control points to estimate, spaced log-evenly
         from 0 to the range of the channel.  Must be set to use `estimate()`.
         
     mesh_size : Int (default = 32)
         The size of each axis in the mesh used to interpolate corrected values.
         
+    Metadata
+    --------
+    bleedthrough_channels : List(Str)
+        The channels that were used to correct this one.
+        
+    bleedthrough_fn : Callable (Tuple(Float) --> Float)
+        The function that will correct one event in this channel.  Pass it
+        the values specified in `bleedthrough_channels` and it will return
+        the corrected value for this channel. 
+            
     Notes
     -----
     We use an interpolation-based scheme to estimate corrected bleedthrough.
@@ -104,10 +114,9 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
     Examples
     --------
     >>> bl_op = flow.BleedthroughPiecewiseOp()
-    >>> bl_op.num_knots = 10
-    >>> bl_op.controls = {'Pacific Blue-A' : 'merged/ebfp.fcs',
-    ...                   'FITC-A' : 'merged/eyfp.fcs',
-    ...                   'PE-Tx-Red-YG-A' : 'merged/mkate.fcs'}
+    >>> bl_op.controls = {'Pacific Blue-A' : 'ebfp.fcs',
+    ...                   'FITC-A' : 'eyfp.fcs',
+    ...                   'PE-Tx-Red-YG-A' : 'mkate.fcs'}
     >>>
     >>> bl_op.estimate(ex2)
     >>> bl_op.default_view().plot(ex2)    
@@ -124,12 +133,11 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
     name = Constant("Bleedthrough")
 
     controls = Dict(Str, File)
-    num_knots = Int(7)
+    num_knots = Int(12)
     mesh_size = Int(32)
 
     _splines = Dict(Str, Dict(Str, Python), transient = True)
     _interpolators = Dict(Str, Python, transient = True)
-    _subset = Str
     
     # because the order of the channels is important, we can't just call
     # _interpolators.keys()
@@ -175,7 +183,6 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
             if subset:
                 try:
                     tube_exp = tube_exp.query(subset)
-                    self._subset = subset
                 except:
                     raise util.CytoflowOpError("Subset string '{0}' isn't valid"
                                           .format(self.subset))
@@ -306,11 +313,9 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
         
         for channel in self._channels:
             new_experiment[channel] = self._interpolators[channel](old_data)
-            
-            # add the correction splines to the experiment metadata so we can 
-            # correct other controls later on
-            new_experiment.metadata[channel]['piecewise_bleedthrough'] = \
-                (self._channels, self._interpolators[channel])
+
+            new_experiment.metadata[channel]['bleedthrough_channels'] = self._channels
+            new_experiment.metadata[channel]['bleedthrough_fn'] = self._interpolators[channel]
 
         new_experiment.history.append(self.clone_traits(transient = lambda t: True))
         return new_experiment
@@ -374,6 +379,7 @@ class BleedthroughPiecewiseDiagnostic(HasStrictTraits):
     friendly_id = "Autofluorescence Diagnostic" 
     
     name = Str
+    subset = Str
     
     # TODO - why can't I use BleedthroughPiecewiseOp here?
     op = Instance(IOperation)
@@ -408,23 +414,23 @@ class BleedthroughPiecewiseDiagnostic(HasStrictTraits):
                 check_tube(self.op.controls[from_channel], experiment)
                 tube_exp = ImportOp(tubes = [Tube(file = self.op.controls[from_channel])],
                                     name_metadata = experiment.metadata['name_metadata'],
-                                    coarse_events = 10000).apply()
+                                    events = 10000).apply()
                 
                 # apply previous operations
                 for op in experiment.history:
                     tube_exp = op.apply(tube_exp)
                     
                 # subset it
-                if self.op._subset:
+                if self.subset:
                     try:
-                        tube_exp = tube_exp.query(self.op._subset)
+                        tube_exp = tube_exp.query(self.subset)
                     except:
                         raise util.CytoflowOpError("Subset string '{0}' isn't valid"
-                                              .format(self.op._subset))
+                                              .format(self.subset))
                                     
                     if len(tube_exp.data) == 0:
                         raise util.CytoflowOpError("Subset string '{0}' returned no events"
-                                              .format(self.op._subset))
+                                              .format(self.subset))
                     
                 # get scales
                 xscale = util.scale_factory("logicle", tube_exp, channel = from_channel)

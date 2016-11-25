@@ -23,7 +23,7 @@ Created on Aug 26, 2015
 
 from __future__ import division, absolute_import
 
-import os
+import os, math
 
 from traits.api import HasStrictTraits, Str, CStr, File, Dict, Instance, \
                        Constant, Tuple, Float, provides
@@ -76,8 +76,18 @@ class BleedthroughLinearOp(HasStrictTraits):
         `("channel2", "channel1")` must also be present.  The module does not
         assume that the matrix is symmetric.
         
-    Notes
-    -----
+    Metadata
+    --------
+    linear_bleedthrough : Dict(Str : Float)
+        The values for spillover from other channels into this channel.
+        
+    bleedthrough_channels : List(Str)
+        The channels that were used to correct this one.
+        
+    bleedthrough_fn : Callable (Tuple(Float) --> Float)
+        The function that will correct one event in this channel.  Pass it
+        the values specified in `bleedthrough_channels` and it will return
+        the corrected value for this channel.
 
 
     Examples
@@ -226,6 +236,8 @@ class BleedthroughLinearOp(HasStrictTraits):
             new_experiment.metadata[channel]['linear_bleedthrough'] = \
                 {x : self.spillover[(x, channel)]
                      for x in channels if x != channel}
+            new_experiment.metadata[channel]['bleedthrough_channels'] = list(channels)
+            new_experiment.metadata[channel]['bleedthrough_fn'] = lambda x, a_inv = a_inv: np.dot(x, a_inv)
      
         new_experiment.history.append(self.clone_traits(transient = lambda t: True))   
         return new_experiment
@@ -268,6 +280,7 @@ class BleedthroughLinearDiagnostic(HasStrictTraits):
     friendly_id = "Autofluorescence Diagnostic" 
     
     name = Str
+    subset = Str
     
     # TODO - why can't I use BleedthroughPiecewiseOp here?
     op = Instance(IOperation)
@@ -307,13 +320,28 @@ class BleedthroughLinearDiagnostic(HasStrictTraits):
                 for op in experiment.history:
                     tube_exp = op.apply(tube_exp)
                     
+                # subset it
+                if self.subset:
+                    try:
+                        tube_exp = tube_exp.query(self.subset)
+                    except:
+                        raise util.CytoflowOpError("Subset string '{0}' isn't valid"
+                                              .format(self.subset))
+                                    
+                    if len(tube_exp.data) == 0:
+                        raise util.CytoflowOpError("Subset string '{0}' returned no events"
+                                              .format(self.subset))
+                    
                 tube_data = tube_exp.data
+                
+                xscale = util.scale_factory("logicle", tube_exp, channel = from_channel)
+                yscale = util.scale_factory("logicle", tube_exp, channel = to_channel)
 
                 plt.subplot(num_channels, 
                             num_channels, 
                             from_idx + (to_idx * num_channels) + 1)
-                plt.xlim(np.percentile(tube_data[from_channel], (5, 95)))
-                plt.ylim(np.percentile(tube_data[to_channel], (5, 95)))
+                plt.xscale('logicle', **xscale.mpl_params)
+                plt.yscale('logicle', **yscale.mpl_params)
                 plt.xlabel(from_channel)
                 plt.ylabel(to_channel)
                 plt.scatter(tube_data[from_channel],
@@ -322,8 +350,7 @@ class BleedthroughLinearDiagnostic(HasStrictTraits):
                             s = 1,
                             marker = 'o')
                 
-                xstart, xstop = np.percentile(tube_data[from_channel], (5, 95))
-                xs = np.linspace(xstart, xstop, 2)
+                xs = np.logspace(-1, math.log(tube_data[from_channel].max(), 10))
                 ys = xs * self.op.spillover[(from_channel, to_channel)]
           
                 plt.plot(xs, ys, 'g-', lw=3)

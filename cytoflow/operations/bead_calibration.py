@@ -23,8 +23,8 @@ Created on Aug 31, 2015
 
 from __future__ import division, absolute_import
 
-from traits.api import (HasStrictTraits, Str, CStr, File, Dict, Python,
-                        Instance, Int, List, Float, Constant, provides, Undefined)
+from traits.api import (HasStrictTraits, Str, File, Dict, Instance, Int, List, 
+                        Float, Constant, provides, Undefined, Callable, Any)
 import numpy as np
 import math
 import scipy.signal
@@ -63,6 +63,7 @@ class BeadCalibrationOp(HasStrictTraits):
     (MEFLs, etc) (as well as for math reasons), this module filters out
     negative values.
     
+    
     Attributes
     ----------
     name : Str
@@ -94,6 +95,16 @@ class BeadCalibrationOp(HasStrictTraits):
     bead_brightness_cutoff : Float
         If a bead peak is above this, then don't consider it.  Takes care of
         clipping saturated detection.  Defaults to 70% of the detector range.
+        
+        
+    Metadata
+    --------
+    bead_calibration_fn : Callable (pandas.Series --> pandas.Series)
+        The function to calibrate raw data to bead units
+        
+    bead_units : String
+        The units this channel was calibrated to
+        
         
     Notes
     -----
@@ -166,9 +177,9 @@ class BeadCalibrationOp(HasStrictTraits):
     
     beads = Dict(Str, List(Float))
 
-    _calibration_functions = Dict(Str, Python, transient = True)
-    _peaks = Dict(Str, Python, transient = True)
-    _mefs = Dict(Str, Python, transient = True)
+    _calibration_functions = Dict(Str, Callable, transient = True)
+    _peaks = Dict(Str, Any, transient = True)
+    _mefs = Dict(Str, Any, transient = True)
 
     def estimate(self, experiment, subset = None): 
         """
@@ -332,19 +343,19 @@ class BeadCalibrationOp(HasStrictTraits):
         # we filter out negative values here.
 
         new_experiment = experiment.clone()
-        
-        for channel in channels:
-            new_experiment.data = \
-                new_experiment.data[new_experiment.data[channel] > 0]
+#         
+#         for channel in channels:
+#             new_experiment.data = \
+#                 new_experiment.data[new_experiment.data[channel] > 0]
                 
-        new_experiment.data.reset_index(drop = True, inplace = True)
+#         new_experiment.data.reset_index(drop = True, inplace = True)
         
         for channel in channels:
             calibration_fn = self._calibration_functions[channel]
             
             new_experiment[channel] = calibration_fn(new_experiment[channel])
             new_experiment.metadata[channel]['bead_calibration_fn'] = calibration_fn
-            new_experiment.metadata[channel]['units'] = self.units[channel]
+            new_experiment.metadata[channel]['bead_units'] = self.units[channel]
             if 'range' in experiment.metadata[channel]:
                 new_experiment.metadata[channel]['range'] = calibration_fn(experiment.metadata[channel]['range'])
             
