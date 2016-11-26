@@ -119,6 +119,9 @@ class Histogram2DView(HasStrictTraits):
         
         if col_wrap and self.yfacet:
             raise util.CytoflowViewError("Can't set yfacet and col_wrap at the same time.") 
+        
+        if col_wrap and not self.xfacet:
+            raise util.CytoflowViewError("Must set xfacet to use col_wrap.")
 
         if self.subset:
             try: 

@@ -19,7 +19,7 @@ from __future__ import division, absolute_import
 
 from warnings import warn
 
-from traits.api import HasStrictTraits, Str, provides, Callable, Tuple, Enum
+from traits.api import HasStrictTraits, Str, provides, Property, List, Tuple, Enum
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -104,10 +104,14 @@ class BarChartView(HasStrictTraits):
     
     error_statistic = Tuple(Str, Str)
     subset = Str
-
+            
+    def enum_plots(self, experiment):
+        """
+        Returns an iterator over the possible plots that this View can
+        produce.  The values returned can be passed to "plot".
+        """
         
-    def plot(self, experiment, **kwargs):
-        """Plot a bar chart"""
+        # TODO - all this is copied from below.  can we abstract it out somehow?
         
         if not experiment:
             raise util.CytoflowViewError("No experiment specified")
@@ -192,17 +196,154 @@ class BarChartView(HasStrictTraits):
             raise util.CytoflowViewError("Hue facet {} is not a statistic index; "
                                          "must be one of {}".format(self.huefacet, data.index.names)) 
             
+        facets = filter(lambda x: x, [self.variable, self.xfacet, self.yfacet, self.huefacet])
+        by = list(set(names) - set(facets))
+        
+        class plot_enum(object):
+            
+            def __init__(self, experiment, by):
+                self._iter = None
+                self._returned = False
+                
+                if by:
+                    self._iter = experiment.data.groupby(by).__iter__()
+                
+            def __iter__(self):
+                return self
+            
+            def next(self):
+                if self._iter:
+                    return self._iter.next()[0]
+                else:
+                    if self._returned:
+                        raise StopIteration
+                    else:
+                        self._returned = True
+                        return None
+            
+        return plot_enum(experiment, by)
+
+        
+    def plot(self, experiment, plot_name = None, **kwargs):
+        """Plot a bar chart"""
+        
+        if not experiment:
+            raise util.CytoflowViewError("No experiment specified")
+        
+        if self.statistic not in experiment.statistics:
+            raise util.CytoflowViewError("Can't find the statistic {} in the experiment"
+                                         .format(self.statistic))
+        else:
+            stat = experiment.statistics[self.statistic]
+            
+        if self.error_statistic[0]:
+            if self.error_statistic not in experiment.statistics:
+                raise util.CytoflowViewError("Can't find the error statistic in the experiment")
+            else:
+                error_stat = experiment.statistics[self.error_statistic]
+        else:
+            error_stat = None
+         
+        if error_stat is not None:
+            if not stat.index.equals(error_stat.index):
+                raise util.CytoflowViewError("Data statistic and error statistic "
+                                             " don't have the same index.")
+
+        data = pd.DataFrame(index = stat.index)
+        
+        data[stat.name] = stat
+                
+        if error_stat is not None:
+            error_name = util.random_string(6)
+            data[error_name] = error_stat 
+        else:
+            error_name = None
+            
+        if self.subset:
+            try:
+                data = data.query(self.subset)
+            except:
+                raise util.CytoflowViewError("Subset string '{0}' isn't valid"
+                                        .format(self.subset))
+                
+            if len(data) == 0:
+                raise util.CytoflowViewError("Subset string '{0}' returned no values"
+                                        .format(self.subset))
+            
+        names = list(data.index.names)
+        for name in names:
+            unique_values = data.index.get_level_values(name).unique()
+            if len(unique_values) == 1:
+                warn("Only one value for level {}; dropping it.".format(name),
+                     util.CytoflowViewWarning)
+                data.index = data.index.droplevel(name)
+                
+        names = list(data.index.names)
+                        
+        if not self.variable:
+            raise util.CytoflowViewError("variable not specified")
+        
+        if not self.variable in names:
+            raise util.CytoflowViewError("Variable {} isn't in the statistic; "
+                                         "must be one of {}"
+                                         .format(self.variable, names))
+        
+        if self.xfacet and self.xfacet not in experiment.conditions:
+            raise util.CytoflowViewError("X facet {0} isn't in the experiment"
+                                    .format(self.xfacet))
+            
+        if self.xfacet and self.xfacet not in names:
+            raise util.CytoflowViewError("X facet {} is not a statistic index; "
+                                         "must be one of {}".format(self.xfacet, names))
+        
+        if self.yfacet and self.yfacet not in experiment.conditions:
+            raise util.CytoflowViewError("Y facet {0} isn't in the experiment"
+                                    .format(self.yfacet))
+
+        if self.yfacet and self.yfacet not in names:
+            raise util.CytoflowViewError("Y facet {} is not a statistic index; "
+                                         "must be one of {}".format(self.yfacet, names))
+
+        if self.huefacet and self.huefacet not in experiment.conditions:
+            raise util.CytoflowViewError("Hue facet {0} isn't in the experiment"
+                                    .format(self.huefacet))
+            
+        if self.huefacet and self.huefacet not in names:
+            raise util.CytoflowViewError("Hue facet {} is not a statistic index; "
+                                         "must be one of {}".format(self.huefacet, names)) 
+            
         col_wrap = kwargs.pop('col_wrap', None)
         
         if col_wrap and self.yfacet:
             raise util.CytoflowViewError("Can't set yfacet and col_wrap at the same time.") 
+        
+        if col_wrap and not self.xfacet:
+            raise util.CytoflowViewError("Must set xfacet to use col_wrap.")
             
         facets = filter(lambda x: x, [self.variable, self.xfacet, self.yfacet, self.huefacet])
-        if set(facets) != set(data.index.names):
-            raise util.CytoflowViewError("Must use all the statistic indices as variables or facets: {}"
-                                         .format(data.index.names))
-            
+        unused_names = list(set(names) - set(facets))
+
+        if unused_names and plot_name is None:
+            for plot in self.enum_plots(experiment):
+                self.plot(experiment, plot, **kwargs)
+                plt.title("{0} = {1}".format(unused_names, plot))
+            return
+
         data.reset_index(inplace = True)
+        
+        if plot_name:
+            if plot_name and not unused_names:
+                raise util.CytoflowViewError("Plot {} not from plot_enum"
+                                             .format(plot_name))
+                               
+            groupby = data.groupby(unused_names)
+
+            if plot_name not in set(groupby.groups.keys()):
+                raise util.CytoflowViewError("Plot {} not from plot_enum"
+                                             .format(plot_name))
+                
+            data = groupby.get_group(plot_name)
+            data.reset_index(drop = True, inplace = True)
         
         cols = col_wrap if col_wrap else \
                len(data[self.xfacet].unique()) if self.xfacet else 1
