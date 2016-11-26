@@ -113,7 +113,7 @@ class Stats1DView(HasStrictTraits):
     by = util.Removed(err_string = REMOVED_ERROR)
     yfunction = util.Removed(err_string = REMOVED_ERROR)
     ychannel = util.Removed(err_string = REMOVED_ERROR)
-    variable = util.Deprecated(new = "variable")
+    xvariable = util.Deprecated(new = "variable")
     
     name = Str
     statistic = Tuple(Str, Str)
