@@ -25,11 +25,8 @@ from __future__ import division, absolute_import
 
 import math
 
-from warnings import warn
-
 from traits.api import (HasStrictTraits, Str, File, Dict, Any,
-                        Instance, Tuple, Bool, Constant, DelegatesTo, provides,
-                        Property)
+                        Instance, Tuple, Bool, Constant, provides)
 import numpy as np
 import matplotlib.pyplot as plt
 import sklearn.mixture
@@ -102,7 +99,7 @@ class ColorTranslationOp(HasStrictTraits):
     
     name = Constant("Color Translation")
 
-    translation = util.Removed(err_str = "'translation' is removed; the same info is found in 'controls'", warning = True)
+    translation = util.Removed(err_string = "'translation' is removed; the same info is found in 'controls'", warning = True)
     controls = Dict(Tuple(Str, Str), File)
     mixture_model = Bool(False)
 
