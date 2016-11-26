@@ -260,7 +260,7 @@ class Experiment(HasStrictTraits):
     def clone(self):
         """Clone this experiment"""
         new_exp = self.clone_traits()
-        new_exp.data = self.data.copy()
+        new_exp.data = self.data.copy(deep = False)
 
         # shallow copy of the history
         new_exp.history = self.history[:]
