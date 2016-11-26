@@ -106,6 +106,21 @@ class GaussianMixture2DOp(HasStrictTraits):
         If `True`, add a column named `{Name}_Posterior` giving the posterior
         probability that the event is in the component to which it was
         assigned.  Useful for filtering out low-probability events.
+        
+    Statistics
+    ----------
+    xmean : Float
+        the mean of the fitted gaussian in the x dimension.
+        
+    ymean : Float
+        the mean of the fitted gaussian in the y dimension.
+        
+    proportion : Float
+        the proportion of events in each component of the mixture model.  only
+        set if `num_components` > 1.
+        
+    PS -- if someone has good ideas for summarizing spread in a 2D (non-isotropic)
+    Gaussian, or other useful statistics, let me know!
     
     Examples
     --------
@@ -164,6 +179,9 @@ class GaussianMixture2DOp(HasStrictTraits):
                                       " aggregation metadata {0}.  Did you"
                                       " accidentally specify a data channel?"
                                       .format(b))
+                
+        if self.num_components == 1 and self.posteriors:
+            raise util.CytoflowOpError("If num_components == 1, all posteriors are 1.")
                 
         if subset:
             try:
@@ -274,13 +292,6 @@ class GaussianMixture2DOp(HasStrictTraits):
             raise util.CytoflowOpError("Column {0} not found in the experiment"
                                   .format(self.ychannel))
             
-        if (self.name + "_Posterior") in experiment.data:
-            raise util.CytoflowOpError("Column {0} already found in the experiment"
-                                  .format(self.name + "_Posterior"))
-            
-        if self.num_components == 1 and self.sigma == 0.0:
-            raise util.CytoflowOpError("If num_components == 1, sigma must be > 0")
-
         if self.posteriors:
             col_name = "{0}_Posterior".format(self.name)
             if col_name in experiment.data:
@@ -408,14 +419,51 @@ class GaussianMixture2DOp(HasStrictTraits):
                     
         new_experiment = experiment.clone()
         
-        if self.num_components == 1:
+        if self.num_components == 1 and self.sigma > 0:
             new_experiment.add_condition(self.name, "bool", event_assignments == "{0}_1".format(self.name))
-        else:
+        elif self.num_components > 1:
             new_experiment.add_condition(self.name, "category", event_assignments)
             
-        if self.posteriors:
+        if self.posteriors and self.num_components > 1:
             col_name = "{0}_Posterior".format(self.name)
             new_experiment.add_condition(col_name, "float", event_posteriors)
+                    
+        # add the statistics
+        levels = list(self.by)
+        if self.num_components > 1:
+            levels.append(self.name)
+                    
+        if levels:     
+            idx = pd.MultiIndex.from_product([new_experiment[x].unique() for x in levels], 
+                                             names = levels)
+    
+            xmean_stat = pd.Series(index = idx, dtype = np.dtype(object)).sort_index()
+            ymean_stat = pd.Series(index = idx, dtype = np.dtype(object)).sort_index()
+            prop_stat = pd.Series(index = idx, dtype = np.dtype(object)).sort_index()     
+                                   
+            for group, _ in groupby:
+                gmm = self._gmms[group]
+                for c in range(self.num_components):
+                    g = group
+                    if self.num_components > 1:
+                        component_name = "{}_{}".format(self.name, c + 1)
+                        try:
+                            g.append(component_name)
+                        except AttributeError:
+                            if g is True:
+                                g = component_name
+                            else:
+                                g = (g, component_name)
+                                                         
+                    xmean_stat.loc[g] = self._xscale.inverse(gmm.means_[c][0])
+                    ymean_stat.loc[g] = self._yscale.inverse(gmm.means_[c][0])
+                    prop_stat.loc[g] = gmm.weights_[c]
+                     
+            new_experiment.statistics[(self.name, "xmean")] = xmean_stat
+            new_experiment.statistics[(self.name, "ymean")] = ymean_stat
+            if self.num_components > 1:
+                new_experiment.statistics[(self.name, "proportion")] = prop_stat
+            
                     
         new_experiment.history.append(self.clone_traits(transient = lambda t: True))
         return new_experiment
@@ -458,11 +506,6 @@ class GaussianMixture2DView(HasStrictTraits):
     
     # TODO - why can't I use GaussianMixture2DOp here?
     op = Instance(IOperation)
-    name = DelegatesTo('op')
-    xchannel = DelegatesTo('op')
-    ychannel = DelegatesTo('op')
-    xscale = DelegatesTo('op')
-    yscale = DelegatesTo('op')
     subset = Str
     
     def enum_plots(self, experiment):
@@ -501,29 +544,49 @@ class GaussianMixture2DView(HasStrictTraits):
         
         if not experiment:
             raise util.CytoflowViewError("No experiment specified")
-        
-        if not self.xchannel:
-            raise util.CytoflowViewError("No X channel specified")
-                   
-        if self.xchannel not in experiment.data:
-            raise util.CytoflowViewError("X channel {0} not found in the experiment"
-                                  .format(self.channel))
 
-        if not self.ychannel:
-            raise util.CytoflowViewError("No Y channel specified")
-                   
-        if self.ychannel not in experiment.data:
-            raise util.CytoflowViewError("Y channel {0} not found in the experiment"
-                                  .format(self.channel))
+        experiment = experiment.clone()
         
+        # try to apply the current op
+        try:
+            experiment = self.op.apply(experiment)
+        except util.CytoflowOpError:
+            pass
+        
+        if self.subset:
+            try:
+                experiment = experiment.query(self.subset)
+                experiment.data.reset_index(drop = True, inplace = True)
+            except:
+                raise util.CytoflowViewError("Subset string '{0}' isn't valid"
+                                        .format(self.subset))
+                
+            if len(experiment) == 0:
+                raise util.CytoflowViewError("Subset string '{0}' returned no events"
+                                        .format(self.subset)) 
+        
+        # figure out common limits
+        # adjust the limits to clip extreme values
+        min_quantile = kwargs.pop("min_quantile", 0.001)
+        max_quantile = kwargs.pop("max_quantile", 0.999) 
+                
+        xlim = kwargs.pop("xlim", None)
+        if xlim is None:
+            xlim = (experiment.data[self.op.xchannel].quantile(min_quantile),
+                    experiment.data[self.op.xchannel].quantile(max_quantile))
+
+        ylim = kwargs.pop("ylim", None)
+        if ylim is None:
+            ylim = (experiment.data[self.op.ychannel].quantile(min_quantile),
+                    experiment.data[self.op.ychannel].quantile(max_quantile))
+              
+        # now, are we making subplots?
         if self.op.by and not plot_name:
             for plot in self.enum_plots(experiment):
                 self.plot(experiment, plot, **kwargs)
                 plt.title("{0} = {1}".format(self.op.by, plot))
             return
-        
-        temp_experiment = experiment.clone()
-        
+                
         if plot_name:
             if plot_name and not self.op.by:
                 raise util.CytoflowViewError("Plot {} not from plot_enum"
@@ -535,39 +598,23 @@ class GaussianMixture2DView(HasStrictTraits):
                 raise util.CytoflowViewError("Plot {} not from plot_enum"
                                              .format(plot_name))
             
-            temp_experiment.data = groupby.get_group(plot_name)
-            temp_experiment.data.reset_index(drop = True, inplace = True)
+            experiment.data = groupby.get_group(plot_name)
+            experiment.data.reset_index(drop = True, inplace = True)
             
-        try:
-            temp_op = GaussianMixture2DOp()
-            temp_op.copy_traits(self.op, transient = lambda x: True)
-            if not self.name:
-                warnings.warn("Operation name not set!", util.CytoflowViewWarning)
-                temp_op.name = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
-                kwargs.setdefault("legend", False)
-            temp_experiment = temp_op.apply(temp_experiment)
-            cytoflow.ScatterplotView(xchannel = self.xchannel,
-                                     ychannel = self.ychannel,
-                                     xscale = self.xscale,
-                                     yscale = self.yscale,
-                                     huefacet = temp_op.name,
-                                     subset = self.subset).plot(temp_experiment, **kwargs)
-            if plot_name:
-                plt.title("{0} = {1}".format(self.op.by, plot_name))
+        # plot the scatterplot, whether or not we're plotting isolines on top
+            
+        s = cytoflow.ScatterplotView(xchannel = self.op.xchannel,
+                                     ychannel = self.op.ychannel,
+                                     xscale = self.op.xscale,
+                                     yscale = self.op.yscale,
+                                     huefacet = self.op.name if self.op.name in experiment.conditions else "")
+        s.plot(experiment, 
+               xscale = self.op._xscale, 
+               yscale = self.op._yscale,
+               xlim = xlim,
+               ylim = ylim,
+               **kwargs)
 
-        except util.CytoflowOpError as e:
-            warnings.warn(e.__str__(), util.CytoflowViewWarning)
-            cytoflow.ScatterplotView(xchannel = self.xchannel,
-                                     ychannel = self.ychannel,
-                                     xscale = self.xscale,
-                                     yscale = self.yscale,
-                                     subset = self.subset).plot(temp_experiment, **kwargs)
-            if plot_name:
-                plt.title("{0} = {1}".format(self.op.by, plot_name))
-                
-            return
-
-        
         # plot the actual distribution on top of it.  display as a "contour"
         # plot with ellipses at 1, 2, and 3 standard deviations
         # cf. http://scikit-learn.org/stable/auto_examples/mixture/plot_gmm.html

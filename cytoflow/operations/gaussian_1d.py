@@ -23,7 +23,7 @@ Created on Dec 16, 2015
 
 from __future__ import division, absolute_import
 
-import warnings, random, string
+import warnings, random, string, copy
 
 from traits.api import (HasStrictTraits, Str, CStr, Dict, Any, Instance, Bool, 
                         Constant, List, provides, DelegatesTo)
@@ -93,12 +93,32 @@ class GaussianMixture1DOp(HasStrictTraits):
         `Time` and `Dox`.
         
     scale : Enum("linear", "log", "logicle") (default = "linear")
-        Re-scale the data before fitting the data?  
+        Re-scale the data before fitting the model?  
         
     posteriors : Bool (default = False)
         If `True`, add a column named `{Name}_Posterior` giving the posterior
         probability that the event is in the component to which it was
         assigned.  Useful for filtering out low-probability events.
+
+    Statistics
+    ----------
+    mean : Float
+        the mean of the fitted gaussian
+        
+    stdev : Float
+        the inverse-scaled standard deviation of the fitted gaussian.  on a 
+        linear scale, this is in the same units as the mean; on a log scale,
+        this is a scalar multiple; and on a logicle scale, this is probably
+        meaningless!
+        
+    interval : (Float, Float)
+        the inverse-scaled (mean - stdev, mean + stdev) of the fitted gaussian.
+        this is likely more meaningful than `stdev`, especially on the
+        `logicle` scale.
+        
+    proportion : Float
+        the proportion of events in each component of the mixture model.  only
+        set if `num_components` > 1.
         
     Examples
     --------
@@ -150,8 +170,8 @@ class GaussianMixture1DOp(HasStrictTraits):
                                       .format(b))
                 
             
-        if self.num_components == 1 and self.sigma == 0.0:
-            raise util.CytoflowOpError("If num_components == 1, sigma must be > 0")
+        if self.num_components == 1 and self.posteriors:
+            raise util.CytoflowOpError("If num_components == 1, all posteriors are 1.")
         
         if subset:
             try:
@@ -232,6 +252,10 @@ class GaussianMixture1DOp(HasStrictTraits):
         if self.name in experiment.data.columns:
             raise util.CytoflowOpError("Experiment already has a column named {0}"
                                   .format(self.name))
+            
+        if not self._gmms:
+            raise util.CytoflowOpError("No components found.  Did you forget to "
+                                  "call estimate()?")
 
         if not self._scale:
             raise util.CytoflowOpError("Couldn't find _scale.  What happened??")
@@ -239,11 +263,6 @@ class GaussianMixture1DOp(HasStrictTraits):
         if self.channel not in experiment.data:
             raise util.CytoflowOpError("Column {0} not found in the experiment"
                                   .format(self.channel))
-
-            
-        if (self.name + "_Posterior") in experiment.data:
-            raise util.CytoflowOpError("Column {0} already found in the experiment"
-                                  .format(self.name + "_Posterior"))
 
         if self.posteriors:
             col_name = "{0}_Posterior".format(self.name)
@@ -296,7 +315,7 @@ class GaussianMixture1DOp(HasStrictTraits):
             gmm = self._gmms[group]
             x = data_subset[self.channel]
             x = self._scale(x).values
-            
+                        
             # which values are missing?
             x_na = np.isnan(x)
             
@@ -344,14 +363,54 @@ class GaussianMixture1DOp(HasStrictTraits):
                     
         new_experiment = experiment.clone()
         
-        if self.num_components == 1:
+        if self.num_components == 1 and self.sigma > 0:
             new_experiment.add_condition(self.name, "bool", event_assignments == "{0}_1".format(self.name))
-        else:
+        elif self.num_components > 1:
             new_experiment.add_condition(self.name, "category", event_assignments)
             
-        if self.posteriors:
+        if self.posteriors and self.num_components > 1:
             col_name = "{0}_Posterior".format(self.name)
             new_experiment.add_condition(col_name, "float", event_posteriors)
+
+        # add the statistics
+        levels = list(self.by)
+        if self.num_components > 1:
+            levels.append(self.name)
+        
+        if levels:     
+            idx = pd.MultiIndex.from_product([new_experiment[x].unique() for x in levels], 
+                                             names = levels)
+    
+            mean_stat = pd.Series(index = idx, dtype = np.dtype(object)).sort_index()
+            stdev_stat = pd.Series(index = idx, dtype = np.dtype(object)).sort_index()
+            interval_stat = pd.Series(index = idx, dtype = np.dtype(object)).sort_index()
+            prop_stat = pd.Series(index = idx, dtype = np.dtype(object)).sort_index()     
+                                   
+            for group, _ in groupby:
+                gmm = self._gmms[group]
+                for c in range(self.num_components):
+                    g = group
+                    if self.num_components > 1:
+                        component_name = "{}_{}".format(self.name, c + 1)
+                        try:
+                            g.append(component_name)
+                        except AttributeError:
+                            if g is True:
+                                g = component_name
+                            else:
+                                g = (g, component_name)
+                                                         
+                    mean_stat.loc[g] = self._scale.inverse(gmm.means_[c][0])
+                    stdev_stat.loc[g] = self._scale.inverse(np.sqrt(gmm.covars_[c][0]))
+                    interval_stat.loc[g] = (self._scale.inverse(gmm.means_[c][0] - np.sqrt(gmm.covars_[c][0])),
+                                    self._scale.inverse(gmm.means_[c][0] + np.sqrt(gmm.covars_[c][0])))
+                    prop_stat.loc[g] = gmm.weights_[c]
+                     
+            new_experiment.statistics[(self.name, "mean")] = mean_stat
+            new_experiment.statistics[(self.name, "stdev")] = stdev_stat
+            new_experiment.statistics[(self.name, "interval")] = interval_stat
+            if self.num_components > 1:
+                new_experiment.statistics[(self.name, "proportion")] = prop_stat
             
         new_experiment.history.append(self.clone_traits(transient = lambda t: True))
         return new_experiment
@@ -370,20 +429,9 @@ class GaussianMixture1DOp(HasStrictTraits):
 class GaussianMixture1DView(HasStrictTraits):
     """
     Attributes
-    ----------
-    name : Str
-        The instance name (for serialization, UI etc.)
-        
+    ----------    
     op : Instance(GaussianMixture1DOp)
         The op whose parameters we're viewing.
-        
-    num_plots: Property(Int)
-        A read-only property that computes the number of plots from the 
-        
-        
-    plot_idx : Python expression (default: None)
-        The subset of data to display.  Must match one of the keys of 
-        `op._gmms`.  If `None` (the default), display a plot for each subset.
     """
     
     id = 'edu.mit.synbio.cytoflow.view.gaussianmixture1dview'
@@ -391,9 +439,6 @@ class GaussianMixture1DView(HasStrictTraits):
     
     # TODO - why can't I use GaussianMixture1DOp here?
     op = Instance(IOperation)
-    name = DelegatesTo('op')
-    channel = DelegatesTo('op')
-    scale = DelegatesTo('op')
     subset = Str
         
     def enum_plots(self, experiment):
@@ -432,22 +477,48 @@ class GaussianMixture1DView(HasStrictTraits):
         """
         if not experiment:
             raise util.CytoflowViewError("No experiment specified")
-        
-        if not self.channel:
-            raise util.CytoflowViewError("No channel specified")
-                   
-        if self.channel not in experiment.data:
-            raise util.CytoflowViewError("Channel {0} not found in the experiment"
-                                  .format(self.channel))
               
+        if not self.op._gmms:
+            raise util.CytoflowOpError("No model found.  Did you forget to "
+                                       "call estimate()?")
+            
+        experiment = experiment.clone()
+        
+        # try to apply the current operation
+        try:
+            experiment = self.op.apply(experiment)
+        except util.CytoflowOpError:
+            pass           
+        
+        if self.subset:
+            try:
+                experiment = experiment.query(self.subset)
+                experiment.data.reset_index(drop = True, inplace = True)
+            except:
+                raise util.CytoflowViewError("Subset string '{0}' isn't valid"
+                                        .format(self.subset))
+                
+            if len(experiment) == 0:
+                raise util.CytoflowViewError("Subset string '{0}' returned no events"
+                                        .format(self.subset))   
+        
+        # figure out common x limits
+        # adjust the limits to clip extreme values
+        min_quantile = kwargs.pop("min_quantile", 0.001)
+        max_quantile = kwargs.pop("max_quantile", 0.999) 
+                
+        xlim = kwargs.pop("xlim", None)
+        if xlim is None:
+            xlim = (experiment.data[self.op.channel].quantile(min_quantile),
+                    experiment.data[self.op.channel].quantile(max_quantile))
+              
+        # see if we're making subplots
         if self.op.by and not plot_name:
             for plot in self.enum_plots(experiment):
-                self.plot(experiment, plot, **kwargs)
+                self.plot(experiment, plot, xlim = xlim, **kwargs)
                 plt.title("{0} = {1}".format(self.op.by, plot))
             return
-                                
-        temp_experiment = experiment.clone()
-        
+                                        
         if plot_name:
             if plot_name and not self.op.by:
                 raise util.CytoflowViewError("Plot {} not from plot_enum"
@@ -458,45 +529,28 @@ class GaussianMixture1DView(HasStrictTraits):
             if plot_name not in set(groupby.groups.keys()):
                 raise util.CytoflowViewError("Plot {} not from plot_enum"
                                              .format(plot_name))
-            temp_experiment.data = groupby.get_group(plot_name)
-            temp_experiment.data.reset_index(drop = True, inplace = True)
+                
+            experiment.data = groupby.get_group(plot_name)
+            experiment.data.reset_index(drop = True, inplace = True)
             
-        try:
-            temp_op = GaussianMixture1DOp()
-            temp_op.copy_traits(self.op, transient = lambda x: True)
-            if not self.name:
-                warnings.warn("Operation name not set!", util.CytoflowViewWarning)
-                temp_op.name = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
-                kwargs.setdefault("legend", False)
-            temp_experiment = temp_op.apply(temp_experiment)
-            cytoflow.HistogramView(channel = self.channel,
-                                   scale = self.scale,
-                                   subset = self.subset,
-                                   huefacet = temp_op.name).plot(temp_experiment, **kwargs)
-            if plot_name:
-                plt.title("{0} = {1}".format(self.op.by, plot_name))
-
-        except util.CytoflowOpError as e:
-            warnings.warn(e.__str__(), util.CytoflowViewWarning)
-            cytoflow.HistogramView(channel = self.channel,
-                                   scale = self.scale,
-                                   subset = self.subset).plot(temp_experiment, **kwargs)
-            if plot_name:
-                plt.title("{0} = {1}".format(self.op.by, plot_name))
-
-            return  
+        # plot the histogram, whether or not we're plotting distributions on top
         
+        hist = cytoflow.HistogramView(channel = self.op.channel,
+                                      scale = self.op.scale,
+                                      huefacet = self.op.name if self.op.name in experiment.conditions else "")
+        hist.plot(experiment, scale = self.op._scale, xlim = xlim, **kwargs)
+         
         # get the parameterized scale object back from the op
         scale = self.op._scale
-        
+         
         # plot the actual distribution on top of it.
-        
+         
         # we want to scale the plots so they have the same area under the
         # curve as the histograms.  it used to be that we got the area from
         # repeating the assignments, then calculating bin widths, etc.  but
         # really, if we just plotted the damn thing already, we can get the
         # area of the plot from the Polygon patch that we just plotted!
-
+ 
         if plot_name:
             if plot_name in self.op._gmms:
                 gmm = self.op._gmms[plot_name]
@@ -507,18 +561,18 @@ class GaussianMixture1DView(HasStrictTraits):
                 return
         else:
             gmm = self.op._gmms[True]                
-                              
+                               
         for i in range(0, len(gmm.means_)):
             patch = plt.gca().patches[i]
             xy = patch.get_xy()
             pdf_scale = poly_area([scale(p[0]) for p in xy], [p[1] for p in xy])
-            
+             
             # cheat a little
-            pdf_scale *= 1.2
-            
+            pdf_scale *= 1.1
+             
             plt_min, plt_max = plt.gca().get_xlim()
             x = scale.inverse(np.linspace(scale(plt_min), scale(plt_max), 500))     
-                   
+                    
             mean = gmm.means_[i][0]
             stdev = np.sqrt(gmm.covars_[i][0])
             y = stats.norm.pdf(scale(x), mean, stdev) * pdf_scale

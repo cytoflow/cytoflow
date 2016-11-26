@@ -117,7 +117,10 @@ class HistogramView(HasStrictTraits):
             data = experiment.data
         
         # get the scale
-        scale = util.scale_factory(self.scale, experiment, channel = self.channel)
+        scale = kwargs.pop('scale', None)
+        if scale is None:
+            scale = util.scale_factory(self.scale, experiment, channel = self.channel)
+
         scaled_data = scale(data[self.channel])
                 
         kwargs.setdefault('histtype', 'stepfilled')

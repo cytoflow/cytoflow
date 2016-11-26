@@ -164,8 +164,13 @@ class ScatterplotView(HasStrictTraits):
                           xlim = xlim,
                           ylim = ylim)
         
-        xscale = util.scale_factory(self.xscale, experiment, channel = self.xchannel)
-        yscale = util.scale_factory(self.yscale, experiment, channel = self.ychannel)
+        xscale = kwargs.pop('xscale', None)
+        if xscale is None:
+            xscale = util.scale_factory(self.xscale, experiment, channel = self.xchannel)
+        
+        yscale = kwargs.pop('yscale', None)
+        if yscale is None:
+            yscale = util.scale_factory(self.yscale, experiment, channel = self.ychannel)
         
         for ax in g.axes.flatten():
             ax.set_xscale(self.xscale, **xscale.mpl_params)
