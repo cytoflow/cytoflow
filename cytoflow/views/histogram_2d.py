@@ -192,8 +192,11 @@ class Histogram2DView(HasStrictTraits):
             ylim = (data[self.ychannel].quantile(min_quantile),
                     data[self.ychannel].quantile(max_quantile))
 
+        cols = col_wrap if col_wrap else \
+               len(data[self.xfacet].unique()) if self.xfacet else 1
+
         g = sns.FacetGrid(data,
-                          size = (6 / col_wrap if col_wrap else 6),
+                          size = (6 / cols),
                           aspect = 1.5, 
                           col = (self.xfacet if self.xfacet else None),
                           row = (self.yfacet if self.yfacet else None),

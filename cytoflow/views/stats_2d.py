@@ -298,9 +298,10 @@ class Stats2DView(HasStrictTraits):
         data.sort_values(by = [xname], inplace = True)
                       
         kwargs.setdefault('antialiased', True)
-                 
+        cols = col_wrap if col_wrap else \
+               len(data[self.xfacet].unique()) if self.xfacet else 1
         grid = sns.FacetGrid(data,
-                             size = (6 / col_wrap if col_wrap else 6),
+                             size = (6 / cols),
                              aspect = 1.5,
                              col = (self.xfacet if self.xfacet else None),
                              row = (self.yfacet if self.yfacet else None),
