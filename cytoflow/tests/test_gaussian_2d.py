@@ -87,7 +87,17 @@ class Test(unittest.TestCase):
         self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_2", 10], 2398)
          
         self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_None", 1], 4838)        
-        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_None", 10], 5151)        
+        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_None", 10], 5151) 
+        
+    def testStatistics(self): 
+        self.gate.by = ["Dox"]
+        self.gate.estimate(self.ex)
+        ex2 = self.gate.apply(self.ex)
+        
+        stat = ex2.statistics[("Gauss", "mean")]
+        
+        self.assertIn("Gauss", stat.index.names)
+        self.assertIn("Dox", stat.index.names)       
     
     def testPlot(self):
         self.gate.estimate(self.ex)
@@ -100,5 +110,5 @@ class Test(unittest.TestCase):
         
 
 if __name__ == "__main__":
-    #import sys;sys.argv = ['', 'Test.testName']
+#     import sys;sys.argv = ['', 'Test.testName']
     unittest.main()
