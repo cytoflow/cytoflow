@@ -23,10 +23,11 @@ Created on Dec 16, 2015
 
 from __future__ import division, absolute_import
 
-import warnings, random, string
+from warnings import warn
+from itertools import product
 
 from traits.api import (HasStrictTraits, Str, CStr, Dict, Any, Instance, Bool, 
-                        Constant, List, provides, DelegatesTo)
+                        Constant, List, provides, DelegatesTo, Property)
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -486,19 +487,12 @@ import matplotlib.patches as patches
 import matplotlib.transforms as transforms
     
 @provides(cytoflow.views.IView)
-class GaussianMixture2DView(HasStrictTraits):
+class GaussianMixture2DView(cytoflow.views.ScatterplotView):
     """
     Attributes
     ----------
-    name : Str
-        The instance name (for serialization, UI etc.)
-        
     op : Instance(GaussianMixture2DOp)
-        The op whose parameters we're viewing.
-        
-    group : Python (default: None)
-        The subset of data to display.  Must match one of the keys of 
-        `op._gmms`.  If `None` (the default), display a plot for each subset.
+        The op whose parameters we're viewing.        
     """
     
     id = 'edu.mit.synbio.cytoflow.view.gaussianmixture2dview'
@@ -506,21 +500,53 @@ class GaussianMixture2DView(HasStrictTraits):
     
     # TODO - why can't I use GaussianMixture2DOp here?
     op = Instance(IOperation)
-    subset = Str
+    xchannel = DelegatesTo('op')
+    ychannel = DelegatesTo('op')
+    xscale = DelegatesTo('op')
+    yscale = DelegatesTo('op')
     
+    _by = Property(List)
+    
+    def _get__by(self):
+        facets = filter(lambda x: x, [self.xfacet, self.yfacet])
+        return list(set(self.op.by) - set(facets))
+        
     def enum_plots(self, experiment):
         """
         Returns an iterator over the possible plots that this View can
         produce.  The values returned can be passed to "plot".
         """
+    
+        if self.xfacet and self.xfacet not in experiment.conditions:
+            raise util.CytoflowViewError("X facet {} not in the experiment"
+                                    .format(self.xfacet))
+            
+        if self.xfacet and self.xfacet not in self.op.by:
+            raise util.CytoflowViewError("X facet {} must be in GaussianMixture1DOp.by, which is {}"
+                                    .format(self.xfacet, self.op.by))
         
+        if self.yfacet and self.yfacet not in experiment.conditions:
+            raise util.CytoflowViewError("Y facet {0} not in the experiment"
+                                    .format(self.yfacet))
+            
+        if self.yfacet and self.yfacet not in self.op.by:
+            raise util.CytoflowViewError("Y facet {} must be in GaussianMixture1DOp.by, which is {}"
+                                    .format(self.yfacet, self.op.by))
+            
+        for b in self.op.by:
+            if b not in experiment.data:
+                raise util.CytoflowOpError("Aggregation metadata {0} not found"
+                                      " in the experiment"
+                                      .format(b))    
+    
         class plot_enum(object):
             
-            def __init__(self, op, experiment):
+            def __init__(self, view, experiment):
                 self._iter = None
                 self._returned = False
-                if op.by:
-                    self._iter = experiment.data.groupby(op.by).__iter__()
+                
+                if view._by:
+                    self._iter = experiment.data.groupby(view._by).__iter__()
                 
             def __iter__(self):
                 return self
@@ -535,13 +561,12 @@ class GaussianMixture2DView(HasStrictTraits):
                         self._returned = True
                         return None
             
-        return plot_enum(self.op, experiment)
+        return plot_enum(self, experiment)
     
     def plot(self, experiment, plot_name = None, **kwargs):
         """
         Plot the plots.
         """
-        
         if not experiment:
             raise util.CytoflowViewError("No experiment specified")
 
@@ -552,6 +577,13 @@ class GaussianMixture2DView(HasStrictTraits):
             experiment = self.op.apply(experiment)
         except util.CytoflowOpError:
             pass
+        
+        # if apply() succeeded (or wasn't needed), set up the hue facet
+        if self.op.name and self.op.name in experiment.conditions:
+            if self.huefacet and self.huefacet != self.op.name:
+                warn("Resetting huefacet to the model component (was {}, now {})."
+                     .format(self.huefacet, self.op.name))
+            self.huefacet = self.op.name
         
         if self.subset:
             try:
@@ -580,19 +612,19 @@ class GaussianMixture2DView(HasStrictTraits):
             ylim = (experiment.data[self.op.ychannel].quantile(min_quantile),
                     experiment.data[self.op.ychannel].quantile(max_quantile))
               
-        # now, are we making subplots?
-        if self.op.by and not plot_name:
+        # see if we're making subplots
+        if self._by and not plot_name:
             for plot in self.enum_plots(experiment):
                 self.plot(experiment, plot, **kwargs)
                 plt.title("{0} = {1}".format(self.op.by, plot))
             return
                 
         if plot_name:
-            if plot_name and not self.op.by:
+            if plot_name and not self._by:
                 raise util.CytoflowViewError("Plot {} not from plot_enum"
                                              .format(plot_name))
                 
-            groupby = experiment.data.groupby(self.op.by)
+            groupby = experiment.data.groupby(self._by)
             
             if plot_name not in set(groupby.groups.keys()):
                 raise util.CytoflowViewError("Plot {} not from plot_enum"
@@ -602,76 +634,95 @@ class GaussianMixture2DView(HasStrictTraits):
             experiment.data.reset_index(drop = True, inplace = True)
             
         # plot the scatterplot, whether or not we're plotting isolines on top
-            
-        s = cytoflow.ScatterplotView(xchannel = self.op.xchannel,
-                                     ychannel = self.op.ychannel,
-                                     xscale = self.op.xscale,
-                                     yscale = self.op.yscale,
-                                     huefacet = self.op.name if self.op.name in experiment.conditions else "")
-        s.plot(experiment, 
-               xscale = self.op._xscale, 
-               yscale = self.op._yscale,
-               xlim = xlim,
-               ylim = ylim,
-               **kwargs)
+        
+        g = super(GaussianMixture2DView, self).plot(experiment, 
+                                                    xscale = self.op._xscale, 
+                                                    yscale = self.op._yscale,
+                                                    xlim = xlim, 
+                                                    ylim = ylim,
+                                                    **kwargs)
 
         # plot the actual distribution on top of it.  display as a "contour"
         # plot with ellipses at 1, 2, and 3 standard deviations
         # cf. http://scikit-learn.org/stable/auto_examples/mixture/plot_gmm.html
         
-        if plot_name:
-            if plot_name in self.op._gmms:
-                gmm = self.op._gmms[plot_name]
-            else:
-                # there weren't any events in this subset to estimate a GMM from
-                warnings.warn("No estimated GMM for plot {}".format(plot_name),
-                              util.CytoflowViewWarning)
-                return
-        else:
-            gmm = self.op._gmms[True] 
+        row_names = g.row_names if g.row_names else [False]
+        col_names = g.col_names if g.col_names else [False]
         
-        for i, (mean, covar) in enumerate(zip(gmm.means_, gmm._get_covars())):    
-            v, w = linalg.eigh(covar)
-            u = w[0] / linalg.norm(w[0])
+        for (i, row), (j, col) in product(enumerate(row_names),
+                                          enumerate(col_names)):
             
-            #rotation angle (in degrees)
-            t = np.arctan(u[1] / u[0])
-            t = 180 * t / np.pi
-                       
-            color_i = i % len(sns.color_palette())
-            color = sns.color_palette()[color_i]
-            
-            # in order to scale the ellipses correctly, we have to make them
-            # ourselves out of an affine-scaled unit circle.  The interface
-            # is the same as matplotlib.patches.Ellipse
-            
-            self._plot_ellipse(mean,
-                               np.sqrt(v[0]),
-                               np.sqrt(v[1]),
-                               180 + t,
-                               color = color,
-                               fill = False,
-                               linewidth = 2)
+            facets = filter(lambda x: x, [row, col])
+            if facets:
+                try:
+                    gmm_name = list(plot_name).extend(facets)
+                except TypeError: # plot_name isn't a list
+                    gmm_name = list([plot_name]).extend(facets)
+            else:
+                gmm_name = plot_name
+                
 
-            self._plot_ellipse(mean,
-                               np.sqrt(v[0]) * 2,
-                               np.sqrt(v[1]) * 2,
-                               180 + t,
-                               color = color,
-                               fill = False,
-                               linewidth = 2,
-                               alpha = 0.66)
-            
-            self._plot_ellipse(mean,
-                               np.sqrt(v[0]) * 3,
-                               np.sqrt(v[1]) * 3,
-                               180 + t,
-                               color = color,
-                               fill = False,
-                               linewidth = 2,
-                               alpha = 0.33)
+            if gmm_name:
+                if gmm_name in self.op._gmms:
+                    gmm = self.op._gmms[gmm_name]
+                else:
+                    # there weren't any events in this subset to estimate a GMM from
+                    warn("No estimated GMM for plot {}".format(gmm_name),
+                          util.CytoflowViewWarning)
+                    return g
+            else:
+                if True in self.op._gmms:
+                    gmm = self.op._gmms[True]
+                else:
+                    return g           
+                
+            ax = g.facet_axis(i, j)
+        
+            for k, (mean, covar) in enumerate(zip(gmm.means_, gmm._get_covars())):    
+                v, w = linalg.eigh(covar)
+                u = w[0] / linalg.norm(w[0])
+                
+                #rotation angle (in degrees)
+                t = np.arctan(u[1] / u[0])
+                t = 180 * t / np.pi
+                           
+                color_k = k % len(sns.color_palette())
+                color = sns.color_palette()[color_k]
+                
+                # in order to scale the ellipses correctly, we have to make them
+                # ourselves out of an affine-scaled unit circle.  The interface
+                # is the same as matplotlib.patches.Ellipse
+                
+                self._plot_ellipse(ax,
+                                   mean,
+                                   np.sqrt(v[0]),
+                                   np.sqrt(v[1]),
+                                   180 + t,
+                                   color = color,
+                                   fill = False,
+                                   linewidth = 2)
+    
+                self._plot_ellipse(ax, 
+                                   mean,
+                                   np.sqrt(v[0]) * 2,
+                                   np.sqrt(v[1]) * 2,
+                                   180 + t,
+                                   color = color,
+                                   fill = False,
+                                   linewidth = 2,
+                                   alpha = 0.66)
+                
+                self._plot_ellipse(ax, 
+                                   mean,
+                                   np.sqrt(v[0]) * 3,
+                                   np.sqrt(v[1]) * 3,
+                                   180 + t,
+                                   color = color,
+                                   fill = False,
+                                   linewidth = 2,
+                                   alpha = 0.33)
                          
-    def _plot_ellipse(self, center, width, height, angle, **kwargs):
+    def _plot_ellipse(self, ax, center, width, height, angle, **kwargs):
         tf = transforms.Affine2D() \
              .scale(width * 0.5, height * 0.5) \
              .rotate_deg(angle) \
@@ -684,7 +735,7 @@ class GaussianMixture2DView(HasStrictTraits):
 
         scaled_path = path.Path(v, tf_path.codes)
         scaled_patch = patches.PathPatch(scaled_path, **kwargs)
-        plt.gca().add_patch(scaled_patch)
+        ax.add_patch(scaled_patch)
             
              
 
