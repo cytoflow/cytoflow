@@ -653,14 +653,16 @@ class GaussianMixture2DView(cytoflow.views.ScatterplotView):
                                           enumerate(col_names)):
             
             facets = filter(lambda x: x, [row, col])
-            if facets:
+            if plot_name:
                 try:
-                    gmm_name = list(plot_name).extend(facets)
+                    gmm_name = list(plot_name) + facets
                 except TypeError: # plot_name isn't a list
-                    gmm_name = list([plot_name]).extend(facets)
-            else:
-                gmm_name = plot_name
+                    gmm_name = list([plot_name]) + facets  
+            else:      
+                gmm_name = facets
                 
+            if len(gmm_name) == 1:
+                gmm_name = gmm_name[0]   
 
             if gmm_name:
                 if gmm_name in self.op._gmms:
