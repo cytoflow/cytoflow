@@ -198,6 +198,27 @@ def geom_sem(a):
     return u * np.std(np.log(a)) / np.sqrt(a.size)
 
     
+def geom_sem_range(a):
+    """
+    A convenience function to compute [geom_mean / geom_sem, geom_mean * geom_sem].
+    
+    Parameters
+    ----------
+    
+    a : array-like
+        A numpy.ndarray, or something that can be converted to an ndarray
+        
+    Returns
+    -------
+    A tuple, with `(geom_mean / geom_sem, geom_mean * geom_sem)`
+    """
+    
+    u = geom_mean(a)
+    sem = geom_sem(a)
+    
+    return (u / sem, u * sem)
+
+    
 def cartesian(arrays, out=None):
     """
     Generate a cartesian product of input arrays.
