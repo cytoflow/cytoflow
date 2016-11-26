@@ -220,6 +220,11 @@ class Stats1DView(HasStrictTraits):
             raise util.CytoflowViewError("Hue facet {} is not a statistic index; "
                                          "must be one of {}".format(self.huefacet, data.index.names))  
             
+        col_wrap = kwargs.pop('col_wrap', None)
+        
+        if col_wrap and self.yfacet:
+            raise util.CytoflowViewError("Can't set yfacet and col_wrap at the same time.") 
+            
         facets = filter(lambda x: x, [self.xvariable, self.xfacet, self.yfacet, self.huefacet])
         if set(facets) != set(data.index.names):
             raise util.CytoflowViewError("Must use all the statistic indices as variables or facets: {}"
@@ -229,7 +234,7 @@ class Stats1DView(HasStrictTraits):
         
         kwargs.setdefault('antialiased', True)            
         grid = sns.FacetGrid(data,
-                             size = 6,
+                             size = (6 / col_wrap if col_wrap else 6),
                              aspect = 1.5,
                              col = (self.xfacet if self.xfacet else None),
                              row = (self.yfacet if self.yfacet else None),
@@ -237,6 +242,7 @@ class Stats1DView(HasStrictTraits):
                              col_order = (np.sort(data[self.xfacet].unique()) if self.xfacet else None),
                              row_order = (np.sort(data[self.yfacet].unique()) if self.yfacet else None),
                              hue_order = (np.sort(data[self.huefacet].unique()) if self.huefacet else None),
+                             col_wrap = col_wrap,
                              legend_out = False,
                              sharex = False,
                              sharey = False)

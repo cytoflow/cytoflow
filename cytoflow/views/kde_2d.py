@@ -118,6 +118,11 @@ class Kde2DView(HasStrictTraits):
         if self.huefacet and self.huefacet not in experiment.metadata:
             raise util.CytoflowViewError("Hue facet {0} not in the experiment"
                                          .format(self.huefacet))
+            
+        col_wrap = kwargs.pop('col_wrap', None)
+        
+        if col_wrap and self.yfacet:
+            raise util.CytoflowViewError("Can't set yfacet and col_wrap at the same time.") 
         
         if self.subset:
             try:
@@ -152,7 +157,7 @@ class Kde2DView(HasStrictTraits):
                     data[self.ychannel].quantile(max_quantile))
 
         g = sns.FacetGrid(data, 
-                          size = 6,
+                          size = (6 / col_wrap if col_wrap else 6),
                           aspect = 1.5,
                           col = (self.xfacet if self.xfacet else None),
                           row = (self.yfacet if self.yfacet else None),
@@ -160,6 +165,7 @@ class Kde2DView(HasStrictTraits):
                           col_order = (np.sort(data[self.xfacet].unique()) if self.xfacet else None),
                           row_order = (np.sort(data[self.yfacet].unique()) if self.yfacet else None),
                           hue_order = (np.sort(data[self.huefacet].unique()) if self.huefacet else None),
+                          col_wrap = col_wrap,
                           legend_out = False,
                           sharex = False,
                           sharey = False,
