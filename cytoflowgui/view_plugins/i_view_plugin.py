@@ -21,7 +21,8 @@ Created on Mar 15, 2015
 @author: brian
 """
 
-from traits.api import Interface, Str, HasTraits, Instance, on_trait_change
+from traits.api import (Interface, Str, HasTraits, Instance, on_trait_change, 
+                        Dict, List, Property)
 from traitsui.api import Handler
 
 from cytoflowgui.util import DelayedEvent
@@ -60,6 +61,19 @@ class IViewPlugin(Interface):
 class PluginViewMixin(HasTraits):
     handler = Instance(Handler, transient = True)    
     changed = DelayedEvent(delay = 0.1)
+    
+    subset_dict = Dict(Str, List)
+    subset = Property
+    
+    def _get_subset(self):
+        ret = ""
+        for key, values in self.subset_dict.iteritems():
+            for val in values:
+                if ret:
+                    ret += " or "
+                if isinstance(val, basestring):
+                    val = '"{}"'.format(val)
+                ret += "{} == {}".format(key, val)
     
     # why can't we just put this in a workflow listener?  it's because
     # we sometimes need to override or supplement it on a per-module basis

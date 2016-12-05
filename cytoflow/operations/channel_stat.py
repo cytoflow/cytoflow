@@ -91,8 +91,8 @@ class ChannelStatisticOp(HasStrictTraits):
     >>> ex2 = stats_op.apply(ex)
     """
     
-    id = Constant('edu.mit.synbio.cytoflow.operations.statistics')
-    friendly_id = Constant("Statistics")
+    id = Constant('edu.mit.synbio.cytoflow.operations.channel_statistic')
+    friendly_id = Constant("Channel Statistics")
     
     name = CStr()
     channel = Str()

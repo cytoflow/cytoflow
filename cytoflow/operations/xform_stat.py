@@ -85,8 +85,8 @@ class TransformStatisticOp(HasStrictTraits):
     >>> ex3 = log_op.apply(ex2)  
     """
     
-    id = Constant('edu.mit.synbio.cytoflow.operations.statistics')
-    friendly_id = Constant("Statistics")
+    id = Constant('edu.mit.synbio.cytoflow.operations.transform_statistic')
+    friendly_id = Constant("Transform Statistic")
     
     name = CStr()
     statistic = Tuple(Str, Str)

@@ -26,15 +26,12 @@ from range2d import Range2DPlugin
 from polygon import PolygonPlugin
 from quad import QuadPlugin
 
-# transforms 
-from log import LogPlugin
-from hlog import HLogPlugin
-from logicle import LogiclePlugin
-
-# etc
+# data-drive
 from binning import BinningPlugin
 from gaussian_1d import GaussianMixture1DPlugin
 from gaussian_2d import GaussianMixture2DPlugin
+from channel_stat import ChannelStatisticPlugin
+from xform_stat import TransformStatisticPlugin
 
 # tasbe
 from bleedthrough_linear import BleedthroughLinearPlugin

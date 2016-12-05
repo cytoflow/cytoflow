@@ -21,7 +21,7 @@ Created on Mar 23, 2015
 @author: brian
 '''
 
-import logging, re
+import logging
 
 # for local debugging
 if __name__ == '__main__':
@@ -30,29 +30,30 @@ if __name__ == '__main__':
 
     import os
     os.environ['TRAITS_DEBUG'] = "1"
+    
+import pandas as pd
 
 from traits.api import Instance, HasStrictTraits, List, CFloat, Str, Dict, Interface, \
-                       Property, Bool, provides, DelegatesTo, Any
+                       Property, Bool, provides, DelegatesTo, on_trait_change
 from traitsui.api import BasicEditorFactory, View, UI, \
                          CheckListEditor, Item, HGroup, ListEditor, InstanceEditor
 from traitsui.qt4.editor import Editor
 
-from cytoflow.utility import sanitize_identifier
 from cytoflowgui.value_bounds_editor import ValuesBoundsEditor
 
-class ICondition(Interface):
+class IConditionModel(Interface):
     name = Str
     values = List
-    subset_str = Property
+    subset = Property(List)
     
-@provides(ICondition)
+@provides(IConditionModel)
 class BoolCondition(HasStrictTraits):
     name = Str
     values = List  # unused
     selected_t = Bool(False)
     selected_f = Bool(False)
-    subset_str = Property(trait = Str,
-                          depends_on = "name, selected_t, selected_f")
+    
+    subset = Property(List)
     
     def default_traits_view(self):
         return View(HGroup(Item('selected_t',
@@ -60,82 +61,43 @@ class BoolCondition(HasStrictTraits):
                            Item('selected_f',
                                 label = self.name + "-")))
     
-    # MAGIC: gets the value of the Property trait "subset_str"
-    def _get_subset_str(self):
-        if self.selected_t and not self.selected_f:
-            return "({0} == True)".format(sanitize_identifier(self.name))
-        elif not self.selected_t and self.selected_f:
-            return "({0} == False)".format(sanitize_identifier(self.name))
-        else:
-            return ""
+    # MAGIC: gets the value of the Property trait "subset"
+    def _get_subset(self):
+        ret = []
+        if self.selected_t:
+            ret += [True]
+        if self.selected_f:
+            ret += [False]
+            
+        return ret
     
-    def _set_subset_str(self, val):
-        """Update the view based on a subset string"""
-        if val == "({0} == True)".format(sanitize_identifier(self.name)):
+    def _set_subset(self, val):
+        if True in val:
             self.selected_t = True
-            self.selected_f = False
-        elif val == "({0} == False)".format(sanitize_identifier(self.name)):
-            self.selected_t = False
+        if False in val:
             self.selected_f = True
-        else:
-            self.selected_t = False
-            self.selected_f = False
 
-@provides(ICondition)
+@provides(IConditionModel)
 class CategoryCondition(HasStrictTraits):
     name = Str
     values = List
-    selected = List
-    subset_str = Property(trait = Str,
-                          depends_on = 'name, selected[]')
+    subset = List
     
     def default_traits_view(self):
-        return View(Item('selected',
+        return View(Item('subset',
                          label = self.name,
                          editor = CheckListEditor(values = self.values,
                                                   cols = 2),
                          style = 'custom'))
 
-    # MAGIC: gets the value of the Property trait "subset_str"
-    def _get_subset_str(self):
-        if len(self.selected) == 0:
-            return ""
-        
-        phrase = "("
-        for cat in self.selected:
-            if len(phrase) > 1:
-                phrase += " or "
-            phrase += "{0} == \"{1}\"".format(sanitize_identifier(self.name), cat) 
-        phrase += ")"
-        
-        return phrase
-    
-    def _set_subset_str(self, val):
-        if not val:
-            self.selected = []
-            return
-        
-        if val.startswith("("):
-            val = val[1:]
-        if val.endswith(")"):
-            val = val[:-1]
-            
-        selected = []
-        for s in val.split(" or "):
-            cat = re.search(" == \"(\w+)\"$", s).group(1)
-            selected.append(cat)
-            
-        self.selected = selected
-
-@provides(ICondition)
+@provides(IConditionModel)
 class RangeCondition(HasStrictTraits):
     name = Str
     values = List
     high = CFloat
     low = CFloat
     
-    subset_str = Property(trait = Str,
-                          depends_on = "name, low, high")
+    subset = Property(List)
     
     def default_traits_view(self):
         return View(Item('high',
@@ -147,24 +109,21 @@ class RangeCondition(HasStrictTraits):
                                      auto_set = False)))
     
     # MAGIC: gets the value of the Property trait "subset_str"
-    def _get_subset_str(self):
+    def _get_subset(self):
         if self.low == self.values[0] and self.high == self.values[-1]:
-            return ""
-         
-        return "({0} >= {1} and {0} <= {2})" \
-            .format(sanitize_identifier(self.name), self.low, self.high)
+            return []
+        
+        return [x for x in self.values if x >= self.low and x <= self.high]
             
     # MAGIC: when the Property trait "subset_str" is set, update the editor.
-    def _set_subset_str(self, val):
-        # because low and high are CFloats, we can just assign the string
-        # and they'll get "C"onverted
+    def _set_subset(self, val):
         if not val:
             self.low = self._low_default()
             self.high = self._high_default()
             return
         
-        self.low = re.search(r">= ([0-9.]+)", val).group(1)
-        self.high = re.search(r"<= ([0-9.]+)", val).group(1)
+        self.low = min(val)
+        self.high = min(val)
     
     # MAGIC: the default value for self.high
     def _high_default(self):
@@ -176,107 +135,91 @@ class RangeCondition(HasStrictTraits):
 
 class SubsetModel(HasStrictTraits):
 
+    # the conditions we get from the Experiment
+    conditions = Dict(Str, pd.Series)
+    
     # the core of the model; the traits view is a bunch of
     # InstanceEditors for this list.
-    conditions = List(ICondition)
+    condition_models = List(IConditionModel)
     
     # maps a condition name to an ICondition instance
-    conditions_map = Dict(Str, Instance(ICondition))
+    condition_models_map = Dict(Str, Instance(IConditionModel))
     
-    # the pieces needed to set up the editors
-    conditions_types = Dict(Str, Str)
-    conditions_values = Dict(Str, List(Any))
-    
-    # the actual string representation of this model: something you
-    # can feed to pandas.DataFrame.subset()    
-    subset_str = Property(trait = Str,
-                          depends_on = "conditions.subset_str")
-    
-    _subset_str = Str()
+    # the actual Dict representation of this model 
+    subset = Property(Dict, depends_on = "conditions.subset")
       
-    traits_view = View(Item('conditions',
+    traits_view = View(Item('condition_models',
                             style = 'custom',
                             show_label = False,
                             editor = ListEditor(editor = InstanceEditor(),
                                                 style = 'custom',
                                                 mutable = False)))
         
-    # MAGIC: gets the value of the Property trait "subset_string"
-    def _get_subset_str(self):
-        subset_strings = [c.subset_str for c in self.conditions]
-        subset_strings = filter(lambda x: x, subset_strings)
-        return " and ".join(subset_strings)
+    # MAGIC: gets the value of the Property trait "subset"
+    def _get_subset(self):
+        return {name: model.subset 
+                for name, model in self.condition_models_map.iteritems()}
 
-    # MAGIC: when the Property trait "subset_string" is assigned to,
+    # MAGIC: when the Property trait "subset" is assigned to,
     # update the view
-    def _set_subset_str(self, value):
-        self._subset_str = value
-        self._update_subeditors()
-        
-    def _update_subeditors(self):
-        # reset everything
-        for condition in self.conditions:
-            condition.subset_str = ""
-            
-        # abort if there's nothing to parse
-        if not self._subset_str:
-            return
-        
-        # this parser is ugly and brittle.  TODO - replace me with
-        # something from pyparsing.  ie, see
-        # http://pyparsing.wikispaces.com/file/view/simpleBool.py
+    def _set_subset(self, value):
+        for name, subset in value.iteritems():
+            self.condition_models_map[name].subset = subset
                 
-        phrases = self._subset_str.split(r") and (")
-        if phrases[0] == "":  # only had one phrase, not a conjunction
-            phrases = [self._subset_str]
-            
-        for phrase in phrases:
-            if not phrase.startswith("("):
-                phrase = "(" + phrase
-            if not phrase.endswith(")"):
-                phrase = phrase + ")"
-            name = re.match(r"\((\w+) ", phrase).group(1)
-            
-            # update the subset editor ui
-            if name in self.conditions_map:
-                self.conditions_map[name].subset_str = phrase
-            
-            
-    def _on_types_change(self, obj, name, old, new):
+    @on_trait_change('conditions', dispatch = 'ui')
+    def _on_conditions_change(self, obj, name, old, new):
         model_map = {"bool" : BoolCondition,
-                    "category" : CategoryCondition,
-                    "float" : RangeCondition,
-                    "int" : RangeCondition}
+                     "category" : CategoryCondition,
+                     "float" : RangeCondition,
+                     "int" : RangeCondition}
+        
+        self.condition_models = []
+        self.condition_models_map = {}
          
-        for name, dtype in self.conditions_types.iteritems(): 
-            if name in self.conditions_values:            
-                condition = model_map[dtype](name = name, 
-                                             values = self.conditions_values[name])
+        for name, values in self.conditions.iteritems():
+            dtype = values.dtype
+            model = model_map[dtype](name = name, 
+                                     values = list(values))
                 
-                self.conditions.append(condition)
-                self.conditions_map[name] = condition
-                
-        self._update_subeditors()
-        
-    
-    def _on_values_change(self, obj, name, old, new):        
-        model_map = {"bool" : BoolCondition,
-                    "category" : CategoryCondition,
-                    "float" : RangeCondition,
-                    "int" : RangeCondition}
-        
-        for name, values in self.conditions_values.iteritems():
-            if name in self.conditions_map:
-                self.conditions_map[name].values = values
-            elif name in self.conditions_types:
-                dtype = self.conditions_types[name]
-                condition = model_map[dtype](name = name, 
-                                             values = self.conditions_values[name])
-                 
-                self.conditions.append(condition)
-                self.conditions_map[name] = condition
-                
-        self._update_subeditors()
+            self.conditions.append(model)
+            self.conditions_map[name] = model
+            
+#             
+#     def _on_types_change(self, obj, name, old, new):
+#         model_map = {"bool" : BoolCondition,
+#                     "category" : CategoryCondition,
+#                     "float" : RangeCondition,
+#                     "int" : RangeCondition}
+#          
+#         for name, dtype in self.conditions_types.iteritems(): 
+#             if name in self.conditions_values:            
+#                 condition = model_map[dtype](name = name, 
+#                                              values = self.conditions_values[name])
+#                 
+#                 self.conditions.append(condition)
+#                 self.conditions_map[name] = condition
+#                 
+#         self._update_subeditors()
+#         
+#     
+#     def _on_values_change(self, obj, name, old, new):        
+#         model_map = {"bool" : BoolCondition,
+#                     "category" : CategoryCondition,
+#                     "float" : RangeCondition,
+#                     "int" : RangeCondition}
+#         
+#         for name, values in self.conditions_values.iteritems():
+#             if name in self.conditions_map:
+#                 self.conditions_map[name].values = values
+#             elif name in self.conditions_types:
+#                 dtype = self.conditions_types[name]
+#                 condition = model_map[dtype](name = name, 
+#                                              values = self.conditions_values[name])
+#                  
+#                 self.conditions.append(condition)
+#                 self.conditions_map[name] = condition
+#                 
+#         self._update_subeditors()
 
 
 class _SubsetEditor(Editor):
@@ -284,8 +227,7 @@ class _SubsetEditor(Editor):
     model = Instance(SubsetModel, args = ())
     
     # feed through the synchronized properties to the model
-    conditions_types = DelegatesTo('model')
-    conditions_values = DelegatesTo('model')
+    conditions = DelegatesTo('model')
     
     # the UI for the Experiment metadata
     _ui = Instance(UI)
@@ -303,20 +245,21 @@ class _SubsetEditor(Editor):
         # TODO - when the next version of Traits is released, change this
         # to a static decorator with a 'dispatch' arg (it's already been fixed 
         # on Github)
-        self.model.on_trait_change(self.model._on_types_change, "conditions_types", 
-                                   dispatch = 'ui')
-          
-        self.model.on_trait_change(self.model._on_values_change, "conditions_values", 
-                             dispatch = 'ui')
+#         self.model.on_trait_change(self.model._on_types_change, "conditions", 
+#                                    dispatch = 'ui')
+#           
+#         self.model.on_trait_change(self.model._on_values_change, "conditions_values", 
+#                              dispatch = 'ui')
 
-        self.sync_value(self.factory.conditions_types, 'conditions_types', 'from')
-        self.sync_value(self.factory.conditions_values, 'conditions_values', 'from')
+#         self.model.on_trait_change(self.model._on_conditions_change, "conditions", 
+#                              dispatch = 'ui')
+
+        self.sync_value(self.factory.conditions, 'conditions', 'from')
                 
         # now start listening for changed values
-        self.model.on_trait_change(self.update_value, "subset_str")
+        self.model.on_trait_change(self.update_value, "subset")
               
-        self._ui = self.model.edit_traits(kind = 'subpanel',
-                                          parent = parent)
+        self._ui = self.model.edit_traits(kind = 'subpanel', parent = parent)
         self.control = self._ui.control
         
     def dispose(self):
@@ -337,7 +280,7 @@ class _SubsetEditor(Editor):
             
     def update_editor(self):
         logging.debug("subset_editor: Setting editor to {}".format(self.value))
-        self.model.subset_str = self.value
+        self.model.subset = self.value
     
     def update_value(self, new):
         logging.debug("subset_editor: Setting value to {}".format(new))
@@ -347,9 +290,7 @@ class SubsetEditor(BasicEditorFactory):
     # the editor to be created
     klass = _SubsetEditor
     
-    # the name of the trait containing the names --> types dict
-    conditions_types = Str
-    
     # the name of the trait containing the names --> values dict
-    conditions_values = Str
+    conditions = Str
+
     

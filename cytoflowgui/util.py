@@ -21,7 +21,7 @@ Created on Apr 18, 2015
 @author: brian
 '''
 
-from traits.api import Event, Undefined
+from traits.api import Event, Undefined, TraitType
 
 from Queue import PriorityQueue
 import heapq, threading
@@ -82,7 +82,6 @@ class DelayedEvent(Event):
 
     def get ( self, obj, name ):
         return Undefined           
-        
 
 summary_functions = {"Mean" : np.mean,
                      "Geom.Mean" : util.geom_mean,

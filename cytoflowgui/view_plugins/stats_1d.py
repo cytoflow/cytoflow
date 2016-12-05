@@ -103,9 +103,7 @@ class Stats1DHandler(Controller, ViewHandlerMixin):
 class Stats1DPluginView(Stats1DView, PluginViewMixin):
     handler_factory = Callable(Stats1DHandler)
     
-    
     # functions aren't picklable, so send the name instead
-    
     yfunction_name = Str()
     yfunction = Callable(transient = True)
     

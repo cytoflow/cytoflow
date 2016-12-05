@@ -24,7 +24,7 @@ import warnings, logging, sys
 
 from traits.api import HasStrictTraits, Instance, List, DelegatesTo, Enum, \
                        Property, cached_property, on_trait_change, Bool, \
-                       Str, Dict, Any, Event
+                       Str, Dict, Any, Event, Tuple
 from traitsui.api import View, Item, Handler
 from pyface.qt import QtGui
 
@@ -83,16 +83,13 @@ class WorkflowItem(HasStrictTraits):
     # previous WorkflowItem's ``result``
     result = Instance(Experiment, transient = True)
     
-    # the channels and conditions from result.  usually these would be
+    # the channels, conditions and statistics from result.  usually these would be
     # Properties (ie, determined dynamically), but that's hard with the
     # multiprocess model.
     
     channels = List(Str, status = True)
-    conditions = List(Str, status = True)
-        
-    # we need the types and the values to set up the subset editor
-    conditions_types = Dict(Str, Str, status = True)
-    conditions_values = Dict(Str, List, status = True)
+    conditions = Dict(Str, pd.Series, status = True)
+    statistics = Dict(Tuple(Str, Str), pd.Series, status = True)
     
     # the IViews against the output of this operation
     views = List(IView, copy = "ref")
@@ -150,7 +147,6 @@ class WorkflowItem(HasStrictTraits):
     # synchronization primitives for plotting
     matplotlib_events = Any(transient = True)
     plot_lock = Any(transient = True)
-    
            
     @cached_property
     def _get_icon(self):
@@ -161,12 +157,10 @@ class WorkflowItem(HasStrictTraits):
         else: # self.valid == "invalid" or None
             return QtGui.QStyle.SP_DialogCancelButton
         
-
     @cached_property
     def _get_operation_handler(self):
         return self.operation.handler_factory(model = self.operation)
     
-
     @cached_property
     def _get_current_view_handler(self):
         if self.current_view:
@@ -235,16 +229,9 @@ class RemoteWorkflowItem(WorkflowItem):
             self.command = "plot"   
             
         if self.result:
-            self.channels = list(np.sort(self.result.channels))
-            self.conditions = self.result.conditions.keys()
-            
-            self.conditions_types = self.result.conditions
-            
-            for condition in self.conditions_types.keys():
-                el = np.sort(pd.unique(self.result[condition]))
-                el = el[pd.notnull(el)]
-                self.conditions_values[condition] = list(el)
-                
+            self.channels = list(self.result.channels)
+            self.conditions = dict(self.result.conditions)
+            self.statistics = dict(self.result.statistics)
             
     @on_trait_change('current_view', post_init = True)
     def _current_view_changed(self, obj, name, old, new):

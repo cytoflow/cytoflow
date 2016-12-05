@@ -62,14 +62,14 @@ class ImportHandler(Controller, OpHandlerMixin):
                     Item('handler.samples',
                          label='Samples',
                          style='readonly'),
-                    Item('events',
+                    Item('ret_events',
                          label='Events',
                          style='readonly'),
                     Item('handler.coarse',
                          label="Random subsample?",
                          show_label = False,
                          editor = ToggleButtonEditor()),
-                    Item('object.coarse_events',
+                    Item('object.events',
                          editor = TextEditor(auto_set = False),
                          label="Events per\nsample",
                          visible_when='handler.coarse == True'),
@@ -82,7 +82,7 @@ class ImportHandler(Controller, OpHandlerMixin):
 
         d = ExperimentDialog()
 
-        # self.model is an instance of cytoflow.ImportOp
+        # self.model is an instance of ImportPluginOp
         d.model.init_model(self.model)
             
         d.size = (550, 500)
@@ -98,25 +98,24 @@ class ImportHandler(Controller, OpHandlerMixin):
     @cached_property
     def _get_samples(self):
         return len(self.model.tubes)
-     
         
     @on_trait_change('coarse')    
     def _on_coarse_changed(self):
         if self.coarse:
-            self.model.coarse_events = self.coarse_events
+            self.model.events = self.events
         else:
-            self.coarse_events = self.model.coarse_events
-            self.model.coarse_events = 0
+            self.coarse_events = self.model.events
+            self.model.events = 0
         
 
 @provides(IOperation)
 class ImportPluginOp(ImportOp, PluginOpMixin):
     handler_factory = Callable(ImportHandler, transient = True)
-    events = util.PositiveInt(0, allow_zero = True, status = True)
+    ret_events = util.PositiveInt(0, allow_zero = True, status = True)
     
     def apply(self, experiment = None):
         ret = super(ImportPluginOp, self).apply(experiment = experiment)
-        self.events = len(ret.data)
+        self.ret_events = len(ret.data)
 
         return ret
     
