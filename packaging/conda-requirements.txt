@@ -6,6 +6,7 @@ matplotlib==1.5.1
 scipy==0.18.1
 scikit-learn==0.17.1
 seaborn==0.7.1
+traits>=4.6.0
 pyface==4.4.0
 envisage==4.4.0
 nbformat==4.1.0
