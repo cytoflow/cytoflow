@@ -28,7 +28,6 @@ except:
     # if there's no console, this fails
     pass
 
-
 import sys, multiprocessing, os, logging, traceback, threading
 
 from traits.etsconfig.api import ETSConfig
@@ -55,7 +54,8 @@ from op_plugins import (ImportPlugin, ThresholdPlugin, RangePlugin, QuadPlugin,
                         GaussianMixture1DPlugin, GaussianMixture2DPlugin,
                         BleedthroughLinearPlugin, BleedthroughPiecewisePlugin,
                         BeadCalibrationPlugin, AutofluorescencePlugin,
-                        ColorTranslationPlugin, TasbePlugin)
+                        ColorTranslationPlugin, TasbePlugin, 
+                        ChannelStatisticPlugin, TransformStatisticPlugin)
 
 from view_plugins import (HistogramPlugin, Histogram2DPlugin, ScatterplotPlugin,
                           BarChartPlugin, Stats1DPlugin, Kde1DPlugin, Kde2DPlugin,
@@ -187,7 +187,8 @@ def run_gui():
     
     plugins.extend(view_plugins)
     
-    op_plugins = [TasbePlugin(),
+    op_plugins = [ChannelStatisticPlugin(),
+                  TasbePlugin(),
                   ColorTranslationPlugin(),
                   AutofluorescencePlugin(),
                   BeadCalibrationPlugin(),
