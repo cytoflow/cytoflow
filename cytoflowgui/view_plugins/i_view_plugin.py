@@ -63,17 +63,22 @@ class PluginViewMixin(HasTraits):
     changed = DelayedEvent(delay = 0.1)
     
     subset_dict = Dict(Str, List)
-    subset = Property
-    
+    subset = Property(Str, depends_on = "subset_dict")
+        
     def _get_subset(self):
-        ret = ""
+        ret = []
         for key, values in self.subset_dict.iteritems():
-            for val in values:
-                if ret:
-                    ret += " or "
-                if isinstance(val, basestring):
-                    val = '"{}"'.format(val)
-                ret += "{} == {}".format(key, val)
+            if values:
+                values = list(values)
+                values = ['"{}"'.format(x) if isinstance(x, basestring) else x for x in values]
+                values = ["{} == {}".format(key, x) for x in values]
+                values = " or ".join(values)
+                ret.append(values)
+        
+        ret = ["({})".format(x) for x in ret]
+        ret = " and ".join(ret)
+        
+        return ret
     
     # why can't we just put this in a workflow listener?  it's because
     # we sometimes need to override or supplement it on a per-module basis

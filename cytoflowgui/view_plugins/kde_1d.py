@@ -21,12 +21,17 @@ Created on Feb 24, 2015
 @author: brian
 """
 
-from traits.api import provides, Callable
+from traits.api import provides, Callable, Str
 from traitsui.api import View, Item, Controller, EnumEditor, VGroup
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
 from cytoflow import Kde1DView
+import cytoflow.utility as util
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
 
 from cytoflowgui.subset_editor import SubsetEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
@@ -58,12 +63,15 @@ class Kde1DHandler(Controller, ViewHandlerMixin):
                                 editor=ExtendableEnumEditor(name='context.conditions',
                                                             extra_items = {"None" : ""}),
                                 label="Color\nFacet"),
+                           Item('plotfacet',
+                                editor=ExtendableEnumEditor(name='context.conditions',
+                                                            extra_items = {"None" : ""}),
+                                label = "Tab\nFacet"),
                             label = "1D Kernel Density Estimate",
                             show_border = False),
-                    VGroup(Item('subset',
+                    VGroup(Item('subset_dict',
                                 show_label = False,
-                                editor = SubsetEditor(conditions_types = "context.conditions_types",
-                                                      conditions_values = "context.conditions_values")),
+                                editor = SubsetEditor(conditions = "context.conditions")),
                            label = "Subset",
                            show_border = False,
                            show_labels = False),
@@ -78,8 +86,31 @@ class Kde1DHandler(Controller, ViewHandlerMixin):
                          editor = ColorTextEditor(foreground_color = "#000000",
                                                   background_color = "#ff9191"))))
     
-class Kde1DPluginView(Kde1DView, PluginViewMixin):
+class Kde1DPluginView(PluginViewMixin, Kde1DView):
     handler_factory = Callable(Kde1DHandler)
+    plotfacet = Str
+
+    def enum_plots_wi(self, wi):
+        if not self.plotfacet:
+            return iter([])
+        
+        if self.plotfacet and self.plotfacet not in wi.result.conditions:
+            raise util.CytoflowViewError("Plot facet {0} not in the experiment"
+                                    .format(self.huefacet))
+        values = np.sort(pd.unique(wi.result[self.plotfacet]))
+        return iter(values)
+    
+    def plot_wi(self, wi):
+        self.plot(wi.result, wi.current_plot)
+    
+    def plot(self, experiment, plot_name = None, **kwargs):
+        if self.plotfacet and plot_name:
+            experiment = experiment.subset(self.plotfacet, plot_name)
+
+        Kde1DView.plot(self, experiment, **kwargs)
+        
+        if self.plotfacet and plot_name is not None:
+            plt.title("{0} = {1}".format(self.plotfacet, plot_name))
 
 @provides(IViewPlugin)
 class Kde1DPlugin(Plugin):

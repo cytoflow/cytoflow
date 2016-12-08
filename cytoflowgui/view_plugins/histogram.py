@@ -86,9 +86,8 @@ class HistogramHandler(Controller, ViewHandlerMixin):
                          editor = ColorTextEditor(foreground_color = "#000000",
                                                   background_color = "#ff9191"))))
     
-class HistogramPluginView(HistogramView, PluginViewMixin):
+class HistogramPluginView(PluginViewMixin, HistogramView):
     handler_factory = Callable(HistogramHandler)
-
     plotfacet = Str
 
     def enum_plots_wi(self, wi):

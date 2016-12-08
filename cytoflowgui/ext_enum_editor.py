@@ -4,7 +4,8 @@ Created on Apr 16, 2016
 @author: brian
 '''
 
-from traits.api import Dict
+from traits.api import Dict, Bool
+from traitsui.helper import enum_values_changed
 
 from traitsui.qt4.enum_editor import SimpleEditor as _EnumEditor
 from traitsui.editors.enum_editor import EnumEditor
@@ -43,10 +44,38 @@ class _ExtendableEnumEditor(_EnumEditor):
         m.update({v: k for k, v in self.factory.extra_items.items()})
         
         return m
+    
+    def values_changed(self):
+        """ Recomputes the cached data based on the underlying enumeration model.
+        """
+
+        if self.factory.seq_only:
+            self._names, self._mapping, self._inverse_mapping = \
+                cust_enum_values_changed(self._value(), self.string_value)  
+        else:          
+            self._names, self._mapping, self._inverse_mapping = \
+                enum_values_changed(self._value(), self.string_value)
+    
+def cust_enum_values_changed(values, strfunc=unicode):
+    """ Recomputes the mappings for a new set of enumeration values.
+    """
+
+    data = [(strfunc(v), v) for v in values]
+
+    names = [x[0] for x in data]
+    mapping = {}
+    inverse_mapping = {}
+    for name, value in data:
+        mapping[name] = value
+        inverse_mapping[value] = name
+
+    return (names, mapping, inverse_mapping)
         
 class ExtendableEnumEditor(EnumEditor):
     
     extra_items = Dict
+    
+    seq_only = Bool(True)
     
     def _get_simple_editor_class(self):
         """ Returns the editor class to use for "simple" style views.

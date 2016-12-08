@@ -195,13 +195,13 @@ class Experiment(HasStrictTraits):
             v = values
             if c not in self.conditions:
                 raise util.CytoflowError("{} is not a condition".format(c))
-            if v not in self.conditions[c]:
+            if v not in list(self.conditions[c]):
                 raise util.CytoflowError("{} is not a value of condition {}".format(v, c))
         else:
             for c, v in zip(conditions, values):
                 if c not in self.conditions:
                     raise util.CytoflowError("{} is not a condition".format(c))
-                if v not in self.conditions[c]:
+                if v not in list(self.conditions[c]):
                     raise util.CytoflowError("{} is not a value of condition {}".format(v, c))
 
         g = self.data.groupby(conditions)

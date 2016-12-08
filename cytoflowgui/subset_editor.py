@@ -34,12 +34,13 @@ if __name__ == '__main__':
 import pandas as pd
 
 from traits.api import Instance, HasStrictTraits, List, CFloat, Str, Dict, Interface, \
-                       Property, Bool, provides, DelegatesTo, on_trait_change
+                       Property, Bool, provides, DelegatesTo, on_trait_change, Any
 from traitsui.api import BasicEditorFactory, View, UI, \
                          CheckListEditor, Item, HGroup, ListEditor, InstanceEditor
 from traitsui.qt4.editor import Editor
 
 from cytoflowgui.value_bounds_editor import ValuesBoundsEditor
+import cytoflow.utility as util
 
 class IConditionModel(Interface):
     name = Str
@@ -97,7 +98,7 @@ class RangeCondition(HasStrictTraits):
     high = CFloat
     low = CFloat
     
-    subset = Property(List)
+    subset = Property(List, depends_on = "values, high, low")
     
     def default_traits_view(self):
         return View(Item('high',
@@ -138,15 +139,11 @@ class SubsetModel(HasStrictTraits):
     # the conditions we get from the Experiment
     conditions = Dict(Str, pd.Series)
     
-    # the core of the model; the traits view is a bunch of
-    # InstanceEditors for this list.
-    condition_models = List(IConditionModel)
+    # the core of the model
+    condition_models = List(Instance(IConditionModel))
     
-    # maps a condition name to an ICondition instance
-    condition_models_map = Dict(Str, Instance(IConditionModel))
-    
-    # the actual Dict representation of this model 
-    subset = Property(Dict, depends_on = "conditions.subset")
+    # the actual Dict representation of the subset
+    subset = Property(Dict(Str, List), depends_on = 'condition_models.subset')
       
     traits_view = View(Item('condition_models',
                             style = 'custom',
@@ -157,69 +154,55 @@ class SubsetModel(HasStrictTraits):
         
     # MAGIC: gets the value of the Property trait "subset"
     def _get_subset(self):
-        return {name: model.subset 
-                for name, model in self.condition_models_map.iteritems()}
+        return {model.name: model.subset for model in self.condition_models}
 
     # MAGIC: when the Property trait "subset" is assigned to,
     # update the view
     def _set_subset(self, value):
         for name, subset in value.iteritems():
-            self.condition_models_map[name].subset = subset
+            model = next((x for x in self.condition_models if x.name == name))
+            if set(model.subset) != set(subset):
+                model.subset = subset
+#         for model in self.condition_models:
+#             value_subset = value[model.name]
+#             if set(model.subset) != set(value_subset):
+#                 model.subset = value_subset
                 
     @on_trait_change('conditions', dispatch = 'ui')
     def _on_conditions_change(self, obj, name, old, new):
-        model_map = {"bool" : BoolCondition,
-                     "category" : CategoryCondition,
-                     "float" : RangeCondition,
-                     "int" : RangeCondition}
         
-        self.condition_models = []
-        self.condition_models_map = {}
-         
-        for name, values in self.conditions.iteritems():
-            dtype = values.dtype
-            model = model_map[dtype](name = name, 
-                                     values = list(values))
-                
-            self.conditions.append(model)
-            self.conditions_map[name] = model
+        # to prevent unnecessary updates, be careful about how these are
+        # updated
+        
+        # first, check current models against the new conditions.  remove any
+        # that are no longer present, and update the values for the rest
+        for model in list(self.condition_models):
+            if model.name not in self.conditions:
+                self.condition_models.remove(model)
+                continue
+            else:
+                if set(model.values) != set(self.conditions[model.name]):
+                    model.values = list(self.conditions[model.name])
+                    
+        # then, see if there are any new conditions to add
+        for name, values in self.conditions.iteritems(): 
+            if len([x for x in self.condition_models if x.name == name]) > 0:
+                continue
             
-#             
-#     def _on_types_change(self, obj, name, old, new):
-#         model_map = {"bool" : BoolCondition,
-#                     "category" : CategoryCondition,
-#                     "float" : RangeCondition,
-#                     "int" : RangeCondition}
-#          
-#         for name, dtype in self.conditions_types.iteritems(): 
-#             if name in self.conditions_values:            
-#                 condition = model_map[dtype](name = name, 
-#                                              values = self.conditions_values[name])
-#                 
-#                 self.conditions.append(condition)
-#                 self.conditions_map[name] = condition
-#                 
-#         self._update_subeditors()
-#         
-#     
-#     def _on_values_change(self, obj, name, old, new):        
-#         model_map = {"bool" : BoolCondition,
-#                     "category" : CategoryCondition,
-#                     "float" : RangeCondition,
-#                     "int" : RangeCondition}
-#         
-#         for name, values in self.conditions_values.iteritems():
-#             if name in self.conditions_map:
-#                 self.conditions_map[name].values = values
-#             elif name in self.conditions_types:
-#                 dtype = self.conditions_types[name]
-#                 condition = model_map[dtype](name = name, 
-#                                              values = self.conditions_values[name])
-#                  
-#                 self.conditions.append(condition)
-#                 self.conditions_map[name] = condition
-#                 
-#         self._update_subeditors()
+            dtype = pd.Series(list(values)).dtype
+            if dtype.kind == 'b':
+                model = BoolCondition(name = name)
+            elif dtype.kind in "ifu":
+                model = RangeCondition(name = name,
+                                       values = list(values))
+            elif dtype.kind in "OSU":
+                model = CategoryCondition(name = name,
+                                          values = list(values))
+            else:
+                raise util.CytoflowError("Unknown dtype {} in SubsetEditor"
+                                         .format(dtype))
+                
+            self.condition_models.append(model)
 
 
 class _SubsetEditor(Editor):
@@ -236,23 +219,6 @@ class _SubsetEditor(Editor):
         """
         Finishes initializing the editor and make the toolkit control
         """
-    
-        # usually, we'd make these static notifiers.  however, in this case we
-        # have to set a dynamic notifier because this is changed by the 
-        # receiving thread in LocalWorkflow, and we need to re-dispatch
-        # to the ui thread.
-        
-        # TODO - when the next version of Traits is released, change this
-        # to a static decorator with a 'dispatch' arg (it's already been fixed 
-        # on Github)
-#         self.model.on_trait_change(self.model._on_types_change, "conditions", 
-#                                    dispatch = 'ui')
-#           
-#         self.model.on_trait_change(self.model._on_values_change, "conditions_values", 
-#                              dispatch = 'ui')
-
-#         self.model.on_trait_change(self.model._on_conditions_change, "conditions", 
-#                              dispatch = 'ui')
 
         self.sync_value(self.factory.conditions, 'conditions', 'from')
                 
@@ -266,13 +232,7 @@ class _SubsetEditor(Editor):
         
         # disconnect the dynamic notifiers
         
-        self.model.on_trait_change(self.update_value, "subset_str", remove = True)
-
-        self.model.on_trait_change(self.model._on_types_change, "conditions_types", 
-                                   dispatch = 'ui', remove = True)
-          
-        self.model.on_trait_change(self.model._on_values_change, "conditions_values", 
-                             dispatch = 'ui', remove = True)
+        self.model.on_trait_change(self.update_value, "subset", remove = True)
         
         if self._ui:
             self._ui.dispose()

@@ -259,7 +259,7 @@ class HistogramView(HasStrictTraits):
         if self.huefacet and legend:
             current_palette = mpl.rcParams['axes.color_cycle']
         
-            if util.is_numeric(experiment.conditions[self.huefacet]) and \
+            if util.is_numeric(experiment.data[self.huefacet]) and \
                len(g.hue_names) > len(current_palette):
                 
                 plot_ax = plt.gca()
