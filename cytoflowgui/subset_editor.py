@@ -54,7 +54,7 @@ class BoolCondition(HasStrictTraits):
     selected_t = Bool(False)
     selected_f = Bool(False)
     
-    subset = Property(List)
+    subset = Property(List, depends_on = "selected_t, selected_f")
     
     def default_traits_view(self):
         return View(HGroup(Item('selected_t',
