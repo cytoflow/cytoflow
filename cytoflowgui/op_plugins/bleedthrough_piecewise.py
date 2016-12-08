@@ -86,10 +86,9 @@ class BleedthroughPiecewiseHandler(Controller, OpHandlerMixin):
                                                label = "Remove a control")),
                     label = "Controls",
                     show_labels = False),
-                    VGroup(Item('subset',
+                    VGroup(Item('subset_dict',
                                 show_label = False,
-                                editor = SubsetEditor(conditions_types = "context.previous.conditions_types",
-                                                      conditions_values = "context.previous.conditions_values")),
+                                editor = SubsetEditor(conditions = "context.previous.conditions")),
                            label = "Subset",
                            show_border = False,
                            show_labels = False),
@@ -109,7 +108,6 @@ class BleedthroughPiecewisePluginOp(BleedthroughPiecewiseOp, PluginOpMixin):
 
     controls = Dict(Str, File, transient = True)
     controls_list = List(_Control, estimate = True)
-    subset = Str(estimate = True)
         
     # MAGIC: called when add_control is set
     def _add_control_fired(self):

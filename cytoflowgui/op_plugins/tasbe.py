@@ -139,10 +139,9 @@ class TasbeHandler(Controller, OpHandlerMixin):
                                 style = 'custom'),
 
                         show_labels = False),
-                    VGroup(Item('subset',
+                    VGroup(Item('subset_dict',
                                 show_label = False,
-                                editor = SubsetEditor(conditions_types = "context.previous.conditions_types",
-                                                      conditions_values = "context.previous.conditions_values")),
+                                editor = SubsetEditor(conditions = "context.previous.conditions")),
                            label = "Subset",
                            show_border = False,
                            show_labels = False),
@@ -179,9 +178,7 @@ class TasbePluginOp(PluginOpMixin):
     to_channel = Str(estimate = True)
     translation_list = List(_TranslationControl, estimate = True)
     mixture_model = Bool(False, estimate = True)
-    
-    subset = Str(estimate = True)
-    
+        
     _af_op = Instance(AutofluorescenceOp, (), transient = True)
     _bleedthrough_op = Instance(BleedthroughPiecewiseOp, (), transient = True)
     _bead_calibration_op = Instance(BeadCalibrationOp, (), transient = True)

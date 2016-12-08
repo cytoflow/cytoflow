@@ -92,10 +92,9 @@ class ColorTranslationHandler(Controller, OpHandlerMixin):
                     show_labels = False),
                     Item('mixture_model',
                          label = "Use mixture\nmodel?"),
-                    VGroup(Item('subset',
+                    VGroup(Item('subset_dict',
                                 show_label = False,
-                                editor = SubsetEditor(conditions_types = "context.previous.conditions_types",
-                                                      conditions_values = "context.previous.conditions_values")),
+                                editor = SubsetEditor(conditions = "context.previous.conditions")),
                            label = "Subset",
                            show_border = False,
                            show_labels = False),
@@ -105,7 +104,7 @@ class ColorTranslationHandler(Controller, OpHandlerMixin):
                          show_label = False),
                     shared_op_traits)
 
-class ColorTranslationPluginOp(ColorTranslationOp, PluginOpMixin):
+class ColorTranslationPluginOp(PluginOpMixin, ColorTranslationOp):
     handler_factory = Callable(ColorTranslationHandler)
 
     add_control = Event
@@ -114,7 +113,6 @@ class ColorTranslationPluginOp(ColorTranslationOp, PluginOpMixin):
     controls = Dict(Tuple(Str, Str), File, transient = True)
     controls_list = List(_Control, estimate = True)
     mixture_model = Bool(False, estimate = True)
-    subset = Str(estimate = True)
     translation = Constant(None)
         
     @on_trait_change('controls_list_items,controls_list.+', post_init = True)

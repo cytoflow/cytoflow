@@ -62,7 +62,7 @@ class PluginViewMixin(HasTraits):
     handler = Instance(Handler, transient = True)    
     changed = DelayedEvent(delay = 0.1)
     
-    subset_dict = Dict(Str, List)
+    subset_dict = Dict(Str, List, estimate = True)
     subset = Property(Str, depends_on = "subset_dict")
         
     def _get_subset(self):

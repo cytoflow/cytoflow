@@ -78,10 +78,9 @@ class BarChartHandler(Controller, ViewHandlerMixin):
                                 label="Color\nFacet"),
                              label = "Bar Chart",
                              show_border = False),
-                    VGroup(Item('subset',
+                    VGroup(Item('subset_dict',
                                 show_label = False,
-                                editor = SubsetEditor(conditions_types = "context.conditions_types",
-                                                      conditions_values = "context.conditions_values")),
+                                editor = SubsetEditor(conditions = "context.conditions")),
                            label = "Subset",
                            show_border = False,
                            show_labels = False),
@@ -96,7 +95,7 @@ class BarChartHandler(Controller, ViewHandlerMixin):
                          editor = ColorTextEditor(foreground_color = "#000000",
                                                   background_color = "#ff9191"))))
     
-class BarChartPluginView(BarChartView, PluginViewMixin):
+class BarChartPluginView(PluginViewMixin, BarChartView):
     handler_factory = Callable(BarChartHandler)
     
     # functions aren't pickleable, so send the name instead.  must make

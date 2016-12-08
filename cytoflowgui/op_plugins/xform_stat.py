@@ -57,10 +57,9 @@ class TransformStatisticHandler(Controller, OpHandlerMixin):
                                                   name = 'context.previous.conditions'),
                          label = 'Group\nBy',
                          style = 'custom'),
-                    VGroup(Item('subset',
+                    VGroup(Item('subset_dict',
                                 show_label = False,
-                                editor = SubsetEditor(conditions_types = "context.previous.conditions_types",
-                                                      conditions_values = "context.previous.conditions_values")),
+                                editor = SubsetEditor(conditions = "context.previous.conditions")),
                            label = "Subset",
                            show_border = False,
                            show_labels = False),
@@ -68,6 +67,7 @@ class TransformStatisticHandler(Controller, OpHandlerMixin):
 
 class TransformStatisticPluginOp(TransformStatisticOp, PluginOpMixin):
     handler_factory = Callable(TransformStatisticHandler)
+    subset_dict = Dict(Str, List)
     
     # functions aren't picklable, so send the name instead
     function_name = Str()

@@ -118,7 +118,7 @@ class BeadCalibrationHandler(Controller, OpHandlerMixin):
                          show_label = False),
                     shared_op_traits)
 
-class BeadCalibrationPluginOp(BeadCalibrationOp, PluginOpMixin):
+class BeadCalibrationPluginOp(PluginOpMixin, BeadCalibrationOp):
     handler_factory = Callable(BeadCalibrationHandler)
 
     beads_name = Str(estimate = True)   

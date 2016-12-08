@@ -56,7 +56,7 @@ class BinningHandler(Controller, OpHandlerMixin):
                          label = "Bin Width"),
                     shared_op_traits)
 
-class BinningPluginOp(BinningOp, PluginOpMixin):
+class BinningPluginOp(PluginOpMixin, BinningOp):
     handler_factory = Callable(BinningHandler)
     
     def default_view(self, **kwargs):
@@ -73,10 +73,9 @@ class BinningViewHandler(Controller, ViewHandlerMixin):
                                 style = 'readonly'),
                            label = "Binning Default Plot",
                            show_border = False)),
-                    VGroup(Item('subset',
+                    VGroup(Item('subset_dict',
                                 show_label = False,
-                                editor = SubsetEditor(conditions_types = "context.previous.conditions_types",
-                                                      conditions_values = "context.previous.conditions_values")),
+                                editor = SubsetEditor(conditions = "context.previous.conditions")),
                            label = "Subset",
                            show_border = False,
                            show_labels = False),
@@ -92,7 +91,7 @@ class BinningViewHandler(Controller, ViewHandlerMixin):
                                                   background_color = "#ff9191")))
 
 @provides(IView)
-class BinningPluginView(BinningView, PluginViewMixin):
+class BinningPluginView(PluginViewMixin, BinningView):
     handler_factory = Callable(BinningViewHandler)
     op = Instance(IOperation, fixed = True)
     huefacet = Str(status = True)

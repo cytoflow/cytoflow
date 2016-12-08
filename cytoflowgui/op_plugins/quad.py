@@ -73,10 +73,9 @@ class ThresholdViewHandler(Controller, ViewHandlerMixin):
                                 label="Color\nFacet"),
                            label = "Quad Setup View",
                            show_border = False),
-                    VGroup(Item('subset',
+                    VGroup(Item('subset_dict',
                                 show_label = False,
-                                editor = SubsetEditor(conditions_types = "context.previous.conditions_types",
-                                                      conditions_values = "context.previous.conditions_values")),
+                                editor = SubsetEditor(conditions = "context.previous.conditions")),
                            label = "Subset",
                            show_border = False,
                            show_labels = False),
@@ -91,7 +90,7 @@ class ThresholdViewHandler(Controller, ViewHandlerMixin):
                          editor = ColorTextEditor(foreground_color = "#000000",
                                                   background_color = "#ff9191"))))
 
-class QuadSelectionView(QuadSelection, PluginViewMixin):
+class QuadSelectionView(PluginViewMixin, QuadSelection):
     handler_factory = Callable(ThresholdViewHandler, transient = True)    
     op = Instance(IOperation, fixed = True)
     xthreshold = DelegatesTo('op', status = True)
