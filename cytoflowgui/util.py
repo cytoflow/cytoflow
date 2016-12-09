@@ -21,7 +21,9 @@ Created on Apr 18, 2015
 @author: brian
 '''
 
-from traits.api import Event, Undefined, TraitType
+from traits.api import Event, Undefined, Unicode
+
+from pyface.ui.qt4.file_dialog import FileDialog
 
 from Queue import PriorityQueue
 import heapq, threading
@@ -94,6 +96,14 @@ def filter_unpicklable(obj):
             return "filtered: {}".format(type(obj))
         else:
             return obj
+        
+class DefaultFileDialog(FileDialog):
+    default_suffix = Unicode
+    
+    def _create_control(self, parent):
+        dlg = FileDialog._create_control(self, parent)
+        dlg.setDefaultSuffix(self.default_suffix)
+        return dlg
 
 summary_functions = {"Mean" : np.mean,
                      "Geom.Mean" : util.geom_mean,

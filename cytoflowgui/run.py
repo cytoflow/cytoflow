@@ -22,7 +22,7 @@ Created on Feb 11, 2015
 """
 
 try:
-    import faulthandler
+    import faulthandler       # @UnresolvedImport
     faulthandler.enable()
 except:
     # if there's no console, this fails
@@ -90,7 +90,7 @@ if sys.platform.startswith('win'):
             if hasattr(sys, 'frozen'):
                 # We have to set original _MEIPASS2 value from sys._MEIPASS
                 # to get --onefile mode working.
-                os.putenv('_MEIPASS2', sys._MEIPASS)
+                os.putenv('_MEIPASS2', sys._MEIPASS)  # @UndefinedVariable
             try:
                 super(_Popen, self).__init__(*args, **kw)
             finally:
@@ -158,7 +158,7 @@ def run_gui():
     # if we're frozen, add _MEIPASS to the pyface search path for icons etc
     if getattr(sys, 'frozen', False):
         from pyface.resource_manager import resource_manager
-        resource_manager.extra_paths.append(sys._MEIPASS)
+        resource_manager.extra_paths.append(sys._MEIPASS)    # @UndefinedVariable
 
     global debug
     debug = ("--debug" in sys.argv)

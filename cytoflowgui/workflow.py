@@ -44,7 +44,7 @@ matplotlib_backend.py
 
 import threading, sys, Queue, logging, traceback
 
-from traits.api import HasStrictTraits, Instance, List, on_trait_change, Any
+from traits.api import HasStrictTraits, Instance, List, on_trait_change, Any, Event
                        
 from traitsui.api import View, Item, InstanceEditor, Spring, Label
 
@@ -99,6 +99,8 @@ class Workflow(HasStrictTraits):
     
     workflow = List(WorkflowItem)
     selected = Instance(WorkflowItem)
+    
+    modified = Event
 
     default_scale = util.ScaleEnum
     
@@ -247,6 +249,7 @@ class Workflow(HasStrictTraits):
                       .format((event.index, event.removed, event.added)))
 
         idx = event.index
+        self.modified = True
         
         # remove deleted items from the linked list
         if event.removed:
@@ -298,6 +301,7 @@ class Workflow(HasStrictTraits):
             wi = next((x for x in self.workflow if x.operation == obj))
             idx = self.workflow.index(wi)
             self.message_q.put((Msg.UPDATE_OP, (idx, obj, new)))
+            self.modified = True
 
     @on_trait_change('workflow:views:changed')
     def _view_changed(self, obj, name, new):
@@ -308,6 +312,7 @@ class Workflow(HasStrictTraits):
             wi = next((x for x in self.workflow if obj in x.views))
             idx = self.workflow.index(wi)
             self.message_q.put((Msg.UPDATE_VIEW, (idx, obj, new)))
+            self.modified = True
         
     @on_trait_change('workflow:current_view')
     def _on_current_view_changed(self, obj, name, old, new):
