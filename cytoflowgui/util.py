@@ -82,6 +82,18 @@ class DelayedEvent(Event):
 
     def get ( self, obj, name ):
         return Undefined           
+    
+def filter_unpicklable(obj):
+    if type(obj) is list:
+        return [filter_unpicklable(x) for x in obj]
+    elif type(obj) is dict:
+        return {x: filter_unpicklable(obj[x]) for x in obj}
+    else:
+        if not hasattr(obj, '__getstate__') and not isinstance(obj,
+                  (basestring, int, long, float, tuple, list, set, dict)):
+            return "filtered: {}".format(type(obj))
+        else:
+            return obj
 
 summary_functions = {"Mean" : np.mean,
                      "Geom.Mean" : util.geom_mean,

@@ -207,9 +207,12 @@ class Workflow(HasStrictTraits):
 
     
     def send_main(self, child_conn):
-        while True:
-            msg = self.message_q.get()
-            child_conn.send(msg)
+        try:
+            while True:
+                msg = self.message_q.get()
+                child_conn.send(msg)
+        except Exception:
+            log_exception()
 
             
     def log_main(self, log_q):
@@ -510,9 +513,12 @@ class RemoteWorkflow(HasStrictTraits):
                 log_exception()
             
     def send_main(self, parent_conn):
-        while True:
-            msg = self.message_q.get()
-            parent_conn.send(msg)
+        try:
+            while True:
+                msg = self.message_q.get()
+                parent_conn.send(msg)
+        except Exception:
+            log_exception()
             
             
     @on_trait_change('workflow_items')
@@ -570,7 +576,7 @@ class RemoteWorkflow(HasStrictTraits):
 
     @on_trait_change('workflow:changed')
     def _workflow_item_changed(self, obj, name, old, new):
-        logging.debug("RemoteWorkflow._workflow_status_changed :: {}"
+        logging.debug("RemoteWorkflow._workflow_item_changed :: {}"
                       .format((obj, name, old, new)))
             
         idx = self.workflow.index(obj)            

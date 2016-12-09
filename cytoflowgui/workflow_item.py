@@ -39,7 +39,7 @@ from cytoflow.views.i_view import IView
 from cytoflow.utility import CytoflowOpError, CytoflowViewError
 
 from cytoflowgui.flow_task_pane import TabListEditor
-from cytoflowgui.util import DelayedEvent
+from cytoflowgui.util import DelayedEvent, filter_unpicklable
 
 # http://stackoverflow.com/questions/1977362/how-to-create-module-wide-variables-in-python
 this = sys.modules[__name__]
@@ -232,7 +232,11 @@ class RemoteWorkflowItem(WorkflowItem):
         if self.result:
             self.channels = list(self.result.channels)
             self.conditions = dict(self.result.conditions)
-            self.metadata = dict(self.result.metadata)
+            
+            # some things in metadata are unpicklable, functions and such,
+            # so filter them out.
+            self.metadata = filter_unpicklable(dict(self.result.metadata))
+            
             self.statistics = dict(self.result.statistics)
             
     @on_trait_change('current_view', post_init = True)
