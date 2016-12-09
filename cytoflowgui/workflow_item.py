@@ -89,6 +89,7 @@ class WorkflowItem(HasStrictTraits):
     
     channels = List(Str, status = True)
     conditions = Dict(Str, pd.Series, status = True)
+    metadata = Dict(Str, Any, status = True)
     statistics = Dict(Tuple(Str, Str), pd.Series, status = True)
     
     # the IViews against the output of this operation
@@ -231,6 +232,7 @@ class RemoteWorkflowItem(WorkflowItem):
         if self.result:
             self.channels = list(self.result.channels)
             self.conditions = dict(self.result.conditions)
+            self.metadata = dict(self.result.metadata)
             self.statistics = dict(self.result.statistics)
             
     @on_trait_change('current_view', post_init = True)

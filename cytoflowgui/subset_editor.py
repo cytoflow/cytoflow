@@ -139,6 +139,12 @@ class SubsetModel(HasStrictTraits):
     # the conditions we get from the Experiment
     conditions = Dict(Str, pd.Series)
     
+    # the metadata from the Experiment
+    metadata = Dict(Str, Any)
+    
+    # a string to evaluate in the `metadata` dict for each condition
+    when = Str
+    
     # the core of the model
     condition_models = List(Instance(IConditionModel))
     
@@ -151,6 +157,19 @@ class SubsetModel(HasStrictTraits):
                             editor = ListEditor(editor = InstanceEditor(),
                                                 style = 'custom',
                                                 mutable = False)))
+    
+    def include_condition(self, condition):
+        if not self.when:
+            return True
+        
+        if condition in self.metadata:
+            try:
+                return eval(self.when, globals(), self.metadata[condition])
+            except:
+                raise util.CytoflowError("Bad when statement: {}"
+                                         .format(self.when))
+        else:
+            return False
         
     # MAGIC: gets the value of the Property trait "subset"
     def _get_subset(self):
@@ -163,10 +182,6 @@ class SubsetModel(HasStrictTraits):
             model = next((x for x in self.condition_models if x.name == name))
             if set(model.subset) != set(subset):
                 model.subset = subset
-#         for model in self.condition_models:
-#             value_subset = value[model.name]
-#             if set(model.subset) != set(value_subset):
-#                 model.subset = value_subset
                 
     @on_trait_change('conditions', dispatch = 'ui')
     def _on_conditions_change(self, obj, name, old, new):
@@ -177,7 +192,7 @@ class SubsetModel(HasStrictTraits):
         # first, check current models against the new conditions.  remove any
         # that are no longer present, and update the values for the rest
         for model in list(self.condition_models):
-            if model.name not in self.conditions:
+            if model.name not in self.conditions or not self.include_condition(model.name):
                 self.condition_models.remove(model)
                 continue
             else:
@@ -187,6 +202,9 @@ class SubsetModel(HasStrictTraits):
         # then, see if there are any new conditions to add
         for name, values in self.conditions.iteritems(): 
             if len([x for x in self.condition_models if x.name == name]) > 0:
+                continue
+            
+            if not self.include_condition(name):
                 continue
             
             dtype = pd.Series(list(values)).dtype
@@ -212,6 +230,9 @@ class _SubsetEditor(Editor):
     # feed through the synchronized properties to the model
     conditions = DelegatesTo('model')
     
+    # feed through the synchronized properties to the model
+    metadata = DelegatesTo('model')
+
     # the UI for the Experiment metadata
     _ui = Instance(UI)
     
@@ -219,9 +240,14 @@ class _SubsetEditor(Editor):
         """
         Finishes initializing the editor and make the toolkit control
         """
+        
+        if self.factory.metadata:
+            self.sync_value(self.factory.metadata, 'metadata', 'from')
+            
+        self.model.when = self.factory.when
 
         self.sync_value(self.factory.conditions, 'conditions', 'from')
-                
+
         # now start listening for changed values
         self.model.on_trait_change(self.update_value, "subset")
               
@@ -252,5 +278,12 @@ class SubsetEditor(BasicEditorFactory):
     
     # the name of the trait containing the names --> values dict
     conditions = Str
+    
+    # the name of the trait containing the metadata dict
+    metadata = Str
+    
+    # a string to evaluate on the metadata to see if we include this condition
+    # in the editor
+    when = Str
 
     

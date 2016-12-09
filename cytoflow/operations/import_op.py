@@ -125,6 +125,10 @@ class ImportOp(HasStrictTraits):
     This operation adds `voltage` and `range` metadata for each channel, 
     corresponding to the `$PnV` and `$PnR` FCS fields.  If `ignore_v` is
     specified, it also gets added as experiment-wide metadata.
+    
+    For each condition, this operation adds "experiment == True" to its
+    metadata.  This is to distinguish between conditions that were added by
+    gates, etc.
         
     Examples
     --------
@@ -186,6 +190,7 @@ class ImportOp(HasStrictTraits):
             
         for condition, dtype in self.conditions.items():
             experiment.add_condition(condition, dtype)
+            experiment.metadata[condition]['experiment'] = True
 
         try:
             # silence warnings about duplicate channels;
