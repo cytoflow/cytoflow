@@ -102,7 +102,7 @@ class ImportHandler(Controller, OpHandlerMixin):
     @on_trait_change('coarse')    
     def _on_coarse_changed(self):
         if self.coarse:
-            self.model.events = self.events
+            self.model.events = self.coarse_events
         else:
             self.coarse_events = self.model.events
             self.model.events = 0
