@@ -52,19 +52,19 @@ class HistogramHandler(Controller, ViewHandlerMixin):
                                 label = "Channel"),
                            Item('scale'),
                            Item('xfacet',
-                                editor=ExtendableEnumEditor(name='context.conditions',
+                                editor=ExtendableEnumEditor(name='handler.conditions',
                                                             extra_items = {"None" : ""}),
                                 label = "Horizontal\nFacet"),
                             Item('yfacet',
-                                editor=ExtendableEnumEditor(name='context.conditions',
+                                editor=ExtendableEnumEditor(name='handler.conditions',
                                                             extra_items = {"None" : ""}),
                                 label = "Vertical\nFacet"),
                            Item('huefacet',
-                                editor=ExtendableEnumEditor(name='context.conditions',
+                                editor=ExtendableEnumEditor(name='handler.conditions',
                                                             extra_items = {"None" : ""}),
                                 label="Color\nFacet"),
                            Item('plotfacet',
-                                editor=ExtendableEnumEditor(name='context.conditions',
+                                editor=ExtendableEnumEditor(name='handler.conditions',
                                                             extra_items = {"None" : ""}),
                                 label = "Tab\nFacet"),
                             label = "Histogram Plot",
@@ -100,8 +100,8 @@ class HistogramPluginView(PluginViewMixin, HistogramView):
         values = np.sort(pd.unique(wi.result[self.plotfacet]))
         return iter(values)
     
-    def plot_wi(self, wi):
-        self.plot(wi.result, wi.current_plot)
+#     def plot_wi(self, wi):
+#         self.plot(wi.result, wi.current_plot)
     
     def plot(self, experiment, plot_name = None, **kwargs):
         if self.plotfacet and plot_name:

@@ -83,7 +83,7 @@ class Removed(TraitType):
     def get(self, obj, name):
         curframe = inspect.currentframe()
         calframe = inspect.getouterframes(curframe)
-        if calframe[1][3] == "copy_traits":
+        if calframe[1][3] == "copy_traits" or calframe[1][3] == "trait_get":
             return
         
         if self.warning:
@@ -111,7 +111,7 @@ class Deprecated(TraitType):
     def get(self, obj, name):
         curframe = inspect.currentframe()
         calframe = inspect.getouterframes(curframe)
-        if calframe[1][3] != "copy_traits":
+        if calframe[1][3] != "copy_traits" and calframe[1][3] != 'trait_get':
             warn(self.err_string.format(name, self.new), CytoflowWarning)
         return getattr(obj, self.new)
     

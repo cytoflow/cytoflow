@@ -55,7 +55,7 @@ class RangeViewHandler(Controller, ViewHandlerMixin):
                                 style = "readonly"),
                            Item('scale'),
                            Item('huefacet',
-                                editor=ExtendableEnumEditor(name='context.previous.conditions',
+                                editor=ExtendableEnumEditor(name='handler.previous_conditions',
                                                             extra_items = {"None" : ""}),
                                 label="Color\nFacet"),
                             label = "Range Setup View",

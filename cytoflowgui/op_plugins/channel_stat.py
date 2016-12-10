@@ -39,7 +39,7 @@ from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_E
 from cytoflowgui.subset_editor import SubsetEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
-from cytoflowgui.util import summary_functions, error_functions
+from cytoflowgui.util import summary_functions
 
 
 class ChannelStatisticHandler(Controller, OpHandlerMixin):
@@ -54,7 +54,7 @@ class ChannelStatisticHandler(Controller, OpHandlerMixin):
                                 label = "Function"),
                     Item('by',
                          editor = CheckListEditor(cols = 2,
-                                                  name = 'context.previous.conditions'),
+                                                  name = 'handler.previous_conditions'),
                          label = 'Group\nBy',
                          style = 'custom'),
                     VGroup(Item('subset_dict',
@@ -72,6 +72,14 @@ class ChannelStatisticPluginOp(PluginOpMixin, ChannelStatisticOp):
     # functions aren't picklable, so send the name instead
     function_name = Str()
     function = Callable(transient = True)
+    
+    def apply(self, experiment):
+        if not self.function_name:
+            raise util.CytoflowOpError("Summary function isn't set")
+        
+        self.function = summary_functions[self.function_name]
+        
+        return ChannelStatisticOp.apply(self, experiment) 
 
 @provides(IOperationPlugin)
 class ChannelStatisticPlugin(Plugin):

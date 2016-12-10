@@ -162,9 +162,15 @@ shared_op_traits = Group(Item('context.estimate_warning',
         
 class OpHandlerMixin(HasTraits):
     """
-    This used to hold properties for dynamically updated metadata lists ....
-    but now those are updated elsewhere.  Keep this around in case a mixin
-    becomes useful again.
+    Useful bits for operation handlers
     """
     
-    pass
+    previous_conditions = Property(depends_on = "info.ui.context")
+    
+    def _get_previous_conditions(self):
+        context = self.info.ui.context['context']
+        if context and context.previous:
+            return context.previous.conditions.keys()
+        else:
+            return []
+

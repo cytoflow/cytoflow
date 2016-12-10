@@ -78,7 +78,7 @@ class RangeView2DHandler(Controller, ViewHandlerMixin):
                            Item('yscale',
                                 label = "Y Scale"),
                            Item('huefacet',
-                                editor=ExtendableEnumEditor(name='context.previous.conditions',
+                                editor=ExtendableEnumEditor(name='handler.previous_conditions',
                                                             extra_items = {"None" : ""}),
                                 label="Color\nFacet"),
                            label = "2D Range Setup View",

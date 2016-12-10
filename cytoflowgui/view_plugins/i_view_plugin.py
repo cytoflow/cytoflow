@@ -25,6 +25,7 @@ from traits.api import (Interface, Str, HasTraits, Instance, on_trait_change,
                         Dict, List, Property)
 from traitsui.api import Handler
 
+import cytoflow.utility as util
 from cytoflowgui.util import DelayedEvent
 
 VIEW_PLUGIN_EXT = 'edu.mit.synbio.cytoflow.view_plugins'
@@ -103,16 +104,38 @@ class PluginViewMixin(HasTraits):
         return True
     
     def plot_wi(self, wi):
-        self.plot(wi.result)
+        self.plot(wi.result, wi.current_plot)
             
     def enum_plots_wi(self, wi):
-        return []
-
+        try:
+            return self.enum_plots(wi.result)
+        except:
+            return []
+            
 
 class ViewHandlerMixin(HasTraits):
-    """
-    This used to contain shared useful bits for view handlers.  There's
-    nothing here now, but we'll keep it around in case it again becomes useful
-    """
+    statistics = Property(depends_on = "info.ui.context")
+    
+    def _get_statistics(self):
+        context = self.info.ui.context['context']
+        if context:
+            return context.statistics.keys()
+        else:
+            return []
+        
+    conditions = Property(depends_on = "info.ui.context")
+    previous_conditions = Property(depends_on = "info.ui.context")
+    
+    def _get_conditions(self):
+        context = self.info.ui.context['context']
+        if context:
+            return context.conditions.keys()
+        else:
+            return []
 
-
+    def _get_previous_conditions(self):
+        context = self.info.ui.context['context']
+        if context and context.previous:
+            return context.previous.conditions.keys()
+        else:
+            return []
