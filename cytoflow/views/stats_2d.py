@@ -471,7 +471,6 @@ class Stats2DView(HasStrictTraits):
         if unused_names and plot_name is None:
             for plot in self.enum_plots(experiment):
                 self.plot(experiment, plot, **kwargs)
-                plt.title("{0} = {1}".format(unused_names, plot))
             return
 
         data.reset_index(inplace = True)
@@ -580,6 +579,10 @@ class Stats2DView(HasStrictTraits):
                 
         plt.xlabel(self.xstatistic)
         plt.ylabel(self.ystatistic)
+        
+        if unused_names and plot_name:
+            plt.title("{0} = {1}".format(unused_names, plot_name))
+
 
 def _x_error_bars(x, y, xerr, ax = None, color = None, **kwargs):
     

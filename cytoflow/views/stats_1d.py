@@ -355,8 +355,8 @@ class Stats1DView(HasStrictTraits):
         if unused_names and plot_name is None:
             for plot in self.enum_plots(experiment):
                 self.plot(experiment, plot, **kwargs)
-                plt.title("{0} = {1}".format(unused_names, plot))
             return
+
              
         data.reset_index(inplace = True)
         
@@ -458,6 +458,9 @@ class Stats1DView(HasStrictTraits):
                 plt.sca(plot_ax)
             else:
                 grid.add_legend(title = self.huefacet)
+                
+        if unused_names and plot_name:
+            plt.title("{0} = {1}".format(unused_names, plot_name))
                 
         plt.ylabel(self.statistic)
                 

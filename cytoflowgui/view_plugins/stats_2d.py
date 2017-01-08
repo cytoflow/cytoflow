@@ -21,10 +21,12 @@ Created on Feb 24, 2015
 @author: brian
 """
 
-from traits.api import provides, Callable, Str
+from traits.api import provides, Callable, Property, Str
 from traitsui.api import View, Item, Controller, EnumEditor, VGroup
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
+
+import pandas as pd
 
 from cytoflow import Stats2DView
 import cytoflow.utility as util
@@ -34,66 +36,100 @@ from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
     import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin
-from cytoflowgui.util import summary_functions, error_functions
     
 class Stats2DHandler(Controller, ViewHandlerMixin):
     """
     docs
     """
     
+    numeric_indices = Property(depends_on = "model.xstatistic, model.ystatistic")
+    indices = Property(depends_on = "model.xstatistic, model.ystatistic")
+    
+    # MAGIC: gets the value for the property numeric_indices
+    def _get_numeric_indices(self):
+        context = self.info.ui.context['context']
+        
+        if not (context and context.statistics and self.model and self.model.xstatistic[0] and self.model.ystatistic[0]):
+            return []
+        
+        stat = context.statistics[self.model.xstatistic]
+        data = pd.DataFrame(index = stat.index)
+        
+        if self.model.subset:
+            data = data.query(self.model.subset)
+            
+        if len(data) == 0:
+            return []       
+        
+        names = list(data.index.names)
+        for name in names:
+            unique_values = data.index.get_level_values(name).unique()
+            if len(unique_values) == 1:
+                data.index = data.index.droplevel(name)
+        
+        data.reset_index(inplace = True)
+        return [x for x in data if util.is_numeric(data[x])]
+    
+    # MAGIC: gets the value for the property indices
+    def _get_indices(self):
+        context = self.info.ui.context['context']
+        
+        if not (context and context.statistics and self.model and self.model.xstatistic[0] and self.model.ystatistic[0]):
+            return []
+        
+        stat = context.statistics[self.model.xstatistic]
+        data = pd.DataFrame(index = stat.index)
+        
+        if self.model.subset:
+            data = data.query(self.model.subset)
+            
+        if len(data) == 0:
+            return []       
+        
+        names = list(data.index.names)
+        for name in names:
+            unique_values = data.index.get_level_values(name).unique()
+            if len(unique_values) == 1:
+                data.index = data.index.droplevel(name)
+        
+        return list(data.index.names)
+
+    
     def default_traits_view(self):
         return View(VGroup(
                     VGroup(Item('name'),
+                           Item('xstatistic',
+                                editor = EnumEditor(name = 'handler.statistics'),
+                                label = "X Statistic"),
+                           Item('xscale', label = "X Scale"),
+                           Item('ystatistic',
+                                editor = EnumEditor(name = 'handler.statistics'),
+                                label = "Y Statistic"),
+                           Item('yscale', label = "Y Scale"),
                            Item('variable',
-                                # TODO - restrict this to numeric values?
-                                editor=EnumEditor(name='context.conditions')),
-                           Item('xchannel',
-                                editor=EnumEditor(name='context.channels'),
-                                label = "X Channel"),
-                           Item('xscale',
-                                label = "X Scale"),
-                           Item('xfunction_name',
-                                editor = EnumEditor(values = summary_functions.keys()),
-                                label = "X Summary\nFunction"),
-                           Item('x_error_bars',
-                                editor = ExtendableEnumEditor(name='context.conditions',
-                                                              extra_items = {"None" : "",
-                                                                             "DATA" : "data"}),
-                                 label = "X Error bars"),
-                           Item('x_error_function_name',
-                                editor = EnumEditor(values = error_functions.keys()),
-                                label = "X Error\nfunction",
-                                visible_when = 'x_error_bars'),
-                           Item('ychannel',
-                                editor=EnumEditor(name='context.channels'),
-                                label = "Y Channel"),
-                           Item('yscale',
-                                label = "Y Scale"),
-                           Item('yfunction_name',
-                                editor = EnumEditor(values = summary_functions.keys()),
-                                label = "Y Summary\nFunction"),
-                           Item('y_error_bars',
-                                editor = ExtendableEnumEditor(name='context.conditions',
-                                                              extra_items = {"None" : "",
-                                                                             "DATA" : "data"}),
-                                 label = "Y Error bars"),
-                           Item('y_error_function_name',
-                                editor = EnumEditor(values = error_functions.keys()),
-                                label = "Y Error\nfunction",
-                                visible_when = 'y_error_bars'),
+                                editor=EnumEditor(name='handler.numeric_indices')),
                            Item('xfacet',
-                                editor=ExtendableEnumEditor(name='context.conditions',
+                                editor=ExtendableEnumEditor(name='handler.indices',
                                                             extra_items = {"None" : ""}),
                                 label = "Horizontal\nFacet"),
                            Item('yfacet',
-                                editor=ExtendableEnumEditor(name='context.conditions',
+                                editor=ExtendableEnumEditor(name='handler.indices',
                                                             extra_items = {"None" : ""}),
                                 label = "Vertical\nFacet"),
                            Item('huefacet',
-                                editor=ExtendableEnumEditor(name='context.conditions',
+                                editor=ExtendableEnumEditor(name='handler.indices',
                                                             extra_items = {"None" : ""}),
                                 label="Color\nFacet"),
-                           label = "One-Dimensional Statistics Plot",
+                           Item('huescale', label = "Hue\nScale"),
+                           Item('x_error_statistic',
+                                editor=ExtendableEnumEditor(name='handler.statistics',
+                                                            extra_items = {"None" : ("", "")}),
+                                label = "X Error\nStatistic"),
+                           Item('y_error_statistic',
+                                editor=ExtendableEnumEditor(name='handler.statistics',
+                                                            extra_items = {"None" : ("", "")}),
+                                label = "Y Error\nStatistic"),
+                           label = "Two-Dimensional Statistics Plot",
                            show_border = False),
                     VGroup(Item('subset_dict',
                                 show_label = False,
@@ -116,37 +152,6 @@ class Stats2DHandler(Controller, ViewHandlerMixin):
 class Stats2DPluginView(Stats2DView, PluginViewMixin):
     handler_factory = Callable(Stats2DHandler)
     
-    # functions aren't picklable, so send the name instead
-    
-    xfunction_name = Str()
-    xfunction = Callable(transient = True)
-    x_error_function_name = Str()
-    x_error_function = Callable(transient = True)
-    yfunction_name = Str()
-    yfunction = Callable(transient = True)
-    y_error_function_name = Str()
-    y_error_function = Callable(transient = True)
-    
-    def plot(self, experiment, **kwargs):
-        if not self.xfunction_name:
-            raise util.CytoflowViewError("X Summary function isn't set")
-        
-        self.xfunction = summary_functions[self.xfunction_name]
-        
-        if not self.yfunction_name:
-            raise util.CytoflowViewError("Y Summary function isn't set")
-        
-        self.yfunction = summary_functions[self.yfunction_name]
-        
-        if self.x_error_bars and self.x_error_function_name:
-            self.x_error_function = error_functions[self.x_error_function_name]
-
-        if self.y_error_bars and self.y_error_function_name:
-            self.y_error_function = error_functions[self.y_error_function_name]
-             
-        
-        Stats2DView.plot(self, experiment, **kwargs)
-        
 
 @provides(IViewPlugin)
 class Stats2DPlugin(Plugin):
