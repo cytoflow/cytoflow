@@ -186,6 +186,8 @@ class Stats1DView(HasStrictTraits):
                 warn("Only one value for level {}; dropping it.".format(name),
                      util.CytoflowViewWarning)
                 data.index = data.index.droplevel(name)
+                
+        names = list(data.index.names)
                         
         if not self.variable:
             raise util.CytoflowViewError("variable not specified")

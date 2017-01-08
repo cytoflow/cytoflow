@@ -21,79 +21,23 @@ Created on Feb 24, 2015
 @author: brian
 """
 
-from traits.api import provides, Callable, Property, Str
+from traits.api import provides, Callable
 from traitsui.api import View, Item, Controller, EnumEditor, VGroup
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
-import pandas as pd
-
 from cytoflow import Stats2DView
-import cytoflow.utility as util
 
 from cytoflowgui.subset_editor import SubsetEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
-    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin
+    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, StatisticViewHandlerMixin, PluginViewMixin
     
-class Stats2DHandler(Controller, ViewHandlerMixin):
+class Stats2DHandler(Controller, ViewHandlerMixin, StatisticViewHandlerMixin):
     """
     docs
     """
-    
-    numeric_indices = Property(depends_on = "model.xstatistic, model.ystatistic")
-    indices = Property(depends_on = "model.xstatistic, model.ystatistic")
-    
-    # MAGIC: gets the value for the property numeric_indices
-    def _get_numeric_indices(self):
-        context = self.info.ui.context['context']
-        
-        if not (context and context.statistics and self.model and self.model.xstatistic[0] and self.model.ystatistic[0]):
-            return []
-        
-        stat = context.statistics[self.model.xstatistic]
-        data = pd.DataFrame(index = stat.index)
-        
-        if self.model.subset:
-            data = data.query(self.model.subset)
-            
-        if len(data) == 0:
-            return []       
-        
-        names = list(data.index.names)
-        for name in names:
-            unique_values = data.index.get_level_values(name).unique()
-            if len(unique_values) == 1:
-                data.index = data.index.droplevel(name)
-        
-        data.reset_index(inplace = True)
-        return [x for x in data if util.is_numeric(data[x])]
-    
-    # MAGIC: gets the value for the property indices
-    def _get_indices(self):
-        context = self.info.ui.context['context']
-        
-        if not (context and context.statistics and self.model and self.model.xstatistic[0] and self.model.ystatistic[0]):
-            return []
-        
-        stat = context.statistics[self.model.xstatistic]
-        data = pd.DataFrame(index = stat.index)
-        
-        if self.model.subset:
-            data = data.query(self.model.subset)
-            
-        if len(data) == 0:
-            return []       
-        
-        names = list(data.index.names)
-        for name in names:
-            unique_values = data.index.get_level_values(name).unique()
-            if len(unique_values) == 1:
-                data.index = data.index.droplevel(name)
-        
-        return list(data.index.names)
-
     
     def default_traits_view(self):
         return View(VGroup(

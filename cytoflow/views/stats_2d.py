@@ -249,12 +249,15 @@ class Stats2DView(HasStrictTraits):
                                         .format(self.subset))
                 
         names = list(data.index.names)
+        
         for name in names:
             unique_values = data.index.get_level_values(name).unique()
             if len(unique_values) == 1:
                 warn("Only one value for level {}; dropping it.".format(name),
                      util.CytoflowViewWarning)
                 data.index = data.index.droplevel(name)    
+                
+        names = list(data.index.names)
             
         if not self.variable in experiment.conditions:
             raise util.CytoflowViewError("Variable {} not in experiment"

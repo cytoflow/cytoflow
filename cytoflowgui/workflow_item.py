@@ -349,12 +349,15 @@ class RemoteWorkflowItem(WorkflowItem):
                     # the plot updates
                     plt.show()
                      
-                    self.matplotlib_events.set() 
-                   
-                if w:
-                    self.view_warning = w[-1].message.__str__()
             except CytoflowViewError as e:
                 self.view_error = e.__str__()   
                 plt.clf()
                 plt.show()   
+            finally:
+                self.matplotlib_events.set() 
+
+                if w:
+                    self.view_warning = w[-1].message.__str__()
+
+                    
             

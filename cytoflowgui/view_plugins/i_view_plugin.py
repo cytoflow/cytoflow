@@ -25,6 +25,8 @@ from traits.api import (Interface, Str, HasTraits, Instance, on_trait_change,
                         Dict, List, Property)
 from traitsui.api import Handler
 
+import pandas as pd
+
 import cytoflow.utility as util
 from cytoflowgui.util import DelayedEvent
 
@@ -139,3 +141,57 @@ class ViewHandlerMixin(HasTraits):
             return context.previous.conditions.keys()
         else:
             return []
+        
+class StatisticViewHandlerMixin(HasTraits):
+    
+    numeric_indices = Property(depends_on = "model.statistic")
+    indices = Property(depends_on = "model.statistic")
+    
+    # MAGIC: gets the value for the property numeric_indices
+    def _get_numeric_indices(self):
+        context = self.info.ui.context['context']
+        
+        if not (context and context.statistics and self.model and self.model.statistic[0]):
+            return []
+        
+        stat = context.statistics[self.model.statistic]
+        data = pd.DataFrame(index = stat.index)
+        
+        if self.model.subset:
+            data = data.query(self.model.subset)
+            
+        if len(data) == 0:
+            return []       
+        
+        names = list(data.index.names)
+        for name in names:
+            unique_values = data.index.get_level_values(name).unique()
+            if len(unique_values) == 1:
+                data.index = data.index.droplevel(name)
+        
+        data.reset_index(inplace = True)
+        return [x for x in data if util.is_numeric(data[x])]
+    
+    # MAGIC: gets the value for the property indices
+    def _get_indices(self):
+        context = self.info.ui.context['context']
+        
+        if not (context and context.statistics and self.model and self.model.statistic[0]):
+            return []
+        
+        stat = context.statistics[self.model.statistic]
+        data = pd.DataFrame(index = stat.index)
+        
+        if self.model.subset:
+            data = data.query(self.model.subset)
+            
+        if len(data) == 0:
+            return []       
+        
+        names = list(data.index.names)
+        for name in names:
+            unique_values = data.index.get_level_values(name).unique()
+            if len(unique_values) == 1:
+                data.index = data.index.droplevel(name)
+        
+        return list(data.index.names)

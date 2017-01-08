@@ -157,12 +157,15 @@ class BarChartView(HasStrictTraits):
                                         .format(self.subset))
             
         names = list(data.index.names)
+        
         for name in names:
             unique_values = data.index.get_level_values(name).unique()
             if len(unique_values) == 1:
                 warn("Only one value for level {}; dropping it.".format(name),
                      util.CytoflowViewWarning)
                 data.index = data.index.droplevel(name)
+                
+        names = list(data.index.names)
                         
         if not self.variable:
             raise util.CytoflowViewError("variable not specified")
@@ -326,7 +329,6 @@ class BarChartView(HasStrictTraits):
         if unused_names and plot_name is None:
             for plot in self.enum_plots(experiment):
                 self.plot(experiment, plot, **kwargs)
-                plt.title("{0} = {1}".format(unused_names, plot))
             return
 
         data.reset_index(inplace = True)
@@ -393,6 +395,14 @@ class BarChartView(HasStrictTraits):
             labels = np.sort(data[self.huefacet].unique())
             labels = [str(x) for x in labels]
             g.add_legend(title = self.huefacet, label_order = labels)
+            
+        if self.orientation == 'horizontal':
+            plt.xlabel(self.statistic)
+        else:
+            plt.ylabel(self.statistic)
+            
+        if unused_names and plot_name:
+            plt.title("{0} = {1}".format(unused_names, plot_name))
             
 # in Py3k i could have named arguments after *args, but not in py2.  :-(
 def _barplot(*args, **kwargs):

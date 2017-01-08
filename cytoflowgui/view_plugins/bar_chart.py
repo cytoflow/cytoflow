@@ -27,17 +27,14 @@ from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
 from cytoflow import BarChartView
-import cytoflow.utility as util
 
 from cytoflowgui.subset_editor import SubsetEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
-    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin
-    
-from cytoflowgui.util import summary_functions, error_functions
-    
-class BarChartHandler(Controller, ViewHandlerMixin):
+    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, StatisticViewHandlerMixin, PluginViewMixin
+        
+class BarChartHandler(Controller, ViewHandlerMixin, StatisticViewHandlerMixin):
     """
     docs
     """
@@ -45,37 +42,30 @@ class BarChartHandler(Controller, ViewHandlerMixin):
     def default_traits_view(self):
         return View(VGroup(
                     VGroup(Item('name'),
-                           Item('channel',
-                                editor=EnumEditor(name='context.channels'),
-                                label = "Channel"),
+                           Item('statistic',
+                                editor=EnumEditor(name='handler.statistics'),
+                                label = "Statistic"),
                            Item('variable',
-                                editor=EnumEditor(name='context.conditions'),
+                                editor=EnumEditor(name='handler.indices'),
                                 label = "Variable"),
-                           Item('function_name',
-                                editor = EnumEditor(values = summary_functions.keys()),
-                                label = "Summary\nFunction"),
                            Item('orientation'),
-                           Item('error_bars',
-                                editor = ExtendableEnumEditor(name='handler.conditions',
-                                                              extra_items = {"None" : "",
-                                                                             "DATA" : "data"}),
-                                 label = "Error bars"),
-                           Item('error_function_name',
-                                editor = EnumEditor(values = error_functions.keys()),
-                                label = "Error\nfunction",
-                                visible_when = 'object.error_bars'),
+                           Item('scale', label = "Scale"),
                            Item('xfacet',
-                                editor=ExtendableEnumEditor(name='handler.conditions',
+                                editor=ExtendableEnumEditor(name='handler.indices',
                                                             extra_items = {"None" : ""}),
                                 label = "Horizontal\nFacet"),
                            Item('yfacet',
-                                editor=ExtendableEnumEditor(name='handler.conditions',
+                                editor=ExtendableEnumEditor(name='handler.indices',
                                                             extra_items = {"None" : ""}),
                                 label = "Vertical\nFacet"),
                            Item('huefacet',
-                                editor=ExtendableEnumEditor(name='handler.conditions',
+                                editor=ExtendableEnumEditor(name='handler.indices',
                                                             extra_items = {"None" : ""}),
-                                label="Color\nFacet"),
+                                label="Hue\nFacet"),
+                           Item('error_statistic',
+                                editor=ExtendableEnumEditor(name='handler.statistics',
+                                                            extra_items = {"None" : ("", "")}),
+                                label = "Error\nStatistic"),
                              label = "Bar Chart",
                              show_border = False),
                     VGroup(Item('subset_dict',
@@ -97,27 +87,6 @@ class BarChartHandler(Controller, ViewHandlerMixin):
     
 class BarChartPluginView(PluginViewMixin, BarChartView):
     handler_factory = Callable(BarChartHandler)
-    
-    # functions aren't pickleable, so send the name instead.  must make
-    # the callables transient so we don't get a loop!
-    
-    function_name = Str
-    #function = Callable(transient = True)
-
-    error_function_name = Str
-    #error_function = Callable(transient = True)
-    
-    def plot(self, experiment, **kwargs):
-        
-        if not self.function_name:
-            raise util.CytoflowViewError("Summary function isn't set")
-        
-        self.function = summary_functions[self.function_name]
-         
-        if self.error_bars and self.error_function_name:
-            self.error_function = error_functions[self.error_function_name]
-             
-        BarChartView.plot(self, experiment, **kwargs)
 
 @provides(IViewPlugin)
 class BarChartPlugin(Plugin):
