@@ -50,7 +50,7 @@ class TableView(HasStrictTraits):
     subset = Str
 
     
-    def plot(self, experiment, **kwargs):
+    def plot(self, experiment, plot_name = None, **kwargs):
         """Plot a table"""
         
         if not experiment:
