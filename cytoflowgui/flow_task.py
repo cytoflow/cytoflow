@@ -37,7 +37,7 @@ from cytoflowgui.flow_task_pane import FlowTaskPane
 from cytoflowgui.workflow_pane import WorkflowDockPane
 from cytoflowgui.view_pane import ViewDockPane
 from cytoflowgui.workflow import Workflow
-from cytoflowgui.op_plugins import IOperationPlugin, ImportPlugin, OP_PLUGIN_EXT
+from cytoflowgui.op_plugins import IOperationPlugin, ImportPlugin, ChannelStatisticPlugin, OP_PLUGIN_EXT
 from cytoflowgui.view_plugins import IViewPlugin, VIEW_PLUGIN_EXT
 from cytoflowgui.notebook import JupyterNotebookWriter
 from cytoflowgui.workflow_item import WorkflowItem
@@ -153,6 +153,15 @@ class FlowTask(Task):
                          conditions = {"Dox" : 10.0, "Replicate" : 2})
          
             import_op.tubes = [tube1, tube2, tube3, tube4]
+            
+            self.add_operation(ChannelStatisticPlugin().id)
+            stat_op = self.model.workflow[1].operation
+            stat_op.name = "Test"
+            stat_op.channel = "Y2-A"
+            stat_op.function_name = "Geom.Mean"
+            stat_op.by = ["Dox", "Replicate"]
+            self.model.selected = self.model.workflow[1]
+        
                  
 #     def prepare_destroy(self):
 #         self.model = None
