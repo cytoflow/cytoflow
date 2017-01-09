@@ -21,7 +21,7 @@ Created on Feb 23, 2015
 @author: brian
 '''
 
-from traits.api import Interface, Str
+from traits.api import HasStrictTraits, Interface, Str
 
 class IView(Interface):
     """An interface for a visualization of flow data.
@@ -62,4 +62,8 @@ class IView(Interface):
         kwargs : dict
             additional arguments to pass to the underlying plotting function.
         """
+    
+class ViewMixin(HasStrictTraits):
+    
+    def get_indices(self, statistic, **facets):
     
