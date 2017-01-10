@@ -29,10 +29,9 @@ import pandas as pd
 
 import cytoflow.utility as util
 from .i_view import IView
-from .stats_view_base import StatisticsViewBase
 
 @provides(IView)
-class Stats1DView(StatisticsViewBase):
+class Stats1DView(HasStrictTraits):
     """
     Plot a statistic.  The value of the statistic will be plotted on the
     Y axis; a numeric conditioning variable must be chosen for the X axis.
@@ -116,6 +115,8 @@ class Stats1DView(StatisticsViewBase):
     ychannel = util.Removed(err_string = REMOVED_ERROR)
     xvariable = util.Deprecated(new = "variable")
     
+    name = Str
+    statistic = Tuple(Str, Str)
     variable = Str
     xscale = util.ScaleEnum
     yscale = util.ScaleEnum
@@ -125,7 +126,7 @@ class Stats1DView(StatisticsViewBase):
     huescale = util.ScaleEnum # TODO - make this actually work
     
     error_statistic = Tuple(Str, Str)
-
+    subset = Str
     
     def enum_plots(self, experiment):
         """
@@ -261,7 +262,6 @@ class Stats1DView(StatisticsViewBase):
                                          .format(self.statistic))
         else:
             stat = experiment.statistics[self.statistic]
-            stat = self.reduce_statistic(stat)
             
         if self.error_statistic[0]:
             if self.error_statistic not in experiment.statistics:
@@ -276,72 +276,72 @@ class Stats1DView(StatisticsViewBase):
                 raise util.CytoflowViewError("Data statistic and error statistic "
                                              " don't have the same index.")
                
-#         data = pd.DataFrame(index = stat.index)
-#         data[stat.name] = stat
+        data = pd.DataFrame(index = stat.index)
+        data[stat.name] = stat
 
         if error_stat is not None:
             error_name = util.random_string(6)
             data[error_name] = error_stat
         
-#         if self.subset:
-#             try:
-#                 # TODO - either sanitize column names, or check to see that
-#                 # all conditions are valid Python variables
-#                 data = data.query(self.subset)
-#             except:
-#                 raise util.CytoflowViewError("Subset string '{0}' isn't valid"
-#                                         .format(self.subset))
-#                 
-#             if len(data) == 0:
-#                 raise util.CytoflowViewError("Subset string '{0}' returned no values"
-#                                         .format(self.subset))
+        if self.subset:
+            try:
+                # TODO - either sanitize column names, or check to see that
+                # all conditions are valid Python variables
+                data = data.query(self.subset)
+            except:
+                raise util.CytoflowViewError("Subset string '{0}' isn't valid"
+                                        .format(self.subset))
                 
-#         names = list(data.index.names)
-#         for name in names:
-#             unique_values = data.index.get_level_values(name).unique()
-#             if len(unique_values) == 1:
-#                 warn("Only one value for level {}; dropping it.".format(name),
-#                      util.CytoflowViewWarning)
-#                 data.index = data.index.droplevel(name)
-# 
-#         names = list(data.index.names)
-#                
-#         if not self.variable:
-#             raise util.CytoflowViewError("X variable not set")
-#             
-#         if self.variable not in experiment.conditions:
-#             raise util.CytoflowViewError("X variable {0} not in the experiment"
-#                                     .format(self.variable))
-#                         
-#         if self.variable not in names:
-#             raise util.CytoflowViewError("X variable {} is not a statistic index; "
-#                                          "must be one of {}".format(self.variable, names))
-#                 
-#         if experiment.conditions[self.variable].dtype.kind not in "biufc": 
-#             raise util.CytoflowViewError("X variable {0} isn't numeric"
-#                                     .format(self.variable))
-#         
-#         if self.xfacet and self.xfacet not in experiment.conditions:
-#             raise util.CytoflowViewError("X facet {0} not in the experiment")
-#         
-#         if self.xfacet and self.xfacet not in names:
-#             raise util.CytoflowViewError("X facet {} is not a statistic index; "
-#                                          "must be one of {}".format(self.xfacet, names))
-#         
-#         if self.yfacet and self.yfacet not in experiment.conditions:
-#             raise util.CytoflowViewError("Y facet {0} not in the experiment")
-#         
-#         if self.yfacet and self.yfacet not in names:
-#             raise util.CytoflowViewError("Y facet {} is not a statistic index; "
-#                                          "must be one of {}".format(self.yfacet, names))
-#         
-#         if self.huefacet and self.huefacet not in experiment.metadata:
-#             raise util.CytoflowViewError("Hue facet {0} not in the experiment")   
-#         
-#         if self.huefacet and self.huefacet not in names:
-#             raise util.CytoflowViewError("Hue facet {} is not a statistic index; "
-#                                          "must be one of {}".format(self.huefacet, names))  
-#             
+            if len(data) == 0:
+                raise util.CytoflowViewError("Subset string '{0}' returned no values"
+                                        .format(self.subset))
+                
+        names = list(data.index.names)
+        for name in names:
+            unique_values = data.index.get_level_values(name).unique()
+            if len(unique_values) == 1:
+                warn("Only one value for level {}; dropping it.".format(name),
+                     util.CytoflowViewWarning)
+                data.index = data.index.droplevel(name)
+
+        names = list(data.index.names)
+               
+        if not self.variable:
+            raise util.CytoflowViewError("X variable not set")
+            
+        if self.variable not in experiment.conditions:
+            raise util.CytoflowViewError("X variable {0} not in the experiment"
+                                    .format(self.variable))
+                        
+        if self.variable not in names:
+            raise util.CytoflowViewError("X variable {} is not a statistic index; "
+                                         "must be one of {}".format(self.variable, names))
+                
+        if experiment.conditions[self.variable].dtype.kind not in "biufc": 
+            raise util.CytoflowViewError("X variable {0} isn't numeric"
+                                    .format(self.variable))
+        
+        if self.xfacet and self.xfacet not in experiment.conditions:
+            raise util.CytoflowViewError("X facet {0} not in the experiment")
+        
+        if self.xfacet and self.xfacet not in names:
+            raise util.CytoflowViewError("X facet {} is not a statistic index; "
+                                         "must be one of {}".format(self.xfacet, names))
+        
+        if self.yfacet and self.yfacet not in experiment.conditions:
+            raise util.CytoflowViewError("Y facet {0} not in the experiment")
+        
+        if self.yfacet and self.yfacet not in names:
+            raise util.CytoflowViewError("Y facet {} is not a statistic index; "
+                                         "must be one of {}".format(self.yfacet, names))
+        
+        if self.huefacet and self.huefacet not in experiment.metadata:
+            raise util.CytoflowViewError("Hue facet {0} not in the experiment")   
+        
+        if self.huefacet and self.huefacet not in names:
+            raise util.CytoflowViewError("Hue facet {} is not a statistic index; "
+                                         "must be one of {}".format(self.huefacet, names))  
+            
         col_wrap = kwargs.pop('col_wrap', None)
         
         if col_wrap and self.yfacet:
