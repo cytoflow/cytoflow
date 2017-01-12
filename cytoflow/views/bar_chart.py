@@ -333,8 +333,8 @@ class BarChartView(HasStrictTraits):
 
         data.reset_index(inplace = True)
         
-        if plot_name:
-            if plot_name and not unused_names:
+        if plot_name is not None:
+            if plot_name is not None and not unused_names:
                 raise util.CytoflowViewError("Plot {} not from plot_enum"
                                              .format(plot_name))
                                

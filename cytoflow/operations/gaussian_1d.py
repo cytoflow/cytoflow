@@ -554,8 +554,8 @@ class GaussianMixture1DView(cytoflow.views.HistogramView):
                 plt.title("{0} = {1}".format(self.op.by, plot))
             return
                                         
-        if plot_name:
-            if plot_name and not self._by:
+        if plot_name is not None:
+            if plot_name is not None and not self._by:
                 raise util.CytoflowViewError("Plot {} not from plot_enum"
                                              .format(plot_name))
                                
@@ -587,7 +587,7 @@ class GaussianMixture1DView(cytoflow.views.HistogramView):
                                           enumerate(col_names)):
             
             facets = filter(lambda x: x, [row, col])
-            if plot_name:
+            if plot_name is not None:
                 try:
                     gmm_name = list(plot_name) + facets
                 except TypeError: # plot_name isn't a list
