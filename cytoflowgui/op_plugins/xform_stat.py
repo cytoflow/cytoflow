@@ -21,40 +21,51 @@ Created on Oct 9, 2015
 @author: brian
 '''
 
-from sklearn import mixture
+import numpy as np
+import pandas as pd
 
-from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor, \
-                         CheckListEditor, ButtonEditor, TextEditor
+from traitsui.api import View, Item, EnumEditor, Controller, VGroup, \
+                         CheckListEditor, TextEditor
 from envisage.api import Plugin, contributes_to
-from traits.api import provides, Callable, Instance, Str, List, Dict, Any, DelegatesTo, on_trait_change
+from traits.api import provides, Callable, Str, List, Dict, Property
 from pyface.api import ImageResource
 
-from cytoflow.operations import IOperation
 from cytoflow.operations.xform_stat import TransformStatisticOp
-from cytoflow.views.i_selectionview import IView
 import cytoflow.utility as util
 
-from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
 from cytoflowgui.subset_editor import SubsetEditor
-from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
-from cytoflowgui.util import summary_functions, error_functions
+
+transform_functions = {"Sum" : np.sum,
+                       "Proportion" : lambda a: pd.Series(a / a.sum())
+                       }
 
 
 class TransformStatisticHandler(Controller, OpHandlerMixin):
+    
+    prev_statistics = Property(depends_on = "info.ui.context")
+    
+    def _get_prev_statistics(self):
+        context = self.info.ui.context['context']
+        if context and context.previous:
+            return context.previous.statistics.keys()
+        else:
+            return []
+    
     def default_traits_view(self):
         return View(Item('name',
                          editor = TextEditor(auto_set = False)),
                     Item('statistic',
-                         editor=EnumEditor(name='context.previous.channels'),
-                         label = "Channel"),
+                         editor=EnumEditor(name='handler.prev_statistics'),
+                         label = "Statistic"),
                     Item('function_name',
-                                editor = EnumEditor(values = summary_functions.keys()),
-                                label = "Function"),
+                         editor = EnumEditor(values = transform_functions.keys()),
+                         label = "Function"),
                     Item('by',
                          editor = CheckListEditor(cols = 2,
-                                                  name = 'context.previous.conditions'),
+                                                  name = 'handler.previous_conditions'),
+                         
                          label = 'Group\nBy',
                          style = 'custom'),
                     VGroup(Item('subset_dict',
@@ -72,6 +83,14 @@ class TransformStatisticPluginOp(TransformStatisticOp, PluginOpMixin):
     # functions aren't picklable, so send the name instead
     function_name = Str()
     function = Callable(transient = True)
+    
+    def apply(self, experiment):
+        if not self.function_name:
+            raise util.CytoflowOpError("Transform function not set")
+        
+        self.function = transform_functions[self.function_name]
+        
+        return TransformStatisticOp.apply(self, experiment)
 
 @provides(IOperationPlugin)
 class TransformStatisticPlugin(Plugin):

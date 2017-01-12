@@ -26,7 +26,7 @@ from range2d import Range2DPlugin
 from polygon import PolygonPlugin
 from quad import QuadPlugin
 
-# data-drive
+# data-driven
 from binning import BinningPlugin
 from gaussian_1d import GaussianMixture1DPlugin
 from gaussian_2d import GaussianMixture2DPlugin

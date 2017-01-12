@@ -30,6 +30,7 @@ import heapq, threading
 
 import numpy as np
 import scipy.stats
+import pandas as pd
 import cytoflow.utility as util
 
 # http://stackoverflow.com/questions/1977362/how-to-create-module-wide-variables-in-python
@@ -105,13 +106,4 @@ class DefaultFileDialog(FileDialog):
         dlg.setDefaultSuffix(self.default_suffix)
         return dlg
 
-summary_functions = {"Mean" : np.mean,
-                     "Geom.Mean" : util.geom_mean,
-                     "Count" : len}
 
-mean_95ci = lambda x: util.ci(x, np.mean, boots = 100)
-geomean_95ci = lambda x: util.ci(x, util.geom_mean, boots = 100)
-error_functions = {"Std.Dev." : np.std,
-                   "S.E.M" : scipy.stats.sem,
-                   "Mean 95% CI" : mean_95ci,
-                   "Geom.Mean 95% CI" : geomean_95ci}

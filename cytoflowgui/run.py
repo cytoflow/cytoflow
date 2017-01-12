@@ -1,4 +1,5 @@
 #!/usr/bin/env python2.7
+from docutils.transforms import Transform
 
 # (c) Massachusetts Institute of Technology 2015-2016
 #
@@ -187,7 +188,8 @@ def run_gui():
     
     plugins.extend(view_plugins)
     
-    op_plugins = [ChannelStatisticPlugin(),
+    op_plugins = [TransformStatisticPlugin(),
+                  ChannelStatisticPlugin(),
                   TasbePlugin(),
                   ColorTranslationPlugin(),
                   AutofluorescencePlugin(),

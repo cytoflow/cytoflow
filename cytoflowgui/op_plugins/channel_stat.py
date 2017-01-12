@@ -21,25 +21,36 @@ Created on Oct 9, 2015
 @author: brian
 '''
 
-from sklearn import mixture
+import numpy as np
+import pandas as pd
+import scipy.stats
 
-from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor, \
-                         CheckListEditor, ButtonEditor, TextEditor
+from traitsui.api import View, Item, EnumEditor, Controller, VGroup, \
+                         CheckListEditor, TextEditor
 from envisage.api import Plugin, contributes_to
-from traits.api import provides, Callable, Instance, Str, List, Dict, Any, DelegatesTo, on_trait_change
+from traits.api import provides, Callable, Str, List, Dict
 from pyface.api import ImageResource
 
-from cytoflow.operations import IOperation
 from cytoflow.operations.channel_stat import ChannelStatisticOp
-from cytoflow.views.i_selectionview import IView
 import cytoflow.utility as util
 
-from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
 from cytoflowgui.subset_editor import SubsetEditor
-from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
-from cytoflowgui.util import summary_functions
+
+mean_95ci = lambda x: util.ci(x, np.mean, boots = 100)
+geomean_95ci = lambda x: util.ci(x, util.geom_mean, boots = 100)
+
+summary_functions = {"Mean" : np.mean,
+                     "Geom.Mean" : util.geom_mean,
+                     "Count" : len,
+                     "Std.Dev" : np.std,
+                     "Geom.SD" : util.geom_sd_range,
+                     "SEM" : scipy.stats.sem,
+                     "Geom.SEM" : util.geom_sem_range,
+                     "Mean 95% CI" : mean_95ci,
+                     "Geom.Mean 95% CI" : geomean_95ci
+                     }
 
 
 class ChannelStatisticHandler(Controller, OpHandlerMixin):
