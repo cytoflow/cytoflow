@@ -103,6 +103,10 @@ class HistogramView(HasStrictTraits):
             raise util.CytoflowViewError("Hue facet {0} not in the experiment"
                                     .format(self.huefacet))
             
+        facets = filter(lambda x: x, [self.xfacet, self.yfacet, self.huefacet])
+        if len(facets) != len(set(facets)):
+            raise util.CytoflowViewError("Can't reuse facets")
+            
         col_wrap = kwargs.pop('col_wrap', None)
         
         if col_wrap and self.yfacet:

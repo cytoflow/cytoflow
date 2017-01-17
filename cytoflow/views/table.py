@@ -134,6 +134,8 @@ class TableView(HasStrictTraits):
 
         facets = filter(lambda x: x, [self.row_facet, self.subrow_facet, 
                                       self.column_facet, self.subcolumn_facet])
+        if len(facets) != len(set(facets)):
+            raise util.CytoflowViewError("Can't reuse facets")
         
         if set(facets) != set(data.index.names):
             raise util.CytoflowViewError("Must use all the statistic indices as variables or facets: {}"

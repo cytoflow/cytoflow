@@ -200,6 +200,9 @@ class BarChartView(HasStrictTraits):
                                          "must be one of {}".format(self.huefacet, data.index.names)) 
             
         facets = filter(lambda x: x, [self.variable, self.xfacet, self.yfacet, self.huefacet])
+        if len(facets) != len(set(facets)):
+            raise util.CytoflowViewError("Can't reuse facets")
+        
         by = list(set(names) - set(facets))
         
         class plot_enum(object):
@@ -324,6 +327,9 @@ class BarChartView(HasStrictTraits):
             raise util.CytoflowViewError("Must set xfacet to use col_wrap.")
             
         facets = filter(lambda x: x, [self.variable, self.xfacet, self.yfacet, self.huefacet])
+        if len(facets) != len(set(facets)):
+            raise util.CytoflowViewError("Can't reuse facets")
+        
         unused_names = list(set(names) - set(facets))
 
         if unused_names and plot_name is None:
