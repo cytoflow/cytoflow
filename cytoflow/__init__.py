@@ -41,6 +41,7 @@ from .operations.bead_calibration import BeadCalibrationOp
 from .operations.color_translation import ColorTranslationOp
 
 # data-driven
+from .operations.ratio import RatioOp
 from .operations.gaussian_1d import GaussianMixture1DOp
 from .operations.gaussian_2d import GaussianMixture2DOp
 from .operations.channel_stat import ChannelStatisticOp
