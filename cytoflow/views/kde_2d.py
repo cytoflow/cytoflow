@@ -25,9 +25,7 @@ from six import string_types
 
 from traits.api import HasStrictTraits, provides, Str
 
-import matplotlib as mpl
 import matplotlib.pyplot as plt
-import matplotlib.colors as mcolors
 import seaborn as sns
 import numpy as np
 import statsmodels.nonparametric.api as smnp
@@ -148,6 +146,9 @@ class Kde2DView(HasStrictTraits):
         kwargs.setdefault('min_alpha', 0.2)
         kwargs.setdefault('max_alpha', 0.9)
         kwargs.setdefault('n_levels', 10)
+        
+        xscale = util.scale_factory(self.xscale, experiment, channel = self.xchannel)
+        yscale = util.scale_factory(self.yscale, experiment, channel = self.ychannel)
 
         # adjust the limits to clip extreme values
         min_quantile = kwargs.pop("min_quantile", 0.001)
@@ -155,13 +156,13 @@ class Kde2DView(HasStrictTraits):
                 
         xlim = kwargs.pop("xlim", None)
         if xlim is None:
-            xlim = (data[self.xchannel].quantile(min_quantile),
-                    data[self.xchannel].quantile(max_quantile))
+            xlim = (xscale.clip(data[self.xchannel].quantile(min_quantile)),
+                    xscale.clip(data[self.xchannel].quantile(max_quantile)))
                       
         ylim = kwargs.pop("ylim", None)
         if ylim is None:
-            ylim = (data[self.ychannel].quantile(min_quantile),
-                    data[self.ychannel].quantile(max_quantile))
+            ylim = (yscale.clip(data[self.ychannel].quantile(min_quantile)),
+                    yscale.clip(data[self.ychannel].quantile(max_quantile)))
 
         cols = col_wrap if col_wrap else \
                len(data[self.xfacet].unique()) if self.xfacet else 1
@@ -181,9 +182,6 @@ class Kde2DView(HasStrictTraits):
                           sharey = False,
                           xlim = xlim,
                           ylim = ylim)
-        
-        xscale = util.scale_factory(self.xscale, experiment, channel = self.xchannel)
-        yscale = util.scale_factory(self.yscale, experiment, channel = self.ychannel)
         
         for ax in g.axes.flatten():
             ax.set_xscale(self.xscale, **xscale.mpl_params)

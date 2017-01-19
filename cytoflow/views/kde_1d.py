@@ -128,6 +128,9 @@ class Kde1DView(HasStrictTraits):
 
         kwargs.setdefault('shade', True)
         kwargs['label'] = self.name
+        
+        # get the scale     
+        kwargs['scale'] = scale = util.scale_factory(self.scale, experiment, channel = self.channel)
 
         # adjust the limits to clip extreme values
         min_quantile = kwargs.pop("min_quantile", 0.001)
@@ -135,8 +138,8 @@ class Kde1DView(HasStrictTraits):
                 
         xlim = kwargs.pop("xlim", None)
         if xlim is None:
-            xlim = (data[self.channel].quantile(min_quantile),
-                    data[self.channel].quantile(max_quantile))
+            xlim = (scale.clip(data[self.channel].quantile(min_quantile)),
+                    scale.clip(data[self.channel].quantile(max_quantile)))
         
         cols = col_wrap if col_wrap else \
                len(data[self.xfacet].unique()) if self.xfacet else 1
@@ -156,8 +159,7 @@ class Kde1DView(HasStrictTraits):
                           sharey = False,
                           xlim = xlim)
         
-        # get the scale     
-        kwargs['scale'] = scale = util.scale_factory(self.scale, experiment, channel = self.channel)
+
         
         # set the scale for each set of axes; can't just call plt.xscale() 
         for ax in g.axes.flatten():

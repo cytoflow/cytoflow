@@ -17,8 +17,6 @@
 
 from __future__ import division, absolute_import
 
-import logging
-
 from traits.api import HasStrictTraits, Str, provides
 
 import numpy as np
