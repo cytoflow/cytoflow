@@ -45,5 +45,8 @@ class LinearScale(HasStrictTraits):
     
     def inverse(self, data):
         return data
+    
+    def clip(self, data):
+        return data
 
 register_scale(LinearScale)

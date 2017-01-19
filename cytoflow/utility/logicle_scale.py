@@ -158,7 +158,10 @@ class LogicleScale(HasStrictTraits):
                 data = max(min(data, logicle_max), logicle_min)
                 return self._logicle.scale(data)
             else:
-                raise CytoflowError("Unknown data type in LogicleScale.__call__")
+                try:
+                    return map(self._logicle_scale, data)
+                except TypeError:
+                    raise CytoflowError("Unknown data type in LogicleScale.__call__")
         except ValueError as e:
             raise CytoflowError(e.strerror)
 
@@ -179,9 +182,30 @@ class LogicleScale(HasStrictTraits):
                 data = max(min(data, 1.0 - sys.float_info.epsilon), 0.0)
                 return self._logicle.inverse(data)
             else:
-                raise CytoflowError("Unknown data type in LogicleScale.inverse")
+                try:
+                    return map(self._logicle.inverse, data)
+                except TypeError:
+                    raise CytoflowError("Unknown data type in LogicleScale.inverse")
         except ValueError as e:
             raise CytoflowError(str(e))
+        
+    def clip(self, data):
+        try:
+            logicle_min = self._logicle.inverse(0.0)
+            logicle_max = self._logicle.inverse(1.0 - sys.float_info.epsilon)
+            if isinstance(data, pd.Series):            
+                return data.clip(logicle_min, logicle_max)
+            elif isinstance(data, np.ndarray):
+                return np.clip(data, logicle_min, logicle_max)
+            elif isinstance(data, float):
+                return max(min(data, logicle_max), logicle_min)
+            else:
+                try:
+                    return map(lambda x: max(min(x, logicle_max), logicle_min), data)
+                except TypeError:
+                    raise CytoflowError("Unknown data type in LogicleScale.__call__")
+        except ValueError as e:
+            raise CytoflowError(e.strerror)
     
     @cached_property
     def _get__T(self):

@@ -67,6 +67,11 @@ class IScale(Interface):
         """
         Transforms 'data' using the inverse of this scale.
         """
+        
+    def clip(self, data):
+        """
+        Clips the data to the scale's domain.
+        """
     
 # maps name -> scale object
 _scale_mapping = {}

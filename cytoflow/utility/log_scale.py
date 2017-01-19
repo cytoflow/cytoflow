@@ -71,6 +71,20 @@ class LogScale(HasStrictTraits):
                         
     def inverse(self, data):
         return np.power(10, data)
+    
+    def clip(self, data):
+#         import pydevd; pydevd.settrace()
+        if isinstance(data, pd.Series):            
+            return data.clip(lower = self.threshold)
+        elif isinstance(data, np.ndarray):
+            return data.clip(min = self.threshold)
+        elif isinstance(data, float):
+            return max(data, self.threshold)
+        else:
+            try:
+                return map(lambda x: max(data, self.threshold), data)
+            except TypeError:
+                raise CytoflowError("Unknown data type in LogicleScale.__call__")
 
 register_scale(LogScale)
 

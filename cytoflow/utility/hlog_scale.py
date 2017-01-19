@@ -117,6 +117,9 @@ class HlogScale(HasStrictTraits):
             return f_inv(data)
         else:
             raise CytoflowError("Unknown data type in HlogScale.inverse")
+        
+    def clip(self, data):
+        return data
     
     def _get_range(self):
         if self.experiment:
