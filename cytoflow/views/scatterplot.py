@@ -146,6 +146,14 @@ class ScatterplotView(HasStrictTraits):
         kwargs.setdefault('s', 2)
         kwargs.setdefault('marker', 'o')
         kwargs.setdefault('antialiased', True)
+        
+        xscale = kwargs.pop('xscale', None)
+        if xscale is None:
+            xscale = util.scale_factory(self.xscale, experiment, channel = self.xchannel)
+        
+        yscale = kwargs.pop('yscale', None)
+        if yscale is None:
+            yscale = util.scale_factory(self.yscale, experiment, channel = self.ychannel)
 
         # adjust the limits to clip extreme values
         min_quantile = kwargs.pop("min_quantile", 0.001)
@@ -153,13 +161,13 @@ class ScatterplotView(HasStrictTraits):
                 
         xlim = kwargs.pop("xlim", None)
         if xlim is None:
-            xlim = (data[self.xchannel].quantile(min_quantile),
-                    data[self.xchannel].quantile(max_quantile))
+            xlim = (xscale.clip(data[self.xchannel].quantile(min_quantile)),
+                    xscale.clip(data[self.xchannel].quantile(max_quantile)))
                       
         ylim = kwargs.pop("ylim", None)
         if ylim is None:
-            ylim = (data[self.ychannel].quantile(min_quantile),
-                    data[self.ychannel].quantile(max_quantile))
+            ylim = (yscale.clip(data[self.ychannel].quantile(min_quantile)),
+                    yscale.clip(data[self.ychannel].quantile(max_quantile)))
             
         cols = col_wrap if col_wrap else \
                len(data[self.xfacet].unique()) if self.xfacet else 1
@@ -179,15 +187,7 @@ class ScatterplotView(HasStrictTraits):
                           sharey = False,
                           xlim = xlim,
                           ylim = ylim)
-        
-        xscale = kwargs.pop('xscale', None)
-        if xscale is None:
-            xscale = util.scale_factory(self.xscale, experiment, channel = self.xchannel)
-        
-        yscale = kwargs.pop('yscale', None)
-        if yscale is None:
-            yscale = util.scale_factory(self.yscale, experiment, channel = self.ychannel)
-        
+
         for ax in g.axes.flatten():
             ax.set_xscale(self.xscale, **xscale.mpl_params)
             ax.set_yscale(self.yscale, **yscale.mpl_params)
