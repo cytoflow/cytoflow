@@ -24,6 +24,8 @@ Created on Jan 18, 2017
 
 from __future__ import division, absolute_import
 
+import numpy as np
+
 from traits.api import (HasStrictTraits, Str, Constant, provides)
 
 import cytoflow.utility as util
@@ -105,8 +107,9 @@ class RatioOp(HasStrictTraits):
         new_experiment = experiment.clone()
         new_experiment.add_channel(self.name, 
                                    experiment[self.numerator] / experiment[self.denominator])
+        new_experiment.data.replace([np.inf, -np.inf], np.nan, inplace = True)
+        new_experiment.data.dropna(inplace = True)
         new_experiment.history.append(self.clone_traits(transient = lambda t: True))
-#         new_experiment.metadata[self.name] = {}
         new_experiment.metadata[self.name]['numerator'] = self.numerator
         new_experiment.metadata[self.name]['denominator'] = self.denominator
         return new_experiment
