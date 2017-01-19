@@ -144,38 +144,44 @@ class LogicleScale(HasStrictTraits):
         (ie, applying a log10 scale to negative numbers.)
         """
         
-        logicle_min = self._logicle.inverse(0.0)
-        logicle_max = self._logicle.inverse(1.0 - sys.float_info.epsilon)
-        if isinstance(data, pd.Series):            
-            data = data.clip(logicle_min, logicle_max)
-            return data.apply(self._logicle.scale)
-        elif isinstance(data, np.ndarray):
-            data = np.clip(data, logicle_min, logicle_max)
-            scale = np.vectorize(self._logicle.scale)
-            return scale(data)
-        elif isinstance(data, float):
-            data = max(min(data, logicle_max), logicle_min)
-            return self._logicle.scale(data)
-        else:
-            raise CytoflowError("Unknown data type in LogicleScale.__call__")
+        try:
+            logicle_min = self._logicle.inverse(0.0)
+            logicle_max = self._logicle.inverse(1.0 - sys.float_info.epsilon)
+            if isinstance(data, pd.Series):            
+                data = data.clip(logicle_min, logicle_max)
+                return data.apply(self._logicle.scale)
+            elif isinstance(data, np.ndarray):
+                data = np.clip(data, logicle_min, logicle_max)
+                scale = np.vectorize(self._logicle.scale)
+                return scale(data)
+            elif isinstance(data, float):
+                data = max(min(data, logicle_max), logicle_min)
+                return self._logicle.scale(data)
+            else:
+                raise CytoflowError("Unknown data type in LogicleScale.__call__")
+        except ValueError as e:
+            raise CytoflowError(e.strerror)
 
         
     def inverse(self, data):
         """
         Transforms 'data' using the inverse of this scale.
         """
-        if isinstance(data, pd.Series):            
-            data = data.clip(0, 1.0 - sys.float_info.epsilon)
-            return data.apply(self._logicle.inverse)
-        elif isinstance(data, np.ndarray):
-            data = np.clip(data, 0, 1.0 - sys.float_info.epsilon)
-            inverse = np.vectorize(self._logicle.inverse)
-            return inverse(data)
-        elif isinstance(data, float):
-            data = max(min(data, 1.0 - sys.float_info.epsilon), 0.0)
-            return self._logicle.inverse(data)
-        else:
-            raise CytoflowError("Unknown data type in LogicleScale.inverse")
+        try:
+            if isinstance(data, pd.Series):            
+                data = data.clip(0, 1.0 - sys.float_info.epsilon)
+                return data.apply(self._logicle.inverse)
+            elif isinstance(data, np.ndarray):
+                data = np.clip(data, 0, 1.0 - sys.float_info.epsilon)
+                inverse = np.vectorize(self._logicle.inverse)
+                return inverse(data)
+            elif isinstance(data, float):
+                data = max(min(data, 1.0 - sys.float_info.epsilon), 0.0)
+                return self._logicle.inverse(data)
+            else:
+                raise CytoflowError("Unknown data type in LogicleScale.inverse")
+        except ValueError as e:
+            raise CytoflowError(str(e))
     
     @cached_property
     def _get__T(self):
@@ -322,20 +328,24 @@ class MatplotlibLogicleScale(HasTraits, matplotlib.scale.ScaleBase):
         
         def transform_non_affine(self, values):
             
-            logicle_min = self.logicle.inverse(0.0)
-            logicle_max = self.logicle.inverse(1.0 - sys.float_info.epsilon)
-            if isinstance(values, pd.Series):            
-                values = values.clip(logicle_min, logicle_max)
-                return values.apply(self.logicle.scale)
-            elif isinstance(values, np.ndarray):
-                values = np.clip(values, logicle_min, logicle_max)
-                scale = np.vectorize(self.logicle.scale)
-                return scale(values)
-            elif isinstance(values, float):
-                data = max(min(values, logicle_max), logicle_min)
-                return self.logicle.scale(data)
-            else:
-                raise CytoflowError("Unknown data type in MatplotlibLogicleScale.transform_non_affine")
+            try:        
+                logicle_min = self.logicle.inverse(0.0)
+                logicle_max = self.logicle.inverse(1.0 - sys.float_info.epsilon)
+                if isinstance(values, pd.Series):            
+                    values = values.clip(logicle_min, logicle_max)
+                    return values.apply(self.logicle.scale)
+                elif isinstance(values, np.ndarray):
+                    values = np.clip(values, logicle_min, logicle_max)
+                    scale = np.vectorize(self.logicle.scale)
+                    return scale(values)
+                elif isinstance(values, float):
+                    data = max(min(values, logicle_max), logicle_min)
+                    return self.logicle.scale(data)
+                else:
+                    raise CytoflowError("Unknown data type in MatplotlibLogicleScale.transform_non_affine")
+                
+            except ValueError as e:
+                raise CytoflowError(str(e))
 
 
         def inverted(self):
@@ -355,18 +365,21 @@ class MatplotlibLogicleScale(HasTraits, matplotlib.scale.ScaleBase):
             HasTraits.__init__(self, **kwargs)
         
         def transform_non_affine(self, values):
-            if isinstance(values, pd.Series):            
-                values = values.clip(0, 1.0 - sys.float_info.epsilon)
-                return values.apply(self.logicle.inverse)
-            elif isinstance(values, np.ndarray):
-                values = np.clip(values, 0, 1.0 - sys.float_info.epsilon)
-                inverse = np.vectorize(self.logicle.inverse)
-                return inverse(values)
-            elif isinstance(values, float):
-                values = max(min(values, 1.0 - sys.float_info.epsilon), 0.0)
-                return self.logicle.inverse(values)
-            else:
-                raise CytoflowError("Unknown data type in LogicleScale.inverse")
+            try:
+                if isinstance(values, pd.Series):            
+                    values = values.clip(0, 1.0 - sys.float_info.epsilon)
+                    return values.apply(self.logicle.inverse)
+                elif isinstance(values, np.ndarray):
+                    values = np.clip(values, 0, 1.0 - sys.float_info.epsilon)
+                    inverse = np.vectorize(self.logicle.inverse)
+                    return inverse(values)
+                elif isinstance(values, float):
+                    values = max(min(values, 1.0 - sys.float_info.epsilon), 0.0)
+                    return self.logicle.inverse(values)
+                else:
+                    raise CytoflowError("Unknown data type in LogicleScale.inverse")
+            except ValueError as e:
+                raise CytoflowError(str(e))
         
         
         def inverted(self):
