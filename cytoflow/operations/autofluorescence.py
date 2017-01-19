@@ -106,6 +106,7 @@ class AutofluorescenceOp(HasStrictTraits):
         # make a little Experiment
         check_tube(self.blank_file, experiment)
         blank_exp = ImportOp(tubes = [Tube(file = self.blank_file)], 
+                             channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels},
                              name_metadata = experiment.metadata['name_metadata']).apply()
         
         # apply previous operations
@@ -245,6 +246,7 @@ class AutofluorescenceDiagnosticView(HasStrictTraits):
         try:
             check_tube(self.op.blank_file, experiment)
             blank_exp = ImportOp(tubes = [Tube(file = self.op.blank_file)], 
+                                 channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels},
                                  name_metadata = experiment.metadata['name_metadata']).apply()
         except util.CytoflowOpError as e:
             raise util.CytoflowViewError(e.__str__())

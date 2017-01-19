@@ -91,10 +91,16 @@ class ImportOp(HasStrictTraits):
         experimental conditions.  Each `Tube` must have a `conditions` dict
         whose keys match `self.conditions.keys()`.
         
-    channels = List(Str)
+    channels = Dict(Str, Str)
         If you only need a subset of the channels available in the data set,
-        specify them here.  If `channels` is empty, load all the channels in
-        the FCS files.
+        specify them here.  Each (key, value) pair specifies a channel to
+        include in the output experiment.  The key is the channel name in the 
+        FCS file, and the value is the name of the channel in the Experiment.
+        You can use this to rename channels as you import data (because flow
+        channel names are frequently not terribly informative.)  New channel
+        names must be valid Python identifiers: start with a letter or `_`, and
+        all characters must be letters, numbers or `_`.  If `channels` is
+        empty, load all channels in the FCS files.
         
     events : Int (default = 0)
         If >= 0, import only a random subset of events of size `events`. 
@@ -150,7 +156,7 @@ class ImportOp(HasStrictTraits):
     tubes = List(Tube)
     
     # which channels do we import?
-    channels = List(Str)
+    channels = Dict(Str, Str)
     
     # which FCS metadata has the channel names in it?
     name_metadata = Enum(None, "$PnN", "$PnS")
@@ -166,6 +172,15 @@ class ImportOp(HasStrictTraits):
         
         if not self.tubes or len(self.tubes) == 0:
             raise util.CytoflowOpError("Must specify some tubes!")
+        
+        # if we have channel renaming, make sure the new names are valid
+        # python identifiers
+        if self.channels:
+            for old_name, new_name in self.channels.iteritems():
+                if new_name != util.sanitize_identifier(new_name):
+                    raise util.CytoflowOpError("Channel name {} must be a "
+                                               "valid Python identifier."
+                                               .format(new_name))
         
         # make sure each tube has the same conditions
         tube0_conditions = set(self.tubes[0].conditions)
@@ -235,7 +250,7 @@ class ImportOp(HasStrictTraits):
         meta_channels.set_index(experiment.metadata["name_metadata"], 
                                 inplace = True)
         
-        channels = self.channels if self.channels \
+        channels = self.channels.keys() if self.channels \
                    else list(tube0_meta["_channel_names_"])
 
         # make sure everything in self.channels is in the tube channels
@@ -249,6 +264,8 @@ class ImportOp(HasStrictTraits):
 
         for channel in channels:
             experiment.add_channel(channel)
+            
+            experiment.metadata[channel]["fcs_name"] = channel
             
             # keep track of the channel's PMT voltage
             if("$PnV" in meta_channels.ix[channel]):
@@ -274,6 +291,16 @@ class ImportOp(HasStrictTraits):
                                   util.CytoflowWarning)
 
             experiment.add_events(tube_data[channels], tube.conditions)
+                        
+        for channel in channels:
+            if self.channels and channel in self.channels:
+                new_name = self.channels[channel]
+                if channel == new_name:
+                    continue
+                experiment.data.rename(columns = {channel : new_name}, inplace = True)
+                experiment.metadata[new_name] = experiment.metadata[channel]
+                experiment.metadata[new_name]["fcs_name"] = channel
+                del experiment.metadata[channel]
             
         return experiment
 
@@ -293,7 +320,7 @@ def check_tube(filename, experiment):
                               .format(filename, str(e)))
     
     # first make sure the tube has the right channels    
-    if not set(experiment.channels) <= set(tube_meta["_channel_names_"]):
+    if not set([experiment.metadata[c]["fcs_name"] for c in experiment.channels]) <= set(tube_meta["_channel_names_"]):
         raise util.CytoflowOpError("Tube {0} doesn't have the same channels"
                                  .format(filename))
      
@@ -302,15 +329,16 @@ def check_tube(filename, experiment):
                             inplace = True)
      
     # next check the per-channel parameters
-    for channel in experiment.channels:        
+    for channel in experiment.channels:  
+        fcs_name = experiment.metadata[channel]["fcs_name"]      
         # first check voltage
         if "voltage" in experiment.metadata[channel]:    
-            if not "$PnV" in tube_channels.ix[channel]:
+            if not "$PnV" in tube_channels.ix[fcs_name]:
                 raise util.CytoflowOpError("Didn't find a voltage for channel {0}" \
                                    "in tube {1}".format(channel, filename))
             
             old_v = experiment.metadata[channel]["voltage"]
-            new_v = tube_channels.ix[channel]['$PnV']
+            new_v = tube_channels.ix[fcs_name]['$PnV']
             
             if old_v != new_v and not channel in ignore_v:
                 raise util.CytoflowOpError("Tube {0} doesn't have the same voltages"

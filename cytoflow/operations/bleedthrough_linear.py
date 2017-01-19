@@ -135,6 +135,7 @@ class BleedthroughLinearOp(HasStrictTraits):
             # make a little Experiment
             check_tube(self.controls[channel], experiment)
             tube_exp = ImportOp(tubes = [Tube(file = self.controls[channel])],
+                                channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels},
                                 name_metadata = experiment.metadata['name_metadata']).apply()
             
             # apply previous operations
@@ -314,6 +315,7 @@ class BleedthroughLinearDiagnostic(HasStrictTraits):
                 
                 check_tube(self.op.controls[from_channel], experiment)
                 tube_exp = ImportOp(tubes = [Tube(file = self.op.controls[from_channel])],
+                                    channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels},
                                     name_metadata = experiment.metadata['name_metadata']).apply()
                 
                 # apply previous operations
