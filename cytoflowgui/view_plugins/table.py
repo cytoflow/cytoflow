@@ -38,6 +38,7 @@ from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
     import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, StatisticViewHandlerMixin, PluginViewMixin
+from cytoflowgui.util import DefaultFileDialog
 
 class TableHandler(Controller, ViewHandlerMixin, StatisticViewHandlerMixin):
     """
@@ -123,10 +124,13 @@ class TablePluginView(TableView, PluginViewMixin):
 #      
     @on_trait_change('export')
     def _on_export(self):
-                
-        dialog = FileDialog(parent = None,
-                            action = 'save as',
-                            wildcard = "CSV files (*.csv)|*.csv|)")
+        
+        dialog = DefaultFileDialog(parent = None,
+                                   action = 'save as', 
+                                   default_suffix = "csv",
+                                   wildcard = (FileDialog.create_wildcard("CSV", "*.csv") + ';' + #@UndefinedVariable  
+                                               FileDialog.create_wildcard("All files", "*")))     #@UndefinedVariable  
+
         if dialog.open() != OK:
             return
 
