@@ -79,7 +79,7 @@ class TransformStatisticHandler(Controller, OpHandlerMixin):
                          label = "Function"),
                     Item('by',
                          editor = CheckListEditor(cols = 2,
-                                                  name = 'handler.previous_conditions'),
+                                                  name = 'context.previous.conditions_names'),
                          
                          label = 'Group\nBy',
                          style = 'custom'),

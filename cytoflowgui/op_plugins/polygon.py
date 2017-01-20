@@ -65,7 +65,7 @@ class PolygonViewHandler(Controller, ViewHandlerMixin):
                            Item('yscale',
                                 label = "Y Scale"),
                            Item('huefacet',
-                                editor=ExtendableEnumEditor(name='handler.previous_conditions',
+                                editor=ExtendableEnumEditor(name='context.previous.conditions_names',
                                                             extra_items = {"None" : ""}),
                                 label="Color\nFacet"),
                            label = "Polygon Setup View",

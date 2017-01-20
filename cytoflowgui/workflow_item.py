@@ -89,8 +89,10 @@ class WorkflowItem(HasStrictTraits):
     
     channels = List(Str, status = True)
     conditions = Dict(Str, pd.Series, status = True)
+    conditions_names = Property(depends_on = 'conditions')
     metadata = Dict(Str, Any, status = True)
     statistics = Dict(Tuple(Str, Str), pd.Series, status = True)
+    statistics_names = Property(depends_on = 'statistics')
     
     # the IViews against the output of this operation
     views = List(IView, copy = "ref")
@@ -168,6 +170,20 @@ class WorkflowItem(HasStrictTraits):
             return self.current_view.handler_factory(model = self.current_view)
         else:
             return None
+
+    @cached_property
+    def _get_conditions_names(self):
+        if self.conditions:
+            return self.conditions.keys()
+        else:
+            return []
+        
+    @cached_property
+    def _get_statistics_names(self):
+        if self.statistics:
+            return self.statistics.keys()
+        else:
+            return []
 
     
 class RemoteWorkflowItem(WorkflowItem):

@@ -21,12 +21,15 @@ Created on Feb 24, 2015
 @author: brian
 """
 
-from traits.api import provides, Callable
+import pandas as pd
+
+from traits.api import provides, Callable, Property
 from traitsui.api import View, Item, Controller, EnumEditor, VGroup
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
 from cytoflow import Stats2DView
+import cytoflow.utility as util
 
 from cytoflowgui.subset_editor import SubsetEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
@@ -39,15 +42,69 @@ class Stats2DHandler(Controller, ViewHandlerMixin, StatisticViewHandlerMixin):
     docs
     """
     
+    # override corresponding props from the StatisticViewHandlerMixin
+    numeric_indices = Property(depends_on = "model.xstatistic")
+    indices = Property(depends_on = "model.xstatistic")
+    
+    # MAGIC: gets the value for the property numeric_indices
+    def _get_numeric_indices(self):
+        context = self.info.ui.context['context']
+        
+        if not (context and context.statistics and self.model and self.model.xstatistic[0]):
+            return []
+        
+        stat = context.statistics[self.model.xstatistic]
+        data = pd.DataFrame(index = stat.index)
+        
+        if self.model.subset:
+            data = data.query(self.model.subset)
+            
+        if len(data) == 0:
+            return []       
+        
+        names = list(data.index.names)
+        for name in names:
+            unique_values = data.index.get_level_values(name).unique()
+            if len(unique_values) == 1:
+                data.index = data.index.droplevel(name)
+        
+        data.reset_index(inplace = True)
+        return [x for x in data if util.is_numeric(data[x])]
+    
+    # MAGIC: gets the value for the property indices
+    def _get_indices(self):
+        context = self.info.ui.context['context']
+        
+        if not (context and context.statistics and self.model and self.model.xstatistic[0]):
+            return []
+        
+        stat = context.statistics[self.model.xstatistic]
+        data = pd.DataFrame(index = stat.index)
+        
+        if self.model.subset:
+            data = data.query(self.model.subset)
+            
+        if len(data) == 0:
+            return []       
+        
+        names = list(data.index.names)
+        for name in names:
+            unique_values = data.index.get_level_values(name).unique()
+            if len(unique_values) == 1:
+                data.index = data.index.droplevel(name)
+        
+        return list(data.index.names)
+    
+    
     def default_traits_view(self):
         return View(VGroup(
                     VGroup(Item('name'),
                            Item('xstatistic',
-                                editor = EnumEditor(name = 'handler.statistics'),
+                                editor = EnumEditor(name = 'context.statistics_names'),
                                 label = "X Statistic"),
                            Item('xscale', label = "X Scale"),
                            Item('ystatistic',
-                                editor = EnumEditor(name = 'handler.statistics'),
+                                editor = EnumEditor(name = 'context.statistics_names'),
                                 label = "Y Statistic"),
                            Item('yscale', label = "Y Scale"),
                            Item('variable',
@@ -66,11 +123,11 @@ class Stats2DHandler(Controller, ViewHandlerMixin, StatisticViewHandlerMixin):
                                 label="Color\nFacet"),
                            Item('huescale', label = "Hue\nScale"),
                            Item('x_error_statistic',
-                                editor=ExtendableEnumEditor(name='handler.statistics',
+                                editor=ExtendableEnumEditor(name='context.statistics_names',
                                                             extra_items = {"None" : ("", "")}),
                                 label = "X Error\nStatistic"),
                            Item('y_error_statistic',
-                                editor=ExtendableEnumEditor(name='handler.statistics',
+                                editor=ExtendableEnumEditor(name='context.statistics_names',
                                                             extra_items = {"None" : ("", "")}),
                                 label = "Y Error\nStatistic"),
                            label = "Two-Dimensional Statistics Plot",

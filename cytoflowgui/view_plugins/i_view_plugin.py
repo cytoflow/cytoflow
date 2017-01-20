@@ -116,31 +116,11 @@ class PluginViewMixin(HasTraits):
             
 
 class ViewHandlerMixin(HasTraits):
-    statistics = Property(depends_on = "info.ui.context")
+    """
+    Useful bits for view handlers.  Empty now, but maintained in case it's
+    useful again.
+    """
     
-    def _get_statistics(self):
-        context = self.info.ui.context['context']
-        if context:
-            return context.statistics.keys()
-        else:
-            return []
-        
-    conditions = Property(depends_on = "info.ui.context")
-    previous_conditions = Property(depends_on = "info.ui.context")
-    
-    def _get_conditions(self):
-        context = self.info.ui.context['context']
-        if context:
-            return context.conditions.keys()
-        else:
-            return []
-
-    def _get_previous_conditions(self):
-        context = self.info.ui.context['context']
-        if context and context.previous:
-            return context.previous.conditions.keys()
-        else:
-            return []
         
 class StatisticViewHandlerMixin(HasTraits):
     

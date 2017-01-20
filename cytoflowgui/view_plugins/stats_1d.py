@@ -43,7 +43,7 @@ class Stats1DHandler(Controller, ViewHandlerMixin, StatisticViewHandlerMixin):
         return View(VGroup(
                     VGroup(Item('name'),
                            Item('statistic',
-                                editor=EnumEditor(name='handler.statistics'),
+                                editor=EnumEditor(name='context.statistics_names'),
                                 label = "Statistic"),
                            Item('variable',
                                 editor = EnumEditor(name = 'handler.numeric_indices')),
@@ -63,7 +63,7 @@ class Stats1DHandler(Controller, ViewHandlerMixin, StatisticViewHandlerMixin):
                                 label="Hue\nFacet"),
                            Item('huescale', label = "Hue\nScale"),
                            Item('error_statistic',
-                                editor=ExtendableEnumEditor(name='handler.statistics',
+                                editor=ExtendableEnumEditor(name='context.statistics_names',
                                                             extra_items = {"None" : ("", "")}),
                                 label = "Error\nStatistic"),
                            label = "One-Dimensional Statistics Plot",

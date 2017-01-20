@@ -43,7 +43,7 @@ class BarChartHandler(Controller, ViewHandlerMixin, StatisticViewHandlerMixin):
         return View(VGroup(
                     VGroup(Item('name'),
                            Item('statistic',
-                                editor=EnumEditor(name='handler.statistics'),
+                                editor=EnumEditor(name='context.statistics_names'),
                                 label = "Statistic"),
                            Item('variable',
                                 editor=EnumEditor(name='handler.indices'),
@@ -63,7 +63,7 @@ class BarChartHandler(Controller, ViewHandlerMixin, StatisticViewHandlerMixin):
                                                             extra_items = {"None" : ""}),
                                 label="Hue\nFacet"),
                            Item('error_statistic',
-                                editor=ExtendableEnumEditor(name='handler.statistics',
+                                editor=ExtendableEnumEditor(name='context.statistics_names',
                                                             extra_items = {"None" : ("", "")}),
                                 label = "Error\nStatistic"),
                              label = "Bar Chart",

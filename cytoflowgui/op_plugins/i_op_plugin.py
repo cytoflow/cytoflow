@@ -162,15 +162,7 @@ shared_op_traits = Group(Item('context.estimate_warning',
         
 class OpHandlerMixin(HasTraits):
     """
-    Useful bits for operation handlers
+    Useful bits for operation handlers.  Not currently used, but kept around
+    in case it's useful some day in the future.
     """
-    
-    previous_conditions = Property(depends_on = "info.ui.context")
-    
-    def _get_previous_conditions(self):
-        context = self.info.ui.context['context']
-        if context and context.previous:
-            return context.previous.conditions.keys()
-        else:
-            return []
 

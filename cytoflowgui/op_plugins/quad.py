@@ -68,7 +68,7 @@ class ThresholdViewHandler(Controller, ViewHandlerMixin):
                                 style = "readonly"),
                            Item('yscale'),
                            Item('huefacet',
-                                editor=ExtendableEnumEditor(name='handler.previous_conditions',
+                                editor=ExtendableEnumEditor(name='context.previous.conditions_names',
                                                             extra_items = {"None" : ""}),
                                 label="Color\nFacet"),
                            label = "Quad Setup View",

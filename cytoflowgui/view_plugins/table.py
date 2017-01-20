@@ -48,7 +48,7 @@ class TableHandler(Controller, ViewHandlerMixin, StatisticViewHandlerMixin):
         return View(VGroup(
                     VGroup(Item('name'),
                            Item('statistic',
-                                editor = EnumEditor(name='handler.statistics'),
+                                editor = EnumEditor(name='context.statistics_names'),
                                 label = "Statistic"),
                            Item('row_facet',
                                 editor = ExtendableEnumEditor(name='handler.indices',
