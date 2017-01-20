@@ -182,10 +182,23 @@ class TableView(HasStrictTraits):
                     for (cci, cc) in enumerate(subcol_groups):
                         row_idx = ri * len(subrow_groups) + rri + row_offset
                         col_idx = ci * len(subcol_groups) + cci + col_offset
-                        agg_idx = [x for x in (r, rr, c, cc) if x is not None]
+                        
+                        # this is not pythonic, but i'm tired
+                        agg_idx = []
+                        for data_idx in data.index.names:
+                            if data_idx == self.row_facet:
+                                agg_idx.append(r)
+                            elif data_idx == self.subrow_facet:
+                                agg_idx.append(rr)
+                            elif data_idx == self.column_facet:
+                                agg_idx.append(c)
+                            elif data_idx == self.subcolumn_facet:
+                                agg_idx.append(cc)
+                        
                         agg_idx = tuple(agg_idx)
                         if len(agg_idx) == 1:
                             agg_idx = agg_idx[0]
+                            
                             
                         t.add_cell(row_idx, 
                                    col_idx,
