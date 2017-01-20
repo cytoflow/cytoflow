@@ -117,6 +117,8 @@ class FrameStatisticOp(HasStrictTraits):
             raise util.CytoflowOpError("Must specify some grouping conditions "
                                        "in 'by'")
 
+        new_experiment = experiment.clone()
+
         if self.subset:
             try:
                 experiment = experiment.query(self.subset)
@@ -174,8 +176,6 @@ class FrameStatisticOp(HasStrictTraits):
         # special handling for lists
         if type(stat.iloc[0]) is pd.Series:
             stat = pd.concat(stat.to_dict(), names = self.by + stat.iloc[0].index.names)
-        
-        new_experiment = experiment.clone()
         
         new_experiment.history.append(self.clone_traits(transient = lambda t: True))
         if self.statistic_name:

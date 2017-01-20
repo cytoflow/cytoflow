@@ -123,6 +123,7 @@ class ChannelStatisticOp(HasStrictTraits):
             raise util.CytoflowOpError("Must specify some grouping conditions "
                                        "in 'by'")
 
+        new_experiment = experiment.clone()
         if self.subset:
             try:
                 experiment = experiment.query(self.subset)
@@ -180,7 +181,6 @@ class ChannelStatisticOp(HasStrictTraits):
         if type(stat.iloc[0]) is pd.Series:
             stat = pd.concat(stat.to_dict(), names = self.by + stat.iloc[0].index.names)
         
-        new_experiment = experiment.clone()
         new_experiment.history.append(self.clone_traits(transient = lambda t: True))
         if self.statistic_name:
             new_experiment.statistics[(self.name, self.statistic_name)] = stat
