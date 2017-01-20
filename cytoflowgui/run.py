@@ -56,7 +56,8 @@ from op_plugins import (ImportPlugin, ThresholdPlugin, RangePlugin, QuadPlugin,
                         BleedthroughLinearPlugin, BleedthroughPiecewisePlugin,
                         BeadCalibrationPlugin, AutofluorescencePlugin,
                         ColorTranslationPlugin, TasbePlugin, 
-                        ChannelStatisticPlugin, TransformStatisticPlugin)
+                        ChannelStatisticPlugin, TransformStatisticPlugin, 
+                        RatioPlugin)
 
 from view_plugins import (HistogramPlugin, Histogram2DPlugin, ScatterplotPlugin,
                           BarChartPlugin, Stats1DPlugin, Kde1DPlugin, Kde2DPlugin,
@@ -188,7 +189,8 @@ def run_gui():
     
     plugins.extend(view_plugins)
     
-    op_plugins = [TransformStatisticPlugin(),
+    op_plugins = [RatioPlugin(),
+                  TransformStatisticPlugin(),
                   ChannelStatisticPlugin(),
                   TasbePlugin(),
                   ColorTranslationPlugin(),
