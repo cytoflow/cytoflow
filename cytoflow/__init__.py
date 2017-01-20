@@ -70,4 +70,5 @@ from cytoflow.utility.util_functions import (geom_mean, geom_sd, geom_sd_range,
                                              geom_sem, geom_sem_range)
 from cytoflow.utility.scale import set_default_scale
 
-__version__ = "0.4.1"
+import subprocess
+__version__ = subprocess.check_output(["git", "describe"])

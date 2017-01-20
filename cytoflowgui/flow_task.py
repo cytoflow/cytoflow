@@ -26,10 +26,10 @@ Created on Feb 11, 2015
 
 import os.path
 
-from traits.api import Instance, List, Bool, on_trait_change, Any, Unicode
+from traits.api import Instance, List, Bool, on_trait_change, Any, Unicode, TraitError
 from pyface.tasks.api import Task, TaskLayout, PaneItem
 from pyface.tasks.action.api import SMenu, SMenuBar, SToolBar, TaskAction
-from pyface.api import FileDialog, ImageResource, AboutDialog, information, confirm, OK, YES
+from pyface.api import FileDialog, ImageResource, AboutDialog, information, error, confirm, OK, YES
 from envisage.api import Plugin, ExtensionPoint, contributes_to
 from envisage.ui.tasks.api import TaskFactory
 
@@ -186,13 +186,13 @@ class FlowTask(Task):
         return [self.workflow_pane, self.view_pane]
         
     def on_new(self):
-        
-        ret = confirm(parent = None,
-                      message = "Are you sure you want to clear the current workflow?",
-                      title = "Clear workflow?")
-        
-        if ret != YES:
-            return
+        if self.model.modified:
+            ret = confirm(parent = None,
+                          message = "Are you sure you want to discard the current workflow?",
+                          title = "Clear workflow?")
+            
+            if ret != YES:
+                return
         
         # clear the workflow
         self.model.workflow = []
@@ -205,8 +205,18 @@ class FlowTask(Task):
      
         
     def on_open(self):
-        """ Shows a dialog to open a file.
+        """ 
+        Shows a dialog to open a file.
         """
+        
+        if self.model.modified:
+            ret = confirm(parent = None,
+                          message = "Are you sure you want to discard the current workflow?",
+                          title = "Clear workflow?")
+            
+            if ret != YES:
+                return
+        
         dialog = FileDialog(parent = self.window.control, 
                             action = 'open',
                             wildcard = (FileDialog.create_wildcard("Cytoflow workflow", "*.flow") + ';' +  #@UndefinedVariable  
@@ -219,7 +229,32 @@ class FlowTask(Task):
     def open_file(self, path):
         f = open(path, 'r')
         unpickler = pickle.Unpickler(f)
-        new_workflow = unpickler.load()
+        
+        try:
+            version = unpickler.load()
+        except TraitError:
+            error(parent = None,
+                  message = "This doesn't look like a Cytoflow file. Or maybe "
+                            "you tried to load a workflow older than version "
+                            "0.5?")
+            return
+        
+        if version != self.model.version:
+            ret = confirm(parent = None,
+                          message = "This is Cytoflow {}, but you're trying "
+                          "to load a workflow from version {}. This may or "
+                          "may not work!  Are you sure you want to proceed?"
+                          .format(self.model.version, version),
+                          title = "Load workflow?")
+            if ret != YES:
+                return
+
+        try:
+            new_workflow = unpickler.load()
+        except TraitError:
+            error(parent = None,
+                  message = "Error trying to load the workflow.")
+            return
 
         # replace the current workflow with the one we just loaded
         
@@ -232,6 +267,7 @@ class FlowTask(Task):
             container.save_to_directory(os.getcwd()) 
         else:
             self.model.workflow = new_workflow
+            self.model.modified = False
         
     def on_save(self):
         """ Save the file to the previous filename  """
@@ -257,12 +293,18 @@ class FlowTask(Task):
         # TODO - error handling
         f = open(path, 'w')
         pickler = pickle.Pickler(f, 0)  # text protocol for now
+        pickler.dump(self.model.version)
         pickler.dump(self.model.workflow)
+        self.model.modified = False
         
     @on_trait_change('model.modified', post_init = True)
-    def _on_model_modified(self):
-        if not self.window.title.endswith("*"):
-            self.window.title += "*"
+    def _on_model_modified(self, val):
+        if val:
+            if not self.window.title.endswith("*"):
+                self.window.title += "*"
+        else:
+            if self.window.title.endswith("*"):
+                self.window.title = self.window.title[:-1]
         
     def on_export(self):
         """
@@ -506,11 +548,14 @@ class FlowTaskPlugin(Plugin):
 
     @contributes_to(TASKS)
     def _get_tasks(self):
+        from cytoflow import __version__ as cf_version
+
         return [TaskFactory(id = 'edu.mit.synbio.cytoflow.flow_task',
                             name = 'Cytometry analysis',
                             factory = lambda **x: FlowTask(application = self.application,
                                                            op_plugins = self.op_plugins,
                                                            view_plugins = self.view_plugins,
-                                                           model = Workflow(self.remote_connection),
+                                                           model = Workflow(self.remote_connection,
+                                                                            version = cf_version),
                                                            debug = self.debug,
                                                            **x))]

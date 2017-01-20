@@ -44,7 +44,7 @@ matplotlib_backend.py
 
 import threading, sys, Queue, logging, traceback
 
-from traits.api import HasStrictTraits, Instance, List, on_trait_change, Any, Event
+from traits.api import HasStrictTraits, Instance, List, on_trait_change, Any, Bool, Str
                        
 from traitsui.api import View, Item, InstanceEditor, Spring, Label
 
@@ -99,8 +99,9 @@ class Workflow(HasStrictTraits):
     
     workflow = List(WorkflowItem)
     selected = Instance(WorkflowItem)
+    version = Str
     
-    modified = Event
+    modified = Bool
 
     default_scale = util.ScaleEnum
     
