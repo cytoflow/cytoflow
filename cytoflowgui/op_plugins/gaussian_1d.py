@@ -56,7 +56,7 @@ class GaussianMixture1DHandler(Controller, OpHandlerMixin):
                          editor = TextEditor(auto_set = False)),
                     Item('by',
                          editor = CheckListEditor(cols = 2,
-                                                  name = 'context.previous.conditions'),
+                                                  name = 'context.previous.conditions_names'),
                          label = 'Group\nEstimates\nBy',
                          style = 'custom'),
                     VGroup(Item('subset_dict',
@@ -131,7 +131,10 @@ class GaussianMixture1DPluginView(GaussianMixture1DView, PluginViewMixin):
         self.plot(wi.previous.result, plot_name = wi.current_plot)
         
     def enum_plots_wi(self, wi):
-        return self.enum_plots(wi.previous.result)
+        try:
+            return self.enum_plots(wi.previous.result)
+        except:
+            return []
         
     def should_plot(self, changed):
         """

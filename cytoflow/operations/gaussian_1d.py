@@ -389,16 +389,18 @@ class GaussianMixture1DOp(HasStrictTraits):
             for group, _ in groupby:
                 gmm = self._gmms[group]
                 for c in range(self.num_components):
-                    g = group
+                    g = list(group)
                     if self.num_components > 1:
                         component_name = "{}_{}".format(self.name, c + 1)
-                        try:
+                        if group is True:
+                            g = list(component_name)
+                        else:
                             g.append(component_name)
-                        except AttributeError:
-                            if g is True:
-                                g = component_name
-                            else:
-                                g = (g, component_name)
+                                
+                    if len(g) > 1:
+                        g = tuple(g)
+                    else:
+                        g = g[0]
                                                          
                     mean_stat.loc[g] = self._scale.inverse(gmm.means_[c][0])
                     stdev_stat.loc[g] = self._scale.inverse(np.sqrt(gmm.covars_[c][0]))
@@ -508,6 +510,9 @@ class GaussianMixture1DView(cytoflow.views.HistogramView):
         if not experiment:
             raise util.CytoflowViewError("No experiment specified")
               
+        if not self.op.channel:
+            raise util.CytoflowViewError("No channel specified")
+              
         experiment = experiment.clone()
         
         # try to apply the current operation
@@ -548,7 +553,7 @@ class GaussianMixture1DView(cytoflow.views.HistogramView):
                     experiment.data[self.op.channel].quantile(max_quantile))
               
         # see if we're making subplots
-        if self._by and not plot_name:
+        if self._by and plot_name is None:
             for plot in self.enum_plots(experiment):
                 self.plot(experiment, plot, xlim = xlim, **kwargs)
                 plt.title("{0} = {1}".format(self.op.by, plot))
@@ -589,11 +594,11 @@ class GaussianMixture1DView(cytoflow.views.HistogramView):
             facets = filter(lambda x: x, [row, col])
             if plot_name is not None:
                 try:
-                    gmm_name = list(plot_name) + facets
+                    gmm_name = tuple(list(plot_name) + facets)
                 except TypeError: # plot_name isn't a list
-                    gmm_name = list([plot_name]) + facets  
+                    gmm_name = tuple(list([plot_name]) + facets) 
             else:      
-                gmm_name = facets
+                gmm_name = tuple(facets)
                 
             if len(gmm_name) == 1:
                 gmm_name = gmm_name[0]   

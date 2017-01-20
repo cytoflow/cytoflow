@@ -445,16 +445,18 @@ class GaussianMixture2DOp(HasStrictTraits):
             for group, _ in groupby:
                 gmm = self._gmms[group]
                 for c in range(self.num_components):
-                    g = group
+                    g = list(group)
                     if self.num_components > 1:
                         component_name = "{}_{}".format(self.name, c + 1)
-                        try:
+                        if group is True:
+                            g = list(component_name)
+                        else:
                             g.append(component_name)
-                        except AttributeError:
-                            if g is True:
-                                g = component_name
-                            else:
-                                g = (g, component_name)
+                                
+                    if len(g) > 1:
+                        g = tuple(g)
+                    else:
+                        g = g[0]
                                                          
                     xmean_stat.loc[g] = self._xscale.inverse(gmm.means_[c][0])
                     ymean_stat.loc[g] = self._yscale.inverse(gmm.means_[c][0])
@@ -569,6 +571,12 @@ class GaussianMixture2DView(cytoflow.views.ScatterplotView):
         """
         if not experiment:
             raise util.CytoflowViewError("No experiment specified")
+        
+        if not self.op.xchannel:
+            raise util.CytoflowViewError("No X channel specified")
+        
+        if not self.op.ychannel:
+            raise util.CytoflowViewError("No Y channel specified")
 
         experiment = experiment.clone()
         
@@ -613,7 +621,7 @@ class GaussianMixture2DView(cytoflow.views.ScatterplotView):
                     experiment.data[self.op.ychannel].quantile(max_quantile))
               
         # see if we're making subplots
-        if self._by and not plot_name:
+        if self._by and plot_name is None:
             for plot in self.enum_plots(experiment):
                 self.plot(experiment, plot, **kwargs)
                 plt.title("{0} = {1}".format(self.op.by, plot))

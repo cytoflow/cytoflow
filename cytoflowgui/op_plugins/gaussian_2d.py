@@ -62,7 +62,7 @@ class GaussianMixture2DHandler(Controller, OpHandlerMixin):
                          editor = TextEditor(auto_set = False)),
                     Item('by',
                          editor = CheckListEditor(cols = 2,
-                                                  name = 'context.previous.conditions'),
+                                                  name = 'context.previous.conditions_names'),
                          label = 'Group\nEstimates\nBy',
                          style = 'custom'),
                     VGroup(Item('subset_dict',
