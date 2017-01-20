@@ -243,6 +243,8 @@ class BeadCalibrationOp(HasStrictTraits):
             
             peaks = [hist_bins[x] for x in peak_bins_filtered]
             
+            print peaks
+            
             mef_unit = self.units[channel]
             
             if not mef_unit in self.beads:
@@ -250,6 +252,8 @@ class BeadCalibrationOp(HasStrictTraits):
             
             # "mean equivalent fluorochrome"
             mef = self.beads[mef_unit]
+            
+            print mef
             
             if len(peaks) == 0:
                 raise util.CytoflowOpError("Didn't find any peaks; check the diagnostic plot")
@@ -264,8 +268,9 @@ class BeadCalibrationOp(HasStrictTraits):
             elif len(peaks) == 2:
                 # if we have only two peaks, assume they're the brightest two
                 self._peaks[channel] = peaks
-                self._mefs[channel] = [mef[-1], mef[-2]]
+                self._mefs[channel] = [mef[-2], mef[-1]]
                 a = (mef[-1] - mef[-2]) / (peaks[1] - peaks[0])
+                print a
                 self._calibration_functions[channel] = lambda x, a=a: a * x
             else:
                 # if there are n > 2 peaks, check all the contiguous n-subsets
@@ -306,6 +311,9 @@ class BeadCalibrationOp(HasStrictTraits):
                 b = 10 ** best_lr[1]
                 self._calibration_functions[channel] = \
                     lambda x, a=a, b=b: b * np.power(x, a)
+                    
+            print self._peaks[channel]
+            print self._mefs[channel]
 
     def apply(self, experiment):
         """Applies the bleedthrough correction to an experiment.
