@@ -171,7 +171,7 @@ class Experiment(HasStrictTraits):
         return [x for x in self.data if self.metadata[x]['type'] == "channel"]
     
     def _get_conditions(self):
-        return {x : pd.Series(self.data[x].unique()) for x in self.data
+        return {x : pd.Series(self.data[x].unique()).sort_values() for x in self.data
                 if self.metadata[x]['type'] == "condition"}
         
     def subset(self, conditions, values):
