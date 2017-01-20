@@ -177,7 +177,7 @@ class ImportOp(HasStrictTraits):
         # python identifiers
         if self.channels:
             for old_name, new_name in self.channels.iteritems():
-                if new_name != util.sanitize_identifier(new_name):
+                if old_name != new_name and new_name != util.sanitize_identifier(new_name):
                     raise util.CytoflowOpError("Channel name {} must be a "
                                                "valid Python identifier."
                                                .format(new_name))
