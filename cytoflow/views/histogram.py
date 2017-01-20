@@ -118,7 +118,9 @@ class HistogramView(HasStrictTraits):
         if self.subset:
             try:
                 data = experiment.query(self.subset).data.reset_index()
-            except:
+            except util.CytoflowError as e:
+                raise util.CytoflowViewError(str(e))
+            except Exception as e:
                 raise util.CytoflowViewError("Subset string '{0}' isn't valid"
                                         .format(self.subset))
                 
