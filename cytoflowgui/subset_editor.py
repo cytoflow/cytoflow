@@ -179,7 +179,12 @@ class SubsetModel(HasStrictTraits):
     # update the view
     def _set_subset(self, value):
         for name, subset in value.iteritems():
-            model = next((x for x in self.condition_models if x.name == name))
+            try:
+                model = next((x for x in self.condition_models if x.name == name))
+            except StopIteration:
+                print "Thus I die"
+                continue
+            
             if set(model.subset) != set(subset):
                 model.subset = subset
                 

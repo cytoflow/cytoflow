@@ -21,6 +21,8 @@ Created on Mar 15, 2015
 @author: brian
 """
 
+import numpy as np
+
 from traits.api import (Interface, Str, HasTraits, Instance, on_trait_change, 
                         Dict, List, Property)
 from traitsui.api import Handler
@@ -72,7 +74,7 @@ class PluginViewMixin(HasTraits):
         ret = []
         for key, values in self.subset_dict.iteritems():
             if values:
-                values = list(values)
+                values = list(np.unique(values))
                 values = ['"{}"'.format(x) if isinstance(x, basestring) else x for x in values]
                 values = ["{} == {}".format(key, x) for x in values]
                 values = " or ".join(values)
@@ -199,5 +201,6 @@ class StatisticViewHandlerMixin(HasTraits):
         ret = {}
         for name in names:
             ret[name] = pd.Series(index.get_level_values(name)).sort_values()
+            ret[name] = pd.Series(ret[name].unique())
             
         return ret
