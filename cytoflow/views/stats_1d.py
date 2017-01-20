@@ -365,7 +365,6 @@ class Stats1DView(HasStrictTraits):
                 self.plot(experiment, plot, **kwargs)
             return
 
-             
         data.reset_index(inplace = True)
         
         if plot_name is not None:

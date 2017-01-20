@@ -24,13 +24,12 @@ Created on Feb 24, 2015
 import numpy as np
 import pandas as pd
 
-from traits.api import provides, Callable, Dict, Event, Str, List, \
-                       on_trait_change, Instance
+from traits.api import provides, Callable, Event, on_trait_change, Instance
 from traitsui.api import View, Item, Controller, VGroup, ButtonEditor, EnumEditor
 from envisage.api import Plugin, contributes_to
-from pyface.api import ImageResource, FileDialog, OK, error
+from pyface.api import ImageResource, FileDialog, OK
 
-from cytoflow import TableView, geom_mean
+from cytoflow import TableView
 import cytoflow.utility as util
 
 from cytoflowgui.subset_editor import SubsetEditor
@@ -74,7 +73,7 @@ class TableHandler(Controller, ViewHandlerMixin, StatisticViewHandlerMixin):
                            show_border = False),
                     VGroup(Item('subset_dict',
                                 show_label = False,
-                                editor = SubsetEditor(conditions = "context.conditions")),
+                                editor = SubsetEditor(conditions = "handler.levels")),
                            label = "Subset",
                            show_border = False,
                            show_labels = False),

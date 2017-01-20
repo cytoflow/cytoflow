@@ -134,7 +134,7 @@ class Stats2DHandler(Controller, ViewHandlerMixin, StatisticViewHandlerMixin):
                            show_border = False),
                     VGroup(Item('subset_dict',
                                 show_label = False,
-                                editor = SubsetEditor(conditions = "context.conditions")),
+                                editor = SubsetEditor(conditions = "handler.levels")),
                            label = "Subset",
                            show_border = False,
                            show_labels = False),

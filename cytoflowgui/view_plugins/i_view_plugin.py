@@ -124,8 +124,9 @@ class ViewHandlerMixin(HasTraits):
         
 class StatisticViewHandlerMixin(HasTraits):
     
-    numeric_indices = Property(depends_on = "model.statistic")
-    indices = Property(depends_on = "model.statistic")
+    numeric_indices = Property(depends_on = "model.statistic, model.subset")
+    indices = Property(depends_on = "model.statistic, model.subset")
+    levels = Property(depends_on = "model.statistic")
     
     # MAGIC: gets the value for the property numeric_indices
     def _get_numeric_indices(self):
@@ -175,3 +176,28 @@ class StatisticViewHandlerMixin(HasTraits):
                 data.index = data.index.droplevel(name)
         
         return list(data.index.names)
+    
+    # MAGIC: gets the value for the property 'levels'
+    # returns a Dict(Str, pd.Series)
+    
+    def _get_levels(self):
+        context = self.info.ui.context['context']
+        
+        if not (context and context.statistics and self.model and self.model.statistic[0]):
+            return []
+        
+        stat = context.statistics[self.model.statistic]
+        index = stat.index
+        
+        names = list(index.names)
+        for name in names:
+            unique_values = index.get_level_values(name).unique()
+            if len(unique_values) == 1:
+                index = index.droplevel(name)
+
+        names = list(index.names)
+        ret = {}
+        for name in names:
+            ret[name] = pd.Series(index.get_level_values(name))
+            
+        return ret
