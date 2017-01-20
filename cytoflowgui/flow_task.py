@@ -162,7 +162,8 @@ class FlowTask(Task):
             stat_op.by = ["Dox", "Replicate"]
             self.model.selected = self.model.workflow[1]
         
-                 
+        self.model.modified = False
+        
 #     def prepare_destroy(self):
 #         self.model = None
     
