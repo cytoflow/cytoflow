@@ -282,7 +282,7 @@ class Stats1DView(HasStrictTraits):
                
         data = pd.DataFrame(index = stat.index)
         data[stat.name] = stat
-
+        
         if error_stat is not None:
             error_name = util.random_string(6)
             data[error_name] = error_stat

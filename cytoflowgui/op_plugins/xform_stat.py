@@ -60,6 +60,8 @@ transform_functions = {"Mean" : np.mean,
 class TransformStatisticHandler(Controller, OpHandlerMixin):
     
     prev_statistics = Property(depends_on = "info.ui.context")
+    indices = Property(depends_on = "model.statistic, model.subset")
+    levels = Property(depends_on = "model.statistic")    
     
     def _get_prev_statistics(self):
         context = self.info.ui.context['context']
@@ -67,6 +69,56 @@ class TransformStatisticHandler(Controller, OpHandlerMixin):
             return context.previous.statistics.keys()
         else:
             return []
+
+    # MAGIC: gets the value for the property indices
+    def _get_indices(self):
+        context = self.info.ui.context['context']
+        
+        if not (context and context.previous and context.previous.statistics and self.model and self.model.statistic[0]):
+            return []
+        
+        stat = context.previous.statistics[self.model.statistic]
+        data = pd.DataFrame(index = stat.index)
+        
+        if self.model.subset:
+            data = data.query(self.model.subset)
+            
+        if len(data) == 0:
+            return []       
+        
+        names = list(data.index.names)
+        for name in names:
+            unique_values = data.index.get_level_values(name).unique()
+            if len(unique_values) == 1:
+                data.index = data.index.droplevel(name)
+        
+        return list(data.index.names)
+    
+    # MAGIC: gets the value for the property 'levels'
+    # returns a Dict(Str, pd.Series)
+    
+    def _get_levels(self):
+        context = self.info.ui.context['context']
+        
+        if not (context and context.previous and context.previous.statistics 
+                and self.model and self.model.statistic[0]):
+            return []
+        
+        stat = context.previous.statistics[self.model.statistic]
+        index = stat.index
+        
+        names = list(index.names)
+        for name in names:
+            unique_values = index.get_level_values(name).unique()
+            if len(unique_values) == 1:
+                index = index.droplevel(name)
+
+        names = list(index.names)
+        ret = {}
+        for name in names:
+            ret[name] = pd.Series(index.get_level_values(name)).sort_values()
+            
+        return ret
     
     def default_traits_view(self):
         return View(Item('name',
@@ -79,13 +131,13 @@ class TransformStatisticHandler(Controller, OpHandlerMixin):
                          label = "Function"),
                     Item('by',
                          editor = CheckListEditor(cols = 2,
-                                                  name = 'context.previous.conditions_names'),
+                                                  name = 'handler.indices'),
                          
                          label = 'Group\nBy',
                          style = 'custom'),
                     VGroup(Item('subset_dict',
                                 show_label = False,
-                                editor = SubsetEditor(conditions = "context.previous.conditions")),
+                                editor = SubsetEditor(conditions = "handler.levels")),
                            label = "Subset",
                            show_border = False,
                            show_labels = False),

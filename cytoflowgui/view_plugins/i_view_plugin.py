@@ -198,6 +198,6 @@ class StatisticViewHandlerMixin(HasTraits):
         names = list(index.names)
         ret = {}
         for name in names:
-            ret[name] = pd.Series(index.get_level_values(name))
+            ret[name] = pd.Series(index.get_level_values(name)).sort_values()
             
         return ret

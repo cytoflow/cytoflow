@@ -150,7 +150,8 @@ class TransformStatisticOp(HasStrictTraits):
                 
         # special handling for lists
         if type(new_stat.iloc[0]) is pd.Series:
-            new_stat = pd.concat(new_stat.to_dict(), names = self.by + new_stat.iloc[0].index.names)
+            names = set(self.by) | set(new_stat.iloc[0].index.names)
+            new_stat = pd.concat(new_stat.to_dict(), names = names)
         
         new_experiment = experiment.clone()
         new_experiment.history.append(self.clone_traits(transient = lambda t: True))
