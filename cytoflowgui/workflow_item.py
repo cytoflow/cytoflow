@@ -20,7 +20,7 @@ Created on Mar 15, 2015
 @author: brian
 '''
 
-import warnings, logging, sys
+import warnings, logging, sys, threading
 
 from traits.api import HasStrictTraits, Instance, List, DelegatesTo, Enum, \
                        Property, cached_property, on_trait_change, Bool, \
@@ -193,6 +193,8 @@ class RemoteWorkflowItem(WorkflowItem):
     # the Event we use to cause the remote process to run one of our 
     # functions in the main thread
     command = DelayedEvent(delay = 0.1)
+    
+    lock = Instance(threading.Lock, (), transient = True)
     
     @on_trait_change('+status')
     def _wi_changed(self, obj, name, old, new):
