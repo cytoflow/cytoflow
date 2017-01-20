@@ -23,6 +23,7 @@ Created on Oct 9, 2015
 
 import numpy as np
 import pandas as pd
+import scipy.stats
 
 from traitsui.api import View, Item, EnumEditor, Controller, VGroup, \
                          CheckListEditor, TextEditor
@@ -37,8 +38,22 @@ from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_E
 from cytoflowgui.subset_editor import SubsetEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
 
-transform_functions = {"Sum" : np.sum,
-                       "Proportion" : lambda a: pd.Series(a / a.sum())
+mean_95ci = lambda x: util.ci(x, np.mean, boots = 100)
+geomean_95ci = lambda x: util.ci(x, util.geom_mean, boots = 100)
+
+transform_functions = {"Mean" : np.mean,
+                       "Geom.Mean" : util.geom_mean,
+                       "Count" : len,
+                       "Std.Dev" : np.std,
+                       "Geom.SD" : util.geom_sd_range,
+                       "SEM" : scipy.stats.sem,
+                       "Geom.SEM" : util.geom_sem_range,
+                       "Mean 95% CI" : mean_95ci,
+                       "Geom.Mean 95% CI" : geomean_95ci,
+                       "Sum" : np.sum,
+                       "Proportion" : lambda a: pd.Series(a / a.sum()),
+                       "Percentage" : lambda a: pd.Series(a / a.sum()) * 100.0,
+                       "Fold" : lambda a: pd.Series(a / a.min())
                        }
 
 
