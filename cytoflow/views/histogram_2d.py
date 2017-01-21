@@ -212,8 +212,8 @@ class Histogram2DView(HasStrictTraits):
                           row_order = (np.sort(data[self.yfacet].unique()) if self.yfacet else None),
                           hue_order = (np.sort(data[self.huefacet].unique()) if self.huefacet else None),
                           col_wrap = col_wrap,
-                          sharex = False,
-                          sharey = False,
+                          sharex = True,
+                          sharey = True,
                           xlim = xlim,
                           ylim = ylim)
          

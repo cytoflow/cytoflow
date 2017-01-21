@@ -216,8 +216,8 @@ class HistogramView(HasStrictTraits):
                           hue_order = (np.sort(data[self.huefacet].unique()) if self.huefacet else None),
                           col_wrap = col_wrap,
                           legend_out = False,
-                          sharex = False,
-                          sharey = False,
+                          sharex = True,
+                          sharey = True,
                           xlim = xlim)
         
         # set the scale for each set of axes; can't just call plt.xscale() 

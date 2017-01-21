@@ -178,8 +178,8 @@ class Kde2DView(HasStrictTraits):
                           hue_order = (np.sort(data[self.huefacet].unique()) if self.huefacet else None),
                           col_wrap = col_wrap,
                           legend_out = False,
-                          sharex = False,
-                          sharey = False,
+                          sharex = True,
+                          sharey = True,
                           xlim = xlim,
                           ylim = ylim)
         

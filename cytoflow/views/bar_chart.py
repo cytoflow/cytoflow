@@ -19,7 +19,7 @@ from __future__ import division, absolute_import
 
 from warnings import warn
 
-from traits.api import HasStrictTraits, Str, provides, Property, List, Tuple, Enum
+from traits.api import HasStrictTraits, Str, provides, Tuple, Enum
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -365,8 +365,8 @@ class BarChartView(HasStrictTraits):
                           row_order = (np.sort(data[self.yfacet].unique()) if self.yfacet else None),
                           col_wrap = col_wrap,
                           legend_out = False,
-                          sharex = False,
-                          sharey = False)
+                          sharex = True,
+                          sharey = True)
         
         scale = util.scale_factory(self.scale, experiment, statistic = self.statistic)
                 

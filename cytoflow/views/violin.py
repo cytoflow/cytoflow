@@ -153,8 +153,8 @@ class ViolinPlotView(HasStrictTraits):
                           row_order = (np.sort(data[self.yfacet].unique()) if self.yfacet else None),
                           col_wrap = col_wrap,
                           legend_out = False,
-                          sharex = False,
-                          sharey = False)
+                          sharex = True,
+                          sharey = True)
                 
         # set the scale for each set of axes; can't just call plt.xscale() 
         for ax in g.axes.flatten():

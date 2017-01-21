@@ -516,8 +516,8 @@ class Stats2DView(HasStrictTraits):
                              hue_order = (np.sort(data[self.huefacet].unique()) if self.huefacet else None),
                              col_wrap = col_wrap,
                              legend_out = False,
-                             sharex = False,
-                             sharey = False)
+                             sharex = True,
+                             sharey = True)
         
         xscale = util.scale_factory(self.xscale, experiment, statistic = self.xstatistic)
         yscale = util.scale_factory(self.yscale, experiment, statistic = self.ystatistic)
