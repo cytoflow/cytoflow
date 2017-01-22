@@ -201,6 +201,9 @@ class HistogramView(HasStrictTraits):
         if xlim is None:
             xlim = (data[self.channel].quantile(min_quantile),
                     data[self.channel].quantile(max_quantile))
+            
+        sharex = kwargs.pop("sharex", True)
+        sharey = kwargs.pop("sharey", True)
         
         cols = col_wrap if col_wrap else \
                len(data[self.xfacet].unique()) if self.xfacet else 1
@@ -216,8 +219,8 @@ class HistogramView(HasStrictTraits):
                           hue_order = (np.sort(data[self.huefacet].unique()) if self.huefacet else None),
                           col_wrap = col_wrap,
                           legend_out = False,
-                          sharex = True,
-                          sharey = True,
+                          sharex = sharex,
+                          sharey = sharey,
                           xlim = xlim)
         
         # set the scale for each set of axes; can't just call plt.xscale() 
@@ -227,31 +230,34 @@ class HistogramView(HasStrictTraits):
         legend = kwargs.pop('legend', True)
         g.map(plt.hist, self.channel, **kwargs)
         
-        # if we have an xfacet, make sure the y scale is the same for each
-        fig = plt.gcf()
-        fig_y_max = float("-inf")
-        for ax in fig.get_axes():
-            _, ax_y_max = ax.get_ylim()
-            if ax_y_max > fig_y_max:
-                fig_y_max = ax_y_max
-                
-        for ax in fig.get_axes():
-            ax.set_ylim(None, fig_y_max)
+        # if we are sharing y axes, make sure the y scale is the same for each
+        if sharey:
+            fig = plt.gcf()
+            fig_y_max = float("-inf")
             
-        # if we have a yfacet, make sure the x scale is the same for each
-        fig = plt.gcf()
-        fig_x_min = float("inf")
-        fig_x_max = float("-inf")
-        
-        for ax in fig.get_axes():
-            ax_x_min, ax_x_max = ax.get_xlim()
-            if ax_x_min < fig_x_min:
-                fig_x_min = ax_x_min
-            if ax_x_max > fig_x_max:
-                fig_x_max = ax_x_max
-                
-        for ax in fig.get_axes():
-            ax.set_xlim(fig_x_min, fig_x_max)
+            for ax in fig.get_axes():
+                _, ax_y_max = ax.get_ylim()
+                if ax_y_max > fig_y_max:
+                    fig_y_max = ax_y_max
+                    
+            for ax in fig.get_axes():
+                ax.set_ylim(None, fig_y_max)
+            
+        # if we are sharing x axes, make sure the x scale is the same for each
+        if sharex:
+            fig = plt.gcf()
+            fig_x_min = float("inf")
+            fig_x_max = float("-inf")
+            
+            for ax in fig.get_axes():
+                ax_x_min, ax_x_max = ax.get_xlim()
+                if ax_x_min < fig_x_min:
+                    fig_x_min = ax_x_min
+                if ax_x_max > fig_x_max:
+                    fig_x_max = ax_x_max
+                    
+            for ax in fig.get_axes():
+                ax.set_xlim(fig_x_min, fig_x_max)
         
         # if we have a hue facet, the y scaling is frequently wrong.
         if self.huefacet:

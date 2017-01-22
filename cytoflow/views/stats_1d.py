@@ -380,11 +380,29 @@ class Stats1DView(HasStrictTraits):
                 
             data = groupby.get_group(plot_name)
             data.reset_index(drop = True, inplace = True)
+            
+        xscale = util.scale_factory(self.xscale, experiment, condition = self.variable) 
+        yscale = util.scale_factory(self.yscale, experiment, statistic = self.statistic)
+            
+        # TODO - account for error bars
+            
+        xlim = kwargs.pop("xlim", None)
+        if xlim is None:
+            xlim = (xscale.clip(data[self.variable].min() * 0.9),
+                    xscale.clip(data[self.variable].max() * 1.1))
+                      
+        ylim = kwargs.pop("ylim", None)
+        if ylim is None:
+            ylim = (yscale.clip(data[stat.name].min() * 0.9),
+                    yscale.clip(data[stat.name].max() * 1.1))
         
         kwargs.setdefault('antialiased', True)  
         
         cols = col_wrap if col_wrap else \
                len(data[self.xfacet].unique()) if self.xfacet else 1
+               
+        sharex = kwargs.pop('sharex', True)
+        sharey = kwargs.pop('sharey', True)
                   
         grid = sns.FacetGrid(data,
                              size = (6 / cols),
@@ -397,12 +415,11 @@ class Stats1DView(HasStrictTraits):
                              hue_order = (np.sort(data[self.huefacet].unique()) if self.huefacet else None),
                              col_wrap = col_wrap,
                              legend_out = False,
-                             sharex = True,
-                             sharey = True)
-        
-        xscale = util.scale_factory(self.xscale, experiment, condition = self.variable) 
-        yscale = util.scale_factory(self.yscale, experiment, statistic = self.statistic)
-        
+                             sharex = sharex,
+                             sharey = sharey,
+                             xlim = xlim,
+                             ylim = ylim)
+
         for ax in grid.axes.flatten():
             ax.set_xscale(self.xscale, **xscale.mpl_params)
             ax.set_yscale(self.yscale, **yscale.mpl_params)
@@ -413,34 +430,37 @@ class Stats1DView(HasStrictTraits):
         
         grid.map(plt.plot, self.variable, stat.name, **kwargs)
         
-        # if we have an xfacet, make sure the y scale is the same for each
-        fig = plt.gcf()
-        fig_y_min = float("inf")
-        fig_y_max = float("-inf")
-        for ax in fig.get_axes():
-            ax_y_min, ax_y_max = ax.get_ylim()
-            if ax_y_min < fig_y_min:
-                fig_y_min = ax_y_min
-            if ax_y_max > fig_y_max:
-                fig_y_max = ax_y_max
-                
-        for ax in fig.get_axes():
-            ax.set_ylim(fig_y_min, fig_y_max)
+        # if we are sharing y axes, make sure the y scale is the same for each
+        if sharey:
+            fig = plt.gcf()
+            fig_y_min = float("inf")
+            fig_y_max = float("-inf")
             
-        # if we have a yfacet, make sure the x scale is the same for each
-        fig = plt.gcf()
-        fig_x_min = float("inf")
-        fig_x_max = float("-inf")
-        
-        for ax in fig.get_axes():
-            ax_x_min, ax_x_max = ax.get_xlim()
-            if ax_x_min < fig_x_min:
-                fig_x_min = ax_x_min
-            if ax_x_max > fig_x_max:
-                fig_x_max = ax_x_max
-        
-        for ax in fig.get_axes():
-            ax.set_xlim(fig_x_min, fig_x_max)
+            for ax in fig.get_axes():
+                ax_y_min, ax_y_max = ax.get_ylim()
+                if ax_y_min < fig_y_min:
+                    fig_y_min = ax_y_min
+                if ax_y_max > fig_y_max:
+                    fig_y_max = ax_y_max
+                    
+            for ax in fig.get_axes():
+                ax.set_ylim(fig_y_min, fig_y_max)
+            
+        # if we are sharing x axes, make sure the x scale is the same for each
+        if sharex:
+            fig = plt.gcf()
+            fig_x_min = float("inf")
+            fig_x_max = float("-inf")
+            
+            for ax in fig.get_axes():
+                ax_x_min, ax_x_max = ax.get_xlim()
+                if ax_x_min < fig_x_min:
+                    fig_x_min = ax_x_min
+                if ax_x_max > fig_x_max:
+                    fig_x_max = ax_x_max
+            
+            for ax in fig.get_axes():
+                ax.set_xlim(fig_x_min, fig_x_max)
         
         # if we have a hue facet and a lot of hues, make a color bar instead
         # of a super-long legend.

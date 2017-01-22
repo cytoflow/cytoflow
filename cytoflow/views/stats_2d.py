@@ -499,11 +499,29 @@ class Stats2DView(HasStrictTraits):
         
         # sort by the data in the x variable
         data = data.sort_values(by = [xname])
+        
+        # TODO - account for error bars
+        
+        xscale = util.scale_factory(self.xscale, experiment, statistic = self.xstatistic)
+        yscale = util.scale_factory(self.yscale, experiment, statistic = self.ystatistic)
+            
+        xlim = kwargs.pop("xlim", None)
+        if xlim is None:
+            xlim = (xscale.clip(data[xname].min() * 0.9),
+                    xscale.clip(data[xname].max() * 1.1))
+                      
+        ylim = kwargs.pop("ylim", None)
+        if ylim is None:
+            ylim = (yscale.clip(data[yname].min() * 0.9),
+                    yscale.clip(data[yname].max() * 1.1))
                       
         kwargs.setdefault('antialiased', True)
         
         cols = col_wrap if col_wrap else \
                len(data[self.xfacet].unique()) if self.xfacet else 1
+               
+        sharex = kwargs.pop('sharex', True)
+        sharey = kwargs.pop('sharey', True)
                
         grid = sns.FacetGrid(data,
                              size = (6 / cols),
@@ -516,12 +534,11 @@ class Stats2DView(HasStrictTraits):
                              hue_order = (np.sort(data[self.huefacet].unique()) if self.huefacet else None),
                              col_wrap = col_wrap,
                              legend_out = False,
-                             sharex = True,
-                             sharey = True)
-        
-        xscale = util.scale_factory(self.xscale, experiment, statistic = self.xstatistic)
-        yscale = util.scale_factory(self.yscale, experiment, statistic = self.ystatistic)
-        
+                             sharex = sharex,
+                             sharey = sharey,
+                             xlim = xlim,
+                             ylim = ylim)
+
         for ax in grid.axes.flatten():
             ax.set_xscale(self.xscale, **xscale.mpl_params)
             ax.set_yscale(self.yscale, **yscale.mpl_params)
