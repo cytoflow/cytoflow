@@ -242,7 +242,7 @@ class LogicleScale(HasStrictTraits):
             # get the range by finding the rth quantile of the negative values
             neg_values = data[data < 0]
             if(not neg_values.empty):
-                r_value = neg_values.quantile(self.r).item()
+                r_value = neg_values.quantile(self.r)
                 W = (self.M - math.log10(self._T/math.fabs(r_value)))/2
                 if W <= 0:
                     warn("Channel {0} doesn't have enough negative data. " 
