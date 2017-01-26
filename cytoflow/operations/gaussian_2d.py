@@ -150,7 +150,7 @@ class GaussianMixture2DOp(HasStrictTraits):
     posteriors = Bool(False)
     
     # the key is either a single value or a tuple
-    _gmms = Dict(Any, Instance(mixture.GMM), transient = True)
+    _gmms = Dict(Any, Instance(mixture.GaussianMixture), transient = True)
     _xscale = Instance(util.IScale, transient = True)
     _yscale = Instance(util.IScale, transient = True)
     
@@ -222,9 +222,9 @@ class GaussianMixture2DOp(HasStrictTraits):
             x = x[~(np.isnan(x[self.xchannel]) | np.isnan(x[self.ychannel]))]
             x = x.values
             
-            gmm = mixture.GMM(n_components = self.num_components,
-                              covariance_type = "full",
-                              random_state = 1)
+            gmm = mixture.GaussianMixture(n_components = self.num_components,
+                                          covariance_type = "full",
+                                          random_state = 1)
             gmm.fit(x)
             
             if not gmm.converged_:
@@ -245,7 +245,7 @@ class GaussianMixture2DOp(HasStrictTraits):
             sort_idx = np.argsort(norms)
             gmm.means_ = gmm.means_[sort_idx]
             gmm.weights_ = gmm.weights_[sort_idx]
-            gmm.covars_ = gmm.covars_[sort_idx]
+            gmm.covariances_ = gmm.covariances_[sort_idx]
             
             gmms[group] = gmm
             
@@ -372,7 +372,7 @@ class GaussianMixture2DOp(HasStrictTraits):
 
                 for c in range(0, self.num_components):
                     mean = gmm.means_[c]
-                    covar = gmm._get_covars()[c]
+                    covar = gmm.covariances_[c]
                     
                     # xc is the center on the x axis
                     # yc is the center on the y axis
@@ -445,19 +445,23 @@ class GaussianMixture2DOp(HasStrictTraits):
             for group, _ in groupby:
                 gmm = self._gmms[group]
                 for c in range(self.num_components):
-                    g = list(group)
                     if self.num_components > 1:
                         component_name = "{}_{}".format(self.name, c + 1)
+
                         if group is True:
-                            g = list(component_name)
-                        else:
+                            g = [component_name]
+                        elif isinstance(group, tuple):
+                            g = list(group)
                             g.append(component_name)
-                                
+                        else:
+                            g = list([group])
+                            g.append(component_name)
+                        
                     if len(g) > 1:
                         g = tuple(g)
                     else:
                         g = g[0]
-                                                         
+                                                                             
                     xmean_stat.loc[g] = self._xscale.inverse(gmm.means_[c][0])
                     ymean_stat.loc[g] = self._yscale.inverse(gmm.means_[c][0])
                     prop_stat.loc[g] = gmm.weights_[c]
@@ -688,7 +692,7 @@ class GaussianMixture2DView(cytoflow.views.ScatterplotView):
                 
             ax = g.facet_axis(i, j)
         
-            for k, (mean, covar) in enumerate(zip(gmm.means_, gmm._get_covars())):    
+            for k, (mean, covar) in enumerate(zip(gmm.means_, gmm.covariances_)):    
                 v, w = linalg.eigh(covar)
                 u = w[0] / linalg.norm(w[0])
                 

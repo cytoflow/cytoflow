@@ -143,7 +143,7 @@ class GaussianMixture1DOp(HasStrictTraits):
     posteriors = Bool(False)
     
     # the key is either a single value or a tuple
-    _gmms = Dict(Any, Instance(mixture.GMM), transient = True)
+    _gmms = Dict(Any, Instance(mixture.GaussianMixture), transient = True)
     _scale = Instance(util.IScale, transient = True)
     
     def estimate(self, experiment, subset = None):
@@ -209,8 +209,8 @@ class GaussianMixture1DOp(HasStrictTraits):
             #x = pd.Series(self._scale(x)).dropna()
             x = x[~np.isnan(x)]
             
-            gmm = mixture.GMM(n_components = self.num_components,
-                              random_state = 1)
+            gmm = mixture.GaussianMixture(n_components = self.num_components,
+                                          random_state = 1)
             gmm.fit(x[:, np.newaxis])
             
             if not gmm.converged_:
@@ -225,7 +225,7 @@ class GaussianMixture1DOp(HasStrictTraits):
             sort_idx = np.argsort(gmm.means_[:, 0])
             gmm.means_ = gmm.means_[sort_idx]
             gmm.weights_ = gmm.weights_[sort_idx]
-            gmm.covars_ = gmm.covars_[sort_idx]
+            gmm.covariances_ = gmm.covariances_[sort_idx]
            
             gmms[group] = gmm
             
@@ -336,9 +336,9 @@ class GaussianMixture1DOp(HasStrictTraits):
                 # for each component, get the low and the high threshold
                 for c in range(0, self.num_components):
                     lo = (gmm.means_[c][0]    # @UnusedVariable
-                          - self.sigma * np.sqrt(gmm.covars_[c][0]))
+                          - self.sigma * np.sqrt(gmm.covariances_[c][0]))
                     hi = (gmm.means_[c][0]    # @UnusedVariable
-                          + self.sigma * np.sqrt(gmm.covars_[c][0]))
+                          + self.sigma * np.sqrt(gmm.covariances_[c][0]))
                     
                     # and build an expression with numexpr so it evaluates fast!
                     gate_bool = gate_df.eval("p == @c and x >= @lo and x <= @hi").values
@@ -389,23 +389,27 @@ class GaussianMixture1DOp(HasStrictTraits):
             for group, _ in groupby:
                 gmm = self._gmms[group]
                 for c in range(self.num_components):
-                    g = list(group)
                     if self.num_components > 1:
                         component_name = "{}_{}".format(self.name, c + 1)
+
                         if group is True:
-                            g = list(component_name)
-                        else:
+                            g = [component_name]
+                        elif isinstance(group, tuple):
+                            g = list(group)
                             g.append(component_name)
-                                
+                        else:
+                            g = list([group])
+                            g.append(component_name)
+                        
                     if len(g) > 1:
                         g = tuple(g)
                     else:
                         g = g[0]
-                                                         
+                               
                     mean_stat.loc[g] = self._scale.inverse(gmm.means_[c][0])
-                    stdev_stat.loc[g] = self._scale.inverse(np.sqrt(gmm.covars_[c][0]))
-                    interval_stat.loc[g] = (self._scale.inverse(gmm.means_[c][0] - np.sqrt(gmm.covars_[c][0])),
-                                    self._scale.inverse(gmm.means_[c][0] + np.sqrt(gmm.covars_[c][0])))
+                    stdev_stat.loc[g] = self._scale.inverse(np.sqrt(gmm.covariances_[c][0]))
+                    interval_stat.loc[g] = (self._scale.inverse(gmm.means_[c][0] - np.sqrt(gmm.covariances_[c][0][0])),
+                                            self._scale.inverse(gmm.means_[c][0] + np.sqrt(gmm.covariances_[c][0][0])))
                     prop_stat.loc[g] = gmm.weights_[c]
                      
             new_experiment.statistics[(self.name, "mean")] = mean_stat
@@ -631,13 +635,13 @@ class GaussianMixture1DView(cytoflow.views.HistogramView):
                 pdf_scale = poly_area([scale(p[0]) for p in xy], [p[1] for p in xy])
                   
                 # cheat a little
-                pdf_scale *= 1.1
+#                 pdf_scale *= 1.1
                  
                 plt_min, plt_max = plt.gca().get_xlim()
                 x = scale.inverse(np.linspace(scale(plt_min), scale(plt_max), 500))     
                          
                 mean = gmm.means_[k][0]
-                stdev = np.sqrt(gmm.covars_[k][0])
+                stdev = np.sqrt(gmm.covariances_[k][0])
                 y = stats.norm.pdf(scale(x), mean, stdev) * pdf_scale
                 color_k = k % len(sns.color_palette())
                 color = sns.color_palette()[color_k]
