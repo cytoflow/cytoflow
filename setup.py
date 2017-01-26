@@ -45,12 +45,8 @@ def read_file(*names, **kwargs):
         return fp.read()
     
 def find_version(*file_paths):
-    version_file = read_file(*file_paths)
-    version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]",
-                              version_file, re.M)
-    if version_match:
-        return version_match.group(1)
-    raise RuntimeError("Unable to find version string.")
+    import subprocess
+    return subprocess.check_output(["git", "describe"]).rstrip()
 
 long_description = read_rst('README.rst')
 
@@ -67,7 +63,7 @@ setup(
                         'numexpr>=2.4.6',
                         'matplotlib>=1.4.3',
                         'scipy>=0.14',
-                        'scikit-learn>=0.16',
+                        'scikit-learn>=0.18',
                         'seaborn>=0.7.0',
                         'traits>=4.6.0',
                         'pyface==5.1.0',
@@ -76,7 +72,6 @@ setup(
                         'python-dateutil>=2.5.2',
                         'statsmodels>=0.6.1',
                         'faulthandler>=2.4',
-                        
                         'fcsparser>=0.1.1',] \
                 if not on_rtd else None,
                         

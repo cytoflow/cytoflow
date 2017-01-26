@@ -4,7 +4,7 @@ numpy==1.11.1
 numexpr==2.6.1
 matplotlib==1.5.1
 scipy==0.18.1
-scikit-learn==0.17.1
+scikit-learn==0.18
 seaborn==0.7.1
 traits>=4.6.0
 pyface==4.4.0
