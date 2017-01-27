@@ -46,7 +46,8 @@ class LogScale(HasStrictTraits):
     statistic = Tuple(Str, Str)
 
     mode = Enum("mask", "clip")
-    threshold = Float(1.0)
+    threshold = Property(Float, depends_on = "[experiment, condition, channel]")
+    _channel_threshold = Float(0.1)
 
     mpl_params = Property(Dict)
 
@@ -54,13 +55,30 @@ class LogScale(HasStrictTraits):
         return {"nonposx" : self.mode, 
                 "nonposy" : self.mode}
         
-    def __call__(self, data):
+    def _set_threshold(self, threshold):
+        self._channel_threshold = threshold
         
+    def _get_threshold(self):
+        if self.channel:
+            return self._channel_threshold
+        elif self.condition:
+            return self.experiment[self.condition].min()
+        elif self.statistic:
+            stat = self.experiment.statistics[self.statistic]
+            return stat.min()
+        
+    def __call__(self, data):
         if isinstance(data, (int, float)):
-            if data < self.threshold:
-                raise CytoflowError("data <= scale.threshold (currently: {})".format(self.threshold))
+            if self.mode == "mask":
+                if data < self.threshold:
+                    raise CytoflowError("data <= scale.threshold (currently: {})".format(self.threshold))
+                else:
+                    return np.log10(data)
             else:
-                return np.log10(data)
+                if data < self.threshold:
+                    return np.log10(self.threshold)
+                else:
+                    return np.log10(data)
             
         mask_value = np.nan if self.mode == "mask" else self.threshold
         x = pd.Series(data)
