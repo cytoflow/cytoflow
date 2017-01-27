@@ -382,10 +382,12 @@ class Stats1DView(HasStrictTraits):
             data.reset_index(drop = True, inplace = True)
             
         xscale = util.scale_factory(self.xscale, experiment, condition = self.variable) 
-        yscale = util.scale_factory(self.yscale, experiment, statistic = self.statistic)
-            
-        # TODO - account for error bars
-            
+        
+        if error_name:
+            yscale = util.scale_factory(self.yscale, experiment, statistic = self.error_statistic)
+        else:
+            yscale = util.scale_factory(self.yscale, experiment, statistic = self.statistic)
+                        
         xlim = kwargs.pop("xlim", None)
         if xlim is None:
             xlim = (xscale.clip(data[self.variable].min() * 0.9),
@@ -395,7 +397,16 @@ class Stats1DView(HasStrictTraits):
         if ylim is None:
             ylim = (yscale.clip(data[stat.name].min() * 0.9),
                     yscale.clip(data[stat.name].max() * 1.1))
-        
+            
+            if error_name is not None:
+                err = data[error_name]
+                try: 
+                    ylim = (yscale.clip(min([x[0] for x in err]) * 0.9),
+                            yscale.clip(max([x[1] for x in err]) * 1.1))
+                except IndexError:
+                    ylim = (yscale.clip(err.min() * 0.9), 
+                            yscale.clip(err.max() * 1.1))
+
         kwargs.setdefault('antialiased', True)  
         
         cols = col_wrap if col_wrap else \

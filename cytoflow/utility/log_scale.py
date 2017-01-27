@@ -65,7 +65,10 @@ class LogScale(HasStrictTraits):
             return self.experiment[self.condition].min()
         elif self.statistic:
             stat = self.experiment.statistics[self.statistic]
-            return stat.min()
+            try:
+                return min([x[0] for x in stat])
+            except IndexError:
+                return stat.min()
         
     def __call__(self, data):
         if isinstance(data, (int, float)):
