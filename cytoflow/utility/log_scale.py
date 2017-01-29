@@ -71,6 +71,9 @@ class LogScale(HasStrictTraits):
                 return stat.min()
         
     def __call__(self, data):
+        # this function should work with: int, float, tuple, list, pd.Series, 
+        # np.ndframe.  it should return the same data type as it was passed.
+        
         if isinstance(data, (int, float)):
             if self.mode == "mask":
                 if data < self.threshold:
@@ -82,16 +85,42 @@ class LogScale(HasStrictTraits):
                     return np.log10(self.threshold)
                 else:
                     return np.log10(data)
+        elif isinstance(data, (list, tuple)):
+            ret = [self.__call__(x) for x in data]
+            if isinstance(data, tuple):
+                return tuple(ret)
+            else:
+                return ret
+        elif isinstance(data, (np.ndarray, pd.Series)):
+            mask_value = np.nan if self.mode == "mask" else self.threshold
+            x = pd.Series(data)
+            x = x.mask(lambda x: x < self.threshold, other = mask_value)
+            ret = np.log10(x)
             
-        mask_value = np.nan if self.mode == "mask" else self.threshold
-        x = pd.Series(data)
-        x = x.mask(lambda x: x < self.threshold, other = mask_value)
-        ret = np.log10(x)
-
-        return (ret if isinstance(data, pd.Series) else ret.values)
+            if isinstance(data, pd.Series):
+                return ret
+            else:
+                return ret.values
+        else:
+            raise CytoflowError("Unknown type {} passed to log_scale.__call__"
+                                .format(type(data)))
                         
     def inverse(self, data):
-        return np.power(10, data)
+        # this function shoujld work with: int, float, tuple, list, pd.Series, 
+        # np.ndframe
+        if isinstance(data, (int, float)):
+            return np.power(10, data)
+        elif isinstance(data, (list, tuple)):
+            ret = [np.power(10, x) for x in data]
+            if isinstance(data, tuple):
+                return tuple(ret)
+            else:
+                return ret
+        elif isinstance(data, (np.ndarray, pd.Series)):
+            return np.power(10, data)
+        else:
+            raise CytoflowError("Unknown type {} passed to log_scale.inverse"
+                                .format(type(data)))
     
     def clip(self, data):
 #         import pydevd; pydevd.settrace()

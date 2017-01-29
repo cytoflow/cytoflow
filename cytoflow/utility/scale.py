@@ -57,7 +57,9 @@ class IScale(Interface):
 
     def __call__(self, data):
         """
-        Transforms `data` using this scale.
+        Transforms `data` using this scale.  Must know how to handle int, float,
+        list, tuple, numpy.ndarray and pandas.Series and return the same type
+        it was passed.
         
         Careful!  May return `NaN` if the scale domain doesn't match the data 
         (ie, applying a log10 scale to negative numbers.
@@ -65,7 +67,9 @@ class IScale(Interface):
         
     def inverse(self, data):
         """
-        Transforms 'data' using the inverse of this scale.
+        Transforms 'data' using the inverse of this scale.  Must know how to 
+        handle int, float, list, tuple, numpy.ndarray and pandas.Series, and
+        return the same type it was passed.
         """
         
     def clip(self, data):

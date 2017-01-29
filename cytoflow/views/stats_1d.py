@@ -383,7 +383,7 @@ class Stats1DView(HasStrictTraits):
             
         xscale = util.scale_factory(self.xscale, experiment, condition = self.variable) 
         
-        if error_name:
+        if error_stat is not None:
             yscale = util.scale_factory(self.yscale, experiment, statistic = self.error_statistic)
         else:
             yscale = util.scale_factory(self.yscale, experiment, statistic = self.statistic)
@@ -398,14 +398,13 @@ class Stats1DView(HasStrictTraits):
             ylim = (yscale.clip(data[stat.name].min() * 0.9),
                     yscale.clip(data[stat.name].max() * 1.1))
             
-            if error_name is not None:
-                err = data[error_name]
+            if error_stat is not None:
                 try: 
-                    ylim = (yscale.clip(min([x[0] for x in err]) * 0.9),
-                            yscale.clip(max([x[1] for x in err]) * 1.1))
+                    ylim = (yscale.clip(min([x[0] for x in error_stat]) * 0.9),
+                            yscale.clip(max([x[1] for x in error_stat]) * 1.1))
                 except IndexError:
-                    ylim = (yscale.clip(err.min() * 0.9), 
-                            yscale.clip(err.max() * 1.1))
+                    ylim = (yscale.clip(error_stat.min() * 0.9), 
+                            yscale.clip(error_stat.max() * 1.1))
 
         kwargs.setdefault('antialiased', True)  
         
