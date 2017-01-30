@@ -27,8 +27,8 @@ from warnings import warn
 import pandas as pd
 import numpy as np
 
-from traits.api import (HasStrictTraits, Str, List, Constant, provides, 
-                        Callable, CStr, Tuple, Any, Undefined)
+from traits.api import (HasStrictTraits, Str, List, Constant, provides, CStr,
+                        Callable, Tuple, Any)
 
 import cytoflow.utility as util
 
@@ -38,9 +38,16 @@ from .i_operation import IOperation
 class TransformStatisticOp(HasStrictTraits):
     """
     Apply a function to a statistic, creating a new statistic.  The function can
-    be applied to the entire statistic, or it can be applied individually to groups
-    of the statistic.  The function should take a `pandas.Series` as its only argument.
-    Return type is arbitrary, but a `float` or a `pandas.Series` is most common.
+    be applied to the entire statistic, or it can be applied individually to 
+    groups of the statistic.  The function should take a `pandas.Series` as its
+    only argument.  Return type is arbitrary, but a to be used with the rest of
+    Cytoflow it should probably be a numeric type or an iterable of numeric
+    types.
+    
+    As a special case, if the function returns a pandas.Series *with the same
+    index that it was passed*, it is interpreted as a transformation.  The 
+    resulting statistic will have the same length, index names and index levels
+    as the original statistic.
 
     Attributes
     ----------
@@ -53,9 +60,11 @@ class TransformStatisticOp(HasStrictTraits):
         
     function : Callable
         The function used to transform the statistic.  `function` must take a 
-        Series as its only parameter.  The return type is arbitrary, but a `float`
-        or a `pandas.Series` is most common.  If `statistic_name` is unset, the name 
-        of the function becomes the second in element in the Experiment.statistics key tuple.
+        Series as its only parameter.  The return type is arbitrary, to work 
+        with the rest of Cytoflow it should probably be a numeric type or an
+        iterable of numeric types..  If `statistic_name` is unset, the name of 
+        the function becomes the second in element in the Experiment.statistics
+        key tuple.
         
     statistic_name : Str
         The name of the function; if present, becomes the second element in
@@ -69,7 +78,7 @@ class TransformStatisticOp(HasStrictTraits):
         `Time` and `Dox`.
         
     fill : Any (default = 0)
-        Value to fill NaNs in the output
+        Value to use in the statistic if a slice of the data is empty.
    
     Examples
     --------
@@ -87,13 +96,13 @@ class TransformStatisticOp(HasStrictTraits):
     
     id = Constant('edu.mit.synbio.cytoflow.operations.transform_statistic')
     friendly_id = Constant("Transform Statistic")
-    
-    name = CStr()
+
+    name = CStr
     statistic = Tuple(Str, Str)
-    function = Callable()
-    statistic_name = Str()
+    function = Callable
+    statistic_name = Str
     by = List(Str)    
-    fill = Any(Undefined)
+    fill = Any(0)
 
     def apply(self, experiment):
         
@@ -130,28 +139,44 @@ class TransformStatisticOp(HasStrictTraits):
         idx = pd.MultiIndex.from_product([data[x].unique() for x in self.by], 
                                          names = self.by)
         
-        new_stat = pd.Series(index = idx, dtype = np.dtype(object)).sort_index()
+        new_stat = pd.Series(data = self.fill,
+                             index = idx, 
+                             dtype = np.dtype(object)).sort_index()
                 
-        for group in data[self.by].itertuples(index = False):
+        for group in data[self.by].itertuples(index = False, name = None ):
             s = stat.xs(group, level = self.by)
+            if len(group) == 1:
+                group = group[0]
             try:
                 new_stat[group] = self.function(s)
             except Exception as e:
-                raise util.CytoflowOpError("Your function threw an error: {}"
-                                      .format(e))
-        
-        # fill in NaNs; in general, we don't want those.
-        if self.fill is Undefined:
-            fill = 0
-        else:
-            fill = self.fill
+                raise util.CytoflowOpError("On group {}, your function threw "
+                                           "an error: {}"
+                                           .format(group, e))
                 
-        new_stat.fillna(fill, inplace = True)
+            # check for, and warn about, NaNs.
+            if np.any(np.isnan(new_stat[group])):
+                warn("Category {} returned {}".format(group, x), 
+                     util.CytoflowOpWarning)
                 
-        # special handling for lists
-        if type(new_stat.iloc[0]) is pd.Series:
+        matched_series = True
+        for group in data[self.by].itertuples(index = False):
+            s = stat.xs(group, level = self.by)
+            if len(group) == 1:
+                group = group[0]
+            if isinstance(new_stat[group], pd.Series) and \
+                s.index.equals(new_stat[group].index):
+                pass
+            else:
+                matched_series = False
+                break
+            
+        if matched_series:
             names = set(self.by) | set(new_stat.iloc[0].index.names)
             new_stat = pd.concat(new_stat.to_dict(), names = names)
+            
+        # try to convert to numeric, but if there are non-numeric bits ignore
+        stat = pd.to_numeric(stat, errors = 'ignore')
         
         new_experiment = experiment.clone()
         new_experiment.history.append(self.clone_traits(transient = lambda t: True))

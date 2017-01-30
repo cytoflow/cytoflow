@@ -43,7 +43,8 @@ class FrameStatisticOp(HasStrictTraits):
     The `apply()` function groups the data by the variables in `by`, then
     applies the `function` callable to each pandas.DataFrame subset.  The 
     callable should take a DataFrame as its only parameter.  The return type
-    is arbitrary, but a float is most common.
+    is arbitrary, but to be used with the rest of `Cytoflow` it should probably
+    be a numeric type or an iterable of numeric types.
     
     Attributes
     ----------
@@ -53,10 +54,11 @@ class FrameStatisticOp(HasStrictTraits):
         
     function : Callable
         The function used to compute the statistic.  Must take a 
-        pandas.DataFrame as its only argument.  The return type is arbitrary,
-        but a float is most common.  If `statistic_name` is unset, the name of
-        the function becomes the second in element in the Experiment.statistics 
-        key tuple.
+        pandas.DataFrame as its only argument.  The return type is arbitrary, 
+        but to be used with the rest of `Cytoflow` it should probably be a 
+        numeric type or an iterable of numeric types.  If `statistic_name` is 
+        unset, the name of the function becomes the second in element in the 
+        Experiment.statistics key tuple.
         
     statistic_name : Str
         The name of the function; if present, becomes the second element in
@@ -75,13 +77,7 @@ class FrameStatisticOp(HasStrictTraits):
         computing the statistic.
         
     fill : Any (default = 0)
-        The pandas.Series that this module creates has an entry for every
-        combination of conditions in the Experiment (after subsetting.)
-        However, sometimes there aren't any values for a particular combination
-        of conditions; in this case, we need a value to fill these rows.  The
-        default value, `0`, works well in many cases, but not always (and
-        especially when `function` returns something other than a number!)
-
+        The value to use in the statistic if a slice of the data is empty.
    
     Examples
     --------
@@ -96,12 +92,12 @@ class FrameStatisticOp(HasStrictTraits):
     id = Constant('edu.mit.synbio.cytoflow.operations.statistics')
     friendly_id = Constant("Statistics")
     
-    name = CStr()
-    function = Callable()
-    statistic_name = Str()
+    name = CStr
+    function = Callable
+    statistic_name = Str
     by = List(Str)
-    subset = Str()
-    fill = Any(Undefined)
+    subset = Str
+    fill = Any(0)
     
     def apply(self, experiment):
         if not experiment:
@@ -156,27 +152,27 @@ class FrameStatisticOp(HasStrictTraits):
         idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by], 
                                          names = self.by)
 
-        stat = pd.Series(index = idx, dtype = np.dtype(object)).sort_index()
+        stat = pd.Series(data = self.fill,
+                         index = idx, 
+                         dtype = np.dtype(object)).sort_index()
         
         for group, data_subset in groupby:
             try:
                 stat[group] = self.function(data_subset)
+
             except Exception as e:
-                raise util.CytoflowOpError("Your function threw an error: {}"
-                                      .format(e))
-                
-        # fill in NaNs; in general, we don't want those.
-        if self.fill is Undefined:
-            fill = 0
-        else:
-            fill = self.fill
-                        
-        stat.fillna(fill, inplace = True)
-                
-        # special handling for lists
-        if type(stat.iloc[0]) is pd.Series:
-            stat = pd.concat(stat.to_dict(), names = self.by + stat.iloc[0].index.names)
-        
+                raise util.CytoflowOpError("In group {}, your function threw "
+                                           "an error: {}"
+                                           .format(group, e))    
+                            
+            # check for, and warn about, NaNs.
+            if np.any(np.isnan(stat[group])):
+                warn("Category {} returned {}".format(group, x), 
+                     util.CytoflowOpWarning)
+                    
+        # try to convert to numeric, but if there are non-numeric bits ignore
+        stat = pd.to_numeric(stat, errors = 'ignore')
+
         new_experiment.history.append(self.clone_traits(transient = lambda t: True))
         if self.statistic_name:
             new_experiment.statistics[(self.name, self.statistic_name)] = stat
