@@ -23,7 +23,7 @@ Created on Feb 21, 2016
 
 from __future__ import division, absolute_import
 
-from traits.api import HasStrictTraits, HasTraits, Float, Property, Instance, Str, \
+from traits.api import HasTraits, Float, Property, Instance, Str, \
                        cached_property, Undefined, provides, Constant, Dict, \
                        Tuple
                        
@@ -35,11 +35,11 @@ from matplotlib import transforms
 from matplotlib.ticker import NullFormatter, LogFormatterMathtext
 from matplotlib.ticker import Locator
 
-from .scale import IScale, register_scale
+from .scale import IScale, ScaleMixin, register_scale
 from .cytoflow_errors import CytoflowError
 
 @provides(IScale)
-class HlogScale(HasStrictTraits):
+class HlogScale(ScaleMixin):
     """
     A scale that transforms the data using the `hyperlog` function.
     

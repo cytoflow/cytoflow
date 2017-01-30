@@ -23,11 +23,11 @@ Created on Feb 24, 2016
 
 from __future__ import division, absolute_import
 
-from traits.api import HasTraits, HasStrictTraits, Instance, Str, Dict, provides, Constant, Tuple
-from .scale import IScale, register_scale
+from traits.api import Instance, Str, Dict, provides, Constant, Tuple
+from .scale import IScale, ScaleMixin, register_scale
 
 @provides(IScale)
-class LinearScale(HasStrictTraits):
+class LinearScale(ScaleMixin):
     id = Constant("edu.mit.synbio.cytoflow.utility.linear_scale")
     name = "linear"
     

@@ -23,18 +23,18 @@ Created on Feb 24, 2016
 
 from __future__ import division, absolute_import
 
-from traits.api import (HasStrictTraits, Instance, Str, Dict, provides, Constant,
-                        Enum, Float, Property, Tuple) 
+from traits.api import (Instance, Str, Dict, provides, Constant, Enum, Float, 
+                        Property, Tuple) 
                        
 import numpy as np
 import pandas as pd
 
-from .scale import IScale, register_scale
+from .scale import IScale, ScaleMixin, register_scale
 from .cytoflow_errors import CytoflowError
 
 
 @provides(IScale)
-class LogScale(HasStrictTraits):
+class LogScale(ScaleMixin):
     id = Constant("edu.mit.synbio.cytoflow.utility.log_scale")
     name = "log"
     

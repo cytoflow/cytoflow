@@ -327,6 +327,10 @@ def random_string(n):
     return ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(n))
 
 def is_numeric(s):
-    """s is a pandas.Series or a numpy.ndarray; determines if it's numeric from its dtype"""
+    """
+    s is a pandas.Series or a numpy.ndarray; try to determine if it's numeric
+    from its dtype.
+    """
     return s.dtype.kind in 'iufc'
+
 #     return issubclass(s.dtype.type, np.number)
