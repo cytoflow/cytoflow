@@ -80,29 +80,6 @@ class Test(unittest.TestCase):
         
         with self.assertRaises(util.CytoflowOpError):
             op.apply(self.ex)
-            
-    def testFill(self):
-        op = flow.ChannelStatisticOp(name = "ByDox",
-                                     by = ['Dox', 'T'],
-                                     channel = "Y2-A",
-                                     function = lambda x: np.nan if len(x) < 1000 else len(x),
-                                     statistic_name = "len")
-        ex2 = op.apply(self.ex)
-        stat = ex2.statistics[("ByDox", "len")]
-
-        self.assertFalse(stat.isnull().any())
-        
-    def testSeries(self):
-        op = flow.ChannelStatisticOp(name = "ByDox",
-                                     by = ['Dox', 'T'],
-                                     channel = "Y2-A",
-                                     function = lambda x: pd.Series({'a' : len(x), 'b' : len(x) - 1}),
-                                     statistic_name = "len")
-        ex2 = op.apply(self.ex)
-        stat = ex2.statistics[("ByDox", "len")]
-
-        self.assertIsInstance(stat, pd.Series)
-        self.assertIsNot(type(stat.iloc[0]), pd.Series)
 
 
 if __name__ == "__main__":

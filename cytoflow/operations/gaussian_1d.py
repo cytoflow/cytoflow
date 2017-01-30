@@ -29,8 +29,8 @@ from traits.api import (HasStrictTraits, Str, CStr, Dict, Any, Instance, Bool,
                         Constant, List, provides, Property, DelegatesTo)
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn import mixture
-from scipy import stats
+import sklearn.mixture as mixture
+import scipy.stats as stats
 import pandas as pd
 import seaborn as sns
 

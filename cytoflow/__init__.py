@@ -66,12 +66,14 @@ from .views.violin import ViolinPlotView
 from .views.table import TableView
 
 # util
-from cytoflow.utility.util_functions import (geom_mean, geom_sd, geom_sd_range,
+from .utility.util_functions import (geom_mean, geom_sd, geom_sd_range,
                                              geom_sem, geom_sem_range)
-from cytoflow.utility.scale import set_default_scale
+from .utility.scale import set_default_scale
 
 import subprocess
+import os
 try:
-    __version__ = subprocess.check_output(["git", "describe", "--always"]).rstrip()
+    cf_cwd =  os.path.dirname(__file__)
+    __version__ = subprocess.check_output(["git", "describe", "--always"], cwd = cf_cwd).rstrip()
 except subprocess.CalledProcessError:
     __version__ = "0.4.1"

@@ -159,7 +159,7 @@ class LogicleScale(HasStrictTraits):
                 return self._logicle.scale(data)
             else:
                 try:
-                    return map(self._logicle_scale, data)
+                    return map(self._logicle.scale, data)
                 except TypeError:
                     raise CytoflowError("Unknown data type in LogicleScale.__call__")
         except ValueError as e:
@@ -222,7 +222,7 @@ class LogicleScale(HasStrictTraits):
                 stat = self.experiment.statistics[self.statistic]
                 try:
                     return max([max(x) for x in stat])
-                except IndexError:
+                except TypeError, IndexError:
                     return stat.max()
             else:
                 return Undefined

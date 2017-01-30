@@ -17,7 +17,11 @@
 
 import unittest
 
+import numpy as np
+import pandas as pd
+
 import cytoflow as flow
+import cytoflow.utility as util
 
 class TestLogicle(unittest.TestCase):
     
@@ -34,16 +38,12 @@ class TestLogicle(unittest.TestCase):
         """
         Test the parameter estimator against the R implementation
         """
-               
-        el = flow.LogicleTransformOp()
-        el.name = "Logicle"
-        el.channels = ["Y2-A"]
         
-        el.estimate(self.ex)
+        scale = util.scale_factory("logicle", self.ex, channel = "Y2-A")
 
         # these are the values the R implementation gives
-        self.assertAlmostEqual(el.A['Y2-A'], 0.0)
-        self.assertAlmostEqual(el.W['Y2-A'], 0.533191950161284)
+        self.assertAlmostEqual(scale.A, 0.0)
+        self.assertAlmostEqual(scale.W, 0.533191950161284)
         
     ### TODO - test the estimator failure modes
         
@@ -52,12 +52,16 @@ class TestLogicle(unittest.TestCase):
         Make sure the function applies without segfaulting
         """
         
-        el = flow.LogicleTransformOp()
-        el.name = "Logicle"
-        el.channels = ['Y2-A']
+        scale = util.scale_factory("logicle", self.ex, channel = "Y2-A")
         
-        el.estimate(self.ex)
-        el.apply(self.ex)
+        x = scale(20.0)
+        self.assertTrue(isinstance(x, float))
+        
+        x = scale([20])
+        self.assertTrue(isinstance(x, list))
+        
+        x = scale(pd.Series([20]))
+        self.assertTrue(isinstance(x, pd.Series))
         
     ### TODO - test the apply function error checking
     

@@ -95,10 +95,14 @@ class HlogScale(ScaleMixin):
             return data.apply(f)
         elif isinstance(data, np.ndarray):
             return f(data)
-        elif isinstance(data, float):
-            return f(data)
+        elif isinstance(data, (int, float)):
+            # numpy returns a 0-dim array.  wtf.
+            return float(f(data))
         else:
-            raise CytoflowError("Unknown data type in HlogScale.__call__")
+            try:
+                return map(f, data)
+            except TypeError:
+                raise CytoflowError("Unknown data type in HlogScale.__call__")
 
         
     def inverse(self, data):
@@ -116,7 +120,10 @@ class HlogScale(ScaleMixin):
         elif isinstance(data, float):
             return f_inv(data)
         else:
-            raise CytoflowError("Unknown data type in HlogScale.inverse")
+            try:
+                return map(f_inv, data)
+            except TypeError:
+                raise CytoflowError("Unknown data type in HlogScale.inverse")
         
     def clip(self, data):
         return data

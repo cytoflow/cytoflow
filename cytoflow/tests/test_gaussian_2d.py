@@ -58,43 +58,44 @@ class Test(unittest.TestCase):
     def testEstimateBy(self):
         self.gate.by = ["Dox"]
         self.gate.estimate(self.ex)
-        self.assertAlmostEqual(self.gate._gmms[1.0].means_[0][0], 0.209793501551, places = 3)
-        self.assertAlmostEqual(self.gate._gmms[1.0].means_[0][1], 0.140549661228, places = 3)        
-        self.assertAlmostEqual(self.gate._gmms[1.0].means_[1][0], 0.362389957305, places = 3)
-        self.assertAlmostEqual(self.gate._gmms[1.0].means_[1][1], 0.149434629131, places = 3)
-        self.assertAlmostEqual(self.gate._gmms[10.0].means_[0][0], 0.166408870403, places = 3)
-        self.assertAlmostEqual(self.gate._gmms[10.0].means_[0][1], 0.132633502267, places = 3)        
-        self.assertAlmostEqual(self.gate._gmms[10.0].means_[1][0], 0.230731659893, places = 3)
-        self.assertAlmostEqual(self.gate._gmms[10.0].means_[1][1], 0.618217911538, places = 3)
+
+        self.assertAlmostEqual(self.gate._gmms[1.0].means_[0][0], 0.16641878, places = 3)
+        self.assertAlmostEqual(self.gate._gmms[1.0].means_[0][1], 0.14040044, places = 3)        
+        self.assertAlmostEqual(self.gate._gmms[1.0].means_[1][0], 0.35156931, places = 3)
+        self.assertAlmostEqual(self.gate._gmms[1.0].means_[1][1], 0.1459792, places = 3)
+        self.assertAlmostEqual(self.gate._gmms[10.0].means_[0][0], 0.16668259, places = 3)
+        self.assertAlmostEqual(self.gate._gmms[10.0].means_[0][1], 0.1328976, places = 3)        
+        self.assertAlmostEqual(self.gate._gmms[10.0].means_[1][0], 0.23071522, places = 3)
+        self.assertAlmostEqual(self.gate._gmms[10.0].means_[1][1], 0.61858629, places = 3)
     
     def testApply(self):
         self.gate.estimate(self.ex)
         ex2 = self.gate.apply(self.ex) 
                  
-        self.assertAlmostEqual(ex2.data.groupby("Gauss").size().loc["Gauss_1"], 6149)
-        self.assertAlmostEqual(ex2.data.groupby("Gauss").size().loc["Gauss_2"], 2395)
-        self.assertAlmostEqual(ex2.data.groupby("Gauss").size().loc["Gauss_None"], 11456)
+        self.assertAlmostEqual(ex2.data.groupby("Gauss").size().loc["Gauss_1"], 5207)
+        self.assertAlmostEqual(ex2.data.groupby("Gauss").size().loc["Gauss_2"], 2008)
+        self.assertAlmostEqual(ex2.data.groupby("Gauss").size().loc["Gauss_None"], 12785)
         
     def testApplyBy(self):
         self.gate.by = ["Dox"]
         self.gate.estimate(self.ex)
         ex2 = self.gate.apply(self.ex)
-         
-        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_1", 1], 3122)
-        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_1", 10], 2451)
         
-        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_2", 1], 2040)
-        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_2", 10], 2398)
+        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_1", 1], 1874)
+        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_1", 10], 1994)
+        
+        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_2", 1], 2186)
+        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_2", 10], 2013)
          
-        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_None", 1], 4838)        
-        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_None", 10], 5151) 
+        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_None", 1], 5940)        
+        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_None", 10], 5993) 
         
     def testStatistics(self): 
         self.gate.by = ["Dox"]
         self.gate.estimate(self.ex)
         ex2 = self.gate.apply(self.ex)
         
-        stat = ex2.statistics[("Gauss", "mean")]
+        stat = ex2.statistics[("Gauss", "xmean")]
         
         self.assertIn("Gauss", stat.index.names)
         self.assertIn("Dox", stat.index.names)       

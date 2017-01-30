@@ -79,10 +79,12 @@ class Test(unittest.TestCase):
         op = flow.ChannelStatisticOp(name = "ByDox",
                                      by = ['Dox', 'T'],
                                      channel = "Y2-A",
-                                     function = lambda x: pd.Series({'a' : len(x), 'b' : len(x) - 1}),
+                                     function = lambda x: pd.Series(x / 10.0),
                                      statistic_name = "len")
         ex2 = op.apply(self.ex)
         stat = ex2.statistics[("ByDox", "len")]
+        
+        print stat
  
         self.assertIsInstance(stat, pd.Series)
         self.assertIsNot(type(stat.iloc[0]), pd.Series)

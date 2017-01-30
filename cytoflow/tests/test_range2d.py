@@ -36,27 +36,19 @@ class Test(unittest.TestCase):
         tube2 = flow.Tube(file= self.cwd + 'CFP_Well_A4.fcs', conditions = {"Dox" : 1.0})
         import_op = flow.ImportOp(conditions = {"Dox" : "float"},
                                   tubes = [tube1, tube2])
-        ex = import_op.apply()
-
-        # this works so much better on transformed data
-        logicle = flow.LogicleTransformOp()
-        logicle.name = "Logicle transformation"
-        logicle.channels = ['V2-A', 'Y2-A', 'B1-A']
-        logicle.estimate(ex)
-        self.ex = logicle.apply(ex)
-
+        self.ex = import_op.apply()
 
         self.gate = flow.Range2DOp(name = "Range2D",
                                    xchannel = "V2-A",
                                    ychannel = "Y2-A",
-                                   xlow = 0.0, xhigh = 0.4,
-                                   ylow = 0.4, yhigh = 0.8)
+                                   xlow = -200, xhigh = 800,
+                                   ylow = 800, yhigh = 30000)
         
     def testGate(self):
         ex2 = self.gate.apply(self.ex)
         
         # how many events ended up in the gate?
-        self.assertEqual(ex2.data.groupby("Range2D").size()[True], 4385)
+        self.assertEqual(ex2.data.groupby("Range2D").size()[True], 4371)
         
     def testPlot(self):
         self.gate.default_view().plot(self.ex)

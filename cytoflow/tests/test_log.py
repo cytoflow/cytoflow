@@ -39,12 +39,12 @@ class Test(unittest.TestCase):
         
 
     def test_run(self):
-        scale = util.scale_factory("log", self.ex, "Pacific Blue-A")
+        scale = util.scale_factory("log", self.ex, channel = "Pacific Blue-A")
         x = scale(20.0)
         self.assertTrue(isinstance(x, float))
         
         x = scale([20])
-        self.assertTrue(isinstance(x, np.ndarray))
+        self.assertTrue(isinstance(x, list))
         
         x = scale(pd.Series([20]))
         self.assertTrue(isinstance(x, pd.Series))
