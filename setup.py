@@ -57,7 +57,7 @@ setup(
     
     # Project uses reStructuredText, so ensure that the docutils get
     # installed or upgraded on the target machine
-    install_requires = ['pandas>=0.18.0',
+    install_requires = ['pandas>=0.19.2',
                         'bottleneck>=1.0',
                         'numpy>=1.9.0',
                         'numexpr>=2.4.6',

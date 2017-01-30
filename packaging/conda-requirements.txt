@@ -1,4 +1,4 @@
-pandas==0.18.1
+pandas==0.19.2
 bottleneck==1.1.0
 numpy==1.11.1
 numexpr==2.6.1
