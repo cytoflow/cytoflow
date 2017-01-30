@@ -219,7 +219,11 @@ class LogicleScale(HasStrictTraits):
             elif self.condition and self.condition in self.experiment.conditions:
                 return self.experiment.data[self.condition].max()
             elif self.statistic and self.statistic in self.experiment.statistics:
-                return self.experiment.statistics[self.statistic].max()
+                stat = self.experiment.statistics[self.statistic]
+                try:
+                    return max([max(x) for x in stat])
+                except IndexError:
+                    return stat.max()
             else:
                 return Undefined
         else:
