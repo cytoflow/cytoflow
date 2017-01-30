@@ -457,10 +457,12 @@ class GaussianMixture2DOp(HasStrictTraits):
                             g = list([group])
                             g.append(component_name)
                         
-                    if len(g) > 1:
-                        g = tuple(g)
+                        if len(g) > 1:
+                            g = tuple(g)
+                        else:
+                            g = g[0]
                     else:
-                        g = g[0]
+                        g = group
                                                                              
                     xmean_stat.loc[g] = self._xscale.inverse(gmm.means_[c][0])
                     ymean_stat.loc[g] = self._yscale.inverse(gmm.means_[c][0])

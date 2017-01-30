@@ -401,10 +401,12 @@ class GaussianMixture1DOp(HasStrictTraits):
                             g = list([group])
                             g.append(component_name)
                         
-                    if len(g) > 1:
-                        g = tuple(g)
+                        if len(g) > 1:
+                            g = tuple(g)
+                        else:
+                            g = g[0]
                     else:
-                        g = g[0]
+                        g = group
                                
                     mean_stat.loc[g] = self._scale.inverse(gmm.means_[c][0])
                     stdev_stat.loc[g] = self._scale.inverse(np.sqrt(gmm.covariances_[c][0]))
