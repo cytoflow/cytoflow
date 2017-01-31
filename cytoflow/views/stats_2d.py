@@ -427,7 +427,11 @@ class Stats2DView(HasStrictTraits):
             if len(unique_values) == 1:
                 warn("Only one value for level {}; dropping it.".format(name),
                      util.CytoflowViewWarning)
-                data.index = data.index.droplevel(name)
+                try:
+                    data.index = data.index.droplevel(name)
+                except AttributeError:
+                    raise util.CytoflowViewError("Must have more than one "
+                                                 "value to plot.")
                 
         names = list(data.index.names)    
             

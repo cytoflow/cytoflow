@@ -260,7 +260,7 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
                                              self._splines]))
         
         for channel in self._channels:
-            chan_values = np.reshape(mesh_corrected[channel], [len(x) for x in mesh_axes])
+            chan_values = mesh_corrected[channel].values.reshape([len(x) for x in mesh_axes])
             self._interpolators[channel] = \
                 scipy.interpolate.RegularGridInterpolator(points = mesh_axes, 
                                                           values = chan_values, 

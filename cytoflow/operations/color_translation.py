@@ -177,7 +177,7 @@ class ColorTranslationOp(HasStrictTraits):
             _ = data.reset_index(drop = True, inplace = True)
 
             if self.mixture_model:    
-                gmm = sklearn.mixture.GMM(n_components=2)
+                gmm = sklearn.mixture.GaussianMixture(n_components=2)
                 fit = gmm.fit(np.log10(data[from_channel][:, np.newaxis]))
     
                 # pick the component with the maximum mean
@@ -384,7 +384,7 @@ class ColorTranslationDiagnostic(HasStrictTraits):
                              antialiased = True)
                 plt.xlabel(from_channel)
                 
-                gmm = sklearn.mixture.GMM(n_components=2)
+                gmm = sklearn.mixture.GaussianMixture(n_components=2)
                 fit = gmm.fit(np.log10(data[from_channel][:, np.newaxis]))
     
                 mu_idx = 0 if fit.means_[0][0] > fit.means_[1][0] else 1

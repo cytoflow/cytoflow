@@ -75,17 +75,16 @@ class Test(unittest.TestCase):
         with self.assertRaises(util.CytoflowOpError):
             op.apply(self.ex)
 
-    def testSeries(self):
-        op = flow.ChannelStatisticOp(name = "ByDox",
-                                     by = ['Dox', 'T'],
-                                     channel = "Y2-A",
-                                     function = lambda x: pd.Series(x / 10.0),
-                                     statistic_name = "len")
-        ex2 = op.apply(self.ex)
-        stat = ex2.statistics[("ByDox", "len")]
+    def testSeries(self):      
+        op = flow.TransformStatisticOp(name = "ByDox",
+                                       by = ['Dox'],
+                                       statistic = ("ByDox", "len"),
+                                       function = lambda x: x / x.sum(),
+                                       statistic_name = "prop")
         
-        print stat
- 
+        ex2 = op.apply(self.ex)
+        stat = ex2.statistics[("ByDox", "prop")]
+         
         self.assertIsInstance(stat, pd.Series)
         self.assertIsNot(type(stat.iloc[0]), pd.Series)
 

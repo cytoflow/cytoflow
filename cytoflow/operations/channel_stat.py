@@ -28,7 +28,7 @@ import pandas as pd
 import numpy as np
 
 from traits.api import (HasStrictTraits, Str, List, Constant, provides, 
-                        Callable, CStr, Any, Undefined)
+                        Callable, CStr, Any)
 
 import cytoflow.utility as util
 
