@@ -106,13 +106,13 @@ class _ValueBoundsEditor(Editor):
         slider.setMaximum(10000)
         slider.setPageStep(1000)
         slider.setSingleStep(100)
-                
         
-#         self._slider_low = self.low
-#         self._slider_high = self.high
-        
-        slider.setLow(self._convert_to_slider(self.low))
-        slider.setHigh(self._convert_to_slider(self.high))
+        if len(self.values) > 1:
+            slider.setLow(self._convert_to_slider(self.low))
+            slider.setHigh(self._convert_to_slider(self.high))
+        else:
+            slider.setLow(slider.minimum())
+            slider.setHigh(slider.maximum())
         
         QtCore.QObject.connect(slider, QtCore.SIGNAL('sliderMoved(int)'),
                 self._slider_moved)
@@ -135,8 +135,19 @@ class _ValueBoundsEditor(Editor):
         self.set_tooltip(self._label_lo)
         self.set_tooltip(self._label_hi)
         
+        if len(self.values) <= 1:
+            self.control.setEnabled(False)
+        
     def update_editor(self):
-        pass
+        slider = self.control.slider
+        if len(self.values) > 1:
+            self.control.setEnabled(True)
+            slider.setLow(self._convert_to_slider(self.low))
+            slider.setHigh(self._convert_to_slider(self.high))
+        else:
+            slider.setLow(slider.minimum())
+            slider.setHigh(slider.maximum())
+            self.control.setEnabled(False)
 
     def update_low_on_enter(self):
         try:
