@@ -168,26 +168,14 @@ class VerticalNotebookPage(HasPrivateTraits):
                              'deletable', 
                              dispatch = 'ui',
                              remove = True)
-        
+
         # make sure we dispose of the child ui properly
         if self.ui is not None:
             self.ui.dispose()
             self.ui = None
-        
-        # and clean up all the widgets
-        buttons_container = self.layout.takeAt(0).widget()
-        buttons_layout = buttons_container.layout()
-        
-        while buttons_layout.count() > 0:
-            child = buttons_layout.takeAt(0)
-            if child.widget():  # spacers don't have widgets
-                child.widget().setParent(None)
-            
-        buttons_container.setParent(None)
-        
-        while self.layout.count() > 0:
-            child = self.layout.takeAt(0)
-            child.widget().setParent(None)
+
+        # this cleans up all the widgets in this control's layout
+        self.control.deleteLater()
 
     def register_name_listener(self, model, trait):
         """ 
@@ -294,6 +282,7 @@ class VerticalNotebookPage(HasPrivateTraits):
             self.del_button.clicked.connect(self._handle_close_button)
             
             buttons_layout.addWidget(self.del_button)
+            
         buttons_layout.addStretch(1)
         buttons_container.setLayout(buttons_layout)
         
