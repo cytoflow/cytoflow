@@ -176,7 +176,7 @@ class TransformStatisticOp(HasStrictTraits):
             new_stat = pd.concat(new_stat.to_dict(), names = names)
             
         # try to convert to numeric, but if there are non-numeric bits ignore
-        stat = pd.to_numeric(stat, errors = 'ignore')
+        new_stat = pd.to_numeric(new_stat, errors = 'ignore')
         
         new_experiment = experiment.clone()
         new_experiment.history.append(self.clone_traits(transient = lambda t: True))

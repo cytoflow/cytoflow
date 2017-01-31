@@ -255,7 +255,7 @@ def _bivariate_kdeplot(x, y, xscale=None, yscale=None, shade=False, kernel="gau"
     x_support = _kde_support(x, kde.bw[0], gridsize, cut, clip[0])
     y_support = _kde_support(y, kde.bw[1], gridsize, cut, clip[1])
     xx, yy = np.meshgrid(x_support, y_support)
-    z = kde.pdf([xx.ravel(), yy.ravel()]).reshape(xx.shape)
+    z = kde.pdf([xx.ravel(), yy.ravel()]).values.reshape(xx.shape)
 
     n_levels = kwargs.pop("n_levels", 10)
     color = kwargs.pop("color")

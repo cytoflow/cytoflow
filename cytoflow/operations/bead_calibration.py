@@ -304,6 +304,7 @@ class BeadCalibrationOp(HasStrictTraits):
                 
                 a = best_lr[0]
                 b = 10 ** best_lr[1]
+                print a, b
                 self._calibration_functions[channel] = \
                     lambda x, a=a, b=b: b * np.power(x, a)
 
@@ -344,12 +345,12 @@ class BeadCalibrationOp(HasStrictTraits):
         # we filter out negative values here.
 
         new_experiment = experiment.clone()
-#         
-#         for channel in channels:
-#             new_experiment.data = \
-#                 new_experiment.data[new_experiment.data[channel] > 0]
+        
+        for channel in channels:
+            new_experiment.data = \
+                new_experiment.data[new_experiment.data[channel] > 0]
                 
-#         new_experiment.data.reset_index(drop = True, inplace = True)
+        new_experiment.data.reset_index(drop = True, inplace = True)
         
         for channel in channels:
             calibration_fn = self._calibration_functions[channel]
