@@ -144,6 +144,19 @@ class ColorTranslationPluginOp(PluginOpMixin, ColorTranslationOp):
         
         self.changed = "estimate_result"
         
+    def should_clear_estimate(self, changed):
+        """
+        Should the owning WorkflowItem clear the estimated model by calling
+        op.clear_estimate()?  `changed` can be:
+         - "estimate" -- the parameters required to call 'estimate()' (ie
+            traits with estimate = True metadata) have changed
+         - "prev_result" -- the previous WorkflowItem's result changed
+        """
+        if changed == "prev_result":
+            return False
+        
+        return True
+        
     def clear_estimate(self):
         self._coefficients.clear()
         self._subset.clear()
@@ -171,19 +184,7 @@ class ColorTranslationPluginView(ColorTranslationDiagnostic, PluginViewMixin):
     
     def plot_wi(self, wi):
         self.plot(wi.previous.result)
-        
-    def should_clear_estimate(self, changed):
-        """
-        Should the owning WorkflowItem clear the estimated model by calling
-        op.clear_estimate()?  `changed` can be:
-         - "estimate" -- the parameters required to call 'estimate()' (ie
-            traits with estimate = True metadata) have changed
-         - "prev_result" -- the previous WorkflowItem's result changed
-        """
-        if changed == "prev_result":
-            return False
-        
-        return True
+
 
 @provides(IOperationPlugin)
 class ColorTranslationPlugin(Plugin):

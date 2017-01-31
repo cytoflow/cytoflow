@@ -157,6 +157,9 @@ class FrameStatisticOp(HasStrictTraits):
                          dtype = np.dtype(object)).sort_index()
         
         for group, data_subset in groupby:
+            if len(data_subset) == 0:
+                continue
+            
             try:
                 stat[group] = self.function(data_subset)
 

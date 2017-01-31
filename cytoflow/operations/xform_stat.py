@@ -145,6 +145,8 @@ class TransformStatisticOp(HasStrictTraits):
                 
         for group in data[self.by].itertuples(index = False, name = None ):
             s = stat.xs(group, level = self.by)
+            if len(s) == 0:
+                continue
             if len(group) == 1:
                 group = group[0]
             try:

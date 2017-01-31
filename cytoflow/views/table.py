@@ -82,7 +82,11 @@ class TableView(HasStrictTraits):
             if len(unique_values) == 1:
                 warn("Only one value for level {}; dropping it.".format(name),
                      util.CytoflowViewWarning)
-                data.index = data.index.droplevel(name)        
+                try:
+                    data.index = data.index.droplevel(name)
+                except AttributeError:
+                    raise util.CytoflowViewError("Must have more than one "
+                                                 "value to plot.")
         
         if not (self.row_facet or self.column_facet):
             raise util.CytoflowViewError("Must set at least one of row_facet "
