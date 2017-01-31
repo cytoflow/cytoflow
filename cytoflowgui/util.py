@@ -28,16 +28,6 @@ from pyface.ui.qt4.file_dialog import FileDialog
 from Queue import PriorityQueue
 import heapq, threading
 
-import numpy as np
-import scipy.stats
-import pandas as pd
-import cytoflow.utility as util
-
-# http://stackoverflow.com/questions/1977362/how-to-create-module-wide-variables-in-python
-# this = sys.modules[__name__]
-# this.parent_log = None
-# this.child_log = None
-
 class UniquePriorityQueue(PriorityQueue):
     """
     A PriorityQueue that only allows one copy of each item.
@@ -80,6 +70,7 @@ class DelayedEvent(Event):
             return
         
         self._timer = threading.Timer(delay, fire, (self, obj, name, value))
+        self.value = value
         self._timer.start()
         self._lock.release()
 
