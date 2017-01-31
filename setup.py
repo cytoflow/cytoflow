@@ -17,7 +17,7 @@
 
 from __future__ import print_function
 from setuptools import setup, find_packages, Extension
-import io, os
+import io, os, re
 
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 no_logicle = os.environ.get('NO_LOGICLE', None) == 'True'
@@ -45,12 +45,12 @@ def read_file(*names, **kwargs):
         return fp.read()
     
 def find_version(*file_paths):
-    try:
-        import subprocess
-        cf_cwd =  os.path.dirname(__file__)
-        return subprocess.check_output(["git", "describe", "--always"], cwd = cf_cwd).rstrip()
-    except (subprocess.CalledProcessError, OSError):
-        return "0.4.1"
+    version_file = read_file(*file_paths)
+    version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]",
+                              version_file, re.M)
+    if version_match:
+        return version_match.group(1)
+    raise RuntimeError("Unable to find version string.")
 
 long_description = read_rst('README.rst')
 
