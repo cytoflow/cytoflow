@@ -22,7 +22,6 @@ Created on Oct 9, 2015
 '''
 
 import numpy as np
-import pandas as pd
 import scipy.stats
 
 from traitsui.api import View, Item, EnumEditor, Controller, VGroup, \
@@ -60,7 +59,7 @@ class ChannelStatisticHandler(Controller, OpHandlerMixin):
                     Item('channel',
                          editor=EnumEditor(name='context.previous.channels'),
                          label = "Channel"),
-                    Item('function_name',
+                    Item('statistic_name',
                                 editor = EnumEditor(values = summary_functions.keys()),
                                 label = "Function"),
                     Item('by',
@@ -81,14 +80,13 @@ class ChannelStatisticPluginOp(PluginOpMixin, ChannelStatisticOp):
     subset_dict = Dict(Str, List)
     
     # functions aren't picklable, so send the name instead
-    function_name = Str()
     function = Callable(transient = True)
     
     def apply(self, experiment):
-        if not self.function_name:
+        if not self.statistic_name:
             raise util.CytoflowOpError("Summary function isn't set")
         
-        self.function = summary_functions[self.function_name]
+        self.function = summary_functions[self.statistic_name]
         
         return ChannelStatisticOp.apply(self, experiment) 
 

@@ -126,7 +126,7 @@ class TransformStatisticHandler(Controller, OpHandlerMixin):
                     Item('statistic',
                          editor=EnumEditor(name='handler.prev_statistics'),
                          label = "Statistic"),
-                    Item('function_name',
+                    Item('statistic_name',
                          editor = EnumEditor(values = transform_functions.keys()),
                          label = "Function"),
                     Item('by',
@@ -148,14 +148,13 @@ class TransformStatisticPluginOp(TransformStatisticOp, PluginOpMixin):
     subset_dict = Dict(Str, List)
     
     # functions aren't picklable, so send the name instead
-    function_name = Str()
     function = Callable(transient = True)
     
     def apply(self, experiment):
-        if not self.function_name:
+        if not self.statistic_name:
             raise util.CytoflowOpError("Transform function not set")
         
-        self.function = transform_functions[self.function_name]
+        self.function = transform_functions[self.statistic_name]
         
         return TransformStatisticOp.apply(self, experiment)
 

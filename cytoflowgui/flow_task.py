@@ -158,14 +158,11 @@ class FlowTask(Task):
             stat_op = self.model.workflow[1].operation
             stat_op.name = "Test"
             stat_op.channel = "Y2-A"
-            stat_op.function_name = "Geom.Mean"
+            stat_op.statistic_name = "Geom.Mean"
             stat_op.by = ["Dox", "Replicate"]
             self.model.selected = self.model.workflow[1]
-        
+                    
         self.model.modified = False
-        
-#     def prepare_destroy(self):
-#         self.model = None
     
     def _default_layout_default(self):
         return TaskLayout(left = PaneItem("edu.mit.synbio.workflow_pane"),
@@ -269,6 +266,7 @@ class FlowTask(Task):
         else:
             self.model.workflow = new_workflow
             self.model.modified = False
+            self.model.workflow[0].operation.changed = "api"
         
     def on_save(self):
         """ Save the file to the previous filename  """
