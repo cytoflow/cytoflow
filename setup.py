@@ -45,8 +45,12 @@ def read_file(*names, **kwargs):
         return fp.read()
     
 def find_version(*file_paths):
-    import subprocess
-    return subprocess.check_output(["git", "describe"]).rstrip()
+    try:
+        import subprocess
+        cf_cwd =  os.path.dirname(__file__)
+        __version__ = subprocess.check_output(["git", "describe", "--always"], cwd = cf_cwd).rstrip()
+    except subprocess.CalledProcessError:
+        __version__ = "0.4.1"
 
 long_description = read_rst('README.rst')
 
