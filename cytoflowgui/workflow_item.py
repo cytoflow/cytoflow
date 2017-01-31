@@ -30,7 +30,6 @@ from pyface.qt import QtGui
 
 import matplotlib.pyplot as plt
 
-import numpy as np
 import pandas as pd
 
 from cytoflow import Experiment
@@ -188,11 +187,11 @@ class WorkflowItem(HasStrictTraits):
     
 class RemoteWorkflowItem(WorkflowItem):
 
-    changed = DelayedEvent(delay = 0.1)
+    changed = DelayedEvent(delay = 0.2)
     
     # the Event we use to cause the remote process to run one of our 
     # functions in the main thread
-    command = DelayedEvent(delay = 0.1)
+    command = DelayedEvent(delay = 0.2)
     
     lock = Instance(threading.Lock, (), transient = True)
     
