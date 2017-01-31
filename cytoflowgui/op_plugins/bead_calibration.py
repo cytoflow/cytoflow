@@ -22,8 +22,7 @@ Created on Oct 9, 2015
 '''
 
 from traitsui.api import (View, Item, EnumEditor, Controller, VGroup, 
-                          ButtonEditor, TableEditor, ObjectColumn, HGroup,
-                          ListEditor, InstanceEditor)
+                          ButtonEditor, HGroup, ListEditor, InstanceEditor)
 from envisage.api import Plugin, contributes_to
 from traits.api import provides, Callable, List, Str, HasTraits, \
                        File, Event, on_trait_change, Property, \
@@ -139,6 +138,23 @@ class BeadCalibrationPluginOp(PluginOpMixin, BeadCalibrationOp):
     def default_view(self, **kwargs):
         return BeadCalibrationPluginView(op = self, **kwargs)
     
+    def apply(self, experiment):
+        if not self.beads_name:
+            raise util.CytoflowOpError("Specify which beads to calibrate with.")
+                
+        for i, unit_i in enumerate(self.units_list):
+            for j, unit_j in enumerate(self.units_list):
+                if unit_i.channel == unit_j.channel and i != j:
+                    raise util.CytoflowOpError("Channel {0} is included more than once"
+                                               .format(unit_i.channel))
+                                               
+        self.units = {}
+        for unit in self.units_list:
+            self.units[unit.channel] = unit.unit
+                    
+        self.beads = self.BEADS[self.beads_name]
+        BeadCalibrationOp.apply(self, experiment)
+    
     def estimate(self, experiment):
         if not self.beads_name:
             raise util.CytoflowOpError("Specify which beads to calibrate with.")
@@ -207,7 +223,7 @@ class BeadCalibrationPluginView(BeadCalibrationDiagnostic, PluginViewMixin):
          - "prev_result" -- the previous WorkflowItem's result changed
          - "estimate_result" -- the results of calling "estimate" changed
         """
-        if changed == "prev_result" or changed == "result":
+        if changed == "prev_result":
             return False
         
         return True

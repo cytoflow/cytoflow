@@ -227,13 +227,15 @@ class TasbePluginOp(PluginOpMixin):
         self._af_op.blank_file = self.blank_file
         
         self._af_op.estimate(experiment, subset = self.subset)
+        self.changed = "estimate_result"
         experiment = self._af_op.apply(experiment)
         
         self._bleedthrough_op.controls.clear()
         for control in self.bleedthrough_list:
             self._bleedthrough_op.controls[control.channel] = control.file
 
-        self._bleedthrough_op.estimate(experiment, subset = self.subset)
+        self._bleedthrough_op.estimate(experiment, subset = self.subset) 
+        self.changed = "estimate_result"
         experiment = self._bleedthrough_op.apply(experiment)
         
         self._bead_calibration_op.beads = BeadCalibrationOp.BEADS[self.beads_name]
@@ -247,6 +249,7 @@ class TasbePluginOp(PluginOpMixin):
             self._bead_calibration_op.units[channel] = self.beads_unit
             
         self._bead_calibration_op.estimate(experiment)
+        self.changed = "estimate_result"
         experiment = self._bead_calibration_op.apply(experiment)
         
         self._color_translation_op.mixture_model = self.mixture_model

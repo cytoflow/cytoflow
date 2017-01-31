@@ -251,9 +251,13 @@ class BeadCalibrationOp(HasStrictTraits):
             mef = self.beads[mef_unit]
                     
             if len(peaks) == 0:
-                raise util.CytoflowOpError("Didn't find any peaks; check the diagnostic plot")
+                raise util.CytoflowOpError("Didn't find any peaks for channel {}; "
+                                           "check the diagnostic plot"
+                                           .format(channel))
             elif len(peaks) > len(self.beads):
-                raise util.CytoflowOpError("Found too many peaks; check the diagnostic plot")
+                raise util.CytoflowOpError("Found too many peaks for channel {}; "
+                                           "check the diagnostic plot"
+                                           .format(channel))
             elif len(peaks) == 1:
                 # if we only have one peak, assume it's the brightest peak
                 a = mef[-1] / peaks[0]
@@ -431,11 +435,7 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
 
         if not channels:
             raise util.CytoflowViewError("No channels to plot")
-        
-        if set(channels) != set(self.op._calibration_functions.keys()):
-            raise util.CytoflowViewError("Calibration doesn't match units. "
-                                  "Did you forget to call estimate()?")        
-      
+
         # make a little Experiment
         try:
             check_tube(self.op.beads_file, experiment)
@@ -447,16 +447,12 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
 
         plt.figure()
         
-        
         for idx, channel in enumerate(channels):
+            if channel not in beads_exp.channels:
+                raise util.CytoflowViewError("Channel {} not in the beads!"
+                                             .format(channel))
             data = beads_exp.data[channel]
-
             data_range = experiment.metadata[channel]['range']
-            
-            if self.op.bead_brightness_cutoff is Undefined:
-                cutoff = 0.7 * data_range
-            else:
-                cutoff = self.op.bead_brightness_cutoff
                 
             # bin the data on a log scale            
             hist_bins = np.logspace(1, math.log(data_range, 2), num = 256, base = 2)
@@ -467,40 +463,29 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
             hist[0][-1] = 0
             
             hist_smooth = scipy.signal.savgol_filter(hist[0], 5, 1)
-            
-            # find peaks
-            peak_bins = scipy.signal.find_peaks_cwt(hist_smooth, 
-                                                    widths = np.arange(3, 20),
-                                                    max_distances = np.arange(3, 20) / 2)
-            
-            # filter by height and intensity
-            peak_threshold = np.percentile(hist_smooth, self.op.bead_peak_quantile)
-            peak_bins_filtered = \
-                [x for x in peak_bins if hist_smooth[x] > peak_threshold
-                 and hist[1][x] > self.op.bead_brightness_threshold
-                 and hist[1][x] < cutoff]
                 
             plt.subplot(len(channels), 2, 2 * idx + 1)
             plt.xscale('log')
             plt.xlabel(channel)
             plt.plot(hist_bins[1:], hist_smooth)
-            for peak in peak_bins_filtered:
-                plt.axvline(hist_bins[peak], color = 'r')
 
-            plt.subplot(len(channels), 2, 2 * idx + 2)
-            plt.xscale('log')
-            plt.yscale('log')
-            plt.xlabel(self.op.units[channel])
-            plt.ylabel(channel)
-            plt.plot(self.op._peaks[channel], 
-                     self.op._mefs[channel], 
-                     marker = 'o')
-            
-            xmin, xmax = plt.xlim()
-            x = np.logspace(np.log10(xmin), np.log10(xmax))
-            plt.plot(x, 
-                     self.op._calibration_functions[channel](x), 
-                     color = 'r', linestyle = ':')
+            if channel in self.op._peaks and channel in self.op._mefs:
+                for peak in self.op._peaks[channel]:
+                    plt.axvline(peak, color = 'r')
+                plt.subplot(len(channels), 2, 2 * idx + 2)
+                plt.xscale('log')
+                plt.yscale('log')
+                plt.xlabel(self.op.units[channel])
+                plt.ylabel(channel)
+                plt.plot(self.op._peaks[channel], 
+                         self.op._mefs[channel], 
+                         marker = 'o')
+                
+                xmin, xmax = plt.xlim()
+                x = np.logspace(np.log10(xmin), np.log10(xmax))
+                plt.plot(x, 
+                         self.op._calibration_functions[channel](x), 
+                         color = 'r', linestyle = ':')
             
         plt.tight_layout(pad = 0.8)
             
