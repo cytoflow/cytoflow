@@ -53,6 +53,7 @@ class UniquePriorityQueue(PriorityQueue):
 class DelayedEvent(Event):
     def __init__(self, **kwargs):
         self._lock = threading.RLock()
+        self._timers = {}
         super(DelayedEvent, self).__init__(**kwargs)
         
     def set ( self, obj, name, value ):
@@ -60,18 +61,17 @@ class DelayedEvent(Event):
         
         def fire(self, obj, name, value):
             self._lock.acquire()
-            self.value = Undefined
+            del self._timers[value]
             obj.trait_property_changed(name, Undefined, value)
             self._lock.release()
             
         self._lock.acquire()
-        if self.value is not Undefined and self._timer and self._timer.is_alive():
+        if value in self._timers:
             self._lock.release()
             return
-        
-        self._timer = threading.Timer(delay, fire, (self, obj, name, value))
-        self.value = value
-        self._timer.start()
+
+        self._timers[value] = threading.Timer(delay, fire, (self, obj, name, value))
+        self._timers[value].start()
         self._lock.release()
 
     def get ( self, obj, name ):
