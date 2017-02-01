@@ -24,7 +24,8 @@ Created on Aug 31, 2015
 from __future__ import division, absolute_import
 
 from traits.api import (HasStrictTraits, Str, File, Dict, Bool, Int, List, 
-                        Float, Constant, provides, Undefined, Callable, Any)
+                        Float, Constant, provides, Undefined, Callable, Any,
+                        Instance)
 import numpy as np
 import math
 import scipy.signal
