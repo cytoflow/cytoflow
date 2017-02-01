@@ -24,10 +24,12 @@ import unittest
 import os
 
 import numpy as np
+import pandas as pd
 from numpy.testing import assert_almost_equal
 
 import cytoflow as flow
-from cytoflow.operations.hlog import hlog
+import cytoflow.utility as util
+from cytoflow.utility.hlog_scale import hlog as cf_hlog
 
 class Test(unittest.TestCase):
 
@@ -38,10 +40,17 @@ class Test(unittest.TestCase):
                                 tubes = [flow.Tube(file = self.cwd + '/data/tasbe/mkate.fcs',
                                                    conditions = {})]).apply()
         
-        self.op = flow.HlogTransformOp(channels = ["FSC-A", "Pacific Blue-A"])
-
     def test_run(self):
-        self.op.apply(self.ex)
+        
+        scale = util.scale_factory("hlog", self.ex, channel = "Pacific Blue-A")
+        x = scale(20.0)
+        self.assertTrue(isinstance(x, float))
+        
+        x = scale([20])
+        self.assertTrue(isinstance(x, list))
+        
+        x = scale(pd.Series([20]))
+        self.assertTrue(isinstance(x, pd.Series))
 
     # stolen shamelessly from Eugene Yurtsev's FlowCytometryTools
     # http://gorelab.bitbucket.org/flowcytometrytools/
@@ -78,6 +87,19 @@ class Test(unittest.TestCase):
 _machine_max = 2**18
 _l_mmax = np.log10(_machine_max)
 _display_max = 10**4
+
+#     x : num | num iterable
+#         values to be transformed.
+#     b : num
+#         Parameter controling the location of the shift 
+#         from linear to log transformation.
+#     r : num (default = 10**4)
+#         maximal transformed value.
+#     d : num (default = log10(2**18))
+#         log10 of maximal possible measured value.
+#         hlog_inv(r) = 10**d
+def hlog(x, b = 200, r = _display_max, d = _l_mmax):
+    return cf_hlog(x, b, r, d)
 
 # stolen shamelessly from Eugene Yurtsev's FlowCytometryTools
 # http://gorelab.bitbucket.org/flowcytometrytools/

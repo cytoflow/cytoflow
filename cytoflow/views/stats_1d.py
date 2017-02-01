@@ -17,14 +17,15 @@
 
 from __future__ import division, absolute_import
 
-import types
+from warnings import warn
 
-from traits.api import HasStrictTraits, Str, provides, Callable, Enum
+from traits.api import HasStrictTraits, Tuple, Str, provides
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 import numpy as np
 import seaborn as sns
+import pandas as pd
 
 import cytoflow.utility as util
 from .i_view import IView
@@ -32,29 +33,29 @@ from .i_view import IView
 @provides(IView)
 class Stats1DView(HasStrictTraits):
     """
-    Divide the data up by `by`, then plot a line plot of `by`
-    on the x axis with a summary statistic `yfunction` of the same data in 
-    `ychannel` on the y axis. 
+    Plot a statistic.  The value of the statistic will be plotted on the
+    Y axis; a numeric conditioning variable must be chosen for the X axis.
+    Every variable in the statistic must be specified as either the `variable`
+    or one of the plot facets.
     
     Attributes
     ----------
     name : Str
         The plot's name 
+        
+    statistic : Tuple(Str, Str)
+        The statistic to plot.  The first element is the name of the module that
+        added the statistic, and the second element is the name of the statistic.
     
-    xvariable : Str
-        the name of the conditioning variable to put on the X axis
+    variable : Str
+        the name of the conditioning variable to put on the X axis.  Must be
+        numeric (float or int).
         
     xscale : Enum("linear", "log") (default = "linear")
         The scale to use on the X axis
-
-    ychannel : Str
-        Apply `yfunction` to `ychannel` for each value of `by`
         
     yscale : Enum("linear", "log", "logicle") (default = "linear")
         The scale to use on the Y axis
-        
-    yfunction : Callable (list-like --> float)
-        What summary function to apply to `ychannel`
         
     xfacet : Str
         the conditioning variable for horizontal subplots
@@ -65,21 +66,18 @@ class Stats1DView(HasStrictTraits):
     huefacet : 
         the conditioning variable for color.
         
-    y_error_bars : Str
-        draw error bars?  if the name of a condition, subdivide each data
-        set further by the condition, apply 'yfunction' to each subset, then
-        apply `y_error_function` to the values and plot them as error bars.
-        if `data`, then apply `y_error_function` to the same data subsets that
-        `function` was applied to and plot those as error bars.    
+    huescale :
+        the scale to use on the "hue" axis, if there are many values of
+        the hue facet.
         
-    y_error_function : Callable (list-like --> (float, float))
-        for each group/subgroup subset, call this function to compute the 
-        error bars.  whether it is called on the data or the summary function
-        is determined by the value of `y_error_bars`
+    error_statistic : Tuple(Str, Str)
+        A statistic to use to draw error bars; the bars are +- the value of
+        the statistic.
         
-    subset : Str
-        a string passed to Experiment.query() to subset the data before 
-        we plot it.
+    subset : String
+        Passed to pandas.DataFrame.query(), to get a subset of the statistic
+        before we plot it.
+
         
     Examples
     --------
@@ -91,133 +89,341 @@ class Stats1DView(HasStrictTraits):
     constitutive expression level, then plot the dose-response (geometric mean)
     curve in each bin. 
     
-    >>> ex_binned = flow.BinningOp(name = "CFP_Bin",
-    ...                            channel = "PE-Tx-Red-YG-A",
-    ...                            scale = "log",
-    ...                            bin_width = 0.1).apply(ex)
-    >>> view = Stats1DView(name = "Dox vs IFP",
-    ...                    xchannel = "Dox",
-    ...                    ychannel = "Pacific Blue-A",
-    ...                    huefacet = "CFP_Bin",
-    ...                    yfunction = flow.geom_mean)
-    >>> view.plot(ex_binned)
+    >>> ex_bin = flow.BinningOp(name = "CFP_Bin",
+    ...                         channel = "PE-Tx-Red-YG-A",
+    ...                         scale = "log",
+    ...                         bin_width = 0.1).apply(ex)
+    >>> ex_stat = flow.ChannelStatisticOp(name = "DoxCFP",
+    ...                                   by = ["Dox", "CFP_Bin"],
+    ...                                   channel = "Pacific Blue-A",
+    ...                                   function = flow.geom_mean).apply(ex_bin)
+    >>> view = flow.Stats1DView(name = "Dox vs IFP",
+    ...                         statistic = ("DoxCFP", "geom_mean"),
+    ...                         variable = "Dox",
+    ...                         xscale = "log",
+    ...                         huefacet = "CFP_Bin").plot(ex_stat)
+    >>> view.plot(ex_stat)
     """
     
     # traits   
     id = "edu.mit.synbio.cytoflow.view.stats1d"
     friendly_id = "1D Statistics View" 
     
+    REMOVED_ERROR = "Statistics have changed dramatically in 0.5; please see the documentation"
+    by = util.Removed(err_string = REMOVED_ERROR)
+    yfunction = util.Removed(err_string = REMOVED_ERROR)
+    ychannel = util.Removed(err_string = REMOVED_ERROR)
+    xvariable = util.Deprecated(new = "variable")
+    
     name = Str
-    xvariable = Str
-    xscale = Enum("linear", "log")
-    ychannel = Str
+    statistic = Tuple(Str, Str)
+    variable = Str
+    xscale = util.ScaleEnum
     yscale = util.ScaleEnum
-    yfunction = Callable
     xfacet = Str
     yfacet = Str
     huefacet = Str
+    huescale = util.ScaleEnum # TODO - make this actually work
     
-    y_error_bars = Str
-    y_error_function = Callable
-
+    error_statistic = Tuple(Str, Str)
     subset = Str
     
-    def plot(self, experiment, **kwargs):
-        """Plot a bar chart"""
+    def enum_plots(self, experiment):
+        """
+        Returns an iterator over the possible plots that this View can
+        produce.  The values returned can be passed to "plot".
+        """
+        
+        # TODO - all this is copied from below.  can we abstract it out somehow?
         
         if not experiment:
             raise util.CytoflowViewError("No experiment specified")
         
-        if not self.xvariable:
+        if self.statistic not in experiment.statistics:
+            raise util.CytoflowViewError("Can't find the statistic {} in the experiment"
+                                         .format(self.statistic))
+        else:
+            stat = experiment.statistics[self.statistic]
+            
+        if self.error_statistic[0]:
+            if self.error_statistic not in experiment.statistics:
+                raise util.CytoflowViewError("Can't find the error statistic in the experiment")
+            else:
+                error_stat = experiment.statistics[self.error_statistic]
+        else:
+            error_stat = None
+         
+        if error_stat is not None:
+            if not stat.index.equals(error_stat.index):
+                raise util.CytoflowViewError("Data statistic and error statistic "
+                                             " don't have the same index.")
+
+        data = pd.DataFrame(index = stat.index)
+        
+        data[stat.name] = stat
+                
+        if error_stat is not None:
+            error_name = util.random_string(6)
+            data[error_name] = error_stat 
+        else:
+            error_name = None
+            
+        if self.subset:
+            try:
+                data = data.query(self.subset)
+            except:
+                raise util.CytoflowViewError("Subset string '{0}' isn't valid"
+                                        .format(self.subset))
+                
+            if len(data) == 0:
+                raise util.CytoflowViewError("Subset string '{0}' returned no values"
+                                        .format(self.subset))
+            
+        names = list(data.index.names)
+        for name in names:
+            unique_values = data.index.get_level_values(name).unique()
+            if len(unique_values) == 1:
+                warn("Only one value for level {}; dropping it.".format(name),
+                     util.CytoflowViewWarning)
+                try:
+                    data.index = data.index.droplevel(name)
+                except AttributeError:
+                    raise util.CytoflowViewError("Must have more than one "
+                                                 "value to plot.")
+                
+        names = list(data.index.names)
+                        
+        if not self.variable:
+            raise util.CytoflowViewError("variable not specified")
+        
+        if not self.variable in data.index.names:
+            raise util.CytoflowViewError("Variable {} isn't in the statistic; "
+                                         "must be one of {}"
+                                         .format(self.variable, data.index.names))
+        
+        if self.xfacet and self.xfacet not in experiment.conditions:
+            raise util.CytoflowViewError("X facet {0} isn't in the experiment"
+                                    .format(self.xfacet))
+            
+        if self.xfacet and self.xfacet not in data.index.names:
+            raise util.CytoflowViewError("X facet {} is not a statistic index; "
+                                         "must be one of {}".format(self.xfacet, data.index.names))
+        
+        if self.yfacet and self.yfacet not in experiment.conditions:
+            raise util.CytoflowViewError("Y facet {0} isn't in the experiment"
+                                    .format(self.yfacet))
+
+        if self.yfacet and self.yfacet not in data.index.names:
+            raise util.CytoflowViewError("Y facet {} is not a statistic index; "
+                                         "must be one of {}".format(self.yfacet, data.index.names))
+
+        if self.huefacet and self.huefacet not in experiment.conditions:
+            raise util.CytoflowViewError("Hue facet {0} isn't in the experiment"
+                                    .format(self.huefacet))
+            
+        if self.huefacet and self.huefacet not in data.index.names:
+            raise util.CytoflowViewError("Hue facet {} is not a statistic index; "
+                                         "must be one of {}".format(self.huefacet, data.index.names)) 
+            
+        facets = filter(lambda x: x, [self.variable, self.xfacet, self.yfacet, self.huefacet])
+        
+        if len(facets) != len(set(facets)):
+            raise util.CytoflowViewError("Can't reuse facets")
+        
+        by = list(set(names) - set(facets))
+        
+        class plot_enum(object):
+            
+            def __init__(self, experiment, by):
+                self._iter = None
+                self._returned = False
+                
+                if by:
+                    self._iter = experiment.data.groupby(by).__iter__()
+                
+            def __iter__(self):
+                return self
+            
+            def next(self):
+                if self._iter:
+                    return self._iter.next()[0]
+                else:
+                    if self._returned:
+                        raise StopIteration
+                    else:
+                        self._returned = True
+                        return None
+            
+        return plot_enum(experiment, by)
+    
+    def plot(self, experiment, plot_name = None, **kwargs):
+        """Plot a chart"""
+        
+        if not experiment:
+            raise util.CytoflowViewError("No experiment specified")
+        
+        if not self.statistic:
+            raise util.CytoflowViewError("Statistic not set")
+        
+        if self.statistic not in experiment.statistics:
+            raise util.CytoflowViewError("Can't find the statistic {} in the experiment"
+                                         .format(self.statistic))
+        else:
+            stat = experiment.statistics[self.statistic]
+            
+        if self.error_statistic[0]:
+            if self.error_statistic not in experiment.statistics:
+                raise util.CytoflowViewError("Can't find the error statistic in the experiment")
+            else:
+                error_stat = experiment.statistics[self.error_statistic]
+        else:
+            error_stat = None
+         
+        if error_stat is not None:
+            if not stat.index.equals(error_stat.index):
+                raise util.CytoflowViewError("Data statistic and error statistic "
+                                             " don't have the same index.")
+               
+        data = pd.DataFrame(index = stat.index)
+        data[stat.name] = stat
+        
+        if error_stat is not None:
+            error_name = util.random_string(6)
+            data[error_name] = error_stat
+        
+        if self.subset:
+            try:
+                # TODO - either sanitize column names, or check to see that
+                # all conditions are valid Python variables
+                data = data.query(self.subset)
+            except:
+                raise util.CytoflowViewError("Subset string '{0}' isn't valid"
+                                        .format(self.subset))
+                
+            if len(data) == 0:
+                raise util.CytoflowViewError("Subset string '{0}' returned no values"
+                                        .format(self.subset))
+                
+        names = list(data.index.names)
+        for name in names:
+            unique_values = data.index.get_level_values(name).unique()
+            if len(unique_values) == 1:
+                warn("Only one value for level {}; dropping it.".format(name),
+                     util.CytoflowViewWarning)
+                try:
+                    data.index = data.index.droplevel(name)
+                except AttributeError:
+                    raise util.CytoflowViewError("Must have more than one "
+                                                 "value to plot.")
+
+        names = list(data.index.names)
+               
+        if not self.variable:
             raise util.CytoflowViewError("X variable not set")
             
-        if self.xvariable not in experiment.conditions:
+        if self.variable not in experiment.conditions:
             raise util.CytoflowViewError("X variable {0} not in the experiment"
-                                    .format(self.xvariable))
-        
-        if not (experiment.conditions[self.xvariable] == "float" or
-                experiment.conditions[self.xvariable] == "int"):
+                                    .format(self.variable))
+                        
+        if self.variable not in names:
+            raise util.CytoflowViewError("X variable {} is not a statistic index; "
+                                         "must be one of {}".format(self.variable, names))
+                
+        if experiment.conditions[self.variable].dtype.kind not in "biufc": 
             raise util.CytoflowViewError("X variable {0} isn't numeric"
-                                    .format(self.xvariable))
-
-        if not self.ychannel:
-            raise util.CytoflowViewError("Y channel isn't set.")
-        
-        if self.ychannel not in experiment.data:
-            raise util.CytoflowViewError("Y channel {0} isn't in the experiment"
-                                    .format(self.ychannel))
-        
-        if not self.yfunction:
-            raise util.CytoflowViewError("Y summary function isn't set")
+                                    .format(self.variable))
         
         if self.xfacet and self.xfacet not in experiment.conditions:
             raise util.CytoflowViewError("X facet {0} not in the experiment")
         
+        if self.xfacet and self.xfacet not in names:
+            raise util.CytoflowViewError("X facet {} is not a statistic index; "
+                                         "must be one of {}".format(self.xfacet, names))
+        
         if self.yfacet and self.yfacet not in experiment.conditions:
             raise util.CytoflowViewError("Y facet {0} not in the experiment")
         
+        if self.yfacet and self.yfacet not in names:
+            raise util.CytoflowViewError("Y facet {} is not a statistic index; "
+                                         "must be one of {}".format(self.yfacet, names))
+        
         if self.huefacet and self.huefacet not in experiment.metadata:
-            raise util.CytoflowViewError("Hue facet {0} not in the experiment")        
+            raise util.CytoflowViewError("Hue facet {0} not in the experiment")   
         
-        if self.y_error_bars and self.y_error_bars != 'data' \
-                             and self.y_error_bars not in experiment.conditions:
-            raise util.CytoflowViewError("y_error_bars must be either 'data' or "
-                                         "a condition in the experiment") 
+        if self.huefacet and self.huefacet not in names:
+            raise util.CytoflowViewError("Hue facet {} is not a statistic index; "
+                                         "must be one of {}".format(self.huefacet, names))  
             
-        if self.y_error_bars and not self.y_error_function:
-            raise util.CytoflowViewError("didn't set an error function")
-                
-        kwargs.setdefault('antialiased', True)
+        col_wrap = kwargs.pop('col_wrap', None)
+        
+        if col_wrap and self.yfacet:
+            raise util.CytoflowViewError("Can't set yfacet and col_wrap at the same time.") 
+        
+        if col_wrap and not self.xfacet:
+            raise util.CytoflowViewError("Must set xfacet to use col_wrap.")
+            
+        facets = filter(lambda x: x, [self.variable, self.xfacet, self.yfacet, self.huefacet])
+        if len(facets) != len(set(facets)):
+            raise util.CytoflowViewError("Can't reuse facets")
+        
+        unused_names = list(set(names) - set(facets))
 
-        if self.subset:
-            try:
-                data = experiment.query(self.subset).data.reset_index()
-            except:
-                raise util.CytoflowViewError("Subset string '{0}' isn't valid"
-                                        .format(self.subset))
-                            
-            if len(data) == 0:
-                raise util.CytoflowViewError("Subset string '{0}' returned no events"
-                                        .format(self.subset))
+        if unused_names and plot_name is None:
+            for plot in self.enum_plots(experiment):
+                self.plot(experiment, plot, **kwargs)
+            return
+
+        data.reset_index(inplace = True)
+        
+        if plot_name is not None:
+            if plot_name is not None and not unused_names:
+                raise util.CytoflowViewError("Plot {} not from plot_enum"
+                                             .format(plot_name))
+                               
+            groupby = data.groupby(unused_names)
+
+            if plot_name not in set(groupby.groups.keys()):
+                raise util.CytoflowViewError("Plot {} not from plot_enum"
+                                             .format(plot_name))
+                
+            data = groupby.get_group(plot_name)
+            data.reset_index(drop = True, inplace = True)
+            
+        xscale = util.scale_factory(self.xscale, experiment, condition = self.variable) 
+        
+        if error_stat is not None:
+            yscale = util.scale_factory(self.yscale, experiment, statistic = self.error_statistic)
         else:
-            data = experiment.data
+            yscale = util.scale_factory(self.yscale, experiment, statistic = self.statistic)
+                        
+        xlim = kwargs.pop("xlim", None)
+        if xlim is None:
+            xlim = (xscale.clip(data[self.variable].min() * 0.9),
+                    xscale.clip(data[self.variable].max() * 1.1))
+                      
+        ylim = kwargs.pop("ylim", None)
+        if ylim is None:
+            ylim = (yscale.clip(data[stat.name].min() * 0.9),
+                    yscale.clip(data[stat.name].max() * 1.1))
             
-        group_vars = [self.xvariable]
-        if self.xfacet:
-            group_vars.append(self.xfacet)
-        if self.yfacet:
-            group_vars.append(self.yfacet)
-        if self.huefacet:
-            group_vars.append(self.huefacet)
-            
-        g = data.groupby(by = group_vars)
-        plot_data = g[self.ychannel].aggregate(self.yfunction).reset_index()
-  
-        # compute the error statistic
-        if self.y_error_bars:
-            if self.y_error_bars == 'data':
-                # compute the error statistic on the same subsets as the summary
-                # statistic
-                error_stat = g[self.ychannel].aggregate(self.y_error_function).reset_index()
-            else:
-                # subdivide the data set further by the error_bars condition
-                err_vars = list(group_vars)
-                err_vars.append(self.y_error_bars)
-                
-                # apply the summary statistic to each subgroup
-                data_g = data.groupby(by = err_vars)
-                data_stat = data_g[self.ychannel].aggregate(self.yfunction).reset_index()
-                
-                # apply the error function to the summary statistics
-                err_g = data_stat.groupby(by = group_vars)
-                error_stat = err_g[self.ychannel].aggregate(self.y_error_function).reset_index()
+            if error_stat is not None:
+                try: 
+                    ylim = (yscale.clip(min([x[0] for x in error_stat]) * 0.9),
+                            yscale.clip(max([x[1] for x in error_stat]) * 1.1))
+                except IndexError:
+                    ylim = (yscale.clip(error_stat.min() * 0.9), 
+                            yscale.clip(error_stat.max() * 1.1))
+
+        kwargs.setdefault('antialiased', True)  
         
-            y_err_name = util.random_string(6)
-            plot_data[y_err_name] = error_stat[self.ychannel]
-        
-  
-        grid = sns.FacetGrid(plot_data,
-                             size = 6,
+        cols = col_wrap if col_wrap else \
+               len(data[self.xfacet].unique()) if self.xfacet else 1
+               
+        sharex = kwargs.pop('sharex', True)
+        sharey = kwargs.pop('sharey', True)
+                  
+        grid = sns.FacetGrid(data,
+                             size = (6 / cols),
                              aspect = 1.5,
                              col = (self.xfacet if self.xfacet else None),
                              row = (self.yfacet if self.yfacet else None),
@@ -225,56 +431,62 @@ class Stats1DView(HasStrictTraits):
                              col_order = (np.sort(data[self.xfacet].unique()) if self.xfacet else None),
                              row_order = (np.sort(data[self.yfacet].unique()) if self.yfacet else None),
                              hue_order = (np.sort(data[self.huefacet].unique()) if self.huefacet else None),
+                             col_wrap = col_wrap,
                              legend_out = False,
-                             sharex = False,
-                             sharey = False)
-            
-        yscale = util.scale_factory(self.yscale, experiment, self.ychannel)
-        
+                             sharex = sharex,
+                             sharey = sharey,
+                             xlim = xlim,
+                             ylim = ylim)
+
         for ax in grid.axes.flatten():
-            ax.set_xscale(self.xscale)
+            ax.set_xscale(self.xscale, **xscale.mpl_params)
             ax.set_yscale(self.yscale, **yscale.mpl_params)
 
         # plot the error bars first so the axis labels don't get overwritten
-        if self.y_error_bars:
-            grid.map(_error_bars, self.xvariable, self.ychannel, y_err_name)
+        if error_stat is not None:
+            grid.map(_error_bars, self.variable, stat.name, error_name, **kwargs)
         
-        grid.map(plt.plot, self.xvariable, self.ychannel, **kwargs)
+        grid.map(plt.plot, self.variable, stat.name, **kwargs)
         
-        # if we have an xfacet, make sure the y scale is the same for each
-        fig = plt.gcf()
-        fig_y_min = float("inf")
-        fig_y_max = float("-inf")
-        for ax in fig.get_axes():
-            ax_y_min, ax_y_max = ax.get_ylim()
-            if ax_y_min < fig_y_min:
-                fig_y_min = ax_y_min
-            if ax_y_max > fig_y_max:
-                fig_y_max = ax_y_max
-                
-        for ax in fig.get_axes():
-            ax.set_ylim(fig_y_min, fig_y_max)
+        # if we are sharing y axes, make sure the y scale is the same for each
+        if sharey:
+            fig = plt.gcf()
+            fig_y_min = float("inf")
+            fig_y_max = float("-inf")
             
-        # if we have a yfacet, make sure the x scale is the same for each
-        fig = plt.gcf()
-        fig_x_min = float("inf")
-        fig_x_max = float("-inf")
-        
-        for ax in fig.get_axes():
-            ax_x_min, ax_x_max = ax.get_xlim()
-            if ax_x_min < fig_x_min:
-                fig_x_min = ax_x_min
-            if ax_x_max > fig_x_max:
-                fig_x_max = ax_x_max
+            for ax in fig.get_axes():
+                ax_y_min, ax_y_max = ax.get_ylim()
+                if ax_y_min < fig_y_min:
+                    fig_y_min = ax_y_min
+                if ax_y_max > fig_y_max:
+                    fig_y_max = ax_y_max
+                    
+            for ax in fig.get_axes():
+                ax.set_ylim(fig_y_min, fig_y_max)
+            
+        # if we are sharing x axes, make sure the x scale is the same for each
+        if sharex:
+            fig = plt.gcf()
+            fig_x_min = float("inf")
+            fig_x_max = float("-inf")
+            
+            for ax in fig.get_axes():
+                ax_x_min, ax_x_max = ax.get_xlim()
+                if ax_x_min < fig_x_min:
+                    fig_x_min = ax_x_min
+                if ax_x_max > fig_x_max:
+                    fig_x_max = ax_x_max
+            
+            for ax in fig.get_axes():
+                ax.set_xlim(fig_x_min, fig_x_max)
         
         # if we have a hue facet and a lot of hues, make a color bar instead
         # of a super-long legend.
         
         if self.huefacet:
             current_palette = mpl.rcParams['axes.color_cycle']
-            if (experiment.conditions[self.huefacet] == "int" or 
-                experiment.conditions[self.huefacet] == "float") and \
-                len(grid.hue_names) > len(current_palette):
+            if util.is_numeric(experiment.data[self.huefacet]) and \
+               len(grid.hue_names) > len(current_palette):
                 
                 plot_ax = plt.gca()
                 cmap = mpl.colors.ListedColormap(sns.color_palette("husl", 
@@ -291,6 +503,11 @@ class Stats1DView(HasStrictTraits):
                 plt.sca(plot_ax)
             else:
                 grid.add_legend(title = self.huefacet)
+                
+        if unused_names and plot_name:
+            plt.title("{0} = {1}".format(unused_names, plot_name))
+                
+        plt.ylabel(self.statistic)
                 
 def _error_bars(x, y, yerr, ax = None, color = None, **kwargs):
     

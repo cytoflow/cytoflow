@@ -49,10 +49,11 @@ class AutofluorescenceHandler(Controller, OpHandlerMixin):
                          editor = CheckListEditor(cols = 2,
                                                   name = 'context.previous.channels'),
                          style = 'custom'),
-                    VGroup(Item('subset',
+                    VGroup(Item('subset_dict',
                                 show_label = False,
-                                editor = SubsetEditor(conditions_types = "context.previous.conditions_types",
-                                                      conditions_values = "context.previous.conditions_values")),
+                                editor = SubsetEditor(conditions = "context.previous.conditions",
+                                                      metadata = "context.previous.metadata",
+                                                      when = "'experiment' not in vars() or not experiment")),
                            label = "Subset",
                            show_border = False,
                            show_labels = False),
@@ -62,13 +63,11 @@ class AutofluorescenceHandler(Controller, OpHandlerMixin):
                          show_label = False),
                     shared_op_traits)
 
-class AutofluorescencePluginOp(AutofluorescenceOp, PluginOpMixin):
+class AutofluorescencePluginOp(PluginOpMixin, AutofluorescenceOp):
     handler_factory = Callable(AutofluorescenceHandler)
     
     channels = List(Str, estimate = True)
     blank_file = File(filter = ["*.fcs"], estimate = True)
-    subset = Str(estimate = True)
-
 
     @on_trait_change('channels_items', post_init = True)
     def _channels_changed(self, obj, name, old, new):

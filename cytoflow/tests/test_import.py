@@ -65,13 +65,13 @@ class Test(unittest.TestCase):
         
         ex = flow.ImportOp(conditions = {"Dox" : "float"},
                            tubes = [tube1],
-                           channels = ['Y2-A']).apply()
+                           channels = {'Y2-A' : "Yellow"}).apply()
                            
-        self.assertTrue(ex.channels == ["Y2-A"])
+        self.assertTrue(ex.channels == ["Yellow"])
         with self.assertRaises(RuntimeError):
             flow.ImportOp(conditions = {"Dox" : "float"},
                           tubes = [tube1],
-                          channels = ['Y2-B']).apply()
+                          channels = {'Y2-B' : "Blue"}).apply()
     
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']

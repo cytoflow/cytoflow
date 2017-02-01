@@ -46,7 +46,7 @@ def read_file(*names, **kwargs):
     
 def find_version(*file_paths):
     version_file = read_file(*file_paths)
-    version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]",
+    version_match = re.search(r"__version__ = ['\"]([^'\"]*)['\"]",
                               version_file, re.M)
     if version_match:
         return version_match.group(1)
@@ -61,21 +61,21 @@ setup(
     
     # Project uses reStructuredText, so ensure that the docutils get
     # installed or upgraded on the target machine
-    install_requires = ['pandas>=0.18.0',
+    install_requires = ['pandas>=0.19.2',
                         'bottleneck>=1.0',
                         'numpy>=1.9.0',
                         'numexpr>=2.4.6',
                         'matplotlib>=1.4.3',
-                        'scipy>=0.14',
-                        'scikit-learn>=0.16',
+                        'scipy>=0.17',
+                        'scikit-learn>=0.18',
                         'seaborn>=0.7.0',
-                        'pyface==4.4.0',
-                        'envisage>=4.0',
+                        'traits>=4.6.0',
+                        'pyface==5.1.0',
+                        'envisage>=4.5',
                         'nbformat>=4.0',
                         'python-dateutil>=2.5.2',
                         'statsmodels>=0.6.1',
                         'faulthandler>=2.4',
-                        
                         'fcsparser>=0.1.1',] \
                 if not on_rtd else None,
                         

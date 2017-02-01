@@ -17,13 +17,14 @@
 
 from __future__ import absolute_import
 
-from .util_functions import cartesian, iqr, geom_mean, num_hist_bins, \
-                            sanitize_identifier, categorical_order, random_string
+from .util_functions import (cartesian, iqr, geom_mean, geom_sd, geom_sd_range,
+                             geom_sem, geom_sem_range, num_hist_bins, sanitize_identifier, 
+                             categorical_order, random_string, is_numeric)
 from .algorithms import ci
 from .cytoflow_errors import CytoflowError, CytoflowOpError, CytoflowViewError
 from .cytoflow_errors import CytoflowWarning, CytoflowOpWarning, CytoflowViewWarning
 
 from .scale import scale_factory, IScale
-from .custom_traits import PositiveInt, PositiveFloat, ScaleEnum
+from .custom_traits import PositiveInt, PositiveFloat, ScaleEnum, Deprecated, Removed
 
 from .matplotlib_widgets import PolygonSelector

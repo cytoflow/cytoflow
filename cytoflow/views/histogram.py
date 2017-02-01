@@ -102,11 +102,25 @@ class HistogramView(HasStrictTraits):
         if self.huefacet and self.huefacet not in experiment.conditions:
             raise util.CytoflowViewError("Hue facet {0} not in the experiment"
                                     .format(self.huefacet))
+            
+        facets = filter(lambda x: x, [self.xfacet, self.yfacet, self.huefacet])
+        if len(facets) != len(set(facets)):
+            raise util.CytoflowViewError("Can't reuse facets")
+            
+        col_wrap = kwargs.pop('col_wrap', None)
+        
+        if col_wrap and self.yfacet:
+            raise util.CytoflowViewError("Can't set yfacet and col_wrap at the same time.")
+        
+        if col_wrap and not self.xfacet:
+            raise util.CytoflowViewError("Must set xfacet to use col_wrap.")
 
         if self.subset:
             try:
                 data = experiment.query(self.subset).data.reset_index()
-            except:
+            except util.CytoflowError as e:
+                raise util.CytoflowViewError(str(e))
+            except Exception as e:
                 raise util.CytoflowViewError("Subset string '{0}' isn't valid"
                                         .format(self.subset))
                 
@@ -117,11 +131,12 @@ class HistogramView(HasStrictTraits):
             data = experiment.data
         
         # get the scale
-        scale = util.scale_factory(self.scale, experiment, self.channel)
+        scale = kwargs.pop('scale', None)
+        if scale is None:
+            scale = util.scale_factory(self.scale, experiment, channel = self.channel)
+
         scaled_data = scale(data[self.channel])
-        
-        #print scaled_data
-        
+                
         kwargs.setdefault('histtype', 'stepfilled')
         kwargs.setdefault('alpha', 0.5)
         kwargs.setdefault('antialiased', True)
@@ -174,12 +189,27 @@ class HistogramView(HasStrictTraits):
         bins[0] -= 1
                     
         kwargs.setdefault('bins', bins) 
-        
+
         # mask out the data that's not in the scale domain
         data = data[~np.isnan(scaled_data)]
 
+        # adjust the limits to clip extreme values
+        min_quantile = kwargs.pop("min_quantile", 0.001)
+        max_quantile = kwargs.pop("max_quantile", 0.999) 
+                
+        xlim = kwargs.pop("xlim", None)
+        if xlim is None:
+            xlim = (data[self.channel].quantile(min_quantile),
+                    data[self.channel].quantile(max_quantile))
+            
+        sharex = kwargs.pop("sharex", True)
+        sharey = kwargs.pop("sharey", True)
+        
+        cols = col_wrap if col_wrap else \
+               len(data[self.xfacet].unique()) if self.xfacet else 1
+            
         g = sns.FacetGrid(data, 
-                          size = 6,
+                          size = 6 / cols,
                           aspect = 1.5,
                           col = (self.xfacet if self.xfacet else None),
                           row = (self.yfacet if self.yfacet else None),
@@ -187,9 +217,11 @@ class HistogramView(HasStrictTraits):
                           col_order = (np.sort(data[self.xfacet].unique()) if self.xfacet else None),
                           row_order = (np.sort(data[self.yfacet].unique()) if self.yfacet else None),
                           hue_order = (np.sort(data[self.huefacet].unique()) if self.huefacet else None),
+                          col_wrap = col_wrap,
                           legend_out = False,
-                          sharex = False,
-                          sharey = False)
+                          sharex = sharex,
+                          sharey = sharey,
+                          xlim = xlim)
         
         # set the scale for each set of axes; can't just call plt.xscale() 
         for ax in g.axes.flatten():
@@ -198,31 +230,34 @@ class HistogramView(HasStrictTraits):
         legend = kwargs.pop('legend', True)
         g.map(plt.hist, self.channel, **kwargs)
         
-        # if we have an xfacet, make sure the y scale is the same for each
-        fig = plt.gcf()
-        fig_y_max = float("-inf")
-        for ax in fig.get_axes():
-            _, ax_y_max = ax.get_ylim()
-            if ax_y_max > fig_y_max:
-                fig_y_max = ax_y_max
-                
-        for ax in fig.get_axes():
-            ax.set_ylim(None, fig_y_max)
+        # if we are sharing y axes, make sure the y scale is the same for each
+        if sharey:
+            fig = plt.gcf()
+            fig_y_max = float("-inf")
             
-        # if we have a yfacet, make sure the x scale is the same for each
-        fig = plt.gcf()
-        fig_x_min = float("inf")
-        fig_x_max = float("-inf")
-        
-        for ax in fig.get_axes():
-            ax_x_min, ax_x_max = ax.get_xlim()
-            if ax_x_min < fig_x_min:
-                fig_x_min = ax_x_min
-            if ax_x_max > fig_x_max:
-                fig_x_max = ax_x_max
-                
-        for ax in fig.get_axes():
-            ax.set_xlim(fig_x_min, fig_x_max)
+            for ax in fig.get_axes():
+                _, ax_y_max = ax.get_ylim()
+                if ax_y_max > fig_y_max:
+                    fig_y_max = ax_y_max
+                    
+            for ax in fig.get_axes():
+                ax.set_ylim(None, fig_y_max)
+            
+        # if we are sharing x axes, make sure the x scale is the same for each
+        if sharex:
+            fig = plt.gcf()
+            fig_x_min = float("inf")
+            fig_x_max = float("-inf")
+            
+            for ax in fig.get_axes():
+                ax_x_min, ax_x_max = ax.get_xlim()
+                if ax_x_min < fig_x_min:
+                    fig_x_min = ax_x_min
+                if ax_x_max > fig_x_max:
+                    fig_x_max = ax_x_max
+                    
+            for ax in fig.get_axes():
+                ax.set_xlim(fig_x_min, fig_x_max)
         
         # if we have a hue facet, the y scaling is frequently wrong.
         if self.huefacet:
@@ -235,9 +270,9 @@ class HistogramView(HasStrictTraits):
         
         if self.huefacet and legend:
             current_palette = mpl.rcParams['axes.color_cycle']
-            if (experiment.conditions[self.huefacet] == "int" or 
-                experiment.conditions[self.huefacet] == "float") and \
-                len(g.hue_names) > len(current_palette):
+        
+            if util.is_numeric(experiment.data[self.huefacet]) and \
+               len(g.hue_names) > len(current_palette):
                 
                 plot_ax = plt.gca()
                 cmap = mpl.colors.ListedColormap(sns.color_palette("husl", 
@@ -253,3 +288,5 @@ class HistogramView(HasStrictTraits):
                 plt.sca(plot_ax)
             else:
                 g.add_legend(title = self.huefacet)
+                
+        return g

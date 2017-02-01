@@ -88,10 +88,11 @@ class BleedthroughLinearHandler(Controller, OpHandlerMixin):
                                                label = "Remove a control")),
                     label = "Controls",
                     show_labels = False),
-                    VGroup(Item('subset',
+                    VGroup(Item('subset_dict',
                                 show_label = False,
-                                editor = SubsetEditor(conditions_types = "context.previous.conditions_types",
-                                                      conditions_values = "context.previous.conditions_values")),
+                                editor = SubsetEditor(conditions = "context.previous.conditions",
+                                                      metadata = "context.previous.metadata",
+                                                      when = "'experiment' not in vars() or not experiment")),
                            label = "Subset",
                            show_border = False,
                            show_labels = False),
@@ -101,14 +102,13 @@ class BleedthroughLinearHandler(Controller, OpHandlerMixin):
                          show_label = False),
                     shared_op_traits)
 
-class BleedthroughLinearPluginOp(BleedthroughLinearOp, PluginOpMixin):
+class BleedthroughLinearPluginOp(PluginOpMixin, BleedthroughLinearOp):
     handler_factory = Callable(BleedthroughLinearHandler)
 
     controls = Dict(Str, File, transient = True)
     spillover = Dict(Tuple(Str, Str), Float, transient = True)
 
     controls_list = List(_Control, estimate = True)
-    subset = Str(estimate = True)
         
     @on_trait_change('controls_list_items,controls_list.+', post_init = True)
     def _controls_changed(self, obj, name, old, new):

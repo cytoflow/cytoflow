@@ -26,7 +26,7 @@ from __future__ import division, absolute_import
 import math, sys
 from warnings import warn
 
-from traits.api import HasTraits, Float, Property, Instance, Str, \
+from traits.api import HasStrictTraits, HasTraits, Float, Property, Instance, Str, \
                        cached_property, Undefined, provides, Constant, Dict, \
                        Tuple
                        
@@ -43,7 +43,7 @@ from .logicle_ext.Logicle import FastLogicle
 from .cytoflow_errors import CytoflowError, CytoflowWarning
 
 @provides(IScale)
-class LogicleScale(HasTraits):
+class LogicleScale(HasStrictTraits):
     """
     A scale that transforms the data using the `logicle` function.
     
@@ -53,24 +53,48 @@ class LogicleScale(HasTraits):
     "negative" events (events with a fluorescence of ~0.)
     
     If you don't have any data around 0, you might be better of with a more
-    traditional log scale or a Hyperlog.
+    traditional log scale.
     
     The transformation has one parameter, `W`, which specifies the width of
-    the "linear" range in log10 decades.  You can estimate an "optimal" value 
-    with `estimate()`, or you can set it to a fixed value like 0.5.
+    the "linear" range in log10 decades.  By default, the optimal value is
+    estimated from the data; but if you assign a value to `W` it will be used.
+    `0.5` is usually a good start.
     
     Attributes
     ----------
-    range : Float
-        the input range of the channel.  no default!
-    W : Float (default = 0.5)
-        for each channel, the width of the linear range, in log10 decades.  
-        can estimate, or use a fixed value like 0.5.
+    experiment : Instance(cytoflow.Experiment)
+        the `cytoflow.Experiment` used to estimate the scale parameters.
+        
+    channel : Str
+        If set, choose scale parameters from this channel in `experiment`.
+        One of `channel`, `condition` or `statistic` must be set.
+        
+    condition : Str
+        If set, choose scale parameters from this condition in `experiment`.
+        One of `channel`, `condition` or `statistic` must be set.
+        
+    statistic : Str
+        If set, choose scale parameters from this statistic in `experiment`.
+        One of `channel`, `condition` or `statistic` must be set.
+        
+    quantiles = Tuple(Float, Float) (default = (0.001, 0.999))
+        If there are a few very large or very small values, this can throw off
+        matplotlib's choice of default axis ranges.  Set `quantiles` to choose
+        what part of the data to consider when choosing axis ranges.
+        
+    W : Float (default = estimated from data)
+        The width of the linear range, in log10 decades.  can estimate from data, 
+        or use a fixed value like 0.5.
+        
     M : Float (default = 4.5)
-        The width of the entire display, in log10 decades
+        The width of the log portion of the display, in log10 decades.  
+        
     A : Float (default = 0.0)
-        for each channel, additional decades of negative data to include.  
-        the display usually captures all the data, so 0 is fine to start.
+        additional decades of negative data to include.  the default display 
+        usually captures all the data, so 0 is fine to start.
+    
+    r : Float (default = 0.05)
+        Quantile used to estimate `W`.
     
     References
     ----------
@@ -94,22 +118,24 @@ class LogicleScale(HasTraits):
     name = "logicle"
     
     experiment = Instance("cytoflow.Experiment")
-    channel = Str
     
-    quantiles = Tuple((0.001, 0.999))
-    range_min = Property(Float)
-    range_max = Property(Float)
+    # what data do we use to compute scale parameters?  set one.
+    channel = Str
+    condition = Str
+    statistic = Tuple(Str, Str)
 
-    range = Property(Float, depends_on = "[experiment, channel]")
-    W = Property(Float, depends_on = "[experiment, channel, r]")
+    W = Property(Float, depends_on = "[experiment, channel, M, _T, r]")
     M = Float(4.5, desc = "the width of the display in log10 decades")
     A = Float(0.0, desc = "additional decades of negative data to include.")
     r = Float(0.05, desc = "quantile to use for estimating the W parameter.")
+
+    _W = Float(Undefined)
+    _T = Property(Float, depends_on = "[experiment, condition, channel]")
+    _range = Property(Tuple(Float, Float))
+    _logicle = Property(Instance(FastLogicle), depends_on = "[_T, W, M, A]")
+
+    mpl_params = Property(Dict, depends_on = "_logicle, scale_min, scale_max")
     
-    logicle = Property(Instance(FastLogicle), depends_on = "[range, W, M, A]")
-
-    mpl_params = Property(Dict, depends_on = "logicle")
-
     def __call__(self, data):
         """
         Transforms `data` using this scale.
@@ -118,88 +144,138 @@ class LogicleScale(HasTraits):
         (ie, applying a log10 scale to negative numbers.)
         """
         
-        logicle_min = self.logicle.inverse(0.0)
-        logicle_max = self.logicle.inverse(1.0 - sys.float_info.epsilon)
-        if isinstance(data, pd.Series):            
-            data = data.clip(logicle_min, logicle_max)
-            return data.apply(self.logicle.scale)
-        elif isinstance(data, np.ndarray):
-            data = np.clip(data, logicle_min, logicle_max)
-            scale = np.vectorize(self.logicle.scale)
-            return scale(data)
-        elif isinstance(data, float):
-            data = max(min(data, logicle_max), logicle_min)
-            return self.logicle.scale(data)
-        else:
-            raise CytoflowError("Unknown data type in LogicleScale.__call__")
+        try:
+            logicle_min = self._logicle.inverse(0.0)
+            logicle_max = self._logicle.inverse(1.0 - sys.float_info.epsilon)
+            if isinstance(data, pd.Series):            
+                data = data.clip(logicle_min, logicle_max)
+                return data.apply(self._logicle.scale)
+            elif isinstance(data, np.ndarray):
+                data = np.clip(data, logicle_min, logicle_max)
+                scale = np.vectorize(self._logicle.scale)
+                return scale(data)
+            elif isinstance(data, float):
+                data = max(min(data, logicle_max), logicle_min)
+                return self._logicle.scale(data)
+            else:
+                try:
+                    return map(self._logicle.scale, data)
+                except TypeError:
+                    raise CytoflowError("Unknown data type in LogicleScale.__call__")
+        except ValueError as e:
+            raise CytoflowError(e.strerror)
 
         
     def inverse(self, data):
         """
         Transforms 'data' using the inverse of this scale.
         """
-        if isinstance(data, pd.Series):            
-            data = data.clip(0, 1.0 - sys.float_info.epsilon)
-            return data.apply(self.logicle.inverse)
-        elif isinstance(data, np.ndarray):
-            data = np.clip(data, 0, 1.0 - sys.float_info.epsilon)
-            inverse = np.vectorize(self.logicle.inverse)
-            return inverse(data)
-        elif isinstance(data, float):
-            data = max(min(data, 1.0 - sys.float_info.epsilon), 0.0)
-            return self.logicle.inverse(data)
-        else:
-            raise CytoflowError("Unknown data type in LogicleScale.inverse")
+        try:
+            if isinstance(data, pd.Series):            
+                data = data.clip(0, 1.0 - sys.float_info.epsilon)
+                return data.apply(self._logicle.inverse)
+            elif isinstance(data, np.ndarray):
+                data = np.clip(data, 0, 1.0 - sys.float_info.epsilon)
+                inverse = np.vectorize(self._logicle.inverse)
+                return inverse(data)
+            elif isinstance(data, float):
+                data = max(min(data, 1.0 - sys.float_info.epsilon), 0.0)
+                return self._logicle.inverse(data)
+            else:
+                try:
+                    return map(self._logicle.inverse, data)
+                except TypeError:
+                    raise CytoflowError("Unknown data type in LogicleScale.inverse")
+        except ValueError as e:
+            raise CytoflowError(str(e))
+        
+    def clip(self, data):
+        try:
+            logicle_min = self._logicle.inverse(0.0)
+            logicle_max = self._logicle.inverse(1.0 - sys.float_info.epsilon)
+            if isinstance(data, pd.Series):            
+                return data.clip(logicle_min, logicle_max)
+            elif isinstance(data, np.ndarray):
+                return np.clip(data, logicle_min, logicle_max)
+            elif isinstance(data, float):
+                return max(min(data, logicle_max), logicle_min)
+            else:
+                try:
+                    return map(lambda x: max(min(x, logicle_max), logicle_min), data)
+                except TypeError:
+                    raise CytoflowError("Unknown data type in LogicleScale.__call__")
+        except ValueError as e:
+            raise CytoflowError(e.strerror)
     
     @cached_property
-    def _get_range(self):
-        if self.experiment and self.channel:
-            return self.experiment.metadata[self.channel]["range"]
-        else:
-            return Undefined
-        
-    def _get_range_min(self):
-        if self.experiment and self.channel:
-            return self.experiment[self.channel].quantile(self.quantiles[0])
-        else:
-            return Undefined
-    
-    def _get_range_max(self):
-        if self.experiment and self.channel:
-            return self.experiment[self.channel].quantile(self.quantiles[1])
+    def _get__T(self):
+        "The range of possible data values"
+        if self.experiment:
+            if self.channel and self.channel in self.experiment.channels:
+                if "range" in self.experiment.metadata[self.channel]:
+                    return self.experiment.metadata[self.channel]["range"]
+                else:
+                    return self.experiment.data[self.channel].max()
+            elif self.condition and self.condition in self.experiment.conditions:
+                return self.experiment.data[self.condition].max()
+            elif self.statistic and self.statistic in self.experiment.statistics:
+                stat = self.experiment.statistics[self.statistic]
+                try:
+                    return max([max(x) for x in stat])
+                except TypeError, IndexError:
+                    return stat.max()
+            else:
+                return Undefined
         else:
             return Undefined
         
     @cached_property
     def _get_W(self):
-        if not (self.experiment and self.channel):
+        if not self.experiment:
             return Undefined
         
-        data = self.experiment[self.channel]
+        if self._W is not Undefined:
+            return self._W
         
-        if self.r <= 0 or self.r >= 1:
-            raise CytoflowError("r must be between 0 and 1")
-        
-        # get the range by finding the rth quantile of the negative values
-        neg_values = data[data < 0]
-        if(not neg_values.empty):
-            r_value = neg_values.quantile(self.r).item()
-            return (self.M - math.log10(self.range/math.fabs(r_value)))/2
+        if self.channel and self.channel in self.experiment.channels:
+            data = self.experiment[self.channel]
+            
+            if self.r <= 0 or self.r >= 1:
+                raise CytoflowError("r must be between 0 and 1")
+            
+            # get the range by finding the rth quantile of the negative values
+            neg_values = data[data < 0]
+            if(not neg_values.empty):
+                r_value = neg_values.quantile(self.r)
+                W = (self.M - math.log10(self._T/math.fabs(r_value)))/2
+                if W <= 0:
+                    warn("Channel {0} doesn't have enough negative data. " 
+                         "Try a log transform instead."
+                         .format(self.channel),
+                         CytoflowWarning)
+                    return 0.5
+                else:
+                    return W
+            else:
+                # ... unless there aren't any negative values, in which case
+                # you probably shouldn't use this transform
+                warn("Channel {0} doesn't have any negative data. " 
+                     "Try a log transform instead."
+                     .format(self.channel),
+                     CytoflowWarning)
+                return 0.5
         else:
-            # ... unless there aren't any negative values, in which case
-            # you probably shouldn't use this transform
-            warn("Channel {0} doesn't have any negative data. " 
-                 "Try a log transform instead."
-                 .format(self.channel),
-                 CytoflowWarning)
-            return 0.5
+            return 0.5  # a reasonable default for non-channel scales
+        
+    def _set_W(self, value):
+        self._W = value
         
     @cached_property
-    def _get_logicle(self):
-        if self.range is Undefined or self.W is Undefined:
+    def _get__logicle(self):
+        if self.W is Undefined or self._T is Undefined:
             return Undefined
         
-        if self.range <= 0:
+        if self._T <= 0:
             raise CytoflowError("Logicle range must be > 0")
         
         if self.W < 0:
@@ -214,24 +290,19 @@ class LogicleScale(HasTraits):
         
         if (-self.A > self.W or self.A + self.W > self.M - self.W):
             raise CytoflowError("Logicle param A is too large.")
-        
          
-        return FastLogicle(self.range, self.W, self.M, self.A)
+        return FastLogicle(self._T, self.W, self.M, self.A)
     
     @cached_property
     def _get_mpl_params(self):
-        return {"logicle" : self.logicle,
-                "range_min" : self.range_min,
-                "range_max" : self.range_max}
+        return {"logicle" : self._logicle} 
     
 register_scale(LogicleScale)
         
 class MatplotlibLogicleScale(HasTraits, matplotlib.scale.ScaleBase):   
     name = "logicle"
-    logicle = Instance(FastLogicle)
     
-    range_min = Float
-    range_max = Float
+    logicle = Instance(FastLogicle)
 
     def __init__(self, axis, **kwargs):
         HasTraits.__init__(self, **kwargs)
@@ -256,10 +327,10 @@ class MatplotlibLogicleScale(HasTraits, matplotlib.scale.ScaleBase):
         Set the locators and formatters to reasonable defaults for
         linear scaling.
         """
-        axis.set_major_locator(LogicleMajorLocator(range_min = self.range_min, range_max = self.range_max))
+        axis.set_major_locator(LogicleMajorLocator())
         #axis.set_major_formatter(ScalarFormatter())
         axis.set_major_formatter(LogFormatterMathtext(10))
-        axis.set_minor_locator(LogicleMinorLocator(range_min = self.range_min, range_max = self.range_max))
+        axis.set_minor_locator(LogicleMinorLocator())
         axis.set_minor_formatter(NullFormatter())        
 
     class LogicleTransform(HasTraits, transforms.Transform):
@@ -285,20 +356,24 @@ class MatplotlibLogicleScale(HasTraits, matplotlib.scale.ScaleBase):
         
         def transform_non_affine(self, values):
             
-            logicle_min = self.logicle.inverse(0.0)
-            logicle_max = self.logicle.inverse(1.0 - sys.float_info.epsilon)
-            if isinstance(values, pd.Series):            
-                values = values.clip(logicle_min, logicle_max)
-                return values.apply(self.logicle.scale)
-            elif isinstance(values, np.ndarray):
-                values = np.clip(values, logicle_min, logicle_max)
-                scale = np.vectorize(self.logicle.scale)
-                return scale(values)
-            elif isinstance(values, float):
-                data = max(min(values, logicle_max), logicle_min)
-                return self.logicle.scale(data)
-            else:
-                raise CytoflowError("Unknown data type in MatplotlibLogicleScale.transform_non_affine")
+            try:        
+                logicle_min = self.logicle.inverse(0.0)
+                logicle_max = self.logicle.inverse(1.0 - sys.float_info.epsilon)
+                if isinstance(values, pd.Series):            
+                    values = values.clip(logicle_min, logicle_max)
+                    return values.apply(self.logicle.scale)
+                elif isinstance(values, np.ndarray):
+                    values = np.clip(values, logicle_min, logicle_max)
+                    scale = np.vectorize(self.logicle.scale)
+                    return scale(values)
+                elif isinstance(values, float):
+                    data = max(min(values, logicle_max), logicle_min)
+                    return self.logicle.scale(data)
+                else:
+                    raise CytoflowError("Unknown data type in MatplotlibLogicleScale.transform_non_affine")
+                
+            except ValueError as e:
+                raise CytoflowError(str(e))
 
 
         def inverted(self):
@@ -318,18 +393,21 @@ class MatplotlibLogicleScale(HasTraits, matplotlib.scale.ScaleBase):
             HasTraits.__init__(self, **kwargs)
         
         def transform_non_affine(self, values):
-            if isinstance(values, pd.Series):            
-                values = values.clip(0, 1.0 - sys.float_info.epsilon)
-                return values.apply(self.logicle.inverse)
-            elif isinstance(values, np.ndarray):
-                values = np.clip(values, 0, 1.0 - sys.float_info.epsilon)
-                inverse = np.vectorize(self.logicle.inverse)
-                return inverse(values)
-            elif isinstance(values, float):
-                values = max(min(values, 1.0 - sys.float_info.epsilon), 0.0)
-                return self.logicle.inverse(values)
-            else:
-                raise CytoflowError("Unknown data type in LogicleScale.inverse")
+            try:
+                if isinstance(values, pd.Series):            
+                    values = values.clip(0, 1.0 - sys.float_info.epsilon)
+                    return values.apply(self.logicle.inverse)
+                elif isinstance(values, np.ndarray):
+                    values = np.clip(values, 0, 1.0 - sys.float_info.epsilon)
+                    inverse = np.vectorize(self.logicle.inverse)
+                    return inverse(values)
+                elif isinstance(values, float):
+                    values = max(min(values, 1.0 - sys.float_info.epsilon), 0.0)
+                    return self.logicle.inverse(values)
+                else:
+                    raise CytoflowError("Unknown data type in LogicleScale.inverse")
+            except ValueError as e:
+                raise CytoflowError(str(e))
         
         
         def inverted(self):
@@ -341,14 +419,8 @@ class LogicleMajorLocator(Locator):
     Determine the tick locations for logicle axes.
     Based on matplotlib.LogLocator
     """
-    
-    def __init__(self, *args, **kwargs):
-        self.range_min = kwargs.pop('range_min')
-        self.range_max = kwargs.pop('range_max')
-        
-        super(LogicleMajorLocator, self).__init__(*args, **kwargs)
 
-    def set_params(self):
+    def set_params(self, **kwargs):
         """Empty"""
         pass
 
@@ -374,28 +446,25 @@ class LogicleMajorLocator(Locator):
 
         return self.raise_if_exceeds(np.asarray(ticks))
 
-    def view_limits(self, vmin, vmax):
+    def view_limits(self, data_min, data_max):
         'Try to choose the view limits intelligently'
 
-        if vmax < vmin:
-            vmin, vmax = vmax, vmin
-            
-        vmin = max(vmin, self.range_min)
-        vmax = min(vmax, self.range_max)
+        if data_max < data_min:
+            data_min, data_max = data_max, data_min
 
         # get the nearest tenth-decade that contains the data
         
-        if vmax > 0:
-            logs = np.ceil(np.log10(vmax))
-            vmax = np.ceil(vmax / (10 ** (logs - 1))) * (10 ** (logs - 1))             
+        if data_max > 0:
+            logs = np.ceil(np.log10(data_max))
+            vmax = np.ceil(data_max / (10 ** (logs - 1))) * (10 ** (logs - 1))             
         else: 
             vmax = 100  
 
-        if vmin >= 0:
+        if data_min >= 0:
             vmin = 0
         else: 
-            logs = np.ceil(np.log10(-1.0 * vmin))
-            vmin = np.floor(vmin / (10 ** (logs - 1))) * (10 ** (logs - 1))
+            logs = np.ceil(np.log10(-1.0 * data_min))
+            vmin = np.floor(data_min / (10 ** (logs - 1))) * (10 ** (logs - 1))
 
         return transforms.nonsingular(vmin, vmax)
     
@@ -404,12 +473,6 @@ class LogicleMinorLocator(Locator):
     Determine the tick locations for logicle axes.
     Based on matplotlib.LogLocator
     """
-    
-    def __init__(self, *args, **kwargs):
-        self.range_min = kwargs.pop('range_min')
-        self.range_max = kwargs.pop('range_max')
-        
-        super(LogicleMinorLocator, self).__init__(*args, **kwargs)
 
     def set_params(self):
         """Empty"""
@@ -419,13 +482,6 @@ class LogicleMinorLocator(Locator):
         'Return the locations of the ticks'
         vmin, vmax = self.axis.get_view_interval()
         return self.tick_values(vmin, vmax)
-    
-    def view_limits(self, vmin, vmax):
-        vmin, vmax = Locator.view_limits(self, vmin, vmax)
-        vmin = max(vmin, self.range_min)
-        vmax = min(vmax, self.range_max)
-        
-        return (vmin, vmax)
 
     def tick_values(self, vmin, vmax):
         'Every tenth decade, including 0 and negative'
@@ -447,9 +503,7 @@ class LogicleMinorLocator(Locator):
             
             # flatten
             gt = [item for sublist in gt for item in sublist]
-            
-            #print gt
-            
+                        
             ticks = lt
             ticks.extend(gt)
         else:

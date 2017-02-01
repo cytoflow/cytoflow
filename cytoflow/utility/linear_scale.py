@@ -23,16 +23,20 @@ Created on Feb 24, 2016
 
 from __future__ import division, absolute_import
 
-from traits.api import HasTraits, Instance, Str, Dict, provides, Constant
-from .scale import IScale, register_scale
+from traits.api import Instance, Str, Dict, provides, Constant, Tuple
+from .scale import IScale, ScaleMixin, register_scale
 
 @provides(IScale)
-class LinearScale(HasTraits):
+class LinearScale(ScaleMixin):
     id = Constant("edu.mit.synbio.cytoflow.utility.linear_scale")
     name = "linear"
     
     experiment = Instance("cytoflow.Experiment")
+    
+    # none of these are actually used
     channel = Str
+    condition = Str
+    statistic = Tuple(Str, Str)
 
     mpl_params = Dict()
 
@@ -40,6 +44,9 @@ class LinearScale(HasTraits):
         return data
     
     def inverse(self, data):
+        return data
+    
+    def clip(self, data):
         return data
 
 register_scale(LinearScale)

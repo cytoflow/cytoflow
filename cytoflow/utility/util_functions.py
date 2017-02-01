@@ -100,6 +100,124 @@ def geom_mean(a):
     neg_prop = neg.size / a.size
     
     return (pos_mean * pos_prop) - (neg_mean * neg_prop)
+
+def geom_sd(a):
+    """
+    Compute the geometric standard deviation for an "abitrary" data set, ie one
+    that contains zeros and negative numbers.  Since we're in log space, this
+    gives a *dimensionless scaling factor*, not a measure.  If you want 
+    traditional "error bars", don't plot `[geom_mean - geom_sd, geom_mean + sd]`;
+    rather, plot `[geom_mean / geom_sd, geom_mean * geom_sd]`.
+    
+    Parameters
+    ----------
+    
+    a : array-like
+        A numpy.ndarray, or something that can be converted to an ndarray
+        
+    Returns
+    -------
+    The geometric mean of the distribution.
+    
+    Notes
+    -----
+    As with `geom_mean`, non-positive numbers pose a problem.  The approach
+    here, though less rigorously validated than the one above, is to replace
+    negative numbers with their absolute value plus 2 * geometric mean, then
+    go about our business as per the Wikipedia page for geometric sd[1].
+    
+    References
+    ----------
+    [1] https://en.wikipedia.org/wiki/Geometric_standard_deviation
+    """
+    
+    a = np.array(a)
+    u = geom_mean(a)
+    a[a <= 0] = np.abs(a[a <= 0]) + 2 * u
+    
+    return np.exp(np.std(np.log(a)))
+    
+def geom_sd_range(a):
+    """
+    A convenience function to compute [geom_mean / geom_sd, geom_mean * geom_sd].
+    
+    Parameters
+    ----------
+    
+    a : array-like
+        A numpy.ndarray, or something that can be converted to an ndarray
+        
+    Returns
+    -------
+    A tuple, with `(geom_mean / geom_sd, geom_mean * geom_sd)`
+    """
+    
+    u = geom_mean(a)
+    sd = geom_sd(a)
+    
+    return (u / sd, u * sd)
+
+def geom_sem(a):
+    """
+    Compute the geometric standard error of the mean for an "arbirary" data set,
+    ie one that contains zeros and negative numbers.
+    
+    Parameters
+    ----------
+     Parameters
+    ----------
+    
+    a : array-like
+        A numpy.ndarray, or something that can be converted to an ndarray
+        
+    Returns
+    -------
+    The geometric mean of the distribution.
+    
+    Notes
+    -----
+    As with `geom_mean`, non-positive numbers pose a problem.  The approach
+    here, though less rigorously validated than the one above, is to replace
+    negative numbers with their absolute value plus 2 * geometric mean.  The
+    geometric SEM is computed as in [1].
+    
+    References
+    ----------
+    [1] The Standard Errors of the Geometric and Harmonic Means and Their Application to Index Numbers
+        Nilan Norris
+        The Annals of Mathematical Statistics
+        Vol. 11, No. 4 (Dec., 1940), pp. 445-448
+    
+        http://www.jstor.org/stable/2235723?seq=1#page_scan_tab_contents
+    """
+    
+    a = np.array(a)
+    u = geom_mean(a)
+    a[a <= 0] = np.abs(a[a <= 0]) + 2 * u
+    
+    return u * np.std(np.log(a)) / np.sqrt(a.size)
+
+    
+def geom_sem_range(a):
+    """
+    A convenience function to compute [geom_mean / geom_sem, geom_mean * geom_sem].
+    
+    Parameters
+    ----------
+    
+    a : array-like
+        A numpy.ndarray, or something that can be converted to an ndarray
+        
+    Returns
+    -------
+    A tuple, with `(geom_mean / geom_sem, geom_mean * geom_sem)`
+    """
+    
+    u = geom_mean(a)
+    sem = geom_sem(a)
+    
+    return (u / sem, u * sem)
+
     
 def cartesian(arrays, out=None):
     """
@@ -207,3 +325,12 @@ def categorical_order(values, order=None):
 def random_string(n):
     """from http://stackoverflow.com/questions/2257441/random-string-generation-with-upper-case-letters-and-digits-in-python"""
     return ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(n))
+
+def is_numeric(s):
+    """
+    s is a pandas.Series or a numpy.ndarray; try to determine if it's numeric
+    from its dtype.
+    """
+    return s.dtype.kind in 'iufc'
+
+#     return issubclass(s.dtype.type, np.number)

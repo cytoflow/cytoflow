@@ -44,7 +44,7 @@ matplotlib_backend.py
 
 import threading, sys, Queue, logging, traceback
 
-from traits.api import HasStrictTraits, Instance, List, on_trait_change, Any
+from traits.api import HasStrictTraits, Instance, List, on_trait_change, Any, Bool, Str
                        
 from traitsui.api import View, Item, InstanceEditor, Spring, Label
 
@@ -99,6 +99,9 @@ class Workflow(HasStrictTraits):
     
     workflow = List(WorkflowItem)
     selected = Instance(WorkflowItem)
+    version = Str
+    
+    modified = Bool
 
     default_scale = util.ScaleEnum
     
@@ -207,9 +210,12 @@ class Workflow(HasStrictTraits):
 
     
     def send_main(self, child_conn):
-        while True:
-            msg = self.message_q.get()
-            child_conn.send(msg)
+        try:
+            while True:
+                msg = self.message_q.get()
+                child_conn.send(msg)
+        except Exception:
+            log_exception()
 
             
     def log_main(self, log_q):
@@ -244,6 +250,7 @@ class Workflow(HasStrictTraits):
                       .format((event.index, event.removed, event.added)))
 
         idx = event.index
+        self.modified = True
         
         # remove deleted items from the linked list
         if event.removed:
@@ -295,6 +302,7 @@ class Workflow(HasStrictTraits):
             wi = next((x for x in self.workflow if x.operation == obj))
             idx = self.workflow.index(wi)
             self.message_q.put((Msg.UPDATE_OP, (idx, obj, new)))
+            self.modified = True
 
     @on_trait_change('workflow:views:changed')
     def _view_changed(self, obj, name, new):
@@ -305,6 +313,7 @@ class Workflow(HasStrictTraits):
             wi = next((x for x in self.workflow if obj in x.views))
             idx = self.workflow.index(wi)
             self.message_q.put((Msg.UPDATE_VIEW, (idx, obj, new)))
+            self.modified = True
         
     @on_trait_change('workflow:current_view')
     def _on_current_view_changed(self, obj, name, old, new):
@@ -399,8 +408,9 @@ class RemoteWorkflow(HasStrictTraits):
         # loop and process updates
         while True:
             try:
-                _, fn = self.exec_q.get()
-                fn()
+                _, (wi, fn) = self.exec_q.get()
+                with wi.lock:
+                    fn()
             except Exception:
                 log_exception()
             
@@ -450,10 +460,11 @@ class RemoteWorkflow(HasStrictTraits):
                 elif msg == Msg.UPDATE_OP:
                     (idx, new_op, update_type) = payload
                     wi = self.workflow[idx]
-                    wi.operation.copy_traits(new_op, 
-                                             status = lambda t: t is not True,
-                                             fixed = lambda t: t is not True)
-                    
+                    with wi.lock:
+                        wi.operation.copy_traits(new_op, 
+                                                 status = lambda t: t is not True,
+                                                 fixed = lambda t: t is not True)
+                        
                     wi.operation.changed = update_type
                         
                 elif msg == Msg.UPDATE_VIEW:
@@ -466,10 +477,11 @@ class RemoteWorkflow(HasStrictTraits):
                         logging.warn("RemoteWorkflow: Couldn't find view {}".format(view_id))
                         continue
                     
-                    view.copy_traits(new_view, 
-                                     status = lambda t: t is not True,
-                                     fixed = lambda t: t is not True) 
-                    
+                    with wi.lock:
+                        view.copy_traits(new_view, 
+                                         status = lambda t: t is not True,
+                                         fixed = lambda t: t is not True) 
+                        
                     view.changed = update_type
     
                 elif msg == Msg.CHANGE_CURRENT_VIEW:
@@ -487,10 +499,6 @@ class RemoteWorkflow(HasStrictTraits):
                     (idx, plot) = payload
                     wi = self.workflow[idx]
                     wi.current_plot = plot
-                    
-                    #wi.command = "plot"
-                    
-                    #self.exec_q.put_nowait((0, wi.plot))
                         
                 elif msg == Msg.CHANGE_DEFAULT_SCALE:
                     new_scale = payload
@@ -501,8 +509,7 @@ class RemoteWorkflow(HasStrictTraits):
                     wi = self.workflow[idx]
                     
                     wi.command = "estimate"
-                    #self.exec_q.put_nowait((idx - 0.1, wi.estimate))
-    
+                        
                 else:
                     raise RuntimeError("Bad command in the remote workflow")
             
@@ -510,9 +517,12 @@ class RemoteWorkflow(HasStrictTraits):
                 log_exception()
             
     def send_main(self, parent_conn):
-        while True:
-            msg = self.message_q.get()
-            parent_conn.send(msg)
+        try:
+            while True:
+                msg = self.message_q.get()
+                parent_conn.send(msg)
+        except Exception:
+            log_exception()
             
             
     @on_trait_change('workflow_items')
@@ -570,7 +580,7 @@ class RemoteWorkflow(HasStrictTraits):
 
     @on_trait_change('workflow:changed')
     def _workflow_item_changed(self, obj, name, old, new):
-        logging.debug("RemoteWorkflow._workflow_status_changed :: {}"
+        logging.debug("RemoteWorkflow._workflow_item_changed :: {}"
                       .format((obj, name, old, new)))
             
         idx = self.workflow.index(obj)            
@@ -584,11 +594,11 @@ class RemoteWorkflow(HasStrictTraits):
         idx = self.workflow.index(obj)            
 
         if cmd == "apply":
-            self.exec_q.put_nowait((idx, obj.apply))
+            self.exec_q.put_nowait((idx, (obj, obj.apply)))
         elif cmd == "estimate":
-            self.exec_q.put_nowait((idx - 0.1, obj.estimate))
+            self.exec_q.put_nowait((idx - 0.1, (obj, obj.estimate)))
         elif cmd == "plot" and obj == self.selected:
-            self.exec_q.put_nowait((0, obj.plot))
+            self.exec_q.put_nowait((0, (obj, obj.plot)))
             
     @on_trait_change('selected')
     def _selected_changed(self, obj, name, new):

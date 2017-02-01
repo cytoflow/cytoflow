@@ -17,8 +17,6 @@
 
 from __future__ import division, absolute_import
 
-import logging
-
 from traits.api import HasStrictTraits, Str, provides
 
 import numpy as np
@@ -111,6 +109,18 @@ class ViolinPlotView(HasStrictTraits):
         if self.huefacet and self.huefacet not in experiment.conditions:
             raise util.CytoflowViewError("Hue facet {0} not in the experiment"
                                     .format(self.huefacet))
+            
+        facets = filter(lambda x: x, [self.xfacet, self.yfacet, self.huefacet])
+        if len(facets) != len(set(facets)):
+            raise util.CytoflowViewError("Can't reuse facets")
+            
+        col_wrap = kwargs.pop('col_wrap', None)
+        
+        if col_wrap and self.yfacet:
+            raise util.CytoflowViewError("Can't set yfacet and col_wrap at the same time.") 
+        
+        if col_wrap and not self.xfacet:
+            raise util.CytoflowViewError("Must set xfacet to use col_wrap.")
 
         if self.subset:
             try:
@@ -126,21 +136,28 @@ class ViolinPlotView(HasStrictTraits):
             data = experiment.data
                     
         # get the scale
-        scale = util.scale_factory(self.scale, experiment, self.channel)
+        scale = util.scale_factory(self.scale, experiment, channel = self.channel)
         kwargs['data_scale'] = scale
         
         kwargs.setdefault('orient', 'v')
+        
+        cols = col_wrap if col_wrap else \
+               len(data[self.xfacet].unique()) if self.xfacet else 1
+               
+        sharex = kwargs.pop('sharex', True)
+        sharey = kwargs.pop('sharey', True)
                 
         g = sns.FacetGrid(data, 
-                          size = 6,
+                          size = (6 / cols),
                           aspect = 1.5,
                           col = (self.xfacet if self.xfacet else None),
                           row = (self.yfacet if self.yfacet else None),
                           col_order = (np.sort(data[self.xfacet].unique()) if self.xfacet else None),
                           row_order = (np.sort(data[self.yfacet].unique()) if self.yfacet else None),
+                          col_wrap = col_wrap,
                           legend_out = False,
-                          sharex = False,
-                          sharey = False)
+                          sharex = sharex,
+                          sharey = sharey)
                 
         # set the scale for each set of axes; can't just call plt.xscale() 
         for ax in g.axes.flatten():
@@ -164,31 +181,36 @@ class ViolinPlotView(HasStrictTraits):
               hue_order = (np.sort(data[self.huefacet].unique()) if self.huefacet else None),
               **kwargs)
         
-        # if we have an xfacet, make sure the y scale is the same for each
-        fig = plt.gcf()
-        fig_y_min = float("inf")
-        fig_y_max = float("-inf")
-        for ax in fig.get_axes():
-            ax_y_min, ax_y_max = ax.get_ylim()
-            if ax_y_min < fig_y_min:
-                fig_y_min = ax_y_min
-            if ax_y_max > fig_y_max:
-                fig_y_max = ax_y_max
-                
-        for ax in fig.get_axes():
-            ax.set_ylim(fig_y_min, fig_y_max)
+        # if we're sharing y axes, make sure the y scale is the same for each
+        if sharey:
+            fig = plt.gcf()
+            fig_y_min = float("inf")
+            fig_y_max = float("-inf")
+            for ax in fig.get_axes():
+                ax_y_min, ax_y_max = ax.get_ylim()
+                if ax_y_min < fig_y_min:
+                    fig_y_min = ax_y_min
+                if ax_y_max > fig_y_max:
+                    fig_y_max = ax_y_max
+                    
+            for ax in fig.get_axes():
+                ax.set_ylim(fig_y_min, fig_y_max)
             
-        # if we have a yfacet, make sure the x scale is the same for each
-        fig = plt.gcf()
-        fig_x_min = float("inf")
-        fig_x_max = float("-inf")
-        
-        for ax in fig.get_axes():
-            ax_x_min, ax_x_max = ax.get_xlim()
-            if ax_x_min < fig_x_min:
-                fig_x_min = ax_x_min
-            if ax_x_max > fig_x_max:
-                fig_x_max = ax_x_max
+        # if we're sharing x axes, make sure the x scale is the same for each
+        if sharex:
+            fig = plt.gcf()
+            fig_x_min = float("inf")
+            fig_x_max = float("-inf")
+            
+            for ax in fig.get_axes():
+                ax_x_min, ax_x_max = ax.get_xlim()
+                if ax_x_min < fig_x_min:
+                    fig_x_min = ax_x_min
+                if ax_x_max > fig_x_max:
+                    fig_x_max = ax_x_max
+            
+            for ax in fig.get_axes():
+                ax.set_xlim(fig_x_min, fig_x_max)
         
         if self.huefacet:
             g.add_legend(title = self.huefacet)

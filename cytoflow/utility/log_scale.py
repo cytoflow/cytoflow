@@ -23,115 +23,118 @@ Created on Feb 24, 2016
 
 from __future__ import division, absolute_import
 
-from traits.api import (HasTraits, Instance, Str, Dict, provides, Constant,
-                        Enum, Float, Property, cached_property, Tuple, Undefined) 
+from traits.api import (Instance, Str, Dict, provides, Constant, Enum, Float, 
+                        Property, Tuple) 
                        
 import numpy as np
 import pandas as pd
 
-import matplotlib
-
-from matplotlib.scale import LogScale as _LogScale
-
-from matplotlib.ticker import (NullFormatter, LogFormatterMathtext)
-from matplotlib.ticker import LogLocator
-
-from .scale import IScale, register_scale
+from .scale import IScale, ScaleMixin, register_scale
 from .cytoflow_errors import CytoflowError
 
 
 @provides(IScale)
-class LogScale(HasTraits):
+class LogScale(ScaleMixin):
     id = Constant("edu.mit.synbio.cytoflow.utility.log_scale")
     name = "log"
     
     experiment = Instance("cytoflow.Experiment")
+    
+    # must set one of these.  they're considered in order.
     channel = Str
+    condition = Str
+    statistic = Tuple(Str, Str)
 
     mode = Enum("mask", "clip")
-    threshold = Float(1.0)
-    quantiles = Tuple(0.001, 0.999)
-    
-    range_min = Property(Float)
-    range_max = Property(Float)
+    threshold = Property(Float, depends_on = "[experiment, condition, channel]")
+    _channel_threshold = Float(0.1)
 
-    mpl_params = Property(Dict, depends_on = "[mode, range_min, range_max]")
+    mpl_params = Property(Dict)
 
-    @cached_property
     def _get_mpl_params(self):
         return {"nonposx" : self.mode, 
-                "nonposy" : self.mode, 
-                "range_min" : self.range_min,
-                "range_max" : self.range_max}
+                "nonposy" : self.mode}
         
-    def _get_range_min(self):
-        if self.experiment and self.channel:
-            c = self.experiment[self.channel]
-            return c[c > 0].quantile(self.quantiles[0])
-        else:
-            return Undefined
-    
-    def _get_range_max(self):
-        if self.experiment and self.channel:
-            return self.experiment[self.channel].quantile(self.quantiles[1])
-        else:
-            return Undefined
+    def _set_threshold(self, threshold):
+        self._channel_threshold = threshold
+        
+    def _get_threshold(self):
+        if self.channel:
+            return self._channel_threshold
+        elif self.condition:
+            return self.experiment[self.condition].min()
+        elif self.statistic:
+            stat = self.experiment.statistics[self.statistic]
+            try:
+                return min([x[0] for x in stat])
+            except IndexError:
+                return stat.min()
         
     def __call__(self, data):
+        # this function should work with: int, float, tuple, list, pd.Series, 
+        # np.ndframe.  it should return the same data type as it was passed.
         
         if isinstance(data, (int, float)):
-            if data < self.threshold:
-                raise CytoflowError("data <= scale.threshold (currently: {})".format(self.threshold))
+            if self.mode == "mask":
+                if data < self.threshold:
+                    raise CytoflowError("data <= scale.threshold (currently: {})".format(self.threshold))
+                else:
+                    return np.log10(data)
             else:
-                return np.log10(data)
+                if data < self.threshold:
+                    return np.log10(self.threshold)
+                else:
+                    return np.log10(data)
+        elif isinstance(data, (list, tuple)):
+            ret = [self.__call__(x) for x in data]
+            if isinstance(data, tuple):
+                return tuple(ret)
+            else:
+                return ret
+        elif isinstance(data, (np.ndarray, pd.Series)):
+            mask_value = np.nan if self.mode == "mask" else self.threshold
+            x = pd.Series(data)
+            x = x.mask(lambda x: x < self.threshold, other = mask_value)
+            ret = np.log10(x)
             
-        mask_value = np.nan if self.mode == "mask" else self.threshold
-        x = pd.Series(data)
-        x = x.mask(lambda x: x < self.threshold, other = mask_value)
-        ret = np.log10(x)
-
-        return (ret if isinstance(data, pd.Series) else ret.values)
+            if isinstance(data, pd.Series):
+                return ret
+            else:
+                return ret.values
+        else:
+            raise CytoflowError("Unknown type {} passed to log_scale.__call__"
+                                .format(type(data)))
                         
     def inverse(self, data):
-        return np.power(10, data)
+        # this function shoujld work with: int, float, tuple, list, pd.Series, 
+        # np.ndframe
+        if isinstance(data, (int, float)):
+            return np.power(10, data)
+        elif isinstance(data, (list, tuple)):
+            ret = [np.power(10, x) for x in data]
+            if isinstance(data, tuple):
+                return tuple(ret)
+            else:
+                return ret
+        elif isinstance(data, (np.ndarray, pd.Series)):
+            return np.power(10, data)
+        else:
+            raise CytoflowError("Unknown type {} passed to log_scale.inverse"
+                                .format(type(data)))
+    
+    def clip(self, data):
+#         import pydevd; pydevd.settrace()
+        if isinstance(data, pd.Series):            
+            return data.clip(lower = self.threshold)
+        elif isinstance(data, np.ndarray):
+            return data.clip(min = self.threshold)
+        elif isinstance(data, float):
+            return max(data, self.threshold)
+        else:
+            try:
+                return map(lambda x: max(data, self.threshold), data)
+            except TypeError:
+                raise CytoflowError("Unknown data type in LogicleScale.__call__")
 
 register_scale(LogScale)
-    
-class RangeLogLocator(LogLocator):
-    
-    def __init__(self, *args, **kwargs):
-        self.range_min = kwargs.pop('range_min')
-        self.range_max = kwargs.pop('range_max')
-        
-        super(RangeLogLocator, self).__init__(*args, **kwargs)
-        
-    def view_limits(self, vmin, vmax):
-        vmin, vmax = LogLocator.view_limits(self, vmin, vmax)
-        
-        if self.range_min and self.range_max:
-            vmin = max(vmin, self.range_min)
-            vmax = min(vmax, self.range_max)
-        
-#             vmin = vmin * 0.5
-            vmax = vmax * 2.0
-        
-        return (vmin, vmax)
- 
-class MatplotlibLogScale(_LogScale):   
-     
-    def __init__(self, axis, **kwargs):
-        super(MatplotlibLogScale, self).__init__(axis, **kwargs)
-        self._range_min = kwargs.pop('range_min', None)
-        self._range_max = kwargs.pop('range_max', None)
-        
-    def set_default_locators_and_formatters(self, axis):
-        """
-        Set the locators and formatters to specialized versions for
-        log scaling.
-        """
-        axis.set_major_locator(RangeLogLocator(self.base, range_min = self._range_min, range_max = self._range_max))
-        axis.set_major_formatter(LogFormatterMathtext(self.base))
-        axis.set_minor_locator(RangeLogLocator(self.base, self.subs, range_min = self._range_min, range_max = self._range_max))
-        axis.set_minor_formatter(NullFormatter())
 
-matplotlib.scale.register_scale(MatplotlibLogScale)

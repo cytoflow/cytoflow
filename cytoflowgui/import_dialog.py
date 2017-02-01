@@ -35,7 +35,7 @@ from traits.api import HasTraits, HasStrictTraits, provides, Instance, Str, Int,
                        Bool, Enum, Float, DelegatesTo, Any, Property, BaseCStr, on_trait_change
                        
 from traitsui.api import UI, Group, View, Item, TableEditor, OKCancelButtons, \
-                         Controller, Menu, Action
+                         Controller
 
 from traitsui.qt4.table_editor import TableEditor as TableEditorQt
 
@@ -523,6 +523,9 @@ class ExperimentDialogHandler(Controller):
         if conf:
             for (tube, _) in self.model.selected:
                 self.model.tubes.remove(tube)
+                
+        if not self.model.tubes:
+            self.model.dummy_experiment = None
 
     
     @on_trait_change('model.tubes_items', post_init = True)

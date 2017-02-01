@@ -78,15 +78,14 @@ class RangeView2DHandler(Controller, ViewHandlerMixin):
                            Item('yscale',
                                 label = "Y Scale"),
                            Item('huefacet',
-                                editor=ExtendableEnumEditor(name='context.previous.conditions',
+                                editor=ExtendableEnumEditor(name='context.previous.conditions_names',
                                                             extra_items = {"None" : ""}),
                                 label="Color\nFacet"),
                            label = "2D Range Setup View",
                            show_border = False),
-                    VGroup(Item('subset',
+                    VGroup(Item('subset_dict',
                                 show_label = False,
-                                editor = SubsetEditor(conditions_types = "context.previous.conditions_types",
-                                                      conditions_values = "context.previous.conditions_values")),
+                                editor = SubsetEditor(conditions = "context.previous.conditions")),
                            label = "Subset",
                            show_border = False,
                            show_labels = False),
@@ -102,7 +101,7 @@ class RangeView2DHandler(Controller, ViewHandlerMixin):
                                                   background_color = "#ff9191"))))
 
 @provides(ISelectionView)
-class Range2DSelectionView(RangeSelection2D, PluginViewMixin):
+class Range2DSelectionView(PluginViewMixin, RangeSelection2D):
     handler_factory = Callable(RangeView2DHandler, transient = True)
     op = Instance(IOperation, fixed = True)
     xlow = DelegatesTo('op', status = True)

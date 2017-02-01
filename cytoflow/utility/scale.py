@@ -17,9 +17,13 @@
 
 from __future__ import absolute_import
 
-from traits.api import Interface, Str, Dict, Instance
+import numbers
+
+from traits.api import Interface, Str, Dict, Instance, Tuple
 
 from .cytoflow_errors import CytoflowError
+from .util_functions import is_numeric
+from traits.has_traits import HasStrictTraits
 
 class IScale(Interface):
     """An interface for various ways we could rescale flow data.
@@ -37,6 +41,16 @@ class IScale(Interface):
         Which channel to scale.  Needed because some scales have parameters
         estimated from data.
         
+    condition : Str
+        What condition to scale.  Needed because some scales have parameters
+        estimated from the a condition.  Must be a numeric condition; else
+        instantiating the scale should fail.
+        
+    statistic : Tuple(Str, Str)
+        What statistic to scale.  Needed because some scales have parameters
+        estimated from a statistic.  The statistic must be numeric or an
+        iterable of numerics; else instantiating the scale should fail.
+        
     mpl_params : Dict
         A dictionary of named parameters to pass to plt.xscale() and 
         plt.yscale().  Sometimes estimated from data.
@@ -46,13 +60,20 @@ class IScale(Interface):
     name = Str
     
     experiment = Instance("cytoflow.experiment.Experiment")
+    
+    # what are we using to parameterize the scale?  set one of these; if
+    # multiple are set, the first is used.
     channel = Str
+    condition = Str
+    statistic = Tuple(Str, Str)
 
     mpl_params = Dict()
 
     def __call__(self, data):
         """
-        Transforms `data` using this scale.
+        Transforms `data` using this scale.  Must know how to handle int, float,
+        and lists, tuples, numpy.ndarrays and pandas.Series of int or float.
+        Must return the same type passed.
         
         Careful!  May return `NaN` if the scale domain doesn't match the data 
         (ie, applying a log10 scale to negative numbers.
@@ -60,20 +81,57 @@ class IScale(Interface):
         
     def inverse(self, data):
         """
-        Transforms 'data' using the inverse of this scale.
+        Transforms 'data' using the inverse of this scale.  Must know how to 
+        handle int, float, and list, tuple, numpy.ndarray and pandas.Series of
+        int or float.  Returns the same type as passed.
         """
+        
+    def clip(self, data):
+        """
+        Clips the data to the scale's domain.
+        """
+        
+class ScaleMixin(HasStrictTraits):
+    def __init__(self, **kwargs):
+        
+        # run the traits constructor
+        HasStrictTraits.__init__(self, **kwargs)
+        
+        # check that the channel, condition, or statistic is either numeric or
+        # an iterable of numerics
+        if self.condition:
+            if not is_numeric(self.experiment[self.condition]):
+                raise CytoflowError("Tried to scale the non-numeric condition {}"
+                                    .format(self.condition))
+                
+        elif self.statistic[0]:
+            stat = self.experiment.statistics[self.statistic]
+            if is_numeric(stat):
+                return
+            else:
+                try:
+                    for x in stat:
+                        for y in x:
+                            if not isinstance(y, numbers.Number):
+                                raise CytoflowError("Tried to scale a non-numeric "
+                                                    "statistic {}"
+                                                    .format(self.statistic))
+                except TypeError:
+                    raise CytoflowError("Tried to scale a non-numeric "
+                                        "statistic {}"
+                                        .format(self.statistic))
     
 # maps name -> scale object
 _scale_mapping = {}
 _scale_default = "linear"
 
-def scale_factory(scale, experiment, channel):
+def scale_factory(scale, experiment, **scale_params):
     scale = scale.lower()
         
     if scale not in _scale_mapping:
         raise CytoflowError("Unknown scale type {0}".format(scale))
-         
-    return _scale_mapping[scale](experiment = experiment, channel = channel)
+        
+    return _scale_mapping[scale](experiment = experiment, **scale_params)
  
 def register_scale(scale_class):
     _scale_mapping[scale_class.name] = scale_class
@@ -91,4 +149,5 @@ def set_default_scale(scale):
 import cytoflow.utility.linear_scale   # @UnusedImport
 import cytoflow.utility.log_scale      # @UnusedImport
 import cytoflow.utility.logicle_scale  # @UnusedImport
+import cytoflow.utility.hlog_scale     # @UnusedImport
 

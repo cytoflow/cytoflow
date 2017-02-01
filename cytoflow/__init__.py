@@ -17,9 +17,10 @@
 
 from __future__ import absolute_import
 
-# suppress a meaningless warning from seaborn
+# suppress meaningless warnings from seaborn
 import warnings
 warnings.filterwarnings('ignore', '.*IPython widgets are experimental.*')
+warnings.filterwarnings('ignore', 'axes.color_cycle is deprecated and replaced with axes.prop_cycle')
 
 # basics
 from .experiment import Experiment
@@ -32,24 +33,23 @@ from .operations.range2d import Range2DOp
 from .operations.polygon import PolygonOp
 from .operations.quad import QuadOp
 
-# transforms (deprecated!)
-from .operations.hlog import HlogTransformOp
-from .operations.logicle import LogicleTransformOp
-from .operations.log import LogTransformOp
-
 # TASBE
 from .operations.autofluorescence import AutofluorescenceOp
 from .operations.bleedthrough_piecewise import BleedthroughPiecewiseOp
+from .operations.bleedthrough_linear import BleedthroughLinearOp
 from .operations.bead_calibration import BeadCalibrationOp
 from .operations.color_translation import ColorTranslationOp
 
 # data-driven
+from .operations.ratio import RatioOp
 from .operations.gaussian_1d import GaussianMixture1DOp
 from .operations.gaussian_2d import GaussianMixture2DOp
+from .operations.channel_stat import ChannelStatisticOp
+from .operations.frame_stat import FrameStatisticOp
+from .operations.xform_stat import TransformStatisticOp
 
 # misc
 from .operations.binning import BinningOp
-from .operations.bleedthrough_linear import BleedthroughLinearOp
 
 # views
 from .views.histogram import HistogramView
@@ -66,7 +66,14 @@ from .views.violin import ViolinPlotView
 from .views.table import TableView
 
 # util
-from cytoflow.utility.util_functions import geom_mean
-from cytoflow.utility.scale import set_default_scale
+from .utility.util_functions import (geom_mean, geom_sd, geom_sd_range,
+                                             geom_sem, geom_sem_range)
+from .utility.scale import set_default_scale
 
-__version__ = "0.4.1"
+import subprocess
+import os
+try:
+    cf_cwd =  os.path.dirname(__file__)
+    __version__ = subprocess.check_output(["git", "describe", "--always"], cwd = cf_cwd).rstrip()
+except (subprocess.CalledProcessError, OSError):
+    __version__ = "0.4.1"

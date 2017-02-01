@@ -17,7 +17,8 @@
 
 from __future__ import division, absolute_import
 
-from traits.api import HasStrictTraits, Str, provides, Callable
+from warnings import warn
+from traits.api import HasStrictTraits, Str, provides, Tuple
 import matplotlib.pyplot as plt
 
 from matplotlib.table import Table
@@ -34,26 +35,58 @@ class TableView(HasStrictTraits):
     # traits   
     id = "edu.mit.synbio.cytoflow.view.table"
     friendly_id = "Table View" 
+
+    REMOVED_ERROR = "Statistics have changed dramatically in 0.5; please see the documentation"
+    channel = util.Removed(err_string = REMOVED_ERROR)
+    function = util.Removed(err_string = REMOVED_ERROR)
     
     name = Str
+    statistic = Tuple(Str, Str)
     row_facet = Str
     subrow_facet = Str
     column_facet = Str
     subcolumn_facet = Str
     
     subset = Str
+
     
-    channel = Str
-    function = Callable
-    
-    def plot(self, experiment, **kwargs):
+    def plot(self, experiment, plot_name = None, **kwargs):
         """Plot a table"""
         
         if not experiment:
-            raise util.CytoflowViewError("No experiment specified")
+            raise util.CytoflowViewError("No experiment specified")   
         
-        if not self.channel or self.channel not in experiment.data:
-            raise util.CytoflowViewError("Must set a channel")            
+        if self.statistic not in experiment.statistics:
+            raise util.CytoflowViewError("Can't find the statistic {} in the experiment"
+                                         .format(self.statistic))
+        else:
+            stat = experiment.statistics[self.statistic]    
+            
+        data = pd.DataFrame(index = stat.index)
+        data[stat.name] = stat   
+        
+        if self.subset:
+            try:
+                data = data.query(self.subset)
+            except:
+                raise util.CytoflowViewError("Subset string '{0}' isn't valid"
+                                        .format(self.subset))
+                
+            if len(data) == 0:
+                raise util.CytoflowViewError("Subset string '{0}' returned no values"
+                                        .format(self.subset))
+            
+        names = list(data.index.names)
+        for name in names:
+            unique_values = data.index.get_level_values(name).unique()
+            if len(unique_values) == 1:
+                warn("Only one value for level {}; dropping it.".format(name),
+                     util.CytoflowViewWarning)
+                try:
+                    data.index = data.index.droplevel(name)
+                except AttributeError:
+                    raise util.CytoflowViewError("Must have more than one "
+                                                 "value to plot.")
         
         if not (self.row_facet or self.column_facet):
             raise util.CytoflowViewError("Must set at least one of row_facet "
@@ -68,60 +101,61 @@ class TableView(HasStrictTraits):
                                          "subcolumn_facet")
             
         if self.row_facet and self.row_facet not in experiment.conditions:
-            raise util.CytoflowViewError("Row facet {0} not in the experiment"
+            raise util.CytoflowViewError("Row facet {} not in the experiment"
                                     .format(self.row_facet))        
+
+        if self.row_facet and self.row_facet not in data.index.names:
+            raise util.CytoflowViewError("Row facet {} not a statistic index; "
+                                         "must be one of {}"
+                                         .format(self.row_facet, data.index.names))  
             
         if self.subrow_facet and self.subrow_facet not in experiment.conditions:
-            raise util.CytoflowViewError("Subrow facet {0} not in the experiment"
+            raise util.CytoflowViewError("Subrow facet {} not in the experiment"
                                     .format(self.subrow_facet))  
             
+        if self.subrow_facet and self.subrow_facet not in data.index.names:
+            raise util.CytoflowViewError("Subrow facet {} not a statistic index; "
+                                         "must be one of {}"
+                                         .format(self.subrow_facet, data.index.names))  
+            
         if self.column_facet and self.column_facet not in experiment.conditions:
-            raise util.CytoflowViewError("Column facet {0} not in the experiment"
+            raise util.CytoflowViewError("Column facet {} not in the experiment"
                                     .format(self.column_facet))  
             
+        if self.column_facet and self.column_facet not in data.index.names:
+            raise util.CytoflowViewError("Column facet {} not a statistic index; "
+                                         "must be one of {}"
+                                         .format(self.column_facet, data.index.names)) 
+            
         if self.subcolumn_facet and self.subcolumn_facet not in experiment.conditions:
-            raise util.CytoflowViewError("Subcolumn facet {0} not in the experiment"
+            raise util.CytoflowViewError("Subcolumn facet {} not in the experiment"
                                     .format(self.subcolumn_facet))  
             
-        if not self.function:
-            raise util.CytoflowViewError("Summary function isn't set")
+        if self.subcolumn_facet and self.subcolumn_facet not in data.index.names:
+            raise util.CytoflowViewError("Subcolumn facet {} not a statistic index; "
+                                         "must be one of {}"
+                                         .format(self.subcolumn_facet, data.index.names))  
+
+        facets = filter(lambda x: x, [self.row_facet, self.subrow_facet, 
+                                      self.column_facet, self.subcolumn_facet])
+        if len(facets) != len(set(facets)):
+            raise util.CytoflowViewError("Can't reuse facets")
+        
+        if set(facets) != set(data.index.names):
+            raise util.CytoflowViewError("Must use all the statistic indices as variables or facets: {}"
+                                         .format(data.index.names))
             
-        row_groups = np.sort(pd.unique(experiment[self.row_facet])) \
+        row_groups = data.index.get_level_values(self.row_facet).unique() \
                      if self.row_facet else [None]
                      
-        subrow_groups = np.sort(pd.unique(experiment[self.subrow_facet])) \
+        subrow_groups = data.index.get_level_values(self.subrow_facet).unique() \
                         if self.subrow_facet else [None] 
         
-        col_groups = np.sort(pd.unique(experiment[self.column_facet])) \
+        col_groups = data.index.get_level_values(self.column_facet).unique() \
                      if self.column_facet else [None]
                      
-        subcol_groups = np.sort(pd.unique(experiment[self.subcolumn_facet])) \
+        subcol_groups = data.index.get_level_values(self.subcolumn_facet).unique() \
                         if self.subcolumn_facet else [None]
-
-
-        if self.subset:
-            try:
-                data = experiment.query(self.subset).data.reset_index()
-            except:
-                raise util.CytoflowViewError("Subset string '{0}' isn't valid"
-                                        .format(self.subset))
-                
-            if len(data) == 0:
-                raise util.CytoflowViewError("Subset string '{0}' returned no events"
-                                        .format(self.subset))
-        else:
-            data = experiment.data
-            
-        group_vars = []
-        if self.row_facet: group_vars.append(self.row_facet) 
-        if self.subrow_facet: group_vars.append(self.subrow_facet)
-        if self.column_facet: group_vars.append(self.column_facet)
-        if self.subcolumn_facet: group_vars.append(self.subcolumn_facet)
-                
-        agg = data.groupby(by = group_vars)[self.channel].aggregate(self.function)
-
-        # agg is a multi-index series; we can get a particular value from it
-        # with get(idx1, idx2...)
 
         row_offset = (self.column_facet != "") + (self.subcolumn_facet != "")        
         col_offset = (self.row_facet != "") + (self.subrow_facet != "")
@@ -144,7 +178,6 @@ class TableView(HasStrictTraits):
         t = Table(ax, loc, bbox, **kwargs)
         width = [1.0 / num_cols] * num_cols
         height = t._approx_text_height() * 1.8
-        
          
         # make the main table       
         for (ri, r) in enumerate(row_groups):
@@ -153,15 +186,29 @@ class TableView(HasStrictTraits):
                     for (cci, cc) in enumerate(subcol_groups):
                         row_idx = ri * len(subrow_groups) + rri + row_offset
                         col_idx = ci * len(subcol_groups) + cci + col_offset
-                        agg_idx = [x for x in (r, rr, c, cc) if x is not None]
+                        
+                        # this is not pythonic, but i'm tired
+                        agg_idx = []
+                        for data_idx in data.index.names:
+                            if data_idx == self.row_facet:
+                                agg_idx.append(r)
+                            elif data_idx == self.subrow_facet:
+                                agg_idx.append(rr)
+                            elif data_idx == self.column_facet:
+                                agg_idx.append(c)
+                            elif data_idx == self.subcolumn_facet:
+                                agg_idx.append(cc)
+                        
                         agg_idx = tuple(agg_idx)
                         if len(agg_idx) == 1:
                             agg_idx = agg_idx[0]
+                            
+                            
                         t.add_cell(row_idx, 
                                    col_idx,
                                    width = width[col_idx],
                                    height = height,
-                                   text = agg.get(agg_idx))
+                                   text = data.loc[agg_idx][stat.name])
                         
         # row headers
         if self.row_facet:

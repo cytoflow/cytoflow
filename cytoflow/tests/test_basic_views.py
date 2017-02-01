@@ -41,10 +41,16 @@ class Test(unittest.TestCase):
         self.ex = import_op.apply()
         
     def testBarChart(self):
-        flow.BarChartView(name = "Bar Chart",
-                          channel = "Y2-A",
-                          variable = "Dox",
-                          function = len).plot(self.ex)
+        import numpy as np
+        ex2 = flow.ChannelStatisticOp(name = "Stats1D",
+                                      by = ["Dox"],
+                                      channel = "V2-A",
+                                      function = np.mean).apply(self.ex) 
+                                      
+        warnings.filterwarnings('ignore', 'axes.color_cycle is deprecated and replaced with axes.prop_cycle')
+
+        flow.BarChartView(statistic = ("Stats1D", "mean"),
+                          variable = "Dox").plot(ex2)
                     
     def testHexBin(self):
         # suppress unicode warning.
@@ -92,25 +98,37 @@ class Test(unittest.TestCase):
                              
     def testStats1D(self):
         import numpy as np
-        flow.Stats1DView(name = "Stats1D",
-                         xvariable = "Dox",
-                         ychannel = "V2-A",
-                         yfunction = np.mean).plot(self.ex)
-
-        flow.Stats1DView(name = "Stats1D",
-                         xvariable = "Dox",
+        
+        ex2 = flow.ChannelStatisticOp(name = "Stats1D",
+                                      by = ["Dox"],
+                                      channel = "V2-A",
+                                      function = np.mean).apply(self.ex)
+        
+        flow.Stats1DView(statistic = ("Stats1D", "mean"),
+                         variable = "Dox").plot(ex2)
+                         
+        flow.Stats1DView(statistic = ("Stats1D", "mean"),
+                         variable = "Dox",
                          xscale = "log",
-                         ychannel = "V2-A",
-                         yfunction = np.mean).plot(self.ex)
+                         yscale = "logicle").plot(ex2)
+
                          
     def testStats2D(self):
         import numpy as np
-        flow.Stats2DView(name = "Stats2D",
-                         variable = "Dox",
-                         xchannel = "V2-A",
-                         xfunction = np.mean,
-                         ychannel = "Y2-A",
-                         yfunction = np.mean).plot(self.ex)
+        
+        ex2 = flow.ChannelStatisticOp(name = "StatsV",
+                                      by = ["Dox"],
+                                      channel = "V2-A",
+                                      function = np.mean).apply(self.ex)
+                                      
+        ex3 = flow.ChannelStatisticOp(name = "StatsY",
+                                      by = ["Dox"],
+                                      channel = "Y2-A",
+                                      function = np.mean).apply(ex2)                                      
+        
+        flow.Stats2DView(xstatistic = ("StatsV", "mean"),
+                         ystatistic = ("StatsY", "mean"),
+                         variable = "Dox").plot(ex3)
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']

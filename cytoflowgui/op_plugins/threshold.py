@@ -54,15 +54,14 @@ class ThresholdViewHandler(Controller, ViewHandlerMixin):
                                 style = "readonly"),
                            Item('scale'),
                            Item('huefacet',
-                                editor=ExtendableEnumEditor(name='context.previous.conditions',
+                                editor=ExtendableEnumEditor(name='context.previous.conditions_names',
                                                             extra_items = {"None" : ""}),
                                 label="Color\nFacet"),
                            label = "Threshold Setup View",
                            show_border = False),
-                    VGroup(Item('subset',
+                    VGroup(Item('subset_dict',
                                 show_label = False,
-                                editor = SubsetEditor(conditions_types = "context.previous.conditions_types",
-                                                      conditions_values = "context.previous.conditions_values")),
+                                editor = SubsetEditor(conditions = "context.previous.conditions")),
                            label = "Subset",
                            show_border = False,
                            show_labels = False),
@@ -77,7 +76,7 @@ class ThresholdViewHandler(Controller, ViewHandlerMixin):
                          editor = ColorTextEditor(foreground_color = "#000000",
                                                   background_color = "#ff9191"))))
 
-class ThresholdSelectionView(ThresholdSelection, PluginViewMixin):
+class ThresholdSelectionView(PluginViewMixin, ThresholdSelection):
     handler_factory = Callable(ThresholdViewHandler, transient = True)    
     op = Instance(IOperation, fixed = True)
     threshold = DelegatesTo('op', status = True)

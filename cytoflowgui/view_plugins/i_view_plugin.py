@@ -21,9 +21,15 @@ Created on Mar 15, 2015
 @author: brian
 """
 
-from traits.api import Interface, Str, HasTraits, Instance, on_trait_change
+import numpy as np
+
+from traits.api import (Interface, Str, HasTraits, Instance, on_trait_change, 
+                        Dict, List, Property)
 from traitsui.api import Handler
 
+import pandas as pd
+
+import cytoflow.utility as util
 from cytoflowgui.util import DelayedEvent
 
 VIEW_PLUGIN_EXT = 'edu.mit.synbio.cytoflow.view_plugins'
@@ -61,6 +67,24 @@ class PluginViewMixin(HasTraits):
     handler = Instance(Handler, transient = True)    
     changed = DelayedEvent(delay = 0.1)
     
+    subset_dict = Dict(Str, List, estimate = True)
+    subset = Property(Str, depends_on = "subset_dict")
+        
+    def _get_subset(self):
+        ret = []
+        for key, values in self.subset_dict.iteritems():
+            if values:
+                values = list(np.unique(values))
+                values = ['"{}"'.format(x) if isinstance(x, basestring) else x for x in values]
+                values = ["{} == {}".format(key, x) for x in values]
+                values = " or ".join(values)
+                ret.append(values)
+        
+        ret = ["({})".format(x) for x in ret]
+        ret = " and ".join(ret)
+        
+        return ret
+    
     # why can't we just put this in a workflow listener?  it's because
     # we sometimes need to override or supplement it on a per-module basis
         
@@ -84,16 +108,99 @@ class PluginViewMixin(HasTraits):
         return True
     
     def plot_wi(self, wi):
-        self.plot(wi.result)
+        self.plot(wi.result, wi.current_plot)
             
     def enum_plots_wi(self, wi):
-        return []
-
+        try:
+            return self.enum_plots(wi.result)
+        except:
+            return []
+            
 
 class ViewHandlerMixin(HasTraits):
     """
-    This used to contain shared useful bits for view handlers.  There's
-    nothing here now, but we'll keep it around in case it again becomes useful
+    Useful bits for view handlers.  Empty now, but maintained in case it's
+    useful again.
     """
+    
+        
+class StatisticViewHandlerMixin(HasTraits):
+    
+    numeric_indices = Property(depends_on = "model.statistic, model.subset")
+    indices = Property(depends_on = "model.statistic, model.subset")
+    levels = Property(depends_on = "model.statistic")
+    
+    # MAGIC: gets the value for the property numeric_indices
+    def _get_numeric_indices(self):
+        context = self.info.ui.context['context']
+        
+        if not (context and context.statistics and self.model and self.model.statistic[0]):
+            return []
+        
+        stat = context.statistics[self.model.statistic]
+        data = pd.DataFrame(index = stat.index)
+        
+        if self.model.subset:
+            data = data.query(self.model.subset)
+            
+        if len(data) == 0:
+            return []       
+        
+        names = list(data.index.names)
+        for name in names:
+            unique_values = data.index.get_level_values(name).unique()
+            if len(unique_values) == 1:
+                data.index = data.index.droplevel(name)
+        
+        data.reset_index(inplace = True)
+        return [x for x in data if util.is_numeric(data[x])]
+    
+    # MAGIC: gets the value for the property indices
+    def _get_indices(self):
+        context = self.info.ui.context['context']
+        
+        if not (context and context.statistics and self.model and self.model.statistic[0]):
+            return []
+        
+        stat = context.statistics[self.model.statistic]
+        data = pd.DataFrame(index = stat.index)
+        
+        if self.model.subset:
+            data = data.query(self.model.subset)
+            
+        if len(data) == 0:
+            return []       
+        
+        names = list(data.index.names)
+        for name in names:
+            unique_values = data.index.get_level_values(name).unique()
+            if len(unique_values) == 1:
+                data.index = data.index.droplevel(name)
+        
+        return list(data.index.names)
+    
+    # MAGIC: gets the value for the property 'levels'
+    # returns a Dict(Str, pd.Series)
+    
+    def _get_levels(self):
+        context = self.info.ui.context['context']
+        
+        if not (context and context.statistics and self.model and self.model.statistic[0]):
+            return []
+        
+        stat = context.statistics[self.model.statistic]
+        index = stat.index
+        
+        names = list(index.names)
+        for name in names:
+            unique_values = index.get_level_values(name).unique()
+            if len(unique_values) == 1:
+                index = index.droplevel(name)
 
-
+        names = list(index.names)
+        ret = {}
+        for name in names:
+            ret[name] = pd.Series(index.get_level_values(name)).sort_values()
+            ret[name] = pd.Series(ret[name].unique())
+            
+        return ret

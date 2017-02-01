@@ -62,13 +62,12 @@ class GaussianMixture2DHandler(Controller, OpHandlerMixin):
                          editor = TextEditor(auto_set = False)),
                     Item('by',
                          editor = CheckListEditor(cols = 2,
-                                                  name = 'context.previous.conditions'),
+                                                  name = 'context.previous.conditions_names'),
                          label = 'Group\nEstimates\nBy',
                          style = 'custom'),
-                    VGroup(Item('subset',
+                    VGroup(Item('subset_dict',
                                 show_label = False,
-                                editor = SubsetEditor(conditions_types = "context.previous.conditions_types",
-                                                      conditions_values = "context.previous.conditions_values")),
+                                editor = SubsetEditor(conditions = "context.previous.conditions")),
                            label = "Subset",
                            show_border = False,
                            show_labels = False),
@@ -87,7 +86,6 @@ class GaussianMixture2DPluginOp(GaussianMixture2DOp, PluginOpMixin):
     num_components = util.PositiveInt(1, estimate = True)
     sigma = util.PositiveFloat(0.0, allow_zero = True, estimate = True)
     by = List(Str, estimate = True)
-    subset = Str(estimate = True)
     
     _gmms = Dict(Any, Instance(mixture.GMM), transient = True, estimate_result = True)
 

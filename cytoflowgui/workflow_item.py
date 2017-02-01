@@ -20,17 +20,16 @@ Created on Mar 15, 2015
 @author: brian
 '''
 
-import warnings, logging, sys
+import warnings, logging, sys, threading
 
 from traits.api import HasStrictTraits, Instance, List, DelegatesTo, Enum, \
                        Property, cached_property, on_trait_change, Bool, \
-                       Str, Dict, Any, Event
+                       Str, Dict, Any, Event, Tuple
 from traitsui.api import View, Item, Handler
 from pyface.qt import QtGui
 
 import matplotlib.pyplot as plt
 
-import numpy as np
 import pandas as pd
 
 from cytoflow import Experiment
@@ -39,7 +38,7 @@ from cytoflow.views.i_view import IView
 from cytoflow.utility import CytoflowOpError, CytoflowViewError
 
 from cytoflowgui.flow_task_pane import TabListEditor
-from cytoflowgui.util import DelayedEvent
+from cytoflowgui.util import DelayedEvent, filter_unpicklable
 
 # http://stackoverflow.com/questions/1977362/how-to-create-module-wide-variables-in-python
 this = sys.modules[__name__]
@@ -83,16 +82,16 @@ class WorkflowItem(HasStrictTraits):
     # previous WorkflowItem's ``result``
     result = Instance(Experiment, transient = True)
     
-    # the channels and conditions from result.  usually these would be
+    # the channels, conditions and statistics from result.  usually these would be
     # Properties (ie, determined dynamically), but that's hard with the
     # multiprocess model.
     
     channels = List(Str, status = True)
-    conditions = List(Str, status = True)
-        
-    # we need the types and the values to set up the subset editor
-    conditions_types = Dict(Str, Str, status = True)
-    conditions_values = Dict(Str, List, status = True)
+    conditions = Dict(Str, pd.Series, status = True)
+    conditions_names = Property(depends_on = 'conditions')
+    metadata = Dict(Str, Any, status = True)
+    statistics = Dict(Tuple(Str, Str), pd.Series, status = True)
+    statistics_names = Property(depends_on = 'statistics')
     
     # the IViews against the output of this operation
     views = List(IView, copy = "ref")
@@ -150,7 +149,6 @@ class WorkflowItem(HasStrictTraits):
     # synchronization primitives for plotting
     matplotlib_events = Any(transient = True)
     plot_lock = Any(transient = True)
-    
            
     @cached_property
     def _get_icon(self):
@@ -161,12 +159,10 @@ class WorkflowItem(HasStrictTraits):
         else: # self.valid == "invalid" or None
             return QtGui.QStyle.SP_DialogCancelButton
         
-
     @cached_property
     def _get_operation_handler(self):
         return self.operation.handler_factory(model = self.operation)
     
-
     @cached_property
     def _get_current_view_handler(self):
         if self.current_view:
@@ -174,14 +170,30 @@ class WorkflowItem(HasStrictTraits):
         else:
             return None
 
+    @cached_property
+    def _get_conditions_names(self):
+        if self.conditions:
+            return self.conditions.keys()
+        else:
+            return []
+        
+    @cached_property
+    def _get_statistics_names(self):
+        if self.statistics:
+            return self.statistics.keys()
+        else:
+            return []
+
     
 class RemoteWorkflowItem(WorkflowItem):
 
-    changed = DelayedEvent(delay = 0.1)
+    changed = DelayedEvent(delay = 0.2)
     
     # the Event we use to cause the remote process to run one of our 
     # functions in the main thread
-    command = DelayedEvent(delay = 0.1)
+    command = DelayedEvent(delay = 0.2)
+    
+    lock = Instance(threading.Lock, (), transient = True)
     
     @on_trait_change('+status')
     def _wi_changed(self, obj, name, old, new):
@@ -235,16 +247,14 @@ class RemoteWorkflowItem(WorkflowItem):
             self.command = "plot"   
             
         if self.result:
-            self.channels = list(np.sort(self.result.channels))
-            self.conditions = self.result.conditions.keys()
+            self.channels = list(self.result.channels)
+            self.conditions = dict(self.result.conditions)
             
-            self.conditions_types = self.result.conditions
+            # some things in metadata are unpicklable, functions and such,
+            # so filter them out.
+            self.metadata = filter_unpicklable(dict(self.result.metadata))
             
-            for condition in self.conditions_types.keys():
-                el = np.sort(pd.unique(self.result[condition]))
-                el = el[pd.notnull(el)]
-                self.conditions_values[condition] = list(el)
-                
+            self.statistics = dict(self.result.statistics)
             
     @on_trait_change('current_view', post_init = True)
     def _current_view_changed(self, obj, name, old, new):
@@ -356,12 +366,15 @@ class RemoteWorkflowItem(WorkflowItem):
                     # the plot updates
                     plt.show()
                      
-                    self.matplotlib_events.set() 
-                   
-                if w:
-                    self.view_warning = w[-1].message.__str__()
             except CytoflowViewError as e:
                 self.view_error = e.__str__()   
                 plt.clf()
                 plt.show()   
+            finally:
+                self.matplotlib_events.set() 
+
+                if w:
+                    self.view_warning = w[-1].message.__str__()
+
+                    
             

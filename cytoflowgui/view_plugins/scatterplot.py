@@ -21,12 +21,17 @@ Created on Apr 23, 2015
 @author: brian
 '''
 
-from traits.api import provides, Callable
+from traits.api import provides, Callable, Str
 from traitsui.api import View, Item, Controller, EnumEditor, VGroup
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
 from cytoflow import ScatterplotView
+import cytoflow.utility as util
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
 
 from cytoflowgui.subset_editor import SubsetEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
@@ -53,23 +58,26 @@ class ScatterplotHandler(Controller, ViewHandlerMixin):
                            Item('yscale',
                                 label = "Y Scale"),
                            Item('xfacet',
-                                editor=ExtendableEnumEditor(name='context.conditions',
+                                editor=ExtendableEnumEditor(name='context.conditions_names',
                                                             extra_items = {"None" : ""}),
                                 label = "Horizontal\nFacet"),
                            Item('yfacet',
-                                editor=ExtendableEnumEditor(name='context.conditions',
+                                editor=ExtendableEnumEditor(name='context.conditions_names',
                                                             extra_items = {"None" : ""}),
                                 label = "Vertical\nFacet"),
                            Item('huefacet',
-                                editor=ExtendableEnumEditor(name='context.conditions',
+                                editor=ExtendableEnumEditor(name='context.conditions_names',
                                                             extra_items = {"None" : ""}),
                                 label="Color\nFacet"),
+                           Item('plotfacet',
+                                editor=ExtendableEnumEditor(name='context.conditions_names',
+                                                            extra_items = {"None" : ""}),
+                                label = "Tab\nFacet"),
                            label = "Scatter Plot",
                            show_border = False),
-                    VGroup(Item('subset',
+                    VGroup(Item('subset_dict',
                                 show_label = False,
-                                editor = SubsetEditor(conditions_types = "context.conditions_types",
-                                                      conditions_values = "context.conditions_values")),
+                                editor = SubsetEditor(conditions = "context.conditions")),
                            label = "Subset",
                            show_border = False,
                            show_labels = False),
@@ -85,8 +93,31 @@ class ScatterplotHandler(Controller, ViewHandlerMixin):
                                                   background_color = "#ff9191"))))
 
 
-class ScatterplotPluginView(ScatterplotView, PluginViewMixin):
+class ScatterplotPluginView(PluginViewMixin, ScatterplotView):
     handler_factory = Callable(ScatterplotHandler)
+    plotfacet = Str
+
+    def enum_plots_wi(self, wi):
+        if not self.plotfacet:
+            return iter([])
+        
+        if self.plotfacet and self.plotfacet not in wi.result.conditions:
+            raise util.CytoflowViewError("Plot facet {0} not in the experiment"
+                                    .format(self.huefacet))
+        values = np.sort(pd.unique(wi.result[self.plotfacet]))
+        return iter(values)
+    
+    def plot_wi(self, wi):
+        self.plot(wi.result, wi.current_plot)
+    
+    def plot(self, experiment, plot_name = None, **kwargs):
+        if self.plotfacet and plot_name:
+            experiment = experiment.subset(self.plotfacet, plot_name)
+
+        ScatterplotView.plot(self, experiment, **kwargs)
+        
+        if self.plotfacet and plot_name is not None:
+            plt.title("{0} = {1}".format(self.plotfacet, plot_name))
 
 @provides(IViewPlugin)
 class ScatterplotPlugin(Plugin):

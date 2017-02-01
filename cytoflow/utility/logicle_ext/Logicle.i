@@ -5,6 +5,24 @@
 #include "logicle.h"
 %}
 
+%exception intScale {
+   try {
+      $action
+   } catch (Logicle::IllegalArgument &e) {
+      PyErr_SetString(PyExc_ValueError, const_cast<char*>(e.message()));
+      return NULL;
+   }
+}
+
+%exception inverse {
+   try {
+      $action
+   } catch (Logicle::IllegalArgument &e) {
+      PyErr_SetString(PyExc_ValueError, const_cast<char*>(e.message()));
+      return NULL;
+   }
+}
+
 class Logicle
 {
 public:

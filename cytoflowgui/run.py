@@ -1,4 +1,5 @@
 #!/usr/bin/env python2.7
+from docutils.transforms import Transform
 
 # (c) Massachusetts Institute of Technology 2015-2016
 #
@@ -22,12 +23,11 @@ Created on Feb 11, 2015
 """
 
 try:
-    import faulthandler
+    import faulthandler       # @UnresolvedImport
     faulthandler.enable()
 except:
     # if there's no console, this fails
     pass
-
 
 import sys, multiprocessing, os, logging, traceback, threading
 
@@ -55,7 +55,9 @@ from op_plugins import (ImportPlugin, ThresholdPlugin, RangePlugin, QuadPlugin,
                         GaussianMixture1DPlugin, GaussianMixture2DPlugin,
                         BleedthroughLinearPlugin, BleedthroughPiecewisePlugin,
                         BeadCalibrationPlugin, AutofluorescencePlugin,
-                        ColorTranslationPlugin, TasbePlugin)
+                        ColorTranslationPlugin, TasbePlugin, 
+                        ChannelStatisticPlugin, TransformStatisticPlugin, 
+                        RatioPlugin)
 
 from view_plugins import (HistogramPlugin, Histogram2DPlugin, ScatterplotPlugin,
                           BarChartPlugin, Stats1DPlugin, Kde1DPlugin, Kde2DPlugin,
@@ -90,7 +92,7 @@ if sys.platform.startswith('win'):
             if hasattr(sys, 'frozen'):
                 # We have to set original _MEIPASS2 value from sys._MEIPASS
                 # to get --onefile mode working.
-                os.putenv('_MEIPASS2', sys._MEIPASS)
+                os.putenv('_MEIPASS2', sys._MEIPASS)  # @UndefinedVariable
             try:
                 super(_Popen, self).__init__(*args, **kw)
             finally:
@@ -158,7 +160,7 @@ def run_gui():
     # if we're frozen, add _MEIPASS to the pyface search path for icons etc
     if getattr(sys, 'frozen', False):
         from pyface.resource_manager import resource_manager
-        resource_manager.extra_paths.append(sys._MEIPASS)
+        resource_manager.extra_paths.append(sys._MEIPASS)    # @UndefinedVariable
 
     global debug
     debug = ("--debug" in sys.argv)
@@ -187,7 +189,10 @@ def run_gui():
     
     plugins.extend(view_plugins)
     
-    op_plugins = [TasbePlugin(),
+    op_plugins = [RatioPlugin(),
+                  TransformStatisticPlugin(),
+                  ChannelStatisticPlugin(),
+                  TasbePlugin(),
                   ColorTranslationPlugin(),
                   AutofluorescencePlugin(),
                   BeadCalibrationPlugin(),

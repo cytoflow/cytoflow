@@ -48,10 +48,7 @@ class AutofluorescenceOp(HasStrictTraits):
     depend on this metadata and will fail if it's not present.
     
     Attributes
-    ----------
-    name : Str
-        The operation name (for UI representation; optional for interactive use)
-        
+    ----------       
     channels : List(Str)
         The channels to correct.
         
@@ -59,14 +56,22 @@ class AutofluorescenceOp(HasStrictTraits):
         The filename of a file with "blank" cells (not fluorescent).  Used
         to `estimate()` the autofluorescence.
         
+    Metadata
+    --------
+    af_median : Float
+        The median of the non-fluorescent distribution
+        
+    af_stdev : Float
+        The standard deviation of the non-fluorescent distribution
+        
     Examples
     --------
     >>> af_op = flow.AutofluorescenceOp()
     >>> af_op.blank_file = "blank.fcs"
     >>> af_op.channels = ["Pacific Blue-A", "FITC-A", "PE-Tx-Red-YG-A"] 
-
+    >>>
     >>> af_op.estimate(ex)
-    >>> af_op.default_view().plot()
+    >>> af_op.default_view().plot(ex)
     >>> ex2 = af_op.apply(ex)
     """
     
@@ -79,7 +84,7 @@ class AutofluorescenceOp(HasStrictTraits):
     blank_file = File(exists = True)
 
     _af_median = Dict(Str, CFloat, transient = True)
-    _af_stdev = Dict(Str, CFloat)
+    _af_stdev = Dict(Str, CFloat, transient = True)
     
     def estimate(self, experiment, subset = None): 
         """
@@ -101,6 +106,7 @@ class AutofluorescenceOp(HasStrictTraits):
         # make a little Experiment
         check_tube(self.blank_file, experiment)
         blank_exp = ImportOp(tubes = [Tube(file = self.blank_file)], 
+                             channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels},
                              name_metadata = experiment.metadata['name_metadata']).apply()
         
         # apply previous operations
@@ -165,8 +171,12 @@ class AutofluorescenceOp(HasStrictTraits):
         for channel in self.channels:
             new_experiment[channel] = \
                 experiment[channel] - self._af_median[channel]
+                
+            new_experiment.metadata[channel]['af_median'] = self._af_median[channel]
+            new_experiment.metadata[channel]['af_stdev'] = self._af_stdev[channel]
 
         new_experiment.history.append(self.clone_traits(transient = lambda t: True))
+
         return new_experiment
     
     def default_view(self, **kwargs):
@@ -195,6 +205,7 @@ class AutofluorescenceDiagnosticView(HasStrictTraits):
     friendly_id = Constant("Autofluorescence Diagnostic")
     
     name = Str
+    subset = Str
     op = Instance(IOperation)
     
     def plot(self, experiment, **kwargs):
@@ -235,6 +246,7 @@ class AutofluorescenceDiagnosticView(HasStrictTraits):
         try:
             check_tube(self.op.blank_file, experiment)
             blank_exp = ImportOp(tubes = [Tube(file = self.op.blank_file)], 
+                                 channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels},
                                  name_metadata = experiment.metadata['name_metadata']).apply()
         except util.CytoflowOpError as e:
             raise util.CytoflowViewError(e.__str__())
@@ -242,6 +254,18 @@ class AutofluorescenceDiagnosticView(HasStrictTraits):
         # apply previous operations
         for op in experiment.history:
             blank_exp = op.apply(blank_exp)
+            
+        # subset it
+        if self.subset:
+            try:
+                blank_exp = blank_exp.query(self.subset)
+            except:
+                raise util.CytoflowOpError("Subset string '{0}' isn't valid"
+                                      .format(self.subset))
+                            
+            if len(blank_exp.data) == 0:
+                raise util.CytoflowOpError("Subset string '{0}' returned no events"
+                                      .format(self.subset))
 
         plt.figure()
         

@@ -55,15 +55,14 @@ class RangeViewHandler(Controller, ViewHandlerMixin):
                                 style = "readonly"),
                            Item('scale'),
                            Item('huefacet',
-                                editor=ExtendableEnumEditor(name='context.previous.conditions',
+                                editor=ExtendableEnumEditor(name='context.previous.conditions_names',
                                                             extra_items = {"None" : ""}),
                                 label="Color\nFacet"),
                             label = "Range Setup View",
                             show_border = False),
                     VGroup(Item('subset',
                                 show_label = False,
-                                editor = SubsetEditor(conditions_types = "context.previous.conditions_types",
-                                                      conditions_values = "context.previous.conditions_values")),
+                                editor = SubsetEditor(conditions = "context.previous.conditions")),
                            label = "Subset",
                            show_border = False,
                            show_labels = False),
@@ -79,7 +78,7 @@ class RangeViewHandler(Controller, ViewHandlerMixin):
                                                   background_color = "#ff9191"))))
 
 @provides(ISelectionView)
-class RangeSelectionView(RangeSelection, PluginViewMixin):
+class RangeSelectionView(PluginViewMixin, RangeSelection):
     handler_factory = Callable(RangeViewHandler)
     op = Instance(IOperation, fixed = True)
     low = DelegatesTo('op', status = True)

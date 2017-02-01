@@ -22,7 +22,7 @@ Created on Mar 15, 2015
 """
 import logging
 
-from traits.api import Interface, Str, HasTraits, on_trait_change
+from traits.api import Interface, Str, HasTraits, on_trait_change, Dict, List, Property
 from traitsui.api import Group, Item
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.util import DelayedEvent
@@ -64,6 +64,25 @@ class IOperationPlugin(Interface):
         """
 
 class PluginOpMixin(HasTraits):
+    
+    subset_dict = Dict(Str, List, estimate = True)
+    subset = Property(Str, depends_on = "subset_dict")
+        
+    def _get_subset(self):
+        ret = []
+        for key, values in self.subset_dict.iteritems():
+            if values:
+                values = list(values)
+                values = ['"{}"'.format(x) if isinstance(x, basestring) else x for x in values]
+                values = ["{} == {}".format(key, x) for x in values]
+                values = " or ".join(values)
+                ret.append(values)
+        
+        ret = ["({})".format(x) for x in ret]
+        ret = " and ".join(ret)
+        
+        return ret
+    
     changed = DelayedEvent(delay = 0.2)
     
     # there are a few pieces of metadata that determine which traits get
@@ -143,9 +162,7 @@ shared_op_traits = Group(Item('context.estimate_warning',
         
 class OpHandlerMixin(HasTraits):
     """
-    This used to hold properties for dynamically updated metadata lists ....
-    but now those are updated elsewhere.  Keep this around in case a mixin
-    becomes useful again.
+    Useful bits for operation handlers.  Not currently used, but kept around
+    in case it's useful some day in the future.
     """
-    
-    pass
+

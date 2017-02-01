@@ -23,10 +23,9 @@ Created on Sep 18, 2015
 
 from __future__ import division, absolute_import
 
-import warnings
 
-from traits.api import (HasStrictTraits, Str, CStr, provides, Undefined,
-                        Instance, DelegatesTo, Constant, Disallow, Int)
+from traits.api import (HasStrictTraits, Str, CStr, provides,
+                        Instance, DelegatesTo, Constant, Int)
 import numpy as np
 import bottleneck as bn
 
@@ -139,7 +138,7 @@ class BinningOp(HasStrictTraits):
            and not (self.scale == "linear" or self.scale == "log"):
             raise util.CytoflowOpError("Can only use bin_width with linear or log scale") 
         
-        scale = util.scale_factory(self.scale, experiment, self.channel)
+        scale = util.scale_factory(self.scale, experiment, channel = self.channel)
         scaled_data = scale(experiment.data[self.channel])
             
         channel_min = bn.nanmin(scaled_data)
@@ -169,7 +168,8 @@ class BinningOp(HasStrictTraits):
         
         # if we're log-scaled (for example), don't label data that isn't
         # showable on a log scale!
-        new_experiment.data.ix[np.isnan(scaled_data), self.name] = np.NaN
+        new_experiment.data.ix[np.isnan(scaled_data), self.name] = np.nan
+        new_experiment.data.dropna(inplace = True)
         
         # keep track of the bins we used, for pretty plotting later.
         new_experiment.metadata[self.name]["bin_scale"] = self.scale

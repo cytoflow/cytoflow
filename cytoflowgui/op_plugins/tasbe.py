@@ -139,10 +139,11 @@ class TasbeHandler(Controller, OpHandlerMixin):
                                 style = 'custom'),
 
                         show_labels = False),
-                    VGroup(Item('subset',
+                    VGroup(Item('subset_dict',
                                 show_label = False,
-                                editor = SubsetEditor(conditions_types = "context.previous.conditions_types",
-                                                      conditions_values = "context.previous.conditions_values")),
+                                editor = SubsetEditor(conditions = "context.previous.conditions",
+                                                      metadata = "context.previous.metadata",
+                                                      when = "'experiment' not in vars() or not experiment")),
                            label = "Subset",
                            show_border = False,
                            show_labels = False),
@@ -179,9 +180,7 @@ class TasbePluginOp(PluginOpMixin):
     to_channel = Str(estimate = True)
     translation_list = List(_TranslationControl, estimate = True)
     mixture_model = Bool(False, estimate = True)
-    
-    subset = Str(estimate = True)
-    
+        
     _af_op = Instance(AutofluorescenceOp, (), transient = True)
     _bleedthrough_op = Instance(BleedthroughPiecewiseOp, (), transient = True)
     _bead_calibration_op = Instance(BeadCalibrationOp, (), transient = True)
@@ -221,17 +220,23 @@ class TasbePluginOp(PluginOpMixin):
             warnings.warn("Are you sure you don't want to specify a subset "
                           "used to estimate the model?",
                           util.CytoflowOpWarning)
+            
+        experiment = experiment.clone()
         
         self._af_op.channels = self.channels
         self._af_op.blank_file = self.blank_file
         
         self._af_op.estimate(experiment, subset = self.subset)
+        self.changed = "estimate_result"
+        experiment = self._af_op.apply(experiment)
         
         self._bleedthrough_op.controls.clear()
         for control in self.bleedthrough_list:
             self._bleedthrough_op.controls[control.channel] = control.file
 
-        self._bleedthrough_op.estimate(experiment, subset = self.subset)
+        self._bleedthrough_op.estimate(experiment, subset = self.subset) 
+        self.changed = "estimate_result"
+        experiment = self._bleedthrough_op.apply(experiment)
         
         self._bead_calibration_op.beads = BeadCalibrationOp.BEADS[self.beads_name]
         self._bead_calibration_op.beads_file = self.beads_file
@@ -244,6 +249,8 @@ class TasbePluginOp(PluginOpMixin):
             self._bead_calibration_op.units[channel] = self.beads_unit
             
         self._bead_calibration_op.estimate(experiment)
+        self.changed = "estimate_result"
+        experiment = self._bead_calibration_op.apply(experiment)
         
         self._color_translation_op.mixture_model = self.mixture_model
         

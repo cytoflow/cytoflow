@@ -36,29 +36,22 @@ class Test(unittest.TestCase):
         tube2 = flow.Tube(file= self.cwd + 'CFP_Well_A4.fcs', conditions = {"Dox" : 1.0})
         import_op = flow.ImportOp(conditions = {"Dox" : "float"},
                                   tubes = [tube1, tube2])
-        ex = import_op.apply()
-
-        # this works so much better on transformed data
-        logicle = flow.LogicleTransformOp()
-        logicle.name = "Logicle transformation"
-        logicle.channels = ['V2-A', 'Y2-A', 'B1-A']
-        logicle.estimate(ex)
-        self.ex = logicle.apply(ex)
+        self.ex = import_op.apply()
 
         self.gate = flow.QuadOp(name = "Quad",
                                 xchannel = "V2-A",
                                 ychannel = "Y2-A",
-                                xthreshold = 0.4,
-                                ythreshold = 0.2)
+                                xthreshold = 216,
+                                ythreshold = 2144)
         
     def testGate(self):
         ex2 = self.gate.apply(self.ex)
-        
+                
         # how many events ended up in the gate?
-        self.assertEqual(ex2.data.groupby("Quad").size().loc["Quad_1"], 6122)
-        self.assertEqual(ex2.data.groupby("Quad").size().loc["Quad_2"], 154)
-        self.assertEqual(ex2.data.groupby("Quad").size().loc["Quad_3"], 12946)
-        self.assertEqual(ex2.data.groupby("Quad").size().loc["Quad_4"], 778)
+        self.assertEqual(ex2.data.groupby("Quad").size().loc["Quad_1"], 3052)
+        self.assertEqual(ex2.data.groupby("Quad").size().loc["Quad_2"], 1132)
+        self.assertEqual(ex2.data.groupby("Quad").size().loc["Quad_3"], 10799)
+        self.assertEqual(ex2.data.groupby("Quad").size().loc["Quad_4"], 5017)
         
     def testPlot(self):
         self.gate.default_view().plot(self.ex)

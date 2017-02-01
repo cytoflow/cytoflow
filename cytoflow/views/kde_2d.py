@@ -25,9 +25,7 @@ from six import string_types
 
 from traits.api import HasStrictTraits, provides, Str
 
-import matplotlib as mpl
 import matplotlib.pyplot as plt
-import matplotlib.colors as mcolors
 import seaborn as sns
 import numpy as np
 import statsmodels.nonparametric.api as smnp
@@ -118,6 +116,18 @@ class Kde2DView(HasStrictTraits):
         if self.huefacet and self.huefacet not in experiment.metadata:
             raise util.CytoflowViewError("Hue facet {0} not in the experiment"
                                          .format(self.huefacet))
+            
+        facets = filter(lambda x: x, [self.xfacet, self.yfacet, self.huefacet])
+        if len(facets) != len(set(facets)):
+            raise util.CytoflowViewError("Can't reuse facets")
+            
+        col_wrap = kwargs.pop('col_wrap', None)
+        
+        if col_wrap and self.yfacet:
+            raise util.CytoflowViewError("Can't set yfacet and col_wrap at the same time.") 
+        
+        if col_wrap and not self.xfacet:
+            raise util.CytoflowViewError("Must set xfacet to use col_wrap.")
         
         if self.subset:
             try:
@@ -136,9 +146,32 @@ class Kde2DView(HasStrictTraits):
         kwargs.setdefault('min_alpha', 0.2)
         kwargs.setdefault('max_alpha', 0.9)
         kwargs.setdefault('n_levels', 10)
+        
+        xscale = util.scale_factory(self.xscale, experiment, channel = self.xchannel)
+        yscale = util.scale_factory(self.yscale, experiment, channel = self.ychannel)
+
+        # adjust the limits to clip extreme values
+        min_quantile = kwargs.pop("min_quantile", 0.001)
+        max_quantile = kwargs.pop("max_quantile", 0.999) 
+                
+        xlim = kwargs.pop("xlim", None)
+        if xlim is None:
+            xlim = (xscale.clip(data[self.xchannel].quantile(min_quantile)),
+                    xscale.clip(data[self.xchannel].quantile(max_quantile)))
+                      
+        ylim = kwargs.pop("ylim", None)
+        if ylim is None:
+            ylim = (yscale.clip(data[self.ychannel].quantile(min_quantile)),
+                    yscale.clip(data[self.ychannel].quantile(max_quantile)))
+
+        sharex = kwargs.pop('sharex', True)
+        sharey = kwargs.pop('sharey', True)
+
+        cols = col_wrap if col_wrap else \
+               len(data[self.xfacet].unique()) if self.xfacet else 1
 
         g = sns.FacetGrid(data, 
-                          size = 6,
+                          size = (6 / cols),
                           aspect = 1.5,
                           col = (self.xfacet if self.xfacet else None),
                           row = (self.yfacet if self.yfacet else None),
@@ -146,12 +179,12 @@ class Kde2DView(HasStrictTraits):
                           col_order = (np.sort(data[self.xfacet].unique()) if self.xfacet else None),
                           row_order = (np.sort(data[self.yfacet].unique()) if self.yfacet else None),
                           hue_order = (np.sort(data[self.huefacet].unique()) if self.huefacet else None),
+                          col_wrap = col_wrap,
                           legend_out = False,
-                          sharex = False,
-                          sharey = False)
-        
-        xscale = util.scale_factory(self.xscale, experiment, self.xchannel)
-        yscale = util.scale_factory(self.yscale, experiment, self.ychannel)
+                          sharex = sharex,
+                          sharey = sharey,
+                          xlim = xlim,
+                          ylim = ylim)
         
         for ax in g.axes.flatten():
             ax.set_xscale(self.xscale, **xscale.mpl_params)
@@ -162,31 +195,37 @@ class Kde2DView(HasStrictTraits):
 
         g.map(_bivariate_kdeplot, self.xchannel, self.ychannel, **kwargs)
         
-        # if we have an xfacet, make sure the y scale is the same for each
-        fig = plt.gcf()
-        fig_y_min = float("inf")
-        fig_y_max = float("-inf")
-        for ax in fig.get_axes():
-            ax_y_min, ax_y_max = ax.get_ylim()
-            if ax_y_min < fig_y_min:
-                fig_y_min = ax_y_min
-            if ax_y_max > fig_y_max:
-                fig_y_max = ax_y_max
-                
-        for ax in fig.get_axes():
-            ax.set_ylim(fig_y_min, fig_y_max)
+        # if we are sharing y axes, make sure the y scale is the same for each
+        if sharey:
+            fig = plt.gcf()
+            fig_y_min = float("inf")
+            fig_y_max = float("-inf")
             
-        # if we have a yfacet, make sure the x scale is the same for each
-        fig = plt.gcf()
-        fig_x_min = float("inf")
-        fig_x_max = float("-inf")
-        
-        for ax in fig.get_axes():
-            ax_x_min, ax_x_max = ax.get_xlim()
-            if ax_x_min < fig_x_min:
-                fig_x_min = ax_x_min
-            if ax_x_max > fig_x_max:
-                fig_x_max = ax_x_max
+            for ax in fig.get_axes():
+                ax_y_min, ax_y_max = ax.get_ylim()
+                if ax_y_min < fig_y_min:
+                    fig_y_min = ax_y_min
+                if ax_y_max > fig_y_max:
+                    fig_y_max = ax_y_max
+                    
+            for ax in fig.get_axes():
+                ax.set_ylim(fig_y_min, fig_y_max)
+            
+        # if we have are sharing x axes, make sure the x scale is the same for each
+        if sharex:
+            fig = plt.gcf()
+            fig_x_min = float("inf")
+            fig_x_max = float("-inf")
+            
+            for ax in fig.get_axes():
+                ax_x_min, ax_x_max = ax.get_xlim()
+                if ax_x_min < fig_x_min:
+                    fig_x_min = ax_x_min
+                if ax_x_max > fig_x_max:
+                    fig_x_max = ax_x_max
+                    
+            for ax in fig.get_axes():
+                ax.set_xlim(fig_x_min, fig_x_max)
         
         if self.huefacet:
             g.add_legend(title = self.huefacet)
@@ -216,7 +255,7 @@ def _bivariate_kdeplot(x, y, xscale=None, yscale=None, shade=False, kernel="gau"
     x_support = _kde_support(x, kde.bw[0], gridsize, cut, clip[0])
     y_support = _kde_support(y, kde.bw[1], gridsize, cut, clip[1])
     xx, yy = np.meshgrid(x_support, y_support)
-    z = kde.pdf([xx.ravel(), yy.ravel()]).reshape(xx.shape)
+    z = kde.pdf([xx.ravel(), yy.ravel()]).values.reshape(xx.shape)
 
     n_levels = kwargs.pop("n_levels", 10)
     color = kwargs.pop("color")

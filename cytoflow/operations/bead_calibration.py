@@ -23,9 +23,8 @@ Created on Aug 31, 2015
 
 from __future__ import division, absolute_import
 
-from traits.api import (HasStrictTraits, Str, CStr, File, Dict, Python,
-                        Instance, Int, List, Float, Constant, provides, 
-                        Bool, Undefined)
+from traits.api import (HasStrictTraits, Str, File, Dict, Bool, Int, List, 
+                        Float, Constant, provides, Undefined, Callable, Any)
 import numpy as np
 import math
 import scipy.signal
@@ -65,6 +64,7 @@ class BeadCalibrationOp(HasStrictTraits):
     (MEFLs, etc) (as well as for math reasons), this module filters out
     negative values.
     
+    
     Attributes
     ----------
     name : Str
@@ -97,12 +97,24 @@ class BeadCalibrationOp(HasStrictTraits):
         If a bead peak is above this, then don't consider it.  Takes care of
         clipping saturated detection.  Defaults to 70% of the detector range.
         
+<<<<<<< HEAD
     force_linear : Bool(False)
         A linear fit in log space doesn't always go through the origin, which 
         means that the calibration function isn't strictly a multiplicative
         scaling operation.  Set `force_linear` to force the such
         behavior.  Keep an eye on the diagnostic plot, though, to see how much
         error you're introducing!
+=======
+        
+    Metadata
+    --------
+    bead_calibration_fn : Callable (pandas.Series --> pandas.Series)
+        The function to calibrate raw data to bead units
+        
+    bead_units : String
+        The units this channel was calibrated to
+        
+>>>>>>> statistics
         
     Notes
     -----
@@ -178,9 +190,9 @@ class BeadCalibrationOp(HasStrictTraits):
     
     beads = Dict(Str, List(Float))
 
-    _calibration_functions = Dict(Str, Python, transient = True)
-    _peaks = Dict(Str, Python, transient = True)
-    _mefs = Dict(Str, Python, transient = True)
+    _calibration_functions = Dict(Str, Callable, transient = True)
+    _peaks = Dict(Str, Any, transient = True)
+    _mefs = Dict(Str, Any, transient = True)
 
     def estimate(self, experiment, subset = None): 
         """
@@ -202,6 +214,7 @@ class BeadCalibrationOp(HasStrictTraits):
         # make a little Experiment
         check_tube(self.beads_file, experiment)
         beads_exp = ImportOp(tubes = [Tube(file = self.beads_file)],
+                             channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels},
                              name_metadata = experiment.metadata['name_metadata']).apply()
         
         channels = self.units.keys()
@@ -241,8 +254,7 @@ class BeadCalibrationOp(HasStrictTraits):
                  and hist[1][x] > self.bead_brightness_threshold
                  and hist[1][x] < cutoff]
             
-            peaks = [hist_bins[x] for x in peak_bins_filtered]
-            
+            peaks = [hist_bins[x] for x in peak_bins_filtered]            
             mef_unit = self.units[channel]
             
             if not mef_unit in self.beads:
@@ -250,11 +262,15 @@ class BeadCalibrationOp(HasStrictTraits):
             
             # "mean equivalent fluorochrome"
             mef = self.beads[mef_unit]
-            
+                    
             if len(peaks) == 0:
-                raise util.CytoflowOpError("Didn't find any peaks; check the diagnostic plot")
+                raise util.CytoflowOpError("Didn't find any peaks for channel {}; "
+                                           "check the diagnostic plot"
+                                           .format(channel))
             elif len(peaks) > len(self.beads):
-                raise util.CytoflowOpError("Found too many peaks; check the diagnostic plot")
+                raise util.CytoflowOpError("Found too many peaks for channel {}; "
+                                           "check the diagnostic plot"
+                                           .format(channel))
             elif len(peaks) == 1:
                 # if we only have one peak, assume it's the brightest peak
                 a = mef[-1] / peaks[0]
@@ -264,8 +280,9 @@ class BeadCalibrationOp(HasStrictTraits):
             elif len(peaks) == 2:
                 # if we have only two peaks, assume they're the brightest two
                 self._peaks[channel] = peaks
-                self._mefs[channel] = [mef[-1], mef[-2]]
+                self._mefs[channel] = [mef[-2], mef[-1]]
                 a = (mef[-1] - mef[-2]) / (peaks[1] - peaks[0])
+                print a
                 self._calibration_functions[channel] = lambda x, a=a: a * x
             else:
                 # if there are n > 2 peaks, check all the contiguous n-subsets
@@ -291,8 +308,7 @@ class BeadCalibrationOp(HasStrictTraits):
                         best_resid = resid
                         self._peaks[channel] = peaks
                         self._mefs[channel] = mef_subset
-                        
-                        
+   
                 if self.force_linear:
                     # if we're forcing a linear scale for the calibration
                     # function, find that scale with an optimization.  (we can't
@@ -328,7 +344,6 @@ class BeadCalibrationOp(HasStrictTraits):
                     b = 10 ** best_lr[1]
                     self._calibration_functions[channel] = \
                         lambda x, a=a, b=b: b * np.power(x, a)
-                    
 
 
     def apply(self, experiment):
@@ -380,7 +395,7 @@ class BeadCalibrationOp(HasStrictTraits):
             
             new_experiment[channel] = calibration_fn(new_experiment[channel])
             new_experiment.metadata[channel]['bead_calibration_fn'] = calibration_fn
-            new_experiment.metadata[channel]['units'] = self.units[channel]
+            new_experiment.metadata[channel]['bead_units'] = self.units[channel]
             if 'range' in experiment.metadata[channel]:
                 new_experiment.metadata[channel]['range'] = calibration_fn(experiment.metadata[channel]['range'])
             
@@ -454,31 +469,24 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
 
         if not channels:
             raise util.CytoflowViewError("No channels to plot")
-        
-        if set(channels) != set(self.op._calibration_functions.keys()):
-            raise util.CytoflowViewError("Calibration doesn't match units. "
-                                  "Did you forget to call estimate()?")        
-      
+
         # make a little Experiment
         try:
             check_tube(self.op.beads_file, experiment)
             beads_exp = ImportOp(tubes = [Tube(file = self.op.beads_file)],
+                                 channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels},
                                  name_metadata = experiment.metadata['name_metadata']).apply()
         except util.CytoflowOpError as e:
             raise util.CytoflowViewError(e.__str__())
 
         plt.figure()
         
-        
         for idx, channel in enumerate(channels):
+            if channel not in beads_exp.channels:
+                raise util.CytoflowViewError("Channel {} not in the beads!"
+                                             .format(channel))
             data = beads_exp.data[channel]
-
             data_range = experiment.metadata[channel]['range']
-            
-            if self.op.bead_brightness_cutoff is Undefined:
-                cutoff = 0.7 * data_range
-            else:
-                cutoff = self.op.bead_brightness_cutoff
                 
             # bin the data on a log scale            
             hist_bins = np.logspace(1, math.log(data_range, 2), num = 256, base = 2)
@@ -489,40 +497,29 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
             hist[0][-1] = 0
             
             hist_smooth = scipy.signal.savgol_filter(hist[0], 5, 1)
-            
-            # find peaks
-            peak_bins = scipy.signal.find_peaks_cwt(hist_smooth, 
-                                                    widths = np.arange(3, 20),
-                                                    max_distances = np.arange(3, 20) / 2)
-            
-            # filter by height and intensity
-            peak_threshold = np.percentile(hist_smooth, self.op.bead_peak_quantile)
-            peak_bins_filtered = \
-                [x for x in peak_bins if hist_smooth[x] > peak_threshold
-                 and hist[1][x] > self.op.bead_brightness_threshold
-                 and hist[1][x] < cutoff]
                 
             plt.subplot(len(channels), 2, 2 * idx + 1)
             plt.xscale('log')
             plt.xlabel(channel)
             plt.plot(hist_bins[1:], hist_smooth)
-            for peak in peak_bins_filtered:
-                plt.axvline(hist_bins[peak], color = 'r')
 
-            plt.subplot(len(channels), 2, 2 * idx + 2)
-            plt.xscale('log')
-            plt.yscale('log')
-            plt.xlabel(self.op.units[channel])
-            plt.ylabel(channel)
-            plt.plot(self.op._peaks[channel], 
-                     self.op._mefs[channel], 
-                     marker = 'o')
-            
-            xmin, xmax = plt.xlim()
-            x = np.logspace(np.log10(xmin), np.log10(xmax))
-            plt.plot(x, 
-                     self.op._calibration_functions[channel](x), 
-                     color = 'r', linestyle = ':')
+            if channel in self.op._peaks and channel in self.op._mefs:
+                for peak in self.op._peaks[channel]:
+                    plt.axvline(peak, color = 'r')
+                plt.subplot(len(channels), 2, 2 * idx + 2)
+                plt.xscale('log')
+                plt.yscale('log')
+                plt.xlabel(self.op.units[channel])
+                plt.ylabel(channel)
+                plt.plot(self.op._peaks[channel], 
+                         self.op._mefs[channel], 
+                         marker = 'o')
+                
+                xmin, xmax = plt.xlim()
+                x = np.logspace(np.log10(xmin), np.log10(xmax))
+                plt.plot(x, 
+                         self.op._calibration_functions[channel](x), 
+                         color = 'r', linestyle = ':')
             
         plt.tight_layout(pad = 0.8)
             

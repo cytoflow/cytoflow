@@ -47,7 +47,7 @@ class _ExtendableEnumEditor(_EnumEditor):
 class ExtendableEnumEditor(EnumEditor):
     
     extra_items = Dict
-    
+        
     def _get_simple_editor_class(self):
         """ Returns the editor class to use for "simple" style views.
         The default implementation tries to import the SimpleEditor class in the

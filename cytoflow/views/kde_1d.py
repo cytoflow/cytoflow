@@ -100,6 +100,18 @@ class Kde1DView(HasStrictTraits):
         if self.huefacet and self.huefacet not in experiment.conditions:
             raise util.CytoflowViewError("Hue facet {0} not in the experiment"
                                     .format(self.huefacet))
+            
+        facets = filter(lambda x: x, [self.xfacet, self.yfacet, self.huefacet])
+        if len(facets) != len(set(facets)):
+            raise util.CytoflowViewError("Can't reuse facets")
+            
+        col_wrap = kwargs.pop('col_wrap', None)
+        
+        if col_wrap and self.yfacet:
+            raise util.CytoflowViewError("Can't set yfacet and col_wrap at the same time.") 
+        
+        if col_wrap and not self.xfacet:
+            raise util.CytoflowViewError("Must set xfacet to use col_wrap.")
 
         if self.subset:
             try:
@@ -113,15 +125,30 @@ class Kde1DView(HasStrictTraits):
                                         .format(self.subset))
         else:
             data = experiment.data
-            
 
-        #print scaled_data
-        
         kwargs.setdefault('shade', True)
         kwargs['label'] = self.name
         
+        # get the scale     
+        kwargs['scale'] = scale = util.scale_factory(self.scale, experiment, channel = self.channel)
+
+        # adjust the limits to clip extreme values
+        min_quantile = kwargs.pop("min_quantile", 0.001)
+        max_quantile = kwargs.pop("max_quantile", 0.999) 
+                
+        xlim = kwargs.pop("xlim", None)
+        if xlim is None:
+            xlim = (scale.clip(data[self.channel].quantile(min_quantile)),
+                    scale.clip(data[self.channel].quantile(max_quantile)))
+        
+        sharex = kwargs.pop('sharex', True)
+        sharey = kwargs.pop('sharey', True)
+        
+        cols = col_wrap if col_wrap else \
+               len(data[self.xfacet].unique()) if self.xfacet else 1
+        
         g = sns.FacetGrid(data, 
-                          size = 6,
+                          size = (6 / cols),
                           aspect = 1.5,
                           col = (self.xfacet if self.xfacet else None),
                           row = (self.yfacet if self.yfacet else None),
@@ -129,12 +156,11 @@ class Kde1DView(HasStrictTraits):
                           col_order = (np.sort(data[self.xfacet].unique()) if self.xfacet else None),
                           row_order = (np.sort(data[self.yfacet].unique()) if self.yfacet else None),
                           hue_order = (np.sort(data[self.huefacet].unique()) if self.huefacet else None),
+                          col_wrap = col_wrap,
                           legend_out = False,
-                          sharex = False,
-                          sharey = False)
-        
-        # get the scale     
-        kwargs['scale'] = scale = util.scale_factory(self.scale, experiment, self.channel)
+                          sharex = sharex,
+                          sharey = sharey,
+                          xlim = xlim)
         
         # set the scale for each set of axes; can't just call plt.xscale() 
         for ax in g.axes.flatten():
@@ -142,31 +168,45 @@ class Kde1DView(HasStrictTraits):
                   
         g.map(_univariate_kdeplot, self.channel, **kwargs)
         
-        # if we have an xfacet, make sure the y scale is the same for each
-        fig = plt.gcf()
-        fig_y_max = float("-inf")
-        for ax in fig.get_axes():
-            _, ax_y_max = ax.get_ylim()
-            if ax_y_max > fig_y_max:
-                fig_y_max = ax_y_max
-                
-        for ax in fig.get_axes():
-            ax.set_ylim(None, fig_y_max)
-            
-        # if we have a yfacet, make sure the x scale is the same for each
-        fig = plt.gcf()
-        fig_x_min = float("inf")
-        fig_x_max = float("-inf")
+        # adjust the limits to clip extreme values
+        min_quantile = kwargs.pop("min_quantile", 0.001)
+        max_quantile = kwargs.pop("max_quantile", 0.999)
         
-        for ax in fig.get_axes():
-            ax_x_min, ax_x_max = ax.get_xlim()
-            if ax_x_min < fig_x_min:
-                fig_x_min = ax_x_min
-            if ax_x_max > fig_x_max:
-                fig_x_max = ax_x_max
-                
-        for ax in fig.get_axes():
-            ax.set_xlim(fig_x_min, fig_x_max)
+        def autoscale_x(*args, **kwargs):
+            d = args[0]
+            plt.gca().set_xlim(d.quantile(min_quantile),
+                               d.quantile(max_quantile))
+            
+        g.map(autoscale_x, self.channel)
+        
+        # if we are sharing y axes, make sure the y scale is the same for each
+        if sharey:
+            fig = plt.gcf()
+            fig_y_max = float("-inf")
+            
+            for ax in fig.get_axes():
+                _, ax_y_max = ax.get_ylim()
+                if ax_y_max > fig_y_max:
+                    fig_y_max = ax_y_max
+                    
+            for ax in fig.get_axes():
+                ax.set_ylim(None, fig_y_max)
+            
+        # if we are sharing x axes, make sure the x scale is the same for each
+        if sharex:
+            fig = plt.gcf()
+            fig_x_min = float("inf")
+            fig_x_max = float("-inf")
+            
+            for ax in fig.get_axes():
+                ax_x_min, ax_x_max = ax.get_xlim()
+                if ax_x_min < fig_x_min:
+                    fig_x_min = ax_x_min
+                if ax_x_max > fig_x_max:
+                    fig_x_max = ax_x_max
+                    
+            for ax in fig.get_axes():
+                ax.set_xlim(fig_x_min, fig_x_max)
         
         if self.huefacet:
             g.add_legend(title = self.huefacet)

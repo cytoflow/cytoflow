@@ -72,9 +72,9 @@ class CytoflowApplication(TasksApplication):
             console_handler = logging.StreamHandler()
             console_handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s:%(name)s:%(message)s"))
             logging.getLogger().addHandler(console_handler)
-	except:
-	    # if there's no console, this fails
-	    pass
+        except:
+            # if there's no console, this fails
+            pass
           
         ## capture log in memory
         mem_handler = logging.StreamHandler(self.application_log)

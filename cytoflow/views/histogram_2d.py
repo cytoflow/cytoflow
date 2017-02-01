@@ -114,6 +114,18 @@ class Histogram2DView(HasStrictTraits):
         
         if self.huefacet and self.huefacet not in experiment.metadata:
             raise util.CytoflowViewError("Hue facet {0} not in the experiment")
+        
+        facets = filter(lambda x: x, [self.xfacet, self.yfacet, self.huefacet])
+        if len(facets) != len(set(facets)):
+            raise util.CytoflowViewError("Can't reuse facets")
+        
+        col_wrap = kwargs.pop('col_wrap', None)
+        
+        if col_wrap and self.yfacet:
+            raise util.CytoflowViewError("Can't set yfacet and col_wrap at the same time.") 
+        
+        if col_wrap and not self.xfacet:
+            raise util.CytoflowViewError("Must set xfacet to use col_wrap.")
 
         if self.subset:
             try: 
@@ -127,8 +139,8 @@ class Histogram2DView(HasStrictTraits):
         else:
             data = experiment.data
             
-        xscale = util.scale_factory(self.xscale, experiment, self.xchannel)
-        yscale = util.scale_factory(self.yscale, experiment, self.ychannel)
+        xscale = util.scale_factory(self.xscale, experiment, channel = self.xchannel)
+        yscale = util.scale_factory(self.yscale, experiment, channel = self.ychannel)
 
         kwargs['xscale'] = xscale
         kwargs['yscale'] = yscale
@@ -172,9 +184,29 @@ class Histogram2DView(HasStrictTraits):
         kwargs['yedges'] = yscale.inverse(yedges)
         
         kwargs.setdefault('antialiased', True)
+        
+        # adjust the limits to clip extreme values
+        min_quantile = kwargs.pop("min_quantile", 0.001)
+        max_quantile = kwargs.pop("max_quantile", 0.999) 
+                
+        xlim = kwargs.pop("xlim", None)
+        if xlim is None:
+            xlim = (data[self.xchannel].quantile(min_quantile),
+                    data[self.xchannel].quantile(max_quantile))
+                      
+        ylim = kwargs.pop("ylim", None)
+        if ylim is None:
+            ylim = (data[self.ychannel].quantile(min_quantile),
+                    data[self.ychannel].quantile(max_quantile))
+            
+        sharex = kwargs.pop('sharex', True)
+        sharey = kwargs.pop('sharey', True)
+
+        cols = col_wrap if col_wrap else \
+               len(data[self.xfacet].unique()) if self.xfacet else 1
 
         g = sns.FacetGrid(data,
-                          size = 6,
+                          size = (6 / cols),
                           aspect = 1.5, 
                           col = (self.xfacet if self.xfacet else None),
                           row = (self.yfacet if self.yfacet else None),
@@ -182,49 +214,57 @@ class Histogram2DView(HasStrictTraits):
                           col_order = (np.sort(data[self.xfacet].unique()) if self.xfacet else None),
                           row_order = (np.sort(data[self.yfacet].unique()) if self.yfacet else None),
                           hue_order = (np.sort(data[self.huefacet].unique()) if self.huefacet else None),
-                          sharex = False,
-                          sharey = False)
+                          col_wrap = col_wrap,
+                          sharex = sharex,
+                          sharey = sharey,
+                          xlim = xlim,
+                          ylim = ylim)
          
         for ax in g.axes.flatten():
             ax.set_xscale(self.xscale, **xscale.mpl_params)
             ax.set_yscale(self.yscale, **yscale.mpl_params)
         
         g.map(_hist2d, self.xchannel, self.ychannel, **kwargs)
-        
-        # if we have an xfacet, make sure the y scale is the same for each
-        fig = plt.gcf()
-        fig_y_min = float("inf")
-        fig_y_max = float("-inf")
-        for ax in fig.get_axes():
-            ax_y_min, ax_y_max = ax.get_ylim()
-            if ax_y_min < fig_y_min:
-                fig_y_min = ax_y_min
-            if ax_y_max > fig_y_max:
-                fig_y_max = ax_y_max
-                
-        for ax in fig.get_axes():
-            ax.set_ylim(fig_y_min, fig_y_max)
             
-        # if we have a yfacet, make sure the x scale is the same for each
-        fig = plt.gcf()
-        fig_x_min = float("inf")
-        fig_x_max = float("-inf")
+        # if we are sharing x axes, make sure the x scale is the same for each
+        if sharex:
+            fig = plt.gcf()
+            fig_x_min = float("inf")
+            fig_x_max = float("-inf")
+            
+            for ax in fig.get_axes():
+                ax_x_min, ax_x_max = ax.get_xlim()
+                if ax_x_min < fig_x_min:
+                    fig_x_min = ax_x_min
+                if ax_x_max > fig_x_max:
+                    fig_x_max = ax_x_max
+                    
+            for ax in fig.get_axes():
+                ax.set_xlim(fig_x_min, fig_x_max)
         
-        for ax in fig.get_axes():
-            ax_x_min, ax_x_max = ax.get_xlim()
-            if ax_x_min < fig_x_min:
-                fig_x_min = ax_x_min
-            if ax_x_max > fig_x_max:
-                fig_x_max = ax_x_max
-        
+        # if we are sharing y axes, make sure the y scale is the same for each
+        if sharey:
+            fig = plt.gcf()
+            fig_y_min = float("inf")
+            fig_y_max = float("-inf")
+            
+            for ax in fig.get_axes():
+                ax_y_min, ax_y_max = ax.get_ylim()
+                if ax_y_min < fig_y_min:
+                    fig_y_min = ax_y_min
+                if ax_y_max > fig_y_max:
+                    fig_y_max = ax_y_max
+                    
+            for ax in fig.get_axes():
+                ax.set_ylim(fig_y_min, fig_y_max)
+
         # if we have a hue facet and a lot of hues, make a color bar instead
         # of a super-long legend.
         
         if self.huefacet:
             current_palette = mpl.rcParams['axes.color_cycle']
-            if (experiment.conditions[self.huefacet] == "int" or 
-                experiment.conditions[self.huefacet] == "float") and \
-                len(g.hue_names) > len(current_palette):
+            if util.is_numeric(experiment.data[self.huefacet]) and \
+               len(g.hue_names) > len(current_palette):
                 
                 plot_ax = plt.gca()
                 cmap = mpl.colors.ListedColormap(sns.color_palette("husl", 

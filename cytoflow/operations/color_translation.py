@@ -25,11 +25,8 @@ from __future__ import division, absolute_import
 
 import math
 
-from warnings import warn
-
 from traits.api import (HasStrictTraits, Str, File, Dict, Any,
-                        Instance, Tuple, Bool, Constant, DelegatesTo, provides,
-                        Property)
+                        Instance, Tuple, Bool, Constant, provides)
 import numpy as np
 import matplotlib.pyplot as plt
 import sklearn.mixture
@@ -67,6 +64,14 @@ class ColorTranslationOp(HasStrictTraits):
         cells and non-expressing cells (as you would get with a transient
         transfection.)  Make sure you check the diagnostic plots!
         
+    Metadata
+    --------
+    channel_translation : Str
+        Which channel was this one translated to?
+        
+    channel_translation_fn : Callable (pandas.Series --> pandas.Series)
+        The function that translated this channel
+        
     Notes
     -----
     In the TASBE workflow, this operation happens *after* the application of
@@ -78,7 +83,7 @@ class ColorTranslationOp(HasStrictTraits):
 
     Examples
     --------
-    >>> ct_op = flow.ColorOp()
+    >>> ct_op = flow.ColorTranslationOp()
     >>> ct_op.controls = {("Pacific Blue-A", "FITC-A") : "merged/rby.fcs",
     ...                   ("PE-Tx-Red-YG-A", "FITC-A") : "merged/rby.fcs"}
     >>> ct_op.mixture_model = True
@@ -94,7 +99,7 @@ class ColorTranslationOp(HasStrictTraits):
     
     name = Constant("Color Translation")
 
-    translation = Property(transient = True)
+    translation = util.Removed(err_string = "'translation' is removed; the same info is found in 'controls'", warning = True)
     controls = Dict(Tuple(Str, Str), File)
     mixture_model = Bool(False)
 
@@ -105,14 +110,6 @@ class ColorTranslationOp(HasStrictTraits):
     # translation (determined by `estimate()`). 
     # TODO - why can't i make the value List(Float)?
     _coefficients = Dict(Tuple(Str, Str), Any, transient = True)
-    
-    # the subset string used for estimate(), passed to the diagnostic
-    # plot
-    _subset = Str
-        
-    def _set_translation(self):
-        warn("'translation' is deprecated; same info found in 'controls'",
-             util.CytoflowViewWarning)
 
     def estimate(self, experiment, subset = None): 
         """
@@ -150,6 +147,7 @@ class ColorTranslationOp(HasStrictTraits):
                 # make a little Experiment
                 check_tube(tube_file, experiment)
                 tube_exp = ImportOp(tubes = [Tube(file = tube_file)],
+                                    channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels},
                                     name_metadata = experiment.metadata['name_metadata']).apply()
                 
                 # apply previous operations
@@ -160,7 +158,6 @@ class ColorTranslationOp(HasStrictTraits):
                 if subset:
                     try:
                         tube_exp = tube_exp.query(subset)
-                        self._subset = subset
                     except:
                         raise util.CytoflowOpError("Subset string '{0}' isn't valid"
                                               .format(self.subset))
@@ -180,7 +177,7 @@ class ColorTranslationOp(HasStrictTraits):
             _ = data.reset_index(drop = True, inplace = True)
 
             if self.mixture_model:    
-                gmm = sklearn.mixture.GMM(n_components=2)
+                gmm = sklearn.mixture.GaussianMixture(n_components=2)
                 fit = gmm.fit(np.log10(data[from_channel][:, np.newaxis]))
     
                 # pick the component with the maximum mean
@@ -302,8 +299,7 @@ class ColorTranslationDiagnostic(HasStrictTraits):
     friendly_id = "Color Translation Diagnostic" 
     
     name = Str
-    
-    subset = DelegatesTo("op", "_subset")
+    subset = Str
     
     # TODO - why can't I use ColorTranslationOp here?
     op = Instance(IOperation)
@@ -343,6 +339,7 @@ class ColorTranslationDiagnostic(HasStrictTraits):
                 try:
                     check_tube(tube_file, experiment)
                     tube_exp = ImportOp(tubes = [Tube(file = tube_file)],
+                                        channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels},
                                         name_metadata = experiment.metadata['name_metadata']).apply()
                 except util.CytoflowOpError as e:
                     raise util.CytoflowViewError(e.__str__())
@@ -387,7 +384,7 @@ class ColorTranslationDiagnostic(HasStrictTraits):
                              antialiased = True)
                 plt.xlabel(from_channel)
                 
-                gmm = sklearn.mixture.GMM(n_components=2)
+                gmm = sklearn.mixture.GaussianMixture(n_components=2)
                 fit = gmm.fit(np.log10(data[from_channel][:, np.newaxis]))
     
                 mu_idx = 0 if fit.means_[0][0] > fit.means_[1][0] else 1
