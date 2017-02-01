@@ -1,5 +1,4 @@
 #!/usr/bin/env python2.7
-from docutils.transforms import Transform
 
 # (c) Massachusetts Institute of Technology 2015-2016
 #
