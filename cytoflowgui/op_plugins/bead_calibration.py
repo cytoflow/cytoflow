@@ -51,9 +51,9 @@ class BeadCalibrationHandler(Controller, OpHandlerMixin):
     
     beads_name_choices = Property(transient = True)
     beads_units = Property(transient = True)
-    
+
     wi = Instance(WorkflowItem)
-    
+     
     def init_info(self, info):
         # this is ugly, but it works.
         if not self.wi:

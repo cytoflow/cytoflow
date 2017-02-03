@@ -198,7 +198,6 @@ class RemoteWorkflowItem(WorkflowItem):
     # the Event we use to cause the remote process to run one of our 
     # functions in the main thread
     command = DelayedEvent(delay = 0.2)
-#     command = Event
     
     lock = Instance(threading.Lock, (), transient = True)
     
@@ -332,7 +331,8 @@ class RemoteWorkflowItem(WorkflowItem):
             try:    
                 self.result = None
                 self.status = "applying"
-                self.result = self.operation.apply(prev_result)
+                r = self.operation.apply(prev_result)
+                self.result = r
 
                 self.op_error = ""
                 if w:
