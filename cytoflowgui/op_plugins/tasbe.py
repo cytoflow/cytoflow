@@ -221,6 +221,9 @@ class TasbePluginOp(PluginOpMixin):
                           "used to estimate the model?",
                           util.CytoflowOpWarning)
             
+        if experiment is None:
+            raise util.CytoflowOpError("No valid result to estimate with")
+        
         experiment = experiment.clone()
         
         self._af_op.channels = self.channels
@@ -335,7 +338,11 @@ class TasbePluginView(PluginViewMixin):
                      "Color Translation"])
         
     def enum_plots_wi(self, wi):
-        return self.enum_plots(wi.previous.result)
+        if wi.previous and wi.previous.result:
+            return self.enum_plots(wi.previous.result)
+        else:
+            return []
+        
         
     def should_plot(self, changed):
         """

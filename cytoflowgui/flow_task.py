@@ -200,6 +200,8 @@ class FlowTask(Task):
         
         # and select the operation
         self.model.selected = self.model.workflow[0]
+        
+        self.model.modified = False
      
         
     def on_open(self):

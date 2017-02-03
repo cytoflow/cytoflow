@@ -365,6 +365,7 @@ class RemoteWorkflow(HasStrictTraits):
     plot_lock = Any
     
     exec_q = Instance(UniquePriorityQueue, ())
+    exec_lock = Instance(threading.Lock, ())
     
     def run(self, parent_workflow_conn, parent_mpl_conn, log_q):
         
@@ -408,7 +409,8 @@ class RemoteWorkflow(HasStrictTraits):
         # loop and process updates
         while True:
             try:
-                _, (wi, fn) = self.exec_q.get()
+                prio, (wi, fn) = self.exec_q.get()
+                print "get {}".format(prio)
                 with wi.lock:
                     fn()
             except Exception:
@@ -429,13 +431,20 @@ class RemoteWorkflow(HasStrictTraits):
                     self.workflow = []
                     for new_item in payload:
                         wi = RemoteWorkflowItem()
-                        wi.copy_traits(new_item)
+                        wi.lock.acquire()
+                        wi.copy_traits(new_item,
+                                       status = lambda t: t is not True)
                         wi.matplotlib_events = self.matplotlib_events
                         wi.plot_lock = self.plot_lock
                         self.workflow.append(wi)
+                        wi.status = "invalid"
                         
-                    if self.workflow:
-                        self.workflow[0].command = "apply"
+                        if hasattr(wi.operation, "estimate"):
+                            wi.command = "estimate"
+                        wi.command = "apply"
+                            
+                    for wi in self.workflow:
+                        wi.lock.release()
     
                 elif msg == Msg.ADD_ITEMS:
                     (idx, new_item) = payload
@@ -594,11 +603,13 @@ class RemoteWorkflow(HasStrictTraits):
         idx = self.workflow.index(obj)            
 
         if cmd == "apply":
-            self.exec_q.put_nowait((idx, (obj, obj.apply)))
+            print "put {}".format(idx)
+            self.exec_q.put((idx, (obj, obj.apply)))
         elif cmd == "estimate":
-            self.exec_q.put_nowait((idx - 0.1, (obj, obj.estimate)))
+            print "put {}".format(idx - 0.1)
+            self.exec_q.put((idx - 0.1, (obj, obj.estimate)))
         elif cmd == "plot" and obj == self.selected:
-            self.exec_q.put_nowait((0, (obj, obj.plot)))
+            self.exec_q.put((0, (obj, obj.plot)))
             
     @on_trait_change('selected')
     def _selected_changed(self, obj, name, new):

@@ -123,10 +123,10 @@ class WorkflowItem(HasStrictTraits):
     default_view = Instance(IView, copy = "ref")
     
     # the previous WorkflowItem in the workflow
-    previous = Instance('WorkflowItem')
+    previous = Instance('WorkflowItem', transient = True)
     
     # the next WorkflowItem in the workflow
-    next = Instance('WorkflowItem')
+    next = Instance('WorkflowItem', transient = True)
     
     # is the wi valid?
     # MAGIC: first value is the default
@@ -318,6 +318,7 @@ class RemoteWorkflowItem(WorkflowItem):
          
         with warnings.catch_warnings(record = True) as w:
             try:    
+                self.result = None
                 self.status = "applying"
                 self.result = self.operation.apply(prev_result)
 
