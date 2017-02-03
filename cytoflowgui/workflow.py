@@ -432,17 +432,20 @@ class RemoteWorkflow(HasStrictTraits):
                     for new_item in payload:
                         wi = RemoteWorkflowItem()
                         wi.lock.acquire()
-                        wi.copy_traits(new_item,
-                                       status = lambda t: t is not True)
                         wi.matplotlib_events = self.matplotlib_events
                         wi.plot_lock = self.plot_lock
+                        wi.copy_traits(new_item,
+                                       status = lambda t: t is not True)
                         self.workflow.append(wi)
-                        wi.status = "invalid"
                         
-                        if hasattr(wi.operation, "estimate"):
-                            wi.command = "estimate"
-                        wi.command = "apply"
-                            
+                        # load the data from ImportOp.  This should kick off
+                        # the chain of handlers to apply the rest of the 
+                        # operations, too manipulate exec_q directly so we 
+                        # don't run into timing issues; we want this to be run 
+                        # first.
+                        if self.workflow[0] == wi:
+                            self.exec_q.put((0, (wi, wi.apply)))
+
                     for wi in self.workflow:
                         wi.lock.release()
     

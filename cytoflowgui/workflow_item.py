@@ -183,6 +183,12 @@ class WorkflowItem(HasStrictTraits):
             return self.statistics.keys()
         else:
             return []
+        
+    def __str__(self):
+        return "<{}: {}>".format(self.__class__.__name__, self.operation.__class__.__name__)
+
+    def __repr__(self):
+        return "<{}: {}>".format(self.__class__.__name__, self.operation.__class__.__name__)
 
     
 class RemoteWorkflowItem(WorkflowItem):
@@ -192,6 +198,7 @@ class RemoteWorkflowItem(WorkflowItem):
     # the Event we use to cause the remote process to run one of our 
     # functions in the main thread
     command = DelayedEvent(delay = 0.2)
+#     command = Event
     
     lock = Instance(threading.Lock, (), transient = True)
     
@@ -255,6 +262,11 @@ class RemoteWorkflowItem(WorkflowItem):
             self.metadata = filter_unpicklable(dict(self.result.metadata))
             
             self.statistics = dict(self.result.statistics)
+        else:
+            self.channels = []
+            self.conditions = {}
+            self.metadata = {}
+            self.statistics = {}
             
     @on_trait_change('current_view', post_init = True)
     def _current_view_changed(self, obj, name, old, new):
