@@ -153,7 +153,7 @@ class BeadCalibrationPluginOp(PluginOpMixin, BeadCalibrationOp):
             self.units[unit.channel] = unit.unit
                     
         self.beads = self.BEADS[self.beads_name]
-        BeadCalibrationOp.apply(self, experiment)
+        return BeadCalibrationOp.apply(self, experiment)
     
     def estimate(self, experiment):
         if not self.beads_name:
