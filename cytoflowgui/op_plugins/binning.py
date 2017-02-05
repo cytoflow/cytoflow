@@ -95,6 +95,7 @@ class BinningPluginView(PluginViewMixin, BinningView):
     handler_factory = Callable(BinningViewHandler)
     op = Instance(IOperation, fixed = True)
     huefacet = Str(status = True)
+    huescale = util.ScaleEnum(status = True)
     
     def plot_wi(self, wi):
         self.plot(wi.previous.result)
@@ -104,6 +105,7 @@ class BinningPluginView(PluginViewMixin, BinningView):
         if self.op.name:
             op = self.op
             self.huefacet = op.name
+            self.huescale = op.scale
             legend = True
         else:
             op = self.op.clone_traits()

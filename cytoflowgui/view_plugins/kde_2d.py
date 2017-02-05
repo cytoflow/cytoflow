@@ -70,6 +70,8 @@ class Kde2DHandler(Controller, ViewHandlerMixin):
                                 editor=ExtendableEnumEditor(name='context.conditions_names',
                                                             extra_items = {"None" : ""}),
                                 label="Color\nFacet"),
+                           Item('huescale',
+                                label = "Color\nScale"),
                            Item('plotfacet',
                                 editor=ExtendableEnumEditor(name='context.conditions_names',
                                                             extra_items = {"None" : ""}),
