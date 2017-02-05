@@ -28,6 +28,7 @@ from traits.api import (Instance, Str, Dict, provides, Constant, Enum, Float,
                        
 import numpy as np
 import pandas as pd
+import matplotlib.colors
 
 from .scale import IScale, ScaleMixin, register_scale
 from .cytoflow_errors import CytoflowError
@@ -62,9 +63,11 @@ class LogScale(ScaleMixin):
         if self.channel:
             return self._channel_threshold
         elif self.condition:
-            return self.experiment[self.condition].min()
+            cond = self.experiment[self.condition][self.experiment[self.condition] > 0]
+            return cond.min()
         elif self.statistic:
             stat = self.experiment.statistics[self.statistic]
+            stat = stat[stat > 0]
             try:
                 return min([x[0] for x in stat])
             except IndexError:
@@ -123,7 +126,6 @@ class LogScale(ScaleMixin):
                                 .format(type(data)))
     
     def clip(self, data):
-#         import pydevd; pydevd.settrace()
         if isinstance(data, pd.Series):            
             return data.clip(lower = self.threshold)
         elif isinstance(data, np.ndarray):
@@ -135,6 +137,27 @@ class LogScale(ScaleMixin):
                 return map(lambda x: max(data, self.threshold), data)
             except TypeError:
                 raise CytoflowError("Unknown data type in LogicleScale.__call__")
+            
+    def color_norm(self):
+        if self.channel:
+            vmin = self.experiment[self.channel].min()
+            vmax = self.experiment[self.channel].max()
+        elif self.condition:
+            vmin = self.experiment[self.condition].min()
+            vmax = self.experiment[self.condition].max()
+        elif self.statistic:
+            stat = self.experiment.statistics[self.statistic]
+            try:
+                vmin = min([min(x) for x in stat])
+                vmax = max([max(x) for x in stat])
+            except (TypeError, IndexError):
+                vmin = stat.min()
+                vmax = stat.max()
+        else:
+            raise CytoflowError("Must set one of 'channel', 'condition' "
+                                "or 'statistic'.")
+        
+        return matplotlib.colors.LogNorm(vmin = self.clip(vmin), vmax = self.clip(vmax))
 
 register_scale(LogScale)
 

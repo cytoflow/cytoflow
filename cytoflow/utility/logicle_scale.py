@@ -37,6 +37,7 @@ import matplotlib.scale
 from matplotlib import transforms
 from matplotlib.ticker import NullFormatter, LogFormatterMathtext
 from matplotlib.ticker import Locator
+import matplotlib.colors
 
 from .scale import IScale, register_scale
 from .logicle_ext.Logicle import FastLogicle
@@ -206,6 +207,24 @@ class LogicleScale(HasStrictTraits):
                     raise CytoflowError("Unknown data type in LogicleScale.__call__")
         except ValueError as e:
             raise CytoflowError(e.strerror)
+        
+    def color_norm(self):
+        # it turns out that Logicle is already defined as a normalization to 
+        # [0, 1].
+        class LogicleNormalize(matplotlib.colors.Normalize):
+            def __init__(self, scale = None):
+                self._scale = scale
+                self.vmin = scale.inverse(0.0)
+                self.vmax = scale.inverse(1.0 - sys.float_info.epsilon)
+                
+            def __call__(self, data, clip = None):
+                # it turns out that Logicle is already defined as a
+                # normalization to [0, 1].
+                ret = self._scale(data)
+                return np.ma.masked_array(ret)
+            
+        return LogicleNormalize(scale = self)
+        
     
     @cached_property
     def _get__T(self):
@@ -222,7 +241,7 @@ class LogicleScale(HasStrictTraits):
                 stat = self.experiment.statistics[self.statistic]
                 try:
                     return max([max(x) for x in stat])
-                except TypeError, IndexError:
+                except (TypeError, IndexError):
                     return stat.max()
             else:
                 return Undefined

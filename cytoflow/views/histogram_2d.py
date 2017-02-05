@@ -62,6 +62,9 @@ class Histogram2DView(HasStrictTraits):
         
     huefacet = Str
         The conditioning variable for multiple plots (color)
+        
+    huescale = Enum("linear", "log", "logicle") (default = "linear")
+        What scale to use on the color bar, if there is one plotted
 
     subset = Str
         A string passed to pandas.DataFrame.query() to subset the data before
@@ -83,6 +86,7 @@ class Histogram2DView(HasStrictTraits):
     xfacet = Str
     yfacet = Str
     huefacet = Str
+    huescale = util.ScaleEnum
     subset = Str
     
     _max_bins = Int(100)
@@ -270,12 +274,12 @@ class Histogram2DView(HasStrictTraits):
                 cmap = mpl.colors.ListedColormap(sns.color_palette("husl", 
                                                                    n_colors = len(g.hue_names)))
                 cax, _ = mpl.colorbar.make_axes(plt.gca())
-                norm = mpl.colors.Normalize(vmin = np.min(g.hue_names), 
-                                            vmax = np.max(g.hue_names), 
-                                            clip = False)
+                hue_scale = util.scale_factory(self.huescale, 
+                                               experiment, 
+                                               condition = self.huefacet)
                 mpl.colorbar.ColorbarBase(cax, 
                                           cmap = cmap, 
-                                          norm = norm,
+                                          norm = hue_scale.color_norm(),
                                           label = self.huefacet)
                 plt.sca(plot_ax)
             else:
