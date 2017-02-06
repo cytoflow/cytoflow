@@ -27,14 +27,14 @@ import scipy.stats
 from traitsui.api import View, Item, EnumEditor, Controller, VGroup, \
                          CheckListEditor, TextEditor
 from envisage.api import Plugin, contributes_to
-from traits.api import provides, Callable, Str, List, Dict
+from traits.api import provides, Callable, List, on_trait_change
 from pyface.api import ImageResource
 
 from cytoflow.operations.channel_stat import ChannelStatisticOp
 import cytoflow.utility as util
 
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
-from cytoflowgui.subset import SubsetListEditor
+from cytoflowgui.subset import SubsetListEditor, ISubset
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
 
 mean_95ci = lambda x: util.ci(x, np.mean, boots = 100)
@@ -77,7 +77,12 @@ class ChannelStatisticHandler(Controller, OpHandlerMixin):
 
 class ChannelStatisticPluginOp(PluginOpMixin, ChannelStatisticOp):
     handler_factory = Callable(ChannelStatisticHandler)
-    subset_list = Dict(Str, List)
+    subset_list = List(ISubset)  #override the PluginOpMixin definition
+    
+    # override PluginOpMixin's definition
+    @on_trait_change("subset_list.str", post_init = True)
+    def _subset_changed(self, obj, name, old, new):
+        self.changed = "api"
     
     # functions aren't picklable, so send the name instead
     function = Callable(transient = True)
