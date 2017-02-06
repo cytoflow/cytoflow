@@ -154,13 +154,13 @@ class FlowTask(Task):
          
             import_op.tubes = [tube1, tube2, tube3, tube4]
             
-            self.add_operation(ChannelStatisticPlugin().id)
-            stat_op = self.model.workflow[1].operation
-            stat_op.name = "Test"
-            stat_op.channel = "Y2-A"
-            stat_op.statistic_name = "Geom.Mean"
-            stat_op.by = ["Dox", "Replicate"]
-            self.model.selected = self.model.workflow[1]
+#             self.add_operation(ChannelStatisticPlugin().id)
+#             stat_op = self.model.workflow[1].operation
+#             stat_op.name = "Test"
+#             stat_op.channel = "Y2-A"
+#             stat_op.statistic_name = "Geom.Mean"
+#             stat_op.by = ["Dox", "Replicate"]
+#             self.model.selected = self.model.workflow[1]
                     
         self.model.modified = False
     

@@ -33,7 +33,7 @@ import matplotlib.pyplot as plt
 from cytoflow import Histogram2DView
 import cytoflow.utility as util
 
-from cytoflowgui.subset_editor import SubsetEditor
+from cytoflowgui.subset import SubsetListEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.view_plugins.i_view_plugin \
@@ -77,9 +77,9 @@ class Histogram2DHandler(Controller, ViewHandlerMixin):
                                 label = "Tab\nFacet"),
                            label = "2D Histogram",
                            show_border = False),
-                    VGroup(Item('subset_dict',
+                    VGroup(Item('subset_list',
                                 show_label = False,
-                                editor = SubsetEditor(conditions = "context.conditions")),
+                                editor = SubsetListEditor(conditions = "context.conditions")),
                            label = "Subset",
                            show_border = False,
                            show_labels = False),

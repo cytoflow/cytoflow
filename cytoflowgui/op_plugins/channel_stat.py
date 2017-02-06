@@ -34,7 +34,7 @@ from cytoflow.operations.channel_stat import ChannelStatisticOp
 import cytoflow.utility as util
 
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
-from cytoflowgui.subset_editor import SubsetEditor
+from cytoflowgui.subset import SubsetListEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
 
 mean_95ci = lambda x: util.ci(x, np.mean, boots = 100)
@@ -67,9 +67,9 @@ class ChannelStatisticHandler(Controller, OpHandlerMixin):
                                                   name = 'context.previous.conditions_names'),
                          label = 'Group\nBy',
                          style = 'custom'),
-                    VGroup(Item('subset_dict',
+                    VGroup(Item('subset_list',
                                 show_label = False,
-                                editor = SubsetEditor(conditions = "context.previous.conditions")),
+                                editor = SubsetListEditor(conditions = "context.previous.conditions")),
                            label = "Subset",
                            show_border = False,
                            show_labels = False),
@@ -77,7 +77,7 @@ class ChannelStatisticHandler(Controller, OpHandlerMixin):
 
 class ChannelStatisticPluginOp(PluginOpMixin, ChannelStatisticOp):
     handler_factory = Callable(ChannelStatisticHandler)
-    subset_dict = Dict(Str, List)
+    subset_list = Dict(Str, List)
     
     # functions aren't picklable, so send the name instead
     function = Callable(transient = True)

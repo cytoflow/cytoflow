@@ -33,7 +33,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-from cytoflowgui.subset_editor import SubsetEditor
+from cytoflowgui.subset import SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
@@ -78,9 +78,9 @@ class Kde2DHandler(Controller, ViewHandlerMixin):
                                 label = "Tab\nFacet"),
                            label = "2D Kernel Density Estimate",
                            show_border = False),
-                    VGroup(Item('subset_dict',
+                    VGroup(Item('subset_list',
                                 show_label = False,
-                                editor = SubsetEditor(conditions = "context.conditions")),
+                                editor = SubsetListEditor(conditions = "context.conditions")),
                            label = "Subset",
                            show_border = False,
                            show_labels = False),
