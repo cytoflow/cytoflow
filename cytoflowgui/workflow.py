@@ -409,8 +409,7 @@ class RemoteWorkflow(HasStrictTraits):
         # loop and process updates
         while True:
             try:
-                prio, (wi, fn) = self.exec_q.get()
-                print "get {}".format(prio)
+                _, (wi, fn) = self.exec_q.get()
                 with wi.lock:
                     fn()
             except Exception:
@@ -606,10 +605,8 @@ class RemoteWorkflow(HasStrictTraits):
         idx = self.workflow.index(obj)            
 
         if cmd == "apply":
-            print "put {}".format(idx)
             self.exec_q.put((idx, (obj, obj.apply)))
         elif cmd == "estimate":
-            print "put {}".format(idx - 0.1)
             self.exec_q.put((idx - 0.1, (obj, obj.estimate)))
         elif cmd == "plot" and obj == self.selected:
             self.exec_q.put((0, (obj, obj.plot)))
