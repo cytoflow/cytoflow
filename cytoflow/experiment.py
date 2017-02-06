@@ -17,11 +17,9 @@
 
 from __future__ import absolute_import
 
-from warnings import warn
-
 import pandas as pd
-from traits.api import HasStrictTraits, Dict, List, Instance, Str, Any, \
-                       Property, cached_property, Tuple
+from traits.api import (HasStrictTraits, Dict, List, Instance, Str, Any,
+                        Property, Tuple)
 
 import cytoflow.utility as util
 

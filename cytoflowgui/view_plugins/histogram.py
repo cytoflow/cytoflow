@@ -26,14 +26,15 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from traits.api import provides, Callable, Str
-from traitsui.api import View, Item, Controller, EnumEditor, VGroup
+from traitsui.api import View, Item, Controller, EnumEditor, VGroup, \
+                         ListEditor, InstanceEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
 from cytoflow import HistogramView
 import cytoflow.utility as util
 
-from cytoflowgui.subset_editor import SubsetEditor
+# from cytoflowgui.subset_editor import SubsetEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
@@ -71,9 +72,12 @@ class HistogramHandler(Controller, ViewHandlerMixin):
                                 label = "Tab\nFacet"),
                             label = "Histogram Plot",
                             show_border = False),
-                    VGroup(Item('subset_dict',
-                                show_label = False,
-                                editor = SubsetEditor(conditions = "context.conditions")),
+                    VGroup(Item('subset_list',
+                                editor = ListEditor(editor = InstanceEditor(),
+                                                    style = 'custom',
+                                                    mutable = False),
+                                style = 'custom',
+                                show_label = False),
                            label = "Subset",
                            show_border = False,
                            show_labels = False),

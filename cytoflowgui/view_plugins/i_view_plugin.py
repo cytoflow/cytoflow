@@ -21,16 +21,17 @@ Created on Mar 15, 2015
 @author: brian
 """
 
-import numpy as np
-
 from traits.api import (Interface, Str, HasTraits, Instance, on_trait_change, 
                         Dict, List, Property)
 from traitsui.api import Handler
 
+import numpy as np
 import pandas as pd
 
 import cytoflow.utility as util
 from cytoflowgui.util import DelayedEvent
+from cytoflowgui.subset_editor import (ISubset, BoolSubset, CategorySubset, 
+                                       RangeSubset)
 
 VIEW_PLUGIN_EXT = 'edu.mit.synbio.cytoflow.view_plugins'
 
@@ -67,8 +68,8 @@ class PluginViewMixin(HasTraits):
     handler = Instance(Handler, transient = True)    
     changed = DelayedEvent(delay = 0.1)
     
-    subset_dict = Dict(Str, List, estimate = True)
-    subset = Property(Str, depends_on = "subset_dict")
+    subset_list = List(ISubset)
+    subset = Property(Str, depends_on = "subset_list")
         
     def _get_subset(self):
         ret = []
@@ -122,6 +123,80 @@ class ViewHandlerMixin(HasTraits):
     Useful bits for view handlers.  Empty now, but maintained in case it's
     useful again.
     """
+    
+    def init_info(self, info):
+        # initialize the view model's subset_list based on the workflow
+        # instance's conditions as well as its current contents.
+        wi = info.ui.context['context']
+        if not wi.result:
+            return
+        
+        view = info.ui.context['model']
+        view_names = set([subset.name for subset in view.subset_list])
+        condition_names = set(wi.result.conditions.keys())
+        
+        for name in view_names - condition_names:
+            # remove subsets that aren't in conditions
+            subset = next((x for x in view.subset_list if x.name == name))
+            view.subset_list.remove(subset)
+            
+        for name in condition_names - view_names:
+            # add subsets that are new conditions
+            values = wi.result.conditions[name]
+            dtype = pd.Series(list(values)).dtype
+            if dtype.kind == 'b':
+                subset = BoolSubset(name = name)
+            elif dtype.kind in "ifu":
+                subset = RangeSubset(name = name,
+                                     values = list(values))
+            elif dtype.kind in "OSU":
+                subset = CategorySubset(name = name,
+                                        values = list(values))
+            else:
+                raise util.CytoflowError("Unknown dtype {} in ViewHandlerMixin"
+                                         .format(dtype))
+             
+            view.subset_list.append(subset)    
+        
+        for name in condition_names & view_names:
+            # update values for subsets we're already tracking
+            subset = next((x for x in view.subset_list if x.name == name))
+            if set(subset.values) != set(wi.result.conditions[name]):
+                subset.values = list(wi.result.conditions[name])
+        
+#         # first, check current models against the new conditions.  remove any
+#         # that are no longer present, and update the values for the rest
+#         for model in list(self.condition_models):
+#             if model.name not in self.conditions or not self.include_condition(model.name):
+#                 self.condition_models.remove(model)
+#                 continue
+#             else:
+#                 if set(model.values) != set(self.conditions[model.name]):
+#                     model.values = list(self.conditions[model.name])
+#                     
+#         # then, see if there are any new conditions to add
+#         for name, values in self.conditions.iteritems(): 
+#             if len([x for x in self.condition_models if x.name == name]) > 0:
+#                 continue
+#             
+#             if not self.include_condition(name):
+#                 continue
+#             
+#             dtype = pd.Series(list(values)).dtype
+#             if dtype.kind == 'b':
+#                 model = BoolCondition(name = name)
+#             elif dtype.kind in "ifu":
+#                 model = RangeCondition(name = name,
+#                                        values = list(values))
+#             elif dtype.kind in "OSU":
+#                 model = CategoryCondition(name = name,
+#                                           values = list(values))
+#             else:
+#                 raise util.CytoflowError("Unknown dtype {} in SubsetEditor"
+#                                          .format(dtype))
+#                 
+#             self.condition_models.append(model)
+        
     
         
 class StatisticViewHandlerMixin(HasTraits):
