@@ -21,6 +21,7 @@ from traits.api import HasStrictTraits, Str, provides
 
 import numpy as np
 import seaborn as sns
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 import cytoflow.utility as util
@@ -50,6 +51,9 @@ class ViolinPlotView(HasStrictTraits):
     huefacet : Str
         the conditioning variable for multiple plots (color)
         
+    huescale = Enum("linear", "log", "logicle") (default = "linear")
+        What scale to use on the color bar, if there is one plotted
+        
     subset : Str
         a string passed to pandas.DataFrame.query() to subset the data before 
         we plot it.
@@ -77,6 +81,7 @@ class ViolinPlotView(HasStrictTraits):
     xfacet = Str
     yfacet = Str
     huefacet = Str
+    huescale = util.ScaleEnum
     subset = Str
     
     def plot(self, experiment, **kwargs):
@@ -213,7 +218,24 @@ class ViolinPlotView(HasStrictTraits):
                 ax.set_xlim(fig_x_min, fig_x_max)
         
         if self.huefacet:
-            g.add_legend(title = self.huefacet)
+            current_palette = mpl.rcParams['axes.color_cycle']
+            if util.is_numeric(experiment.data[self.huefacet]) and \
+               len(g.hue_names) > len(current_palette):
+                
+                plot_ax = plt.gca()
+                cmap = mpl.colors.ListedColormap(sns.color_palette("husl", 
+                                                                   n_colors = len(g.hue_names)))
+                cax, _ = mpl.colorbar.make_axes(plt.gca())
+                hue_scale = util.scale_factory(self.huescale, 
+                                               experiment, 
+                                               condition = self.huefacet)
+                mpl.colorbar.ColorbarBase(cax, 
+                                          cmap = cmap, 
+                                          norm = hue_scale.color_norm(),
+                                          label = self.huefacet)
+                plt.sca(plot_ax)
+            else:
+                g.add_legend(title = self.huefacet)
         
 # this uses an internal interface to seaborn's violin plot.
 

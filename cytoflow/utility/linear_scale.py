@@ -23,8 +23,11 @@ Created on Feb 24, 2016
 
 from __future__ import division, absolute_import
 
+import matplotlib.colors
+
 from traits.api import Instance, Str, Dict, provides, Constant, Tuple
 from .scale import IScale, ScaleMixin, register_scale
+from .cytoflow_errors import CytoflowError
 
 @provides(IScale)
 class LinearScale(ScaleMixin):
@@ -48,5 +51,28 @@ class LinearScale(ScaleMixin):
     
     def clip(self, data):
         return data
+    
+    def color_norm(self):
+        if self.channel:
+            vmin = self.experiment[self.channel].min()
+            vmax = self.experiment[self.channel].max()
+        elif self.condition:
+            vmin = self.experiment[self.condition].min()
+            vmax = self.experiment[self.condition].max()
+        elif self.statistic:
+            stat = self.experiment.statistics[self.statistic]
+            try:
+                vmin = min([min(x) for x in stat])
+                vmax = max([max(x) for x in stat])
+            except (TypeError, IndexError):
+                vmin = stat.min()
+                vmax = stat.max()
+        else:
+            raise CytoflowError("Must set one of 'channel', 'condition' "
+                                "or 'statistic'.")
+            
+        return matplotlib.colors.Normalize(vmin = vmin, vmax = vmax)
+        
+            
 
 register_scale(LinearScale)

@@ -45,7 +45,7 @@ from cytoflow.views.i_selectionview import IView
 
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
-from cytoflowgui.subset_editor import SubsetEditor
+from cytoflowgui.subset import SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
 from cytoflowgui.workflow_item import WorkflowItem
@@ -139,9 +139,9 @@ class TasbeHandler(Controller, OpHandlerMixin):
                                 style = 'custom'),
 
                         show_labels = False),
-                    VGroup(Item('subset_dict',
+                    VGroup(Item('subset_list',
                                 show_label = False,
-                                editor = SubsetEditor(conditions = "context.previous.conditions",
+                                editor = SubsetListEditor(conditions = "context.previous.conditions",
                                                       metadata = "context.previous.metadata",
                                                       when = "'experiment' not in vars() or not experiment")),
                            label = "Subset",
@@ -221,6 +221,9 @@ class TasbePluginOp(PluginOpMixin):
                           "used to estimate the model?",
                           util.CytoflowOpWarning)
             
+        if experiment is None:
+            raise util.CytoflowOpError("No valid result to estimate with")
+        
         experiment = experiment.clone()
         
         self._af_op.channels = self.channels
@@ -335,7 +338,11 @@ class TasbePluginView(PluginViewMixin):
                      "Color Translation"])
         
     def enum_plots_wi(self, wi):
-        return self.enum_plots(wi.previous.result)
+        if wi.previous and wi.previous.result:
+            return self.enum_plots(wi.previous.result)
+        else:
+            return []
+        
         
     def should_plot(self, changed):
         """

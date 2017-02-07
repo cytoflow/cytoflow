@@ -26,7 +26,7 @@ from cytoflow.operations.quad import QuadOp, QuadSelection
 from cytoflowgui.op_plugins.i_op_plugin \
     import IOperationPlugin, OpHandlerMixin, PluginOpMixin, OP_PLUGIN_EXT, shared_op_traits
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
-from cytoflowgui.subset_editor import SubsetEditor
+from cytoflowgui.subset import SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 
@@ -73,9 +73,9 @@ class ThresholdViewHandler(Controller, ViewHandlerMixin):
                                 label="Color\nFacet"),
                            label = "Quad Setup View",
                            show_border = False),
-                    VGroup(Item('subset_dict',
+                    VGroup(Item('subset_list',
                                 show_label = False,
-                                editor = SubsetEditor(conditions = "context.previous.conditions")),
+                                editor = SubsetListEditor(conditions = "context.previous.conditions")),
                            label = "Subset",
                            show_border = False,
                            show_labels = False),

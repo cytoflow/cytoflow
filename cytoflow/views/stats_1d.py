@@ -123,7 +123,7 @@ class Stats1DView(HasStrictTraits):
     xfacet = Str
     yfacet = Str
     huefacet = Str
-    huescale = util.ScaleEnum # TODO - make this actually work
+    huescale = util.ScaleEnum
     
     error_statistic = Tuple(Str, Str)
     subset = Str
@@ -491,15 +491,14 @@ class Stats1DView(HasStrictTraits):
                 plot_ax = plt.gca()
                 cmap = mpl.colors.ListedColormap(sns.color_palette("husl", 
                                                                    n_colors = len(grid.hue_names)))
-                cax, kw = mpl.colorbar.make_axes(plt.gca())
-                norm = mpl.colors.Normalize(vmin = np.min(grid.hue_names), 
-                                            vmax = np.max(grid.hue_names), 
-                                            clip = False)
+                cax, _ = mpl.colorbar.make_axes(plt.gca())
+                hue_scale = util.scale_factory(self.huescale, 
+                                               experiment, 
+                                               condition = self.huefacet)
                 mpl.colorbar.ColorbarBase(cax, 
-                                          cmap = cmap, 
-                                          norm = norm,
-                                          label = self.huefacet, 
-                                          **kw)
+                                          cmap = cmap,
+                                          norm = hue_scale.color_norm(),
+                                          label = self.huefacet)
                 plt.sca(plot_ax)
             else:
                 grid.add_legend(title = self.huefacet)

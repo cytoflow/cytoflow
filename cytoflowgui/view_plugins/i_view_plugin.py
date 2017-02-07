@@ -21,16 +21,15 @@ Created on Mar 15, 2015
 @author: brian
 """
 
-import numpy as np
-
 from traits.api import (Interface, Str, HasTraits, Instance, on_trait_change, 
-                        Dict, List, Property)
+                        List, Property)
 from traitsui.api import Handler
 
 import pandas as pd
 
 import cytoflow.utility as util
 from cytoflowgui.util import DelayedEvent
+from cytoflowgui.subset import ISubset
 
 VIEW_PLUGIN_EXT = 'edu.mit.synbio.cytoflow.view_plugins'
 
@@ -67,23 +66,16 @@ class PluginViewMixin(HasTraits):
     handler = Instance(Handler, transient = True)    
     changed = DelayedEvent(delay = 0.1)
     
-    subset_dict = Dict(Str, List, estimate = True)
-    subset = Property(Str, depends_on = "subset_dict")
+    subset_list = List(ISubset)
+    subset = Property(Str, depends_on = "subset_list.str")
         
+    # MAGIC - returns the value of the "subset" Property, above
     def _get_subset(self):
-        ret = []
-        for key, values in self.subset_dict.iteritems():
-            if values:
-                values = list(np.unique(values))
-                values = ['"{}"'.format(x) if isinstance(x, basestring) else x for x in values]
-                values = ["{} == {}".format(key, x) for x in values]
-                values = " or ".join(values)
-                ret.append(values)
-        
-        ret = ["({})".format(x) for x in ret]
-        ret = " and ".join(ret)
-        
-        return ret
+        return " and ".join([subset.str for subset in self.subset_list if subset.str])
+    
+    @on_trait_change("subset_list.str", post_init = True)
+    def _subset_changed(self, obj, name, old, new):
+        self.changed = "api"
     
     # why can't we just put this in a workflow listener?  it's because
     # we sometimes need to override or supplement it on a per-module basis

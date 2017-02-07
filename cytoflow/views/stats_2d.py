@@ -141,7 +141,7 @@ class Stats2DView(HasStrictTraits):
     xfacet = Str
     yfacet = Str
     huefacet = Str
-    huescale = util.ScaleEnum # TODO - make this work
+    huescale = util.ScaleEnum
     
     x_error_statistic = Tuple(Str, Str)
     y_error_statistic = Tuple(Str, Str)
@@ -595,18 +595,18 @@ class Stats2DView(HasStrictTraits):
         if self.huefacet:
             current_palette = mpl.rcParams['axes.color_cycle']
             if util.is_numeric(experiment.data[self.huefacet]) and \
-                len(grid.hue_names) > len(current_palette):
+               len(grid.hue_names) > len(current_palette):
                 
                 plot_ax = plt.gca()
                 cmap = mpl.colors.ListedColormap(sns.color_palette("husl", 
                                                                    n_colors = len(grid.hue_names)))
                 cax, _ = mpl.colorbar.make_axes(plt.gca())
-                norm = mpl.colors.Normalize(vmin = np.min(grid.hue_names), 
-                                            vmax = np.max(grid.hue_names), 
-                                            clip = False)
+                hue_scale = util.scale_factory(self.huescale, 
+                                               experiment, 
+                                               condition = self.huefacet)
                 mpl.colorbar.ColorbarBase(cax, 
                                           cmap = cmap, 
-                                          norm = norm,
+                                          norm = hue_scale.color_norm(),
                                           label = self.huefacet)
                 plt.sca(plot_ax)
             else:

@@ -22,10 +22,11 @@ Created on Mar 15, 2015
 """
 import logging
 
-from traits.api import Interface, Str, HasTraits, on_trait_change, Dict, List, Property
+from traits.api import Interface, Str, HasTraits, on_trait_change, List, Property
 from traitsui.api import Group, Item
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.util import DelayedEvent
+from cytoflowgui.subset import ISubset
 
 OP_PLUGIN_EXT = 'edu.mit.synbio.cytoflow.op_plugins'
 
@@ -65,23 +66,16 @@ class IOperationPlugin(Interface):
 
 class PluginOpMixin(HasTraits):
     
-    subset_dict = Dict(Str, List, estimate = True)
-    subset = Property(Str, depends_on = "subset_dict")
+    subset_list = List(ISubset)
+    subset = Property(Str, depends_on = "subset_list.str")
         
+    # MAGIC - returns the value of the "subset" Property, above
     def _get_subset(self):
-        ret = []
-        for key, values in self.subset_dict.iteritems():
-            if values:
-                values = list(values)
-                values = ['"{}"'.format(x) if isinstance(x, basestring) else x for x in values]
-                values = ["{} == {}".format(key, x) for x in values]
-                values = " or ".join(values)
-                ret.append(values)
-        
-        ret = ["({})".format(x) for x in ret]
-        ret = " and ".join(ret)
-        
-        return ret
+        return " and ".join([subset.str for subset in self.subset_list if subset.str])
+    
+    @on_trait_change("subset_list.str", post_init = True)
+    def _subset_changed(self, obj, name, old, new):
+        self.changed = "api"
     
     changed = DelayedEvent(delay = 0.2)
     

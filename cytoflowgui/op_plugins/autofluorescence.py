@@ -37,7 +37,7 @@ from cytoflow.views.i_selectionview import IView
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
 from cytoflowgui.color_text_editor import ColorTextEditor
-from cytoflowgui.subset_editor import SubsetEditor
+from cytoflowgui.subset import SubsetListEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
 
 class AutofluorescenceHandler(Controller, OpHandlerMixin):
@@ -49,11 +49,11 @@ class AutofluorescenceHandler(Controller, OpHandlerMixin):
                          editor = CheckListEditor(cols = 2,
                                                   name = 'context.previous.channels'),
                          style = 'custom'),
-                    VGroup(Item('subset_dict',
+                    VGroup(Item('subset_list',
                                 show_label = False,
-                                editor = SubsetEditor(conditions = "context.previous.conditions",
-                                                      metadata = "context.previous.metadata",
-                                                      when = "'experiment' not in vars() or not experiment")),
+                                editor = SubsetListEditor(conditions = "context.previous.conditions",
+                                                          metadata = "context.previous.metadata",
+                                                          when = "'experiment' not in vars() or not experiment")),
                            label = "Subset",
                            show_border = False,
                            show_labels = False),

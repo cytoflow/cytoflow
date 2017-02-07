@@ -31,7 +31,7 @@ from pyface.api import ImageResource
 from cytoflow import Stats2DView
 import cytoflow.utility as util
 
-from cytoflowgui.subset_editor import SubsetEditor
+from cytoflowgui.subset import SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
@@ -121,7 +121,8 @@ class Stats2DHandler(Controller, ViewHandlerMixin, StatisticViewHandlerMixin):
                                 editor=ExtendableEnumEditor(name='handler.indices',
                                                             extra_items = {"None" : ""}),
                                 label="Color\nFacet"),
-                           Item('huescale', label = "Hue\nScale"),
+                           Item('huescale', 
+                                label = "Hue\nScale"),
                            Item('x_error_statistic',
                                 editor=ExtendableEnumEditor(name='context.statistics_names',
                                                             extra_items = {"None" : ("", "")}),
@@ -132,9 +133,9 @@ class Stats2DHandler(Controller, ViewHandlerMixin, StatisticViewHandlerMixin):
                                 label = "Y Error\nStatistic"),
                            label = "Two-Dimensional Statistics Plot",
                            show_border = False),
-                    VGroup(Item('subset_dict',
+                    VGroup(Item('subset_list',
                                 show_label = False,
-                                editor = SubsetEditor(conditions = "handler.levels")),
+                                editor = SubsetListEditor(conditions = "handler.levels")),
                            label = "Subset",
                            show_border = False,
                            show_labels = False),

@@ -31,6 +31,7 @@ import numpy as np
 import pandas as pd
 
 import matplotlib.scale
+import matplotlib.colors
 from matplotlib import transforms
 from matplotlib.ticker import NullFormatter, LogFormatterMathtext
 from matplotlib.ticker import Locator
@@ -127,6 +128,38 @@ class HlogScale(ScaleMixin):
         
     def clip(self, data):
         return data
+    
+    def color_norm(self):
+        if self.channel:
+            vmin = self.experiment[self.channel].min()
+            vmax = self.experiment[self.channel].max()
+        elif self.condition:
+            vmin = self.experiment[self.condition].min()
+            vmax = self.experiment[self.condition].max()
+        elif self.statistic:
+            stat = self.experiment.statistics[self.statistic]
+            try:
+                vmin = min([min(x) for x in stat])
+                vmax = max([max(x) for x in stat])
+            except (TypeError, IndexError):
+                vmin = stat.min()
+                vmax = stat.max()
+        else:
+            raise CytoflowError("Must set one of 'channel', 'condition' "
+                                "or 'statistic'.")
+        
+        class HlogNormalize(matplotlib.colors.Normalize):
+            def __init__(self, vmin, vmax, scale):
+                self._scale = scale
+                matplotlib.colors.Normalize.__init__(self, vmin, vmax)
+                
+            def __call__(self, value, clip = None):
+                # as implemented here, hlog already transforms onto a (0, 1)
+                # scale
+                scaled_value = self._scale(value)
+                return np.ma.masked_array(scaled_value)
+            
+        return HlogNormalize(vmin, vmax, self)
     
     def _get_range(self):
         if self.experiment:

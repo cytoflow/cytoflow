@@ -91,6 +91,13 @@ class IScale(Interface):
         Clips the data to the scale's domain.
         """
         
+    def color_norm(self):
+        """
+        Return an instance of matplotlib.colors.Normalize, which is used to
+        correctly scale a color bar.
+        """
+        
+        
 class ScaleMixin(HasStrictTraits):
     def __init__(self, **kwargs):
         

@@ -123,10 +123,10 @@ class WorkflowItem(HasStrictTraits):
     default_view = Instance(IView, copy = "ref")
     
     # the previous WorkflowItem in the workflow
-    previous = Instance('WorkflowItem')
+    previous = Instance('WorkflowItem', transient = True)
     
     # the next WorkflowItem in the workflow
-    next = Instance('WorkflowItem')
+    next = Instance('WorkflowItem', transient = True)
     
     # is the wi valid?
     # MAGIC: first value is the default
@@ -183,6 +183,12 @@ class WorkflowItem(HasStrictTraits):
             return self.statistics.keys()
         else:
             return []
+        
+    def __str__(self):
+        return "<{}: {}>".format(self.__class__.__name__, self.operation.__class__.__name__)
+
+    def __repr__(self):
+        return "<{}: {}>".format(self.__class__.__name__, self.operation.__class__.__name__)
 
     
 class RemoteWorkflowItem(WorkflowItem):
@@ -255,6 +261,11 @@ class RemoteWorkflowItem(WorkflowItem):
             self.metadata = filter_unpicklable(dict(self.result.metadata))
             
             self.statistics = dict(self.result.statistics)
+        else:
+            self.channels = []
+            self.conditions = {}
+            self.metadata = {}
+            self.statistics = {}
             
     @on_trait_change('current_view', post_init = True)
     def _current_view_changed(self, obj, name, old, new):
@@ -318,8 +329,10 @@ class RemoteWorkflowItem(WorkflowItem):
          
         with warnings.catch_warnings(record = True) as w:
             try:    
+                self.result = None
                 self.status = "applying"
-                self.result = self.operation.apply(prev_result)
+                r = self.operation.apply(prev_result)
+                self.result = r
 
                 self.op_error = ""
                 if w:

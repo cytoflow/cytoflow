@@ -154,13 +154,13 @@ class FlowTask(Task):
          
             import_op.tubes = [tube1, tube2, tube3, tube4]
             
-            self.add_operation(ChannelStatisticPlugin().id)
-            stat_op = self.model.workflow[1].operation
-            stat_op.name = "Test"
-            stat_op.channel = "Y2-A"
-            stat_op.statistic_name = "Geom.Mean"
-            stat_op.by = ["Dox", "Replicate"]
-            self.model.selected = self.model.workflow[1]
+#             self.add_operation(ChannelStatisticPlugin().id)
+#             stat_op = self.model.workflow[1].operation
+#             stat_op.name = "Test"
+#             stat_op.channel = "Y2-A"
+#             stat_op.statistic_name = "Geom.Mean"
+#             stat_op.by = ["Dox", "Replicate"]
+#             self.model.selected = self.model.workflow[1]
                     
         self.model.modified = False
     
@@ -200,6 +200,8 @@ class FlowTask(Task):
         
         # and select the operation
         self.model.selected = self.model.workflow[0]
+        
+        self.model.modified = False
      
         
     def on_open(self):
@@ -254,6 +256,10 @@ class FlowTask(Task):
                   message = "Error trying to load the workflow.")
             return
 
+        # clear the wi status
+        for wi in new_workflow:
+            wi.status = "invalid"
+
         # replace the current workflow with the one we just loaded
         
         if False:  # for debugging the loading of things
@@ -266,7 +272,16 @@ class FlowTask(Task):
         else:
             self.model.workflow = new_workflow
             self.model.modified = False
-            self.model.workflow[0].operation.changed = "api"
+            
+        # see if the user wants to re-estimate all the model parameters
+#         est_wis = filter(lambda x: hasattr(x.operation, "estimate"), self.model.workflow)
+#         if est_wis:
+#             ret = confirm(parent = None,
+#                           message = "Do you want to estimate model parameters now?",
+#                           title = "Estimate parameters?")
+#             if ret == YES:
+#                 for wi in est_wis:
+#                     wi.do_estimate = True
         
     def on_save(self):
         """ Save the file to the previous filename  """

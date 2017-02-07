@@ -141,42 +141,44 @@ class BinningOp(HasStrictTraits):
         scale = util.scale_factory(self.scale, experiment, channel = self.channel)
         scaled_data = scale(experiment.data[self.channel])
             
-        channel_min = bn.nanmin(scaled_data)
-        channel_max = bn.nanmax(scaled_data)
+        scaled_min = bn.nanmin(scaled_data)
+        scaled_max = bn.nanmax(scaled_data)
         
         num_bins = self.num_bins if self.num_bins else \
-                   (channel_max - channel_min) / self.bin_width
+                   (scaled_max - scaled_min) / self.bin_width
                    
         if num_bins > self._max_num_bins:
             raise util.CytoflowOpError("Too many bins! To increase this limit, "
                                        "change _max_num_bins (currently {})"
                                        .format(self._max_num_bins))
 
-        bins = np.linspace(start = channel_min, stop = channel_max,
-                           num = num_bins)
-            
-        # bins need to be internal; drop the first and last one
-        bins = bins[1:-1]
+        scaled_bins = np.linspace(start = scaled_min, stop = scaled_max,
+                                  num = num_bins)
         
-        if len(bins) < 2:
+        if len(scaled_bins) < 2:
             raise util.CytoflowOpError("Must have more than one bin")
+        
+        # put the data in bins
+        bin_idx = np.digitize(scaled_data, scaled_bins[1:-1])
+        
+        # now, back into data space
+        bins = scale.inverse(scaled_bins)
             
         new_experiment = experiment.clone()
-        new_experiment.add_condition(self.name,
-                                     "int",
-                                     np.digitize(scaled_data, bins))
+        new_experiment.add_condition(self.name, "float", bins[bin_idx])
         
         # if we're log-scaled (for example), don't label data that isn't
         # showable on a log scale!
-        new_experiment.data.ix[np.isnan(scaled_data), self.name] = np.nan
-        new_experiment.data.dropna(inplace = True)
+#         new_experiment.data.ix[np.isnan(scaled_data), self.name] = np.nan
+#         new_experiment.data.dropna(inplace = True)
         
-        # keep track of the bins we used, for pretty plotting later.
+        # keep track of the bins we used, for prettier plotting later.
         new_experiment.metadata[self.name]["bin_scale"] = self.scale
         new_experiment.metadata[self.name]["bins"] = bins
         
         if self.bin_count_name:
             # TODO - this is a HUGE memory hog?!
+            # TODO - fix this, then turn it on by default
             agg_count = new_experiment.data.groupby(self.name).count()
             agg_count = agg_count[agg_count.columns[0]]
             

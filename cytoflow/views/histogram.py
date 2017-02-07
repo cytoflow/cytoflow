@@ -50,6 +50,9 @@ class HistogramView(HasStrictTraits):
     huefacet : Str
         the conditioning variable for multiple plots (color)
         
+    huescale = Enum("linear", "log", "logicle") (default = "linear")
+        What scale to use on the color bar, if there is one plotted
+        
     subset : Str
         a string passed to pandas.DataFrame.query() to subset the data before 
         we plot it.
@@ -76,6 +79,7 @@ class HistogramView(HasStrictTraits):
     xfacet = Str
     yfacet = Str
     huefacet = Str
+    huescale = util.ScaleEnum
     subset = Str
     
     def plot(self, experiment, **kwargs):
@@ -146,12 +150,9 @@ class HistogramView(HasStrictTraits):
         
         num_bins = util.num_hist_bins(scaled_data)
         
-        # clip num_bins to (50, 1000)
-        num_bins = max(min(num_bins, 1000), 50)
+        # clip num_bins to (100, 1000)
+        num_bins = max(min(num_bins, 1000), 100)
         
-        xmin = bottleneck.nanmin(scaled_data)
-        xmax = bottleneck.nanmax(scaled_data)
-                    
         if (self.huefacet 
             and "bins" in experiment.metadata[self.huefacet]
             and experiment.metadata[self.huefacet]["bin_scale"] == self.scale):
@@ -163,21 +164,26 @@ class HistogramView(HasStrictTraits):
             # number of bins for the histogram is much larger than the
             # number of colors, sub-divide each color into multiple bins.
             bins = experiment.metadata[self.huefacet]["bins"]
-            bins = np.append(bins, xmax)
-            
+            scaled_bins = scale(bins)
+     
             num_hues = len(data[self.huefacet].unique())
-            bins_per_hue = math.ceil(num_bins / num_hues)
-            
-            new_bins = [xmin]
-            for end in [b for b in bins if (b > xmin and b <= xmax)]:
-                new_bins = np.append(new_bins,
-                                     np.linspace(new_bins[-1],
-                                                 end,
-                                                 bins_per_hue + 1,
-                                                 endpoint = True)[1:])
+            bins_per_hue = math.floor(num_bins / num_hues)
+
+            if bins_per_hue == 1:
+                new_bins = scaled_bins
+            else:
+                new_bins = []
+                for idx in range(1, len(scaled_bins)):
+                    new_bins = np.append(new_bins, 
+                                         np.linspace(scaled_bins[idx - 1],
+                                                     scaled_bins[idx],
+                                                     bins_per_hue + 1,
+                                                     endpoint = False))
 
             bins = scale.inverse(new_bins)
         else:
+            xmin = bottleneck.nanmin(scaled_data)
+            xmax = bottleneck.nanmax(scaled_data)
             bin_width = (xmax - xmin) / num_bins
             bins = scale.inverse(np.arange(xmin, xmax, bin_width))
             bins = np.append(bins, scale.inverse(xmax))
@@ -274,16 +280,18 @@ class HistogramView(HasStrictTraits):
             if util.is_numeric(experiment.data[self.huefacet]) and \
                len(g.hue_names) > len(current_palette):
                 
+                hue_scale = util.scale_factory(self.huescale, 
+                                               experiment, 
+                                               condition = self.huefacet)
+                
                 plot_ax = plt.gca()
                 cmap = mpl.colors.ListedColormap(sns.color_palette("husl", 
                                                                    n_colors = len(g.hue_names)))
                 cax, _ = mpl.colorbar.make_axes(plt.gca())
-                norm = mpl.colors.Normalize(vmin = np.min(g.hue_names), 
-                                            vmax = np.max(g.hue_names), 
-                                            clip = False)
+
                 mpl.colorbar.ColorbarBase(cax, 
                                           cmap = cmap, 
-                                          norm = norm, 
+                                          norm = hue_scale.color_norm(), 
                                           label = self.huefacet)
                 plt.sca(plot_ax)
             else:
