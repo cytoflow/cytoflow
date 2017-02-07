@@ -482,25 +482,27 @@ class Stats2DView(HasStrictTraits):
         facets = filter(lambda x: x, [self.variable, self.xfacet, self.yfacet, self.huefacet])
         if len(facets) != len(set(facets)):
             raise util.CytoflowViewError("Can't reuse facets")
-        unused_names = list(set(names) - set(facets))
-
-        if unused_names and plot_name is None:
-            for plot in self.enum_plots(experiment):
-                self.plot(experiment, plot, **kwargs)
-            return
-
-        data.reset_index(inplace = True)
         
+        unused_names = list(set(names) - set(facets))
+        data.reset_index(inplace = True)
+        groupby = data.groupby(unused_names)
+        
+        if unused_names and plot_name is None:
+            raise util.CytoflowViewError("You must use facets {} in either the "
+                                         "plot variables or the plot name. "
+                                         "Possible plot names: {}"
+                                         .format(groupby.groups.keys()))
+
         if plot_name is not None:
             if plot_name is not None and not unused_names:
-                raise util.CytoflowViewError("Plot {} not from plot_enum"
-                                             .format(plot_name))
+                raise util.CytoflowViewError("You specified a plot name, but all "
+                                             "the facets are already used")
                                
-            groupby = data.groupby(unused_names)
 
             if plot_name not in set(groupby.groups.keys()):
-                raise util.CytoflowViewError("Plot {} not from plot_enum"
-                                             .format(plot_name))
+                raise util.CytoflowViewError("Plot {} not from plot_enum; must "
+                                             "be one of {}"
+                                             .format(plot_name, groupby.groups.keys()))
                 
             data = groupby.get_group(plot_name)
             data.reset_index(drop = True, inplace = True)

@@ -30,7 +30,6 @@ from traits.api import (HasStrictTraits, Str, CStr, Dict, Any, Instance, Bool,
                         Constant, List, provides, DelegatesTo, Property)
 
 import numpy as np
-import matplotlib.pyplot as plt
 from sklearn import mixture
 from scipy import linalg
 import pandas as pd
@@ -628,10 +627,10 @@ class GaussianMixture2DView(cytoflow.views.ScatterplotView):
               
         # see if we're making subplots
         if self._by and plot_name is None:
-            for plot in self.enum_plots(experiment):
-                self.plot(experiment, plot, **kwargs)
-                plt.title("{0} = {1}".format(self.op.by, plot))
-            return
+            raise util.CytoflowViewError("You must use facets {} in either the "
+                                         "plot variables or the plt name. "
+                                         "Possible plot names: {}"
+                                         .format(self._by, [x for x in self.enum_plots(experiment)]))
                 
         if plot_name is not None:
             if plot_name is not None and not self._by:

@@ -560,10 +560,10 @@ class GaussianMixture1DView(cytoflow.views.HistogramView):
               
         # see if we're making subplots
         if self._by and plot_name is None:
-            for plot in self.enum_plots(experiment):
-                self.plot(experiment, plot, xlim = xlim, **kwargs)
-                plt.title("{0} = {1}".format(self.op.by, plot))
-            return
+            raise util.CytoflowViewError("You must use facets {} in either the "
+                                         "plot variables or the plt name. "
+                                         "Possible plot names: {}"
+                                         .format(self._by, [x for x in self.enum_plots(experiment)]))
                                         
         if plot_name is not None:
             if plot_name is not None and not self._by:
@@ -649,6 +649,9 @@ class GaussianMixture1DView(cytoflow.views.HistogramView):
                 color = sns.color_palette()[color_k]
                 ax.plot(x, y, color = color)
                 
+        if unused_names and plot_name:
+            plt.title("{0} = {1}".format(unused_names, plot_name))
+                        
         return g
 
 # from http://stackoverflow.com/questions/24467972/calculate-area-of-polygon-given-x-y-coordinates
