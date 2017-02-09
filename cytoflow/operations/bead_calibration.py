@@ -98,14 +98,13 @@ class BeadCalibrationOp(HasStrictTraits):
         If a bead peak is above this, then don't consider it.  Takes care of
         clipping saturated detection.  Defaults to 70% of the detector range.
         
-<<<<<<< HEAD
     force_linear : Bool(False)
         A linear fit in log space doesn't always go through the origin, which 
         means that the calibration function isn't strictly a multiplicative
         scaling operation.  Set `force_linear` to force the such
         behavior.  Keep an eye on the diagnostic plot, though, to see how much
         error you're introducing!
-=======
+        
         
     Metadata
     --------
@@ -115,7 +114,6 @@ class BeadCalibrationOp(HasStrictTraits):
     bead_units : String
         The units this channel was calibrated to
         
->>>>>>> statistics
         
     Notes
     -----

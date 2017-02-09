@@ -361,9 +361,10 @@ class TasbePluginView(PluginViewMixin):
     def plot(self, experiment, plot_name = None, **kwargs):
         
         if not plot_name:
-            for plot in self.enum_plots(experiment):
-                self.plot(experiment, plot_name = plot, **kwargs)
-                plt.title(plot)
+            raise util.CytoflowViewError("Which plot do you want?  Must be one "
+                                         "of \"Autofluorescence\", "
+                                         "\"Bleedthrough\", \"Bead Calibration\", "
+                                         "or \"Color Translation\"")
         elif plot_name == "Autofluorescence":
             self.op._af_op.default_view().plot(experiment, **kwargs)
         elif plot_name == "Bleedthrough":
