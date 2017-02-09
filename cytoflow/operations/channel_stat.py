@@ -174,15 +174,15 @@ class ChannelStatisticOp(HasStrictTraits):
                 continue
             
             try:
-                stat[group] = self.function(data_subset[self.channel])
+                stat.loc[group] = self.function(data_subset[self.channel])
             except Exception as e:
                 raise util.CytoflowOpError("In group {}, your function "
                                            "threw an error: {}"
                                            .format(group, e))
             
             # check for, and warn about, NaNs.
-            if np.any(np.isnan(stat[group])):
-                warn("Category {} returned {}".format(group, x), 
+            if np.any(np.isnan(stat.loc[group])):
+                warn("Category {} returned {}".format(group, stat.loc[group]), 
                      util.CytoflowOpWarning)
                     
         # try to convert to numeric, but if there are non-numeric bits ignore

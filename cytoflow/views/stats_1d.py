@@ -367,27 +367,29 @@ class Stats1DView(HasStrictTraits):
             raise util.CytoflowViewError("Can't reuse facets")
         
         unused_names = list(set(names) - set(facets))
-        data.reset_index(inplace = True)
-        groupby = data.groupby(unused_names)
-        
-        if unused_names and plot_name is None:
-            raise util.CytoflowViewError("You must use facets {} in either the "
-                                         "plot variables or the plot name. "
-                                         "Possible plot names: {}"
-                                         .format(unused_names, groupby.groups.keys()))
 
-        if plot_name is not None:
-            if plot_name is not None and not unused_names:
-                raise util.CytoflowViewError("You specified a plot name, but all "
-                                             "the facets are already used")
+        if plot_name is not None and not unused_names:
+            raise util.CytoflowViewError("You specified a plot name, but all "
+                                         "the facets are already used")
+            
+        if unused_names:
+            groupby = data.groupby(unused_names)
 
-            if plot_name not in set(groupby.groups.keys()):
-                raise util.CytoflowViewError("Plot {} not from plot_enum; must "
-                                             "be one of {}"
-                                             .format(plot_name, groupby.groups.keys()))
+            if plot_name is None:
+                raise util.CytoflowViewError("You must use facets {} in either the "
+                                             "plot variables or the plot name. "
+                                             "Possible plot names: {}"
+                                             .format(groupby.groups.keys()))
+
+                if plot_name not in set(groupby.groups.keys()):
+                    raise util.CytoflowViewError("Plot {} not from plot_enum; must "
+                                                 "be one of {}"
+                                                 .format(plot_name, groupby.groups.keys()))
                 
             data = groupby.get_group(plot_name)
             data.reset_index(drop = True, inplace = True)
+        else:
+            data.reset_index(inplace = True)
             
         xscale = util.scale_factory(self.xscale, experiment, condition = self.variable) 
         

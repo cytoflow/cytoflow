@@ -124,10 +124,6 @@ class TransformStatisticOp(HasStrictTraits):
         if not self.function:
             raise util.CytoflowOpError("Must specify a function")
 
-        if not self.by:
-            raise util.CytoflowOpError("Must specify some grouping conditions "
-                                       "in 'by'")
-       
         for b in self.by:
             if b not in stat.index.names:
                 raise util.CytoflowOpError("{} is not a statistic index; "
@@ -136,8 +132,11 @@ class TransformStatisticOp(HasStrictTraits):
                 
         data = stat.reset_index()
         
-        idx = pd.MultiIndex.from_product([data[x].unique() for x in self.by], 
-                                         names = self.by)
+        if self.by:
+            idx = pd.MultiIndex.from_product([data[x].unique() for x in self.by], 
+                                             names = self.by)
+        else:
+            idx = stat.index.copy()
         
         new_stat = pd.Series(data = self.fill,
                              index = idx, 
@@ -150,15 +149,15 @@ class TransformStatisticOp(HasStrictTraits):
             if len(group) == 1:
                 group = group[0]
             try:
-                new_stat[group] = self.function(s)
+                new_stat.loc[group] = self.function(s)
             except Exception as e:
                 raise util.CytoflowOpError("On group {}, your function threw "
                                            "an error: {}"
                                            .format(group, e))
                 
             # check for, and warn about, NaNs.
-            if np.any(np.isnan(new_stat[group])):
-                warn("Category {} returned {}".format(group, x), 
+            if np.any(np.isnan(new_stat.loc[group])):
+                warn("Category {} returned {}".format(group, new_stat.loc[group]), 
                      util.CytoflowOpWarning)
                 
         matched_series = True
@@ -166,8 +165,8 @@ class TransformStatisticOp(HasStrictTraits):
             s = stat.xs(group, level = self.by)
             if len(group) == 1:
                 group = group[0]
-            if isinstance(new_stat[group], pd.Series) and \
-                s.index.equals(new_stat[group].index):
+            if isinstance(new_stat.loc[group], pd.Series) and \
+                s.index.equals(new_stat.loc[group].index):
                 pass
             else:
                 matched_series = False

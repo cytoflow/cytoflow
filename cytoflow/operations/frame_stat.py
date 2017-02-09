@@ -28,7 +28,7 @@ import pandas as pd
 import numpy as np
 
 from traits.api import (HasStrictTraits, Str, List, Constant, provides, 
-                        Callable, CStr, Any, Undefined)
+                        Callable, CStr, Any)
 
 import cytoflow.utility as util
 
@@ -161,7 +161,7 @@ class FrameStatisticOp(HasStrictTraits):
                 continue
             
             try:
-                stat[group] = self.function(data_subset)
+                stat.loc[group] = self.function(data_subset)
 
             except Exception as e:
                 raise util.CytoflowOpError("In group {}, your function threw "
@@ -169,8 +169,8 @@ class FrameStatisticOp(HasStrictTraits):
                                            .format(group, e))    
                             
             # check for, and warn about, NaNs.
-            if np.any(np.isnan(stat[group])):
-                warn("Category {} returned {}".format(group, x), 
+            if np.any(np.isnan(stat.loc[group])):
+                warn("Category {} returned {}".format(group, stat.loc[group]), 
                      util.CytoflowOpWarning)
                     
         # try to convert to numeric, but if there are non-numeric bits ignore
