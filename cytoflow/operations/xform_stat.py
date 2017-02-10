@@ -131,23 +131,27 @@ class TransformStatisticOp(HasStrictTraits):
                                            .format(b, stat.index.names))
                 
         data = stat.reset_index()
-        
+                
         if self.by:
             idx = pd.MultiIndex.from_product([data[x].unique() for x in self.by], 
                                              names = self.by)
         else:
             idx = stat.index.copy()
-        
+                    
         new_stat = pd.Series(data = self.fill,
                              index = idx, 
                              dtype = np.dtype(object)).sort_index()
-                
-        for group in data[self.by].itertuples(index = False, name = None ):
-            s = stat.xs(group, level = self.by)
+                                             
+        for group in data[self.by].itertuples(index = False, name = None):
+            if isinstance(stat.index, pd.MultiIndex):
+                s = stat.xs(group, level = self.by)
+            else:
+                s = pd.Series(stat.loc[group])
+                print s
+                                
             if len(s) == 0:
                 continue
-            if len(group) == 1:
-                group = group[0]
+
             try:
                 new_stat.loc[group] = self.function(s)
             except Exception as e:
@@ -163,8 +167,7 @@ class TransformStatisticOp(HasStrictTraits):
         matched_series = True
         for group in data[self.by].itertuples(index = False):
             s = stat.xs(group, level = self.by)
-            if len(group) == 1:
-                group = group[0]
+
             if isinstance(new_stat.loc[group], pd.Series) and \
                 s.index.equals(new_stat.loc[group].index):
                 pass
@@ -173,6 +176,7 @@ class TransformStatisticOp(HasStrictTraits):
                 break
             
         if matched_series:
+            print new_stat
             names = set(self.by) | set(new_stat.iloc[0].index.names)
             new_stat = pd.concat(new_stat.to_dict(), names = names)
             
