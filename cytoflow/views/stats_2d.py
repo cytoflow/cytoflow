@@ -488,7 +488,9 @@ class Stats2DView(HasStrictTraits):
         if plot_name is not None and not unused_names:
             raise util.CytoflowViewError("You specified a plot name, but all "
                                          "the facets are already used")
-            
+
+        data.reset_index(inplace = True)
+
         if unused_names:
             groupby = data.groupby(unused_names)
 
@@ -498,18 +500,13 @@ class Stats2DView(HasStrictTraits):
                                              "Possible plot names: {}"
                                              .format(groupby.groups.keys()))
 
-                if plot_name not in set(groupby.groups.keys()):
-                    raise util.CytoflowViewError("Plot {} not from plot_enum; must "
-                                                 "be one of {}"
-                                                 .format(plot_name, groupby.groups.keys()))
-                
+            if plot_name not in set(groupby.groups.keys()):
+                raise util.CytoflowViewError("Plot {} not from plot_enum; must "
+                                             "be one of {}"
+                                             .format(plot_name, groupby.groups.keys()))
+            
             data = groupby.get_group(plot_name)
-            data.reset_index(drop = True, inplace = True)
-        else:
-            data.reset_index(inplace = True)
-        
-        # TODO - account for error bars
-        
+
         if self.x_error_statistic is not None:
             xscale = util.scale_factory(self.xscale, experiment, statistic = self.xstatistic)
         else:
