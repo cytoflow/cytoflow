@@ -116,7 +116,7 @@ class TransformStatisticHandler(Controller, OpHandlerMixin):
         names = list(index.names)
         ret = {}
         for name in names:
-            ret[name] = pd.Series(index.get_level_values(name)).sort_values()
+            ret[name] = pd.Series(np.unique(index.get_level_values(name)))
             
         return ret
     
