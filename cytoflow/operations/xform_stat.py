@@ -141,32 +141,38 @@ class TransformStatisticOp(HasStrictTraits):
         new_stat = pd.Series(data = self.fill,
                              index = idx, 
                              dtype = np.dtype(object)).sort_index()
-                                             
-        for group in data[self.by].itertuples(index = False, name = None):
-            if isinstance(stat.index, pd.MultiIndex):
-                s = stat.xs(group, level = self.by)
-            else:
-                s = pd.Series(stat.loc[group])
-                print s
-                                
-            if len(s) == 0:
-                continue
-
-            try:
-                new_stat.loc[group] = self.function(s)
-            except Exception as e:
-                raise util.CytoflowOpError("On group {}, your function threw "
-                                           "an error: {}"
-                                           .format(group, e))
-                
-            # check for, and warn about, NaNs.
-            if np.any(np.isnan(new_stat.loc[group])):
-                warn("Category {} returned {}".format(group, new_stat.loc[group]), 
-                     util.CytoflowOpWarning)
-                
+                    
+        if self.by:                         
+            for group in data[self.by].itertuples(index = False, name = None):                
+                if isinstance(stat.index, pd.MultiIndex):
+                    s = stat.xs(group, level = self.by, drop_level = False)
+                else:
+                    s = stat.loc[list(group)]
+                                    
+                if len(s) == 0:
+                    continue
+    
+                try:
+                    new_stat[group] = self.function(s)
+                except Exception as e:
+                    raise util.CytoflowOpError("On group {}, your function threw "
+                                               "an error: {}"
+                                               .format(group, e))
+                                        
+                # check for, and warn about, NaNs.
+                if np.any(np.isnan(new_stat.loc[group])):
+                    warn("Category {} returned {}".format(group, new_stat.loc[group]), 
+                         util.CytoflowOpWarning)
+                    
+        else:
+            new_stat = self.function(stat)
+                                                    
         matched_series = True
         for group in data[self.by].itertuples(index = False):
-            s = stat.xs(group, level = self.by)
+            if isinstance(stat.index, pd.MultiIndex):
+                s = stat.xs(group, level = self.by, drop_level = False)
+            else:
+                s = stat.loc[list(group)]
 
             if isinstance(new_stat.loc[group], pd.Series) and \
                 s.index.equals(new_stat.loc[group].index):
@@ -175,13 +181,14 @@ class TransformStatisticOp(HasStrictTraits):
                 matched_series = False
                 break
             
-        if matched_series:
-            print new_stat
-            names = set(self.by) | set(new_stat.iloc[0].index.names)
-            new_stat = pd.concat(new_stat.to_dict(), names = names)
+        if matched_series and len(self.by) > 1:
+            new_stat = pd.concat(new_stat.values)
             
         # try to convert to numeric, but if there are non-numeric bits ignore
         new_stat = pd.to_numeric(new_stat, errors = 'ignore')
+        
+        # sort the index, for performance
+        new_stat = new_stat.sort_index()
         
         new_experiment = experiment.clone()
         new_experiment.history.append(self.clone_traits(transient = lambda t: True))

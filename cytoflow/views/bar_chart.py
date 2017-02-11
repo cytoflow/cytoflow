@@ -345,21 +345,23 @@ class BarChartView(HasStrictTraits):
                                          "the facets are already used")
             
         if unused_names:
+            data.reset_index(inplace = True)
             groupby = data.groupby(unused_names)
 
             if plot_name is None:
                 raise util.CytoflowViewError("You must use facets {} in either the "
                                              "plot variables or the plot name. "
                                              "Possible plot names: {}"
-                                             .format(groupby.groups.keys()))
+                                             .format(unused_names, groupby.groups.keys()))
 
                 if plot_name not in set(groupby.groups.keys()):
                     raise util.CytoflowViewError("Plot {} not from plot_enum; must "
                                                  "be one of {}"
                                                  .format(plot_name, groupby.groups.keys()))
-                
+            
+            
             data = groupby.get_group(plot_name)
-            data.reset_index(drop = True, inplace = True)
+#             data.reset_index(drop = True, inplace = True)
         else:
             data.reset_index(inplace = True)
 
