@@ -82,12 +82,14 @@ class TasbeHandler(Controller, OpHandlerMixin):
         
     def bleedthrough_traits_view(self):
         return View(HGroup(Item('channel', style = 'readonly'),
-                           Item('file', show_label = False)),
+                           Item('file', show_label = False),
+                           show_labels = False),
                     handler = self)
         
     def translation_traits_view(self):
-        return View(HGroup(Item('from_channel', style = 'readonly'),
-                           Item('to_channel', style = 'readonly'),
+        return View(HGroup(Item('from_channel', style = 'readonly', show_label = False),
+                           Item('', label = '->'),
+                           Item('to_channel', style = 'readonly', show_label = False),
                            Item('file', show_label = False)),
                     handler = self)
     
@@ -210,11 +212,17 @@ class TasbePluginOp(PluginOpMixin):
                     continue
                 self.translation_list.append(_TranslationControl(from_channel = c,
                                                                  to_channel = self.to_channel))
-
-
+        self.changed = "estimate"
+        
+    @on_trait_change("bleedthrough_list_items,"
+                     "bleedthrough_list.+,"
+                     "translation_list_items,"
+                     "translation_list.+", 
+                     post_init = True)
+    def _controls_changed(self, obj, name, old, new):
+        self.changed = "estimate"
     
     def estimate(self, experiment, subset = None):
-
         if not self.subset:
             warnings.warn("Are you sure you don't want to specify a subset "
                           "used to estimate the model?",
@@ -337,11 +345,10 @@ class TasbePluginView(PluginViewMixin):
                      "Color Translation"])
         
     def enum_plots_wi(self, wi):
-        if wi.previous and wi.previous.result:
-            return self.enum_plots(wi.previous.result)
-        else:
-            return []
-        
+        return iter(["Autofluorescence",
+                     "Bleedthrough",
+                     "Bead Calibration",
+                     "Color Translation"])
         
     def should_plot(self, changed):
         """
