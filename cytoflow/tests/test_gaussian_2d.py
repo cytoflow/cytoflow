@@ -27,6 +27,7 @@ import matplotlib
 matplotlib.use('Agg')
 
 import cytoflow as flow
+import cytoflow.utility as util
 
 class Test(unittest.TestCase):
 
@@ -104,11 +105,16 @@ class Test(unittest.TestCase):
         self.gate.estimate(self.ex)
         self.gate.default_view().plot(self.ex)
         
+    def testPlotUnusedFacet(self):
+        self.gate.by = ["Dox"]
+        self.gate.estimate(self.ex)
+        with self.assertRaises(util.CytoflowViewError):
+            self.gate.default_view().plot(self.ex)
+
     def testPlotBy(self):
         self.gate.by = ["Dox"]
         self.gate.estimate(self.ex)
-        self.gate.default_view().plot(self.ex)
-        
+        self.gate.default_view().plot(self.ex, plot_name = 1.0)        
 
 if __name__ == "__main__":
 #     import sys;sys.argv = ['', 'Test.testName']

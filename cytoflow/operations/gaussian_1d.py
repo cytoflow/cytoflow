@@ -648,9 +648,6 @@ class GaussianMixture1DView(cytoflow.views.HistogramView):
                 color_k = k % len(sns.color_palette())
                 color = sns.color_palette()[color_k]
                 ax.plot(x, y, color = color)
-                
-        if unused_names and plot_name:
-            plt.title("{0} = {1}".format(unused_names, plot_name))
                         
         return g
 

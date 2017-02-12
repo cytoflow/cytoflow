@@ -181,7 +181,7 @@ class TransformStatisticOp(HasStrictTraits):
                 matched_series = False
                 break
             
-        if matched_series and len(self.by) > 1:
+        if matched_series and len(self.by) > 0:
             new_stat = pd.concat(new_stat.values)
             
         # try to convert to numeric, but if there are non-numeric bits ignore
