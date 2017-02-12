@@ -318,9 +318,7 @@ class VerticalNotebookPage(HasPrivateTraits):
                 self.icon = QtGui.QStyle.SP_ArrowDown
             else:
                 self.icon = QtGui.QStyle.SP_ArrowRight
-        
-        self.ui.control.setVisible(is_open)        
-        
+                
     def _on_name_changed(self, name):
         """ 
         Handles the name trait being changed.

@@ -23,11 +23,9 @@ Created on Oct 9, 2015
 
 import warnings
 
-import matplotlib.pyplot as plt
-
 from traitsui.api import (View, Item, EnumEditor, Controller, VGroup, 
                           CheckListEditor, ButtonEditor, Heading, 
-                          HGroup, ListEditor, InstanceEditor)
+                          HGroup, InstanceEditor)
 from envisage.api import Plugin, contributes_to
 from traits.api import (provides, Callable, Bool, List, Str, HasTraits,
                         on_trait_change, File, Constant,
@@ -49,6 +47,7 @@ from cytoflowgui.subset import SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
 from cytoflowgui.workflow_item import WorkflowItem
+from cytoflowgui.vertical_list_editor import VerticalListEditor
 
 class _BleedthroughControl(HasTraits):
     channel = Str
@@ -102,9 +101,9 @@ class TasbeHandler(Controller, OpHandlerMixin):
                         label = "Autofluorescence"),
                     VGroup(
                         Item('bleedthrough_list',
-                                editor = ListEditor(editor = InstanceEditor(view = self.bleedthrough_traits_view()),
-                                                    style = 'custom',
-                                                    mutable = False),
+                                editor = VerticalListEditor(editor = InstanceEditor(view = self.bleedthrough_traits_view()),
+                                                            style = 'custom',
+                                                            mutable = False),
                                 style = 'custom'),
                         label = "Bleedthrough Correction",
                         show_border = False,
@@ -133,9 +132,9 @@ class TasbeHandler(Controller, OpHandlerMixin):
                            label = "Color Translation"),
                     VGroup(
                         Item('translation_list',
-                                editor = ListEditor(editor = InstanceEditor(view = self.translation_traits_view()),
-                                                    style = 'custom',
-                                                    mutable = False),
+                                editor = VerticalListEditor(editor = InstanceEditor(view = self.translation_traits_view()),
+                                                            style = 'custom',
+                                                            mutable = False),
                                 style = 'custom'),
 
                         show_labels = False),

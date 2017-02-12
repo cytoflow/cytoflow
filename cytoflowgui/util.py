@@ -22,7 +22,6 @@ Created on Apr 18, 2015
 '''
 
 from traits.api import Event, Undefined, Unicode
-
 from pyface.ui.qt4.file_dialog import FileDialog
 
 from Queue import PriorityQueue
@@ -96,5 +95,3 @@ class DefaultFileDialog(FileDialog):
         dlg = FileDialog._create_control(self, parent)
         dlg.setDefaultSuffix(self.default_suffix)
         return dlg
-
-

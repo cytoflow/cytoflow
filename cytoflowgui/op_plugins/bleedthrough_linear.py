@@ -23,9 +23,8 @@ Created on Oct 9, 2015
 
 import warnings
 
-from traitsui.api import View, Item, EnumEditor, Controller, VGroup, \
-                         ButtonEditor, ListEditor, InstanceEditor, \
-                         HGroup
+from traitsui.api import View, Item, EnumEditor, Controller, VGroup, HGroup, \
+                         ButtonEditor, InstanceEditor
 from envisage.api import Plugin, contributes_to
 from traits.api import provides, Callable, List, Str, HasTraits, \
                        File, Event, Dict, Tuple, Float, on_trait_change, Instance
@@ -42,6 +41,7 @@ from cytoflowgui.subset import SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
 from cytoflowgui.workflow_item import WorkflowItem
+from cytoflowgui.vertical_list_editor import VerticalListEditor
 
 class _Control(HasTraits):
     channel = Str
@@ -76,9 +76,9 @@ class BleedthroughLinearHandler(Controller, OpHandlerMixin):
     
     def default_traits_view(self):
         return View(VGroup(Item('controls_list',
-                                editor = ListEditor(editor = InstanceEditor(view = self.control_traits_view()),
-                                                    style = 'custom',
-                                                    mutable = False),
+                                editor = VerticalListEditor(editor = InstanceEditor(view = self.control_traits_view()),
+                                                            style = 'custom',
+                                                            mutable = False),
                                 style = 'custom'),
                     Item('handler.add_control',
                          editor = ButtonEditor(value = True,

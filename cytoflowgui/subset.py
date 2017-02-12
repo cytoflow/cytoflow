@@ -34,10 +34,10 @@ import pandas as pd
 from traits.api import (HasStrictTraits, List, CFloat, Str, Dict, Interface, 
                         Property, Bool, provides, on_trait_change, Any, Trait,
                         TraitPrefixList)
-from traitsui.api import View, CheckListEditor, Item, HGroup, ListEditor
-from traitsui.qt4.list_editor import CustomEditor as _ListEditor
+from traitsui.api import View, CheckListEditor, Item, HGroup
 
 from cytoflowgui.value_bounds_editor import ValuesBoundsEditor
+from cytoflowgui.vertical_list_editor import VerticalListEditor, _VerticalListEditor
 import cytoflow.utility as util
 
 class ISubset(Interface):
@@ -141,11 +141,12 @@ class RangeSubset(HasStrictTraits):
         else:
             return 0    
 
-class _SubsetListEditor(_ListEditor):
+class _SubsetListEditor(_VerticalListEditor):
 
     conditions = Dict(Str, pd.Series)
     metadata = Dict(Str, Any)
     when = Str
+    scrollable = False
 
     def init(self, parent):
         
@@ -156,7 +157,7 @@ class _SubsetListEditor(_ListEditor):
         
         self.sync_value(self.factory.conditions, 'conditions', 'from')
         
-        _ListEditor.init(self, parent)
+        _VerticalListEditor.init(self, parent)
         
     @on_trait_change('conditions', dispatch = 'ui')
     def _on_conditions_change(self, obj, name, old, new):
@@ -204,9 +205,9 @@ class _SubsetListEditor(_ListEditor):
                                          .format(self.when))
         else:
             return False
-         
 
-class SubsetListEditor(ListEditor):    
+
+class SubsetListEditor(VerticalListEditor):    
     # the name of the trait containing the names --> values dict
     conditions = Str
     

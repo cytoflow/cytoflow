@@ -22,7 +22,7 @@ Created on Oct 9, 2015
 '''
 
 from traitsui.api import (View, Item, EnumEditor, Controller, VGroup, 
-                          ButtonEditor, HGroup, ListEditor, InstanceEditor)
+                          ButtonEditor, HGroup, InstanceEditor)
 from envisage.api import Plugin, contributes_to
 from traits.api import provides, Callable, List, Str, HasTraits, \
                        File, Event, on_trait_change, Property, \
@@ -39,6 +39,7 @@ from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_E
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
 from cytoflowgui.workflow_item import WorkflowItem
+from cytoflowgui.vertical_list_editor import VerticalListEditor
 
 class _Unit(HasTraits):
     channel = Str
@@ -93,9 +94,9 @@ class BeadCalibrationHandler(Controller, OpHandlerMixin):
                     Item('beads_file',
                          width = -125)),
                     VGroup(Item('units_list',
-                                editor = ListEditor(editor = InstanceEditor(view = self.unit_traits_view()),
-                                                    style = 'custom',
-                                                    mutable = False),
+                                editor = VerticalListEditor(editor = InstanceEditor(view = self.unit_traits_view()),
+                                                            style = 'custom',
+                                                            mutable = False),
                                 style = 'custom'),
                     Item('handler.add_channel',
                          editor = ButtonEditor(value = True,
