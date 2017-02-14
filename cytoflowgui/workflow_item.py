@@ -361,23 +361,23 @@ class RemoteWorkflowItem(WorkflowItem):
           
         with warnings.catch_warnings(record = True) as w:
             try:
-                with self.plot_lock:
-                    self.matplotlib_events.clear()
-    
-                    self.current_view.plot_wi(self)
-                
-                    if this.last_view_plotted and "interactive" in this.last_view_plotted.traits():
-                        this.last_view_plotted.interactive = False
-                     
-                    if "interactive" in self.current_view.traits():
-                        self.current_view.interactive = True
-                       
-                    this.last_view_plotted = self.current_view
-                      
-                    # the remote canvas/pyplot interface of the multiprocess backend
-                    # is NOT interactive.  this call lets us batch together all 
-                    # the plot updates
-                    plt.show()
+                self.plot_lock.acquire()                
+                self.matplotlib_events.clear()
+
+                self.current_view.plot_wi(self)
+            
+                if this.last_view_plotted and "interactive" in this.last_view_plotted.traits():
+                    this.last_view_plotted.interactive = False
+                 
+                if "interactive" in self.current_view.traits():
+                    self.current_view.interactive = True
+                   
+                this.last_view_plotted = self.current_view
+                  
+                # the remote canvas/pyplot interface of the multiprocess backend
+                # is NOT interactive.  this call lets us batch together all 
+                # the plot updates
+                plt.show()
                      
             except CytoflowViewError as e:
                 self.view_error = e.__str__()   
@@ -385,6 +385,7 @@ class RemoteWorkflowItem(WorkflowItem):
                 plt.show()   
             finally:
                 self.matplotlib_events.set() 
+                self.plot_lock.release()
 
                 if w:
                     self.view_warning = w[-1].message.__str__()
