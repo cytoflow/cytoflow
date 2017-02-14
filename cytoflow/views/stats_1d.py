@@ -504,7 +504,7 @@ class Stats1DView(HasStrictTraits):
             else:
                 grid.add_legend(title = self.huefacet)
                 
-        if unused_names and plot_name:
+        if unused_names and plot_name is not None:
             plt.title("{0} = {1}".format(unused_names, plot_name))
                 
         plt.ylabel(self.statistic)

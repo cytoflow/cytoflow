@@ -112,7 +112,7 @@ class Histogram2DPluginView(PluginViewMixin, Histogram2DView):
         self.plot(wi.result, wi.current_plot)
     
     def plot(self, experiment, plot_name = None, **kwargs):
-        if self.plotfacet and plot_name:
+        if self.plotfacet and plot_name is not None:
             experiment = experiment.subset(self.plotfacet, plot_name)
 
         Histogram2DView.plot(self, experiment, **kwargs)

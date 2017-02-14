@@ -588,6 +588,9 @@ class GaussianMixture1DView(cytoflow.views.HistogramView):
                                                     scale = scale, 
                                                     xlim = xlim,
                                                     **kwargs)
+                
+        if self._by and plot_name is not None:
+            plt.title("{0} = {1}".format(self._by, plot_name))
 
         # plot the actual distribution on top of it.    
         

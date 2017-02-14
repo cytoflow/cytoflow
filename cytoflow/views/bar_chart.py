@@ -452,7 +452,7 @@ class BarChartView(HasStrictTraits):
             plt.sca(fig.get_axes()[0])
             plt.ylabel(self.statistic)
             
-        if unused_names and plot_name:
+        if unused_names and plot_name is not None:
             plt.title("{0} = {1}".format(unused_names, plot_name))
             
 # in Py3k i could have named arguments after *args, but not in py2.  :-(

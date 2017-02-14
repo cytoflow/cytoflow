@@ -26,6 +26,8 @@ from __future__ import division, absolute_import
 from warnings import warn
 from itertools import product
 
+import matplotlib.pyplot as plt
+
 from traits.api import (HasStrictTraits, Str, CStr, Dict, Any, Instance, Bool, 
                         Constant, List, provides, DelegatesTo, Property)
 
@@ -654,6 +656,9 @@ class GaussianMixture2DView(cytoflow.views.ScatterplotView):
                                                     xlim = xlim, 
                                                     ylim = ylim,
                                                     **kwargs)
+        
+        if self._by and plot_name is not None:
+            plt.title("{0} = {1}".format(self._by, plot_name))
 
         # plot the actual distribution on top of it.  display as a "contour"
         # plot with ellipses at 1, 2, and 3 standard deviations
@@ -736,7 +741,9 @@ class GaussianMixture2DView(cytoflow.views.ScatterplotView):
                                    fill = False,
                                    linewidth = 2,
                                    alpha = 0.33)
-                         
+                
+        return g
+
     def _plot_ellipse(self, ax, center, width, height, angle, **kwargs):
         tf = transforms.Affine2D() \
              .scale(width * 0.5, height * 0.5) \

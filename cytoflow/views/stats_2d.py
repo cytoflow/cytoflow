@@ -633,7 +633,7 @@ class Stats2DView(HasStrictTraits):
         plt.xlabel(self.xstatistic)
         plt.ylabel(self.ystatistic)
         
-        if unused_names and plot_name:
+        if unused_names and plot_name is not None:
             plt.title("{0} = {1}".format(unused_names, plot_name))
 
 
