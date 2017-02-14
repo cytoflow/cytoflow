@@ -409,16 +409,16 @@ class GaussianMixture1DOp(HasStrictTraits):
                         g = group
                                
                     mean_stat.loc[g] = self._scale.inverse(gmm.means_[c][0])
-                    stdev_stat.loc[g] = self._scale.inverse(np.sqrt(gmm.covariances_[c][0]))
+                    stdev_stat.loc[g] = self._scale.inverse(np.sqrt(gmm.covariances_[c][0]))[0]
                     interval_stat.loc[g] = (self._scale.inverse(gmm.means_[c][0] - np.sqrt(gmm.covariances_[c][0][0])),
                                             self._scale.inverse(gmm.means_[c][0] + np.sqrt(gmm.covariances_[c][0][0])))
                     prop_stat.loc[g] = gmm.weights_[c]
                      
-            new_experiment.statistics[(self.name, "mean")] = mean_stat
-            new_experiment.statistics[(self.name, "stdev")] = stdev_stat
+            new_experiment.statistics[(self.name, "mean")] = pd.to_numeric(mean_stat)
+            new_experiment.statistics[(self.name, "stdev")] = pd.to_numeric(stdev_stat)
             new_experiment.statistics[(self.name, "interval")] = interval_stat
             if self.num_components > 1:
-                new_experiment.statistics[(self.name, "proportion")] = prop_stat
+                new_experiment.statistics[(self.name, "proportion")] = pd.to_numeric(prop_stat)
             
         new_experiment.history.append(self.clone_traits(transient = lambda t: True))
         return new_experiment

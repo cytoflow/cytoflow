@@ -469,10 +469,10 @@ class GaussianMixture2DOp(HasStrictTraits):
                     ymean_stat.loc[g] = self._yscale.inverse(gmm.means_[c][0])
                     prop_stat.loc[g] = gmm.weights_[c]
                      
-            new_experiment.statistics[(self.name, "xmean")] = xmean_stat
-            new_experiment.statistics[(self.name, "ymean")] = ymean_stat
+            new_experiment.statistics[(self.name, "xmean")] = pd.to_numeric(xmean_stat)
+            new_experiment.statistics[(self.name, "ymean")] = pd.to_numeric(ymean_stat)
             if self.num_components > 1:
-                new_experiment.statistics[(self.name, "proportion")] = prop_stat
+                new_experiment.statistics[(self.name, "proportion")] = pd.to_numeric(prop_stat)
             
                     
         new_experiment.history.append(self.clone_traits(transient = lambda t: True))
@@ -681,7 +681,7 @@ class GaussianMixture2DView(cytoflow.views.ScatterplotView):
                 
             if len(gmm_name) == 0:
                 gmm_name = None
-            if len(gmm_name) == 1:
+            elif len(gmm_name) == 1:
                 gmm_name = gmm_name[0]   
 
             if gmm_name is not None:

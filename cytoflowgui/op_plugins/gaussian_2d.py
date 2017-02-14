@@ -135,7 +135,10 @@ class GaussianMixture2DPluginView(GaussianMixture2DView, PluginViewMixin):
         self.plot(wi.previous.result, plot_name = wi.current_plot)
         
     def enum_plots_wi(self, wi):
-        return self.enum_plots(wi.previous.result)
+        try:
+            return self.enum_plots(wi.previous.result)
+        except:
+            return []
         
     def should_plot(self, changed):
         """
