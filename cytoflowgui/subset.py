@@ -75,7 +75,7 @@ class CategorySubset(HasStrictTraits):
     selected = List
     
     str = Property(trait = Str,
-                          depends_on = 'name, subset[]')
+                          depends_on = 'name, selected[]')
     
     def default_traits_view(self):
         return View(Item('selected',
