@@ -87,7 +87,7 @@ class GaussianMixture2DPluginOp(GaussianMixture2DOp, PluginOpMixin):
     sigma = util.PositiveFloat(0.0, allow_zero = True, estimate = True)
     by = List(Str, estimate = True)
     
-    _gmms = Dict(Any, Instance(mixture.GMM), transient = True, estimate_result = True)
+    _gmms = Dict(Any, Instance(mixture.GaussianMixture), transient = True, estimate_result = True)
 
     def default_view(self, **kwargs):
         return GaussianMixture2DPluginView(op = self, **kwargs)

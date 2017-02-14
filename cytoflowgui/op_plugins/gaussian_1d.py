@@ -23,7 +23,7 @@ Created on Oct 9, 2015
 
 from sklearn import mixture
 
-from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor, \
+from traitsui.api import View, Item, EnumEditor, Controller, VGroup, \
                          CheckListEditor, ButtonEditor, TextEditor
 from envisage.api import Plugin, contributes_to
 from traits.api import provides, Callable, Instance, Str, List, Dict, Any, DelegatesTo, on_trait_change
@@ -81,7 +81,7 @@ class GaussianMixture1DPluginOp(PluginOpMixin, GaussianMixture1DOp):
     sigma = util.PositiveFloat(0.0, allow_zero = True, estimate = True)
     by = List(Str, estimate = True)
     
-    _gmms = Dict(Any, Instance(mixture.GMM), transient = True, estimate_result = True)
+    _gmms = Dict(Any, Instance(mixture.GaussianMixture), transient = True, estimate_result = True)
     
     def estimate(self, experiment):
         GaussianMixture1DOp.estimate(self, experiment, subset = self.subset)

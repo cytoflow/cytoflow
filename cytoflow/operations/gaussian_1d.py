@@ -609,10 +609,12 @@ class GaussianMixture1DView(cytoflow.views.HistogramView):
             else:      
                 gmm_name = tuple(facets)
                 
-            if len(gmm_name) == 1:
-                gmm_name = gmm_name[0]   
+            if len(gmm_name) == 0:
+                gmm_name = None
+            elif len(gmm_name) == 1:
+                gmm_name = gmm_name[0]
                         
-            if gmm_name:
+            if gmm_name is not None:
                 if gmm_name in self.op._gmms:
                     gmm = self.op._gmms[gmm_name]
                 else:
