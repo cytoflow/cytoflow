@@ -46,8 +46,7 @@ class ScatterplotHandler(Controller, ViewHandlerMixin):
 
     def default_traits_view(self):
         return View(VGroup(
-                    VGroup(Item('name'),
-                           Item('xchannel',
+                    VGroup(Item('xchannel',
                                 editor=EnumEditor(name='context.channels'),
                                 label = "X Channel"),
                            Item('xscale',

@@ -98,8 +98,7 @@ class Stats2DHandler(Controller, ViewHandlerMixin, StatisticViewHandlerMixin):
     
     def default_traits_view(self):
         return View(VGroup(
-                    VGroup(Item('name'),
-                           Item('xstatistic',
+                    VGroup(Item('xstatistic',
                                 editor = EnumEditor(name = 'context.statistics_names'),
                                 label = "X Statistic"),
                            Item('xscale', label = "X Scale"),

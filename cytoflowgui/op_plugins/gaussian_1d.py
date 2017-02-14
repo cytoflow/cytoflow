@@ -95,9 +95,7 @@ class GaussianMixture1DPluginOp(PluginOpMixin, GaussianMixture1DOp):
 class GaussianMixture1DViewHandler(Controller, ViewHandlerMixin):
     def default_traits_view(self):
         return View(VGroup(
-                    VGroup(Item('name',
-                                style = 'readonly'),
-                           Item('channel',
+                    VGroup(Item('channel',
                                 style = 'readonly'),
                            Item('by',
                                 editor = TextEditor(),

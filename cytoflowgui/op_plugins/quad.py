@@ -51,9 +51,7 @@ class QuadHandler(Controller, OpHandlerMixin):
 class ThresholdViewHandler(Controller, ViewHandlerMixin):
     def default_traits_view(self):
         return View(VGroup(
-                    VGroup(Item('name',
-                                style = "readonly"),
-                           Item('xchannel', 
+                    VGroup(Item('xchannel', 
                                 label = "X Channel",
                                 style = "readonly"),
                            Item('xthreshold', 

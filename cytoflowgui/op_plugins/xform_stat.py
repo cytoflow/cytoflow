@@ -121,9 +121,7 @@ class TransformStatisticHandler(Controller, OpHandlerMixin):
         return ret
     
     def default_traits_view(self):
-        return View(Item('name',
-                         editor = TextEditor(auto_set = False)),
-                    Item('statistic',
+        return View(Item('statistic',
                          editor=EnumEditor(name='handler.prev_statistics'),
                          label = "Statistic"),
                     Item('statistic_name',

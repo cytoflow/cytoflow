@@ -46,8 +46,7 @@ class TableHandler(Controller, ViewHandlerMixin, StatisticViewHandlerMixin):
 
     def default_traits_view(self):
         return View(VGroup(
-                    VGroup(Item('name'),
-                           Item('statistic',
+                    VGroup(Item('statistic',
                                 editor = EnumEditor(name='context.statistics_names'),
                                 label = "Statistic"),
                            Item('row_facet',

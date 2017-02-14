@@ -48,9 +48,7 @@ class RangeHandler(Controller, OpHandlerMixin):
 class RangeViewHandler(Controller, ViewHandlerMixin):
     def default_traits_view(self):
         return View(VGroup(
-                    VGroup(Item('name',
-                                style = "readonly"),
-                           Item('channel', 
+                    VGroup(Item('channel', 
                                 label = "Channel",
                                 style = "readonly"),
                            Item('scale'),

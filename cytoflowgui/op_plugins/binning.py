@@ -65,9 +65,7 @@ class BinningPluginOp(PluginOpMixin, BinningOp):
 class BinningViewHandler(Controller, ViewHandlerMixin):
     def default_traits_view(self):
         return View(VGroup(
-                    VGroup(Item('name',
-                                style = 'readonly'),
-                           Item('channel',
+                    VGroup(Item('channel',
                                 style = 'readonly'),
                            Item('huefacet',
                                 style = 'readonly'),

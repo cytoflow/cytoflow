@@ -156,9 +156,7 @@ class BleedthroughLinearPluginOp(PluginOpMixin, BleedthroughLinearOp):
 
 class BleedthroughLinearViewHandler(Controller, ViewHandlerMixin):
     def default_traits_view(self):
-        return View(Item('name',
-                         style = 'readonly'),
-                    Item('context.view_warning',
+        return View(Item('context.view_warning',
                          resizable = True,
                          visible_when = 'context.view_warning',
                          editor = ColorTextEditor(foreground_color = "#000000",

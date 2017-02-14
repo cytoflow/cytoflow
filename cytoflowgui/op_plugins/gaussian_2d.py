@@ -101,9 +101,7 @@ class GaussianMixture2DPluginOp(GaussianMixture2DOp, PluginOpMixin):
 class GaussianMixture2DViewHandler(Controller, ViewHandlerMixin):
     def default_traits_view(self):
         return View(VGroup(
-                    VGroup(Item('name',
-                                style = 'readonly'),
-                           Item('xchannel',
+                    VGroup(Item('xchannel',
                                 style = 'readonly'),
                            Item('ychannel',
                                 style = 'readonly'),

@@ -47,7 +47,6 @@ class Kde2DHandler(Controller, ViewHandlerMixin):
     def default_traits_view(self):
         return View(VGroup(
                     VGroup(Heading("WARNING: Very slow!"),
-                           Item('name'),
                            Item('xchannel',
                                 editor=EnumEditor(name='context.channels'),
                                 label = "X Channel"),

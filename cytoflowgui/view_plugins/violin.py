@@ -46,8 +46,7 @@ class ViolinHandler(Controller, ViewHandlerMixin):
     
     def default_traits_view(self):
         return View(VGroup(
-                    VGroup(Item('name'),
-                           Item('variable',
+                    VGroup(Item('variable',
                                 editor=ExtendableEnumEditor(name='context.conditions_names'),
                                 label = "X Variable"),
                            Item('channel',
