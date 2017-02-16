@@ -154,13 +154,13 @@ class FlowTask(Task):
          
             import_op.tubes = [tube1, tube2, tube3, tube4]
             
-#             self.add_operation(ChannelStatisticPlugin().id)
-#             stat_op = self.model.workflow[1].operation
-#             stat_op.name = "Test"
-#             stat_op.channel = "Y2-A"
-#             stat_op.statistic_name = "Geom.Mean"
-#             stat_op.by = ["Dox", "Replicate"]
-#             self.model.selected = self.model.workflow[1]
+            self.add_operation(ChannelStatisticPlugin().id)
+            stat_op = self.model.workflow[1].operation
+            stat_op.name = "Test"
+            stat_op.channel = "Y2-A"
+            stat_op.statistic_name = "Geom.Mean"
+            stat_op.by = ["Dox", "Replicate"]
+            self.model.selected = self.model.workflow[1]
                     
         self.model.modified = False
     
@@ -256,9 +256,17 @@ class FlowTask(Task):
                   message = "Error trying to load the workflow.")
             return
 
-        # clear the wi status
+        # a few things to take care of when reloading
         for wi in new_workflow:
+            # clear the wi status
             wi.status = "invalid"
+            
+            # re-load the subsets.  i don't know why this is necessary.
+            for view in wi.views:
+                subset_list = view.subset_list
+                view.subset_list = []
+                for s in subset_list:
+                    view.subset_list.append(s)
 
         # replace the current workflow with the one we just loaded
         

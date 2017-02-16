@@ -74,8 +74,7 @@ class CategorySubset(HasStrictTraits):
     values = List
     selected = List
     
-    str = Property(trait = Str,
-                          depends_on = 'name, selected[]')
+    str = Property(Str, depends_on = 'name, selected[]')
     
     def default_traits_view(self):
         return View(Item('selected',
@@ -105,7 +104,7 @@ class RangeSubset(HasStrictTraits):
     high = CFloat
     low = CFloat
     
-    str = Property(List, depends_on = "name, values, high, low")
+    str = Property(Str, depends_on = "name, values, high, low")
     
     def default_traits_view(self):
         return View(Item('high',
