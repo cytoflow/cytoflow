@@ -257,7 +257,7 @@ class FlowTask(Task):
             return
 
         # a few things to take care of when reloading
-        for wi in new_workflow:
+        for wi_idx, wi in enumerate(new_workflow):
             # clear the wi status
             wi.status = "invalid"
             
@@ -267,6 +267,11 @@ class FlowTask(Task):
                 view.subset_list = []
                 for s in subset_list:
                     view.subset_list.append(s)
+                    
+            # re-link the linked list.  i thought this would get taken care
+            # of in deserialization, but i guess not...
+            if wi_idx > 0:
+                wi.previous = new_workflow[wi_idx - 1]
 
         # replace the current workflow with the one we just loaded
         
