@@ -24,8 +24,8 @@ Created on Oct 9, 2015
 import numpy as np
 import scipy.stats
 
-from traitsui.api import View, Item, EnumEditor, Controller, VGroup, \
-                         CheckListEditor, TextEditor
+from traitsui.api import (View, Item, EnumEditor, Controller, VGroup,
+                          CheckListEditor, TextEditor)
 from envisage.api import Plugin, contributes_to
 from traits.api import provides, Callable, List, on_trait_change
 from pyface.api import ImageResource
@@ -77,14 +77,9 @@ class ChannelStatisticHandler(Controller, OpHandlerMixin):
 
 class ChannelStatisticPluginOp(PluginOpMixin, ChannelStatisticOp):
     handler_factory = Callable(ChannelStatisticHandler)
-    subset_list = List(ISubset)  #override the PluginOpMixin definition
     
-    # override PluginOpMixin's definition
-    @on_trait_change("subset_list.str", post_init = True)
-    def _subset_changed(self, obj, name, old, new):
-        self.changed = "api"
-    
-    # functions aren't picklable, so send the name instead
+    # functions aren't picklable, so make this one transient 
+    # and send the name instead
     function = Callable(transient = True)
     
     def apply(self, experiment):
