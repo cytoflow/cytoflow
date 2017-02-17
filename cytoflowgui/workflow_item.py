@@ -93,6 +93,13 @@ class WorkflowItem(HasStrictTraits):
     statistics = Dict(Tuple(Str, Str), pd.Series, status = True)
     statistics_names = Property(depends_on = 'statistics')
     
+    previous_channels = List(Str, status = True)
+    previous_conditions = Dict(Str, pd.Series, status = True)
+    previous_conditions_names = Property(depends_on = 'previous_conditions')
+    previous_metadata = Dict(Str, Any, status = True)
+    previous_statistics = Dict(Tuple(Str, Str), pd.Series, status = True)
+    previous_statistics_names = Property(depends_on = 'previous_statisticss')
+
     # the IViews against the output of this operation
     views = List(IView, copy = "ref")
     
@@ -183,6 +190,20 @@ class WorkflowItem(HasStrictTraits):
             return self.statistics.keys()
         else:
             return []
+
+    @cached_property
+    def _get_previous_conditions_names(self):
+        if self.previous_conditions:
+            return self.previous_conditions.keys()
+        else:
+            return []
+        
+    @cached_property
+    def _get_previous_statistics_names(self):
+        if self.previous_statistics:
+            return self.previous_statistics.keys()
+        else:
+            return []
         
     def __str__(self):
         return "<{}: {}>".format(self.__class__.__name__, self.operation.__class__.__name__)
@@ -231,6 +252,16 @@ class RemoteWorkflowItem(WorkflowItem):
         logging.debug("RemoteWorkflowItem._prev_result_changed :: {}"
                       .format(self, new))
 
+        if self.previous and self.previous.result:
+            self.previous_channels = list(self.previous.result.channels)
+            self.previous_conditions = dict(self.previous.result.conditions)
+            
+            # some things in metadata are unpicklable, functions and such,
+            # so filter them out.
+            self.previous_metadata = filter_unpicklable(dict(self.previous.result.metadata))
+            
+            self.previous_statistics = dict(self.previous.result.statistics)
+
         if self.operation.should_clear_estimate("prev_result"):
             try:
                 self.operation.clear_estimate()
@@ -261,11 +292,11 @@ class RemoteWorkflowItem(WorkflowItem):
             self.metadata = filter_unpicklable(dict(self.result.metadata))
             
             self.statistics = dict(self.result.statistics)
-        else:
-            self.channels = []
-            self.conditions = {}
-            self.metadata = {}
-            self.statistics = {}
+#         else:
+#             self.channels = []
+#             self.conditions = {}
+#             self.metadata = {}
+#             self.statistics = {}
             
     @on_trait_change('current_view', post_init = True)
     def _current_view_changed(self, obj, name, old, new):
