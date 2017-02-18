@@ -66,7 +66,7 @@ class TransformStatisticHandler(Controller, OpHandlerMixin):
     def _get_prev_statistics(self):
         context = self.info.ui.context['context']
         if context and context.previous:
-            return context.previous.statistics.keys()
+            return context.previous_statistics.keys()
         else:
             return []
 
@@ -74,10 +74,10 @@ class TransformStatisticHandler(Controller, OpHandlerMixin):
     def _get_indices(self):
         context = self.info.ui.context['context']
         
-        if not (context and context.previous and context.previous.statistics and self.model and self.model.statistic[0]):
+        if not (context and context.previous and context.previous_statistics and self.model and self.model.statistic[0]):
             return []
         
-        stat = context.previous.statistics[self.model.statistic]
+        stat = context.previous_statistics[self.model.statistic]
         data = pd.DataFrame(index = stat.index)
         
         if self.model.subset:
@@ -100,11 +100,11 @@ class TransformStatisticHandler(Controller, OpHandlerMixin):
     def _get_levels(self):
         context = self.info.ui.context['context']
         
-        if not (context and context.previous and context.previous.statistics 
+        if not (context and context.previous and context.previous_statistics 
                 and self.model and self.model.statistic[0]):
             return []
         
-        stat = context.previous.statistics[self.model.statistic]
+        stat = context.previous_statistics[self.model.statistic]
         index = stat.index
         
         names = list(index.names)

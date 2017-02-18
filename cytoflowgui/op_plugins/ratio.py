@@ -30,10 +30,10 @@ class RatioHandler(Controller, OpHandlerMixin):
         return View(Item('name',
                          editor = TextEditor(auto_set = False)),
                     Item('numerator',
-                         editor=EnumEditor(name='context.previous.channels'),
+                         editor=EnumEditor(name='context.previous_channels'),
                          label = "Numerator"),
                     Item('denominator',
-                         editor=EnumEditor(name='context.previous.channels'),
+                         editor=EnumEditor(name='context.previous_channels'),
                          label = "Denominator"),
                     shared_op_traits) 
 

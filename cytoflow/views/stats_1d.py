@@ -381,7 +381,7 @@ class Stats1DView(HasStrictTraits):
                 raise util.CytoflowViewError("You must use facets {} in either the "
                                              "plot variables or the plot name. "
                                              "Possible plot names: {}"
-                                             .format(groupby.groups.keys()))
+                                             .format(unused_names, groupby.groups.keys()))
 
             if plot_name not in set(groupby.groups.keys()):
                 raise util.CytoflowViewError("Plot {} not from plot_enum; must "

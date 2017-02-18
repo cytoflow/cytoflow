@@ -93,6 +93,8 @@ class WorkflowItem(HasStrictTraits):
     statistics = Dict(Tuple(Str, Str), pd.Series, status = True)
     statistics_names = Property(depends_on = 'statistics')
     
+    # we have to keep copies of these around to facilitate loading
+    # and saving.
     previous_channels = List(Str, status = True)
     previous_conditions = Dict(Str, pd.Series, status = True)
     previous_conditions_names = Property(depends_on = 'previous_conditions')
