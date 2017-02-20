@@ -48,6 +48,7 @@ class _ValueBoundsEditor(Editor):
     low = Any
     high = Any
     
+    # a format string for the text boxes
     format = Str
 
     # the slider positions.  either synchronized to low, high immediately or 

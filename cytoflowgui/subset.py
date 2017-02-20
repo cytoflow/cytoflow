@@ -113,6 +113,7 @@ class RangeSubset(HasStrictTraits):
                                      values = self.values,
                                      low_name = 'low',
                                      high_name = 'high',
+                                     format = '%g',
                                      auto_set = False)))
         
     # MAGIC: gets the value of the Property trait "subset_str"
