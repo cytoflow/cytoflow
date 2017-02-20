@@ -23,7 +23,6 @@ import matplotlib.pyplot as plt
 
 from matplotlib.table import Table
 
-import numpy as np
 import pandas as pd
 
 from .i_view import IView
@@ -172,11 +171,16 @@ class TableView(HasStrictTraits):
             sp.set_color('w')
             sp.set_zorder(0)
         
-        loc = 'best'
+        loc = 'upper left'
         bbox = None
         
         t = Table(ax, loc, bbox, **kwargs)
-        width = [1.0 / num_cols] * num_cols
+        t.auto_set_font_size(False)
+        for c in range(num_cols):
+            t.auto_set_column_width(c)
+
+        width = [0.2] * num_cols
+
         height = t._approx_text_height() * 1.8
          
         # make the main table       
@@ -203,18 +207,24 @@ class TableView(HasStrictTraits):
                         if len(agg_idx) == 1:
                             agg_idx = agg_idx[0]
                             
-                            
+                        try:
+                            text = "{:g}".format(data.loc[agg_idx][stat.name])
+                        except ValueError:
+                            text = data.loc[agg_idx][stat.name]
                         t.add_cell(row_idx, 
                                    col_idx,
                                    width = width[col_idx],
                                    height = height,
-                                   text = data.loc[agg_idx][stat.name])
+                                   text = text)
                         
         # row headers
         if self.row_facet:
             for (ri, r) in enumerate(row_groups):
                 row_idx = ri * len(subrow_groups) + row_offset
-                text = "{0} = {1}".format(self.row_facet, r)
+                try:
+                    text = "{0} = {1:g}".format(self.row_facet, r)
+                except ValueError:
+                    text = "{0} = {1}".format(self.row_facet, r)
                 t.add_cell(row_idx,
                            0,
                            width = width[0],
@@ -226,7 +236,11 @@ class TableView(HasStrictTraits):
             for (ri, r) in enumerate(row_groups):
                 for (rri, rr) in enumerate(subrow_groups):
                     row_idx = ri * len(subrow_groups) + rri + row_offset
-                    text = "{0} = {1}".format(self.subrow_facet, rr)
+                    try:
+                        text = "{0} = {1:g}".format(self.subrow_facet, rr)
+                    except ValueError:
+                        text = "{0} = {1}".format(self.subrow_facet, rr)
+                        
                     t.add_cell(row_idx,
                                1,
                                width = width[1],
@@ -237,19 +251,25 @@ class TableView(HasStrictTraits):
         if self.column_facet:
             for (ci, c) in enumerate(col_groups):
                 col_idx = ci * len(subcol_groups) + col_offset
-                text = "{0} = {1}".format(self.column_facet, c)
+                try:
+                    text = "{0} = {1:g}".format(self.column_facet, c)
+                except ValueError:
+                    text = "{0} = {1}".format(self.column_facet, c)
                 t.add_cell(0,
                            col_idx,
                            width = width[col_idx],
                            height = height,
                            text = text)
 
-        # column headers
+        # subcolumn headers
         if self.subcolumn_facet:
             for (ci, c) in enumerate(col_groups):
                 for (cci, cc) in enumerate(subcol_groups):
                     col_idx = ci * len(subcol_groups) + cci + col_offset
-                    text = "{0} = {1}".format(self.subcolumn_facet, c)
+                    try:
+                        text = "{0} = {1:g}".format(self.subcolumn_facet, cc)
+                    except ValueError:
+                        text = "{0} = {1}".format(self.subcolumn_facet, cc)
                     t.add_cell(1,
                                col_idx,
                                width = width[col_idx],
