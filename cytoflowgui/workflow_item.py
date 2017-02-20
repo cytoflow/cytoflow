@@ -100,7 +100,7 @@ class WorkflowItem(HasStrictTraits):
     previous_conditions_names = Property(depends_on = 'previous_conditions')
     previous_metadata = Dict(Str, Any, status = True)
     previous_statistics = Dict(Tuple(Str, Str), pd.Series, status = True)
-    previous_statistics_names = Property(depends_on = 'previous_statisticss')
+    previous_statistics_names = Property(depends_on = 'previous_statistics')
 
     # the IViews against the output of this operation
     views = List(IView, copy = "ref")
