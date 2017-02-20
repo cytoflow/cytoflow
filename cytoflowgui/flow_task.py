@@ -138,19 +138,19 @@ class FlowTask(Task):
             
             import_op = self.model.workflow[0].operation
             import_op.conditions["Dox"] = "float"
-            import_op.conditions["Replicate"] = "int"
+            import_op.conditions["Well"] = "category"
          
             tube1 = Tube(file = "../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs",
-                         conditions = {"Dox" : 0.0, "Replicate" : 1})
+                         conditions = {"Dox" : 0.0, "Well" : 'A'})
          
             tube2 = Tube(file = "../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs",
-                         conditions = {"Dox" : 10.0, "Replicate" : 1})
+                         conditions = {"Dox" : 10.0, "Well" : 'A'})
              
             tube3 = Tube(file = "../cytoflow/tests/data/Plate01/CFP_Well_B4.fcs",
-                         conditions = {"Dox" : 0.0, "Replicate" : 2})
+                         conditions = {"Dox" : 0.0, "Well" : 'B'})
          
             tube4 = Tube(file = "../cytoflow/tests/data/Plate01/RFP_Well_A6.fcs",
-                         conditions = {"Dox" : 10.0, "Replicate" : 2})
+                         conditions = {"Dox" : 10.0, "Well" : 'B'})
          
             import_op.tubes = [tube1, tube2, tube3, tube4]
             
@@ -159,7 +159,7 @@ class FlowTask(Task):
             stat_op.name = "Test"
             stat_op.channel = "Y2-A"
             stat_op.statistic_name = "Geom.Mean"
-            stat_op.by = ["Dox", "Replicate"]
+            stat_op.by = ["Dox", "Well"]
             self.model.selected = self.model.workflow[1]
                     
         self.model.modified = False
