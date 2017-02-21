@@ -29,10 +29,11 @@ if __name__ == '__main__':
     import os
     os.environ['TRAITS_DEBUG'] = "1"
     
-from collections import OrderedDict
+from collections import OrderedDict, Counter
     
-from traits.api import HasTraits, HasStrictTraits, provides, Instance, Str, Int, List, \
-                       Bool, Enum, Float, DelegatesTo, Any, Property, BaseCStr, on_trait_change
+from traits.api import (HasTraits, HasStrictTraits, provides, Instance, Str, 
+                        Int, List, Bool, Enum, Float, DelegatesTo, Any, 
+                        Property, BaseCStr, on_trait_change, Dict)
                        
 from traitsui.api import UI, Group, View, Item, TableEditor, OKCancelButtons, \
                          Controller
@@ -106,9 +107,9 @@ class Tube(HasTraits):
     parent = Instance("ExperimentDialogModel", transient = True)
     
     # needed for fast hashing
-    conditions = Any({}) # a dict
+    conditions = Dict
             
-    def conditions_hash(self):
+    def __hash__(self):
         ret = int(0)
     
         for key, value in self.conditions.iteritems():
@@ -119,7 +120,7 @@ class Tube(HasTraits):
                 
         return ret
     
-    def conditions_eq(self, other):
+    def __eq__(self, other):
     
         if set(self.conditions.keys()) != set(other.conditions.keys()):
             return False
@@ -166,9 +167,9 @@ class ExperimentDialogModel(HasStrictTraits):
     # subsequent tubes for voltage etc. and fail early.
     dummy_experiment = Instance(Experiment)
     
-    # the tubes' traits.
+    # a dict of the dynamic TraitTypes added to the tube instances
     tube_traits = Instance(OrderedDict, ())
-    
+        
     # traits to communicate with the TabularEditor
     update = Bool
     refresh = Bool
@@ -201,6 +202,7 @@ class ExperimentDialogModel(HasStrictTraits):
                           "bool" : Bool,
                           "int" : Int}
         
+        new_tubes = []
         for op_tube in op.tubes:
             tube = Tube(file = op_tube.file,
                         parent = self)
@@ -264,7 +266,9 @@ class ExperimentDialogModel(HasStrictTraits):
                     self.tube_traits[condition] = condition_trait
             tube.trait_set(**op_tube.conditions)
             
-            self.tubes.append(tube)
+            new_tubes.append(tube)
+            
+        self.tubes.extend(new_tubes)
     
     def update_import_op(self, op):
         trait_to_dtype = {"Str" : "category",
@@ -291,11 +295,8 @@ class ExperimentDialogModel(HasStrictTraits):
         op.tubes = tubes
             
     def is_tube_unique(self, tube):
-        for other in self.tubes:
-            if tube != other and tube.conditions_eq(other):
-                return False
-            
-        return True
+        return Counter(self.tubes)[tube] == 1
+    
     
     def _get_valid(self):
         for tube in self.tubes:
