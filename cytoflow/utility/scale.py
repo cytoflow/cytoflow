@@ -156,5 +156,9 @@ def set_default_scale(scale):
 import cytoflow.utility.linear_scale   # @UnusedImport
 import cytoflow.utility.log_scale      # @UnusedImport
 import cytoflow.utility.logicle_scale  # @UnusedImport
-import cytoflow.utility.hlog_scale     # @UnusedImport
+
+# this scale is REALLY SLOW.  If you want it for your analysis, you can
+# import it into your script, that will register it with the global list.
+
+# import cytoflow.utility.hlog_scale     # @UnusedImport
 
