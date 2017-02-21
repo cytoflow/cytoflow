@@ -454,8 +454,10 @@ class ExperimentDialogHandler(Controller):
         if file_dialog.return_code != PyfaceOK:
             return
         
+        new_tubes = []
         for path in file_dialog.paths:
             try:
+                print path
                 tube_meta = fcsparser.parse(path, 
                                             meta_data_only = True, 
                                             reformat_meta = True)
@@ -512,9 +514,9 @@ class ExperimentDialogHandler(Controller):
                 
                 tube.trait_set(**{"Row" : row, "Col" : col})
                 
-            
-            self.model.tubes.append(tube)
-#             self.btn_add_cond.setEnabled(True)
+            new_tubes.append(tube)
+
+        self.model.tubes.extend(new_tubes)
             
     def _on_remove_tubes(self):
         conf = confirm(None,
