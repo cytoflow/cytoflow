@@ -29,10 +29,10 @@ if __name__ == '__main__':
     import os
     os.environ['TRAITS_DEBUG'] = "1"
     
-from collections import OrderedDict, Counter
+from collections import OrderedDict
     
 from traits.api import (HasTraits, HasStrictTraits, provides, Instance, Str, 
-                        Int, List, Bool, Enum, Float, DelegatesTo, Any, 
+                        Int, List, Bool, Enum, Float, DelegatesTo,
                         Property, BaseCStr, on_trait_change, Dict)
                        
 from traitsui.api import UI, Group, View, Item, TableEditor, OKCancelButtons, \
@@ -109,7 +109,7 @@ class Tube(HasTraits):
     # needed for fast hashing
     conditions = Dict
             
-    def __hash__(self):
+    def conditions_hash(self):
         ret = int(0)
     
         for key, value in self.conditions.iteritems():
@@ -120,20 +120,21 @@ class Tube(HasTraits):
                 
         return ret
     
-    def __eq__(self, other):
-    
-        if set(self.conditions.keys()) != set(other.conditions.keys()):
-            return False
-        
-        for key in self.conditions:
-            if self.conditions[key] != other.conditions[key]:
-                return False
-                
-        return True
-    
     def _anytrait_changed(self, name, old, new):
         if self.trait(name).condition:
+            old_hash = self.conditions_hash()
+            
+            self.parent.counter[old_hash] -= 1
+            if self.parent.counter[old_hash] == 0:
+                del self.parent.counter[old_hash]
+                
             self.conditions[name] = new
+            
+            new_hash = self.conditions_hash()
+            if new_hash not in self.parent.counter:
+                self.parent.counter[new_hash] = 1
+            else:
+                self.parent.counter[new_hash] += 1
 
     
 class ExperimentColumn(ObjectColumn):
@@ -160,6 +161,9 @@ class ExperimentDialogModel(HasStrictTraits):
     # the heart of the model, a list of Tubes
     tubes = List(Tube)
     
+    # keeps track of whether a tube is unique or not
+    counter = Dict(Int, Int)
+    
     # are all the tubes unique?
     valid = Property()
     
@@ -168,8 +172,8 @@ class ExperimentDialogModel(HasStrictTraits):
     dummy_experiment = Instance(Experiment)
     
     # a dict of the dynamic TraitTypes added to the tube instances
-    tube_traits = Instance(OrderedDict, ())
-        
+    tube_traits = Instance(OrderedDict, ())    
+
     # traits to communicate with the TabularEditor
     update = Bool
     refresh = Bool
@@ -270,6 +274,23 @@ class ExperimentDialogModel(HasStrictTraits):
             
         self.tubes.extend(new_tubes)
     
+    @on_trait_change('tubes_items')
+    def _tubes_items(self, event):
+        for tube in event.added:
+            tube_hash = tube.conditions_hash()
+            if tube_hash in self.counter:
+                self.counter[tube_hash] += 1
+            else:
+                self.counter[tube_hash] = 1
+                
+        for tube in event.removed:
+            tube_hash = tube.conditions_hash()
+            if self.counter[tube_hash] == 1:
+                del self.counter[tube_hash]
+            else:
+                self.counter[tube_hash] -= 1
+
+    
     def update_import_op(self, op):
         trait_to_dtype = {"Str" : "category",
                           "Float" : "float",
@@ -295,15 +316,15 @@ class ExperimentDialogModel(HasStrictTraits):
         op.tubes = tubes
             
     def is_tube_unique(self, tube):
-        return Counter(self.tubes)[tube] == 1
+        tube_hash = tube.conditions_hash()
+        if tube_hash in self.counter:
+            return self.counter[tube.conditions_hash()] == 1
+        else:
+            return False
     
     
     def _get_valid(self):
-        for tube in self.tubes:
-            if not self.is_tube_unique(tube):
-                return False
-    
-        return True
+        return len(set(self.counter)) == len(self.tubes)
    
 
 class PlateDirectoryDialog(QtDirectoryDialog):
@@ -571,9 +592,22 @@ class ExperimentDialogHandler(Controller):
 
         for tube, trait_name in self.model.selected:
             if tube != obj:
+
+                old_hash = tube.conditions_hash()
+                self.model.counter[old_hash] -= 1
+                if self.model.counter[old_hash] == 0:
+                    del self.model.counter[old_hash]            
+    
                 # update the underlying traits without notifying the editor
                 tube.trait_setq(**{trait_name: new})
                 tube.conditions[trait_name] = new
+                
+                new_hash = tube.conditions_hash()
+                if new_hash not in self.model.counter:
+                    self.model.counter[new_hash] = 1
+                else:
+                    self.model.counter[new_hash] += 1
+                
 
         # now refresh the editor all at once
         self.table_editor.refresh_editor()
@@ -584,6 +618,9 @@ class ExperimentDialogHandler(Controller):
         Add a new tube metadata
         """
         
+        if trait.condition:
+            self.model.counter.clear()
+            
         trait_names = self.model.tube_traits.keys()
             
         if not name in trait_names:
@@ -598,12 +635,21 @@ class ExperimentDialogHandler(Controller):
                 tube.conditions[name] = trait.default_value
                 if trait.condition:
                     tube.on_trait_change(self._try_multiedit, name)
+                    
+                    tube_hash = tube.conditions_hash()
+                    if tube_hash in self.model.counter:
+                        self.model.counter[tube_hash] += 1
+                    else:
+                        self.model.counter[tube_hash] = 1
+                
 
             self.table_editor.columns.append(ExperimentColumn(name = name,
                                                               label = label,
                                                               editable = trait.condition))
             
     def _remove_metadata(self, name):
+        self.model.counter.clear()
+        
         if name in self.model.tube_traits:
             del self.model.tube_traits[name]
              
@@ -613,6 +659,12 @@ class ExperimentDialogHandler(Controller):
                     
                 tube.remove_trait(name)
                 del tube.conditions[name]
+                
+                tube_hash = tube.conditions_hash()
+                if tube_hash in self.model.counter:
+                    self.model.counter[tube_hash] += 1
+                else:
+                    self.model.counter[tube_hash] = 1   
                 
         table_column = next((x for x in self.table_editor.columns if x.name == name))
         self.table_editor.columns.remove(table_column)
