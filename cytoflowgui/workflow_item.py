@@ -257,12 +257,12 @@ class RemoteWorkflowItem(WorkflowItem):
         if self.previous and self.previous.result:
             self.previous_channels = list(self.previous.result.channels)
             self.previous_conditions = dict(self.previous.result.conditions)
-            
+            self.previous_statistics = dict(self.previous.result.statistics)
+
             # some things in metadata are unpicklable, functions and such,
             # so filter them out.
             self.previous_metadata = filter_unpicklable(dict(self.previous.result.metadata))
             
-            self.previous_statistics = dict(self.previous.result.statistics)
 
         if self.operation.should_clear_estimate("prev_result"):
             try:
@@ -288,17 +288,12 @@ class RemoteWorkflowItem(WorkflowItem):
         if self.result:
             self.channels = list(self.result.channels)
             self.conditions = dict(self.result.conditions)
-            
+            self.statistics = dict(self.result.statistics)
+
             # some things in metadata are unpicklable, functions and such,
             # so filter them out.
             self.metadata = filter_unpicklable(dict(self.result.metadata))
             
-            self.statistics = dict(self.result.statistics)
-#         else:
-#             self.channels = []
-#             self.conditions = {}
-#             self.metadata = {}
-#             self.statistics = {}
             
     @on_trait_change('current_view', post_init = True)
     def _current_view_changed(self, obj, name, old, new):
@@ -362,7 +357,6 @@ class RemoteWorkflowItem(WorkflowItem):
          
         with warnings.catch_warnings(record = True) as w:
             try:    
-                self.result = None
                 self.status = "applying"
                 r = self.operation.apply(prev_result)
                 self.result = r
@@ -374,6 +368,7 @@ class RemoteWorkflowItem(WorkflowItem):
                     self.op_warning = ""
                 
             except CytoflowOpError as e:
+                self.result = None
                 self.op_error = e.__str__()    
                 self.status = "invalid"
                 return

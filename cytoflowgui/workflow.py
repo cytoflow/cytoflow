@@ -439,7 +439,7 @@ class RemoteWorkflow(HasStrictTraits):
                         
                         # load the data from ImportOp.  This should kick off
                         # the chain of handlers to apply the rest of the 
-                        # operations, too manipulate exec_q directly so we 
+                        # operations, too.  manipulate exec_q directly so we 
                         # don't run into timing issues; we want this to be run 
                         # first.
                         if self.workflow[0] == wi:
