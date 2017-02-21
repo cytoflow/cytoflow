@@ -457,7 +457,6 @@ class ExperimentDialogHandler(Controller):
         new_tubes = []
         for path in file_dialog.paths:
             try:
-                print path
                 tube_meta = fcsparser.parse(path, 
                                             meta_data_only = True, 
                                             reformat_meta = True)
