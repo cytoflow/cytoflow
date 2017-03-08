@@ -35,7 +35,7 @@ import pandas as pd
 from cytoflow import Experiment
 from cytoflow.operations.i_operation import IOperation
 from cytoflow.views.i_view import IView
-from cytoflow.utility import CytoflowOpError, CytoflowViewError
+from cytoflow.utility import CytoflowError, CytoflowOpError, CytoflowViewError
 
 from cytoflowgui.flow_task_pane import TabListEditor
 from cytoflowgui.util import DelayedEvent, filter_unpicklable
@@ -341,7 +341,7 @@ class RemoteWorkflowItem(WorkflowItem):
                 else:
                     self.estimate_warning = ""
                 
-            except CytoflowOpError as e:
+            except CytoflowError as e:
                 self.estimate_error = e.__str__()    
                 self.status = "invalid"
                 return        
@@ -367,7 +367,7 @@ class RemoteWorkflowItem(WorkflowItem):
                 else:
                     self.op_warning = ""
                 
-            except CytoflowOpError as e:
+            except CytoflowError as e:
                 self.result = None
                 self.op_error = e.__str__()    
                 self.status = "invalid"
@@ -407,7 +407,7 @@ class RemoteWorkflowItem(WorkflowItem):
                 # the plot updates
                 plt.show()
                      
-            except CytoflowViewError as e:
+            except CytoflowError as e:
                 self.view_error = e.__str__()   
                 plt.clf()
                 plt.show()   
