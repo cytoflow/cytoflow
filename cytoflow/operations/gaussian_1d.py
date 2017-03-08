@@ -630,6 +630,9 @@ class GaussianMixture1DView(cytoflow.views.HistogramView):
                 
             ax = g.facet_axis(i, j)
                                     
+            if len(gmm.means_) != len(ax.patches):
+                return
+                                    
             for k in range(0, len(gmm.means_)):
                 # we want to scale the plots so they have the same area under the
                 # curve as the histograms.  it used to be that we got the area from
