@@ -137,6 +137,8 @@ def run_gui():
     multiprocessing.freeze_support()
     
     from pyface.qt import qt_api
+
+    cmd_line = " ".join(sys.argv)
     
     if qt_api == "pyside":
         print "Cytoflow uses PyQT; but it is trying to use PySide instead."
@@ -145,7 +147,7 @@ def run_gui():
         print " - If you must have both installed, select PyQT by setting the"
         print "   environment variable QT_API to \"pyqt\""
         print "   * eg, on Linux, type on the command line:"
-        print "     QT_API=\"pyqt\" python run.py"
+        print "     QT_API=\"pyqt\" " + cmd_line
         print "   * on Windows, try: "
         print "     setx QT_API \"pyqt\""
 

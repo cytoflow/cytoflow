@@ -24,6 +24,21 @@ Created on Mar 7, 2015
 from traits.etsconfig.api import ETSConfig
 ETSConfig.toolkit = 'qt4'
 
+import matplotlib
+
+# We want matplotlib to use our backend
+matplotlib.use('module://cytoflowgui.matplotlib_backend')
+
+import sip
+
+sip.setapi(u'QDate', 2)
+sip.setapi(u'QDateTime', 2)
+sip.setapi(u'QString', 2)
+sip.setapi(u'QTextStream', 2)
+sip.setapi(u'QTime', 2)
+sip.setapi(u'QUrl', 2)
+sip.setapi(u'QVariant', 2)
+
 import cytoflow
 
 from run import run_gui
