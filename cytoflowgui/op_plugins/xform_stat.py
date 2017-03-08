@@ -59,16 +59,16 @@ transform_functions = {"Mean" : np.mean,
 
 class TransformStatisticHandler(Controller, OpHandlerMixin):
     
-    prev_statistics = Property(depends_on = "info.ui.context")
+#     prev_statistics = Property(depends_on = "info.ui.context")
     indices = Property(depends_on = "model.statistic, model.subset")
     levels = Property(depends_on = "model.statistic")    
     
-    def _get_prev_statistics(self):
-        context = self.info.ui.context['context']
-        if context and context.previous:
-            return context.previous_statistics.keys()
-        else:
-            return []
+#     def _get_prev_statistics(self):
+#         context = self.info.ui.context['context']
+#         if context and context.previous:
+#             return context.previous_statistics.keys()
+#         else:
+#             return []
 
     # MAGIC: gets the value for the property indices
     def _get_indices(self):
@@ -121,8 +121,10 @@ class TransformStatisticHandler(Controller, OpHandlerMixin):
         return ret
     
     def default_traits_view(self):
-        return View(Item('statistic',
-                         editor=EnumEditor(name='handler.prev_statistics'),
+        return View(Item('name',
+                         editor = TextEditor(auto_set = False)),
+                    Item('statistic',
+                         editor=EnumEditor(name='context.previous_statistics_names'),
                          label = "Statistic"),
                     Item('statistic_name',
                          editor = EnumEditor(values = transform_functions.keys()),
