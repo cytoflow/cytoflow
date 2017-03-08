@@ -201,7 +201,7 @@ class HistogramView(HasStrictTraits):
 
         # adjust the limits to clip extreme values
         min_quantile = kwargs.pop("min_quantile", 0.001)
-        max_quantile = kwargs.pop("max_quantile", 0.999) 
+        max_quantile = kwargs.pop("max_quantile", 1.0) 
                 
         xlim = kwargs.pop("xlim", None)
         if xlim is None:
