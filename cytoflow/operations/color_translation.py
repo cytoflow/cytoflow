@@ -160,11 +160,11 @@ class ColorTranslationOp(HasStrictTraits):
                         tube_exp = tube_exp.query(subset)
                     except:
                         raise util.CytoflowOpError("Subset string '{0}' isn't valid"
-                                              .format(self.subset))
+                                              .format(subset))
                                     
                     if len(tube_exp.data) == 0:
                         raise util.CytoflowOpError("Subset string '{0}' returned no events"
-                                              .format(self.subset))
+                                              .format(subset))
                 
                 tube_data = tube_exp.data                
 
