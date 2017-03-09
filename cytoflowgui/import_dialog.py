@@ -33,7 +33,7 @@ from collections import OrderedDict
     
 from traits.api import (HasTraits, HasStrictTraits, provides, Instance, Str, 
                         Int, List, Bool, Enum, Float, DelegatesTo,
-                        Property, BaseCStr, on_trait_change, Dict)
+                        Property, BaseCStr, on_trait_change, Dict, cached_property)
                        
 from traitsui.api import UI, Group, View, Item, TableEditor, OKCancelButtons, \
                          Controller
@@ -108,6 +108,8 @@ class Tube(HasTraits):
     
     # needed for fast hashing
     conditions = Dict
+    
+    all_conditions_set = Property(Bool, depends_on = "conditions")
             
     def conditions_hash(self):
         ret = int(0)
@@ -135,12 +137,16 @@ class Tube(HasTraits):
                 self.parent.counter[new_hash] = 1
             else:
                 self.parent.counter[new_hash] += 1
+                
+    @cached_property
+    def _get_all_conditions_set(self):
+        return len(filter(lambda x: x is None or x == "", self.conditions.values())) == 0
 
     
 class ExperimentColumn(ObjectColumn):
     # override ObjectColumn.get_cell_color
     def get_cell_color(self, obj):
-        if obj.parent.is_tube_unique(obj):
+        if obj.parent.is_tube_unique(obj) and obj.all_conditions_set:
             return super(ObjectColumn, self).get_cell_color(object)
         else:
             return QtGui.QColor('lightpink')
@@ -164,7 +170,7 @@ class ExperimentDialogModel(HasStrictTraits):
     # keeps track of whether a tube is unique or not
     counter = Dict(Int, Int)
     
-    # are all the tubes unique?
+    # are all the tubes unique and filled?
     valid = Property()
     
     # a dummy Experiment, with the first Tube and no events, so we can check
@@ -324,7 +330,7 @@ class ExperimentDialogModel(HasStrictTraits):
     
     
     def _get_valid(self):
-        return len(set(self.counter)) == len(self.tubes)
+        return len(set(self.counter)) == len(self.tubes) and all([x.all_conditions_set for x in self.tubes])
    
 
 class PlateDirectoryDialog(QtDirectoryDialog):
