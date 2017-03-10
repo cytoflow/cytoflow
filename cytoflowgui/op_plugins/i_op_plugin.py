@@ -22,7 +22,7 @@ Created on Mar 15, 2015
 """
 import logging
 
-from traits.api import Interface, Str, HasTraits, on_trait_change, List, Property, Event
+from traits.api import Interface, Str, HasTraits, on_trait_change, List, Property
 from traitsui.api import Group, Item
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.util import DelayedEvent
@@ -73,14 +73,11 @@ class PluginOpMixin(HasTraits):
     def _get_subset(self):
         return " and ".join([subset.str for subset in self.subset_list if subset.str])
     
-    # the event that causes this operation's estimate() function to be called
-    estimate = Event
+    @on_trait_change("subset_list.str", post_init = True)
+    def _subset_changed(self, obj, name, old, new):
+        self.changed = "api"
     
-#     @on_trait_change("subset_list.str", post_init = True)
-#     def _subset_changed(self, obj, name, old, new):
-#         self.changed = "api"
-    
-#     changed = DelayedEvent(delay = 0.2)
+    changed = DelayedEvent(delay = 0.2)
     
     # there are a few pieces of metadata that determine which traits get
     # copied between processes and when.  if a trait has "status = True",
@@ -95,20 +92,20 @@ class PluginOpMixin(HasTraits):
     # why can't we just put this in a workflow listener?  it's because
     # we sometimes need to override or supplement it on a per-module basis
         
-#     @on_trait_change("+", post_init = True)
-#     def _trait_changed(self, obj, name, old, new):
-#         logging.debug("PluginOpMixin::_trait_changed :: {}"
-#                       .format((obj, name, old, new)))
-#         if not obj.trait(name).transient:
-#             if obj.trait(name).status:
-#                 self.changed = "status"
-#             elif obj.trait(name).estimate:
-#                 self.changed = "estimate"
-#             else:
-#                 self.changed = "api"
-#         
-#         if obj.trait(name).estimate_result:
-#             self.changed = "estimate_result"
+    @on_trait_change("+", post_init = True)
+    def _trait_changed(self, obj, name, old, new):
+        logging.debug("PluginOpMixin::_trait_changed :: {}"
+                      .format((obj, name, old, new)))
+        if not obj.trait(name).transient:
+            if obj.trait(name).status:
+                self.changed = "status"
+            elif obj.trait(name).estimate:
+                self.changed = "estimate"
+            else:
+                self.changed = "api"
+        
+        if obj.trait(name).estimate_result:
+            self.changed = "estimate_result"
                 
     def should_apply(self, changed):
         """
