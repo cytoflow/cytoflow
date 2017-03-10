@@ -96,7 +96,7 @@ class BleedthroughLinearHandler(Controller, OpHandlerMixin):
                            label = "Subset",
                            show_border = False,
                            show_labels = False),
-                    Item('context.do_estimate',
+                    Item('estimate',
                          editor = ButtonEditor(value = True,
                                                label = "Estimate!"),
                          show_label = False),

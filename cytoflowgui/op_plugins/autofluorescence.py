@@ -57,7 +57,7 @@ class AutofluorescenceHandler(Controller, OpHandlerMixin):
                            label = "Subset",
                            show_border = False,
                            show_labels = False),
-                    Item('context.do_estimate',
+                    Item('estimate',
                          editor = ButtonEditor(value = True,
                                                label = "Estimate!"),
                          show_label = False),
@@ -71,7 +71,7 @@ class AutofluorescencePluginOp(PluginOpMixin, AutofluorescenceOp):
 
     @on_trait_change('channels_items', post_init = True)
     def _channels_changed(self, obj, name, old, new):
-        self.changed = "estimate"
+        self.changed = 'estimate'
     
     def default_view(self, **kwargs):
         return AutofluorescencePluginView(op = self, **kwargs)
@@ -83,12 +83,12 @@ class AutofluorescencePluginOp(PluginOpMixin, AutofluorescenceOp):
                           util.CytoflowOpWarning)
             
         AutofluorescenceOp.estimate(self, experiment, subset = self.subset)
-        self.changed = "estimate_result"
+        self.changed = 'estimate_result'
         
     def clear_estimate(self):
         self._af_median.clear()
         self._af_stdev.clear()
-        self.changed = "estimate_result"
+        self.changed = 'estimate_result'
     
     def should_clear_estimate(self, changed):
         """

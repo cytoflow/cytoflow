@@ -30,6 +30,9 @@ from cytoflowgui.subset import ISubset
 
 OP_PLUGIN_EXT = 'edu.mit.synbio.cytoflow.op_plugins'
 
+class Changed:
+    
+
 class IOperationPlugin(Interface):
     """
     Attributes
@@ -73,9 +76,12 @@ class PluginOpMixin(HasTraits):
     def _get_subset(self):
         return " and ".join([subset.str for subset in self.subset_list if subset.str])
     
-    # the event that causes this operation's estimate() function to be called
+    # causes this operation's estimate() function to be called
     estimate = Event
     
+    # indicates that some un-watchable element (eg, list membership) changed.
+    changed = Event
+        
 #     @on_trait_change("subset_list.str", post_init = True)
 #     def _subset_changed(self, obj, name, old, new):
 #         self.changed = "api"

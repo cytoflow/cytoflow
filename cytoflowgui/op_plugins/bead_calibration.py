@@ -112,7 +112,7 @@ class BeadCalibrationHandler(Controller, OpHandlerMixin):
                          label = "Peak\nThreshold "),
                     Item('bead_brightness_cutoff',
                          label = "Peak\nCutoff"),
-                    Item('context.do_estimate',
+                    Item('estimate',
                          editor = ButtonEditor(value = True,
                                                label = "Estimate!"),
                          show_label = False),
