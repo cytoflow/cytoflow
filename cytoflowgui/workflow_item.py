@@ -147,9 +147,6 @@ class WorkflowItem(HasStrictTraits):
     estimate_warning = Str(status = True)
     view_error = Str(status = True)
     view_warning = Str(status = True)
-    
-    # the event to make the workflow item re-estimate its internal model
-#     do_estimate = Event
 
     # the central event to kick of WorkflowItem update logic
     changed = Event
@@ -160,6 +157,10 @@ class WorkflowItem(HasStrictTraits):
     # synchronization primitives for plotting
     matplotlib_events = Any(transient = True)
     plot_lock = Any(transient = True)
+           
+    # events to track number of times apply() and plot() are called
+    apply_called = Event
+    plot_called = Event
            
     @cached_property
     def _get_icon(self):
@@ -354,6 +355,7 @@ class RemoteWorkflowItem(WorkflowItem):
         Apply this wi's operation to the previous wi's result
         """
         logging.debug("WorkflowItem.apply :: {}".format((self)))
+        self.apply_called = True
          
         prev_result = self.previous.result if self.previous else None
          
@@ -380,6 +382,7 @@ class RemoteWorkflowItem(WorkflowItem):
         
     def plot(self):              
         logging.debug("WorkflowItem.plot :: {}".format((self)))
+        self.plot_called = True
                      
         if not self.current_view:
             plt.clf()

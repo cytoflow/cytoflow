@@ -44,7 +44,8 @@ matplotlib_backend.py
 
 import threading, sys, logging, traceback
 
-from traits.api import HasStrictTraits, Instance, List, on_trait_change, Any, Bool, Str
+from traits.api import (HasStrictTraits, Instance, List, on_trait_change, Any, 
+                        Bool, Str, Int)
                        
 from traitsui.api import View, Item, InstanceEditor, Spring
 
@@ -70,6 +71,9 @@ class Msg:
     UPDATE_WI = "UPDATE_WI"
 #     CHANGE_DEFAULT_SCALE = "CHANGE_DEFAULT_SCALE"
     ESTIMATE = "ESTIMATE"
+    
+    APPLY_CALLED = "APPLY_CALLED"
+    PLOT_CALLED = "PLOT_CALLED"
     
 class Changed:
     
@@ -141,7 +145,11 @@ class Workflow(HasStrictTraits):
                                      editor = InstanceEditor(view = 'current_view_traits'),
                                      style = 'custom',
                                      show_label = False),
-                                Spring())
+                                Spring(),
+                                Item('apply_calls',
+                                     style = 'readonly'),
+                                Item('plot_calls',
+                                     style = 'readonly'))
 #                                 Label("Default scale"),
 #                                 Item('default_scale',
 #                                      show_label = False))
@@ -160,6 +168,11 @@ class Workflow(HasStrictTraits):
     
     # the Pipe connection object to pass to the matplotlib canvas
     child_matplotlib_conn = Any
+    
+    # count the number of times the remote process calls apply() or plot().
+    # useful for debugging
+    apply_calls = Int(0)
+    plot_calls = Int(0)
     
     def __init__(self, remote_connection, **kwargs):
         super(Workflow, self).__init__(**kwargs)  
@@ -215,6 +228,12 @@ class Workflow(HasStrictTraits):
                     view.copy_traits(new_view, 
                                      status = True,
                                      fixed = lambda t: t is not True)
+                    
+                elif msg == Msg.APPLY_CALLED:
+                    self.apply_calls = payload
+                    
+                elif msg == Msg.PLOT_CALLED:
+                    self.plot_calls = payload
                     
                 else:
                     raise RuntimeError("Bad message from remote")
@@ -399,7 +418,9 @@ class RemoteWorkflow(HasStrictTraits):
     
     exec_q = Instance(UniquePriorityQueue, ())
     exec_lock = Instance(threading.Lock, ())
-
+    
+    apply_calls = Int(0)
+    plot_calls = Int(0)
     
     def run(self, parent_workflow_conn, parent_mpl_conn, log_q):
         
@@ -783,4 +804,14 @@ class RemoteWorkflow(HasStrictTraits):
         if new:
             idx = self.workflow.index(obj)
             self.exec_q.put((idx + 0.1, (obj, obj.plot)))
+            
+    @on_trait_change('workflow:apply_called')
+    def _apply_called(self):
+        self.apply_calls += 1
+        self.message_q.put((Msg.APPLY_CALLED, self.apply_calls))
+        
+    @on_trait_change('workflow:plot_called')
+    def _plot_called(self):
+        self.plot_calls += 1
+        self.message_q.put((Msg.PLOT_CALLED, self.plot_calls))
 
