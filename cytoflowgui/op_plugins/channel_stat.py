@@ -27,7 +27,7 @@ import scipy.stats
 from traitsui.api import (View, Item, EnumEditor, Controller, VGroup,
                           CheckListEditor, TextEditor)
 from envisage.api import Plugin, contributes_to
-from traits.api import provides, Callable, List, on_trait_change
+from traits.api import provides, Callable, List, Property, Str
 from pyface.api import ImageResource
 
 from cytoflow.operations.channel_stat import ChannelStatisticOp
@@ -81,6 +81,13 @@ class ChannelStatisticPluginOp(PluginOpMixin, ChannelStatisticOp):
     # functions aren't picklable, so make this one transient 
     # and send the name instead
     function = Callable(transient = True)
+    
+    subset_list = List(ISubset)    
+    subset = Property(Str, depends_on = "subset_list.str")
+        
+    # MAGIC - returns the value of the "subset" Property, above
+    def _get_subset(self):
+        return " and ".join([subset.str for subset in self.subset_list if subset.str])
     
     def apply(self, experiment):
         if not self.statistic_name:

@@ -48,6 +48,8 @@ from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
 from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.vertical_list_editor import VerticalListEditor
+from cytoflowgui.workflow import Changed
+from cytoflowgui.subset import ISubset
 
 class _BleedthroughControl(HasTraits):
     channel = Str
@@ -187,6 +189,17 @@ class TasbePluginOp(PluginOpMixin):
     _bead_calibration_op = Instance(BeadCalibrationOp, (), transient = True)
     _color_translation_op = Instance(ColorTranslationOp, (), transient = True)
     
+    subset_list = List(ISubset, estimate = True)    
+    subset = Property(Str, depends_on = "subset_list.str")
+        
+    # MAGIC - returns the value of the "subset" Property, above
+    def _get_subset(self):
+        return " and ".join([subset.str for subset in self.subset_list if subset.str])
+    
+    @on_trait_change("subset_list.str", post_init = True)
+    def _subset_changed(self, obj, name, old, new):
+        self.changed = (Changed.ESTIMATE, self)
+    
     @on_trait_change('channels[]', post_init = True)
     def _channels_changed(self, obj, name, old, new):
         self.bleedthrough_list = []
@@ -200,7 +213,7 @@ class TasbePluginOp(PluginOpMixin):
                     continue
                 self.translation_list.append(_TranslationControl(from_channel = c,
                                                                  to_channel = self.to_channel))
-        self.changed = "estimate"
+        self.changed = Changed.ESTIMATE
 
 
     @on_trait_change('to_channel', post_init = True)
@@ -212,7 +225,7 @@ class TasbePluginOp(PluginOpMixin):
                     continue
                 self.translation_list.append(_TranslationControl(from_channel = c,
                                                                  to_channel = self.to_channel))
-        self.changed = "estimate"
+        self.changed = Changed.ESTIMATE
         
     @on_trait_change("bleedthrough_list_items,"
                      "bleedthrough_list.+,"
@@ -220,7 +233,7 @@ class TasbePluginOp(PluginOpMixin):
                      "translation_list.+", 
                      post_init = True)
     def _controls_changed(self, obj, name, old, new):
-        self.changed = "estimate"
+        self.changed = Changed.ESTIMATE
     
     def estimate(self, experiment, subset = None):
         if not self.subset:
@@ -237,7 +250,7 @@ class TasbePluginOp(PluginOpMixin):
         self._af_op.blank_file = self.blank_file
         
         self._af_op.estimate(experiment, subset = self.subset)
-        self.changed = "estimate_result"
+        self.changed = Changed.ESTIMATE_RESULT
         experiment = self._af_op.apply(experiment)
         
         self._bleedthrough_op.controls.clear()
@@ -245,7 +258,7 @@ class TasbePluginOp(PluginOpMixin):
             self._bleedthrough_op.controls[control.channel] = control.file
 
         self._bleedthrough_op.estimate(experiment, subset = self.subset) 
-        self.changed = "estimate_result"
+        self.changed = Changed.ESTIMATE_RESULT
         experiment = self._bleedthrough_op.apply(experiment)
         
         self._bead_calibration_op.beads = BeadCalibrationOp.BEADS[self.beads_name]
@@ -259,7 +272,7 @@ class TasbePluginOp(PluginOpMixin):
             self._bead_calibration_op.units[channel] = self.beads_unit
             
         self._bead_calibration_op.estimate(experiment)
-        self.changed = "estimate_result"
+        self.changed = Changed.ESTIMATE_RESULT
         experiment = self._bead_calibration_op.apply(experiment)
         
         self._color_translation_op.mixture_model = self.mixture_model
@@ -271,21 +284,14 @@ class TasbePluginOp(PluginOpMixin):
                                                  
         self._color_translation_op.estimate(experiment, subset = self.subset)                                         
         
-        self.changed = "estimate_result"
+        self.changed = Changed.ESTIMATE_RESULT
         
         
     def should_clear_estimate(self, changed):
-        """
-        Should the owning WorkflowItem clear the estimated model by calling
-        op.clear_estimate()?  `changed` can be:
-         - "estimate" -- the parameters required to call 'estimate()' (ie
-            traits with estimate = True metadata) have changed
-         - "prev_result" -- the previous WorkflowItem's result changed
-        """
-        if changed == "prev_result":
-            return False
+        if changed == Changed.ESTIMATE:
+            return True
         
-        return True
+        return False
         
         
     def clear_estimate(self):
@@ -294,7 +300,7 @@ class TasbePluginOp(PluginOpMixin):
         self._bead_calibration_op = BeadCalibrationOp()
         self._color_translation_op = ColorTranslationOp()
         
-        self.changed = "estimate_result"
+        self.changed = Changed.ESTIMATE_RESULT
         
         
     def apply(self, experiment):
@@ -349,15 +355,7 @@ class TasbePluginView(PluginViewMixin):
                      "Color Translation"])
         
     def should_plot(self, changed):
-        """
-        Should the owning WorkflowItem refresh the plot when certain things
-        change?  `changed` can be:
-         - "view" -- the view's parameters changed
-         - "result" -- this WorkflowItem's result changed
-         - "prev_result" -- the previous WorkflowItem's result changed
-         - "estimate_result" -- the results of calling "estimate" changed
-        """
-        if changed == "result" or changed == "prev_result":
+        if changed == Changed.RESULT or changed == Changed.PREV_RESULT:
             return False
         
         return True

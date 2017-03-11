@@ -50,7 +50,6 @@ from traitsui.api import View, Item, InstanceEditor, Spring
 
 import matplotlib.pyplot as plt
 
-import cytoflow
 from cytoflow.views import IView
 
 from cytoflowgui.vertical_notebook_editor import VerticalNotebookEditor
@@ -71,6 +70,32 @@ class Msg:
     UPDATE_WI = "UPDATE_WI"
 #     CHANGE_DEFAULT_SCALE = "CHANGE_DEFAULT_SCALE"
     ESTIMATE = "ESTIMATE"
+    
+class Changed:
+    
+    # the operation's parameters to apply() changed
+    OPERATION = "OPERATION"  
+    
+    # the current view's parameters have changed
+    VIEW = "VIEW"         
+    
+    # the operation's parameters to estimate() changed   
+    ESTIMATE = "ESTIMATE"    
+    
+    # the result of calling estimate() changed
+    ESTIMATE_RESULT = "ESTIMATE_RESULT"  
+    
+    # some operation status info changed
+    OP_STATUS = "OP_STATUS"     
+    
+    # some view status changed
+    VIEW_STATUS = "VIEW_STATUS" 
+    
+    # the result of calling apply() changed
+    RESULT = "RESULT"        
+    
+    # the previous WorkflowItem's result changed
+    PREV_RESULT = "PREV_RESULT"  
     
     
 def log_exception():
@@ -269,6 +294,7 @@ class Workflow(HasStrictTraits):
                 self.workflow[idx + 1].previous = self.workflow[idx]
                 
             self.message_q.put((Msg.ADD_ITEMS, (idx, event.added[0])))
+
  
     @on_trait_change('selected')
     def _on_selected_changed(self, obj, name, old, new):
@@ -281,6 +307,7 @@ class Workflow(HasStrictTraits):
             idx = self.workflow.index(new)
             
         self.message_q.put((Msg.SELECT, idx))
+
         
     @on_trait_change('workflow:operation:+')
     def _operation_changed(self, obj, name, new):
@@ -292,8 +319,9 @@ class Workflow(HasStrictTraits):
             idx = self.workflow.index(wi)
             self.message_q.put((Msg.UPDATE_OP, (idx, obj)))
             self.modified = True
+            
 
-    @on_trait_change('workflow:operation:changed')
+    @on_trait_change('workflow:operation:op_changed')
     def _operation_changed_event(self, obj, name, new):
         logging.debug("LocalWorkflow._operation_changed_event:: {}"
                       .format(obj, new))
@@ -314,6 +342,7 @@ class Workflow(HasStrictTraits):
             idx = self.workflow.index(wi)
             self.message_q.put((Msg.UPDATE_VIEW, (idx, obj)))
             self.modified = True
+
         
     @on_trait_change('workflow:current_view')
     def _on_current_view_changed(self, obj, name, old, new):
@@ -324,6 +353,7 @@ class Workflow(HasStrictTraits):
         view = obj.current_view
         self.message_q.put((Msg.CHANGE_CURRENT_VIEW, (idx, view)))
 
+
     @on_trait_change('workflow:current_plot')
     def _on_current_plot_changed(self, obj, name, old, new):
         logging.debug("LocalWorkflow._on_current_plot_changed :: {}"
@@ -333,11 +363,14 @@ class Workflow(HasStrictTraits):
         plot = obj.current_plot
         self.message_q.put((Msg.CHANGE_CURRENT_PLOT, (idx, plot)))
         
-    @on_trait_change('workflow:operation:estimate')
+        
+    @on_trait_change('workflow:operation:do_estimate')
     def _on_estimate(self, obj, name, old, new):
         logging.debug("LocalWorkflow._on_estimate :: {}"
                       .format((obj, name, old, new)))
-        idx = self.workflow.index(obj)
+        
+        wi = next((x for x in self.workflow if x.operation == obj))
+        idx = self.workflow.index(wi)
         self.message_q.put((Msg.ESTIMATE, idx))
 
 #     # MAGIC: called when default_scale is changed
@@ -366,6 +399,7 @@ class RemoteWorkflow(HasStrictTraits):
     
     exec_q = Instance(UniquePriorityQueue, ())
     exec_lock = Instance(threading.Lock, ())
+
     
     def run(self, parent_workflow_conn, parent_mpl_conn, log_q):
         
@@ -503,14 +537,14 @@ class RemoteWorkflow(HasStrictTraits):
                     wi = self.workflow[idx]
                     wi.current_plot = plot
                         
-                elif msg == Msg.CHANGE_DEFAULT_SCALE:
-                    new_scale = payload
-                    cytoflow.set_default_scale(new_scale)
+#                 elif msg == Msg.CHANGE_DEFAULT_SCALE:
+#                     new_scale = payload
+#                     cytoflow.set_default_scale(new_scale)
                     
                 elif msg == Msg.ESTIMATE:
                     idx = payload
                     wi = self.workflow[idx]
-                    wi.operation.estimate = True
+                    self.exec_q.put((idx - 0.5, (wi, wi.estimate)))
                                             
                 else:
                     raise RuntimeError("Bad command in the remote workflow")
@@ -555,50 +589,112 @@ class RemoteWorkflow(HasStrictTraits):
                 self.workflow[idx].next = self.workflow[idx + 1]
                 self.workflow[idx + 1].previous = self.workflow[idx]
                 
-                
-    @on_trait_change('workflow:views:+', post_init = True)
-    def _view_trait_changed(self, obj, name, new):
-        logging.debug("RemoteWorkflow._view_changed :: {}"
-                      .format((obj, name, new)))
-
-        wi = next((x for x in self.workflow if obj in x.views))
-        idx = self.workflow.index(wi)
-        
-        if obj.trait(name).transient:
-            return
-        elif obj.trait(name).status:
-            self.message_q.put((Msg.UPDATE_VIEW, (idx, obj)))
-        else:
-            if obj.should_plot("view"):
-                self.exec_q.put((idx, (wi, wi.plot)))
-                
             
     @on_trait_change('workflow:operation:+', post_init = True)
-    def _operation_changed(self, obj, name, new):
+    def _operation_changed(self, obj, name, old, new):
+        """Translate changes in op traits to wi change events"""
         logging.debug("RemoteWorkflow._operation_changed :: {}"
-                      .format(obj, name, new))
+                      .format((obj, name, old, new)))
         
-        wi = next((x for x in self.workflow if x.operation == obj))
-        idx = self.workflow.index(wi)
+        wi = next((x for x in self.workflow if obj == x.operation))
         
-        if obj.trait(name).transient or obj.trait(name).estimate:
+        if name == "changed":
+            wi.changed = new
+        elif obj.trait(name).estimate:
+            wi.changed = (Changed.ESTIMATE, obj)
+        elif obj.trait(name).status:
+            wi.changed = (Changed.OP_STATUS, obj)
+        elif obj.trait(name).operation:
+            wi.changed = (Changed.OPERATION, obj)
+        elif obj.trait(name).transient:
+            return
+        else:
+            wi.changed = (Changed.OPERATION, obj)
+            
+            
+    @on_trait_change('workflow:views:+', post_init = True)
+    def _view_changed(self, obj, name, new):
+        """Translate changes in view traits to wi change events"""
+        logging.debug("RemoteWorkflow._view_changed :: {}"
+                      .format((obj, name, new)))
+        
+        wi = next((x for x in self.workflow if obj in x.views))
+        
+        if name == "changed":
+            wi.changed = new
+        elif obj.trait(name).transient:
             return
         elif obj.trait(name).status:
-            self.message_q.put((Msg.UPDATE_OP, (idx, obj)))
+            wi.changed = (Changed.VIEW_STATUS, obj)
         else:
-            if obj.should_apply("operation"):
+            wi.changed = (Changed.VIEW, obj)
+            
+                
+    @on_trait_change('workflow:changed')
+    def _changed_event(self, obj, name, new):
+        logging.debug("RemoteWorkflow._changed_event:: {}"
+                      .format(obj, new))
+        
+        wi = obj
+        idx = self.workflow.index(wi)
+        (msg, payload) = new
+
+        if msg == Changed.OPERATION:
+            if wi.operation.should_apply(Changed.OPERATION):
+                self.exec_q.put((idx, (wi, wi.apply)))
+        
+        elif msg == Changed.VIEW:
+            if wi.current_view == payload and wi.current_view.should_plot(Changed.VIEW):
+                self.exec_q.put((idx - 0.1, (wi, wi.plot)))
+                
+        elif msg == Changed.ESTIMATE:
+            if wi.operation.should_clear_estimate(Changed.ESTIMATE):
+                try:
+                    wi.operation.clear_estimate()
+                except AttributeError:
+                    pass
+        
+        elif new == Changed.ESTIMATE_RESULT:
+            if wi.current_view == payload and wi.current_view.should_plot(Changed.ESTIMATE_RESULT):
+                self.exec_q.put((idx - 0.1, (wi, wi.plot)))
+                
+            if wi.operation.should_apply(Changed.ESTIMATE_RESULT):
+                self.exec_q.put((idx, (wi, wi.apply)))
+                        
+        elif msg == Changed.OP_STATUS:
+            self.message_q.put((Msg.UPDATE_OP, (idx, payload)))
+            
+        elif msg == Changed.VIEW_STATUS:
+            self.message_q.put((Msg.UPDATE_VIEW, (idx, payload)))
+            
+        elif msg == Changed.RESULT:
+            if wi.current_view and wi.current_view.should_plot(Changed.RESULT):
+                self.exec_q.put((idx - 0.1, (wi, wi.plot)))
+                
+        elif msg == Changed.PREV_RESULT:
+            if wi.operation.should_clear_estimate(Changed.PREV_RESULT):
+                try:
+                    wi.operation.clear_estimate()
+                except AttributeError:
+                    pass
+                
+            if wi.operation.should_apply(Changed.PREV_RESULT):
                 self.exec_q.put((idx, (wi, wi.apply)))
                 
+            if wi.current_view and wi.current_view.should_plot(Changed.PREV_RESULT):
+                self.exec_q.put((idx - 0.1, (wi, wi.plot)))
+
                 
-    @on_trait_change('workflow:operation:estimate', post_init = True)
-    def _do_estimate(self, obj, name, new):
-        logging.debug("RemoteWorkflow._do_estimate :: {}"
-                      .format((obj, name, new)))
-                      
-        wi = next((x for x in self.workflow if x.operation == obj))
-        idx = self.workflow.index(wi)
-        
-        self.exec_q.put((idx - 0.1, (wi, wi.estimate)))
+                
+#     @on_trait_change('workflow:operation:estimate', post_init = True)
+#     def _do_estimate(self, obj, name, new):
+#         logging.debug("RemoteWorkflow._do_estimate :: {}"
+#                       .format((obj, name, new)))
+#                       
+#         wi = next((x for x in self.workflow if x.operation == obj))
+#         idx = self.workflow.index(wi)
+#         
+
         
 
     @on_trait_change('workflow:+', post_init = True)
@@ -624,21 +720,8 @@ class RemoteWorkflow(HasStrictTraits):
             # some things in metadata are unpicklable, functions and such,
             # so filter them out.
             obj.previous_metadata = filter_unpicklable(dict(obj.previous.result.metadata))
-               
-   
-        if obj.operation.should_clear_estimate("prev_result"):
-            try:
-                obj.operation.clear_estimate()
-            except AttributeError:
-                pass
-           
-        if obj.operation.should_apply("prev_result"):
-            obj.status = "invalid"
-            self.exec_q.put((self.workflow.index(obj), 
-                             (obj, obj.apply)))
-         
-        if self.selected == obj and obj.current_view and obj.current_view.should_plot("prev_result"):
-            self.exec_q.put((0, (obj, obj.plot)))
+            
+        obj.changed = (Changed.PREV_RESULT, None)
         
             
     @on_trait_change('workflow:previous:result', post_init = True)
@@ -654,21 +737,8 @@ class RemoteWorkflow(HasStrictTraits):
             # some things in metadata are unpicklable, functions and such,
             # so filter them out.
             obj.next.previous_metadata = filter_unpicklable(dict(obj.result.metadata))
-               
-   
-        if obj.next.operation.should_clear_estimate("prev_result"):
-            try:
-                obj.next.operation.clear_estimate()
-            except AttributeError:
-                pass
-           
-        if obj.next.operation.should_apply("prev_result"):
-            obj.next.status = "invalid"
-            self.exec_q.put((self.workflow.index(obj.next), 
-                             (obj.next, obj.next.apply)))
-         
-        if self.selected == obj.next and obj.next.current_view and obj.next.current_view.should_plot("prev_result"):
-            self.exec_q.put((0, (obj.next, obj.next.plot)))
+        
+        obj.next.changed = (Changed.PREV_RESULT, None)
             
 
     @on_trait_change('workflow:result', post_init = True)
@@ -687,6 +757,8 @@ class RemoteWorkflow(HasStrictTraits):
             # some things in metadata are unpicklable, functions and such,
             # so filter them out.
             obj.metadata = filter_unpicklable(dict(obj.result.metadata))
+            
+        obj.changed = (Changed.RESULT, None)
              
 
     @on_trait_change('workflow:current_view', post_init = True)
@@ -694,6 +766,8 @@ class RemoteWorkflow(HasStrictTraits):
         logging.debug("RemoteWorkflow._current_view_changed :: {}"
                       .format((self, new.id)))
         
+        idx = self.workflow.index(obj)
+
         # update plot names
         plot_names = [x for x in obj.current_view.enum_plots_wi(self)]
         if plot_names == [None] or plot_names == []:
@@ -701,11 +775,12 @@ class RemoteWorkflow(HasStrictTraits):
         else:
             obj.current_view_plot_names = plot_names         
         
-        self.exec_q.put((0, (obj, obj.plot)))
+        self.exec_q.put((idx + 0.1, (obj, obj.plot)))
            
             
     @on_trait_change('workflow:selected, workflow:current_plot', post_init = True)
     def _selected_changed(self, obj, name, new):
         if new:
-            self.exec_q.put((0, (obj, obj.plot)))
+            idx = self.workflow.index(obj)
+            self.exec_q.put((idx + 0.1, (obj, obj.plot)))
 

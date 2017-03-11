@@ -23,7 +23,7 @@ Created on Mar 15, 2015
 import warnings, logging, sys, threading
 
 from traits.api import HasStrictTraits, Instance, List, DelegatesTo, Enum, \
-                       Property, cached_property, on_trait_change, Bool, \
+                       Property, cached_property, Bool, \
                        Str, Dict, Any, Event, Tuple
 from traitsui.api import View, Item, Handler
 from pyface.qt import QtGui
@@ -35,10 +35,9 @@ import pandas as pd
 from cytoflow import Experiment
 from cytoflow.operations.i_operation import IOperation
 from cytoflow.views.i_view import IView
-from cytoflow.utility import CytoflowError, CytoflowOpError, CytoflowViewError
+from cytoflow.utility import CytoflowError
 
 from cytoflowgui.flow_task_pane import TabListEditor
-from cytoflowgui.util import DelayedEvent, filter_unpicklable
 
 # http://stackoverflow.com/questions/1977362/how-to-create-module-wide-variables-in-python
 this = sys.modules[__name__]
@@ -151,6 +150,9 @@ class WorkflowItem(HasStrictTraits):
     
     # the event to make the workflow item re-estimate its internal model
 #     do_estimate = Event
+
+    # the central event to kick of WorkflowItem update logic
+    changed = Event
     
     # the icon for the vertical notebook view.  Qt specific, sadly.
     icon = Property(depends_on = 'status', transient = True)  

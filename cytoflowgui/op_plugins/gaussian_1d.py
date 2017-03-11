@@ -26,7 +26,8 @@ from sklearn import mixture
 from traitsui.api import View, Item, EnumEditor, Controller, VGroup, \
                          CheckListEditor, ButtonEditor, TextEditor
 from envisage.api import Plugin, contributes_to
-from traits.api import provides, Callable, Instance, Str, List, Dict, Any, DelegatesTo, on_trait_change
+from traits.api import (provides, Callable, Instance, Str, List, Dict, Any, 
+                        DelegatesTo, Property)
 from pyface.api import ImageResource
 
 from cytoflow.operations import IOperation
@@ -39,6 +40,8 @@ from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_E
 from cytoflowgui.subset import SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
+from cytoflowgui.subset import ISubset
+from cytoflowgui.workflow import Changed
 
 class GaussianMixture1DHandler(Controller, OpHandlerMixin):
     def default_traits_view(self):
@@ -81,16 +84,31 @@ class GaussianMixture1DPluginOp(PluginOpMixin, GaussianMixture1DOp):
     sigma = util.PositiveFloat(0.0, allow_zero = True, estimate = True)
     by = List(Str, estimate = True)
     
-    _gmms = Dict(Any, Instance(mixture.GaussianMixture), transient = True, estimate_result = True)
+    # TODO - what's estimate_result?
+    _gmms = Dict(Any, Instance(mixture.GaussianMixture), transient = True)
+    
+    subset_list = List(ISubset, estimate = True)    
+    subset = Property(Str, depends_on = "subset_list.str")
+        
+    # MAGIC - returns the value of the "subset" Property, above
+    def _get_subset(self):
+        return " and ".join([subset.str for subset in self.subset_list if subset.str])
     
     def estimate(self, experiment):
         GaussianMixture1DOp.estimate(self, experiment, subset = self.subset)
+        self.changed = (Changed.ESTIMATE_RESULT, self)
     
     def default_view(self, **kwargs):
         return GaussianMixture1DPluginView(op = self, **kwargs)
     
+    def should_clear_estimate(self, changed):
+        if changed == Changed.ESTIMATE:
+            return True
+        return False
+    
     def clear_estimate(self):
         self._gmms = {}
+        self.changed = (Changed.ESTIMATE_RESULT, self)
         
 class GaussianMixture1DViewHandler(Controller, ViewHandlerMixin):
     def default_traits_view(self):
@@ -121,9 +139,10 @@ class GaussianMixture1DPluginView(GaussianMixture1DView, PluginViewMixin):
     subset = DelegatesTo('op')
     by = DelegatesTo('op', status = True)
     
-    @on_trait_change('by[]', post_init = True)
-    def _by_changed(self):
-        self.changed = "plot_names"
+    # TODO - ???
+#     @on_trait_change('by[]', post_init = True)
+#     def _by_changed(self):
+#         self.changed = "plot_names"
 
     def plot_wi(self, wi):
         self.plot(wi.previous.result, plot_name = wi.current_plot)
@@ -135,15 +154,7 @@ class GaussianMixture1DPluginView(GaussianMixture1DView, PluginViewMixin):
             return []
         
     def should_plot(self, changed):
-        """
-        Should the owning WorkflowItem refresh the plot when certain things
-        change?  `changed` can be:
-         - "view" -- the view's parameters changed
-         - "result" -- this WorkflowItem's result changed
-         - "prev_result" -- the previous WorkflowItem's result changed
-         - "estimate_result" -- the results of calling "estimate" changed
-        """
-        if changed == "result":
+        if changed == Changed.RESULT:
             return False
         
         return True

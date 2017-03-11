@@ -20,18 +20,13 @@ Created on Mar 15, 2015
 
 @author: brian
 """
-import logging
 
-from traits.api import Interface, Str, HasTraits, on_trait_change, List, Property, Event
+from traits.api import Interface, Str, HasTraits,Event
 from traitsui.api import Group, Item
 from cytoflowgui.color_text_editor import ColorTextEditor
-from cytoflowgui.util import DelayedEvent
-from cytoflowgui.subset import ISubset
 
 OP_PLUGIN_EXT = 'edu.mit.synbio.cytoflow.op_plugins'
 
-class Changed:
-    
 
 class IOperationPlugin(Interface):
     """
@@ -68,26 +63,6 @@ class IOperationPlugin(Interface):
         """
 
 class PluginOpMixin(HasTraits):
-    
-    subset_list = List(ISubset)
-    subset = Property(Str, depends_on = "subset_list.str")
-        
-    # MAGIC - returns the value of the "subset" Property, above
-    def _get_subset(self):
-        return " and ".join([subset.str for subset in self.subset_list if subset.str])
-    
-    # causes this operation's estimate() function to be called
-    estimate = Event
-    
-    # indicates that some un-watchable element (eg, list membership) changed.
-    changed = Event
-        
-#     @on_trait_change("subset_list.str", post_init = True)
-#     def _subset_changed(self, obj, name, old, new):
-#         self.changed = "api"
-    
-#     changed = DelayedEvent(delay = 0.2)
-    
     # there are a few pieces of metadata that determine which traits get
     # copied between processes and when.  if a trait has "status = True",
     # it is only copied from the remote process to the local one.
@@ -98,41 +73,31 @@ class PluginOpMixin(HasTraits):
     # process.  if a trait has "fixed = True", then it is assigned when the
     # operation is first copied over AND NEVER SUBSEQUENTLY CHANGED.
     
-    # why can't we just put this in a workflow listener?  it's because
-    # we sometimes need to override or supplement it on a per-module basis
-        
-#     @on_trait_change("+", post_init = True)
-#     def _trait_changed(self, obj, name, old, new):
-#         logging.debug("PluginOpMixin::_trait_changed :: {}"
-#                       .format((obj, name, old, new)))
-#         if not obj.trait(name).transient:
-#             if obj.trait(name).status:
-#                 self.changed = "status"
-#             elif obj.trait(name).estimate:
-#                 self.changed = "estimate"
-#             else:
-#                 self.changed = "api"
-#         
-#         if obj.trait(name).estimate_result:
-#             self.changed = "estimate_result"
+    # causes this operation's estimate() function to be called
+    do_estimate = Event
+    
+    # transmit some changing status back to the workflow
+    changed = Event
+    
                 
     def should_apply(self, changed):
         """
         Should the owning WorkflowItem apply this operation when certain things
         change?  `changed` can be:
-         - "operation" -- the operation's parameters changed
-         - "prev_result" -- the previous WorkflowItem's result changed
-         - "estimate_result" -- the results of calling "estimate" changed
+         - Changed.OPERATION -- the operation's parameters changed
+         - Changed.PREV_RESULT -- the previous WorkflowItem's result changed
+         - Changed.ESTIMATE_RESULT -- the results of calling "estimate" changed
         """
         return True
+
     
     def should_clear_estimate(self, changed):
         """
         Should the owning WorkflowItem clear the estimated model by calling
         op.clear_estimate()?  `changed` can be:
-         - "estimate" -- the parameters required to call 'estimate()' (ie
+         - Changed.ESTIMATE -- the parameters required to call 'estimate()' (ie
             traits with estimate = True metadata) have changed
-         - "prev_result" -- the previous WorkflowItem's result changed
+         - Changed.PREV_RESULT -- the previous WorkflowItem's result changed
          """
         return True
 

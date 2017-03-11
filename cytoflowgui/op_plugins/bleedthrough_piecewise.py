@@ -26,8 +26,8 @@ import warnings
 from traitsui.api import View, Item, EnumEditor, Controller, VGroup, \
                          ButtonEditor, Heading, HGroup, InstanceEditor
 from envisage.api import Plugin, contributes_to
-from traits.api import provides, Callable, List, Str, HasTraits, \
-                       File, Event, Dict, on_trait_change, Instance
+from traits.api import (provides, Callable, List, Str, HasTraits, Property,
+                        File, Event, Dict, on_trait_change, Instance)
 from pyface.api import ImageResource
 
 import cytoflow.utility as util
@@ -42,6 +42,8 @@ from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
 from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.vertical_list_editor import VerticalListEditor
+from cytoflowgui.workflow import Changed
+from cytoflowgui.subset import ISubset
 
 class _Control(HasTraits):
     channel = Str
@@ -111,6 +113,13 @@ class BleedthroughPiecewisePluginOp(BleedthroughPiecewiseOp, PluginOpMixin):
 
     controls = Dict(Str, File, transient = True)
     controls_list = List(_Control, estimate = True)
+    
+    subset_list = List(ISubset, estimate = True)    
+    subset = Property(Str, depends_on = "subset_list.str")
+        
+    # MAGIC - returns the value of the "subset" Property, above
+    def _get_subset(self):
+        return " and ".join([subset.str for subset in self.subset_list if subset.str])
         
     # MAGIC: called when add_control is set
     def _add_control_fired(self):
@@ -122,7 +131,7 @@ class BleedthroughPiecewisePluginOp(BleedthroughPiecewiseOp, PluginOpMixin):
         
     @on_trait_change('controls_list_items,controls_list.+', post_init = True)
     def _controls_changed(self, obj, name, old, new):
-        self.changed = "estimate"
+        self.changed = (Changed.ESTIMATE, self)
     
     def default_view(self, **kwargs):
         return BleedthroughPiecewisePluginView(op = self, **kwargs)
@@ -145,14 +154,20 @@ class BleedthroughPiecewisePluginOp(BleedthroughPiecewiseOp, PluginOpMixin):
                     
         BleedthroughPiecewiseOp.estimate(self, experiment, subset = self.subset)
         
-        self.changed = "estimate_result"
+        self.changed = (Changed.ESTIMATE_RESULT, self)
         
     def clear_estimate(self):
         self._splines.clear()
         self._interpolators.clear()
         self._channels.clear()
         
-        self.changed = "estimate_result"
+        self.changed = (Changed.ESTIMATE_RESULT, self)
+        
+    def should_clear_estimate(self, changed):
+        if changed == Changed.ESTIMATE:
+            return True
+        
+        return False
 
 class BleedthroughPiecewiseViewHandler(Controller, ViewHandlerMixin):
     def default_traits_view(self):
@@ -173,19 +188,14 @@ class BleedthroughPiecewisePluginView(BleedthroughPiecewiseDiagnostic, PluginVie
     
     def plot_wi(self, wi):
         self.plot(wi.previous.result)
+    
+    def should_plot(self, changed):
+        if changed == Changed.ESTIMATE_RESULT:
+            return True
         
-    def should_clear_estimate(self, changed):
-        """
-        Should the owning WorkflowItem clear the estimated model by calling
-        op.clear_estimate()?  `changed` can be:
-         - "estimate" -- the parameters required to call 'estimate()' (ie
-            traits with estimate = True metadata) have changed
-         - "prev_result" -- the previous WorkflowItem's result changed
-        """
-        if changed == "prev_result":
-            return False
-        
-        return True
+        return False
+
+
 
 @provides(IOperationPlugin)
 class BleedthroughPiecewisePlugin(Plugin):
