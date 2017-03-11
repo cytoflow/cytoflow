@@ -135,7 +135,7 @@ class BeadCalibrationPluginOp(PluginOpMixin, BeadCalibrationOp):
 
     @on_trait_change('units_list_items,units_list.+', post_init = True)
     def _controls_changed(self, obj, name, old, new):
-        self.changed = (Changed.ESTIMATE, self)
+        self.changed = (Changed.ESTIMATE, ('units_list', self.units_list))
     
     def default_view(self, **kwargs):
         return BeadCalibrationPluginView(op = self, **kwargs)

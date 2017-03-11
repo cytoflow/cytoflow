@@ -130,7 +130,7 @@ class ColorTranslationPluginOp(PluginOpMixin, ColorTranslationOp):
         
     @on_trait_change('controls_list_items,controls_list.+', post_init = True)
     def _controls_changed(self, obj, name, old, new):
-        self.changed = (Changed.ESTIMATE, self)
+        self.changed = (Changed.ESTIMATE, ('controls_list', self.controls_list))
     
     def default_view(self, **kwargs):
         return ColorTranslationPluginView(op = self, **kwargs)

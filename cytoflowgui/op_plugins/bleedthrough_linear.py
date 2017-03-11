@@ -115,7 +115,7 @@ class BleedthroughLinearPluginOp(PluginOpMixin, BleedthroughLinearOp):
         
     @on_trait_change('controls_list_items,controls_list.+', post_init = True)
     def _controls_changed(self, obj, name, old, new):
-        self.changed = (Changed.ESTIMATE, self)
+        self.changed = (Changed.ESTIMATE, ('controls_list', self.controls_list))
         
     subset_list = List(ISubset, estimate = True)    
     subset = Property(Str, depends_on = "subset_list.str")

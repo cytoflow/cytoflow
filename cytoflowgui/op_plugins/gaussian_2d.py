@@ -100,7 +100,7 @@ class GaussianMixture2DPluginOp(GaussianMixture2DOp, PluginOpMixin):
     
     @on_trait_change("subset_list.str", post_init = True)
     def _subset_changed(self, obj, name, old, new):
-        self.changed = (Changed.ESTIMATE, self)
+        self.changed = (Changed.ESTIMATE, ('subset_list', self.subset_list))
 
     def default_view(self, **kwargs):
         return GaussianMixture2DPluginView(op = self, **kwargs)
@@ -146,9 +146,10 @@ class GaussianMixture2DPluginView(GaussianMixture2DView, PluginViewMixin):
     subset = DelegatesTo('op')
     by = DelegatesTo('op', status = True)
     
-    @on_trait_change('by[]', post_init = True)
-    def _by_changed(self):
-        self.changed = "plot_names"
+    # TODO - ???
+#     @on_trait_change('by[]', post_init = True)
+#     def _by_changed(self):
+#         self.changed = "plot_names"
     
     def plot_wi(self, wi):
         self.plot(wi.previous.result, plot_name = wi.current_plot)

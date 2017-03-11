@@ -44,6 +44,8 @@ matplotlib_backend.py
 
 import threading, sys, logging, traceback
 
+from Queue import Queue
+
 from traits.api import (HasStrictTraits, Instance, List, on_trait_change, Any, 
                         Bool, Str, Int)
                        
@@ -64,11 +66,29 @@ class Msg:
     ADD_ITEMS = "ADD_ITEMS"
     REMOVE_ITEMS = "REMOVE_ITEMS"
     SELECT = "SELECT"
+    
+    # send an update to an operation.  payload:
+    # - the WorkflowItem index
+    # - the name of the updated trait
+    # - the new trait value
     UPDATE_OP = "UPDATE_OP"
+    
+    # send an update to a view.  payload:
+    # - the WorkflowItem index
+    # - the view id
+    # - the name of the updated trait
+    # - the new trait value
     UPDATE_VIEW = "UPDATE_VIEW"
+    
     CHANGE_CURRENT_VIEW = "CHANGE_CURRENT_VIEW"
     CHANGE_CURRENT_PLOT = "CHANGE_CURRENT_PLOT"
+    
+    # send an update to a WorkflowItem.  payload:
+    # - the WorkflowItem index
+    # - the name of the updated trait
+    # - the new trait value
     UPDATE_WI = "UPDATE_WI"
+    
 #     CHANGE_DEFAULT_SCALE = "CHANGE_DEFAULT_SCALE"
     ESTIMATE = "ESTIMATE"
     
@@ -76,29 +96,47 @@ class Msg:
     PLOT_CALLED = "PLOT_CALLED"
     
 class Changed:
-    
-    # the operation's parameters to apply() changed
+    # the operation's parameters needed to apply() changed.  
+    # payload:
+    # - the name of the changed trait
+    # - the new trait value
     OPERATION = "OPERATION"  
     
     # the current view's parameters have changed
+    # payload:
+    # - the IView object that changed
+    # - the name of the changed trait
+    # - the new trait value 
     VIEW = "VIEW"         
     
     # the operation's parameters to estimate() changed   
+    # payload:
+    # - the name of the changed trait
+    # - the new trait value
     ESTIMATE = "ESTIMATE"    
     
     # the result of calling estimate() changed
+    # payload: unused
     ESTIMATE_RESULT = "ESTIMATE_RESULT"  
     
     # some operation status info changed
+    # payload:
+    # - the name of the changed trait
+    # - the new trait value
     OP_STATUS = "OP_STATUS"     
     
     # some view status changed
+    # payload:
+    # - the name of the changed trait
+    # - the new trait value
     VIEW_STATUS = "VIEW_STATUS" 
     
     # the result of calling apply() changed
+    # payload: unused
     RESULT = "RESULT"        
     
     # the previous WorkflowItem's result changed
+    # payload: unused
     PREV_RESULT = "PREV_RESULT"  
     
     
@@ -164,7 +202,8 @@ class Workflow(HasStrictTraits):
     send_thread = Instance(threading.Thread)
     log_thread = Instance(threading.Thread)
     remote_process_thread = Instance(threading.Thread)
-    message_q = Instance(DelayUniqueQueue, {"delay" : 0.2})
+#     message_q = Instance(DelayUniqueQueue, {"delay" : 0.2})
+    message_q = Instance(Queue, ())
     
     # the Pipe connection object to pass to the matplotlib canvas
     child_matplotlib_conn = Any
@@ -209,25 +248,39 @@ class Workflow(HasStrictTraits):
             
             try: 
                 if msg == Msg.UPDATE_WI:
-                    (idx, new_wi) = payload
+                    (idx, name, new) = payload
                     wi = self.workflow[idx]
-                    wi.copy_traits(new_wi, status = True)
+                    
+                    if not wi.trait(name).status:
+                        raise RuntimeError("Tried to set a local non-status wi trait")
+                    
+                    wi.trait_set(**{name : new})
+#                     wi.copy_traits(new_wi, status = True)
                         
                 elif msg == Msg.UPDATE_OP:
-                    (idx, new_op) = payload
+                    (idx, name, new) = payload
                     wi = self.workflow[idx]
-                    wi.operation.copy_traits(new_op, 
-                                             status = True,
-                                             fixed = lambda t: t is not True)
+                    
+                    if not wi.operation.trait(name).status:
+                        raise RuntimeError("Tried to set a local non-status trait")
+                    
+                    wi.operation.trait_set(**{name : new})
+#                     wi.operation.copy_traits(new_op, 
+#                                              status = True,
+#                                              fixed = lambda t: t is not True)
                     
                 elif msg == Msg.UPDATE_VIEW:
-                    (idx, new_view) = payload
-                    view_id = new_view.id
+                    (idx, view_id, name, new) = payload
                     wi = self.workflow[idx]
                     view = next((x for x in wi.views if x.id == view_id))
-                    view.copy_traits(new_view, 
-                                     status = True,
-                                     fixed = lambda t: t is not True)
+                    
+                    if not view.trait(name).status:
+                        raise RuntimeError("Tried to set a local non-status trait")
+                    
+                    view.trait_set(**{name : new})
+#                     view.copy_traits(new_view, 
+#                                      status = True,
+#                                      fixed = lambda t: t is not True)
                     
                 elif msg == Msg.APPLY_CALLED:
                     self.apply_calls = payload
@@ -329,39 +382,52 @@ class Workflow(HasStrictTraits):
 
         
     @on_trait_change('workflow:operation:+')
-    def _operation_changed(self, obj, name, new):
+    def _operation_changed(self, obj, name, old, new):
         logging.debug("LocalWorkflow._operation_changed :: {}"
-                      .format(obj, new))
+                      .format((obj, name, old, new)))
         
         if not obj.trait(name).transient and not obj.trait(name).status:         
             wi = next((x for x in self.workflow if x.operation == obj))
             idx = self.workflow.index(wi)
-            self.message_q.put((Msg.UPDATE_OP, (idx, obj)))
+            self.message_q.put((Msg.UPDATE_OP, (idx, name, new)))
             self.modified = True
             
 
-    @on_trait_change('workflow:operation:op_changed')
-    def _operation_changed_event(self, obj, name, new):
+    @on_trait_change('workflow:operation:changed')
+    def _operation_changed_event(self, obj, _, new):
         logging.debug("LocalWorkflow._operation_changed_event:: {}"
-                      .format(obj, new))
+                      .format((obj, new)))
+        
+        (_, (name, new)) = new
         
         wi = next((x for x in self.workflow if x.operation == obj))
         idx = self.workflow.index(wi)
-        self.message_q.put((Msg.UPDATE_OP, (idx, obj)))
+        self.message_q.put((Msg.UPDATE_OP, (idx, name, new)))
         self.modified = True
 
 
     @on_trait_change('workflow:views:+')
-    def _view_changed(self, obj, name, new):
+    def _view_changed(self, obj, name, old, new):
         logging.debug("LocalWorkflow._view_changed :: {}"
-                      .format((obj, name, new)))
+                      .format((obj, name, old, new)))
 
-        if not obj.trait(name).status:
+        if not obj.trait(name).transient and not obj.trait(name).status:
             wi = next((x for x in self.workflow if obj in x.views))
             idx = self.workflow.index(wi)
-            self.message_q.put((Msg.UPDATE_VIEW, (idx, obj)))
+            self.message_q.put((Msg.UPDATE_VIEW, (idx, obj.id, name, new)))
             self.modified = True
 
+    @on_trait_change('workflow:views:changed')
+    def _view_changed_event(self, obj, _, new):
+        logging.debug("LocalWorkflow._view_changed_event:: {}"
+                      .format((obj, new)))
+        
+        (_, (_, name, new)) = new
+        
+        wi = next((x for x in self.workflow if obj in x.views))
+        idx = self.workflow.index(wi)
+        self.message_q.put((Msg.UPDATE_VIEW, (idx, obj.id, name, new)))
+        self.modified = True
         
     @on_trait_change('workflow:current_view')
     def _on_current_view_changed(self, obj, name, old, new):
@@ -410,7 +476,8 @@ class RemoteWorkflow(HasStrictTraits):
     
     send_thread = Instance(threading.Thread)
     recv_thread = Instance(threading.Thread)
-    message_q = Instance(DelayUniqueQueue, {"delay" : 0.2})
+#     message_q = Instance(DelayUniqueQueue, {"delay" : 0.2})
+    message_q = Instance(Queue, ())
     
     # synchronization primitives for plotting
     matplotlib_events = Any
@@ -522,16 +589,30 @@ class RemoteWorkflow(HasStrictTraits):
                         self.selected = self.workflow[idx]
                     
                 elif msg == Msg.UPDATE_OP:
-                    (idx, new_op) = payload
+                    (idx, name, new) = payload
                     wi = self.workflow[idx]
                     with wi.lock:
-                        wi.operation.copy_traits(new_op, 
-                                                 status = lambda t: t is not True,
-                                                 fixed = lambda t: t is not True)
+                        if wi.operation.trait(name).status:
+                            raise RuntimeError("Tried to set a remote status trait")
+                        
+                        if wi.operation.trait(name).fixed:
+                            raise RuntimeError("Tried to set a remote fixed trait")
+                        
+                        if wi.operation.trait(name).transient:
+                            raise RuntimeError("Tried to set a remote transient trait")
+                        
+                        wi.operation.trait_set(**{name : new})
+                        
+#                         if wi.operation.trait(name).estimate:
+#                             wi.changed = (Changed.ESTIMATE, wi.operation)
+#                         else:
+#                             wi.changed = (Changed.OPERATION)
+#                         wi.operation.copy_traits(new_op, 
+#                                                  status = lambda t: t is not True,
+#                                                  fixed = lambda t: t is not True)
                         
                 elif msg == Msg.UPDATE_VIEW:
-                    (idx, new_view) = payload
-                    view_id = new_view.id
+                    (idx, view_id, name, new) = payload
                     wi = self.workflow[idx]
                     try:
                         view = next((x for x in wi.views if x.id == view_id))
@@ -540,9 +621,19 @@ class RemoteWorkflow(HasStrictTraits):
                         continue
                     
                     with wi.lock:
-                        view.copy_traits(new_view, 
-                                         status = lambda t: t is not True,
-                                         fixed = lambda t: t is not True) 
+                        if view.trait(name).status:
+                            raise RuntimeError("Tried to set a remote status trait")
+                        
+                        if view.trait(name).fixed:
+                            raise RuntimeError("Tried to set a remote fixed trait")
+                        
+                        if view.trait(name).transient:
+                            raise RuntimeError("Tried to set a remote transient trait")
+                        
+                        view.trait_set(**{name : new})
+#                         view.copy_traits(new_view, 
+#                                          status = lambda t: t is not True,
+#                                          fixed = lambda t: t is not True) 
     
                 elif msg == Msg.CHANGE_CURRENT_VIEW:
                     (idx, view) = payload
@@ -622,15 +713,15 @@ class RemoteWorkflow(HasStrictTraits):
         if name == "changed":
             wi.changed = new
         elif obj.trait(name).estimate:
-            wi.changed = (Changed.ESTIMATE, obj)
+            wi.changed = (Changed.ESTIMATE, (name, new))
         elif obj.trait(name).status:
-            wi.changed = (Changed.OP_STATUS, obj)
+            wi.changed = (Changed.OP_STATUS, (name, new))
         elif obj.trait(name).operation:
-            wi.changed = (Changed.OPERATION, obj)
+            wi.changed = (Changed.OPERATION, (name, new))
         elif obj.trait(name).transient:
             return
         else:
-            wi.changed = (Changed.OPERATION, obj)
+            wi.changed = (Changed.OPERATION, (name, new))
             
             
     @on_trait_change('workflow:views:+', post_init = True)
@@ -646,15 +737,15 @@ class RemoteWorkflow(HasStrictTraits):
         elif obj.trait(name).transient:
             return
         elif obj.trait(name).status:
-            wi.changed = (Changed.VIEW_STATUS, obj)
+            wi.changed = (Changed.VIEW_STATUS, (obj, name, new))
         else:
-            wi.changed = (Changed.VIEW, obj)
+            wi.changed = (Changed.VIEW, (obj, name, new))
             
                 
     @on_trait_change('workflow:changed')
     def _changed_event(self, obj, name, new):
         logging.debug("RemoteWorkflow._changed_event:: {}"
-                      .format(obj, new))
+                      .format((obj, name, new)))
         
         wi = obj
         idx = self.workflow.index(wi)
@@ -665,7 +756,8 @@ class RemoteWorkflow(HasStrictTraits):
                 self.exec_q.put((idx, (wi, wi.apply)))
         
         elif msg == Changed.VIEW:
-            if wi.current_view == payload and wi.current_view.should_plot(Changed.VIEW):
+            (view, name, new) = payload
+            if wi.current_view == view and wi.current_view.should_plot(Changed.VIEW):
                 self.exec_q.put((idx - 0.1, (wi, wi.plot)))
                 
         elif msg == Changed.ESTIMATE:
@@ -683,10 +775,11 @@ class RemoteWorkflow(HasStrictTraits):
                 self.exec_q.put((idx, (wi, wi.apply)))
                         
         elif msg == Changed.OP_STATUS:
-            self.message_q.put((Msg.UPDATE_OP, (idx, payload)))
+            (name, new) = payload
+            self.message_q.put((Msg.UPDATE_OP, (idx, name, new)))
             
-        elif msg == Changed.VIEW_STATUS:
-            self.message_q.put((Msg.UPDATE_VIEW, (idx, payload)))
+#         elif msg == Changed.VIEW_STATUS:
+#             self.message_q.put((Msg.UPDATE_VIEW, (idx, payload)))
             
         elif msg == Changed.RESULT:
             if wi.current_view and wi.current_view.should_plot(Changed.RESULT):
@@ -725,7 +818,7 @@ class RemoteWorkflow(HasStrictTraits):
              
         idx = self.workflow.index(obj)
         if obj.trait(name).status:            
-            self.message_q.put((Msg.UPDATE_WI, (idx, obj)))
+            self.message_q.put((Msg.UPDATE_WI, (idx, name, new)))
             
             
     @on_trait_change('workflow:previous', post_init = True)

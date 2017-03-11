@@ -22,13 +22,14 @@ Created on Mar 15, 2015
 """
 
 from traits.api import (Interface, Str, HasTraits, Instance, Event, 
-                        List, Property)
+                        List, Property, on_trait_change)
 from traitsui.api import Handler
 
 import pandas as pd
 
 import cytoflow.utility as util
 from cytoflowgui.subset import ISubset
+from cytoflowgui.workflow import Changed
 
 VIEW_PLUGIN_EXT = 'edu.mit.synbio.cytoflow.view_plugins'
 
@@ -74,6 +75,11 @@ class PluginViewMixin(HasTraits):
     def _get_subset(self):
         return " and ".join([subset.str for subset in self.subset_list if subset.str])
  
+ 
+    @on_trait_change('subset_list.str')
+    def _subset_changed(self, obj, name, old, new):
+        self.changed = (Changed.VIEW, (self, 'subset_list', self.subset_list))  
+              
             
     def should_plot(self, changed):
         """

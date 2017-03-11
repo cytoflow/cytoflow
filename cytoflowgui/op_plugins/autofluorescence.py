@@ -81,7 +81,7 @@ class AutofluorescencePluginOp(PluginOpMixin, AutofluorescenceOp):
 
     @on_trait_change('channels', post_init = True)
     def _channels_changed(self):
-        self.changed = (Changed.ESTIMATE, self)
+        self.changed = (Changed.ESTIMATE, ('channels', self.channels))
 
     
     def default_view(self, **kwargs):
