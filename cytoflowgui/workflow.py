@@ -424,7 +424,6 @@ class Workflow(HasStrictTraits):
         view = obj.current_view
         self.message_q.put((Msg.CHANGE_CURRENT_VIEW, (idx, view)))
 
-
     @on_trait_change('workflow:current_plot')
     def _on_current_plot_changed(self, obj, name, old, new):
         logging.debug("LocalWorkflow._on_current_plot_changed :: {}"
@@ -433,7 +432,17 @@ class Workflow(HasStrictTraits):
         idx = self.workflow.index(obj)
         plot = obj.current_plot
         self.message_q.put((Msg.CHANGE_CURRENT_PLOT, (idx, plot)))
-        
+# 
+#     @on_trait_change('workflow:current_view_plot_names_items')
+#     def _on_current_plot_names_changed(self, obj, name, old, new):
+#         logging.debug("LocalWorkflow._on_current_plot_names_changed :: {}"
+#                       .format((obj, name, old, new)))
+#         if len(obj.current_view_plot_names) > 0:
+#             idx = self.workflow.index(obj)
+#             plot = obj.current_plot
+#             self.message_q.put((Msg.CHANGE_CURRENT_PLOT, (idx, plot)))
+#         else:
+#             self.message_q.put((Msg.CHANGE_CURRENT_PLOT, (idx, None)))
         
     @on_trait_change('workflow:operation:do_estimate')
     def _on_estimate(self, obj, name, old, new):
@@ -722,14 +731,7 @@ class RemoteWorkflow(HasStrictTraits):
         idx = self.workflow.index(wi)
         (msg, payload) = new
         
-        if wi.current_view:
-            plot_names = [x for x in wi.current_view.enum_plots_wi(wi)]
-            if plot_names == [None] or plot_names == []:
-                wi.current_view_plot_names = []
-            else:
-                wi.current_view_plot_names = plot_names
-        else:
-            wi.current_view_plot_names = []
+
 
         if msg == Changed.OPERATION:
             if wi.operation.should_apply(Changed.OPERATION):
@@ -738,6 +740,7 @@ class RemoteWorkflow(HasStrictTraits):
         elif msg == Changed.VIEW:
             (view, name, new) = payload
             if wi.current_view == view and wi.current_view.should_plot(Changed.VIEW):
+                wi.update_plot_names()
                 self.exec_q.put((idx - 0.1, (wi, wi.plot)))
                 
         elif msg == Changed.ESTIMATE:
@@ -749,6 +752,7 @@ class RemoteWorkflow(HasStrictTraits):
         
         elif msg == Changed.ESTIMATE_RESULT:
             if wi.current_view and wi.current_view.should_plot(Changed.ESTIMATE_RESULT):
+                wi.update_plot_names()
                 self.exec_q.put((idx - 0.1, (wi, wi.plot)))
                 
             if wi.operation.should_apply(Changed.ESTIMATE_RESULT):
@@ -764,6 +768,7 @@ class RemoteWorkflow(HasStrictTraits):
             
         elif msg == Changed.RESULT:
             if wi.current_view and wi.current_view.should_plot(Changed.RESULT):
+                wi.update_plot_names()
                 self.exec_q.put((idx - 0.1, (wi, wi.plot)))
                 
         elif msg == Changed.PREV_RESULT:
@@ -777,6 +782,7 @@ class RemoteWorkflow(HasStrictTraits):
                 self.exec_q.put((idx, (wi, wi.apply)))
                 
             if wi.current_view and wi.current_view.should_plot(Changed.PREV_RESULT):
+                wi.update_plot_names()
                 self.exec_q.put((idx - 0.1, (wi, wi.plot)))
 
     @on_trait_change('workflow:+', post_init = True)
@@ -826,6 +832,7 @@ class RemoteWorkflow(HasStrictTraits):
                       .format((self, obj, name, old, new)))   
          
         if obj.current_view and obj.current_view.should_plot("result"):
+            obj.update_plot_names()
             self.exec_q.put((0, (obj, obj.plot)))
              
         if obj.result:
@@ -845,12 +852,14 @@ class RemoteWorkflow(HasStrictTraits):
                       .format((self, obj, name, old, new)))
         
         idx = self.workflow.index(obj)
+        obj.update_plot_names()
         self.exec_q.put((idx + 0.1, (obj, obj.plot)))
             
     @on_trait_change('selected', post_init = True)
     def _selected_changed(self, obj, name, new):
         if new:
             idx = self.workflow.index(new)
+            new.update_plot_names()
             self.exec_q.put((idx + 0.1, (new, new.plot)))
             
     @on_trait_change('workflow:apply_called')

@@ -21,8 +21,9 @@ Created on Feb 11, 2015
 """
 
 from traits.api import Instance, provides, Str, Any
-from traitsui.api import BasicEditorFactory
-from traitsui.qt4.editor import Editor
+from traitsui.editor_factory import EditorWithListFactory
+from traitsui.qt4.enum_editor import BaseEditor as BaseEnumerationEditor
+from traitsui.qt4.constants import OKColor, ErrorColor
 
 from pyface.qt import QtCore, QtGui
 from pyface.tasks.api import TaskPane, ITaskPane
@@ -34,8 +35,7 @@ from matplotlib.figure import Figure
 class FlowTaskPane(TaskPane):
     """
     The center pane for the UI; contains the matplotlib canvas for plotting
-    data views.  eventually, this will allow multiple views; for now, it's
-    just one matplotlib canvas.
+    data views.
     """
     
     id = 'edu.mit.synbio.cytoflow.flow_task_pane'
@@ -71,66 +71,104 @@ class FlowTaskPane(TaskPane):
         
         self.canvas.print_figure(filename, bbox_inches = 'tight')
     
-class _TabListEditor(Editor):
+class _TabListEditor(BaseEnumerationEditor):
     
     # the currently selected notebook page
-    selected = Any
+#     selected = Any
     
     def init(self, parent):        
+        super(_TabListEditor, self).init(parent)
+        
         self.control = QtGui.QTabBar()
+        self.control.setDocumentMode(True)
+        for name in self.names:
+            self.control.addTab(str(name))
+            
         QtCore.QObject.connect(self.control, 
                                QtCore.SIGNAL('currentChanged(int)'), 
-                               self._tab_activated )
-        self.control.setDocumentMode(True)
+                               self.update_object )
+
+
          
         # Set up the additional 'list items changed' event handler needed for
         # a list based trait. Note that we want to fire the update_editor_item
         # only when the items in the list change and not when intermediate
         # traits change. Therefore, replace "." by ":" in the extended_name
         # when setting up the listener.
-        extended_name = self.extended_name.replace('.', ':')
-        self.context_object.on_trait_change( self.update_editor_item,
-                               extended_name + '_items?', dispatch = 'ui' )  
-         
-        # Set of selection synchronization:
-        self.sync_value( self.factory.selected, 'selected' ) 
+#         extended_name = self.extended_name.replace('.', ':')
+#         self.context_object.on_trait_change( self.update_editor_item,
+#                                extended_name + '_items?', dispatch = 'ui' )  
+#          
+#         # Set of selection synchronization:
+#         self.sync_value( self.factory.selected, 'selected' ) 
 
+
+#     def update_editor(self):
+#         while self.control.count() > 0:
+#             self.control.removeTab(0)
+#             
+#         for v in self.value:
+#             self.control.addTab(str(v))
+#             
+#         if not self.value:
+#             self.selected = None
+
+
+#     def update_editor_item (self, event):
+#         """ Handles an update to some subset of the trait's list.
+#         """
+#         self.update_editor()
 
     def update_editor(self):
-        while self.control.count() > 0:
-            self.control.removeTab(0)
-            
-        for v in self.value:
-            self.control.addTab(str(v))
-            
-        if not self.value:
-            self.selected = None
-
-
-    def update_editor_item (self, event):
-        """ Handles an update to some subset of the trait's list.
+        """ Updates the editor when the object trait changes externally to the
+            editor.
         """
-        self.update_editor()
-
+        try:
+            index = self.names.index(self.inverse_mapping[self.value])
+            self.control.setCurrentIndex(index)
+        except:
+            self.control.setCurrentIndex(0)
+            self.update_object(0)
     
-    def _tab_activated(self, idx):
+    def update_object(self, idx):
         """ Handles a notebook tab being "activated" (i.e. clicked on) by the
             user.
         """
-        if idx >= 0 and idx < len(self.value):
-            self.selected = self.value[idx]
+        if idx >= 0 and idx < len(self.names):
+            name = self.names[idx]
+            self.value = self.mapping[unicode(name)]
+            
+    def rebuild_editor(self):
+        self.control.blockSignals(True)
+        
+        while self.control.count() > 0:
+            self.control.removeTab(0)
+             
+        for name in self.names:
+            self.control.addTab(str(name))
+            
+        self.control.blockSignals(False)
+        self.update_editor()
+        
+    def error(self, excp):
+        """ Handles an error that occurs while setting the object's trait value.
+        """
+        self._set_background(ErrorColor)
+        
+        
 
     
-    def dispose ( self ):
-        """ Disposes of the contents of an editor.
-        """
-        self.context_object.on_trait_change( self.update_editor_item,
-                                self.name + '_items?', remove = True )
-
-        super(_TabListEditor, self).dispose()
+#     def dispose ( self ):
+#         """ Disposes of the contents of an editor.
+#         """
+#         self.context_object.on_trait_change( self.update_editor_item,
+#                                 self.name + '_items?', remove = True )
+# 
+#         super(_TabListEditor, self).dispose()
         
 # editor factory
-class TabListEditor(BasicEditorFactory):
-    klass = _TabListEditor
-    selected = Str
+class TabListEditor(EditorWithListFactory):
+    def _get_custom_editor_class(self):
+        return _TabListEditor
+
         

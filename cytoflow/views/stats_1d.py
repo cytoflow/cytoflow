@@ -234,12 +234,12 @@ class Stats1DView(HasStrictTraits):
         
         class plot_enum(object):
             
-            def __init__(self, experiment, by):
+            def __init__(self, data, by):
                 self._iter = None
                 self._returned = False
                 
                 if by:
-                    self._iter = experiment.data.groupby(by).__iter__()
+                    self._iter = data.groupby(by).__iter__()
                 
             def __iter__(self):
                 return self
@@ -254,7 +254,7 @@ class Stats1DView(HasStrictTraits):
                         self._returned = True
                         return None
             
-        return plot_enum(experiment, by)
+        return plot_enum(data.reset_index(), by)
     
     def plot(self, experiment, plot_name = None, **kwargs):
         """Plot a chart"""

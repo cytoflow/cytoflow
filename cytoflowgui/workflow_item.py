@@ -118,14 +118,14 @@ class WorkflowItem(HasStrictTraits):
     
     # the plot names for the currently selected view
     current_view_plot_names = List(Any, status = True)
-#     current_view_plot_names = Property(List, depends_on = 'current_view, previous.result, result')
     
     # if there are multiple plots, which are we viewing?
     current_plot = Any
     
     # the view for the current plot
-    current_plot_view = View(Item('current_view_plot_names',
-                                  editor = TabListEditor(selected = 'current_plot'),
+    current_plot_view = View(Item('current_plot',
+                                  editor = TabListEditor(name = 'current_view_plot_names'),
+                                  style = 'custom',
                                   show_label = False))
     
     # the default view for this workflow item
@@ -284,6 +284,21 @@ class RemoteWorkflowItem(WorkflowItem):
  
         self.status = "valid"
         
+    def update_plot_names(self):
+        if self.current_view:
+            plot_names = [x for x in self.current_view.enum_plots_wi(self)]
+            if plot_names == [None] or plot_names == []:
+                self.current_view_plot_names = []
+            else:
+                self.current_view_plot_names = plot_names
+        else:
+            self.current_view_plot_names = []
+            
+#         print self.current_plot
+#         print self.current_view_plot_names
+#             
+#         if self.current_plot not in self.current_view_plot_names:
+#             self.current_plot = None
         
     def plot(self):              
         logging.debug("WorkflowItem.plot :: {}".format((self)))
@@ -293,9 +308,13 @@ class RemoteWorkflowItem(WorkflowItem):
             plt.clf()
             plt.show()
             return
-         
+
         self.view_warning = ""
         self.view_error = ""
+
+        if len(self.current_view_plot_names) > 0 and self.current_plot not in self.current_view_plot_names:
+            self.view_error = "Plot {} not in current plot names {}".format(self.current_plot, self.current_view_plot_names)
+            return
           
         with warnings.catch_warnings(record = True) as w:
             try:
