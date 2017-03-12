@@ -94,7 +94,10 @@ class PluginViewMixin(HasTraits):
         return True
     
     def plot_wi(self, wi):
-        self.plot(wi.result, wi.current_plot)
+        if wi.current_view_plot_names:
+            self.plot(wi.result, plot_name = wi.current_plot)
+        else:
+            self.plot(wi.result)
             
     def enum_plots_wi(self, wi):
         try:

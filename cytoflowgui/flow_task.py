@@ -267,16 +267,16 @@ class FlowTask(Task):
                 wi.previous = new_workflow[wi_idx - 1]
             
             # reload the subset lists.  i don't know why this is necessary.
-            for view in wi.views:
-                subset_list = view.subset_list
-                view.subset_list = []
-                for s in subset_list:
-                    view.subset_list.append(s)
-                    
-            subset_list = wi.operation.subset_list
-            wi.operation.subset_list = []
-            for s in subset_list:
-                wi.operation.subset_list.append(s)
+#             for view in wi.views:
+#                 subset_list = view.subset_list
+#                 view.subset_list = []
+#                 for s in subset_list:
+#                     view.subset_list.append(s)
+#                     
+#             subset_list = wi.operation.subset_list
+#             wi.operation.subset_list = []
+#             for s in subset_list:
+#                 wi.operation.subset_list.append(s)
 
         # replace the current workflow with the one we just loaded
         

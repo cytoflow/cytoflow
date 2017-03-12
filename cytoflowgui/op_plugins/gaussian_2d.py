@@ -73,7 +73,7 @@ class GaussianMixture2DHandler(Controller, OpHandlerMixin):
                            label = "Subset",
                            show_border = False,
                            show_labels = False),
-                    Item('context.do_estimate',
+                    Item('do_estimate',
                          editor = ButtonEditor(value = True,
                                                label = "Estimate!"),
                          show_label = False),
@@ -143,16 +143,14 @@ class GaussianMixture2DViewHandler(Controller, ViewHandlerMixin):
 class GaussianMixture2DPluginView(GaussianMixture2DView, PluginViewMixin):
     handler_factory = Callable(GaussianMixture2DViewHandler)
     op = Instance(IOperation, fixed = True)
-    subset = DelegatesTo('op')
+    subset = DelegatesTo('op', transient = True)
     by = DelegatesTo('op', status = True)
     
-    # TODO - ???
-#     @on_trait_change('by[]', post_init = True)
-#     def _by_changed(self):
-#         self.changed = "plot_names"
-    
     def plot_wi(self, wi):
-        self.plot(wi.previous.result, plot_name = wi.current_plot)
+        if wi.current_view_plot_names:
+            self.plot(wi.previous.result, plot_name = wi.current_plot)
+        else:
+            self.plot(wi.previous.result)
         
     def enum_plots_wi(self, wi):
         try:

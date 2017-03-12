@@ -555,6 +555,8 @@ class RemoteWorkflow(HasStrictTraits):
 
                     for wi in self.workflow:
                         wi.lock.release()
+                        
+                    self.workflow[0].changed = (Changed.OPERATION, (None, None))
     
                 elif msg == Msg.ADD_ITEMS:
                     (idx, new_item) = payload
@@ -731,8 +733,6 @@ class RemoteWorkflow(HasStrictTraits):
         idx = self.workflow.index(wi)
         (msg, payload) = new
         
-
-
         if msg == Changed.OPERATION:
             if wi.operation.should_apply(Changed.OPERATION):
                 self.exec_q.put((idx, (wi, wi.apply)))
