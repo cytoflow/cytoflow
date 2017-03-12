@@ -152,7 +152,7 @@ class TasbeHandler(Controller, OpHandlerMixin):
                            show_labels = False),
                     Heading("WARNING: Very slow!"),
                     Heading("Give it a few minutes..."),
-                    Item('context.do_estimate',
+                    Item('do_estimate',
                          editor = ButtonEditor(value = True,
                                                label = "Estimate!"),
                          show_label = False),

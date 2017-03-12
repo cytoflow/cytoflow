@@ -99,7 +99,7 @@ class BleedthroughLinearHandler(Controller, OpHandlerMixin):
                            label = "Subset",
                            show_border = False,
                            show_labels = False),
-                    Item('estimate',
+                    Item('do_estimate',
                          editor = ButtonEditor(value = True,
                                                label = "Estimate!"),
                          show_label = False),
@@ -123,6 +123,10 @@ class BleedthroughLinearPluginOp(PluginOpMixin, BleedthroughLinearOp):
     # MAGIC - returns the value of the "subset" Property, above
     def _get_subset(self):
         return " and ".join([subset.str for subset in self.subset_list if subset.str])
+    
+    @on_trait_change('subset_list.str', post_init = True)
+    def _subset_changed(self, obj, name, old, new):
+        self.changed = (Changed.ESTIMATE, ('subset_list', self.subset_list))
     
     def default_view(self, **kwargs):
         return BleedthroughLinearPluginView(op = self, **kwargs)

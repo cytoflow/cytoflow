@@ -155,6 +155,10 @@ class TransformStatisticPluginOp(TransformStatisticOp, PluginOpMixin):
     def _get_subset(self):
         return " and ".join([subset.str for subset in self.subset_list if subset.str])
     
+    @on_trait_change('subset_list.str', post_init = True)
+    def _subset_changed(self, obj, name, old, new):
+        self.changed = (Changed.OPERATION, ('subset_list', self.subset_list))
+    
     # functions aren't picklable, so send the name instead
     function = Callable(transient = True)
     

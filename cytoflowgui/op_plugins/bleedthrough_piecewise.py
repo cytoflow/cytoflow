@@ -99,7 +99,7 @@ class BleedthroughPiecewiseHandler(Controller, OpHandlerMixin):
                            show_labels = False),
                     Heading("WARNING: Very slow!"),
                     Heading("Give it a few minutes..."),
-                    Item('context.do_estimate',
+                    Item('do_estimate',
                          editor = ButtonEditor(value = True,
                                                label = "Estimate!"),
                          show_label = False),
@@ -120,6 +120,10 @@ class BleedthroughPiecewisePluginOp(BleedthroughPiecewiseOp, PluginOpMixin):
     # MAGIC - returns the value of the "subset" Property, above
     def _get_subset(self):
         return " and ".join([subset.str for subset in self.subset_list if subset.str])
+    
+    @on_trait_change('subset_list.str', post_init = True)
+    def _subset_changed(self, obj, name, old, new):
+        self.changed = (Changed.ESTIMATE, ('subset_list', self.subset_list))
         
     # MAGIC: called when add_control is set
     def _add_control_fired(self):

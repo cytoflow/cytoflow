@@ -118,6 +118,7 @@ class WorkflowItem(HasStrictTraits):
     
     # the plot names for the currently selected view
     current_view_plot_names = List(Any, status = True)
+#     current_view_plot_names = Property(List, depends_on = 'current_view, previous.result, result')
     
     # if there are multiple plots, which are we viewing?
     current_plot = Any
@@ -210,6 +211,17 @@ class WorkflowItem(HasStrictTraits):
         else:
             return []
         
+#     @cached_property
+#     def _get_current_view_plot_names(self):
+#         if self.current_view:
+#             plot_names = [x for x in self.current_view.enum_plots_wi(self)]
+#             if plot_names == [None] or plot_names == []:
+#                 return []
+#             else:
+#                 return plot_names  
+#         else:
+#             return []
+        
     def __str__(self):
         return "<{}: {}>".format(self.__class__.__name__, self.operation.__class__.__name__)
 
@@ -218,116 +230,9 @@ class WorkflowItem(HasStrictTraits):
 
     
 class RemoteWorkflowItem(WorkflowItem):
-
-#     changed = DelayedEvent(delay = 0.2)
-    
-    # the Event we use to cause the remote process to run one of our 
-    # functions in the main thread
-#     command = DelayedEvent(delay = 0.2)
-    
+      
     lock = Instance(threading.Lock, (), transient = True)
     
-#     @on_trait_change('+status')
-#     def _wi_changed(self, obj, name, old, new):
-#         self.changed = "status"
-#         
-#     @on_trait_change('operation:changed', post_init = True)
-#     def _operation_changed(self, obj, name, old, new):
-#         logging.debug("RemoteWorkflowItem._operation_changed :: {}"
-#                       .format((self, new)))
-#         
-#         if new == "estimate" and self.operation.should_clear_estimate("estimate"):
-#             try:
-#                 self.operation.clear_estimate()
-#             except AttributeError:
-#                 pass
-#             
-#         if new == "api" and self.operation.should_apply("operation"):
-#             self.command = "apply"
-#             
-#         if new == "estimate_result" and self.operation.should_apply("estimate_result"):
-#             self.command = "apply"
-#             
-#         if new == "estimate_result" and self.current_view.should_plot("estimate_result"):
-#             self.command = "plot"
-#             
-#             
-#     @on_trait_change('previous.result', post_init = True)
-#     def _prev_result_changed(self, obj, name, old, new):
-#         logging.debug("RemoteWorkflowItem._prev_result_changed :: {}"
-#                       .format(self, new))
-# 
-#         if self.previous and self.previous.result:
-#             self.previous_channels = list(self.previous.result.channels)
-#             self.previous_conditions = dict(self.previous.result.conditions)
-#             self.previous_statistics = dict(self.previous.result.statistics)
-# 
-#             # some things in metadata are unpicklable, functions and such,
-#             # so filter them out.
-#             self.previous_metadata = filter_unpicklable(dict(self.previous.result.metadata))
-#             
-# 
-#         if self.operation.should_clear_estimate("prev_result"):
-#             try:
-#                 self.operation.clear_estimate()
-#             except AttributeError:
-#                 pass
-#         
-#         if self.operation.should_apply("prev_result"):
-#             self.status = "invalid"
-#             self.command = "apply"
-#       
-#         if self.current_view and self.current_view.should_plot("prev_result"):
-#             self.command = "plot"            
-#             
-#     @on_trait_change('result', post_init = True)
-#     def _result_changed(self, obj, name, old, new):
-#         logging.debug("RemoteWorkflowItem._result_changed :: {}"
-#                       .format(self))   
-#         
-#         if self.current_view and self.current_view.should_plot("result"):
-#             self.command = "plot"   
-#             
-#         if self.result:
-#             self.channels = list(self.result.channels)
-#             self.conditions = dict(self.result.conditions)
-#             self.statistics = dict(self.result.statistics)
-# 
-#             # some things in metadata are unpicklable, functions and such,
-#             # so filter them out.
-#             self.metadata = filter_unpicklable(dict(self.result.metadata))
-#             
-#             
-#     @on_trait_change('current_view', post_init = True)
-#     def _current_view_changed(self, obj, name, old, new):
-#         logging.debug("RemoteWorkflowItem._current_view_changed :: {}"
-#                       .format((self, new.id)))
-#         
-#         self.command = "plot"        
-#         
-#         
-#     @on_trait_change('current_view:changed', post_init = True)
-#     def _current_view_trait_changed(self, obj, name, old, new):
-#         logging.debug("RemoteWorkflowItem._current_view_trait_changed :: {}"
-#                       .format((self, new)))       
-#          
-#         if new == "api" and self.current_view.should_plot("view"):
-#             self.command = "plot"
-#             
-#              
-#     @on_trait_change('current_view.changed', post_init = True)
-#     def _update_plot_names(self):
-#         plot_names = [x for x in self.current_view.enum_plots_wi(self)]
-#         if plot_names == [None] or plot_names == []:
-#             self.current_view_plot_names = []
-#         else:
-#             self.current_view_plot_names = plot_names      
-#             
-#     @on_trait_change('current_plot', post_init = True)
-#     def _current_plot_changed(self):
-#         self.command = "plot"
-
-
     def estimate(self):
         logging.debug("WorkflowItem.estimate :: {}".format((self)))
 

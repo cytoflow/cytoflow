@@ -104,7 +104,7 @@ class ColorTranslationHandler(Controller, OpHandlerMixin):
                            label = "Subset",
                            show_border = False,
                            show_labels = False),
-                    Item('context.do_estimate',
+                    Item('do_estimate',
                          editor = ButtonEditor(value = True,
                                                label = "Estimate!"),
                          show_label = False),
@@ -127,9 +127,13 @@ class ColorTranslationPluginOp(PluginOpMixin, ColorTranslationOp):
     # MAGIC - returns the value of the "subset" Property, above
     def _get_subset(self):
         return " and ".join([subset.str for subset in self.subset_list if subset.str])
+    
+    @on_trait_change('subset_list.str', post_init = True)
+    def _subset_changed(self, obj, name, old, new):
+        self.changed = (Changed.ESTIMATE, ('subset_list', self.subset_list))
         
-    @on_trait_change('controls_list_items,controls_list.+', post_init = True)
-    def _controls_changed(self, obj, name, old, new):
+    @on_trait_change('controls_list_items, controls_list:+', post_init = True)
+    def _controls_changed(self):
         self.changed = (Changed.ESTIMATE, ('controls_list', self.controls_list))
     
     def default_view(self, **kwargs):
@@ -163,9 +167,7 @@ class ColorTranslationPluginOp(PluginOpMixin, ColorTranslationOp):
         return False
         
     def clear_estimate(self):
-        self._coefficients.clear()
-        self._subset.clear()
-        
+        self._coefficients.clear()        
         self.changed = (Changed.ESTIMATE_RESULT, self)
 
 class ColorTranslationViewHandler(Controller, ViewHandlerMixin):

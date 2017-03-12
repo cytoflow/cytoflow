@@ -59,7 +59,7 @@ class RangeViewHandler(Controller, ViewHandlerMixin):
                                 label="Color\nFacet"),
                             label = "Range Setup View",
                             show_border = False),
-                    VGroup(Item('subset',
+                    VGroup(Item('subset_list',
                                 show_label = False,
                                 editor = SubsetListEditor(conditions = "context.previous_conditions")),
                            label = "Subset",

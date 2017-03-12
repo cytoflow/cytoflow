@@ -78,15 +78,17 @@ class AutofluorescencePluginOp(PluginOpMixin, AutofluorescenceOp):
     # MAGIC - returns the value of the "subset" Property, above
     def _get_subset(self):
         return " and ".join([subset.str for subset in self.subset_list if subset.str])
+    
+    @on_trait_change('subset_list.str', post_init = True)
+    def _subset_changed(self, obj, name, old, new):
+        self.changed = (Changed.ESTIMATE, ('subset_list', self.subset_list))
 
     @on_trait_change('channels', post_init = True)
     def _channels_changed(self):
         self.changed = (Changed.ESTIMATE, ('channels', self.channels))
-
     
     def default_view(self, **kwargs):
         return AutofluorescencePluginView(op = self, **kwargs)
-    
     
     def estimate(self, experiment):
         if not self.subset:

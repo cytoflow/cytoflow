@@ -68,6 +68,9 @@ class PluginViewMixin(HasTraits):
     # transmit some change back to the workflow
     changed = Event
     
+    # plot names
+    plot_names = List(Str, status = True)
+    
     subset_list = List(ISubset)
     subset = Property(Str, depends_on = "subset_list.str")
         
@@ -75,11 +78,9 @@ class PluginViewMixin(HasTraits):
     def _get_subset(self):
         return " and ".join([subset.str for subset in self.subset_list if subset.str])
  
- 
     @on_trait_change('subset_list.str')
     def _subset_changed(self, obj, name, old, new):
         self.changed = (Changed.VIEW, (self, 'subset_list', self.subset_list))  
-              
             
     def should_plot(self, changed):
         """
