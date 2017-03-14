@@ -124,21 +124,19 @@ class FlowTask(Task):
     # "open" or "save as".
     filename = Unicode
     
-    # are we debugging?  ie, do we need a default setup?
-    debug = Bool
-    
     def activated(self):
         # add the import op
         self.add_operation(ImportPlugin().id) 
         self.model.selected = self.model.workflow[0]
         
         # if we're debugging, add a few data bits
-        if self.debug:
+        if self.model.debug:
             from cytoflow import Tube
             
             import_op = self.model.workflow[0].operation
-            import_op.conditions["Dox"] = "float"
-            import_op.conditions["Well"] = "category"
+            import_op.conditions = {"Dox" : "float", "Well" : "category"}
+#             import_op.conditions["Dox"] = "float"
+#             import_op.conditions["Well"] = "category"
          
             tube1 = Tube(file = "../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs",
                          conditions = {"Dox" : 0.0, "Well" : 'A'})
@@ -588,6 +586,6 @@ class FlowTaskPlugin(Plugin):
                                                            op_plugins = self.op_plugins,
                                                            view_plugins = self.view_plugins,
                                                            model = Workflow(self.remote_connection,
-                                                                            version = cf_version),
-                                                           debug = self.debug,
+                                                                            version = cf_version,
+                                                                            debug = self.debug),
                                                            **x))]
