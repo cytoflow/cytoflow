@@ -535,6 +535,8 @@ class GaussianMixture1DView(cytoflow.views.HistogramView):
                 warn("Resetting huefacet to the model component (was {}, now {})."
                      .format(self.huefacet, self.op.name))
             self.huefacet = self.op.name
+        else:
+            self.huefacet = ""
         
         if self.subset:
             try:
@@ -629,9 +631,14 @@ class GaussianMixture1DView(cytoflow.views.HistogramView):
                     return g           
                 
             ax = g.facet_axis(i, j)
-                                    
+                                                
             if len(gmm.means_) != len(ax.patches):
-                return
+                warn("The number of patches on the plot doesn't match the "
+                     "number of components in the GMM.  Can't plot distributions "
+                     "for plot {}"
+                     .format(gmm_name),
+                     util.CytoflowViewWarning)
+                continue
                                     
             for k in range(0, len(gmm.means_)):
                 # we want to scale the plots so they have the same area under the
