@@ -122,21 +122,23 @@ class Tube(HasTraits):
                 
         return ret
     
-    def _anytrait_changed(self, name, old, new):
+    def _anytrait_changed(self, name, old, new):        
         if self.trait(name).condition:
             old_hash = self.conditions_hash()
-            
-            self.parent.counter[old_hash] -= 1
-            if self.parent.counter[old_hash] == 0:
-                del self.parent.counter[old_hash]
-                
             self.conditions[name] = new
-            
             new_hash = self.conditions_hash()
-            if new_hash not in self.parent.counter:
-                self.parent.counter[new_hash] = 1
-            else:
-                self.parent.counter[new_hash] += 1
+            
+            if old_hash in self.parent.counter:
+                self.parent.counter[old_hash] -= 1
+                
+                if self.parent.counter[old_hash] == 0:
+                    del self.parent.counter[old_hash]
+                
+            
+                if new_hash not in self.parent.counter:
+                    self.parent.counter[new_hash] = 1
+                else:
+                    self.parent.counter[new_hash] += 1
                 
     @cached_property
     def _get_all_conditions_set(self):
