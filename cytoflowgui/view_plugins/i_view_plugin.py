@@ -73,20 +73,20 @@ class PluginViewMixin(HasTraits):
     def _get_subset(self):
         return " and ".join([subset.str for subset in self.subset_list if subset.str])
     
-    @on_trait_change("subset_list.str", post_init = True)
-    def _subset_changed(self, obj, name, old, new):
-        self.changed = "api"
-    
-    # why can't we just put this in a workflow listener?  it's because
-    # we sometimes need to override or supplement it on a per-module basis
-        
-    @on_trait_change("+", post_init = True)
-    def _changed(self, obj, name, old, new):
-        if not obj.trait(name).transient:
-            if obj.trait(name).status:
-                self.changed = "status"
-            else:
-                self.changed = "api"
+#     @on_trait_change("subset_list.str", post_init = True)
+#     def _subset_changed(self, obj, name, old, new):
+#         self.changed = "api"
+#     
+#     # why can't we just put this in a workflow listener?  it's because
+#     # we sometimes need to override or supplement it on a per-module basis
+#         
+#     @on_trait_change("+", post_init = True)
+#     def _changed(self, obj, name, old, new):
+#         if not obj.trait(name).transient:
+#             if obj.trait(name).status:
+#                 self.changed = "status"
+#             else:
+#                 self.changed = "api"
             
     def should_plot(self, changed):
         """
