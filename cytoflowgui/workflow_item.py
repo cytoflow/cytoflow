@@ -305,8 +305,12 @@ class RemoteWorkflowItem(WorkflowItem):
         self.plot_called = True
                      
         if not self.current_view:
+            self.plot_lock.acquire()                
+            self.matplotlib_events.clear()
             plt.clf()
             plt.show()
+            self.matplotlib_events.set() 
+            self.plot_lock.release()
             return
 
         self.view_warning = ""
@@ -320,7 +324,9 @@ class RemoteWorkflowItem(WorkflowItem):
             try:
                 self.plot_lock.acquire()                
                 self.matplotlib_events.clear()
-
+                
+                plt.clf()
+                
                 self.current_view.plot_wi(self)
             
                 if this.last_view_plotted and "interactive" in this.last_view_plotted.traits():
