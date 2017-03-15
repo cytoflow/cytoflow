@@ -559,7 +559,8 @@ class RemoteWorkflow(HasStrictTraits):
                     for wi in self.workflow:
                         wi.lock.release()
                         
-                    self.workflow[0].changed = (Changed.OPERATION, (None, None))
+                    if len(self.workflow) > 0:
+                        self.workflow[0].changed = (Changed.OPERATION, (None, None))
     
                 elif msg == Msg.ADD_ITEMS:
                     (idx, new_item) = payload
@@ -754,7 +755,9 @@ class RemoteWorkflow(HasStrictTraits):
                     pass
         
         elif msg == Changed.ESTIMATE_RESULT:
-            if wi.current_view and wi.current_view.should_plot(Changed.ESTIMATE_RESULT):
+            if (wi == self.selected 
+                and wi.current_view 
+                and wi.current_view.should_plot(Changed.ESTIMATE_RESULT)):
                 wi.update_plot_names()
                 self.exec_q.put((idx - 0.1, (wi, wi.plot)))
                 
@@ -770,7 +773,9 @@ class RemoteWorkflow(HasStrictTraits):
             self.message_q.put((Msg.UPDATE_VIEW, (idx, view.id, name, new)))
             
         elif msg == Changed.RESULT:
-            if wi.current_view and wi.current_view.should_plot(Changed.RESULT):
+            if (wi == self.selected 
+                and wi.current_view 
+                and wi.current_view.should_plot(Changed.RESULT)):
                 wi.update_plot_names()
                 self.exec_q.put((idx - 0.1, (wi, wi.plot)))
                 
@@ -784,7 +789,9 @@ class RemoteWorkflow(HasStrictTraits):
             if wi.operation.should_apply(Changed.PREV_RESULT):
                 self.exec_q.put((idx, (wi, wi.apply)))
                 
-            if wi.current_view and wi.current_view.should_plot(Changed.PREV_RESULT):
+            if (wi == self.selected 
+                and wi.current_view 
+                and wi.current_view.should_plot(Changed.PREV_RESULT)):
                 wi.update_plot_names()
                 self.exec_q.put((idx - 0.1, (wi, wi.plot)))
 
@@ -834,9 +841,9 @@ class RemoteWorkflow(HasStrictTraits):
         logging.debug("RemoteWorkflow._result_changed :: {}"
                       .format((self, obj, name, old, new)))   
          
-        if obj.current_view and obj.current_view.should_plot("result"):
-            obj.update_plot_names()
-            self.exec_q.put((0, (obj, obj.plot)))
+#         if obj.current_view and obj.current_view.should_plot("result"):
+#             obj.update_plot_names()
+#             self.exec_q.put((0, (obj, obj.plot)))
              
         if obj.result:
             obj.channels = list(obj.result.channels)
@@ -854,9 +861,10 @@ class RemoteWorkflow(HasStrictTraits):
         logging.debug("RemoteWorkflow._current_view_changed :: {}"
                       .format((self, obj, name, old, new)))
         
-        idx = self.workflow.index(obj)
-        obj.update_plot_names()
-        self.exec_q.put((idx + 0.1, (obj, obj.plot)))
+        if obj == self.selected:
+            idx = self.workflow.index(obj)
+            obj.update_plot_names()
+            self.exec_q.put((idx + 0.1, (obj, obj.plot)))
             
     @on_trait_change('selected', post_init = True)
     def _selected_changed(self, obj, name, new):
