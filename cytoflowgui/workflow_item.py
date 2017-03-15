@@ -249,10 +249,12 @@ class RemoteWorkflowItem(WorkflowItem):
                 else:
                     self.estimate_warning = ""
                 
+                return True
+                
             except CytoflowError as e:
                 self.estimate_error = e.__str__()    
                 self.status = "invalid"
-                return        
+                return False 
             
             
     def apply(self):
@@ -275,14 +277,16 @@ class RemoteWorkflowItem(WorkflowItem):
                     self.op_warning = w[-1].message.__str__()
                 else:
                     self.op_warning = ""
+                    
+                self.status = "valid"
+                return True
                 
             except CytoflowError as e:
                 self.result = None
                 self.op_error = e.__str__()    
                 self.status = "invalid"
-                return
+                return False
  
-        self.status = "valid"
         
     def update_plot_names(self):
         if self.current_view:
@@ -311,14 +315,14 @@ class RemoteWorkflowItem(WorkflowItem):
             plt.show()
             self.matplotlib_events.set() 
             self.plot_lock.release()
-            return
+            return True
 
         self.view_warning = ""
         self.view_error = ""
 
         if len(self.current_view_plot_names) > 0 and self.current_plot not in self.current_view_plot_names:
             self.view_error = "Plot {} not in current plot names {}".format(self.current_plot, self.current_view_plot_names)
-            return
+            return True
           
         with warnings.catch_warnings(record = True) as w:
             try:
@@ -341,17 +345,20 @@ class RemoteWorkflowItem(WorkflowItem):
                 # is NOT interactive.  this call lets us batch together all 
                 # the plot updates
                 plt.show()
-                     
+                                     
             except CytoflowError as e:
                 self.view_error = e.__str__()   
                 plt.clf()
                 plt.show()   
+                
             finally:
                 self.matplotlib_events.set() 
                 self.plot_lock.release()
 
                 if w:
                     self.view_warning = w[-1].message.__str__()
+                    
+                return True
 
                     
             

@@ -57,7 +57,7 @@ from cytoflow.views import IView
 
 from cytoflowgui.vertical_notebook_editor import VerticalNotebookEditor
 from cytoflowgui.workflow_item import WorkflowItem, RemoteWorkflowItem
-from cytoflowgui.util import UniquePriorityQueue, DelayUniqueQueue, filter_unpicklable
+from cytoflowgui.util import UniquePriorityQueue, filter_unpicklable
 from cytoflowgui.multiprocess_logging import QueueHandler
 import cytoflowgui.matplotlib_backend
 
@@ -531,7 +531,10 @@ class RemoteWorkflow(HasStrictTraits):
             try:
                 _, (wi, fn) = self.exec_q.get()
                 with wi.lock:
-                    fn()
+                    ret = fn()
+                if not ret:  # if there was a problem, clear the queue
+                    while not self.exec_q.empty():
+                        self.exec_q.get()
             except Exception:
                 log_exception()
 
@@ -548,6 +551,7 @@ class RemoteWorkflow(HasStrictTraits):
                 if msg == Msg.NEW_WORKFLOW:
                     self.workflow = []
                     for new_item in payload:
+                        idx = len(self.workflow)
                         wi = RemoteWorkflowItem()
                         wi.lock.acquire()
                         wi.matplotlib_events = self.matplotlib_events
@@ -555,12 +559,20 @@ class RemoteWorkflow(HasStrictTraits):
                         wi.copy_traits(new_item,
                                        status = lambda t: t is not True)
                         self.workflow.append(wi)
+                        
+                        if hasattr(wi.operation, "estimate"):
+                            self.exec_q.put((idx - 0.5, (wi, wi.estimate)))
+
+                        self.exec_q.put((idx, (wi, wi.apply)))                            
+                        
+#                         self.workflow[0].changed = (Changed.ESTIMATE, )
+#                         self.workflow[0].changed = (Changed.OPERATION, (None, None))
 
                     for wi in self.workflow:
                         wi.lock.release()
                         
-                    if len(self.workflow) > 0:
-                        self.workflow[0].changed = (Changed.OPERATION, (None, None))
+#                     if len(self.workflow) > 0:
+#                         self.workflow[0].changed = (Changed.OPERATION, (None, None))
     
                 elif msg == Msg.ADD_ITEMS:
                     (idx, new_item) = payload
