@@ -25,8 +25,8 @@ import warnings
 from traitsui.api import (View, Item, Controller, ButtonEditor, CheckListEditor,
                           VGroup)
 from envisage.api import Plugin, contributes_to
-from traits.api import provides, Callable, List, Str, \
-                       File, on_trait_change
+from traits.api import (provides, Callable, List, Str, Property, File, 
+                        on_trait_change)
 from pyface.api import ImageResource
 
 import cytoflow.utility as util
@@ -39,6 +39,9 @@ from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_E
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.subset import SubsetListEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
+from cytoflowgui.workflow import Changed
+from cytoflowgui.subset import ISubset
+
 
 class AutofluorescenceHandler(Controller, OpHandlerMixin):
     
@@ -57,7 +60,7 @@ class AutofluorescenceHandler(Controller, OpHandlerMixin):
                            label = "Subset",
                            show_border = False,
                            show_labels = False),
-                    Item('context.do_estimate',
+                    Item('do_estimate',
                          editor = ButtonEditor(value = True,
                                                label = "Estimate!"),
                          show_label = False),
@@ -69,9 +72,20 @@ class AutofluorescencePluginOp(PluginOpMixin, AutofluorescenceOp):
     channels = List(Str, estimate = True)
     blank_file = File(filter = ["*.fcs"], estimate = True)
 
-    @on_trait_change('channels_items', post_init = True)
-    def _channels_changed(self, obj, name, old, new):
-        self.changed = "estimate"
+    subset_list = List(ISubset, estimate = True)    
+    subset = Property(Str, depends_on = "subset_list.str")
+        
+    # MAGIC - returns the value of the "subset" Property, above
+    def _get_subset(self):
+        return " and ".join([subset.str for subset in self.subset_list if subset.str])
+    
+    @on_trait_change('subset_list.str', post_init = True)
+    def _subset_changed(self, obj, name, old, new):
+        self.changed = (Changed.ESTIMATE, ('subset_list', self.subset_list))
+
+    @on_trait_change('channels', post_init = True)
+    def _channels_changed(self):
+        self.changed = (Changed.ESTIMATE, ('channels', self.channels))
     
     def default_view(self, **kwargs):
         return AutofluorescencePluginView(op = self, **kwargs)
@@ -83,25 +97,28 @@ class AutofluorescencePluginOp(PluginOpMixin, AutofluorescenceOp):
                           util.CytoflowOpWarning)
             
         AutofluorescenceOp.estimate(self, experiment, subset = self.subset)
-        self.changed = "estimate_result"
+        self.changed = (Changed.ESTIMATE_RESULT, self)
+        
         
     def clear_estimate(self):
         self._af_median.clear()
         self._af_stdev.clear()
-        self.changed = "estimate_result"
+        self.changed = (Changed.ESTIMATE_RESULT, self)
+        
+    
+    def should_apply(self, changed):
+        if changed == Changed.PREV_RESULT or changed == Changed.ESTIMATE_RESULT:
+            return True
+        
+        return False
+
     
     def should_clear_estimate(self, changed):
-        """
-        Should the owning WorkflowItem clear the estimated model by calling
-        op.clear_estimate()?  `changed` can be:
-         - "estimate" -- the parameters required to call 'estimate()' (ie
-            traits with estimate = True metadata) have changed
-         - "prev_result" -- the previous WorkflowItem's result changed
-        """
-        if changed == "prev_result":
-            return False
+        if changed == Changed.ESTIMATE:
+            return True
         
-        return True
+        return False
+        
 
 class AutofluorescenceViewHandler(Controller, ViewHandlerMixin):
     def default_traits_view(self):
@@ -122,20 +139,14 @@ class AutofluorescencePluginView(AutofluorescenceDiagnosticView, PluginViewMixin
     
     def plot_wi(self, wi):
         self.plot(wi.previous.result)
-        
+
+    
     def should_plot(self, changed):
-        """
-        Should the owning WorkflowItem refresh the plot when certain things
-        change?  `changed` can be:
-         - "view" -- the view's parameters changed
-         - "result" -- this WorkflowItem's result changed
-         - "prev_result" -- the previous WorkflowItem's result changed
-         - "estimate_result" -- the results of calling "estimate" changed
-        """
-        if changed == "prev_result" or changed == "result":
-            return False
+        if changed == Changed.ESTIMATE_RESULT:
+            return True
         
-        return True
+        return False
+    
 
 @provides(IOperationPlugin)
 class AutofluorescencePlugin(Plugin):

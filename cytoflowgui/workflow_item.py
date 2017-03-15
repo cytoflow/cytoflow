@@ -23,7 +23,7 @@ Created on Mar 15, 2015
 import warnings, logging, sys, threading
 
 from traits.api import HasStrictTraits, Instance, List, DelegatesTo, Enum, \
-                       Property, cached_property, on_trait_change, Bool, \
+                       Property, cached_property, Bool, \
                        Str, Dict, Any, Event, Tuple
 from traitsui.api import View, Item, Handler
 from pyface.qt import QtGui
@@ -35,10 +35,9 @@ import pandas as pd
 from cytoflow import Experiment
 from cytoflow.operations.i_operation import IOperation
 from cytoflow.views.i_view import IView
-from cytoflow.utility import CytoflowError, CytoflowOpError, CytoflowViewError
+from cytoflow.utility import CytoflowError
 
 from cytoflowgui.flow_task_pane import TabListEditor
-from cytoflowgui.util import DelayedEvent, filter_unpicklable
 
 # http://stackoverflow.com/questions/1977362/how-to-create-module-wide-variables-in-python
 this = sys.modules[__name__]
@@ -124,8 +123,9 @@ class WorkflowItem(HasStrictTraits):
     current_plot = Any
     
     # the view for the current plot
-    current_plot_view = View(Item('current_view_plot_names',
-                                  editor = TabListEditor(selected = 'current_plot'),
+    current_plot_view = View(Item('current_plot',
+                                  editor = TabListEditor(name = 'current_view_plot_names'),
+                                  style = 'custom',
                                   show_label = False))
     
     # the default view for this workflow item
@@ -148,9 +148,9 @@ class WorkflowItem(HasStrictTraits):
     estimate_warning = Str(status = True)
     view_error = Str(status = True)
     view_warning = Str(status = True)
-    
-    # the event to make the workflow item re-estimate its internal model
-#     do_estimate = Event
+
+    # the central event to kick of WorkflowItem update logic
+    changed = Event
     
     # the icon for the vertical notebook view.  Qt specific, sadly.
     icon = Property(depends_on = 'status', transient = True)  
@@ -158,6 +158,10 @@ class WorkflowItem(HasStrictTraits):
     # synchronization primitives for plotting
     matplotlib_events = Any(transient = True)
     plot_lock = Any(transient = True)
+           
+    # events to track number of times apply() and plot() are called
+    apply_called = Event
+    plot_called = Event
            
     @cached_property
     def _get_icon(self):
@@ -207,6 +211,17 @@ class WorkflowItem(HasStrictTraits):
         else:
             return []
         
+#     @cached_property
+#     def _get_current_view_plot_names(self):
+#         if self.current_view:
+#             plot_names = [x for x in self.current_view.enum_plots_wi(self)]
+#             if plot_names == [None] or plot_names == []:
+#                 return []
+#             else:
+#                 return plot_names  
+#         else:
+#             return []
+        
     def __str__(self):
         return "<{}: {}>".format(self.__class__.__name__, self.operation.__class__.__name__)
 
@@ -215,116 +230,9 @@ class WorkflowItem(HasStrictTraits):
 
     
 class RemoteWorkflowItem(WorkflowItem):
-
-#     changed = DelayedEvent(delay = 0.2)
-    
-    # the Event we use to cause the remote process to run one of our 
-    # functions in the main thread
-#     command = DelayedEvent(delay = 0.2)
-    
+      
     lock = Instance(threading.Lock, (), transient = True)
     
-#     @on_trait_change('+status')
-#     def _wi_changed(self, obj, name, old, new):
-#         self.changed = "status"
-#         
-#     @on_trait_change('operation:changed', post_init = True)
-#     def _operation_changed(self, obj, name, old, new):
-#         logging.debug("RemoteWorkflowItem._operation_changed :: {}"
-#                       .format((self, new)))
-#         
-#         if new == "estimate" and self.operation.should_clear_estimate("estimate"):
-#             try:
-#                 self.operation.clear_estimate()
-#             except AttributeError:
-#                 pass
-#             
-#         if new == "api" and self.operation.should_apply("operation"):
-#             self.command = "apply"
-#             
-#         if new == "estimate_result" and self.operation.should_apply("estimate_result"):
-#             self.command = "apply"
-#             
-#         if new == "estimate_result" and self.current_view.should_plot("estimate_result"):
-#             self.command = "plot"
-#             
-#             
-#     @on_trait_change('previous.result', post_init = True)
-#     def _prev_result_changed(self, obj, name, old, new):
-#         logging.debug("RemoteWorkflowItem._prev_result_changed :: {}"
-#                       .format(self, new))
-# 
-#         if self.previous and self.previous.result:
-#             self.previous_channels = list(self.previous.result.channels)
-#             self.previous_conditions = dict(self.previous.result.conditions)
-#             self.previous_statistics = dict(self.previous.result.statistics)
-# 
-#             # some things in metadata are unpicklable, functions and such,
-#             # so filter them out.
-#             self.previous_metadata = filter_unpicklable(dict(self.previous.result.metadata))
-#             
-# 
-#         if self.operation.should_clear_estimate("prev_result"):
-#             try:
-#                 self.operation.clear_estimate()
-#             except AttributeError:
-#                 pass
-#         
-#         if self.operation.should_apply("prev_result"):
-#             self.status = "invalid"
-#             self.command = "apply"
-#       
-#         if self.current_view and self.current_view.should_plot("prev_result"):
-#             self.command = "plot"            
-#             
-#     @on_trait_change('result', post_init = True)
-#     def _result_changed(self, obj, name, old, new):
-#         logging.debug("RemoteWorkflowItem._result_changed :: {}"
-#                       .format(self))   
-#         
-#         if self.current_view and self.current_view.should_plot("result"):
-#             self.command = "plot"   
-#             
-#         if self.result:
-#             self.channels = list(self.result.channels)
-#             self.conditions = dict(self.result.conditions)
-#             self.statistics = dict(self.result.statistics)
-# 
-#             # some things in metadata are unpicklable, functions and such,
-#             # so filter them out.
-#             self.metadata = filter_unpicklable(dict(self.result.metadata))
-#             
-#             
-#     @on_trait_change('current_view', post_init = True)
-#     def _current_view_changed(self, obj, name, old, new):
-#         logging.debug("RemoteWorkflowItem._current_view_changed :: {}"
-#                       .format((self, new.id)))
-#         
-#         self.command = "plot"        
-#         
-#         
-#     @on_trait_change('current_view:changed', post_init = True)
-#     def _current_view_trait_changed(self, obj, name, old, new):
-#         logging.debug("RemoteWorkflowItem._current_view_trait_changed :: {}"
-#                       .format((self, new)))       
-#          
-#         if new == "api" and self.current_view.should_plot("view"):
-#             self.command = "plot"
-#             
-#              
-#     @on_trait_change('current_view.changed', post_init = True)
-#     def _update_plot_names(self):
-#         plot_names = [x for x in self.current_view.enum_plots_wi(self)]
-#         if plot_names == [None] or plot_names == []:
-#             self.current_view_plot_names = []
-#         else:
-#             self.current_view_plot_names = plot_names      
-#             
-#     @on_trait_change('current_plot', post_init = True)
-#     def _current_plot_changed(self):
-#         self.command = "plot"
-
-
     def estimate(self):
         logging.debug("WorkflowItem.estimate :: {}".format((self)))
 
@@ -341,10 +249,12 @@ class RemoteWorkflowItem(WorkflowItem):
                 else:
                     self.estimate_warning = ""
                 
+                return True
+                
             except CytoflowError as e:
                 self.estimate_error = e.__str__()    
                 self.status = "invalid"
-                return        
+                return False 
             
             
     def apply(self):
@@ -352,6 +262,7 @@ class RemoteWorkflowItem(WorkflowItem):
         Apply this wi's operation to the previous wi's result
         """
         logging.debug("WorkflowItem.apply :: {}".format((self)))
+        self.apply_called = True
          
         prev_result = self.previous.result if self.previous else None
          
@@ -366,32 +277,60 @@ class RemoteWorkflowItem(WorkflowItem):
                     self.op_warning = w[-1].message.__str__()
                 else:
                     self.op_warning = ""
+                    
+                self.status = "valid"
+                return True
                 
             except CytoflowError as e:
                 self.result = None
                 self.op_error = e.__str__()    
                 self.status = "invalid"
-                return
+                return False
  
-        self.status = "valid"
         
+    def update_plot_names(self):
+        if self.current_view:
+            plot_names = [x for x in self.current_view.enum_plots_wi(self)]
+            if plot_names == [None] or plot_names == []:
+                self.current_view_plot_names = []
+            else:
+                self.current_view_plot_names = plot_names
+        else:
+            self.current_view_plot_names = []
+            
+#         print self.current_plot
+#         print self.current_view_plot_names
+#             
+#         if self.current_plot not in self.current_view_plot_names:
+#             self.current_plot = None
         
     def plot(self):              
         logging.debug("WorkflowItem.plot :: {}".format((self)))
+        self.plot_called = True
                      
         if not self.current_view:
+            self.plot_lock.acquire()                
+            self.matplotlib_events.clear()
             plt.clf()
             plt.show()
-            return
-         
+            self.matplotlib_events.set() 
+            self.plot_lock.release()
+            return True
+
         self.view_warning = ""
         self.view_error = ""
+
+        if len(self.current_view_plot_names) > 0 and self.current_plot not in self.current_view_plot_names:
+            self.view_error = "Plot {} not in current plot names {}".format(self.current_plot, self.current_view_plot_names)
+            return True
           
         with warnings.catch_warnings(record = True) as w:
             try:
                 self.plot_lock.acquire()                
                 self.matplotlib_events.clear()
-
+                
+                plt.clf()
+                
                 self.current_view.plot_wi(self)
             
                 if this.last_view_plotted and "interactive" in this.last_view_plotted.traits():
@@ -406,17 +345,20 @@ class RemoteWorkflowItem(WorkflowItem):
                 # is NOT interactive.  this call lets us batch together all 
                 # the plot updates
                 plt.show()
-                     
+                                     
             except CytoflowError as e:
                 self.view_error = e.__str__()   
                 plt.clf()
                 plt.show()   
+                
             finally:
                 self.matplotlib_events.set() 
                 self.plot_lock.release()
 
                 if w:
                     self.view_warning = w[-1].message.__str__()
+                    
+                return True
 
                     
             

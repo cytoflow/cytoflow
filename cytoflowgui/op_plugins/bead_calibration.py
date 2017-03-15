@@ -40,6 +40,7 @@ from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
 from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.vertical_list_editor import VerticalListEditor
+from cytoflowgui.workflow import Changed
 
 class _Unit(HasTraits):
     channel = Str
@@ -112,7 +113,7 @@ class BeadCalibrationHandler(Controller, OpHandlerMixin):
                          label = "Peak\nThreshold "),
                     Item('bead_brightness_cutoff',
                          label = "Peak\nCutoff"),
-                    Item('context.do_estimate',
+                    Item('do_estimate',
                          editor = ButtonEditor(value = True,
                                                label = "Estimate!"),
                          show_label = False),
@@ -134,7 +135,7 @@ class BeadCalibrationPluginOp(PluginOpMixin, BeadCalibrationOp):
 
     @on_trait_change('units_list_items,units_list.+', post_init = True)
     def _controls_changed(self, obj, name, old, new):
-        self.changed = "estimate"
+        self.changed = (Changed.ESTIMATE, ('units_list', self.units_list))
     
     def default_view(self, **kwargs):
         return BeadCalibrationPluginView(op = self, **kwargs)
@@ -172,26 +173,20 @@ class BeadCalibrationPluginOp(PluginOpMixin, BeadCalibrationOp):
                     
         self.beads = self.BEADS[self.beads_name]
         BeadCalibrationOp.estimate(self, experiment)
-        self.changed = "estimate_result"
-        
+        self.changed = (Changed.ESTIMATE_RESULT, self)
+
+    
     def should_clear_estimate(self, changed):
-        """
-        Should the owning WorkflowItem clear the estimated model by calling
-        op.clear_estimate()?  `changed` can be:
-         - "estimate" -- the parameters required to call 'estimate()' (ie
-            traits with estimate = True metadata) have changed
-         - "prev_result" -- the previous WorkflowItem's result changed
-        """
-        if changed == "prev_result":
-            return False
+        if changed == Changed.ESTIMATE:
+            return True
         
-        return True
+        return False
         
     def clear_estimate(self):
         self._calibration_functions.clear()
         self._peaks.clear()
         self._mefs.clear()
-        self.changed = "estimate_result"
+        self.changed = (Changed.ESTIMATE_RESULT, self)
 
 class BeadCalibrationViewHandler(Controller, ViewHandlerMixin):
     def default_traits_view(self):
@@ -214,18 +209,11 @@ class BeadCalibrationPluginView(BeadCalibrationDiagnostic, PluginViewMixin):
         self.plot(wi.previous.result)
         
     def should_plot(self, changed):
-        """
-        Should the owning WorkflowItem refresh the plot when certain things
-        change?  `changed` can be:
-         - "view" -- the view's parameters changed
-         - "result" -- this WorkflowItem's result changed
-         - "prev_result" -- the previous WorkflowItem's result changed
-         - "estimate_result" -- the results of calling "estimate" changed
-        """
-        if changed == "prev_result":
-            return False
+        if changed == Changed.ESTIMATE_RESULT:
+            return True
         
-        return True
+        return False
+    
 
 @provides(IOperationPlugin)
 class BeadCalibrationPlugin(Plugin):

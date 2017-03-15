@@ -102,9 +102,6 @@ class HistogramPluginView(PluginViewMixin, HistogramView):
         values = np.sort(pd.unique(wi.result[self.plotfacet]))
         return iter(values)
     
-#     def plot_wi(self, wi):
-#         self.plot(wi.result, wi.current_plot)
-    
     def plot(self, experiment, plot_name = None, **kwargs):
         if self.plotfacet and plot_name is not None:
             experiment = experiment.subset(self.plotfacet, plot_name)

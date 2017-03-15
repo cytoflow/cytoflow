@@ -21,15 +21,15 @@ Created on Mar 15, 2015
 @author: brian
 """
 
-from traits.api import (Interface, Str, HasTraits, Instance, on_trait_change, 
-                        List, Property)
+from traits.api import (Interface, Str, HasTraits, Instance, Event, 
+                        List, Property, on_trait_change)
 from traitsui.api import Handler
 
 import pandas as pd
 
 import cytoflow.utility as util
-from cytoflowgui.util import DelayedEvent
 from cytoflowgui.subset import ISubset
+from cytoflowgui.workflow import Changed
 
 VIEW_PLUGIN_EXT = 'edu.mit.synbio.cytoflow.view_plugins'
 
@@ -64,7 +64,12 @@ class IViewPlugin(Interface):
         
 class PluginViewMixin(HasTraits):
     handler = Instance(Handler, transient = True)    
-    changed = DelayedEvent(delay = 0.1)
+    
+    # transmit some change back to the workflow
+    changed = Event
+    
+    # plot names
+    plot_names = List(Str, status = True)
     
     subset_list = List(ISubset)
     subset = Property(Str, depends_on = "subset_list.str")
@@ -72,35 +77,27 @@ class PluginViewMixin(HasTraits):
     # MAGIC - returns the value of the "subset" Property, above
     def _get_subset(self):
         return " and ".join([subset.str for subset in self.subset_list if subset.str])
-    
-#     @on_trait_change("subset_list.str", post_init = True)
-#     def _subset_changed(self, obj, name, old, new):
-#         self.changed = "api"
-#     
-#     # why can't we just put this in a workflow listener?  it's because
-#     # we sometimes need to override or supplement it on a per-module basis
-#         
-#     @on_trait_change("+", post_init = True)
-#     def _changed(self, obj, name, old, new):
-#         if not obj.trait(name).transient:
-#             if obj.trait(name).status:
-#                 self.changed = "status"
-#             else:
-#                 self.changed = "api"
+ 
+    @on_trait_change('subset_list.str')
+    def _subset_changed(self, obj, name, old, new):
+        self.changed = (Changed.VIEW, (self, 'subset_list', self.subset_list))  
             
     def should_plot(self, changed):
         """
         Should the owning WorkflowItem refresh the plot when certain things
         change?  `changed` can be:
-         - "view" -- the view's parameters changed
-         - "result" -- this WorkflowItem's result changed
-         - "prev_result" -- the previous WorkflowItem's result changed
-         - "estimate_result" -- the results of calling "estimate" changed
+         - Changed.VIEW -- the view's parameters changed
+         - Changed.RESULT -- this WorkflowItem's result changed
+         - Changed.PREV_RESULT -- the previous WorkflowItem's result changed
+         - Changed.ESTIMATE_RESULT -- the results of calling "estimate" changed
         """
         return True
     
     def plot_wi(self, wi):
-        self.plot(wi.result, wi.current_plot)
+        if wi.current_view_plot_names:
+            self.plot(wi.result, plot_name = wi.current_plot)
+        else:
+            self.plot(wi.result)
             
     def enum_plots_wi(self, wi):
         try:

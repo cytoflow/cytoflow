@@ -29,6 +29,7 @@ from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewM
 from cytoflowgui.subset import SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
+from cytoflowgui.workflow import Changed
 
 class ThresholdHandler(Controller, OpHandlerMixin):
     def default_traits_view(self):
@@ -81,7 +82,7 @@ class ThresholdSelectionView(PluginViewMixin, ThresholdSelection):
     name = Str
     
     def should_plot(self, changed):
-        if changed == "prev_result" or changed == "view":
+        if changed == Changed.PREV_RESULT or changed == Changed.VIEW:
             return True
         else:
             return False

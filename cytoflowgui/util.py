@@ -21,12 +21,11 @@ Created on Apr 18, 2015
 @author: brian
 '''
 
-from traits.api import Event, Undefined, Unicode
+from traits.api import Unicode
 from pyface.ui.qt4.file_dialog import FileDialog
 
 from Queue import PriorityQueue
-import heapq, threading
-from collections import deque
+import heapq
 
 class UniquePriorityQueue(PriorityQueue):
     """
@@ -49,85 +48,6 @@ class UniquePriorityQueue(PriorityQueue):
         item = PriorityQueue._get(self, heappop)
         self.values.remove(item[1])
         return item
-
-class DelayedEvent(Event):
-    def __init__(self, **kwargs):
-        self._lock = threading.RLock()
-        self._timers = {}
-        super(DelayedEvent, self).__init__(**kwargs)
-        
-    def set ( self, obj, name, value ):
-        delay = self._metadata['delay']
-        
-        def fire(self, obj, name, value):
-            self._lock.acquire()
-            del self._timers[value]
-            obj.trait_property_changed(name, Undefined, value)
-            self._lock.release()
-            
-        self._lock.acquire()
-        if value in self._timers:
-            self._lock.release()
-            return
-
-        self._timers[value] = threading.Timer(delay, fire, (self, obj, name, value))
-        self._timers[value].start()
-        self._lock.release()
-
-    def get ( self, obj, name ):
-        return Undefined           
-    
-class DelayUniqueQueue:
-    def __init__(self, delay = 0.0):
-        self.delay = delay
-        self.queue = deque()
-        self.values = set()
-        self.mutex = threading.Lock()
-        self.not_empty = threading.Condition(self.mutex)
-        self._timers = {}
-        
-    def put(self, item):
-        
-        self.mutex.acquire()
-        try:
-            if item not in self.values:
-                self.values.add(item)
-                def fire(self, item):
-                    self.mutex.acquire()
-                    del self._timers[item]
-                    try:
-                        self.queue.append(item)
-                        self.not_empty.notify()
-                    finally:
-                        self.mutex.release()
-                        
-                self._timers[item] = threading.Timer(self.delay, fire, (self, item))
-                self._timers[item].start()
-            else:
-                pass
-    
-        finally:
-            self.mutex.release()
-
-
-    def get(self):
-        self.not_empty.acquire()
-        
-        try:
-            while len(self.queue) == 0:
-                self.not_empty.wait()
-                
-            item = self.queue.popleft()
-            self.values.remove(item)
-            return item
-        finally:
-            self.not_empty.release()
-            
-    def qsize(self):
-        self.mutex.acquire()
-        n = len(self.queue)
-        self.mutex.release()
-        return n
     
 def filter_unpicklable(obj):
     if type(obj) is list:

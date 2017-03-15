@@ -36,6 +36,7 @@ from cytoflowgui.subset import SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
+from cytoflowgui.workflow import Changed
 
 class PolygonHandler(Controller, OpHandlerMixin):
     def default_traits_view(self):
@@ -93,7 +94,7 @@ class PolygonSelectionView(PluginViewMixin, PolygonSelection):
     name = Str
     
     def should_plot(self, changed):
-        if changed == "prev_result" or changed == "view":
+        if changed == Changed.PREV_RESULT or changed == Changed.VIEW:
             return True
         else:
             return False
