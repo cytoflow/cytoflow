@@ -95,6 +95,29 @@ class Stats2DHandler(Controller, ViewHandlerMixin, StatisticViewHandlerMixin):
         
         return list(data.index.names)
     
+    def _get_levels(self):
+        context = self.info.ui.context['context']
+        
+        if not (context and context.statistics and self.model and self.model.xstatistic[0]):
+            return []
+        
+        stat = context.statistics[self.model.xstatistic]
+        index = stat.index
+        
+        names = list(index.names)
+        for name in names:
+            unique_values = index.get_level_values(name).unique()
+            if len(unique_values) == 1:
+                index = index.droplevel(name)
+
+        names = list(index.names)
+        ret = {}
+        for name in names:
+            ret[name] = pd.Series(index.get_level_values(name)).sort_values()
+            ret[name] = pd.Series(ret[name].unique())
+            
+        return ret
+    
     
     def default_traits_view(self):
         return View(VGroup(
