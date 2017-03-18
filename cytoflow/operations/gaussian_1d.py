@@ -431,9 +431,7 @@ class GaussianMixture1DOp(HasStrictTraits):
         -------
             IView : an IView, call plot() to see the diagnostic plot.
         """
-        ret = GaussianMixture1DView(op = self)
-        ret.trait_set(**kwargs)
-        return ret
+        return GaussianMixture1DView(op = self, **kwargs)
     
 @provides(cytoflow.views.IView)
 class GaussianMixture1DView(cytoflow.views.HistogramView):
