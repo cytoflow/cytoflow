@@ -431,7 +431,9 @@ class GaussianMixture1DOp(HasStrictTraits):
         -------
             IView : an IView, call plot() to see the diagnostic plot.
         """
-        return GaussianMixture1DView(op = self, **kwargs)
+        ret = GaussianMixture1DView(op = self)
+        ret.trait_set(**kwargs)
+        return ret
     
 @provides(cytoflow.views.IView)
 class GaussianMixture1DView(cytoflow.views.HistogramView):
@@ -632,25 +634,23 @@ class GaussianMixture1DView(cytoflow.views.HistogramView):
                 
             ax = g.facet_axis(i, j)
                                                 
-            if len(gmm.means_) != len(ax.patches):
-                warn("The number of patches on the plot doesn't match the "
-                     "number of components in the GMM.  Can't plot distributions "
-                     "for plot {}"
-                     .format(gmm_name),
-                     util.CytoflowViewWarning)
-                continue
+            # okay.  we want to scale the gaussian curves to have the same area
+            # as the plots they're over.  so, what's the total area on the plot?
+            
+            patch_area = 0.0
                                     
-            for k in range(0, len(gmm.means_)):
-                # we want to scale the plots so they have the same area under the
-                # curve as the histograms.  it used to be that we got the area from
-                # repeating the assignments, then calculating bin widths, etc.  but
-                # really, if we just plotted the damn thing already, we can get the
-                # area of the plot from the Polygon patch that we just plotted!
+            for k in range(0, len(ax.patches)):
                 
                 patch = ax.patches[k]
                 xy = patch.get_xy()
-                pdf_scale = poly_area([scale(p[0]) for p in xy], [p[1] for p in xy])
-                  
+                patch_area += poly_area([scale(p[0]) for p in xy], [p[1] for p in xy])
+                
+            # now, scale the plotted curve by the area of the total plot times
+            # the proportion of it that is under that curve.
+                
+            for k in range(0, len(gmm.weights_)):
+                pdf_scale = patch_area * gmm.weights_[k]
+                
                 # cheat a little
 #                 pdf_scale *= 1.1
                  
