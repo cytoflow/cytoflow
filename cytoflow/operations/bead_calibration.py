@@ -281,7 +281,6 @@ class BeadCalibrationOp(HasStrictTraits):
                 self._peaks[channel] = peaks
                 self._mefs[channel] = [mef[-2], mef[-1]]
                 a = (mef[-1] - mef[-2]) / (peaks[1] - peaks[0])
-                print a
                 self._calibration_functions[channel] = lambda x, a=a: a * x
             else:
                 # if there are n > 2 peaks, check all the contiguous n-subsets
@@ -324,7 +323,6 @@ class BeadCalibrationOp(HasStrictTraits):
                     
                     res = scipy.optimize.minimize(s, [1])
                     
-                    print res
                     a = res.x[0]
                     self._calibration_functions[channel] = \
                         lambda x, a=a: a * x
