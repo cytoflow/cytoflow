@@ -184,10 +184,13 @@ class Stats2DView(HasStrictTraits):
         else:
             ystat = experiment.statistics[self.ystatistic]  
             
-        if not xstat.index.equals(ystat.index):
+        if set(xstat.index.names) != set(ystat.index.names):            
             raise util.CytoflowViewError("X statistic and Y statistic must have "
                                          "the same indices: {}"
                                          .format(xstat.index.names))
+            
+        ystat.index = ystat.index.reorder_levels(xstat.index.names)
+        ystat.sort_index(inplace = True)
              
         if self.x_error_statistic[0]:
             if self.x_error_statistic not in experiment.statistics:
@@ -195,9 +198,12 @@ class Stats2DView(HasStrictTraits):
             else:
                 x_error_stat = experiment.statistics[self.x_error_statistic]
                 
-            if not x_error_stat.index.equals(xstat.index):
+            if set(x_error_stat.index.names) != set(xstat.index.names):
                 raise util.CytoflowViewError("X error statistic doesn't have the "
                                              "same indices as the X statistic")
+                
+            x_error_stat.index = x_error_stat.index.reorder_levels(xstat.index.names)
+            x_error_stat.sort_index(inplace = True)
         else:
             x_error_stat = None
 
@@ -207,12 +213,15 @@ class Stats2DView(HasStrictTraits):
             else:
                 y_error_stat = experiment.statistics[self.y_error_statistic]
                 
-            if not y_error_stat.index.equals(ystat.index):
+            if set(y_error_stat.index.names) != set(ystat.index.names):
                 raise util.CytoflowViewError("Y error statistic doesn't have the "
                                              "same indices as the Y statistic")
+                
+            y_error_stat.index = y_error_stat.index.reorder_levels(ystat.index.names)
+            y_error_stat.sort_index(inplace = True)
         else:
             y_error_stat = None
-
+            
         data = pd.DataFrame(index = xstat.index)
             
         xname = util.random_string(6)
