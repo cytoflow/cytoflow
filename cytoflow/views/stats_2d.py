@@ -189,7 +189,16 @@ class Stats2DView(HasStrictTraits):
                                          "the same indices: {}"
                                          .format(xstat.index.names))
             
-        ystat.index = ystat.index.reorder_levels(xstat.index.names)
+        try:
+            ystat.index = ystat.index.reorder_levels(xstat.index.names)
+            ystat.sort_index(inplace = True)
+        except AttributeError:
+            pass
+        
+        intersect_idx = xstat.index.intersection(ystat.index)
+        xstat = xstat.reindex(intersect_idx)
+        xstat.sort_index(inplace = True)
+        ystat = ystat.reindex(intersect_idx)
         ystat.sort_index(inplace = True)
              
         if self.x_error_statistic[0]:
@@ -201,9 +210,19 @@ class Stats2DView(HasStrictTraits):
             if set(x_error_stat.index.names) != set(xstat.index.names):
                 raise util.CytoflowViewError("X error statistic doesn't have the "
                                              "same indices as the X statistic")
-                
-            x_error_stat.index = x_error_stat.index.reorder_levels(xstat.index.names)
+            
+            try:
+                x_error_stat.index = x_error_stat.index.reorder_levels(xstat.index.names)
+                x_error_stat.sort_index(inplace = True)
+            except AttributeError:
+                pass
+            
+            x_error_stat = x_error_stat.reindex(intersect_idx)
             x_error_stat.sort_index(inplace = True)
+            
+            if not x_error_stat.index.equals(xstat.index):
+                raise util.CytoflowViewError("X error statistic doesn't have the "
+                                             "same values as the X statistic")                
         else:
             x_error_stat = None
 
@@ -217,8 +236,18 @@ class Stats2DView(HasStrictTraits):
                 raise util.CytoflowViewError("Y error statistic doesn't have the "
                                              "same indices as the Y statistic")
                 
-            y_error_stat.index = y_error_stat.index.reorder_levels(ystat.index.names)
+            try:
+                y_error_stat.index = y_error_stat.index.reorder_levels(ystat.index.names)
+                y_error_stat.sort_index(inplace = True)
+            except AttributeError:
+                pass
+            
+            y_error_stat = y_error_stat.reindex(intersect_idx)
             y_error_stat.sort_index(inplace = True)
+            
+            if not y_error_stat.index.equals(ystat.index):
+                raise util.CytoflowViewError("Y error statistic doesn't have the "
+                                             "same values as the Y statistic")   
         else:
             y_error_stat = None
             
@@ -365,16 +394,42 @@ class Stats2DView(HasStrictTraits):
         else:
             ystat = experiment.statistics[self.ystatistic]  
             
-        if not xstat.index.equals(ystat.index):
+        if set(xstat.index.names) != set(ystat.index.names):
             raise util.CytoflowViewError("X statistic and Y statistic must have "
                                          "the same indices: {}"
                                          .format(xstat.index.names))
+            
+        try:
+            # this dies if it's not a hierarchical index
+            ystat.index = ystat.index.reorder_levels(xstat.index.names)
+            ystat.sort_index(inplace = True)
+        except AttributeError:
+            pass
+        
+        intersect_idx = xstat.index.intersection(ystat.index)
+        xstat = xstat.reindex(intersect_idx)
+        xstat.sort_index(inplace = True)
+        ystat = ystat.reindex(intersect_idx)
+        ystat.sort_index(inplace = True)
              
         if self.x_error_statistic[0]:
             if self.x_error_statistic not in experiment.statistics:
                 raise util.CytoflowViewError("X error statistic not in experiment")
             else:
                 x_error_stat = experiment.statistics[self.x_error_statistic]
+                
+            if set(x_error_stat.index.names) != set(xstat.index.names):
+                raise util.CytoflowViewError("X error statistic doesn't have the "
+                                             "same indices as the X statistic")
+            
+            try:
+                x_error_stat.index = x_error_stat.index.reorder_levels(xstat.index.names)
+                x_error_stat.sort_index(inplace = True)
+            except AttributeError:
+                pass
+            
+            x_error_stat = x_error_stat.reindex(intersect_idx)
+            x_error_stat.sort_index(inplace = True)
                 
             if not x_error_stat.index.equals(xstat.index):
                 raise util.CytoflowViewError("X error statistic doesn't have the "
@@ -387,6 +442,20 @@ class Stats2DView(HasStrictTraits):
                 raise util.CytoflowViewError("Y error statistic not in experiment")
             else:
                 y_error_stat = experiment.statistics[self.y_error_statistic]
+                
+                
+            if set(y_error_stat.index.names) != set(ystat.index.names):
+                raise util.CytoflowViewError("Y error statistic doesn't have the "
+                                             "same indices as the Y statistic")
+                
+            try:
+                y_error_stat.index = y_error_stat.index.reorder_levels(ystat.index.names)
+                y_error_stat.sort_index(inplace = True)
+            except AttributeError:
+                pass
+            
+            y_error_stat = y_error_stat.reindex(intersect_idx)
+            y_error_stat.sort_index(inplace = True)
                 
             if not y_error_stat.index.equals(ystat.index):
                 raise util.CytoflowViewError("Y error statistic doesn't have the "
