@@ -21,9 +21,10 @@ Created on Mar 15, 2015
 @author: brian
 """
 
-from traits.api import Interface, Str, HasTraits,Event
+from traits.api import Interface, Str, HasTraits, Event, Instance
 from traitsui.api import Group, Item
 from cytoflowgui.color_text_editor import ColorTextEditor
+from cytoflowgui.workflow_item import WorkflowItem
 
 OP_PLUGIN_EXT = 'edu.mit.synbio.cytoflow.op_plugins'
 
@@ -46,7 +47,7 @@ class IOperationPlugin(Interface):
         If we were to put this op in a menu, what submenu to use?
         Not currently used.
     """
-    
+
     operation_id = Str
     short_name = Str
     menu_group = Str
@@ -130,7 +131,9 @@ shared_op_traits = Group(Item('context.estimate_warning',
         
 class OpHandlerMixin(HasTraits):
     """
-    Useful bits for operation handlers.  Not currently used, but kept around
-    in case it's useful some day in the future.
+    Useful bits for operation handlers.
     """
+    
+    context = Instance(WorkflowItem)
+    
 

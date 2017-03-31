@@ -174,12 +174,12 @@ class WorkflowItem(HasStrictTraits):
         
     @cached_property
     def _get_operation_handler(self):
-        return self.operation.handler_factory(model = self.operation)
+        return self.operation.handler_factory(model = self.operation, context = self)
     
     @cached_property
     def _get_current_view_handler(self):
         if self.current_view:
-            return self.current_view.handler_factory(model = self.current_view)
+            return self.current_view.handler_factory(model = self.current_view, context = self)
         else:
             return None
 

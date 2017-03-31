@@ -30,6 +30,7 @@ import pandas as pd
 import cytoflow.utility as util
 from cytoflowgui.subset import ISubset
 from cytoflowgui.workflow import Changed
+from cytoflowgui.workflow_item import WorkflowItem
 
 VIEW_PLUGIN_EXT = 'edu.mit.synbio.cytoflow.view_plugins'
 
@@ -108,15 +109,15 @@ class PluginViewMixin(HasTraits):
 
 class ViewHandlerMixin(HasTraits):
     """
-    Useful bits for view handlers.  Empty now, but maintained in case it's
-    useful again.
+    Useful bits for view handlers. 
     """
+    
+    context = Instance(WorkflowItem)
     
         
 class StatisticViewHandlerMixin(HasTraits):
     
     numeric_indices = Property(depends_on = "model.statistic, model.subset")
-    indices = Property(depends_on = "model.statistic, model.subset")
     levels = Property(depends_on = "model.statistic")
     
     # MAGIC: gets the value for the property numeric_indices
@@ -144,29 +145,7 @@ class StatisticViewHandlerMixin(HasTraits):
         data.reset_index(inplace = True)
         return [x for x in data if util.is_numeric(data[x])]
     
-    # MAGIC: gets the value for the property indices
-    def _get_indices(self):
-        context = self.info.ui.context['context']
-        
-        if not (context and context.statistics and self.model and self.model.statistic[0]):
-            return []
-        
-        stat = context.statistics[self.model.statistic]
-        data = pd.DataFrame(index = stat.index)
-        
-        if self.model.subset:
-            data = data.query(self.model.subset)
-            
-        if len(data) == 0:
-            return []       
-        
-        names = list(data.index.names)
-        for name in names:
-            unique_values = data.index.get_level_values(name).unique()
-            if len(unique_values) == 1:
-                data.index = data.index.droplevel(name)
-        
-        return list(data.index.names)
+
     
     # MAGIC: gets the value for the property 'levels'
     # returns a Dict(Str, pd.Series)

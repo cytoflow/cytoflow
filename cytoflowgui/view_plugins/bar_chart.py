@@ -21,10 +21,12 @@ Created on Feb 24, 2015
 @author: brian
 """
 
-from traits.api import provides, Callable, Str
+from traits.api import provides, Callable, Property
 from traitsui.api import View, Item, VGroup, Controller, EnumEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
+
+import pandas as pd
 
 from cytoflow import BarChartView
 
@@ -38,6 +40,8 @@ class BarChartHandler(Controller, ViewHandlerMixin, StatisticViewHandlerMixin):
     """
     docs
     """
+    
+    indices = Property(depends_on = "context.statistics, model.statistic, model.subset")
 
     def default_traits_view(self):
         return View(VGroup(
@@ -83,6 +87,30 @@ class BarChartHandler(Controller, ViewHandlerMixin, StatisticViewHandlerMixin):
                          visible_when = 'context.view_error',
                          editor = ColorTextEditor(foreground_color = "#000000",
                                                   background_color = "#ff9191"))))
+        
+    # MAGIC: gets the value for the property indices
+    def _get_indices(self):
+#         context = self.info.ui.context['context']
+        
+        if not (self.context and self.context.statistics and self.model and self.model.statistic[0]):
+            return []
+        
+        stat = self.context.statistics[self.model.statistic]
+        data = pd.DataFrame(index = stat.index)
+        
+        if self.model.subset:
+            data = data.query(self.model.subset)
+            
+        if len(data) == 0:
+            return []       
+        
+        names = list(data.index.names)
+        for name in names:
+            unique_values = data.index.get_level_values(name).unique()
+            if len(unique_values) == 1:
+                data.index = data.index.droplevel(name)
+        
+        return list(data.index.names)
     
 class BarChartPluginView(PluginViewMixin, BarChartView):
     handler_factory = Callable(BarChartHandler)
