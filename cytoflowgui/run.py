@@ -23,7 +23,7 @@ Created on Feb 11, 2015
 
 try:
     import faulthandler       # @UnresolvedImport
-    faulthandler.enable()
+    faulthandler.enable()     # @UndefinedVariable
 except:
     # if there's no console, this fails
     pass

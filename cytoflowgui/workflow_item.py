@@ -349,8 +349,7 @@ class RemoteWorkflowItem(WorkflowItem):
             except CytoflowError as e:
                 self.view_error = e.__str__()   
                 plt.clf()
-                plt.show()   
-                
+                plt.show() 
             finally:
                 self.matplotlib_events.set() 
                 self.plot_lock.release()
@@ -358,7 +357,7 @@ class RemoteWorkflowItem(WorkflowItem):
                 if w:
                     self.view_warning = w[-1].message.__str__()
                     
-                return True
+            return True
 
                     
             
