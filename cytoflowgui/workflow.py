@@ -816,37 +816,37 @@ class RemoteWorkflow(HasStrictTraits):
         if obj.trait(name).status:            
             self.message_q.put((Msg.UPDATE_WI, (idx, name, new)))
             
-    @on_trait_change('workflow:previous', post_init = True)
-    def _prev_changed(self, obj, name, old, new):
-        logging.debug("RemoteWorkflow._prev_changed :: {}"
-                      .format((self, obj, name, old, new)))
- 
-        if obj.previous and obj.previous.result:
-            obj.previous_channels = list(obj.previous.result.channels)
-            obj.previous_conditions = dict(obj.previous.result.conditions)
-            obj.previous_statistics = dict(obj.previous.result.statistics)
-   
-            # some things in metadata are unpicklable, functions and such,
-            # so filter them out.
-            obj.previous_metadata = filter_unpicklable(dict(obj.previous.result.metadata))
-            
-        obj.changed = (Changed.PREV_RESULT, None)
+#     @on_trait_change('workflow:previous', post_init = True)
+#     def _prev_changed(self, obj, name, old, new):
+#         logging.debug("RemoteWorkflow._prev_changed :: {}"
+#                       .format((self, obj, name, old, new)))
+#  
+#         if obj.previous and obj.previous.result:
+#             obj.previous_channels = list(obj.previous.result.channels)
+#             obj.previous_conditions = dict(obj.previous.result.conditions)
+#             obj.previous_statistics = dict(obj.previous.result.statistics)
+#    
+#             # some things in metadata are unpicklable, functions and such,
+#             # so filter them out.
+#             obj.previous_metadata = filter_unpicklable(dict(obj.previous.result.metadata))
+#             
+#         obj.changed = (Changed.PREV_RESULT, None)
         
-    @on_trait_change('workflow:previous:result', post_init = True)
-    def _prev_result_changed(self, obj, name, old, new):
-        logging.debug("RemoteWorkflow._prev_result_changed :: {}"
-                      .format((self, obj, name, old, new)))
- 
-        if obj.result:
-            obj.next.previous_channels = list(obj.result.channels)
-            obj.next.previous_conditions = dict(obj.result.conditions)
-            obj.next.previous_statistics = dict(obj.result.statistics)
-   
-            # some things in metadata are unpicklable, functions and such,
-            # so filter them out.
-            obj.next.previous_metadata = filter_unpicklable(dict(obj.result.metadata))
-        
-        obj.next.changed = (Changed.PREV_RESULT, None)
+#     @on_trait_change('workflow:previous:result', post_init = True)
+#     def _prev_result_changed(self, obj, name, old, new):
+#         logging.debug("RemoteWorkflow._prev_result_changed :: {}"
+#                       .format((self, obj, name, old, new)))
+#  
+#         if obj.result:
+#             obj.next.previous_channels = list(obj.result.channels)
+#             obj.next.previous_conditions = dict(obj.result.conditions)
+#             obj.next.previous_statistics = dict(obj.result.statistics)
+#    
+#             # some things in metadata are unpicklable, functions and such,
+#             # so filter them out.
+#             obj.next.previous_metadata = filter_unpicklable(dict(obj.result.metadata))
+#         
+#         obj.next.changed = (Changed.PREV_RESULT, None)
             
     @on_trait_change('workflow:result', post_init = True)
     def _result_changed(self, obj, name, old, new):

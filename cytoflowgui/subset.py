@@ -151,15 +151,15 @@ class _SubsetListEditor(_VerticalListEditor):
     def init(self, parent):
         
         if self.factory.metadata:
-            self.sync_value(self.factory.metadata, 'metadata', 'from')
+            self.sync_value(self.factory.metadata, 'metadata', 'from', is_list = True)
              
         self.when = self.factory.when
         
-        self.sync_value(self.factory.conditions, 'conditions', 'from')
+        self.sync_value(self.factory.conditions, 'conditions', 'from', is_list = True)
         
         _VerticalListEditor.init(self, parent)
         
-    @on_trait_change('conditions', dispatch = 'ui')
+    @on_trait_change('conditions, metadata', dispatch = 'ui')
     def _on_conditions_change(self, obj, name, old, new):
         value_names = set([subset.name for subset in self.value])
         condition_names = set([x for x in self.conditions.keys() if self.include_condition(x)])
@@ -185,7 +185,7 @@ class _SubsetListEditor(_VerticalListEditor):
                 raise util.CytoflowError("Unknown dtype {} in ViewController"
                                          .format(dtype))
              
-            self.value.append(subset)    
+            self.value.append(subset)
         
         for name in condition_names & value_names:
             # update values for subsets we're already tracking

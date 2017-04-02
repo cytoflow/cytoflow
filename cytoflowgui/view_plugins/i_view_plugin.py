@@ -114,6 +114,23 @@ class ViewHandlerMixin(HasTraits):
     
     context = Instance(WorkflowItem)
     
+    conditions_names = Property(depends_on = "context.conditions")
+    previous_conditions_names = Property(depends_on = "context.previous.conditions")
+    
+    # MAGIC: gets value for property "conditions_names"
+    def _get_conditions_names(self):
+        if self.context and self.context.conditions:
+            return self.context.conditions.keys()
+        else:
+            return []
+    
+    # MAGIC: gets value for property "previous_conditions_names"
+    def _get_previous_conditions_names(self):
+        if self.context and self.context.previous and self.context.previous.conditions:
+            return self.context.previous.conditions.keys()
+        else:
+            return []
+    
         
 class StatisticViewHandlerMixin(HasTraits):
     
