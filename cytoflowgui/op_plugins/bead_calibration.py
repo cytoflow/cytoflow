@@ -24,9 +24,8 @@ Created on Oct 9, 2015
 from traitsui.api import (View, Item, EnumEditor, Controller, VGroup, 
                           ButtonEditor, HGroup, InstanceEditor)
 from envisage.api import Plugin, contributes_to
-from traits.api import provides, Callable, List, Str, HasTraits, \
-                       File, Event, on_trait_change, Property, \
-                       Dict, Int, Float, Undefined, Instance
+from traits.api import (provides, Callable, List, Str, HasTraits, File, Event, 
+                        on_trait_change, Property, Dict, Int, Float, Undefined)
 from pyface.api import ImageResource
 
 import cytoflow.utility as util
@@ -38,7 +37,6 @@ from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewM
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
-from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.vertical_list_editor import VerticalListEditor
 from cytoflowgui.workflow import Changed
 
@@ -46,20 +44,13 @@ class _Unit(HasTraits):
     channel = Str
     unit = Str
 
-class BeadCalibrationHandler(Controller, OpHandlerMixin):
+class BeadCalibrationHandler(OpHandlerMixin, Controller):
     
     add_channel = Event
     remove_channel = Event
     
-    beads_name_choices = Property(transient = True)
-    beads_units = Property(transient = True)
-
-    wi = Instance(WorkflowItem)
-     
-    def init_info(self, info):
-        # this is ugly, but it works.
-        if not self.wi:
-            self.wi = info.ui.context['context']
+    beads_name_choices = Property()
+    beads_units = Property(depends_on = 'model.beads_name')
     
     # MAGIC: called when add_control is set
     def _add_channel_fired(self):
@@ -80,7 +71,7 @@ class BeadCalibrationHandler(Controller, OpHandlerMixin):
     
     def unit_traits_view(self):
         return View(HGroup(Item('channel',
-                                editor = EnumEditor(name = 'handler.wi.previous.channels')),
+                                editor = EnumEditor(name = 'handler.context.previous.channels')),
                            Item('unit',
                                 editor = EnumEditor(name = 'handler.beads_units'),
                                 show_label = False)),
@@ -188,7 +179,7 @@ class BeadCalibrationPluginOp(PluginOpMixin, BeadCalibrationOp):
         self._mefs.clear()
         self.changed = (Changed.ESTIMATE_RESULT, self)
 
-class BeadCalibrationViewHandler(Controller, ViewHandlerMixin):
+class BeadCalibrationViewHandler(ViewHandlerMixin, Controller):
     def default_traits_view(self):
         return View(Item('context.view_warning',
                          resizable = True,
@@ -202,7 +193,7 @@ class BeadCalibrationViewHandler(Controller, ViewHandlerMixin):
                                                   background_color = "#ff9191")))
 
 @provides(IView)
-class BeadCalibrationPluginView(BeadCalibrationDiagnostic, PluginViewMixin):
+class BeadCalibrationPluginView(PluginViewMixin, BeadCalibrationDiagnostic):
     handler_factory = Callable(BeadCalibrationViewHandler)
     
     def plot_wi(self, wi):

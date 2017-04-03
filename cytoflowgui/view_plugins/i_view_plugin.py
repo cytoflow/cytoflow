@@ -116,6 +116,7 @@ class ViewHandlerMixin(HasTraits):
     
     conditions_names = Property(depends_on = "context.conditions")
     previous_conditions_names = Property(depends_on = "context.previous.conditions")
+    statistics_names = Property(depends_on = "context.statistics")
     
     # MAGIC: gets value for property "conditions_names"
     def _get_conditions_names(self):
@@ -130,6 +131,14 @@ class ViewHandlerMixin(HasTraits):
             return self.context.previous.conditions.keys()
         else:
             return []
+        
+    # MAGIC: gets value for property "statistics_names"
+    def _get_statistics_names(self):
+        if self.context and self.context.statistics:
+            return self.context.statistics.keys()
+        else:
+            return []
+        
     
         
 class StatisticViewHandlerMixin(HasTraits):

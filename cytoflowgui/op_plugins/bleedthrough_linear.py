@@ -27,8 +27,7 @@ from traitsui.api import View, Item, EnumEditor, Controller, VGroup, HGroup, \
                          ButtonEditor, InstanceEditor
 from envisage.api import Plugin, contributes_to
 from traits.api import (provides, Callable, List, Str, HasTraits, Property,
-                        File, Event, Dict, Tuple, Float, on_trait_change, 
-                        Instance)
+                        File, Event, Dict, Tuple, Float, on_trait_change)
 from pyface.api import ImageResource
 
 import cytoflow.utility as util
@@ -41,7 +40,6 @@ from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_E
 from cytoflowgui.subset import SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
-from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.vertical_list_editor import VerticalListEditor
 from cytoflowgui.workflow import Changed
 from cytoflowgui.subset import ISubset
@@ -50,18 +48,11 @@ class _Control(HasTraits):
     channel = Str
     file = File
     
-class BleedthroughLinearHandler(Controller, OpHandlerMixin):
+class BleedthroughLinearHandler(OpHandlerMixin, Controller):
     
     add_control = Event
     remove_control = Event
-    
-    wi = Instance(WorkflowItem)
-    
-    def init_info(self, info):
-        # this is ugly, but it works.
-        if not self.wi:
-            self.wi = info.ui.context['context']
-    
+        
     # MAGIC: called when add_control is set
     def _add_control_fired(self):
         self.model.controls_list.append(_Control())
@@ -72,7 +63,7 @@ class BleedthroughLinearHandler(Controller, OpHandlerMixin):
             
     def control_traits_view(self):
         return View(HGroup(Item('channel',
-                                editor = EnumEditor(name = 'handler.wi.previous.channels')),
+                                editor = EnumEditor(name = 'handler.context.previous.channels')),
                            Item('file',
                                 show_label = False)),
                     handler = self)
@@ -93,8 +84,8 @@ class BleedthroughLinearHandler(Controller, OpHandlerMixin):
                     show_labels = False),
                     VGroup(Item('subset_list',
                                 show_label = False,
-                                editor = SubsetListEditor(conditions = "context.previous_conditions",
-                                                          metadata = "context.previous_metadata",
+                                editor = SubsetListEditor(conditions = "handler.context.previous.conditions",
+                                                          metadata = "handler.context.previous.metadata",
                                                           when = "'experiment' not in vars() or not experiment")),
                            label = "Subset",
                            show_border = False,
@@ -161,7 +152,7 @@ class BleedthroughLinearPluginOp(PluginOpMixin, BleedthroughLinearOp):
         self.spillover.clear()
         self.changed = (Changed.ESTIMATE_RESULT, self)
 
-class BleedthroughLinearViewHandler(Controller, ViewHandlerMixin):
+class BleedthroughLinearViewHandler(ViewHandlerMixin, Controller):
     def default_traits_view(self):
         return View(Item('context.view_warning',
                          resizable = True,
@@ -175,7 +166,7 @@ class BleedthroughLinearViewHandler(Controller, ViewHandlerMixin):
                                                   background_color = "#ff9191")))
 
 @provides(IView)
-class BleedthroughLinearPluginView(BleedthroughLinearDiagnostic, PluginViewMixin):
+class BleedthroughLinearPluginView(PluginViewMixin, BleedthroughLinearDiagnostic):
     handler_factory = Callable(BleedthroughLinearViewHandler)
     
     def plot_wi(self, wi):

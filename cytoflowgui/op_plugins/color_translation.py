@@ -41,7 +41,6 @@ from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_E
 from cytoflowgui.subset import SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
-from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.vertical_list_editor import VerticalListEditor
 from cytoflowgui.workflow import Changed
 from cytoflowgui.subset import ISubset
@@ -51,17 +50,10 @@ class _Control(HasTraits):
     to_channel = Str
     file = File
 
-class ColorTranslationHandler(Controller, OpHandlerMixin):
+class ColorTranslationHandler(OpHandlerMixin, Controller):
     
     add_control = Event
     remove_control = Event
-    
-    wi = Instance(WorkflowItem)
-    
-    def init_info(self, info):
-        # this is ugly, but it works.
-        if not self.wi:
-            self.wi = info.ui.context['context']
     
     # MAGIC: called when add_control is set
     def _add_control_fired(self):
@@ -73,9 +65,9 @@ class ColorTranslationHandler(Controller, OpHandlerMixin):
     
     def control_traits_view(self):
         return View(HGroup(Item('from_channel',
-                                editor = EnumEditor(name = 'handler.wi.previous.channels')),
+                                editor = EnumEditor(name = 'handler.context.previous.channels')),
                            Item('to_channel',
-                                editor = EnumEditor(name = 'handler.wi.previous.channels')),
+                                editor = EnumEditor(name = 'handler.context.previous.channels')),
                            Item('file',
                                 show_label = False)),
                     handler = self)
@@ -98,8 +90,8 @@ class ColorTranslationHandler(Controller, OpHandlerMixin):
                          label = "Use mixture\nmodel?"),
                     VGroup(Item('subset_list',
                                 show_label = False,
-                                editor = SubsetListEditor(conditions = "context.previous_conditions",
-                                                          metadata = "context.previous_metadata",
+                                editor = SubsetListEditor(conditions = "context.previous.conditions",
+                                                          metadata = "context.previous.metadata",
                                                           when = "'experiment' not in vars() or not experiment")),
                            label = "Subset",
                            show_border = False,
@@ -120,17 +112,6 @@ class ColorTranslationPluginOp(PluginOpMixin, ColorTranslationOp):
     controls_list = List(_Control, estimate = True)
     mixture_model = Bool(False, estimate = True)
     translation = Constant(None)
-    
-    subset_list = List(ISubset, estimate = True)    
-    subset = Property(Str, depends_on = "subset_list.str")
-        
-    # MAGIC - returns the value of the "subset" Property, above
-    def _get_subset(self):
-        return " and ".join([subset.str for subset in self.subset_list if subset.str])
-    
-    @on_trait_change('subset_list.str', post_init = True)
-    def _subset_changed(self, obj, name, old, new):
-        self.changed = (Changed.ESTIMATE, ('subset_list', self.subset_list))
         
     @on_trait_change('controls_list_items, controls_list:+', post_init = True)
     def _controls_changed(self):
@@ -170,7 +151,7 @@ class ColorTranslationPluginOp(PluginOpMixin, ColorTranslationOp):
         self._coefficients.clear()        
         self.changed = (Changed.ESTIMATE_RESULT, self)
 
-class ColorTranslationViewHandler(Controller, ViewHandlerMixin):
+class ColorTranslationViewHandler(ViewHandlerMixin, Controller):
     def default_traits_view(self):
         return View(Item('context.view_warning',
                          resizable = True,
