@@ -46,7 +46,6 @@ from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_E
 from cytoflowgui.subset import SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
-from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.vertical_list_editor import VerticalListEditor
 from cytoflowgui.workflow import Changed
 from cytoflowgui.subset import ISubset
@@ -58,20 +57,12 @@ class _BleedthroughControl(HasTraits):
 class _TranslationControl(HasTraits):
     from_channel = Str
     to_channel = Str
-    file = File
 
-class TasbeHandler(Controller, OpHandlerMixin):
+class TasbeHandler(OpHandlerMixin, Controller):
                 
     beads_name_choices = Property(transient = True)
     beads_units = Property(depends_on = 'model.beads_name',
                            transient = True)
-    
-    wi = Instance(WorkflowItem)
-    
-    def init_info(self, info):
-        # this is ugly, but it works.
-        if not self.wi:
-            self.wi = info.ui.context['context']
     
     def _get_beads_name_choices(self):
         return BeadCalibrationOp.BEADS.keys()
@@ -98,7 +89,7 @@ class TasbeHandler(Controller, OpHandlerMixin):
     def default_traits_view(self):
         return View(Item("channels",
                          editor = CheckListEditor(cols = 2,
-                                                  name = 'context.previous_channels'),
+                                                  name = 'context.previous.channels'),
                          style = 'custom'),
                     VGroup(
                         Item('blank_file'),
@@ -130,7 +121,7 @@ class TasbeHandler(Controller, OpHandlerMixin):
                         show_border = False),
                     VGroup(
                         Item('to_channel',
-                             editor = EnumEditor(name = 'object.channels')),
+                             editor = EnumEditor(name = 'channels')),
                         Item('mixture_model',
                              label = "Use mixture\nmodel?"),
                            label = "Color Translation"),
@@ -144,8 +135,8 @@ class TasbeHandler(Controller, OpHandlerMixin):
                         show_labels = False),
                     VGroup(Item('subset_list',
                                 show_label = False,
-                                editor = SubsetListEditor(conditions = "context.previous_conditions",
-                                                      metadata = "context.previous_metadata",
+                                editor = SubsetListEditor(conditions = "context.previous.conditions",
+                                                      metadata = "context.previous.metadata",
                                                       when = "'experiment' not in vars() or not experiment")),
                            label = "Subset",
                            show_border = False,
@@ -318,7 +309,7 @@ class TasbePluginOp(PluginOpMixin):
     def default_view(self, **kwargs):
         return TasbePluginView(op = self, **kwargs)
 
-class TasbeViewHandler(Controller, ViewHandlerMixin):
+class TasbeViewHandler(ViewHandlerMixin, Controller):
     def default_traits_view(self):
         return View(Item('context.view_warning',
                          resizable = True,

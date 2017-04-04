@@ -38,13 +38,13 @@ from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.workflow import Changed
 
-class Range2DHandler(Controller, OpHandlerMixin):
+class Range2DHandler(OpHandlerMixin, Controller):
     
     def default_traits_view(self):
         return View(Item('name',
                          editor = TextEditor(auto_set = False)),
                     Item('xchannel',
-                         editor=EnumEditor(name='context.previous_channels'),
+                         editor=EnumEditor(name='context.previous.channels'),
                          label = "X Channel"),
                     Item('xlow', 
                          editor = TextEditor(auto_set = False),
@@ -53,7 +53,7 @@ class Range2DHandler(Controller, OpHandlerMixin):
                          editor = TextEditor(auto_set = False),
                          label = "X High"),
                     Item('ychannel',
-                         editor=EnumEditor(name='context.previous_channels'),
+                         editor=EnumEditor(name='context.previous.channels'),
                          label = "Y Channel"),
                     Item('ylow', 
                          editor = TextEditor(auto_set = False),
@@ -63,7 +63,7 @@ class Range2DHandler(Controller, OpHandlerMixin):
                          label = "Y High"),
                     shared_op_traits) 
         
-class RangeView2DHandler(Controller, ViewHandlerMixin):
+class RangeView2DHandler(ViewHandlerMixin, Controller):
     def default_traits_view(self):
         return View(VGroup(
                     VGroup(Item('xchannel', 
@@ -77,7 +77,7 @@ class RangeView2DHandler(Controller, ViewHandlerMixin):
                            Item('yscale',
                                 label = "Y Scale"),
                            Item('huefacet',
-                                editor=ExtendableEnumEditor(name='context.previous_conditions_names',
+                                editor=ExtendableEnumEditor(name='handler.previous_conditions_names',
                                                             extra_items = {"None" : ""}),
                                 label="Color\nFacet"),
                            label = "2D Range Setup View",

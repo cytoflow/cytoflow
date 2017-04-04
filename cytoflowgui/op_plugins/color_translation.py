@@ -27,8 +27,7 @@ from traitsui.api import View, Item, EnumEditor, Controller, VGroup, \
                          ButtonEditor, HGroup, InstanceEditor
 from envisage.api import Plugin, contributes_to
 from traits.api import (provides, Callable, Tuple, List, Str, HasTraits,
-                        File, Event, Dict, on_trait_change, Bool, Constant, 
-                        Instance, Property)
+                        File, Event, Dict, on_trait_change, Bool, Constant)
 from pyface.api import ImageResource
 
 import cytoflow.utility as util
@@ -43,7 +42,6 @@ from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
 from cytoflowgui.vertical_list_editor import VerticalListEditor
 from cytoflowgui.workflow import Changed
-from cytoflowgui.subset import ISubset
 
 class _Control(HasTraits):
     from_channel = Str
@@ -165,7 +163,7 @@ class ColorTranslationViewHandler(ViewHandlerMixin, Controller):
                                                   background_color = "#ff9191")))
 
 @provides(IView)
-class ColorTranslationPluginView(ColorTranslationDiagnostic, PluginViewMixin):
+class ColorTranslationPluginView(PluginViewMixin, ColorTranslationDiagnostic):
     handler_factory = Callable(ColorTranslationViewHandler)
     
     def plot_wi(self, wi):

@@ -38,19 +38,19 @@ from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
 from cytoflowgui.workflow import Changed
 
-class PolygonHandler(Controller, OpHandlerMixin):
+class PolygonHandler(OpHandlerMixin, Controller):
     def default_traits_view(self):
         return View(Item('name',
                          editor = TextEditor(auto_set = False)),
                     Item('xchannel',
-                         editor=EnumEditor(name='context.previous_channels'),
+                         editor=EnumEditor(name='context.previous.channels'),
                          label = "X Channel"),
                     Item('object.ychannel',
-                         editor=EnumEditor(name='context.previous_channels'),
+                         editor=EnumEditor(name='context.previous.channels'),
                          label = "Y Channel"),
                     shared_op_traits) 
         
-class PolygonViewHandler(Controller, ViewHandlerMixin):
+class PolygonViewHandler(ViewHandlerMixin, Controller):
     def default_traits_view(self):
         return View(VGroup(
                     VGroup(Item('xchannel', 
@@ -64,14 +64,14 @@ class PolygonViewHandler(Controller, ViewHandlerMixin):
                            Item('yscale',
                                 label = "Y Scale"),
                            Item('huefacet',
-                                editor=ExtendableEnumEditor(name='context.previous_conditions_names',
+                                editor=ExtendableEnumEditor(name='handler.previous_conditions_names',
                                                             extra_items = {"None" : ""}),
                                 label="Color\nFacet"),
                            label = "Polygon Setup View",
                            show_border = False),
                     VGroup(Item('subset_list',
                                 show_label = False,
-                                editor = SubsetListEditor(conditions = "context.previous_conditions")),
+                                editor = SubsetListEditor(conditions = "context.previous.conditions")),
                            label = "Subset",
                            show_border = False,
                            show_labels = False),
@@ -102,7 +102,7 @@ class PolygonSelectionView(PluginViewMixin, PolygonSelection):
     def plot_wi(self, wi):
         self.plot(wi.previous.result)
     
-class PolygonPluginOp(PolygonOp, PluginOpMixin):
+class PolygonPluginOp(PluginOpMixin, PolygonOp):
     handler_factory = Callable(PolygonHandler)
     
     def default_view(self, **kwargs):

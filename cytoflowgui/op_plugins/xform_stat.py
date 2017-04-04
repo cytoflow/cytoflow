@@ -59,11 +59,13 @@ transform_functions = {"Mean" : np.mean,
                        }
 
 
-class TransformStatisticHandler(Controller, OpHandlerMixin):
+class TransformStatisticHandler(OpHandlerMixin, Controller):
     
 #     prev_statistics = Property(depends_on = "info.ui.context")
-    indices = Property(depends_on = "model.statistic, model.subset")
-    levels = Property(depends_on = "model.statistic")    
+    indices = Property(depends_on = "context.previous.statistics, "
+                                    "model.statistic, "
+                                    "model.subset")
+    levels = Property(depends_on = "context.previous.statistics, model.statistic")    
     
 #     def _get_prev_statistics(self):
 #         context = self.info.ui.context['context']
@@ -73,13 +75,16 @@ class TransformStatisticHandler(Controller, OpHandlerMixin):
 #             return []
 
     # MAGIC: gets the value for the property indices
-    def _get_indices(self):
-        context = self.info.ui.context['context']
-        
-        if not (context and context.previous and context.previous_statistics and self.model and self.model.statistic[0]):
+    def _get_indices(self):        
+        if not (self.context 
+                and self.context.previous 
+                and self.context.previous.statistics 
+                and self.model 
+                and self.model.statistic 
+                and self.model.statistic in self.context.previous.statistics):
             return []
         
-        stat = context.previous_statistics[self.model.statistic]
+        stat = self.context.previous.statistics[self.model.statistic]
         data = pd.DataFrame(index = stat.index)
         
         if self.model.subset:
@@ -100,13 +105,16 @@ class TransformStatisticHandler(Controller, OpHandlerMixin):
     # returns a Dict(Str, pd.Series)
     
     def _get_levels(self):
-        context = self.info.ui.context['context']
         
-        if not (context and context.previous and context.previous_statistics 
-                and self.model and self.model.statistic[0]):
+        if not (self.context 
+                and self.context.previous 
+                and self.context.previous.statistics 
+                and self.model 
+                and self.model.statistic
+                and self.model.statistic in self.context.previous.statistics):
             return []
         
-        stat = context.previous_statistics[self.model.statistic]
+        stat = self.context.previous_statistics[self.model.statistic]
         index = stat.index
         
         names = list(index.names)
@@ -126,7 +134,7 @@ class TransformStatisticHandler(Controller, OpHandlerMixin):
         return View(Item('name',
                          editor = TextEditor(auto_set = False)),
                     Item('statistic',
-                         editor=EnumEditor(name='context.previous_statistics_names'),
+                         editor=EnumEditor(name='handler.previous_statistics_names'),
                          label = "Statistic"),
                     Item('statistic_name',
                          editor = EnumEditor(values = transform_functions.keys()),
@@ -145,20 +153,9 @@ class TransformStatisticHandler(Controller, OpHandlerMixin):
                            show_labels = False),
                     shared_op_traits)
 
-class TransformStatisticPluginOp(TransformStatisticOp, PluginOpMixin):
+class TransformStatisticPluginOp(PluginOpMixin, TransformStatisticOp, PluginOpMixin):
     handler_factory = Callable(TransformStatisticHandler)
-    
-    subset_list = List(ISubset)    
-    subset = Property(Str, depends_on = "subset_list.str")
-        
-    # MAGIC - returns the value of the "subset" Property, above
-    def _get_subset(self):
-        return " and ".join([subset.str for subset in self.subset_list if subset.str])
-    
-    @on_trait_change('subset_list.str', post_init = True)
-    def _subset_changed(self, obj, name, old, new):
-        self.changed = (Changed.OPERATION, ('subset_list', self.subset_list))
-    
+
     # functions aren't picklable, so send the name instead
     function = Callable(transient = True)
     

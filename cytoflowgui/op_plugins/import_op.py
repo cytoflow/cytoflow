@@ -45,7 +45,7 @@ from cytoflowgui.toggle_button import ToggleButtonEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
 
 
-class ImportHandler(Controller, OpHandlerMixin):
+class ImportHandler(OpHandlerMixin, Controller):
     """
     A WorkflowItem that handles importing data and making a new Experiment
     """
@@ -109,7 +109,7 @@ class ImportHandler(Controller, OpHandlerMixin):
         
 
 @provides(IOperation)
-class ImportPluginOp(ImportOp, PluginOpMixin):
+class ImportPluginOp(PluginOpMixin, ImportOp):
     handler_factory = Callable(ImportHandler, transient = True)
     ret_events = util.PositiveInt(0, allow_zero = True, status = True)
     

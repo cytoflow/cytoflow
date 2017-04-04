@@ -31,7 +31,7 @@ from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.workflow import Changed
 
-class ThresholdHandler(Controller, OpHandlerMixin):
+class ThresholdHandler(OpHandlerMixin, Controller):
     def default_traits_view(self):
         return View(Item('name',
                          editor = TextEditor(auto_set = False)),
@@ -42,7 +42,7 @@ class ThresholdHandler(Controller, OpHandlerMixin):
                          editor = TextEditor(auto_set = False)),
                     shared_op_traits) 
         
-class ThresholdViewHandler(Controller, ViewHandlerMixin):
+class ThresholdViewHandler(ViewHandlerMixin, Controller):
     def default_traits_view(self):
         return View(VGroup(
                     VGroup(Item('channel', 
@@ -60,7 +60,7 @@ class ThresholdViewHandler(Controller, ViewHandlerMixin):
                            show_border = False),
                     VGroup(Item('subset_list',
                                 show_label = False,
-                                editor = SubsetListEditor(conditions = "context.previous_conditions")),
+                                editor = SubsetListEditor(conditions = "context.previous.conditions")),
                            label = "Subset",
                            show_border = False,
                            show_labels = False),
@@ -90,7 +90,7 @@ class ThresholdSelectionView(PluginViewMixin, ThresholdSelection):
     def plot_wi(self, wi):        
         self.plot(wi.previous.result)
     
-class ThresholdPluginOp(ThresholdOp, PluginOpMixin):
+class ThresholdPluginOp(PluginOpMixin, ThresholdOp):
     handler_factory = Callable(ThresholdHandler, transient = True)
      
     def default_view(self, **kwargs):

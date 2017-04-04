@@ -46,7 +46,7 @@ class BarChartHandler(Controller, ViewHandlerMixin, StatisticViewHandlerMixin):
     def default_traits_view(self):
         return View(VGroup(
                     VGroup(Item('statistic',
-                                editor=EnumEditor(name='context.statistics_names'),
+                                editor=EnumEditor(name='handler.statistics_names'),
                                 label = "Statistic"),
                            Item('variable',
                                 editor=EnumEditor(name='handler.indices'),
