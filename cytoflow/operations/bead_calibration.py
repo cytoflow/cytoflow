@@ -506,8 +506,8 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
                 plt.subplot(len(channels), 2, 2 * idx + 2)
                 plt.xscale('log')
                 plt.yscale('log')
-                plt.xlabel(self.op.units[channel])
-                plt.ylabel(channel)
+                plt.xlabel(channel)
+                plt.ylabel(self.op.units[channel])
                 plt.plot(self.op._peaks[channel], 
                          self.op._mefs[channel], 
                          marker = 'o')
