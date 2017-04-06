@@ -24,7 +24,7 @@ Created on Feb 24, 2015
 import numpy as np
 import pandas as pd
 
-from traits.api import provides, Callable, Event, on_trait_change, Instance
+from traits.api import provides, Callable, Event, on_trait_change, Instance, Property
 from traitsui.api import View, Item, Controller, VGroup, ButtonEditor, EnumEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource, FileDialog, OK
@@ -36,18 +36,21 @@ from cytoflowgui.subset import SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
-    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, StatisticViewHandlerMixin, PluginViewMixin
+    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin
 from cytoflowgui.util import DefaultFileDialog
 
-class TableHandler(Controller, ViewHandlerMixin, StatisticViewHandlerMixin):
+class TableHandler(ViewHandlerMixin, Controller):
     """
     docs
     """
+    
+    indices = Property(depends_on = "context.statistics, model.statistic, model.subset")
+    levels = Property(depends_on = "context.statistics, model.statistic")
 
     def default_traits_view(self):
         return View(VGroup(
                     VGroup(Item('statistic',
-                                editor = EnumEditor(name='context.statistics_names'),
+                                editor = EnumEditor(name='handler.statistics_names'),
                                 label = "Statistic"),
                            Item('row_facet',
                                 editor = ExtendableEnumEditor(name='handler.indices',
@@ -86,9 +89,57 @@ class TableHandler(Controller, ViewHandlerMixin, StatisticViewHandlerMixin):
                          visible_when = 'context.view_error',
                          editor = ColorTextEditor(foreground_color = "#000000",
                                                   background_color = "#ff9191"))))
+        
+    # MAGIC: gets the value for the property indices
+    def _get_indices(self):
+        if not (self.context and self.context.statistics 
+                and self.model.statistic in self.context.statistics):
+            return []
+        
+        stat = self.context.statistics[self.model.statistic]
+        data = pd.DataFrame(index = stat.index)
+        
+        if self.model.subset:
+            data = data.query(self.model.subset)
+            
+        if len(data) == 0:
+            return []       
+        
+        names = list(data.index.names)
+        for name in names:
+            unique_values = data.index.get_level_values(name).unique()
+            if len(unique_values) == 1:
+                data.index = data.index.droplevel(name)
+        
+        return list(data.index.names)
+    
+    # MAGIC: gets the value for the property 'levels'
+    # returns a Dict(Str, pd.Series)
+    
+    def _get_levels(self):        
+        if not (self.context and self.context.statistics 
+                and self.model.statistic in self.context.statistics):
+            return []
+        
+        stat = self.context.statistics[self.model.statistic]
+        index = stat.index
+        
+        names = list(index.names)
+        for name in names:
+            unique_values = index.get_level_values(name).unique()
+            if len(unique_values) == 1:
+                index = index.droplevel(name)
+
+        names = list(index.names)
+        ret = {}
+        for name in names:
+            ret[name] = pd.Series(index.get_level_values(name)).sort_values()
+            ret[name] = pd.Series(ret[name].unique())
+            
+        return ret
                     
     
-class TablePluginView(TableView, PluginViewMixin):
+class TablePluginView(PluginViewMixin, TableView):
     handler_factory = Callable(TableHandler)
     
     export = Event()

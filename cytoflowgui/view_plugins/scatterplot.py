@@ -39,7 +39,7 @@ from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
     import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin
 
-class ScatterplotHandler(Controller, ViewHandlerMixin):
+class ScatterplotHandler(ViewHandlerMixin, Controller):
     '''
     classdocs
     '''
@@ -57,21 +57,21 @@ class ScatterplotHandler(Controller, ViewHandlerMixin):
                            Item('yscale',
                                 label = "Y Scale"),
                            Item('xfacet',
-                                editor=ExtendableEnumEditor(name='context.conditions_names',
+                                editor=ExtendableEnumEditor(name='handler.conditions_names',
                                                             extra_items = {"None" : ""}),
                                 label = "Horizontal\nFacet"),
                            Item('yfacet',
-                                editor=ExtendableEnumEditor(name='context.conditions_names',
+                                editor=ExtendableEnumEditor(name='handler.conditions_names',
                                                             extra_items = {"None" : ""}),
                                 label = "Vertical\nFacet"),
                            Item('huefacet',
-                                editor=ExtendableEnumEditor(name='context.conditions_names',
+                                editor=ExtendableEnumEditor(name='handler.conditions_names',
                                                             extra_items = {"None" : ""}),
                                 label="Color\nFacet"),
                            Item('huescale',
                                 label = "Color\nScale"),
                            Item('plotfacet',
-                                editor=ExtendableEnumEditor(name='context.conditions_names',
+                                editor=ExtendableEnumEditor(name='handler.conditions_names',
                                                             extra_items = {"None" : ""}),
                                 label = "Tab\nFacet"),
                            label = "Scatter Plot",

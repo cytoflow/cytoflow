@@ -35,102 +35,30 @@ from cytoflowgui.subset import SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
-    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, StatisticViewHandlerMixin, PluginViewMixin
+    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin
     
-class Stats2DHandler(Controller, ViewHandlerMixin, StatisticViewHandlerMixin):
+class Stats2DHandler(ViewHandlerMixin, Controller):
     """
     docs
     """
     
-    # override corresponding props from the StatisticViewHandlerMixin
-    numeric_indices = Property(depends_on = "model.xstatistic")
-    indices = Property(depends_on = "model.xstatistic")
-    
-    # MAGIC: gets the value for the property numeric_indices
-    def _get_numeric_indices(self):
-        context = self.info.ui.context['context']
-        
-        if not (context and context.statistics and self.model and self.model.xstatistic[0]):
-            return []
-        
-        stat = context.statistics[self.model.xstatistic]
-        data = pd.DataFrame(index = stat.index)
-        
-        if self.model.subset:
-            data = data.query(self.model.subset)
-            
-        if len(data) == 0:
-            return []       
-        
-        names = list(data.index.names)
-        for name in names:
-            unique_values = data.index.get_level_values(name).unique()
-            if len(unique_values) == 1:
-                data.index = data.index.droplevel(name)
-        
-        data.reset_index(inplace = True)
-        return [x for x in data if util.is_numeric(data[x])]
-    
-    # MAGIC: gets the value for the property indices
-    def _get_indices(self):
-        context = self.info.ui.context['context']
-        
-        if not (context and context.statistics and self.model and self.model.xstatistic[0]):
-            return []
-        
-        stat = context.statistics[self.model.xstatistic]
-        data = pd.DataFrame(index = stat.index)
-        
-        if self.model.subset:
-            data = data.query(self.model.subset)
-            
-        if len(data) == 0:
-            return []       
-        
-        names = list(data.index.names)
-        for name in names:
-            unique_values = data.index.get_level_values(name).unique()
-            if len(unique_values) == 1:
-                data.index = data.index.droplevel(name)
-        
-        return list(data.index.names)
-    
-    def _get_levels(self):
-        context = self.info.ui.context['context']
-        
-        if not (context and context.statistics and self.model and self.model.xstatistic[0]):
-            return []
-        
-        stat = context.statistics[self.model.xstatistic]
-        index = stat.index
-        
-        names = list(index.names)
-        for name in names:
-            unique_values = index.get_level_values(name).unique()
-            if len(unique_values) == 1:
-                index = index.droplevel(name)
-
-        names = list(index.names)
-        ret = {}
-        for name in names:
-            ret[name] = pd.Series(index.get_level_values(name)).sort_values()
-            ret[name] = pd.Series(ret[name].unique())
-            
-        return ret
+    indices = Property(depends_on = "context.statistics, model.xstatistic, model.ystatistic, model.subset")
+    numeric_indices = Property(depends_on = "context.statistics, model.xstatistic, model.ystatistic, model.subset")
+    levels = Property(depends_on = "context.statistics, model.xstatistic, model.ystatistic")
     
     
     def default_traits_view(self):
         return View(VGroup(
                     VGroup(Item('xstatistic',
-                                editor = EnumEditor(name = 'context.statistics_names'),
+                                editor = EnumEditor(name = 'handler.statistics_names'),
                                 label = "X Statistic"),
                            Item('xscale', label = "X Scale"),
                            Item('ystatistic',
-                                editor = EnumEditor(name = 'context.statistics_names'),
+                                editor = EnumEditor(name = 'handler.statistics_names'),
                                 label = "Y Statistic"),
                            Item('yscale', label = "Y Scale"),
                            Item('variable',
-                                editor=EnumEditor(name='handler.numeric_indices')),
+                                editor=EnumEditor(name='handler.indices')),
                            Item('xfacet',
                                 editor=ExtendableEnumEditor(name='handler.indices',
                                                             extra_items = {"None" : ""}),
@@ -146,11 +74,11 @@ class Stats2DHandler(Controller, ViewHandlerMixin, StatisticViewHandlerMixin):
                            Item('huescale', 
                                 label = "Hue\nScale"),
                            Item('x_error_statistic',
-                                editor=ExtendableEnumEditor(name='context.statistics_names',
+                                editor=ExtendableEnumEditor(name='handler.statistics_names',
                                                             extra_items = {"None" : ("", "")}),
                                 label = "X Error\nStatistic"),
                            Item('y_error_statistic',
-                                editor=ExtendableEnumEditor(name='context.statistics_names',
+                                editor=ExtendableEnumEditor(name='handler.statistics_names',
                                                             extra_items = {"None" : ("", "")}),
                                 label = "Y Error\nStatistic"),
                            label = "Two-Dimensional Statistics Plot",
@@ -171,9 +99,92 @@ class Stats2DHandler(Controller, ViewHandlerMixin, StatisticViewHandlerMixin):
                          visible_when = 'context.view_error',
                          editor = ColorTextEditor(foreground_color = "#000000",
                                                   background_color = "#ff9191"))))
+        
+    # MAGIC: gets the value for the property indices
+    def _get_indices(self):
+        if not (self.context and self.context.statistics 
+                and self.model.xstatistic in self.context.statistics
+                and self.model.ystatistic in self.context.statistics):
+            return []
+        
+        xstat = self.context.statistics[self.model.xstatistic]
+        ystat = self.context.statistics[self.model.ystatistic]
+        
+        index = xstat.index.intersection(ystat.index)
+        
+        data = pd.DataFrame(index = index)
+        
+        if self.model.subset:
+            data = data.query(self.model.subset)
+            
+        if len(data) == 0:
+            return []       
+        
+        names = list(data.index.names)
+        for name in names:
+            unique_values = data.index.get_level_values(name).unique()
+            if len(unique_values) == 1:
+                data.index = data.index.droplevel(name)
+        
+        return list(data.index.names)
+        
+    # MAGIC: gets the value for the property numeric_indices
+    def _get_numeric_indices(self):        
+        if not (self.context and self.context.statistics 
+                and self.model.xstatistic in self.context.statistics
+                and self.model.ystatistic in self.context.statistics):
+            return []
+        
+        xstat = self.context.statistics[self.model.xstatistic]
+        ystat = self.context.statistics[self.model.ystatistic]
+        index = xstat.index.intersection(ystat.index)
+        data = pd.DataFrame(index = index)
+        
+        if self.model.subset:
+            data = data.query(self.model.subset)
+            
+        if len(data) == 0:
+            return []       
+        
+        names = list(data.index.names)
+        for name in names:
+            unique_values = data.index.get_level_values(name).unique()
+            if len(unique_values) == 1:
+                data.index = data.index.droplevel(name)
+        
+        data.reset_index(inplace = True)
+        return [x for x in data if util.is_numeric(data[x])]
+    
+    # MAGIC: gets the value for the property 'levels'
+    # returns a Dict(Str, pd.Series)
+    
+    def _get_levels(self):        
+        if not (self.context and self.context.statistics 
+                and self.model.xstatistic in self.context.statistics
+                and self.model.ystatistic in self.context.statistics):
+            return []
+        
+        xstat = self.context.statistics[self.model.xstatistic]
+        ystat = self.context.statistics[self.model.ystatistic]
+    
+        index = xstat.index.intersection(ystat.index)
+        
+        names = list(index.names)
+        for name in names:
+            unique_values = index.get_level_values(name).unique()
+            if len(unique_values) == 1:
+                index = index.droplevel(name)
+
+        names = list(index.names)
+        ret = {}
+        for name in names:
+            ret[name] = pd.Series(index.get_level_values(name)).sort_values()
+            ret[name] = pd.Series(ret[name].unique())
+            
+        return ret
 
     
-class Stats2DPluginView(Stats2DView, PluginViewMixin):
+class Stats2DPluginView(PluginViewMixin, Stats2DView):
     handler_factory = Callable(Stats2DHandler)
     
 

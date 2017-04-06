@@ -39,7 +39,7 @@ from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
     import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin
     
-class ViolinHandler(Controller, ViewHandlerMixin):
+class ViolinHandler(ViewHandlerMixin, Controller):
     """
     docs
     """
@@ -47,7 +47,7 @@ class ViolinHandler(Controller, ViewHandlerMixin):
     def default_traits_view(self):
         return View(VGroup(
                     VGroup(Item('variable',
-                                editor=ExtendableEnumEditor(name='context.conditions_names'),
+                                editor=ExtendableEnumEditor(name='handler.conditions_names'),
                                 label = "X Variable"),
                            Item('channel',
                                 editor=EnumEditor(name='context.channels'),
@@ -55,21 +55,21 @@ class ViolinHandler(Controller, ViewHandlerMixin):
                            Item('scale',
                                 label = "Y Channel\nScale"),
                            Item('xfacet',
-                                editor=ExtendableEnumEditor(name='context.conditions_names',
+                                editor=ExtendableEnumEditor(name='handler.conditions_names',
                                                             extra_items = {"None" : ""}),
                                 label = "Horizontal\nFacet"),
                            Item('yfacet',
-                                editor=ExtendableEnumEditor(name='context.conditions_names',
+                                editor=ExtendableEnumEditor(name='handler.conditions_names',
                                                             extra_items = {"None" : ""}),
                                 label = "Vertical\nFacet"),
                            Item('huefacet',
-                                editor=ExtendableEnumEditor(name='context.conditions_names',
+                                editor=ExtendableEnumEditor(name='handler.conditions_names',
                                                             extra_items = {"None" : ""}),
                                 label="Color\nFacet"),
                            Item('huescale',
                                 label = "Color\nScale"),
                            Item('plotfacet',
-                                editor=ExtendableEnumEditor(name='context.conditions_names',
+                                editor=ExtendableEnumEditor(name='handler.conditions_names',
                                                             extra_items = {"None" : ""}),
                                 label = "Tab\nFacet"),
                              label = "Violin Plot",

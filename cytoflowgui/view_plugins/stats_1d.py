@@ -21,28 +21,35 @@ Created on Feb 24, 2015
 @author: brian
 """
 
-from traits.api import provides, Callable
+from traits.api import provides, Callable, Property
 from traitsui.api import View, Item, Controller, EnumEditor, VGroup
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
+import pandas as pd
+
 from cytoflow import Stats1DView
+import cytoflow.utility as util
 
 from cytoflowgui.subset import SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
-    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, StatisticViewHandlerMixin, PluginViewMixin
+    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin
     
-class Stats1DHandler(Controller, ViewHandlerMixin, StatisticViewHandlerMixin):
+class Stats1DHandler(ViewHandlerMixin, Controller):
     """
     docs
     """
     
+    indices = Property(depends_on = "context.statistics, model.statistic, model.subset")
+    numeric_indices = Property(depends_on = "context.statistics, model.statistic, model.subset")
+    levels = Property(depends_on = "context.statistics, model.statistic")
+    
     def default_traits_view(self):
         return View(VGroup(
                     VGroup(Item('statistic',
-                                editor=EnumEditor(name='context.statistics_names'),
+                                editor=EnumEditor(name='handler.statistics_names'),
                                 label = "Statistic"),
                            Item('variable',
                                 editor = EnumEditor(name = 'handler.numeric_indices')),
@@ -63,7 +70,7 @@ class Stats1DHandler(Controller, ViewHandlerMixin, StatisticViewHandlerMixin):
                            Item('huescale', 
                                 label = "Hue\nScale"),
                            Item('error_statistic',
-                                editor=ExtendableEnumEditor(name='context.statistics_names',
+                                editor=ExtendableEnumEditor(name='handler.statistics_names',
                                                             extra_items = {"None" : ("", "")}),
                                 label = "Error\nStatistic"),
                            label = "One-Dimensional Statistics Plot",
@@ -84,6 +91,79 @@ class Stats1DHandler(Controller, ViewHandlerMixin, StatisticViewHandlerMixin):
                          visible_when = 'context.view_error',
                          editor = ColorTextEditor(foreground_color = "#000000",
                                                   background_color = "#ff9191"))))
+        
+        
+    # MAGIC: gets the value for the property indices
+    def _get_indices(self):
+        if not (self.context and self.context.statistics 
+                and self.model.statistic in self.context.statistics):
+            return []
+        
+        stat = self.context.statistics[self.model.statistic]
+        data = pd.DataFrame(index = stat.index)
+        
+        if self.model.subset:
+            data = data.query(self.model.subset)
+            
+        if len(data) == 0:
+            return []       
+        
+        names = list(data.index.names)
+        for name in names:
+            unique_values = data.index.get_level_values(name).unique()
+            if len(unique_values) == 1:
+                data.index = data.index.droplevel(name)
+        
+        return list(data.index.names)
+    
+    # MAGIC: gets the value for the property 'levels'
+    # returns a Dict(Str, pd.Series)
+    
+    def _get_levels(self):        
+        if not (self.context and self.context.statistics 
+                and self.model.statistic in self.context.statistics):
+            return []
+        
+        stat = self.context.statistics[self.model.statistic]
+        index = stat.index
+        
+        names = list(index.names)
+        for name in names:
+            unique_values = index.get_level_values(name).unique()
+            if len(unique_values) == 1:
+                index = index.droplevel(name)
+
+        names = list(index.names)
+        ret = {}
+        for name in names:
+            ret[name] = pd.Series(index.get_level_values(name)).sort_values()
+            ret[name] = pd.Series(ret[name].unique())
+            
+        return ret
+        
+    # MAGIC: gets the value for the property numeric_indices
+    def _get_numeric_indices(self):        
+        if not (self.context and self.context.statistics 
+                and self.model.statistic in self.context.statistics):
+            return []
+        
+        stat = self.context.statistics[self.model.statistic]
+        data = pd.DataFrame(index = stat.index)
+        
+        if self.model.subset:
+            data = data.query(self.model.subset)
+            
+        if len(data) == 0:
+            return []       
+        
+        names = list(data.index.names)
+        for name in names:
+            unique_values = data.index.get_level_values(name).unique()
+            if len(unique_values) == 1:
+                data.index = data.index.droplevel(name)
+        
+        data.reset_index(inplace = True)
+        return [x for x in data if util.is_numeric(data[x])]
 
 class Stats1DPluginView(PluginViewMixin, Stats1DView):
     handler_factory = Callable(Stats1DHandler)

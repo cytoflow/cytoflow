@@ -153,7 +153,7 @@ class TransformStatisticHandler(OpHandlerMixin, Controller):
                            show_labels = False),
                     shared_op_traits)
 
-class TransformStatisticPluginOp(PluginOpMixin, TransformStatisticOp, PluginOpMixin):
+class TransformStatisticPluginOp(PluginOpMixin, TransformStatisticOp):
     handler_factory = Callable(TransformStatisticHandler)
 
     # functions aren't picklable, so send the name instead
