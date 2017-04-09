@@ -25,8 +25,7 @@ import warnings
 from traitsui.api import (View, Item, Controller, ButtonEditor, CheckListEditor,
                           VGroup)
 from envisage.api import Plugin, contributes_to
-from traits.api import (provides, Callable, List, Str, Property, File, 
-                        on_trait_change)
+from traits.api import (provides, Callable, List, Str, File, on_trait_change)
 from pyface.api import ImageResource
 
 import cytoflow.utility as util
@@ -40,22 +39,20 @@ from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.subset import SubsetListEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
 from cytoflowgui.workflow import Changed
-from cytoflowgui.subset import ISubset
 
-
-class AutofluorescenceHandler(Controller, OpHandlerMixin):
+class AutofluorescenceHandler(OpHandlerMixin, Controller):
     
     def default_traits_view(self):
         return View(Item('blank_file',
                          width = -125),
                     Item('channels',
                          editor = CheckListEditor(cols = 2,
-                                                  name = 'context.previous_channels'),
+                                                  name = 'context.previous.channels'),
                          style = 'custom'),
                     VGroup(Item('subset_list',
                                 show_label = False,
-                                editor = SubsetListEditor(conditions = "context.previous_conditions",
-                                                          metadata = "context.previous_metadata",
+                                editor = SubsetListEditor(conditions = "context.previous.conditions",
+                                                          metadata = "context.previous.metadata",
                                                           when = "'experiment' not in vars() or not experiment")),
                            label = "Subset",
                            show_border = False,
@@ -71,17 +68,6 @@ class AutofluorescencePluginOp(PluginOpMixin, AutofluorescenceOp):
     
     channels = List(Str, estimate = True)
     blank_file = File(filter = ["*.fcs"], estimate = True)
-
-    subset_list = List(ISubset, estimate = True)    
-    subset = Property(Str, depends_on = "subset_list.str")
-        
-    # MAGIC - returns the value of the "subset" Property, above
-    def _get_subset(self):
-        return " and ".join([subset.str for subset in self.subset_list if subset.str])
-    
-    @on_trait_change('subset_list.str', post_init = True)
-    def _subset_changed(self, obj, name, old, new):
-        self.changed = (Changed.ESTIMATE, ('subset_list', self.subset_list))
 
     @on_trait_change('channels', post_init = True)
     def _channels_changed(self):
@@ -120,7 +106,7 @@ class AutofluorescencePluginOp(PluginOpMixin, AutofluorescenceOp):
         return False
         
 
-class AutofluorescenceViewHandler(Controller, ViewHandlerMixin):
+class AutofluorescenceViewHandler(ViewHandlerMixin, Controller):
     def default_traits_view(self):
         return View(Item('context.view_warning',
                          resizable = True,
@@ -134,7 +120,7 @@ class AutofluorescenceViewHandler(Controller, ViewHandlerMixin):
                                                   background_color = "#ff9191")))
 
 @provides(IView)
-class AutofluorescencePluginView(AutofluorescenceDiagnosticView, PluginViewMixin):
+class AutofluorescencePluginView(PluginViewMixin, AutofluorescenceDiagnosticView):
     handler_factory = Callable(AutofluorescenceViewHandler)
     
     def plot_wi(self, wi):

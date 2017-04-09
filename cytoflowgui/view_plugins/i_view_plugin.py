@@ -25,9 +25,6 @@ from traits.api import (Interface, Str, HasTraits, Instance, Event,
                         List, Property, on_trait_change)
 from traitsui.api import Handler
 
-import pandas as pd
-
-import cytoflow.utility as util
 from cytoflowgui.subset import ISubset
 from cytoflowgui.workflow import Changed
 from cytoflowgui.workflow_item import WorkflowItem
@@ -114,61 +111,27 @@ class ViewHandlerMixin(HasTraits):
     
     context = Instance(WorkflowItem)
     
-        
-class StatisticViewHandlerMixin(HasTraits):
+    conditions_names = Property(depends_on = "context.conditions")
+    previous_conditions_names = Property(depends_on = "context.previous.conditions")
+    statistics_names = Property(depends_on = "context.statistics")
     
-    numeric_indices = Property(depends_on = "model.statistic, model.subset")
-    levels = Property(depends_on = "model.statistic")
+    # MAGIC: gets value for property "conditions_names"
+    def _get_conditions_names(self):
+        if self.context and self.context.conditions:
+            return self.context.conditions.keys()
+        else:
+            return []
     
-    # MAGIC: gets the value for the property numeric_indices
-    def _get_numeric_indices(self):
-        context = self.info.ui.context['context']
-        
-        if not (context and context.statistics and self.model and self.model.statistic[0]):
+    # MAGIC: gets value for property "previous_conditions_names"
+    def _get_previous_conditions_names(self):
+        if self.context and self.context.previous and self.context.previous.conditions:
+            return self.context.previous.conditions.keys()
+        else:
             return []
         
-        stat = context.statistics[self.model.statistic]
-        data = pd.DataFrame(index = stat.index)
-        
-        if self.model.subset:
-            data = data.query(self.model.subset)
-            
-        if len(data) == 0:
-            return []       
-        
-        names = list(data.index.names)
-        for name in names:
-            unique_values = data.index.get_level_values(name).unique()
-            if len(unique_values) == 1:
-                data.index = data.index.droplevel(name)
-        
-        data.reset_index(inplace = True)
-        return [x for x in data if util.is_numeric(data[x])]
-    
-
-    
-    # MAGIC: gets the value for the property 'levels'
-    # returns a Dict(Str, pd.Series)
-    
-    def _get_levels(self):
-        context = self.info.ui.context['context']
-        
-        if not (context and context.statistics and self.model and self.model.statistic[0]):
+    # MAGIC: gets value for property "statistics_names"
+    def _get_statistics_names(self):
+        if self.context and self.context.statistics:
+            return self.context.statistics.keys()
+        else:
             return []
-        
-        stat = context.statistics[self.model.statistic]
-        index = stat.index
-        
-        names = list(index.names)
-        for name in names:
-            unique_values = index.get_level_values(name).unique()
-            if len(unique_values) == 1:
-                index = index.droplevel(name)
-
-        names = list(index.names)
-        ret = {}
-        for name in names:
-            ret[name] = pd.Series(index.get_level_values(name)).sort_values()
-            ret[name] = pd.Series(ret[name].unique())
-            
-        return ret

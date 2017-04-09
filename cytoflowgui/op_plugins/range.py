@@ -32,13 +32,13 @@ from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
 from cytoflowgui.workflow import Changed
 
-class RangeHandler(Controller, OpHandlerMixin):
+class RangeHandler(OpHandlerMixin, Controller):
     
     def default_traits_view(self):
         return View(Item('name',
                          editor = TextEditor(auto_set = False)),
                     Item('channel',
-                         editor=EnumEditor(name='context.previous_channels'),
+                         editor=EnumEditor(name='context.previous.channels'),
                          label = "Channel"),
                     Item('low',
                          editor = TextEditor(auto_set = False)),
@@ -46,7 +46,7 @@ class RangeHandler(Controller, OpHandlerMixin):
                          editor = TextEditor(auto_set = False)),
                     shared_op_traits) 
         
-class RangeViewHandler(Controller, ViewHandlerMixin):
+class RangeViewHandler(ViewHandlerMixin, Controller):
     def default_traits_view(self):
         return View(VGroup(
                     VGroup(Item('channel', 
@@ -54,14 +54,14 @@ class RangeViewHandler(Controller, ViewHandlerMixin):
                                 style = "readonly"),
                            Item('scale'),
                            Item('huefacet',
-                                editor=ExtendableEnumEditor(name='context.previous_conditions_names',
+                                editor=ExtendableEnumEditor(name='handler.previous_conditions_names',
                                                             extra_items = {"None" : ""}),
                                 label="Color\nFacet"),
                             label = "Range Setup View",
                             show_border = False),
                     VGroup(Item('subset_list',
                                 show_label = False,
-                                editor = SubsetListEditor(conditions = "context.previous_conditions")),
+                                editor = SubsetListEditor(conditions = "context.previous.conditions")),
                            label = "Subset",
                            show_border = False,
                            show_labels = False),
@@ -95,7 +95,7 @@ class RangeSelectionView(PluginViewMixin, RangeSelection):
     
     
 @provides(IOperation)
-class RangePluginOp(RangeOp, PluginOpMixin):
+class RangePluginOp(PluginOpMixin, RangeOp):
     handler_factory = Callable(RangeHandler)
     
     def default_view(self, **kwargs):

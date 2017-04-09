@@ -25,20 +25,20 @@ from cytoflow.operations.ratio import RatioOp
 from cytoflowgui.op_plugins.i_op_plugin \
     import IOperationPlugin, OpHandlerMixin, PluginOpMixin, OP_PLUGIN_EXT, shared_op_traits
 
-class RatioHandler(Controller, OpHandlerMixin):
+class RatioHandler(OpHandlerMixin, Controller):
     def default_traits_view(self):
         return View(Item('name',
                          editor = TextEditor(auto_set = False)),
                     Item('numerator',
-                         editor=EnumEditor(name='context.previous_channels'),
+                         editor=EnumEditor(name='context.previous.channels'),
                          label = "Numerator"),
                     Item('denominator',
-                         editor=EnumEditor(name='context.previous_channels'),
+                         editor=EnumEditor(name='context.previous.channels'),
                          label = "Denominator"),
                     shared_op_traits) 
 
     
-class RatioPluginOp(RatioOp, PluginOpMixin):
+class RatioPluginOp(PluginOpMixin, RatioOp):
     handler_factory = Callable(RatioHandler, transient = True)
 
 @provides(IOperationPlugin)

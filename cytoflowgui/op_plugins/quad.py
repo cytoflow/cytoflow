@@ -31,25 +31,25 @@ from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.workflow import Changed
 
-class QuadHandler(Controller, OpHandlerMixin):
+class QuadHandler(OpHandlerMixin, Controller):
     def default_traits_view(self):
         return View(Item('name',
                          editor = TextEditor(auto_set = False)),
                     Item('xchannel',
-                         editor=EnumEditor(name='context.previous_channels'),
+                         editor=EnumEditor(name='context.previous.channels'),
                          label = "X Channel"),
                     Item('xthreshold',
                          editor = TextEditor(auto_set = False),
                          label = "X Threshold"),
                     Item('ychannel',
-                         editor=EnumEditor(name='context.previous_channels'),
+                         editor=EnumEditor(name='context.previous.channels'),
                          label = "Y Channel"),
                     Item('ythreshold',
                          editor = TextEditor(auto_set = False),
                          label = "Y Threshold"),
                     shared_op_traits) 
         
-class ThresholdViewHandler(Controller, ViewHandlerMixin):
+class ThresholdViewHandler(ViewHandlerMixin, Controller):
     def default_traits_view(self):
         return View(VGroup(
                     VGroup(Item('xchannel', 
@@ -67,14 +67,14 @@ class ThresholdViewHandler(Controller, ViewHandlerMixin):
                                 style = "readonly"),
                            Item('yscale'),
                            Item('huefacet',
-                                editor=ExtendableEnumEditor(name='context.previous_conditions_names',
+                                editor=ExtendableEnumEditor(name='handler.previous_conditions_names',
                                                             extra_items = {"None" : ""}),
                                 label="Color\nFacet"),
                            label = "Quad Setup View",
                            show_border = False),
                     VGroup(Item('subset_list',
                                 show_label = False,
-                                editor = SubsetListEditor(conditions = "context.previous_conditions")),
+                                editor = SubsetListEditor(conditions = "handler.previous_conditions")),
                            label = "Subset",
                            show_border = False,
                            show_labels = False),

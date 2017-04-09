@@ -27,7 +27,7 @@ from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor,
                          CheckListEditor, ButtonEditor
 from envisage.api import Plugin, contributes_to
 from traits.api import (provides, Callable, List, Str, Dict, Any, Instance,
-                        DelegatesTo, on_trait_change, Property)
+                        DelegatesTo)
 from pyface.api import ImageResource
 
 import cytoflow.utility as util
@@ -41,18 +41,17 @@ from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_E
 from cytoflowgui.subset import SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
-from cytoflowgui.subset import ISubset
 from cytoflowgui.workflow import Changed
 
-class GaussianMixture2DHandler(Controller, OpHandlerMixin):
+class GaussianMixture2DHandler(OpHandlerMixin, Controller):
     def default_traits_view(self):
         return View(Item('name',
                          editor = TextEditor(auto_set = False)),
                     Item('xchannel',
-                         editor=EnumEditor(name='context.previous_channels'),
+                         editor=EnumEditor(name='context.previous.channels'),
                          label = "X Channel"),
                     Item('ychannel',
-                         editor=EnumEditor(name='context.previous_channels'),
+                         editor=EnumEditor(name='context.previous.channels'),
                          label = "Y Channel"),
                     Item('xscale'),
                     Item('yscale'),
@@ -64,12 +63,12 @@ class GaussianMixture2DHandler(Controller, OpHandlerMixin):
                          editor = TextEditor(auto_set = False)),
                     Item('by',
                          editor = CheckListEditor(cols = 2,
-                                                  name = 'context.previous_conditions_names'),
+                                                  name = 'handler.previous_conditions_names'),
                          label = 'Group\nEstimates\nBy',
                          style = 'custom'),
                     VGroup(Item('subset_list',
                                 show_label = False,
-                                editor = SubsetListEditor(conditions = "context.previous_conditions")),
+                                editor = SubsetListEditor(conditions = "context.previous.conditions")),
                            label = "Subset",
                            show_border = False,
                            show_labels = False),
@@ -81,7 +80,7 @@ class GaussianMixture2DHandler(Controller, OpHandlerMixin):
                     show_border = False),
                     shared_op_traits)
 
-class GaussianMixture2DPluginOp(GaussianMixture2DOp, PluginOpMixin):
+class GaussianMixture2DPluginOp(PluginOpMixin, GaussianMixture2DOp):
     handler_factory = Callable(GaussianMixture2DHandler)
     
     # add "estimate" metadata
@@ -90,17 +89,6 @@ class GaussianMixture2DPluginOp(GaussianMixture2DOp, PluginOpMixin):
     by = List(Str, estimate = True)
     
     _gmms = Dict(Any, Instance(mixture.GaussianMixture), transient = True)
-    
-    subset_list = List(ISubset, estimate = True)    
-    subset = Property(Str, depends_on = "subset_list.str")
-        
-    # MAGIC - returns the value of the "subset" Property, above
-    def _get_subset(self):
-        return " and ".join([subset.str for subset in self.subset_list if subset.str])
-    
-    @on_trait_change("subset_list.str", post_init = True)
-    def _subset_changed(self, obj, name, old, new):
-        self.changed = (Changed.ESTIMATE, ('subset_list', self.subset_list))
 
     def default_view(self, **kwargs):
         return GaussianMixture2DPluginView(op = self, **kwargs)
@@ -119,7 +107,7 @@ class GaussianMixture2DPluginOp(GaussianMixture2DOp, PluginOpMixin):
         
         return False
 
-class GaussianMixture2DViewHandler(Controller, ViewHandlerMixin):
+class GaussianMixture2DViewHandler(ViewHandlerMixin, Controller):
     def default_traits_view(self):
         return View(VGroup(
                     VGroup(Item('xchannel',
@@ -140,7 +128,7 @@ class GaussianMixture2DViewHandler(Controller, ViewHandlerMixin):
                                                   background_color = "#ff9191")))
 
 @provides(IView)
-class GaussianMixture2DPluginView(GaussianMixture2DView, PluginViewMixin):
+class GaussianMixture2DPluginView(PluginViewMixin, GaussianMixture2DView):
     handler_factory = Callable(GaussianMixture2DViewHandler)
     op = Instance(IOperation, fixed = True)
     subset = DelegatesTo('op', transient = True)

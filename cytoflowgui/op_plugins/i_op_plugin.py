@@ -21,10 +21,14 @@ Created on Mar 15, 2015
 @author: brian
 """
 
-from traits.api import Interface, Str, HasTraits, Event, Instance
+from traits.api import Interface, Str, HasTraits, Event, Instance, Property, List, on_trait_change
 from traitsui.api import Group, Item
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.workflow_item import WorkflowItem
+from cytoflowgui.subset import ISubset
+from cytoflowgui.workflow import Changed
+
+
 
 OP_PLUGIN_EXT = 'edu.mit.synbio.cytoflow.op_plugins'
 
@@ -101,6 +105,19 @@ class PluginOpMixin(HasTraits):
          - Changed.PREV_RESULT -- the previous WorkflowItem's result changed
          """
         return True
+    
+    # bits to support the subset editor
+    
+    subset_list = List(ISubset)    
+    subset = Property(Str, depends_on = "subset_list.str")
+        
+    # MAGIC - returns the value of the "subset" Property, above
+    def _get_subset(self):
+        return " and ".join([subset.str for subset in self.subset_list if subset.str])
+    
+    @on_trait_change('subset_list.str', post_init = True)
+    def _subset_changed(self, obj, name, old, new):
+        self.changed = (Changed.OPERATION, ('subset_list', self.subset_list))
 
             
 shared_op_traits = Group(Item('context.estimate_warning',
@@ -135,5 +152,30 @@ class OpHandlerMixin(HasTraits):
     """
     
     context = Instance(WorkflowItem)
+    
+    conditions_names = Property(depends_on = "context.conditions")
+    previous_conditions_names = Property(depends_on = "context.previous.conditions")
+    statistics_names = Property(depends_on = "context.statistics")
+    
+    # MAGIC: gets value for property "conditions_names"
+    def _get_conditions_names(self):
+        if self.context and self.context.conditions:
+            return self.context.conditions.keys()
+        else:
+            return []
+    
+    # MAGIC: gets value for property "previous_conditions_names"
+    def _get_previous_conditions_names(self):
+        if self.context and self.context.previous and self.context.previous.conditions:
+            return self.context.previous.conditions.keys()
+        else:
+            return []
+        
+    # MAGIC: gets value for property "statistics_names"
+    def _get_statistics_names(self):
+        if self.context and self.context.statistics:
+            return self.context.statistics.keys()
+        else:
+            return []
     
 

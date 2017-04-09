@@ -27,7 +27,7 @@ from traitsui.api import View, Item, EnumEditor, Controller, VGroup, \
                          CheckListEditor, ButtonEditor, TextEditor
 from envisage.api import Plugin, contributes_to
 from traits.api import (provides, Callable, Instance, Str, List, Dict, Any, 
-                        DelegatesTo, Property)
+                        DelegatesTo)
 from pyface.api import ImageResource
 
 from cytoflow.operations import IOperation
@@ -40,15 +40,14 @@ from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_E
 from cytoflowgui.subset import SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
-from cytoflowgui.subset import ISubset
 from cytoflowgui.workflow import Changed
 
-class GaussianMixture1DHandler(Controller, OpHandlerMixin):
+class GaussianMixture1DHandler(OpHandlerMixin, Controller):
     def default_traits_view(self):
         return View(Item('name',
                          editor = TextEditor(auto_set = False)),
                     Item('channel',
-                         editor=EnumEditor(name='context.previous_channels'),
+                         editor=EnumEditor(name='context.previous.channels'),
                          label = "Channel"),
                     Item('scale'),
                     VGroup(
@@ -59,12 +58,12 @@ class GaussianMixture1DHandler(Controller, OpHandlerMixin):
                          editor = TextEditor(auto_set = False)),
                     Item('by',
                          editor = CheckListEditor(cols = 2,
-                                                  name = 'context.previous_conditions_names'),
+                                                  name = 'handler.previous_conditions_names'),
                          label = 'Group\nEstimates\nBy',
                          style = 'custom'),
                     VGroup(Item('subset_list',
                                 show_label = False,
-                                editor = SubsetListEditor(conditions = "context.previous_conditions")),
+                                editor = SubsetListEditor(conditions = "context.previous.conditions")),
                            label = "Subset",
                            show_border = False,
                            show_labels = False),
@@ -87,13 +86,6 @@ class GaussianMixture1DPluginOp(PluginOpMixin, GaussianMixture1DOp):
     # TODO - what's estimate_result?
     _gmms = Dict(Any, Instance(mixture.GaussianMixture), transient = True)
     
-    subset_list = List(ISubset, estimate = True)    
-    subset = Property(Str, depends_on = "subset_list.str")
-        
-    # MAGIC - returns the value of the "subset" Property, above
-    def _get_subset(self):
-        return " and ".join([subset.str for subset in self.subset_list if subset.str])
-    
     def estimate(self, experiment):
         GaussianMixture1DOp.estimate(self, experiment, subset = self.subset)
         self.changed = (Changed.ESTIMATE_RESULT, self)
@@ -110,7 +102,7 @@ class GaussianMixture1DPluginOp(PluginOpMixin, GaussianMixture1DOp):
         self._gmms = {}
         self.changed = (Changed.ESTIMATE_RESULT, self)
         
-class GaussianMixture1DViewHandler(Controller, ViewHandlerMixin):
+class GaussianMixture1DViewHandler(ViewHandlerMixin, Controller):
     def default_traits_view(self):
         return View(VGroup(
                     VGroup(Item('channel',
@@ -133,7 +125,7 @@ class GaussianMixture1DViewHandler(Controller, ViewHandlerMixin):
                                                   background_color = "#ff9191")))
 
 @provides(IView)
-class GaussianMixture1DPluginView(GaussianMixture1DView, PluginViewMixin):
+class GaussianMixture1DPluginView(PluginViewMixin, GaussianMixture1DView):
     handler_factory = Callable(GaussianMixture1DViewHandler, transient = True)
     op = Instance(IOperation, fixed = True)
     subset = DelegatesTo('op', transient = True)

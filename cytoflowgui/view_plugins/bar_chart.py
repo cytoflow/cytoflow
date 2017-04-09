@@ -34,19 +34,20 @@ from cytoflowgui.subset import SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
-    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, StatisticViewHandlerMixin, PluginViewMixin
+    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin
         
-class BarChartHandler(Controller, ViewHandlerMixin, StatisticViewHandlerMixin):
+class BarChartHandler(ViewHandlerMixin, Controller):
     """
     docs
     """
     
     indices = Property(depends_on = "context.statistics, model.statistic, model.subset")
+    levels = Property(depends_on = "context.statistics, model.statistic")
 
     def default_traits_view(self):
         return View(VGroup(
                     VGroup(Item('statistic',
-                                editor=EnumEditor(name='context.statistics_names'),
+                                editor=EnumEditor(name='handler.statistics_names'),
                                 label = "Statistic"),
                            Item('variable',
                                 editor=EnumEditor(name='handler.indices'),
@@ -66,7 +67,7 @@ class BarChartHandler(Controller, ViewHandlerMixin, StatisticViewHandlerMixin):
                                                             extra_items = {"None" : ""}),
                                 label="Hue\nFacet"),
                            Item('error_statistic',
-                                editor=ExtendableEnumEditor(name='context.statistics_names',
+                                editor=ExtendableEnumEditor(name='handler.statistics_names',
                                                             extra_items = {"None" : ("", "")}),
                                 label = "Error\nStatistic"),
                              label = "Bar Chart",
@@ -90,9 +91,8 @@ class BarChartHandler(Controller, ViewHandlerMixin, StatisticViewHandlerMixin):
         
     # MAGIC: gets the value for the property indices
     def _get_indices(self):
-#         context = self.info.ui.context['context']
-        
-        if not (self.context and self.context.statistics and self.model and self.model.statistic[0]):
+        if not (self.context and self.context.statistics 
+                and self.model.statistic in self.context.statistics):
             return []
         
         stat = self.context.statistics[self.model.statistic]
@@ -111,6 +111,31 @@ class BarChartHandler(Controller, ViewHandlerMixin, StatisticViewHandlerMixin):
                 data.index = data.index.droplevel(name)
         
         return list(data.index.names)
+    
+    # MAGIC: gets the value for the property 'levels'
+    # returns a Dict(Str, pd.Series)
+    
+    def _get_levels(self):        
+        if not (self.context and self.context.statistics 
+                and self.model.statistic in self.context.statistics):
+            return []
+        
+        stat = self.context.statistics[self.model.statistic]
+        index = stat.index
+        
+        names = list(index.names)
+        for name in names:
+            unique_values = index.get_level_values(name).unique()
+            if len(unique_values) == 1:
+                index = index.droplevel(name)
+
+        names = list(index.names)
+        ret = {}
+        for name in names:
+            ret[name] = pd.Series(index.get_level_values(name)).sort_values()
+            ret[name] = pd.Series(ret[name].unique())
+            
+        return ret
     
 class BarChartPluginView(PluginViewMixin, BarChartView):
     handler_factory = Callable(BarChartHandler)

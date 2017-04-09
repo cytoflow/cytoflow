@@ -87,19 +87,19 @@ class WorkflowItem(HasStrictTraits):
     
     channels = List(Str, status = True)
     conditions = Dict(Str, pd.Series, status = True)
-    conditions_names = Property(depends_on = 'conditions')
+#     conditions_names = Property(depends_on = 'conditions')
     metadata = Dict(Str, Any, status = True)
     statistics = Dict(Tuple(Str, Str), pd.Series, status = True)
-    statistics_names = Property(depends_on = 'statistics')
+#     statistics_names = Property(depends_on = 'statistics')
     
     # we have to keep copies of these around to facilitate loading
     # and saving.
-    previous_channels = List(Str, status = True)
-    previous_conditions = Dict(Str, pd.Series, status = True)
-    previous_conditions_names = Property(depends_on = 'previous_conditions')
-    previous_metadata = Dict(Str, Any, status = True)
-    previous_statistics = Dict(Tuple(Str, Str), pd.Series, status = True)
-    previous_statistics_names = Property(depends_on = 'previous_statistics')
+#     previous_channels = List(Str, status = True)
+#     previous_conditions = Dict(Str, pd.Series, status = True)
+#     previous_conditions_names = Property(depends_on = 'previous_conditions')
+#     previous_metadata = Dict(Str, Any, status = True)
+#     previous_statistics = Dict(Tuple(Str, Str), pd.Series, status = True)
+#     previous_statistics_names = Property(depends_on = 'previous_statistics')
 
     # the IViews associated with this operation
     views = List(IView, copy = "ref")
@@ -183,33 +183,33 @@ class WorkflowItem(HasStrictTraits):
         else:
             return None
 
-    @cached_property
-    def _get_conditions_names(self):
-        if self.conditions:
-            return self.conditions.keys()
-        else:
-            return []
-        
-    @cached_property
-    def _get_statistics_names(self):
-        if self.statistics:
-            return self.statistics.keys()
-        else:
-            return []
-
-    @cached_property
-    def _get_previous_conditions_names(self):
-        if self.previous_conditions:
-            return self.previous_conditions.keys()
-        else:
-            return []
-        
-    @cached_property
-    def _get_previous_statistics_names(self):
-        if self.previous_statistics:
-            return self.previous_statistics.keys()
-        else:
-            return []
+#     @cached_property
+#     def _get_conditions_names(self):
+#         if self.conditions:
+#             return self.conditions.keys()
+#         else:
+#             return []
+#         
+#     @cached_property
+#     def _get_statistics_names(self):
+#         if self.statistics:
+#             return self.statistics.keys()
+#         else:
+#             return []
+# 
+#     @cached_property
+#     def _get_previous_conditions_names(self):
+#         if self.previous_conditions:
+#             return self.previous_conditions.keys()
+#         else:
+#             return []
+#         
+#     @cached_property
+#     def _get_previous_statistics_names(self):
+#         if self.previous_statistics:
+#             return self.previous_statistics.keys()
+#         else:
+#             return []
         
 #     @cached_property
 #     def _get_current_view_plot_names(self):
