@@ -44,7 +44,7 @@ from pyface.i_dialog import IDialog
 from pyface.api import Dialog, FileDialog, error, OK, confirm
 
 from pyface.qt import QtCore, QtGui
-# from pyface.constant import OK as PyfaceOK
+from pyface.constant import OK as PyfaceOK
 
 from pyface.ui.qt4.directory_dialog import DirectoryDialog as QtDirectoryDialog
 
@@ -458,12 +458,13 @@ class ExperimentDialogHandler(Controller):
             self._add_metadata(name, name + " (T/F)", Bool(condition = True))       
         
     def _on_remove_condition(self):
+        pass
         col = self.model.selected[0][1]
         if self.model.tubes[0].trait(col).condition == True:
             conf = confirm(None,
                            "Are you sure you want to remove condition \"{}\"?".format(col),
                            "Remove condition?")
-            if conf == OK:
+            if conf:
                 self._remove_metadata(col)
         else:
             error(None, 
@@ -481,7 +482,7 @@ class ExperimentDialogHandler(Controller):
         file_dialog.action = 'open files'
         file_dialog.open()
         
-        if file_dialog.return_code != OK:
+        if file_dialog.return_code != PyfaceOK:
             return
         
         new_tubes = []
@@ -551,7 +552,7 @@ class ExperimentDialogHandler(Controller):
         conf = confirm(None,
                        "Are you sure you want to remove the selected tube(s)?",
                        "Remove tubes?")
-        if conf == OK:
+        if conf:
             for (tube, _) in self.model.selected:
                 self.model.tubes.remove(tube)
                 
