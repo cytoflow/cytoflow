@@ -31,6 +31,9 @@ except:
 
 import sys, multiprocessing, os, logging, traceback, threading
 
+reload(sys)
+sys.setdefaultencoding('utf8')     # @UndefinedVariable
+
 from traits.etsconfig.api import ETSConfig
 ETSConfig.toolkit = 'qt4'
 
