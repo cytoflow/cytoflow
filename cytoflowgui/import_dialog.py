@@ -274,6 +274,7 @@ class ExperimentDialogModel(HasStrictTraits):
                 condition_trait = \
                     dtype_to_trait[condition_dtype](condition = True)
                 tube.add_trait(condition, condition_trait)
+                tube.conditions[condition] = op_tube.conditions[condition]
                 if not condition in self.tube_traits:
                     self.tube_traits[condition] = condition_trait
             tube.trait_set(**op_tube.conditions)

@@ -446,7 +446,7 @@ class Experiment(HasStrictTraits):
 
         if( any(True for k in conditions if k not in self.conditions) or \
             any(True for k in self.conditions if k not in conditions) ):
-            raise util.CytoflowError("Metadata for this should be {}"
+            raise util.CytoflowError("Metadata for this tube should be {}"
                                      .format(self.conditions.keys()))
             
         # add the conditions to tube's internal data frame.  specify the conditions
