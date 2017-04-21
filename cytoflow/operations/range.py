@@ -239,7 +239,12 @@ class RangeSelection(cytoflow.views.HistogramView):
     @on_trait_change('interactive', post_init = True)
     def _interactive(self):
         if self._ax and self.interactive:
-            self._cursor = Cursor(self._ax, horizOn=False, vertOn=True, color='blue')
+#             self._cursor = Cursor(self._ax, 
+#                                   horizOn=False, 
+#                                   vertOn=True, 
+#                                   color='blue', 
+#                                   useblit = True)
+            
             self._span = SpanSelector(self._ax, 
                                       onselect=self._onselect, 
                                       direction='horizontal',
