@@ -58,6 +58,7 @@ class _BleedthroughControl(HasTraits):
 class _TranslationControl(HasTraits):
     from_channel = Str
     to_channel = Str
+    file = File
 
 class TasbeHandler(OpHandlerMixin, Controller):
                 
