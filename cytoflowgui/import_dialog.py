@@ -41,7 +41,7 @@ from traitsui.api import UI, Group, View, Item, TableEditor, OKCancelButtons, \
 from traitsui.qt4.table_editor import TableEditor as TableEditorQt
 
 from pyface.i_dialog import IDialog
-from pyface.api import Dialog, FileDialog, error, OK, confirm
+from pyface.api import Dialog, FileDialog, error, OK, confirm, YES
 
 from pyface.qt import QtCore, QtGui
 from pyface.constant import OK as PyfaceOK
@@ -464,7 +464,7 @@ class ExperimentDialogHandler(Controller):
             conf = confirm(None,
                            "Are you sure you want to remove condition \"{}\"?".format(col),
                            "Remove condition?")
-            if conf:
+            if conf == YES:
                 self._remove_metadata(col)
         else:
             error(None, 
@@ -552,7 +552,7 @@ class ExperimentDialogHandler(Controller):
         conf = confirm(None,
                        "Are you sure you want to remove the selected tube(s)?",
                        "Remove tubes?")
-        if conf:
+        if conf == YES:
             for (tube, _) in self.model.selected:
                 self.model.tubes.remove(tube)
                 
