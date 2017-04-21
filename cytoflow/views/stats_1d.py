@@ -1,4 +1,5 @@
 #!/usr/bin/env python2.7
+# coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2016
 #

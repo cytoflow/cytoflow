@@ -1,3 +1,6 @@
+#!/usr/bin/env python2.7
+# coding: latin-1
+
 # (c) Massachusetts Institute of Technology 2015-2016
 #
 # This program is free software: you can redistribute it and/or modify

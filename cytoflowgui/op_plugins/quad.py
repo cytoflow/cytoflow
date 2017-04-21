@@ -1,4 +1,5 @@
 #!/usr/bin/env python2.7
+# coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2016
 #
@@ -128,7 +129,7 @@ class QuadPlugin(Plugin):
         return QuadPluginOp()
 
     def get_icon(self):
-        return ImageResource('quad')
+        return ImageResource(u'quád')
     
     @contributes_to(OP_PLUGIN_EXT)
     def get_plugin(self):

@@ -1,10 +1,5 @@
-'''
-Created on Feb 24, 2016
-
-@author: brian
-'''
-
 #!/usr/bin/env python2.7
+# coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2016
 #
@@ -20,6 +15,13 @@ Created on Feb 24, 2016
 # 
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+'''
+Created on Feb 24, 2016
+
+@author: brian
+'''
+
 
 from __future__ import division, absolute_import
 
