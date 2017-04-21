@@ -129,7 +129,7 @@ class QuadPlugin(Plugin):
         return QuadPluginOp()
 
     def get_icon(self):
-        return ImageResource(u'quád')
+        return ImageResource(u'quad')
     
     @contributes_to(OP_PLUGIN_EXT)
     def get_plugin(self):
