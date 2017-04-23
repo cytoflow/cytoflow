@@ -572,15 +572,9 @@ class RemoteWorkflow(HasStrictTraits):
                             self.exec_q.put((idx - 0.5, (wi, wi.estimate)))
 
                         self.exec_q.put((idx, (wi, wi.apply)))                            
-                        
-#                         self.workflow[0].changed = (Changed.ESTIMATE, )
-#                         self.workflow[0].changed = (Changed.OPERATION, (None, None))
 
                     for wi in self.workflow:
                         wi.lock.release()
-                        
-#                     if len(self.workflow) > 0:
-#                         self.workflow[0].changed = (Changed.OPERATION, (None, None))
     
                 elif msg == Msg.ADD_ITEMS:
                     (idx, new_item) = payload
@@ -700,6 +694,8 @@ class RemoteWorkflow(HasStrictTraits):
                 self.workflow[idx].next = self.workflow[idx + 1]
                 self.workflow[idx + 1].previous = self.workflow[idx]
                 
+                # invalidate following wi's
+                self.workflow[idx + 1].changed = (Changed.PREV_RESULT, None)                
             
     @on_trait_change('workflow:operation:+', post_init = True)
     def _operation_changed(self, obj, name, old, new):
