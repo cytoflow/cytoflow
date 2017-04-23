@@ -682,6 +682,9 @@ class RemoteWorkflow(HasStrictTraits):
                 
             if removed.next:
                 removed.next.previous = removed.previous
+                
+                # invalidate following wi's
+                removed.next.changed = (Changed.PREV_RESULT, None)
         
         # add new items to the linked list
         if event.added:
