@@ -350,7 +350,14 @@ class Workflow(HasStrictTraits):
         # add new items to the linked list
         if event.added:
             assert len(event.added) == 1
+
             if idx > 0:
+                # populate the new wi with metadata from the old one
+                self.workflow[idx].channels = list(self.workflow[idx - 1].channels)
+                self.workflow[idx].conditions = dict(self.workflow[idx - 1].conditions)
+                self.workflow[idx].metadata = dict(self.workflow[idx - 1].metadata)
+                self.workflow[idx].statistics = dict(self.workflow[idx - 1].statistics)
+                
                 self.workflow[idx - 1].next = self.workflow[idx]
                 self.workflow[idx].previous = self.workflow[idx - 1]
                 
