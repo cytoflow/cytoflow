@@ -11,6 +11,6 @@ pyface==5.1.0
 envisage==4.5.1
 nbformat==4.1.0
 python-dateutil==2.5.3
-statsmodels==0.6.1
+statsmodels==0.8.0
 faulthandler==2.4
 qt==4.8.7

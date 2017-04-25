@@ -75,7 +75,7 @@ setup(
                         'envisage>=4.5',
                         'nbformat>=4.0',
                         'python-dateutil>=2.5.2',
-                        'statsmodels>=0.6.1',
+                        'statsmodels>=0.8.0',
                         'faulthandler>=2.4',
                         'fcsparser>=0.1.1',] \
                 if not on_rtd else None,
