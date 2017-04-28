@@ -128,6 +128,7 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         self.move_y = None
         self.resize_width = None
         self.resize_height = None
+        self._resize_timer = None
         self.send_event = threading.Event()
         
         self.setAttribute(QtCore.Qt.WA_OpaquePaintEvent)    
@@ -177,12 +178,12 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
             self.send_event.wait()
             self.send_event.clear()
             
-            if self.move_x:
+            if self.move_x is not None:
                 msg = (Msg.MOUSE_MOVE_EVENT, (self.move_x, self.move_y))
                 self.child_conn.send(msg)
                 self.move_x = self.move_y = None
                 
-            if self.resize_width:
+            if self.resize_width is not None:
                 logging.debug('FigureCanvasQTAggLocal.send_to_remote: {}'
                               .format((Msg.RESIZE_EVENT, self.resize_width, self.resize_height)))
                 msg = (Msg.RESIZE_EVENT, (self.resize_width, self.resize_height))
@@ -249,20 +250,37 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         h = event.size().height()
                 
         logging.debug("FigureCanvasQTAggLocal.resizeEvent : {}" 
-                      .format((w, h)))
+                      .format((w, h)))            
         
         dpival = self.figure.dpi
         winch = w / dpival
         hinch = h / dpival
         
-        self.resize_width = winch
-        self.resize_height = hinch
-
-        self.send_event.set()
-        
         self.figure.set_size_inches(winch, hinch)
         FigureCanvasAgg.resize_event(self)
         QtGui.QWidget.resizeEvent(self, event)
+        
+        # redrawing the plot window is a heavyweight operation, and we really
+        # don't want to do it for every resize event.  so, upon a resize event,
+        # start a 0.2 second timer. if there's another resize event before
+        # it fires, cancel the timer and restart it.  otherwise, after 0.2
+        # seconds, make the window redraw.  this minimizes redrawing and
+        # makes the user experience much better, even though it's a stupid
+        # hack because i can't (easily) stop the widget from recieveing
+        # resize events during a resize.
+        
+        if self._resize_timer is not None:
+            self._resize_timer.cancel()
+            self._resize_timer = None
+            
+        def fire(self, width, height):
+            self.resize_width = width
+            self.resize_height = height
+            self.send_event.set()
+            self._resize_timer = None
+            
+        self._resize_timer = threading.Timer(0.2, fire, (self, winch, hinch))
+        self._resize_timer.start()
 
         
     def paintEvent(self, e):
@@ -319,11 +337,12 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
     where someone is calling pyplot.plot()
    """
 
-    def __init__(self, parent_conn, process_events, figure):
+    def __init__(self, parent_conn, process_events, plot_lock, figure):
         FigureCanvasAgg.__init__(self, figure)
         
         self.parent_conn = parent_conn
         self.process_events = process_events
+        self.plot_lock = plot_lock
         
         self.buffer_lock = threading.Lock()
         self.buffer = None
@@ -364,30 +383,36 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
                 
             try:              
                 if msg == Msg.RESIZE_EVENT:
-                    (winch, hinch) = payload
-                    self.figure.set_size_inches(winch, hinch)
-                    FigureCanvasAgg.resize_event(self)
-                    self.draw()
+                    with self.plot_lock:
+                        (winch, hinch) = payload
+                        self.figure.set_size_inches(winch, hinch)
+                        FigureCanvasAgg.resize_event(self)
+                        self.draw()
                 elif msg == Msg.MOUSE_PRESS_EVENT:
                     (x, y, button) = payload
                     if self.process_events.is_set():
-                        FigureCanvasAgg.button_press_event(self, x, y, button)
+                        with self.plot_lock:
+                            FigureCanvasAgg.button_press_event(self, x, y, button)
                 elif msg == Msg.MOUSE_DOUBLE_CLICK_EVENT:
                     (x, y, button) = payload
                     if self.process_events.is_set():
-                        FigureCanvasAgg.button_press_event(self, x, y, button, dblclick = True)
+                        with self.plot_lock:
+                            FigureCanvasAgg.button_press_event(self, x, y, button, dblclick = True)
                 elif msg == Msg.MOUSE_RELEASE_EVENT:
                     (x, y, button) = payload
                     if self.process_events.is_set():
-                        FigureCanvasAgg.button_release_event(self, x, y, button)
+                        with self.plot_lock:
+                            FigureCanvasAgg.button_release_event(self, x, y, button)
                 elif msg == Msg.MOUSE_MOVE_EVENT:
                     (x, y) = payload
                     if self.process_events.is_set():
-                        FigureCanvasAgg.motion_notify_event(self, x, y)
+                        with self.plot_lock:
+                            FigureCanvasAgg.motion_notify_event(self, x, y)
                 elif msg == Msg.PRINT:
                     (args, kwargs) = payload
                     if self.process_events.is_set():
-                        FigureCanvasAgg.print_figure(self, *args, **kwargs)
+                        with self.plot_lock:
+                            FigureCanvasAgg.print_figure(self, *args, **kwargs)
                 else:
                     raise RuntimeError("FigureCanvasAggRemote received bad message {}".format(msg))
             except Exception:
@@ -477,6 +502,9 @@ def new_figure_manager(num, *args, **kwargs):
 
     # and the threading.Event for turning events on and off
     process_events = kwargs.pop('process_events')
+    
+    # and the plot lock
+    plot_lock = kwargs.pop('plot_lock')
 
     # make a new figure
     FigureClass = kwargs.pop('FigureClass', Figure)
@@ -484,7 +512,7 @@ def new_figure_manager(num, *args, **kwargs):
  
     # the canvas is a singleton.
     if not remote_canvas:
-        remote_canvas = FigureCanvasAggRemote(parent_conn, process_events, new_fig)
+        remote_canvas = FigureCanvasAggRemote(parent_conn, process_events, plot_lock, new_fig)
     else:         
         old_fig = remote_canvas.figure
         new_fig.set_size_inches(old_fig.get_figwidth(), 

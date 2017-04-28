@@ -514,10 +514,11 @@ class RemoteWorkflow(HasStrictTraits):
         self.plot_lock = threading.Lock()
         
         # configure matplotlib backend to use the pipe
-        plt.new_figure_manager = lambda num, parent_conn = parent_mpl_conn, process_events = self.matplotlib_events, *args, **kwargs: \
+        plt.new_figure_manager = lambda num, parent_conn = parent_mpl_conn, process_events = self.matplotlib_events, plot_lock = self.plot_lock, *args, **kwargs: \
                                     cytoflowgui.matplotlib_backend.new_figure_manager(num, 
                                                                                       parent_conn = parent_conn, 
-                                                                                      process_events = process_events, 
+                                                                                      process_events = process_events,
+                                                                                      plot_lock = plot_lock, 
                                                                                       *args, 
                                                                                       **kwargs)
         
