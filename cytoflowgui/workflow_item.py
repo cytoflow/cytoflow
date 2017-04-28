@@ -287,12 +287,6 @@ class RemoteWorkflowItem(WorkflowItem):
                 self.current_view_plot_names = plot_names
         else:
             self.current_view_plot_names = []
-            
-#         print self.current_plot
-#         print self.current_view_plot_names
-#             
-#         if self.current_plot not in self.current_view_plot_names:
-#             self.current_plot = None
         
     def plot(self):              
         logging.debug("WorkflowItem.plot :: {}".format((self)))

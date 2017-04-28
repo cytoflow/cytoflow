@@ -540,10 +540,11 @@ class RemoteWorkflow(HasStrictTraits):
             try:
                 _, (wi, fn) = self.exec_q.get()
                 with wi.lock:
-                    ret = fn()
-                if not ret:  # if there was a problem, clear the queue
-                    while not self.exec_q.empty():
-                        self.exec_q.get()
+                    fn()
+#                     ret = fn()
+#                 if not ret:  # if there was a problem, clear the queue
+#                     while not self.exec_q.empty():
+#                         self.exec_q.get()
             except Exception:
                 log_exception()
 
