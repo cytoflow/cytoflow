@@ -26,7 +26,8 @@ import warnings
 from traitsui.api import (View, Item, Controller, ButtonEditor, CheckListEditor,
                           VGroup)
 from envisage.api import Plugin, contributes_to
-from traits.api import (provides, Callable, List, Str, File, on_trait_change)
+from traits.api import (provides, Callable, List, Str, File, on_trait_change,
+                        Property)
 from pyface.api import ImageResource
 
 import cytoflow.utility as util
@@ -37,7 +38,7 @@ from cytoflow.views.i_selectionview import IView
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
 from cytoflowgui.color_text_editor import ColorTextEditor
-from cytoflowgui.subset import SubsetListEditor
+from cytoflowgui.subset import ISubset, SubsetListEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
 from cytoflowgui.workflow import Changed
 
@@ -73,6 +74,22 @@ class AutofluorescencePluginOp(PluginOpMixin, AutofluorescenceOp):
     @on_trait_change('channels', post_init = True)
     def _channels_changed(self):
         self.changed = (Changed.ESTIMATE, ('channels', self.channels))
+        
+    
+    # bits to support the subset editor
+    
+    subset_list = List(ISubset, estimate = True)    
+    subset = Property(Str, depends_on = "subset_list.str")
+        
+    # MAGIC - returns the value of the "subset" Property, above
+    def _get_subset(self):
+        return " and ".join([subset.str for subset in self.subset_list if subset.str])
+    
+    @on_trait_change('subset_list.str', post_init = True)
+    def _subset_changed(self, obj, name, old, new):
+        self.changed = (Changed.ESTIMATE, ('subset_list', self.subset_list))
+
+  
     
     def default_view(self, **kwargs):
         return AutofluorescencePluginView(op = self, **kwargs)

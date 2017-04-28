@@ -28,7 +28,7 @@ from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor,
                          CheckListEditor, ButtonEditor
 from envisage.api import Plugin, contributes_to
 from traits.api import (provides, Callable, List, Str, Dict, Any, Instance,
-                        DelegatesTo)
+                        DelegatesTo, Property, on_trait_change)
 from pyface.api import ImageResource
 
 import cytoflow.utility as util
@@ -39,7 +39,7 @@ from cytoflow.views.i_selectionview import IView
 
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
-from cytoflowgui.subset import SubsetListEditor
+from cytoflowgui.subset import ISubset, SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
 from cytoflowgui.workflow import Changed
@@ -90,6 +90,19 @@ class GaussianMixture2DPluginOp(PluginOpMixin, GaussianMixture2DOp):
     by = List(Str, estimate = True)
     
     _gmms = Dict(Any, Instance(mixture.GaussianMixture), transient = True)
+    
+    # bits to support the subset editor
+    
+    subset_list = List(ISubset, estimate = True)    
+    subset = Property(Str, depends_on = "subset_list.str")
+        
+    # MAGIC - returns the value of the "subset" Property, above
+    def _get_subset(self):
+        return " and ".join([subset.str for subset in self.subset_list if subset.str])
+    
+    @on_trait_change('subset_list.str', post_init = True)
+    def _subset_changed(self, obj, name, old, new):
+        self.changed = (Changed.ESTIMATE, ('subset_list', self.subset_list))
 
     def default_view(self, **kwargs):
         return GaussianMixture2DPluginView(op = self, **kwargs)

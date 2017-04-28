@@ -28,7 +28,8 @@ from traitsui.api import View, Item, EnumEditor, Controller, VGroup, \
                          ButtonEditor, HGroup, InstanceEditor
 from envisage.api import Plugin, contributes_to
 from traits.api import (provides, Callable, Tuple, List, Str, HasTraits,
-                        File, Event, Dict, on_trait_change, Bool, Constant)
+                        File, Event, Dict, on_trait_change, Bool, Constant,
+                        Property)
 from pyface.api import ImageResource
 
 import cytoflow.utility as util
@@ -38,7 +39,7 @@ from cytoflow.views.i_selectionview import IView
 
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
-from cytoflowgui.subset import SubsetListEditor
+from cytoflowgui.subset import ISubset, SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
 from cytoflowgui.vertical_list_editor import VerticalListEditor
@@ -115,6 +116,19 @@ class ColorTranslationPluginOp(PluginOpMixin, ColorTranslationOp):
     @on_trait_change('controls_list_items, controls_list:+', post_init = True)
     def _controls_changed(self):
         self.changed = (Changed.ESTIMATE, ('controls_list', self.controls_list))
+
+    # bits to support the subset editor
+    
+    subset_list = List(ISubset, estimate = True)    
+    subset = Property(Str, depends_on = "subset_list.str")
+        
+    # MAGIC - returns the value of the "subset" Property, above
+    def _get_subset(self):
+        return " and ".join([subset.str for subset in self.subset_list if subset.str])
+    
+    @on_trait_change('subset_list.str', post_init = True)
+    def _subset_changed(self, obj, name, old, new):
+        self.changed = (Changed.ESTIMATE, ('subset_list', self.subset_list))
     
     def default_view(self, **kwargs):
         return ColorTranslationPluginView(op = self, **kwargs)

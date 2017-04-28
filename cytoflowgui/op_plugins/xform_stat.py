@@ -160,6 +160,20 @@ class TransformStatisticPluginOp(PluginOpMixin, TransformStatisticOp):
     # functions aren't picklable, so send the name instead
     function = Callable(transient = True)
     
+    # bits to support the subset editor
+    
+    subset_list = List(ISubset)    
+    subset = Property(Str, depends_on = "subset_list.str")
+        
+    # MAGIC - returns the value of the "subset" Property, above
+    def _get_subset(self):
+        return " and ".join([subset.str for subset in self.subset_list if subset.str])
+    
+    @on_trait_change('subset_list.str', post_init = True)
+    def _subset_changed(self, obj, name, old, new):
+        self.changed = (Changed.OPERATION, ('subset_list', self.subset_list))
+    
+    
     def apply(self, experiment):
         if not self.statistic_name:
             raise util.CytoflowOpError("Transform function not set")

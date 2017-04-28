@@ -28,15 +28,16 @@ import scipy.stats
 from traitsui.api import (View, Item, EnumEditor, Controller, VGroup,
                           CheckListEditor, TextEditor)
 from envisage.api import Plugin, contributes_to
-from traits.api import (provides, Callable)
+from traits.api import (provides, Callable, List, Str, Property, on_trait_change)
 from pyface.api import ImageResource
 
 from cytoflow.operations.channel_stat import ChannelStatisticOp
 import cytoflow.utility as util
 
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
-from cytoflowgui.subset import SubsetListEditor
+from cytoflowgui.subset import ISubset, SubsetListEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
+from cytoflowgui.workflow import Changed
 
 mean_95ci = lambda x: util.ci(x, np.mean, boots = 100)
 geomean_95ci = lambda x: util.ci(x, util.geom_mean, boots = 100)
@@ -82,6 +83,19 @@ class ChannelStatisticPluginOp(PluginOpMixin, ChannelStatisticOp):
     # functions aren't picklable, so make this one transient 
     # and send the name instead
     function = Callable(transient = True)
+    
+    # bits to support the subset editor
+    
+    subset_list = List(ISubset)    
+    subset = Property(Str, depends_on = "subset_list.str")
+        
+    # MAGIC - returns the value of the "subset" Property, above
+    def _get_subset(self):
+        return " and ".join([subset.str for subset in self.subset_list if subset.str])
+    
+    @on_trait_change('subset_list.str', post_init = True)
+    def _subset_changed(self, obj, name, old, new):
+        self.changed = (Changed.OPERATION, ('subset_list', self.subset_list))
 
     def apply(self, experiment):
         if not self.statistic_name:
