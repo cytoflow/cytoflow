@@ -45,8 +45,7 @@ from cytoflowgui.workflow import Changed
 class AutofluorescenceHandler(OpHandlerMixin, Controller):
     
     def default_traits_view(self):
-        return View(Item('blank_file',
-                         width = -125),
+        return View(Item('blank_file'),
                     Item('channels',
                          editor = CheckListEditor(cols = 2,
                                                   name = 'context.previous.channels'),
