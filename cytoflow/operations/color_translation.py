@@ -26,11 +26,15 @@ from __future__ import division, absolute_import
 
 import math
 
-from traits.api import (HasStrictTraits, Str, File, Dict, Any,
+from traits.api import (HasStrictTraits, Str, File, Dict, Any, Callable,
                         Instance, Tuple, Bool, Constant, provides)
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 import sklearn.mixture
+import sklearn.linear_model
+import scipy.optimize
+import scipy.interpolate
 
 import cytoflow.views
 import cytoflow.utility as util
@@ -103,6 +107,7 @@ class ColorTranslationOp(HasStrictTraits):
     translation = util.Removed(err_string = "'translation' is removed; the same info is found in 'controls'", warning = True)
     controls = Dict(Tuple(Str, Str), File)
     mixture_model = Bool(False)
+    linear_model = Bool(False)
 
     # The regression coefficients determined by `estimate()`, used to map 
     # colors between channels.  The keys are tuples of (*from-channel*,
@@ -111,6 +116,7 @@ class ColorTranslationOp(HasStrictTraits):
     # translation (determined by `estimate()`). 
     # TODO - why can't i make the value List(Float)?
     _coefficients = Dict(Tuple(Str, Str), Any, transient = True)
+    _trans_fn = Dict(Tuple(Str, Str), Callable, transient = True)
 
     def estimate(self, experiment, subset = None): 
         """
@@ -172,18 +178,23 @@ class ColorTranslationOp(HasStrictTraits):
                 tubes[tube_file] = tube_data
 
                 
-            data = tubes[tube_file][[from_channel, to_channel]]
+            data = tubes[tube_file][[from_channel, to_channel]].copy()
             data = data[data[from_channel] > 0]
             data = data[data[to_channel] > 0]
-            _ = data.reset_index(drop = True, inplace = True)
 
+            _ = data.reset_index(drop = True, inplace = True)
+            
+            data[from_channel] = np.log10(data[from_channel])
+            data[to_channel] = np.log10(data[to_channel])
+            data.sort(columns = from_channel, inplace = True)
+            
             if self.mixture_model:    
-                gmm = sklearn.mixture.GaussianMixture(n_components=2)
-                fit = gmm.fit(np.log10(data[from_channel][:, np.newaxis]))
-    
+                gmm = sklearn.mixture.BayesianGaussianMixture(n_components=2)
+                fit = gmm.fit(data)
+
                 # pick the component with the maximum mean
-                mu_idx = 0 if fit.means_[0][0] > fit.means_[1][0] else 1
-                weights = [x[mu_idx] for x in fit.predict_proba(np.log10(data[from_channel][:, np.newaxis]))]
+                idx = 0 if fit.means_[0][0] > fit.means_[1][0] else 1
+                weights = [x[idx] for x in fit.predict_proba(data)]
             else:
                 weights = [1] * len(data.index)
             
@@ -206,13 +217,27 @@ class ColorTranslationOp(HasStrictTraits):
             # coefficients that are close to (but not quite the same as) the
             # TASBE website, and WAY off the color model I have in the same
             # directory as my test data.
-            
-            lr = np.polyfit(np.log10(data[from_channel]), 
-                            np.log10(data[to_channel]), 
+             
+            lr = np.polyfit(data[from_channel], 
+                            data[to_channel], 
                             deg = 1, 
                             w = weights)
             
+            # remember, these (linear) coefficients came from logspace, so 
+            # if the relationship in log10 space is Y = aX + b, then in
+            # linear space the relationship is x = 10**X, y = 10**Y,
+            # and y = (10**b) * x ^ a
+            
+            # also remember that the result of np.polyfit is a list of
+            # coefficients with the highest power first!  so if we
+            # solve y=ax + b, coeff #0 is a and coeff #1 is b
+                 
+            a = lr[0]
+            b = 10 ** lr[1]
+            trans_fn = lambda x, a=a, b=b: b * np.power(x, a)
+  
             self._coefficients[(from_channel, to_channel)] = lr
+            self._trans_fn[(from_channel, to_channel)] = trans_fn
 
 
     def apply(self, experiment):
@@ -234,8 +259,8 @@ class ColorTranslationOp(HasStrictTraits):
         if not self.controls:
             raise util.CytoflowOpError("No controls specified")
         
-        if not self._coefficients:
-            raise util.CytoflowOpError("Coefficients aren't set. "
+        if not self._trans_fn:
+            raise util.CytoflowOpError("Transfer functions aren't set. "
                                   "Did you call estimate()?")
             
         translation = {x[0] : x[1] for x in self.controls.keys()}
@@ -248,20 +273,7 @@ class ColorTranslationOp(HasStrictTraits):
                        
         new_experiment = experiment.clone()
         for from_channel, to_channel in translation.iteritems():
-            coeff = self._coefficients[(from_channel, to_channel)]
-            
-            # remember, these (linear) coefficients came from logspace, so 
-            # if the relationship in log10 space is Y = aX + b, then in
-            # linear space the relationship is x = 10**X, y = 10**Y,
-            # and y = (10**b) * x ^ a
-            
-            # also remember that the result of np.polyfit is a list of
-            # coefficients with the highest power first!  so if we
-            # solve y=ax + b, coeff #0 is a and coeff #1 is b
-            
-            a = coeff[0]
-            b = 10 ** coeff[1]
-            trans_fn = lambda x, a=a, b=b: b * np.power(x, a)
+            trans_fn = self._trans_fn[(from_channel, to_channel)]
                         
             new_experiment[from_channel] = trans_fn(experiment[from_channel])
             new_experiment.metadata[from_channel]['channel_translation_fn'] = trans_fn
@@ -316,8 +328,8 @@ class ColorTranslationDiagnostic(HasStrictTraits):
         if not self.op.controls:
             raise util.CytoflowViewError("No controls specified")
         
-        if not self.op._coefficients:
-            raise util.CytoflowViewError("Coefficients aren't set. "
+        if not self.op._trans_fn:
+            raise util.CytoflowViewError("Transfer functions aren't set. "
                                   "Did you call estimate()?")
 
         tubes = {}
@@ -387,19 +399,14 @@ class ColorTranslationDiagnostic(HasStrictTraits):
                 
                 gmm = sklearn.mixture.GaussianMixture(n_components=2)
                 fit = gmm.fit(np.log10(data[from_channel][:, np.newaxis]))
-    
-                mu_idx = 0 if fit.means_[0][0] > fit.means_[1][0] else 1
-                weights = [x[mu_idx] for x in fit.predict_proba(np.log10(data[from_channel][:, np.newaxis]))]
-                
+                    
                 plt.axvline(10 ** fit.means_[0][0], color = 'r')
                 plt.axvline(10 ** fit.means_[1][0], color = 'r')
-            else:
-                weights = [1] * len(data.index)
                 
-            lr = np.polyfit(np.log10(data[from_channel]), 
-                            np.log10(data[to_channel]), 
-                            deg = 1, 
-                            w = weights)
+#             lr = np.polyfit(np.log10(data[from_channel]), 
+#                             np.log10(data[to_channel]), 
+#                             deg = 1, 
+#                             w = weights)
             
             num_cols = 2 if self.op.mixture_model else 1
             plt.subplot(num_plots, num_cols, plt_idx * num_cols + 1)
@@ -419,8 +426,10 @@ class ColorTranslationDiagnostic(HasStrictTraits):
                         **kwargs)          
 
             xs = np.logspace(1, math.log(from_range, 2), num = 256, base = 2)
-            p = np.poly1d(lr)
-            plt.plot(xs, 10 ** p(np.log10(xs)), "--g")
+            trans_fn = self.op._trans_fn[(from_channel, to_channel)]
+#             p = np.poly1d(lr)
+            plt.plot(xs, trans_fn(xs), "--g")
+            
             
             plt_idx = plt_idx + 1
         
