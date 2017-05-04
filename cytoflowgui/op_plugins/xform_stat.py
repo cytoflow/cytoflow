@@ -67,13 +67,6 @@ class TransformStatisticHandler(OpHandlerMixin, Controller):
                                     "model.statistic, "
                                     "model.subset")
     levels = Property(depends_on = "context.previous.statistics, model.statistic")    
-    
-#     def _get_prev_statistics(self):
-#         context = self.info.ui.context['context']
-#         if context and context.previous:
-#             return context.previous_statistics.keys()
-#         else:
-#             return []
 
     # MAGIC: gets the value for the property indices
     def _get_indices(self):        
@@ -115,7 +108,7 @@ class TransformStatisticHandler(OpHandlerMixin, Controller):
                 and self.model.statistic in self.context.previous.statistics):
             return []
         
-        stat = self.context.previous_statistics[self.model.statistic]
+        stat = self.context.previous.statistics[self.model.statistic]
         index = stat.index
         
         names = list(index.names)
