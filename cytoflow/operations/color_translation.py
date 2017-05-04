@@ -186,7 +186,6 @@ class ColorTranslationOp(HasStrictTraits):
             
             data[from_channel] = np.log10(data[from_channel])
             data[to_channel] = np.log10(data[to_channel])
-            data.sort(columns = from_channel, inplace = True)
             
             if self.mixture_model:    
                 gmm = sklearn.mixture.BayesianGaussianMixture(n_components=2)
