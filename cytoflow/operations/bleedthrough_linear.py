@@ -26,11 +26,12 @@ from __future__ import division, absolute_import
 
 import os, math
 
-from traits.api import HasStrictTraits, Str, CStr, File, Dict, Instance, \
+from traits.api import HasStrictTraits, Str, File, Dict, Instance, \
                        Constant, Tuple, Float, provides
     
 import numpy as np
 import matplotlib.pyplot as plt
+import scipy.optimize
 
 import cytoflow.views
 import cytoflow.utility as util
@@ -170,23 +171,26 @@ class BleedthroughLinearOp(HasStrictTraits):
                 # sometimes some of the data is off the edge of the
                 # plot, and this screws up a linear regression
                 
-                from_min = np.min(tube_data[from_channel]) * 1.05
-                from_max = np.max(tube_data[from_channel]) * 0.95
+                from_min = np.min(tube_data[from_channel]) * 1.025
+                from_max = np.max(tube_data[from_channel]) * 0.975
                 tube_data = tube_data[tube_data[from_channel] > from_min]
                 tube_data = tube_data[tube_data[from_channel] < from_max]
                 
-                to_min = np.min(tube_data[to_channel]) * 1.05
-                to_max = np.max(tube_data[to_channel]) * 0.95
+                to_min = np.min(tube_data[to_channel]) * 1.025
+                to_max = np.max(tube_data[to_channel]) * 0.975
                 tube_data = tube_data[tube_data[to_channel] > to_min]
                 tube_data = tube_data[tube_data[to_channel] < to_max]
                 
                 tube_data.reset_index(drop = True, inplace = True)
-                
-                lr = np.polyfit(tube_data[from_channel],
-                                tube_data[to_channel],
-                                deg = 1)
-                
-                self.spillover[(from_channel, to_channel)] = lr[0]
+                 
+                f = lambda x, k: x * k
+                 
+                popt, _ = scipy.optimize.curve_fit(f,
+                                                   tube_data[from_channel],
+                                                   tube_data[to_channel],
+                                                   0)
+                 
+                self.spillover[(from_channel, to_channel)] = popt[0]
                 
     def apply(self, experiment):
         """Applies the bleedthrough correction to an experiment.
