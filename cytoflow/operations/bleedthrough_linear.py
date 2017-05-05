@@ -162,24 +162,24 @@ class BleedthroughLinearOp(HasStrictTraits):
             # polyfit requires sorted data
             tube_data.sort_values(channel, inplace = True)
 
+            from_channel = channel
+            
+            # sometimes some of the data is off the edge of the
+            # plot, and this screws up a linear regression
+            
+            from_min = np.min(tube_data[from_channel]) * 1.025
+            from_max = np.max(tube_data[from_channel]) * 0.975
+            tube_data[from_channel] = \
+                tube_data[from_channel].clip(from_min, from_max)
             for to_channel in channels:
-                from_channel = channel
                 
                 if from_channel == to_channel:
                     continue
                 
-                # sometimes some of the data is off the edge of the
-                # plot, and this screws up a linear regression
-                
-                from_min = np.min(tube_data[from_channel]) * 1.025
-                from_max = np.max(tube_data[from_channel]) * 0.975
-                tube_data = tube_data[tube_data[from_channel] > from_min]
-                tube_data = tube_data[tube_data[from_channel] < from_max]
-                
                 to_min = np.min(tube_data[to_channel]) * 1.025
                 to_max = np.max(tube_data[to_channel]) * 0.975
-                tube_data = tube_data[tube_data[to_channel] > to_min]
-                tube_data = tube_data[tube_data[to_channel] < to_max]
+                tube_data[to_channel] = \
+                    tube_data[to_channel].clip(to_min, to_max)
                 
                 tube_data.reset_index(drop = True, inplace = True)
                  
