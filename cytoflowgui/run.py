@@ -201,7 +201,7 @@ def run_gui():
                   ColorTranslationPlugin(),
                   AutofluorescencePlugin(),
                   BeadCalibrationPlugin(),
-                  BleedthroughPiecewisePlugin(),
+#                   BleedthroughPiecewisePlugin(),
                   BleedthroughLinearPlugin(),
                   GaussianMixture2DPlugin(),
                   GaussianMixture1DPlugin(),

@@ -28,7 +28,7 @@ import math
 from warnings import warn
 
 from traits.api import (HasStrictTraits, Str, File, Dict, Python,
-                        Instance, Int, List, Constant, provides)
+                        Instance, Int, List, Constant, provides, Bool)
 import numpy as np
 import scipy.interpolate
 import scipy.optimize
@@ -45,6 +45,8 @@ from .import_op import Tube, ImportOp, check_tube
 @provides(IOperation)
 class BleedthroughPiecewiseOp(HasStrictTraits):
     """
+    *THIS OPERATION IS DEPRECATED.*
+    
     Apply bleedthrough correction to a set of fluorescence channels.
     
     This is not a traditional bleedthrough matrix-based compensation; it uses
@@ -60,6 +62,11 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
     call `estimate()` to parameterize the operation; check that the bleedthrough 
     plots look good with `default_view().plot()`; and then `apply()` to an 
     Experiment.
+    
+    *THIS OPERATION IS DEPRECATED AND WILL BE REMOVED IN A FUTURE RELEASE. TO
+    USE IT, SET `ignore_deprecated` TO `True`.  IF YOU HAVE A USE CASE WHERE
+    THIS WORKS BETTER THAN THE LINEAR BLEEDTHROUGH CORRECTION, PLEASE EMAIL
+    ME OR FILE A BUG.*
     
     Attributes
     ----------
@@ -77,6 +84,8 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
         
     mesh_size : Int (default = 32)
         The size of each axis in the mesh used to interpolate corrected values.
+        
+    ignore_deprecated : Bool (default = False)
         
     Metadata
     --------
@@ -136,6 +145,8 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
     controls = Dict(Str, File)
     num_knots = Int(12)
     mesh_size = Int(32)
+    
+    ignore_deprecated = Bool(False)
 
     _splines = Dict(Str, Dict(Str, Python), transient = True)
     _interpolators = Dict(Str, Python, transient = True)
@@ -149,6 +160,12 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
         """
         Estimate the bleedthrough from the single-channel controls in `controls`
         """
+        
+        if not self.ignore_deprecated:
+            raise util.CytoflowOpError("BleedthroughPiecewiseOp is DEPRECATED. "
+                                       "To use it anyway, set ignore_deprected "
+                                       "to True.")
+        
         if not experiment:
             raise util.CytoflowOpError("No experiment specified")
         
@@ -282,6 +299,12 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
         -------
             a new experiment with the bleedthrough subtracted out.
         """
+        
+        if not self.ignore_deprecated:
+            raise util.CytoflowOpError("BleedthroughPiecewiseOp is DEPRECATED. "
+                                       "To use it anyway, set ignore_deprected "
+                                       "to True.")
+            
         if not experiment:
             raise util.CytoflowOpError("No experiment specified")
         
@@ -331,6 +354,11 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
         -------
             IView : An IView, call plot() to see the diagnostic plots
         """
+        
+        if not self.ignore_deprecated:
+            raise util.CytoflowOpError("BleedthroughPiecewiseOp is DEPRECATED. "
+                                       "To use it anyway, set ignore_deprected "
+                                       "to True.")
         
         if set(self.controls.keys()) != set(self._splines.keys()):
             raise util.CytoflowOpError("Must have both the controls and bleedthrough to plot")
