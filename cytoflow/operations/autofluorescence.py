@@ -127,6 +127,12 @@ class AutofluorescenceOp(HasStrictTraits):
                                       .format(subset))
         
         for channel in self.channels:
+            channel_min = blank_exp[channel].quantile(0.025)
+            channel_max = blank_exp[channel].quantile(0.975)
+            
+            blank_exp[channel] = blank_exp[channel].clip(channel_min,
+                                                         channel_max)
+            
             self._af_median[channel] = np.median(blank_exp[channel])
             self._af_stdev[channel] = np.std(blank_exp[channel])    
                 
