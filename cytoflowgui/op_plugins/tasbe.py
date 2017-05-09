@@ -37,7 +37,7 @@ import cytoflow.utility as util
 
 from cytoflow.operations import IOperation
 from cytoflow.operations.autofluorescence import AutofluorescenceOp
-from cytoflow.operations.bleedthrough_piecewise import BleedthroughPiecewiseOp
+from cytoflow.operations.bleedthrough_linear import BleedthroughLinearOp
 from cytoflow.operations.bead_calibration import BeadCalibrationOp
 from cytoflow.operations.color_translation import ColorTranslationOp
 from cytoflow.views.i_selectionview import IView
@@ -177,7 +177,7 @@ class TasbePluginOp(PluginOpMixin):
     mixture_model = Bool(False, estimate = True)
         
     _af_op = Instance(AutofluorescenceOp, (), transient = True)
-    _bleedthrough_op = Instance(BleedthroughPiecewiseOp, (), transient = True)
+    _bleedthrough_op = Instance(BleedthroughLinearOp, (), transient = True)
     _bead_calibration_op = Instance(BeadCalibrationOp, (), transient = True)
     _color_translation_op = Instance(ColorTranslationOp, (), transient = True)
     
@@ -290,7 +290,7 @@ class TasbePluginOp(PluginOpMixin):
         
     def clear_estimate(self):
         self._af_op = AutofluorescenceOp()
-        self._bleedthrough_op = BleedthroughPiecewiseOp()
+        self._bleedthrough_op = BleedthroughLinearOp()
         self._bead_calibration_op = BeadCalibrationOp()
         self._color_translation_op = ColorTranslationOp()
         
