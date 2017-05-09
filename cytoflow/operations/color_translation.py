@@ -263,6 +263,7 @@ class ColorTranslationOp(HasStrictTraits):
                                   "Did you call estimate()?")
             
         translation = {x[0] : x[1] for x in self.controls.keys()}
+        from_channels = [x[0] for x in self.controls.keys()]
 
         for key, val in translation.iteritems():
             if (key, val) not in self._coefficients:
@@ -271,6 +272,11 @@ class ColorTranslationOp(HasStrictTraits):
                                       .format(key, val))
                        
         new_experiment = experiment.clone()
+        
+        for channel in from_channels:
+            new_experiment.data = \
+                new_experiment.data[new_experiment.data[channel] > 0]
+        
         for from_channel, to_channel in translation.iteritems():
             trans_fn = self._trans_fn[(from_channel, to_channel)]
                         
