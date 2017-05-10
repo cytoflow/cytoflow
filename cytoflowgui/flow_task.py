@@ -250,7 +250,7 @@ class FlowTask(Task):
 
         try:
             new_workflow = unpickler.load()
-        except TraitError:
+        except TraitError as e:
             error(parent = None,
                   message = "Error trying to load the workflow.")
             return

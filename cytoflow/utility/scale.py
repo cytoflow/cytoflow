@@ -124,7 +124,7 @@ class ScaleMixin(HasStrictTraits):
                                 raise CytoflowError("Tried to scale a non-numeric "
                                                     "statistic {}"
                                                     .format(self.statistic))
-                except TypeError:
+                except TypeError as e:
                     raise CytoflowError("Tried to scale a non-numeric "
                                         "statistic {}"
                                         .format(self.statistic))
