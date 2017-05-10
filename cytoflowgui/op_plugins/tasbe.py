@@ -33,6 +33,8 @@ from traits.api import (provides, Callable, Bool, List, Str, HasTraits,
                         Property, Instance, Int, Float, Undefined)
 from pyface.api import ImageResource
 
+import pandas as pd
+
 import cytoflow.utility as util
 
 from cytoflow.operations import IOperation
@@ -262,8 +264,13 @@ class TasbePluginOp(PluginOpMixin):
         self._bead_calibration_op.bead_brightness_cutoff = self.bead_brightness_cutoff        
         
         self._bead_calibration_op.units.clear()
-        for channel in self.channels:
-            self._bead_calibration_op.units[channel] = self.beads_unit
+        
+        # this is the old way
+#         for channel in self.channels:
+#             self._bead_calibration_op.units[channel] = self.beads_unit
+
+        # this way matches TASBE better
+        self._bead_calibration_op.units[self.to_channel] = self.beads_unit
             
         self._bead_calibration_op.estimate(experiment)
         self.changed = (Changed.ESTIMATE_RESULT, self)
@@ -356,22 +363,34 @@ class TasbePluginView(PluginViewMixin):
         
     def plot(self, experiment, plot_name = None, **kwargs):
         
-        if not plot_name:
+        if plot_name not in ["Autofluorescence", "Bleedthrough", "Bead Calibration", "Color Translation"]:
             raise util.CytoflowViewError("Which plot do you want?  Must be one "
                                          "of \"Autofluorescence\", "
                                          "\"Bleedthrough\", \"Bead Calibration\", "
                                          "or \"Color Translation\"")
-        elif plot_name == "Autofluorescence":
-            self.op._af_op.default_view().plot(experiment, **kwargs)
-        elif plot_name == "Bleedthrough":
-            self.op._bleedthrough_op.default_view().plot(experiment, **kwargs)
-        elif plot_name == "Bead Calibration":
-            self.op._bead_calibration_op.default_view().plot(experiment, **kwargs)
-        elif plot_name == "Color Translation":
-            self.op._color_translation_op.default_view().plot(experiment, **kwargs)
+                    
+        new_ex = experiment.clone()
+        
+        # we don't need to actually apply any ops to data
+        new_ex.data = pd.DataFrame(data = {x : pd.Series() for x in new_ex.data})
+                    
+        if plot_name == "Autofluorescence":
+            self.op._af_op.default_view().plot(new_ex, **kwargs)
         else:
-            raise util.CytoflowViewError("Couldn't find plot \"{}\""
-                                         .format(plot_name))
+            new_ex = self.op._af_op.apply(new_ex)
+
+        if plot_name == "Bleedthrough":
+            self.op._bleedthrough_op.default_view().plot(new_ex, **kwargs)
+        else:
+            new_ex = self.op._bleedthrough_op.apply(new_ex)
+            
+        if plot_name == "Bead Calibration":
+            self.op._bead_calibration_op.default_view().plot(new_ex, **kwargs)
+        else:
+            new_ex = self.op._bead_calibration_op.apply(new_ex)
+            
+        if plot_name == "Color Translation":
+            self.op._color_translation_op.default_view().plot(new_ex, **kwargs)
 
 
 @provides(IOperationPlugin)
