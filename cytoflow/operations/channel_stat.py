@@ -166,7 +166,7 @@ class ChannelStatisticOp(HasStrictTraits):
         idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by], 
                                          names = self.by)
 
-        stat = pd.Series(data = self.fill,
+        stat = pd.Series(data = [self.fill] * len(idx),
                          index = idx, 
                          dtype = np.dtype(object)).sort_index()
         

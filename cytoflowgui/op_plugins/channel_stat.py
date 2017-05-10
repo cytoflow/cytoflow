@@ -28,7 +28,8 @@ import scipy.stats
 from traitsui.api import (View, Item, EnumEditor, Controller, VGroup,
                           CheckListEditor, TextEditor)
 from envisage.api import Plugin, contributes_to
-from traits.api import (provides, Callable, List, Str, Property, on_trait_change)
+from traits.api import (provides, Callable, List, Str, Property, Any,
+                        on_trait_change)
 from pyface.api import ImageResource
 
 from cytoflow.operations.channel_stat import ChannelStatisticOp
@@ -52,6 +53,17 @@ summary_functions = {"Mean" : np.mean,
                      "Mean 95% CI" : mean_95ci,
                      "Geom.Mean 95% CI" : geomean_95ci
                      }
+
+fill = {"Mean" : 0,
+        "Geom.Mean" : 0,
+        "Count" : 0,
+        "Std.Dev" : 0,
+        "Geom.SD" : (0,0),
+        "SEM" : scipy.stats.sem,
+        "Geom.SEM" : (0,0),
+        "Mean 95% CI" : 0,
+        "Geom.Mean 95% CI" : 0
+        }
 
 
 class ChannelStatisticHandler(OpHandlerMixin, Controller):
@@ -83,6 +95,16 @@ class ChannelStatisticPluginOp(PluginOpMixin, ChannelStatisticOp):
     # functions aren't picklable, so make this one transient 
     # and send the name instead
     function = Callable(transient = True)
+    
+    # we need to automatically pick a good fill
+    fill = Property(Any, depends_on = 'statistic_name', transient = True)
+    
+    # MAGIC - returns the value of the 'fill' property
+    def _get_fill(self):
+        if self.statistic_name:
+            return fill[self.statistic_name]
+        else:
+            return 0
     
     # bits to support the subset editor
     
