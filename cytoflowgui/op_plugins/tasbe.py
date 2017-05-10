@@ -144,8 +144,6 @@ class TasbeHandler(OpHandlerMixin, Controller):
                            label = "Subset",
                            show_border = False,
                            show_labels = False),
-                    Heading("WARNING: Very slow!"),
-                    Heading("Give it a few minutes..."),
                     Item('do_estimate',
                          editor = ButtonEditor(value = True,
                                                label = "Estimate!"),
