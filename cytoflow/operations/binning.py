@@ -230,7 +230,10 @@ class BinningView(cytoflow.views.HistogramView):
     huefacet = DelegatesTo('op', 'name')
     
     def plot(self, experiment, **kwargs):
-                
+        
+        if not experiment:
+            raise util.CytoflowViewError("No experiment specified")
+        
         experiment = self.op.apply(experiment)
         cytoflow.HistogramView.plot(self, experiment, **kwargs)
 

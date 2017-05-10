@@ -308,6 +308,9 @@ class ImportOp(HasStrictTraits):
 
 def check_tube(filename, experiment):
     
+    if not experiment:
+        raise util.CytoflowError("No experiment specified")
+    
     ignore_v = experiment.metadata['ignore_v']
     
     try:

@@ -132,6 +132,8 @@ class ColorTranslationOp(HasStrictTraits):
         tubes = {}
         
         translation = {x[0] : x[1] for x in self.controls.keys()}
+        
+        print self.trait_get()
 
         for from_channel, to_channel in translation.iteritems():
             
@@ -159,6 +161,7 @@ class ColorTranslationOp(HasStrictTraits):
                 
                 # apply previous operations
                 for op in experiment.history:
+                    print op
                     tube_exp = op.apply(tube_exp) 
 
                 # subset the events
@@ -181,6 +184,8 @@ class ColorTranslationOp(HasStrictTraits):
             data = tubes[tube_file][[from_channel, to_channel]].copy()
             data = data[data[from_channel] > 0]
             data = data[data[to_channel] > 0]
+            
+            print data
 
             _ = data.reset_index(drop = True, inplace = True)
             
@@ -221,6 +226,8 @@ class ColorTranslationOp(HasStrictTraits):
                             data[to_channel], 
                             deg = 1, 
                             w = weights)
+            
+            print lr
             
             # remember, these (linear) coefficients came from logspace, so 
             # if the relationship in log10 space is Y = aX + b, then in

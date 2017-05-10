@@ -463,6 +463,9 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
     def plot(self, experiment, **kwargs):
         """Plot a faceted histogram view of a channel"""
 
+        if not experiment:
+            raise util.CytoflowViewError("No experiment specified")
+
         channels = self.op.units.keys()
 
         if not channels:
