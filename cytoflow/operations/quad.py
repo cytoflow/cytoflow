@@ -225,7 +225,7 @@ class QuadSelection(cytoflow.views.ScatterplotView):
     def plot(self, experiment, **kwargs):
         """Plot the underlying scatterplot and then plot the selection on top of it."""
         
-        if not experiment:
+        if experiment is None:
             raise util.CytoflowViewError("No experiment specified")
         
         if self.xfacet:

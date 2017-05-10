@@ -111,7 +111,7 @@ class BinningOp(HasStrictTraits):
             event's measurement in self.channel is greater than self.low and
             less than self.high; it is False otherwise.
         """
-        if not experiment:
+        if experiment is None:
             raise util.CytoflowOpError("no experiment specified")
         
         if not self.name:
@@ -231,7 +231,7 @@ class BinningView(cytoflow.views.HistogramView):
     
     def plot(self, experiment, **kwargs):
         
-        if not experiment:
+        if experiment is None:
             raise util.CytoflowViewError("No experiment specified")
         
         experiment = self.op.apply(experiment)

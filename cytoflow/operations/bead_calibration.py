@@ -198,7 +198,7 @@ class BeadCalibrationOp(HasStrictTraits):
         """
         Estimate the calibration coefficients from the beads file.
         """
-        if not experiment:
+        if experiment is None:
             raise util.CytoflowOpError("No experiment specified")
         
         if not self.beads_file:
@@ -356,7 +356,7 @@ class BeadCalibrationOp(HasStrictTraits):
         -------
             a new experiment calibrated in physical units.
         """
-        if not experiment:
+        if experiment is None:
             raise util.CytoflowOpError("No experiment specified")
         
         channels = self.units.keys()
@@ -463,7 +463,7 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
     def plot(self, experiment, **kwargs):
         """Plot a faceted histogram view of a channel"""
 
-        if not experiment:
+        if experiment is None:
             raise util.CytoflowViewError("No experiment specified")
 
         channels = self.op.units.keys()

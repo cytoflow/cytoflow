@@ -95,7 +95,7 @@ class RangeOp(HasStrictTraits):
             less than self.high; it is False otherwise.
         """
 
-        if not experiment:
+        if experiment is None:
             raise util.CytoflowOpError("No experiment specified")
         
         # make sure name got set!
@@ -196,7 +196,7 @@ class RangeSelection(cytoflow.views.HistogramView):
     def plot(self, experiment, **kwargs):
         """Plot the underlying histogram and then plot the selection on top of it."""
         
-        if not experiment:
+        if experiment is None:
             raise util.CytoflowViewError("No experiment specified")
         
         if self.xfacet:

@@ -166,7 +166,7 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
                                        "To use it anyway, set ignore_deprected "
                                        "to True.")
         
-        if not experiment:
+        if experiment is None:
             raise util.CytoflowOpError("No experiment specified")
         
         if self.num_knots < 3:
@@ -305,7 +305,7 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
                                        "To use it anyway, set ignore_deprected "
                                        "to True.")
             
-        if not experiment:
+        if experiment is None:
             raise util.CytoflowOpError("No experiment specified")
         
         if not self._interpolators:
@@ -417,7 +417,7 @@ class BleedthroughPiecewiseDiagnostic(HasStrictTraits):
     def plot(self, experiment = None, **kwargs):
         """Plot a faceted histogram view of a channel"""
         
-        if not experiment:
+        if experiment is None:
             raise util.CytoflowViewError("No experiment specified")
         
         if not self.op.controls:

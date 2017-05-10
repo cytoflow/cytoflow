@@ -97,7 +97,7 @@ class PolygonOp(HasStrictTraits):
             experiment. The reason is in util.CytoflowOpError.args
         """
         
-        if not experiment:
+        if experiment is None:
             raise util.CytoflowOpError("No experiment specified")
 
         if self.name in experiment.data.columns:
@@ -216,7 +216,7 @@ class PolygonSelection(cytoflow.views.ScatterplotView):
     def plot(self, experiment, **kwargs):
         """Plot self.view, and then plot the selection on top of it."""
         
-        if not experiment:
+        if experiment is None:
             raise util.CytoflowViewError("No experiment specified")
         
         if self.xfacet:

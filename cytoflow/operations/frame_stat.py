@@ -101,7 +101,7 @@ class FrameStatisticOp(HasStrictTraits):
     fill = Any(0)
     
     def apply(self, experiment):
-        if not experiment:
+        if experiment is None:
             raise util.CytoflowOpError("No experiment specified")
 
         if not self.name:

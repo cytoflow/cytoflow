@@ -94,7 +94,7 @@ class Kde2DView(HasStrictTraits):
     def plot(self, experiment, **kwargs):
         """Plot a faceted 2d kernel density estimate"""
         
-        if not experiment:
+        if experiment is None:
             raise util.CytoflowViewError("No experiment specified")
 
         if not self.xchannel:

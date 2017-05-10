@@ -107,7 +107,7 @@ class TransformStatisticOp(HasStrictTraits):
 
     def apply(self, experiment):
         
-        if not experiment:
+        if experiment is None:
             raise util.CytoflowOpError("Must specify an experiment")
 
         if not self.name:

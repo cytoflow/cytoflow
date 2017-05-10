@@ -157,7 +157,7 @@ class Stats2DView(HasStrictTraits):
         
         # TODO - all this is copied from below.  can we abstract it out somehow?
         
-        if not experiment:
+        if experiment is None:
             raise util.CytoflowViewError("No experiment specified")
         
         if not self.variable:
@@ -367,7 +367,7 @@ class Stats2DView(HasStrictTraits):
     def plot(self, experiment, plot_name = None, **kwargs):
         """Plot a bar chart"""
         
-        if not experiment:
+        if experiment is None:
             raise util.CytoflowViewError("No experiment specified")
         
         if not self.variable:

@@ -91,7 +91,7 @@ class AutofluorescenceOp(HasStrictTraits):
         """
         Estimate the autofluorescence from *blank_file*
         """
-        if not experiment:
+        if experiment is None:
             raise util.CytoflowOpError("No experiment specified")
         
         if not self.channels:
@@ -149,7 +149,7 @@ class AutofluorescenceOp(HasStrictTraits):
             a new experiment with the autofluorescence median subtracted from
             the values in self.blank_file
         """
-        if not experiment:
+        if experiment is None:
             raise util.CytoflowOpError("No experiment specified")
         
         if not self.channels:
@@ -218,7 +218,7 @@ class AutofluorescenceDiagnosticView(HasStrictTraits):
     def plot(self, experiment, **kwargs):
         """Plot a faceted histogram view of a channel"""
         
-        if not experiment:
+        if experiment is None:
             raise util.CytoflowViewError("No experiment specified")
         
         if not self.op.channels:

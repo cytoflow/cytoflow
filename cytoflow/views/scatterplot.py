@@ -91,7 +91,7 @@ class ScatterplotView(HasStrictTraits):
     def plot(self, experiment, **kwargs):
         """Plot a faceted scatter plot view of a channel"""
         
-        if not experiment:
+        if experiment is None:
             raise util.CytoflowViewError("No experiment specified")
 
         if not self.xchannel:

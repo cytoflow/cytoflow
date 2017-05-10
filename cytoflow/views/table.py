@@ -53,7 +53,7 @@ class TableView(HasStrictTraits):
     def plot(self, experiment, plot_name = None, **kwargs):
         """Plot a table"""
         
-        if not experiment:
+        if experiment is None:
             raise util.CytoflowViewError("No experiment specified")   
         
         if self.statistic not in experiment.statistics:

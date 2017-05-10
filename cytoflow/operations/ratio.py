@@ -86,7 +86,7 @@ class RatioOp(HasStrictTraits):
             a new experiment with the new ratio channel
         """
 
-        if not experiment:
+        if experiment is None:
             raise util.CytoflowOpError("No experiment specified")
         
         if self.numerator not in experiment.channels:

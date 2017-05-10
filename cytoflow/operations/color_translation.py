@@ -123,7 +123,7 @@ class ColorTranslationOp(HasStrictTraits):
         Estimate the mapping from the two-channel controls
         """
 
-        if not experiment:
+        if experiment is None:
             raise util.CytoflowOpError("No experiment specified")
         
         if not self.controls:
@@ -133,8 +133,6 @@ class ColorTranslationOp(HasStrictTraits):
         
         translation = {x[0] : x[1] for x in self.controls.keys()}
         
-        print self.trait_get()
-
         for from_channel, to_channel in translation.iteritems():
             
             if from_channel not in experiment.channels:
@@ -161,7 +159,6 @@ class ColorTranslationOp(HasStrictTraits):
                 
                 # apply previous operations
                 for op in experiment.history:
-                    print op
                     tube_exp = op.apply(tube_exp) 
 
                 # subset the events
@@ -185,8 +182,6 @@ class ColorTranslationOp(HasStrictTraits):
             data = data[data[from_channel] > 0]
             data = data[data[to_channel] > 0]
             
-            print data
-
             _ = data.reset_index(drop = True, inplace = True)
             
             data[from_channel] = np.log10(data[from_channel])
@@ -226,9 +221,7 @@ class ColorTranslationOp(HasStrictTraits):
                             data[to_channel], 
                             deg = 1, 
                             w = weights)
-            
-            print lr
-            
+                        
             # remember, these (linear) coefficients came from logspace, so 
             # if the relationship in log10 space is Y = aX + b, then in
             # linear space the relationship is x = 10**X, y = 10**Y,
@@ -259,7 +252,7 @@ class ColorTranslationOp(HasStrictTraits):
             a new experiment with the color translation applied.
         """
 
-        if not experiment:
+        if experiment is None:
             raise util.CytoflowOpError("No experiment specified")
         
         if not self.controls:
@@ -334,7 +327,7 @@ class ColorTranslationDiagnostic(HasStrictTraits):
         Plot the plots
         """
         
-        if not experiment:
+        if experiment is None:
             raise util.CytoflowViewError("No experiment specified")
         
         if not self.op.controls:
@@ -375,7 +368,6 @@ class ColorTranslationDiagnostic(HasStrictTraits):
                     
                 tube_data = tube_exp.data
 
-
                 # subset the events
                 if self.subset:
                     try:
@@ -414,11 +406,7 @@ class ColorTranslationDiagnostic(HasStrictTraits):
                     
                 plt.axvline(10 ** fit.means_[0][0], color = 'r')
                 plt.axvline(10 ** fit.means_[1][0], color = 'r')
-                
-#             lr = np.polyfit(np.log10(data[from_channel]), 
-#                             np.log10(data[to_channel]), 
-#                             deg = 1, 
-#                             w = weights)
+
             
             num_cols = 2 if self.op.mixture_model else 1
             plt.subplot(num_plots, num_cols, plt_idx * num_cols + 1)
@@ -439,7 +427,6 @@ class ColorTranslationDiagnostic(HasStrictTraits):
 
             xs = np.logspace(1, math.log(from_range, 2), num = 256, base = 2)
             trans_fn = self.op._trans_fn[(from_channel, to_channel)]
-#             p = np.poly1d(lr)
             plt.plot(xs, trans_fn(xs), "--g")
             
             

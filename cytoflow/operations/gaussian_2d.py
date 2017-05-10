@@ -161,7 +161,7 @@ class GaussianMixture2DOp(HasStrictTraits):
         Estimate the Gaussian mixture model parameters
         """
         
-        if not experiment:
+        if experiment is None:
             raise util.CytoflowOpError("No experiment specified")
 
         if self.xchannel not in experiment.data:
@@ -259,7 +259,7 @@ class GaussianMixture2DOp(HasStrictTraits):
         in `estimate`.
         """
             
-        if not experiment:
+        if experiment is None:
             raise util.CytoflowOpError("No experiment specified")
         
         if not self.xchannel:
@@ -577,7 +577,7 @@ class GaussianMixture2DView(cytoflow.views.ScatterplotView):
         """
         Plot the plots.
         """
-        if not experiment:
+        if experiment is None:
             raise util.CytoflowViewError("No experiment specified")
         
         if not self.op.xchannel:

@@ -118,7 +118,7 @@ class BleedthroughLinearOp(HasStrictTraits):
         """
         Estimate the bleedthrough from simgle-channel controls in `controls`
         """
-        if not experiment:
+        if experiment is None:
             raise util.CytoflowOpError("No experiment specified")
         
         channels = self.controls.keys()
@@ -204,7 +204,7 @@ class BleedthroughLinearOp(HasStrictTraits):
         -------
             a new experiment with the bleedthrough subtracted out.
         """
-        if not experiment:
+        if experiment is None:
             raise util.CytoflowOpError("No experiment specified")
         
         if not self.spillover:
@@ -294,7 +294,7 @@ class BleedthroughLinearDiagnostic(HasStrictTraits):
     def plot(self, experiment = None, **kwargs):
         """Plot a faceted histogram view of a channel"""
         
-        if not experiment:
+        if experiment is None:
             raise util.CytoflowViewError("No experiment specified")
 
         if not self.op.controls:
