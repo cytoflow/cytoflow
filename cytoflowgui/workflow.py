@@ -258,7 +258,8 @@ class Workflow(HasStrictTraits):
                     if not wi.trait(name).status:
                         raise RuntimeError("Tried to set a local non-status wi trait")
                     
-                    wi.trait_set(**{name : new})
+                    with wi.lock:
+                        wi.trait_set(**{name : new})
                         
                 elif msg == Msg.UPDATE_OP:
                     (idx, name, new) = payload
@@ -267,7 +268,8 @@ class Workflow(HasStrictTraits):
                     if not wi.operation.trait(name).status:
                         raise RuntimeError("Tried to set a local non-status trait")
                     
-                    wi.operation.trait_set(**{name : new})
+                    with wi.lock:
+                        wi.operation.trait_set(**{name : new})
                     
                 elif msg == Msg.UPDATE_VIEW:
                     (idx, view_id, name, new) = payload
@@ -277,7 +279,8 @@ class Workflow(HasStrictTraits):
                     if not view.trait(name).status:
                         raise RuntimeError("Tried to set a local non-status trait")
                     
-                    view.trait_set(**{name : new})
+                    with wi.lock:
+                        view.trait_set(**{name : new})
                     
                 elif msg == Msg.APPLY_CALLED:
                     self.apply_calls = payload
@@ -443,17 +446,6 @@ class Workflow(HasStrictTraits):
         idx = self.workflow.index(obj)
         plot = obj.current_plot
         self.message_q.put((Msg.CHANGE_CURRENT_PLOT, (idx, plot)))
-# 
-#     @on_trait_change('workflow:current_view_plot_names_items')
-#     def _on_current_plot_names_changed(self, obj, name, old, new):
-#         logging.debug("LocalWorkflow._on_current_plot_names_changed :: {}"
-#                       .format((obj, name, old, new)))
-#         if len(obj.current_view_plot_names) > 0:
-#             idx = self.workflow.index(obj)
-#             plot = obj.current_plot
-#             self.message_q.put((Msg.CHANGE_CURRENT_PLOT, (idx, plot)))
-#         else:
-#             self.message_q.put((Msg.CHANGE_CURRENT_PLOT, (idx, None)))
         
     @on_trait_change('workflow:operation:do_estimate')
     def _on_estimate(self, obj, name, old, new):
@@ -463,14 +455,6 @@ class Workflow(HasStrictTraits):
         wi = next((x for x in self.workflow if x.operation == obj))
         idx = self.workflow.index(wi)
         self.message_q.put((Msg.ESTIMATE, idx))
-
-#     # MAGIC: called when default_scale is changed
-#     def _default_scale_changed(self, new_scale):
-#         logging.debug("LocalWorkflow._default_scale_changed :: {}"
-#                       .format((new_scale)))
-#             
-#         cytoflow.set_default_scale(new_scale)
-#         self.message_q.put((Msg.CHANGE_DEFAULT_SCALE, new_scale))
 
         
 class RemoteWorkflow(HasStrictTraits):
@@ -482,7 +466,6 @@ class RemoteWorkflow(HasStrictTraits):
     
     send_thread = Instance(threading.Thread)
     recv_thread = Instance(threading.Thread)
-#     message_q = Instance(DelayUniqueQueue, {"delay" : 0.2})
     message_q = Instance(Queue, ())
     
     # synchronization primitives for plotting
@@ -541,10 +524,7 @@ class RemoteWorkflow(HasStrictTraits):
                 _, (wi, fn) = self.exec_q.get()
                 with wi.lock:
                     fn()
-#                     ret = fn()
-#                 if not ret:  # if there was a problem, clear the queue
-#                     while not self.exec_q.empty():
-#                         self.exec_q.get()
+
             except Exception:
                 log_exception()
 

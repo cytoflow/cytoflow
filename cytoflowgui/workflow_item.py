@@ -129,7 +129,7 @@ class WorkflowItem(HasStrictTraits):
     
     # is the wi valid?
     # MAGIC: first value is the default
-    status = Enum("invalid", "estimating", "applying", "valid", status = True)
+    status = Enum("invalid", "estimating", "applying", "valid", "loading", status = True)
     
     # report the errors and warnings
     op_error = Str(status = True)
@@ -144,6 +144,9 @@ class WorkflowItem(HasStrictTraits):
     
     # the icon for the vertical notebook view.  Qt specific, sadly.
     icon = Property(depends_on = 'status', transient = True)  
+    
+    # synchronization primitive for updating wi traits
+    lock = Instance(threading.Lock, (), transient = True)
     
     # synchronization primitives for plotting
     matplotlib_events = Any(transient = True)
@@ -172,45 +175,6 @@ class WorkflowItem(HasStrictTraits):
             return self.current_view.handler_factory(model = self.current_view, context = self)
         else:
             return None
-
-#     @cached_property
-#     def _get_conditions_names(self):
-#         if self.conditions:
-#             return self.conditions.keys()
-#         else:
-#             return []
-#         
-#     @cached_property
-#     def _get_statistics_names(self):
-#         if self.statistics:
-#             return self.statistics.keys()
-#         else:
-#             return []
-# 
-#     @cached_property
-#     def _get_previous_conditions_names(self):
-#         if self.previous_conditions:
-#             return self.previous_conditions.keys()
-#         else:
-#             return []
-#         
-#     @cached_property
-#     def _get_previous_statistics_names(self):
-#         if self.previous_statistics:
-#             return self.previous_statistics.keys()
-#         else:
-#             return []
-        
-#     @cached_property
-#     def _get_current_view_plot_names(self):
-#         if self.current_view:
-#             plot_names = [x for x in self.current_view.enum_plots_wi(self)]
-#             if plot_names == [None] or plot_names == []:
-#                 return []
-#             else:
-#                 return plot_names  
-#         else:
-#             return []
         
     def __str__(self):
         return "<{}: {}>".format(self.__class__.__name__, self.operation.__class__.__name__)
@@ -220,8 +184,6 @@ class WorkflowItem(HasStrictTraits):
 
     
 class RemoteWorkflowItem(WorkflowItem):
-      
-    lock = Instance(threading.Lock, (), transient = True)
     
     def estimate(self):
         logging.debug("WorkflowItem.estimate :: {}".format((self)))

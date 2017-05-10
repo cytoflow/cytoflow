@@ -257,25 +257,17 @@ class FlowTask(Task):
 
         # a few things to take care of when reloading
         for wi_idx, wi in enumerate(new_workflow):
+            
+            # get wi lock
+            wi.lock.acquire()
+            
             # clear the wi status
-            wi.status = "invalid"
+            wi.status = "loading"
 
             # re-link the linked list.  i thought this would get taken care
             # of in deserialization, but i guess not...
             if wi_idx > 0:
                 wi.previous = new_workflow[wi_idx - 1]
-            
-            # reload the subset lists.  i don't know why this is necessary.
-#             for view in wi.views:
-#                 subset_list = view.subset_list
-#                 view.subset_list = []
-#                 for s in subset_list:
-#                     view.subset_list.append(s)
-#                     
-#             subset_list = wi.operation.subset_list
-#             wi.operation.subset_list = []
-#             for s in subset_list:
-#                 wi.operation.subset_list.append(s)
 
         # replace the current workflow with the one we just loaded
         
@@ -290,15 +282,9 @@ class FlowTask(Task):
             self.model.workflow = new_workflow
             self.model.modified = False
             
-        # see if the user wants to re-estimate all the model parameters
-#         est_wis = filter(lambda x: hasattr(x.operation, "estimate"), self.model.workflow)
-#         if est_wis:
-#             ret = confirm(parent = None,
-#                           message = "Do you want to estimate model parameters now?",
-#                           title = "Estimate parameters?")
-#             if ret == YES:
-#                 for wi in est_wis:
-#                     wi.do_estimate = True
+        for wi in self.model.workflow:
+            wi.lock.release()
+
         
     def on_save(self):
         """ Save the file to the previous filename  """

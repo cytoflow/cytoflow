@@ -165,10 +165,13 @@ class _SubsetListEditor(_VerticalListEditor):
         value_names = set([subset.name for subset in self.value])
         condition_names = set([x for x in self.conditions.keys() if self.include_condition(x)])
         
-        for name in value_names - condition_names:
-            # remove subsets that aren't in conditions
-            subset = next((x for x in self.value if x.name == name))
-            self.value.remove(subset)
+        loading = (self.ui.context["context"].status == "loading")
+        
+        if not loading:
+            for name in value_names - condition_names:
+                # remove subsets that aren't in conditions
+                subset = next((x for x in self.value if x.name == name))
+                self.value.remove(subset)
             
         for name in condition_names - value_names:
             # add subsets that are new conditions
