@@ -151,27 +151,7 @@ class TablePluginView(PluginViewMixin, TableView):
     def plot(self, experiment, plot_name = None, **kwargs):
         TableView.plot(self, experiment, **kwargs)
         self.result = experiment.statistics[self.statistic]
-        
-#         self.result = None
-#         if not self.function_name:
-#             raise util.CytoflowViewError("Summary function isn't set")
-#          
-#         self.function = self.summary_functions[self.function_name]
-#         TableView.plot(self, experiment, **kwargs)
-#          
-#         group_vars = []
-#         if self.row_facet: group_vars.append(self.row_facet) 
-#         if self.subrow_facet: group_vars.append(self.subrow_facet)
-#         if self.column_facet: group_vars.append(self.column_facet)
-#         if self.subcolumn_facet: group_vars.append(self.subcolumn_facet)
-#                  
-#         if self.subset:
-#             data = experiment.query(self.subset).data
-#         else:
-#             data = experiment.data
-#                  
-#         self.result = data.groupby(by = group_vars)[self.channel].aggregate(self.function)
-#      
+
     @on_trait_change('export')
     def _on_export(self):
         
@@ -183,8 +163,7 @@ class TablePluginView(PluginViewMixin, TableView):
 
         if dialog.open() != OK:
             return
-
-        
+ 
         data = pd.DataFrame(index = self.result.index)
         data[self.result.name] = self.result   
         
@@ -231,10 +210,34 @@ class TablePluginView(PluginViewMixin, TableView):
                     for (cci, cc) in enumerate(subcol_groups):
                         row_idx = ri * len(subrow_groups) + rri + row_offset
                         col_idx = ci * len(subcol_groups) + cci + col_offset
-                        agg_idx = [x for x in (r, rr, c, cc) if x is not None]
+#                         agg_idx = [x for x in (r, rr, c, cc) if x is not None]
+#                         agg_idx = tuple(agg_idx)
+#                         if len(agg_idx) == 1:
+#                             agg_idx = agg_idx[0]
+#                         t[row_idx, col_idx] = self.result.get(agg_idx) 
+
+
+                        # this is not pythonic, but i'm tired
+                        agg_idx = []
+                        for data_idx in data.index.names:
+                            if data_idx == self.row_facet:
+                                agg_idx.append(r)
+                            elif data_idx == self.subrow_facet:
+                                agg_idx.append(rr)
+                            elif data_idx == self.column_facet:
+                                agg_idx.append(c)
+                            elif data_idx == self.subcolumn_facet:
+                                agg_idx.append(cc)
+                        
                         agg_idx = tuple(agg_idx)
                         if len(agg_idx) == 1:
                             agg_idx = agg_idx[0]
+                            
+                        try:
+                            text = "{:g}".format(data.loc[agg_idx][self.result.name])
+                        except ValueError:
+                            text = data.loc[agg_idx][self.result.name]
+
                         t[row_idx, col_idx] = self.result.get(agg_idx) 
                         
         # row headers
