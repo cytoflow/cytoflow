@@ -740,8 +740,9 @@ class RemoteWorkflow(HasStrictTraits):
         
         if msg == Changed.OPERATION:
             if wi.operation.should_apply(Changed.OPERATION):
-                wi.result = None
-                wi.status = "invalid"
+                with wi.lock:
+                    wi.result = None
+                    wi.status = "invalid"
                 self.exec_q.put((idx, (wi, wi.apply)))
         
         elif msg == Changed.VIEW:
@@ -790,8 +791,9 @@ class RemoteWorkflow(HasStrictTraits):
                     pass
                 
             if wi.operation.should_apply(Changed.PREV_RESULT):
-                wi.result = None
-                wi.status = "invalid"
+                with wi.lock:
+                    wi.result = None
+                    wi.status = "invalid"
                 self.exec_q.put((idx, (wi, wi.apply)))
                 
             if (wi == self.selected 

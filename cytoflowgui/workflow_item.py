@@ -146,7 +146,7 @@ class WorkflowItem(HasStrictTraits):
     icon = Property(depends_on = 'status', transient = True)  
     
     # synchronization primitive for updating wi traits
-    lock = Instance(threading.Lock, (), transient = True)
+    lock = Instance(threading.RLock, (), transient = True)
     
     # synchronization primitives for plotting
     matplotlib_events = Any(transient = True)
