@@ -80,7 +80,7 @@ class CategorySubset(HasStrictTraits):
     def default_traits_view(self):
         return View(Item('selected',
                          label = self.name,
-                         editor = CheckListEditor(values = self.values,
+                         editor = CheckListEditor(name = 'values',
                                                   cols = 2),
                          style = 'custom'))
         
@@ -111,7 +111,7 @@ class RangeSubset(HasStrictTraits):
         return View(Item('high',
                          label = self.name,
                          editor = ValuesBoundsEditor(
-                                     values = self.values,
+                                     name = 'values',
                                      low_name = 'low',
                                      high_name = 'high',
                                      format = '%g',
