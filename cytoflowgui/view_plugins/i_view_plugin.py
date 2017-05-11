@@ -26,6 +26,8 @@ from traits.api import (Interface, Str, HasTraits, Instance, Event,
                         List, Property, on_trait_change)
 from traitsui.api import Handler
 
+import cytoflow.utility as util
+
 from cytoflowgui.subset import ISubset
 from cytoflowgui.workflow import Changed
 from cytoflowgui.workflow_item import WorkflowItem
@@ -115,6 +117,7 @@ class ViewHandlerMixin(HasTraits):
     conditions_names = Property(depends_on = "context.conditions")
     previous_conditions_names = Property(depends_on = "context.previous.conditions")
     statistics_names = Property(depends_on = "context.statistics")
+    numeric_statistics_names = Property(depends_on = "context.statistics")
     
     # MAGIC: gets value for property "conditions_names"
     def _get_conditions_names(self):
@@ -134,5 +137,13 @@ class ViewHandlerMixin(HasTraits):
     def _get_statistics_names(self):
         if self.context and self.context.statistics:
             return self.context.statistics.keys()
+        else:
+            return []
+
+    # MAGIC: gets value for property "numeric_statistics_names"
+    def _get_numeric_statistics_names(self):
+        if self.context and self.context.statistics:
+            return [x for x in self.context.statistics.keys()
+                            if util.is_numeric(self.context.statistics[x])]
         else:
             return []

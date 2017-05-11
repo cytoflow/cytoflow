@@ -175,6 +175,9 @@ class Stats2DView(HasStrictTraits):
                                          .format(self.ystatistic))
         else:
             xstat = experiment.statistics[self.xstatistic]
+            
+        if not util.is_numeric(xstat):
+            raise util.CytoflowViewError("X Statistic must be numeric")
 
         if not self.ystatistic:
             raise util.CytoflowViewError("Y statistic not set")
@@ -184,6 +187,9 @@ class Stats2DView(HasStrictTraits):
                                          .format(self.ystatistic))
         else:
             ystat = experiment.statistics[self.ystatistic]  
+            
+        if not util.is_numeric(ystat):
+            raise util.CytoflowViewError("Y Statistic must be numeric")
             
         if set(xstat.index.names) != set(ystat.index.names):            
             raise util.CytoflowViewError("X statistic and Y statistic must have "

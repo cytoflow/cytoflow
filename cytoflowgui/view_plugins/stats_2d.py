@@ -51,11 +51,11 @@ class Stats2DHandler(ViewHandlerMixin, Controller):
     def default_traits_view(self):
         return View(VGroup(
                     VGroup(Item('xstatistic',
-                                editor = EnumEditor(name = 'handler.statistics_names'),
+                                editor = EnumEditor(name = 'handler.numeric_statistics_names'),
                                 label = "X Statistic"),
                            Item('xscale', label = "X Scale"),
                            Item('ystatistic',
-                                editor = EnumEditor(name = 'handler.statistics_names'),
+                                editor = EnumEditor(name = 'handler.numeric_statistics_names'),
                                 label = "Y Statistic"),
                            Item('yscale', label = "Y Scale"),
                            Item('variable',

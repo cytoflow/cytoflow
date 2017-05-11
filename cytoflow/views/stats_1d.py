@@ -272,6 +272,9 @@ class Stats1DView(HasStrictTraits):
         else:
             stat = experiment.statistics[self.statistic]
             
+        if not util.is_numeric(stat):
+            raise util.CytoflowViewError("Statistic must be numeric")
+            
         if self.error_statistic[0]:
             if self.error_statistic not in experiment.statistics:
                 raise util.CytoflowViewError("Can't find the error statistic in the experiment")
