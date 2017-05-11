@@ -177,9 +177,9 @@ class Workflow(HasStrictTraits):
                                                                   delete = True,
                                                                   page_deletable = '.deletable',
                                                                   selected = 'selected',
-                                                                  scrollable = True,
                                                                   multiple_open = False),
-                                show_label = False))
+                                show_label = False),
+                             scrollable = True)
 
     # a view showing the selected workflow item's current view
     selected_view_traits = View(Item('selected',
@@ -192,7 +192,9 @@ class Workflow(HasStrictTraits):
                                      visible_when = 'debug'),
                                 Item('plot_calls',
                                      style = 'readonly',
-                                     visible_when = 'debug'))
+                                     visible_when = 'debug'),
+                                kind = 'panel',
+                                scrollable = True)
     
     # the view for the center pane
     plot_view = View(Item('selected',

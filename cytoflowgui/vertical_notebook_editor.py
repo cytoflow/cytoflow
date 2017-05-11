@@ -47,13 +47,6 @@ class _VerticalNotebookEditor(Editor):
     Traits UI vertical notebook editor for editing lists of objects with traits.
     """
 
-    #-- Trait Definitions ----------------------------------------------------
-
-    # Is the notebook editor scrollable? This values overrides the default:
-    scrollable = True
-
-    #-- Private Traits -------------------------------------------------------
-
     # The currently selected notebook page object (or objects):
     selected_item = Any
     selected_list = List
@@ -74,7 +67,6 @@ class _VerticalNotebookEditor(Editor):
         factory = self.factory
         self.notebook = VerticalNotebook(**factory.get('multiple_open',
                                                        'delete',
-                                                       'scrollable', 
                                                        'double_click')).set(editor=self)
         self.control = self.notebook.create_control(parent)
 
@@ -241,9 +233,6 @@ class VerticalNotebookEditor(BasicEditorFactory):
     # Include a "delete" button?
     delete = Bool(False)
 
-    # Should the notebook be scrollable?
-    scrollable = Bool(False)
-
     # List member trait to read the notebook page name from
     page_name = Str
 
@@ -300,7 +289,6 @@ if __name__ == '__main__':
                                                    page_description='.trait2',
                                                    page_icon='.icon',
                                                    view='traits_view',
-                                                   scrollable=True,
                                                    multiple_open=False)
                      )
             ),

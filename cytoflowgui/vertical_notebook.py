@@ -453,9 +453,6 @@ class VerticalNotebook(HasPrivateTraits):
     # can the editor delete list items?
     delete = Bool(False)
 
-    # Should the notebook be scrollable?
-    scrollable = Bool(False)
-
     # The pages contained in the notebook:
     pages = List(VerticalNotebookPage)
 
@@ -479,19 +476,8 @@ class VerticalNotebook(HasPrivateTraits):
 
         self.layout = QtGui.QVBoxLayout()
 
-        # Create the correct type of window based on whether or not it should
-        # be scrollable:
-        if self.scrollable:
-            self.control = QtGui.QScrollArea()
-            self.control.setFrameShape(QtGui.QFrame.NoFrame)
-            self.control.setWidgetResizable(True)
-
-            panel = QtGui.QWidget()
-            panel.setLayout(self.layout)
-            self.control.setWidget(panel)
-        else:
-            self.control = QtGui.QWidget()
-            self.control.setLayout(self.layout)
+        self.control = QtGui.QWidget()
+        self.control.setLayout(self.layout)
 
         return self.control
 

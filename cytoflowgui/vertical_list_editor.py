@@ -51,7 +51,7 @@ class _VerticalListEditor(_ListEditor):
         layout = QtGui.QGridLayout(self.control)
         layout.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop)
         layout.setContentsMargins(0, 0, 0, 0)
-
+        
         # Remember the editor to use for each individual list item:
         editor = self.factory.editor
         if editor is None:
