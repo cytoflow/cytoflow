@@ -193,9 +193,6 @@ class Workflow(HasStrictTraits):
                                 Item('plot_calls',
                                      style = 'readonly',
                                      visible_when = 'debug'))
-#                                 Label("Default scale"),
-#                                 Item('default_scale',
-#                                      show_label = False))
     
     # the view for the center pane
     plot_view = View(Item('selected',

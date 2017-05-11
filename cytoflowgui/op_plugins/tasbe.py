@@ -304,6 +304,9 @@ class TasbePluginOp(PluginOpMixin):
         
     def apply(self, experiment):
         
+        if experiment is None:
+            raise util.CytoflowOpError("No experiment was specified")
+        
         experiment = self._af_op.apply(experiment)
         experiment = self._bleedthrough_op.apply(experiment)
         experiment = self._bead_calibration_op.apply(experiment)
@@ -367,6 +370,9 @@ class TasbePluginView(PluginViewMixin):
                                          "\"Bleedthrough\", \"Bead Calibration\", "
                                          "or \"Color Translation\"")
                     
+        if experiment is None:
+            raise util.CytoflowViewError("No experiment to plot")
+        
         new_ex = experiment.clone()
         
         # we don't need to actually apply any ops to data

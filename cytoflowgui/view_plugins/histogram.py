@@ -104,6 +104,10 @@ class HistogramPluginView(PluginViewMixin, HistogramView):
         return iter(values)
     
     def plot(self, experiment, plot_name = None, **kwargs):
+        
+        if experiment is None:
+            raise util.CytoflowViewError("No experiment specified")
+        
         if self.plotfacet and plot_name is not None:
             experiment = experiment.subset(self.plotfacet, plot_name)
 

@@ -113,6 +113,9 @@ class ScatterplotPluginView(PluginViewMixin, ScatterplotView):
         self.plot(wi.result, wi.current_plot)
     
     def plot(self, experiment, plot_name = None, **kwargs):
+        if experiment is None:
+            raise util.CytoflowViewError("No experiment specified")
+        
         if self.plotfacet and plot_name is not None:
             experiment = experiment.subset(self.plotfacet, plot_name)
 

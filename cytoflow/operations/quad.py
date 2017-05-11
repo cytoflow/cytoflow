@@ -108,6 +108,9 @@ class QuadOp(HasStrictTraits):
             
         """
         
+        if experiment is None:
+            raise util.CytoflowOpError("No experiment specified")
+        
         # make sure name got set!
         if not self.name:
             raise util.CytoflowOpError("You have to set the gate's name "

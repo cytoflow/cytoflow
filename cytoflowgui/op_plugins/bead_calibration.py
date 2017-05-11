@@ -133,6 +133,7 @@ class BeadCalibrationPluginOp(PluginOpMixin, BeadCalibrationOp):
         return BeadCalibrationPluginView(op = self, **kwargs)
     
     def apply(self, experiment):
+
         if not self.beads_name:
             raise util.CytoflowOpError("Specify which beads to calibrate with.")
                 
