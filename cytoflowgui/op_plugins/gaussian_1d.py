@@ -83,7 +83,8 @@ class GaussianMixture1DPluginOp(PluginOpMixin, GaussianMixture1DOp):
     num_components = util.PositiveInt(1, estimate = True)
     sigma = util.PositiveFloat(0.0, allow_zero = True, estimate = True)
     by = List(Str, estimate = True)
-    
+    scale = util.ScaleEnum(estimate = True)
+ 
     # bits to support the subset editor
     
     subset_list = List(ISubset, estimate = True)    
@@ -113,6 +114,7 @@ class GaussianMixture1DPluginOp(PluginOpMixin, GaussianMixture1DOp):
     
     def clear_estimate(self):
         self._gmms = {}
+        self._scale = None
         self.changed = (Changed.ESTIMATE_RESULT, self)
         
 class GaussianMixture1DViewHandler(ViewHandlerMixin, Controller):

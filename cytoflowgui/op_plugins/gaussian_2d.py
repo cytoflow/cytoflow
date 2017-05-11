@@ -88,6 +88,8 @@ class GaussianMixture2DPluginOp(PluginOpMixin, GaussianMixture2DOp):
     num_components = util.PositiveInt(1, estimate = True)
     sigma = util.PositiveFloat(0.0, allow_zero = True, estimate = True)
     by = List(Str, estimate = True)
+    xscale = util.ScaleEnum(estimate = True)
+    yscale = util.ScaleEnum(estimate = True)
     
     _gmms = Dict(Any, Instance(mixture.GaussianMixture), transient = True)
     
@@ -113,6 +115,8 @@ class GaussianMixture2DPluginOp(PluginOpMixin, GaussianMixture2DOp):
     
     def clear_estimate(self):
         self._gmms.clear()
+        self._xscale = None
+        self._yscale = None
         self.changed = (Changed.ESTIMATE_RESULT, self)
         
     def should_clear_estimate(self, changed):
