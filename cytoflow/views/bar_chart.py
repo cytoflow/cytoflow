@@ -362,6 +362,21 @@ class BarChartView(HasStrictTraits):
             
             data = groupby.get_group(plot_name)
 
+        if error_stat is not None:
+            scale = util.scale_factory(self.scale, experiment, statistic = self.error_statistic)
+        else:
+            scale = util.scale_factory(self.scale, experiment, statistic = self.statistic)
+                        
+        ylim = kwargs.pop("ylim", None)
+        if ylim is None:
+            ylim = (0, scale.clip(data[stat.name].max() * 1.1))
+            
+            if error_stat is not None:
+                try: 
+                    ylim = (0, scale.clip(max([x[1] for x in error_stat]) * 1.1))
+                except IndexError:
+                    ylim = (0, scale.clip(error_stat.max() * 1.1))
+
         sharex = kwargs.pop('sharex', True)
         sharey = kwargs.pop('sharey', True)
         
@@ -378,9 +393,9 @@ class BarChartView(HasStrictTraits):
                           col_wrap = col_wrap,
                           legend_out = False,
                           sharex = sharex,
-                          sharey = sharey)
+                          sharey = sharey,
+                          ylim = ylim)
         
-        scale = util.scale_factory(self.scale, experiment, statistic = self.statistic)
                 
         # because the bottom of a bar chart is "0", masking out bad
         # values on a log scale doesn't work.  we must clip instead.
