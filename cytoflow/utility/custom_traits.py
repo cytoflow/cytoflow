@@ -76,51 +76,61 @@ class ScaleEnum(BaseEnum):
         return scale._scale_default
 
 class Removed(TraitType):
+    gui = False
+    
     def __init__(self, **metadata):
         metadata.setdefault('err_string', 'Trait {} has been removed')
         metadata.setdefault('transient', True)
         super(Removed, self).__init__(**metadata)
     
     def get(self, obj, name):
-        curframe = inspect.currentframe()
-        calframe = inspect.getouterframes(curframe)
-        if calframe[1][3] == "copy_traits" or calframe[1][3] == "trait_get":
-            return
-        
-        if self.warning:
-            warn(self.err_string.format(name), CytoflowWarning)
-        else:
-            raise CytoflowError(self.err_string.format(name))
+        if not self.gui:
+            # TODO - this is quite slow.  come up with a better way.
+            curframe = inspect.currentframe()
+            calframe = inspect.getouterframes(curframe)
+            if calframe[1][3] == "copy_traits" or calframe[1][3] == "trait_get":
+                return
+             
+            if self.warning:
+                warn(self.err_string.format(name), CytoflowWarning)
+            else:
+                raise CytoflowError(self.err_string.format(name))
     
     def set(self, obj, name, value):
-        curframe = inspect.currentframe()
-        calframe = inspect.getouterframes(curframe, 2)
-        if calframe[1][3] == "copy_traits":
-            return
-        
-        if self.warning:
-            warn(self.err_string.format(name), CytoflowWarning)
-        else:
-            raise CytoflowError(self.err_string.format(name))
+        if not self.gui:
+            curframe = inspect.currentframe()
+            calframe = inspect.getouterframes(curframe, 2)
+            if calframe[1][3] == "copy_traits":
+                return
+             
+            if self.warning:
+                warn(self.err_string.format(name), CytoflowWarning)
+            else:
+                raise CytoflowError(self.err_string.format(name))
     
 class Deprecated(TraitType):  
+    gui = False
+    
     def __init__(self, **metadata):
         metadata.setdefault('err_string', 'Trait {} is deprecated; please use {}')
         metadata.setdefault('transient', True)
         super(Deprecated, self).__init__(**metadata)
       
     def get(self, obj, name):
-        curframe = inspect.currentframe()
-        calframe = inspect.getouterframes(curframe)
-        if calframe[1][3] != "copy_traits" and calframe[1][3] != 'trait_get':
-            warn(self.err_string.format(name, self.new), CytoflowWarning)
+        if not self.gui:
+            curframe = inspect.currentframe()
+            calframe = inspect.getouterframes(curframe)
+            if calframe[1][3] != "copy_traits" and calframe[1][3] != 'trait_get':
+                warn(self.err_string.format(name, self.new), CytoflowWarning)
+                
         return getattr(obj, self.new)
     
     def set(self, obj, name, value):
-        curframe = inspect.currentframe()
-        calframe = inspect.getouterframes(curframe)
-        if calframe[1][3] != "copy_traits":
-            warn(self.err_string.format(name, self.new), CytoflowWarning)
+        if not self.gui:
+            curframe = inspect.currentframe()
+            calframe = inspect.getouterframes(curframe)
+            if calframe[1][3] != "copy_traits":
+                warn(self.err_string.format(name, self.new), CytoflowWarning)
         setattr(obj, self.new, value)
         
     
