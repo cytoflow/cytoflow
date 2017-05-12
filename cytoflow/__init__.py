@@ -68,7 +68,8 @@ from .views.table import TableView
 
 # util
 from .utility.util_functions import (geom_mean, geom_sd, geom_sd_range,
-                                             geom_sem, geom_sem_range)
+                                     geom_sem, geom_sem_range)
+from .utility.algorithms import (ci, percentiles)
 from .utility.scale import set_default_scale
 
 import subprocess
