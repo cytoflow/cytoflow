@@ -190,6 +190,8 @@ class FlowTask(Task):
             
             if ret != YES:
                 return
+            
+        self.filename = None
         
         # clear the workflow
         self.model.workflow = []
