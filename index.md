@@ -39,8 +39,8 @@ packages don't handle this gracefully!
   analyze data with Python?  If so, head over to the 
   [developer documentation](https://cytoflow.readthedocs.io/) to use these 
   modules in your own workflow.  They have been designed to work well in a 
-  [Jupyter notebook](http://jupyter.org/); in fact, the GUI will export a 
-  workflow directly to a notebook!
+  [Jupyter notebook](http://jupyter.org/); in fact, the GUI will soon export 
+  a workflow directly to a notebook!
 
 * **Free and open-source.**  Download the source code from 
   [the GitHub project page](https://github.com/bpteague/cytoflow) and modify it 
@@ -53,19 +53,26 @@ packages don't handle this gracefully!
 
 **There isn't any!**  The binaries at the top of the page are all you need.
 On a Mac, you'll have to extract the ZIP archive -- then, just double-click
-to start the program!
+to start the program!  It takes a minute to decompress the one-click archive
+before it runs, though, so be patient.
 
 # Documentation
 
 The [developer documentation](https://cytoflow.readthedocs.io/) is quite
 complete, but the GUI documentation is lagging.  A good introduction is
-[the screencast on Youtube.](https://youtu.be/rl1c4SlAfvU)
+[the screencast on Youtube.](https://youtu.be/rl1c4SlAfvU)  **NOTE**: This
+screencast is for an older version.  Several new screencasts will be along 
+shortly.
 
 # Help!  I found a bug!
 
 First, are you using the current version?  To check, which version 
 you're using, go to the Help menu (Windows) or Cytoflow menu (Mac)
 and choose "About Cytoflow...".
+
+You can also try to reproduce the bug in the latest build from git HEAD. 
+Those binaries are [on BinTray]
+(https://bintray.com/bpteague/cytoflow/cytoflow#files).
 
 If you have found a bug in the most recent version, there are three ways to 
 report it.  First, you can navigate to the Help menu and choose "Report a 
