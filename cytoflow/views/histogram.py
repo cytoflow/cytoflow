@@ -27,6 +27,8 @@ import seaborn as sns
 import math
 import bottleneck
 
+from warnings import warn
+
 import cytoflow.utility as util
 from .i_view import IView
 
@@ -199,6 +201,13 @@ class HistogramView(HasStrictTraits):
 
         # mask out the data that's not in the scale domain
         data = data[~np.isnan(scaled_data)]
+        
+        # mask out data that doesn't fall in the range of the bins
+        if data[self.channel].min() < bins[0] or data[self.channel].max() > bins[-1]:
+            warn("Masking out data that doesn't fall in the specified bins",
+                 util.CytoflowViewWarning)
+            data = data[data[self.channel] > bins[0]]
+            data = data[data[self.channel] < bins[-1]]
 
         # adjust the limits to clip extreme values
         min_quantile = kwargs.pop("min_quantile", 0.001)
