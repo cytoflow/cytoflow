@@ -24,31 +24,9 @@ Major features still TODO
   by each plotting module) and parameters that are plot-wide and get specified
   via the pyplot interace after a plot is created.  (These will be program-wide.)
   
-* Better support for statistics.  This is the next thing on BT's plate to 
-  implement.  This plan is still evolving, but it is
-  currently: each module that can compute statistics adds them to the Experiment
-  when apply() is called.  Each statistic is a Series, where the index is
-  the groups from groupby() specifying the subsets on which the statistics
-  were computed.  These Series are stored in a 
-  (Instance(IOperation), String) --> Series dictionary, where the IOperation 
-  is the operation that computed the statistic and the String is the name
-  of the statistic (because some operations can make multiple statistics!).
-  Will need to add a new module to compute basic 1-dimensional statistics 
-  (are there interesting multidimensional statistics too?  Like R^2?  Hrm.)
-  Plots and analyses that consume statistics must do something (facet or axis
-  or error bars) with EVERY LEVEL of the Series index.  Subsets: keep track
-  of which subset was used to compute a statistic and when analyzing or plotting
-  multiple statistics, warn (but don't die!) if the subsets are different.
-  
 * For the GUI -- an online HELP function.  Something cross-platform, please?
 
 * Operations
-  * Asinh scale
-     - It's not clear that we need this.  What do we gain over log & logicle?
-       At least there's now a nice clean way to do this 
-       (see ``cytoflow.utility.logicle_scale``)
-  * Ratio transform (creates a new channel Z from channels X and Y, Z=X/Y)
-     - If you're using the notebook, you can call add_channel().  
   * K-means clustering?  There's a branch, but it's not merged.
   * Principle component analysis?
  

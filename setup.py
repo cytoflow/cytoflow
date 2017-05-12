@@ -66,7 +66,7 @@ setup(
                         'bottleneck>=1.0',
                         'numpy>=1.9.0',
                         'numexpr>=2.4.6',
-                        'matplotlib>=1.4.3',
+                        'matplotlib>=1.5.1',
                         'scipy>=0.17',
                         'scikit-learn>=0.18',
                         'seaborn>=0.7.0',

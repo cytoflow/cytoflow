@@ -44,10 +44,26 @@ cytoflow.operations.bleedthrough_piecewise module
     :undoc-members:
     :show-inheritance:
 
+cytoflow.operations.channel_stat module
+---------------------------------------
+
+.. automodule:: cytoflow.operations.channel_stat
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 cytoflow.operations.color_translation module
 --------------------------------------------
 
 .. automodule:: cytoflow.operations.color_translation
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+cytoflow.operations.frame_stat module
+-------------------------------------
+
+.. automodule:: cytoflow.operations.frame_stat
     :members:
     :undoc-members:
     :show-inheritance:
@@ -68,14 +84,6 @@ cytoflow.operations.gaussian_2d module
     :undoc-members:
     :show-inheritance:
 
-cytoflow.operations.hlog module
--------------------------------
-
-.. automodule:: cytoflow.operations.hlog
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 cytoflow.operations.i_operation module
 --------------------------------------
 
@@ -88,22 +96,6 @@ cytoflow.operations.import_op module
 ------------------------------------
 
 .. automodule:: cytoflow.operations.import_op
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-cytoflow.operations.log module
-------------------------------
-
-.. automodule:: cytoflow.operations.log
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-cytoflow.operations.logicle module
-----------------------------------
-
-.. automodule:: cytoflow.operations.logicle
     :members:
     :undoc-members:
     :show-inheritance:
@@ -140,10 +132,26 @@ cytoflow.operations.range2d module
     :undoc-members:
     :show-inheritance:
 
+cytoflow.operations.ratio module
+--------------------------------
+
+.. automodule:: cytoflow.operations.ratio
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 cytoflow.operations.threshold module
 ------------------------------------
 
 .. automodule:: cytoflow.operations.threshold
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+cytoflow.operations.xform_stat module
+-------------------------------------
+
+.. automodule:: cytoflow.operations.xform_stat
     :members:
     :undoc-members:
     :show-inheritance:

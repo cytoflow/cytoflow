@@ -78,4 +78,4 @@ try:
     cf_cwd =  os.path.dirname(__file__)
     __version__ = subprocess.check_output(["git", "describe", "--always"], cwd = cf_cwd).rstrip()
 except (subprocess.CalledProcessError, OSError):
-    __version__ = "0.4.1"
+    __version__ = "0.5.0"

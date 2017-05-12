@@ -35,6 +35,14 @@ cytoflow.utility.cytoflow_errors module
     :undoc-members:
     :show-inheritance:
 
+cytoflow.utility.hlog_scale module
+----------------------------------
+
+.. automodule:: cytoflow.utility.hlog_scale
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 cytoflow.utility.linear_scale module
 ------------------------------------
 

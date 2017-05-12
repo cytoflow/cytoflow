@@ -65,7 +65,7 @@ the fastest.**
 
 * Install the conda package dependencies.  At the command prompt, type::
 
-    conda install pandas bottleneck numpy numexpr matplotlib scipy scikit-learn seaborn pyface envisage nbformat python-dateutil statsmodels pip
+    conda install pandas bottleneck numpy numexpr matplotlib scipy scikit-learn seaborn traits pyface envisage nbformat python-dateutil statsmodels qt pip
 
 * Install the package with pip::
 
@@ -91,7 +91,7 @@ MacOS
  
 * Install the conda package dependencies.  At the Terminal prompt, type::
      
-     conda install pandas bottleneck numpy numexpr matplotlib scipy scikit-learn seaborn pyface envisage nbformat python-dateutil statsmodels pip
+     conda install pandas bottleneck numpy numexpr matplotlib scipy scikit-learn seaborn traits pyface envisage nbformat python-dateutil statsmodels qt pip
      
 * Install the `cytoflow` package with `pip`.  At the Terminal prompt, type::
      
@@ -252,13 +252,13 @@ pre-built MacOS Python packages.  That's the approach outlined below.
   then please file a bug report.
   
 * Download the ``cytoflow`` wheel from the Github release page or the PyPI release.  These 
-  commands get version 0.3.2 from PyPI; but the Logicle extension hasn't changed in many 
+  commands get version 0.4.1 from PyPI; but the Logicle extension hasn't changed in many 
   releases, and hopefully won't be changing any time soon, so they are likely still valid
   for the master Git branch::
   
     mkdir build
     cd build
-    curl https://pypi.python.org/packages/ee/bd/5426bd210d5c03066783091da2a529233d20c16b2548b0b404a3602ca188/cytoflow-0.3.2-cp27-cp27m-macosx_10_5_x86_64.whl#md5=0340aeac94e05aa9c8fd1acec12a56af -o cytoflow.zip
+    curl https://pypi.python.org/packages/86/dc/287ba2a15660511b3c3cd0f4b77692b073eabcc9c58bb55824c00c59d0ea/cytoflow-0.4.1-cp27-cp27m-macosx_10_6_x86_64.whl -o cytoflow.zip
     unzip cytoflow.zip
     cp cytoflow/utility/logicle_ext/_Logicle.so ../cytoflow/utility/logicle_ext/
 
