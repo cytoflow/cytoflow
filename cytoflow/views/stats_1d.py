@@ -146,6 +146,9 @@ class Stats1DView(HasStrictTraits):
         else:
             stat = experiment.statistics[self.statistic]
             
+        if not util.is_numeric(stat):
+            raise util.CytoflowViewError("Statistic must be numeric")
+            
         if self.error_statistic[0]:
             if self.error_statistic not in experiment.statistics:
                 raise util.CytoflowViewError("Can't find the error statistic in the experiment")
@@ -396,10 +399,10 @@ class Stats1DView(HasStrictTraits):
             
         xscale = util.scale_factory(self.xscale, experiment, condition = self.variable) 
         
-        if error_stat is not None:
-            yscale = util.scale_factory(self.yscale, experiment, statistic = self.error_statistic)
-        else:
-            yscale = util.scale_factory(self.yscale, experiment, statistic = self.statistic)
+        yscale = util.scale_factory(self.yscale, 
+                                    experiment, 
+                                    statistic = self.statistic, 
+                                    error_statistic = self.error_statistic)
                         
         xlim = kwargs.pop("xlim", None)
         if xlim is None:
@@ -416,8 +419,8 @@ class Stats1DView(HasStrictTraits):
                     ylim = (yscale.clip(min([x[0] for x in error_stat]) * 0.9),
                             yscale.clip(max([x[1] for x in error_stat]) * 1.1))
                 except IndexError:
-                    ylim = (yscale.clip(error_stat.min() * 0.9), 
-                            yscale.clip(error_stat.max() * 1.1))
+                    ylim = (yscale.clip((data[stat.name].min() - error_stat.min()) * 0.9), 
+                            yscale.clip((data[stat.name].max() + error_stat.max()) * 1.1))
 
         kwargs.setdefault('antialiased', True)  
         

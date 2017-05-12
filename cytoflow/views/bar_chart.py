@@ -365,10 +365,10 @@ class BarChartView(HasStrictTraits):
             
             data = groupby.get_group(plot_name)
 
-        if error_stat is not None:
-            scale = util.scale_factory(self.scale, experiment, statistic = self.error_statistic)
-        else:
-            scale = util.scale_factory(self.scale, experiment, statistic = self.statistic)
+        scale = util.scale_factory(self.scale, 
+                                   experiment, 
+                                   statistic = self.statistic,
+                                   error_statistic = self.error_statistic)
                         
         ylim = kwargs.pop("ylim", None)
         if ylim is None:
@@ -378,8 +378,8 @@ class BarChartView(HasStrictTraits):
                 try: 
                     ylim = (0, scale.clip(max([x[1] for x in error_stat]) * 1.1))
                 except IndexError:
-                    ylim = (0, scale.clip(error_stat.max() * 1.1))
-
+                    ylim = (0, scale.clip((stat.max() + error_stat.max()) * 1.1))
+                    
         sharex = kwargs.pop('sharex', True)
         sharey = kwargs.pop('sharey', True)
         

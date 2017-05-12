@@ -353,7 +353,7 @@ class Stats2DView(HasStrictTraits):
                 self._returned = False
                 
                 if by:
-                    self._iter = experiment.data.groupby(by).__iter__()
+                    self._iter = data.reset_index().groupby(by).__iter__()
                 
             def __iter__(self):
                 return self
@@ -391,6 +391,9 @@ class Stats2DView(HasStrictTraits):
                                          .format(self.ystatistic))
         else:
             xstat = experiment.statistics[self.xstatistic]
+            
+        if not util.is_numeric(xstat):
+            raise util.CytoflowViewError("X Statistic must be numeric")
 
         if not self.ystatistic:
             raise util.CytoflowViewError("Y statistic not set")
@@ -400,6 +403,9 @@ class Stats2DView(HasStrictTraits):
                                          .format(self.ystatistic))
         else:
             ystat = experiment.statistics[self.ystatistic]  
+            
+        if not util.is_numeric(ystat):
+            raise util.CytoflowViewError("Y Statistic must be numeric")
             
         if set(xstat.index.names) != set(ystat.index.names):
             raise util.CytoflowViewError("X statistic and Y statistic must have "
@@ -511,6 +517,7 @@ class Stats2DView(HasStrictTraits):
                                         .format(self.subset))
                 
         names = list(data.index.names)
+        
         for name in names:
             unique_values = data.index.get_level_values(name).unique()
             if len(unique_values) == 1:
@@ -612,8 +619,8 @@ class Stats2DView(HasStrictTraits):
                     xlim = (xscale.clip(min([x[0] for x in x_error_stat]) * 0.9),
                             xscale.clip(max([x[1] for x in x_error_stat]) * 1.1))
                 except IndexError:
-                    xlim = (xscale.clip(x_error_stat.min() * 0.9), 
-                            xscale.clip(x_error_stat.max() * 1.1))
+                    xlim = (xscale.clip((data[xname].min() - x_error_stat.min()) * 0.9), 
+                            xscale.clip((data[xname].max() + x_error_stat.max()) * 1.1))
                       
         ylim = kwargs.pop("ylim", None)
         if ylim is None:
@@ -625,8 +632,8 @@ class Stats2DView(HasStrictTraits):
                     ylim = (yscale.clip(min([x[0] for x in y_error_stat]) * 0.9),
                             yscale.clip(max([x[1] for x in y_error_stat]) * 1.1))
                 except IndexError:
-                    ylim = (yscale.clip(y_error_stat.min() * 0.9), 
-                            yscale.clip(y_error_stat.max() * 1.1))
+                    ylim = (yscale.clip((data[yname].min() - y_error_stat.min()) * 0.9), 
+                            yscale.clip((data[yname].max() + y_error_stat.max()) * 1.1))
                       
         kwargs.setdefault('antialiased', True)
         

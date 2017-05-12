@@ -43,6 +43,7 @@ import matplotlib.colors
 
 from .scale import IScale, register_scale
 from .logicle_ext.Logicle import FastLogicle
+from .util_functions import is_numeric
 from .cytoflow_errors import CytoflowError, CytoflowWarning
 
 @provides(IScale)
@@ -126,6 +127,7 @@ class LogicleScale(HasStrictTraits):
     channel = Str
     condition = Str
     statistic = Tuple(Str, Str)
+    error_statistic = Tuple(Str, Str)
 
     W = Property(Float, depends_on = "[experiment, channel, M, _T, r]")
     M = Float(4.5, desc = "the width of the display in log10 decades")
@@ -134,10 +136,9 @@ class LogicleScale(HasStrictTraits):
 
     _W = Float(Undefined)
     _T = Property(Float, depends_on = "[experiment, condition, channel]")
-    _range = Property(Tuple(Float, Float))
     _logicle = Property(Instance(FastLogicle), depends_on = "[_T, W, M, A]")
 
-    mpl_params = Property(Dict, depends_on = "_logicle, scale_min, scale_max")
+    mpl_params = Property(Dict, depends_on = "_logicle")
     
     def __call__(self, data):
         """
@@ -239,12 +240,24 @@ class LogicleScale(HasStrictTraits):
                     return self.experiment.data[self.channel].max()
             elif self.condition and self.condition in self.experiment.conditions:
                 return self.experiment.data[self.condition].max()
-            elif self.statistic and self.statistic in self.experiment.statistics:
+            elif self.statistic in self.experiment.statistics \
+                 and not self.error_statistic in self.experiment.statistics:
                 stat = self.experiment.statistics[self.statistic]
+                assert is_numeric(stat)
+                return stat.max()
+            elif self.statistic in self.experiment.statistics and \
+                 self.error_statistic in self.experiment.statistics:
+                stat = self.experiment.statistics[self.statistic]
+                err_stat = self.experiment.statistics[self.error_statistic]
+                
                 try:
-                    return max([max(x) for x in stat])
+                    err_max = max([max(x) for x in err_stat])
+                    return err_max
                 except (TypeError, IndexError):
-                    return stat.max()
+                    err_max = err_stat.max()
+                    stat_max = stat.max()
+
+                    return stat_max + err_max 
             else:
                 return Undefined
         else:

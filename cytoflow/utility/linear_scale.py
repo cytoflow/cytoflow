@@ -42,6 +42,7 @@ class LinearScale(ScaleMixin):
     channel = Str
     condition = Str
     statistic = Tuple(Str, Str)
+    error_statistic = Tuple(Str, Str)
 
     mpl_params = Dict()
 
@@ -61,7 +62,7 @@ class LinearScale(ScaleMixin):
         elif self.condition:
             vmin = self.experiment[self.condition].min()
             vmax = self.experiment[self.condition].max()
-        elif self.statistic:
+        elif self.statistic in self.experiment.statistics:
             stat = self.experiment.statistics[self.statistic]
             try:
                 vmin = min([min(x) for x in stat])
@@ -69,6 +70,16 @@ class LinearScale(ScaleMixin):
             except (TypeError, IndexError):
                 vmin = stat.min()
                 vmax = stat.max()
+                
+            if self.error_statistic in self.experiment.statistics:
+                err_stat = self.experiment.statistics[self.error_statistic]
+                try:
+                    vmin = min([min(x) for x in err_stat])
+                    vmax = max([max(x) for x in err_stat])
+                except (TypeError, IndexError):
+                    vmin = vmin - err_stat.min()
+                    vmax = vmax + err_stat.max()
+                
         else:
             raise CytoflowError("Must set one of 'channel', 'condition' "
                                 "or 'statistic'.")

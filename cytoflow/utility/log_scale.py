@@ -33,7 +33,7 @@ import matplotlib.colors
 
 from .scale import IScale, ScaleMixin, register_scale
 from .cytoflow_errors import CytoflowError
-
+from .util_functions import is_numeric
 
 @provides(IScale)
 class LogScale(ScaleMixin):
@@ -46,9 +46,10 @@ class LogScale(ScaleMixin):
     channel = Str
     condition = Str
     statistic = Tuple(Str, Str)
+    error_statistic = Tuple(Str, Str)
 
     mode = Enum("clip", "mask")
-    threshold = Property(Float, depends_on = "[experiment, condition, channel]")
+    threshold = Property(Float, depends_on = "[experiment, condition, channel, statistic, error_statistic]")
     _channel_threshold = Float(0.1)
 
     mpl_params = Property(Dict)
@@ -66,13 +67,27 @@ class LogScale(ScaleMixin):
         elif self.condition:
             cond = self.experiment[self.condition][self.experiment[self.condition] > 0]
             return cond.min()
-        elif self.statistic:
+        elif self.statistic in self.experiment.statistics \
+            and not self.error_statistic in self.experiment.statistics:
             stat = self.experiment.statistics[self.statistic]
-            stat = stat[stat > 0]
+            assert is_numeric(stat)
+            return stat[stat > 0].min()
+        elif self.statistic in self.experiment.statistics \
+            and self.error_statistic in self.experiment.statistics:
+            stat = self.experiment.statistics[self.statistic]
+            err_stat = self.experiment.statistics[self.error_statistic]
+            stat_min = stat[stat > 0].min()
+            
             try:
-                return min([x[0] for x in stat])
-            except IndexError:
-                return stat.min()
+                err_min = min(filter(lambda x: x > 0, 
+                                     [min(x) for x in err_stat]))
+                return err_min
+                
+            except (TypeError, IndexError):
+                err_min = min(filter(lambda x: stat_min - x > 0,
+                                     err_stat))
+                return stat_min - err_min
+                
         
     def __call__(self, data):
         # this function should work with: int, float, tuple, list, pd.Series, 
@@ -137,16 +152,18 @@ class LogScale(ScaleMixin):
             try:
                 return map(lambda x: max(data, self.threshold), data)
             except TypeError:
-                raise CytoflowError("Unknown data type in LogicleScale.__call__")
+                raise CytoflowError("Unknown data type in LogScale.clip")
             
     def color_norm(self):
         if self.channel:
             vmin = self.experiment[self.channel].min()
             vmax = self.experiment[self.channel].max()
+
         elif self.condition:
             vmin = self.experiment[self.condition].min()
             vmax = self.experiment[self.condition].max()
-        elif self.statistic:
+                
+        elif self.statistic in self.experiment.statistics:
             stat = self.experiment.statistics[self.statistic]
             try:
                 vmin = min([min(x) for x in stat])
@@ -154,6 +171,16 @@ class LogScale(ScaleMixin):
             except (TypeError, IndexError):
                 vmin = stat.min()
                 vmax = stat.max()
+                
+            if self.error_statistic in self.experiment.statistics:
+                err_stat = self.experiment.statistics[self.error_statistic]
+                try:
+                    vmin = min([min(x) for x in err_stat])
+                    vmax = max([max(x) for x in err_stat])
+                except (TypeError, IndexError):
+                    vmin = vmin - err_stat.min()
+                    vmax = vmax + err_stat.max()
+
         else:
             raise CytoflowError("Must set one of 'channel', 'condition' "
                                 "or 'statistic'.")
