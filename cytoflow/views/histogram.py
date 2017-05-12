@@ -235,7 +235,19 @@ class HistogramView(HasStrictTraits):
             ax.set_xscale(self.scale, **scale.mpl_params)  
                   
         legend = kwargs.pop('legend', True)
-        g.map(plt.hist, self.channel, **kwargs)
+        
+        # if we have a hue facet, the y scaling is frequently wrong.  this
+        # will capture the maximum bin count of each call to plt.hist, so 
+        # we don't have to compute the histogram multiple times
+        ymax = []
+        
+        def hist_lims(*args, **kwargs):
+            n, _, _ = plt.hist(*args, **kwargs)
+            ymax.append(max(n))
+        
+        g.map(hist_lims, self.channel, **kwargs)
+        
+        plt.ylim(0, 1.05 * max(ymax))
         
         # if we are sharing y axes, make sure the y scale is the same for each
         if sharey:
@@ -265,12 +277,6 @@ class HistogramView(HasStrictTraits):
                     
             for ax in fig.get_axes():
                 ax.set_xlim(fig_x_min, fig_x_max)
-        
-        # if we have a hue facet, the y scaling is frequently wrong.
-#         if self.huefacet:
-#             h = np.histogram(data[self.channel], bins = bins)
-#             ymax = np.max(h[0])
-#             plt.ylim(0, 1.1 * ymax)
         
         # if we have a hue facet and a lot of hues, make a color bar instead
         # of a super-long legend.
