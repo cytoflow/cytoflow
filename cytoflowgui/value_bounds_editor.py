@@ -135,10 +135,10 @@ class _ValueBoundsEditor(EditorWithList):
         self.values = sorted(values)
         
         if self.high not in self.values:
-            self.high = max(self.values)
+            self.high = min(self.values, key = lambda x: abs(x - self.high))
             
         if self.low not in self.values:
-            self.low = min(self.values)
+            self.low = min(self.values, key = lambda x: abs(x - self.low))
         
         slider = self.control.slider
         
@@ -152,15 +152,8 @@ class _ValueBoundsEditor(EditorWithList):
         
         
     def update_editor(self):
-        slider = self.control.slider
-        if len(self.values) > 1:
-            self.control.setEnabled(True)
-            slider.setLow(self._convert_to_slider(self.low))
-            slider.setHigh(self._convert_to_slider(self.high))
-        else:
-            slider.setLow(slider.minimum())
-            slider.setHigh(slider.maximum())
-            self.control.setEnabled(False)
+        # all this is taken care of in other handlers
+        pass
 
     def update_low_on_enter(self):
         try:
@@ -177,7 +170,7 @@ class _ValueBoundsEditor(EditorWithList):
                 self._label_lo.setText(self.format % low)
 
             if low not in self.values:
-                raise ValueError
+                low = min(self.values, key = lambda x: abs(x - low))
             
             self.low = low
             self.low_invalid = False
@@ -199,8 +192,9 @@ class _ValueBoundsEditor(EditorWithList):
                 high = self.low
                 self._label_hi.setText(self.format % high)
 
-            assert high in self.values
-            
+            if high not in self.values:
+                high = min(self.values, key = lambda x: abs(x - high))
+                
             self.high = high
             self.high_invalid = False
 
@@ -316,9 +310,7 @@ class _ValueBoundsEditor(EditorWithList):
             
     
 class ValuesBoundsEditor(EditorWithListFactory, RangeEditor):
-    
-#     values = List
-        
+            
     def _get_simple_editor_class(self):
         return _ValueBoundsEditor
     
