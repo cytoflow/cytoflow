@@ -191,7 +191,8 @@ class FlowTask(Task):
             if ret != YES:
                 return
             
-        self.filename = None
+        self.filename = ""
+        self.window.title = "Cytoflow"
         
         # clear the workflow
         self.model.workflow = []
