@@ -87,7 +87,6 @@ setup(
     ext_modules = [Extension("cytoflow.utility.logicle_ext._Logicle",
                              sources = ["cytoflow/utility/logicle_ext/FastLogicle.cpp",
                                         "cytoflow/utility/logicle_ext/Logicle.cpp",
-                                        "cytoflow/utility/logicle_ext/logicle.h",
                                         "cytoflow/utility/logicle_ext/Logicle.i"],
                              depends = ["cytoflow/utility/logicle_ext/FastLogicle.cpp",
                                         "cytoflow/utility/logicle_ext/Logicle.cpp",
