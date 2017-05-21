@@ -71,8 +71,7 @@ you're using, go to the Help menu (Windows) or Cytoflow menu (Mac)
 and choose "About Cytoflow...".
 
 You can also try to reproduce the bug in the latest build from git HEAD. 
-Those binaries are [on BinTray]
-(https://bintray.com/bpteague/cytoflow/cytoflow#files).
+Those binaries are [on BinTray](https://bintray.com/bpteague/cytoflow/cytoflow#files).
 
 If you have found a bug in the most recent version, there are three ways to 
 report it.  First, you can navigate to the Help menu and choose "Report a 
