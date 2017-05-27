@@ -34,6 +34,7 @@ from .i_selectionview import ISelectionView
 from .bar_chart import BarChartView
 from .histogram import HistogramView
 from .scatterplot import ScatterplotView
+from .densityplot import DensityView
 from .stats_1d import Stats1DView
 from .stats_2d import Stats2DView
 from .kde_1d import Kde1DView
