@@ -84,17 +84,22 @@ class BeadCalibrationOp(HasStrictTraits):
         values for this dict are included in BeadCalibrationOp.BEADS.
         Must be set to use `estimate()`.
         
-    bead_peak_quantile : Int
-        The quantile threshold used to choose bead peaks.  Default == 80.
-        Must be set to use `estimate()`.
+    bead_peak_quantile : Int (default = 80)
+        The quantile threshold used to choose bead peaks.  Must be set to use 
+        `estimate()`.
         
-    bead_brightness_threshold : Float
-        How bright must a bead peak be to be considered?  Default == 100.
-        Must be set to use `estimate()`.
+    bead_brightness_threshold : Float (default = 100)
+        How bright must a bead peak be to be considered?  Must be set to use 
+        `estimate()`.
         
     bead_brightness_cutoff : Float
         If a bead peak is above this, then don't consider it.  Takes care of
         clipping saturated detection.  Defaults to 70% of the detector range.
+        
+    bead_histogram_bins : Int (default = 512)
+        The number of bins to use in computing the bead histogram.  Tweak
+        this if the peak find is having difficulty, or if you have a small 
+        number of events
         
     force_linear : Bool(False)
         A linear fit in log space doesn't always go through the origin, which 
@@ -179,6 +184,7 @@ class BeadCalibrationOp(HasStrictTraits):
 
     bead_brightness_threshold = Float(100)
     bead_brightness_cutoff = Float(Undefined)
+    bead_histogram_bins = Int(512)
     
     # TODO - bead_brightness_threshold should probably be different depending
     # on the data range of the input.
@@ -229,7 +235,7 @@ class BeadCalibrationOp(HasStrictTraits):
                                             
             # bin the data on a log scale
 
-            hist_bins = np.logspace(1, math.log(data_range, 2), num = 256, base = 2)
+            hist_bins = np.logspace(1, math.log(data_range, 2), num = self.bead_histogram_bins, base = 2)
             hist = np.histogram(data, bins = hist_bins)
             
             # mask off-scale values
@@ -243,7 +249,7 @@ class BeadCalibrationOp(HasStrictTraits):
             peak_bins = scipy.signal.find_peaks_cwt(hist_smooth, 
                                                     widths = np.arange(3, 20),
                                                     max_distances = np.arange(3, 20) / 2)
-            
+                                    
             # filter by height and intensity
             peak_threshold = np.percentile(hist_smooth, self.bead_peak_quantile)
             peak_bins_filtered = \
@@ -259,12 +265,12 @@ class BeadCalibrationOp(HasStrictTraits):
             
             # "mean equivalent fluorochrome"
             mef = self.beads[mef_unit]
-                    
+                                                    
             if len(peaks) == 0:
                 raise util.CytoflowOpError("Didn't find any peaks for channel {}; "
                                            "check the diagnostic plot"
                                            .format(channel))
-            elif len(peaks) > len(self.beads):
+            elif len(peaks) > len(mef):
                 raise util.CytoflowOpError("Found too many peaks for channel {}; "
                                            "check the diagnostic plot"
                                            .format(channel))
@@ -287,7 +293,7 @@ class BeadCalibrationOp(HasStrictTraits):
                 
                 # do it in log10 space because otherwise the brightest peaks
                 # have an outsized influence.
-                
+                                
                 best_resid = np.inf
                 for start, end in [(x, x+len(peaks)) for x in range(len(mef) - len(peaks) + 1)]:
                     mef_subset = mef[start:end]
@@ -297,7 +303,7 @@ class BeadCalibrationOp(HasStrictTraits):
                                     np.log10(mef_subset), 
                                     deg = 1, 
                                     full = True)
-                    
+                                        
                     resid = lr[1][0]
                     if resid < best_resid:
                         best_lr = lr[0]
@@ -487,7 +493,7 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
             data_range = experiment.metadata[channel]['range']
                 
             # bin the data on a log scale            
-            hist_bins = np.logspace(1, math.log(data_range, 2), num = 256, base = 2)
+            hist_bins = np.logspace(1, math.log(data_range, 2), num = self.op.bead_histogram_bins, base = 2)
             hist = np.histogram(data, bins = hist_bins)
             
             # mask off-scale values
