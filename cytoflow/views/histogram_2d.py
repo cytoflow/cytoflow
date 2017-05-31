@@ -149,14 +149,11 @@ class Histogram2DView(HasStrictTraits):
         kwargs['yscale'] = yscale
         
         scaled_xdata = xscale(data[self.xchannel])
-        data = data[~np.isnan(scaled_xdata)]
         scaled_xdata = scaled_xdata[~np.isnan(scaled_xdata)]
 
         scaled_ydata = yscale(data[self.ychannel])
-        data = data[~np.isnan(scaled_ydata)]
         scaled_ydata = scaled_ydata[~np.isnan(scaled_ydata)]
         
-
         # find good bin counts
         num_xbins = util.num_hist_bins(scaled_xdata)
         num_ybins = util.num_hist_bins(scaled_ydata)
@@ -175,32 +172,27 @@ class Histogram2DView(HasStrictTraits):
             num_ybins = self._max_bins
       
         kwargs.setdefault('smoothed', False)
-        if kwargs['smoothed']:
-            num_xbins /= 2
-            num_ybins /= 2
-                
-        _, xedges, yedges = np.histogram2d(scaled_xdata, 
-                                           scaled_ydata, 
-                                           bins = (num_xbins, num_ybins))
-
-        kwargs['xedges'] = xscale.inverse(xedges)
-        kwargs['yedges'] = yscale.inverse(yedges)
-        
-        kwargs.setdefault('antialiased', True)
-        
+            
         # adjust the limits to clip extreme values
         min_quantile = kwargs.pop("min_quantile", 0.001)
         max_quantile = kwargs.pop("max_quantile", 1.0) 
                 
         xlim = kwargs.pop("xlim", None)
         if xlim is None:
-            xlim = (data[self.xchannel].quantile(min_quantile),
-                    data[self.xchannel].quantile(max_quantile))
+            xlim = (xscale.clip(data[self.xchannel].quantile(min_quantile)),
+                    xscale.clip(data[self.xchannel].quantile(max_quantile)))
                       
         ylim = kwargs.pop("ylim", None)
         if ylim is None:
-            ylim = (data[self.ychannel].quantile(min_quantile),
-                    data[self.ychannel].quantile(max_quantile))
+            ylim = (yscale.clip(data[self.ychannel].quantile(min_quantile)),
+                    yscale.clip(data[self.ychannel].quantile(max_quantile)))
+
+        xbins = xscale.inverse(np.linspace(xscale(xlim[0]), xscale(xlim[1]), num_xbins))
+        ybins = yscale.inverse(np.linspace(yscale(ylim[0]), yscale(ylim[1]), num_ybins))
+
+        kwargs.setdefault('antialiased', True)
+        kwargs.setdefault('linewidth', 0.1)
+        kwargs.setdefault('edgecolor', 'none')
             
         sharex = kwargs.pop('sharex', True)
         sharey = kwargs.pop('sharey', True)
@@ -227,7 +219,7 @@ class Histogram2DView(HasStrictTraits):
             ax.set_xscale(self.xscale, **xscale.mpl_params)
             ax.set_yscale(self.yscale, **yscale.mpl_params)
         
-        g.map(_hist2d, self.xchannel, self.ychannel, **kwargs)
+        g.map(_hist2d, self.xchannel, self.ychannel, xbins = xbins, ybins = ybins, **kwargs)
             
         # if we are sharing x axes, make sure the x scale is the same for each
         if sharex:
@@ -285,22 +277,21 @@ class Histogram2DView(HasStrictTraits):
                 g.add_legend(title = self.huefacet)
         
 
-def _hist2d(x, y, xedges = None, yedges = None, xscale = None, yscale = None, smoothed = False, **kwargs):
+def _hist2d(x, y, xbins, ybins, **kwargs):
+
+    smoothed = kwargs.pop('smoothed', False)
+    xscale = kwargs.pop('xscale', None)
+    yscale = kwargs.pop('yscale', None)
 
     ax = plt.gca()
-    
-    x = xscale(x)
-    y = yscale(y)    
-    h, _, _ = np.histogram2d(x, y, 
-                             bins = (xscale(xedges), 
-                                     yscale(yedges)))
-    X, Y = np.meshgrid(xedges[1:], yedges[1:])
+
+    h, X, Y = np.histogram2d(x, y, bins = [xbins, ybins])
     
     if smoothed:
-        grid_x, grid_y = np.mgrid[xscale(xedges[0]):xscale(xedges[-1]):100j, 
-                                  yscale(yedges[0]):yscale(yedges[-1]):100j]
+        grid_x, grid_y = np.mgrid[xscale(X[0]):xscale(X[-1]):complex(5 * len(xbins)), 
+                                  yscale(Y[0]):yscale(Y[-1]):complex(5 * len(ybins))]
         
-        loc = [(x, y) for x in xscale(xedges[1:]) for y in yscale(yedges[1:])]
+        loc = [(x, y) for x in xscale(X[1:]) for y in yscale(Y[1:])]
          
         h = griddata(loc, h.flatten(), (grid_x, grid_y), method = "linear", fill_value = 0)
          

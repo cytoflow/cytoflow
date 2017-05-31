@@ -24,10 +24,10 @@ Created on Apr 19, 2015
 
 from traits.api import HasStrictTraits, provides, Str
 
-import matplotlib as mpl
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
+from scipy.interpolate import griddata
 
 import cytoflow.utility as util
 from .i_view import IView
@@ -137,17 +137,21 @@ class DensityView(HasStrictTraits):
         else:
             data = experiment.data
 
-        legend = kwargs.pop('legend', True)
+#         legend = kwargs.pop('legend', True)
         
         kwargs.setdefault('antialiased', True)
-        
-        xscale = kwargs.pop('xscale', None)
+        kwargs.setdefault('linewidth', 1)
+        kwargs.setdefault('edgecolor', 'face')
+
+        xscale = kwargs.get('xscale', None)
         if xscale is None:
             xscale = util.scale_factory(self.xscale, experiment, channel = self.xchannel)
+            kwargs['xscale'] = xscale
         
-        yscale = kwargs.pop('yscale', None)
+        yscale = kwargs.get('yscale', None)
         if yscale is None:
             yscale = util.scale_factory(self.yscale, experiment, channel = self.ychannel)
+            kwargs['yscale'] = yscale
 
         # adjust the limits to clip extreme values
         min_quantile = kwargs.pop("min_quantile", 0.001)
@@ -163,9 +167,9 @@ class DensityView(HasStrictTraits):
             ylim = (yscale.clip(data[self.ychannel].quantile(min_quantile)),
                     yscale.clip(data[self.ychannel].quantile(max_quantile)))
             
-        gridsize = kwargs.pop('gridsize', 200)
-        xbins = xscale.inverse(np.arange(xlim[0], xlim[1], gridsize))
-        ybins = yscale.inverse(np.arange(ylim[0], ylim[1], gridsize))
+        gridsize = kwargs.pop('gridsize', 50)
+        xbins = xscale.inverse(np.linspace(xscale(xlim[0]), xscale(xlim[1]), gridsize))
+        ybins = yscale.inverse(np.linspace(yscale(ylim[0]), yscale(ylim[1]), gridsize))
             
         sharex = kwargs.pop('sharex', True)
         sharey = kwargs.pop('sharey', True)
@@ -186,12 +190,12 @@ class DensityView(HasStrictTraits):
                           sharey = sharey,
                           xlim = xlim,
                           ylim = ylim)
+        
+        for ax in g.axes.flatten():
+            ax.set_xscale(self.xscale, **xscale.mpl_params)
+            ax.set_yscale(self.yscale, **yscale.mpl_params)
 
-#         for ax in g.axes.flatten():
-#             ax.set_xscale(self.xscale, **xscale.mpl_params)
-#             ax.set_yscale(self.yscale, **yscale.mpl_params)
-
-        g.map(plt.hist2d, self.xchannel, self.ychannel, bins = [xbins, ybins], **kwargs)
+        g.map(_densityplot, self.xchannel, self.ychannel, xbins = xbins, ybins = ybins, **kwargs)
         
         # if we're sharing y axes, make sure the y scale is the same for each
         if sharey:
@@ -250,10 +254,30 @@ class DensityView(HasStrictTraits):
         return g
         
         
-# def _densityplot(x, y, xbins, ybins, **kwargs):
-#     h = np.histogram2d(x, y, bins = [xbins, ybins])
-#         
-#         
+def _densityplot(x, y, xbins, ybins, **kwargs):
+    
+    h, X, Y = np.histogram2d(x, y, bins=[xbins, ybins])
+    
+    smoothed = kwargs.pop('smoothed', False)
+    xscale = kwargs.pop('xscale')
+    yscale = kwargs.pop('yscale')
+    
+    if smoothed:
+        grid_x, grid_y = np.mgrid[xscale(X[0]):xscale(X[-1]):complex(5 * len(xbins)), 
+                                  yscale(Y[0]):yscale(Y[-1]):complex(5 * len(ybins))]
+        
+        loc = [(x, y) for x in xscale(X[1:]) for y in yscale(Y[1:])]
+         
+        h = griddata(loc, h.flatten(), (grid_x, grid_y), method = "linear", fill_value = 0)
+         
+        X, Y = xscale.inverse(grid_x), yscale.inverse(grid_y)
+    else:
+        h = h.T
+
+    ax = plt.gca()
+    ax.pcolormesh(X, Y, h, **kwargs)
+         
+         
 if __name__ == '__main__':
     import cytoflow as flow
     tube1 = flow.Tube(file = '../../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs',
