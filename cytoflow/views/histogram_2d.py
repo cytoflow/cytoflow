@@ -33,7 +33,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 from matplotlib.colors import Colormap
-from scipy.interpolate import griddata
+from scipy.ndimage.filters import gaussian_filter
 
 import cytoflow.utility as util
 from .i_view import IView
@@ -281,25 +281,18 @@ class Histogram2DView(HasStrictTraits):
 
 def _hist2d(x, y, xbins, ybins, **kwargs):
 
+    h, X, Y = np.histogram2d(x, y, bins=[xbins, ybins])
+    
     smoothed = kwargs.pop('smoothed', False)
-    xscale = kwargs.pop('xscale', None)
-    yscale = kwargs.pop('yscale', None)
-
-    ax = plt.gca()
-
-    h, X, Y = np.histogram2d(x, y, bins = [xbins, ybins])
+    smoothed_sigma = kwargs.pop('smoothed_sigma', 1)
     
     if smoothed:
-        grid_x, grid_y = np.mgrid[xscale(X[0]):xscale(X[-1]):complex(5 * len(xbins)), 
-                                  yscale(Y[0]):yscale(Y[-1]):complex(5 * len(ybins))]
-        
-        loc = [(x, y) for x in xscale(X[1:]) for y in yscale(Y[1:])]
-         
-        h = griddata(loc, h.flatten(), (grid_x, grid_y), method = "linear", fill_value = 0)
-         
-        X, Y = xscale.inverse(grid_x), yscale.inverse(grid_y)
+        h = gaussian_filter(h, sigma = smoothed_sigma)
     else:
         h = h.T
+
+    ax = plt.gca()
+    ax.pcolormesh(X, Y, h, **kwargs)
 
     color = kwargs.pop("color")   
     ax.pcolormesh(X, Y, h, cmap = AlphaColormap("AlphaColor", color), **kwargs)
