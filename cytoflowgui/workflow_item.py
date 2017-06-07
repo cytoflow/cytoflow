@@ -231,13 +231,13 @@ class RemoteWorkflowItem(WorkflowItem):
                     self.op_warning = ""
                     
                 self.status = "valid"
-                return True
+                return
                 
             except CytoflowError as e:
                 self.result = None
                 self.op_error = e.__str__()    
                 self.status = "invalid"
-                return False
+                return
  
         
     def update_plot_names(self):
@@ -261,14 +261,20 @@ class RemoteWorkflowItem(WorkflowItem):
             plt.show()
             self.matplotlib_events.set() 
             self.plot_lock.release()
-            return True
+            return
 
         self.view_warning = ""
         self.view_error = ""
 
-        if len(self.current_view_plot_names) > 0 and self.current_plot not in self.current_view_plot_names:
+        try:
+            if len(self.current_view_plot_names) > 0 and self.current_plot not in self.current_view_plot_names:
+                self.view_error = "Plot {} not in current plot names {}".format(self.current_plot, self.current_view_plot_names)
+                return
+        except Exception as e:
+            # occasionally if the types are really different the "in" statement 
+            # above will throw an error
             self.view_error = "Plot {} not in current plot names {}".format(self.current_plot, self.current_view_plot_names)
-            return True
+            return
           
         with warnings.catch_warnings(record = True) as w:
             try:
