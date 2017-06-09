@@ -94,7 +94,7 @@ class DensityGateOp(HasStrictTraits):
     >>> ex3 = gauss_op.apply(ex2)
     """
     
-    id = Constant('edu.mit.synbio.cytoflow.operations.gaussian_2d')
+    id = Constant('edu.mit.synbio.cytoflow.operations.density')
     friendly_id = Constant("2D Gaussian Mixture")
     
     name = CStr()
@@ -102,12 +102,11 @@ class DensityGateOp(HasStrictTraits):
     ychannel = Str()
     xscale = util.ScaleEnum
     yscale = util.ScaleEnum
-    num_components = util.PositiveInt
-    sigma = util.PositiveFloat(0.0, allow_zero = True)
+    keep = util.PositiveFloat(0.9)
+    bins = util.PositiveInt(100)
+    sigma = util.PositiveFloat(1.0, allow_zero = False)
     by = List(Str)
-    
-    posteriors = Bool(False)
-    
+        
     # the key is either a single value or a tuple
     _gmms = Dict(Any, Instance(mixture.GaussianMixture), transient = True)
     _xscale = Instance(util.IScale, transient = True)

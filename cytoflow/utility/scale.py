@@ -18,7 +18,7 @@
 
 import numbers
 
-from traits.api import Interface, Str, Dict, Instance, Tuple
+from traits.api import Interface, Str, Dict, Instance, Tuple, Array
 
 from .cytoflow_errors import CytoflowError
 from .util_functions import is_numeric
@@ -65,6 +65,8 @@ class IScale(Interface):
     channel = Str
     condition = Str
     statistic = Tuple(Str, Str)
+    error_statistic = Tuple(Str, Str)
+    data = Array
 
     mpl_params = Dict()
 

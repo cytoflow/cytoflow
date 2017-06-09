@@ -25,9 +25,9 @@ Created on Feb 21, 2016
 import math, sys
 from warnings import warn
 
-from traits.api import HasStrictTraits, HasTraits, Float, Property, Instance, Str, \
-                       cached_property, Undefined, provides, Constant, Dict, \
-                       Tuple
+from traits.api import (HasStrictTraits, HasTraits, Float, Property, Instance, Str,
+                        cached_property, Undefined, provides, Constant, Dict,
+                        Tuple, Array)
                        
 import numpy as np
 import pandas as pd
@@ -125,6 +125,7 @@ class LogicleScale(HasStrictTraits):
     condition = Str
     statistic = Tuple(Str, Str)
     error_statistic = Tuple(Str, Str)
+    data = Array
 
     W = Property(Float, depends_on = "[experiment, channel, M, _T, r]")
     M = Float(4.5, desc = "the width of the display in log10 decades")
@@ -255,6 +256,8 @@ class LogicleScale(HasStrictTraits):
                     stat_max = stat.max()
 
                     return stat_max + err_max 
+            elif self.data.size > 0:
+                return self.data.max()
             else:
                 return Undefined
         else:

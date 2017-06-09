@@ -70,8 +70,8 @@ class DensityView(HasStrictTraits):
         .. note: should this be a param instead?
     """
     
-    id = 'edu.mit.synbio.cytoflow.view.scatterplot'
-    friend_id = "Scatter Plot"
+    id = 'edu.mit.synbio.cytoflow.view.density'
+    friend_id = "Density Plot"
     
     xchannel = Str
     xscale = util.ScaleEnum
@@ -141,7 +141,11 @@ class DensityView(HasStrictTraits):
         kwargs.setdefault('linewidth', 1)
         kwargs.setdefault('edgecolor', 'face')
         kwargs.setdefault('cmap', plt.get_cmap('viridis'))
-        kwargs.setdefault('norm', colors.Normalize())
+        
+#         hue_scale = util.scale_factory(self.huescale, 
+#                                        experiment, 
+#                                        condition = self.huefacet)
+#         kwargs.setdefault('norm', colors.Normalize())
         
         under_color = kwargs.pop('under_color', 'white')
         kwargs['cmap'].set_under(color = under_color)
@@ -197,15 +201,18 @@ class DensityView(HasStrictTraits):
             ax.set_yscale(self.yscale, **yscale.mpl_params)
             
         # set up the range of the color map
-        data_max = 0
-        for _, data_ijk in g.facet_data():
-            x = data_ijk[self.xchannel]
-            y = data_ijk[self.ychannel]
-            h, _, _ = np.histogram2d(x, y, bins=[xbins, ybins])
-            data_max = max(data_max, h.max())
-            
-        kwargs['norm'].vmin = 1
-        kwargs['norm'].vmax = data_max
+        if 'norm' not in kwargs:
+            data_max = 0
+            for _, data_ijk in g.facet_data():
+                x = data_ijk[self.xchannel]
+                y = data_ijk[self.ychannel]
+                h, _, _ = np.histogram2d(x, y, bins=[xbins, ybins])
+                data_max = max(data_max, h.max())
+                
+            hue_scale = util.scale_factory(self.huescale, 
+                                           experiment, 
+                                           data = np.array([1, data_max]))
+            kwargs['norm'] = hue_scale.color_norm()
         
         g.map(_densityplot, self.xchannel, self.ychannel, xbins = xbins, ybins = ybins, **kwargs)
         
