@@ -27,7 +27,7 @@ from __future__ import division, absolute_import
 
 import matplotlib.colors
 
-from traits.api import Instance, Str, Dict, provides, Constant, Tuple
+from traits.api import Instance, Str, Dict, provides, Constant, Tuple, Array
 from .scale import IScale, ScaleMixin, register_scale
 from .cytoflow_errors import CytoflowError
 
@@ -43,6 +43,7 @@ class LinearScale(ScaleMixin):
     condition = Str
     statistic = Tuple(Str, Str)
     error_statistic = Tuple(Str, Str)
+    data = Array
 
     mpl_params = Dict()
 
@@ -56,6 +57,8 @@ class LinearScale(ScaleMixin):
         return data
     
     def color_norm(self):
+        print "a"
+        print self.data
         if self.channel:
             vmin = self.experiment[self.channel].min()
             vmax = self.experiment[self.channel].max()
@@ -79,11 +82,15 @@ class LinearScale(ScaleMixin):
                 except (TypeError, IndexError):
                     vmin = vmin - err_stat.min()
                     vmax = vmax + err_stat.max()
-                
+        elif self.data.size > 0:
+            vmin = self.data.min()
+            vmax = self.data.max()        
         else:
             raise CytoflowError("Must set one of 'channel', 'condition' "
                                 "or 'statistic'.")
             
+        import sys;sys.path.append(r'/home/brian/.p2/pool/plugins/org.python.pydev_5.4.0.201611281236/pysrc')
+        import pydevd;pydevd.settrace()
         return matplotlib.colors.Normalize(vmin = vmin, vmax = vmax)
         
             

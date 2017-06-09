@@ -24,9 +24,9 @@ Created on Feb 21, 2016
 
 from __future__ import division, absolute_import
 
-from traits.api import HasTraits, Float, Property, Instance, Str, \
-                       cached_property, Undefined, provides, Constant, Dict, \
-                       Tuple
+from traits.api import (HasTraits, Float, Property, Instance, Str,
+                        cached_property, Undefined, provides, Constant, Dict,
+                        Tuple, Array)
                        
 import numpy as np
 import pandas as pd
@@ -77,6 +77,8 @@ class HlogScale(ScaleMixin):
     channel = Str
     condition = Str
     statistic = Tuple(Str, Str)
+    error_statistic = Tuple(Str, Str)
+    data = Array
 
     range = Property(Float)
     b = Float(200, desc = "location of the log transition")
@@ -145,6 +147,9 @@ class HlogScale(ScaleMixin):
             except (TypeError, IndexError):
                 vmin = stat.min()
                 vmax = stat.max()
+        elif self.data is not None:
+            vmin = self.data.min()
+            vmax = self.data.max()
         else:
             raise CytoflowError("Must set one of 'channel', 'condition' "
                                 "or 'statistic'.")
@@ -173,6 +178,8 @@ class HlogScale(ScaleMixin):
                 return self.experiment.data[self.condition].max()
             elif self.statistic and self.statistic in self.experiment.statistics:
                 return self.experiment.statistics[self.statistic].max()
+            elif self.data.size > 0:
+                return self.data.max()
             else:
                 return Undefined
         else:

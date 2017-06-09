@@ -25,7 +25,7 @@ Created on Feb 24, 2016
 from __future__ import division, absolute_import
 
 from traits.api import (Instance, Str, Dict, provides, Constant, Enum, Float, 
-                        Property, Tuple) 
+                        Property, Tuple, Array) 
                        
 import numpy as np
 import pandas as pd
@@ -47,6 +47,7 @@ class LogScale(ScaleMixin):
     condition = Str
     statistic = Tuple(Str, Str)
     error_statistic = Tuple(Str, Str)
+    data = Array
 
     mode = Enum("clip", "mask")
     threshold = Property(Float, depends_on = "[experiment, condition, channel, statistic, error_statistic]")
@@ -87,6 +88,9 @@ class LogScale(ScaleMixin):
                 err_min = min(filter(lambda x: stat_min - x > 0,
                                      err_stat))
                 return stat_min - err_min
+            
+        elif self.data.size > 0:
+            return self.data[self.data > 0].min()
                 
         
     def __call__(self, data):
@@ -180,7 +184,9 @@ class LogScale(ScaleMixin):
                 except (TypeError, IndexError):
                     vmin = vmin - err_stat.min()
                     vmax = vmax + err_stat.max()
-
+        elif self.data.size > 0:
+            vmin = self.data.min()
+            vmax = self.data.max()
         else:
             raise CytoflowError("Must set one of 'channel', 'condition' "
                                 "or 'statistic'.")
