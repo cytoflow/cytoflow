@@ -238,20 +238,20 @@ class DensityGateOp(HasStrictTraits):
             
 
             i = scipy.stats.rankdata(h, method = "ordinal") - 1
-            i = np.unravel_index(np.argsort(-i), (len(x), len(y)))
+            i = np.unravel_index(np.argsort(-i), h.shape)
 
             goal_count = self.keep * len(group_data)
             curr_count = 0
             num_bins = 0
-            
-            while(curr_count < goal_count and num_bins < (xbins * ybins)):
-                goal_count += h[i[0][num_bins], i[1][num_bins]]
+
+            while(curr_count < goal_count and num_bins < i[0].size):
+                curr_count += h[i[0][num_bins], i[1][num_bins]]
                 num_bins += 1
             
             self._xbins[group] = x
             self._keep_xbins[group] = i[0][0:num_bins]
             self._ybins[group] = y
-            self._key_ybins[group] = i[1][0:num_bins]
+            self._keep_ybins[group] = i[1][0:num_bins]
             
     def apply(self, experiment):
         """
@@ -317,7 +317,7 @@ class DensityGateOp(HasStrictTraits):
             # contains all the events
             groupby = experiment.data.groupby(lambda x: True)
             
-        event_assignments = pd.Series([None] * len(experiment), dtype = "bool")
+        event_assignments = pd.Series([False] * len(experiment), dtype = "bool")
         
         for group, group_data in groupby:
             if group not in self._histogram:
@@ -331,6 +331,8 @@ class DensityGateOp(HasStrictTraits):
             keep_x = self._keep_xbins[group]
             ybins = self._ybins[group]
             keep_y = self._keep_ybins[group]
+            
+            
             
 #             
 #             gmm = self._gmms[group]

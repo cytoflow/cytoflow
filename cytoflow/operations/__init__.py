@@ -30,6 +30,7 @@ from .quad import QuadOp
 
 # data-driven
 from .ratio import RatioOp
+from .density import DensityGateOp
 from .gaussian_1d import GaussianMixture1DOp
 from .gaussian_2d import GaussianMixture2DOp
 from .channel_stat import ChannelStatisticOp
