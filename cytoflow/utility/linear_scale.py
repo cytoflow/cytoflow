@@ -57,8 +57,6 @@ class LinearScale(ScaleMixin):
         return data
     
     def color_norm(self):
-        print "a"
-        print self.data
         if self.channel:
             vmin = self.experiment[self.channel].min()
             vmax = self.experiment[self.channel].max()
@@ -88,9 +86,7 @@ class LinearScale(ScaleMixin):
         else:
             raise CytoflowError("Must set one of 'channel', 'condition' "
                                 "or 'statistic'.")
-            
-        import sys;sys.path.append(r'/home/brian/.p2/pool/plugins/org.python.pydev_5.4.0.201611281236/pysrc')
-        import pydevd;pydevd.settrace()
+
         return matplotlib.colors.Normalize(vmin = vmin, vmax = vmax)
         
             
