@@ -24,10 +24,12 @@ Created on Apr 19, 2015
 
 from traits.api import HasStrictTraits, provides, Str
 
+import matplotlib as mpl
+import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
-from scipy.interpolate import griddata
+from scipy.ndimage.filters import gaussian_filter
 
 import cytoflow.utility as util
 from .i_view import IView
@@ -40,9 +42,6 @@ class DensityView(HasStrictTraits):
     Attributes
     ----------
     
-    name : Str
-        The name of the plot, for visualization (and the plot title)
-        
     xchannel : Str
         The channel to plot on the X axis
         
@@ -71,10 +70,9 @@ class DensityView(HasStrictTraits):
         .. note: should this be a param instead?
     """
     
-    id = 'edu.mit.synbio.cytoflow.view.scatterplot'
-    friend_id = "Scatter Plot"
+    id = 'edu.mit.synbio.cytoflow.view.density'
+    friend_id = "Density Plot"
     
-    name = Str
     xchannel = Str
     xscale = util.ScaleEnum
     ychannel = Str
@@ -137,21 +135,28 @@ class DensityView(HasStrictTraits):
         else:
             data = experiment.data
 
-#         legend = kwargs.pop('legend', True)
+        legend = kwargs.pop('legend', True)
         
         kwargs.setdefault('antialiased', True)
         kwargs.setdefault('linewidth', 1)
         kwargs.setdefault('edgecolor', 'face')
+        kwargs.setdefault('cmap', plt.get_cmap('viridis'))
+        
+#         hue_scale = util.scale_factory(self.huescale, 
+#                                        experiment, 
+#                                        condition = self.huefacet)
+#         kwargs.setdefault('norm', colors.Normalize())
+        
+        under_color = kwargs.pop('under_color', 'white')
+        kwargs['cmap'].set_under(color = under_color)
 
-        xscale = kwargs.get('xscale', None)
+        xscale = kwargs.pop('xscale', None)
         if xscale is None:
             xscale = util.scale_factory(self.xscale, experiment, channel = self.xchannel)
-            kwargs['xscale'] = xscale
         
-        yscale = kwargs.get('yscale', None)
+        yscale = kwargs.pop('yscale', None)
         if yscale is None:
             yscale = util.scale_factory(self.yscale, experiment, channel = self.ychannel)
-            kwargs['yscale'] = yscale
 
         # adjust the limits to clip extreme values
         min_quantile = kwargs.pop("min_quantile", 0.001)
@@ -194,7 +199,21 @@ class DensityView(HasStrictTraits):
         for ax in g.axes.flatten():
             ax.set_xscale(self.xscale, **xscale.mpl_params)
             ax.set_yscale(self.yscale, **yscale.mpl_params)
-
+            
+        # set up the range of the color map
+        if 'norm' not in kwargs:
+            data_max = 0
+            for _, data_ijk in g.facet_data():
+                x = data_ijk[self.xchannel]
+                y = data_ijk[self.ychannel]
+                h, _, _ = np.histogram2d(x, y, bins=[xbins, ybins])
+                data_max = max(data_max, h.max())
+                
+            hue_scale = util.scale_factory(self.huescale, 
+                                           experiment, 
+                                           data = np.array([1, data_max]))
+            kwargs['norm'] = hue_scale.color_norm()
+        
         g.map(_densityplot, self.xchannel, self.ychannel, xbins = xbins, ybins = ybins, **kwargs)
         
         # if we're sharing y axes, make sure the y scale is the same for each
@@ -227,30 +246,15 @@ class DensityView(HasStrictTraits):
             
             for ax in fig.get_axes():
                 ax.set_xlim(fig_x_min, fig_x_max)
-        
-        # if we have a hue facet and a lot of hues, make a color bar instead
-        # of a super-long legend.
-        
-#         if legend and self.huefacet:
-#             current_palette = mpl.rcParams['axes.color_cycle']
-#             if util.is_numeric(experiment.data[self.huefacet]) and \
-#                len(g.hue_names) > len(current_palette):
-#                 
-#                 plot_ax = plt.gca()
-#                 cmap = mpl.colors.ListedColormap(sns.color_palette("husl", 
-#                                                                    n_colors = len(g.hue_names)))
-#                 cax, _ = mpl.colorbar.make_axes(plt.gca())
-#                 hue_scale = util.scale_factory(self.huescale, 
-#                                                experiment, 
-#                                                condition = self.huefacet)
-#                 mpl.colorbar.ColorbarBase(cax, 
-#                                           cmap = cmap, 
-#                                           norm = hue_scale.color_norm(),
-#                                           label = self.huefacet)
-#                 plt.sca(plot_ax)
-#             else:
-#                 g.add_legend(title = self.huefacet)
-#                 
+                
+        if legend:
+            plot_ax = plt.gca()
+            cmap = kwargs['cmap']
+            norm = kwargs['norm']
+            cax, _ = mpl.colorbar.make_axes(plt.gca())
+            mpl.colorbar.ColorbarBase(cax, cmap, norm)
+            plt.sca(plot_ax)
+               
         return g
         
         
@@ -259,18 +263,10 @@ def _densityplot(x, y, xbins, ybins, **kwargs):
     h, X, Y = np.histogram2d(x, y, bins=[xbins, ybins])
     
     smoothed = kwargs.pop('smoothed', False)
-    xscale = kwargs.pop('xscale')
-    yscale = kwargs.pop('yscale')
+    smoothed_sigma = kwargs.pop('smoothed_sigma', 1)
     
     if smoothed:
-        grid_x, grid_y = np.mgrid[xscale(X[0]):xscale(X[-1]):complex(5 * len(xbins)), 
-                                  yscale(Y[0]):yscale(Y[-1]):complex(5 * len(ybins))]
-        
-        loc = [(x, y) for x in xscale(X[1:]) for y in yscale(Y[1:])]
-         
-        h = griddata(loc, h.flatten(), (grid_x, grid_y), method = "linear", fill_value = 0)
-         
-        X, Y = xscale.inverse(grid_x), yscale.inverse(grid_y)
+        h = gaussian_filter(h, sigma = smoothed_sigma)
     else:
         h = h.T
 
