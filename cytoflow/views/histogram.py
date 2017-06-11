@@ -301,7 +301,7 @@ class HistogramView(HasStrictTraits):
                 plot_ax = plt.gca()
                 cmap = mpl.colors.ListedColormap(sns.color_palette("husl", 
                                                                    n_colors = len(g.hue_names)))
-                cax, _ = mpl.colorbar.make_axes(plt.gca())
+                cax, _ = mpl.colorbar.make_axes(plt.gcf().get_axes())
 
                 mpl.colorbar.ColorbarBase(cax, 
                                           cmap = cmap, 

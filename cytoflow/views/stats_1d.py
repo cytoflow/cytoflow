@@ -497,7 +497,7 @@ class Stats1DView(HasStrictTraits):
                 plot_ax = plt.gca()
                 cmap = mpl.colors.ListedColormap(sns.color_palette("husl", 
                                                                    n_colors = len(grid.hue_names)))
-                cax, _ = mpl.colorbar.make_axes(plt.gca())
+                cax, _ = mpl.colorbar.make_axes(plt.gcf().get_axes())
                 hue_scale = util.scale_factory(self.huescale, 
                                                experiment, 
                                                condition = self.huefacet)
