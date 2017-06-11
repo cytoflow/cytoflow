@@ -29,7 +29,7 @@ import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
-from scipy.ndimage.filters import gaussian_filter
+import scipy.ndimage.filters
 
 import cytoflow.utility as util
 from .i_view import IView
@@ -142,13 +142,15 @@ class DensityView(HasStrictTraits):
         kwargs.setdefault('edgecolor', 'face')
         kwargs.setdefault('cmap', plt.get_cmap('viridis'))
         
-#         hue_scale = util.scale_factory(self.huescale, 
-#                                        experiment, 
-#                                        condition = self.huefacet)
-#         kwargs.setdefault('norm', colors.Normalize())
-        
-        under_color = kwargs.pop('under_color', 'white')
-        kwargs['cmap'].set_under(color = under_color)
+        under_color = kwargs.pop('under_color', None)
+        if under_color is not None:
+            kwargs['cmap'].set_under(color = under_color)
+        else:
+            kwargs['cmap'].set_under(color = kwargs['cmap'](0.0))
+
+        bad_color = kwargs.pop('bad_color', None)
+        if bad_color is not None:
+            kwargs['cmap'].set_bad(color = kwargs['cmap'](0.0))
 
         xscale = kwargs.pop('xscale', None)
         if xscale is None:
@@ -251,7 +253,7 @@ class DensityView(HasStrictTraits):
             plot_ax = plt.gca()
             cmap = kwargs['cmap']
             norm = kwargs['norm']
-            cax, _ = mpl.colorbar.make_axes(plt.gca())
+            cax, _ = mpl.colorbar.make_axes(plt.gcf().get_axes())
             mpl.colorbar.ColorbarBase(cax, cmap, norm)
             plt.sca(plot_ax)
                
@@ -266,7 +268,7 @@ def _densityplot(x, y, xbins, ybins, **kwargs):
     smoothed_sigma = kwargs.pop('smoothed_sigma', 1)
     
     if smoothed:
-        h = gaussian_filter(h, sigma = smoothed_sigma)
+        h = scipy.ndimage.filters.gaussian_filter(h, sigma = smoothed_sigma)
     else:
         h = h.T
 
