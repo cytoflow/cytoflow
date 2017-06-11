@@ -30,10 +30,13 @@ from itertools import product
 import matplotlib.pyplot as plt
 
 from traits.api import (HasStrictTraits, Str, CStr, Dict, Any, Instance, Bool, 
-                        Constant, List, provides, DelegatesTo, Property)
+                        Constant, List, provides, DelegatesTo, Property, Array)
 
+import matplotlib as mpl
+import matplotlib.colors as colors
 import numpy as np
 import scipy.stats
+import scipy.ndimage.filters
 # from sklearn import mixture
 # from scipy import linalg
 # from scipy import stats
@@ -148,10 +151,11 @@ class DensityGateOp(HasStrictTraits):
     _xscale = Instance(util.IScale, transient = True)
     _yscale = Instance(util.IScale, transient = True)
     
-    _xbins = Dict(Any, Instance(np.ndarray), transient = True)
-    _keep_xbins = Dict(Any, Instance(np.ndarray), transient = True)
-    _ybins = Dict(Any, Instance(np.ndarray), transient = True)
-    _keep_ybins = Dict(Any, Instance(np.ndarray), transient = True)
+    _xbins = Array(transient = True)
+    _keep_xbins = Dict(Any, Array, transient = True)
+    _ybins = Array(transient = True)
+    _keep_ybins = Dict(Any, Array, transient = True)
+    _histogram = Dict(Any, Array, transient = True)
     
     def estimate(self, experiment, subset = None):
         """
@@ -171,10 +175,16 @@ class DensityGateOp(HasStrictTraits):
             
         if self.max_quantile > 1.0 or self.min_quantile > 1.0:
             raise util.CytoflowOpError("min_quantile and max_quantile must be <= 1.0")
-        
+               
         if not (self.max_quantile > self.min_quantile):
             raise util.CytoflowOpError("max_quantile must be > min_quantile")
-       
+        
+        if self.sigma < 0.0:
+            raise util.CytoflowOpError("sigma must be >= 0.0")
+        
+        if self.keep > 1.0:
+            raise util.CytoflowOpError("keep must be <= 1.0")
+
         for b in self.by:
             if b not in experiment.data:
                 raise util.CytoflowOpError("Aggregation metadata {0} not found"
@@ -209,37 +219,36 @@ class DensityGateOp(HasStrictTraits):
         # the data is transformed the same way when we apply()
         self._xscale = xscale = util.scale_factory(self.xscale, experiment, channel = self.xchannel)
         self._yscale = yscale = util.scale_factory(self.yscale, experiment, channel = self.ychannel)
+        
+
+        xlim = (xscale.clip(experiment[self.xchannel].quantile(self.min_quantile)),
+                xscale.clip(experiment[self.xchannel].quantile(self.max_quantile)))
+                  
+        ylim = (yscale.clip(experiment[self.ychannel].quantile(self.min_quantile)),
+                yscale.clip(experiment[self.ychannel].quantile(self.max_quantile)))
+        
+        self._xbins = xbins = xscale.inverse(np.linspace(xscale(xlim[0]), 
+                                                         xscale(xlim[1]), 
+                                                         self.bins))
+        self._ybins = ybins = yscale.inverse(np.linspace(yscale(ylim[0]), 
+                                                         yscale(ylim[1]), 
+                                                         self.bins))
                     
         for group, group_data in groupby:
             if len(group_data) == 0:
                 raise util.CytoflowOpError("Group {} had no data"
                                            .format(group))
-                
-            group_data = group_data.loc[:, [self.xchannel, self.ychannel]]
 
-            group_data[self.xchannel] = self._xscale(group_data[self.xchannel])
-            group_data[self.ychannel] = self._yscale(group_data[self.ychannel])
-            
-            # drop data that isn't in the scale range
-            group_data = group_data[~(np.isnan(group_data[self.xchannel]) | np.isnan(group_data[self.ychannel]))]
-
-            xlim = (xscale.clip(group_data[self.xchannel].quantile(self.min_quantile)),
-                    xscale.clip(group_data[self.xchannel].quantile(self.max_quantile)))
-                      
-            ylim = (yscale.clip(group_data[self.ychannel].quantile(self.min_quantile)),
-                    yscale.clip(group_data[self.ychannel].quantile(self.max_quantile)))
-            
-            xbins = xscale.inverse(np.linspace(xscale(xlim[0]), xscale(xlim[1]), self.bins))
-            ybins = yscale.inverse(np.linspace(yscale(ylim[0]), yscale(ylim[1]), self.bins))
-            
-            h, x, y = np.histogram2d(group_data[self.xchannel], 
+            h, _, _ = np.histogram2d(group_data[self.xchannel], 
                                      group_data[self.ychannel], 
                                      bins=[xbins, ybins])
             
-
+            h = scipy.ndimage.filters.gaussian_filter(h, sigma = self.sigma)
+            self._histogram[group] = h
+            
             i = scipy.stats.rankdata(h, method = "ordinal") - 1
             i = np.unravel_index(np.argsort(-i), h.shape)
-
+            
             goal_count = self.keep * len(group_data)
             curr_count = 0
             num_bins = 0
@@ -248,9 +257,7 @@ class DensityGateOp(HasStrictTraits):
                 curr_count += h[i[0][num_bins], i[1][num_bins]]
                 num_bins += 1
             
-            self._xbins[group] = x
             self._keep_xbins[group] = i[0][0:num_bins]
-            self._ybins[group] = y
             self._keep_ybins[group] = i[1][0:num_bins]
             
     def apply(self, experiment):
@@ -277,7 +284,7 @@ class DensityGateOp(HasStrictTraits):
             raise util.CytoflowOpError("Experiment already has a column named {0}"
                                   .format(self.name))
         
-        if not (self._xbins and self._ybins and self._keep_xbins and self._keep_ybins):
+        if not (self._xbins.size and self._ybins.size and self._keep_xbins and self._keep_ybins):
             raise util.CytoflowOpError("No gate estimate found.  Did you forget to "
                                   "call estimate()?")
 
@@ -306,134 +313,52 @@ class DensityGateOp(HasStrictTraits):
                                       " aggregation metadata {0}.  Did you"
                                       " accidentally specify a data channel?"
                                       .format(b))
-                           
-        if self.sigma < 0.0:
-            raise util.CytoflowOpError("sigma must be >= 0.0") 
         
         if self.by:
             groupby = experiment.data.groupby(self.by)
         else:
             # use a lambda expression to return a group that
             # contains all the events
-            groupby = experiment.data.groupby(lambda x: True)
+            groupby = experiment.data.groupby(lambda _: True)
             
         event_assignments = pd.Series([False] * len(experiment), dtype = "bool")
         
         for group, group_data in groupby:
-            if group not in self._histogram:
+            if group not in self._keep_xbins:
                 # there weren't any events in this group, so we didn't get
-                # a gmm.
+                # an estimate
                 continue
             
             group_idx = groupby.groups[group]
             
-            xbins = self._xbins[group]
-            keep_x = self._keep_xbins[group]
-            ybins = self._ybins[group]
-            keep_y = self._keep_ybins[group]
+            cX = pd.cut(group_data[self.xchannel], self._xbins, include_lowest = True, labels = False)
+            cY = pd.cut(group_data[self.ychannel], self._ybins, include_lowest = True, labels = False)
+
+            group_keep = pd.Series([False] * len(group_data))
             
+            for (xbin, ybin) in zip(self._keep_xbins[group],
+                                    self._keep_ybins[group]):
+                group_keep[(cX == xbin) & (cY == ybin)] = True
             
-            
-#             
-#             gmm = self._gmms[group]
-#             data = data_subset.loc[:, [self.xchannel, self.ychannel]]
-#             x[self.xchannel] = self._xscale(x[self.xchannel])
-#             x[self.ychannel] = self._yscale(x[self.ychannel])
-#             
-#             # which values are missing?
-#             x_na = np.isnan(x[self.xchannel]) | np.isnan(x[self.ychannel])
-#             x_na = x_na.values
-#             
-#             x = x.values
-#             group_idx = groupby.groups[group]
-# 
-#             # make a preliminary assignment
-#             predicted = np.full(len(x), -1, "int")
-#             predicted[~x_na] = gmm.predict(x[~x_na])
-#             
-#             # if we're doing sigma-based gating, for each component check
-#             # to see if the event is in the sigma gate.
-#             if self.sigma > 0.0:
-#                 
-#                 # make a quick dataframe with the value and the predicted
-#                 # component
-#                 gate_df = pd.DataFrame({"x" : x[:, 0], 
-#                                         "y" : x[:, 1],
-#                                         "p" : predicted})
-# 
-#                 # for each component, get the ellipse that follows the isoline
-#                 # around the mixture component
-#                 # cf. http://scikit-learn.org/stable/auto_examples/mixture/plot_gmm.html
-#                 # and http://www.mathworks.com/matlabcentral/newsreader/view_thread/298389
-#                 # and http://stackoverflow.com/questions/7946187/point-and-ellipse-rotated-position-test-algorithm
-#                 # i am not proud of how many tries this took me to get right.
-# 
-#                 for c in range(0, self.num_components):
-#                     mean = gmm.means_[c]
-#                     covar = gmm.covariances_[c]
-#                     
-#                     # xc is the center on the x axis
-#                     # yc is the center on the y axis
-#                     xc = mean[0]  # @UnusedVariable
-#                     yc = mean[1]  # @UnusedVariable
-#                     
-#                     v, w = linalg.eigh(covar)
-#                     u = w[0] / linalg.norm(w[0])
-#                     
-#                     # xl is the length along the x axis
-#                     # yl is the length along the y axis
-#                     xl = np.sqrt(v[0]) * self.sigma  # @UnusedVariable
-#                     yl = np.sqrt(v[1]) * self.sigma  # @UnusedVariable
-#                     
-#                     # t is the rotation in radians (counter-clockwise)
-#                     t = 2 * np.pi - np.arctan(u[1] / u[0])
-#                     
-#                     sin_t = np.sin(t)  # @UnusedVariable
-#                     cos_t = np.cos(t)  # @UnusedVariable
-#                                         
-#                     # and build an expression with numexpr so it evaluates fast!
-# 
-#                     gate_bool = gate_df.eval("p == @c and "
-#                                              "((x - @xc) * @cos_t - (y - @yc) * @sin_t) ** 2 / ((@xl / 2) ** 2) + "
-#                                              "((x - @xc) * @sin_t + (y - @yc) * @cos_t) ** 2 / ((@yl / 2) ** 2) <= 1").values
-# 
-#                     predicted[np.logical_and(predicted == c, gate_bool == False)] = -1
-#             
-#             predicted_str = pd.Series(["(none)"] * len(predicted))
-#             for c in range(0, self.num_components):
-#                 predicted_str[predicted == c] = "{0}_{1}".format(self.name, c + 1)
-#             predicted_str[predicted == -1] = "{0}_None".format(self.name)
-#             predicted_str.index = group_idx
-# 
-#             event_assignments.iloc[group_idx] = predicted_str
-#                     
-#             if self.posteriors:
-#                 probability = np.full((len(x), self.num_components), 0.0, "float")
-#                 probability[~x_na, :] = gmm.predict_proba(x[~x_na, :])
-#                 posteriors = pd.Series([0.0] * len(predicted))
-#                 for c in range(0, self.num_components):
-#                     posteriors[predicted == c] = probability[predicted == c, c]
-#                 posteriors.index = group_idx
-#                 event_posteriors.iloc[group_idx] = posteriors
+            event_assignments.iloc[group_idx] = group_keep
                     
         new_experiment = experiment.clone()
         
         new_experiment.add_condition(self.name, "bool", event_assignments)
 
-
-        new_experiment.history.append(self.clone_traits(transient = lambda t: True))
+        new_experiment.history.append(self.clone_traits(transient = lambda _: True))
         return new_experiment
-#     
-#     def default_view(self, **kwargs):
-#         """
-#         Returns a diagnostic plot of the Gaussian mixture model.
-#         
-#         Returns
-#         -------
-#             IView : an IView, call plot() to see the diagnostic plot.
-#         """
-#         return GaussianMixture2DView(op = self, **kwargs)
-#     
+     
+    def default_view(self, **kwargs):
+        """
+        Returns a diagnostic plot of the Gaussian mixture model.
+         
+        Returns
+        -------
+            IView : an IView, call plot() to see the diagnostic plot.
+        """
+        return DensityGateView(op = self, **kwargs)
+     
 #     
 # # a few more imports for drawing scaled ellipses
 #         
@@ -441,272 +366,205 @@ class DensityGateOp(HasStrictTraits):
 # import matplotlib.patches as patches
 # import matplotlib.transforms as transforms
 #     
-# @provides(cytoflow.views.IView)
-# class GaussianMixture2DView(cytoflow.views.ScatterplotView):
-#     """
-#     Attributes
-#     ----------
-#     op : Instance(GaussianMixture2DOp)
-#         The op whose parameters we're viewing.        
-#     """
-#     
-#     id = 'edu.mit.synbio.cytoflow.view.gaussianmixture2dview'
-#     friendly_id = "2D Gaussian Mixture Diagnostic Plot"
-#     
-#     # TODO - why can't I use GaussianMixture2DOp here?
-#     op = Instance(IOperation)
-#     xchannel = DelegatesTo('op')
-#     ychannel = DelegatesTo('op')
-#     xscale = DelegatesTo('op')
-#     yscale = DelegatesTo('op')
-#     
-#     _by = Property(List)
-#     
-#     def _get__by(self):
-#         facets = filter(lambda x: x, [self.xfacet, self.yfacet])
-#         return list(set(self.op.by) - set(facets))
-#         
-#     def enum_plots(self, experiment):
-#         """
-#         Returns an iterator over the possible plots that this View can
-#         produce.  The values returned can be passed to "plot".
-#         """
-#     
-#         if self.xfacet and self.xfacet not in experiment.conditions:
-#             raise util.CytoflowViewError("X facet {} not in the experiment"
-#                                     .format(self.xfacet))
-#             
-#         if self.xfacet and self.xfacet not in self.op.by:
-#             raise util.CytoflowViewError("X facet {} must be in GaussianMixture1DOp.by, which is {}"
-#                                     .format(self.xfacet, self.op.by))
-#         
-#         if self.yfacet and self.yfacet not in experiment.conditions:
-#             raise util.CytoflowViewError("Y facet {0} not in the experiment"
-#                                     .format(self.yfacet))
-#             
-#         if self.yfacet and self.yfacet not in self.op.by:
-#             raise util.CytoflowViewError("Y facet {} must be in GaussianMixture1DOp.by, which is {}"
-#                                     .format(self.yfacet, self.op.by))
-#             
-#         for b in self.op.by:
-#             if b not in experiment.data:
-#                 raise util.CytoflowOpError("Aggregation metadata {0} not found"
-#                                       " in the experiment"
-#                                       .format(b))    
-#     
-#         class plot_enum(object):
-#             
-#             def __init__(self, view, experiment):
-#                 self._iter = None
-#                 self._returned = False
-#                 
-#                 if view._by:
-#                     self._iter = experiment.data.groupby(view._by).__iter__()
-#                 
-#             def __iter__(self):
-#                 return self
-#             
-#             def next(self):
-#                 if self._iter:
-#                     return self._iter.next()[0]
-#                 else:
-#                     if self._returned:
-#                         raise StopIteration
-#                     else:
-#                         self._returned = True
-#                         return None
-#             
-#         return plot_enum(self, experiment)
-#     
-#     def plot(self, experiment, plot_name = None, **kwargs):
-#         """
-#         Plot the plots.
-#         """
-#         if experiment is None:
-#             raise util.CytoflowViewError("No experiment specified")
-#         
-#         if not self.op.xchannel:
-#             raise util.CytoflowViewError("No X channel specified")
-#         
-#         if not self.op.ychannel:
-#             raise util.CytoflowViewError("No Y channel specified")
-# 
-#         experiment = experiment.clone()
-#         
-#         # try to apply the current op
-#         try:
-#             experiment = self.op.apply(experiment)
-#         except util.CytoflowOpError:
-#             pass
-#         
-#         # if apply() succeeded (or wasn't needed), set up the hue facet
-#         if self.op.name and self.op.name in experiment.conditions:
-#             if self.huefacet and self.huefacet != self.op.name:
-#                 warn("Resetting huefacet to the model component (was {}, now {})."
-#                      .format(self.huefacet, self.op.name))
-#             self.huefacet = self.op.name
-#         
-#         if self.subset:
-#             try:
-#                 experiment = experiment.query(self.subset)
-#                 experiment.data.reset_index(drop = True, inplace = True)
-#             except:
-#                 raise util.CytoflowViewError("Subset string '{0}' isn't valid"
-#                                         .format(self.subset))
-#                 
-#             if len(experiment) == 0:
-#                 raise util.CytoflowViewError("Subset string '{0}' returned no events"
-#                                         .format(self.subset)) 
-#         
-#         # figure out common limits
-#         # adjust the limits to clip extreme values
-#         min_quantile = kwargs.pop("min_quantile", 0.001)
-#         max_quantile = kwargs.pop("max_quantile", 1.0) 
-#                 
-#         xlim = kwargs.pop("xlim", None)
-#         if xlim is None:
-#             xlim = (experiment.data[self.op.xchannel].quantile(min_quantile),
-#                     experiment.data[self.op.xchannel].quantile(max_quantile))
-# 
-#         ylim = kwargs.pop("ylim", None)
-#         if ylim is None:
-#             ylim = (experiment.data[self.op.ychannel].quantile(min_quantile),
-#                     experiment.data[self.op.ychannel].quantile(max_quantile))
-#               
-#         # see if we're making subplots
-#         if self._by and plot_name is None:
-#             raise util.CytoflowViewError("You must use facets {} in either the "
-#                                          "plot variables or the plt name. "
-#                                          "Possible plot names: {}"
-#                                          .format(self._by, [x for x in self.enum_plots(experiment)]))
-#                 
-#         if plot_name is not None:
-#             if plot_name is not None and not self._by:
-#                 raise util.CytoflowViewError("Plot {} not from plot_enum"
-#                                              .format(plot_name))
-#                 
-#             groupby = experiment.data.groupby(self._by)
-#             
-#             if plot_name not in set(groupby.groups.keys()):
-#                 raise util.CytoflowViewError("Plot {} not from plot_enum"
-#                                              .format(plot_name))
-#             
-#             experiment.data = groupby.get_group(plot_name)
-#             experiment.data.reset_index(drop = True, inplace = True)
-#             
-#         # plot the scatterplot, whether or not we're plotting isolines on top
-#         
-#         g = super(GaussianMixture2DView, self).plot(experiment, 
-#                                                     xscale = self.op._xscale, 
-#                                                     yscale = self.op._yscale,
-#                                                     xlim = xlim, 
-#                                                     ylim = ylim,
-#                                                     **kwargs)
-#         
-#         if self._by and plot_name is not None:
-#             plt.title("{0} = {1}".format(self._by, plot_name))
-# 
-#         # plot the actual distribution on top of it.  display as a "contour"
-#         # plot with ellipses at 1, 2, and 3 standard deviations
-#         # cf. http://scikit-learn.org/stable/auto_examples/mixture/plot_gmm.html
-#         
-#         row_names = g.row_names if g.row_names else [False]
-#         col_names = g.col_names if g.col_names else [False]
-#         
-#         for (i, row), (j, col) in product(enumerate(row_names),
-#                                           enumerate(col_names)):
-#             
-#             facets = filter(lambda x: x, [row, col])
-#             if plot_name is not None:
-#                 try:
-#                     gmm_name = list(plot_name) + facets
-#                 except TypeError: # plot_name isn't a list
-#                     gmm_name = list([plot_name]) + facets  
-#             else:      
-#                 gmm_name = facets
-#                 
-#             if len(gmm_name) == 0:
-#                 gmm_name = None
-#             elif len(gmm_name) == 1:
-#                 gmm_name = gmm_name[0]   
-# 
-#             if gmm_name is not None:
-#                 if gmm_name in self.op._gmms:
-#                     gmm = self.op._gmms[gmm_name]
-#                 else:
-#                     # there weren't any events in this subset to estimate a GMM from
-#                     warn("No estimated GMM for plot {}".format(gmm_name),
-#                           util.CytoflowViewWarning)
-#                     return g
-#             else:
-#                 if True in self.op._gmms:
-#                     gmm = self.op._gmms[True]
-#                 else:
-#                     return g           
-#                 
-#             ax = g.facet_axis(i, j)
-#         
-#             for k, (mean, covar) in enumerate(zip(gmm.means_, gmm.covariances_)):    
-#                 v, w = linalg.eigh(covar)
-#                 u = w[0] / linalg.norm(w[0])
-#                 
-#                 #rotation angle (in degrees)
-#                 t = np.arctan(u[1] / u[0])
-#                 t = 180 * t / np.pi
-#                            
-#                 color_k = k % len(sns.color_palette())
-#                 color = sns.color_palette()[color_k]
-#                 
-#                 # in order to scale the ellipses correctly, we have to make them
-#                 # ourselves out of an affine-scaled unit circle.  The interface
-#                 # is the same as matplotlib.patches.Ellipse
-#                 
-#                 self._plot_ellipse(ax,
-#                                    mean,
-#                                    np.sqrt(v[0]),
-#                                    np.sqrt(v[1]),
-#                                    180 + t,
-#                                    color = color,
-#                                    fill = False,
-#                                    linewidth = 2)
-#     
-#                 self._plot_ellipse(ax, 
-#                                    mean,
-#                                    np.sqrt(v[0]) * 2,
-#                                    np.sqrt(v[1]) * 2,
-#                                    180 + t,
-#                                    color = color,
-#                                    fill = False,
-#                                    linewidth = 2,
-#                                    alpha = 0.66)
-#                 
-#                 self._plot_ellipse(ax, 
-#                                    mean,
-#                                    np.sqrt(v[0]) * 3,
-#                                    np.sqrt(v[1]) * 3,
-#                                    180 + t,
-#                                    color = color,
-#                                    fill = False,
-#                                    linewidth = 2,
-#                                    alpha = 0.33)
-#                 
-#         return g
-# 
-#     def _plot_ellipse(self, ax, center, width, height, angle, **kwargs):
-#         tf = transforms.Affine2D() \
-#              .scale(width * 0.5, height * 0.5) \
-#              .rotate_deg(angle) \
-#              .translate(*center)
-#              
-#         tf_path = tf.transform_path(path.Path.unit_circle())
-#         v = tf_path.vertices
-#         v = np.vstack((self.op._xscale.inverse(v[:, 0]),
-#                        self.op._yscale.inverse(v[:, 1]))).T
-# 
-#         scaled_path = path.Path(v, tf_path.codes)
-#         scaled_patch = patches.PathPatch(scaled_path, **kwargs)
-#         ax.add_patch(scaled_patch)
-#             
-#              
-# 
-#     
+@provides(cytoflow.views.IView)
+class DensityGateView(cytoflow.views.DensityView):
+    """
+    Attributes
+    ----------
+    op : Instance(GaussianMixture2DOp)
+        The op whose parameters we're viewing.        
+    """
+     
+    id = 'edu.mit.synbio.cytoflow.view.densitygateview'
+    friendly_id = "Density Gate Diagnostic Plot"
+     
+    op = Instance(IOperation)
+    xchannel = DelegatesTo('op')
+    ychannel = DelegatesTo('op')
+    xscale = DelegatesTo('op')
+    yscale = DelegatesTo('op')
+     
+    _by = Property(List)
+     
+    def _get__by(self):
+        facets = filter(lambda x: x, [self.xfacet, self.yfacet])
+        return list(set(self.op.by) - set(facets))
+         
+    def enum_plots(self, experiment):
+        """
+        Returns an iterator over the possible plots that this View can
+        produce.  The values returned can be passed to "plot".
+        """
+     
+        if self.xfacet and self.xfacet not in experiment.conditions:
+            raise util.CytoflowViewError("X facet {} not in the experiment"
+                                    .format(self.xfacet))
+             
+        if self.xfacet and self.xfacet not in self.op.by:
+            raise util.CytoflowViewError("X facet {} must be in GaussianMixture1DOp.by, which is {}"
+                                    .format(self.xfacet, self.op.by))
+         
+        if self.yfacet and self.yfacet not in experiment.conditions:
+            raise util.CytoflowViewError("Y facet {0} not in the experiment"
+                                    .format(self.yfacet))
+             
+        if self.yfacet and self.yfacet not in self.op.by:
+            raise util.CytoflowViewError("Y facet {} must be in GaussianMixture1DOp.by, which is {}"
+                                    .format(self.yfacet, self.op.by))
+             
+        for b in self.op.by:
+            if b not in experiment.data:
+                raise util.CytoflowOpError("Aggregation metadata {0} not found"
+                                      " in the experiment"
+                                      .format(b))    
+     
+        class plot_enum(object):
+             
+            def __init__(self, view, experiment):
+                self._iter = None
+                self._returned = False
+                 
+                if view._by:
+                    self._iter = experiment.data.groupby(view._by).__iter__()
+                 
+            def __iter__(self):
+                return self
+             
+            def next(self):
+                if self._iter:
+                    return self._iter.next()[0]
+                else:
+                    if self._returned:
+                        raise StopIteration
+                    else:
+                        self._returned = True
+                        return None
+             
+        return plot_enum(self, experiment)
+     
+    def plot(self, experiment, plot_name = None, **kwargs):
+        """
+        Plot the plots.
+        """
+        if experiment is None:
+            raise util.CytoflowViewError("No experiment specified")
+         
+        if not self.op.xchannel:
+            raise util.CytoflowViewError("No X channel specified")
+         
+        if not self.op.ychannel:
+            raise util.CytoflowViewError("No Y channel specified")
+ 
+        experiment = experiment.clone()
+         
+        # try to apply the current op
+        try:
+            experiment = self.op.apply(experiment)
+        except util.CytoflowOpError:
+            pass
+         
+        if self.subset:
+            try:
+                experiment = experiment.query(self.subset)
+                experiment.data.reset_index(drop = True, inplace = True)
+            except:
+                raise util.CytoflowViewError("Subset string '{0}' isn't valid"
+                                        .format(self.subset))
+                 
+            if len(experiment) == 0:
+                raise util.CytoflowViewError("Subset string '{0}' returned no events"
+                                        .format(self.subset)) 
+         
+        # figure out common limits
+        # adjust the limits to clip extreme values
+        min_quantile = self.op.min_quantile
+        max_quantile = self.op.max_quantile
+        
+        legend = kwargs.pop('legend', True)
+        kwargs.setdefault('cmap', plt.get_cmap('viridis'))
+                 
+        xlim = kwargs.pop("xlim", None)
+        if xlim is None:
+            xlim = (experiment.data[self.op.xchannel].quantile(min_quantile),
+                    experiment.data[self.op.xchannel].quantile(max_quantile))
+ 
+        ylim = kwargs.pop("ylim", None)
+        if ylim is None:
+            ylim = (experiment.data[self.op.ychannel].quantile(min_quantile),
+                    experiment.data[self.op.ychannel].quantile(max_quantile))
+               
+        # see if we're making subplots
+        if self._by and plot_name is None:
+            raise util.CytoflowViewError("You must use facets {} in either the "
+                                         "plot variables or the plt name. "
+                                         "Possible plot names: {}"
+                                         .format(self._by, [x for x in self.enum_plots(experiment)]))
+                 
+        if plot_name is not None:
+            if plot_name is not None and not self._by:
+                raise util.CytoflowViewError("Plot {} not from plot_enum"
+                                             .format(plot_name))
+                 
+            groupby = experiment.data.groupby(self._by)
+             
+            if plot_name not in set(groupby.groups.keys()):
+                raise util.CytoflowViewError("Plot {} not from plot_enum"
+                                             .format(plot_name))
+             
+            experiment.data = groupby.get_group(plot_name)
+            experiment.data.reset_index(drop = True, inplace = True)
+             
+        # plot the density plot, whether or not we're plotting isolines on top
+         
+        g = super(DensityGateView, self).plot(experiment, 
+                                              xscale = self.op._xscale, 
+                                              yscale = self.op._yscale,
+                                              xlim = xlim, 
+                                              ylim = ylim,
+                                              smoothed = True,
+                                              legend = (legend and self.op._xbins.size == 0),
+                                              **kwargs)
+         
+        if self._by and plot_name is not None:
+            plt.title("{0} = {1}".format(self._by, plot_name))
+
+        # plot a countour around the bins that got kept
+        if self.op._xbins.size and self.op._ybins.size:
+            group = plot_name if plot_name is not None else True
+
+            keep_x = self.op._keep_xbins[group]
+            keep_y = self.op._keep_ybins[group]
+            h = self.op._histogram[group]
+            last_level = h[keep_x[-1], keep_y[-1]]
+            g.map(_contourplot, 
+                  xbins = self.op._xbins[0:-1], 
+                  ybins = self.op._ybins[0:-1],
+                  histogram = h,
+                  last_level = last_level)
+            
+            # set up the range of the color map
+            if legend and 'norm' not in kwargs:
+                data_max = 0
+                for _, data_ijk in g.facet_data():
+                    x = data_ijk[self.xchannel]
+                    y = data_ijk[self.ychannel]
+                    h, _, _ = np.histogram2d(x, y, bins=[self.op._xbins, self.op._ybins])
+                    data_max = max(data_max, h.max())
+                    
+                hue_scale = util.scale_factory(self.huescale, 
+                                               experiment, 
+                                               data = np.array([1, data_max]))
+                kwargs['norm'] = hue_scale.color_norm()
+            
+            if legend:
+                plot_ax = plt.gca()
+                cmap = kwargs['cmap']
+                norm = kwargs['norm']
+                cax, _ = mpl.colorbar.make_axes(plt.gcf().get_axes())
+                mpl.colorbar.ColorbarBase(cax, cmap, norm)
+                plt.sca(plot_ax)
+        
+def _contourplot(xbins, ybins, histogram, last_level, **kwargs):
+
+    ax = plt.gca()  
+    ax.contour(xbins, ybins, histogram, [last_level], **kwargs)
