@@ -44,6 +44,7 @@ from .operations.ratio import RatioOp
 from .operations.density import DensityGateOp
 from .operations.gaussian_1d import GaussianMixture1DOp
 from .operations.gaussian_2d import GaussianMixture2DOp
+from .operations.gaussian import GaussianMixtureOp
 from .operations.channel_stat import ChannelStatisticOp
 from .operations.frame_stat import FrameStatisticOp
 from .operations.xform_stat import TransformStatisticOp
