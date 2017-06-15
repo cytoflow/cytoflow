@@ -49,27 +49,30 @@ class GaussianMixtureOp(HasStrictTraits):
     This module fits a Gaussian mixture model with a specified number of
     components to one or more channels.
     
-    Creates a new categorical metadata variable named `name`, with possible
-    values `name_1` .... `name_n` where `n` is the number of components.
-    An event is assigned to `name_i` category if it falls within `sigma`
-    standard deviations of the component's mean.  If that is true for multiple
-    categories (or if `sigma == 0.0`), the event is assigned to the category 
-    with the highest posterior probability.  If the event doesn't fall into
-    any category, it is assigned to `name_None`.
+    If `num_components > 1`, `apply()` creates a new categorical metadata 
+    variable named  `name`, with possible values `{name}_1` .... `name_n` 
+    where `n` is the number of components.  An event is assigned to `name_i` 
+    category if it has the highest posterior probability of having been 
+    produced by component `i`.  If an event has a value that is outside the
+    range of one of the channels' scales, then it is assigned to `{name}_None`.
     
-    As a special case, if `num_components` is `1` and `sigma` > 0.0, then
-    the new condition is boolean, `True` if the event fell in the gate and
-    `False` otherwise.
+    Optionally, if `sigma` is greater than 0, `apply()` creates new  `boolean` 
+    metadata variables named `{name}_1` ... `{name}_n` where `n` is the number 
+    of components.  The column `{name}_i` is `True` if the event is less than 
+    `sigma` standard deviations from the mean of component `i`.  If 
+    `num_components == 1`, `sigma` must be greater than 0.
     
-    Optionally, if `posteriors` is `True`, this module will also compute the 
-    posterior probability of each event in its assigned component, returning
-    it in a new colunm named `{Name}_Posterior`.
+    Optionally, if `posteriors` is `True`, `apply()` creates a new `double`
+    metadata variables named `{name}_1_posterior` ... `{name}_n_posterior` 
+    where `n` is the number of components.  The column `{name}_i_posterior`
+    contains the posterior probability that this event is a member of 
+    component `i`.
     
     Finally, the same mixture model (mean and standard deviation) may not
     be appropriate for every subset of the data.  If this is the case, you
     can use the `by` attribute to specify metadata by which to aggregate
     the data before estimating (and applying) a mixture model.  The number of 
-    components is the same across each subset, though.
+    components must be the same across each subset, though.
     
     Attributes
     ----------
@@ -79,18 +82,17 @@ class GaussianMixtureOp(HasStrictTraits):
     channels : List(Str)
         The channels to apply the mixture model to.
 
-    scale : Dict(Str : Enum("linear", "logicle", "log")) (default = "linear")
-        Re-scale the data in the specified channels before fitting.  
+    scale : Dict(Str : Enum("linear", "logicle", "log"))
+        Re-scale the data in the specified channels before fitting.  If a 
+        channel is in `channels` but not in `scale`, it defaults to `linear`.
 
     num_components : Int (default = 1)
-        How many components to fit to the data?  Must be positive.
+        How many components to fit to the data?  Must be a positive integer.
 
     sigma : Float (default = 0.0)
         How many standard deviations on either side of the mean to include
-        in each category?  If an event is in multiple components, assign it
-        to the component with the highest posterior probability.  If 
-        `sigma == 0.0`, categorize *all* the data by assigning each event to
-        the component with the highest posterior probability.  Must be >= 0.0.
+        in the boolean variable `{name}_i`?  Must be >= 0.0.  If 
+        `num_components == 1`, must be > 0.
     
     by : List(Str)
         A list of metadata attributes to aggregate the data before estimating
@@ -100,9 +102,9 @@ class GaussianMixtureOp(HasStrictTraits):
         `Time` and `Dox`.
 
     posteriors : Bool (default = False)
-        If `True`, add a column named `{Name}_Posterior` giving the posterior
-        probability that the event is in the component to which it was
-        assigned.  Useful for filtering out low-probability events.
+        If `True`, add columns named `{Name}_{i}_Posterior` giving the posterior
+        probability that the event is in component `i`.  Useful for filtering 
+        out low-probability events.
         
     variance : Bool (default = False)
         If `True`, add variance and covariance statistics to the resulting
@@ -110,7 +112,7 @@ class GaussianMixtureOp(HasStrictTraits):
         
     Statistics
     ----------
-    {name}_{channel}_mean : Float
+    {name}_{channel}_{component}_mean : Float
         the mean of the fitted gaussian in the channel.
         
     {name}_variance : Float
@@ -121,7 +123,16 @@ class GaussianMixtureOp(HasStrictTraits):
         
     proportion : Float
         the proportion of events in each component of the mixture model.  only
-        set if `num_components` > 1.
+        added if `num_components` > 1.
+        
+    Notes
+    -----
+    
+    We use the Mahalnobis distance as a multivariate generalization of 
+    the number of standard deviations an event is from the mean of the
+    multivariate gaussian.  If \vec{x} is an observation from a distribution
+    with mean \vec{mu} and S is the covariance matrix, then the Mahalanobis
+    distance is sqrt((x - mu)^T * S^-1 *(x - mu)).
     
     Examples
     --------
@@ -142,7 +153,7 @@ class GaussianMixtureOp(HasStrictTraits):
     channels = List(Str)
     scale = Dict(Str, util.ScaleEnum)
     num_components = util.PositiveInt
-    sigma = util.PositiveFloat(0.0, allow_zero = True)
+    sigma = util.PositiveFloat(allow_zero = True)
     by = List(Str)
     
     posteriors = Bool(False)
@@ -156,7 +167,7 @@ class GaussianMixtureOp(HasStrictTraits):
         """
         Estimate the Gaussian mixture model parameters
         """
-        
+
         if experiment is None:
             raise util.CytoflowOpError("No experiment specified")
         
@@ -184,9 +195,7 @@ class GaussianMixtureOp(HasStrictTraits):
                                       " aggregation metadata {0}.  Did you"
                                       " accidentally specify a data channel?"
                                       .format(b))
-                
-        if self.num_components == 1 and self.posteriors:
-            raise util.CytoflowOpError("If num_components == 1, all posteriors will be 1.")
+
                 
         if subset:
             try:
@@ -275,10 +284,24 @@ class GaussianMixtureOp(HasStrictTraits):
         if not self.name:
             raise util.CytoflowOpError("You have to set the gate's name "
                                   "before applying it!")
- 
-        if self.name in experiment.data.columns:
+        
+        if self.num_components > 1 and self.name in experiment.data.columns:
             raise util.CytoflowOpError("Experiment already has a column named {0}"
                                   .format(self.name))
+            
+        if self.sigma > 0:
+            for i in range(1, self.num_components + 1):
+                cname = "{}_{}".format(self.name, i)
+                if cname in experiment.data.columns:
+                    raise util.CytoflowOpError("Experiment already has a column named {}"
+                                  .format(cname))
+ 
+        if self.posteriors:
+            for i in range(1, self.num_components + 1):
+                cname = "{}_{}_posterior".format(self.name, i)
+                if cname in experiment.data.columns:
+                    raise util.CytoflowOpError("Experiment already has a column named {}"
+                                  .format(cname))               
          
         if not self._gmms:
             raise util.CytoflowOpError("No components found.  Did you forget to "
@@ -307,20 +330,30 @@ class GaussianMixtureOp(HasStrictTraits):
                                       " accidentally specify a data channel?"
                                       .format(b))
                             
-        if self.sigma < 0.0:
-            raise util.CytoflowOpError("sigma must be >= 0.0")
+        if self.num_components == 1 and self.sigma == 0.0:
+            raise util.CytoflowOpError("if num_components is 1, sigma must be > 0.0")
+        
+                
+        if self.num_components == 1 and self.posteriors:
+            raise util.CytoflowOpError("If num_components == 1, all posteriors will be 1.")
          
-        event_assignments = pd.Series([None] * len(experiment), dtype = "object")
+        if self.num_components > 1:
+            event_assignments = pd.Series(["{}_None".format(self.name)] * len(experiment), dtype = "object")
+ 
+        if self.sigma > 0:
+            event_gate = {i : pd.Series([False] * len(experiment), dtype = "double")
+                           for i in range(self.num_compnents)}
  
         if self.posteriors:
-            event_posteriors = pd.Series([0.0] * len(experiment))
+            event_posteriors = {i : pd.Series([0.0] * len(experiment), dtype = "double")
+                                for i in range(self.num_components)}
          
         if self.by:
             groupby = experiment.data.groupby(self.by)
         else:
             # use a lambda expression to return a group that
             # contains all the events
-            groupby = experiment.data.groupby(lambda _: True)
+            groupby = experiment.data.groupby(lambda _: True)            
          
         for group, data_subset in groupby:
             if group not in self._gmms:
@@ -332,147 +365,147 @@ class GaussianMixtureOp(HasStrictTraits):
             x = data_subset.loc[:, self.channels[:]]
             for c in self.channels:
                 x[c] = self._scale[c](x[c])
-             
-            # drop data that isn't in the scale range
-            x_na = 
-            for c in self.channels:
-                x_na = x[~(np.isnan(x[c]))]
-            x = x.values
-            
+                
             # which values are missing?
-            x_na = np.isnan(x[self.xchannel]) | np.isnan(x[self.ychannel])
-            x_na = x_na.values
-             
+            x_na = pd.Series([False] * len(x))
+            for c in self.channels:
+                x_na[np.isnan(x[c])] = True
+                        
             x = x.values
             group_idx = groupby.groups[group]
  
-            # make a preliminary assignment
-            predicted = np.full(len(x), -1, "int")
-            predicted[~x_na] = gmm.predict(x[~x_na])
-             
+            if self.num_components > 1:
+                predicted = np.full(len(x), -1, "int")
+                predicted[~x_na] = gmm.predict(x[~x_na])
+                
+                predicted_str = pd.Series(["(none)"] * len(predicted))
+                for c in range(0, self.num_components):
+                    predicted_str[predicted == c] = "{0}_{1}".format(self.name, c + 1)
+                predicted_str[predicted == -1] = "{0}_None".format(self.name)
+                predicted_str.index = group_idx
+     
+                event_assignments.iloc[group_idx] = predicted_str
+                
             # if we're doing sigma-based gating, for each component check
             # to see if the event is in the sigma gate.
             if self.sigma > 0.0:
-                 
-                # make a quick dataframe with the value and the predicted
-                # component
-                gate_df = pd.DataFrame({"x" : x[:, 0], 
-                                        "y" : x[:, 1],
-                                        "p" : predicted})
- 
-                # for each component, get the ellipse that follows the isoline
-                # around the mixture component
-                # cf. http://scikit-learn.org/stable/auto_examples/mixture/plot_gmm.html
-                # and http://www.mathworks.com/matlabcentral/newsreader/view_thread/298389
-                # and http://stackoverflow.com/questions/7946187/point-and-ellipse-rotated-position-test-algorithm
-                # i am not proud of how many tries this took me to get right.
- 
-                for c in range(0, self.num_components):
-                    mean = gmm.means_[c]
-                    covar = gmm.covariances_[c]
-                     
-                    # xc is the center on the x axis
-                    # yc is the center on the y axis
-                    xc = mean[0]  # @UnusedVariable
-                    yc = mean[1]  # @UnusedVariable
-                     
-                    v, w = linalg.eigh(covar)
-                    u = w[0] / linalg.norm(w[0])
-                     
-                    # xl is the length along the x axis
-                    # yl is the length along the y axis
-                    xl = np.sqrt(v[0]) * self.sigma  # @UnusedVariable
-                    yl = np.sqrt(v[1]) * self.sigma  # @UnusedVariable
-                     
-                    # t is the rotation in radians (counter-clockwise)
-                    t = 2 * np.pi - np.arctan(u[1] / u[0])
-                     
-                    sin_t = np.sin(t)  # @UnusedVariable
-                    cos_t = np.cos(t)  # @UnusedVariable
-                                         
-                    # and build an expression with numexpr so it evaluates fast!
- 
-                    gate_bool = gate_df.eval("p == @c and "
-                                             "((x - @xc) * @cos_t - (y - @yc) * @sin_t) ** 2 / ((@xl / 2) ** 2) + "
-                                             "((x - @xc) * @sin_t + (y - @yc) * @cos_t) ** 2 / ((@yl / 2) ** 2) <= 1").values
- 
-                    predicted[np.logical_and(predicted == c, gate_bool == False)] = -1
-             
-            predicted_str = pd.Series(["(none)"] * len(predicted))
-            for c in range(0, self.num_components):
-                predicted_str[predicted == c] = "{0}_{1}".format(self.name, c + 1)
-            predicted_str[predicted == -1] = "{0}_None".format(self.name)
-            predicted_str.index = group_idx
- 
-            event_assignments.iloc[group_idx] = predicted_str
-                     
-            if self.posteriors:
-                probability = np.full((len(x), self.num_components), 0.0, "float")
-                probability[~x_na, :] = gmm.predict_proba(x[~x_na, :])
-                posteriors = pd.Series([0.0] * len(predicted))
-                for c in range(0, self.num_components):
-                    posteriors[predicted == c] = probability[predicted == c, c]
-                posteriors.index = group_idx
-                event_posteriors.iloc[group_idx] = posteriors
-                     
-        new_experiment = experiment.clone()
-         
-        if self.num_components == 1 and self.sigma > 0:
-            new_experiment.add_condition(self.name, "bool", event_assignments == "{0}_1".format(self.name))
-        elif self.num_components > 1:
-            new_experiment.add_condition(self.name, "category", event_assignments)
-             
-        if self.posteriors and self.num_components > 1:
-            col_name = "{0}_Posterior".format(self.name)
-            new_experiment.add_condition(col_name, "float", event_posteriors)
-                     
-        # add the statistics
-        levels = list(self.by)
-        if self.num_components > 1:
-            levels.append(self.name)
-                     
-        if levels:     
-            idx = pd.MultiIndex.from_product([new_experiment[x].unique() for x in levels], 
-                                             names = levels)
-     
-            xmean_stat = pd.Series(index = idx, dtype = np.dtype(object)).sort_index()
-            ymean_stat = pd.Series(index = idx, dtype = np.dtype(object)).sort_index()
-            prop_stat = pd.Series(index = idx, dtype = np.dtype(object)).sort_index()     
-                                    
-            for group, _ in groupby:
-                gmm = self._gmms[group]
                 for c in range(self.num_components):
-                    if self.num_components > 1:
-                        component_name = "{}_{}".format(self.name, c + 1)
- 
-                        if group is True:
-                            g = [component_name]
-                        elif isinstance(group, tuple):
-                            g = list(group)
-                            g.append(component_name)
-                        else:
-                            g = list([group])
-                            g.append(component_name)
-                         
-                        if len(g) > 1:
-                            g = tuple(g)
-                        else:
-                            g = g[0]
-                    else:
-                        g = group
-                                                                              
-                    xmean_stat.loc[g] = self._xscale.inverse(gmm.means_[c][0])
-                    ymean_stat.loc[g] = self._yscale.inverse(gmm.means_[c][0])
-                    prop_stat.loc[g] = gmm.weights_[c]
-                      
-            new_experiment.statistics[(self.name, "xmean")] = pd.to_numeric(xmean_stat)
-            new_experiment.statistics[(self.name, "ymean")] = pd.to_numeric(ymean_stat)
-            if self.num_components > 1:
-                new_experiment.statistics[(self.name, "proportion")] = pd.to_numeric(prop_stat)
-             
-                     
-        new_experiment.history.append(self.clone_traits(transient = lambda t: True))
-        return new_experiment
+                    
+                    # compute the Mahalanobis distance
+                    
+#                                      
+#                 # make a quick dataframe with the value and the predicted
+#                 # component
+#                 gate_df = pd.DataFrame({"x" : x[:, 0], 
+#                                         "y" : x[:, 1],
+#                                         "p" : predicted})
+#  
+#                 # for each component, get the ellipse that follows the isoline
+#                 # around the mixture component
+#                 # cf. http://scikit-learn.org/stable/auto_examples/mixture/plot_gmm.html
+#                 # and http://www.mathworks.com/matlabcentral/newsreader/view_thread/298389
+#                 # and http://stackoverflow.com/questions/7946187/point-and-ellipse-rotated-position-test-algorithm
+#                 # i am not proud of how many tries this took me to get right.
+#  
+#                 for c in range(0, self.num_components):
+#                     mean = gmm.means_[c]
+#                     covar = gmm.covariances_[c]
+#                      
+#                     # xc is the center on the x axis
+#                     # yc is the center on the y axis
+#                     xc = mean[0]  # @UnusedVariable
+#                     yc = mean[1]  # @UnusedVariable
+#                      
+#                     v, w = linalg.eigh(covar)
+#                     u = w[0] / linalg.norm(w[0])
+#                      
+#                     # xl is the length along the x axis
+#                     # yl is the length along the y axis
+#                     xl = np.sqrt(v[0]) * self.sigma  # @UnusedVariable
+#                     yl = np.sqrt(v[1]) * self.sigma  # @UnusedVariable
+#                      
+#                     # t is the rotation in radians (counter-clockwise)
+#                     t = 2 * np.pi - np.arctan(u[1] / u[0])
+#                      
+#                     sin_t = np.sin(t)  # @UnusedVariable
+#                     cos_t = np.cos(t)  # @UnusedVariable
+#                                          
+#                     # and build an expression with numexpr so it evaluates fast!
+#  
+#                     gate_bool = gate_df.eval("p == @c and "
+#                                              "((x - @xc) * @cos_t - (y - @yc) * @sin_t) ** 2 / ((@xl / 2) ** 2) + "
+#                                              "((x - @xc) * @sin_t + (y - @yc) * @cos_t) ** 2 / ((@yl / 2) ** 2) <= 1").values
+#  
+#                     predicted[np.logical_and(predicted == c, gate_bool == False)] = -1
+#              
+# 
+#                      
+#             if self.posteriors:
+#                 probability = np.full((len(x), self.num_components), 0.0, "float")
+#                 probability[~x_na, :] = gmm.predict_proba(x[~x_na, :])
+#                 posteriors = pd.Series([0.0] * len(predicted))
+#                 for c in range(0, self.num_components):
+#                     posteriors[predicted == c] = probability[predicted == c, c]
+#                 posteriors.index = group_idx
+#                 event_posteriors.iloc[group_idx] = posteriors
+#                      
+#          
+#         if self.num_components == 1 and self.sigma > 0:
+#             new_experiment.add_condition(self.name, "bool", event_assignments == "{0}_1".format(self.name))
+#         elif self.num_components > 1:
+#             new_experiment.add_condition(self.name, "category", event_assignments)
+#              
+#         if self.posteriors and self.num_components > 1:
+#             col_name = "{0}_Posterior".format(self.name)
+#             new_experiment.add_condition(col_name, "float", event_posteriors)
+#                      
+#         # add the statistics
+#         levels = list(self.by)
+#         if self.num_components > 1:
+#             levels.append(self.name)
+#                      
+#         if levels:     
+#             idx = pd.MultiIndex.from_product([new_experiment[x].unique() for x in levels], 
+#                                              names = levels)
+#      
+#             xmean_stat = pd.Series(index = idx, dtype = np.dtype(object)).sort_index()
+#             ymean_stat = pd.Series(index = idx, dtype = np.dtype(object)).sort_index()
+#             prop_stat = pd.Series(index = idx, dtype = np.dtype(object)).sort_index()     
+#                                     
+#             for group, _ in groupby:
+#                 gmm = self._gmms[group]
+#                 for c in range(self.num_components):
+#                     if self.num_components > 1:
+#                         component_name = "{}_{}".format(self.name, c + 1)
+#  
+#                         if group is True:
+#                             g = [component_name]
+#                         elif isinstance(group, tuple):
+#                             g = list(group)
+#                             g.append(component_name)
+#                         else:
+#                             g = list([group])
+#                             g.append(component_name)
+#                          
+#                         if len(g) > 1:
+#                             g = tuple(g)
+#                         else:
+#                             g = g[0]
+#                     else:
+#                         g = group
+#                                                                               
+#                     xmean_stat.loc[g] = self._xscale.inverse(gmm.means_[c][0])
+#                     ymean_stat.loc[g] = self._yscale.inverse(gmm.means_[c][0])
+#                     prop_stat.loc[g] = gmm.weights_[c]
+#                       
+#             new_experiment.statistics[(self.name, "xmean")] = pd.to_numeric(xmean_stat)
+#             new_experiment.statistics[(self.name, "ymean")] = pd.to_numeric(ymean_stat)
+#             if self.num_components > 1:
+#                 new_experiment.statistics[(self.name, "proportion")] = pd.to_numeric(prop_stat)
+#              
+#                      
+#         new_experiment.history.append(self.clone_traits(transient = lambda t: True))
+#         return new_experiment
 #     
 #     def default_view(self, **kwargs):
 #         """
