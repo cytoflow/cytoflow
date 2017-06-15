@@ -187,9 +187,7 @@ class HistogramView(HasStrictTraits):
         else:
             xmin = bottleneck.nanmin(scaled_data)
             xmax = bottleneck.nanmax(scaled_data)
-            bin_width = (xmax - xmin) / num_bins
-            bins = scale.inverse(np.linspace(xmin, xmax, bin_width))
-            bins = np.append(bins, scale.inverse(xmax))
+            bins = scale.inverse(np.linspace(xmin, xmax, num=num_bins, endpoint = True))
             
         # take care of a rare rounding error, where the first observation is
         # less than the first bin or the last observation is more than the last 
