@@ -342,7 +342,7 @@ class MatplotlibLogicleScale(HasTraits, matplotlib.scale.ScaleBase):
     logicle = Instance(FastLogicle)
 
     def __init__(self, axis, **kwargs):
-        HasTraits.__init__(self, **kwargs)
+        HasTraits.__init__(self, **kwargs)  # @UndefinedVariable
     
     def get_transform(self):
         """
@@ -389,7 +389,7 @@ class MatplotlibLogicleScale(HasTraits, matplotlib.scale.ScaleBase):
         
         def __init__(self, **kwargs):
             transforms.Transform.__init__(self)
-            HasTraits.__init__(self, **kwargs)
+            HasTraits.__init__(self, **kwargs)  # @UndefinedVariable
         
         def transform_non_affine(self, values):
             
@@ -427,7 +427,7 @@ class MatplotlibLogicleScale(HasTraits, matplotlib.scale.ScaleBase):
         
         def __init__(self, **kwargs):
             transforms.Transform.__init__(self)
-            HasTraits.__init__(self, **kwargs)
+            HasTraits.__init__(self, **kwargs)  # @UndefinedVariable
         
         def transform_non_affine(self, values):
             try:
