@@ -33,6 +33,7 @@ from traits.api import (HasStrictTraits, Str, CStr, Dict, Any, Instance, Bool,
                         Constant, List, provides, DelegatesTo, Property)
 
 import numpy as np
+import numpy.linalg
 from sklearn import mixture
 from scipy import linalg
 import pandas as pd
@@ -152,7 +153,7 @@ class GaussianMixtureOp(HasStrictTraits):
     name = CStr()
     channels = List(Str)
     scale = Dict(Str, util.ScaleEnum)
-    num_components = util.PositiveInt
+    num_components = util.PositiveInt(allow_zero = False)
     sigma = util.PositiveFloat(allow_zero = True)
     by = List(Str)
     
@@ -342,7 +343,7 @@ class GaussianMixtureOp(HasStrictTraits):
  
         if self.sigma > 0:
             event_gate = {i : pd.Series([False] * len(experiment), dtype = "double")
-                           for i in range(self.num_compnents)}
+                           for i in range(self.num_components)}
  
         if self.posteriors:
             event_posteriors = {i : pd.Series([0.0] * len(experiment), dtype = "double")
@@ -390,6 +391,12 @@ class GaussianMixtureOp(HasStrictTraits):
             # to see if the event is in the sigma gate.
             if self.sigma > 0.0:
                 for c in range(self.num_components):
+                    s = np.linalg.pinv(gmm.covariances_[c])
+                    mu = gmm.means_[c]
+                    
+                    f = lambda x, mu, s: np.dot(np.dot((x - mu).T, s), (x - mu))
+                    dist = np.apply_along_axis(f, 1, x, mu, s)
+                    
                     
                     # compute the Mahalanobis distance
                     
@@ -449,11 +456,11 @@ class GaussianMixtureOp(HasStrictTraits):
 #                 posteriors.index = group_idx
 #                 event_posteriors.iloc[group_idx] = posteriors
 #                      
-#          
-#         if self.num_components == 1 and self.sigma > 0:
-#             new_experiment.add_condition(self.name, "bool", event_assignments == "{0}_1".format(self.name))
-#         elif self.num_components > 1:
-#             new_experiment.add_condition(self.name, "category", event_assignments)
+        
+        new_experiment = experiment.clone()
+          
+        if self.num_components > 1:
+            new_experiment.add_condition(self.name, "category", event_assignments)
 #              
 #         if self.posteriors and self.num_components > 1:
 #             col_name = "{0}_Posterior".format(self.name)
@@ -504,8 +511,8 @@ class GaussianMixtureOp(HasStrictTraits):
 #                 new_experiment.statistics[(self.name, "proportion")] = pd.to_numeric(prop_stat)
 #              
 #                      
-#         new_experiment.history.append(self.clone_traits(transient = lambda t: True))
-#         return new_experiment
+        new_experiment.history.append(self.clone_traits(transient = lambda t: True))
+        return new_experiment
 #     
 #     def default_view(self, **kwargs):
 #         """
