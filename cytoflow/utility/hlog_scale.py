@@ -197,7 +197,7 @@ class MatplotlibHlogScale(HasTraits, matplotlib.scale.ScaleBase):
     range = Float
 
     def __init__(self, axis, **kwargs):
-        HasTraits.__init__(self, **kwargs)
+        HasTraits.__init__(self, **kwargs)  # @UndefinedVariable
     
     def get_transform(self):
         """
@@ -244,7 +244,7 @@ class MatplotlibHlogScale(HasTraits, matplotlib.scale.ScaleBase):
         
         def __init__(self, **kwargs):
             transforms.Transform.__init__(self)
-            HasTraits.__init__(self, **kwargs)
+            HasTraits.__init__(self, **kwargs)  # @UndefinedVariable
         
         def transform_non_affine(self, values):
             
@@ -275,7 +275,7 @@ class MatplotlibHlogScale(HasTraits, matplotlib.scale.ScaleBase):
         
         def __init__(self, **kwargs):
             transforms.Transform.__init__(self)
-            HasTraits.__init__(self, **kwargs)
+            HasTraits.__init__(self, **kwargs)  # @UndefinedVariable
         
         def transform_non_affine(self, values):
             
