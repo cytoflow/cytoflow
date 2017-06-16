@@ -150,7 +150,8 @@ class BinningOp(HasStrictTraits):
                                        "change _max_num_bins (currently {})"
                                        .format(self._max_num_bins))
 
-        scaled_bins = np.linspace(start = scaled_min, stop = scaled_max,
+        scaled_bins = np.linspace(start = scaled_min, 
+                                  stop = scaled_max,
                                   num = num_bins)
         
         if len(scaled_bins) < 2:
