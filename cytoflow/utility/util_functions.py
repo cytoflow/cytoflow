@@ -334,3 +334,15 @@ def is_numeric(s):
     return s.dtype.kind in 'iufc'
 
 #     return issubclass(s.dtype.type, np.number)
+
+def cov2corr(covariance):
+    ''' 
+    From https://github.com/AndreaCensi/procgraph/blob/master/src/procgraph_statistics/cov2corr.py
+    Compute the correlation matrix from the covariance matrix.
+    '''
+
+    sigma = np.sqrt(covariance.diagonal())
+    M = np.multiply.outer(sigma, sigma)
+    correlation = covariance / M
+
+    return sigma, correlation

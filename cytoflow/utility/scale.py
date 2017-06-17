@@ -151,6 +151,9 @@ def set_default_scale(scale):
         raise CytoflowError("Unknown scale type {0}".format(scale))
     
     _scale_default = scale
+    
+def get_default_scale():
+    return _scale_default
 
 # register the new scales
 import cytoflow.utility.linear_scale   # @UnusedImport
