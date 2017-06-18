@@ -749,7 +749,7 @@ class GaussianMixture2DView(cytoflow.views.ScatterplotView):
 
     def _plot_ellipse(self, ax, center, width, height, angle, **kwargs):
         tf = transforms.Affine2D() \
-             .scale(width * 0.5, height * 0.5) \
+             .scale(width, height) \
              .rotate_deg(angle) \
              .translate(*center)
              
