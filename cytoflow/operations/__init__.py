@@ -34,6 +34,7 @@ from .density import DensityGateOp
 from .gaussian_1d import GaussianMixture1DOp
 from .gaussian_2d import GaussianMixture2DOp
 from .gaussian import GaussianMixtureOp
+from .kmeans import KMeansOp
 from .channel_stat import ChannelStatisticOp
 from .frame_stat import FrameStatisticOp
 from .xform_stat import TransformStatisticOp
