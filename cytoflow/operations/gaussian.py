@@ -500,6 +500,10 @@ class GaussianMixtureOp(HasStrictTraits):
                 raise util.CytoflowViewError("Channel {} isn't in the operation's channels"
                                              .format(s))
             
+        for c in channels:
+            if c not in scale:
+                scale[c] = util.get_default_scale()
+            
         if len(channels) == 0:
             raise util.CytoflowViewError("Must specify at least one channel for a default view")
         elif len(channels) == 1:
@@ -664,7 +668,10 @@ class GaussianMixture1DView(cytoflow.views.HistogramView):
             experiment.data.reset_index(drop = True, inplace = True)
 
         # get the parameterized scale object back from the op
-        scale = self.op._scale[self.channel]
+        if self.channel in self.op.scale and self.scale == self.op.scale[self.xchannel]:
+            scale = self.op._scale[self.xchannel]
+        else:
+            scale = util.scale_factory(self.xscale, experiment, channel = self.xchannel)
 
         # plot the histogram, whether or not we're plotting distributions on top
 
@@ -904,8 +911,15 @@ class GaussianMixture2DView(cytoflow.views.ScatterplotView):
             experiment.data = groupby.get_group(plot_name)
             experiment.data.reset_index(drop = True, inplace = True)
             
-        xscale = self.op._scale[self.xchannel]
-        yscale = self.op._scale[self.ychannel]
+        if self.xchannel in self.op.scale and self.xscale == self.op.scale[self.xchannel]:
+            xscale = self.op._scale[self.xchannel]
+        else:
+            xscale = util.scale_factory(self.xscale, experiment, channel = self.xchannel)
+           
+        if self.ychannel in self.op.scale and self.yscale == self.op.scale[self.ychannel]:
+            yscale = self.op._scale[self.ychannel]
+        else:
+            yscale = util.scale_factory(self.yscale, experiment, channel = self.ychannel)
             
         # plot the scatterplot, whether or not we're plotting isolines on top
         
