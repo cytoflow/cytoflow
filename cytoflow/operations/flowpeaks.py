@@ -45,11 +45,12 @@ import cytoflow.utility as util
 from .i_operation import IOperation
 
 @provides(IOperation)
-class KMeansOp(HasStrictTraits):
+class FlowPeaksOp(HasStrictTraits):
     """
-    This module uses a K-means clustering algorithm to cluster events.  
+    This module uses the flowPeaks algorithm to assign events to clusters in
+    an unsupervised manner.
     
-    Call `estimate()` to compute the cluster centroids.
+    Call `estimate()` to compute the cluster centroids and smoothed density.
       
     Calling `apply()` creates a new categorical metadata variable 
     named `name`, with possible values `{name}_1` .... `name_n` where `n` is 
@@ -72,9 +73,6 @@ class KMeansOp(HasStrictTraits):
         Re-scale the data in the specified channels before fitting.  If a 
         channel is in `channels` but not in `scale`, the current package-wide
         default (set with `set_default_scale`) is used.
-
-    num_clusters : Int (default = 2)
-        How many components to fit to the data?  Must be a positive integer.
     
     by : List(Str)
         A list of metadata attributes to aggregate the data before estimating
@@ -83,10 +81,27 @@ class KMeansOp(HasStrictTraits):
         separately to each subset of the data with a unique combination of
         `Time` and `Dox`.
         
-    Statistics
-    ----------       
-    centers : Float
-        the location of each cluster's centroid in each channel
+    tol : Float (default = 0.5)
+        How readily should clusters be merged?  Must be between 0 and 1.
+        
+    find_outliers : Bool (default = False)
+        Should the algorithm use an extra step to identify outliers?
+        
+    Notes
+    -----
+    
+    This algorithm uses kmeans to find a large number of clusters, then 
+    hierarchically merges those clusters.  Thus, the user does not need to
+    specify the number of clusters in advance; and it can find non-convex
+    clusters.  It also operates in an arbitrary number of dimensions.
+    
+    For details and a theoretical justification, see
+    
+    flowPeaks: a fast unsupervised clustering for flow cytometry data via
+    K-means and density peak finding 
+    
+    Yongchao Ge  Stuart C. Sealfon
+    Bioinformatics (2012) 28 (15): 2052-2058.         
   
     Examples
     --------
@@ -100,14 +115,15 @@ class KMeansOp(HasStrictTraits):
     >>> ex3 = clust_op.apply(ex2)
     """
     
-    id = Constant('edu.mit.synbio.cytoflow.operations.kmeans')
-    friendly_id = Constant("KMeans Clustering")
+    id = Constant('edu.mit.synbio.cytoflow.operations.flowpeaks')
+    friendly_id = Constant("FlowPeaks Clustering")
     
     name = CStr()
     channels = List(Str)
     scale = Dict(Str, util.ScaleEnum)
-    num_clusters = util.PositiveInt(allow_zero = False)
     by = List(Str)
+    find_outliers = Bool(False)
+    tol = util.PositiveFloat(allow_zero = False)
     
     _kmeans = Dict(Any, Instance(sklearn.cluster.MiniBatchKMeans), transient = True)
     _scale = Dict(Str, Instance(util.IScale), transient = True)
@@ -189,10 +205,46 @@ class KMeansOp(HasStrictTraits):
                 x = x[~(np.isnan(x[c]))]
             x = x.values
             
+            num_clusters = _get_num_clusters(x)
+            
             self._kmeans[group] = kmeans = \
-                sklearn.cluster.MiniBatchKMeans(n_clusters = self.num_clusters)
+                sklearn.cluster.MiniBatchKMeans(n_clusters = num_clusters)
             
             kmeans.fit(x)
+            x_labels = kmeans.predict(x)
+            
+            kmeans.mean = []
+            kmeans.cov = []
+            kmeans.smooth_cov = []
+            
+            d = len(self.channel)
+            s0 = np.zeros(d, d)
+            for j in range(d):
+                r = x[d].max() - x[d].min()
+                s0[j, j] = (r / (num_clusters ** (1. / d))) ** 0.5 
+            
+            for k in range(num_clusters):
+                xk = x[x_labels == k]
+                num_k = np.sum(x_labels == k)
+                mu = xk.mean(axis = 0)
+                s = np.cov(xk)
+
+                # TODO - make these magic numbers adjustable
+                h0 = 1
+                h = 1.5
+                
+                el = num_k / (num_clusters + num_k)
+                s_smooth = el * h * s + (1.0 - el) * h0 * s0
+                
+                kmeans.mean.append(mu)
+                kmeans.cov.append(s)
+                kmeans.smooth_cov.append(s_smooth)
+                
+                # TODO - make a GMM parameterized with mu, smoothed cov matrix
+                # (have to compute precision matrix, cholesky decomposition)
+                # then use score() as an objective function in a minimization
+                # to find local peaks
+                
                                                  
          
     def apply(self, experiment):
@@ -344,6 +396,16 @@ class KMeansOp(HasStrictTraits):
                                 **kwargs)
         else:
             raise util.CytoflowViewError("Can't specify more than two channels for a default view")
+        
+        
+def _get_num_clusters(x):
+    k = []
+    for c in range(x.shape[1]):
+        xc = x[c]
+        kc = (xc.max() - xc.min()) / (2.0 * util.iqr(xc) * (xc.size ** (1. / 3)))
+        k.append(kc)
+        
+    return np.median(k)
     
 @provides(cytoflow.views.IView)
 class KMeans1DView(cytoflow.views.HistogramView):
