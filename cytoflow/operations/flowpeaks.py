@@ -126,7 +126,7 @@ class FlowPeaksOp(HasStrictTraits):
     scale = Dict(Str, util.ScaleEnum)
     by = List(Str)
     find_outliers = Bool(False)
-    tol = util.PositiveFloat(allow_zero = False)
+    tol = util.PositiveFloat(0.1, allow_zero = False)
     
     _kmeans = Dict(Any, Instance(sklearn.cluster.MiniBatchKMeans), transient = True)
     _scale = Dict(Str, Instance(util.IScale), transient = True)
@@ -138,9 +138,6 @@ class FlowPeaksOp(HasStrictTraits):
 
         if experiment is None:
             raise util.CytoflowOpError("No experiment specified")
-        
-        if self.num_clusters < 2:
-            raise util.CytoflowOpError("num_clusters must be >= 2")
         
         if len(self.channels) == 0:
             raise util.CytoflowOpError("Must set at least one channel")
@@ -208,26 +205,32 @@ class FlowPeaksOp(HasStrictTraits):
                 x = x[~(np.isnan(x[c]))]
             x = x.values
             
-            #### CHOOSE THE NUMBER OF CLUSTERS AND FIT KMEANS
-            num_clusters = _get_num_clusters(x)
+            #### choose the number of clusters and fit the kmeans
+            num_clusters = [util.num_hist_bins(x[:, c]) for c in range(len(self.channels))]
+            num_clusters = np.ceil(np.median(num_clusters))
+            num_clusters = int(num_clusters)
             
             self._kmeans[group] = kmeans = \
                 sklearn.cluster.MiniBatchKMeans(n_clusters = num_clusters)
             
             kmeans.fit(x)
             x_labels = kmeans.predict(x)
+            d = len(self.channels)
+
             
-            #### USE KMEANS TO ESTIMATE DENSITY FUNCTION
+            #### use the kmeans centroids to parameterize a finite gaussian
+            #### mixture model which estimates the density function
  
             gmm = sklearn.mixture.GaussianMixture(n_components = num_clusters, 
                                                   covariance_type='full')
+            gmm.weights_ = np.ndarray((0,))
+            gmm.means_ = np.ndarray((0, d))
+            gmm.covariances_ = np.ndarray((0, d, d))
+            gmm.precisions_ = np.ndarray((0, d, d))
+            gmm.precisions_cholesky_ = np.ndarray((0, d, d))
             
-#             kmeans.mean = []
-#             kmeans.cov = []
-#             kmeans.smooth_cov = []
-            
-            d = len(self.channel)
-            s0 = np.zeros(d, d)
+            d = len(self.channels)
+            s0 = np.zeros([d, d])
             for j in range(d):
                 r = x[d].max() - x[d].min()
                 s0[j, j] = (r / (num_clusters ** (1. / d))) ** 0.5 
@@ -237,7 +240,7 @@ class FlowPeaksOp(HasStrictTraits):
                 num_k = np.sum(x_labels == k)
                 weight_k = num_k / len(x_labels)
                 mu = xk.mean(axis = 0)
-                s = np.cov(xk)
+                s = np.cov(xk, rowvar = False)
 
                 # TODO - make these magic numbers adjustable
                 h0 = 1
@@ -248,18 +251,25 @@ class FlowPeaksOp(HasStrictTraits):
                 s_precision = numpy.linalg.inv(s_smooth)
                 s_cholesky = numpy.linalg.cholesky(s_precision)
                 
-                gmm.weights_ = np.append(gmm.weights_, weight_k, axis = 0)
-                gmm.means_ = np.append(gmm.means_, mu, axis = 0)
-                gmm.covariances_ = np.append(gmm.covariances_, s_smooth, axis = 0)
-                gmm.precisions_ = np.append(gmm.precisions_, s_precision, axis = 0)
-                gmm.precisions_cholesky_ = np.append(gmm.precisions_cholesky_, s_cholesky, axis = 0)
+                gmm.weights_ = np.append(gmm.weights_, [weight_k], axis = 0)
+                gmm.means_ = np.append(gmm.means_, mu[np.newaxis, :], axis = 0)
+                gmm.covariances_ = np.append(gmm.covariances_, s_smooth[np.newaxis, :, :], axis = 0)
+                gmm.precisions_ = np.append(gmm.precisions_, s_precision[np.newaxis, :, :], axis = 0)
+                gmm.precisions_cholesky_ = np.append(gmm.precisions_cholesky_, s_cholesky[np.newaxis, :, :], axis = 0)
                 
-            ### USE OPTIMIZATION TO FIND CLUSTER --> PEAK MAPPING
+            ### use optimization on the gmm to find local peaks for each 
+            ### mixture component
             clust_peaks = []
             for k in range(num_clusters):
                 mu = gmm.means_[k]
-                print gmm.score(mu)
+                f = lambda x: -1.0 * gmm.score(x[np.newaxis, :])
+                res = scipy.optimize.minimize(f, mu)
+                if res.status != 0:
+                    raise util.CytoflowOpError("Peak finding failed for cluster {}: {}"
+                                               .format(k, res.message))
+                clust_peaks.append(res.x)
                 
+            print clust_peaks
                                                  
          
     def apply(self, experiment):
@@ -412,15 +422,6 @@ class FlowPeaksOp(HasStrictTraits):
         else:
             raise util.CytoflowViewError("Can't specify more than two channels for a default view")
         
-        
-def _get_num_clusters(x):
-    k = []
-    for c in range(x.shape[1]):
-        xc = x[c]
-        kc = (xc.max() - xc.min()) / (2.0 * util.iqr(xc) * (xc.size ** (1. / 3)))
-        k.append(kc)
-        
-    return np.median(k)
     
 @provides(cytoflow.views.IView)
 class FlowPeaks1DView(cytoflow.views.HistogramView):
