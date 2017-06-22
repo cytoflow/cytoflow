@@ -33,8 +33,11 @@ from traits.api import (HasStrictTraits, Str, CStr, Dict, Any, Instance, Bool,
                         Constant, List, provides, Property, Enum)
 
 import numpy as np
+import numpy.linalg
 import sklearn.cluster
+import sklearn.mixture
 import scipy.stats
+import scipy.optimize
 
 import pandas as pd
 import seaborn as sns
@@ -205,6 +208,7 @@ class FlowPeaksOp(HasStrictTraits):
                 x = x[~(np.isnan(x[c]))]
             x = x.values
             
+            #### CHOOSE THE NUMBER OF CLUSTERS AND FIT KMEANS
             num_clusters = _get_num_clusters(x)
             
             self._kmeans[group] = kmeans = \
@@ -213,9 +217,14 @@ class FlowPeaksOp(HasStrictTraits):
             kmeans.fit(x)
             x_labels = kmeans.predict(x)
             
-            kmeans.mean = []
-            kmeans.cov = []
-            kmeans.smooth_cov = []
+            #### USE KMEANS TO ESTIMATE DENSITY FUNCTION
+ 
+            gmm = sklearn.mixture.GaussianMixture(n_components = num_clusters, 
+                                                  covariance_type='full')
+            
+#             kmeans.mean = []
+#             kmeans.cov = []
+#             kmeans.smooth_cov = []
             
             d = len(self.channel)
             s0 = np.zeros(d, d)
@@ -226,6 +235,7 @@ class FlowPeaksOp(HasStrictTraits):
             for k in range(num_clusters):
                 xk = x[x_labels == k]
                 num_k = np.sum(x_labels == k)
+                weight_k = num_k / len(x_labels)
                 mu = xk.mean(axis = 0)
                 s = np.cov(xk)
 
@@ -235,15 +245,20 @@ class FlowPeaksOp(HasStrictTraits):
                 
                 el = num_k / (num_clusters + num_k)
                 s_smooth = el * h * s + (1.0 - el) * h0 * s0
+                s_precision = numpy.linalg.inv(s_smooth)
+                s_cholesky = numpy.linalg.cholesky(s_precision)
                 
-                kmeans.mean.append(mu)
-                kmeans.cov.append(s)
-                kmeans.smooth_cov.append(s_smooth)
+                gmm.weights_ = np.append(gmm.weights_, weight_k, axis = 0)
+                gmm.means_ = np.append(gmm.means_, mu, axis = 0)
+                gmm.covariances_ = np.append(gmm.covariances_, s_smooth, axis = 0)
+                gmm.precisions_ = np.append(gmm.precisions_, s_precision, axis = 0)
+                gmm.precisions_cholesky_ = np.append(gmm.precisions_cholesky_, s_cholesky, axis = 0)
                 
-                # TODO - make a GMM parameterized with mu, smoothed cov matrix
-                # (have to compute precision matrix, cholesky decomposition)
-                # then use score() as an objective function in a minimization
-                # to find local peaks
+            ### USE OPTIMIZATION TO FIND CLUSTER --> PEAK MAPPING
+            clust_peaks = []
+            for k in range(num_clusters):
+                mu = gmm.means_[k]
+                print gmm.score(mu)
                 
                                                  
          
@@ -383,12 +398,12 @@ class FlowPeaksOp(HasStrictTraits):
         if len(channels) == 0:
             raise util.CytoflowViewError("Must specify at least one channel for a default view")
         elif len(channels) == 1:
-            return KMeans1DView(op = self, 
+            return FlowPeaks1DView(op = self, 
                                 channel = channels[0], 
                                 scale = scale[channels[0]], 
                                 **kwargs)
         elif len(channels) == 2:
-            return KMeans2DView(op = self, 
+            return FlowPeaks2DView(op = self, 
                                 xchannel = channels[0], 
                                 ychannel = channels[1],
                                 xscale = scale[channels[0]],
@@ -408,7 +423,7 @@ def _get_num_clusters(x):
     return np.median(k)
     
 @provides(cytoflow.views.IView)
-class KMeans1DView(cytoflow.views.HistogramView):
+class FlowPeaks1DView(cytoflow.views.HistogramView):
     """
     Attributes
     ----------    
@@ -561,7 +576,7 @@ class KMeans1DView(cytoflow.views.HistogramView):
 
         # plot the histogram, whether or not we're plotting distributions on top
 
-        g = super(KMeans1DView, self).plot(experiment, 
+        g = super(FlowPeaks1DView, self).plot(experiment, 
                                                     scale = scale, 
                                                     xlim = xlim,
                                                     **kwargs)
@@ -619,7 +634,7 @@ class KMeans1DView(cytoflow.views.HistogramView):
 
      
 @provides(cytoflow.views.IView)
-class KMeans2DView(cytoflow.views.ScatterplotView):
+class FlowPeaks2DView(cytoflow.views.ScatterplotView):
     """
     Attributes
     ----------
@@ -779,7 +794,7 @@ class KMeans2DView(cytoflow.views.ScatterplotView):
             
         # plot the scatterplot, whether or not we're plotting isolines on top
         
-        g = super(KMeans2DView, self).plot(experiment, 
+        g = super(FlowPeaks2DView, self).plot(experiment, 
                                            xscale = xscale,
                                            yscale = yscale,
                                            xlim = xlim, 
