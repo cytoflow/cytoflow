@@ -30,7 +30,7 @@ from itertools import product
 import matplotlib.pyplot as plt
 
 from traits.api import (HasStrictTraits, Str, CStr, Dict, Any, Instance, Bool, 
-                        Constant, List, provides, Property, Enum)
+                        Constant, List, provides, Property, Enum, Array)
 
 import numpy as np
 import numpy.linalg
@@ -129,6 +129,8 @@ class FlowPeaksOp(HasStrictTraits):
     tol = util.PositiveFloat(0.1, allow_zero = False)
     
     _kmeans = Dict(Any, Instance(sklearn.cluster.MiniBatchKMeans), transient = True)
+    _gmm = Dict(Any, Instance(sklearn.mixture.GaussianMixture), transient = True)
+    _clusters = Dict(Any, List, transient = True)
     _scale = Dict(Str, Instance(util.IScale), transient = True)
     
     def estimate(self, experiment, subset = None):
@@ -217,12 +219,12 @@ class FlowPeaksOp(HasStrictTraits):
             x_labels = kmeans.predict(x)
             d = len(self.channels)
 
-            
             #### use the kmeans centroids to parameterize a finite gaussian
             #### mixture model which estimates the density function
  
-            gmm = sklearn.mixture.GaussianMixture(n_components = num_clusters, 
-                                                  covariance_type='full')
+            self._gmm[group] = gmm = \
+                sklearn.mixture.GaussianMixture(n_components = num_clusters, 
+                                                covariance_type='full')
             gmm.weights_ = np.ndarray((0,))
             gmm.means_ = np.ndarray((0, d))
             gmm.covariances_ = np.ndarray((0, d, d))
@@ -269,7 +271,84 @@ class FlowPeaksOp(HasStrictTraits):
                                                .format(k, res.message))
                 clust_peaks.append(res.x)
                 
-            print clust_peaks
+                
+            ### merge local peaks
+                
+            def max_tol(x, y):
+                f = lambda a: 10.0 ** gmm.score(a[np.newaxis, :])
+                lx = kmeans.predict(x[np.newaxis, :])[0]
+                nx = np.sum(x_labels == lx)
+                ly = kmeans.predict(y[np.newaxis, :])[0]
+                ny = np.sum(x_labels == ly)
+                n = len(x)
+                n_scale = np.sqrt(((nx + ny) / 2.0) / (n / num_clusters))
+                
+                def tol(t):
+                    zt = x + t * (y - x)
+                    fhat_zt = f(x) + t * (f(y) - f(x))
+                    return -1.0 * abs((f(zt) - fhat_zt) / fhat_zt) * n_scale
+                
+                res = scipy.optimize.minimize_scalar(tol, 
+                                                     bounds = [0, 1], 
+                                                     method = 'Bounded')
+                
+                if res.status != 0:
+                    raise util.CytoflowOpError("tol optimization failed for {}, {}"
+                                               .format(x, y))
+                return -1.0 * res.fun
+            
+            def nearest_neighbor_dist(k):
+                min_dist = np.inf
+                
+                for i in range(num_clusters):
+                    if i == k:
+                        continue
+                    dist = np.linalg.norm(gmm.means_[k] - gmm.means_[i])
+                    if dist < min_dist:
+                        min_dist = dist
+                        
+                return min_dist
+            
+            sk = [nearest_neighbor_dist(x) for x in range(num_clusters)]
+            
+            def s(x):
+                k = kmeans.predict(x[np.newaxis, :])[0]
+                return sk[k]
+                
+                    
+            clusters = [[x] for x in range(num_clusters)]
+            
+            gi = 0
+            while gi < len(clusters):
+                g = clusters[gi]
+                
+                hi = gi + 1
+                while hi < len(clusters):
+                    h = clusters[hi]
+                    can_merge = False
+                    for pg in g:
+                        if can_merge:
+                            continue
+                        for ph in h:
+                            if can_merge:
+                                continue
+                            vg = clust_peaks[pg]
+                            vh = clust_peaks[ph]
+                            
+                            if max_tol(vg, vh) < self.tol and \
+                               np.linalg.norm(vg - vh) <= 2 * (s(vg) + s(vh)):
+                                can_merge = True
+                                
+                    if can_merge:
+                        g.extend(h)
+                        clusters.remove(h)
+                    else:
+                        hi += 1
+                                            
+                gi += 1
+
+            self._clusters[group] = clusters
+                    
                                                  
          
     def apply(self, experiment):
