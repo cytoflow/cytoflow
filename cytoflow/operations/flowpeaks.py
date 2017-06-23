@@ -130,6 +130,7 @@ class FlowPeaksOp(HasStrictTraits):
     
     _kmeans = Dict(Any, Instance(sklearn.cluster.MiniBatchKMeans), transient = True)
     _gmm = Dict(Any, Instance(sklearn.mixture.GaussianMixture), transient = True)
+    _groups = Dict(Any, List, transient = True)
     _clusters = Dict(Any, List, transient = True)
     _scale = Dict(Str, Instance(util.IScale), transient = True)
     
@@ -314,17 +315,16 @@ class FlowPeaksOp(HasStrictTraits):
             def s(x):
                 k = kmeans.predict(x[np.newaxis, :])[0]
                 return sk[k]
-                
                     
-            clusters = [[x] for x in range(num_clusters)]
+            cluster_groups = [[x] for x in range(num_clusters)]
             
             gi = 0
-            while gi < len(clusters):
-                g = clusters[gi]
+            while gi < len(cluster_groups):
+                g = cluster_groups[gi]
                 
                 hi = gi + 1
-                while hi < len(clusters):
-                    h = clusters[hi]
+                while hi < len(cluster_groups):
+                    h = cluster_groups[hi]
                     can_merge = False
                     for pg in g:
                         if can_merge:
@@ -341,13 +341,19 @@ class FlowPeaksOp(HasStrictTraits):
                                 
                     if can_merge:
                         g.extend(h)
-                        clusters.remove(h)
+                        cluster_groups.remove(h)
                     else:
                         hi += 1
                                             
                 gi += 1
-
+            
+            clusters = [0] * num_clusters
+            for gi, cluster_group in enumerate(cluster_groups):
+                for k in cluster_group:
+                    clusters[k] = gi
+                    
             self._clusters[group] = clusters
+            self._groups[group] = cluster_groups
                     
                                                  
          
@@ -403,11 +409,11 @@ class FlowPeaksOp(HasStrictTraits):
         event_assignments = pd.Series(["{}_None".format(self.name)] * len(experiment), dtype = "object")
          
         # make the statistics       
-        clusters = [x + 1 for x in range(self.num_clusters)]
-          
-        idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by] + [clusters] + [self.channels], 
-                                         names = list(self.by) + ["Cluster"] + ["Channel"])
-        centers_stat = pd.Series(index = idx, dtype = np.dtype(object)).sort_index()
+#         clusters = [x + 1 for x in range(self.num_clusters)]
+#           
+#         idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by] + [clusters] + [self.channels], 
+#                                          names = list(self.by) + ["Cluster"] + ["Channel"])
+#         centers_stat = pd.Series(index = idx, dtype = np.dtype(object)).sort_index()
                      
         for group, data_subset in groupby:
             if len(data_subset) == 0:
@@ -430,31 +436,36 @@ class FlowPeaksOp(HasStrictTraits):
   
             predicted = np.full(len(x), -1, "int")
             predicted[~x_na] = kmeans.predict(x[~x_na])
+#             print predicted[~x_na][1:1000]
+            
+            clusters = np.asarray(self._clusters[group])
+#             print predicted[~x_na].type
+            predicted[~x_na] = clusters[ predicted[~x_na] ]
                  
             predicted_str = pd.Series(["(none)"] * len(predicted))
-            for c in range(0, self.num_clusters):
+            for c in range(0, self._num_clusters[group]):
                 predicted_str[predicted == c] = "{0}_{1}".format(self.name, c + 1)
             predicted_str[predicted == -1] = "{0}_None".format(self.name)
             predicted_str.index = group_idx
       
             event_assignments.iloc[group_idx] = predicted_str
             
-            for c in range(self.num_clusters):
-                if len(self.by) == 0:
-                    g = [c + 1]
-                elif hasattr(group, '__iter__'):
-                    g = tuple(list(group) + [c + 1])
-                else:
-                    g = tuple([group] + [c + 1])
-                
-                for cidx1, channel1 in enumerate(self.channels):
-                    g2 = tuple(list(g) + [channel1])
-                    centers_stat.loc[g2] = self._scale[channel1].inverse(kmeans.cluster_centers_[c, cidx1])
-         
+#             for c in range(self.num_clusters):
+#                 if len(self.by) == 0:
+#                     g = [c + 1]
+#                 elif hasattr(group, '__iter__'):
+#                     g = tuple(list(group) + [c + 1])
+#                 else:
+#                     g = tuple([group] + [c + 1])
+#                 
+#                 for cidx1, channel1 in enumerate(self.channels):
+#                     g2 = tuple(list(g) + [channel1])
+#                     centers_stat.loc[g2] = self._scale[channel1].inverse(kmeans.cluster_centers_[c, cidx1])
+#          
         new_experiment = experiment.clone()          
         new_experiment.add_condition(self.name, "category", event_assignments)
         
-        new_experiment.statistics[(self.name, "centers")] = pd.to_numeric(centers_stat)
+#         new_experiment.statistics[(self.name, "centers")] = pd.to_numeric(centers_stat)
  
         new_experiment.history.append(self.clone_traits(transient = lambda _: True))
         return new_experiment
