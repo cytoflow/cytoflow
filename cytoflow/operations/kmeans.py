@@ -268,6 +268,7 @@ class KMeansOp(HasStrictTraits):
                 x_na[np.isnan(x[c]).values] = True
                          
             x = x.values
+            x_na = x_na.values
             group_idx = groupby.groups[group]
             
             kmeans = self._kmeans[group]
