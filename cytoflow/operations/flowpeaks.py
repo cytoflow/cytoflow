@@ -430,20 +430,19 @@ class FlowPeaksOp(HasStrictTraits):
                 x_na[np.isnan(x[c]).values] = True
                          
             x = x.values
+            x_na = x_na.values
             group_idx = groupby.groups[group]
             
             kmeans = self._kmeans[group]
   
             predicted = np.full(len(x), -1, "int")
             predicted[~x_na] = kmeans.predict(x[~x_na])
-#             print predicted[~x_na][1:1000]
             
             clusters = np.asarray(self._clusters[group])
-#             print predicted[~x_na].type
             predicted[~x_na] = clusters[ predicted[~x_na] ]
                  
             predicted_str = pd.Series(["(none)"] * len(predicted))
-            for c in range(0, self._num_clusters[group]):
+            for c in range(len(self._groups[group])):
                 predicted_str[predicted == c] = "{0}_{1}".format(self.name, c + 1)
             predicted_str[predicted == -1] = "{0}_None".format(self.name)
             predicted_str.index = group_idx

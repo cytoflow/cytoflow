@@ -388,6 +388,7 @@ class GaussianMixtureOp(HasStrictTraits):
                 x_na[np.isnan(x[c]).values] = True
                         
             x = x.values
+            x_na = x_na.values
             group_idx = groupby.groups[group]
  
             if self.num_components > 1:
