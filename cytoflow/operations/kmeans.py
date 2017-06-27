@@ -551,7 +551,7 @@ class KMeans1DView(cytoflow.views.HistogramView):
                 
             cidx = self.op.channels.index(self.channel)
             for k in range(0, self.op.num_clusters):
-                c = km.cluster_centers_[k][cidx]
+                c = self.op._scale[self.channel].inverse(km.cluster_centers_[k][cidx])
                 
                 plt.axvline(c, linewidth=3, color='blue')                      
         return g
@@ -716,7 +716,7 @@ class KMeans2DView(cytoflow.views.ScatterplotView):
         else:
             yscale = util.scale_factory(self.yscale, experiment, channel = self.ychannel)
             
-        # plot the scatterplot, whether or not we're plotting isolines on top
+        # plot the scatterplot, whether or not we're plotting kmean centers on top
         
         g = super(KMeans2DView, self).plot(experiment, 
                                            xscale = xscale,
@@ -727,11 +727,6 @@ class KMeans2DView(cytoflow.views.ScatterplotView):
          
         if self._by and plot_name is not None:
             plt.title("{0} = {1}".format(self._by, plot_name))
- 
-        # plot the actual distribution on top of it.  display as a "contour"
-        # plot with ellipses at 68, 95, and 99 percentiles of the CDF of the 
-        # multivariate gaussian 
-        # cf. http://scikit-learn.org/stable/auto_examples/mixture/plot_gmm.html
          
         row_names = g.row_names if g.row_names else [False]
         col_names = g.col_names if g.col_names else [False]
@@ -773,77 +768,13 @@ class KMeans2DView(cytoflow.views.ScatterplotView):
             ix = self.op.channels.index(self.xchannel)
             iy = self.op.channels.index(self.ychannel)
             
-            for k in range(0, self.op.num_clusters):
-                x = km.cluster_centers_[k][ix]
-                y = km.cluster_centers_[k][iy]
+            for k in range(self.op.num_clusters):
+                x = self.op._scale[self.xchannel].inverse(km.cluster_centers_[k][ix])
+                y = self.op._scale[self.ychannel].inverse(km.cluster_centers_[k][iy])
                 
                 plt.plot(x, y, '*', color = 'blue')
-#                 print (x, y)
-
-                
-#                 mu = mean[[ix, iy]]
-#                 s = covar[rows, cols]
-#                 
-#                 v, w = linalg.eigh(s)
-#                 u = w[0] / linalg.norm(w[0])
-#                   
-#                 #rotation angle (in degrees)
-#                 t = np.arctan(u[1] / u[0])
-#                 t = 180 * t / np.pi
-#                              
-#                 color_k = k % len(sns.color_palette())
-#                 color = sns.color_palette()[color_k]
-#                   
-#                 # in order to scale the ellipses correctly, we have to make them
-#                 # ourselves out of an affine-scaled unit circle.  The interface
-#                 # is the same as matplotlib.patches.Ellipse
-#                   
-#                 self._plot_ellipse(ax,
-#                                    mu,
-#                                    np.sqrt(v[0]),
-#                                    np.sqrt(v[1]),
-#                                    180 + t,
-#                                    color = color,
-#                                    fill = False,
-#                                    linewidth = 2)
-#       
-#                 self._plot_ellipse(ax, 
-#                                    mu,
-#                                    np.sqrt(v[0]) * 2,
-#                                    np.sqrt(v[1]) * 2,
-#                                    180 + t,
-#                                    color = color,
-#                                    fill = False,
-#                                    linewidth = 2,
-#                                    alpha = 0.66)
-#                   
-#                 self._plot_ellipse(ax, 
-#                                    mu,
-#                                    np.sqrt(v[0]) * 3,
-#                                    np.sqrt(v[1]) * 3,
-#                                    180 + t,
-#                                    color = color,
-#                                    fill = False,
-#                                    linewidth = 2,
-#                                    alpha = 0.33)
-#                   
-#         return g
-#  
-#     def _plot_ellipse(self, ax, center, width, height, angle, **kwargs):
-#         tf = transforms.Affine2D() \
-#              .scale(width, height) \
-#              .rotate_deg(angle) \
-#              .translate(*center)
-#               
-#         tf_path = tf.transform_path(path.Path.unit_circle())
-#         v = tf_path.vertices
-#         v = np.vstack((self.op._scale[self.xchannel].inverse(v[:, 0]),
-#                        self.op._scale[self.ychannel].inverse(v[:, 1]))).T
-#  
-#         scaled_path = path.Path(v, tf_path.codes)
-#         scaled_patch = patches.PathPatch(scaled_path, **kwargs)
-#         ax.add_patch(scaled_patch)
-#              
-              
+                   
+        return g
+         
  
      

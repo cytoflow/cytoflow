@@ -130,8 +130,9 @@ class FlowPeaksOp(HasStrictTraits):
     
     _kmeans = Dict(Any, Instance(sklearn.cluster.MiniBatchKMeans), transient = True)
     _gmm = Dict(Any, Instance(sklearn.mixture.GaussianMixture), transient = True)
-    _groups = Dict(Any, List, transient = True)
-    _clusters = Dict(Any, List, transient = True)
+#     _peaks = Dict(Any, List, transient = True)  # kmeans cluster idx --> peak idx
+    _groups = Dict(Any, List, transient = True) # kmeans cluster idx --> group idx
+#     _clusters = Dict(Any, List, transient = True)
     _scale = Dict(Str, Instance(util.IScale), transient = True)
     
     def estimate(self, experiment, subset = None):
@@ -260,9 +261,10 @@ class FlowPeaksOp(HasStrictTraits):
                 gmm.precisions_ = np.append(gmm.precisions_, s_precision[np.newaxis, :, :], axis = 0)
                 gmm.precisions_cholesky_ = np.append(gmm.precisions_cholesky_, s_cholesky[np.newaxis, :, :], axis = 0)
                 
-            ### use optimization on the gmm to find local peaks for each 
-            ### mixture component
-            clust_peaks = []
+            ### use optimization on the finite gmm to find the local peak for 
+            ### each kmeans cluster
+            peaks = []
+            peak_clusters = []
             for k in range(num_clusters):
                 mu = gmm.means_[k]
                 f = lambda x: -1.0 * gmm.score(x[np.newaxis, :])
@@ -270,11 +272,26 @@ class FlowPeaksOp(HasStrictTraits):
                 if res.status != 0:
                     raise util.CytoflowOpError("Peak finding failed for cluster {}: {}"
                                                .format(k, res.message))
-                clust_peaks.append(res.x)
-                
-                
-            ### merge local peaks
-                
+                    
+                merged = False
+                for pi, p in enumerate(peaks):
+                    if np.linalg.norm(p - res.x) < (10 ** -4.0):
+                        peak_clusters[pi].append(k)
+                        merged = True
+                        break
+                        
+                if not merged:
+                    peak_clusters.append([k])
+                    peaks.append(res.x)
+                    
+            print peaks
+            print peak_clusters
+
+            ### merge peaks that are sufficiently close
+
+            groups = [[x] for x in range(len(peaks))]
+            peak_groups = [x for x in range(len(peaks))]
+                            
             def max_tol(x, y):
                 f = lambda a: 10.0 ** gmm.score(a[np.newaxis, :])
                 lx = kmeans.predict(x[np.newaxis, :])[0]
@@ -315,46 +332,60 @@ class FlowPeaksOp(HasStrictTraits):
             def s(x):
                 k = kmeans.predict(x[np.newaxis, :])[0]
                 return sk[k]
-                    
-            cluster_groups = [[x] for x in range(num_clusters)]
             
-            gi = 0
-            while gi < len(cluster_groups):
-                g = cluster_groups[gi]
+            def can_merge(g, h):
+                for pg in g:
+                    for ph in h:
+                        vg = peaks[pg]
+                        vh = peaks[ph]
+                        dist_gh = np.linalg.norm(vg - vh)
+                        
+                        if max_tol(vg, vh) < self.tol and dist_gh <= 2 * (s(vg) + s(vh)):
+                            return True
+                        
+                return False
+            
+            while True:
+                if len(groups) == 1:
+                    break
                 
-                hi = gi + 1
-                while hi < len(cluster_groups):
-                    h = cluster_groups[hi]
-                    can_merge = False
-                    for pg in g:
-                        if can_merge:
-                            continue
-                        for ph in h:
-                            if can_merge:
-                                continue
-                            vg = clust_peaks[pg]
-                            vh = clust_peaks[ph]
-                            
-                            if max_tol(vg, vh) < self.tol and \
-                               np.linalg.norm(vg - vh) <= 2 * (s(vg) + s(vh)):
-                                can_merge = True
+                # find closest mergable groups
+                min_dist = np.inf
+                for gi in range(len(groups)):
+                    g = groups[gi]
+                    
+                    for hi in range(gi + 1, len(groups)):
+                        h = groups[hi]
+                        
+                        if can_merge(g, h):
+                            dist_gh = np.inf
+                            for vg in g:
+                                for vh in h:
+                                    dist_gh = min(dist_gh, 
+                                                  np.linalg.norm(vg - vh))
+                                    
+                            if dist_gh < min_dist:
+                                min_gi = gi
+                                min_hi = hi
+                                min_dist = dist_gh
                                 
-                    if can_merge:
-                        g.extend(h)
-                        cluster_groups.remove(h)
-                    else:
-                        hi += 1
-                                            
-                gi += 1
-            
-            clusters = [0] * num_clusters
-            for gi, cluster_group in enumerate(cluster_groups):
-                for k in cluster_group:
-                    clusters[k] = gi
+                if min_dist == np.inf:
+                    break
+                
+                # merge the groups
+                groups[min_gi].extend(groups[min_hi])
+                for g in groups[hi]:
+                    peak_groups[g] = gi
+                del groups[hi]
+                
+        cluster_group = [0] * num_clusters
+
+        for gi, g in enumerate(groups):
+            for p in g:
+                for cluster in peak_clusters[p]:
+                    cluster_group[cluster] = gi
                     
-            self._clusters[group] = clusters
-            self._groups[group] = cluster_groups
-                    
+        self._groups[group] = cluster_group    
                                                  
          
     def apply(self, experiment):
@@ -438,8 +469,8 @@ class FlowPeaksOp(HasStrictTraits):
             predicted = np.full(len(x), -1, "int")
             predicted[~x_na] = kmeans.predict(x[~x_na])
             
-            clusters = np.asarray(self._clusters[group])
-            predicted[~x_na] = clusters[ predicted[~x_na] ]
+            groups = np.asarray(self._groups[group])
+            predicted[~x_na] = groups[ predicted[~x_na] ]
                  
             predicted_str = pd.Series(["(none)"] * len(predicted))
             for c in range(len(self._groups[group])):
@@ -517,12 +548,12 @@ class FlowPeaks1DView(cytoflow.views.HistogramView):
     """
     Attributes
     ----------    
-    op : Instance(GaussianMixture1DOp)
+    op : Instance(FlowpeaksOp)
         The op whose parameters we're viewing.
     """
     
-    id = 'edu.mit.synbio.cytoflow.view.gaussianmixture1dview'
-    friendly_id = "1D Gaussian Mixture Diagnostic Plot"
+    id = 'edu.mit.synbio.cytoflow.view.flowpeaks1dview'
+    friendly_id = "1D FlowPeaks Diagnostic Plot"
     
     # TODO - why can't I use GaussianMixture1DOp here?
     op = Instance(IOperation)
@@ -717,7 +748,7 @@ class FlowPeaks1DView(cytoflow.views.HistogramView):
                 
             cidx = self.op.channels.index(self.channel)
             for k in range(0, self.op.num_clusters):
-                c = km.cluster_centers_[k][cidx]
+                c = self.op._scale[self.channel].inverse(km.cluster_centers_[k][cidx])
                 
                 plt.axvline(c, linewidth=3, color='blue')                      
         return g
@@ -728,14 +759,14 @@ class FlowPeaks2DView(cytoflow.views.ScatterplotView):
     """
     Attributes
     ----------
-    op : Instance(GaussianMixture2DOp)
+    op : Instance(FlowPeaksOp)
         The op whose parameters we're viewing.        
     """
      
-    id = 'edu.mit.synbio.cytoflow.view.gaussianmixture2dview'
-    friendly_id = "Gaussian Mixture Diagnostic Plot"
+    id = 'edu.mit.synbio.cytoflow.view.flowpeaks2dview'
+    friendly_id = "FlowPeaks 2D Diagnostic Plot"
      
-    # TODO - why can't I use GaussianMixture2DOp here?
+    # TODO - why can't I use FlowPeaksOp here?
     op = Instance(IOperation)
      
     _by = Property(List)
@@ -882,7 +913,7 @@ class FlowPeaks2DView(cytoflow.views.ScatterplotView):
         else:
             yscale = util.scale_factory(self.yscale, experiment, channel = self.ychannel)
             
-        # plot the scatterplot, whether or not we're plotting isolines on top
+        # plot the scatterplot, whether or not we're plotting centroids on top
         
         g = super(FlowPeaks2DView, self).plot(experiment, 
                                            xscale = xscale,
@@ -894,10 +925,7 @@ class FlowPeaks2DView(cytoflow.views.ScatterplotView):
         if self._by and plot_name is not None:
             plt.title("{0} = {1}".format(self._by, plot_name))
  
-        # plot the actual distribution on top of it.  display as a "contour"
-        # plot with ellipses at 68, 95, and 99 percentiles of the CDF of the 
-        # multivariate gaussian 
-        # cf. http://scikit-learn.org/stable/auto_examples/mixture/plot_gmm.html
+        # plot the kmeans centroids
          
         row_names = g.row_names if g.row_names else [False]
         col_names = g.col_names if g.col_names else [False]
@@ -939,77 +967,10 @@ class FlowPeaks2DView(cytoflow.views.ScatterplotView):
             ix = self.op.channels.index(self.xchannel)
             iy = self.op.channels.index(self.ychannel)
             
-            for k in range(0, self.op.num_clusters):
-                x = km.cluster_centers_[k][ix]
-                y = km.cluster_centers_[k][iy]
+            for k in range(len(km.cluster_centers_)):
+                x = self.op._scale[self.xchannel].inverse(km.cluster_centers_[k][ix])
+                y = self.op._scale[self.ychannel].inverse(km.cluster_centers_[k][iy])
                 
                 plt.plot(x, y, '*', color = 'blue')
-#                 print (x, y)
 
-                
-#                 mu = mean[[ix, iy]]
-#                 s = covar[rows, cols]
-#                 
-#                 v, w = linalg.eigh(s)
-#                 u = w[0] / linalg.norm(w[0])
-#                   
-#                 #rotation angle (in degrees)
-#                 t = np.arctan(u[1] / u[0])
-#                 t = 180 * t / np.pi
-#                              
-#                 color_k = k % len(sns.color_palette())
-#                 color = sns.color_palette()[color_k]
-#                   
-#                 # in order to scale the ellipses correctly, we have to make them
-#                 # ourselves out of an affine-scaled unit circle.  The interface
-#                 # is the same as matplotlib.patches.Ellipse
-#                   
-#                 self._plot_ellipse(ax,
-#                                    mu,
-#                                    np.sqrt(v[0]),
-#                                    np.sqrt(v[1]),
-#                                    180 + t,
-#                                    color = color,
-#                                    fill = False,
-#                                    linewidth = 2)
-#       
-#                 self._plot_ellipse(ax, 
-#                                    mu,
-#                                    np.sqrt(v[0]) * 2,
-#                                    np.sqrt(v[1]) * 2,
-#                                    180 + t,
-#                                    color = color,
-#                                    fill = False,
-#                                    linewidth = 2,
-#                                    alpha = 0.66)
-#                   
-#                 self._plot_ellipse(ax, 
-#                                    mu,
-#                                    np.sqrt(v[0]) * 3,
-#                                    np.sqrt(v[1]) * 3,
-#                                    180 + t,
-#                                    color = color,
-#                                    fill = False,
-#                                    linewidth = 2,
-#                                    alpha = 0.33)
-#                   
-#         return g
-#  
-#     def _plot_ellipse(self, ax, center, width, height, angle, **kwargs):
-#         tf = transforms.Affine2D() \
-#              .scale(width, height) \
-#              .rotate_deg(angle) \
-#              .translate(*center)
-#               
-#         tf_path = tf.transform_path(path.Path.unit_circle())
-#         v = tf_path.vertices
-#         v = np.vstack((self.op._scale[self.xchannel].inverse(v[:, 0]),
-#                        self.op._scale[self.ychannel].inverse(v[:, 1]))).T
-#  
-#         scaled_path = path.Path(v, tf_path.codes)
-#         scaled_patch = patches.PathPatch(scaled_path, **kwargs)
-#         ax.add_patch(scaled_patch)
-#              
-              
- 
-     
+        return g
