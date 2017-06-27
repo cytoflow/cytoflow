@@ -130,7 +130,7 @@ class FlowPeaksOp(HasStrictTraits):
     
     _kmeans = Dict(Any, Instance(sklearn.cluster.MiniBatchKMeans), transient = True)
     _gmm = Dict(Any, Instance(sklearn.mixture.GaussianMixture), transient = True)
-#     _peaks = Dict(Any, List, transient = True)  # kmeans cluster idx --> peak idx
+    _peaks = Dict(Any, List, transient = True)  # kmeans cluster idx --> peak idx
     _groups = Dict(Any, List, transient = True) # kmeans cluster idx --> group idx
 #     _clusters = Dict(Any, List, transient = True)
     _scale = Dict(Str, Instance(util.IScale), transient = True)
@@ -283,9 +283,6 @@ class FlowPeaksOp(HasStrictTraits):
                 if not merged:
                     peak_clusters.append([k])
                     peaks.append(res.x)
-                    
-            print peaks
-            print peak_clusters
 
             ### merge peaks that are sufficiently close
 
@@ -379,12 +376,15 @@ class FlowPeaksOp(HasStrictTraits):
                 del groups[hi]
                 
         cluster_group = [0] * num_clusters
+        cluster_peaks = [0] * num_clusters
 
         for gi, g in enumerate(groups):
             for p in g:
                 for cluster in peak_clusters[p]:
                     cluster_group[cluster] = gi
+                    cluster_peaks[cluster] = p
                     
+        self._peaks[group] = cluster_peaks
         self._groups[group] = cluster_group    
                                                  
          
@@ -936,28 +936,32 @@ class FlowPeaks2DView(cytoflow.views.ScatterplotView):
             facets = filter(lambda x: x, [row, col])
             if plot_name is not None:
                 try:
-                    km_name = list(plot_name) + facets
+                    group_name = list(plot_name) + facets
                 except TypeError: # plot_name isn't a list
-                    km_name = list([plot_name]) + facets  
+                    group_name = list([plot_name]) + facets  
             else:      
-                km_name = facets
+                group_name = facets
                  
-            if len(km_name) == 0:
-                km_name = None
-            elif len(km_name) == 1:
-                km_name = km_name[0]   
+            if len(group_name) == 0:
+                group_name = None
+            elif len(group_name) == 1:
+                group_name = group_name[0]   
  
-            if km_name is not None:
-                if km_name in self.op._kmeans:
-                    km = self.op._kmeans[km_name]
+            if group_name is not None:
+                if group_name in self.op._kmeans:
+                    km = self.op._kmeans[group_name]
+                    gmm = self.op._gmm[group_name]
+                    peaks = self.op._peaks[group_name]
                 else:
                     # there weren't any events in this subset to estimate a km from
-                    warn("No estimated km for plot {}".format(km_name),
+                    warn("No estimated km for plot {}".format(group_name),
                           util.CytoflowViewWarning)
                     return g
             else:
                 if True in self.op._kmeans:
                     km = self.op._kmeans[True]
+                    gmm = self.op._gmm[True]
+                    peaks = self.op._peaks[True]
                 else:
                     return g           
                  
@@ -972,5 +976,14 @@ class FlowPeaks2DView(cytoflow.views.ScatterplotView):
                 y = self.op._scale[self.ychannel].inverse(km.cluster_centers_[k][iy])
                 
                 plt.plot(x, y, '*', color = 'blue')
+                
+                peak_i = peaks[k]
+                peak = gmm.means_[peak_i].copy()
+                print peak
+                peak[0] = self.op._scale[self.ychannel].inverse(peak[0])
+                peak[1] = self.op._scale[self.xchannel].inverse(peak[1])
+                
+                print peak
+                plt.plot(peak[0], peak[1], 'o', color = "magenta")
 
         return g
