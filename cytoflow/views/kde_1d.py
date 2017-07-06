@@ -107,7 +107,7 @@ class Kde1DView(HasStrictTraits):
             raise util.CytoflowViewError("Hue facet {0} not in the experiment"
                                     .format(self.huefacet))
             
-        facets = filter(lambda x: x, [self.xfacet, self.yfacet, self.huefacet])
+        facets = [x for x in [self.xfacet, self.yfacet, self.huefacet] if x]
         if len(facets) != len(set(facets)):
             raise util.CytoflowViewError("Can't reuse facets")
             

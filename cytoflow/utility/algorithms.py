@@ -23,6 +23,9 @@ Created on May 28, 2016
 '''
 from __future__ import division
 
+from builtins import map
+from builtins import zip
+from builtins import range
 import numpy as np
 from scipy import stats
 
@@ -149,7 +152,7 @@ def _structured_bootstrap(args, n_boot, units, func, func_kwargs, rs):
     for i in range(int(n_boot)):
         resampler = rs.randint(0, n_units, n_units)
         sample = [np.take(a, resampler, axis=0) for a in args]
-        lengths = map(len, sample[0])
+        lengths = list(map(len, sample[0]))
         resampler = [rs.randint(0, n, n) for n in lengths]
         sample = [[c.take(r, axis=0) for c, r in zip(a, resampler)]
                   for a in sample]

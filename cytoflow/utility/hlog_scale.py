@@ -24,6 +24,7 @@ Created on Feb 21, 2016
 
 from __future__ import division, absolute_import
 
+from builtins import map
 from traits.api import HasTraits, Float, Property, Instance, Str, \
                        cached_property, Undefined, provides, Constant, Dict, \
                        Tuple
@@ -102,7 +103,7 @@ class HlogScale(ScaleMixin):
             return float(f(data))
         else:
             try:
-                return map(f, data)
+                return list(map(f, data))
             except TypeError:
                 raise CytoflowError("Unknown data type in HlogScale.__call__")
 
@@ -123,7 +124,7 @@ class HlogScale(ScaleMixin):
             return f_inv(data)
         else:
             try:
-                return map(f_inv, data)
+                return list(map(f_inv, data))
             except TypeError:
                 raise CytoflowError("Unknown data type in HlogScale.inverse")
         

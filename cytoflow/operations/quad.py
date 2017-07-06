@@ -17,6 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import division, absolute_import
+from __future__ import print_function
 
 from traits.api import (HasStrictTraits, CFloat, Str, CStr, Bool, Instance,
                         provides, on_trait_change, DelegatesTo, Any, Constant)
@@ -300,7 +301,7 @@ if __name__ == '__main__':
     rv.plot(ex)
     rv.interactive = True
     plt.show()
-    print "x:{0}  y:{1}".format(r.xthreshold, r.ythreshold)
+    print("x:{0}  y:{1}".format(r.xthreshold, r.ythreshold))
     ex2 = r.apply(ex)
     
     flow.ScatterplotView(xchannel = "V2-A",

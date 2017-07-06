@@ -17,6 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import absolute_import, division
+from __future__ import print_function
 
 from traits.api import (HasStrictTraits, CFloat, Str, CStr, Instance, 
                         Bool, on_trait_change, provides, DelegatesTo, Any, 
@@ -254,4 +255,4 @@ if __name__ == '__main__':
     v.interactive = True
     v.plot(ex)
     plt.show()
-    print t.threshold
+    print(t.threshold)

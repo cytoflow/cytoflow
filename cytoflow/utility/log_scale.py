@@ -79,13 +79,11 @@ class LogScale(ScaleMixin):
             stat_min = stat[stat > 0].min()
             
             try:
-                err_min = min(filter(lambda x: x > 0, 
-                                     [min(x) for x in err_stat]))
+                err_min = min([x for x in [min(x) for x in err_stat] if x > 0])
                 return err_min
                 
             except (TypeError, IndexError):
-                err_min = min(filter(lambda x: stat_min - x > 0,
-                                     err_stat))
+                err_min = min([x for x in err_stat if stat_min - x > 0])
                 return stat_min - err_min
                 
         
@@ -150,7 +148,7 @@ class LogScale(ScaleMixin):
             return max(data, self.threshold)
         else:
             try:
-                return map(lambda x: max(data, self.threshold), data)
+                return [max(data, self.threshold) for x in data]
             except TypeError:
                 raise CytoflowError("Unknown data type in LogScale.clip")
             

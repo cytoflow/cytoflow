@@ -61,7 +61,7 @@ class ScaleEnum(BaseEnum):
         """ Returns an Enum trait with values from the registered scales
         """
         self.name = ''
-        self.values = scale._scale_mapping.keys()
+        self.values = list(scale._scale_mapping.keys())
         self.init_fast_validator( 5, self.values )
         super( BaseEnum, self ).__init__(scale._scale_default, **metadata )
         

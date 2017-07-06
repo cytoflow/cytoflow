@@ -24,6 +24,9 @@ Created on Dec 16, 2015
 
 from __future__ import division, absolute_import
 
+from builtins import zip
+from builtins import range
+from builtins import object
 from warnings import warn
 from itertools import product
 
@@ -518,7 +521,7 @@ class GaussianMixture2DView(cytoflow.views.ScatterplotView):
     _by = Property(List)
     
     def _get__by(self):
-        facets = filter(lambda x: x, [self.xfacet, self.yfacet])
+        facets = [x for x in [self.xfacet, self.yfacet] if x]
         return list(set(self.op.by) - set(facets))
         
     def enum_plots(self, experiment):
@@ -561,7 +564,7 @@ class GaussianMixture2DView(cytoflow.views.ScatterplotView):
             def __iter__(self):
                 return self
             
-            def next(self):
+            def __next__(self):
                 if self._iter:
                     return self._iter.next()[0]
                 else:
@@ -671,7 +674,7 @@ class GaussianMixture2DView(cytoflow.views.ScatterplotView):
         for (i, row), (j, col) in product(enumerate(row_names),
                                           enumerate(col_names)):
             
-            facets = filter(lambda x: x, [row, col])
+            facets = [x for x in [row, col] if x]
             if plot_name is not None:
                 try:
                     gmm_name = list(plot_name) + facets

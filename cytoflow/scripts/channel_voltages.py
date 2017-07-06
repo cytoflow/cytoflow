@@ -23,6 +23,7 @@ Created on Jul 27, 2016
 '''
 
 from __future__ import absolute_import
+from __future__ import print_function
 
 import argparse
 
@@ -38,7 +39,7 @@ def main():
     for c in ex.channels:
         m = ex.metadata[c]
         if "voltage" in m:
-            print "{0}\t{1}".format(c, m["voltage"])
+            print("{0}\t{1}".format(c, m["voltage"]))
     
 if __name__ == '__main__':
     main()

@@ -121,7 +121,7 @@ class BleedthroughLinearOp(HasStrictTraits):
         if experiment is None:
             raise util.CytoflowOpError("No experiment specified")
         
-        channels = self.controls.keys()
+        channels = list(self.controls.keys())
 
         if len(channels) < 2:
             raise util.CytoflowOpError("Need at least two channels to correct bleedthrough.")
@@ -226,7 +226,7 @@ class BleedthroughLinearOp(HasStrictTraits):
         new_experiment = experiment.clone()
         
         # the completely arbitrary ordering of the channels
-        channels = list(set([x for (x, _) in self.spillover.keys()]))
+        channels = list(set([x for (x, _) in list(self.spillover.keys())]))
         
         # build the spillover matrix from the spillover dictionary
         a = [  [self.spillover[(y, x)] if x != y else 1.0 for x in channels]
@@ -258,7 +258,7 @@ class BleedthroughLinearOp(HasStrictTraits):
         """
  
         # the completely arbitrary ordering of the channels
-        channels = list(set([x for (x, _) in self.spillover.keys()]))
+        channels = list(set([x for (x, _) in list(self.spillover.keys())]))
         
         if set(self.controls.keys()) != set(channels):
             raise util.CytoflowOpError("Must have both the controls and bleedthrough to plot")
@@ -310,7 +310,7 @@ class BleedthroughLinearDiagnostic(HasStrictTraits):
         plt.figure()
         
         # the completely arbitrary ordering of the channels
-        channels = list(set([x for (x, _) in self.op.spillover.keys()]))
+        channels = list(set([x for (x, _) in list(self.op.spillover.keys())]))
         num_channels = len(channels)
         
         for from_idx, from_channel in enumerate(channels):

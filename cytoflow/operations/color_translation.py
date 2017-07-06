@@ -131,9 +131,9 @@ class ColorTranslationOp(HasStrictTraits):
 
         tubes = {}
         
-        translation = {x[0] : x[1] for x in self.controls.keys()}
+        translation = {x[0] : x[1] for x in list(self.controls.keys())}
         
-        for from_channel, to_channel in translation.iteritems():
+        for from_channel, to_channel in translation.items():
             
             if from_channel not in experiment.channels:
                 raise util.CytoflowOpError("Channel {0} not in the experiment"
@@ -262,10 +262,10 @@ class ColorTranslationOp(HasStrictTraits):
             raise util.CytoflowOpError("Transfer functions aren't set. "
                                   "Did you call estimate()?")
             
-        translation = {x[0] : x[1] for x in self.controls.keys()}
-        from_channels = [x[0] for x in self.controls.keys()]
+        translation = {x[0] : x[1] for x in list(self.controls.keys())}
+        from_channels = [x[0] for x in list(self.controls.keys())]
 
-        for key, val in translation.iteritems():
+        for key, val in translation.items():
             if (key, val) not in self._coefficients:
                 raise util.CytoflowOpError("Coefficients aren't set for translation "
                                       "{1} --> {2}.  Did you call estimate()?"
@@ -277,7 +277,7 @@ class ColorTranslationOp(HasStrictTraits):
             new_experiment.data = \
                 new_experiment.data[new_experiment.data[channel] > 0]
         
-        for from_channel, to_channel in translation.iteritems():
+        for from_channel, to_channel in translation.items():
             trans_fn = self._trans_fn[(from_channel, to_channel)]
                         
             new_experiment[from_channel] = trans_fn(experiment[from_channel])
@@ -339,13 +339,13 @@ class ColorTranslationDiagnostic(HasStrictTraits):
 
         tubes = {}
         
-        translation = {x[0] : x[1] for x in self.op.controls.keys()}
+        translation = {x[0] : x[1] for x in list(self.op.controls.keys())}
         
         plt.figure()
-        num_plots = len(self.op.controls.keys())
+        num_plots = len(list(self.op.controls.keys()))
         plt_idx = 0
         
-        for from_channel, to_channel in translation.iteritems():
+        for from_channel, to_channel in translation.items():
             
             if (from_channel, to_channel) not in self.op.controls:
                 raise util.CytoflowViewError("Control file for {0} --> {1} not specified"

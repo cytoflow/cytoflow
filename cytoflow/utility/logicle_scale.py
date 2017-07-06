@@ -25,6 +25,8 @@ Created on Feb 21, 2016
 
 from __future__ import division, absolute_import
 
+from builtins import str
+from builtins import map
 import math, sys
 from warnings import warn
 
@@ -163,7 +165,7 @@ class LogicleScale(HasStrictTraits):
                 return self._logicle.scale(data)
             else:
                 try:
-                    return map(self._logicle.scale, data)
+                    return list(map(self._logicle.scale, data))
                 except TypeError:
                     raise CytoflowError("Unknown data type in LogicleScale.__call__")
         except ValueError as e:
@@ -187,7 +189,7 @@ class LogicleScale(HasStrictTraits):
                 return self._logicle.inverse(data)
             else:
                 try:
-                    return map(self._logicle.inverse, data)
+                    return list(map(self._logicle.inverse, data))
                 except TypeError:
                     raise CytoflowError("Unknown data type in LogicleScale.inverse")
         except ValueError as e:
@@ -205,7 +207,7 @@ class LogicleScale(HasStrictTraits):
                 return max(min(data, logicle_max), logicle_min)
             else:
                 try:
-                    return map(lambda x: max(min(x, logicle_max), logicle_min), data)
+                    return [max(min(x, logicle_max), logicle_min) for x in data]
                 except TypeError:
                     raise CytoflowError("Unknown data type in LogicleScale.__call__")
         except ValueError as e:

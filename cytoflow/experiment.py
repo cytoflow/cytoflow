@@ -18,6 +18,8 @@
 
 from __future__ import absolute_import
 
+from builtins import zip
+from past.builtins import basestring
 import pandas as pd
 from traits.api import (HasStrictTraits, Dict, List, Instance, Str, Any,
                        Property, Tuple)
@@ -237,7 +239,7 @@ class Experiment(HasStrictTraits):
         """
         
         resolvers = {}
-        for name, col in self.data.iteritems():
+        for name, col in self.data.items():
             new_name = util.sanitize_identifier(name)
             if new_name in resolvers:
                 raise util.CytoflowError("Tried to sanitize column name {1} to "
@@ -446,7 +448,7 @@ class Experiment(HasStrictTraits):
         if( any(True for k in conditions if k not in self.conditions) or \
             any(True for k in self.conditions if k not in conditions) ):
             raise util.CytoflowError("Metadata for this tube should be {}"
-                                     .format(self.conditions.keys()))
+                                     .format(list(self.conditions.keys())))
             
         # add the conditions to tube's internal data frame.  specify the conditions
         # dtype using self.conditions.  check for errors as we do so.
@@ -460,7 +462,7 @@ class Experiment(HasStrictTraits):
         
         new_data = data.astype("float64", copy=True)
         
-        for meta_name, meta_value in conditions.iteritems():
+        for meta_name, meta_value in conditions.items():
             meta_type = self.conditions[meta_name].dtype
 
             new_data[meta_name] = \

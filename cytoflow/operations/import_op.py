@@ -23,6 +23,7 @@ Created on Mar 20, 2015
 '''
 from __future__ import absolute_import
 
+from builtins import str
 import warnings
 from traits.api import (HasTraits, HasStrictTraits, provides, Str, List, Any,
                         Dict, File, Constant, Enum)
@@ -177,7 +178,7 @@ class ImportOp(HasStrictTraits):
         # if we have channel renaming, make sure the new names are valid
         # python identifiers
         if self.channels:
-            for old_name, new_name in self.channels.iteritems():
+            for old_name, new_name in self.channels.items():
                 if old_name != new_name and new_name != util.sanitize_identifier(new_name):
                     raise util.CytoflowOpError("Channel name {} must be a "
                                                "valid Python identifier."
@@ -204,7 +205,7 @@ class ImportOp(HasStrictTraits):
         
         experiment.metadata["ignore_v"] = self.ignore_v
             
-        for condition, dtype in self.conditions.items():
+        for condition, dtype in list(self.conditions.items()):
             experiment.add_condition(condition, dtype)
             experiment.metadata[condition]['experiment'] = True
 
@@ -251,7 +252,7 @@ class ImportOp(HasStrictTraits):
         meta_channels.set_index(experiment.metadata["name_metadata"], 
                                 inplace = True)
         
-        channels = self.channels.keys() if self.channels \
+        channels = list(self.channels.keys()) if self.channels \
                    else list(tube0_meta["_channel_names_"])
 
         # make sure everything in self.channels is in the tube channels

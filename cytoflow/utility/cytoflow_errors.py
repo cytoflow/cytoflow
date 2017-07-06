@@ -22,7 +22,6 @@ Created on Mar 5, 2015
 @author: brian
 """
 from __future__ import division, absolute_import
-from exceptions import UserWarning
 import warnings
 
 # Force warnings.warn() to omit the source code line in the message
@@ -50,7 +49,6 @@ class CytoflowViewWarning(CytoflowWarning):
 
 # make sure these warnings show up all the time, instead of just once.
 
-import warnings
 warnings.simplefilter('always', CytoflowWarning)
 warnings.simplefilter('always', CytoflowOpWarning)
 warnings.simplefilter('always', CytoflowViewWarning)

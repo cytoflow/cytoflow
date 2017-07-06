@@ -17,6 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import division, absolute_import
+from builtins import object
 from warnings import warn
 from traits.api import HasStrictTraits, Str, provides, Tuple
 import matplotlib as mpl
@@ -340,7 +341,7 @@ class Stats2DView(HasStrictTraits):
             raise util.CytoflowViewError("Hue facet {} not in statistics; must be one of {}"
                                          .format(self.huefacet, data.index.names))
             
-        facets = filter(lambda x: x, [self.variable, self.xfacet, self.yfacet, self.huefacet])
+        facets = [x for x in [self.variable, self.xfacet, self.yfacet, self.huefacet] if x]
         if len(facets) != len(set(facets)):
             raise util.CytoflowViewError("Can't reuse facets")
         
@@ -358,7 +359,7 @@ class Stats2DView(HasStrictTraits):
             def __iter__(self):
                 return self
             
-            def next(self):
+            def __next__(self):
                 if self._iter:
                     return self._iter.next()[0]
                 else:
@@ -571,7 +572,7 @@ class Stats2DView(HasStrictTraits):
         if col_wrap and not self.xfacet:
             raise util.CytoflowViewError("Must set xfacet to use col_wrap.")
             
-        facets = filter(lambda x: x, [self.variable, self.xfacet, self.yfacet, self.huefacet])
+        facets = [x for x in [self.variable, self.xfacet, self.yfacet, self.huefacet] if x]
         if len(facets) != len(set(facets)):
             raise util.CytoflowViewError("Can't reuse facets")
         
@@ -590,12 +591,12 @@ class Stats2DView(HasStrictTraits):
                 raise util.CytoflowViewError("You must use facets {} in either the "
                                              "plot variables or the plot name. "
                                              "Possible plot names: {}"
-                                             .format(unused_names, groupby.groups.keys()))
+                                             .format(unused_names, list(groupby.groups.keys())))
 
             if plot_name not in set(groupby.groups.keys()):
                 raise util.CytoflowViewError("Plot {} not from plot_enum; must "
                                              "be one of {}"
-                                             .format(plot_name, groupby.groups.keys()))
+                                             .format(plot_name, list(groupby.groups.keys())))
             
             data = groupby.get_group(plot_name)
 
@@ -735,8 +736,8 @@ def _x_error_bars(x, y, xerr, ax = None, color = None, **kwargs):
         x_lo = [xe[0] for xe in xerr]
         x_hi = [xe[1] for xe in xerr]
     else:
-        x_lo = [x.iloc[i] - xe for i, xe in xerr.reset_index(drop = True).iteritems()]
-        x_hi = [x.iloc[i] + xe for i, xe in xerr.reset_index(drop = True).iteritems()]
+        x_lo = [x.iloc[i] - xe for i, xe in xerr.reset_index(drop = True).items()]
+        x_hi = [x.iloc[i] + xe for i, xe in xerr.reset_index(drop = True).items()]
         
     plt.hlines(y, x_lo, x_hi, color = color, **kwargs)
     
@@ -747,8 +748,8 @@ def _y_error_bars(x, y, yerr, ax = None, color = None, **kwargs):
         y_lo = [ye[0] for ye in yerr]
         y_hi = [ye[1] for ye in yerr]
     else:
-        y_lo = [y.iloc[i] - ye for i, ye in yerr.reset_index(drop = True).iteritems()]
-        y_hi = [y.iloc[i] + ye for i, ye in yerr.reset_index(drop = True).iteritems()]
+        y_lo = [y.iloc[i] - ye for i, ye in yerr.reset_index(drop = True).items()]
+        y_hi = [y.iloc[i] + ye for i, ye in yerr.reset_index(drop = True).items()]
         
     plt.vlines(x, y_lo, y_hi, color = color, **kwargs)
     

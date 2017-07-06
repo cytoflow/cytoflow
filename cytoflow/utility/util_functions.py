@@ -23,6 +23,8 @@ Created on Mar 5, 2015
 """
 from __future__ import division
 
+from builtins import filter
+from builtins import range
 import random, string
 
 import numpy as np
@@ -269,7 +271,7 @@ def cartesian(arrays, out=None):
     out[:,0] = np.repeat(arrays[0], m)
     if arrays[1:]:
         cartesian(arrays[1:], out=out[0:m,1:])
-        for j in xrange(1, arrays[0].size):
+        for j in range(1, arrays[0].size):
             out[j*m:(j+1)*m,1:] = out[0:m,1:]
     return out
 
@@ -320,7 +322,7 @@ def categorical_order(values, order=None):
                     order = np.sort(order)
                 except (ValueError, TypeError):
                     order = order
-        order = filter(pd.notnull, order)
+        order = list(filter(pd.notnull, order))
     return list(order)
 
 def random_string(n):

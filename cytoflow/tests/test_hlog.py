@@ -21,6 +21,8 @@ Created on Nov 26, 2015
 
 @author: brian
 '''
+from __future__ import division
+from past.utils import old_div
 import unittest
 import os
 
@@ -70,7 +72,7 @@ class Test(unittest.TestCase):
         
         hlpos = hlog(_xpos)
         hlneg = hlog(_xneg)
-        assert_almost_equal((hlpos[-1] - _ymax) / _ymax, 0, decimal=2)
+        assert_almost_equal(old_div((hlpos[-1] - _ymax), _ymax), 0, decimal=2)
         assert_almost_equal(hlpos, -hlneg[::-1])  # check symmetry
         # test that values get larger as b decreases
         hlpos10 = hlog(_xpos, b=10)
@@ -80,7 +82,7 @@ class Test(unittest.TestCase):
         i = np.where(_xpos > 1e4)[0]
         tlpos_large = tlpos[i]
         hlpos_large = hlpos10[i]
-        d = (hlpos_large - tlpos_large) / hlpos_large
+        d = old_div((hlpos_large - tlpos_large), hlpos_large)
         assert_almost_equal(d, np.zeros(len(d)), decimal=2)
         
         
@@ -109,7 +111,7 @@ def tlog(x, th=1, r=_display_max, d=_l_mmax):
     ''' Trucated log10 transform)'''
     
     if th <= 0:
-        raise ValueError, 'Threshold value must be positive. %s given.' % th
+        raise ValueError('Threshold value must be positive. %s given.' % th)
     return np.where(x <= th, np.log10(th) * 1. * r / d, np.log10(x) * 1. * r / d)
 
 

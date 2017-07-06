@@ -18,6 +18,9 @@
 
 from __future__ import division, absolute_import
 
+from builtins import zip
+from builtins import str
+from builtins import object
 from warnings import warn
 
 from traits.api import HasStrictTraits, Str, provides, Tuple, Enum
@@ -204,7 +207,7 @@ class BarChartView(HasStrictTraits):
             raise util.CytoflowViewError("Hue facet {} is not a statistic index; "
                                          "must be one of {}".format(self.huefacet, data.index.names)) 
             
-        facets = filter(lambda x: x, [self.variable, self.xfacet, self.yfacet, self.huefacet])
+        facets = [x for x in [self.variable, self.xfacet, self.yfacet, self.huefacet] if x]
         if len(facets) != len(set(facets)):
             raise util.CytoflowViewError("Can't reuse facets")
         
@@ -222,7 +225,7 @@ class BarChartView(HasStrictTraits):
             def __iter__(self):
                 return self
             
-            def next(self):
+            def __next__(self):
                 if self._iter:
                     return self._iter.next()[0]
                 else:
@@ -338,7 +341,7 @@ class BarChartView(HasStrictTraits):
         if col_wrap and not self.xfacet:
             raise util.CytoflowViewError("Must set xfacet to use col_wrap.")
             
-        facets = filter(lambda x: x, [self.variable, self.xfacet, self.yfacet, self.huefacet])
+        facets = [x for x in [self.variable, self.xfacet, self.yfacet, self.huefacet] if x]
         if len(facets) != len(set(facets)):
             raise util.CytoflowViewError("Can't reuse facets")
         
@@ -356,12 +359,12 @@ class BarChartView(HasStrictTraits):
                 raise util.CytoflowViewError("You must use facets {} in either the "
                                              "plot variables or the plot name. "
                                              "Possible plot names: {}"
-                                             .format(unused_names, groupby.groups.keys()))
+                                             .format(unused_names, list(groupby.groups.keys())))
 
             if plot_name not in set(groupby.groups.keys()):
                 raise util.CytoflowViewError("Plot {} not from plot_enum; must "
                                              "be one of {}"
-                                             .format(plot_name, groupby.groups.keys()))
+                                             .format(plot_name, list(groupby.groups.keys())))
             
             data = groupby.get_group(plot_name)
 
@@ -624,8 +627,8 @@ def _draw_confints(ax, at_group, stat, confints, colors,
         ci_lo = [x[0] for x in confints]
         ci_hi = [x[1] for x in confints]
     else:
-        ci_lo = [stat.iloc[i] - x for i, x in confints.reset_index(drop = True).iteritems()]
-        ci_hi = [stat.iloc[i] + x for i, x in confints.reset_index(drop = True).iteritems()]
+        ci_lo = [stat.iloc[i] - x for i, x in confints.reset_index(drop = True).items()]
+        ci_hi = [stat.iloc[i] + x for i, x in confints.reset_index(drop = True).items()]
  
     for at, lo, hi, color in zip(at_group,
                                  ci_lo,

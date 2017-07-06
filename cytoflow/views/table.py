@@ -18,6 +18,7 @@
 
 from __future__ import division, absolute_import
 
+from builtins import range
 from warnings import warn
 from traits.api import HasStrictTraits, Str, provides, Tuple
 import matplotlib.pyplot as plt
@@ -136,8 +137,8 @@ class TableView(HasStrictTraits):
                                          "must be one of {}"
                                          .format(self.subcolumn_facet, data.index.names))  
 
-        facets = filter(lambda x: x, [self.row_facet, self.subrow_facet, 
-                                      self.column_facet, self.subcolumn_facet])
+        facets = [x for x in [self.row_facet, self.subrow_facet, 
+                                      self.column_facet, self.subcolumn_facet] if x]
         if len(facets) != len(set(facets)):
             raise util.CytoflowViewError("Can't reuse facets")
         
@@ -168,7 +169,7 @@ class TableView(HasStrictTraits):
         # hide the plot axes that matplotlib tries to make
         ax.xaxis.set_visible(False)
         ax.yaxis.set_visible(False)
-        for sp in ax.spines.itervalues():
+        for sp in ax.spines.values():
             sp.set_color('w')
             sp.set_zorder(0)
         

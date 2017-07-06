@@ -21,7 +21,9 @@ Created on Apr 19, 2015
 
 @author: brian
 """
+from __future__ import division
 
+from past.utils import old_div
 from traits.api import HasStrictTraits, provides, Str
 
 import matplotlib as mpl
@@ -120,7 +122,7 @@ class ScatterplotView(HasStrictTraits):
             raise util.CytoflowViewError("Hue facet {0} not in the experiment"
                                          .format(self.huefacet))
             
-        facets = filter(lambda x: x, [self.xfacet, self.yfacet, self.huefacet])
+        facets = [x for x in [self.xfacet, self.yfacet, self.huefacet] if x]
         if len(facets) != len(set(facets)):
             raise util.CytoflowViewError("Can't reuse facets")
             
@@ -181,7 +183,7 @@ class ScatterplotView(HasStrictTraits):
                len(data[self.xfacet].unique()) if self.xfacet else 1
             
         g = sns.FacetGrid(data, 
-                          size = (6 / cols),
+                          size = (old_div(6, cols)),
                           aspect = 1.5,
                           col = (self.xfacet if self.xfacet else None),
                           row = (self.yfacet if self.yfacet else None),

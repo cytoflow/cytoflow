@@ -18,7 +18,7 @@
 
 from __future__ import print_function
 from setuptools import setup, find_packages, Extension
-import io, os, re
+import io, os, re, sys
 
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 no_logicle = os.environ.get('NO_LOGICLE', None) == 'True'
@@ -76,8 +76,9 @@ setup(
                         'nbformat>=4.0',
                         'python-dateutil>=2.5.2',
                         'statsmodels>=0.8.0',
-                        'faulthandler>=2.4',
-                        'fcsparser>=0.1.1',] \
+                        ('faulthandler>=2.4' if sys.version_info < (3,0) else ""),
+                        'fcsparser>=0.1.3',] \
+                        'future>=0.16
                 if not on_rtd else None,
                         
                         # ALSO requires PyQt4 >= 4.10, but it's not available

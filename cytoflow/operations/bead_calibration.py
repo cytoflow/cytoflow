@@ -24,6 +24,7 @@ Created on Aug 31, 2015
 
 from __future__ import division, absolute_import
 
+from builtins import range
 from traits.api import (HasStrictTraits, Str, File, Dict, Bool, Int, List, 
                         Float, Constant, provides, Undefined, Callable, Any,
                         Instance)
@@ -217,7 +218,7 @@ class BeadCalibrationOp(HasStrictTraits):
                              channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels},
                              name_metadata = experiment.metadata['name_metadata']).apply()
         
-        channels = self.units.keys()
+        channels = list(self.units.keys())
 
         for channel in channels:
             data = beads_exp.data[channel]
@@ -359,7 +360,7 @@ class BeadCalibrationOp(HasStrictTraits):
         if experiment is None:
             raise util.CytoflowOpError("No experiment specified")
         
-        channels = self.units.keys()
+        channels = list(self.units.keys())
 
         if not self.units:
             raise util.CytoflowOpError("No channels to calibrate.")
@@ -466,7 +467,7 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
         if experiment is None:
             raise util.CytoflowViewError("No experiment specified")
 
-        channels = self.op.units.keys()
+        channels = list(self.op.units.keys())
 
         if not channels:
             raise util.CytoflowViewError("No channels to plot")

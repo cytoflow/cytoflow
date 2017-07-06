@@ -172,12 +172,12 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
         if self.num_knots < 3:
             raise util.CytoflowOpError("Need to allow at least 3 knots in the spline")
         
-        self._channels = self.controls.keys()
+        self._channels = list(self.controls.keys())
 
         if len(self._channels) < 2:
             raise util.CytoflowOpError("Need at least two channels to correct bleedthrough.")
         
-        for channel in self.controls.keys():
+        for channel in list(self.controls.keys()):
             if 'range' not in experiment.metadata[channel]:
                 raise util.CytoflowOpError("Can't find range for channel {}"
                                            .format(channel))
@@ -432,7 +432,7 @@ class BleedthroughPiecewiseDiagnostic(HasStrictTraits):
          
         plt.figure()
         
-        channels = self.op._splines.keys()
+        channels = list(self.op._splines.keys())
         num_channels = len(channels)
         
         for from_idx, from_channel in enumerate(channels):

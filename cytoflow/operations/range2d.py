@@ -17,6 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import division, absolute_import
+from __future__ import print_function
 
 import pandas as pd
 
@@ -291,4 +292,4 @@ if __name__ == '__main__':
     rv.plot(ex)
     rv.interactive = True
     plt.show()
-    print "x:({0}, {1})  y:({2}, {3})".format(r.xlow, r.xhigh, r.ylow, r.yhigh)
+    print("x:({0}, {1})  y:({2}, {3})".format(r.xlow, r.xhigh, r.ylow, r.yhigh))
