@@ -169,7 +169,7 @@ class TransformStatisticOp(HasStrictTraits):
             new_stat = self.function(stat)
                                                     
         matched_series = True
-        for group in data[self.by].itertuples(index = False):
+        for group in data[self.by].itertuples(index = False, name = None):
             if isinstance(stat.index, pd.MultiIndex):
                 s = stat.xs(group, level = self.by, drop_level = False)
             else:
