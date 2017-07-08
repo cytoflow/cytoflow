@@ -120,14 +120,14 @@ class RangeOp(HasStrictTraits):
         if self.high <= experiment[self.channel].min():
             raise util.CytoflowOpError("range high must be > {0}"
                                   .format(experiment[self.channel].min()))
-        if self.low >= experiment[self.channel].max:
+        if self.low >= experiment[self.channel].max():
             raise util.CytoflowOpError("range low must be < {0}"
                                   .format(experiment[self.channel].max()))
         
         gate = experiment[self.channel].between(self.low, self.high)
         new_experiment = experiment.clone()
         new_experiment.add_condition(self.name, "bool", gate)
-        new_experiment.history.append(self.clone_traits(transient = lambda t: True))
+        new_experiment.history.append(self.clone_traits(transient = lambda _: True))
             
         return new_experiment
     

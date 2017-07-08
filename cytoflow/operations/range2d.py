@@ -134,14 +134,14 @@ class Range2DOp(HasStrictTraits):
         if self.xhigh <= experiment[self.xchannel].min():
             raise util.CytoflowOpError("x channel range high must be > {0}"
                                   .format(experiment[self.xchannel].min()))
-        if self.xlow >= experiment[self.xchannel].max:
+        if self.xlow >= experiment[self.xchannel].max():
             raise util.CytoflowOpError("x channel range low must be < {0}"
                                   .format(experiment[self.xchannel].max()))
             
         if self.yhigh <= experiment[self.ychannel].min():
             raise util.CytoflowOpError("y channel range high must be > {0}"
                                   .format(experiment[self.ychannel].min()))
-        if self.ylow >= experiment[self.ychannel].max:
+        if self.ylow >= experiment[self.ychannel].max():
             raise util.CytoflowOpError("y channel range low must be < {0}"
                                   .format(experiment[self.ychannel].max()))
         
