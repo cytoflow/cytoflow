@@ -566,7 +566,7 @@ class GaussianMixture2DView(cytoflow.views.ScatterplotView):
             
             def __next__(self):
                 if self._iter:
-                    return self._iter.next()[0]
+                    return next(self._iter)[0]
                 else:
                     if self._returned:
                         raise StopIteration
