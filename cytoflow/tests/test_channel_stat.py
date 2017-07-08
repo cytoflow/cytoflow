@@ -29,9 +29,6 @@ import unittest
 import matplotlib
 matplotlib.use('Agg')
 
-import numpy as np
-import pandas as pd
-
 import cytoflow as flow
 import cytoflow.utility as util
 

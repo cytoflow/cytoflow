@@ -22,15 +22,11 @@ Created on Dec 1, 2015
 @author: brian
 '''
 from __future__ import division
-from past.utils import old_div
 import os
 import unittest
 
 import matplotlib
 matplotlib.use('Agg')
-
-import numpy as np
-import pandas as pd
 
 import cytoflow as flow
 import cytoflow.utility as util
@@ -78,7 +74,7 @@ class Test(unittest.TestCase):
         op = flow.FrameStatisticOp(name = "ByDox",
                                    by = ['T'],
                                    subset = "Dox == 10.0",
-                                   function = lambda x: old_div(len(x), 0.0))
+                                   function = lambda x: len(x) / 0.0)
         
         with self.assertRaises(util.CytoflowOpError):
             op.apply(self.ex)
