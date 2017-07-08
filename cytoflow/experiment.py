@@ -239,7 +239,7 @@ class Experiment(HasStrictTraits):
         """
         
         resolvers = {}
-        for name, col in self.data.items():
+        for name, col in self.data.iteritems():
             new_name = util.sanitize_identifier(name)
             if new_name in resolvers:
                 raise util.CytoflowError("Tried to sanitize column name {1} to "
