@@ -170,7 +170,7 @@ class BinningOp(HasStrictTraits):
         
         # if we're log-scaled (for example), don't label data that isn't
         # showable on a log scale!
-#         new_experiment.data.ix[np.isnan(scaled_data), self.name] = np.nan
+#         new_experiment.data.loc[np.isnan(scaled_data), self.name] = np.nan
 #         new_experiment.data.dropna(inplace = True)
         
         # keep track of the bins we used, for prettier plotting later.

@@ -270,12 +270,12 @@ class ImportOp(HasStrictTraits):
             experiment.metadata[channel]["fcs_name"] = channel
             
             # keep track of the channel's PMT voltage
-            if("$PnV" in meta_channels.ix[channel]):
-                v = meta_channels.ix[channel]['$PnV']
+            if("$PnV" in meta_channels.loc[channel]):
+                v = meta_channels.loc[channel]['$PnV']
                 if v: experiment.metadata[channel]["voltage"] = v
             
             # add the maximum possible value for this channel.
-            data_range = meta_channels.ix[channel]['$PnR']
+            data_range = meta_channels.loc[channel]['$PnR']
             data_range = float(data_range)
             experiment.metadata[channel]['range'] = data_range
         
@@ -338,12 +338,12 @@ def check_tube(filename, experiment):
         fcs_name = experiment.metadata[channel]["fcs_name"]      
         # first check voltage
         if "voltage" in experiment.metadata[channel]:    
-            if not "$PnV" in tube_channels.ix[fcs_name]:
+            if not "$PnV" in tube_channels.loc[fcs_name]:
                 raise util.CytoflowOpError("Didn't find a voltage for channel {0}" \
                                    "in tube {1}".format(channel, filename))
             
             old_v = experiment.metadata[channel]["voltage"]
-            new_v = tube_channels.ix[fcs_name]['$PnV']
+            new_v = tube_channels.loc[fcs_name]['$PnV']
             
             if old_v != new_v and not channel in ignore_v:
                 raise util.CytoflowOpError("Tube {0} doesn't have the same voltages"
