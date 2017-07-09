@@ -42,13 +42,7 @@ This process is also where the plotting happens.  For an explanation of how
 the plots are ferried back to the GUI, see the module docstring for
 matplotlib_backend.py
 """
-from __future__ import print_function
 
-from future import standard_library
-standard_library.install_aliases()
-from builtins import map
-from builtins import next
-from builtins import object
 import threading, sys, logging, traceback
 
 from queue import Queue

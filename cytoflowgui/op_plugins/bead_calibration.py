@@ -72,7 +72,7 @@ class BeadCalibrationHandler(OpHandlerMixin, Controller):
     
     def unit_traits_view(self):
         return View(HGroup(Item('channel',
-                                editor = EnumEditor(name = 'handler.context.previous.channels')),
+                                editor = EnumEditor(name = 'handler.context.previous_wi.channels')),
                            Item('unit',
                                 editor = EnumEditor(name = 'handler.beads_units'),
                                 show_label = False)),

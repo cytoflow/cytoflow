@@ -21,7 +21,6 @@ Created on Mar 7, 2015
 
 @author: brian
 '''
-from __future__ import absolute_import
 
 from traits.etsconfig.api import ETSConfig
 ETSConfig.toolkit = 'qt4'

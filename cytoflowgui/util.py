@@ -22,9 +22,6 @@ Created on Apr 18, 2015
 @author: brian
 '''
 
-from future import standard_library
-standard_library.install_aliases()
-from past.builtins import basestring
 from traits.api import Unicode
 from pyface.ui.qt4.file_dialog import FileDialog
 
@@ -41,15 +38,15 @@ class UniquePriorityQueue(PriorityQueue):
         PriorityQueue._init(self, maxsize)
         self.values = set()
 
-    def _put(self, item, heappush=heapq.heappush):
+    def _put(self, item):
         if item[1] not in self.values:
             self.values.add(item[1])
-            PriorityQueue._put(self, item, heappush)
+            PriorityQueue._put(self, item)
         else:
             pass
 
-    def _get(self, heappop=heapq.heappop):
-        item = PriorityQueue._get(self, heappop)
+    def _get(self):
+        item = PriorityQueue._get(self)
         self.values.remove(item[1])
         return item
     
@@ -60,7 +57,7 @@ def filter_unpicklable(obj):
         return {x: filter_unpicklable(obj[x]) for x in obj}
     else:
         if not hasattr(obj, '__getstate__') and not isinstance(obj,
-                  (basestring, int, float, tuple, list, set, dict)):
+                  (str, int, float, tuple, list, set, dict)):
             return "filtered: {}".format(type(obj))
         else:
             return obj

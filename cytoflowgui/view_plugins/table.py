@@ -22,8 +22,6 @@ Created on Feb 24, 2015
 @author: brian
 """
 
-from future import standard_library
-standard_library.install_aliases()
 import numpy as np
 import pandas as pd
 

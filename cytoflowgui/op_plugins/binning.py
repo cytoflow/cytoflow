@@ -22,7 +22,6 @@ Created on Oct 9, 2015
 @author: brian
 '''
 
-from builtins import range
 import random, string, warnings
 
 from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor
@@ -47,7 +46,7 @@ class BinningHandler(Controller, OpHandlerMixin):
         return View(Item('name',
                          editor = TextEditor(auto_set = False)),
                     Item('channel',
-                         editor=EnumEditor(name='context.previous.channels'),
+                         editor=EnumEditor(name='context.previous_wi.channels'),
                          label = "Channel"),
                     Item('scale'),
                     Item('num_bins', 
@@ -75,7 +74,7 @@ class BinningViewHandler(Controller, ViewHandlerMixin):
                            show_border = False)),
                     VGroup(Item('subset_list',
                                 show_label = False,
-                                editor = SubsetListEditor(conditions = "handler.context.previous.conditions")),
+                                editor = SubsetListEditor(conditions = "handler.context.previous_wi.conditions")),
                            label = "Subset",
                            show_border = False,
                            show_labels = False),

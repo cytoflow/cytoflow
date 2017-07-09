@@ -62,7 +62,7 @@ class BleedthroughPiecewiseHandler(OpHandlerMixin, Controller):
              
     def control_traits_view(self):
         return View(HGroup(Item('channel',
-                                editor = EnumEditor(name = 'handler.context.previous.channels')),
+                                editor = EnumEditor(name = 'handler.context.previous_wi.channels')),
                            Item('file',
                                 show_label = False)),
                     handler = self)
@@ -83,8 +83,8 @@ class BleedthroughPiecewiseHandler(OpHandlerMixin, Controller):
                     show_labels = False),
                     VGroup(Item('subset_list',
                                 show_label = False,
-                                editor = SubsetListEditor(conditions = "handler.context.previous.conditions",
-                                                          metadata = "handler.context.previous.metadata",
+                                editor = SubsetListEditor(conditions = "handler.context.previous_wi.conditions",
+                                                          metadata = "handler.context.previous_wi.metadata",
                                                           when = "'experiment' not in vars() or not experiment")),
                            label = "Subset",
                            show_border = False,

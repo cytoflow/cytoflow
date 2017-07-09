@@ -22,10 +22,6 @@ and for sending e-mail using the user's preferred composer.
 From http://code.activestate.com/recipes/511443-cross-platform-startfile-and-mailto-functions/
 '''
 
-from future import standard_library
-standard_library.install_aliases()
-from past.builtins import basestring
-from builtins import object
 __version__ = '1.1'
 __all__ = ['open', 'mailto']
 

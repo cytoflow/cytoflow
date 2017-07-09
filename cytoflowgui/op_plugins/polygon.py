@@ -44,10 +44,10 @@ class PolygonHandler(OpHandlerMixin, Controller):
         return View(Item('name',
                          editor = TextEditor(auto_set = False)),
                     Item('xchannel',
-                         editor=EnumEditor(name='context.previous.channels'),
+                         editor=EnumEditor(name='context.previous_wi.channels'),
                          label = "X Channel"),
                     Item('object.ychannel',
-                         editor=EnumEditor(name='context.previous.channels'),
+                         editor=EnumEditor(name='context.previous_wi.channels'),
                          label = "Y Channel"),
                     shared_op_traits) 
         
@@ -72,7 +72,7 @@ class PolygonViewHandler(ViewHandlerMixin, Controller):
                            show_border = False),
                     VGroup(Item('subset_list',
                                 show_label = False,
-                                editor = SubsetListEditor(conditions = "context.previous.conditions")),
+                                editor = SubsetListEditor(conditions = "context.previous_wi.conditions")),
                            label = "Subset",
                            show_border = False,
                            show_labels = False),

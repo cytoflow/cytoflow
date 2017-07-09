@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import absolute_import
 from .i_op_plugin import (IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, 
                          shared_op_traits)
 from .import_op import ImportPlugin

@@ -21,8 +21,6 @@ Created on Nov 23, 2015
 
 @author: brian
 '''
-from __future__ import absolute_import
-from __future__ import print_function
 
 # for local debugging
 if __name__ == '__main__':

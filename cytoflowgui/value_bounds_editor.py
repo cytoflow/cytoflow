@@ -18,11 +18,6 @@
 
 # for local debugging
 
-from __future__ import division
-from __future__ import print_function
-from __future__ import absolute_import
-from builtins import str
-from past.utils import old_div
 if __name__ == '__main__':
     from traits.etsconfig.api import ETSConfig
     ETSConfig.toolkit = 'qt4'
@@ -100,7 +95,7 @@ class _ValueBoundsEditor(EditorWithList):
 
         # The default size is a bit too big and probably doesn't need to grow.
         sh = self._label_lo.sizeHint()
-        sh.setWidth(old_div(sh.width(), 2))
+        sh.setWidth(sh.width() / 2)
         self._label_lo.setMaximumSize(sh)
 
         self.control.slider = slider = RangeSlider(QtCore.Qt.Horizontal)
@@ -124,7 +119,7 @@ class _ValueBoundsEditor(EditorWithList):
 
         # The default size is a bit too big and probably doesn't need to grow.
         sh = self._label_hi.sizeHint()
-        sh.setWidth(old_div(sh.width(), 2))
+        sh.setWidth(sh.width() / 2)
         self._label_hi.setMaximumSize(sh)
 
         self.set_tooltip(slider)
@@ -227,13 +222,13 @@ class _ValueBoundsEditor(EditorWithList):
             
 
     def _step_width(self):
-        return (old_div((self.control.slider.maximum() - self.control.slider.minimum()), float(len(self.values) - 1)))
+        return ((self.control.slider.maximum() - self.control.slider.minimum()) / float(len(self.values) - 1))
 
     def _convert_from_slider(self, slider_val):
         if len(self.values) == 1:
             return self.values[0]
         
-        idx = int(old_div(slider_val, self._step_width()) + 0.5)
+        idx = int((slider_val / self._step_width()) + 0.5)
 
         return self.values[idx]
 
@@ -253,7 +248,7 @@ class _ValueBoundsEditor(EditorWithList):
             if start == end:
                 return start
                 
-            cut = old_div((start + end), 2)
+            cut = ((start + end) / 2)
 
             if value == self.values[cut]:
                 return cut

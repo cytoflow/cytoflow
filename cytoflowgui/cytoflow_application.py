@@ -21,10 +21,7 @@ Created on Mar 15, 2015
 
 @author: brian
 '''
-from __future__ import absolute_import
 
-from future import standard_library
-standard_library.install_aliases()
 import sys, logging, io
 from cytoflowgui import multiprocess_logging
 

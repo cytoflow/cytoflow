@@ -48,7 +48,7 @@ class GaussianMixture1DHandler(OpHandlerMixin, Controller):
         return View(Item('name',
                          editor = TextEditor(auto_set = False)),
                     Item('channel',
-                         editor=EnumEditor(name='context.previous.channels'),
+                         editor=EnumEditor(name='context.previous_wi.channels'),
                          label = "Channel"),
                     Item('scale'),
                     VGroup(
@@ -64,7 +64,7 @@ class GaussianMixture1DHandler(OpHandlerMixin, Controller):
                          style = 'custom'),
                     VGroup(Item('subset_list',
                                 show_label = False,
-                                editor = SubsetListEditor(conditions = "context.previous.conditions")),
+                                editor = SubsetListEditor(conditions = "context.previous_wi.conditions")),
                            label = "Subset",
                            show_border = False,
                            show_labels = False),

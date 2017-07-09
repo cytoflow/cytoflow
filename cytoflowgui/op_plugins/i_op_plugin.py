@@ -142,9 +142,9 @@ class OpHandlerMixin(HasTraits):
     context = Instance(WorkflowItem)
     
     conditions_names = Property(depends_on = "context.conditions")
-    previous_conditions_names = Property(depends_on = "context.previous.conditions")
+    previous_conditions_names = Property(depends_on = "context.previous_wi.conditions")
     statistics_names = Property(depends_on = "context.statistics")
-    previous_statistics_names = Property(depends_on = "context.previous.statistics")
+    previous_statistics_names = Property(depends_on = "context.previous_wi.statistics")
 
     
     # MAGIC: gets value for property "conditions_names"

@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import absolute_import
 from .i_view_plugin import IViewPlugin, PluginViewMixin, VIEW_PLUGIN_EXT
 from .histogram import HistogramPlugin
 from .histogram_2d import Histogram2DPlugin

@@ -23,7 +23,6 @@ Created on Mar 23, 2015
 '''
 
 # for local debugging
-from builtins import next
 if __name__ == '__main__':
     from traits.etsconfig.api import ETSConfig
     ETSConfig.toolkit = 'qt4'

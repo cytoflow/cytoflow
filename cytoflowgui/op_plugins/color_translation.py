@@ -65,9 +65,9 @@ class ColorTranslationHandler(OpHandlerMixin, Controller):
     
     def control_traits_view(self):
         return View(HGroup(Item('from_channel',
-                                editor = EnumEditor(name = 'handler.context.previous.channels')),
+                                editor = EnumEditor(name = 'handler.context.previous_wi.channels')),
                            Item('to_channel',
-                                editor = EnumEditor(name = 'handler.context.previous.channels')),
+                                editor = EnumEditor(name = 'handler.context.previous_wi.channels')),
                            Item('file',
                                 show_label = False)),
                     handler = self)
@@ -90,8 +90,8 @@ class ColorTranslationHandler(OpHandlerMixin, Controller):
                          label = "Use mixture\nmodel?"),
                     VGroup(Item('subset_list',
                                 show_label = False,
-                                editor = SubsetListEditor(conditions = "context.previous.conditions",
-                                                          metadata = "context.previous.metadata",
+                                editor = SubsetListEditor(conditions = "context.previous_wi.conditions",
+                                                          metadata = "context.previous_wi.metadata",
                                                           when = "'experiment' not in vars() or not experiment")),
                            label = "Subset",
                            show_border = False,

@@ -21,7 +21,6 @@ Created on Feb 11, 2015
 @author: brian
 """
 
-from builtins import str
 from traits.api import Instance, provides, Str, Any
 from traitsui.editor_factory import EditorWithListFactory
 from traitsui.qt4.enum_editor import BaseEditor as BaseEnumerationEditor

@@ -21,14 +21,10 @@ Created on Feb 11, 2015
 
 @author: brian
 """
-from __future__ import absolute_import
 
 # from traits.etsconfig.api import ETSConfig
 # ETSConfig.toolkit = 'qt4'
 
-from future import standard_library
-standard_library.install_aliases()
-from builtins import next
 import os.path
 
 from traits.api import Instance, List, Bool, on_trait_change, Any, Unicode, TraitError

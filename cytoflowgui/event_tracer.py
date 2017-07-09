@@ -14,8 +14,7 @@
 """ Record trait change events in single and multi-threaded environments.
 
 """
-from builtins import str
-from builtins import object
+
 import inspect
 import os
 import threading

@@ -21,9 +21,7 @@ Created on Oct 9, 2015
 
 @author: brian
 '''
-from __future__ import division
 
-from past.utils import old_div
 import numpy as np
 import pandas as pd
 import scipy.stats
@@ -56,19 +54,19 @@ transform_functions = {"Mean" : np.mean,
                        "Mean 95% CI" : mean_95ci,
                        "Geom.Mean 95% CI" : geomean_95ci,
                        "Sum" : np.sum,
-                       "Proportion" : lambda a: pd.Series(old_div(a, a.sum())),
-                       "Percentage" : lambda a: pd.Series(old_div(a, a.sum())) * 100.0,
-                       "Fold" : lambda a: pd.Series(old_div(a, a.min()))
+                       "Proportion" : lambda a: pd.Series(a / a.sum()),
+                       "Percentage" : lambda a: pd.Series(a / a.sum()) * 100.0,
+                       "Fold" : lambda a: pd.Series(a / a.min())
                        }
 
 
 class TransformStatisticHandler(OpHandlerMixin, Controller):
     
 #     prev_statistics = Property(depends_on = "info.ui.context")
-    indices = Property(depends_on = "context.previous.statistics, "
+    indices = Property(depends_on = "context.previous_wi.statistics, "
                                     "model.statistic, "
                                     "model.subset")
-    levels = Property(depends_on = "context.previous.statistics, model.statistic")    
+    levels = Property(depends_on = "context.previous_wi.statistics, model.statistic")    
 
     # MAGIC: gets the value for the property indices
     def _get_indices(self):        

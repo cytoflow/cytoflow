@@ -92,7 +92,7 @@ class TasbeHandler(OpHandlerMixin, Controller):
     def default_traits_view(self):
         return View(Item("channels",
                          editor = CheckListEditor(cols = 2,
-                                                  name = 'context.previous.channels'),
+                                                  name = 'context.previous_wi.channels'),
                          style = 'custom'),
                     VGroup(
                         Item('blank_file'),
@@ -138,8 +138,8 @@ class TasbeHandler(OpHandlerMixin, Controller):
                         show_labels = False),
                     VGroup(Item('subset_list',
                                 show_label = False,
-                                editor = SubsetListEditor(conditions = "context.previous.conditions",
-                                                      metadata = "context.previous.metadata",
+                                editor = SubsetListEditor(conditions = "context.previous_wi.conditions",
+                                                      metadata = "context.previous_wi.metadata",
                                                       when = "'experiment' not in vars() or not experiment")),
                            label = "Subset",
                            show_border = False,
