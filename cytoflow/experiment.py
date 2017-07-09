@@ -16,8 +16,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from builtins import zip
-from past.builtins import basestring
 import pandas as pd
 from traits.api import (HasStrictTraits, Dict, List, Instance, Str, Any,
                        Property, Tuple)
@@ -189,7 +187,7 @@ class Experiment(HasStrictTraits):
             
         """
 
-        if isinstance(conditions, basestring):
+        if isinstance(conditions, str):
             c = conditions
             v = values
             if c not in self.conditions:
