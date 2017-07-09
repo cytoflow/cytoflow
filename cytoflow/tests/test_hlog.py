@@ -1,7 +1,7 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.4
 # coding: latin-1
 
-# (c) Massachusetts Institute of Technology 2015-2016
+# (c) Massachusetts Institute of Technology 2015-2017
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,8 +21,6 @@ Created on Nov 26, 2015
 
 @author: brian
 '''
-from __future__ import division
-from past.utils import old_div
 import unittest
 import os
 
@@ -72,7 +70,7 @@ class Test(unittest.TestCase):
         
         hlpos = hlog(_xpos)
         hlneg = hlog(_xneg)
-        assert_almost_equal(old_div((hlpos[-1] - _ymax), _ymax), 0, decimal=2)
+        assert_almost_equal(((hlpos[-1] - _ymax) / _ymax), 0, decimal=2)
         assert_almost_equal(hlpos, -hlneg[::-1])  # check symmetry
         # test that values get larger as b decreases
         hlpos10 = hlog(_xpos, b=10)
@@ -82,7 +80,7 @@ class Test(unittest.TestCase):
         i = np.where(_xpos > 1e4)[0]
         tlpos_large = tlpos[i]
         hlpos_large = hlpos10[i]
-        d = old_div((hlpos_large - tlpos_large), hlpos_large)
+        d = ((hlpos_large - tlpos_large) / hlpos_large)
         assert_almost_equal(d, np.zeros(len(d)), decimal=2)
         
         

@@ -1,7 +1,7 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.4
 # coding: latin-1
 
-# (c) Massachusetts Institute of Technology 2015-2016
+# (c) Massachusetts Institute of Technology 2015-2017
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,8 +21,6 @@ Created on Apr 19, 2015
 
 @author: brian
 """
-
-from __future__ import division, absolute_import
 
 import warnings
 
@@ -135,8 +133,8 @@ class Histogram2DView(HasStrictTraits):
         if self.subset:
             try: 
                 data = experiment.query(self.subset).data.reset_index()
-            except:
-                raise util.CytoflowViewError("Subset string \'{0}\' not valid")
+            except Exception as e:
+                raise util.CytoflowViewError("Subset string \'{0}\' not valid") from e
                             
             if len(data) == 0:
                 raise util.CytoflowViewError("Subset string '{0}' returned no events"

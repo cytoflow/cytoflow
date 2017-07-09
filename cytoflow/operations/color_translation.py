@@ -1,7 +1,7 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.4
 # coding: latin-1
 
-# (c) Massachusetts Institute of Technology 2015-2016
+# (c) Massachusetts Institute of Technology 2015-2017
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,20 +21,13 @@ Created on Sep 2, 2015
 
 @author: brian
 '''
-
-from __future__ import division, absolute_import
-
 import math
 
 from traits.api import (HasStrictTraits, Str, File, Dict, Any, Callable,
                         Instance, Tuple, Bool, Constant, provides)
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 import sklearn.mixture
-import sklearn.linear_model
-import scipy.optimize
-import scipy.interpolate
 
 import cytoflow.views
 import cytoflow.utility as util
@@ -165,9 +158,9 @@ class ColorTranslationOp(HasStrictTraits):
                 if subset:
                     try:
                         tube_exp = tube_exp.query(subset)
-                    except:
+                    except Exception as e:
                         raise util.CytoflowOpError("Subset string '{0}' isn't valid"
-                                              .format(subset))
+                                              .format(subset)) from e
                                     
                     if len(tube_exp.data) == 0:
                         raise util.CytoflowOpError("Subset string '{0}' returned no events"
@@ -360,7 +353,7 @@ class ColorTranslationDiagnostic(HasStrictTraits):
                                         channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels},
                                         name_metadata = experiment.metadata['name_metadata']).apply()
                 except util.CytoflowOpError as e:
-                    raise util.CytoflowViewError(e.__str__())
+                    raise util.CytoflowViewError(e.__str__()) from e
                 
                 # apply previous operations
                 for op in experiment.history:
@@ -372,9 +365,9 @@ class ColorTranslationDiagnostic(HasStrictTraits):
                 if self.subset:
                     try:
                         tube_exp = tube_exp.query(self.subset)
-                    except:
+                    except Exception as e:
                         raise util.CytoflowViewError("Subset string '{0}' isn't valid"
-                                              .format(self.subset))
+                                              .format(self.subset)) from e
                                     
                     if len(tube_exp.data) == 0:
                         raise util.CytoflowViewError("Subset string '{0}' returned no events"

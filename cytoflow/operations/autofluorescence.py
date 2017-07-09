@@ -1,7 +1,7 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.4
 # coding: latin-1
 
-# (c) Massachusetts Institute of Technology 2015-2016
+# (c) Massachusetts Institute of Technology 2015-2017
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,8 +15,6 @@
 # 
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-from __future__ import division, absolute_import
 
 from traits.api import (HasStrictTraits, Str, CFloat, File, Dict,
                         Instance, List, Constant, provides)
@@ -118,9 +116,9 @@ class AutofluorescenceOp(HasStrictTraits):
         if subset:
             try:
                 blank_exp = blank_exp.query(subset)
-            except:
+            except Exception as exc:
                 raise util.CytoflowOpError("Subset string '{0}' isn't valid"
-                                      .format(subset))
+                                           .format(subset)) from exc
                             
             if len(blank_exp.data) == 0:
                 raise util.CytoflowOpError("Subset string '{0}' returned no events"
@@ -256,7 +254,7 @@ class AutofluorescenceDiagnosticView(HasStrictTraits):
                                  channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels},
                                  name_metadata = experiment.metadata['name_metadata']).apply()
         except util.CytoflowOpError as e:
-            raise util.CytoflowViewError(e.__str__())
+            raise util.CytoflowViewError(e.__str__()) from e
         
         # apply previous operations
         for op in experiment.history:
@@ -266,9 +264,9 @@ class AutofluorescenceDiagnosticView(HasStrictTraits):
         if self.subset:
             try:
                 blank_exp = blank_exp.query(self.subset)
-            except:
+            except Exception as exc:
                 raise util.CytoflowOpError("Subset string '{0}' isn't valid"
-                                      .format(self.subset))
+                                           .format(self.subset)) from exc
                             
             if len(blank_exp.data) == 0:
                 raise util.CytoflowOpError("Subset string '{0}' returned no events"

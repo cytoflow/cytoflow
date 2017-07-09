@@ -1,7 +1,7 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.4
 # coding: latin-1
 
-# (c) Massachusetts Institute of Technology 2015-2016
+# (c) Massachusetts Institute of Technology 2015-2017
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,10 +21,6 @@ Created on Aug 31, 2015
 
 @author: brian
 '''
-
-from __future__ import division, absolute_import
-
-from builtins import range
 from traits.api import (HasStrictTraits, Str, File, Dict, Bool, Int, List, 
                         Float, Constant, provides, Undefined, Callable, Any,
                         Instance)
@@ -479,7 +475,7 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
                                  channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels},
                                  name_metadata = experiment.metadata['name_metadata']).apply()
         except util.CytoflowOpError as e:
-            raise util.CytoflowViewError(e.__str__())
+            raise util.CytoflowViewError(e.__str__()) from e
 
         plt.figure()
         

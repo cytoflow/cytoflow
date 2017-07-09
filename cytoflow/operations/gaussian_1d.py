@@ -1,7 +1,7 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.4
 # coding: latin-1
 
-# (c) Massachusetts Institute of Technology 2015-2016
+# (c) Massachusetts Institute of Technology 2015-2017
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,9 +22,6 @@ Created on Dec 16, 2015
 @author: brian
 '''
 
-from __future__ import division, absolute_import
-from builtins import range
-from builtins import object
 from warnings import warn
 from itertools import product
 
@@ -179,9 +176,9 @@ class GaussianMixture1DOp(HasStrictTraits):
         if subset:
             try:
                 experiment = experiment.query(subset)
-            except:
+            except Exception as e:
                 raise util.CytoflowViewError("Subset string '{0}' isn't valid"
-                                        .format(subset))
+                                        .format(subset)) from e
                 
             if len(experiment) == 0:
                 raise util.CytoflowViewError("Subset string '{0}' returned no events"
@@ -545,9 +542,9 @@ class GaussianMixture1DView(cytoflow.views.HistogramView):
             try:
                 experiment = experiment.query(self.subset)
                 experiment.data.reset_index(drop = True, inplace = True)
-            except:
+            except Exception as e:
                 raise util.CytoflowViewError("Subset string '{0}' isn't valid"
-                                        .format(self.subset))
+                                        .format(self.subset)) from e
                 
             if len(experiment) == 0:
                 raise util.CytoflowViewError("Subset string '{0}' returned no events"

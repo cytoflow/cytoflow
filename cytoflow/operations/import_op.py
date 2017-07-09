@@ -1,7 +1,7 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.4
 # coding: latin-1
 
-# (c) Massachusetts Institute of Technology 2015-2016
+# (c) Massachusetts Institute of Technology 2015-2017
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,9 +21,7 @@ Created on Mar 20, 2015
 
 @author: brian
 '''
-from __future__ import absolute_import
 
-from builtins import str
 import warnings
 from traits.api import (HasTraits, HasStrictTraits, provides, Str, List, Any,
                         Dict, File, Constant, Enum)
@@ -219,8 +217,8 @@ class ImportOp(HasStrictTraits):
                                              reformat_meta = True)
         except Exception as e:
             raise util.CytoflowOpError("FCS reader threw an error reading metadata "
-                                       " for tube {0}: {1}"
-                                       .format(self.tubes[0].file, str(e)))
+                                       "for tube {}"
+                                       .format(self.tubes[0].file)) from e
               
         meta_channels = tube0_meta["_channels_"]
         
@@ -320,9 +318,9 @@ def check_tube(filename, experiment):
                                      meta_data_only = True,
                                      reformat_meta = True)
     except Exception as e:
-        raise util.CytoflowOpError("FCS reader threw an error reading metadata"
-                              " for tube {0}: {1}"
-                              .format(filename, str(e)))
+        raise util.CytoflowOpError("FCS reader threw an error reading metadata "
+                                   "for tube {0}"
+                                   .format(filename)) from e
     
     # first make sure the tube has the right channels    
     if not set([experiment.metadata[c]["fcs_name"] for c in experiment.channels]) <= set(tube_meta["_channel_names_"]):
@@ -362,8 +360,8 @@ def parse_tube(filename, experiment):
                             filename, 
                             channel_naming = experiment.metadata["name_metadata"])
     except Exception as e:
-        raise util.CytoflowOpError("FCS reader threw an error reading data for tube "
-                              "{0}: {1}".format(filename, str(e)))
+        raise util.CytoflowOpError("FCS reader threw an error reading data for tube {}"
+                                   .format(filename)) from e
             
     return tube_data
 

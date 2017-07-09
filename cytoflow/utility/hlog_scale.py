@@ -1,7 +1,7 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.4
 # coding: latin-1
 
-# (c) Massachusetts Institute of Technology 2015-2016
+# (c) Massachusetts Institute of Technology 2015-2017
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,9 +22,6 @@ Created on Feb 21, 2016
 @author: brian
 '''
 
-from __future__ import division, absolute_import
-
-from builtins import map
 from traits.api import HasTraits, Float, Property, Instance, Str, \
                        cached_property, Undefined, provides, Constant, Dict, \
                        Tuple
@@ -104,8 +101,8 @@ class HlogScale(ScaleMixin):
         else:
             try:
                 return list(map(f, data))
-            except TypeError:
-                raise CytoflowError("Unknown data type in HlogScale.__call__")
+            except TypeError as e:
+                raise CytoflowError("Unknown data type in HlogScale.__call__") from e
 
         
     def inverse(self, data):
@@ -125,8 +122,8 @@ class HlogScale(ScaleMixin):
         else:
             try:
                 return list(map(f_inv, data))
-            except TypeError:
-                raise CytoflowError("Unknown data type in HlogScale.inverse")
+            except TypeError as e:
+                raise CytoflowError("Unknown data type in HlogScale.inverse") from e
         
     def clip(self, data):
         return data

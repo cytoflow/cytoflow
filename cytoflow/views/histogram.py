@@ -1,7 +1,7 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.4
 # coding: latin-1
 
-# (c) Massachusetts Institute of Technology 2015-2016
+# (c) Massachusetts Institute of Technology 2015-2017
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,10 +16,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import division, absolute_import
-
-from builtins import str
-from builtins import range
 from traits.api import HasStrictTraits, Str, provides
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -128,10 +124,10 @@ class HistogramView(HasStrictTraits):
             try:
                 data = experiment.query(self.subset).data.reset_index()
             except util.CytoflowError as e:
-                raise util.CytoflowViewError(str(e))
+                raise util.CytoflowViewError(str(e)) from e
             except Exception as e:
                 raise util.CytoflowViewError("Subset string '{0}' isn't valid"
-                                        .format(self.subset))
+                                        .format(self.subset)) from e
                 
             if len(data) == 0:
                 raise util.CytoflowViewError("Subset string '{0}' returned no events"

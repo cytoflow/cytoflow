@@ -1,7 +1,7 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.4
 # coding: latin-1
 
-# (c) Massachusetts Institute of Technology 2015-2016
+# (c) Massachusetts Institute of Technology 2015-2017
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,8 +21,7 @@ Created on Dec 1, 2015
 
 @author: brian
 '''
-from __future__ import division
-from past.utils import old_div
+
 import os
 import unittest
 
@@ -76,7 +75,7 @@ class Test(unittest.TestCase):
                                      by = ['T'],
                                      channel = "Y2-A",
                                      subset = "Dox == 10.0",
-                                     function = lambda x: old_div(len(x), 0.0))
+                                     function = lambda x: len(x) / 0.0)
         
         with self.assertRaises(util.CytoflowOpError):
             op.apply(self.ex)

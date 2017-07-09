@@ -1,7 +1,7 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.4
 # coding: latin-1
 
-# (c) Massachusetts Institute of Technology 2015-2016
+# (c) Massachusetts Institute of Technology 2015-2017
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,8 +15,6 @@
 # 
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-from __future__ import absolute_import
 
 import numbers
 
@@ -125,9 +123,8 @@ class ScaleMixin(HasStrictTraits):
                                                     "statistic {}"
                                                     .format(self.statistic))
                 except TypeError as e:
-                    raise CytoflowError("Tried to scale a non-numeric "
-                                        "statistic {}"
-                                        .format(self.statistic))
+                    raise CytoflowError("Error scaling statistic {}"
+                                        .format(self.statistic)) from e
     
 # maps name -> scale object
 _scale_mapping = {}

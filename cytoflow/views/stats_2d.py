@@ -1,7 +1,7 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.4
 # coding: latin-1
 
-# (c) Massachusetts Institute of Technology 2015-2016
+# (c) Massachusetts Institute of Technology 2015-2017
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,8 +16,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import division, absolute_import
-from builtins import object
 from warnings import warn
 from traits.api import HasStrictTraits, Str, provides, Tuple
 import matplotlib as mpl
@@ -286,9 +284,9 @@ class Stats2DView(HasStrictTraits):
                 # TODO - either sanitize column names, or check to see that
                 # all conditions are valid Python variables
                 data = data.query(self.subset)
-            except:
+            except Exception as e:
                 raise util.CytoflowViewError("Subset string '{0}' isn't valid"
-                                        .format(self.subset))
+                                        .format(self.subset)) from e
                 
             if len(data) == 0:
                 raise util.CytoflowViewError("Subset string '{0}' returned no values"
@@ -303,9 +301,9 @@ class Stats2DView(HasStrictTraits):
                      util.CytoflowViewWarning)
                 try:
                     data.index = data.index.droplevel(name)
-                except AttributeError:
+                except AttributeError as e:
                     raise util.CytoflowViewError("Must have more than one "
-                                                 "value to plot.")
+                                                 "value to plot.") from e
                 
         names = list(data.index.names)
             
@@ -509,9 +507,9 @@ class Stats2DView(HasStrictTraits):
                 # TODO - either sanitize column names, or check to see that
                 # all conditions are valid Python variables
                 data = data.query(self.subset)
-            except:
+            except Exception as e:
                 raise util.CytoflowViewError("Subset string '{0}' isn't valid"
-                                        .format(self.subset))
+                                        .format(self.subset)) from e
                 
             if len(data) == 0:
                 raise util.CytoflowViewError("Subset string '{0}' returned no values"
@@ -526,9 +524,9 @@ class Stats2DView(HasStrictTraits):
                      util.CytoflowViewWarning)
                 try:
                     data.index = data.index.droplevel(name)
-                except AttributeError:
+                except AttributeError as e:
                     raise util.CytoflowViewError("Must have more than one "
-                                                 "value to plot.")
+                                                 "value to plot.") from e
                 
         names = list(data.index.names)    
             

@@ -1,7 +1,7 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.4
 # coding: latin-1
 
-# (c) Massachusetts Institute of Technology 2015-2016
+# (c) Massachusetts Institute of Technology 2015-2017
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,9 +21,6 @@ Created on Aug 26, 2015
 
 @author: brian
 '''
-
-from __future__ import division, absolute_import
-
 import os, math
 
 from traits.api import HasStrictTraits, Str, File, Dict, Instance, \
@@ -148,9 +145,9 @@ class BleedthroughLinearOp(HasStrictTraits):
             if subset:
                 try:
                     tube_exp = tube_exp.query(subset)
-                except:
+                except Exception as exc:
                     raise util.CytoflowOpError("Subset string '{0}' isn't valid"
-                                          .format(self.subset))
+                                          .format(self.subset)) from exc
                                 
                 if len(tube_exp.data) == 0:
                     raise util.CytoflowOpError("Subset string '{0}' returned no events"
@@ -331,9 +328,9 @@ class BleedthroughLinearDiagnostic(HasStrictTraits):
                 if self.subset:
                     try:
                         tube_exp = tube_exp.query(self.subset)
-                    except:
+                    except Exception as e:
                         raise util.CytoflowOpError("Subset string '{0}' isn't valid"
-                                              .format(self.subset))
+                                              .format(self.subset)) from e
                                     
                     if len(tube_exp.data) == 0:
                         raise util.CytoflowOpError("Subset string '{0}' returned no events"

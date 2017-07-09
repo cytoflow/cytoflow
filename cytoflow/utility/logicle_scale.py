@@ -1,7 +1,7 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.4
 # coding: latin-1
 
-# (c) Massachusetts Institute of Technology 2015-2016
+# (c) Massachusetts Institute of Technology 2015-2017
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,11 +22,6 @@ Created on Feb 21, 2016
 @author: brian
 '''
 
-
-from __future__ import division, absolute_import
-
-from builtins import str
-from builtins import map
 import math, sys
 from warnings import warn
 
@@ -166,8 +161,8 @@ class LogicleScale(HasStrictTraits):
             else:
                 try:
                     return list(map(self._logicle.scale, data))
-                except TypeError:
-                    raise CytoflowError("Unknown data type in LogicleScale.__call__")
+                except TypeError as e:
+                    raise CytoflowError("Unknown data type") from e
         except ValueError as e:
             raise CytoflowError(e.strerror)
 
@@ -190,8 +185,8 @@ class LogicleScale(HasStrictTraits):
             else:
                 try:
                     return list(map(self._logicle.inverse, data))
-                except TypeError:
-                    raise CytoflowError("Unknown data type in LogicleScale.inverse")
+                except TypeError as e:
+                    raise CytoflowError("Unknown data type") from e
         except ValueError as e:
             raise CytoflowError(str(e))
         
@@ -208,8 +203,8 @@ class LogicleScale(HasStrictTraits):
             else:
                 try:
                     return [max(min(x, logicle_max), logicle_min) for x in data]
-                except TypeError:
-                    raise CytoflowError("Unknown data type in LogicleScale.__call__")
+                except TypeError as e:
+                    raise CytoflowError("Unknown data type") from e
         except ValueError as e:
             raise CytoflowError(e.strerror)
         
@@ -409,7 +404,7 @@ class MatplotlibLogicleScale(HasTraits, matplotlib.scale.ScaleBase):
                     raise CytoflowError("Unknown data type in MatplotlibLogicleScale.transform_non_affine")
                 
             except ValueError as e:
-                raise CytoflowError(str(e))
+                raise CytoflowError("Bad transform") from e
 
 
         def inverted(self):
@@ -443,8 +438,7 @@ class MatplotlibLogicleScale(HasTraits, matplotlib.scale.ScaleBase):
                 else:
                     raise CytoflowError("Unknown data type in LogicleScale.inverse")
             except ValueError as e:
-                raise CytoflowError(str(e))
-        
+                raise CytoflowError("Bad transform") from e
         
         def inverted(self):
             return MatplotlibLogicleScale.LogicleTransform(logicle = self.logicle)

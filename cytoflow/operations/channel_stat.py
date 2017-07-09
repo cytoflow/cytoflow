@@ -1,7 +1,7 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.4
 # coding: latin-1
 
-# (c) Massachusetts Institute of Technology 2015-2016
+# (c) Massachusetts Institute of Technology 2015-2017
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,9 +21,6 @@ Created on Sep 13, 2016
 
 @author: brian
 '''
-
-from __future__ import division, absolute_import
-
 from warnings import warn
 import pandas as pd
 import numpy as np
@@ -133,9 +130,8 @@ class ChannelStatisticOp(HasStrictTraits):
         if self.subset:
             try:
                 experiment = experiment.query(self.subset)
-            except:
-                raise util.CytoflowOpError("Subset string '{0}' isn't valid"
-                                        .format(self.subset))
+            except Exception as exc:
+                raise util.CytoflowOpError("Subset string '{0}' isn't valid".format(self.subset)) from exc
                 
             if len(experiment) == 0:
                 raise util.CytoflowOpError("Subset string '{0}' returned no events"
@@ -177,9 +173,8 @@ class ChannelStatisticOp(HasStrictTraits):
             try:
                 stat.loc[group] = self.function(data_subset[self.channel])
             except Exception as e:
-                raise util.CytoflowOpError("In group {}, your function "
-                                           "threw an error: {}"
-                                           .format(group, e))
+                raise util.CytoflowOpError("Your function threw an error in group {}"
+                                           .format(group)) from e
             
             # check for, and warn about, NaNs.
             if np.any(np.isnan(stat.loc[group])):
@@ -189,7 +184,7 @@ class ChannelStatisticOp(HasStrictTraits):
         # try to convert to numeric, but if there are non-numeric bits ignore
         stat = pd.to_numeric(stat, errors = 'ignore')
         
-        new_experiment.history.append(self.clone_traits(transient = lambda t: True))
+        new_experiment.history.append(self.clone_traits(transient = lambda _: True))
         if self.statistic_name:
             new_experiment.statistics[(self.name, self.statistic_name)] = stat
         else:

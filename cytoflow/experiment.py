@@ -1,7 +1,7 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.4
 # coding: latin-1
 
-# (c) Massachusetts Institute of Technology 2015-2016
+# (c) Massachusetts Institute of Technology 2015-2017
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,8 +15,6 @@
 # 
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-from __future__ import absolute_import
 
 from builtins import zip
 from past.builtins import basestring
@@ -331,10 +329,10 @@ class Experiment(HasStrictTraits):
             else:
                 self.data[name] = pd.Series(dtype = dtype)
           
-        except (ValueError, TypeError):
+        except (ValueError, TypeError) as exc:
                 raise util.CytoflowError("Had trouble converting data to type {0}"
-                                    .format(dtype))
-    
+                                    .format(dtype)) from exc
+                                        
         self.metadata[name] = {}
         self.metadata[name]['type'] = "condition"      
             
@@ -382,8 +380,8 @@ class Experiment(HasStrictTraits):
             else:
                 self.data[name] = pd.Series(dtype = "float64")
                 
-        except (ValueError, TypeError):
-                raise util.CytoflowError("Had trouble converting data to type \"float64\"")
+        except (ValueError, TypeError) as exc:
+                raise util.CytoflowError("Had trouble converting data to type \"float64\"") from exc
 
         self.metadata[name] = {}
         self.metadata[name]['type'] = "channel"
