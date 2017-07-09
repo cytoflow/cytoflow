@@ -1,7 +1,7 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.4
 # coding: latin-1
 
-# (c) Massachusetts Institute of Technology 2015-2016
+# (c) Massachusetts Institute of Technology 2015-2017
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@ Created on Mar 23, 2015
 '''
 
 # for local debugging
+from builtins import next
 if __name__ == '__main__':
     from traits.etsconfig.api import ETSConfig
     ETSConfig.toolkit = 'qt4'
@@ -163,7 +164,7 @@ class _SubsetListEditor(_VerticalListEditor):
     @on_trait_change('conditions, metadata', dispatch = 'ui')
     def _on_conditions_change(self, obj, name, old, new):
         value_names = set([subset.name for subset in self.value])
-        condition_names = set([x for x in self.conditions.keys() if self.include_condition(x)])
+        condition_names = set([x for x in list(self.conditions.keys()) if self.include_condition(x)])
         
         loading = (self.ui.context["context"].status == "loading")
         

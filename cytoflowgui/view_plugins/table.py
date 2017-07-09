@@ -1,7 +1,7 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.4
 # coding: latin-1
 
-# (c) Massachusetts Institute of Technology 2015-2016
+# (c) Massachusetts Institute of Technology 2015-2017
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,6 +22,8 @@ Created on Feb 24, 2015
 @author: brian
 """
 
+from future import standard_library
+standard_library.install_aliases()
 import numpy as np
 import pandas as pd
 
@@ -176,8 +178,8 @@ class TablePluginView(PluginViewMixin, TableView):
             if len(unique_values) == 1:
                 data.index = data.index.droplevel(name) 
                 
-        facets = filter(lambda x: x, [self.row_facet, self.subrow_facet, 
-                                      self.column_facet, self.subcolumn_facet])
+        facets = [x for x in [self.row_facet, self.subrow_facet, 
+                                      self.column_facet, self.subcolumn_facet] if x]
         
         if set(facets) != set(data.index.names):
             raise util.CytoflowViewError("Must use all the statistic indices as variables or facets: {}"

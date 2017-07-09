@@ -1,7 +1,7 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.4
 # coding: latin-1
 
-# (c) Massachusetts Institute of Technology 2015-2016
+# (c) Massachusetts Institute of Technology 2015-2017
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,10 +21,14 @@ Created on Feb 11, 2015
 
 @author: brian
 """
+from __future__ import absolute_import
 
 # from traits.etsconfig.api import ETSConfig
 # ETSConfig.toolkit = 'qt4'
 
+from future import standard_library
+standard_library.install_aliases()
+from builtins import next
 import os.path
 
 from traits.api import Instance, List, Bool, on_trait_change, Any, Unicode, TraitError
@@ -44,7 +48,7 @@ from cytoflowgui.notebook import JupyterNotebookWriter
 from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.util import DefaultFileDialog
 
-import mailto
+# from . import mailto
 
 import pickle as pickle
 
@@ -270,12 +274,12 @@ class FlowTask(Task):
             # re-link the linked list.  i thought this would get taken care
             # of in deserialization, but i guess not...
             if wi_idx > 0:
-                wi.previous = new_workflow[wi_idx - 1]
+                wi.previous_wi = new_workflow[wi_idx - 1]
 
         # replace the current workflow with the one we just loaded
         
         if False:  # for debugging the loading of things
-            from event_tracer import record_events 
+            from .event_tracer import record_events 
             
             with record_events() as container:
                 self.model.workflow = new_workflow
@@ -337,7 +341,7 @@ class FlowTask(Task):
         f = ""
         filetypes_groups = self.plot_pane.canvas.get_supported_filetypes_grouped()
         filename_exts = []
-        for name, ext in filetypes_groups.iteritems():
+        for name, ext in filetypes_groups.items():
             if f:
                 f += ";"
             f += FileDialog.create_wildcard(name, " ".join(["*." + e for e in ext])) #@UndefinedVariable  
@@ -348,8 +352,8 @@ class FlowTask(Task):
                             wildcard = f)
         
         if dialog.open() == OK:
-            filetypes = self.plot_pane.canvas.get_supported_filetypes().keys()
-            if not filter(lambda ext: dialog.path.endswith(ext), ["." + ext for ext in filetypes]):
+            filetypes = list(self.plot_pane.canvas.get_supported_filetypes().keys())
+            if not [ext for ext in ["." + ext for ext in filetypes] if dialog.path.endswith(ext)]:
                 selected_exts = filename_exts[dialog.wildcard_index]
                 ext = sorted(selected_exts, key = len)[0]
                 dialog.path += "."
@@ -386,7 +390,7 @@ class FlowTask(Task):
 
         log = self.application.application_log.getvalue()
         
-        versions = ["{0} {1}".format(key, value) for key, value in self._get_package_versions().iteritems()]
+        versions = ["{0} {1}".format(key, value) for key, value in self._get_package_versions().items()]
 
         body = """
 Thank you for your bug report!  Please fill out the following template.
@@ -408,9 +412,9 @@ PACKAGE VERSIONS: {0}
 DEBUG LOG: {1}
 """.format(versions, log)
 
-        mailto.mailto("teague@mit.edu", 
-                      subject = "Cytoflow bug report",
-                      body = body)
+#         mailto.mailto("teague@mit.edu", 
+#                       subject = "Cytoflow bug report",
+#                       body = body)
     
     def _get_package_versions(self):
     
@@ -452,7 +456,7 @@ DEBUG LOG: {1}
         text = ["<b>Cytoflow {0}</b>".format(versions['cytoflow']),
                 "<p>"]
         
-        ver_text = ["{0} {1}".format(key, value) for key, value in versions.iteritems()]
+        ver_text = ["{0} {1}".format(key, value) for key, value in versions.items()]
         
         text.extend(ver_text)
         
@@ -563,7 +567,7 @@ class FlowTaskPlugin(Plugin):
     
     @contributes_to(PREFERENCES_PANES)
     def _get_preferences_panes(self):
-        from preferences import CytoflowPreferencesPane
+        from .preferences import CytoflowPreferencesPane
         return [CytoflowPreferencesPane]
 
     @contributes_to(TASKS)

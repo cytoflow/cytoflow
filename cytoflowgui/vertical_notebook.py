@@ -1,7 +1,7 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.4
 # coding: latin-1
 
-# (c) Massachusetts Institute of Technology 2015-2016
+# (c) Massachusetts Institute of Technology 2015-2017
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,6 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # for local debugging
+from __future__ import absolute_import
 if __name__ == '__main__':
     from traits.etsconfig.api import ETSConfig
     ETSConfig.toolkit = 'qt4'
@@ -560,7 +561,7 @@ class VerticalNotebook(HasPrivateTraits):
 if __name__ == '__main__':
 
     from traitsui.api import View, Group, Item
-    from vertical_notebook_editor import VerticalNotebookEditor
+    from .vertical_notebook_editor import VerticalNotebookEditor
 
     class TestPageClass(HasTraits):
         trait1 = Str
@@ -585,7 +586,7 @@ if __name__ == '__main__':
                      )),
                     resizable = True)
 
-    from event_tracer import record_events 
+    from .event_tracer import record_events 
     import os
             
     with record_events() as container:

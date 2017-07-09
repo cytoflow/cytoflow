@@ -1,7 +1,7 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.4
 # coding: latin-1
 
-# (c) Massachusetts Institute of Technology 2015-2016
+# (c) Massachusetts Institute of Technology 2015-2017
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@ Created on Feb 26, 2015
 """
 
 # for local debugging
+from builtins import next
 if __name__ == '__main__':
     from traits.etsconfig.api import ETSConfig
     ETSConfig.toolkit = 'qt4'
@@ -115,7 +116,7 @@ class Tube(HasTraits):
     def conditions_hash(self):
         ret = int(0)
     
-        for key, value in self.conditions.iteritems():
+        for key, value in self.conditions.items():
             if not ret:
                 ret = hash((key, value))
             else:
@@ -143,7 +144,7 @@ class Tube(HasTraits):
                 
     @cached_property
     def _get_all_conditions_set(self):
-        return len(filter(lambda x: x is None or x == "", self.conditions.values())) == 0
+        return len([x for x in list(self.conditions.values()) if x is None or x == ""]) == 0
 
     
 class ExperimentColumn(ObjectColumn):
@@ -268,7 +269,7 @@ class ExperimentDialogModel(HasStrictTraits):
             try:
                 conditions_list = op_tube.conditions_list
             except:
-                conditions_list = op_tube.conditions.keys()
+                conditions_list = list(op_tube.conditions.keys())
                 
             for condition in conditions_list:
                 condition_dtype = op.conditions[condition]
@@ -308,7 +309,7 @@ class ExperimentDialogModel(HasStrictTraits):
                           "Int" : "int"}
         
         conditions = {}
-        for trait_name, trait in self.tube_traits.items():
+        for trait_name, trait in list(self.tube_traits.items()):
             if not trait.condition:
                 continue
 
@@ -319,7 +320,7 @@ class ExperimentDialogModel(HasStrictTraits):
         for tube in self.tubes:
             op_tube = CytoflowTube(file = tube.file,
                                    conditions = tube.trait_get(condition = True),
-                                   conditions_list = [x for x in self.tube_traits.keys() if self.tube_traits[x].condition])
+                                   conditions_list = [x for x in list(self.tube_traits.keys()) if self.tube_traits[x].condition])
             tubes.append(op_tube)
             
         op.conditions = conditions
@@ -380,7 +381,7 @@ class ExperimentDialogHandler(Controller):
                             "Bool" : " (T/F)",
                             "Int" : " (Int)"}
             
-            for name, trait in self.model.tube_traits.iteritems():
+            for name, trait in self.model.tube_traits.items():
                 trait_type = trait.__class__.__name__
                 label = name + trait_to_col[trait_type] \
                         if trait.condition \
@@ -392,7 +393,7 @@ class ExperimentDialogHandler(Controller):
         return True
     
     def closed(self, info, is_ok):
-        for trait_name, trait in self.model.tube_traits.items():
+        for trait_name, trait in list(self.model.tube_traits.items()):
             if not trait.condition:
                 continue
             for tube in self.model.tubes:
@@ -512,7 +513,7 @@ class ExperimentDialogHandler(Controller):
                 
             tube = Tube()
             
-            for trait_name, trait in self.model.tube_traits.items():
+            for trait_name, trait in list(self.model.tube_traits.items()):
                 tube.add_trait(trait_name, trait)
                 
                 # this magic makes sure the trait is actually defined
@@ -631,7 +632,7 @@ class ExperimentDialogHandler(Controller):
         if trait.condition:
             self.model.counter.clear()
             
-        trait_names = self.model.tube_traits.keys()
+        trait_names = list(self.model.tube_traits.keys())
             
         if not name in trait_names:
             self.model.tube_traits[name] = trait

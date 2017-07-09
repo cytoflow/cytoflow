@@ -1,7 +1,7 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.4
 # coding: latin-1
 
-# (c) Massachusetts Institute of Technology 2015-2016
+# (c) Massachusetts Institute of Technology 2015-2017
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -68,11 +68,11 @@ class TasbeHandler(OpHandlerMixin, Controller):
                            transient = True)
     
     def _get_beads_name_choices(self):
-        return BeadCalibrationOp.BEADS.keys()
+        return list(BeadCalibrationOp.BEADS.keys())
     
     def _get_beads_units(self):
         if self.model.beads_name:
-            return BeadCalibrationOp.BEADS[self.model.beads_name].keys()
+            return list(BeadCalibrationOp.BEADS[self.model.beads_name].keys())
         else:
             return []
         
@@ -342,7 +342,7 @@ class TasbePluginView(PluginViewMixin):
     name = Constant("TASBE Calibration")
     
     def plot_wi(self, wi):
-        self.plot(wi.previous.result, plot_name = wi.current_plot)
+        self.plot(wi.previous_wi.result, plot_name = wi.current_plot)
         
     def enum_plots(self, experiment):
         return iter(["Autofluorescence",

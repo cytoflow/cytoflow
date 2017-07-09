@@ -1,7 +1,7 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.4
 # coding: latin-1
 
-# (c) Massachusetts Institute of Technology 2015-2016
+# (c) Massachusetts Institute of Technology 2015-2017
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -148,13 +148,13 @@ class GaussianMixture1DPluginView(PluginViewMixin, GaussianMixture1DView):
 
     def plot_wi(self, wi):
         if wi.current_view_plot_names:
-            self.plot(wi.previous.result, plot_name = wi.current_plot)
+            self.plot(wi.previous_wi.result, plot_name = wi.current_plot)
         else:
-            self.plot(wi.previous.result)
+            self.plot(wi.previous_wi.result)
         
     def enum_plots_wi(self, wi):
         try:
-            return self.enum_plots(wi.previous.result)
+            return self.enum_plots(wi.previous_wi.result)
         except:
             return []
         

@@ -1,7 +1,7 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.4
 # coding: latin-1
 
-# (c) Massachusetts Institute of Technology 2015-2016
+# (c) Massachusetts Institute of Technology 2015-2017
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,7 +21,9 @@ Created on Oct 9, 2015
 
 @author: brian
 '''
+from __future__ import division
 
+from past.utils import old_div
 import numpy as np
 import pandas as pd
 import scipy.stats
@@ -54,9 +56,9 @@ transform_functions = {"Mean" : np.mean,
                        "Mean 95% CI" : mean_95ci,
                        "Geom.Mean 95% CI" : geomean_95ci,
                        "Sum" : np.sum,
-                       "Proportion" : lambda a: pd.Series(a / a.sum()),
-                       "Percentage" : lambda a: pd.Series(a / a.sum()) * 100.0,
-                       "Fold" : lambda a: pd.Series(a / a.min())
+                       "Proportion" : lambda a: pd.Series(old_div(a, a.sum())),
+                       "Percentage" : lambda a: pd.Series(old_div(a, a.sum())) * 100.0,
+                       "Fold" : lambda a: pd.Series(old_div(a, a.min()))
                        }
 
 
@@ -71,14 +73,14 @@ class TransformStatisticHandler(OpHandlerMixin, Controller):
     # MAGIC: gets the value for the property indices
     def _get_indices(self):        
         if not (self.context 
-                and self.context.previous 
-                and self.context.previous.statistics 
+                and self.context.previous_wi 
+                and self.context.previous_wi.statistics 
                 and self.model 
                 and self.model.statistic 
-                and self.model.statistic in self.context.previous.statistics):
+                and self.model.statistic in self.context.previous_wi.statistics):
             return []
         
-        stat = self.context.previous.statistics[self.model.statistic]
+        stat = self.context.previous_wi.statistics[self.model.statistic]
         data = pd.DataFrame(index = stat.index)
         
         if self.model.subset:
@@ -101,14 +103,14 @@ class TransformStatisticHandler(OpHandlerMixin, Controller):
     def _get_levels(self):
         
         if not (self.context 
-                and self.context.previous 
-                and self.context.previous.statistics 
+                and self.context.previous_wi 
+                and self.context.previous_wi.statistics 
                 and self.model 
                 and self.model.statistic
-                and self.model.statistic in self.context.previous.statistics):
+                and self.model.statistic in self.context.previous_wi.statistics):
             return []
         
-        stat = self.context.previous.statistics[self.model.statistic]
+        stat = self.context.previous_wi.statistics[self.model.statistic]
         index = stat.index
         
         names = list(index.names)
@@ -131,7 +133,7 @@ class TransformStatisticHandler(OpHandlerMixin, Controller):
                          editor=EnumEditor(name='handler.previous_statistics_names'),
                          label = "Statistic"),
                     Item('statistic_name',
-                         editor = EnumEditor(values = transform_functions.keys()),
+                         editor = EnumEditor(values = list(transform_functions.keys())),
                          label = "Function"),
                     Item('by',
                          editor = CheckListEditor(cols = 2,

@@ -1,7 +1,7 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.4
 # coding: latin-1
 
-# (c) Massachusetts Institute of Technology 2015-2016
+# (c) Massachusetts Institute of Technology 2015-2017
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -79,7 +79,7 @@ class WorkflowItem(HasStrictTraits):
                                  show_label = False))
     
     # the Experiment that is the result of applying *operation* to the
-    # previous WorkflowItem's ``result``
+    # previous_wi WorkflowItem's ``result``
     result = Instance(Experiment, transient = True)
     
     # the channels, conditions and statistics from result.  usually these would be
@@ -121,11 +121,11 @@ class WorkflowItem(HasStrictTraits):
     # the default view for this workflow item
     default_view = Instance(IView, copy = "ref")
     
-    # the previous WorkflowItem in the workflow
-    previous = Instance('WorkflowItem', transient = True)
+    # the previous_wi WorkflowItem in the workflow
+    previous_wi = Instance('WorkflowItem', transient = True)
     
-    # the next WorkflowItem in the workflow
-    next = Instance('WorkflowItem', transient = True)
+    # the next_wi WorkflowItem in the workflow
+    next_wi = Instance('WorkflowItem', transient = True)
     
     # is the wi valid?
     # MAGIC: first value is the default
@@ -188,7 +188,7 @@ class RemoteWorkflowItem(WorkflowItem):
     def estimate(self):
         logging.debug("WorkflowItem.estimate :: {}".format((self)))
 
-        prev_result = self.previous.result if self.previous else None
+        prev_result = self.previous_wi.result if self.previous_wi else None
                  
         with warnings.catch_warnings(record = True) as w:
             try:    
@@ -211,12 +211,12 @@ class RemoteWorkflowItem(WorkflowItem):
             
     def apply(self):
         """
-        Apply this wi's operation to the previous wi's result
+        Apply this wi's operation to the previous_wi wi's result
         """
         logging.debug("WorkflowItem.apply :: {}".format((self)))
         self.apply_called = True
          
-        prev_result = self.previous.result if self.previous else None
+        prev_result = self.previous_wi.result if self.previous_wi else None
          
         with warnings.catch_warnings(record = True) as w:
             try:    

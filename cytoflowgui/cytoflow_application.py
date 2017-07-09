@@ -1,7 +1,7 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.4
 # coding: latin-1
 
-# (c) Massachusetts Institute of Technology 2015-2016
+# (c) Massachusetts Institute of Technology 2015-2017
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,8 +21,11 @@ Created on Mar 15, 2015
 
 @author: brian
 '''
+from __future__ import absolute_import
 
-import sys, logging, StringIO
+from future import standard_library
+standard_library.install_aliases()
+import sys, logging, io
 from cytoflowgui import multiprocess_logging
 
 from envisage.ui.tasks.api import TasksApplication
@@ -30,7 +33,7 @@ from pyface.api import error
 from pyface.tasks.api import TaskWindowLayout
 from traits.api import Bool, Instance, List, Property, Str
 
-from preferences import CytoflowPreferences
+from .preferences import CytoflowPreferences
   
 def gui_handler_callback(msg, app):
     app.application_error = msg
@@ -61,7 +64,7 @@ class CytoflowApplication(TasksApplication):
     application_error = Str
     
     # keep the application log in memory
-    application_log = Instance(StringIO.StringIO, ())
+    application_log = Instance(io.StringIO, ())
             
     def run(self):
 

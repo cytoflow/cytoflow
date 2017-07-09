@@ -1,7 +1,7 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.4
 # coding: latin-1
 
-# (c) Massachusetts Institute of Technology 2015-2016
+# (c) Massachusetts Institute of Technology 2015-2017
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -42,9 +42,6 @@ passing the event information to the remote canvas which in turn runs the
 matplotlib event handlers.
 """
 
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-
 import time, threading, logging, sys, traceback
 
 import matplotlib.pyplot
@@ -60,7 +57,6 @@ backend_version = "0.0.2"
 
 from matplotlib.backend_bases import FigureManagerBase
 
-
 # module-level pipe connections for communicating between canvases.
 # these are initialized in cytoflow_application, which starts the remote
 # process.
@@ -74,7 +70,7 @@ from matplotlib.backend_bases import FigureManagerBase
 
 DEBUG = 0
 
-class Msg:
+class Msg(object):
     DRAW = "DRAW"
     BLIT = "BLIT"
     

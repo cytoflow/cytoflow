@@ -1,7 +1,7 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.4
 # coding: latin-1
 
-# (c) Massachusetts Institute of Technology 2015-2016
+# (c) Massachusetts Institute of Technology 2015-2017
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import print_function
 from pyface.qt import QtGui, QtCore
 
 class RangeSlider(QtGui.QSlider):
@@ -218,7 +219,7 @@ class RangeSlider(QtGui.QSlider):
 if __name__ == "__main__":
     import sys
     def echo(value):
-        print value
+        print(value)
     app = QtGui.QApplication(sys.argv)
     slider = RangeSlider()
     slider.setMinimum(0)

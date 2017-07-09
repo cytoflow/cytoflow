@@ -1,7 +1,7 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.4
 # coding: latin-1
 
-# (c) Massachusetts Institute of Technology 2015-2016
+# (c) Massachusetts Institute of Technology 2015-2017
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,14 +16,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from i_view_plugin import IViewPlugin, PluginViewMixin, VIEW_PLUGIN_EXT
-from histogram import HistogramPlugin
-from histogram_2d import Histogram2DPlugin
-from scatterplot import ScatterplotPlugin
-from bar_chart import BarChartPlugin
-from stats_1d import Stats1DPlugin
-from stats_2d import Stats2DPlugin
-from kde_1d import Kde1DPlugin
-from kde_2d import Kde2DPlugin
-from violin import ViolinPlotPlugin
-from table import TablePlugin
+from __future__ import absolute_import
+from .i_view_plugin import IViewPlugin, PluginViewMixin, VIEW_PLUGIN_EXT
+from .histogram import HistogramPlugin
+from .histogram_2d import Histogram2DPlugin
+from .scatterplot import ScatterplotPlugin
+from .bar_chart import BarChartPlugin
+from .stats_1d import Stats1DPlugin
+from .stats_2d import Stats2DPlugin
+from .kde_1d import Kde1DPlugin
+from .kde_2d import Kde2DPlugin
+from .violin import ViolinPlotPlugin
+from .table import TablePlugin

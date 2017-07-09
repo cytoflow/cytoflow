@@ -1,7 +1,7 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.4
 # coding: latin-1
 
-# (c) Massachusetts Institute of Technology 2015-2016
+# (c) Massachusetts Institute of Technology 2015-2017
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -33,9 +33,9 @@ class _ExtendableEnumEditor(_EnumEditor):
         """ Gets the current set of enumeration names.
         """        
         if self._object is None:
-            return self.factory._names + self.factory.extra_items.keys()
+            return self.factory._names + list(self.factory.extra_items.keys())
         else:
-            return self._names + self.factory.extra_items.keys()
+            return self._names + list(self.factory.extra_items.keys())
     
     def _get_mapping ( self ):
         """ Gets the current mapping.
@@ -58,7 +58,7 @@ class _ExtendableEnumEditor(_EnumEditor):
         else:
             m = dict(self._inverse_mapping)
             
-        m.update({v: k for k, v in self.factory.extra_items.items()})
+        m.update({v: k for k, v in list(self.factory.extra_items.items())})
         
         return m
         

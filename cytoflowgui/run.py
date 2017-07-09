@@ -1,7 +1,7 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.4
 # coding: latin-1
 
-# (c) Massachusetts Institute of Technology 2015-2016
+# (c) Massachusetts Institute of Technology 2015-2017
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -31,9 +31,6 @@ except:
 
 import sys, multiprocessing, os, logging, traceback, threading
 
-reload(sys)
-sys.setdefaultencoding('utf8')     # @UndefinedVariable
-
 from traits.etsconfig.api import ETSConfig
 ETSConfig.toolkit = 'qt4'
 
@@ -51,9 +48,9 @@ from envisage.core_plugin import CorePlugin
 from envisage.ui.tasks.tasks_plugin import TasksPlugin
 from pyface.image_resource import ImageResource
 
-from flow_task import FlowTaskPlugin
-from cytoflow_application import CytoflowApplication
-from op_plugins import (ImportPlugin, ThresholdPlugin, RangePlugin, QuadPlugin,
+from cytoflowgui.flow_task import FlowTaskPlugin
+from cytoflowgui.cytoflow_application import CytoflowApplication
+from cytoflowgui.op_plugins import (ImportPlugin, ThresholdPlugin, RangePlugin, QuadPlugin,
                         Range2DPlugin, PolygonPlugin, BinningPlugin,
                         GaussianMixture1DPlugin, GaussianMixture2DPlugin,
                         BleedthroughLinearPlugin, BleedthroughPiecewisePlugin,
@@ -62,7 +59,7 @@ from op_plugins import (ImportPlugin, ThresholdPlugin, RangePlugin, QuadPlugin,
                         ChannelStatisticPlugin, TransformStatisticPlugin, 
                         RatioPlugin)
 
-from view_plugins import (HistogramPlugin, Histogram2DPlugin, ScatterplotPlugin,
+from cytoflowgui.view_plugins import (HistogramPlugin, Histogram2DPlugin, ScatterplotPlugin,
                           BarChartPlugin, Stats1DPlugin, Kde1DPlugin, Kde2DPlugin,
                           ViolinPlotPlugin, TablePlugin, Stats2DPlugin)
                          
@@ -149,15 +146,15 @@ def run_gui():
     cmd_line = " ".join(sys.argv)
     
     if qt_api == "pyside":
-        print "Cytoflow uses PyQT; but it is trying to use PySide instead."
-        print " - Make sure PyQT is installed."
-        print " - If both are installed, and you don't need both, uninstall PySide."
-        print " - If you must have both installed, select PyQT by setting the"
-        print "   environment variable QT_API to \"pyqt\""
-        print "   * eg, on Linux, type on the command line:"
-        print "     QT_API=\"pyqt\" " + cmd_line
-        print "   * on Windows, try: "
-        print "     setx QT_API \"pyqt\""
+        print("Cytoflow uses PyQT; but it is trying to use PySide instead.")
+        print(" - Make sure PyQT is installed.")
+        print(" - If both are installed, and you don't need both, uninstall PySide.")
+        print(" - If you must have both installed, select PyQT by setting the")
+        print("   environment variable QT_API to \"pyqt\"")
+        print("   * eg, on Linux, type on the command line:")
+        print("     QT_API=\"pyqt\" " + cmd_line)
+        print("   * on Windows, try: ")
+        print("     setx QT_API \"pyqt\"")
 
         sys.exit(1)
         

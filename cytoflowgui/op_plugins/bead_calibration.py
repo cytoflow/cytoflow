@@ -1,7 +1,7 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.4
 # coding: latin-1
 
-# (c) Massachusetts Institute of Technology 2015-2016
+# (c) Massachusetts Institute of Technology 2015-2017
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -62,11 +62,11 @@ class BeadCalibrationHandler(OpHandlerMixin, Controller):
             self.model.units_list.pop()    
     
     def _get_beads_name_choices(self):
-        return self.model.BEADS.keys()
+        return list(self.model.BEADS.keys())
     
     def _get_beads_units(self):
         if self.model.beads_name:
-            return self.model.BEADS[self.model.beads_name].keys()
+            return list(self.model.BEADS[self.model.beads_name].keys())
         else:
             return []
     
@@ -199,7 +199,7 @@ class BeadCalibrationPluginView(PluginViewMixin, BeadCalibrationDiagnostic):
     handler_factory = Callable(BeadCalibrationViewHandler)
     
     def plot_wi(self, wi):
-        self.plot(wi.previous.result)
+        self.plot(wi.previous_wi.result)
         
     def should_plot(self, changed):
         if changed == Changed.ESTIMATE_RESULT:

@@ -1,7 +1,7 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.4
 # coding: latin-1
 
-# (c) Massachusetts Institute of Technology 2015-2016
+# (c) Massachusetts Institute of Technology 2015-2017
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ Created on Oct 9, 2015
 @author: brian
 '''
 
+from builtins import range
 import random, string, warnings
 
 from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor
@@ -97,7 +98,7 @@ class BinningPluginView(PluginViewMixin, BinningView):
     huescale = util.ScaleEnum(status = True)
     
     def plot_wi(self, wi):
-        self.plot(wi.previous.result)
+        self.plot(wi.previous_wi.result)
 
     def plot(self, experiment, **kwargs):
     

@@ -14,6 +14,8 @@
 """ Record trait change events in single and multi-threaded environments.
 
 """
+from builtins import str
+from builtins import object
 import inspect
 import os
 import threading
@@ -155,7 +157,7 @@ class RecordContainer(object):
         """
         with open(filename, 'w') as fh:
             for record in self._records:
-                fh.write(unicode(record))
+                fh.write(str(record))
 
 
 class MultiThreadRecordContainer(object):
@@ -195,7 +197,7 @@ class MultiThreadRecordContainer(object):
         """
         with self._creation_lock:
             containers = self._record_containers
-            for thread_name, container in containers.iteritems():
+            for thread_name, container in containers.items():
                 filename = os.path.join(
                     directory_name, '{0}.trace'.format(thread_name))
                 container.save_to_file(filename)

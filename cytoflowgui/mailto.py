@@ -1,7 +1,7 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.4
 # coding: latin-1
 
-# (c) Massachusetts Institute of Technology 2015-2016
+# (c) Massachusetts Institute of Technology 2015-2017
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,6 +22,10 @@ and for sending e-mail using the user's preferred composer.
 From http://code.activestate.com/recipes/511443-cross-platform-startfile-and-mailto-functions/
 '''
 
+from future import standard_library
+standard_library.install_aliases()
+from past.builtins import basestring
+from builtins import object
 __version__ = '1.1'
 __all__ = ['open', 'mailto']
 
@@ -30,7 +34,7 @@ import sys
 import webbrowser
 import subprocess
 
-from email.Utils import encode_rfc2231
+from email.utils import encode_rfc2231
 
 _controllers = {}
 _open = None
@@ -129,7 +133,7 @@ elif sys.platform == 'darwin':
 # Platform support for Unix
 else:
 
-    import commands
+    import subprocess
 
     # @WARNING: use the private API of the webbrowser module
     from webbrowser import _iscommand
@@ -144,7 +148,7 @@ else:
         def detect_kde_version(self):
             kde_version = None
             try:
-                info = commands.getoutput('kde-config --version')
+                info = subprocess.getoutput('kde-config --version')
 
                 for line in info.splitlines():
                     if line.startswith('KDE'):
@@ -177,7 +181,7 @@ else:
             desktop_environment = 'gnome'
         else:
             try:
-                info = commands.getoutput('xprop -root _DT_SAVE_MODE')
+                info = subprocess.getoutput('xprop -root _DT_SAVE_MODE')
                 if ' = "xfce4"' in info:
                     desktop_environment = 'xfce'
             except (OSError, RuntimeError):
@@ -208,7 +212,7 @@ else:
             return _controllers[controller_name].open
 
         except KeyError:
-            if _controllers.has_key('xdg-open'):
+            if 'xdg-open' in _controllers:
                 return _controllers['xdg-open'].open
             else:
                 return webbrowser.open
@@ -244,7 +248,7 @@ def _fix_addersses(**kwargs):
                                           type(headervalue).__name__))
         else:
             translation_map = {'%': '%25', '&': '%26', '?': '%3F'}
-            for char, replacement in translation_map.items():
+            for char, replacement in list(translation_map.items()):
                 headervalue = headervalue.replace(char, replacement)
             kwargs[headername] = headervalue
 
@@ -257,7 +261,7 @@ def mailto_format(**kwargs):
     kwargs = _fix_addersses(**kwargs)
     parts = []
     for headername in ('to', 'cc', 'bcc', 'subject', 'body', 'attach'):
-        if kwargs.has_key(headername):
+        if headername in kwargs:
             headervalue = kwargs[headername]
             if not headervalue:
                 continue
@@ -349,7 +353,7 @@ if __name__ == '__main__':
         success = False
         for arg in args:
             if not open(arg):
-                print 'Unable to open "%s"' % arg
+                print('Unable to open "%s"' % arg)
             else:
                 success = True
         sys.exit(success)

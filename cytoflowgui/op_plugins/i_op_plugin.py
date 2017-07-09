@@ -1,7 +1,7 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.4
 # coding: latin-1
 
-# (c) Massachusetts Institute of Technology 2015-2016
+# (c) Massachusetts Institute of Technology 2015-2017
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -150,28 +150,28 @@ class OpHandlerMixin(HasTraits):
     # MAGIC: gets value for property "conditions_names"
     def _get_conditions_names(self):
         if self.context and self.context.conditions:
-            return self.context.conditions.keys()
+            return list(self.context.conditions.keys())
         else:
             return []
     
     # MAGIC: gets value for property "previous_conditions_names"
     def _get_previous_conditions_names(self):
-        if self.context and self.context.previous and self.context.previous.conditions:
-            return self.context.previous.conditions.keys()
+        if self.context and self.context.previous_wi and self.context.previous_wi.conditions:
+            return list(self.context.previous_wi.conditions.keys())
         else:
             return []
         
     # MAGIC: gets value for property "statistics_names"
     def _get_statistics_names(self):
         if self.context and self.context.statistics:
-            return self.context.statistics.keys()
+            return list(self.context.statistics.keys())
         else:
             return []
         
     # MAGIC: gets value for property "previous_statistics_names"
     def _get_previous_statistics_names(self):
-        if self.context and self.context.previous and self.context.previous.statistics:
-            return self.context.previous.statistics.keys()
+        if self.context and self.context.previous_wi and self.context.previous_wi.statistics:
+            return list(self.context.previous_wi.statistics.keys())
         else:
             return []
     

@@ -1,7 +1,7 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.4
 # coding: latin-1
 
-# (c) Massachusetts Institute of Technology 2015-2016
+# (c) Massachusetts Institute of Technology 2015-2017
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -42,10 +42,16 @@ This process is also where the plotting happens.  For an explanation of how
 the plots are ferried back to the GUI, see the module docstring for
 matplotlib_backend.py
 """
+from __future__ import print_function
 
+from future import standard_library
+standard_library.install_aliases()
+from builtins import map
+from builtins import next
+from builtins import object
 import threading, sys, logging, traceback
 
-from Queue import Queue
+from queue import Queue
 
 from traits.api import (HasStrictTraits, Instance, List, on_trait_change, Any, 
                         Bool, Str, Int)
@@ -62,7 +68,7 @@ from cytoflowgui.util import UniquePriorityQueue, filter_unpicklable
 from cytoflowgui.multiprocess_logging import QueueHandler
 import cytoflowgui.matplotlib_backend
 
-class Msg:
+class Msg(object):
     NEW_WORKFLOW = "NEW_WORKFLOW"
     ADD_ITEMS = "ADD_ITEMS"
     REMOVE_ITEMS = "REMOVE_ITEMS"
@@ -96,7 +102,7 @@ class Msg:
     APPLY_CALLED = "APPLY_CALLED"
     PLOT_CALLED = "PLOT_CALLED"
     
-class Changed:
+class Changed(object):
     # the operation's parameters needed to apply() changed.  
     # payload:
     # - the name of the changed trait
@@ -314,7 +320,7 @@ class Workflow(HasStrictTraits):
             except (KeyboardInterrupt, SystemExit):
                 raise
             except:
-                print >> sys.stderr, 'Whoops! Problem:'
+                print('Whoops! Problem:', file=sys.stderr)
                 traceback.print_exc(file=sys.stderr)
 
     @on_trait_change('workflow')
@@ -338,11 +344,11 @@ class Workflow(HasStrictTraits):
         if event.removed:
             assert len(event.removed) == 1
             removed = event.removed[0]
-            if removed.previous:
-                removed.previous.next = removed.next
+            if removed.previous_wi:
+                removed.previous_wi.next_wi = removed.next_wi
                 
-            if removed.next:
-                removed.next.previous = removed.previous
+            if removed.next_wi:
+                removed.next_wi.previous_wi = removed.previous_wi
             
             self.message_q.put((Msg.REMOVE_ITEMS, idx))
             
@@ -360,12 +366,12 @@ class Workflow(HasStrictTraits):
                 self.workflow[idx].metadata = dict(self.workflow[idx - 1].metadata)
                 self.workflow[idx].statistics = dict(self.workflow[idx - 1].statistics)
                 
-                self.workflow[idx - 1].next = self.workflow[idx]
-                self.workflow[idx].previous = self.workflow[idx - 1]
+                self.workflow[idx - 1].next_wi = self.workflow[idx]
+                self.workflow[idx].previous_wi = self.workflow[idx - 1]
                 
             if idx < len(self.workflow) - 1:
-                self.workflow[idx].next = self.workflow[idx + 1]
-                self.workflow[idx + 1].previous = self.workflow[idx]
+                self.workflow[idx].next_wi = self.workflow[idx + 1]
+                self.workflow[idx + 1].previous_wi = self.workflow[idx]
                 
             self.message_q.put((Msg.ADD_ITEMS, (idx, event.added[0])))
  
@@ -483,8 +489,8 @@ class RemoteWorkflow(HasStrictTraits):
         # parent process.  clear it.
         
         rootLogger = logging.getLogger()
-        map(rootLogger.removeHandler, rootLogger.handlers[:])
-        map(rootLogger.removeFilter, rootLogger.filters[:])
+        list(map(rootLogger.removeHandler, rootLogger.handlers[:]))
+        list(map(rootLogger.removeFilter, rootLogger.filters[:]))
         
         # make log messages go to log_q
         h = QueueHandler(log_q) 
@@ -658,25 +664,25 @@ class RemoteWorkflow(HasStrictTraits):
         if event.removed:
             assert len(event.removed) == 1
             removed = event.removed[0]
-            if removed.previous:
-                removed.previous.next = removed.next
+            if removed.previous_wi:
+                removed.previous_wi.next_wi = removed.next_wi
                 
-            if removed.next:
-                removed.next.previous = removed.previous
+            if removed.next_wi:
+                removed.next_wi.previous_wi = removed.previous_wi
                 
                 # invalidate following wi's
-                removed.next.changed = (Changed.PREV_RESULT, None)
+                removed.next_wi.changed = (Changed.PREV_RESULT, None)
         
         # add new items to the linked list
         if event.added:
             assert len(event.added) == 1
             if idx > 0:
-                self.workflow[idx - 1].next = self.workflow[idx]
-                self.workflow[idx].previous = self.workflow[idx - 1]
+                self.workflow[idx - 1].next_wi = self.workflow[idx]
+                self.workflow[idx].previous_wi = self.workflow[idx - 1]
                 
             if idx < len(self.workflow) - 1:
-                self.workflow[idx].next = self.workflow[idx + 1]
-                self.workflow[idx + 1].previous = self.workflow[idx]
+                self.workflow[idx].next_wi = self.workflow[idx + 1]
+                self.workflow[idx + 1].previous_wi = self.workflow[idx]
                 
                 # invalidate following wi's
                 self.workflow[idx + 1].changed = (Changed.PREV_RESULT, None)                
@@ -827,8 +833,8 @@ class RemoteWorkflow(HasStrictTraits):
             
         obj.changed = (Changed.RESULT, None)
         
-        if obj.next:
-            obj.next.changed = (Changed.PREV_RESULT, None)
+        if obj.next_wi:
+            obj.next_wi.changed = (Changed.PREV_RESULT, None)
              
     @on_trait_change('workflow:current_view, workflow:current_plot', post_init = True)
     def _current_view_changed(self, obj, name, old, new):

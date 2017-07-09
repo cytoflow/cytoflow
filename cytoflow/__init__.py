@@ -74,6 +74,6 @@ import subprocess
 import os
 try:
     cf_cwd =  os.path.dirname(__file__)
-    __version__ = subprocess.check_output(["git", "describe", "--always"], cwd = cf_cwd).rstrip()
+    __version__ = subprocess.check_output(["git", "describe", "--always"], cwd = cf_cwd).rstrip().decode("utf-8")
 except (subprocess.CalledProcessError, OSError):
     __version__ = "0.5.2"

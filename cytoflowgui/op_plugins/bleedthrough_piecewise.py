@@ -1,7 +1,7 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.4
 # coding: latin-1
 
-# (c) Massachusetts Institute of Technology 2015-2016
+# (c) Massachusetts Institute of Technology 2015-2017
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -186,7 +186,7 @@ class BleedthroughPiecewisePluginView(PluginViewMixin, BleedthroughPiecewiseDiag
     handler_factory = Callable(BleedthroughPiecewiseViewHandler)
     
     def plot_wi(self, wi):
-        self.plot(wi.previous.result)
+        self.plot(wi.previous_wi.result)
     
     def should_plot(self, changed):
         if changed == Changed.ESTIMATE_RESULT:

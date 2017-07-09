@@ -1,7 +1,7 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.4
 # coding: latin-1
 
-# (c) Massachusetts Institute of Technology 2015-2016
+# (c) Massachusetts Institute of Technology 2015-2017
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@ Created on Feb 11, 2015
 @author: brian
 """
 
+from builtins import str
 from traits.api import Instance, provides, Str, Any
 from traitsui.editor_factory import EditorWithListFactory
 from traitsui.qt4.enum_editor import BaseEditor as BaseEnumerationEditor
@@ -137,7 +138,7 @@ class _TabListEditor(BaseEnumerationEditor):
         """
         if idx >= 0 and idx < len(self.names):
             name = self.names[idx]
-            self.value = self.mapping[unicode(name)]
+            self.value = self.mapping[str(name)]
             
     def rebuild_editor(self):
         self.control.blockSignals(True)

@@ -1,7 +1,7 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.4
 # coding: latin-1
 
-# (c) Massachusetts Institute of Technology 2015-2016
+# (c) Massachusetts Institute of Technology 2015-2017
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,6 +18,11 @@
 
 # for local debugging
 
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
+from builtins import str
+from past.utils import old_div
 if __name__ == '__main__':
     from traits.etsconfig.api import ETSConfig
     ETSConfig.toolkit = 'qt4'
@@ -32,7 +37,7 @@ from traitsui.editors.api import RangeEditor
 from traitsui.editor_factory import EditorWithListFactory
 from traitsui.qt4.editor import EditorWithList
 
-from range_slider import RangeSlider
+from .range_slider import RangeSlider
 
 
 
@@ -95,7 +100,7 @@ class _ValueBoundsEditor(EditorWithList):
 
         # The default size is a bit too big and probably doesn't need to grow.
         sh = self._label_lo.sizeHint()
-        sh.setWidth(sh.width() / 2)
+        sh.setWidth(old_div(sh.width(), 2))
         self._label_lo.setMaximumSize(sh)
 
         self.control.slider = slider = RangeSlider(QtCore.Qt.Horizontal)
@@ -119,7 +124,7 @@ class _ValueBoundsEditor(EditorWithList):
 
         # The default size is a bit too big and probably doesn't need to grow.
         sh = self._label_hi.sizeHint()
-        sh.setWidth(sh.width() / 2)
+        sh.setWidth(old_div(sh.width(), 2))
         self._label_hi.setMaximumSize(sh)
 
         self.set_tooltip(slider)
@@ -158,7 +163,7 @@ class _ValueBoundsEditor(EditorWithList):
     def update_low_on_enter(self):
         try:
             try:
-                low = eval(unicode(self._label_lo.text()).strip())
+                low = eval(str(self._label_lo.text()).strip())
                 if self.evaluate is not None:
                     low = self.evaluate(low)
             except:
@@ -181,7 +186,7 @@ class _ValueBoundsEditor(EditorWithList):
     def update_high_on_enter(self):
         try:
             try:
-                high = eval(unicode(self._label_hi.text()).strip())
+                high = eval(str(self._label_hi.text()).strip())
                 if self.evaluate is not None:
                     high = self.evaluate(high)
             except:
@@ -222,14 +227,13 @@ class _ValueBoundsEditor(EditorWithList):
             
 
     def _step_width(self):
-        return ((self.control.slider.maximum() - self.control.slider.minimum())
-                / float(len(self.values) - 1))
+        return (old_div((self.control.slider.maximum() - self.control.slider.minimum()), float(len(self.values) - 1)))
 
     def _convert_from_slider(self, slider_val):
         if len(self.values) == 1:
             return self.values[0]
         
-        idx = int(slider_val / self._step_width() + 0.5)
+        idx = int(old_div(slider_val, self._step_width()) + 0.5)
 
         return self.values[idx]
 
@@ -249,7 +253,7 @@ class _ValueBoundsEditor(EditorWithList):
             if start == end:
                 return start
                 
-            cut = (start + end) / 2
+            cut = old_div((start + end), 2)
 
             if value == self.values[cut]:
                 return cut
@@ -328,7 +332,7 @@ if __name__ == "__main__":
         hi = Int(4)
         
         def _anytrait_changed(self, name, old, new):
-            print "{0} changed to {1}".format(name, new)
+            print("{0} changed to {1}".format(name, new))
         
     values = [1,2,3,4,5]
     view = View(Item('lo',
@@ -339,6 +343,6 @@ if __name__ == "__main__":
         
     t = T()
     t.configure_traits(view = view)
-    print t.lo
-    print t.hi
+    print(t.lo)
+    print(t.hi)
     

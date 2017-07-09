@@ -1,7 +1,7 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.4
 # coding: latin-1
 
-# (c) Massachusetts Institute of Technology 2015-2016
+# (c) Massachusetts Institute of Technology 2015-2017
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,10 +22,13 @@ Created on Apr 18, 2015
 @author: brian
 '''
 
+from future import standard_library
+standard_library.install_aliases()
+from past.builtins import basestring
 from traits.api import Unicode
 from pyface.ui.qt4.file_dialog import FileDialog
 
-from Queue import PriorityQueue
+from queue import PriorityQueue
 import heapq
 
 class UniquePriorityQueue(PriorityQueue):
@@ -57,7 +60,7 @@ def filter_unpicklable(obj):
         return {x: filter_unpicklable(obj[x]) for x in obj}
     else:
         if not hasattr(obj, '__getstate__') and not isinstance(obj,
-                  (basestring, int, long, float, tuple, list, set, dict)):
+                  (basestring, int, float, tuple, list, set, dict)):
             return "filtered: {}".format(type(obj))
         else:
             return obj

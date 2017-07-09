@@ -1,7 +1,7 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.4
 # coding: latin-1
 
-# (c) Massachusetts Institute of Technology 2015-2016
+# (c) Massachusetts Institute of Technology 2015-2017
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@ Created on Mar 8, 2015
 
 @author: brian
 """
+from __future__ import absolute_import
 
 # for local debugging
 if __name__ == '__main__':
@@ -39,7 +40,7 @@ from traits.trait_base import user_name_for
 from traitsui.ui_traits import AView
 from traitsui.qt4.editor import Editor
 
-from vertical_notebook import VerticalNotebook
+from .vertical_notebook import VerticalNotebook
 
 
 class _VerticalNotebookEditor(Editor):
