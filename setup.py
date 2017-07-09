@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import print_function
 from setuptools import setup, find_packages, Extension
 import io, os, re, sys
 
@@ -76,9 +75,7 @@ setup(
                         'nbformat>=4.0',
                         'python-dateutil>=2.5.2',
                         'statsmodels>=0.8.0',
-                        ('faulthandler>=2.4' if sys.version_info < (3,0) else ""),
-                        'fcsparser>=0.1.3',] \
-                        'future>=0.16
+                        'fcsparser>=0.1.3'] 
                 if not on_rtd else None,
                         
                         # ALSO requires PyQt4 >= 4.10, but it's not available
