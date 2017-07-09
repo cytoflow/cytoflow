@@ -510,6 +510,7 @@ class FlowPeaksOp(HasStrictTraits):
         """
         channels = kwargs.pop('channels', self.channels)
         scale = kwargs.pop('scale', self.scale)
+        density = kwargs.pop('density', False)
         
         for c in channels:
             if c not in self.channels:
@@ -532,8 +533,15 @@ class FlowPeaksOp(HasStrictTraits):
                                 channel = channels[0], 
                                 scale = scale[channels[0]], 
                                 **kwargs)
-        elif len(channels) == 2:
+        elif len(channels) == 2 and density:
             return FlowPeaks2DView(op = self, 
+                                xchannel = channels[0], 
+                                ychannel = channels[1],
+                                xscale = scale[channels[0]],
+                                yscale = scale[channels[1]], 
+                                **kwargs)
+        elif len(channels) == 2 and not density:
+            return FlowPeaksDensityView(op = self, 
                                 xchannel = channels[0], 
                                 ychannel = channels[1],
                                 xscale = scale[channels[0]],
@@ -768,6 +776,9 @@ class FlowPeaks2DView(cytoflow.views.ScatterplotView):
      
     # TODO - why can't I use FlowPeaksOp here?
     op = Instance(IOperation)
+    
+    # show the density plot instead of the scatterplot?
+    density = Bool(False)
      
     _by = Property(List)
      
@@ -916,11 +927,11 @@ class FlowPeaks2DView(cytoflow.views.ScatterplotView):
         # plot the scatterplot, whether or not we're plotting centroids on top
         
         g = super(FlowPeaks2DView, self).plot(experiment, 
-                                           xscale = xscale,
-                                           yscale = yscale,
-                                           xlim = xlim, 
-                                           ylim = ylim,
-                                           **kwargs)
+                                              xscale = xscale,
+                                              yscale = yscale,
+                                              xlim = xlim, 
+                                              ylim = ylim,
+                                              **kwargs)
          
         if self._by and plot_name is not None:
             plt.title("{0} = {1}".format(self._by, plot_name))
@@ -979,11 +990,241 @@ class FlowPeaks2DView(cytoflow.views.ScatterplotView):
                 
                 peak_i = peaks[k]
                 peak = gmm.means_[peak_i].copy()
-                print peak
                 peak[0] = self.op._scale[self.ychannel].inverse(peak[0])
                 peak[1] = self.op._scale[self.xchannel].inverse(peak[1])
                 
-                print peak
+                plt.plot(peak[0], peak[1], 'o', color = "magenta")
+
+        return g
+
+@provides(cytoflow.views.IView)
+class FlowPeaksDensityView(cytoflow.views.DensityView):
+    """
+    Attributes
+    ----------
+    op : Instance(FlowPeaksOp)
+        The op whose parameters we're viewing.        
+    """
+     
+    id = 'edu.mit.synbio.cytoflow.view.flowpeaksdensityview'
+    friendly_id = "FlowPeaks 2D Density Plot"
+     
+    # TODO - why can't I use FlowPeaksOp here?
+    op = Instance(IOperation)
+     
+    _by = Property(List)
+     
+    def _get__by(self):
+        facets = filter(lambda x: x, [self.xfacet, self.yfacet])
+        return list(set(self.op.by) - set(facets))
+         
+    def enum_plots(self, experiment):
+        """
+        Returns an iterator over the possible plots that this View can
+        produce.  The values returned can be passed to "plot".
+        """
+     
+        if self.xfacet and self.xfacet not in experiment.conditions:
+            raise util.CytoflowViewError("X facet {} not in the experiment"
+                                    .format(self.xfacet))
+             
+        if self.xfacet and self.xfacet not in self.op.by:
+            raise util.CytoflowViewError("X facet {} must be in GaussianMixtureOp.by, which is {}"
+                                    .format(self.xfacet, self.op.by))
+         
+        if self.yfacet and self.yfacet not in experiment.conditions:
+            raise util.CytoflowViewError("Y facet {0} not in the experiment"
+                                    .format(self.yfacet))
+             
+        if self.yfacet and self.yfacet not in self.op.by:
+            raise util.CytoflowViewError("Y facet {} must be in GaussianMixtureOp.by, which is {}"
+                                    .format(self.yfacet, self.op.by))
+             
+        for b in self.op.by:
+            if b not in experiment.data:
+                raise util.CytoflowOpError("Aggregation metadata {0} not found"
+                                      " in the experiment"
+                                      .format(b))    
+     
+        class plot_enum(object):
+             
+            def __init__(self, view, experiment):
+                self._iter = None
+                self._returned = False
+                 
+                if view._by:
+                    self._iter = experiment.data.groupby(view._by).__iter__()
+                 
+            def __iter__(self):
+                return self
+             
+            def next(self):
+                if self._iter:
+                    return self._iter.next()[0]
+                else:
+                    if self._returned:
+                        raise StopIteration
+                    else:
+                        self._returned = True
+                        return None
+             
+        return plot_enum(self, experiment)
+     
+    def plot(self, experiment, plot_name = None, **kwargs):
+        """
+        Plot the plots.
+        """
+        if experiment is None:
+            raise util.CytoflowViewError("No experiment specified")
+        
+        if not self.xchannel:
+            raise util.CytoflowViewError("No X channel specified")
+        
+        if not self.ychannel:
+            raise util.CytoflowViewError("No Y channel specified")
+
+        experiment = experiment.clone()
+        
+        # try to apply the current op
+        try:
+            experiment = self.op.apply(experiment)
+        except util.CytoflowOpError:
+            pass
+        
+        # if apply() succeeded (or wasn't needed), set up the hue facet
+        if self.op.name and self.op.name in experiment.conditions:
+            if self.huefacet and self.huefacet != self.op.name:
+                warn("Resetting huefacet to the model component (was {}, now {})."
+                     .format(self.huefacet, self.op.name))
+            self.huefacet = self.op.name
+        
+        if self.subset:
+            try:
+                experiment = experiment.query(self.subset)
+                experiment.data.reset_index(drop = True, inplace = True)
+            except:
+                raise util.CytoflowViewError("Subset string '{0}' isn't valid"
+                                        .format(self.subset))
+                
+            if len(experiment) == 0:
+                raise util.CytoflowViewError("Subset string '{0}' returned no events"
+                                        .format(self.subset)) 
+        
+        # figure out common limits
+        # adjust the limits to clip extreme values
+        min_quantile = kwargs.pop("min_quantile", 0.001)
+        max_quantile = kwargs.pop("max_quantile", 1.0) 
+                
+        xlim = kwargs.pop("xlim", None)
+        if xlim is None:
+            xlim = (experiment.data[self.xchannel].quantile(min_quantile),
+                    experiment.data[self.xchannel].quantile(max_quantile))
+
+        ylim = kwargs.pop("ylim", None)
+        if ylim is None:
+            ylim = (experiment.data[self.ychannel].quantile(min_quantile),
+                    experiment.data[self.ychannel].quantile(max_quantile))
+              
+        # see if we're making subplots
+        if self._by and plot_name is None:
+            raise util.CytoflowViewError("You must use facets {} in either the "
+                                         "plot variables or the plt name. "
+                                         "Possible plot names: {}"
+                                         .format(self._by, [x for x in self.enum_plots(experiment)]))
+                
+        if plot_name is not None:
+            if plot_name is not None and not self._by:
+                raise util.CytoflowViewError("Plot {} not from plot_enum"
+                                             .format(plot_name))
+                
+            groupby = experiment.data.groupby(self._by)
+            
+            if plot_name not in set(groupby.groups.keys()):
+                raise util.CytoflowViewError("Plot {} not from plot_enum"
+                                             .format(plot_name))
+            
+            experiment.data = groupby.get_group(plot_name)
+            experiment.data.reset_index(drop = True, inplace = True)
+            
+        if self.xchannel in self.op.scale and self.xscale == self.op.scale[self.xchannel]:
+            xscale = self.op._scale[self.xchannel]
+        else:
+            xscale = util.scale_factory(self.xscale, experiment, channel = self.xchannel)
+           
+        if self.ychannel in self.op.scale and self.yscale == self.op.scale[self.ychannel]:
+            yscale = self.op._scale[self.ychannel]
+        else:
+            yscale = util.scale_factory(self.yscale, experiment, channel = self.ychannel)
+            
+        # plot the scatterplot, whether or not we're plotting centroids on top
+        
+        g = super(FlowPeaksDensityView, self).plot(experiment, 
+                                              xscale = xscale,
+                                              yscale = yscale,
+                                              xlim = xlim, 
+                                              ylim = ylim,
+                                              **kwargs)
+         
+        if self._by and plot_name is not None:
+            plt.title("{0} = {1}".format(self._by, plot_name))
+ 
+        # plot the kmeans centroids
+         
+        row_names = g.row_names if g.row_names else [False]
+        col_names = g.col_names if g.col_names else [False]
+         
+        for (i, row), (j, col) in product(enumerate(row_names),
+                                          enumerate(col_names)):
+             
+            facets = filter(lambda x: x, [row, col])
+            if plot_name is not None:
+                try:
+                    group_name = list(plot_name) + facets
+                except TypeError: # plot_name isn't a list
+                    group_name = list([plot_name]) + facets  
+            else:      
+                group_name = facets
+                 
+            if len(group_name) == 0:
+                group_name = None
+            elif len(group_name) == 1:
+                group_name = group_name[0]   
+ 
+            if group_name is not None:
+                if group_name in self.op._kmeans:
+                    km = self.op._kmeans[group_name]
+                    gmm = self.op._gmm[group_name]
+                    peaks = self.op._peaks[group_name]
+                else:
+                    # there weren't any events in this subset to estimate a km from
+                    warn("No estimated km for plot {}".format(group_name),
+                          util.CytoflowViewWarning)
+                    return g
+            else:
+                if True in self.op._kmeans:
+                    km = self.op._kmeans[True]
+                    gmm = self.op._gmm[True]
+                    peaks = self.op._peaks[True]
+                else:
+                    return g           
+                 
+            ax = g.facet_axis(i, j)
+            plt.sca(ax)
+         
+            ix = self.op.channels.index(self.xchannel)
+            iy = self.op.channels.index(self.ychannel)
+            
+            for k in range(len(km.cluster_centers_)):
+                x = self.op._scale[self.xchannel].inverse(km.cluster_centers_[k][ix])
+                y = self.op._scale[self.ychannel].inverse(km.cluster_centers_[k][iy])
+                
+#                 plt.plot(x, y, '*', color = 'blue')
+                
+                peak_i = peaks[k]
+                peak = gmm.means_[peak_i].copy()
+                peak[0] = self.op._scale[self.ychannel].inverse(peak[0])
+                peak[1] = self.op._scale[self.xchannel].inverse(peak[1])
+                
                 plt.plot(peak[0], peak[1], 'o', color = "magenta")
 
         return g
