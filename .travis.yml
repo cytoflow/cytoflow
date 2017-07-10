@@ -13,7 +13,7 @@ addons:
       - g++
       - gfortran
       - swig
-      - python3-qt4
+      - python3-pyqt4
       - libblas-dev
       - liblapack-dev
       - libatlas-dev
