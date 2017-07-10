@@ -31,6 +31,11 @@ except:
 
 import sys, multiprocessing, os, logging, traceback, threading
 
+# have to do this here (instead of waiting for the main() function) because
+# importing sklearn sets up multiprocessing (via joblib) on import.
+if multiprocessing.get_start_method(allow_none = True) is None:
+    multiprocessing.set_start_method("spawn")
+
 from traits.etsconfig.api import ETSConfig
 ETSConfig.toolkit = 'qt4'
 
@@ -133,9 +138,59 @@ def log_excepthook(typ, val, tb):
     logging.error("Error: {0}: {1}\nLocation: {2}Thread: Main"
                   .format(typ, val, tb_str))
     
+    
+## monkey-patch envisage for a py3k bug.  this is fixed in envisage HEAD,
+## so check for version
+import envisage
+if envisage.__version__ == '4.6.0':
+    import pickle
+    from envisage.ui.tasks.tasks_application import TasksApplication, TasksApplicationState
+    logger = logging.getLogger(__name__)
+    logger.info("Monkey-patching envisage 4.6.0")
+    
+    def _envisage_load_state(self):
+        """ Loads saved application state, if possible.
+        """
+        state = TasksApplicationState()
+        filename = os.path.join(self.state_location, 'application_memento')
+        if os.path.exists(filename):
+            # Attempt to unpickle the saved application state.
+            try:
+                with open(filename, 'rb') as f:
+                    restored_state = pickle.load(f)
+                if state.version == restored_state.version:
+                    state = restored_state
+                else:
+                    logger.warn('Discarding outdated application layout')
+            except:
+                # If anything goes wrong, log the error and continue.
+                logger.exception('Restoring application layout from %s',
+                                 filename)
+                
+        self._state = state
+    
+    def _envisage_save_state(self):
+        """ Saves the application state.
+        """
+        # Grab the current window layouts.
+        window_layouts = [w.get_window_layout() for w in self.windows]
+        self._state.previous_window_layouts = window_layouts
+    
+        # Attempt to pickle the application state.
+        filename = os.path.join(self.state_location, 'application_memento')
+        try:
+            with open(filename, 'wb') as f:
+                pickle.dump(self._state, f)
+        except:
+            # If anything goes wrong, log the error and continue.
+            logger.exception('Saving application layout')
+    
+    TasksApplication._load_state = _envisage_load_state
+    TasksApplication._save_state = _envisage_save_state
                          
 def run_gui():
     multiprocessing.freeze_support()
+    assert(multiprocessing.get_start_method() == "spawn")
     
     from cytoflow.utility.custom_traits import Removed, Deprecated
     Removed.gui = True
@@ -262,7 +317,6 @@ def remote_main(parent_workflow_conn, parent_mpl_conn, log_q):
     
         
 def monitor_remote_process(proc):
-    
         proc.join()
         logging.error("Remote process exited with {}".format(proc.exitcode))
     
