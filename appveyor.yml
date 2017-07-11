@@ -16,7 +16,7 @@ environment:
       PYTHON_ARCH: "32"
 
     - PYTHON: "C:\\Miniconda3-x64"
-      PYTHON_VERSION: "2.4.x" # currently 2.7.9
+      PYTHON_VERSION: "3.4.x" # currently 2.7.9
       PYTHON_ARCH: "64"
       WINDOWS_SDK_VERSION: "v7.0"
 
@@ -45,6 +45,7 @@ install:
 
   # Install the build and runtime dependencies of the project.
   - conda install --yes --quiet --file=packaging\conda-requirements.txt
+  - conda install --yes --quiet msvc_runtime
   - conda install --yes --quiet setuptools==19.2 pip six
   - pip.exe install pyinstaller nose2
 
@@ -104,3 +105,17 @@ deploy:
     explode: false
     on:
         branch: packaging
+        
+  - provider: BinTray
+    username: bpteague
+    api_key:
+      secure: BLgrF3vno40XZMvXZ+DGzxeO8xzQJP1Y/ndUVPEycNlNB2puWDGdPDJ8d4DxDTEj
+    subject: bpteague
+    repo: cytoflow
+    package: cytoflow
+    version: latest
+    publish: true
+    override: true
+    explode: false
+    on:
+        branch: python3
