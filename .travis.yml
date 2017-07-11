@@ -34,6 +34,7 @@ before_install:
   - conda update --yes conda
 
 install:
+  - conda install --yes --quiet nomkl
   - conda install --yes --quiet --file=packaging/conda-requirements.txt
   - conda install --yes --quiet setuptools==19.2 pip six 
   - python setup.py develop bdist_wheel 
