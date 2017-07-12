@@ -31,90 +31,10 @@ except:
 
 import sys, multiprocessing, os, logging, traceback, threading
 
-# have to do this here (instead of waiting for the main() function) because
-# importing sklearn sets up multiprocessing (via joblib) on import.
-if multiprocessing.get_start_method(allow_none = True) is None:
-    multiprocessing.set_start_method("spawn")
-
 from traits.etsconfig.api import ETSConfig
 ETSConfig.toolkit = 'qt4'
 
-import matplotlib
-
-# We want matplotlib to use our backend
-matplotlib.use('module://cytoflowgui.matplotlib_backend')
-
-# getting real tired of the matplotlib deprecation warnings
-import warnings
-warnings.filterwarnings('ignore', '.*is deprecated and replaced with.*')
-
-from traits.api import push_exception_handler
-from envisage.core_plugin import CorePlugin
-from envisage.ui.tasks.tasks_plugin import TasksPlugin
-from pyface.image_resource import ImageResource
-
-from cytoflowgui.flow_task import FlowTaskPlugin
-from cytoflowgui.cytoflow_application import CytoflowApplication
-from cytoflowgui.op_plugins import (ImportPlugin, ThresholdPlugin, RangePlugin, QuadPlugin,
-                        Range2DPlugin, PolygonPlugin, BinningPlugin,
-                        GaussianMixture1DPlugin, GaussianMixture2DPlugin,
-                        BleedthroughLinearPlugin, BleedthroughPiecewisePlugin,
-                        BeadCalibrationPlugin, AutofluorescencePlugin,
-                        ColorTranslationPlugin, TasbePlugin, 
-                        ChannelStatisticPlugin, TransformStatisticPlugin, 
-                        RatioPlugin)
-
-from cytoflowgui.view_plugins import (HistogramPlugin, Histogram2DPlugin, ScatterplotPlugin,
-                          BarChartPlugin, Stats1DPlugin, Kde1DPlugin, Kde2DPlugin,
-                          ViolinPlotPlugin, TablePlugin, Stats2DPlugin)
-                         
-
-debug = False
-                         
-def QtMsgHandler(msg_type, msg_string):
-    # Convert Qt msg type to logging level
-    log_level = [logging.DEBUG,
-                 logging.WARN,
-                 logging.ERROR,
-                 logging.FATAL] [ int(msg_type) ]
-    logging.log(log_level, 'Qt message: '+msg_string)
-
-# from https://github.com/pyinstaller/pyinstaller/wiki/Recipe-Multiprocessing
-# Module multiprocessing is organized differently in Python 3.4+
-try:
-    # Python 3.4+
-    if sys.platform.startswith('win'):
-        import multiprocessing.popen_spawn_win32 as forking
-    else:
-        import multiprocessing.popen_fork as forking
-except ImportError:
-    import multiprocessing.forking as forking
-
-if sys.platform.startswith('win'):
-    # First define a modified version of Popen.
-    class _Popen(forking.Popen):
-        def __init__(self, *args, **kw):
-            if hasattr(sys, 'frozen'):
-                # We have to set original _MEIPASS2 value from sys._MEIPASS
-                # to get --onefile mode working.
-                os.putenv('_MEIPASS2', sys._MEIPASS)  # @UndefinedVariable
-            try:
-                super(_Popen, self).__init__(*args, **kw)
-            finally:
-                if hasattr(sys, 'frozen'):
-                    # On some platforms (e.g. AIX) 'os.unsetenv()' is not
-                    # available. In those cases we cannot delete the variable
-                    # but only set it to the empty string. The bootloader
-                    # can handle this case.
-                    if hasattr(os, 'unsetenv'):
-                        os.unsetenv('_MEIPASS2')
-                    else:
-                        os.putenv('_MEIPASS2', '')
-
-    # Second override 'Popen' class with our modified version.
-    forking.Popen = _Popen
-    
-def log_notification_handler(obj, trait_name, old, new):
+def log_notification_handler(_, trait_name, old, new):
     
     (exc_type, exc_value, tb) = sys.exc_info()
     logging.debug('Exception occurred in traits notification '
@@ -137,60 +57,102 @@ def log_excepthook(typ, val, tb):
     tb_str = traceback.format_tb(tb)[-1]
     logging.error("Error: {0}: {1}\nLocation: {2}Thread: Main"
                   .format(typ, val, tb_str))
-    
-    
-## monkey-patch envisage for a py3k bug.  this is fixed in envisage HEAD,
-## so check for version
-import envisage
-if envisage.__version__ == '4.6.0':
-    import pickle
-    from envisage.ui.tasks.tasks_application import TasksApplication, TasksApplicationState
-    logger = logging.getLogger(__name__)
-    logger.info("Monkey-patching envisage 4.6.0")
-    
-    def _envisage_load_state(self):
-        """ Loads saved application state, if possible.
-        """
-        state = TasksApplicationState()
-        filename = os.path.join(self.state_location, 'application_memento')
-        if os.path.exists(filename):
-            # Attempt to unpickle the saved application state.
-            try:
-                with open(filename, 'rb') as f:
-                    restored_state = pickle.load(f)
-                if state.version == restored_state.version:
-                    state = restored_state
-                else:
-                    logger.warn('Discarding outdated application layout')
-            except:
-                # If anything goes wrong, log the error and continue.
-                logger.exception('Restoring application layout from %s',
-                                 filename)
-                
-        self._state = state
-    
-    def _envisage_save_state(self):
-        """ Saves the application state.
-        """
-        # Grab the current window layouts.
-        window_layouts = [w.get_window_layout() for w in self.windows]
-        self._state.previous_window_layouts = window_layouts
-    
-        # Attempt to pickle the application state.
-        filename = os.path.join(self.state_location, 'application_memento')
-        try:
-            with open(filename, 'wb') as f:
-                pickle.dump(self._state, f)
-        except:
-            # If anything goes wrong, log the error and continue.
-            logger.exception('Saving application layout')
-    
-    TasksApplication._load_state = _envisage_load_state
-    TasksApplication._save_state = _envisage_save_state
                          
 def run_gui():
-    multiprocessing.freeze_support()
-    assert(multiprocessing.get_start_method() == "spawn")
+    debug = ("--debug" in sys.argv)
+    remote_connection = start_remote_process(debug)
+    
+    import matplotlib
+    
+    # We want matplotlib to use our backend
+    matplotlib.use('module://cytoflowgui.matplotlib_backend')
+    
+    # getting real tired of the matplotlib deprecation warnings
+    import warnings
+    warnings.filterwarnings('ignore', '.*is deprecated and replaced with.*')
+    
+    from traits.api import push_exception_handler
+                             
+    def QtMsgHandler(msg_type, msg_string):
+        # Convert Qt msg type to logging level
+        log_level = [logging.DEBUG,
+                     logging.WARN,
+                     logging.ERROR,
+                     logging.FATAL] [ int(msg_type) ]
+        logging.log(log_level, 'Qt message: '+msg_string)
+    
+       
+
+        
+        
+    ## monkey-patch envisage for a py3k bug.  this is fixed in envisage HEAD,
+    ## so check for version
+    import envisage
+    if envisage.__version__ == '4.6.0':
+        import pickle
+        from envisage.ui.tasks.tasks_application import TasksApplication, TasksApplicationState
+        logger = logging.getLogger(__name__)
+        logger.info("Monkey-patching envisage 4.6.0")
+        
+        def _envisage_load_state(self):
+            """ Loads saved application state, if possible.
+            """
+            state = TasksApplicationState()
+            filename = os.path.join(self.state_location, 'application_memento')
+            if os.path.exists(filename):
+                # Attempt to unpickle the saved application state.
+                try:
+                    with open(filename, 'rb') as f:
+                        restored_state = pickle.load(f)
+                    if state.version == restored_state.version:
+                        state = restored_state
+                    else:
+                        logger.warn('Discarding outdated application layout')
+                except:
+                    # If anything goes wrong, log the error and continue.
+                    logger.exception('Restoring application layout from %s',
+                                     filename)
+                    
+            self._state = state
+        
+        def _envisage_save_state(self):
+            """ Saves the application state.
+            """
+            # Grab the current window layouts.
+            window_layouts = [w.get_window_layout() for w in self.windows]
+            self._state.previous_window_layouts = window_layouts
+        
+            # Attempt to pickle the application state.
+            filename = os.path.join(self.state_location, 'application_memento')
+            try:
+                with open(filename, 'wb') as f:
+                    pickle.dump(self._state, f)
+            except:
+                # If anything goes wrong, log the error and continue.
+                logger.exception('Saving application layout')
+        
+        TasksApplication._load_state = _envisage_load_state
+        TasksApplication._save_state = _envisage_save_state
+    
+    from envisage.core_plugin import CorePlugin
+    from envisage.ui.tasks.tasks_plugin import TasksPlugin
+    from pyface.image_resource import ImageResource
+    
+    from cytoflowgui.flow_task import FlowTaskPlugin
+    from cytoflowgui.cytoflow_application import CytoflowApplication
+    from cytoflowgui.op_plugins import (ImportPlugin, ThresholdPlugin, RangePlugin, QuadPlugin,
+                            Range2DPlugin, PolygonPlugin, BinningPlugin,
+                            GaussianMixture1DPlugin, GaussianMixture2DPlugin,
+                            BleedthroughLinearPlugin, #BleedthroughPiecewisePlugin,
+                            BeadCalibrationPlugin, AutofluorescencePlugin,
+                            ColorTranslationPlugin, TasbePlugin, 
+                            ChannelStatisticPlugin, TransformStatisticPlugin, 
+                            RatioPlugin)
+    
+    from cytoflowgui.view_plugins import (HistogramPlugin, Histogram2DPlugin, ScatterplotPlugin,
+                              BarChartPlugin, Stats1DPlugin, Kde1DPlugin, #Kde2DPlugin,
+                              ViolinPlotPlugin, TablePlugin, Stats2DPlugin)
+#    assert(multiprocessing.get_start_method() == "spawn")
     
     from cytoflow.utility.custom_traits import Removed, Deprecated
     Removed.gui = True
@@ -213,8 +175,6 @@ def run_gui():
 
         sys.exit(1)
         
-    remote_connection = start_remote_process()
-        
     from pyface.qt.QtCore import qInstallMsgHandler
     qInstallMsgHandler(QtMsgHandler)
     
@@ -223,8 +183,7 @@ def run_gui():
         from pyface.resource_manager import resource_manager
         resource_manager.extra_paths.append(sys._MEIPASS)    # @UndefinedVariable
 
-    global debug
-    debug = ("--debug" in sys.argv)
+
         
     # install a global (gui) error handler for traits notifications
     push_exception_handler(handler = log_notification_handler,
@@ -271,15 +230,20 @@ def run_gui():
 
     plugins.extend(op_plugins)
     
+    # these two lines stop pkg_resources from trying to load resources
+    # from the __main__ module, which is frozen (and thus not loadable.)
+    icon = ImageResource('icon')
+    icon.search_path = []
+
     app = CytoflowApplication(id = 'edu.mit.synbio.cytoflow',
                               plugins = plugins,
-                              icon = ImageResource('icon'),
+                              icon = icon,
                               debug = debug)
     app.run()
     
     logging.shutdown()
     
-def start_remote_process():
+def start_remote_process(debug):
 
         # communications channels
         parent_workflow_conn, child_workflow_conn = multiprocessing.Pipe()  
@@ -290,7 +254,8 @@ def start_remote_process():
                                                  name = "remote process",
                                                  args = [parent_workflow_conn,
                                                          parent_mpl_conn,
-                                                         log_q])
+                                                         log_q,
+                                                         debug])
         
         remote_process.daemon = True
         remote_process.start() 
@@ -303,7 +268,8 @@ def start_remote_process():
         
         return (child_workflow_conn, child_matplotlib_conn, log_q)
     
-def remote_main(parent_workflow_conn, parent_mpl_conn, log_q):    
+def remote_main(parent_workflow_conn, parent_mpl_conn, log_q, debug):
+    from traits.api import push_exception_handler    
     from cytoflowgui.workflow import RemoteWorkflow
     
     # install a global (gui) error handler for traits notifications
@@ -317,9 +283,11 @@ def remote_main(parent_workflow_conn, parent_mpl_conn, log_q):
     
         
 def monitor_remote_process(proc):
-        proc.join()
-        logging.error("Remote process exited with {}".format(proc.exitcode))
+    proc.join()
+    logging.error("Remote process exited with {}".format(proc.exitcode))
     
 
 if __name__ == '__main__':
+    multiprocessing.freeze_support()
+    multiprocessing.set_start_method('spawn')
     run_gui()
