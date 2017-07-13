@@ -60,7 +60,8 @@ def log_excepthook(typ, val, tb):
                          
 def run_gui():
     debug = ("--debug" in sys.argv)
-    remote_connection = start_remote_process(debug)
+
+    remote_process, remote_connection = start_remote_process(debug)
     
     import matplotlib
     
@@ -79,11 +80,7 @@ def run_gui():
                      logging.WARN,
                      logging.ERROR,
                      logging.FATAL] [ int(msg_type) ]
-        logging.log(log_level, 'Qt message: '+msg_string)
-    
-       
-
-        
+        logging.log(log_level, 'Qt message: ' + msg_string.decode('utf-8'))
         
     ## monkey-patch envisage for a py3k bug.  this is fixed in envisage HEAD,
     ## so check for version
@@ -240,7 +237,7 @@ def run_gui():
                               icon = icon,
                               debug = debug)
     app.run()
-    
+    remote_process.join()
     logging.shutdown()
     
 def start_remote_process(debug):
@@ -249,16 +246,19 @@ def start_remote_process(debug):
         parent_workflow_conn, child_workflow_conn = multiprocessing.Pipe()  
         parent_mpl_conn, child_matplotlib_conn = multiprocessing.Pipe()
         log_q = multiprocessing.Queue()
+        running_event = multiprocessing.Event()
                 
         remote_process = multiprocessing.Process(target = remote_main,
                                                  name = "remote process",
                                                  args = [parent_workflow_conn,
                                                          parent_mpl_conn,
                                                          log_q,
+                                                         running_event,
                                                          debug])
         
         remote_process.daemon = True
         remote_process.start() 
+        running_event.wait()
         
         remote_process_thread = threading.Thread(target = monitor_remote_process,
                                                  name = "monitor remote process",
@@ -266,9 +266,9 @@ def start_remote_process(debug):
         remote_process_thread.daemon = True
         remote_process_thread.start()
         
-        return (child_workflow_conn, child_matplotlib_conn, log_q)
+        return (remote_process, (child_workflow_conn, child_matplotlib_conn, log_q))
     
-def remote_main(parent_workflow_conn, parent_mpl_conn, log_q, debug):
+def remote_main(parent_workflow_conn, parent_mpl_conn, log_q, running_event, debug):
     from traits.api import push_exception_handler    
     from cytoflowgui.workflow import RemoteWorkflow
     
@@ -279,13 +279,13 @@ def remote_main(parent_workflow_conn, parent_mpl_conn, log_q, debug):
     
     sys.excepthook = log_excepthook
     
+    running_event.set()
     RemoteWorkflow().run(parent_workflow_conn, parent_mpl_conn, log_q)
     
         
 def monitor_remote_process(proc):
     proc.join()
     logging.error("Remote process exited with {}".format(proc.exitcode))
-    
 
 if __name__ == '__main__':
     multiprocessing.freeze_support()

@@ -96,6 +96,8 @@ class Msg(object):
     APPLY_CALLED = "APPLY_CALLED"
     PLOT_CALLED = "PLOT_CALLED"
     
+    SHUTDOWN = "SHUTDOWN"
+    
 class Changed(object):
     # the operation's parameters needed to apply() changed.  
     # payload:
@@ -206,7 +208,6 @@ class Workflow(HasStrictTraits):
     send_thread = Instance(threading.Thread)
     log_thread = Instance(threading.Thread)
     remote_process_thread = Instance(threading.Thread)
-#     message_q = Instance(DelayUniqueQueue, {"delay" : 0.2})
     message_q = Instance(Queue, ())
     
     # the Pipe connection object to pass to the matplotlib canvas
@@ -316,6 +317,9 @@ class Workflow(HasStrictTraits):
             except:
                 print('Whoops! Problem:', file=sys.stderr)
                 traceback.print_exc(file=sys.stderr)
+                
+    def shutdown_remote_process(self):
+        self.message_q.put((Msg.SHUTDOWN, None))
 
     @on_trait_change('workflow')
     def _on_new_workflow(self, obj, name, old, new):
@@ -521,6 +525,11 @@ class RemoteWorkflow(HasStrictTraits):
         while True:
             try:
                 _, (wi, fn) = self.exec_q.get()
+                
+                if wi is None:
+                    # shutdown the child process
+                    break
+                
                 with wi.lock:
                     fn()
 
@@ -631,6 +640,9 @@ class RemoteWorkflow(HasStrictTraits):
                     idx = payload
                     wi = self.workflow[idx]
                     self.exec_q.put((idx - 0.5, (wi, wi.estimate)))
+                    
+                elif msg == Msg.SHUTDOWN:
+                    self.exec_q.put((0, (None, None)))
                                             
                 else:
                     raise RuntimeError("Bad command in the remote workflow")
