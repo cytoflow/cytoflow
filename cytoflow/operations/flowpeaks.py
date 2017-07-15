@@ -979,11 +979,9 @@ class FlowPeaks2DView(cytoflow.views.ScatterplotView):
                 
                 peak_i = peaks[k]
                 peak = gmm.means_[peak_i].copy()
-                print peak
                 peak[0] = self.op._scale[self.ychannel].inverse(peak[0])
                 peak[1] = self.op._scale[self.xchannel].inverse(peak[1])
                 
-                print peak
                 plt.plot(peak[0], peak[1], 'o', color = "magenta")
 
         return g
