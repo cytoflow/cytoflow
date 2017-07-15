@@ -45,7 +45,8 @@ install:
 
   # Install the build and runtime dependencies of the project.
   - conda install --yes --quiet --file=packaging\conda-requirements.txt
-  - conda install --yes --quiet msvc_runtime pip
+  # - conda install --yes --quiet msvc_runtime pip
+  - conda install --yes --quiet pip
   - pip.exe install pyinstaller nose2
 
   - "%WITH_COMPILER% python setup.py develop"
