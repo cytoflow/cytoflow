@@ -5,8 +5,7 @@ import multiprocessing.spawn as spawn
 import multiprocessing.process
 
 # prevent spawn from trying to read __main__ in from the main script
-if not sys.platform.startswith('win'):
-    multiprocessing.process.ORIGINAL_DIR = None
+multiprocessing.process.ORIGINAL_DIR = None
 
 def _freeze_support():
     if 'multiprocessing.semaphore_tracker' in sys.argv[-1]:
