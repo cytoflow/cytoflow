@@ -20,7 +20,7 @@ a = Analysis(['../cytoflowgui/run.py'],
              runtime_hooks=['packaging/rthook_pyqt4.py',
                             'packaging/rthook_qtapi.py',
                             # 'packaging/rthook_override_pyface_qt.py',
-                            'packaging/rthook_seaborn.py',
+                            'packaging/rthook_seaborn.py' ]
                             # 'packaging/rthook_multiprocessing.py'], 
              excludes=['gi.repository.Gio', 'gi.repository.GModule',
                        'gi.repository.GObject', 'gi.repository.Gtk',
