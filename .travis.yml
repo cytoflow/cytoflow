@@ -12,7 +12,7 @@ matrix:
 addons:
   apt:
     sources:
-      - sourceline: 'deb http://archive.ubuntu.com/ubuntu trusty-backports'
+      - sourceline: 'deb http://mirrors.mit.edu/ubuntu/ trusty-backports'
     packages:
       - g++
       - gfortran
