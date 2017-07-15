@@ -30,6 +30,8 @@ before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export PATH="/usr/local/opt/swig@3.04/bin:$PATH"; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then wget https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O miniconda.sh; else wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh; fi
 
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ln -s `which swig3.0` ./swig; export PATH=`pwd`:$PATH; fi
+
   - chmod +x miniconda.sh
   - ./miniconda.sh -b
   - export PATH=/Users/travis/miniconda3/bin:/home/travis/miniconda3/bin:$PATH
