@@ -41,7 +41,7 @@ install:
   - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
   
   # install swig
-  - choco install swig --yes --limit-output
+  - choco install swig --version 3.0.2 --yes --limit-output
 
   # Install the build and runtime dependencies of the project.
   - conda install --yes --quiet --file=packaging\conda-requirements.txt
