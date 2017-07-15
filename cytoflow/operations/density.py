@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.4
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2016
@@ -21,8 +21,6 @@ Created on Dec 16, 2015
 
 @author: brian
 '''
-
-from __future__ import division, absolute_import
 
 from warnings import warn
 from itertools import product
@@ -387,7 +385,7 @@ class DensityGateView(cytoflow.views.DensityView):
     _by = Property(List)
      
     def _get__by(self):
-        facets = filter(lambda x: x, [self.xfacet, self.yfacet])
+        facets = [x for x in [self.xfacet, self.yfacet] if x]
         return list(set(self.op.by) - set(facets))
          
     def enum_plots(self, experiment):
@@ -430,9 +428,9 @@ class DensityGateView(cytoflow.views.DensityView):
             def __iter__(self):
                 return self
              
-            def next(self):
+            def __next__(self):
                 if self._iter:
-                    return self._iter.next()[0]
+                    return next(self._iter)[0]
                 else:
                     if self._returned:
                         raise StopIteration

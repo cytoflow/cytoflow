@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.4
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2016
@@ -110,7 +110,8 @@ class DensityView(HasStrictTraits):
             raise util.CytoflowViewError("Y facet {0} not in the experiment"
                                          .format(self.yfacet))
             
-        facets = filter(lambda x: x, [self.xfacet, self.yfacet])
+        facets = [x for x in [self.xfacet, self.yfacet] if x]
+
         if len(facets) != len(set(facets)):
             raise util.CytoflowViewError("Can't reuse facets")
             
