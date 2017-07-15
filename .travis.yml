@@ -24,7 +24,6 @@ addons:
 
 before_install:
 
-  # make it so on linux we can find swig
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ln -s `which swig3.0` ./swig; export PATH=`pwd`:$PATH; fi
 
   # setup anaconda 
