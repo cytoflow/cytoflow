@@ -26,9 +26,6 @@ before_install:
 
   # make sure distutils can find swig
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ln -s `which swig3.0` ./swig; export PATH=`pwd`:$PATH; fi
-  
-  # make sure the current path ends up on the python search path
-  - export PYTHONPATH=`pwd`:$PYTHONPATH
 
   # setup anaconda 
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; fi
