@@ -45,8 +45,7 @@ install:
 
   # Install the build and runtime dependencies of the project.
   - conda install --yes --quiet --file=packaging\conda-requirements.txt
-  - conda install --yes --quiet msvc_runtime
-  - conda install --yes --quiet setuptools==19.2 pip six
+  - conda install --yes --quiet msvc_runtime pip
   - pip.exe install pyinstaller nose2
 
   - "%WITH_COMPILER% python setup.py develop"
@@ -59,6 +58,7 @@ test_script:
 after_test:
   - "%WITH_COMPILER% %PYTHON%/python setup.py bdist_wheel bdist_wininst"
   - "pyinstaller packaging/pyinstaller.spec"
+  - "pyi-archive_viewer -l dist\\cytoflow.exe"
   - "move dist\\cytoflow.exe dist\\cytoflow-%PYTHON_ARCH%.exe"
   - "IF %PYTHON_ARCH% EQU 32 move build\\lib.win32-3.4\\cytoflow\\utility\\logicle_ext\\_Logicle.pyd dist\\_Logicle-32.pyd"
   - "IF %PYTHON_ARCH% EQU 64 move build\\lib.win-amd64-3.4\\cytoflow\\utility\\logicle_ext\\_Logicle.pyd dist\\_Logicle-64.pyd"
