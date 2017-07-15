@@ -1,8 +1,7 @@
 import sys, os, re
 
-import multiprocessing
 import multiprocessing.spawn as spawn
-import multiprocessing.process
+import multiprocessing.process                       # @UnusedImport
 
 # prevent spawn from trying to read __main__ in from the main script
 multiprocessing.process.ORIGINAL_DIR = None

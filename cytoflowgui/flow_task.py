@@ -125,6 +125,9 @@ class FlowTask(Task):
     # "open" or "save as".
     filename = Unicode
     
+    def prepare_destroy(self):
+        self.model.shutdown_remote_process()
+    
     def activated(self):
         # add the import op
         self.add_operation(ImportPlugin().id) 
