@@ -12,7 +12,7 @@ matrix:
 addons:
   apt:
     sources:
-      - sourceline: 'deb http://mirrors.mit.edu/ubuntu/ trusty-backports'
+      - sourceline: 'deb http://mirrors.mit.edu/ubuntu/ trusty-backports main restricted universe multiverse'
     packages:
       - g++
       - gfortran
