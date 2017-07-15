@@ -49,6 +49,8 @@ install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then cd dist/; zip -r cytoflow.macos.zip Cytoflow.app/; rm -rf Cytoflow.app cytoflow; cd ..; fi
   - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then mv dist/cytoflow dist/cytoflow-linux.x86_64; fi
   - ls -al dist/*
+  - echo `which nose2`
+  - cat `which nose2`
 
 script: nose2 -c packaging/nose2.cfg
 
