@@ -4,6 +4,8 @@ matrix:
   include:
     - os: linux
       sudo: false
+      dist: trusty
+      
     - os: osx
       osx_image: xcode6.4
 
