@@ -66,7 +66,7 @@ setup(
                         'numpy>=1.11.3',
                         'numexpr>=2.6.1',
                         'matplotlib>=1.5.1',
-                        'scipy>=0.19.1',
+                        'scipy>=0.18.1',
                         'scikit-learn>=0.18.1',
                         'seaborn>=0.7.1',
                         'traits>=4.6.0',
