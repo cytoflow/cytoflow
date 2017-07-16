@@ -71,7 +71,7 @@ setup(
                         'seaborn>=0.7.1',
                         'traits>=4.6.0',
                         'pyface>=5.1.0',
-                        'traitsui>=5.1.0'
+                        'traitsui>=5.1.0',
                         'nbformat>=4.3.0',
                         'python-dateutil>=2.6.0',
                         'statsmodels>=0.8.0',
