@@ -3,7 +3,7 @@ bottleneck==1.2.0
 numpy==1.11.3
 numexpr==2.6.1
 matplotlib==1.5.1
-scipy==0.19.1
+scipy==0.18.1
 scikit-learn==0.18.1
 seaborn==0.7.1
 traits==4.6.0
@@ -12,5 +12,4 @@ pyface==5.1.0
 nbformat==4.2.0
 python-dateutil==2.6.0
 statsmodels==0.6.1
-pyqt==4.11.1
-qt==4.8.7
+pyqt==4.11.4
