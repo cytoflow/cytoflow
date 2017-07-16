@@ -1,5 +1,5 @@
-python=>3.5
-pandas
+python==3.5
+pandas<=0.19.2
 bottleneck
 numpy
 numexpr
