@@ -39,7 +39,7 @@ before_install:
   - conda update --yes conda
 
 install:
-  - conda install --yes --quiet python=3.5
+  - conda install --yes --quiet python=3.4
   - conda install --yes --quiet nomkl
   - conda install --yes --quiet --file=packaging/conda-requirements.txt
   - conda install --yes --quiet pip

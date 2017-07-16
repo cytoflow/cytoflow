@@ -61,20 +61,20 @@ setup(
     
     # Project uses reStructuredText, so ensure that the docutils get
     # installed or upgraded on the target machine
-    install_requires = ['pandas>=0.20.1',
-                        'bottleneck>=1.2.1',
+    install_requires = ['pandas>=0.19.2',
+                        'bottleneck>=1.2.0',
                         'numpy>=1.11.3',
-                        'numexpr>=2.6.2',
+                        'numexpr>=2.6.1',
                         'matplotlib>=1.5.1',
-                        'scipy>=0.19.0',
+                        'scipy>=0.19.1',
                         'scikit-learn>=0.18.1',
                         'seaborn>=0.7.1',
                         'traits>=4.6.0',
                         'pyface>=5.1.0',
                         'traitsui>=5.1.0',
-                        'nbformat>=4.3.0',
+                        'nbformat>=4.2.0',
                         'python-dateutil>=2.6.0',
-                        'statsmodels>=0.8.0',
+                        'statsmodels>=0.6.1',
                         'envisage>=4.6.0',
                         'fcsparser>=0.1.3'] 
                 if not on_rtd else None,

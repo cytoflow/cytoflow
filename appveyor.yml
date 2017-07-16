@@ -12,13 +12,12 @@ environment:
     # a later point release.
 
     - PYTHON: "C:\\Miniconda3"
-      PYTHON_VERSION: "3.4.x" # currently 2.7.9
+      PYTHON_VERSION: "3.4.x"   # currently 3.4.3
       PYTHON_ARCH: "32"
 
     - PYTHON: "C:\\Miniconda3-x64"
-      PYTHON_VERSION: "3.4.x" # currently 2.7.9
+      PYTHON_VERSION: "3.4.x"       # currently 3.4.3
       PYTHON_ARCH: "64"
-      WINDOWS_SDK_VERSION: "v7.0"
 
 init:
   - "ECHO %PYTHON% %PYTHON_VERSION% %PYTHON_ARCH%"
@@ -45,7 +44,6 @@ install:
 
   # Install the build and runtime dependencies of the project.
   - conda update --yes conda
-  - conda install --yes --quiet python=3.5
   - conda install --yes --quiet --file=packaging\conda-requirements.txt
   - conda install --yes --quiet msvc_runtime pip
   - pip.exe install pyinstaller nose2
