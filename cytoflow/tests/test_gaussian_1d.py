@@ -74,13 +74,14 @@ class Test(unittest.TestCase):
         self.gate.estimate(self.ex)
         ex2 = self.gate.apply(self.ex)
         
-        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_1", 1], 3382)
-        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_1", 10], 2048)
+        #print(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_1"])
+        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_1", 1.0], 3382)
+        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_1", 10.0], 2048)
 
-        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_2", 10], 2174)
+        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_2", 10.0], 2174)
         
-        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_None", 1], 6618)        
-        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_None", 10], 5778)      
+        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_None", 1.0], 6618)        
+        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_None", 10.0], 5778)      
         
     def testStatistics(self): 
         self.gate.by = ["Dox"]

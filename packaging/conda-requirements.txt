@@ -1,4 +1,4 @@
-pandas<=0.19.2
+pandas
 bottleneck
 numpy
 numexpr
@@ -7,6 +7,7 @@ scipy
 scikit-learn
 seaborn
 traits
+traitsui
 pyface==5.1.0
 nbformat
 python-dateutil
