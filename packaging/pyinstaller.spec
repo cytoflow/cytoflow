@@ -68,12 +68,12 @@ exe = EXE(pyz,
           a.binaries,
           a.zipfiles,
           a.datas,
-          [ ('v', None, 'OPTION') ],  # enable for more verbosity on starup
+#           [ ('v', None, 'OPTION') ],  # enable for more verbosity on starup
           name='cytoflow',
           debug=False,
           strip=False,
           upx=True,
-#          console=False,
+          console=True,
           icon='cytoflowgui/images/icon.ico')
 
 # one-dirctory
