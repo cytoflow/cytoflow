@@ -44,6 +44,7 @@ install:
   - choco install swig --version 3.0.2 --yes --limit-output
 
   # Install the build and runtime dependencies of the project.
+  - conda install --yes --quiet python=3.5
   - conda install --yes --quiet --file=packaging\conda-requirements.txt
   - conda install --yes --quiet msvc_runtime pip
   - pip.exe install pyinstaller nose2
