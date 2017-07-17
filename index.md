@@ -2,8 +2,9 @@
 layout: default
 title: {{ site.name }}
 ---
-
 # Welcome!  New to Cytoflow?  Start with [a screencast.](https://youtu.be/rl1c4SlAfvU)
+
+# Are you on MacOS?  A recent update has broken Cytoflow on MacOS.  You can get experimental packages that should fix the problem [here](https://bintray.com/bpteague/cytoflow/cytoflow-py3k/v1#files)
 
 # What's wrong with other packages?  
 
