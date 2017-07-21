@@ -70,11 +70,12 @@ setup(
                         'scikit-learn>=0.18.1',
                         'seaborn>=0.7.1',
                         'traits>=4.6.0',
-                        'pyface==5.1.0',
-                        'envisage>=4.6.0',
+                        'pyface>=5.1.0',
+                        'traitsui>=5.1.0',
                         'nbformat>=4.2.0',
                         'python-dateutil>=2.6.0',
                         'statsmodels>=0.6.1',
+                        'envisage>=4.6.0',
                         'fcsparser>=0.1.3'] 
                 if not on_rtd else None,
                         

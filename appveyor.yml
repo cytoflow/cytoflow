@@ -12,13 +12,12 @@ environment:
     # a later point release.
 
     - PYTHON: "C:\\Miniconda3"
-      PYTHON_VERSION: "3.4.x" # currently 2.7.9
+      PYTHON_VERSION: "3.4.x"   # currently 3.4.3
       PYTHON_ARCH: "32"
 
     - PYTHON: "C:\\Miniconda3-x64"
-      PYTHON_VERSION: "3.4.x" # currently 2.7.9
+      PYTHON_VERSION: "3.4.x"       # currently 3.4.3
       PYTHON_ARCH: "64"
-      WINDOWS_SDK_VERSION: "v7.0"
 
 init:
   - "ECHO %PYTHON% %PYTHON_VERSION% %PYTHON_ARCH%"
@@ -41,9 +40,10 @@ install:
   - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
   
   # install swig
-  - choco install swig --yes --limit-output
+  - choco install swig --version 3.0.2 --yes --limit-output
 
   # Install the build and runtime dependencies of the project.
+  - conda update --yes conda
   - conda install --yes --quiet --file=packaging\conda-requirements.txt
   - conda install --yes --quiet msvc_runtime pip
   - pip.exe install pyinstaller nose2
@@ -60,8 +60,8 @@ after_test:
   - "pyinstaller packaging/pyinstaller.spec"
   - "pyi-archive_viewer -l dist\\cytoflow.exe"
   - "move dist\\cytoflow.exe dist\\cytoflow-%PYTHON_ARCH%.exe"
-  - "IF %PYTHON_ARCH% EQU 32 move build\\lib.win32-3.4\\cytoflow\\utility\\logicle_ext\\_Logicle.pyd dist\\_Logicle-32.pyd"
-  - "IF %PYTHON_ARCH% EQU 64 move build\\lib.win-amd64-3.4\\cytoflow\\utility\\logicle_ext\\_Logicle.pyd dist\\_Logicle-64.pyd"
+  # - "IF %PYTHON_ARCH% EQU 32 move build\\lib.win32-3.5\\cytoflow\\utility\\logicle_ext\\_Logicle.pyd dist\\_Logicle-32.pyd"
+  # - "IF %PYTHON_ARCH% EQU 64 move build\\lib.win-amd64-3.5\\cytoflow\\utility\\logicle_ext\\_Logicle.pyd dist\\_Logicle-64.pyd"
 
 artifacts:
   - path: dist\*.*
