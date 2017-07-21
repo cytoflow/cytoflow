@@ -47,7 +47,7 @@ class LogScale(ScaleMixin):
     error_statistic = Tuple(Str, Str)
     data = Array
 
-    mode = Enum("clip", "mask")
+    mode = Enum("mask", "clip")
     threshold = Property(Float, depends_on = "[experiment, condition, channel, statistic, error_statistic]")
     _channel_threshold = Float(0.1)
 
