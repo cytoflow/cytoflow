@@ -29,7 +29,7 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 
 from traits.api import (HasStrictTraits, Str, CStr, Dict, Any, Instance, Bool, 
-                        Constant, List, provides, Property, Enum, Array)
+                        Constant, List, provides, Property, Enum, Array, Function)
 
 import numpy as np
 import numpy.linalg
@@ -128,7 +128,7 @@ class FlowPeaksOp(HasStrictTraits):
     tol = util.PositiveFloat(0.1, allow_zero = False)
     
     _kmeans = Dict(Any, Instance(sklearn.cluster.MiniBatchKMeans), transient = True)
-    _gmm = Dict(Any, Instance(sklearn.mixture.GaussianMixture), transient = True)
+    _density = Dict(Any, Function, transient = True)
     _peaks = Dict(Any, List(Array), transient = True)  # 
     _cluster_peak = Dict(Any, List, transient = True)  # kmeans cluster idx --> peak idx
     _cluster_group = Dict(Any, List, transient = True) # kmeans cluster idx --> group idx
@@ -224,15 +224,8 @@ class FlowPeaksOp(HasStrictTraits):
 
             #### use the kmeans centroids to parameterize a finite gaussian
             #### mixture model which estimates the density function
- 
-            self._gmm[data_group] = gmm = \
-                sklearn.mixture.GaussianMixture(n_components = num_clusters, 
-                                                covariance_type='full')
-            gmm.weights_ = np.ndarray((0,))
-            gmm.means_ = np.ndarray((0, d))
-            gmm.covariances_ = np.ndarray((0, d, d))
-            gmm.precisions_ = np.ndarray((0, d, d))
-            gmm.precisions_cholesky_ = np.ndarray((0, d, d))
+            
+            normals = []
             
             d = len(self.channels)
             s0 = np.zeros([d, d])
@@ -240,37 +233,36 @@ class FlowPeaksOp(HasStrictTraits):
                 r = x[d].max() - x[d].min()
                 s0[j, j] = (r / (num_clusters ** (1. / d))) ** 0.5 
             
+            means = []
+            
             for k in range(num_clusters):
                 xk = x[x_labels == k]
                 num_k = np.sum(x_labels == k)
                 weight_k = num_k / len(x_labels)
                 mu = xk.mean(axis = 0)
+                means.append(mu)
                 s = np.cov(xk, rowvar = False)
                 
 
                 # TODO - make these magic numbers adjustable
-                h0 = 1.0
-                h = 3.0
+                h0 = 2.0
+                h = 1.5
                 
                 el = num_k / (num_clusters + num_k)
                 s_smooth = el * h * s + (1.0 - el) * h0 * s0
-                s_precision = numpy.linalg.inv(s_smooth)
-                s_cholesky = numpy.linalg.cholesky(s_precision)
                 
-                gmm.weights_ = np.append(gmm.weights_, [weight_k], axis = 0)
-                gmm.means_ = np.append(gmm.means_, mu[np.newaxis, :], axis = 0)
-                gmm.covariances_ = np.append(gmm.covariances_, s_smooth[np.newaxis, :, :], axis = 0)
-                gmm.precisions_ = np.append(gmm.precisions_, s_precision[np.newaxis, :, :], axis = 0)
-                gmm.precisions_cholesky_ = np.append(gmm.precisions_cholesky_, s_cholesky[np.newaxis, :, :], axis = 0)
+                n = scipy.stats.multivariate_normal(mean = mu, cov = s_smooth)
+                normals.append(lambda x, w = weight_k, n = n: w * n.pdf(x))
+                                
+            self._density[data_group] = d = lambda x, normals = normals: np.sum([n(x) for n in normals], axis = 0)
                 
-            return
             ### use optimization on the finite gmm to find the local peak for 
             ### each kmeans cluster
             peaks = []
             peak_clusters = []  # peak idx --> list of clusters
             for k in range(num_clusters):
-                mu = gmm.means_[k]
-                f = lambda x: -1.0 * gmm.score(x[np.newaxis, :])
+                mu = means[k]
+                f = lambda x: -1.0 * d(x[np.newaxis, :])
                 res = scipy.optimize.minimize(f, mu, method = 'Nelder-Mead')
                 if res.status != 0:
                     raise util.CytoflowOpError("Peak finding failed for cluster {}: {}"
@@ -296,7 +288,7 @@ class FlowPeaksOp(HasStrictTraits):
             peak_groups = [x for x in range(len(peaks))]  # peak idx --> group idx
                             
             def max_tol(x, y):
-                f = lambda a: 10.0 ** gmm.score(a[np.newaxis, :])
+                f = lambda a: 10.0 ** d(a[np.newaxis, :])
                 lx = kmeans.predict(x[np.newaxis, :])[0]
                 nx = np.sum(x_labels == lx)
                 ly = kmeans.predict(y[np.newaxis, :])[0]
@@ -324,7 +316,7 @@ class FlowPeaksOp(HasStrictTraits):
                 for i in range(num_clusters):
                     if i == k:
                         continue
-                    dist = np.linalg.norm(gmm.means_[k] - gmm.means_[i])
+                    dist = np.linalg.norm(means[k] - means[i])
                     if dist < min_dist:
                         min_dist = dist
                         
@@ -965,7 +957,7 @@ class FlowPeaks2DView(cytoflow.views.ScatterplotView):
             if group_name is not None:
                 if group_name in self.op._kmeans:
                     km = self.op._kmeans[group_name]
-                    gmm = self.op._gmm[group_name]
+#                     gmm = self.op._gmm[group_name]
                     peaks = self.op._peaks[group_name]
                     cluster_peak = self.op._cluster_peak[group_name]
                 else:
@@ -976,7 +968,7 @@ class FlowPeaks2DView(cytoflow.views.ScatterplotView):
             else:
                 if True in self.op._kmeans:
                     km = self.op._kmeans[True]
-                    gmm = self.op._gmm[True]
+#                     gmm = self.op._gmm[True]
                     peaks = self.op._peaks[True]
                     cluster_peak = self.op._cluster_peak[True]
                 else:
@@ -1268,8 +1260,8 @@ class FlowPeaks2DDensityView(cytoflow.views.DensityView):
  
             if group_name is not None:
                 if group_name in self.op._kmeans:
-                    km = self.op._kmeans[group_name]
-                    gmm = self.op._gmm[group_name]
+#                     km = self.op._kmeans[group_name]
+                    d = self.op._density[group_name]
 #                     peaks = self.op._peaks[group_name]
 #                     cluster_peak = self.op._cluster_peak[group_name]
                 else:
@@ -1279,8 +1271,8 @@ class FlowPeaks2DDensityView(cytoflow.views.DensityView):
                     return g
             else:
                 if True in self.op._kmeans:
-                    km = self.op._kmeans[True]
-                    gmm = self.op._gmm[True]
+#                     km = self.op._kmeans[True]
+                    d = self.op._density[True]
 #                     peaks = self.op._peaks[True]
 #                     cluster_peak = self.op._cluster_peak[True]
                 else:
@@ -1288,9 +1280,12 @@ class FlowPeaks2DDensityView(cytoflow.views.DensityView):
                                  
             ax = g.facet_axis(i, j)
             plt.sca(ax)
-
-            h = gmm.score_samples(util.cartesian([xscale(xbins), yscale(ybins)]))
-            print(h)
+            
+#             print(util.cartesian([xscale(xbins), yscale(ybins)]))
+#             print(h)
+#             print(d([0, 0]))
+            h = d(util.cartesian([xscale(xbins), yscale(ybins)]))
+#             h = np.log(h)
             h = np.reshape(h, (len(xbins), len(ybins)))
             ax.pcolormesh(xbins, ybins, h.T, **kwargs)
          
