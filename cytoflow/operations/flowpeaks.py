@@ -245,7 +245,7 @@ class FlowPeaksOp(HasStrictTraits):
                 
 
                 # TODO - make these magic numbers adjustable
-                h0 = 1.0
+                h0 = 2.0
                 h = 1.5
                 
                 el = num_k / (num_clusters + num_k)
@@ -260,34 +260,10 @@ class FlowPeaksOp(HasStrictTraits):
             ### each kmeans cluster
             peaks = []
             peak_clusters = []  # peak idx --> list of clusters
-            
-            min_mu = [np.inf] * len(self.channels)
-            max_mu = [-1.0 * np.inf] * len(self.channels)
-            
             for k in range(num_clusters):
                 mu = means[k]
-                for ci in range(len(self.channels)):
-                    if mu[ci] < min_mu[ci]:
-                        min_mu[ci] = mu[ci]
-                    if mu[ci] > max_mu[ci]:
-                        max_mu[ci] = mu[ci]
-            
-            constraints = []
-            for ci, c in enumerate(self.channels):                  
-                constraints.append({'type' : 'ineq',
-                                    'fun' : lambda x, min_mu = min_mu[ci]: x - min_mu})
-                constraints.append({'type' : 'ineq',
-                                    'fun' : lambda x, max_mu = max_mu[ci]: max_mu - x})
-            
-            for k in range(num_clusters):
-                mu = means[k]
-                f = lambda x: -1.0 * d(x)
-                
-#                 res = scipy.optimize.minimize(f, mu, method = 'BFGS')
-                res = scipy.optimize.minimize(f, mu, method = 'SLSQP',
-                                              constraints = constraints)
-#                                               options = {'rhobeg' : 0.1})
-#                 print(res)
+                f = lambda x: -1.0 * d(x[np.newaxis, :])
+                res = scipy.optimize.minimize(f, mu, method = 'Nelder-Mead')
                 if res.status != 0:
                     raise util.CytoflowOpError("Peak finding failed for cluster {}: {}"
                                                .format(k, res.message))
