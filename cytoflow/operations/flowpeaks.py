@@ -37,6 +37,8 @@ import sklearn.cluster
 import sklearn.mixture
 import scipy.stats
 import scipy.optimize
+import scipy.misc
+import statsmodels.tools.numdiff
 
 import pandas as pd
 import seaborn as sns
@@ -52,7 +54,7 @@ class FlowPeaksOp(HasStrictTraits):
     This module uses the flowPeaks algorithm to assign events to clusters in
     an unsupervised manner.
     
-    Call `estimate()` to compute the cluster centroids and smoothed density.
+    Call `estimate()` to compute the clusters.
       
     Calling `apply()` creates a new categorical metadata variable 
     named `name`, with possible values `{name}_1` .... `name_n` where `n` is 
@@ -83,11 +85,26 @@ class FlowPeaksOp(HasStrictTraits):
         separately to each subset of the data with a unique combination of
         `Time` and `Dox`.
         
+    h : Float (default = 1.5)
+        A scalar value by which to scale the covariance matrices of the 
+        underlying density function.  (See `Notes`, below, for more details.)
+        
+    h0 : Float (default = 1.0)
+        A scalar value by which to smooth the covariance matrices of the
+        underlying density function.  (See `Notes`, below, for more details.)
+        
     tol : Float (default = 0.5)
         How readily should clusters be merged?  Must be between 0 and 1.
+        See `Notes`, below, for more details.
+        
+    merge_dist : Float (default = 5)
+        How far apart can clusters be before they are merged?  This is
+        a unit-free scalar, and is approximately the maximum number of
+        k-means clusters between peaks. 
         
     find_outliers : Bool (default = False)
         Should the algorithm use an extra step to identify outliers?
+        *Note: I have disabled this code until I can try to make it faster.*
         
     Notes
     -----
@@ -96,6 +113,33 @@ class FlowPeaksOp(HasStrictTraits):
     hierarchically merges those clusters.  Thus, the user does not need to
     specify the number of clusters in advance; and it can find non-convex
     clusters.  It also operates in an arbitrary number of dimensions.
+    
+    The merging happens in two steps.  First, the cluster centroids are used
+    to estimate an underlying density function.  Then, the local maxima of
+    the density function are found using a numerical optimization starting from
+    each centroid, and k-means clusters that converge to the same local maximum
+    are merged.  Finally, these clusters-of-clusters are merged if their local 
+    maxima are (a) close enough, and (b) the density function between them is 
+    smooth enough.  Thus, the final assignment of each event depends on the 
+    k-means cluster it ends up in, and which  cluster-of-clusters that k-means 
+    centroid is assigned to.
+    
+    There are a lot of parameters that affect this process.  The k-means
+    clustering is pretty robust (though somewhat sensitive to the number of 
+    clusters, which is currently not exposed in the API.) The most important
+    are exposed as traits of the `FlowPeaksOp` class.  These include:
+     - h, h0: sometimes the density function is too "rough" to find good
+              local maxima.  These parameters smooth it out by widening the
+              covariance matrices.  Increasing `h` makes the density rougher;
+              increasing `h0` makes it smoother.
+              
+    - tol: How smooth does the density function have to be between two density
+           maxima to merge them?  Must be between 0 and 1.
+           
+    - merge_dist: How close must two maxima be to merge them?  This value is
+                  a unit-free scalar, and is approximately the number of
+                  k-means clusters between the two maxima.
+    
     
     For details and a theoretical justification, see
     
@@ -108,13 +152,12 @@ class FlowPeaksOp(HasStrictTraits):
     Examples
     --------
     
-    >>> clust_op = KMeansOp(name = "Clust",
-    ...                         channels = ["V2-A", "Y2-A"],
-    ...                         scale = {"V2-A" : "log"},
-    ...                         num_clusters = 2)
-    >>> clust_op.estimate(ex2)
-    >>> clust_op.default_view(channels = ["V2-A"], ["Y2-A"]).plot(ex2)
-    >>> ex3 = clust_op.apply(ex2)
+    >>> fp_op = FlowPeaksOp(name = "Clust",
+    ...                     channels = ["V2-A", "Y2-A"],
+    ...                     scale = {"V2-A" : "log"})
+    >>> fp_op.estimate(ex2)
+    >>> fp_op.default_view(channels = ["V2-A"], ["Y2-A"]).plot(ex2)
+    >>> ex3 = fp_op.apply(ex2)
     """
     
     id = Constant('edu.mit.synbio.cytoflow.operations.flowpeaks')
@@ -124,12 +167,21 @@ class FlowPeaksOp(HasStrictTraits):
     channels = List(Str)
     scale = Dict(Str, util.ScaleEnum)
     by = List(Str)
-    find_outliers = Bool(False)
-    tol = util.PositiveFloat(0.1, allow_zero = False)
+#     find_outliers = Bool(False)
+    
+    # parameters that control estimation, with sensible defaults
+    h = util.PositiveFloat(1.5, allow_zero = False)
+    h0 = util.PositiveFloat(1, allow_zero = False)
+    tol = util.PositiveFloat(0.5, allow_zero = False)
+    merge_dist = util.PositiveFloat(5, allow_zero = False)
+    
+    # parameters that control outlier selection, with sensible defaults
+    
     
     _kmeans = Dict(Any, Instance(sklearn.cluster.MiniBatchKMeans), transient = True)
+    _normals = Dict(Any, List(Function), transient = True)
     _density = Dict(Any, Function, transient = True)
-    _peaks = Dict(Any, List(Array), transient = True)  # 
+    _peaks = Dict(Any, List(Array), transient = True)  
     _cluster_peak = Dict(Any, List, transient = True)  # kmeans cluster idx --> peak idx
     _cluster_group = Dict(Any, List, transient = True) # kmeans cluster idx --> group idx
     _scale = Dict(Str, Instance(util.IScale), transient = True)
@@ -224,9 +276,7 @@ class FlowPeaksOp(HasStrictTraits):
 
             #### use the kmeans centroids to parameterize a finite gaussian
             #### mixture model which estimates the density function
-            
-            normals = []
-            
+                        
             d = len(self.channels)
             s0 = np.zeros([d, d])
             for j in range(d):
@@ -234,7 +284,10 @@ class FlowPeaksOp(HasStrictTraits):
                 s0[j, j] = (r / (num_clusters ** (1. / d))) ** 0.5 
             
             means = []
-            
+            weights = []
+            normals = []
+            beta_max = []
+                        
             for k in range(num_clusters):
                 xk = x[x_labels == k]
                 num_k = np.sum(x_labels == k)
@@ -243,27 +296,31 @@ class FlowPeaksOp(HasStrictTraits):
                 means.append(mu)
                 s = np.cov(xk, rowvar = False)
                 
-
-                # TODO - make these magic numbers adjustable
-                h0 = 1.0
-                h = 1.5
-                
                 el = num_k / (num_clusters + num_k)
-                s_smooth = el * h * s + (1.0 - el) * h0 * s0
+                s_smooth = el * self.h * s + (1.0 - el) * self.h0 * s0
                 
                 n = scipy.stats.multivariate_normal(mean = mu, cov = s_smooth)
-                normals.append(lambda x, w = weight_k, n = n: w * n.pdf(x))
-                                
-            self._density[data_group] = d = lambda x, normals = normals: np.sum([n(x) for n in normals], axis = 0)
+                weights.append(weight_k)
+                normals.append(lambda x, n = n: n.pdf(x))
                 
+                # get appropriate step size for peak finding
+                min_b = np.inf
+                for b in np.diagonal(s_smooth):
+                    if np.sqrt(b) < min_b:
+                        min_b = np.sqrt(b)
+                beta_max.append(b)
+                       
+            self._normals[data_group] = normals         
+            self._density[data_group] = density = lambda x, weights = weights, normals = normals: np.sum([w * n(x) for w, n in zip(weights, normals)], axis = 0)
+            
             ### use optimization on the finite gmm to find the local peak for 
             ### each kmeans cluster
             peaks = []
             peak_clusters = []  # peak idx --> list of clusters
-            
+                        
             min_mu = [np.inf] * len(self.channels)
             max_mu = [-1.0 * np.inf] * len(self.channels)
-            
+             
             for k in range(num_clusters):
                 mu = means[k]
                 for ci in range(len(self.channels)):
@@ -271,38 +328,79 @@ class FlowPeaksOp(HasStrictTraits):
                         min_mu[ci] = mu[ci]
                     if mu[ci] > max_mu[ci]:
                         max_mu[ci] = mu[ci]
-            
+             
             constraints = []
             for ci, c in enumerate(self.channels):                  
                 constraints.append({'type' : 'ineq',
                                     'fun' : lambda x, min_mu = min_mu[ci]: x - min_mu})
                 constraints.append({'type' : 'ineq',
                                     'fun' : lambda x, max_mu = max_mu[ci]: max_mu - x})
-            
+                        
             for k in range(num_clusters):
                 mu = means[k]
-                f = lambda x: -1.0 * d(x)
-                
-#                 res = scipy.optimize.minimize(f, mu, method = 'BFGS')
-                res = scipy.optimize.minimize(f, mu, method = 'SLSQP',
-                                              constraints = constraints)
-#                                               options = {'rhobeg' : 0.1})
-#                 print(res)
-                if res.status != 0:
+                f = lambda x: -1.0 * density(x)
+                 
+                res = scipy.optimize.minimize(f, mu, method = 'COBYLA',
+                                              constraints = constraints,
+                                              options = {'rhobeg' : beta_max[k],
+                                                         'maxiter' : 5000})
+                if not res.success:
                     raise util.CytoflowOpError("Peak finding failed for cluster {}: {}"
                                                .format(k, res.message))
-                    
+
+#                 ### The peak-searching algorithm from the paper.  works fine,
+#                 ### but slow!  we get similar results with the COBYLA
+#                 ### optimization method from scipy, using an appropriate rho
+#                 x0 = x = means[k]
+#                 k0 = k
+#                 b = beta_max[k] / 10.0
+#                 Nsuc = 0
+#                 n = 0
+#                 
+#                 while(n < 1000):
+# #                     df = scipy.misc.derivative(density, x, 1e-6)
+#                     df = statsmodels.tools.numdiff.approx_fprime(x, density)
+#                     if np.linalg.norm(df) < 1e-3:
+#                         break
+#                     
+#                     y = x + b * df / np.linalg.norm(df)
+#                     if density(y) <= density(x):
+#                         Nsuc = 0
+#                         b = b / 2.0
+#                         continue
+#                     
+#                     Nsuc += 1
+#                     if Nsuc >= 2:
+#                         b = min(2*b, beta_max[k])
+# 
+#                     ky = kmeans.predict(y[np.newaxis, :])[0]
+#                     if ky == k:
+#                         x = y
+#                     else:
+#                         k = ky
+#                         b = beta_max[k] / 10.0
+#                         mu = means[k]
+#                         if density(mu) > density(y):
+#                             x = mu
+#                         else:
+#                             x = y
+#                             
+#                     n += 1 
+#                     
+#                     
+#                     
+#                 print("{} --> {}, {}".format(x0, x, n))
+                                        
                 merged = False
                 for pi, p in enumerate(peaks):
-                    if np.linalg.norm(p - res.x) < (10 ** -4.0):
+                    if np.linalg.norm(p - res.x) < (1e-2):
                         peak_clusters[pi].append(k)
                         merged = True
                         break
                         
                 if not merged:
                     peak_clusters.append([k])
-                    peaks.append(res.x)
-                    
+                    peaks.append(res.x)                    
             
             self._peaks[data_group] = peaks
 
@@ -310,15 +408,15 @@ class FlowPeaksOp(HasStrictTraits):
 
             groups = [[x] for x in range(len(peaks))]
             peak_groups = [x for x in range(len(peaks))]  # peak idx --> group idx
+            
                             
             def max_tol(x, y):
-                f = lambda a: 10.0 ** d(a[np.newaxis, :])
+                f = lambda a: density(a[np.newaxis, :])
                 lx = kmeans.predict(x[np.newaxis, :])[0]
-                nx = np.sum(x_labels == lx)
                 ly = kmeans.predict(y[np.newaxis, :])[0]
-                ny = np.sum(x_labels == ly)
                 n = len(x)
-                n_scale = np.sqrt(((nx + ny) / 2.0) / (n / num_clusters))
+                n_scale = 1
+#                 n_scale = np.sqrt(((nx + ny) / 2.0) / (n / num_clusters))
                 
                 def tol(t):
                     zt = x + t * (y - x)
@@ -333,6 +431,7 @@ class FlowPeaksOp(HasStrictTraits):
                     raise util.CytoflowOpError("tol optimization failed for {}, {}"
                                                .format(x, y))
                 return -1.0 * res.fun
+                
             
             def nearest_neighbor_dist(k):
                 min_dist = np.inf
@@ -359,7 +458,7 @@ class FlowPeaksOp(HasStrictTraits):
                         vh = peaks[ph]
                         dist_gh = np.linalg.norm(vg - vh)
                         
-                        if max_tol(vg, vh) < self.tol and dist_gh <= 2 * (s(vg) + s(vh)):
+                        if max_tol(vg, vh) < self.tol and dist_gh / (s(vg) + s(vh)) <= self.merge_dist:
                             return True
                         
                 return False
@@ -367,35 +466,38 @@ class FlowPeaksOp(HasStrictTraits):
             while True:
                 if len(groups) == 1:
                     break
-                
+                 
                 # find closest mergable groups
                 min_dist = np.inf
                 for gi in range(len(groups)):
                     g = groups[gi]
-                    
+                     
                     for hi in range(gi + 1, len(groups)):
                         h = groups[hi]
-                        
+                         
                         if can_merge(g, h):
                             dist_gh = np.inf
-                            for vg in g:
-                                for vh in h:
+                            for pg in g:
+                                vg = peaks[pg]
+                                for ph in h:
+                                    vh = peaks[ph]
+#                                     print("vg {} vh {}".format(vg, vh))
                                     dist_gh = min(dist_gh, 
                                                   np.linalg.norm(vg - vh))
-                                    
+                                     
                             if dist_gh < min_dist:
                                 min_gi = gi
                                 min_hi = hi
                                 min_dist = dist_gh
-                                
+                                 
                 if min_dist == np.inf:
                     break
-                
+                 
                 # merge the groups
                 groups[min_gi].extend(groups[min_hi])
-                for g in groups[hi]:
-                    peak_groups[g] = gi
-                del groups[hi]
+                for g in groups[min_hi]:
+                    peak_groups[g] = min_gi
+                del groups[min_hi]
                 
         cluster_group = [0] * num_clusters
         cluster_peaks = [0] * num_clusters
@@ -489,32 +591,83 @@ class FlowPeaksOp(HasStrictTraits):
             
             kmeans = self._kmeans[group]
   
-            predicted = np.full(len(x), -1, "int")
-            predicted[~x_na] = kmeans.predict(x[~x_na])
+            predicted_km = np.full(len(x), -1, "int")
+            predicted_km[~x_na] = kmeans.predict(x[~x_na])
             
             groups = np.asarray(self._cluster_group[group])
-            predicted[~x_na] = groups[ predicted[~x_na] ]
+            predicted_group = np.full(len(x), -1, "int")
+            predicted_group[~x_na] = groups[ predicted_km[~x_na] ]
                  
-            predicted_str = pd.Series(["(none)"] * len(predicted))
+#             num_groups = len(set(groups))
+#             if self.find_outliers:
+#                 density = self._density[group]
+#                 max_d = [-1.0 * np.inf] * num_groups
+#                 
+#                 for xi in range(len(x)):
+#                     if x_na[xi]:
+#                         continue
+#                     
+#                     x_c = predicted_group[xi]
+#                     d_x_c = density(x[xi])
+#                     if d_x_c > max_d[x_c]:
+#                         max_d[x_c] = d_x_c
+#                     
+#                 group_density = [None] * num_groups
+#                 group_weight = [0.0] * num_groups
+#                 
+#                 for c in range(num_groups):
+#                     num_c = np.sum(predicted_group == c)
+#                     clusters = np.argwhere(groups == c).flatten()
+#                     
+#                     normals = []
+#                     weights = []
+#                     for k in range(len(clusters)):
+#                         num_k = np.sum(predicted_km == k)
+#                         weight_k = num_k / num_c
+#                         group_weight[c] += num_k / len(x)
+#                         weights.append(weight_k)
+#                         normals.append(self._normals[group][k])
+#                         
+#                     group_density[c] = lambda x, weights = weights, normals = normals: np.sum([w * n(x) for w, n in zip(weights, normals)], axis = 0)
+# 
+#                 for xi in range(len(x)):
+#                     if x_na[xi]:
+#                         continue
+#                     
+#                     x_c = predicted_group[xi]
+#                     
+#                     if density(x[xi]) / max_d[x_c] < 0.01:
+#                         predicted_group[xi] = -1
+#                         continue
+#                     
+#                     sum_d = 0
+#                     for c in set(groups):
+#                         sum_d += group_weight[c] * group_density[c](x[xi])
+#                         
+#                     if group_weight[x_c] * group_density[x_c](x[xi]) / sum_d < 0.8:
+#                         predicted_group[xi] = -1
+                        
+#                     
+#                     max_d = -1.0 * np.inf
+#                     for x_c in x[predicted_group == c]:
+#                         x_c_d = density(x_c)
+#                         if x_c_d > max_d:
+#                             max_d = x_c_d
+#                             
+#                     for i in range(len(x)):
+#                         if predicted_group[i] == c and density(x[i]) / max_d <= 0.01:
+#                             predicted_group[i] = -1
+#                             
+#                             
+                    
+            predicted_str = pd.Series(["(none)"] * len(predicted_group))
             for c in range(len(self._cluster_group[group])):
-                predicted_str[predicted == c] = "{0}_{1}".format(self.name, c + 1)
-            predicted_str[predicted == -1] = "{0}_None".format(self.name)
+                predicted_str[predicted_group == c] = "{0}_{1}".format(self.name, c + 1)
+            predicted_str[predicted_group == -1] = "{0}_None".format(self.name)
             predicted_str.index = group_idx
       
             event_assignments.iloc[group_idx] = predicted_str
-            
-#             for c in range(self.num_clusters):
-#                 if len(self.by) == 0:
-#                     g = [c + 1]
-#                 elif hasattr(group, '__iter__'):
-#                     g = tuple(list(group) + [c + 1])
-#                 else:
-#                     g = tuple([group] + [c + 1])
-#                 
-#                 for cidx1, channel1 in enumerate(self.channels):
-#                     g2 = tuple(list(g) + [channel1])
-#                     centers_stat.loc[g2] = self._scale[channel1].inverse(kmeans.cluster_centers_[c, cidx1])
-#          
+
         new_experiment = experiment.clone()          
         new_experiment.add_condition(self.name, "category", event_assignments)
         
@@ -1286,7 +1439,7 @@ class FlowPeaks2DDensityView(cytoflow.views.DensityView):
                 if group_name in self.op._kmeans:
 #                     km = self.op._kmeans[group_name]
                     d = self.op._density[group_name]
-#                     peaks = self.op._peaks[group_name]
+                    peaks = self.op._peaks[group_name]
 #                     cluster_peak = self.op._cluster_peak[group_name]
                 else:
                     # there weren't any events in this subset to estimate a km from
@@ -1297,7 +1450,7 @@ class FlowPeaks2DDensityView(cytoflow.views.DensityView):
                 if True in self.op._kmeans:
 #                     km = self.op._kmeans[True]
                     d = self.op._density[True]
-#                     peaks = self.op._peaks[True]
+                    peaks = self.op._peaks[True]
 #                     cluster_peak = self.op._cluster_peak[True]
                 else:
                     return g           
@@ -1309,6 +1462,7 @@ class FlowPeaks2DDensityView(cytoflow.views.DensityView):
 #             print(h)
 #             print(d([0, 0]))
             h = d(util.cartesian([xscale(xbins), yscale(ybins)]))
+            print(h)
 #             h = np.log(h)
             h = np.reshape(h, (len(xbins), len(ybins)))
             ax.pcolormesh(xbins, ybins, h.T, **kwargs)
@@ -1334,10 +1488,10 @@ class FlowPeaks2DDensityView(cytoflow.views.DensityView):
 # #                 peak[0] = self.op._scale[self.ychannel].inverse(peak[0])
 # #                 peak[1] = self.op._scale[self.xchannel].inverse(peak[1])
 # 
-#             for peak in peaks:
-#                 x = self.op._scale[self.ychannel].inverse(peak[0])
-#                 y = self.op._scale[self.xchannel].inverse(peak[1])
-#                 plt.plot(x, y, 'o', color = "magenta")
+            for peak in peaks:
+                x = self.op._scale[self.ychannel].inverse(peak[0])
+                y = self.op._scale[self.xchannel].inverse(peak[1])
+                plt.plot(x, y, 'o', color = "magenta")
                 
         # if we're sharing y axes, make sure the y scale is the same for each
         if sharey:
