@@ -12,6 +12,22 @@ cytoflow.views.bar_chart module
     :undoc-members:
     :show-inheritance:
 
+cytoflow.views.base_views module
+--------------------------------
+
+.. automodule:: cytoflow.views.base_views
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+cytoflow.views.densityplot module
+---------------------------------
+
+.. automodule:: cytoflow.views.densityplot
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 cytoflow.views.histogram module
 -------------------------------
 
@@ -88,14 +104,6 @@ cytoflow.views.table module
 ---------------------------
 
 .. automodule:: cytoflow.views.table
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-cytoflow.views.test module
---------------------------
-
-.. automodule:: cytoflow.views.test
     :members:
     :undoc-members:
     :show-inheritance:

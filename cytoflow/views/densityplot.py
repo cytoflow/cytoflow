@@ -22,20 +22,19 @@ Created on Apr 19, 2015
 @author: brian
 """
 
-from traits.api import HasStrictTraits, provides, Str
+from traits.api import provides, Constant
 
-import matplotlib as mpl
-import matplotlib.colors as colors
 import matplotlib.pyplot as plt
-import seaborn as sns
 import numpy as np
 import scipy.ndimage.filters
 
 import cytoflow.utility as util
 from .i_view import IView
 
+from .base_views import Base2DView
+
 @provides(IView)
-class DensityView(HasStrictTraits):
+class DensityView(Base2DView):
     """
     Plots a 2-d density plot.  
     
@@ -67,80 +66,57 @@ class DensityView(HasStrictTraits):
         A string passed to pandas.DataFrame.query() to subset the data before
         we plot it.
         
-        .. note: should this be a param instead?
     """
     
     id = 'edu.mit.synbio.cytoflow.view.density'
     friend_id = "Density Plot"
     
-    xchannel = Str
-    xscale = util.ScaleEnum
-    ychannel = Str
-    yscale = util.ScaleEnum
-    xfacet = Str
-    yfacet = Str
-    huescale = util.ScaleEnum
-    subset = Str
+    huefacet = Constant(None)
     
     def plot(self, experiment, **kwargs):
-        """Plot a faceted scatter plot view of a channel"""
+        """
+        Plot a faceted density plot view of a channel
         
-        if experiment is None:
-            raise util.CytoflowViewError("No experiment specified")
-
-        if not self.xchannel:
-            raise util.CytoflowViewError("X channel not specified")
-        
-        if self.xchannel not in experiment.data:
-            raise util.CytoflowViewError("X channel {0} not in the experiment"
-                                    .format(self.xchannel))
+        Parameters
+        ----------
+        gridsize : int
+            The size of the grid on each axis
             
-        if not self.ychannel:
-            raise util.CytoflowViewError("Y channel not specified")
-        
-        if self.ychannel not in experiment.data:
-            raise util.CytoflowViewError("Y channel {0} not in the experiment"
-                                         .format(self.ychannel))
-        
-        if self.xfacet and self.xfacet not in experiment.conditions:
-            raise util.CytoflowViewError("X facet {0} not in the experiment"
-                                         .format(self.xfacet))
-        
-        if self.yfacet and self.yfacet not in experiment.conditions:
-            raise util.CytoflowViewError("Y facet {0} not in the experiment"
-                                         .format(self.yfacet))
+        smoothed : bool
+            Should the resulting mesh be smoothed?
             
-        facets = [x for x in [self.xfacet, self.yfacet] if x]
-
-        if len(facets) != len(set(facets)):
-            raise util.CytoflowViewError("Can't reuse facets")
+        smoothed_sigma : int
+            The standard deviation of the smoothing kernel.  default = 1.
             
-        col_wrap = kwargs.pop('col_wrap', None)
+        cmap : cmap
+            An instance of matplotlib.colors.Colormap.  By default, the 
+            `viridis` colormap is used
+            
+        under_color : matplotlib color
+            Sets the color to be used for low out-of-range values.
+            
+        bad_color : matplotlib color
+            Set the color to be used for masked values.
+            
+        Other Parameters
+        ----------------
+        Other `kwargs` are passed to matplotlib.axes.Axes.pcolormesh_.
         
-        if col_wrap and self.yfacet:
-            raise util.CytoflowViewError("Can't set yfacet and col_wrap at the same time.")
+        .. _matplotlib.axes.Axes.pcolormesh: https://matplotlib.org/api/_as_gen/matplotlib.axes.Axes.pcolormesh.html
+    
+        See Also
+        --------
+        BaseView.plot : common parameters for data views
         
-        if col_wrap and not self.xfacet:
-            raise util.CytoflowViewError("Must set xfacet to use col_wrap.")
+        """
         
-        if self.subset:
-            try:
-                data = experiment.query(self.subset).data.reset_index()
-            except:
-                raise util.CytoflowViewError("Subset string '{0}' isn't valid"
-                                        .format(self.subset))
-                            
-            if len(data) == 0:
-                raise util.CytoflowViewError("Subset string '{0}' returned no events"
-                                        .format(self.subset))
-        else:
-            data = experiment.data
+        super().plot(experiment, **kwargs)
+        
+    def _grid_plot(self, experiment, grid, xlim, ylim, xscale, yscale, **kwargs):
 
-        legend = kwargs.pop('legend', True)
-        
-        kwargs.setdefault('antialiased', True)
-        kwargs.setdefault('linewidth', 1)
-        kwargs.setdefault('edgecolor', 'face')
+        kwargs.setdefault('antialiased', False)
+        kwargs.setdefault('linewidth', 0)
+        kwargs.setdefault('edgecolors', 'face')
         kwargs.setdefault('cmap', plt.get_cmap('viridis'))
         
         under_color = kwargs.pop('under_color', None)
@@ -152,61 +128,15 @@ class DensityView(HasStrictTraits):
         bad_color = kwargs.pop('bad_color', None)
         if bad_color is not None:
             kwargs['cmap'].set_bad(color = kwargs['cmap'](0.0))
-
-        xscale = kwargs.pop('xscale', None)
-        if xscale is None:
-            xscale = util.scale_factory(self.xscale, experiment, channel = self.xchannel)
-        
-        yscale = kwargs.pop('yscale', None)
-        if yscale is None:
-            yscale = util.scale_factory(self.yscale, experiment, channel = self.ychannel)
-
-        # adjust the limits to clip extreme values
-        min_quantile = kwargs.pop("min_quantile", 0.001)
-        max_quantile = kwargs.pop("max_quantile", 1.0) 
-                
-        xlim = kwargs.pop("xlim", None)
-        if xlim is None:
-            xlim = (xscale.clip(data[self.xchannel].quantile(min_quantile)),
-                    xscale.clip(data[self.xchannel].quantile(max_quantile)))
-                      
-        ylim = kwargs.pop("ylim", None)
-        if ylim is None:
-            ylim = (yscale.clip(data[self.ychannel].quantile(min_quantile)),
-                    yscale.clip(data[self.ychannel].quantile(max_quantile)))
             
         gridsize = kwargs.pop('gridsize', 50)
         xbins = xscale.inverse(np.linspace(xscale(xlim[0]), xscale(xlim[1]), gridsize))
         ybins = yscale.inverse(np.linspace(yscale(ylim[0]), yscale(ylim[1]), gridsize))
-            
-        sharex = kwargs.pop('sharex', True)
-        sharey = kwargs.pop('sharey', True)
-            
-        cols = col_wrap if col_wrap else \
-               len(data[self.xfacet].unique()) if self.xfacet else 1
-            
-        g = sns.FacetGrid(data, 
-                          size = (6 / cols),
-                          aspect = 1.5,
-                          col = (self.xfacet if self.xfacet else None),
-                          row = (self.yfacet if self.yfacet else None),
-                          col_order = (np.sort(data[self.xfacet].unique()) if self.xfacet else None),
-                          row_order = (np.sort(data[self.yfacet].unique()) if self.yfacet else None),
-                          col_wrap = col_wrap,
-                          legend_out = False,
-                          sharex = sharex,
-                          sharey = sharey,
-                          xlim = xlim,
-                          ylim = ylim)
-        
-        for ax in g.axes.flatten():
-            ax.set_xscale(self.xscale, **xscale.mpl_params)
-            ax.set_yscale(self.yscale, **yscale.mpl_params)
-            
+  
         # set up the range of the color map
         if 'norm' not in kwargs:
             data_max = 0
-            for _, data_ijk in g.facet_data():
+            for _, data_ijk in grid.facet_data():
                 x = data_ijk[self.xchannel]
                 y = data_ijk[self.ychannel]
                 h, _, _ = np.histogram2d(x, y, bins=[xbins, ybins])
@@ -217,48 +147,9 @@ class DensityView(HasStrictTraits):
                                            data = np.array([1, data_max]))
             kwargs['norm'] = hue_scale.color_norm()
         
-        g.map(_densityplot, self.xchannel, self.ychannel, xbins = xbins, ybins = ybins, **kwargs)
-        
-        # if we're sharing y axes, make sure the y scale is the same for each
-        if sharey:
-            fig = plt.gcf()
-            fig_y_min = float("inf")
-            fig_y_max = float("-inf")
-            for ax in fig.get_axes():
-                ax_y_min, ax_y_max = ax.get_ylim()
-                if ax_y_min < fig_y_min:
-                    fig_y_min = ax_y_min
-                if ax_y_max > fig_y_max:
-                    fig_y_max = ax_y_max
-                    
-            for ax in fig.get_axes():
-                ax.set_ylim(fig_y_min, fig_y_max)
-            
-        # if we are sharing x axes, make sure the x scale is the same for each
-        if sharex:
-            fig = plt.gcf()
-            fig_x_min = float("inf")
-            fig_x_max = float("-inf")
-            
-            for ax in fig.get_axes():
-                ax_x_min, ax_x_max = ax.get_xlim()
-                if ax_x_min < fig_x_min:
-                    fig_x_min = ax_x_min
-                if ax_x_max > fig_x_max:
-                    fig_x_max = ax_x_max
-            
-            for ax in fig.get_axes():
-                ax.set_xlim(fig_x_min, fig_x_max)
-                
-        if legend:
-            plot_ax = plt.gca()
-            cmap = kwargs['cmap']
-            norm = kwargs['norm']
-            cax, _ = mpl.colorbar.make_axes(plt.gcf().get_axes())
-            mpl.colorbar.ColorbarBase(cax, cmap, norm)
-            plt.sca(plot_ax)
+        grid.map(_densityplot, self.xchannel, self.ychannel, xbins = xbins, ybins = ybins, **kwargs)
                
-        return g
+        return {'cmap' : kwargs['cmap'], 'norm' : kwargs['norm']}
         
         
 def _densityplot(x, y, xbins, ybins, **kwargs):

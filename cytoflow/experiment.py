@@ -185,6 +185,11 @@ class Experiment(HasStrictTraits):
         values : Any or Tuple(Any)
             The value(s) of the condition(s)
             
+        Returns
+        -------
+        A new `experiment` containing only the events specified in `conditions`
+        and `values`.
+            
         """
 
         if isinstance(conditions, str):

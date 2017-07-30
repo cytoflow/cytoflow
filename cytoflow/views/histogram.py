@@ -16,22 +16,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from traits.api import HasStrictTraits, Str, provides
-import matplotlib as mpl
+from traits.api import Str, provides
 import matplotlib.pyplot as plt
 
 import numpy as np
-import seaborn as sns
 import math
 import bottleneck
 
-from warnings import warn
-
 import cytoflow.utility as util
 from .i_view import IView
+from .base_views import Base1DView
 
 @provides(IView)
-class HistogramView(HasStrictTraits):
+class HistogramView(Base1DView):
     """Plots a one-channel histogram
     
     Attributes
@@ -83,65 +80,40 @@ class HistogramView(HasStrictTraits):
     huescale = util.ScaleEnum
     subset = Str
     
+    
     def plot(self, experiment, **kwargs):
-        """Plot a faceted histogram view of a channel"""
+        """
+        Plot a faceted histogram view of a channel
         
-        if experiment is None:
-            raise util.CytoflowViewError("No experiment specified")
-        
-        if not self.channel:
-            raise util.CytoflowViewError("Must specify a channel")
-        
-        if self.channel not in experiment.data:
-            raise util.CytoflowViewError("Channel {0} not in the experiment"
-                                    .format(self.channel))
-        
-        if self.xfacet and self.xfacet not in experiment.conditions:
-            raise util.CytoflowViewError("X facet {0} not in the experiment"
-                                    .format(self.xfacet))
-        
-        if self.yfacet and self.yfacet not in experiment.conditions:
-            raise util.CytoflowViewError("Y facet {0} not in the experiment"
-                                    .format(self.yfacet))
-        
-        if self.huefacet and self.huefacet not in experiment.conditions:
-            raise util.CytoflowViewError("Hue facet {0} not in the experiment"
-                                    .format(self.huefacet))
+        Parameters
+        ----------
+        bins : int
+            The number of bins to plot in the histogram
             
-        facets = [x for x in [self.xfacet, self.yfacet, self.huefacet] if x]
-        if len(facets) != len(set(facets)):
-            raise util.CytoflowViewError("Can't reuse facets")
+        histtype : {'stepfilled', 'step', 'bar'}
+            The type of histogram to draw.  `stepfilled` is the default, which
+            is a line plot with a color filled under the curve.
             
-        col_wrap = kwargs.pop('col_wrap', None)
-        
-        if col_wrap and self.yfacet:
-            raise util.CytoflowViewError("Can't set yfacet and col_wrap at the same time.")
-        
-        if col_wrap and not self.xfacet:
-            raise util.CytoflowViewError("Must set xfacet to use col_wrap.")
+        normed : bool
+            If `True`, re-scale the histogram to form a probability density
+            function, so the area under the histogram is 1.
+            
+        Other Parameters
+        ----------------
+        Other `kwargs` is passed to matplotlib.pyplot.hist_.
+    
+        .. _matplotlib.pyplot.hist: https://matplotlib.org/devdocs/api/_as_gen/matplotlib.pyplot.hist.html
 
-        if self.subset:
-            try:
-                data = experiment.query(self.subset).data.reset_index()
-            except util.CytoflowError as e:
-                raise util.CytoflowViewError(str(e)) from e
-            except Exception as e:
-                raise util.CytoflowViewError("Subset string '{0}' isn't valid"
-                                        .format(self.subset)) from e
-                
-            if len(data) == 0:
-                raise util.CytoflowViewError("Subset string '{0}' returned no events"
-                                        .format(self.subset))
-        else:
-            data = experiment.data
+        See Also
+        --------
+        BaseView.plot : common parameters for data views
         
-        # get the scale
-        scale = kwargs.pop('scale', None)
-        if scale is None:
-            scale = util.scale_factory(self.scale, experiment, channel = self.channel)
+        """
+        
+        super().plot(experiment, **kwargs)
 
-        scaled_data = scale(data[self.channel])
-                
+    def _grid_plot(self, experiment, grid, xlim, ylim, xscale, yscale, **kwargs):
+                        
         kwargs.setdefault('histtype', 'stepfilled')
         kwargs.setdefault('alpha', 0.5)
         kwargs.setdefault('antialiased', True)
@@ -149,6 +121,7 @@ class HistogramView(HasStrictTraits):
         # estimate a "good" number of bins; see cytoflow.utility.num_hist_bins
         # for a reference.
         
+        scaled_data = xscale(experiment[self.channel])
         num_bins = util.num_hist_bins(scaled_data)
         
         # clip num_bins to (100, 1000)
@@ -157,6 +130,7 @@ class HistogramView(HasStrictTraits):
         if (self.huefacet 
             and "bins" in experiment.metadata[self.huefacet]
             and experiment.metadata[self.huefacet]["bin_scale"] == self.scale):
+            
             # if we color facet by the result of a BinningOp and we don't
             # match the BinningOp bins with the histogram bins, we get
             # gnarly aliasing.
@@ -165,9 +139,9 @@ class HistogramView(HasStrictTraits):
             # number of bins for the histogram is much larger than the
             # number of colors, sub-divide each color into multiple bins.
             bins = experiment.metadata[self.huefacet]["bins"]
-            scaled_bins = scale(bins)
+            scaled_bins = xscale(bins)
      
-            num_hues = len(data[self.huefacet].unique())
+            num_hues = len(experiment[self.huefacet].unique())
             bins_per_hue = math.floor(num_bins / num_hues)
 
             if bins_per_hue == 1:
@@ -181,11 +155,11 @@ class HistogramView(HasStrictTraits):
                                                      bins_per_hue + 1,
                                                      endpoint = False))
 
-            bins = scale.inverse(new_bins)
+            bins = xscale.inverse(new_bins)
         else:
             xmin = bottleneck.nanmin(scaled_data)
             xmax = bottleneck.nanmax(scaled_data)
-            bins = scale.inverse(np.linspace(xmin, xmax, num=num_bins, endpoint = True))
+            bins = xscale.inverse(np.linspace(xmin, xmax, num=num_bins, endpoint = True))
             
         # take care of a rare rounding error, where the first observation is
         # less than the first bin or the last observation is more than the last 
@@ -194,52 +168,6 @@ class HistogramView(HasStrictTraits):
         bins[0] -= 1
                     
         kwargs.setdefault('bins', bins) 
-
-        # mask out the data that's not in the scale domain
-        data = data[~np.isnan(scaled_data)]
-        
-        # mask out data that doesn't fall in the range of the bins
-        if data[self.channel].min() < bins[0] or data[self.channel].max() > bins[-1]:
-            warn("Masking out data that doesn't fall in the specified bins",
-                 util.CytoflowViewWarning)
-            data = data[data[self.channel] > bins[0]]
-            data = data[data[self.channel] < bins[-1]]
-
-        # adjust the limits to clip extreme values
-        min_quantile = kwargs.pop("min_quantile", 0.001)
-        max_quantile = kwargs.pop("max_quantile", 1.0) 
-                
-        xlim = kwargs.pop("xlim", None)
-        if xlim is None:
-            xlim = (data[self.channel].quantile(min_quantile),
-                    data[self.channel].quantile(max_quantile))
-            
-        sharex = kwargs.pop("sharex", True)
-        sharey = kwargs.pop("sharey", True)
-        
-        cols = col_wrap if col_wrap else \
-               len(data[self.xfacet].unique()) if self.xfacet else 1
-            
-        g = sns.FacetGrid(data, 
-                          size = 6 / cols,
-                          aspect = 1.5,
-                          col = (self.xfacet if self.xfacet else None),
-                          row = (self.yfacet if self.yfacet else None),
-                          hue = (self.huefacet if self.huefacet else None),
-                          col_order = (np.sort(data[self.xfacet].unique()) if self.xfacet else None),
-                          row_order = (np.sort(data[self.yfacet].unique()) if self.yfacet else None),
-                          hue_order = (np.sort(data[self.huefacet].unique()) if self.huefacet else None),
-                          col_wrap = col_wrap,
-                          legend_out = False,
-                          sharex = sharex,
-                          sharey = sharey,
-                          xlim = xlim)
-        
-        # set the scale for each set of axes; can't just call plt.xscale() 
-        for ax in g.axes.flatten():
-            ax.set_xscale(self.scale, **scale.mpl_params)  
-                  
-        legend = kwargs.pop('legend', True)
         
         # if we have a hue facet, the y scaling is frequently wrong.  this
         # will capture the maximum bin count of each call to plt.hist, so 
@@ -250,63 +178,8 @@ class HistogramView(HasStrictTraits):
             n, _, _ = plt.hist(*args, **kwargs)
             ymax.append(max(n))
         
-        g.map(hist_lims, self.channel, **kwargs)
+        grid.map(hist_lims, self.channel, **kwargs)
         
         plt.ylim(0, 1.05 * max(ymax))
         
-        # if we are sharing y axes, make sure the y scale is the same for each
-        if sharey:
-            fig = plt.gcf()
-            fig_y_max = float("-inf")
-            
-            for ax in fig.get_axes():
-                _, ax_y_max = ax.get_ylim()
-                if ax_y_max > fig_y_max:
-                    fig_y_max = ax_y_max
-                    
-            for ax in fig.get_axes():
-                ax.set_ylim(None, fig_y_max)
-            
-        # if we are sharing x axes, make sure the x scale is the same for each
-        if sharex:
-            fig = plt.gcf()
-            fig_x_min = float("inf")
-            fig_x_max = float("-inf")
-            
-            for ax in fig.get_axes():
-                ax_x_min, ax_x_max = ax.get_xlim()
-                if ax_x_min < fig_x_min:
-                    fig_x_min = ax_x_min
-                if ax_x_max > fig_x_max:
-                    fig_x_max = ax_x_max
-                    
-            for ax in fig.get_axes():
-                ax.set_xlim(fig_x_min, fig_x_max)
-        
-        # if we have a hue facet and a lot of hues, make a color bar instead
-        # of a super-long legend.
-        
-        if self.huefacet and legend:
-            current_palette = mpl.rcParams['axes.color_cycle']
-        
-            if util.is_numeric(experiment.data[self.huefacet]) and \
-               len(g.hue_names) > len(current_palette):
-                
-                hue_scale = util.scale_factory(self.huescale, 
-                                               experiment, 
-                                               condition = self.huefacet)
-                
-                plot_ax = plt.gca()
-                cmap = mpl.colors.ListedColormap(sns.color_palette("husl", 
-                                                                   n_colors = len(g.hue_names)))
-                cax, _ = mpl.colorbar.make_axes(plt.gcf().get_axes())
-
-                mpl.colorbar.ColorbarBase(cax, 
-                                          cmap = cmap, 
-                                          norm = hue_scale.color_norm(), 
-                                          label = self.huefacet)
-                plt.sca(plot_ax)
-            else:
-                g.add_legend(title = self.huefacet)
-                
-        return g
+        return {}

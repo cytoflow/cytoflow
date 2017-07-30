@@ -22,7 +22,7 @@ Created on Feb 23, 2015
 @author: brian
 '''
 
-from traits.api import Interface, Str
+from traits.api import Interface, Str, Constant
 
 class IView(Interface):
     """An interface for a visualization of flow data.
@@ -33,26 +33,16 @@ class IView(Interface):
     
     Attributes
     ----------
-    id : Str
+    id : Constant
         A unique id for this view.  Prefix: "edu.mit.cytoflow.views"
 
-    friendly_id : Str
+    friendly_id : Constant
         The human-readable id of this view: eg, "Histogram"
-        
-    name : Str
-        The name of this view (for serialization, UI, etc.)
-        
-    subset : Str
-        A string specifying the subset of the data to be plotted.
-        Passed to pandas.DataFrame.query().
     """
 
-    id = Str      
-    friendly_id = Str
-     
-    name = Str
-    subset = Str
-    
+    id = Constant("FIXME")
+    friendly_id = Constant("FIXME")
+         
     def plot(self, experiment, **kwargs):
         """Plot a visualization of flow data using the pyplot stateful interface
         

@@ -60,10 +60,34 @@ cytoflow.operations.color_translation module
     :undoc-members:
     :show-inheritance:
 
+cytoflow.operations.density module
+----------------------------------
+
+.. automodule:: cytoflow.operations.density
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+cytoflow.operations.flowpeaks module
+------------------------------------
+
+.. automodule:: cytoflow.operations.flowpeaks
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 cytoflow.operations.frame_stat module
 -------------------------------------
 
 .. automodule:: cytoflow.operations.frame_stat
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+cytoflow.operations.gaussian module
+-----------------------------------
+
+.. automodule:: cytoflow.operations.gaussian
     :members:
     :undoc-members:
     :show-inheritance:
@@ -96,6 +120,14 @@ cytoflow.operations.import_op module
 ------------------------------------
 
 .. automodule:: cytoflow.operations.import_op
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+cytoflow.operations.kmeans module
+---------------------------------
+
+.. automodule:: cytoflow.operations.kmeans
     :members:
     :undoc-members:
     :show-inheritance:
