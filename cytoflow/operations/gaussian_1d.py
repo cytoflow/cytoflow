@@ -34,7 +34,8 @@ import scipy.stats as stats
 import pandas as pd
 import seaborn as sns
 
-import cytoflow.views
+from cytoflow.views import IView, HistogramView
+from .base_op_views import BaseOp1DView
 import cytoflow.utility as util
 
 from .i_operation import IOperation
@@ -433,8 +434,8 @@ class GaussianMixture1DOp(HasStrictTraits):
         """
         return GaussianMixture1DView(op = self, **kwargs)
     
-@provides(cytoflow.views.IView)
-class GaussianMixture1DView(cytoflow.views.HistogramView):
+@provides(IView)
+class GaussianMixture1DView(BaseOp1DView, HistogramView):
     """
     Attributes
     ----------    
@@ -445,159 +446,31 @@ class GaussianMixture1DView(cytoflow.views.HistogramView):
     id = 'edu.mit.synbio.cytoflow.view.gaussianmixture1dview'
     friendly_id = "1D Gaussian Mixture Diagnostic Plot"
     
-    # TODO - why can't I use GaussianMixture1DOp here?
-    op = Instance(IOperation)
-    channel = DelegatesTo('op')
-    scale = DelegatesTo('op')
-    
-    _by = Property(List)
-    
-    def _get__by(self):
-        facets = [x for x in [self.xfacet, self.yfacet] if x]
-        return list(set(self.op.by) - set(facets))
-        
-    def enum_plots(self, experiment):
-        """
-        Returns an iterator over the possible plots that this View can
-        produce.  The values returned can be passed to "plot".
-        """
-        
-        if self.xfacet and self.xfacet not in experiment.conditions:
-            raise util.CytoflowViewError("X facet {} not in the experiment"
-                                    .format(self.xfacet))
-            
-        if self.xfacet and self.xfacet not in self.op.by:
-            raise util.CytoflowViewError("X facet {} must be in GaussianMixture1DOp.by, which is {}"
-                                    .format(self.xfacet, self.op.by))
-        
-        if self.yfacet and self.yfacet not in experiment.conditions:
-            raise util.CytoflowViewError("Y facet {0} not in the experiment"
-                                    .format(self.yfacet))
-            
-        if self.yfacet and self.yfacet not in self.op.by:
-            raise util.CytoflowViewError("Y facet {} must be in GaussianMixture1DOp.by, which is {}"
-                                    .format(self.yfacet, self.op.by))
-            
-        for b in self.op.by:
-            if b not in experiment.data:
-                raise util.CytoflowOpError("Aggregation metadata {0} not found"
-                                      " in the experiment"
-                                      .format(b))
-        
-        class plot_enum(object):
-            
-            def __init__(self, view, experiment):
-                self._iter = None
-                self._returned = False
-                
-                if view._by:
-                    self._iter = experiment.data.groupby(view._by).__iter__()
-                
-            def __iter__(self):
-                return self
-            
-            def __next__(self):
-                if self._iter:
-                    return next(self._iter)[0]
-                else:
-                    if self._returned:
-                        raise StopIteration
-                    else:
-                        self._returned = True
-                        return None
-            
-        return plot_enum(self, experiment)
-    
+    def _get_facets(self):
+        return [self.xfacet, self.yfacet]    
     
     def plot(self, experiment, plot_name = None, **kwargs):
         """
         Plot the plots.
         """
-        if experiment is None:
-            raise util.CytoflowViewError("No experiment specified")
-              
-        if not self.op.channel:
-            raise util.CytoflowViewError("No channel specified")
-              
-        experiment = experiment.clone()
+
+        super().plot(experiment = experiment, 
+                     plot_name = plot_name, 
+                     scale = self.op._scale, 
+                     **kwargs)
+
+
+    def _grid_plot(self, experiment, grid, xlim, ylim, xscale, yscale, **kwargs):
+
+        plot_name = kwargs.pop('plot_name', None)
+
+        # plot the histograms
+        super()._grid_plot(experiment, grid, xlim, ylim, xscale, yscale, **kwargs)
+
+        # plot the actual distributions on top of them.
         
-        # try to apply the current operation
-        try:
-            experiment = self.op.apply(experiment)
-        except util.CytoflowOpError:
-            # could have failed because no GMMs have been estimated, or because
-            # op has already been applied
-            pass  
-
-        # if apply() succeeded (or wasn't needed), set up the hue facet
-        if self.op.name and self.op.name in experiment.conditions:
-            if self.huefacet and self.huefacet != self.op.name:
-                warn("Resetting huefacet to the model component (was {}, now {})."
-                     .format(self.huefacet, self.op.name))
-            self.huefacet = self.op.name
-        else:
-            self.huefacet = ""
-        
-        if self.subset:
-            try:
-                experiment = experiment.query(self.subset)
-                experiment.data.reset_index(drop = True, inplace = True)
-            except Exception as e:
-                raise util.CytoflowViewError("Subset string '{0}' isn't valid"
-                                        .format(self.subset)) from e
-                
-            if len(experiment) == 0:
-                raise util.CytoflowViewError("Subset string '{0}' returned no events"
-                                        .format(self.subset))   
-        
-        # figure out common x limits for multiple plots
-        # adjust the limits to clip extreme values
-        min_quantile = kwargs.pop("min_quantile", 0.001)
-        max_quantile = kwargs.pop("max_quantile", 1.0) 
-                
-        xlim = kwargs.pop("xlim", None)
-        if xlim is None:
-            xlim = (experiment.data[self.op.channel].quantile(min_quantile),
-                    experiment.data[self.op.channel].quantile(max_quantile))
-              
-        # see if we're making subplots
-        if self._by and plot_name is None:
-            raise util.CytoflowViewError("You must use facets {} in either the "
-                                         "plot variables or the plt name. "
-                                         "Possible plot names: {}"
-                                         .format(self._by, [x for x in self.enum_plots(experiment)]))
-                                        
-        if plot_name is not None:
-            if plot_name is not None and not self._by:
-                raise util.CytoflowViewError("Plot {} not from plot_enum"
-                                             .format(plot_name))
-                               
-            groupby = experiment.data.groupby(self._by)
-
-            if plot_name not in set(groupby.groups.keys()):
-                raise util.CytoflowViewError("Plot {} not from plot_enum"
-                                             .format(plot_name))
-                
-            experiment.data = groupby.get_group(plot_name)
-            experiment.data.reset_index(drop = True, inplace = True)
-
-        # get the parameterized scale object back from the op
-        scale = self.op._scale
-
-        # plot the histogram, whether or not we're plotting distributions on top
-
-        g = super(GaussianMixture1DView, self).plot(experiment, 
-                                                    scale = scale, 
-                                                    xlim = xlim,
-                                                    **kwargs)
-                
-        if self._by and plot_name is not None:
-            plt.title("{0} = {1}".format(self._by, plot_name))
-
-        # plot the actual distribution on top of it.    
-        
-        row_names = g.row_names if g.row_names else [False]
-        col_names = g.col_names if g.col_names else [False]
+        row_names = grid.row_names if grid.row_names else [False]
+        col_names = grid.col_names if grid.col_names else [False]
                 
         for (i, row), (j, col) in product(enumerate(row_names),
                                           enumerate(col_names)):
@@ -623,14 +496,14 @@ class GaussianMixture1DView(cytoflow.views.HistogramView):
                     # there weren't any events in this subset to estimate a GMM from
                     warn("No estimated GMM for plot {}".format(gmm_name),
                           util.CytoflowViewWarning)
-                    return g
+                    return {}
             else:
                 if True in self.op._gmms:
                     gmm = self.op._gmms[True]
                 else:
-                    return g           
+                    return {}          
                 
-            ax = g.facet_axis(i, j)
+            ax = grid.facet_axis(i, j)
                                                 
             # okay.  we want to scale the gaussian curves to have the same area
             # as the plots they're over.  so, what's the total area on the plot?
@@ -641,7 +514,7 @@ class GaussianMixture1DView(cytoflow.views.HistogramView):
                 
                 patch = ax.patches[k]
                 xy = patch.get_xy()
-                patch_area += poly_area([scale(p[0]) for p in xy], [p[1] for p in xy])
+                patch_area += poly_area([xscale(p[0]) for p in xy], [p[1] for p in xy])
                 
             # now, scale the plotted curve by the area of the total plot times
             # the proportion of it that is under that curve.
@@ -653,16 +526,16 @@ class GaussianMixture1DView(cytoflow.views.HistogramView):
 #                 pdf_scale *= 1.1
                  
                 plt_min, plt_max = plt.gca().get_xlim()
-                x = scale.inverse(np.linspace(scale(plt_min), scale(plt_max), 500))     
+                x = xscale.inverse(np.linspace(xscale(plt_min), xscale(plt_max), 500))     
                          
                 mean = gmm.means_[k][0]
                 stdev = np.sqrt(gmm.covariances_[k][0])
-                y = stats.norm.pdf(scale(x), mean, stdev) * pdf_scale
+                y = stats.norm.pdf(xscale(x), mean, stdev) * pdf_scale
                 color_k = k % len(sns.color_palette())
                 color = sns.color_palette()[color_k]
                 ax.plot(x, y, color = color)
                         
-        return g
+        return {}
 
 # from http://stackoverflow.com/questions/24467972/calculate-area-of-polygon-given-x-y-coordinates
 def poly_area(x,y):

@@ -22,7 +22,7 @@ Created on Feb 23, 2015
 @author: brian
 '''
 
-from traits.api import Interface, Str, Constant
+from traits.api import Interface, Constant
 
 class IView(Interface):
     """An interface for a visualization of flow data.

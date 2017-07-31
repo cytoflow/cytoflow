@@ -24,10 +24,8 @@ Created on Dec 16, 2015
 from warnings import warn
 from itertools import product
 
-import matplotlib.pyplot as plt
-
 from traits.api import (HasStrictTraits, Str, CStr, Dict, Any, Instance, Bool, 
-                        Constant, List, provides, DelegatesTo, Property)
+                        Constant, List, provides)
 
 import numpy as np
 from sklearn import mixture
@@ -35,10 +33,11 @@ from scipy import linalg
 import pandas as pd
 import seaborn as sns
 
-import cytoflow.views
+from cytoflow.views import IView, ScatterplotView
 import cytoflow.utility as util
 
 from .i_operation import IOperation
+from .base_op_views import BaseOp2DView
 
 @provides(IOperation)
 class GaussianMixture2DOp(HasStrictTraits):
@@ -493,8 +492,8 @@ import matplotlib.path as path
 import matplotlib.patches as patches
 import matplotlib.transforms as transforms
     
-@provides(cytoflow.views.IView)
-class GaussianMixture2DView(cytoflow.views.ScatterplotView):
+@provides(IView)
+class GaussianMixture2DView(BaseOp2DView, ScatterplotView):
     """
     Attributes
     ----------
@@ -505,165 +504,32 @@ class GaussianMixture2DView(cytoflow.views.ScatterplotView):
     id = 'edu.mit.synbio.cytoflow.view.gaussianmixture2dview'
     friendly_id = "2D Gaussian Mixture Diagnostic Plot"
     
-    # TODO - why can't I use GaussianMixture2DOp here?
-    op = Instance(IOperation)
-    xchannel = DelegatesTo('op')
-    ychannel = DelegatesTo('op')
-    xscale = DelegatesTo('op')
-    yscale = DelegatesTo('op')
-    
-    _by = Property(List)
-    
-    def _get__by(self):
-        facets = [x for x in [self.xfacet, self.yfacet] if x]
-        return list(set(self.op.by) - set(facets))
-        
-    def enum_plots(self, experiment):
-        """
-        Returns an iterator over the possible plots that this View can
-        produce.  The values returned can be passed to "plot".
-        """
-    
-        if self.xfacet and self.xfacet not in experiment.conditions:
-            raise util.CytoflowViewError("X facet {} not in the experiment"
-                                    .format(self.xfacet))
-            
-        if self.xfacet and self.xfacet not in self.op.by:
-            raise util.CytoflowViewError("X facet {} must be in GaussianMixture1DOp.by, which is {}"
-                                    .format(self.xfacet, self.op.by))
-        
-        if self.yfacet and self.yfacet not in experiment.conditions:
-            raise util.CytoflowViewError("Y facet {0} not in the experiment"
-                                    .format(self.yfacet))
-            
-        if self.yfacet and self.yfacet not in self.op.by:
-            raise util.CytoflowViewError("Y facet {} must be in GaussianMixture1DOp.by, which is {}"
-                                    .format(self.yfacet, self.op.by))
-            
-        for b in self.op.by:
-            if b not in experiment.data:
-                raise util.CytoflowOpError("Aggregation metadata {0} not found"
-                                      " in the experiment"
-                                      .format(b))    
-    
-        class plot_enum(object):
-            
-            def __init__(self, view, experiment):
-                self._iter = None
-                self._returned = False
-                
-                if view._by:
-                    self._iter = experiment.data.groupby(view._by).__iter__()
-                
-            def __iter__(self):
-                return self
-            
-            def __next__(self):
-                if self._iter:
-                    return next(self._iter)[0]
-                else:
-                    if self._returned:
-                        raise StopIteration
-                    else:
-                        self._returned = True
-                        return None
-            
-        return plot_enum(self, experiment)
+    def _get_facets(self):
+        return [self.xfacet, self.yfacet]
     
     def plot(self, experiment, plot_name = None, **kwargs):
         """
         Plot the plots.
         """
-        if experiment is None:
-            raise util.CytoflowViewError("No experiment specified")
         
-        if not self.op.xchannel:
-            raise util.CytoflowViewError("No X channel specified")
+        super().plot(experiment = experiment,
+                     plot_name = plot_name,
+                     xscale = self.op._xscale, 
+                     yscale = self.op._yscale)
         
-        if not self.op.ychannel:
-            raise util.CytoflowViewError("No Y channel specified")
+    def _grid_plot(self, experiment, grid, xlim, ylim, xscale, yscale, **kwargs):
 
-        experiment = experiment.clone()
-        
-        # try to apply the current op
-        try:
-            experiment = self.op.apply(experiment)
-        except util.CytoflowOpError:
-            pass
-        
-        # if apply() succeeded (or wasn't needed), set up the hue facet
-        if self.op.name and self.op.name in experiment.conditions:
-            if self.huefacet and self.huefacet != self.op.name:
-                warn("Resetting huefacet to the model component (was {}, now {})."
-                     .format(self.huefacet, self.op.name))
-            self.huefacet = self.op.name
-        
-        if self.subset:
-            try:
-                experiment = experiment.query(self.subset)
-                experiment.data.reset_index(drop = True, inplace = True)
-            except Exception as e:
-                raise util.CytoflowViewError("Subset string '{0}' isn't valid"
-                                        .format(self.subset)) from e
-                
-            if len(experiment) == 0:
-                raise util.CytoflowViewError("Subset string '{0}' returned no events"
-                                        .format(self.subset)) 
-        
-        # figure out common limits
-        # adjust the limits to clip extreme values
-        min_quantile = kwargs.pop("min_quantile", 0.001)
-        max_quantile = kwargs.pop("max_quantile", 1.0) 
-                
-        xlim = kwargs.pop("xlim", None)
-        if xlim is None:
-            xlim = (experiment.data[self.op.xchannel].quantile(min_quantile),
-                    experiment.data[self.op.xchannel].quantile(max_quantile))
+        plot_name = kwargs.pop('plot_name', None)
 
-        ylim = kwargs.pop("ylim", None)
-        if ylim is None:
-            ylim = (experiment.data[self.op.ychannel].quantile(min_quantile),
-                    experiment.data[self.op.ychannel].quantile(max_quantile))
-              
-        # see if we're making subplots
-        if self._by and plot_name is None:
-            raise util.CytoflowViewError("You must use facets {} in either the "
-                                         "plot variables or the plt name. "
-                                         "Possible plot names: {}"
-                                         .format(self._by, [x for x in self.enum_plots(experiment)]))
-                
-        if plot_name is not None:
-            if plot_name is not None and not self._by:
-                raise util.CytoflowViewError("Plot {} not from plot_enum"
-                                             .format(plot_name))
-                
-            groupby = experiment.data.groupby(self._by)
-            
-            if plot_name not in set(groupby.groups.keys()):
-                raise util.CytoflowViewError("Plot {} not from plot_enum"
-                                             .format(plot_name))
-            
-            experiment.data = groupby.get_group(plot_name)
-            experiment.data.reset_index(drop = True, inplace = True)
-            
-        # plot the scatterplot, whether or not we're plotting isolines on top
-        
-        g = super(GaussianMixture2DView, self).plot(experiment, 
-                                                    xscale = self.op._xscale, 
-                                                    yscale = self.op._yscale,
-                                                    xlim = xlim, 
-                                                    ylim = ylim,
-                                                    **kwargs)
-        
-        if self._by and plot_name is not None:
-            plt.title("{0} = {1}".format(self._by, plot_name))
+        # plot the scatterplot
+        super()._grid_plot(experiment, grid, xlim, ylim, xscale, yscale, **kwargs)
 
         # plot the actual distribution on top of it.  display as a "contour"
         # plot with ellipses at 1, 2, and 3 standard deviations
         # cf. http://scikit-learn.org/stable/auto_examples/mixture/plot_gmm.html
         
-        row_names = g.row_names if g.row_names else [False]
-        col_names = g.col_names if g.col_names else [False]
+        row_names = grid.row_names if grid.row_names else [False]
+        col_names = grid.col_names if grid.col_names else [False]
         
         for (i, row), (j, col) in product(enumerate(row_names),
                                           enumerate(col_names)):
@@ -689,14 +555,14 @@ class GaussianMixture2DView(cytoflow.views.ScatterplotView):
                     # there weren't any events in this subset to estimate a GMM from
                     warn("No estimated GMM for plot {}".format(gmm_name),
                           util.CytoflowViewWarning)
-                    return g
+                    return {}
             else:
                 if True in self.op._gmms:
                     gmm = self.op._gmms[True]
                 else:
-                    return g           
+                    return {}          
                 
-            ax = g.facet_axis(i, j)
+            ax = grid.facet_axis(i, j)
         
             for k, (mean, covar) in enumerate(zip(gmm.means_, gmm.covariances_)):    
                 v, w = linalg.eigh(covar)
@@ -742,8 +608,8 @@ class GaussianMixture2DView(cytoflow.views.ScatterplotView):
                                    linewidth = 2,
                                    alpha = 0.33)
                 
-        return g
-
+        return {}
+    
     def _plot_ellipse(self, ax, center, width, height, angle, **kwargs):
         tf = transforms.Affine2D() \
              .scale(width, height) \
