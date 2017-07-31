@@ -25,20 +25,19 @@ import matplotlib.pyplot as plt
 
 import cytoflow.utility as util
 from .i_view import IView
+from .base_views import Base1DView
 
 @provides(IView)
-class ViolinPlotView(HasStrictTraits):
+class ViolinPlotView(Base1DView):
     """Plots a violin plot -- a set of kernel density estimates
     
     Attributes
     ----------
-    name : Str
-        The view's name (for serialization, UI etc.)
-    
+
     channel : Str
         the name of the channel we're plotting
         
-    xvariable : Str
+    variable : Str
         the main variable by which we're faceting
     
     xfacet : Str 
@@ -61,114 +60,91 @@ class ViolinPlotView(HasStrictTraits):
         
     Examples
     --------
-    >>> kde = flow.Kde1DView()
-    >>> kde.name = "Kernel Density 1D"
-    >>> kde.channel = 'Y2-A'
-    >>> kde.xfacet = 'Dox'
-    >>> kde.yfacet = 'Y2-A+'
-    >>> kde.plot(ex)
+    >>> viol = flow.ViolinPlotView()
+    >>> viol.channel = 'Y2-A'
+    >>> viol.variable = 'Dox'
+    >>> viol.plot(ex)
     """
     
     # traits   
     id = "edu.mit.synbio.cytoflow.view.violin"
     friendly_id = "Violin Plot" 
-    
-    name = Str
-    channel = Str
+
     variable = Str
-    scale = util.ScaleEnum
-    xfacet = Str
-    yfacet = Str
-    huefacet = Str
-    huescale = util.ScaleEnum
-    subset = Str
     
     def plot(self, experiment, **kwargs):
-        """Plot a faceted histogram view of a channel"""
+        """
+        Plot a violin plot of a variable
+        
+        Parameters
+        ----------
+        
+        orient : "v" | "h", optional
+            Orientation of the plot (vertical or horizontal). 
+        
+        bw : {{'scott', 'silverman', float}}, optional
+            Either the name of a reference rule or the scale factor to use when
+            computing the kernel bandwidth. The actual kernel size will be
+            determined by multiplying the scale factor by the standard deviation of
+            the data within each bin.
+
+        scale : {{"area", "count", "width"}}, optional
+            The method used to scale the width of each violin. If ``area``, each
+            violin will have the same area. If ``count``, the width of the violins
+            will be scaled by the number of observations in that bin. If ``width``,
+            each violin will have the same width.
+            
+        scale_hue : bool, optional
+            When nesting violins using a ``hue`` variable, this parameter
+            determines whether the scaling is computed within each level of the
+            major grouping variable (``scale_hue=True``) or across all the violins
+            on the plot (``scale_hue=False``).
+            
+        gridsize : int, optional
+            Number of points in the discrete grid used to compute the kernel
+            density estimate.
+
+        inner : {{"box", "quartile", "point", "stick", None}}, optional
+            Representation of the datapoints in the violin interior. If ``box``,
+            draw a miniature boxplot. If ``quartiles``, draw the quartiles of the
+            distribution.  If ``point`` or ``stick``, show each underlying
+            datapoint. Using ``None`` will draw unadorned violins.
+            
+        split : bool, optional
+            When using hue nesting with a variable that takes two levels, setting
+            ``split`` to True will draw half of a violin for each level. This can
+            make it easier to directly compare the distributions.
+            
+        See Also
+        --------
+        BaseView.plot : common parameters for data views
+        """
         
         if experiment is None:
             raise util.CytoflowViewError("No experiment specified")
         
-        if not self.channel:
-            raise util.CytoflowViewError("Must specify a channel")
-        
-        if self.channel not in experiment.data:
-            raise util.CytoflowViewError("Channel {0} not in the experiment"
-                                    .format(self.channel))
-        
         if not self.variable:
             raise util.CytoflowViewError("Variable not specified")
         
-        if not self.variable in experiment.conditions:
-            raise util.CytoflowViewError("Variable {0} isn't in the experiment")
-        
-        if self.xfacet and self.xfacet not in experiment.conditions:
-            raise util.CytoflowViewError("X facet {0} not in the experiment"
-                                    .format(self.xfacet))
-        
-        if self.yfacet and self.yfacet not in experiment.conditions:
-            raise util.CytoflowViewError("Y facet {0} not in the experiment"
-                                    .format(self.yfacet))
-        
-        if self.huefacet and self.huefacet not in experiment.conditions:
-            raise util.CytoflowViewError("Hue facet {0} not in the experiment"
-                                    .format(self.huefacet))
-            
-        facets = [x for x in [self.xfacet, self.yfacet, self.huefacet] if x]
+        facets = [x for x in [self.xfacet, self.yfacet, self.huefacet, self.variable] if x]
         if len(facets) != len(set(facets)):
             raise util.CytoflowViewError("Can't reuse facets")
-            
-        col_wrap = kwargs.pop('col_wrap', None)
         
-        if col_wrap and self.yfacet:
-            raise util.CytoflowViewError("Can't set yfacet and col_wrap at the same time.") 
+        super().plot(experiment, **kwargs)
         
-        if col_wrap and not self.xfacet:
-            raise util.CytoflowViewError("Must set xfacet to use col_wrap.")
+    def _grid_plot(self, experiment, grid, xlim, ylim, xscale, yscale, **kwargs):
 
-        if self.subset:
-            try:
-                data = experiment.query(self.subset).data.reset_index()
-            except Exception as e:
-                raise util.CytoflowViewError("Subset string '{0}' isn't valid"
-                                        .format(self.subset)) from e
-                
-            if len(data) == 0:
-                raise util.CytoflowViewError("Subset string '{0}' returned no events"
-                                        .format(self.subset))
-        else:
-            data = experiment.data
-                    
-        # get the scale
-        scale = util.scale_factory(self.scale, experiment, channel = self.channel)
-        kwargs['data_scale'] = scale
-        
         kwargs.setdefault('orient', 'v')
-        
-        cols = col_wrap if col_wrap else \
-               len(data[self.xfacet].unique()) if self.xfacet else 1
-               
-        sharex = kwargs.pop('sharex', True)
-        sharey = kwargs.pop('sharey', True)
-                
-        g = sns.FacetGrid(data, 
-                          size = (6 / cols),
-                          aspect = 1.5,
-                          col = (self.xfacet if self.xfacet else None),
-                          row = (self.yfacet if self.yfacet else None),
-                          col_order = (np.sort(data[self.xfacet].unique()) if self.xfacet else None),
-                          row_order = (np.sort(data[self.yfacet].unique()) if self.yfacet else None),
-                          col_wrap = col_wrap,
-                          legend_out = False,
-                          sharex = sharex,
-                          sharey = sharey)
+
+        # since the 'scale' kwarg is already used
+        kwargs['data_scale'] = xscale
                 
         # set the scale for each set of axes; can't just call plt.xscale() 
-        for ax in g.axes.flatten():
+        for ax in grid.axes.flatten():
             if kwargs['orient'] == 'h':
-                ax.set_xscale(self.scale, **scale.mpl_params)  
+                ax.set_xscale(xscale.name, **xscale.mpl_params)  
             else:
-                ax.set_yscale(self.scale, **scale.mpl_params)  
+                ax.set_yscale(xscale.name, **xscale.mpl_params)  
             
         # this order-dependent thing weirds me out.      
         if kwargs['orient'] == 'h':
@@ -179,62 +155,13 @@ class ViolinPlotView(HasStrictTraits):
         if self.huefacet:
             violin_args.append(self.huefacet)
             
-        g.map(_violinplot,   
-              *violin_args,      
-              order = np.sort(data[self.variable].unique()),
-              hue_order = (np.sort(data[self.huefacet].unique()) if self.huefacet else None),
-              **kwargs)
+        grid.map(_violinplot,   
+                 *violin_args,      
+                 order = np.sort(experiment[self.variable].unique()),
+                 hue_order = (np.sort(experiment[self.huefacet].unique()) if self.huefacet else None),
+                 **kwargs)
         
-        # if we're sharing y axes, make sure the y scale is the same for each
-        if sharey:
-            fig = plt.gcf()
-            fig_y_min = float("inf")
-            fig_y_max = float("-inf")
-            for ax in fig.get_axes():
-                ax_y_min, ax_y_max = ax.get_ylim()
-                if ax_y_min < fig_y_min:
-                    fig_y_min = ax_y_min
-                if ax_y_max > fig_y_max:
-                    fig_y_max = ax_y_max
-                    
-            for ax in fig.get_axes():
-                ax.set_ylim(fig_y_min, fig_y_max)
-            
-        # if we're sharing x axes, make sure the x scale is the same for each
-        if sharex:
-            fig = plt.gcf()
-            fig_x_min = float("inf")
-            fig_x_max = float("-inf")
-            
-            for ax in fig.get_axes():
-                ax_x_min, ax_x_max = ax.get_xlim()
-                if ax_x_min < fig_x_min:
-                    fig_x_min = ax_x_min
-                if ax_x_max > fig_x_max:
-                    fig_x_max = ax_x_max
-            
-            for ax in fig.get_axes():
-                ax.set_xlim(fig_x_min, fig_x_max)
-        
-        if self.huefacet:
-            current_palette = mpl.rcParams['axes.color_cycle']
-            if util.is_numeric(experiment.data[self.huefacet]) and \
-               len(g.hue_names) > len(current_palette):
-                
-                plot_ax = plt.gca()
-                cmap = mpl.colors.ListedColormap(sns.color_palette("husl", 
-                                                                   n_colors = len(g.hue_names)))
-                cax, _ = mpl.colorbar.make_axes(plt.gcf().get_axes())
-                hue_scale = util.scale_factory(self.huescale, 
-                                               experiment, 
-                                               condition = self.huefacet)
-                mpl.colorbar.ColorbarBase(cax, 
-                                          cmap = cmap, 
-                                          norm = hue_scale.color_norm(),
-                                          label = self.huefacet)
-                plt.sca(plot_ax)
-            else:
-                g.add_legend(title = self.huefacet)
+        return {}
         
 # this uses an internal interface to seaborn's violin plot.
 

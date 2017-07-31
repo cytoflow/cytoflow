@@ -32,9 +32,10 @@ import statsmodels.nonparametric.api as smnp
 
 import cytoflow.utility as util
 from .i_view import IView
+from .base_views import Base2DView
 
 @provides(IView)
-class Kde2DView(HasStrictTraits):
+class Kde2DView(Base2DView):
     """
     Plots a 2-d kernel density estimate.  
     
@@ -78,178 +79,60 @@ class Kde2DView(HasStrictTraits):
     id = 'edu.mit.synbio.cytoflow.view.kde2d'
     friend_id = "2D Kernel Density Estimate"
     
-    name = Str
-    xchannel = Str
-    xscale = util.ScaleEnum
-    ychannel = Str
-    yscale = util.ScaleEnum
-    xfacet = Str
-    yfacet = Str
-    huefacet = Str
-    huescale = util.ScaleEnum
-    subset = Str
-    
     def plot(self, experiment, **kwargs):
-        """Plot a faceted 2d kernel density estimate"""
+        """
+        Plot a faceted 2d kernel density estimate
         
-        if experiment is None:
-            raise util.CytoflowViewError("No experiment specified")
+        Parameters
+        ----------
+        shade : bool
+            Shade the interior of the isoplot?  (default = `False`)
+            
+        min_alpha, max_alpha : float
+            The minimum and maximum alpha blending values of the isolines,
+            between 0 (transparent) and 1 (opaque).
+            
+        n_levels : int
+            How many isolines to draw? (default = 10)
+            
+        kernel : str
+            The kernel to use for the kernel density estimate. Choices are:
+                - "gau" for Gaussian (the default)
+                - "biw" for biweight
+                - "cos" for cosine
+                - "epa" for Epanechnikov
+                - "tri" for triangular
+                - "triw" for triweight
+                - "uni" for uniform
+            
+        bw : str or float
+            The bandwidth for the kernel, controls how lumpy or smooth the
+            kernel estimate is.  Choices are:
+                - "scott" (the default) - 1.059 * A * nobs ** (-1/5.), where A is min(std(X),IQR/1.34)
+                - "silverman" - .9 * A * nobs ** (-1/5.), where A is min(std(X),IQR/1.34)
+                - "normal_reference" - C * A * nobs ** (-1/5.), where C is calculated from the kernel. Equivalent (up to 2 dp) to the "scott" bandwidth for gaussian kernels. See bandwidths.py
 
-        if not self.xchannel:
-            raise util.CytoflowViewError("X channel not specified")
-        
-        if self.xchannel not in experiment.data:
-            raise util.CytoflowViewError("X channel {0} not in the experiment"
-                                    .format(self.xchannel))
+            If a float is given, it is the bandwidth.
             
-        if not self.ychannel:
-            raise util.CytoflowViewError("Y channel not specified")
+        gridsize : int
+            How many times to compute the kernel on each axis?  (default: 100)
         
-        if self.ychannel not in experiment.data:
-            raise util.CytoflowViewError("Y channel {0} not in the experiment"
-                                         .format(self.ychannel))
+        See Also
+        --------
+        BaseView.plot : common parameters for data views
+        """
         
-        if self.xfacet and self.xfacet not in experiment.conditions:
-            raise util.CytoflowViewError("X facet {0} not in the experiment"
-                                         .format(self.xfacet))
+        super().plot(experiment, **kwargs)
         
-        if self.yfacet and self.yfacet not in experiment.conditions:
-            raise util.CytoflowViewError("Y facet {0} not in the experiment"
-                                         .format(self.yfacet))
-        
-        if self.huefacet and self.huefacet not in experiment.metadata:
-            raise util.CytoflowViewError("Hue facet {0} not in the experiment"
-                                         .format(self.huefacet))
-            
-        facets = [x for x in [self.xfacet, self.yfacet, self.huefacet] if x]
-        if len(facets) != len(set(facets)):
-            raise util.CytoflowViewError("Can't reuse facets")
-            
-        col_wrap = kwargs.pop('col_wrap', None)
-        
-        if col_wrap and self.yfacet:
-            raise util.CytoflowViewError("Can't set yfacet and col_wrap at the same time.") 
-        
-        if col_wrap and not self.xfacet:
-            raise util.CytoflowViewError("Must set xfacet to use col_wrap.")
-        
-        if self.subset:
-            try:
-                data = experiment.query(self.subset).data.reset_index()
-            except:
-                raise util.CytoflowViewError("Subset string '{0}' isn't valid"
-                                        .format(self.subset))
-                            
-            if len(data) == 0:
-                raise util.CytoflowViewError("Subset string '{0}' returned no events"
-                                        .format(self.subset))
-        else:
-            data = experiment.data
+    def _grid_plot(self, experiment, grid, xlim, ylim, xscale, yscale, **kwargs):
+
         
         kwargs.setdefault('shade', False)
         kwargs.setdefault('min_alpha', 0.2)
         kwargs.setdefault('max_alpha', 0.9)
         kwargs.setdefault('n_levels', 10)
-        
-        xscale = util.scale_factory(self.xscale, experiment, channel = self.xchannel)
-        yscale = util.scale_factory(self.yscale, experiment, channel = self.ychannel)
 
-        # adjust the limits to clip extreme values
-        min_quantile = kwargs.pop("min_quantile", 0.001)
-        max_quantile = kwargs.pop("max_quantile", 1.0) 
-                
-        xlim = kwargs.pop("xlim", None)
-        if xlim is None:
-            xlim = (xscale.clip(data[self.xchannel].quantile(min_quantile)),
-                    xscale.clip(data[self.xchannel].quantile(max_quantile)))
-                      
-        ylim = kwargs.pop("ylim", None)
-        if ylim is None:
-            ylim = (yscale.clip(data[self.ychannel].quantile(min_quantile)),
-                    yscale.clip(data[self.ychannel].quantile(max_quantile)))
-
-        sharex = kwargs.pop('sharex', True)
-        sharey = kwargs.pop('sharey', True)
-
-        cols = col_wrap if col_wrap else \
-               len(data[self.xfacet].unique()) if self.xfacet else 1
-
-        g = sns.FacetGrid(data, 
-                          size = (6 / cols),
-                          aspect = 1.5,
-                          col = (self.xfacet if self.xfacet else None),
-                          row = (self.yfacet if self.yfacet else None),
-                          hue = (self.huefacet if self.huefacet else None),
-                          col_order = (np.sort(data[self.xfacet].unique()) if self.xfacet else None),
-                          row_order = (np.sort(data[self.yfacet].unique()) if self.yfacet else None),
-                          hue_order = (np.sort(data[self.huefacet].unique()) if self.huefacet else None),
-                          col_wrap = col_wrap,
-                          legend_out = False,
-                          sharex = sharex,
-                          sharey = sharey,
-                          xlim = xlim,
-                          ylim = ylim)
-        
-        for ax in g.axes.flatten():
-            ax.set_xscale(self.xscale, **xscale.mpl_params)
-            ax.set_yscale(self.yscale, **yscale.mpl_params)
-            
-        kwargs['xscale'] = xscale
-        kwargs['yscale'] = yscale
-
-        g.map(_bivariate_kdeplot, self.xchannel, self.ychannel, **kwargs)
-        
-        # if we are sharing y axes, make sure the y scale is the same for each
-        if sharey:
-            fig = plt.gcf()
-            fig_y_min = float("inf")
-            fig_y_max = float("-inf")
-            
-            for ax in fig.get_axes():
-                ax_y_min, ax_y_max = ax.get_ylim()
-                if ax_y_min < fig_y_min:
-                    fig_y_min = ax_y_min
-                if ax_y_max > fig_y_max:
-                    fig_y_max = ax_y_max
-                    
-            for ax in fig.get_axes():
-                ax.set_ylim(fig_y_min, fig_y_max)
-            
-        # if we have are sharing x axes, make sure the x scale is the same for each
-        if sharex:
-            fig = plt.gcf()
-            fig_x_min = float("inf")
-            fig_x_max = float("-inf")
-            
-            for ax in fig.get_axes():
-                ax_x_min, ax_x_max = ax.get_xlim()
-                if ax_x_min < fig_x_min:
-                    fig_x_min = ax_x_min
-                if ax_x_max > fig_x_max:
-                    fig_x_max = ax_x_max
-                    
-            for ax in fig.get_axes():
-                ax.set_xlim(fig_x_min, fig_x_max)
-        
-        if self.huefacet:
-            current_palette = mpl.rcParams['axes.color_cycle']
-            if util.is_numeric(experiment.data[self.huefacet]) and \
-               len(g.hue_names) > len(current_palette):
-                
-                plot_ax = plt.gca()
-                cmap = mpl.colors.ListedColormap(sns.color_palette("husl", 
-                                                                   n_colors = len(g.hue_names)))
-                cax, _ = mpl.colorbar.make_axes(plt.gcf().get_axes())
-                hue_scale = util.scale_factory(self.huescale, 
-                                               experiment, 
-                                               condition = self.huefacet)
-                mpl.colorbar.ColorbarBase(cax, 
-                                          cmap = cmap, 
-                                          norm = hue_scale.color_norm(),
-                                          label = self.huefacet)
-                plt.sca(plot_ax)
-            else:
-                g.add_legend(title = self.huefacet)
+        grid.map(_bivariate_kdeplot, self.xchannel, self.ychannel, **kwargs)
         
 # yoinked from seaborn/distributions.py, with modifications for scaling.
 def _bivariate_kdeplot(x, y, xscale=None, yscale=None, shade=False, kernel="gau",

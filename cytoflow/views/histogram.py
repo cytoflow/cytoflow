@@ -100,7 +100,7 @@ class HistogramView(Base1DView):
             
         Other Parameters
         ----------------
-        Other `kwargs` is passed to matplotlib.pyplot.hist_.
+        Other `kwargs` are passed to matplotlib.pyplot.hist_.
     
         .. _matplotlib.pyplot.hist: https://matplotlib.org/devdocs/api/_as_gen/matplotlib.pyplot.hist.html
 
