@@ -26,9 +26,10 @@ import statsmodels.nonparametric.api as smnp
 
 import cytoflow.utility as util
 from .i_view import IView
+from .base_views import Base1DView
 
 @provides(IView)
-class Kde1DView(HasStrictTraits):
+class Kde1DView(Base1DView):
     """Plots a one-channel kernel density estimate
     
     Attributes
@@ -54,9 +55,7 @@ class Kde1DView(HasStrictTraits):
     subset : Str
         a string passed to pandas.DataFrame.query() to subset the data before 
         we plot it.
-        
-        .. note: Should this be a param instead?
-        
+                
     Examples
     --------
     >>> kde = flow.Kde1DView()
@@ -71,17 +70,45 @@ class Kde1DView(HasStrictTraits):
     id = "edu.mit.synbio.cytoflow.view.kde1d"
     friendly_id = "1D Kernel Density" 
     
-    name = Str
-    channel = Str
-    scale = util.ScaleEnum
-    xfacet = Str
-    yfacet = Str
-    huefacet = Str
-    huescale = util.ScaleEnum
-    subset = Str
-    
     def plot(self, experiment, **kwargs):
-        """Plot a faceted histogram view of a channel"""
+        """
+        Plot a smoothed histogram view of a channel
+        
+        Parameters
+        ----------
+        shade : bool
+            If `True`, shade the area under the plot
+            
+        kernel : str
+            The kernel to use for the kernel density estimate. Choices are:
+                "gau" for Gaussian (the default)
+                "biw" for biweight
+                "cos" for cosine
+                "epa" for Epanechnikov
+                "tri" for triangular
+                "triw" for triweight
+                "uni" for uniform
+        bw="scott", gridsize=100, cut=3
+            
+        histtype : {'stepfilled', 'step', 'bar'}
+            The type of histogram to draw.  `stepfilled` is the default, which
+            is a line plot with a color filled under the curve.
+            
+        normed : bool
+            If `True`, re-scale the histogram to form a probability density
+            function, so the area under the histogram is 1.
+            
+        Other Parameters
+        ----------------
+        Other `kwargs` is passed to matplotlib.pyplot.hist_.
+    
+        .. _matplotlib.pyplot.hist: https://matplotlib.org/devdocs/api/_as_gen/matplotlib.pyplot.hist.html
+
+        See Also
+        --------
+        BaseView.plot : common parameters for data views
+        
+        """
         
         if experiment is None:
             raise util.CytoflowViewError("No experiment specified")
@@ -239,7 +266,7 @@ class Kde1DView(HasStrictTraits):
 
 def _univariate_kdeplot(data, scale=None, shade=False, kernel="gau",
         bw="scott", gridsize=100, cut=3, clip=None, legend=True,
-        cumulative=False, shade_lowest=True, ax=None, **kwargs):
+        ax=None, **kwargs):
     
     if ax is None:
         ax = plt.gca()
