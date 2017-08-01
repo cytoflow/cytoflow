@@ -1,5 +1,5 @@
-#CytoFlow
-##Python tools for quantitative, reproducible flow cytometry analysis
+# CytoFlow
+## Python tools for quantitative, reproducible flow cytometry analysis
 
 Welcome to a different style of flow cytometry analysis.  Take a look at some example [Jupyter](http://jupyter.org/) notebooks:
 
