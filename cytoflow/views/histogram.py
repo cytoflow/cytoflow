@@ -80,7 +80,6 @@ class HistogramView(Base1DView):
     huescale = util.ScaleEnum
     subset = Str
     
-    
     def plot(self, experiment, **kwargs):
         """
         Plot a faceted histogram view of a channel
