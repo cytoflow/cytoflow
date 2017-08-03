@@ -115,31 +115,68 @@ class Stats1DView(Base1DStatisticsView):
         Returns an iterator over the possible plots that this View can
         produce.  The values returned can be passed to "plot".
         """
-        
+                
         return super().enum_plots(experiment)
         
     
     def plot(self, experiment, plot_name = None, **kwargs):
-        """Plot a chart"""
+        """Plot a chart of a variable's values against a statistic.
+        
+        Parameters
+        ----------
+        
+        color : a matplotlib color
+            The color to plot with.  Overridden if `huefacet` is not `None`
+            
+        linestyle : ['solid' | 'dashed', 'dashdot', 'dotted' | (offset, on-off-dash-seq) | '-' | '--' | '-.' | ':' | 'None' | ' ' | '']
+            
+        marker : a matplotlib marker style
+            See http://matplotlib.org/api/markers_api.html#module-matplotlib.markers
+            
+        markersize : int
+            The marker size in points
+            
+        markerfacecolor : a matplotlib color
+            The color to make the markers.  Overridden (?) if `huefacet` is not `None`
+            
+        alpha : the alpha blending value, from 0.0 (transparent) to 1.0 (opaque)
+        
+        Other Parameters
+        ----------------
+        
+        Other `kwargs` are passed to matplotlib.pyplot.plot_.
+    
+        .. _matplotlib.pyplot.hist: https://matplotlib.org/devdocs/api/_as_gen/matplotlib.pyplot.plot.html
+        
+        See Also
+        --------
+        BaseView.plot : common parameters for data views
+        
+        """
         
         super().plot(experiment, plot_name, **kwargs)
 
     def _grid_plot(self, experiment, grid, xlim, ylim, xscale, yscale, **kwargs):
 
         data = grid.data
+
+        stat = experiment.statistics[self.statistic]
+        stat_name = stat.name
+        if self.error_statistic[0]:
+            err_stat = experiment.statistics[self.error_statistic]
+            err_stat_name = err_stat.name
+                    
         xlim = kwargs.pop("xlim", None)
         if xlim is None:
             xlim = (xscale.clip(data[self.variable].min() * 0.9),
                     xscale.clip(data[self.variable].max() * 1.1))
                       
-        stat_name = experiment.statistics[self.statistic].name
         ylim = kwargs.pop("ylim", None)
         if ylim is None:
             ylim = (yscale.clip(data[stat_name].min() * 0.9),
                     yscale.clip(data[stat_name].max() * 1.1))
             
             if self.error_statistic[0]:
-                err_stat_name = experiment.statistics[self.error_statistic].name
                 try: 
                     ylim = (yscale.clip(min([x[0] for x in data[err_stat_name]]) * 0.9),
                             yscale.clip(max([x[1] for x in data[err_stat_name]]) * 1.1))

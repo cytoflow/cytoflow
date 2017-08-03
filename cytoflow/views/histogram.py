@@ -71,15 +71,6 @@ class HistogramView(Base1DView):
     id = "edu.mit.synbio.cytoflow.view.histogram"
     friendly_id = "Histogram" 
     
-    name = Str
-    channel = Str
-    scale = util.ScaleEnum
-    xfacet = Str
-    yfacet = Str
-    huefacet = Str
-    huescale = util.ScaleEnum
-    subset = Str
-    
     def plot(self, experiment, **kwargs):
         """
         Plot a faceted histogram view of a channel

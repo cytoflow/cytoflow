@@ -351,6 +351,9 @@ class BaseNDView(BaseView):
 @provides(IView)
 class BaseStatisticsView(BaseView):
     
+    # deprecated or removed attributes give warnings & errors, respectively
+    by = util.Deprecated(new = 'variable', err_string = "'by' is deprecated, please use 'variable'")
+    
     variable = Str
     subset = Str
 
@@ -441,8 +444,6 @@ class BaseStatisticsView(BaseView):
         
     def _subset_data(self, data):
         
-
-        
         if self.subset:
             try:
                 # TODO - either sanitize column names, or check to see that
@@ -493,6 +494,16 @@ class BaseStatisticsView(BaseView):
 
 class Base1DStatisticsView(BaseStatisticsView):
     
+    REMOVED_ERROR = "Statistics changed dramatically in 0.5; please see the documentation"
+    by = util.Removed(err_string = REMOVED_ERROR)
+    yfunction = util.Removed(err_string = REMOVED_ERROR)
+    ychannel = util.Removed(err_string = REMOVED_ERROR)
+    channel = util.Removed(err_string = REMOVED_ERROR)
+    function = util.Removed(err_string = REMOVED_ERROR)
+    error_bars = util.Removed(err_string = REMOVED_ERROR)
+    
+    xvariable = util.Deprecated(new = "variable")
+    
     statistic = Tuple(Str, Str)
     error_statistic = Tuple(Str, Str)
     
@@ -503,7 +514,10 @@ class Base1DStatisticsView(BaseStatisticsView):
     def plot(self, experiment, plot_name = None, **kwargs):
         data = self._make_data(experiment)
             
-        xscale = util.scale_factory(self.xscale, experiment, condition = self.variable) 
+        if util.is_numeric(experiment[self.variable]):
+            xscale = util.scale_factory(self.xscale, experiment, condition = self.variable)
+        else:
+            xscale = None 
         
         yscale = util.scale_factory(self.yscale, 
                                     experiment, 
@@ -557,4 +571,181 @@ class Base1DStatisticsView(BaseStatisticsView):
             data[error_stat.name] = error_stat
             
         return data
+
+class Base2DStatisticsView(BaseStatisticsView):
+
+    STATS_REMOVED = "{} has been removed. Statistics changed dramatically in 0.5; please see the documentation."
+    
+    xchannel = util.Removed(err_string = STATS_REMOVED)
+    xfunction = util.Removed(err_string = STATS_REMOVED)
+    ychannel = util.Removed(err_string = STATS_REMOVED)
+    yfunction = util.Removed(err_string = STATS_REMOVED)
+    
+    xstatistic = Tuple(Str, Str)
+    ystatistic = Tuple(Str, Str)
+    x_error_statistic = Tuple(Str, Str)
+    y_error_statistic = Tuple(Str, Str)
+    
+    def enum_plots(self, experiment):
+        data = self._make_data(experiment)
+        return super().enum_plots(experiment, data)
+    
+    def plot(self, experiment, plot_name = None, **kwargs):
+        data = self._make_data(experiment)
+            
+        xscale = util.scale_factory(self.xscale, experiment, condition = self.variable) 
+        
+        yscale = util.scale_factory(self.yscale, 
+                                    experiment, 
+                                    statistic = self.statistic, 
+                                    error_statistic = self.error_statistic)
+            
+        super().plot(experiment, 
+                     data, 
+                     plot_name, 
+                     xscale = xscale, 
+                     yscale = yscale, 
+                     **kwargs)
+        
+    def _make_data(self, experiment):
+        if experiment is None:
+            raise util.CytoflowViewError("No experiment specified")
+        
+        if not self.xstatistic:
+            raise util.CytoflowViewError("X Statistic not set")
+        
+        if self.xstatistic not in experiment.statistics:
+            raise util.CytoflowViewError("Can't find the statistic {} in the experiment"
+                                         .format(self.xstatistic))
+        else:
+            xstat = experiment.statistics[self.xstatistic]
+            
+        if not util.is_numeric(xstat):
+            raise util.CytoflowViewError("X statistic must be numeric")
+            
+        if self.x_error_statistic[0]:
+            if self.x_error_statistic not in experiment.statistics:
+                raise util.CytoflowViewError("Can't find the X error statistic in the experiment")
+            else:
+                x_error_stat = experiment.statistics[self.x_error_statistic]
+        else:
+            x_error_stat = None
+            
+        if x_error_stat is not None:
+            if not xstat.index.equals(x_error_stat.index):
+                raise util.CytoflowViewError("Data statistic and error statistic "
+                                             " don't have the same index.")
+               
+            if xstat.name == x_error_stat.name:
+                raise util.CytoflowViewError("Data statistic and error statistic can "
+                                             "not have the same name.")
+            
+        if not self.ystatistic:
+            raise util.CytoflowViewError("Y statistic not set")
+        
+        if self.ystatistic not in experiment.statistics:
+            raise util.CytoflowViewError("Can't find the Y statistic {} in the experiment"
+                                         .format(self.ystatistic))
+        else:
+            ystat = experiment.statistics[self.ystatistic]
+            
+        if not util.is_numeric(ystat):
+            raise util.CytoflowViewError("Y statistic must be numeric")
+        
+        if self.y_error_statistic[0]:
+            if self.y_error_statistic not in experiment.statistics:
+                raise util.CytoflowViewError("Can't find the Y error statistic in the experiment")
+            else:
+                y_error_stat = experiment.statistics[self.y_error_statistic]
+        else:
+            y_error_stat = None
+         
+        if y_error_stat is not None:
+            if not ystat.index.equals(y_error_stat.index):
+                raise util.CytoflowViewError("Data statistic and error statistic "
+                                             " don't have the same index.")
+               
+            if ystat.name == y_error_stat.name:
+                raise util.CytoflowViewError("Data statistic and error statistic can "
+                                             "not have the same name.")
+                
+        if xstat.name == ystat.name:
+            raise util.CytoflowViewError("X and Y statistics can "
+                                         "not have the same name.")
+               
+        try:
+            ystat.index = ystat.index.reorder_levels(xstat.index.names)
+            ystat.sort_index(inplace = True)
+        except AttributeError:
+            pass
+        
+        intersect_idx = xstat.index.intersection(ystat.index)
+        xstat = xstat.reindex(intersect_idx)
+        xstat.sort_index(inplace = True)
+        ystat = ystat.reindex(intersect_idx)
+        ystat.sort_index(inplace = True)
+             
+        if self.x_error_statistic[0]:
+            if self.x_error_statistic not in experiment.statistics:
+                raise util.CytoflowViewError("X error statistic not in experiment")
+            else:
+                x_error_stat = experiment.statistics[self.x_error_statistic]
+                
+            if set(x_error_stat.index.names) != set(xstat.index.names):
+                raise util.CytoflowViewError("X error statistic doesn't have the "
+                                             "same indices as the X statistic")
+            
+            try:
+                x_error_stat.index = x_error_stat.index.reorder_levels(xstat.index.names)
+                x_error_stat.sort_index(inplace = True)
+            except AttributeError:
+                pass
+            
+            x_error_stat = x_error_stat.reindex(intersect_idx)
+            x_error_stat.sort_index(inplace = True)
+            
+            if not x_error_stat.index.equals(xstat.index):
+                raise util.CytoflowViewError("X error statistic doesn't have the "
+                                             "same values as the X statistic")                
+        else:
+            x_error_stat = None
+            
+        if self.y_error_statistic[0]:
+            if self.y_error_statistic not in experiment.statistics:
+                raise util.CytoflowViewError("Y error statistic not in experiment")
+            else:
+                y_error_stat = experiment.statistics[self.y_error_statistic]
+                
+            if set(y_error_stat.index.names) != set(ystat.index.names):
+                raise util.CytoflowViewError("Y error statistic doesn't have the "
+                                             "same indices as the Y statistic")
+                
+            try:
+                y_error_stat.index = y_error_stat.index.reorder_levels(ystat.index.names)
+                y_error_stat.sort_index(inplace = True)
+            except AttributeError:
+                pass
+            
+            y_error_stat = y_error_stat.reindex(intersect_idx)
+            y_error_stat.sort_index(inplace = True)
+            
+            if not y_error_stat.index.equals(ystat.index):
+                raise util.CytoflowViewError("Y error statistic doesn't have the "
+                                             "same values as the Y statistic")   
+        else:
+            y_error_stat = None
+            
+        data = pd.DataFrame(index = xstat.index)
+        data[xstat.name] = xstat
+        data[ystat.name] = ystat
+        
+        if x_error_stat is not None:
+            data[x_error_stat.name] = x_error_stat
+            
+        if y_error_stat is not None:
+            data[y_error_stat.name] = y_error_stat
+            
+        return data
+
+
 
