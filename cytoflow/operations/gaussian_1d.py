@@ -447,7 +447,7 @@ class GaussianMixture1DView(BaseOp1DView, HistogramView):
     friendly_id = "1D Gaussian Mixture Diagnostic Plot"
     
     def _get_facets(self):
-        return [self.xfacet, self.yfacet]    
+        return [x for x in [self.xfacet, self.yfacet, self.huefacet] if x]    
     
     def plot(self, experiment, plot_name = None, **kwargs):
         """
@@ -465,7 +465,7 @@ class GaussianMixture1DView(BaseOp1DView, HistogramView):
         plot_name = kwargs.pop('plot_name', None)
 
         # plot the histograms
-        super()._grid_plot(experiment, grid, xlim, ylim, xscale, yscale, **kwargs)
+        kwargs.update(super()._grid_plot(experiment, grid, xlim, ylim, xscale, yscale, **kwargs))
 
         # plot the actual distributions on top of them.
         

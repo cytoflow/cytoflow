@@ -45,6 +45,7 @@ import cytoflow.views
 import cytoflow.utility as util
 
 from .i_operation import IOperation
+from .base_op_views import BaseOp2DView
 
 @provides(IOperation)
 class DensityGateOp(HasStrictTraits):
@@ -365,7 +366,7 @@ class DensityGateOp(HasStrictTraits):
 # import matplotlib.transforms as transforms
 #     
 @provides(cytoflow.views.IView)
-class DensityGateView(cytoflow.views.DensityView):
+class DensityGateView(BaseOp2DView):
     """
     Attributes
     ----------
@@ -375,12 +376,6 @@ class DensityGateView(cytoflow.views.DensityView):
      
     id = 'edu.mit.synbio.cytoflow.view.densitygateview'
     friendly_id = "Density Gate Diagnostic Plot"
-     
-    op = Instance(IOperation)
-    xchannel = DelegatesTo('op')
-    ychannel = DelegatesTo('op')
-    xscale = DelegatesTo('op')
-    yscale = DelegatesTo('op')
      
     _by = Property(List)
      

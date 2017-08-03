@@ -38,43 +38,67 @@ class BaseOpView(BaseView):
 
     op = Instance(IOperation)
     facets = Property(List)
-    by = Property(List)
     
     def _get_facets(self):
-        return [self.xfacet, self.yfacet, self.huefacet]
-    
-    def _get_by(self):
-        return list(set(self.op.by) - set(self.facets))
+        raise NotImplementedError("Must implement _get_facets in views "
+                                  "derived from BaseOpView")
         
-    def enum_plots(self, experiment):
+    def enum_plots(self, experiment, by = None):
         """
         Returns an iterator over the possible plots that this View can
         produce.  The values returned can be passed to "plot".
         """
+        
+        if by is None:
+            by = self.op.by
+            
+            try:
+                experiment = self.op.apply(experiment)
+                by.append(self.op.name)
+            except util.CytoflowOpError:
+                warn("Couldn't apply the operation", util.CytoflowViewWarning)
         
         for facet in self.facets:
             if facet and facet not in experiment.conditions:        
                 raise util.CytoflowViewError("Facet {} not in the experiment"
                                             .format(facet))
             
-            if facet and facet not in self.op.by:
-                raise util.CytoflowViewError("Facet {} must be in the parent's by list, which is {}"
-                                             .format(facet, self.op.by))
+            if facet and facet not in by:
+                raise util.CytoflowViewError("Facet {} must be one of {}"
+                                             .format(facet, by))
+                
+        if len(self.facets) != len(set(self.facets)):
+            raise util.CytoflowViewError("You can't reuse facets!")
             
-        for b in self.op.by:
+        for b in by:
             if b not in experiment.data:
                 raise util.CytoflowOpError("Aggregation metadata {} not found"
                                       " in the experiment"
                                       .format(b))
+                
+        if self.subset:
+            try:
+                experiment = experiment.query(self.subset)
+            except util.CytoflowError as e:
+                raise util.CytoflowViewError(str(e)) from e
+            except Exception as e:
+                raise util.CytoflowViewError("Subset string '{0}' isn't valid"
+                                        .format(self.subset)) from e
+                 
+            if len(experiment) == 0:
+                raise util.CytoflowViewError("Subset string '{0}' returned no events"
+                                        .format(self.subset))
+                
+        by = list(set(by) - set(self.facets)) 
         
         class plot_enum(object):
             
-            def __init__(self, view, experiment):
+            def __init__(self, by, experiment):
                 self._iter = None
                 self._returned = False
                 
-                if view.by:
-                    self._iter = experiment.data.groupby(view.by).__iter__()
+                if by:
+                    self._iter = experiment.data.groupby(by).__iter__()
                 
             def __iter__(self):
                 return self
@@ -89,26 +113,35 @@ class BaseOpView(BaseView):
                         self._returned = True
                         return None
             
-        return plot_enum(self, experiment)
+        return plot_enum(by, experiment)
     
-    def plot(self, experiment, plot_name = None, **kwargs):
+    def plot(self, experiment, plot_name = None, **kwargs): 
 
-        experiment = experiment.clone()
+        by = self.op.by[:]
         
-        # try to apply the current operation
         try:
             experiment = self.op.apply(experiment)
+            by.append(self.op.name)
         except util.CytoflowOpError:
-            pass  
-        
-        # if apply() succeeded (or wasn't needed), set up the hue facet
-        if self.op.name and self.op.name in experiment.conditions:
-            if self.huefacet and self.huefacet != self.op.name:
-                warn("Resetting huefacet to the model component (was {}, now {})."
-                     .format(self.huefacet, self.op.name))
-            self.huefacet = self.op.name
-        else:
-            self.huefacet = ""
+            warn("Couldn't apply the operation", util.CytoflowViewWarning)
+
+        for facet in self.facets:
+            if facet and facet not in experiment.conditions:        
+                raise util.CytoflowViewError("Facet {} not in the experiment"
+                                            .format(facet))
+            
+            if facet and facet not in by:
+                raise util.CytoflowViewError("Facet {} must be one of {}"
+                                             .format(facet, by))
+                
+        if len(self.facets) != len(set(self.facets)):
+            raise util.CytoflowViewError("You can't reuse facets!")
+            
+        for b in by:
+            if b not in experiment.data:
+                raise util.CytoflowOpError("Aggregation metadata {} not found"
+                                      " in the experiment"
+                                      .format(b))
         
         if self.subset:
             try:
@@ -123,18 +156,21 @@ class BaseOpView(BaseView):
                                         .format(self.subset))   
                 
         # see if we're making subplots
-        if self.by and plot_name is None:
+        
+        by = list(set(by) - set(self.facets)) 
+
+        if by and plot_name is None:
             raise util.CytoflowViewError("You must use facets {} in either the "
-                                         "plot variables or the plt name. "
+                                         "plot variables or the plot name. "
                                          "Possible plot names: {}"
-                                         .format(self.by, [x for x in self.enum_plots(experiment)]))
+                                         .format(by, [x for x in self.enum_plots(experiment, by)]))
                                         
         if plot_name is not None:
-            if plot_name is not None and not self.by:
+            if plot_name is not None and not by:
                 raise util.CytoflowViewError("Plot {} not from plot_enum"
                                              .format(plot_name))
                                
-            groupby = experiment.data.groupby(self.by)
+            groupby = experiment.data.groupby(by)
 
             if plot_name not in set(groupby.groups.keys()):
                 raise util.CytoflowViewError("Plot {} not from plot_enum"
@@ -144,9 +180,7 @@ class BaseOpView(BaseView):
             experiment.data.reset_index(drop = True, inplace = True)
             
         super().plot(experiment, **kwargs)
-            
-        if self.by and plot_name is not None:
-            plt.title("{0} = {1}".format(self.by, plot_name))
+
     
 @provides(IView)
 class BaseOp1DView(BaseOpView, Base1DView):

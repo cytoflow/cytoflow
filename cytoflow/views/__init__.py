@@ -31,6 +31,8 @@ sns.set_context("talk")
 from .i_view import IView
 from .i_selectionview import ISelectionView
 
+from .base_views import Base1DView, Base2DView
+
 from .bar_chart import BarChartView
 from .histogram import HistogramView
 from .scatterplot import ScatterplotView
