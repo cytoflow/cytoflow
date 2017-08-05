@@ -31,8 +31,8 @@ import cytoflow.utility as util
 class TableView(HasStrictTraits):
 
     # traits   
-    id = "edu.mit.synbio.cytoflow.view.table"
-    friendly_id = "Table View" 
+    _id = "edu.mit.synbio.cytoflow.view.table"
+    _friendly_id = "Table View" 
 
     REMOVED_ERROR = "Statistics have changed dramatically in 0.5; please see the documentation"
     channel = util.Removed(err_string = REMOVED_ERROR)

@@ -306,8 +306,8 @@ class ColorTranslationDiagnostic(HasStrictTraits):
     """
     
     # traits   
-    id = "edu.mit.synbio.cytoflow.view.colortranslationdiagnostic"
-    friendly_id = "Color Translation Diagnostic" 
+    _id = "edu.mit.synbio.cytoflow.view.colortranslationdiagnostic"
+    _friendly_id = "Color Translation Diagnostic" 
     
     name = Str
     subset = Str

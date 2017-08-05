@@ -738,7 +738,7 @@ class FlowPeaks1DView(cytoflow.views.HistogramView):
     """
     
     id = 'edu.mit.synbio.cytoflow.view.flowpeaks1dview'
-    friendly_id = "1D FlowPeaks Diagnostic Plot"
+    _friendly_id = "1D FlowPeaks Diagnostic Plot"
     
     # TODO - why can't I use GaussianMixture1DOp here?
     op = Instance(IOperation)
@@ -948,7 +948,7 @@ class FlowPeaks2DView(cytoflow.views.ScatterplotView):
     """
      
     id = 'edu.mit.synbio.cytoflow.view.flowpeaks2dview'
-    friendly_id = "FlowPeaks 2D Diagnostic Plot"
+    _friendly_id = "FlowPeaks 2D Diagnostic Plot"
      
     # TODO - why can't I use FlowPeaksOp here?
     op = Instance(IOperation)
@@ -1197,7 +1197,7 @@ class FlowPeaks2DDensityView(cytoflow.views.DensityView):
     """
      
     id = 'edu.mit.synbio.cytoflow.view.flowpeaks2ddensityview'
-    friendly_id = "FlowPeaks 2D Diagnostic Density Plot"
+    _friendly_id = "FlowPeaks 2D Diagnostic Density Plot"
      
     # TODO - why can't I use FlowPeaksOp here?
     op = Instance(IOperation)

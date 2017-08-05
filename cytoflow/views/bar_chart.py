@@ -75,8 +75,8 @@ class BarChartView(Base1DStatisticsView):
     """
     
     # traits   
-    id = "edu.mit.synbio.cytoflow.view.barchart"
-    friendly_id = "Bar Chart" 
+    _id = "edu.mit.synbio.cytoflow.view.barchart"
+    _friendly_id = "Bar Chart" 
     
     orientation = util.Removed(err_string = "`orientation` is now a parameter to `plot`")
     

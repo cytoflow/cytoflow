@@ -77,7 +77,7 @@ class Kde2DView(Base2DView):
     """
     
     id = 'edu.mit.synbio.cytoflow.view.kde2d'
-    friend_id = "2D Kernel Density Estimate"
+    friend__id = "2D Kernel Density Estimate"
     
     def plot(self, experiment, **kwargs):
         """

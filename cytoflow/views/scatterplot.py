@@ -71,7 +71,7 @@ class ScatterplotView(Base2DView):
     """
     
     id = 'edu.mit.synbio.cytoflow.view.scatterplot'
-    friend_id = "Scatter Plot"
+    friend__id = "Scatter Plot"
     
     def plot(self, experiment, **kwargs):
         """

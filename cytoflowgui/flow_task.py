@@ -53,7 +53,7 @@ class FlowTask(Task):
     classdocs
     """
     
-    id = "edu.mit.synbio.cytoflow.flow_task"
+    _id = "edu.mit.synbio.cytoflow.flow_task"
     name = "Cytometry analysis"
     
     # the main workflow instance.

@@ -116,8 +116,8 @@ class Stats2DView(Base2DStatisticsView):
     """
     
     # traits   
-    id = "edu.mit.synbio.cytoflow.view.stats2d"
-    friendly_id = "2D Statistics View" 
+    _id = "edu.mit.synbio.cytoflow.view.stats2d"
+    _friendly_id = "2D Statistics View" 
    
     def enum_plots(self, experiment):
         """

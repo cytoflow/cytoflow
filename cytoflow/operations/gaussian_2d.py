@@ -502,7 +502,7 @@ class GaussianMixture2DView(BaseOp2DView, ScatterplotView):
     """
     
     id = 'edu.mit.synbio.cytoflow.view.gaussianmixture2dview'
-    friendly_id = "2D Gaussian Mixture Diagnostic Plot"
+    _friendly_id = "2D Gaussian Mixture Diagnostic Plot"
     
     def _get_facets(self):
         return [self.xfacet, self.yfacet]
