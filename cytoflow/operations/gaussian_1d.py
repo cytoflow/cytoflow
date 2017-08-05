@@ -444,7 +444,7 @@ class GaussianMixture1DView(BaseOp1DView, HistogramView):
     """
     
     id = 'edu.mit.synbio.cytoflow.view.gaussianmixture1dview'
-    _friendly_id = "1D Gaussian Mixture Diagnostic Plot"
+    friendly_id = "1D Gaussian Mixture Diagnostic Plot"
     
     def _get_facets(self):
         return [x for x in [self.xfacet, self.yfacet, self.huefacet] if x]    

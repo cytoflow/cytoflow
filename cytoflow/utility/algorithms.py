@@ -35,19 +35,15 @@ def percentiles(a, pcts, axis=None):
     
     Parameters
     ----------
-    
     a : array
         data
-        
     pcts : sequence of percentile values
         percentile or percentiles to find score at
-        
     axis : int or None
         if not None, computes scores over this axis
         
     Returns
     -------
-    
     scores: array
         array of scores at requested percentiles
         first dimension is length of object passed to ``pcts``
@@ -72,13 +68,10 @@ def percentiles(a, pcts, axis=None):
     return scores
 
 def bootstrap(*args, **kwargs):
-    """
-    Resample one or more arrays with replacement and store aggregate values.
+    """Resample one or more arrays with replacement and store aggregate values.
     Positional arguments are a sequence of arrays to bootstrap along the first
     axis and pass to a summary function.
-    
-    Parameters
-    ----------
+    Keyword arguments:
         n_boot : int, default 10000
             Number of iterations
         axis : int, default None

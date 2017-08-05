@@ -279,8 +279,8 @@ class BleedthroughLinearDiagnostic(HasStrictTraits):
     """
     
     # traits   
-    _id = "edu.mit.synbio.cytoflow.view.autofluorescencediagnosticview"
-    _friendly_id = "Autofluorescence Diagnostic" 
+    id = "edu.mit.synbio.cytoflow.view.autofluorescencediagnosticview"
+    friendly_id = "Autofluorescence Diagnostic" 
     
     name = Str
     subset = Str

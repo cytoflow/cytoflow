@@ -354,7 +354,7 @@ class KMeans1DView(cytoflow.views.HistogramView):
     """
     
     id = 'edu.mit.synbio.cytoflow.view.gaussianmixture1dview'
-    _friendly_id = "1D Gaussian Mixture Diagnostic Plot"
+    friendly_id = "1D Gaussian Mixture Diagnostic Plot"
     
     # TODO - why can't I use GaussianMixture1DOp here?
     op = Instance(IOperation)
@@ -565,7 +565,7 @@ class KMeans2DView(cytoflow.views.ScatterplotView):
     """
      
     id = 'edu.mit.synbio.cytoflow.view.gaussianmixture2dview'
-    _friendly_id = "Gaussian Mixture Diagnostic Plot"
+    friendly_id = "Gaussian Mixture Diagnostic Plot"
      
     # TODO - why can't I use GaussianMixture2DOp here?
     op = Instance(IOperation)

@@ -69,7 +69,7 @@ class DensityView(Base2DView):
     """
     
     id = 'edu.mit.synbio.cytoflow.view.density'
-    friend__id = "Density Plot"
+    friend_id = "Density Plot"
     
     huefacet = Constant(None)
     

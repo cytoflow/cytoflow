@@ -29,28 +29,27 @@ from .base_views import Base1DView
 
 @provides(IView)
 class HistogramView(Base1DView):
-    """
-    Plots a one-channel histogram
+    """Plots a one-channel histogram
     
     Attributes
     ----------
-    name : str
+    name : Str
         The HistogramView name (for serialization, UI etc.)
     
-    channel : str
+    channel : Str
         the name of the channel we're plotting
     
-    xfacet : str 
+    xfacet : Str 
         the conditioning variable for multiple plots (horizontal)
     
-    yfacet : str
+    yfacet : Str
         the conditioning variable for multiple plots (vertical)
     
-    huefacet : str
+    huefacet : Str
         the conditioning variable for multiple plots (color)
         
-    huescale : {'linear', 'log', 'logicle'}
-        What scale to use on the color bar, if there is one plotted.
+    huescale = Enum("linear", "log", "logicle") (default = "linear")
+        What scale to use on the color bar, if there is one plotted
         
     subset : Str
         a string passed to pandas.DataFrame.query() to subset the data before 
@@ -69,8 +68,8 @@ class HistogramView(Base1DView):
     """
     
     # traits   
-    _id = "edu.mit.synbio.cytoflow.view.histogram"
-    _friendly_id = "Histogram" 
+    id = "edu.mit.synbio.cytoflow.view.histogram"
+    friendly_id = "Histogram" 
     
     def plot(self, experiment, **kwargs):
         """
@@ -78,7 +77,6 @@ class HistogramView(Base1DView):
         
         Parameters
         ----------
-        
         bins : int
             The number of bins to plot in the histogram
             
@@ -90,12 +88,14 @@ class HistogramView(Base1DView):
             If `True`, re-scale the histogram to form a probability density
             function, so the area under the histogram is 1.
             
-        **kwargs 
-            Other ``kwargs`` are passed to `matplotlib.pyplot.hist <https://matplotlib.org/devdocs/api/_as_gen/matplotlib.pyplot.hist.html>`_
-        
+        Other Parameters
+        ----------------
+        Other `kwargs` are passed to matplotlib.pyplot.hist_.
+    
+        .. _matplotlib.pyplot.hist: https://matplotlib.org/devdocs/api/_as_gen/matplotlib.pyplot.hist.html
+
         See Also
         --------
-                
         BaseView.plot : common parameters for data views
         
         """

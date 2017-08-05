@@ -72,7 +72,7 @@ x
     """
     
     id = 'edu.mit.synbio.cytoflow.view.histogram2d'
-    friend__id = "2D Histogram"
+    friend_id = "2D Histogram"
     
     name = Str
     xchannel = Str

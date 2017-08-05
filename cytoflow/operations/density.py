@@ -375,7 +375,7 @@ class DensityGateView(BaseOp2DView):
     """
      
     id = 'edu.mit.synbio.cytoflow.view.densitygateview'
-    _friendly_id = "Density Gate Diagnostic Plot"
+    friendly_id = "Density Gate Diagnostic Plot"
      
     _by = Property(List)
      

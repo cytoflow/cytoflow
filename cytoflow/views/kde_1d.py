@@ -64,8 +64,8 @@ class Kde1DView(Base1DView):
     """
     
     # traits   
-    _id = "edu.mit.synbio.cytoflow.view.kde1d"
-    _friendly_id = "1D Kernel Density" 
+    id = "edu.mit.synbio.cytoflow.view.kde1d"
+    friendly_id = "1D Kernel Density" 
     
     def plot(self, experiment, **kwargs):
         """

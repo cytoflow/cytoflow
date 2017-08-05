@@ -336,8 +336,8 @@ class TasbePluginView(PluginViewMixin):
     handler_factory = Callable(TasbeViewHandler)
     op = Instance(TasbePluginOp)
     
-    _id = "edu.mit.synbio.cytoflowgui.op_plugins.tasbe"
-    _friendly_id = "TASBE Calibration" 
+    id = "edu.mit.synbio.cytoflowgui.op_plugins.tasbe"
+    friendly_id = "TASBE Calibration" 
     
     name = Constant("TASBE Calibration")
     

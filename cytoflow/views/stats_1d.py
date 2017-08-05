@@ -101,8 +101,8 @@ class Stats1DView(Base1DStatisticsView):
     """
     
     # traits   
-    _id = "edu.mit.synbio.cytoflow.view.stats1d"
-    _friendly_id = "1D Statistics View" 
+    id = "edu.mit.synbio.cytoflow.view.stats1d"
+    friendly_id = "1D Statistics View" 
     
     REMOVED_ERROR = "Statistics changed dramatically in 0.5; please see the documentation"
     by = util.Removed(err_string = REMOVED_ERROR)
