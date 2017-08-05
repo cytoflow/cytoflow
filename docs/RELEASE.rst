@@ -11,12 +11,6 @@ Spinning a new release
 ::
 
   pandoc --from=markdown --to=rst --output=README.rst README.md
-
-- Update the API documents.  From ``docs`` say
-
-::
-
-  sphinx-apidoc -f -o . ../cytoflow
   
 - Push the updated docs to GitHub.  Give the CI builders ~30 minutes, then 
   check the build status on Travis_, Appveyor_ and ReadTheDocs_.

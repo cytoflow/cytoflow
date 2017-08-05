@@ -281,3 +281,13 @@ texinfo_documents = [
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
+
+def run_apidoc(_):
+    from sphinx.apidoc import main
+    sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+    cur_dir = os.path.abspath(os.path.dirname(__file__))
+    module = os.path.join(cur_dir,"..","cytoflow")
+    main(['-e', '-o', cur_dir, module, '--force'])
+
+def setup(app):
+    app.connect('builder-inited', run_apidoc)
