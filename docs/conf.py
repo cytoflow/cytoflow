@@ -292,13 +292,17 @@ def setup(app):
     app.connect('builder-inited', run_apidoc)
 #     app.connect('autodoc-skip-member', _skip_member)
     app.connect('autodoc-process-docstring', _process_docstring)
+    
+    import sys
+    sys.modules['sys'].IN_SPHINX = True
+    
 
 def run_apidoc(_):
     from sphinx.apidoc import main
     sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
     cur_dir = os.path.abspath(os.path.dirname(__file__))
     module = os.path.join(cur_dir,"..","cytoflow")
-    main(['-e', '-o', cur_dir, module, '--force'])    
+    main(['-e', '-f', '-o', cur_dir, '--ext-autodoc', module])    
     
 def _process_docstring(app, what, name, obj, options, lines):
     pass
