@@ -438,6 +438,7 @@ class BeadCalibrationOp(HasStrictTraits):
                   "MEPCY7" : [32907, 107787, 503797],
                   "MEAP" :  [587, 2433, 6720, 17962, 30866, 51704, 146080],
                   "MEAPCY7" : [718, 1920, 5133, 9324, 14210, 26735]}}
+    """A Beads docstring"""
     
 @provides(cytoflow.views.IView)
 class BeadCalibrationDiagnostic(HasStrictTraits):
