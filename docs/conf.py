@@ -54,6 +54,10 @@ extensions = [
     'sphinxcontrib.napoleon'
 ]
 
+# autodoc options
+autodoc_default_flags = ['no-show-inheritance']
+autodoc_member_order = 'bysource'
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
@@ -282,12 +286,29 @@ texinfo_documents = [
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
 
+
+
+def setup(app):
+    app.connect('builder-inited', run_apidoc)
+#     app.connect('autodoc-skip-member', _skip_member)
+    app.connect('autodoc-process-docstring', _process_docstring)
+
 def run_apidoc(_):
     from sphinx.apidoc import main
     sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
     cur_dir = os.path.abspath(os.path.dirname(__file__))
     module = os.path.join(cur_dir,"..","cytoflow")
-    main(['-e', '-o', cur_dir, module, '--force'])
+    main(['-e', '-o', cur_dir, module, '--force'])    
+    
+def _process_docstring(app, what, name, obj, options, lines):
+    pass
+#    if name.endswith("BEADS"):
+#        print((app, what, name, obj, options, lines))
+    
+# def _skip_member(app, what, name, obj, skip, options):
+#     if name == "BEADS":
+#         print((app, what, name, obj, skip, options))
+# #         return True
 
-def setup(app):
-    app.connect('builder-inited', run_apidoc)
+    
+
