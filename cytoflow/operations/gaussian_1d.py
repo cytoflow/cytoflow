@@ -26,7 +26,7 @@ from warnings import warn
 from itertools import product
 
 from traits.api import (HasStrictTraits, Str, CStr, Dict, Any, Instance, Bool, 
-                        Constant, List, provides, Property, DelegatesTo)
+                        Constant, List, provides, Constant, Set)
 import numpy as np
 import matplotlib.pyplot as plt
 import sklearn.mixture as mixture
@@ -143,7 +143,7 @@ class GaussianMixture1DOp(HasStrictTraits):
     scale = util.ScaleEnum
     posteriors = Bool(False)
     
-    # the key is either a single value or a tuple
+    # the key is a set
     _gmms = Dict(Any, Instance(mixture.GaussianMixture), transient = True)
     _scale = Instance(util.IScale, transient = True)
     
@@ -186,7 +186,8 @@ class GaussianMixture1DOp(HasStrictTraits):
                                         .format(subset))
                 
         if self.by:
-            groupby = experiment.data.groupby(self.by)
+            by = sorted(self.by)
+            groupby = experiment.data.groupby(by)
         else:
             # use a lambda expression to return a group that contains
             # all the events
@@ -287,16 +288,12 @@ class GaussianMixture1DOp(HasStrictTraits):
             raise util.CytoflowOpError("sigma must be >= 0.0")
 
         if self.by:
-            groupby = experiment.data.groupby(self.by)
+            by = sorted(self.by)
+            groupby = experiment.data.groupby(by)
         else:
             # use a lambda expression to return a group that
             # contains all the events
             groupby = experiment.data.groupby(lambda x: True)
-
-        for group, data_subset in groupby:
-            if group not in self._gmms:
-                raise util.CytoflowOpError("Can't find group in model. "
-                                           "Did you call estimate()?")
 
         event_assignments = pd.Series([None] * len(experiment), dtype = "object")
                                       
@@ -308,9 +305,11 @@ class GaussianMixture1DOp(HasStrictTraits):
         # the faster it's going to be.
         
         for group, data_subset in groupby:
+            
+            # if there weren't any events in this group, there's no gmm
             if group not in self._gmms:
-                # there weren't any events in this group, so we didn't get
-                # a gmm.
+                warn("There wasn't a GMM for data subset {}".format(group),
+                     util.CytoflowOpWarning)
                 continue
             
             gmm = self._gmms[group]
@@ -447,17 +446,39 @@ class GaussianMixture1DView(BaseOp1DView, HistogramView):
     friendly_id = "1D Gaussian Mixture Diagnostic Plot"
     
     def _get_facets(self):
-        return [x for x in [self.xfacet, self.yfacet, self.huefacet] if x]    
+        return [x for x in [self.xfacet, self.yfacet, self.huefacet] if x]   
+    
+    def _get_by(self, experiment):
+        ret = []
+        if self.op.by:
+            ret = self.op.by[:]
+            
+        if self.op.name == experiment.history[-1].name:
+            ret.append(self.op.name)
+            
+        return ret
     
     def plot(self, experiment, plot_name = None, **kwargs):
         """
         Plot the plots.
         """
+        
+        view = self.clone_traits()
+        
+        if experiment.history[-1].name == self.op.name:
+            if self.op.name not in self.facets:
+                if not self.huefacet:
+                    warn("Using {} as the hue facet".format(self.op.name),
+                         util.CytoflowViewWarning)
+                    view.huefacet = self.op.name
+                else:
+                    raise util.CytoflowViewError("Must include {} as a facet"
+                                                 .format(self.op.name))
 
-        super().plot(experiment = experiment, 
-                     plot_name = plot_name, 
-                     scale = self.op._scale, 
-                     **kwargs)
+        super(GaussianMixture1DView, view).plot(experiment = experiment, 
+                                                plot_name = plot_name, 
+                                                scale = self.op._scale, 
+                                                **kwargs)
 
 
     def _grid_plot(self, experiment, grid, xlim, ylim, xscale, yscale, **kwargs):
@@ -468,75 +489,117 @@ class GaussianMixture1DView(BaseOp1DView, HistogramView):
         kwargs.update(super()._grid_plot(experiment, grid, xlim, ylim, xscale, yscale, **kwargs))
 
         # plot the actual distributions on top of them.
-        
-        row_names = grid.row_names if grid.row_names else [False]
-        col_names = grid.col_names if grid.col_names else [False]
-                
-        for (i, row), (j, col) in product(enumerate(row_names),
-                                          enumerate(col_names)):
-            
-            facets = [x for x in [row, col] if x]
-            if plot_name is not None:
-                try:
-                    gmm_name = tuple(list(plot_name) + facets)
-                except TypeError: # plot_name isn't a list
-                    gmm_name = tuple(list([plot_name]) + facets) 
-            else:      
-                gmm_name = tuple(facets)
-                
-            if len(gmm_name) == 0:
-                gmm_name = None
-            elif len(gmm_name) == 1:
-                gmm_name = gmm_name[0]
-                        
-            if gmm_name is not None:
-                if gmm_name in self.op._gmms:
-                    gmm = self.op._gmms[gmm_name]
-                else:
-                    # there weren't any events in this subset to estimate a GMM from
-                    warn("No estimated GMM for plot {}".format(gmm_name),
-                          util.CytoflowViewWarning)
-                    return {}
-            else:
-                if True in self.op._gmms:
-                    gmm = self.op._gmms[True]
-                else:
-                    return {}          
-                
+        for (i, j, k), data in grid.facet_data():
             ax = grid.facet_axis(i, j)
+            
+            row_name = grid.row_names[i] if grid.row_names else None
+            col_name = grid.col_names[j] if grid.col_names else None
+            hue_name = grid.hue_names[k] if grid.hue_names else None
+            
+            facets = set([x for x in [grid._row_var, grid._col_var, grid._hue_var] if x is not None])
+
+            if self.op.name in facets:
+                facets = facets - set([self.op.name])
+                
+            if not facets:
+                facets = set([True])
+                
+#             if facets not in self.op._gmms:
+#                 warn("No estimated GMM for plot {}".format(facets),
+#                       util.CytoflowViewWarning)
+#                 continue
+            
+            # find the gmm
+            gmm = None
+            for group, g in self.op._gmms.items():
+                try:
+                    group = set(group)
+                except TypeError:
+                    group = set([group])
+                    
+                if group == facets:
+                    gmm = g
+                    break
+
+            if gmm is None:
+                print(self.op._gmms)
+                print("no gmm for {}".format(facets))
+                      
+        return {}
+            
+
+#         
+#         row_names = grid.row_names if grid.row_names else [False]
+#         col_names = grid.col_names if grid.col_names else [False]
+#                 
+#         for (i, row), (j, col) in product(enumerate(row_names),
+#                                           enumerate(col_names)):
+#             
+#             facets = [x for x in [row, col] if x]
+#             if plot_name is not None:
+#                 try:
+#                     gmm_name = tuple(list(plot_name) + facets)
+#                 except TypeError: # plot_name isn't a list
+#                     gmm_name = tuple(list([plot_name]) + facets) 
+#             else:      
+#                 gmm_name = tuple(facets)
+#                 
+#             if len(gmm_name) == 0:
+#                 gmm_name = None
+#             elif len(gmm_name) == 1:
+#                 gmm_name = gmm_name[0]
+#                         
+#             if gmm_name is not None:
+#                 if gmm_name in self.op._gmms:
+#                     gmm = self.op._gmms[gmm_name]
+#                 else:
+#                     # there weren't any events in this subset to estimate a GMM from
+#                     warn("No estimated GMM for plot {}".format(gmm_name),
+#                           util.CytoflowViewWarning)
+#                     return {}
+#             else:
+#                 if True in self.op._gmms:
+#                     gmm = self.op._gmms[True]
+#                 else:
+#                     return {}          
+#                 
+#             ax = grid.facet_axis(i, j)
                                                 
             # okay.  we want to scale the gaussian curves to have the same area
             # as the plots they're over.  so, what's the total area on the plot?
-            
-            patch_area = 0.0
-                                    
-            for k in range(0, len(ax.patches)):
+#             
+#             patch_area = 0.0
+#                                     
+#             for k in range(0, len(ax.patches)):
+#                 
+#                 patch = ax.patches[k]
+#                 xy = patch.get_xy()
+#                 patch_area += poly_area([xscale(p[0]) for p in xy], [p[1] for p in xy])
+#                 
+#             # now, scale the plotted curve by the area of the total plot times
+#             # the proportion of it that is under that curve.
+#                 
+#             for k in range(0, len(gmm.weights_)):
+#                 pdf_scale = patch_area * gmm.weights_[k]
+#                 
+#                 # cheat a little
+# #                 pdf_scale *= 1.1
+#                  
+#                 plt_min, plt_max = plt.gca().get_xlim()
+#                 x = xscale.inverse(np.linspace(xscale(plt_min), xscale(plt_max), 500))     
+#                          
+#                 mean = gmm.means_[k][0]
+#                 stdev = np.sqrt(gmm.covariances_[k][0])
+#                 y = stats.norm.pdf(xscale(x), mean, stdev) * pdf_scale
+#                 color_k = k % len(sns.color_palette())
+#                 color = sns.color_palette()[color_k]
+#                 ax.plot(x, y, color = color)
                 
-                patch = ax.patches[k]
-                xy = patch.get_xy()
-                patch_area += poly_area([xscale(p[0]) for p in xy], [p[1] for p in xy])
-                
-            # now, scale the plotted curve by the area of the total plot times
-            # the proportion of it that is under that curve.
-                
-            for k in range(0, len(gmm.weights_)):
-                pdf_scale = patch_area * gmm.weights_[k]
-                
-                # cheat a little
-#                 pdf_scale *= 1.1
-                 
-                plt_min, plt_max = plt.gca().get_xlim()
-                x = xscale.inverse(np.linspace(xscale(plt_min), xscale(plt_max), 500))     
-                         
-                mean = gmm.means_[k][0]
-                stdev = np.sqrt(gmm.covariances_[k][0])
-                y = stats.norm.pdf(xscale(x), mean, stdev) * pdf_scale
-                color_k = k % len(sns.color_palette())
-                color = sns.color_palette()[color_k]
-                ax.plot(x, y, color = color)
+#         grid.map(hist_lims, self.channel, **kwargs)
+
                         
-        return {}
+#     return {}
 
 # from http://stackoverflow.com/questions/24467972/calculate-area-of-polygon-given-x-y-coordinates
-def poly_area(x,y):
-    return 0.5*np.abs(np.dot(x,np.roll(y,1))-np.dot(y,np.roll(x,1)))
+# def poly_area(x,y):
+#     return 0.5*np.abs(np.dot(x,np.roll(y,1))-np.dot(y,np.roll(x,1)))

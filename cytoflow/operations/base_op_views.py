@@ -23,9 +23,6 @@ Created on Jul 30, 2017
 '''
 
 from traits.api import (provides, Instance, Property, List, DelegatesTo)
-import matplotlib.pyplot as plt
-
-from warnings import warn
 
 import cytoflow.utility as util
 
@@ -43,27 +40,28 @@ class BaseOpView(BaseView):
         raise NotImplementedError("Must implement _get_facets in views "
                                   "derived from BaseOpView")
         
-    def enum_plots(self, experiment, by = None):
+    def _get_by(self, experiment):
+        raise NotImplementedError("Must implement _get_by in views "
+                                  "derived from BaseOpView")
+        
+    def enum_plots(self, experiment):
         """
         Returns an iterator over the possible plots that this View can
         produce.  The values returned can be passed to "plot".
         """
         
-        if by is None:
-            by = self.op.by
-            
-            try:
-                experiment = self.op.apply(experiment)
-                by.append(self.op.name)
-            except util.CytoflowOpError:
-                warn("Couldn't apply the operation", util.CytoflowViewWarning)
+        by = self._get_by(experiment)
+        
+        if len(by) == 0 and len(self.facets) > 1:
+            raise util.CytoflowViewError("You can only facet this view if you "
+                                         "specify some variables in `by`")
         
         for facet in self.facets:
-            if facet and facet not in experiment.conditions:        
+            if facet not in experiment.conditions:        
                 raise util.CytoflowViewError("Facet {} not in the experiment"
                                             .format(facet))
             
-            if facet and facet not in by:
+            if facet not in by:
                 raise util.CytoflowViewError("Facet {} must be one of {}"
                                              .format(facet, by))
                 
@@ -117,20 +115,18 @@ class BaseOpView(BaseView):
     
     def plot(self, experiment, plot_name = None, **kwargs): 
 
-        by = self.op.by[:]
-        
-        try:
-            experiment = self.op.apply(experiment)
-            by.append(self.op.name)
-        except util.CytoflowOpError:
-            warn("Couldn't apply the operation", util.CytoflowViewWarning)
+        by = self._get_by(experiment)
+
+        if len(by) == 0 and len(self.facets) > 1:
+            raise util.CytoflowViewError("You can only facet this view if you "
+                                         "specify some variables in `by`")
 
         for facet in self.facets:
-            if facet and facet not in experiment.conditions:        
+            if facet not in experiment.conditions:        
                 raise util.CytoflowViewError("Facet {} not in the experiment"
                                             .format(facet))
-            
-            if facet and facet not in by:
+             
+            if facet not in by:
                 raise util.CytoflowViewError("Facet {} must be one of {}"
                                              .format(facet, by))
                 
@@ -161,9 +157,9 @@ class BaseOpView(BaseView):
 
         if by and plot_name is None:
             raise util.CytoflowViewError("You must use facets {} in either the "
-                                         "plot variables or the plot name. "
+                                         "plot facets or the plot name. "
                                          "Possible plot names: {}"
-                                         .format(by, [x for x in self.enum_plots(experiment, by)]))
+                                         .format(by, [x for x in self.enum_plots(experiment)]))
                                         
         if plot_name is not None:
             if plot_name is not None and not by:
