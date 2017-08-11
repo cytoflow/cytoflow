@@ -145,7 +145,6 @@ class OpHandlerMixin(HasTraits):
     previous_conditions_names = Property(depends_on = "context.previous_wi.conditions")
     statistics_names = Property(depends_on = "context.statistics")
     previous_statistics_names = Property(depends_on = "context.previous_wi.statistics")
-
     
     # MAGIC: gets value for property "conditions_names"
     def _get_conditions_names(self):
@@ -174,5 +173,13 @@ class OpHandlerMixin(HasTraits):
             return list(self.context.previous_wi.statistics.keys())
         else:
             return []
-    
-
+        
+    @on_trait_change('context.op_error_trait', 
+                     dispatch = 'ui', 
+                     post_init = True)
+    def _op_trait_error(self):
+        for ed in self.info.ui._editors:
+            if ed.name == self.context.op_error_trait:
+                ed.set_error_state(True)
+            else:
+                ed.set_error_state(False)
