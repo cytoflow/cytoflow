@@ -1,5 +1,6 @@
 #!/usr/bin/env python3.4
 # coding: latin-1
+from cytoflow.utility.cytoflow_errors import CytoflowOpError
 
 # (c) Massachusetts Institute of Technology 2015-2017
 #
@@ -133,11 +134,15 @@ class WorkflowItem(HasStrictTraits):
     
     # report the errors and warnings
     op_error = Str(status = True)
-    op_warning = Str(status = True)    
+    op_error_trait = Str(status = True)
+    op_warning = Str(status = True)
+    op_warning_trait = Str(status = True)    
     estimate_error = Str(status = True)
     estimate_warning = Str(status = True)
     view_error = Str(status = True)
+    view_error_trait = Str(status = True)
     view_warning = Str(status = True)
+    view_warning_trait = Str(status = True)
 
     # the central event to kick of WorkflowItem update logic
     changed = Event
@@ -225,17 +230,26 @@ class RemoteWorkflowItem(WorkflowItem):
                 self.result = r
 
                 self.op_error = ""
+                self.op_error_trait = ""
                 if w:
                     self.op_warning = w[-1].message.__str__()
                 else:
                     self.op_warning = ""
+                    self.op_warning_trait = ""
                     
                 self.status = "valid"
+                return
+            
+            except CytoflowOpError as e:                
+                self.result = None
+                self.op_error_trait = e.args[0]
+                self.op_error = e.args[-1]    
+                self.status = "invalid"
                 return
                 
             except CytoflowError as e:
                 self.result = None
-                self.op_error = e.__str__()    
+                self.op_error = e.args[-1]    
                 self.status = "invalid"
                 return
  
