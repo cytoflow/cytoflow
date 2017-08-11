@@ -23,99 +23,108 @@ from traits.api import (HasStrictTraits, Dict, List, Instance, Str, Any,
 import cytoflow.utility as util
 
 class Experiment(HasStrictTraits):
-    """An Experiment manages all the data and metadata for a flow experiment.
+    """
+    An Experiment manages all the data and metadata for a flow experiment.
     
-    An `Experiment` is `cytoflow`'s central data structure: it wraps a 
-    `pandas.DataFrame` containing all the data from a flow experiment. Each 
-    row in the table is an event.  Each column is either a measurement from one 
-    of the detectors (or a "derived" measurement such as a transformed value or
-    a ratio), or a piece of metadata associated with that event: which 
-    tube it came from, what the experimental conditions for that tube were, 
-    gate membership, etc.  The `Experiment` object lets you:
+    An :class:`Experiment` is the central data struture in :mod:`cytoflow`: it 
+    wraps a :class:`pandas.DataFrame` containing all the data from a flow 
+    experiment. Each row in the table is an event.  Each column is either a 
+    measurement from one of the detectors (or a "derived" measurement such as 
+    a transformed value or a ratio), or a piece of metadata associated with 
+    that event: which tube it came from, what the experimental conditions for 
+    that tube were, gate membership, etc.  The :class:`Experiment` object lets 
+    you:
+    
       - Add additional metadata to define subpopulations
       - Get events that match a particular metadata signature.
       
-    Additionally, the `Experiment` object manages channel- and experiment-level
-    metadata in the `metadata` field, which is a dictionary.  This allows
-    the rest of the `cytoflow` package to track and enforce other constraints
-    that are important in doing quantitative flow cytometry: for example,
-    every tube must be collected with the same channel parameters (such 
-    as PMT voltage.)
+    Additionally, the :class:`Experiment` object manages channel- and 
+    experiment-level metadata in the :attr:`metadata` attribute, which is a 
+    dictionary.  This allows the rest of the :mod:`cytoflow` package to track 
+    and enforce other constraints that are important in doing quantitative 
+    flow cytometry: for example, every tube must be collected with the same 
+    channel parameters (such as PMT voltage.)
 
-    NOTE: `Experiment` is not responsible for enforcing the constraints; 
-    `cytoflow.ImportOp` and the other modules are.
+    .. note:: 
+    
+        :class:`Experiment` is not responsible for enforcing the constraints; 
+        :class:`.ImportOp` and the other modules are.
     
     Attributes
     ----------
 
     data : pandas.DataFrame
-        the `DataFrame` representing all the events and metadata.  Each event
-        is a row; each column is either a measured channel (ie a fluorescence
-        measurement), a derived channel (eg the ratio between two channels), or
-        a piece of metadata.  Metadata can be either experimental conditions 
-        (eg induction level, timepoint) or added by operations (eg gate 
+        All the events and metadata represented by this experiment.  Each event
+        is a row; each column is either a measured channel (eg. a fluorescence
+        measurement), a derived channel (eg. the ratio between two channels), 
+        or a piece of metadata.  Metadata can be either experimental conditions
+        (eg. induction level, timepoint) or added by operations (eg. gate 
         membership).
         
     metadata : Dict(Str : Dict(Str : Any)
-        Each column in `Experiment.data` has an entry in `Experiment.metadata`
-        whose key is the column name and whose value is a dict of 
-        column-specific metadata.  Metadata is added by operations, and is
-        occasionally useful if modules are expected to work together.  See
-        individual operations' documentation for a list of the metadata that
-        operation adds.  The only "required" metadata is `type`, which can
-        be `channel` (if the column is a measured channel, or derived from
-        one) or `condition` (if the column is an experimental condition,
-        gate membership, etc.)
+        Each column in :attr:`data` has an entry in :attr:`metadata` whose key 
+        is the column name and whose value is a dict of column-specific 
+        metadata.  Metadata is added by operations, and is occasionally useful
+        if modules are expected to work together.  See individual operations' 
+        documentation for a list of the metadata that operation adds.  The only 
+        "required" metadata is ``type``, which can be ``channel`` (if the 
+        column is a measured channel, or derived from one) or ``condition`` 
+        (if the column is an experimental condition, gate membership, etc.)
         
-        NOTE!  There may also be experiment-wide entries in `metadata` that
-        are NOT columns in `data`!
+        .. warning::
+        
+            There may also be experiment-wide entries in :attr:`metadata` that
+            are *not* columns in :attr:`data`!
     
     history : List(IOperation)
-        A list of the operations that have been applied to the raw data that
-        have led to this Experiment.
+        The :class:`.IOperation` operations that have been applied to the raw 
+        data to result in this :class:`Experiment`.
         
     statistics : Dict((Str, Str) : pandas.Series)
-        A dictionary of statistics and parameters computed by models that were
-        fit to the data.  The key is an (Str, Str) tuple, where the first Str
-        is the name of the operation that supplied the statistic, and the second
-        Str is the name of the statistic. The value is a multi-indexed pandas
-        Series: each level of the index is a facet, and each combination of
-        indices is a subset for which the statistic was computed.  The values 
-        of the series, of course, are the values of the computed parameters or
-        statistics for each subset.
+        The statistics and parameters computed by models that were fit to the 
+        data.  The key is an ``(Str, Str)`` tuple, where the first ``Str`` is 
+        the name of the operation that supplied the statistic, and the second 
+        ``Str`` is the name of the statistic. The value is a multi-indexed 
+        :class:`pandas.Series`: each level of the index is a facet, and each 
+        combination of indices is a subset for which the statistic was computed.
+        The values of the series, of course, are the values of the computed 
+        parameters or statistics for each subset.
     
     channels : List(String)
-        A read-only `List` containing the channels that this experiment tracks.
+        The channels that this experiment tracks (read-only).
     
     conditions : Dict(String : pandas.Series)
-        A read-only Dict of the experimental conditions and analysis groups 
-        (gate membership, etc) and that this experiment tracks.  The key is the 
-        name of the condition, and the value is a pandas.Series with that
-        condition's possible values. 
+        The experimental conditions and analysis groups (gate membership, etc) 
+        that this experiment tracks.  The key is the name of the condition, and 
+        the value is a :class:`pandas.Series` with that condition's possible 
+        values. 
 
-    Implementation details
-    ----------------------
+    Notes
+    -----
     
-    The OOP programmer in me desperately wanted to subclass DataFrame, add
-    some flow-specific stuff, and move on with my life.  (I may still, with
-    something like https://github.com/dalejung/pandas-composition).  A few 
-    things get in the way of directly subclassing pandas.DataFrame:
+    The OOP programmer in me desperately wanted to subclass 
+    :class:`pandas.DataFrame`, add some flow-specific stuff, and move on with 
+    my life.  (I may still, with something like 
+    https://github.com/dalejung/pandas-composition).  A few things get in the 
+    way of directly subclassing :class:`pandas.DataFrame`:
     
      - First, to enable some of the delicious syntactic sugar for accessing
-       its contents, DataFrame redefines ``__getattribute__`` and 
-       ``__setattribute__``, and making it recognize (and maintain across 
-       copies) additional attributes is an unsupported (non-public) API 
-       feature and introduces other subclassing weirdness.
+       its contents, :class:`pandas.DataFrame` redefines 
+       :meth:`__getattribute__` and :meth:`__setattribute__`, and making it 
+       recognize (and maintain across copies) additional attributes is an 
+       unsupported (non-public) API feature and introduces other 
+       subclassing weirdness.
     
      - Second, many of the operations (like appending!) don't happen in-place;
        they return copies instead.  It's cleaner to simply manage that copying
        ourselves instead of making the client deal with it.  We can pretend
        to operate on the data in-place.
        
-    To maintain the ease of use, we'll override __getitem__ and pass it to
-    the wrapped DataFrame.  We'll do the same with some of the more useful
-    DataFrame API pieces (like query()); and of course, you can just get the
-    data frame itself with Experiment.data
+    To maintain the ease of use, we'll override :meth:`__getitem__` and pass it 
+    to the wrapped :class:`pandas.DataFrame`.  We'll do the same with some of 
+    the more useful :class:`~pandas.DataFrame` API pieces (like :meth:`query`); 
+    and of course, you can just get the data frame itself with 
+    :attr:`Experiment.data`.
     
     Examples
     --------
@@ -162,19 +171,23 @@ class Experiment(HasStrictTraits):
         return self.data.__setitem__(key, value)
     
     def __len__(self):
+        """Return the length of the underlying pandas.DataFrame"""
         return len(self.data)
 
     def _get_channels(self):
+        """Getter for the `channels` property"""
         return [x for x in self.data if self.metadata[x]['type'] == "channel"]
     
     def _get_conditions(self):
+        """Getter for the `conditions` property"""
         return {x : pd.Series(self.data[x].unique()).sort_values() for x in self.data
                 if self.metadata[x]['type'] == "condition"}
         
     def subset(self, conditions, values):
         """
         Returns a subset of this experiment including only the events where
-        each condition `condition` equals the corresponding value in `values`.
+        each condition in ``condition`` equals the corresponding value in 
+        ``values``.
         
         
         Parameters
@@ -187,8 +200,9 @@ class Experiment(HasStrictTraits):
             
         Returns
         -------
-        A new `experiment` containing only the events specified in `conditions`
-        and `values`.
+        Experiment
+            A new :class:`Experiment` containing only the events specified in 
+            ``conditions`` and ``values``.
             
         """
 
@@ -216,27 +230,28 @@ class Experiment(HasStrictTraits):
     
     def query(self, expr, **kwargs):
         """
-        Return an experiment whose data is a subset of this one where `expr`
-        evaluates to `True`.
+        Return an experiment whose data is a subset of this one where ``expr``
+        evaluates to ``True``.
 
         This method "sanitizes" column names first, replacing characters that
-        are not valid in a Python identifier with an underscore '_'. So, the
-        column name `a column` becomes `a_column`, and can be queried with
-        an `a_column == True` or such.
+        are not valid in a Python identifier with an underscore ``_``. So, the
+        column name ``a column`` becomes ``a_column``, and can be queried with
+        an ``a_column == True`` or such.
         
         Parameters
         ----------
         expr : string
-            The expression to pass to `pandas.DataFrame.query()`.  Must be
-            a valid Python expression, something you could pass to `eval()`.
+            The expression to pass to :meth:`pandas.DataFrame.query`.  Must be
+            a valid Python expression, something you could pass to :func:`eval`.
             
         **kwargs : dict
-            Other named parameters to pass to `pandas.DataFrame.query()`.
+            Other named parameters to pass to :meth:`pandas.DataFrame.query`.
             
         Returns
         -------
-        A new `Experiment`, a clone of this one with the data returned by
-        `pandas.DataFrame.query()`
+        Experiment
+            A new :class:`Experiment`, a clone of this one with the data 
+            returned by :meth:`pandas.DataFrame.query()`
         """
         
         resolvers = {}
@@ -260,7 +275,10 @@ class Experiment(HasStrictTraits):
         return ret
     
     def clone(self):
-        """Clone this experiment"""
+        """
+        Create a copy of this :class:`Experiment`
+        """
+        
         new_exp = self.clone_traits()
         new_exp.data = self.data.copy(deep = False)
 
@@ -269,40 +287,44 @@ class Experiment(HasStrictTraits):
         return new_exp
             
     def add_condition(self, name, dtype, data = None):
-        """Add a new column of per-event metadata to this `Experiment`.  Operates
-           *in place*.
+        """
+        Add a new column of per-event metadata to this :class:`Experiment`.
+        
+        .. note::
+            :meth:`add_condition` operates **in place.**
         
         There are two places to call `add_condition`.
-          - As you're setting up a new `Experiment`, call `add_condition()`
-            with `data` set to `None` to specify the conditions the new events
-            will have.
+        
+          - As you're setting up a new :class:`Experiment`, call 
+            :meth:`add_condition` with ``data`` set to ``None`` to specify the 
+            conditions the new events will have.
           - If you compute some new per-event metadata on an existing 
-            `Experiment`, call `add_condition()` to add it. 
+            :class:`Experiment`, call :meth:`add_condition` to add it. 
         
         Parameters
         ----------
         name : String
-            The name of the new column in `self.data`.  Must be a valid Python
-            identifier: must start with `[A-Z]`, `[a-z]` or `_` and contain
-            only the characters `[A-Z]`, `[a-z]`, `[0-9]` or `_`.
+            The name of the new column in :attr:`data`.  Must be a valid Python
+            identifier: must start with ``[A-Za-z_]`` and contain only the 
+            characters ``[A-Za-z0-9_]``.
         
         dtype : String
-            The type of the new column in `self.data`.  Must be a string that
-            `pandas.Series` recognizes as a `dtype`: common types are 
-            "category", "float", "int", and "bool".
+            The type of the new column in :attr:`data`.  Must be a string that
+            :class:`pandas.Series` recognizes as a ``dtype``: common types are 
+            ``category``, ``float``, ``int``, and ``bool``.
             
         data : pandas.Series (default = None)
-            The `pandas.Series` to add to `self.data`.  Must be the same
-            length as `self.data`, and it must be convertable to a 
-            `pandas.Series` of type `dtype`.  If `None`, will add an
-            empty column to the `Experiment` ... but the `Experiment` must
-            be empty to do so!
+            The :class:`pandas.Series` to add to :attr:`data`.  Must be the same
+            length as :attr:`data`, and it must be convertable to a 
+            :class:`pandas.Series` of type ``dtype``.  If ``None``, will add an
+            empty column to the :class:`Experiment` ... but the 
+            :class:`Experiment` must be empty to do so!
              
         Raises
         ------
-        CytoflowError
-            If the `pandas.Series` passed in `data` isn't the same length
-            as `self.data`, or isn't convertable to type `dtype`.          
+        :class:`.CytoflowError`
+            If the :class:`pandas.Series` passed in ``data`` isn't the same 
+            length as :attr:`data`, or isn't convertable to type ``dtype``.          
             
         Examples
         --------
@@ -310,6 +332,7 @@ class Experiment(HasStrictTraits):
         >>> ex = flow.Experiment()
         >>> ex.add_condition("Time", "float")
         >>> ex.add_condition("Strain", "category")      
+        
         """
         
         if name != util.sanitize_identifier(name):
@@ -340,31 +363,37 @@ class Experiment(HasStrictTraits):
         self.metadata[name]['type'] = "condition"      
             
     def add_channel(self, name, data = None):
-        """Add a new column of per-event "data" (as opposed to metadata) to this
-          `Experiment`: ie, something that was measured per cell, or derived
-          from per-cell measurements.  Operates *in place*.
+        """
+        Add a new column of per-event data (as opposed to metadata) to this
+        :class:`Experiment`: ie, something that was measured per cell, or 
+        derived from per-cell measurements.    
+          
+          .. note::
+          
+            :meth:`add_channel` operates *in place*.
         
         Parameters
         ----------
         name : String
-            The name of the new column in `self.data`.
+            The name of the new column to be added to :attr:`data`.
             
         data : pandas.Series
-            The `pandas.Series` to add to `self.data`.  Must be the same
-            length as `self.data`, and it must be convertable to a 
-            dtype of `float64` of type `dtype`.  If `None`, will add an
-            empty column to the `Experiment` ... but the `Experiment` must
-            be empty to do so!
+            The :class:`pandas.Series` to add to :attr:`data`.  Must be the same
+            length as :attr:`data`, and it must be convertable to a 
+            dtype of ``float64``.  If ``None``, will add an empty column to 
+            the :class:`Experiment` ... but the :class:`Experiment` must be 
+            empty to do so!
              
         Raises
         ------
-        CytoflowError
-            If the `pandas.Series` passed in `data` isn't the same length
-            as `self.data`, or isn't convertable to a dtype `float64`.          
+        :exc:`.CytoflowError`
+            If the :class:`pandas.Series` passed in ``data`` isn't the same length
+            as :attr:`data`, or isn't convertable to a dtype ``float64``.          
             
         Examples
         --------
         >>> ex.add_channel("FSC_over_2", ex.data["FSC-A"] / 2.0) 
+        
         """
         
         if name in self.data:
@@ -391,38 +420,42 @@ class Experiment(HasStrictTraits):
         
     def add_events(self, data, conditions):
         """
-        Add new events to this Experiment.
+        Add new events to this :class:`Experiment`.
         
-        Each new event in `data` is appended to `self.data`, and its per-event
-        metadata columns will be set with the values specified in `conditions`.
-        Thus, it is particularly useful for adding tubes of data to new
-        experiments, before additional per-event metadata is added by gates,
-        etc.
+        Each new event in ``data`` is appended to :attr:`data`, and its 
+        per-event metadata columns will be set with the values specified in 
+        ``conditions``.  Thus, it is particularly useful for adding tubes of 
+        data to new experiments, before additional per-event metadata is added 
+        by gates, etc.
         
-        EVERY column in `self.data` must be accounted for.  Each column of
-        type `channel` must appear in `data`; each column of metadata must
-        have a key:value pair in `conditions`.
+        .. note::
+        
+            *Every* column in :attr:`data` must be accounted for.  Each column 
+            of type ``channel`` must appear in ``data``; each column of 
+            metadata must have a key:value pair in ``conditions``.
         
         Parameters
         ----------
         tube : pandas.DataFrame
             A single tube or well's worth of data. Must be a DataFrame with
-            the same columns as `self.channels`
+            the same columns as :attr:`channels`
         
         conditions : Dict(Str, Any)
             A dictionary of the tube's metadata.  The keys must match 
-            `self.conditions`, and the values must be coercable to the
-            relevant `numpy` dtype.
+            :attr:`conditions`, and the values must be coercable to the
+            relevant ``numpy`` dtype.
  
         Raises
         ------
-        CytoflowError
-            - If there are columns in `data` that aren't channels in the 
-              experiment, or vice versa. 
-            - If there are keys in `conditions` that aren't conditions in
-              the experiment, or vice versa.
-            - If there is metadata specified in `conditions` that can't be
-              converted to the corresponding metadata dtype.
+        :exc:`.CytoflowError`
+            :meth:`add_events` pukes if:
+    
+                - there are columns in ``data`` that aren't channels in the 
+                  experiment, or vice versa. 
+                - there are keys in ``conditions`` that aren't conditions in
+                  the experiment, or vice versa.
+                - there is metadata specified in ``conditions`` that can't be
+                  converted to the corresponding metadata ``dtype``.
             
         Examples
         --------
@@ -435,6 +468,7 @@ class Experiment(HasStrictTraits):
         >>> tube2, _ = fcparser.parse('RFP_Well_A3.fcs')
         >>> ex.add_events(tube1, {"Time" : 1, "Strain" : "BL21"})
         >>> ex.add_events(tube2, {"Time" : 1, "Strain" : "Top10G"})
+        
         """
 
         # make sure the new tube's channels match the rest of the 
