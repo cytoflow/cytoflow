@@ -16,6 +16,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+'''
+cytoflow.experiment
+-------------------
+'''
+
 import pandas as pd
 from traits.api import (HasStrictTraits, Dict, List, Instance, Str, Any,
                        Property, Tuple)
