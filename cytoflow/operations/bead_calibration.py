@@ -39,9 +39,6 @@ class BeadCalibrationOp(HasStrictTraits):
     Calibrate arbitrary channels to molecules-of-fluorophore using fluorescent
     beads (eg, the Spherotech RCP-30-5A rainbow beads.)
     
-    Extended Summary
-    ----------------
-    
     Computes a log-linear calibration function that maps arbitrary fluorescence
     units to physical units (ie molecules equivalent fluorophore, or *MEF*).
     
@@ -145,19 +142,52 @@ class BeadCalibrationOp(HasStrictTraits):
     
     Examples
     --------
-    >>> bead_op = flow.BeadCalibrationOp()
-    >>> bead_op.beads = flow.BeadCalibrationOp.BEADS["Spherotech RCP-30-5A Lot AA01-AA04, AB01, AB02, AC01, GAA01-R"]
-    >>> bead_op.units = {"Pacific Blue-A" : "MEBFP",
-                         "FITC-A" : "MEFL",
-                         "PE-Tx-Red-YG-A" : "MEPTR"}
-    >>>
-    >>> bead_op.beads_file = "beads.fcs"
-    >>> bead_op.estimate(ex3)
-    >>>
-    >>> bead_op.default_view().plot(ex3)  
-    >>> # check the plot!
-    >>>
-    >>> ex4 = bead_op.apply(ex3)  
+    
+    Create a small experiment:
+    
+    .. plot::
+        :context: close-figs
+    
+        >>> import cytoflow as flow
+        >>> import_op = flow.ImportOp()
+        >>> import_op.tubes = [flow.Tube(file = "tasbe/rby.fcs")]
+        >>> ex = import_op.apply()
+    
+    Create and parameterize the operation
+    
+    .. plot::
+        :context: close-figs
+
+        >>> bead_op = flow.BeadCalibrationOp()
+        >>> beads = "Spherotech RCP-30-5A Lot AA01-AA04, AB01, AB02, AC01, GAA01-R"
+        >>> bead_op.beads = flow.BeadCalibrationOp.BEADS[beads]
+        >>> bead_op.units = {"Pacific Blue-A" : "MEBFP",
+        ...                  "FITC-A" : "MEFL",
+        ...                  "PE-Tx-Red-YG-A" : "MEPTR"}
+        >>>
+        >>> bead_op.beads_file = "tasbe/beads.fcs"
+    
+    Estimate the model parameters
+    
+    .. plot::
+        :context: close-figs 
+    
+        >>> bead_op.estimate(ex)
+    
+    Plot the diagnostic plot
+    
+    .. plot::
+        :context: close-figs
+
+        >>> bead_op.default_view().plot(ex)  
+
+    Apply the operation to the experiment
+    
+    .. plot::
+        :context: close-figs
+    
+        >>> ex = bead_op.apply(ex)  
+        
     """
     
     # traits
@@ -418,7 +448,7 @@ class BeadCalibrationOp(HasStrictTraits):
             An view instance, call `plot()` to see the diagnostic plots
         """
 
-        return BeadCalibrationDiagnostic(_op = self, **kwargs)
+        return BeadCalibrationDiagnostic(op = self, **kwargs)
     
     # this silliness is necessary to squash the repr() call in sphinx.autodoc
     class _Beads(dict):
@@ -479,18 +509,15 @@ class BeadCalibrationOp(HasStrictTraits):
       - **MECY** (Cy5, 488 --> 680/30)
       - **MEPCY7** (PE-Cy7, 488 --> 750 LP)
       - **MEAP** (APC, 633 --> 665/20)
-      - **MEAPCY7** (APC-Cy7, 635 --> 750 LP)
+      - **MEAPCY7** (APC-Cy7, 635 --> 750 LP)      
     """
             
     
 @provides(cytoflow.views.IView)
 class BeadCalibrationDiagnostic(HasStrictTraits):
     """
-    A diagnostic view for `BeadCalibrationOp`
-    
-    Extended Summary
-    ----------------
-    
+    A diagnostic view for `BeadCalibrationOp`.
+        
     Plots the smoothed histogram of the bead data; the peak locations;
     a scatter plot of the raw bead fluorescence values vs the calibrated unit 
     values; and a line plot of the model that was computed.  Make sure that the
@@ -502,6 +529,12 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
         The operation instance whose parameters we're plotting.  Set 
         automatically if you created `this` using 
         `BeadCalibrationOp.default_view()`.
+        
+    Examples
+    --------
+    
+
+    >>> bead_op = flow.
     """
     
     # traits   
