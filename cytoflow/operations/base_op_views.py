@@ -210,12 +210,104 @@ class AnnotatingView(BaseView):
                       
         super().plot(experiment,
                      annotation_facet = annotation_facet,
-                     annotation_trait = annotation_trait,
+#                      annotation_trait = annotation_trait,
                      **kwargs)
         
     def _grid_plot(self, experiment, grid, xlim, ylim, xscale, yscale, **kwargs):
+        
+        # pop the annotation stuff off of kwargs so the underlying plotter 
+        # doesn't get confused
+        
+        annotation_facet = kwargs.pop('annotation_facet', None)
+#         annotation_trait = kwargs.pop('annotation_trait', None)
+        annotations = kwargs.pop('annotations', None)
+        plot_name = kwargs.pop('plot_name', None)
+        color = kwargs.get('color', None)
 
+        # plot the underlying data plots
         plot_ret = super()._grid_plot(experiment, grid, xlim, ylim, xscale, yscale, **kwargs)
+        
+        # plot the annotations on top
+        for (i, j, k), _ in grid.facet_data():
+            ax = grid.facet_axis(i, j)
+             
+            row_name = grid.row_names[i] if grid.row_names and grid._row_var is not annotation_facet else None
+            col_name = grid.col_names[j] if grid.col_names and grid._col_var is not annotation_facet else None
+            hue_name = grid.hue_names[k] if grid.hue_names and grid._hue_var is not annotation_facet else None
+             
+            facets = [x for x in [row_name, col_name, hue_name] if x is not None]
+#             print("facets {}".format(facets))
+            
+            if plot_name is not None:
+                try:
+                    plot_name = list(plot_name)
+                except TypeError:
+                    plot_name = [plot_name]
+                    
+                annotation_name = plot_name + facets
+            else:      
+                annotation_name = facets
+                
+            annotation = None
+            for group, a in annotations.items():
+                try:
+                    g_set = set(group)
+                except TypeError:
+                    g_set = set([group])
+                if g_set == set(annotation_name):
+                    annotation = a
+                    
+            if (annotation is None 
+                and len(annotations.keys()) == 1 
+                and list(annotations.keys())[0] is True):
+                annotation = annotations[True]
+                
+            if annotation is None:
+                warn("Couldn't find annotation for {}".format(annotation_name),
+                     util.CytoflowViewWarning)
+                continue
+                
+#             print("gmm {}".format(id(gmm)))
+            
+            if annotation_facet == grid._row_var:
+                annotation_value = grid.row_names[i]
+            elif annotation_facet == grid._col_var:
+                annotation_value = grid.col_names[j]
+            elif annotation_facet == grid._hue_var:
+                annotation_value = grid.hue_names[k]
+            else:
+                annotation_value = None
+
+            annotation_color = grid._facet_color(k, color)
+                
+            self._annotation_plot(ax, 
+                                  xlim, 
+                                  ylim, 
+                                  xscale, 
+                                  yscale, 
+                                  annotation, 
+                                  annotation_facet, 
+                                  annotation_value, 
+                                  annotation_color)
+
+# 
+#                 
+#                 idx = idx_re.match(grid.row_names[i]).group(1)
+#                 idx = int(idx) - 1
+#                 draw_gmm(idx, grid._facet_color(k, color))
+#             elif annotation_facet == grid._col_var:
+#                 idx = idx_re.match(grid.col_names[j]).group(1)
+#                 idx = int(idx) - 1
+#                 draw_gmm(idx, grid._facet_color(k, color))
+#             elif annotation_facet == grid._hue_var:
+#                 idx = idx_re.match(grid.hue_names[k]).group(1)
+#                 idx = int(idx) - 1
+#                 print("idx {}".format(idx))
+#                 draw_gmm(idx, grid._facet_color(idx, color))
+#             else:
+#                 for idx in range(0, len(gmm.means_)):            
+#                     draw_gmm(idx, grid._facet_color(k, color))
+
 
         return plot_ret
  

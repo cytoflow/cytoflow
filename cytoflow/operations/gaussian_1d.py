@@ -456,99 +456,41 @@ class GaussianMixture1DView(By1DView, AnnotatingView, HistogramView):
         super(GaussianMixture1DView, view).plot(experiment,
                                                 annotation_facet = self.op.name,
                                                 annotation_trait = trait_name,
+                                                annotations = self.op._gmms,
                                                 scale = self.op._scale,
                                                 **kwargs)
         
-    def _grid_plot(self, experiment, grid, xlim, ylim, xscale, yscale, **kwargs):
-
-        print(kwargs)
-        annotation_facet = kwargs.pop('annotation_facet', None)
-        annotation_trait = kwargs.pop('annotation_trait', None)
-        plot_name = kwargs.pop('plot_name', None)
-        color = kwargs.get('color', None)
         
-        # plot the histograms
-        plot_ret = super()._grid_plot(experiment, grid, xlim, ylim, xscale, yscale, **kwargs)
+    def _annotation_plot(self, axes, xlim, ylim, xscale, yscale, annotation, annotation_facet, annotation_value, annotation_color):
 
-#         print("gmms {}".format([(g, id(self.op._gmms[g])) for g in self.op._gmms]))
-#         print("grid vars {}".format((grid._row_var, grid._col_var, grid._hue_var)))
-         
-        # plot the distributions on top of them.
-        for (i, j, k), _ in grid.facet_data():
-            ax = grid.facet_axis(i, j)
-             
-            row_name = grid.row_names[i] if grid.row_names and grid._row_var is not annotation_facet else None
-            col_name = grid.col_names[j] if grid.col_names and grid._col_var is not annotation_facet else None
-            hue_name = grid.hue_names[k] if grid.hue_names and grid._hue_var is not annotation_facet else None
-             
-            facets = [x for x in [row_name, col_name, hue_name] if x is not None]
-            print("facets {}".format(facets))
+            # annotation is an instance of mixture.GaussianMixture
+            gmm = annotation
             
-            if plot_name is not None:
-                try:
-                    plot_name = list(plot_name)
-                except TypeError:
-                    plot_name = [plot_name]
-                    
-                gmm_name = plot_name + facets
-            else:      
-                gmm_name = facets
-                
-            gmm = None
-            for group, g in self.op._gmms.items():
-                try:
-                    g_set = set(group)
-                except TypeError:
-                    g_set = set([group])
-                if g_set == set(gmm_name):
-                    gmm = g
-                    
-            if gmm is None and len(self.op._gmms.keys()) == 1 and list(self.op._gmms.keys())[0] is True:
-                gmm = self.op._gmms[True]
-                
-            if gmm is None:
-                warn("Couldn't find a GMM for {}".format(gmm_name),
-                     util.CytoflowViewWarning)
-                continue
-                
-            print("gmm {}".format(id(gmm)))
-                
-            def draw_gmm(idx, color):
-                
-                patch_area = 0.0
-                                         
-                for k in range(0, len(ax.patches)):
-                    patch = ax.patches[k]
-                    xy = patch.get_xy()
-                    patch_area += poly_area([xscale(p[0]) for p in xy], [p[1] for p in xy])
-                
-                plt_min, plt_max = plt.gca().get_xlim()
-                x = xscale.inverse(np.linspace(xscale(plt_min), xscale(plt_max), 500))   
-                pdf_scale = patch_area * gmm.weights_[idx]
-                mean = gmm.means_[idx][0]
-                stdev = np.sqrt(gmm.covariances_[idx][0])
-                y = stats.norm.pdf(xscale(x), mean, stdev) * pdf_scale
-                ax.plot(x, y, color = color)
-                
-            idx_re = re.compile(annotation_facet + '_(\d+)')
-            if annotation_facet == grid._row_var:
-                idx = idx_re.match(grid.row_names[i]).group(1)
-                idx = int(idx) - 1
-                draw_gmm(idx, grid._facet_color(k, color))
-            elif annotation_facet == grid._col_var:
-                idx = idx_re.match(grid.col_names[j]).group(1)
-                idx = int(idx) - 1
-                draw_gmm(idx, grid._facet_color(k, color))
-            elif annotation_facet == grid._hue_var:
-                idx = idx_re.match(grid.hue_names[k]).group(1)
-                idx = int(idx) - 1
-                print("idx {}".format(idx))
-                draw_gmm(idx, grid._facet_color(idx, color))
+            if annotation_value is None:
+                for i in range(len(gmm.means_)):
+                    self._annotation_plot(axes, xlim, ylim, xscale, yscale, annotation, annotation_facet, i, annotation_color)
+                return
+            elif type(annotation_value) is str:
+                idx_re = re.compile(annotation_facet + '_(\d+)')
+                idx = idx_re.match(annotation_value).group(1)
+                idx = int(idx) - 1             
             else:
-                for idx in range(0, len(gmm.means_)):            
-                    draw_gmm(idx, grid._facet_color(k, color))
-                
-        return plot_ret
+                idx = annotation_value
+                  
+            patch_area = 0.0
+                                     
+            for k in range(0, len(axes.patches)):
+                patch = axes.patches[k]
+                xy = patch.get_xy()
+                patch_area += poly_area([xscale(p[0]) for p in xy], [p[1] for p in xy])
+            
+            plt_min, plt_max = plt.gca().get_xlim()
+            x = xscale.inverse(np.linspace(xscale(plt_min), xscale(plt_max), 500))   
+            pdf_scale = patch_area * gmm.weights_[idx]
+            mean = gmm.means_[idx][0]
+            stdev = np.sqrt(gmm.covariances_[idx][0])
+            y = stats.norm.pdf(xscale(x), mean, stdev) * pdf_scale
+            axes.plot(x, y, color = annotation_color)
 
 
 # from http://stackoverflow.com/questions/24467972/calculate-area-of-polygon-given-x-y-coordinates
