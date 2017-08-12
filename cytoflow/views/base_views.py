@@ -280,7 +280,7 @@ class Base1DView(BaseDataView):
         super().plot(experiment, xlim = xlim, xscale = scale, **kwargs)
     
 
-class Base2DView(BaseView):
+class Base2DView(BaseDataView):
     
     xchannel = Str
     xscale = util.ScaleEnum
