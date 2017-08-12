@@ -746,7 +746,7 @@ class FlowPeaks1DView(By1DView, AnnotatingView, HistogramView):
                                           annotation_facet = self.op.name,
                                           annotation_trait = trait_name,
                                           annotations = self.op._kmeans,
-                                          scale = self.op._scale,
+                                          scale = self.op._scale[self.channel],
                                           **kwargs)
         
         

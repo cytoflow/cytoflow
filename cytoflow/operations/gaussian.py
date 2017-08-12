@@ -532,6 +532,9 @@ class GaussianMixture1DView(By1DView, AnnotatingView, HistogramView):
     id = Constant('edu.mit.synbio.cytoflow.view.gaussianmixture1dview')
     friendly_id = Constant("1D Gaussian Mixture Diagnostic Plot")
     
+    channel = Str
+    scale = util.ScaleEnum
+    
     def plot(self, experiment, **kwargs):
         """
         Plot the plots.
@@ -543,7 +546,7 @@ class GaussianMixture1DView(By1DView, AnnotatingView, HistogramView):
                                                 annotation_facet = self.op.name,
                                                 annotation_trait = trait_name,
                                                 annotations = self.op._gmms,
-                                                scale = self.op._scale,
+                                                scale = self.op._scale[self.channel],
                                                 **kwargs)
         
         
@@ -600,6 +603,11 @@ class GaussianMixture2DView(By2DView, AnnotatingView, ScatterplotView):
     id = Constant('edu.mit.synbio.cytoflow.view.gaussianmixture2dview')
     friendly_id = Constant("2D Gaussian Mixture Diagnostic Plot")
         
+    xchannel = Str
+    xscale = util.ScaleEnum
+    ychannel = Str
+    yscale = util.ScaleEnum
+        
     def plot(self, experiment, **kwargs):
         """
         Plot the plots.
@@ -611,8 +619,8 @@ class GaussianMixture2DView(By2DView, AnnotatingView, ScatterplotView):
                                                 annotation_facet = self.op.name,
                                                 annotation_trait = trait_name,
                                                 annotations = self.op._gmms,
-                                                xscale = self.op._xscale,
-                                                yscale = self.op._yscale,
+                                                xscale = self.op._scale[self.xchannel],
+                                                yscale = self.op._scale[self.ychannel],
                                                 **kwargs)
 
     def _annotation_plot(self, axes, xlim, ylim, xscale, yscale, annotation, annotation_facet, annotation_value, annotation_color):
@@ -645,47 +653,53 @@ class GaussianMixture2DView(By2DView, AnnotatingView, ScatterplotView):
         # ourselves out of an affine-scaled unit circle.  The interface
         # is the same as matplotlib.patches.Ellipse
         
-        self._plot_ellipse(axes,
-                           mean,
-                           np.sqrt(v[0]),
-                           np.sqrt(v[1]),
-                           180 + t,
-                           color = annotation_color,
-                           fill = False,
-                           linewidth = 2)
+        _plot_ellipse(axes,
+                      xscale,
+                      yscale,
+                      mean,
+                      np.sqrt(v[0]),
+                      np.sqrt(v[1]),
+                      180 + t,
+                      color = annotation_color,
+                      fill = False,
+                      linewidth = 2)
 
-        self._plot_ellipse(axes, 
-                           mean,
-                           np.sqrt(v[0]) * 2,
-                           np.sqrt(v[1]) * 2,
-                           180 + t,
-                           color = annotation_color,
-                           fill = False,
-                           linewidth = 2,
-                           alpha = 0.66)
+        _plot_ellipse(axes,
+                      xscale,
+                      yscale, 
+                      mean,
+                      np.sqrt(v[0]) * 2,
+                      np.sqrt(v[1]) * 2,
+                      180 + t,
+                      color = annotation_color,
+                      fill = False,
+                      linewidth = 2,
+                      alpha = 0.66)
         
-        self._plot_ellipse(axes, 
-                           mean,
-                           np.sqrt(v[0]) * 3,
-                           np.sqrt(v[1]) * 3,
-                           180 + t,
-                           color = annotation_color,
-                           fill = False,
-                           linewidth = 2,
-                           alpha = 0.33)
+        _plot_ellipse(axes,
+                      xscale,
+                      yscale, 
+                      mean,
+                      np.sqrt(v[0]) * 3,
+                      np.sqrt(v[1]) * 3,
+                      180 + t,
+                      color = annotation_color,
+                      fill = False,
+                      linewidth = 2,
+                      alpha = 0.33)
                     
-    def _plot_ellipse(self, ax, center, width, height, angle, **kwargs):
-        tf = transforms.Affine2D() \
-             .scale(width, height) \
-             .rotate_deg(angle) \
-             .translate(*center)
-             
-        tf_path = tf.transform_path(path.Path.unit_circle())
-        v = tf_path.vertices
-        v = np.vstack((self.op._xscale.inverse(v[:, 0]),
-                       self.op._yscale.inverse(v[:, 1]))).T
+def _plot_ellipse(ax, xscale, yscale, center, width, height, angle, **kwargs):
+    tf = transforms.Affine2D() \
+         .scale(width, height) \
+         .rotate_deg(angle) \
+         .translate(*center)
+         
+    tf_path = tf.transform_path(path.Path.unit_circle())
+    v = tf_path.vertices
+    v = np.vstack((xscale.inverse(v[:, 0]),
+                   yscale.inverse(v[:, 1]))).T
 
-        scaled_path = path.Path(v, tf_path.codes)
-        scaled_patch = patches.PathPatch(scaled_path, **kwargs)
-        ax.add_patch(scaled_patch)
+    scaled_path = path.Path(v, tf_path.codes)
+    scaled_patch = patches.PathPatch(scaled_path, **kwargs)
+    ax.add_patch(scaled_patch)
             
