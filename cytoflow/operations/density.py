@@ -45,7 +45,7 @@ import cytoflow.views
 import cytoflow.utility as util
 
 from .i_operation import IOperation
-from .base_op_views import BaseOp2DView
+from .base_op_views import By2DView
 
 @provides(IOperation)
 class DensityGateOp(HasStrictTraits):
@@ -366,7 +366,7 @@ class DensityGateOp(HasStrictTraits):
 # import matplotlib.transforms as transforms
 #     
 @provides(cytoflow.views.IView)
-class DensityGateView(BaseOp2DView):
+class DensityGateView(By2DView):
     """
     Attributes
     ----------

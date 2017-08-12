@@ -68,7 +68,7 @@ class BaseView(HasStrictTraits):
             subplots around so that they form a multi-row grid by setting
             `col_wrap` to the number of columns you want. 
         """
-    
+
         col_wrap = kwargs.pop('col_wrap', None)
         
         if col_wrap and self.yfacet:
@@ -202,7 +202,7 @@ class BaseDataView(BaseView):
         underlying dataframe to `BaseView.plot`
 
         """
-        
+
         if self.xfacet and self.xfacet not in experiment.conditions:
             raise util.CytoflowViewError("X facet {0} not in the experiment"
                                     .format(self.xfacet))

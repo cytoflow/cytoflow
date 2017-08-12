@@ -37,7 +37,7 @@ from cytoflow.views import IView, ScatterplotView
 import cytoflow.utility as util
 
 from .i_operation import IOperation
-from .base_op_views import BaseOp2DView
+from .base_op_views import By2DView
 
 @provides(IOperation)
 class GaussianMixture2DOp(HasStrictTraits):
@@ -493,7 +493,7 @@ import matplotlib.patches as patches
 import matplotlib.transforms as transforms
     
 @provides(IView)
-class GaussianMixture2DView(BaseOp2DView, ScatterplotView):
+class GaussianMixture2DView(By2DView, ScatterplotView):
     """
     Attributes
     ----------
