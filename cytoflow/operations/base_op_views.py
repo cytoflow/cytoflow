@@ -235,7 +235,7 @@ class AnnotatingView(BaseView):
 
         # plot the underlying data plots
         plot_ret = super()._grid_plot(experiment, grid, xlim, ylim, xscale, yscale, **kwargs)
-                
+                        
         # plot the annotations on top
         for (i, j, k), _ in grid.facet_data():
             ax = grid.facet_axis(i, j)
@@ -256,9 +256,6 @@ class AnnotatingView(BaseView):
             else:      
                 annotation_name = facets
                 
-            if not annotation_name:
-                continue
-                
             annotation = None
             for group, a in annotations.items():
                 try:
@@ -274,16 +271,19 @@ class AnnotatingView(BaseView):
                 annotation = annotations[True]
                 
             if annotation is None:
-                warn("Couldn't find annotation for {}".format(annotation_name),
-                     util.CytoflowViewWarning)
+#                 warn("Couldn't find annotation for {}".format(annotation_name),
+#                      util.CytoflowViewWarning)
                 continue
-                            
-            if annotation_facet == grid._row_var:
-                annotation_value = grid.row_names[i]
-            elif annotation_facet == grid._col_var:
-                annotation_value = grid.col_names[j]
-            elif annotation_facet == grid._hue_var:
-                annotation_value = grid.hue_names[k]
+                 
+            if annotation_facet is not None:                                                  
+                if annotation_facet == grid._row_var:
+                    annotation_value = grid.row_names[i]
+                elif annotation_facet == grid._col_var:
+                    annotation_value = grid.col_names[j]
+                elif annotation_facet == grid._hue_var:
+                    annotation_value = grid.hue_names[k]
+                else:
+                    annotation_value = None
             else:
                 annotation_value = None
 

@@ -242,7 +242,7 @@ class BleedthroughLinearOp(HasStrictTraits):
             new_experiment.metadata[channel]['bleedthrough_channels'] = list(channels)
             new_experiment.metadata[channel]['bleedthrough_fn'] = lambda x, a_inv = a_inv: np.dot(x, a_inv)
      
-        new_experiment.history.append(self.clone_traits(transient = lambda t: True))   
+        new_experiment.history.append(self.clone_traits(transient = lambda _: True))   
         return new_experiment
     
     def default_view(self, **kwargs):
@@ -279,10 +279,9 @@ class BleedthroughLinearDiagnostic(HasStrictTraits):
     """
     
     # traits   
-    id = "edu.mit.synbio.cytoflow.view.autofluorescencediagnosticview"
-    friendly_id = "Autofluorescence Diagnostic" 
+    id = Constant("edu.mit.synbio.cytoflow.view.autofluorescencediagnosticview")
+    friendly_id = Constant("Autofluorescence Diagnostic") 
     
-    name = Str
     subset = Str
     
     # TODO - why can't I use BleedthroughPiecewiseOp here?

@@ -22,8 +22,7 @@ Created on Sep 18, 2015
 @author: brian
 '''
 
-from traits.api import (HasStrictTraits, Str, CStr, provides,
-                        Instance, DelegatesTo, Constant, Int)
+from traits.api import (HasStrictTraits, Str, CStr, provides, Constant, Int)
 import numpy as np
 import bottleneck as bn
 

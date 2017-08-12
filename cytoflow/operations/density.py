@@ -22,30 +22,19 @@ Created on Dec 16, 2015
 @author: brian
 '''
 
-from warnings import warn
-from itertools import product
+from traits.api import (HasStrictTraits, Str, CStr, Dict, Any, Instance, 
+                        Constant, List, provides, Array, Tuple)
 
-import matplotlib.pyplot as plt
-
-from traits.api import (HasStrictTraits, Str, CStr, Dict, Any, Instance, Bool, 
-                        Constant, List, provides, DelegatesTo, Property, Array)
-
-import matplotlib as mpl
-import matplotlib.colors as colors
 import numpy as np
 import scipy.stats
 import scipy.ndimage.filters
-# from sklearn import mixture
-# from scipy import linalg
-# from scipy import stats
 import pandas as pd
-import seaborn as sns
 
-import cytoflow.views
+from cytoflow.views import IView, DensityView
 import cytoflow.utility as util
 
 from .i_operation import IOperation
-from .base_op_views import By2DView
+from .base_op_views import By2DView, AnnotatingView
 
 @provides(IOperation)
 class DensityGateOp(HasStrictTraits):
@@ -151,10 +140,9 @@ class DensityGateOp(HasStrictTraits):
     _yscale = Instance(util.IScale, transient = True)
     
     _xbins = Array(transient = True)
-    _keep_xbins = Dict(Any, Array, transient = True)
     _ybins = Array(transient = True)
-    _keep_ybins = Dict(Any, Array, transient = True)
-    _histogram = Dict(Any, Array, transient = True)
+
+    _keep_bins = Dict(Any, Tuple, transient = True)
     
     def estimate(self, experiment, subset = None):
         """
@@ -211,7 +199,7 @@ class DensityGateOp(HasStrictTraits):
         else:
             # use a lambda expression to return a group that contains
             # all the events
-            groupby = experiment.data.groupby(lambda x: True)
+            groupby = experiment.data.groupby(lambda _: True)
             
         # get the scale. estimate the scale params for the ENTIRE data set,
         # not subsets we get from groupby().  And we need to save it so that
@@ -243,7 +231,6 @@ class DensityGateOp(HasStrictTraits):
                                      bins=[xbins, ybins])
             
             h = scipy.ndimage.filters.gaussian_filter(h, sigma = self.sigma)
-            self._histogram[group] = h
             
             i = scipy.stats.rankdata(h, method = "ordinal") - 1
             i = np.unravel_index(np.argsort(-i), h.shape)
@@ -255,9 +242,11 @@ class DensityGateOp(HasStrictTraits):
             while(curr_count < goal_count and num_bins < i[0].size):
                 curr_count += h[i[0][num_bins], i[1][num_bins]]
                 num_bins += 1
-            
-            self._keep_xbins[group] = i[0][0:num_bins]
-            self._keep_ybins[group] = i[1][0:num_bins]
+                
+            self._keep_bins[group] = (i[0][0:num_bins], i[1][0:num_bins], h)
+#             
+#             self._keep_xbins[group] = i[0][0:num_bins]
+#             self._keep_ybins[group] = i[1][0:num_bins]
             
     def apply(self, experiment):
         """
@@ -283,7 +272,7 @@ class DensityGateOp(HasStrictTraits):
             raise util.CytoflowOpError("Experiment already has a column named {0}"
                                   .format(self.name))
         
-        if not (self._xbins.size and self._ybins.size and self._keep_xbins and self._keep_ybins):
+        if not (self._xbins.size and self._ybins.size and self._keep_bins):
             raise util.CytoflowOpError("No gate estimate found.  Did you forget to "
                                   "call estimate()?")
 
@@ -323,7 +312,7 @@ class DensityGateOp(HasStrictTraits):
         event_assignments = pd.Series([False] * len(experiment), dtype = "bool")
         
         for group, group_data in groupby:
-            if group not in self._keep_xbins:
+            if group not in self._keep_bins:
                 # there weren't any events in this group, so we didn't get
                 # an estimate
                 continue
@@ -335,8 +324,10 @@ class DensityGateOp(HasStrictTraits):
 
             group_keep = pd.Series([False] * len(group_data))
             
-            for (xbin, ybin) in zip(self._keep_xbins[group],
-                                    self._keep_ybins[group]):
+            keep_x = self._keep_bins[group][0]
+            keep_y = self._keep_bins[group][1]
+            
+            for (xbin, ybin) in zip(keep_x, keep_y):
                 group_keep[(cX == xbin) & (cY == ybin)] = True
             
             event_assignments.iloc[group_idx] = group_keep
@@ -357,207 +348,34 @@ class DensityGateOp(HasStrictTraits):
             IView : an IView, call plot() to see the diagnostic plot.
         """
         return DensityGateView(op = self, **kwargs)
+          
+@provides(IView)
+class DensityGateView(By2DView, AnnotatingView, DensityView):
      
-#     
-# # a few more imports for drawing scaled ellipses
-#         
-# import matplotlib.path as path
-# import matplotlib.patches as patches
-# import matplotlib.transforms as transforms
-#     
-@provides(cytoflow.views.IView)
-class DensityGateView(By2DView):
-    """
-    Attributes
-    ----------
-    op : Instance(GaussianMixture2DOp)
-        The op whose parameters we're viewing.        
-    """
-     
-    id = 'edu.mit.synbio.cytoflow.view.densitygateview'
-    friendly_id = "Density Gate Diagnostic Plot"
-     
-    _by = Property(List)
-     
-    def _get__by(self):
-        facets = [x for x in [self.xfacet, self.yfacet] if x]
-        return list(set(self.op.by) - set(facets))
-         
-    def enum_plots(self, experiment):
-        """
-        Returns an iterator over the possible plots that this View can
-        produce.  The values returned can be passed to "plot".
-        """
-     
-        if self.xfacet and self.xfacet not in experiment.conditions:
-            raise util.CytoflowViewError("X facet {} not in the experiment"
-                                    .format(self.xfacet))
-             
-        if self.xfacet and self.xfacet not in self.op.by:
-            raise util.CytoflowViewError("X facet {} must be in GaussianMixture1DOp.by, which is {}"
-                                    .format(self.xfacet, self.op.by))
-         
-        if self.yfacet and self.yfacet not in experiment.conditions:
-            raise util.CytoflowViewError("Y facet {0} not in the experiment"
-                                    .format(self.yfacet))
-             
-        if self.yfacet and self.yfacet not in self.op.by:
-            raise util.CytoflowViewError("Y facet {} must be in GaussianMixture1DOp.by, which is {}"
-                                    .format(self.yfacet, self.op.by))
-             
-        for b in self.op.by:
-            if b not in experiment.data:
-                raise util.CytoflowOpError("Aggregation metadata {0} not found"
-                                      " in the experiment"
-                                      .format(b))    
-     
-        class plot_enum(object):
-             
-            def __init__(self, view, experiment):
-                self._iter = None
-                self._returned = False
-                 
-                if view._by:
-                    self._iter = experiment.data.groupby(view._by).__iter__()
-                 
-            def __iter__(self):
-                return self
-             
-            def __next__(self):
-                if self._iter:
-                    return next(self._iter)[0]
-                else:
-                    if self._returned:
-                        raise StopIteration
-                    else:
-                        self._returned = True
-                        return None
-             
-        return plot_enum(self, experiment)
-     
-    def plot(self, experiment, plot_name = None, **kwargs):
+    id = Constant('edu.mit.synbio.cytoflow.view.densitygateview')
+    friendly_id = ("Density Gate Diagnostic Plot")
+
+    huefacet = Constant(None)
+    
+    def plot(self, experiment, **kwargs):
         """
         Plot the plots.
         """
-        if experiment is None:
-            raise util.CytoflowViewError("No experiment specified")
-         
-        if not self.op.xchannel:
-            raise util.CytoflowViewError("No X channel specified")
-         
-        if not self.op.ychannel:
-            raise util.CytoflowViewError("No Y channel specified")
- 
-        experiment = experiment.clone()
-         
-        # try to apply the current op
-        try:
-            experiment = self.op.apply(experiment)
-        except util.CytoflowOpError:
-            pass
-         
-        if self.subset:
-            try:
-                experiment = experiment.query(self.subset)
-                experiment.data.reset_index(drop = True, inplace = True)
-            except:
-                raise util.CytoflowViewError("Subset string '{0}' isn't valid"
-                                        .format(self.subset))
-                 
-            if len(experiment) == 0:
-                raise util.CytoflowViewError("Subset string '{0}' returned no events"
-                                        .format(self.subset)) 
-         
-        # figure out common limits
-        # adjust the limits to clip extreme values
-        min_quantile = self.op.min_quantile
-        max_quantile = self.op.max_quantile
         
-        legend = kwargs.pop('legend', True)
-        kwargs.setdefault('cmap', plt.get_cmap('viridis'))
-                 
-        xlim = kwargs.pop("xlim", None)
-        if xlim is None:
-            xlim = (experiment.data[self.op.xchannel].quantile(min_quantile),
-                    experiment.data[self.op.xchannel].quantile(max_quantile))
- 
-        ylim = kwargs.pop("ylim", None)
-        if ylim is None:
-            ylim = (experiment.data[self.op.ychannel].quantile(min_quantile),
-                    experiment.data[self.op.ychannel].quantile(max_quantile))
-               
-        # see if we're making subplots
-        if self._by and plot_name is None:
-            raise util.CytoflowViewError("You must use facets {} in either the "
-                                         "plot variables or the plt name. "
-                                         "Possible plot names: {}"
-                                         .format(self._by, [x for x in self.enum_plots(experiment)]))
-                 
-        if plot_name is not None:
-            if plot_name is not None and not self._by:
-                raise util.CytoflowViewError("Plot {} not from plot_enum"
-                                             .format(plot_name))
-                 
-            groupby = experiment.data.groupby(self._by)
-             
-            if plot_name not in set(groupby.groups.keys()):
-                raise util.CytoflowViewError("Plot {} not from plot_enum"
-                                             .format(plot_name))
-             
-            experiment.data = groupby.get_group(plot_name)
-            experiment.data.reset_index(drop = True, inplace = True)
-             
-        # plot the density plot, whether or not we're plotting isolines on top
-         
-        g = super(DensityGateView, self).plot(experiment, 
-                                              xscale = self.op._xscale, 
-                                              yscale = self.op._yscale,
-                                              xlim = xlim, 
-                                              ylim = ylim,
-                                              smoothed = True,
-                                              legend = (legend and self.op._xbins.size == 0),
-                                              **kwargs)
-         
-        if self._by and plot_name is not None:
-            plt.title("{0} = {1}".format(self._by, plot_name))
-
+        super().plot(experiment,
+                     annotations = self.op._keep_bins,
+                     xscale = self.op._xscale,
+                     yscale = self.op._yscale,
+                     **kwargs)
+     
+    def _annotation_plot(self, axes, xlim, ylim, xscale, yscale, annotation, annotation_facet, annotation_value, annotation_color):
         # plot a countour around the bins that got kept
-        if self.op._xbins.size and self.op._ybins.size:
-            group = plot_name if plot_name is not None else True
+  
+        keep_x = annotation[0]
+        keep_y = annotation[1]
+        h = annotation[2]
+        xbins = self.op._xbins[0:-1]
+        ybins = self.op._ybins[0:-1]
+        last_level = h[keep_x[-1], keep_y[-1]]
 
-            keep_x = self.op._keep_xbins[group]
-            keep_y = self.op._keep_ybins[group]
-            h = self.op._histogram[group]
-            last_level = h[keep_x[-1], keep_y[-1]]
-            g.map(_contourplot, 
-                  xbins = self.op._xbins[0:-1], 
-                  ybins = self.op._ybins[0:-1],
-                  histogram = h,
-                  last_level = last_level)
-            
-            # set up the range of the color map
-            if legend and 'norm' not in kwargs:
-                data_max = 0
-                for _, data_ijk in g.facet_data():
-                    x = data_ijk[self.xchannel]
-                    y = data_ijk[self.ychannel]
-                    h, _, _ = np.histogram2d(x, y, bins=[self.op._xbins, self.op._ybins])
-                    data_max = max(data_max, h.max())
-                    
-                hue_scale = util.scale_factory(self.huescale, 
-                                               experiment, 
-                                               data = np.array([1, data_max]))
-                kwargs['norm'] = hue_scale.color_norm()
-            
-            if legend:
-                plot_ax = plt.gca()
-                cmap = kwargs['cmap']
-                norm = kwargs['norm']
-                cax, _ = mpl.colorbar.make_axes(plt.gcf().get_axes())
-                mpl.colorbar.ColorbarBase(cax, cmap, norm)
-                plt.sca(plot_ax)
-        
-def _contourplot(xbins, ybins, histogram, last_level, **kwargs):
-
-    ax = plt.gca()  
-    ax.contour(xbins, ybins, histogram, [last_level], **kwargs)
+        axes.contour(xbins, ybins, h.T, [last_level])

@@ -276,6 +276,8 @@ class Base1DView(BaseDataView):
         if xlim is None:
             xlim = (experiment[self.channel].quantile(min_quantile),
                     experiment[self.channel].quantile(max_quantile))
+            
+        xlim = [scale.clip(x) for x in xlim]
         
         super().plot(experiment, xlim = xlim, xscale = scale, **kwargs)
     
@@ -332,11 +334,15 @@ class Base2DView(BaseDataView):
         if xlim is None:
             xlim = (experiment[self.xchannel].quantile(min_quantile),
                     experiment[self.xchannel].quantile(max_quantile))
+            
+        xlim = [xscale.clip(x) for x in xlim]
 
         ylim = kwargs.pop("ylim", None)
         if ylim is None:
             ylim = (experiment[self.ychannel].quantile(min_quantile),
                     experiment[self.ychannel].quantile(max_quantile))
+            
+        ylim = [yscale.clip(y) for y in ylim]
         
         super().plot(experiment, 
                      xlim = xlim,

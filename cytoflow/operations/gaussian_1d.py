@@ -461,36 +461,35 @@ class GaussianMixture1DView(By1DView, AnnotatingView, HistogramView):
         
     def _annotation_plot(self, axes, xlim, ylim, xscale, yscale, annotation, annotation_facet, annotation_value, annotation_color):
 
-            # annotation is an instance of mixture.GaussianMixture
-            gmm = annotation
-            
-            if annotation_value is None:
-                for i in range(len(gmm.means_)):
-                    self._annotation_plot(axes, xlim, ylim, xscale, yscale, annotation, annotation_facet, i, annotation_color)
-                return
-            elif type(annotation_value) is str:
-                idx_re = re.compile(annotation_facet + '_(\d+)')
-                idx = idx_re.match(annotation_value).group(1)
-                idx = int(idx) - 1             
-            else:
-                idx = annotation_value
-                  
-            patch_area = 0.0
-                                     
-            for k in range(0, len(axes.patches)):
-                patch = axes.patches[k]
-                xy = patch.get_xy()
-                patch_area += poly_area([xscale(p[0]) for p in xy], [p[1] for p in xy])
-            
-            plt_min, plt_max = plt.gca().get_xlim()
-            x = xscale.inverse(np.linspace(xscale(plt_min), xscale(plt_max), 500))   
-            pdf_scale = patch_area * gmm.weights_[idx]
-            mean = gmm.means_[idx][0]
-            stdev = np.sqrt(gmm.covariances_[idx][0])
-            y = stats.norm.pdf(xscale(x), mean, stdev) * pdf_scale
-            axes.plot(x, y, color = annotation_color)
-
-
+        # annotation is an instance of mixture.GaussianMixture
+        gmm = annotation
+        
+        if annotation_value is None:
+            for i in range(len(gmm.means_)):
+                self._annotation_plot(axes, xlim, ylim, xscale, yscale, annotation, annotation_facet, i, annotation_color)
+            return
+        elif type(annotation_value) is str:
+            idx_re = re.compile(annotation_facet + '_(\d+)')
+            idx = idx_re.match(annotation_value).group(1)
+            idx = int(idx) - 1             
+        else:
+            idx = annotation_value
+              
+        patch_area = 0.0
+                                 
+        for k in range(0, len(axes.patches)):
+            patch = axes.patches[k]
+            xy = patch.get_xy()
+            patch_area += poly_area([xscale(p[0]) for p in xy], [p[1] for p in xy])
+        
+        plt_min, plt_max = plt.gca().get_xlim()
+        x = xscale.inverse(np.linspace(xscale(plt_min), xscale(plt_max), 500))   
+        pdf_scale = patch_area * gmm.weights_[idx]
+        mean = gmm.means_[idx][0]
+        stdev = np.sqrt(gmm.covariances_[idx][0])
+        y = stats.norm.pdf(xscale(x), mean, stdev) * pdf_scale
+        axes.plot(x, y, color = annotation_color)
+                
 # from http://stackoverflow.com/questions/24467972/calculate-area-of-polygon-given-x-y-coordinates
 def poly_area(x,y):
     return 0.5*np.abs(np.dot(x,np.roll(y,1))-np.dot(y,np.roll(x,1)))

@@ -339,7 +339,7 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
             new_experiment.metadata[channel]['bleedthrough_channels'] = self._channels
             new_experiment.metadata[channel]['bleedthrough_fn'] = self._interpolators[channel]
 
-        new_experiment.history.append(self.clone_traits(transient = lambda t: True))
+        new_experiment.history.append(self.clone_traits(transient = lambda _: True))
         return new_experiment
     
     def default_view(self, **kwargs):
@@ -402,8 +402,8 @@ class BleedthroughPiecewiseDiagnostic(HasStrictTraits):
     """
     
     # traits   
-    id = "edu.mit.synbio.cytoflow.view.autofluorescencediagnosticview"
-    friendly_id = "Autofluorescence Diagnostic" 
+    id = Constant("edu.mit.synbio.cytoflow.view.autofluorescencediagnosticview")
+    friendly_id = Constant("Autofluorescence Diagnostic")
     
     name = Str
     subset = Str
