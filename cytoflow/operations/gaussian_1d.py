@@ -24,16 +24,14 @@ Created on Dec 16, 2015
 
 import re
 from warnings import warn
-from itertools import product
 
 from traits.api import (HasStrictTraits, Str, CStr, Dict, Any, Instance, Bool, 
-                        Constant, List, provides, Constant, Set)
+                        Constant, List, provides)
 import numpy as np
 import matplotlib.pyplot as plt
 import sklearn.mixture as mixture
 import scipy.stats as stats
 import pandas as pd
-import seaborn as sns
 
 from cytoflow.views import IView, HistogramView
 from .base_op_views import By1DView, AnnotatingView
@@ -192,7 +190,7 @@ class GaussianMixture1DOp(HasStrictTraits):
         else:
             # use a lambda expression to return a group that contains
             # all the events
-            groupby = experiment.data.groupby(lambda x: True)
+            groupby = experiment.data.groupby(lambda _: True)
             
         # get the scale. estimate the scale params for the ENTIRE data set,
         # not subsets we get from groupby().  And we need to save it so that
@@ -294,7 +292,7 @@ class GaussianMixture1DOp(HasStrictTraits):
         else:
             # use a lambda expression to return a group that
             # contains all the events
-            groupby = experiment.data.groupby(lambda x: True)
+            groupby = experiment.data.groupby(lambda _: True)
 
         event_assignments = pd.Series([None] * len(experiment), dtype = "object")
                                       
@@ -421,7 +419,7 @@ class GaussianMixture1DOp(HasStrictTraits):
             if self.num_components > 1:
                 new_experiment.statistics[(self.name, "proportion")] = pd.to_numeric(prop_stat)
             
-        new_experiment.history.append(self.clone_traits(transient = lambda t: True))
+        new_experiment.history.append(self.clone_traits(transient = lambda _: True))
         return new_experiment
     
     def default_view(self, **kwargs):

@@ -16,6 +16,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from warnings import warn
+
 from traits.api import Str, provides
 import matplotlib.pyplot as plt
 
@@ -150,12 +152,7 @@ class HistogramView(Base1DView):
             xmin = bottleneck.nanmin(scaled_data)
             xmax = bottleneck.nanmax(scaled_data)
             bins = xscale.inverse(np.linspace(xmin, xmax, num=num_bins, endpoint = True))
-            
-        # take care of a rare rounding error, where the first observation is
-        # less than the first bin or the last observation is more than the last 
-        # bin, which makes plt.hist() puke
-        bins[-1] += 1
-        bins[0] -= 1
+            bins = np.append(bins, xscale.inverse(xmax))
                     
         kwargs.setdefault('bins', bins) 
         
@@ -165,9 +162,20 @@ class HistogramView(Base1DView):
         ymax = []
         
         def hist_lims(*args, **kwargs):
-            n, _, _ = plt.hist(*args, **kwargs)
+            # there's some bug in the above code where we get data that isn't
+            # in the range of `bins`, which makes hist() puke.  so get rid
+            # of it.
+            
+            bins = kwargs.get('bins')
+            new_args = []
+            for x in args:
+                x = x[x > bins[0]]
+                x = x[x < bins[-1]]
+                new_args.append(x)
+                
+            n, _, _ = plt.hist(*new_args, **kwargs)
             ymax.append(max(n))
-        
+                    
         grid.map(hist_lims, self.channel, **kwargs)
         
         plt.ylim(0, 1.05 * max(ymax))

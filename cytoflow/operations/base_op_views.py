@@ -33,9 +33,24 @@ from cytoflow.views import IView
 from cytoflow.views.base_views import BaseView, Base1DView, Base2DView
 
 @provides(IView)
-class ByView(BaseView):
-
+class OpView(BaseView):
     op = Instance(IOperation)
+    
+@provides(IView)
+class Op1DView(OpView, Base1DView):
+    channel = DelegatesTo('op')
+    scale = DelegatesTo('op')
+    
+@provides(IView)
+class Op2DView(OpView, Base2DView):
+    xchannel = DelegatesTo('op')
+    xscale = DelegatesTo('op')
+    ychannel = DelegatesTo('op')
+    yscale = DelegatesTo('op')
+
+@provides(IView)
+class ByView(OpView):
+
     facets = Property(List)
     by = Property(List)
     
@@ -179,18 +194,14 @@ class ByView(BaseView):
             experiment.data.reset_index(drop = True, inplace = True)
             
         super().plot(experiment, **kwargs)
-    
+        
 @provides(IView)
-class By1DView(ByView, Base1DView):
-    channel = DelegatesTo('op')
-    scale = DelegatesTo('op')
+class By1DView(ByView, Op1DView):
+    pass
 
 @provides(IView)
-class By2DView(ByView, Base2DView):
-    xchannel = DelegatesTo('op')
-    xscale = DelegatesTo('op')
-    ychannel = DelegatesTo('op')
-    yscale = DelegatesTo('op')
+class By2DView(ByView, Op2DView):
+    pass
 
 @provides(IView)
 class AnnotatingView(BaseView):
@@ -210,23 +221,21 @@ class AnnotatingView(BaseView):
                       
         super().plot(experiment,
                      annotation_facet = annotation_facet,
-#                      annotation_trait = annotation_trait,
                      **kwargs)
         
     def _grid_plot(self, experiment, grid, xlim, ylim, xscale, yscale, **kwargs):
         
-        # pop the annotation stuff off of kwargs so the underlying plotter 
+        # pop the annotation stuff off of kwargs so the underlying data plotter 
         # doesn't get confused
         
         annotation_facet = kwargs.pop('annotation_facet', None)
-#         annotation_trait = kwargs.pop('annotation_trait', None)
         annotations = kwargs.pop('annotations', None)
         plot_name = kwargs.pop('plot_name', None)
         color = kwargs.get('color', None)
 
         # plot the underlying data plots
         plot_ret = super()._grid_plot(experiment, grid, xlim, ylim, xscale, yscale, **kwargs)
-        
+                
         # plot the annotations on top
         for (i, j, k), _ in grid.facet_data():
             ax = grid.facet_axis(i, j)
@@ -236,7 +245,6 @@ class AnnotatingView(BaseView):
             hue_name = grid.hue_names[k] if grid.hue_names and grid._hue_var is not annotation_facet else None
              
             facets = [x for x in [row_name, col_name, hue_name] if x is not None]
-#             print("facets {}".format(facets))
             
             if plot_name is not None:
                 try:
@@ -247,6 +255,9 @@ class AnnotatingView(BaseView):
                 annotation_name = plot_name + facets
             else:      
                 annotation_name = facets
+                
+            if not annotation_name:
+                continue
                 
             annotation = None
             for group, a in annotations.items():
@@ -266,9 +277,7 @@ class AnnotatingView(BaseView):
                 warn("Couldn't find annotation for {}".format(annotation_name),
                      util.CytoflowViewWarning)
                 continue
-                
-#             print("gmm {}".format(id(gmm)))
-            
+                            
             if annotation_facet == grid._row_var:
                 annotation_value = grid.row_names[i]
             elif annotation_facet == grid._col_var:
@@ -289,25 +298,6 @@ class AnnotatingView(BaseView):
                                   annotation_facet, 
                                   annotation_value, 
                                   annotation_color)
-
-# 
-#                 
-#                 idx = idx_re.match(grid.row_names[i]).group(1)
-#                 idx = int(idx) - 1
-#                 draw_gmm(idx, grid._facet_color(k, color))
-#             elif annotation_facet == grid._col_var:
-#                 idx = idx_re.match(grid.col_names[j]).group(1)
-#                 idx = int(idx) - 1
-#                 draw_gmm(idx, grid._facet_color(k, color))
-#             elif annotation_facet == grid._hue_var:
-#                 idx = idx_re.match(grid.hue_names[k]).group(1)
-#                 idx = int(idx) - 1
-#                 print("idx {}".format(idx))
-#                 draw_gmm(idx, grid._facet_color(idx, color))
-#             else:
-#                 for idx in range(0, len(gmm.means_)):            
-#                     draw_gmm(idx, grid._facet_color(k, color))
-
 
         return plot_ret
  

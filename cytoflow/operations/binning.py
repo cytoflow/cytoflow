@@ -27,10 +27,11 @@ from traits.api import (HasStrictTraits, Str, CStr, provides,
 import numpy as np
 import bottleneck as bn
 
-import cytoflow.views
+from cytoflow.views import IView, HistogramView
 import cytoflow.utility as util
 
 from .i_operation import IOperation
+from .base_op_views import Op1DView, AnnotatingView
 
 @provides(IOperation)
 class BinningOp(HasStrictTraits):
@@ -189,14 +190,14 @@ class BinningOp(HasStrictTraits):
                 "float64",
                 new_experiment[self.name].map(agg_count))
         
-        new_experiment.history.append(self.clone_traits(transient = lambda t: True))
+        new_experiment.history.append(self.clone_traits(transient = lambda _: True))
         return new_experiment
     
     def default_view(self, **kwargs):
         return BinningView(op = self, **kwargs)
     
-@provides(cytoflow.views.IView)
-class BinningView(cytoflow.views.HistogramView):
+@provides(IView)
+class BinningView(Op1DView, AnnotatingView, HistogramView):
     """Plots a histogram of the current binning op, with the bins set to
        the hue facet.
        
@@ -219,19 +220,15 @@ class BinningView(cytoflow.views.HistogramView):
     """
      
     id = Constant('edu.mit.synbio.cytoflow.views.binning')
-    friendly_id = Constant('Binning Setup')
-    
-    op = Instance(IOperation)   
-    name = DelegatesTo('op')
-    channel = DelegatesTo('op')
-    scale = DelegatesTo('op')
-    huefacet = DelegatesTo('op', 'name')
+    friendly_id = Constant('Binning Setup')                                 
     
     def plot(self, experiment, **kwargs):
         
-        if experiment is None:
-            raise util.CytoflowViewError("No experiment specified")
-        
-        experiment = self.op.apply(experiment)
-        cytoflow.HistogramView.plot(self, experiment, **kwargs)
+        view, trait_name = self._strip_trait(self.op.name)
+    
+        super(BinningView, view).plot(experiment,
+                                      annotation_facet = self.op.name,
+                                      annotation_trait = trait_name,
+                                      annotations = {},
+                                      **kwargs)
 

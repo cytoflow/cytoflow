@@ -174,7 +174,8 @@ class BaseView(HasStrictTraits):
                     cmap = mpl.colors.ListedColormap(sns.color_palette("husl", 
                                                                        n_colors = len(g.hue_names)))                
                     hue_scale = util.scale_factory(self.huescale, 
-                                                   data = data[self.huefacet])
+                                                   experiment,
+                                                   data = data[self.huefacet].values)
                     
                     plot_ax = plt.gca()
     
