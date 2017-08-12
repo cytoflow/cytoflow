@@ -30,7 +30,7 @@ import cytoflow.utility as util
 
 from .i_operation import IOperation
 from cytoflow.views import IView
-from cytoflow.views.base_views import BaseView, Base1DView, Base2DView
+from cytoflow.views.base_views import BaseView, BaseDataView, Base1DView, Base2DView
 
 @provides(IView)
 class OpView(BaseView):
@@ -204,7 +204,13 @@ class By2DView(ByView, Op2DView):
     pass
 
 @provides(IView)
-class AnnotatingView(BaseView):
+class NullView(BaseDataView):
+    def _grid_plot(self, experiment, grid, xlim, ylim, xscale, yscale, **kwargs):
+        return {}
+
+
+@provides(IView)
+class AnnotatingView(BaseDataView):
                  
     def plot(self, experiment, **kwargs):
         annotation_facet = kwargs.pop('annotation_facet', None)
@@ -269,10 +275,8 @@ class AnnotatingView(BaseView):
                 and len(annotations.keys()) == 1 
                 and list(annotations.keys())[0] is True):
                 annotation = annotations[True]
-                
+                            
             if annotation is None:
-#                 warn("Couldn't find annotation for {}".format(annotation_name),
-#                      util.CytoflowViewWarning)
                 continue
                  
             if annotation_facet is not None:                                                  
