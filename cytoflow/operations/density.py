@@ -23,7 +23,7 @@ Created on Dec 16, 2015
 '''
 
 from traits.api import (HasStrictTraits, Str, CStr, Dict, Any, Instance, 
-                        Constant, List, provides, Array, Tuple)
+                        Constant, List, provides, Array)
 
 import numpy as np
 import scipy.stats
@@ -142,7 +142,9 @@ class DensityGateOp(HasStrictTraits):
     _xbins = Array(transient = True)
     _ybins = Array(transient = True)
 
-    _keep_bins = Dict(Any, Tuple, transient = True)
+    _keep_xbins = Dict(Any, Array, transient = True)
+    _keep_ybins = Dict(Any, Array, transient = True)
+    _histogram = Dict(Any, Array, transient = True)
     
     def estimate(self, experiment, subset = None):
         """
@@ -243,7 +245,9 @@ class DensityGateOp(HasStrictTraits):
                 curr_count += h[i[0][num_bins], i[1][num_bins]]
                 num_bins += 1
                 
-            self._keep_bins[group] = (i[0][0:num_bins], i[1][0:num_bins], h)
+            self._keep_xbins[group] = i[0][0:num_bins]
+            self._keep_ybins[group] = i[1][0:num_bins]
+            self._histogram[group] = h
 #             
 #             self._keep_xbins[group] = i[0][0:num_bins]
 #             self._keep_ybins[group] = i[1][0:num_bins]
@@ -272,7 +276,7 @@ class DensityGateOp(HasStrictTraits):
             raise util.CytoflowOpError("Experiment already has a column named {0}"
                                   .format(self.name))
         
-        if not (self._xbins.size and self._ybins.size and self._keep_bins):
+        if not (self._xbins.size and self._ybins.size and self._keep_xbins):
             raise util.CytoflowOpError("No gate estimate found.  Did you forget to "
                                   "call estimate()?")
 
@@ -312,7 +316,7 @@ class DensityGateOp(HasStrictTraits):
         event_assignments = pd.Series([False] * len(experiment), dtype = "bool")
         
         for group, group_data in groupby:
-            if group not in self._keep_bins:
+            if group not in self._keep_xbins:
                 # there weren't any events in this group, so we didn't get
                 # an estimate
                 continue
@@ -324,8 +328,8 @@ class DensityGateOp(HasStrictTraits):
 
             group_keep = pd.Series([False] * len(group_data))
             
-            keep_x = self._keep_bins[group][0]
-            keep_y = self._keep_bins[group][1]
+            keep_x = self._keep_xbins[group]
+            keep_y = self._keep_ybins[group]
             
             for (xbin, ybin) in zip(keep_x, keep_y):
                 group_keep[(cX == xbin) & (cY == ybin)] = True
@@ -362,8 +366,14 @@ class DensityGateView(By2DView, AnnotatingView, DensityView):
         Plot the plots.
         """
         
+        annotations = {}
+        for i in self.op._keep_xbins:
+            annotations[i] = (self.op._keep_xbins[i],
+                              self.op._keep_ybins[i],
+                              self.op._histogram[i])
+        
         super().plot(experiment,
-                     annotations = self.op._keep_bins,
+                     annotations = annotations,
                      xscale = self.op._xscale,
                      yscale = self.op._yscale,
                      **kwargs)
