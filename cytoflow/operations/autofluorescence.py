@@ -16,6 +16,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+cytoflow.operations.autofluorescence
+------------------------------------
+"""
+
 from traits.api import (HasStrictTraits, Str, CFloat, File, Dict,
                         Instance, List, Constant, provides)
                        
@@ -32,19 +37,18 @@ class AutofluorescenceOp(HasStrictTraits):
     """
     Apply autofluorescence correction to a set of fluorescence channels.
     
-    The `estimate()` function loads a separate FCS file (not part of the input
-    `Experiment`) and computes the untransformed median and standard deviation 
-    of the blank cells.  Then, `apply()` subtracts the median from the 
+    The :meth:`estimate` function loads a separate FCS file (not part of the input
+    :class:`.Experiment`) and computes the untransformed median and standard deviation 
+    of the blank cells.  Then, :meth:`apply` subtracts the median from the 
     experiment data.
     
-    To use, set the `blank_file` property to point to an FCS file with
-    unstained or nonfluorescing cells in it; set the `channels` property to a 
-    list of channels to correct; and call `estimate()`, then `apply()`.
+    To use, set the :attrib:`blank_file` property to point to an FCS file with
+    unstained or nonfluorescing cells in it; set the :attrib:`channels` 
+    property to a  list of channels to correct.
     
-    `apply()` also adds the "af_median" and "af_stdev" metadata to the corrected
-    channels, representing the median and standard deviation of the measured 
-    blank distributions.  Some other modules (especially in the TASBE workflow)
-    depend on this metadata and will fail if it's not present.
+    :meth:`apply` also adds the ``af_median`` and ``af_stdev`` metadata to the 
+    corrected channels, representing the median and standard deviation of the 
+    measured blank distributions.
     
     Attributes
     ----------       
@@ -53,25 +57,50 @@ class AutofluorescenceOp(HasStrictTraits):
         
     blank_file : File
         The filename of a file with "blank" cells (not fluorescent).  Used
-        to `estimate()` the autofluorescence.
-        
-    Metadata
-    --------
-    af_median : Float
-        The median of the non-fluorescent distribution
-        
-    af_stdev : Float
-        The standard deviation of the non-fluorescent distribution
+        to :meth:`estimate` the autofluorescence.
         
     Examples
     --------
-    >>> af_op = flow.AutofluorescenceOp()
-    >>> af_op.blank_file = "blank.fcs"
-    >>> af_op.channels = ["Pacific Blue-A", "FITC-A", "PE-Tx-Red-YG-A"] 
-    >>>
-    >>> af_op.estimate(ex)
-    >>> af_op.default_view().plot(ex)
-    >>> ex2 = af_op.apply(ex)
+    Create a small experiment:
+    
+    .. plot::
+        :context: close-figs
+    
+        >>> import cytoflow as flow
+        >>> import_op = flow.ImportOp()
+        >>> import_op.tubes = [flow.Tube(file = "tasbe/rby.fcs")]
+        >>> ex = import_op.apply()
+    
+    Create and parameterize the operation
+    
+    .. plot::
+        :context: close-figs
+
+        >>> af_op = flow.AutofluorescenceOp()
+        >>> af_op.channels = ["Pacific Blue-A", "FITC-A", "PE-Tx-Red-YG-A"]
+        >>> af_op.blank_file = "tasbe/blank.fcs"
+    
+    Estimate the model parameters
+    
+    .. plot::
+        :context: close-figs 
+    
+        >>> af_op.estimate(ex)
+    
+    Plot the diagnostic plot
+    
+    .. plot::
+        :context: close-figs
+
+        >>> af_op.default_view().plot(ex)  
+
+    Apply the operation to the experiment
+    
+    .. plot::
+        :context: close-figs
+    
+        >>> ex2 = af_op.apply(ex)  
+        
     """
     
     # traits
@@ -87,17 +116,29 @@ class AutofluorescenceOp(HasStrictTraits):
     
     def estimate(self, experiment, subset = None): 
         """
-        Estimate the autofluorescence from *blank_file*
+        Estimate the autofluorescence from :attrib:`blank_file` in channels
+        specified in :attrib:`channels`.  
+        
+        Parameters
+        ----------
+        experiment : Experiment
+            The experiment to which this operation is applied
+            
+        subset : str (default = "")
+            An expression that specifies the events used to compute the 
+            autofluorescence
+
         """
         if experiment is None:
-            raise util.CytoflowOpError("No experiment specified")
+            raise util.CytoflowOpError(None, "No experiment specified")
         
         if not self.channels:
-            raise util.CytoflowOpError("No channels specified")
+            raise util.CytoflowOpError('channels', "No channels specified")
 
         if not set(self.channels) <= set(experiment.channels):
-            raise util.CytoflowOpError("Specified channels that weren't found in "
-                                  "the experiment.")
+            raise util.CytoflowOpError('channels', 
+                                       "Specified channels that weren't found "
+                                       "in the experiment.")
 
         # don't have to validate that blank_file exists; should crap out on 
         # trying to set a bad value
@@ -117,11 +158,13 @@ class AutofluorescenceOp(HasStrictTraits):
             try:
                 blank_exp = blank_exp.query(subset)
             except Exception as exc:
-                raise util.CytoflowOpError("Subset string '{0}' isn't valid"
+                raise util.CytoflowOpError('subset', 
+                                           "Subset string '{0}' isn't valid"
                                            .format(subset)) from exc
                             
             if len(blank_exp.data) == 0:
-                raise util.CytoflowOpError("Subset string '{0}' returned no events"
+                raise util.CytoflowOpError('subset',
+                                           "Subset string '{0}' returned no events"
                                       .format(subset))
         
         for channel in self.channels:
@@ -135,40 +178,48 @@ class AutofluorescenceOp(HasStrictTraits):
             self._af_stdev[channel] = np.std(blank_exp[channel])    
                 
     def apply(self, experiment):
-        """Applies the threshold to an experiment.
+        """
+        Applies the autofluorescence correction to channels in an experiment.
         
         Parameters
         ----------
         experiment : Experiment
-            the old_experiment to which this op is applied
+            the experiment to which this op is applied
             
         Returns
         -------
-            a new experiment with the autofluorescence median subtracted from
-            the values in self.blank_file
+        Experiment
+            a new experiment with the autofluorescence median subtracted.  The
+            corrected channels have the following metadata added to them:
+            
+            - **af_median** : Float
+              The median of the non-fluorescent distribution
+        
+            - **af_stdev** : Float
+              The standard deviation of the non-fluorescent distribution
         """
         if experiment is None:
-            raise util.CytoflowOpError("No experiment specified")
+            raise util.CytoflowOpError(None, "No experiment specified")
         
         if not self.channels:
-            raise util.CytoflowOpError("No channels specified")
+            raise util.CytoflowOpError('channels', "No channels specified")
         
         if not self._af_median:
-            raise util.CytoflowOpError("Autofluorescence values aren't set. Did "
+            raise util.CytoflowOpError(None, "Autofluorescence values aren't set. Did "
                                        "you forget to run estimate()?")
         
         if not set(self._af_median.keys()) <= set(experiment.channels) or \
            not set(self._af_stdev.keys()) <= set(experiment.channels):
-            raise util.CytoflowOpError("Autofluorescence estimates aren't set, or are "
+            raise util.CytoflowOpError(None, "Autofluorescence estimates aren't set, or are "
                                "different than those in the experiment "
                                "parameter. Did you forget to run estimate()?")
 
         if not set(self._af_median.keys()) == set(self._af_stdev.keys()):
-            raise util.CytoflowOpError("Median and stdev keys are different! "
+            raise util.CytoflowOpError(None, "Median and stdev keys are different! "
                                   "What the hell happened?!")
         
         if not set(self.channels) == set(self._af_median.keys()):
-            raise util.CytoflowOpError("Estimated channels differ from the channels "
+            raise util.CytoflowOpError('channels', "Estimated channels differ from the channels "
                                "parameter.  Did you forget to (re)run estimate()?")
         
         new_experiment = experiment.clone()
@@ -185,6 +236,15 @@ class AutofluorescenceOp(HasStrictTraits):
         return new_experiment
     
     def default_view(self, **kwargs):
+        """
+        Returns a diagnostic plot to see if the autofluorescence estimation
+        is working.
+        
+        Returns
+        -------
+        IView
+            An view instance, call :meth:`plot()` to see the diagnostic plots
+        """
         return AutofluorescenceDiagnosticView(op = self, **kwargs)
     
     
@@ -194,51 +254,56 @@ class AutofluorescenceDiagnosticView(HasStrictTraits):
     Plots a histogram of each channel, and its median in red.  Serves as a
     diagnostic for the autofluorescence correction.
     
-    
     Attributes
     ----------
-    name : Str
-        The instance name (for serialization, UI etc.)
-    
     op : Instance(AutofluorescenceOp)
-        The op whose parameters we're viewing
-        
+        The :class:`AutofluorescenceOp` whose parameters we're viewing. Set 
+        automatically if you created the instance using 
+        :meth:`AutofluorescenceOp.default_view`.
+    
+    subset : str (default = "")
+        An expression that specifies the events that are plotted in the histograms
     """
     
     # traits   
     id = Constant('edu.mit.synbio.cytoflow.view.autofluorescencediagnosticview')
     friendly_id = Constant("Autofluorescence Diagnostic")
-    
-    name = Str
+
+    op = Instance(AutofluorescenceOp)    
     subset = Str
-    op = Instance(IOperation)
     
     def plot(self, experiment, **kwargs):
-        """Plot a faceted histogram view of a channel"""
+        """
+        Plot a faceted histogram view of a channel
+        """
         
         if experiment is None:
-            raise util.CytoflowViewError("No experiment specified")
+            raise util.CytoflowViewError(None, "No experiment specified")
         
         if not self.op.channels:
-            raise util.CytoflowViewError("No channels specified")
+            raise util.CytoflowViewError(None, "No channels specified")
         
         if not self.op._af_median:
-            raise util.CytoflowViewError("Autofluorescence values aren't set. Did "
-                                       "you forget to run estimate()?")
+            raise util.CytoflowViewError(None, 
+                                         "Autofluorescence values aren't set. Did "
+                                         "you forget to run estimate()?")
             
         if not set(self.op._af_median.keys()) <= set(experiment.channels) or \
            not set(self.op._af_stdev.keys()) <= set(experiment.channels):
-            raise util.CytoflowOpError("Autofluorescence estimates aren't set, or are "
-                               "different than those in the experiment "
-                               "parameter. Did you forget to run estimate()?")
+            raise util.CytoflowOpError(None, 
+                                       "Autofluorescence estimates aren't set, or are "
+                                       "different than those in the experiment "
+                                       "parameter. Did you forget to run estimate()?")
 
         if not set(self.op._af_median.keys()) == set(self.op._af_stdev.keys()):
-            raise util.CytoflowOpError("Median and stdev keys are different! "
-                                  "What the hell happened?!")
+            raise util.CytoflowOpError(None,
+                                       "Median and stdev keys are different! "
+                                       "What the hell happened?!")
         
         if not set(self.op.channels) == set(self.op._af_median.keys()):
-            raise util.CytoflowOpError("Estimated channels differ from the channels "
-                               "parameter.  Did you forget to (re)run estimate()?")
+            raise util.CytoflowOpError(None, 
+                                       "Estimated channels differ from the channels "
+                                       "parameter.  Did you forget to (re)run estimate()?")
         
         import matplotlib.pyplot as plt
         import seaborn as sns  # @UnusedImport
@@ -265,12 +330,14 @@ class AutofluorescenceDiagnosticView(HasStrictTraits):
             try:
                 blank_exp = blank_exp.query(self.subset)
             except Exception as exc:
-                raise util.CytoflowOpError("Subset string '{0}' isn't valid"
+                raise util.CytoflowOpError('subset',
+                                           "Subset string '{0}' isn't valid"
                                            .format(self.subset)) from exc
                             
             if len(blank_exp.data) == 0:
-                raise util.CytoflowOpError("Subset string '{0}' returned no events"
-                                      .format(self.subset))
+                raise util.CytoflowOpError('subset',
+                                           "Subset string '{0}' returned no events"
+                                           .format(self.subset))
 
         plt.figure()
         

@@ -16,6 +16,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+cytoflow.operations.bead_calibration
+------------------------------------
+"""
+
 from traits.api import (HasStrictTraits, Str, File, Dict, Bool, Int, List, 
                         Float, Constant, provides, Undefined, Callable, Any,
                         Instance)
@@ -42,14 +47,14 @@ class BeadCalibrationOp(HasStrictTraits):
     Computes a log-linear calibration function that maps arbitrary fluorescence
     units to physical units (ie molecules equivalent fluorophore, or *MEF*).
     
-    To use, set `beads_file` to an FCS file containing events collected *using
+    To use, set :attr:`beads_file` to an FCS file containing events collected *using
     the same cytometer settings as the data you're calibrating*.  Specify which 
-    beads you ran by setting `beads_type` to match one of the  values of 
-    BeadCalibrationOp.BEADS; and set the `units` dict to which channels you 
-    want calibrated and in which units.  Then, call `estimate()` and check the 
-    peak-finding with `default_view().plot()`.  If the peak-finding is wacky, 
-    try adjusting `bead_peak_quantile` and `bead_brightness_threshold`.  When 
-    the peaks are successfully identified, call `apply()` to scale your 
+    beads you ran by setting :attr:`beads_type` to match one of the  values of 
+    :data:`BeadCalibrationOp.BEADS`; and set :attr:`units` to which channels you 
+    want calibrated and in which units.  Then, call :meth:`estimate()` and check the 
+    peak-finding with :meth:`default_view().plot()`.  If the peak-finding is wacky, 
+    try adjusting :attr:`bead_peak_quantile` and :attr:`bead_brightness_threshold`.  When 
+    the peaks are successfully identified, call :meth:`apply` to scale your 
     experimental data set. 
     
     If you can't make the peak finding work, please submit a bug report!
@@ -61,16 +66,14 @@ class BeadCalibrationOp(HasStrictTraits):
     
     Finally, because you can't have a negative number of fluorescent molecules
     (MEFLs, etc) (as well as for math reasons), this module filters out
-    negative values.
-    
+    negative values.    
     
     Attributes
     ----------
-
     units : Dict(Str, Str)
         A dictionary specifying the channels you want calibrated (keys) and
         the units you want them calibrated in (values).  The units must be
-        keys of the `beads` attribute.       
+        keys of the :attr:`beads` attribute.       
         
     beads_file : File
         A file containing the FCS events from the beads.
@@ -78,7 +81,7 @@ class BeadCalibrationOp(HasStrictTraits):
     beads : Dict(Str, List(Float))
         The beads' characteristics.  Keys are calibrated units (ie, MEFL or
         MEAP) and values are ordered lists of known fluorophore levels.  Common
-        values for this dict are included in BeadCalibrationOp.BEADS.
+        values for this dict are included in :data:`BeadCalibrationOp.BEADS`.
         
     bead_peak_quantile : Int (default = 80)
         The quantile threshold used to choose bead peaks. 
@@ -98,11 +101,11 @@ class BeadCalibrationOp(HasStrictTraits):
     force_linear : Bool (default = False)
         A linear fit in log space doesn't always go through the origin, which 
         means that the calibration function isn't strictly a multiplicative
-        scaling operation.  Set `force_linear` to force the such
+        scaling operation.  Set :attr:`force_linear` to force the such
         behavior.  Keep an eye on the diagnostic plot, though, to see how much
         error you're introducing!
    
-        
+           
     Notes
     -----
     The peak finding is rather sophisticated.  
@@ -119,30 +122,23 @@ class BeadCalibrationOp(HasStrictTraits):
     
     Finally, the peaks are filtered by height (the histogram bin has a quantile
     greater than `bead_peak_quantile`) and intensity (brighter than 
-    `bead_brightness_threshold`).
+    :attr:`bead_brightness_threshold`).
     
     How to convert from a series of peaks to mean equivalent fluorochrome?
     If there's one peak, we assume that it's the brightest peak.  If there
-    are two peaks, we assume they're the brightest two.  If there are `n >=3`
+    are two peaks, we assume they're the brightest two.  If there are ``n >=3``
     peaks, we check all the contiguous `n`-subsets of the bead intensities
     and find the one whose linear regression (in log space!) has the smallest
     norm (square-root sum-of-squared-residuals.)
     
     There's a slight subtlety in the fact that we're performing the linear
-    regression in log-space: if the relationship in log10-space is Y=aX + b,
-    then the same relationship in linear space is x = 10**X, y = 10**y, and
-    y = (10**b) * (x ** a).
-    
-    One more thing.  Because the beads are (log) evenly spaced across all
-    the channels, we can directly compute the fluorophore equivalent in channels
-    where we wouldn't usually measure that fluorophore: for example, you can
-    compute MEFL (mean equivalent fluorosceine) in the PE-Texas Red channel,
-    because the bead peak pattern is the same in the PE-Texas Red channel
-    as it would be in the FITC channel.
+    regression in log-space: if the relationship in log10-space is ``Y=aX + b``,
+    then the same relationship in linear space is ``x = 10**X``, ``y = 10**y``, and
+    ``y = (10**b) * (x ** a)``.
+
     
     Examples
     --------
-    
     Create a small experiment:
     
     .. plot::
@@ -194,7 +190,7 @@ class BeadCalibrationOp(HasStrictTraits):
     id = Constant('edu.mit.synbio.cytoflow.operations.beads_calibrate')
     friendly_id = Constant("Bead Calibration")
     
-    name = Constant("Bead Calibration")
+    name = Constant("Beads")
     units = Dict(Str, Str)
     
     beads_file = File(exists = True)
@@ -226,17 +222,19 @@ class BeadCalibrationOp(HasStrictTraits):
             
         """
         if experiment is None:
-            raise util.CytoflowOpError("No experiment specified")
+            raise util.CytoflowOpError(None, "No experiment specified")
         
         if not self.beads_file:
-            raise util.CytoflowOpError("No beads file specified")
+            raise util.CytoflowOpError('beads_file', "No beads file specified")
 
         if not set(self.units.keys()) <= set(experiment.channels):
-            raise util.CytoflowOpError("Specified channels that weren't found in "
-                                  "the experiment.")
+            raise util.CytoflowOpError('units',
+                                       "Specified channels that weren't found in "
+                                       "the experiment.")
             
         if not set(self.units.values()) <= set(self.beads.keys()):
-            raise util.CytoflowOpError("Units don't match beads.")
+            raise util.CytoflowOpError('units',
+                                       "Units don't match beads.")
                         
         # make a little Experiment
         check_tube(self.beads_file, experiment)
@@ -285,17 +283,20 @@ class BeadCalibrationOp(HasStrictTraits):
             mef_unit = self.units[channel]
             
             if not mef_unit in self.beads:
-                raise util.CytoflowOpError("Invalid unit {0} specified for channel {1}".format(mef_unit, channel))
+                raise util.CytoflowOpError('units',
+                                           "Invalid unit {0} specified for channel {1}".format(mef_unit, channel))
             
             # "mean equivalent fluorochrome"
             mef = self.beads[mef_unit]
                                                     
             if len(peaks) == 0:
-                raise util.CytoflowOpError("Didn't find any peaks for channel {}; "
+                raise util.CytoflowOpError(None,
+                                           "Didn't find any peaks for channel {}; "
                                            "check the diagnostic plot"
                                            .format(channel))
             elif len(peaks) > len(mef):
-                raise util.CytoflowOpError("Found too many peaks for channel {}; "
+                raise util.CytoflowOpError(None,
+                                           "Found too many peaks for channel {}; "
                                            "check the diagnostic plot"
                                            .format(channel))
             elif len(peaks) == 1:
@@ -394,23 +395,26 @@ class BeadCalibrationOp(HasStrictTraits):
         """
         
         if experiment is None:
-            raise util.CytoflowOpError("No experiment specified")
+            raise util.CytoflowOpError(None, "No experiment specified")
         
         channels = list(self.units.keys())
 
         if not self.units:
-            raise util.CytoflowOpError("No channels to calibrate.")
+            raise util.CytoflowOpError('units', "No channels to calibrate.")
         
         if not self._calibration_functions:
-            raise util.CytoflowOpError("Calibration not found. "
-                                  "Did you forget to call estimate()?")
+            raise util.CytoflowOpError(None,
+                                       "Calibration not found. "
+                                       "Did you forget to call estimate()?")
         
         if not set(channels) <= set(experiment.channels):
-            raise util.CytoflowOpError("Module units don't match experiment channels")
+            raise util.CytoflowOpError('units',
+                                       "Module units don't match experiment channels")
                 
         if set(channels) != set(self._calibration_functions.keys()):
-            raise util.CytoflowOpError("Calibration doesn't match units. "
-                                  "Did you forget to call estimate()?")
+            raise util.CytoflowOpError('units',
+                                       "Calibration doesn't match units. "
+                                       "Did you forget to call estimate()?")
 
         # two things.  first, you can't raise a negative value to a non-integer
         # power.  second, negative physical units don't make sense -- how can
@@ -439,13 +443,12 @@ class BeadCalibrationOp(HasStrictTraits):
     
     def default_view(self, **kwargs):
         """
-        Returns a diagnostic plot to see if the bleedthrough spline estimation
-        is working.
+        Returns a diagnostic plot to see if the peak finding is working.
         
         Returns
         -------
         IView
-            An view instance, call `plot()` to see the diagnostic plots
+            An view instance, call :meth:`plot()` to see the diagnostic plots
         """
 
         return BeadCalibrationDiagnostic(op = self, **kwargs)
@@ -512,7 +515,7 @@ class BeadCalibrationOp(HasStrictTraits):
       - **MEAPCY7** (APC-Cy7, 635 --> 750 LP)      
     """
             
-    
+
 @provides(cytoflow.views.IView)
 class BeadCalibrationDiagnostic(HasStrictTraits):
     """
@@ -527,22 +530,16 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
     ----------
     op : Instance(BeadCalibrationOp)
         The operation instance whose parameters we're plotting.  Set 
-        automatically if you created `this` using 
-        `BeadCalibrationOp.default_view()`.
-        
-    Examples
-    --------
-    
+        automatically if you created the instance using 
+        :meth:`BeadCalibrationOp.default_view`.
 
-    >>> bead_op = flow.
     """
     
     # traits   
-    id = Constant("edu.mit.synbio.cytoflow.view.autofluorescencediagnosticview")
-    friendly_id = Constant("Autofluorescence Diagnostic")
+    id = Constant("edu.mit.synbio.cytoflow.view.beadcalibrationdiagnosticview")
+    friendly_id = Constant("Bead Calibration Diagnostic")
         
-    # TODO - why can't I use BeadCalibrationOp here?
-    op = Instance(IOperation)
+    op = Instance(BeadCalibrationOp)
     
     def plot(self, experiment):
         """
