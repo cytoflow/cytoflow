@@ -17,9 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 '''
-Created on Sep 18, 2015
-
-@author: brian
+cytoflow.operations.binning
+---------------------------
 '''
 
 from traits.api import (HasStrictTraits, Str, CStr, provides, Constant, Int)
