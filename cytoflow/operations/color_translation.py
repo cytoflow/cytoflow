@@ -277,7 +277,7 @@ class ColorTranslationOp(HasStrictTraits):
             new_experiment.metadata[from_channel]['channel_translation_fn'] = trans_fn
             new_experiment.metadata[from_channel]['channel_translation'] = to_channel
             
-        new_experiment.history.append(self.clone_traits(transient = lambda t: True))
+        new_experiment.history.append(self.clone_traits(transient = lambda _: True))
             
         return new_experiment
     
@@ -306,10 +306,9 @@ class ColorTranslationDiagnostic(HasStrictTraits):
     """
     
     # traits   
-    id = "edu.mit.synbio.cytoflow.view.colortranslationdiagnostic"
-    friendly_id = "Color Translation Diagnostic" 
+    id = Constant("edu.mit.synbio.cytoflow.view.colortranslationdiagnostic")
+    friendly_id = Constant("Color Translation Diagnostic")
     
-    name = Str
     subset = Str
     
     # TODO - why can't I use ColorTranslationOp here?

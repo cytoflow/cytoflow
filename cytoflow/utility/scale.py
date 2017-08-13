@@ -103,7 +103,7 @@ class ScaleMixin(HasStrictTraits):
     def __init__(self, **kwargs):
         
         # run the traits constructor
-        HasStrictTraits.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         
         # check that the channel, condition, or statistic is either numeric or
         # an iterable of numerics

@@ -68,7 +68,7 @@ class BaseView(HasStrictTraits):
             subplots around so that they form a multi-row grid by setting
             `col_wrap` to the number of columns you want. 
         """
-    
+
         col_wrap = kwargs.pop('col_wrap', None)
         
         if col_wrap and self.yfacet:
@@ -174,7 +174,8 @@ class BaseView(HasStrictTraits):
                     cmap = mpl.colors.ListedColormap(sns.color_palette("husl", 
                                                                        n_colors = len(g.hue_names)))                
                     hue_scale = util.scale_factory(self.huescale, 
-                                                   data = data[self.huefacet])
+                                                   experiment,
+                                                   data = data[self.huefacet].values)
                     
                     plot_ax = plt.gca()
     
@@ -202,7 +203,7 @@ class BaseDataView(BaseView):
         underlying dataframe to `BaseView.plot`
 
         """
-        
+
         if self.xfacet and self.xfacet not in experiment.conditions:
             raise util.CytoflowViewError("X facet {0} not in the experiment"
                                     .format(self.xfacet))
@@ -275,11 +276,13 @@ class Base1DView(BaseDataView):
         if xlim is None:
             xlim = (experiment[self.channel].quantile(min_quantile),
                     experiment[self.channel].quantile(max_quantile))
+            
+        xlim = [scale.clip(x) for x in xlim]
         
         super().plot(experiment, xlim = xlim, xscale = scale, **kwargs)
     
 
-class Base2DView(BaseView):
+class Base2DView(BaseDataView):
     
     xchannel = Str
     xscale = util.ScaleEnum
@@ -331,11 +334,15 @@ class Base2DView(BaseView):
         if xlim is None:
             xlim = (experiment[self.xchannel].quantile(min_quantile),
                     experiment[self.xchannel].quantile(max_quantile))
+            
+        xlim = [xscale.clip(x) for x in xlim]
 
         ylim = kwargs.pop("ylim", None)
         if ylim is None:
             ylim = (experiment[self.ychannel].quantile(min_quantile),
                     experiment[self.ychannel].quantile(max_quantile))
+            
+        ylim = [yscale.clip(y) for y in ylim]
         
         super().plot(experiment, 
                      xlim = xlim,

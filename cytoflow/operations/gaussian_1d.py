@@ -22,20 +22,19 @@ Created on Dec 16, 2015
 @author: brian
 '''
 
+import re
 from warnings import warn
-from itertools import product
 
 from traits.api import (HasStrictTraits, Str, CStr, Dict, Any, Instance, Bool, 
-                        Constant, List, provides, Property, DelegatesTo)
+                        Constant, List, provides)
 import numpy as np
 import matplotlib.pyplot as plt
 import sklearn.mixture as mixture
 import scipy.stats as stats
 import pandas as pd
-import seaborn as sns
 
 from cytoflow.views import IView, HistogramView
-from .base_op_views import BaseOp1DView
+from .base_op_views import By1DView, AnnotatingView
 import cytoflow.utility as util
 
 from .i_operation import IOperation
@@ -143,7 +142,7 @@ class GaussianMixture1DOp(HasStrictTraits):
     scale = util.ScaleEnum
     posteriors = Bool(False)
     
-    # the key is either a single value or a tuple
+    # the key is a set
     _gmms = Dict(Any, Instance(mixture.GaussianMixture), transient = True)
     _scale = Instance(util.IScale, transient = True)
     
@@ -186,11 +185,12 @@ class GaussianMixture1DOp(HasStrictTraits):
                                         .format(subset))
                 
         if self.by:
-            groupby = experiment.data.groupby(self.by)
+            by = sorted(self.by)
+            groupby = experiment.data.groupby(by)
         else:
             # use a lambda expression to return a group that contains
             # all the events
-            groupby = experiment.data.groupby(lambda x: True)
+            groupby = experiment.data.groupby(lambda _: True)
             
         # get the scale. estimate the scale params for the ENTIRE data set,
         # not subsets we get from groupby().  And we need to save it so that
@@ -287,16 +287,12 @@ class GaussianMixture1DOp(HasStrictTraits):
             raise util.CytoflowOpError("sigma must be >= 0.0")
 
         if self.by:
-            groupby = experiment.data.groupby(self.by)
+            by = sorted(self.by)
+            groupby = experiment.data.groupby(by)
         else:
             # use a lambda expression to return a group that
             # contains all the events
-            groupby = experiment.data.groupby(lambda x: True)
-
-        for group, data_subset in groupby:
-            if group not in self._gmms:
-                raise util.CytoflowOpError("Can't find group in model. "
-                                           "Did you call estimate()?")
+            groupby = experiment.data.groupby(lambda _: True)
 
         event_assignments = pd.Series([None] * len(experiment), dtype = "object")
                                       
@@ -308,9 +304,11 @@ class GaussianMixture1DOp(HasStrictTraits):
         # the faster it's going to be.
         
         for group, data_subset in groupby:
+            
+            # if there weren't any events in this group, there's no gmm
             if group not in self._gmms:
-                # there weren't any events in this group, so we didn't get
-                # a gmm.
+                warn("There wasn't a GMM for data subset {}".format(group),
+                     util.CytoflowOpWarning)
                 continue
             
             gmm = self._gmms[group]
@@ -421,7 +419,7 @@ class GaussianMixture1DOp(HasStrictTraits):
             if self.num_components > 1:
                 new_experiment.statistics[(self.name, "proportion")] = pd.to_numeric(prop_stat)
             
-        new_experiment.history.append(self.clone_traits(transient = lambda t: True))
+        new_experiment.history.append(self.clone_traits(transient = lambda _: True))
         return new_experiment
     
     def default_view(self, **kwargs):
@@ -435,7 +433,7 @@ class GaussianMixture1DOp(HasStrictTraits):
         return GaussianMixture1DView(op = self, **kwargs)
     
 @provides(IView)
-class GaussianMixture1DView(BaseOp1DView, HistogramView):
+class GaussianMixture1DView(By1DView, AnnotatingView, HistogramView):
     """
     Attributes
     ----------    
@@ -443,100 +441,55 @@ class GaussianMixture1DView(BaseOp1DView, HistogramView):
         The op whose parameters we're viewing.
     """
     
-    id = 'edu.mit.synbio.cytoflow.view.gaussianmixture1dview'
-    friendly_id = "1D Gaussian Mixture Diagnostic Plot"
+    id = Constant('edu.mit.synbio.cytoflow.view.gaussianmixture1dview')
+    friendly_id = Constant("1D Gaussian Mixture Diagnostic Plot")
     
-    def _get_facets(self):
-        return [x for x in [self.xfacet, self.yfacet, self.huefacet] if x]    
-    
-    def plot(self, experiment, plot_name = None, **kwargs):
+    def plot(self, experiment, **kwargs):
         """
         Plot the plots.
         """
-
-        super().plot(experiment = experiment, 
-                     plot_name = plot_name, 
-                     scale = self.op._scale, 
-                     **kwargs)
-
-
-    def _grid_plot(self, experiment, grid, xlim, ylim, xscale, yscale, **kwargs):
-
-        plot_name = kwargs.pop('plot_name', None)
-
-        # plot the histograms
-        kwargs.update(super()._grid_plot(experiment, grid, xlim, ylim, xscale, yscale, **kwargs))
-
-        # plot the actual distributions on top of them.
         
-        row_names = grid.row_names if grid.row_names else [False]
-        col_names = grid.col_names if grid.col_names else [False]
-                
-        for (i, row), (j, col) in product(enumerate(row_names),
-                                          enumerate(col_names)):
-            
-            facets = [x for x in [row, col] if x]
-            if plot_name is not None:
-                try:
-                    gmm_name = tuple(list(plot_name) + facets)
-                except TypeError: # plot_name isn't a list
-                    gmm_name = tuple(list([plot_name]) + facets) 
-            else:      
-                gmm_name = tuple(facets)
-                
-            if len(gmm_name) == 0:
-                gmm_name = None
-            elif len(gmm_name) == 1:
-                gmm_name = gmm_name[0]
-                        
-            if gmm_name is not None:
-                if gmm_name in self.op._gmms:
-                    gmm = self.op._gmms[gmm_name]
-                else:
-                    # there weren't any events in this subset to estimate a GMM from
-                    warn("No estimated GMM for plot {}".format(gmm_name),
-                          util.CytoflowViewWarning)
-                    return {}
-            else:
-                if True in self.op._gmms:
-                    gmm = self.op._gmms[True]
-                else:
-                    return {}          
-                
-            ax = grid.facet_axis(i, j)
-                                                
-            # okay.  we want to scale the gaussian curves to have the same area
-            # as the plots they're over.  so, what's the total area on the plot?
-            
-            patch_area = 0.0
-                                    
-            for k in range(0, len(ax.patches)):
-                
-                patch = ax.patches[k]
-                xy = patch.get_xy()
-                patch_area += poly_area([xscale(p[0]) for p in xy], [p[1] for p in xy])
-                
-            # now, scale the plotted curve by the area of the total plot times
-            # the proportion of it that is under that curve.
-                
-            for k in range(0, len(gmm.weights_)):
-                pdf_scale = patch_area * gmm.weights_[k]
-                
-                # cheat a little
-#                 pdf_scale *= 1.1
-                 
-                plt_min, plt_max = plt.gca().get_xlim()
-                x = xscale.inverse(np.linspace(xscale(plt_min), xscale(plt_max), 500))     
-                         
-                mean = gmm.means_[k][0]
-                stdev = np.sqrt(gmm.covariances_[k][0])
-                y = stats.norm.pdf(xscale(x), mean, stdev) * pdf_scale
-                color_k = k % len(sns.color_palette())
-                color = sns.color_palette()[color_k]
-                ax.plot(x, y, color = color)
-                        
-        return {}
+        view, trait_name = self._strip_trait(self.op.name)
+    
+        super(GaussianMixture1DView, view).plot(experiment,
+                                                annotation_facet = self.op.name,
+                                                annotation_trait = trait_name,
+                                                annotations = self.op._gmms,
+                                                scale = self.op._scale,
+                                                **kwargs)
+        
+        
+    def _annotation_plot(self, axes, xlim, ylim, xscale, yscale, annotation, annotation_facet, annotation_value, annotation_color):
 
+        # annotation is an instance of mixture.GaussianMixture
+        gmm = annotation
+        
+        if annotation_value is None:
+            for i in range(len(gmm.means_)):
+                self._annotation_plot(axes, xlim, ylim, xscale, yscale, annotation, annotation_facet, i, annotation_color)
+            return
+        elif type(annotation_value) is str:
+            idx_re = re.compile(annotation_facet + '_(\d+)')
+            idx = idx_re.match(annotation_value).group(1)
+            idx = int(idx) - 1             
+        else:
+            idx = annotation_value
+              
+        patch_area = 0.0
+                                 
+        for k in range(0, len(axes.patches)):
+            patch = axes.patches[k]
+            xy = patch.get_xy()
+            patch_area += poly_area([xscale(p[0]) for p in xy], [p[1] for p in xy])
+        
+        plt_min, plt_max = plt.gca().get_xlim()
+        x = xscale.inverse(np.linspace(xscale(plt_min), xscale(plt_max), 500))   
+        pdf_scale = patch_area * gmm.weights_[idx]
+        mean = gmm.means_[idx][0]
+        stdev = np.sqrt(gmm.covariances_[idx][0])
+        y = stats.norm.pdf(xscale(x), mean, stdev) * pdf_scale
+        axes.plot(x, y, color = annotation_color)
+                
 # from http://stackoverflow.com/questions/24467972/calculate-area-of-polygon-given-x-y-coordinates
 def poly_area(x,y):
     return 0.5*np.abs(np.dot(x,np.roll(y,1))-np.dot(y,np.roll(x,1)))

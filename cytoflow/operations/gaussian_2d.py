@@ -21,8 +21,7 @@ Created on Dec 16, 2015
 
 @author: brian
 '''
-from warnings import warn
-from itertools import product
+import re
 
 from traits.api import (HasStrictTraits, Str, CStr, Dict, Any, Instance, Bool, 
                         Constant, List, provides)
@@ -31,13 +30,12 @@ import numpy as np
 from sklearn import mixture
 from scipy import linalg
 import pandas as pd
-import seaborn as sns
 
 from cytoflow.views import IView, ScatterplotView
 import cytoflow.utility as util
 
 from .i_operation import IOperation
-from .base_op_views import BaseOp2DView
+from .base_op_views import By2DView, AnnotatingView
 
 @provides(IOperation)
 class GaussianMixture2DOp(HasStrictTraits):
@@ -198,7 +196,7 @@ class GaussianMixture2DOp(HasStrictTraits):
         else:
             # use a lambda expression to return a group that contains
             # all the events
-            groupby = experiment.data.groupby(lambda x: True)
+            groupby = experiment.data.groupby(lambda _: True)
             
         # get the scale. estimate the scale params for the ENTIRE data set,
         # not subsets we get from groupby().  And we need to save it so that
@@ -327,7 +325,7 @@ class GaussianMixture2DOp(HasStrictTraits):
         else:
             # use a lambda expression to return a group that
             # contains all the events
-            groupby = experiment.data.groupby(lambda x: True)
+            groupby = experiment.data.groupby(lambda _: True)
         
         for group, data_subset in groupby:
             if group not in self._gmms:
@@ -472,7 +470,7 @@ class GaussianMixture2DOp(HasStrictTraits):
                 new_experiment.statistics[(self.name, "proportion")] = pd.to_numeric(prop_stat)
             
                     
-        new_experiment.history.append(self.clone_traits(transient = lambda t: True))
+        new_experiment.history.append(self.clone_traits(transient = lambda _: True))
         return new_experiment
     
     def default_view(self, **kwargs):
@@ -493,7 +491,7 @@ import matplotlib.patches as patches
 import matplotlib.transforms as transforms
     
 @provides(IView)
-class GaussianMixture2DView(BaseOp2DView, ScatterplotView):
+class GaussianMixture2DView(By2DView, AnnotatingView, ScatterplotView):
     """
     Attributes
     ----------
@@ -501,115 +499,83 @@ class GaussianMixture2DView(BaseOp2DView, ScatterplotView):
         The op whose parameters we're viewing.        
     """
     
-    id = 'edu.mit.synbio.cytoflow.view.gaussianmixture2dview'
-    friendly_id = "2D Gaussian Mixture Diagnostic Plot"
-    
-    def _get_facets(self):
-        return [self.xfacet, self.yfacet]
-    
-    def plot(self, experiment, plot_name = None, **kwargs):
+    id = Constant('edu.mit.synbio.cytoflow.view.gaussianmixture2dview')
+    friendly_id = Constant("2D Gaussian Mixture Diagnostic Plot")
+        
+    def plot(self, experiment, **kwargs):
         """
         Plot the plots.
         """
         
-        super().plot(experiment = experiment,
-                     plot_name = plot_name,
-                     xscale = self.op._xscale, 
-                     yscale = self.op._yscale)
-        
-    def _grid_plot(self, experiment, grid, xlim, ylim, xscale, yscale, **kwargs):
-
-        plot_name = kwargs.pop('plot_name', None)
-
-        # plot the scatterplot
-        super()._grid_plot(experiment, grid, xlim, ylim, xscale, yscale, **kwargs)
-
-        # plot the actual distribution on top of it.  display as a "contour"
-        # plot with ellipses at 1, 2, and 3 standard deviations
-        # cf. http://scikit-learn.org/stable/auto_examples/mixture/plot_gmm.html
-        
-        row_names = grid.row_names if grid.row_names else [False]
-        col_names = grid.col_names if grid.col_names else [False]
-        
-        for (i, row), (j, col) in product(enumerate(row_names),
-                                          enumerate(col_names)):
-            
-            facets = [x for x in [row, col] if x]
-            if plot_name is not None:
-                try:
-                    gmm_name = list(plot_name) + facets
-                except TypeError: # plot_name isn't a list
-                    gmm_name = list([plot_name]) + facets  
-            else:      
-                gmm_name = facets
-                
-            if len(gmm_name) == 0:
-                gmm_name = None
-            elif len(gmm_name) == 1:
-                gmm_name = gmm_name[0]   
-
-            if gmm_name is not None:
-                if gmm_name in self.op._gmms:
-                    gmm = self.op._gmms[gmm_name]
-                else:
-                    # there weren't any events in this subset to estimate a GMM from
-                    warn("No estimated GMM for plot {}".format(gmm_name),
-                          util.CytoflowViewWarning)
-                    return {}
-            else:
-                if True in self.op._gmms:
-                    gmm = self.op._gmms[True]
-                else:
-                    return {}          
-                
-            ax = grid.facet_axis(i, j)
-        
-            for k, (mean, covar) in enumerate(zip(gmm.means_, gmm.covariances_)):    
-                v, w = linalg.eigh(covar)
-                u = w[0] / linalg.norm(w[0])
-                
-                #rotation angle (in degrees)
-                t = np.arctan(u[1] / u[0])
-                t = 180 * t / np.pi
-                           
-                color_k = k % len(sns.color_palette())
-                color = sns.color_palette()[color_k]
-                
-                # in order to scale the ellipses correctly, we have to make them
-                # ourselves out of an affine-scaled unit circle.  The interface
-                # is the same as matplotlib.patches.Ellipse
-                
-                self._plot_ellipse(ax,
-                                   mean,
-                                   np.sqrt(v[0]),
-                                   np.sqrt(v[1]),
-                                   180 + t,
-                                   color = color,
-                                   fill = False,
-                                   linewidth = 2)
+        view, trait_name = self._strip_trait(self.op.name)
     
-                self._plot_ellipse(ax, 
-                                   mean,
-                                   np.sqrt(v[0]) * 2,
-                                   np.sqrt(v[1]) * 2,
-                                   180 + t,
-                                   color = color,
-                                   fill = False,
-                                   linewidth = 2,
-                                   alpha = 0.66)
-                
-                self._plot_ellipse(ax, 
-                                   mean,
-                                   np.sqrt(v[0]) * 3,
-                                   np.sqrt(v[1]) * 3,
-                                   180 + t,
-                                   color = color,
-                                   fill = False,
-                                   linewidth = 2,
-                                   alpha = 0.33)
-                
-        return {}
-    
+        super(GaussianMixture2DView, view).plot(experiment,
+                                                annotation_facet = self.op.name,
+                                                annotation_trait = trait_name,
+                                                annotations = self.op._gmms,
+                                                xscale = self.op._xscale,
+                                                yscale = self.op._yscale,
+                                                **kwargs)
+
+    def _annotation_plot(self, axes, xlim, ylim, xscale, yscale, annotation, annotation_facet, annotation_value, annotation_color):
+
+        # annotation is an instance of mixture.GaussianMixture
+        gmm = annotation
+        
+        if annotation_value is None:
+            for i in range(len(gmm.means_)):
+                self._annotation_plot(axes, xlim, ylim, xscale, yscale, annotation, annotation_facet, i, annotation_color)
+            return
+        elif type(annotation_value) is str:
+            idx_re = re.compile(annotation_facet + '_(\d+)')
+            idx = idx_re.match(annotation_value).group(1)
+            idx = int(idx) - 1             
+        else:
+            idx = annotation_value
+        
+        mean = gmm.means_[idx]
+        covar = gmm.covariances_[idx]
+        
+        v, w = linalg.eigh(covar)
+        u = w[0] / linalg.norm(w[0])
+        
+        #rotation angle (in degrees)
+        t = np.arctan(u[1] / u[0])
+        t = 180 * t / np.pi
+        
+        # in order to scale the ellipses correctly, we have to make them
+        # ourselves out of an affine-scaled unit circle.  The interface
+        # is the same as matplotlib.patches.Ellipse
+        
+        self._plot_ellipse(axes,
+                           mean,
+                           np.sqrt(v[0]),
+                           np.sqrt(v[1]),
+                           180 + t,
+                           color = annotation_color,
+                           fill = False,
+                           linewidth = 2)
+
+        self._plot_ellipse(axes, 
+                           mean,
+                           np.sqrt(v[0]) * 2,
+                           np.sqrt(v[1]) * 2,
+                           180 + t,
+                           color = annotation_color,
+                           fill = False,
+                           linewidth = 2,
+                           alpha = 0.66)
+        
+        self._plot_ellipse(axes, 
+                           mean,
+                           np.sqrt(v[0]) * 3,
+                           np.sqrt(v[1]) * 3,
+                           180 + t,
+                           color = annotation_color,
+                           fill = False,
+                           linewidth = 2,
+                           alpha = 0.33)
+                    
     def _plot_ellipse(self, ax, center, width, height, angle, **kwargs):
         tf = transforms.Affine2D() \
              .scale(width, height) \

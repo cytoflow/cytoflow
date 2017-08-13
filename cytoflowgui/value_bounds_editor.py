@@ -248,7 +248,7 @@ class _ValueBoundsEditor(EditorWithList):
             if start == end:
                 return start
                 
-            cut = ((start + end) / 2)
+            cut = ((start + end) // 2)
 
             if value == self.values[cut]:
                 return cut
