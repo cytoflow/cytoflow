@@ -16,11 +16,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-'''
-Created on Aug 31, 2015
+"""
+cytoflow.operations.bead_calibration
+------------------------------------
+"""
 
-@author: brian
-'''
 from traits.api import (HasStrictTraits, Str, File, Dict, Bool, Int, List, 
                         Float, Constant, provides, Undefined, Callable, Any,
                         Instance)
@@ -28,6 +28,7 @@ import numpy as np
 import math
 import scipy.signal
 import scipy.optimize
+import sys
         
 import matplotlib.pyplot as plt
 
@@ -43,14 +44,18 @@ class BeadCalibrationOp(HasStrictTraits):
     Calibrate arbitrary channels to molecules-of-fluorophore using fluorescent
     beads (eg, the Spherotech RCP-30-5A rainbow beads.)
     
-    To use, set the `beads_file` property to an FCS file containing the beads'
-    events; specify which beads you ran by setting the `beads_type` property
-    to match one of the values of BeadCalibrationOp.BEADS; and set the
-    `units` dict to which channels you want calibrated and in which units.
-    Then, call `estimate()` and check the peak-finding with 
-    `default_view().plot()`.  If the peak-finding is wacky, try adjusting
-    `bead_peak_quantile` and `bead_brightness_threshold`.  When the peaks are
-    successfully identified, call apply() on your experimental data set. 
+    Computes a log-linear calibration function that maps arbitrary fluorescence
+    units to physical units (ie molecules equivalent fluorophore, or *MEF*).
+    
+    To use, set :attr:`beads_file` to an FCS file containing events collected *using
+    the same cytometer settings as the data you're calibrating*.  Specify which 
+    beads you ran by setting :attr:`beads_type` to match one of the  values of 
+    :data:`BeadCalibrationOp.BEADS`; and set :attr:`units` to which channels you 
+    want calibrated and in which units.  Then, call :meth:`estimate()` and check the 
+    peak-finding with :meth:`default_view().plot()`.  If the peak-finding is wacky, 
+    try adjusting :attr:`bead_peak_quantile` and :attr:`bead_brightness_threshold`.  When 
+    the peaks are successfully identified, call :meth:`apply` to scale your 
+    experimental data set. 
     
     If you can't make the peak finding work, please submit a bug report!
     
@@ -61,36 +66,28 @@ class BeadCalibrationOp(HasStrictTraits):
     
     Finally, because you can't have a negative number of fluorescent molecules
     (MEFLs, etc) (as well as for math reasons), this module filters out
-    negative values.
-    
+    negative values.    
     
     Attributes
     ----------
-    name : Str
-        The operation name (for UI representation.)
-
     units : Dict(Str, Str)
         A dictionary specifying the channels you want calibrated (keys) and
         the units you want them calibrated in (values).  The units must be
-        keys of the `beads` attribute.       
+        keys of the :attr:`beads` attribute.       
         
     beads_file : File
-        A file containing the FCS events from the beads.  Must be set to use
-        `estimate()`.  This isn't persisted by `pickle()`.
+        A file containing the FCS events from the beads.
 
     beads : Dict(Str, List(Float))
         The beads' characteristics.  Keys are calibrated units (ie, MEFL or
         MEAP) and values are ordered lists of known fluorophore levels.  Common
-        values for this dict are included in BeadCalibrationOp.BEADS.
-        Must be set to use `estimate()`.
+        values for this dict are included in :data:`BeadCalibrationOp.BEADS`.
         
     bead_peak_quantile : Int (default = 80)
-        The quantile threshold used to choose bead peaks.  Must be set to use 
-        `estimate()`.
+        The quantile threshold used to choose bead peaks. 
         
     bead_brightness_threshold : Float (default = 100)
-        How bright must a bead peak be to be considered?  Must be set to use 
-        `estimate()`.
+        How bright must a bead peak be to be considered?  
         
     bead_brightness_cutoff : Float
         If a bead peak is above this, then don't consider it.  Takes care of
@@ -101,23 +98,14 @@ class BeadCalibrationOp(HasStrictTraits):
         this if the peak find is having difficulty, or if you have a small 
         number of events
         
-    force_linear : Bool(False)
+    force_linear : Bool (default = False)
         A linear fit in log space doesn't always go through the origin, which 
         means that the calibration function isn't strictly a multiplicative
-        scaling operation.  Set `force_linear` to force the such
+        scaling operation.  Set :attr:`force_linear` to force the such
         behavior.  Keep an eye on the diagnostic plot, though, to see how much
         error you're introducing!
-        
-        
-    Metadata
-    --------
-    bead_calibration_fn : Callable (pandas.Series --> pandas.Series)
-        The function to calibrate raw data to bead units
-        
-    bead_units : String
-        The units this channel was calibrated to
-        
-        
+   
+           
     Notes
     -----
     The peak finding is rather sophisticated.  
@@ -134,49 +122,75 @@ class BeadCalibrationOp(HasStrictTraits):
     
     Finally, the peaks are filtered by height (the histogram bin has a quantile
     greater than `bead_peak_quantile`) and intensity (brighter than 
-    `bead_brightness_threshold`).
+    :attr:`bead_brightness_threshold`).
     
     How to convert from a series of peaks to mean equivalent fluorochrome?
     If there's one peak, we assume that it's the brightest peak.  If there
-    are two peaks, we assume they're the brightest two.  If there are n >=3
-    peaks, we check all the contiguous n-subsets of the bead intensities
+    are two peaks, we assume they're the brightest two.  If there are ``n >=3``
+    peaks, we check all the contiguous `n`-subsets of the bead intensities
     and find the one whose linear regression (in log space!) has the smallest
     norm (square-root sum-of-squared-residuals.)
     
     There's a slight subtlety in the fact that we're performing the linear
-    regression in log-space: if the relationship in log10-space is Y=aX + b,
-    then the same relationship in linear space is x = 10**X, y = 10**y, and
-    y = (10**b) * (x ** a).
-    
-    One more thing.  Because the beads are (log) evenly spaced across all
-    the channels, we can directly compute the fluorophore equivalent in channels
-    where we wouldn't usually measure that fluorophore: for example, you can
-    compute MEFL (mean equivalent fluorosceine) in the PE-Texas Red channel,
-    because the bead peak pattern is the same in the PE-Texas Red channel
-    as it would be in the FITC channel.
+    regression in log-space: if the relationship in log10-space is ``Y=aX + b``,
+    then the same relationship in linear space is ``x = 10**X``, ``y = 10**y``, and
+    ``y = (10**b) * (x ** a)``.
+
     
     Examples
     --------
-    >>> bead_op = flow.BeadCalibrationOp()
-    >>> bead_op.beads = flow.BeadCalibrationOp.BEADS["Spherotech RCP-30-5A Lot AA01-AA04, AB01, AB02, AC01, GAA01-R"]
-    >>> bead_op.units = {"Pacific Blue-A" : "MEFL",
-                         "FITC-A" : "MEFL",
-                         "PE-Tx-Red-YG-A" : "MEFL"}
-    >>>
-    >>> bead_op.beads_file = "beads.fcs"
-    >>> bead_op.estimate(ex3)
-    >>>
-    >>> bead_op.default_view().plot(ex3)  
-    >>> # check the plot!
-    >>>
-    >>> ex4 = bead_op.apply(ex3)  
+    Create a small experiment:
+    
+    .. plot::
+        :context: close-figs
+    
+        >>> import cytoflow as flow
+        >>> import_op = flow.ImportOp()
+        >>> import_op.tubes = [flow.Tube(file = "tasbe/rby.fcs")]
+        >>> ex = import_op.apply()
+    
+    Create and parameterize the operation
+    
+    .. plot::
+        :context: close-figs
+
+        >>> bead_op = flow.BeadCalibrationOp()
+        >>> beads = "Spherotech RCP-30-5A Lot AA01-AA04, AB01, AB02, AC01, GAA01-R"
+        >>> bead_op.beads = flow.BeadCalibrationOp.BEADS[beads]
+        >>> bead_op.units = {"Pacific Blue-A" : "MEBFP",
+        ...                  "FITC-A" : "MEFL",
+        ...                  "PE-Tx-Red-YG-A" : "MEPTR"}
+        >>>
+        >>> bead_op.beads_file = "tasbe/beads.fcs"
+    
+    Estimate the model parameters
+    
+    .. plot::
+        :context: close-figs 
+    
+        >>> bead_op.estimate(ex)
+    
+    Plot the diagnostic plot
+    
+    .. plot::
+        :context: close-figs
+
+        >>> bead_op.default_view().plot(ex)  
+
+    Apply the operation to the experiment
+    
+    .. plot::
+        :context: close-figs
+    
+        >>> ex = bead_op.apply(ex)  
+        
     """
     
     # traits
     id = Constant('edu.mit.synbio.cytoflow.operations.beads_calibrate')
     friendly_id = Constant("Bead Calibration")
     
-    name = Constant("Bead Calibration")
+    name = Constant("Beads")
     units = Dict(Str, Str)
     
     beads_file = File(exists = True)
@@ -197,22 +211,30 @@ class BeadCalibrationOp(HasStrictTraits):
     _peaks = Dict(Str, Any, transient = True)
     _mefs = Dict(Str, Any, transient = True)
 
-    def estimate(self, experiment, subset = None): 
+    def estimate(self, experiment): 
         """
         Estimate the calibration coefficients from the beads file.
+        
+        Parameters
+        ----------
+        experiment : Experiment
+            The experiment used to compute the calibration.
+            
         """
         if experiment is None:
-            raise util.CytoflowOpError("No experiment specified")
+            raise util.CytoflowOpError(None, "No experiment specified")
         
         if not self.beads_file:
-            raise util.CytoflowOpError("No beads file specified")
+            raise util.CytoflowOpError('beads_file', "No beads file specified")
 
         if not set(self.units.keys()) <= set(experiment.channels):
-            raise util.CytoflowOpError("Specified channels that weren't found in "
-                                  "the experiment.")
+            raise util.CytoflowOpError('units',
+                                       "Specified channels that weren't found in "
+                                       "the experiment.")
             
         if not set(self.units.values()) <= set(self.beads.keys()):
-            raise util.CytoflowOpError("Units don't match beads.")
+            raise util.CytoflowOpError('units',
+                                       "Units don't match beads.")
                         
         # make a little Experiment
         check_tube(self.beads_file, experiment)
@@ -261,17 +283,20 @@ class BeadCalibrationOp(HasStrictTraits):
             mef_unit = self.units[channel]
             
             if not mef_unit in self.beads:
-                raise util.CytoflowOpError("Invalid unit {0} specified for channel {1}".format(mef_unit, channel))
+                raise util.CytoflowOpError('units',
+                                           "Invalid unit {0} specified for channel {1}".format(mef_unit, channel))
             
             # "mean equivalent fluorochrome"
             mef = self.beads[mef_unit]
                                                     
             if len(peaks) == 0:
-                raise util.CytoflowOpError("Didn't find any peaks for channel {}; "
+                raise util.CytoflowOpError(None,
+                                           "Didn't find any peaks for channel {}; "
                                            "check the diagnostic plot"
                                            .format(channel))
             elif len(peaks) > len(mef):
-                raise util.CytoflowOpError("Found too many peaks for channel {}; "
+                raise util.CytoflowOpError(None,
+                                           "Found too many peaks for channel {}; "
                                            "check the diagnostic plot"
                                            .format(channel))
             elif len(peaks) == 1:
@@ -348,35 +373,48 @@ class BeadCalibrationOp(HasStrictTraits):
 
 
     def apply(self, experiment):
-        """Applies the bleedthrough correction to an experiment.
+        """
+        Applies the bleedthrough correction to an experiment.
         
         Parameters
         ----------
-        old_experiment : Experiment
-            the experiment to which this op is applied
+        experiment : Experiment
+            the experiment to which this operation is applied
             
         Returns
         -------
-            a new experiment calibrated in physical units.
+        Experiment 
+            A new experiment with the specified channels calibrated in
+            physical units.  The calibrated channels also have new metadata:
+            
+            - **bead_calibration_fn** : Callable (pandas.Series --> pandas.Series)
+                The function to calibrate raw data to bead units
+        
+            - **bead_units** : String
+                The units this channel was calibrated to
         """
+        
         if experiment is None:
-            raise util.CytoflowOpError("No experiment specified")
+            raise util.CytoflowOpError(None, "No experiment specified")
         
         channels = list(self.units.keys())
 
         if not self.units:
-            raise util.CytoflowOpError("No channels to calibrate.")
+            raise util.CytoflowOpError('units', "No channels to calibrate.")
         
         if not self._calibration_functions:
-            raise util.CytoflowOpError("Calibration not found. "
-                                  "Did you forget to call estimate()?")
+            raise util.CytoflowOpError(None,
+                                       "Calibration not found. "
+                                       "Did you forget to call estimate()?")
         
         if not set(channels) <= set(experiment.channels):
-            raise util.CytoflowOpError("Module units don't match experiment channels")
+            raise util.CytoflowOpError('units',
+                                       "Module units don't match experiment channels")
                 
         if set(channels) != set(self._calibration_functions.keys()):
-            raise util.CytoflowOpError("Calibration doesn't match units. "
-                                  "Did you forget to call estimate()?")
+            raise util.CytoflowOpError('units',
+                                       "Calibration doesn't match units. "
+                                       "Did you forget to call estimate()?")
 
         # two things.  first, you can't raise a negative value to a non-integer
         # power.  second, negative physical units don't make sense -- how can
@@ -405,67 +443,114 @@ class BeadCalibrationOp(HasStrictTraits):
     
     def default_view(self, **kwargs):
         """
-        Returns a diagnostic plot to see if the bleedthrough spline estimation
-        is working.
+        Returns a diagnostic plot to see if the peak finding is working.
         
         Returns
         -------
-            IView : An IView, call plot() to see the diagnostic plots
+        IView
+            An view instance, call :meth:`plot()` to see the diagnostic plots
         """
 
         return BeadCalibrationDiagnostic(op = self, **kwargs)
     
-    BEADS = {
-             # from http://www.spherotech.com/RCP-30-5a%20%20rev%20H%20ML%20071712.xls
-             "Spherotech RCP-30-5A Lot AG01, AF02, AD04 and AAE01" :
-                { "MECSB" : [216, 464, 1232, 2940, 7669, 19812, 35474],
-                  "MEBFP" : [861, 1997, 5776, 15233, 45389, 152562, 396759],
-                  "MEFL" :  [792, 2079, 6588, 16471, 47497, 137049, 271647],
-                  "MEPE" :  [531, 1504, 4819, 12506, 36159, 109588, 250892],
-                  "MEPTR" : [233, 669, 2179, 5929, 18219, 63944, 188785],
-                  "MECY" : [1614, 4035, 12025, 31896, 95682, 353225, 1077421],
-                  "MEPCY7" : [14916, 42336, 153840, 494263],
-                  "MEAP" :  [373, 1079, 3633, 9896, 28189, 79831, 151008],
-                  "MEAPCY7" : [2864, 7644, 19081, 37258]},
-             # from http://www.spherotech.com/RCP-30-5a%20%20rev%20G.2.xls
-             "Spherotech RCP-30-5A Lot AA01-AA04, AB01, AB02, AC01, GAA01-R":
-                { "MECSB" : [179, 400, 993, 3203, 6083, 17777, 36331],
-                  "MEBFP" : [700, 1705, 4262, 17546, 35669, 133387, 412089],
-                  "MEFL" :  [692, 2192, 6028, 17493, 35674, 126907, 290983],
-                  "MEPE" :  [505, 1777, 4974, 13118, 26757, 94930, 250470],
-                  "MEPTR" : [207, 750, 2198, 6063, 12887, 51686, 170219],
-                  "MECY" :  [1437, 4693, 12901, 36837, 76621, 261671, 1069858],
-                  "MEPCY7" : [32907, 107787, 503797],
-                  "MEAP" :  [587, 2433, 6720, 17962, 30866, 51704, 146080],
-                  "MEAPCY7" : [718, 1920, 5133, 9324, 14210, 26735]}}
-    """A Beads docstring"""
+    # this silliness is necessary to squash the repr() call in sphinx.autodoc
+    class _Beads(dict):
+        def __repr__(self):
+            if hasattr(sys.modules['sys'], 'IN_SPHINX'):
+                return None
+            return super().__repr__()
     
+    BEADS = _Beads(
+    {
+     # from http://www.spherotech.com/RCP-30-5a%20%20rev%20H%20ML%20071712.xls
+     "Spherotech RCP-30-5A Lot AG01, AF02, AD04 and AAE01" :
+        { "MECSB" : [216, 464, 1232, 2940, 7669, 19812, 35474],
+          "MEBFP" : [861, 1997, 5776, 15233, 45389, 152562, 396759],
+          "MEFL" :  [792, 2079, 6588, 16471, 47497, 137049, 271647],
+          "MEPE" :  [531, 1504, 4819, 12506, 36159, 109588, 250892],
+          "MEPTR" : [233, 669, 2179, 5929, 18219, 63944, 188785],
+          "MECY" : [1614, 4035, 12025, 31896, 95682, 353225, 1077421],
+          "MEPCY7" : [14916, 42336, 153840, 494263],
+          "MEAP" :  [373, 1079, 3633, 9896, 28189, 79831, 151008],
+          "MEAPCY7" : [2864, 7644, 19081, 37258]},
+     # from http://www.spherotech.com/RCP-30-5a%20%20rev%20G.2.xls
+     "Spherotech RCP-30-5A Lot AA01-AA04, AB01, AB02, AC01, GAA01-R":
+        { "MECSB" : [179, 400, 993, 3203, 6083, 17777, 36331],
+          "MEBFP" : [700, 1705, 4262, 17546, 35669, 133387, 412089],
+          "MEFL" :  [692, 2192, 6028, 17493, 35674, 126907, 290983],
+          "MEPE" :  [505, 1777, 4974, 13118, 26757, 94930, 250470],
+          "MEPTR" : [207, 750, 2198, 6063, 12887, 51686, 170219],
+          "MECY" :  [1437, 4693, 12901, 36837, 76621, 261671, 1069858],
+          "MEPCY7" : [32907, 107787, 503797],
+          "MEAP" :  [587, 2433, 6720, 17962, 30866, 51704, 146080],
+          "MEAPCY7" : [718, 1920, 5133, 9324, 14210, 26735]}
+    })
+    """
+    A dictionary containing the calibrated beads that Cytoflow currently knows
+    about.  The available bead sets, the fluorophores and the laser / filter 
+    sets with which they were characterized are below:
+    
+    - **Spherotech RCP-30-5A Lot AG01, AF02, AD04 and AAE01**
+      
+      - **MECSB** (Cascade Blue, 405 --> 450/50)
+      - **MEBFP** (BFP, 405 --> 530/40)
+      - **MEFL** (Fluroscein, 488 --> 530/40)
+      - **MEPE** (Phycoerythrin, 488 --> 575/25)
+      - **MEPTR** (PE-Texas Red, 488 --> 613/20)
+      - **MECY** (Cy5, 488 --> 680/30)
+      - **MEPCY7** (PE-Cy7, 488 --> 750 LP)
+      - **MEAP** (APC, 633 --> 665/20)
+      - **MEAPCY7** (APC-Cy7, 635 --> 750 LP)
+      
+    - **Spherotech RCP-30-5A Lot AA01-AA04, AB01, AB02, AC01, GAA01-R**
+    
+      - **MECSB** (Cascade Blue, 405 --> 450/50)
+      - **MEBFP** (BFP, 405 --> 530/40)
+      - **MEFL** (Flurosceine, 488 --> 530/40)
+      - **MEPE** (Phycoerythrin, 488 --> 575/25)
+      - **MEPTR** (PE-Texas Red, 488 --> 613/20)
+      - **MECY** (Cy5, 488 --> 680/30)
+      - **MEPCY7** (PE-Cy7, 488 --> 750 LP)
+      - **MEAP** (APC, 633 --> 665/20)
+      - **MEAPCY7** (APC-Cy7, 635 --> 750 LP)      
+    """
+            
+
 @provides(cytoflow.views.IView)
 class BeadCalibrationDiagnostic(HasStrictTraits):
     """
-    Plots diagnostic histograms of the peak finding algorithm.
+    A diagnostic view for `BeadCalibrationOp`.
+        
+    Plots the smoothed histogram of the bead data; the peak locations;
+    a scatter plot of the raw bead fluorescence values vs the calibrated unit 
+    values; and a line plot of the model that was computed.  Make sure that the
+    relationship is linear; if it's not, it likely isn't a good calibration!
     
     Attributes
     ----------
-    name : Str
-        The instance name (for serialization, UI etc.)
-    
-    op : Instance(BeadCalibrationDiagnostic)
-        The op whose parameters we're viewing
-        
+    op : Instance(BeadCalibrationOp)
+        The operation instance whose parameters we're plotting.  Set 
+        automatically if you created the instance using 
+        :meth:`BeadCalibrationOp.default_view`.
+
     """
     
     # traits   
-    id = "edu.mit.synbio.cytoflow.view.autofluorescencediagnosticview"
-    friendly_id = "Autofluorescence Diagnostic" 
+    id = Constant("edu.mit.synbio.cytoflow.view.beadcalibrationdiagnosticview")
+    friendly_id = Constant("Bead Calibration Diagnostic")
+        
+    op = Instance(BeadCalibrationOp)
     
-    name = Str
-    
-    # TODO - why can't I use BeadCalibrationOp here?
-    op = Instance(IOperation)
-    
-    def plot(self, experiment, **kwargs):
-        """Plot a faceted histogram view of a channel"""
+    def plot(self, experiment):
+        """
+        Plots the diagnostic view.
+        
+        Parameters
+        ----------
+        experiment : Experiment
+            The experiment used to create the diagnostic plot.
+        
+        """
 
         if experiment is None:
             raise util.CytoflowViewError("No experiment specified")

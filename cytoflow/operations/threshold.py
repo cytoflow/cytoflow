@@ -96,21 +96,24 @@ class ThresholdOp(HasStrictTraits):
         """
         
         if experiment is None:
-            raise util.CytoflowOpError("No experiment specified")
+            raise util.CytoflowOpError(None, "No experiment specified")
         
         # make sure name got set!
         if not self.name:
-            raise util.CytoflowOpError("You have to set the gate's name "
-                                  "before applying it!")
+            raise util.CytoflowOpError('name', 
+                                       "You have to set the gate's name "
+                                       "before applying it!")
         
         # make sure old_experiment doesn't already have a column named self.name
         if(self.name in experiment.data.columns):
-            raise util.CytoflowOpError("Experiment already contains a column {0}"
-                               .format(self.name))
+            raise util.CytoflowOpError('name', 
+                                       "Experiment already contains a column {0}"
+                                       .format(self.name))
 
         if self.channel not in experiment.channels:
-            raise util.CytoflowOpError("{0} isn't a channel in the experiment"
-                                  .format(self.channel))
+            raise util.CytoflowOpError('channel',
+                                       "{0} isn't a channel in the experiment"
+                                       .format(self.channel))
 
         gate = pd.Series(experiment[self.channel] > self.threshold)
 
@@ -180,13 +183,13 @@ class ThresholdSelection(cytoflow.views.HistogramView):
         """Plot the histogram and then plot the threshold on top of it."""
         
         if experiment is None:
-            raise util.CytoflowViewError("No experiment specified")
+            raise util.CytoflowViewError(None, "No experiment specified")
         
         if self.xfacet:
-            raise util.CytoflowViewError("ThresholdSelection.xfacet must be empty")
+            raise util.CytoflowViewError('xfacet', "ThresholdSelection.xfacet must be empty")
         
         if self.yfacet:
-            raise util.CytoflowViewError("ThresholdSelection.yfacet must be empty")
+            raise util.CytoflowViewError('yfacet', "ThresholdSelection.yfacet must be empty")
         
         super(ThresholdSelection, self).plot(experiment, **kwargs)
         self._ax = plt.gca()        

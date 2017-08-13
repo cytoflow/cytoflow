@@ -2,9 +2,9 @@
 Welcome to Cytoflow's developer documentation!
 ==============================================
 
-*******
+*************************************************************
 I want to use Cytoflow's modules in my own cytometry analysis
-*******
+*************************************************************
 
 Great!  May I recommend you start with some example Jupyter notebooks.
 They provide a good introduction to both basic modules and some of
@@ -25,9 +25,9 @@ Quick hint: if you have a working Python v2.7 development environment, say
 For more details of these modules, you're likely to want to see the 
 :ref:`module documents <modindex>`
 
-****
+********************************
 I want to help develop Cytoflow.
-****
+********************************
 
 Hooray!  Have a look at the :ref:`install documentation <hacking>` for how to
 get the source code installed.  Then, have a look at the 
@@ -35,9 +35,9 @@ get the source code installed.  Then, have a look at the
 Finally, subscribe to 
 `the cytoflow-dev mailing list <https://groups.google.com/forum/#!forum/cytoflow-dev>`_ for updates, discussion, etc.
 
-****
+*********
 Contents:
-****
+*********
 
 .. toctree::
    :maxdepth: 2

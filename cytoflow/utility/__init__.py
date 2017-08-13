@@ -27,3 +27,5 @@ from .scale import scale_factory, IScale, set_default_scale, get_default_scale
 from .custom_traits import PositiveInt, PositiveFloat, ScaleEnum, Deprecated, Removed
 
 from .matplotlib_widgets import PolygonSelector
+
+from .docs import munge_class_docs
