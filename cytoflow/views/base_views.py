@@ -36,6 +36,24 @@ import cytoflow.utility as util
 from .i_view import IView
 
 class BaseView(HasStrictTraits):
+    """
+    The base class for facetted plotting.
+    
+    Attributes
+    ----------
+    xfacet, yfacet : String
+        Set to one of the :attr:`~.Experiment.conditions` in the :class:`Experiment`, and
+        a new row or column of subplots will be added for every unique value
+        of that condition.
+        
+    huefacet : String
+        Set to one of the :attr:`~.Experiment.conditions` in the in the :class:`Experiment`,
+        and a new color will be added to the plot for every unique value of 
+        that condition.
+        
+    huescale : {'linear', 'log', 'logicle'}
+        How should the color scale for :attr:`huefacet` be scaled?
+    """
     
     xfacet = Str
     yfacet = Str
@@ -48,9 +66,8 @@ class BaseView(HasStrictTraits):
         
         Parameters
         ----------
-        data : pandas.DataFrame
-            The dataframe containing the data to plot.  May be events, may
-            be statistics.
+        experiment: Experiment
+            The :class:`.Experiment` to plot using this view.
             
         legend : bool
             Plot a legend for the color or hue facet?  Defaults to `True`.
@@ -62,7 +79,6 @@ class BaseView(HasStrictTraits):
         xlim, ylim : (float, float)
             Set the min and max limits of the plots' x and y axes.
 
-            
         col_wrap : int
             If `xfacet` is set and `yfacet` is not set, you can "wrap" the
             subplots around so that they form a multi-row grid by setting

@@ -140,7 +140,7 @@ def get_params_and_attrs(lines, first_attr_line, last_attr_line):
     if first_attr_line is None:
         return
     
-    name_re = re.compile('^\s+(\S+)\s*\:')
+    name_re = re.compile('^\s+(.*)\s+:')
     space_re = re.compile('^\s*$')
     
     attr_name = None
