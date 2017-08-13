@@ -1,7 +1,7 @@
-sphinxcontrib-napoleon==0.2.11
+sphinxcontrib-napoleon
 mock
 pandas
-fcsparser
+bottleneck
 numpy
 numexpr
 matplotlib
@@ -12,3 +12,4 @@ traits
 nbformat
 python-dateutil
 statsmodels
+fcsparser
