@@ -242,19 +242,15 @@ class BinningView(Op1DView, AnnotatingView, HistogramView):
     """
     Plots a histogram of the current binning op.  By default, the different
     bins are shown in different colors.
-
-    Attributes
-    ----------
-    op : Instance(BinningOp)
-        the :class:`BinningOp` we're viewing.  If you made this instance with
-        :meth:`BinningOp.default_view`, then this is set for you already.
-
     """
      
     id = Constant('edu.mit.synbio.cytoflow.views.binning')
     friendly_id = Constant('Binning Setup')                                 
     
     def plot(self, experiment, **kwargs):
+        """
+        Plot the histogram.
+        """
         
         view, trait_name = self._strip_trait(self.op.name)
     

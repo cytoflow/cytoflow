@@ -30,19 +30,50 @@ import cytoflow.utility as util
 
 from .i_operation import IOperation
 from cytoflow.views import IView
-from cytoflow.views.base_views import BaseView, BaseDataView, Base1DView, Base2DView
+from cytoflow.views.base_views import BaseDataView, Base1DView, Base2DView
 
 @provides(IView)
-class OpView(BaseView):
+class OpView(BaseDataView):
+    """
+    Attributes
+    ----------
+    op : Instance(IOperation)
+        The :class:`IOperation` that this view is associated with.  If you
+        created the view using :meth:`default_view`, this is already set.
+    """
+    
     op = Instance(IOperation)
     
 @provides(IView)
 class Op1DView(OpView, Base1DView):
+    """
+    Attributes
+    ----------
+    channel : String
+        The channel this view is viewing.  If you created the view using 
+        :meth:`default_view`, this is already set.
+        
+    scale : {'linear', 'log', 'logicle'}
+        The way to scale the x axes.  If you created the view using 
+        :meth:`default_view`, this may be already set.
+    """
+    
     channel = DelegatesTo('op')
     scale = DelegatesTo('op')
     
 @provides(IView)
 class Op2DView(OpView, Base2DView):
+    """
+    Attributes
+    ----------
+    xchannel, ychannel : String
+        The channels to use for this view's X and Y axes.  If you created the 
+        view using :meth:`default_view`, this is already set.
+        
+    xscale, yscale : {'linear', 'log', 'logicle'}
+        The way to scale the x axes.  If you created the view using 
+        :meth:`default_view`, this may be already set.
+    """
     xchannel = DelegatesTo('op')
     xscale = DelegatesTo('op')
     ychannel = DelegatesTo('op')
@@ -50,7 +81,17 @@ class Op2DView(OpView, Base2DView):
 
 @provides(IView)
 class ByView(OpView):
-
+    """
+    Attributes
+    ----------
+    facets : List(String)
+        A read-only list of the conditions used to facet this view.
+        
+    by : List(String)
+        A read-only list of the conditions used to group this view's data before
+        plotting.
+    """
+    
     facets = Property(List)
     by = Property(List)
     
@@ -66,7 +107,13 @@ class ByView(OpView):
     def enum_plots(self, experiment):
         """
         Returns an iterator over the possible plots that this View can
-        produce.  The values returned can be passed to "plot".
+        produce.  The values returned can be passed to the ``plot_name``
+        keyword of :meth:`plot`.
+        
+        Parameters
+        ----------
+        experiment : Experiment
+            The :class:`Experiment` that will be producing the plots.
         """
                 
         if len(self.by) == 0 and len(self.facets) > 1:
@@ -205,6 +252,10 @@ class By2DView(ByView, Op2DView):
 
 @provides(IView)
 class NullView(BaseDataView):
+    """
+    An :class:`IView` that doesn't actually do an plotting.
+    """
+    
     def _grid_plot(self, experiment, grid, xlim, ylim, xscale, yscale, **kwargs):
         return {}
 

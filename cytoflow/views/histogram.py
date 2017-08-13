@@ -35,29 +35,6 @@ class HistogramView(Base1DView):
     
     Attributes
     ----------
-    name : Str
-        The HistogramView name (for serialization, UI etc.)
-    
-    channel : Str
-        the name of the channel we're plotting
-    
-    xfacet : Str 
-        the conditioning variable for multiple plots (horizontal)
-    
-    yfacet : Str
-        the conditioning variable for multiple plots (vertical)
-    
-    huefacet : Str
-        the conditioning variable for multiple plots (color)
-        
-    huescale = Enum("linear", "log", "logicle") (default = "linear")
-        What scale to use on the color bar, if there is one plotted
-        
-    subset : Str
-        a string passed to pandas.DataFrame.query() to subset the data before 
-        we plot it.
-        
-        .. note: Should this be a param instead?
         
     Examples
     --------
