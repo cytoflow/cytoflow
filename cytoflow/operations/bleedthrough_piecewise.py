@@ -17,9 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 '''
-Created on Aug 26, 2015
-
-@author: brian
+cytoflow.operations.bleedthrough_piecewise
+------------------------------------------
 '''
 import math
 from warnings import warn
@@ -42,7 +41,8 @@ from .import_op import Tube, ImportOp, check_tube
 @provides(IOperation)
 class BleedthroughPiecewiseOp(HasStrictTraits):
     """
-    *THIS OPERATION IS DEPRECATED.*
+    .. warning::
+        **THIS OPERATION IS DEPRECATED.**
     
     Apply bleedthrough correction to a set of fluorescence channels.
     
@@ -55,21 +55,20 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
     the correction factor for each cell indiviually (an operation that takes
     5 msec each.)
     
-    To use, set up the `controls` dict with the single color controls;
-    call `estimate()` to parameterize the operation; check that the bleedthrough 
-    plots look good with `default_view().plot()`; and then `apply()` to an 
-    Experiment.
+    To use, set up the :attr:`controls` dict with the single color controls;
+    call :meth:`estimate` to parameterize the operation; check that the bleedthrough 
+    plots look good with the :meth:`plot` method of the 
+    :class:`BleedthroughPiecewiseDiagnostic` instance returned by 
+    :meth:`default_view`; and then call :meth:`apply` with an :class:`Experiment`.
     
-    *THIS OPERATION IS DEPRECATED AND WILL BE REMOVED IN A FUTURE RELEASE. TO
-    USE IT, SET `ignore_deprecated` TO `True`.  IF YOU HAVE A USE CASE WHERE
-    THIS WORKS BETTER THAN THE LINEAR BLEEDTHROUGH CORRECTION, PLEASE EMAIL
-    ME OR FILE A BUG.*
+    .. warning::
+        **THIS OPERATION IS DEPRECATED AND WILL BE REMOVED IN A FUTURE RELEASE. 
+        TO USE IT, SET :attr:`ignore_deprecated` TO ``True``.  IF YOU HAVE A 
+        USE CASE WHERE THIS WORKS BETTER THAN THE LINEAR BLEEDTHROUGH 
+        CORRECTION, PLEASE EMAIL ME OR FILE A BUG.**
     
     Attributes
     ----------
-    name : Str
-        The operation name (for UI representation; optional for interactive use)
-    
     controls : Dict(Str, File)
         The channel names to correct, and corresponding single-color control
         FCS files to estimate the correction splines with.  Must be set to
@@ -83,16 +82,7 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
         The size of each axis in the mesh used to interpolate corrected values.
         
     ignore_deprecated : Bool (default = False)
-        
-    Metadata
-    --------
-    bleedthrough_channels : List(Str)
-        The channels that were used to correct this one.
-        
-    bleedthrough_fn : Callable (Tuple(Float) --> Float)
-        The function that will correct one event in this channel.  Pass it
-        the values specified in `bleedthrough_channels` and it will return
-        the corrected value for this channel. 
+
             
     Notes
     -----
@@ -120,17 +110,48 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
 
     Examples
     --------
-    >>> bl_op = flow.BleedthroughPiecewiseOp()
-    >>> bl_op.controls = {'Pacific Blue-A' : 'ebfp.fcs',
-    ...                   'FITC-A' : 'eyfp.fcs',
-    ...                   'PE-Tx-Red-YG-A' : 'mkate.fcs'}
-    >>>
-    >>> bl_op.estimate(ex2)
-    >>> bl_op.default_view().plot(ex2)    
-    >>>
-    >>> %time ex3 = bl_op.apply(ex2) # 410,000 cells
-    CPU times: user 577 ms, sys: 27.7 ms, total: 605 ms
-    Wall time: 607 ms
+
+    Create a small experiment:
+    
+    .. plot::
+        :context: close-figs
+    
+        >>> import cytoflow as flow
+        >>> import_op = flow.ImportOp()
+        >>> import_op.tubes = [flow.Tube(file = "tasbe/rby.fcs")]
+        >>> ex = import_op.apply()
+    
+    Create and parameterize the operation
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> bl_op = flow.BleedthroughPiecewiseOp()
+        >>> bl_op.controls = {'Pacific Blue-A' : 'tasbe/ebfp.fcs',
+        ...                   'FITC-A' : 'tasbe/eyfp.fcs',
+        ...                   'PE-Tx-Red-YG-A' : 'tasbe/mkate.fcs'}
+    
+    Estimate the model parameters
+    
+    .. plot::
+        :context: close-figs 
+    
+        >>> bl_op.estimate(ex)
+    
+    Plot the diagnostic plot
+    
+    .. plot::
+        :context: close-figs
+
+        >>> bl_op.default_view().plot(ex)  
+
+    Apply the operation to the experiment
+    
+    .. plot::
+        :context: close-figs
+    
+        >>> ex2 = bl_op.apply(ex)  
+ 
     """
     
     # traits
@@ -155,28 +176,34 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
     
     def estimate(self, experiment, subset = None): 
         """
-        Estimate the bleedthrough from the single-channel controls in `controls`
+        Estimate the bleedthrough from the single-channel controls in 
+        :attr:`controls`
         """
         
         if not self.ignore_deprecated:
-            raise util.CytoflowOpError("BleedthroughPiecewiseOp is DEPRECATED. "
+            raise util.CytoflowOpError(None,
+                                       "BleedthroughPiecewiseOp is DEPRECATED. "
                                        "To use it anyway, set ignore_deprected "
                                        "to True.")
         
         if experiment is None:
-            raise util.CytoflowOpError("No experiment specified")
+            raise util.CytoflowOpError(None, 
+                                       "No experiment specified")
         
         if self.num_knots < 3:
-            raise util.CytoflowOpError("Need to allow at least 3 knots in the spline")
+            raise util.CytoflowOpError('num_knots',
+                                       "Need to allow at least 3 knots in the spline")
         
         self._channels = list(self.controls.keys())
 
         if len(self._channels) < 2:
-            raise util.CytoflowOpError("Need at least two channels to correct bleedthrough.")
+            raise util.CytoflowOpError('controls',
+                                       "Need at least two channels to correct bleedthrough.")
         
         for channel in list(self.controls.keys()):
             if 'range' not in experiment.metadata[channel]:
-                raise util.CytoflowOpError("Can't find range for channel {}"
+                raise util.CytoflowOpError(None,
+                                           "Can't find range for channel {}"
                                            .format(channel))
 
         self._splines = {}
@@ -294,7 +321,16 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
             
         Returns
         -------
-            a new experiment with the bleedthrough subtracted out.
+            A new :class:`Experiment` with the bleedthrough subtracted out.
+            Corrected channels have the following additional metadata:
+            
+            - **bleedthrough_channels** : List(Str)
+              The channels that were used to correct this one.
+        
+            - **bleedthrough_fn** : Callable (Tuple(Float) --> Float)
+              The function that will correct one event in this channel.  Pass it
+              the values specified in `bleedthrough_channels` and it will return
+              the corrected value for this channel. 
         """
         
         if not self.ignore_deprecated:
@@ -303,14 +339,17 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
                                        "to True.")
             
         if experiment is None:
-            raise util.CytoflowOpError("No experiment specified")
+            raise util.CytoflowOpError(None,
+                                       "No experiment specified")
         
         if not self._interpolators:
-            raise util.CytoflowOpError("Module interpolators aren't set. "
-                                  "Did you run estimate()?")
+            raise util.CytoflowOpError(None,
+                                       "Module interpolators aren't set. "
+                                       "Did you run estimate()?")
             
         if not set(self._interpolators.keys()) <= set(experiment.channels):
-            raise util.CytoflowOpError("Module parameters don't match experiment channels")
+            raise util.CytoflowOpError(None,
+                                       "Module parameters don't match experiment channels")
 
         new_experiment = experiment.clone()
         
@@ -353,12 +392,14 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
         """
         
         if not self.ignore_deprecated:
-            raise util.CytoflowOpError("BleedthroughPiecewiseOp is DEPRECATED. "
+            raise util.CytoflowOpError(None,
+                                       "BleedthroughPiecewiseOp is DEPRECATED. "
                                        "To use it anyway, set ignore_deprected "
                                        "to True.")
         
         if set(self.controls.keys()) != set(self._splines.keys()):
-            raise util.CytoflowOpError("Must have both the controls and bleedthrough to plot")
+            raise util.CytoflowOpError('controls',
+                                       "Must have both the controls and bleedthrough to plot")
 
         return BleedthroughPiecewiseDiagnostic(op = self, **kwargs)
     
@@ -393,35 +434,39 @@ class BleedthroughPiecewiseDiagnostic(HasStrictTraits):
     
     Attributes
     ----------
-    name : Str
-        The instance name (for serialization, UI etc.)
-    
+
     op : Instance(BleedthroughPiecewiseOp)
-        The op whose parameters we're viewing
+        The operation whose parameters we're viewing.  If this instance was
+        created with :meth:`BleedthroughPiecewiseOp.default_view`, this 
+        attribute is already set for you.
         
+    subset : str (default = None)
+        Only plot this subset of the bleedthrough controls.
     """
     
     # traits   
     id = Constant("edu.mit.synbio.cytoflow.view.autofluorescencediagnosticview")
     friendly_id = Constant("Autofluorescence Diagnostic")
     
-    name = Str
     subset = Str
     
     # TODO - why can't I use BleedthroughPiecewiseOp here?
-    op = Instance(IOperation)
+    op = Instance(BleedthroughPiecewiseOp)
     
     def plot(self, experiment = None, **kwargs):
         """Plot a faceted histogram view of a channel"""
         
         if experiment is None:
-            raise util.CytoflowViewError("No experiment specified")
+            raise util.CytoflowViewError(None,
+                                         "No experiment specified")
         
         if not self.op.controls:
-            raise util.CytoflowViewError("No controls specified")
+            raise util.CytoflowViewError(None,
+                                         "No controls specified")
         
         if not self.op._splines:
-            raise util.CytoflowViewError("No splines. Did you forget to call estimate()?")
+            raise util.CytoflowViewError(None,
+                                         "No splines. Did you forget to call estimate()?")
         
         kwargs.setdefault('histtype', 'stepfilled')
         kwargs.setdefault('alpha', 0.5)
@@ -461,16 +506,16 @@ class BleedthroughPiecewiseDiagnostic(HasStrictTraits):
                                               .format(self.subset))
                     
                 # get scales
-                xscale = util.scale_factory("logicle", tube_exp, channel = from_channel)
-                yscale = util.scale_factory("logicle", tube_exp, channel = to_channel)
+                xscale = util.scale_factory("log", tube_exp, channel = from_channel)
+                yscale = util.scale_factory("log", tube_exp, channel = to_channel)
                     
                 tube_data = tube_exp.data
 
                 plt.subplot(num_channels, 
                             num_channels, 
                             from_idx + (to_idx * num_channels) + 1)
-                plt.xscale('logicle', **xscale.mpl_params)
-                plt.yscale('logicle', **yscale.mpl_params)
+                plt.xscale('log', **xscale.mpl_params)
+                plt.yscale('log', **yscale.mpl_params)
                 plt.xlabel(from_channel)
                 plt.ylabel(to_channel)
                 plt.scatter(tube_data[from_channel],

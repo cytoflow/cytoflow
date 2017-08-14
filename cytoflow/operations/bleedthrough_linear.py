@@ -17,9 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 '''
-Created on Aug 26, 2015
-
-@author: brian
+cytoflow.operations.bleedthrough_linear
+---------------------------------------
 '''
 import os, math
 
@@ -53,53 +52,70 @@ class BleedthroughLinearOp(HasStrictTraits):
     if that is the case, then the autofluorescence will be subtracted from
     the single-color controls too.
     
-    To use, set up the `controls` dict with the single color controls;
-    call `estimate()` to parameterize the operation; check that the bleedthrough 
-    plots look good with `default_view().plot()`; and then `apply()` to an 
-    Experiment.
+    To use, set up the :attr:`controls` dict with the single color controls;
+    call :meth:`estimate` to parameterize the operation; check that the bleedthrough 
+    plots look good by calling :meth:`~.BleedthroughLinearDiagnostic.plot` on 
+    the :class:`BleedthroughLinearDiagnostic` instance returned by 
+    :meth:`default_view`; and then :meth:`apply` on an :class:`.Experiment`.
     
     Attributes
     ----------
-    name : Str
-        The operation name (for UI representation; optional for interactive use)
-    
     controls : Dict(Str, File)
         The channel names to correct, and corresponding single-color control
         FCS files to estimate the correction splines with.  Must be set to
-        use `estimate()`.
+        use :meth:`estimate`.
         
     spillover : Dict(Tuple(Str, Str), Float)
         The spillover "matrix" to use to correct the data.  The keys are pairs
         of channels, and the values are proportions of spectral overlap.  If 
-        `("channel1", "channel2")` is present as a key, 
-        `("channel2", "channel1")` must also be present.  The module does not
+        ``("channel1", "channel2")`` is present as a key, 
+        ``("channel2", "channel1")`` must also be present.  The module does not
         assume that the matrix is symmetric.
-        
-    Metadata
-    --------
-    linear_bleedthrough : Dict(Str : Float)
-        The values for spillover from other channels into this channel.
-        
-    bleedthrough_channels : List(Str)
-        The channels that were used to correct this one.
-        
-    bleedthrough_fn : Callable (Tuple(Float) --> Float)
-        The function that will correct one event in this channel.  Pass it
-        the values specified in `bleedthrough_channels` and it will return
-        the corrected value for this channel.
-
 
     Examples
     --------
-    >>> bl_op = flow.BleedthroughLinearOp()
-    >>> bl_op.controls = {'Pacific Blue-A' : 'merged/ebfp.fcs',
-    ...                   'FITC-A' : 'merged/eyfp.fcs',
-    ...                   'PE-Tx-Red-YG-A' : 'merged/mkate.fcs'}
-    >>>
-    >>> bl_op.estimate(ex2)
-    >>> bl_op.default_view().plot(ex2)    
-    >>>
-    >>> ex3 = bl_op.apply(ex2)
+
+    Create a small experiment:
+    
+    .. plot::
+        :context: close-figs
+    
+        >>> import cytoflow as flow
+        >>> import_op = flow.ImportOp()
+        >>> import_op.tubes = [flow.Tube(file = "tasbe/rby.fcs")]
+        >>> ex = import_op.apply()
+    
+    Create and parameterize the operation
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> bl_op = flow.BleedthroughLinearOp()
+        >>> bl_op.controls = {'Pacific Blue-A' : 'tasbe/ebfp.fcs',
+        ...                   'FITC-A' : 'tasbe/eyfp.fcs',
+        ...                   'PE-Tx-Red-YG-A' : 'tasbe/mkate.fcs'}
+    
+    Estimate the model parameters
+    
+    .. plot::
+        :context: close-figs 
+    
+        >>> bl_op.estimate(ex)
+    
+    Plot the diagnostic plot
+    
+    .. plot::
+        :context: close-figs
+
+        >>> bl_op.default_view().plot(ex)  
+
+    Apply the operation to the experiment
+    
+    .. plot::
+        :context: close-figs
+    
+        >>> ex2 = bl_op.apply(ex)  
+    
     """
     
     # traits
@@ -113,21 +129,24 @@ class BleedthroughLinearOp(HasStrictTraits):
     
     def estimate(self, experiment, subset = None): 
         """
-        Estimate the bleedthrough from simgle-channel controls in `controls`
+        Estimate the bleedthrough from simgle-channel controls in :attr:`controls`
         """
         if experiment is None:
-            raise util.CytoflowOpError("No experiment specified")
+            raise util.CytoflowOpError(None,
+                                       "No experiment specified")
         
         channels = list(self.controls.keys())
 
         if len(channels) < 2:
-            raise util.CytoflowOpError("Need at least two channels to correct bleedthrough.")
+            raise util.CytoflowOpError('channels',
+                                       "Need at least two channels to correct bleedthrough.")
 
         # make sure the control files exist
         for channel in channels:
             if not os.path.isfile(self.controls[channel]):
-                raise util.CytoflowOpError("Can't find file {0} for channel {1}."
-                                      .format(self.controls[channel], channel))
+                raise util.CytoflowOpError('channels',
+                                           "Can't find file {0} for channel {1}."
+                                           .format(self.controls[channel], channel))
                 
         for channel in channels:
             
@@ -146,13 +165,14 @@ class BleedthroughLinearOp(HasStrictTraits):
                 try:
                     tube_exp = tube_exp.query(subset)
                 except Exception as exc:
-                    raise util.CytoflowOpError("Subset string '{0}' isn't valid"
-                                          .format(self.subset)) from exc
+                    raise util.CytoflowOpError('subset',
+                                               "Subset string '{0}' isn't valid"
+                                               .format(self.subset)) from exc
                                 
                 if len(tube_exp.data) == 0:
-                    raise util.CytoflowOpError("Subset string '{0}' returned no events"
-                                          .format(self.subset))
-            
+                    raise util.CytoflowOpError('subset',
+                                               "Subset string '{0}' returned no events"
+                                               .format(self.subset))
             
             tube_data = tube_exp.data
                 
@@ -195,14 +215,27 @@ class BleedthroughLinearOp(HasStrictTraits):
         Parameters
         ----------
         experiment : Experiment
-            the old_experiment to which this op is applied
+            The experiment to which this operation is applied
             
         Returns
         -------
-            a new experiment with the bleedthrough subtracted out.
+        Experiment
+            A new :class:`Experiment` with the bleedthrough subtracted out.  
+            The corrected channels have the following metadata added:
+            
+            - **linear_bleedthrough** : Dict(Str : Float)
+              The values for spillover from other channels into this channel.
+        
+            - **bleedthrough_channels** : List(Str)
+              The channels that were used to correct this one.
+        
+            - **bleedthrough_fn** : Callable (Tuple(Float) --> Float)
+              The function that will correct one event in this channel.  Pass it
+              the values specified in `bleedthrough_channels` and it will return
+              the corrected value for this channel.
         """
         if experiment is None:
-            raise util.CytoflowOpError("No experiment specified")
+            raise util.CytoflowOpError('experiment', "No experiment specified")
         
         if not self.spillover:
             raise util.CytoflowOpError("Spillover matrix isn't set. "
@@ -251,7 +284,8 @@ class BleedthroughLinearOp(HasStrictTraits):
         
         Returns
         -------
-        IView : An IView, call plot() to see the diagnostic plots
+        IView
+            An IView, call :meth:`plot` to see the diagnostic plots
         """
  
         # the completely arbitrary ordering of the channels
@@ -270,11 +304,13 @@ class BleedthroughLinearDiagnostic(HasStrictTraits):
     
     Attributes
     ----------
-    name : Str
-        The instance name (for serialization, UI etc.)
-    
     op : Instance(BleedthroughPiecewiseOp)
-        The op whose parameters we're viewing
+        The operation whose parameters we're viewing.  If you made the instance
+        with :meth:`BleedthroughPLinearOp.default_view`, this is set for you
+        already.
+        
+    subset : str
+        If set, only plot this subset of the underlying data.
         
     """
     
@@ -288,16 +324,21 @@ class BleedthroughLinearDiagnostic(HasStrictTraits):
     op = Instance(IOperation)
     
     def plot(self, experiment = None, **kwargs):
-        """Plot a faceted histogram view of a channel"""
+        """
+        Plot a diagnostic of the bleedthrough model computation.
+        """
         
         if experiment is None:
-            raise util.CytoflowViewError("No experiment specified")
+            raise util.CytoflowViewError('experiment',
+                                         "No experiment specified")
 
         if not self.op.controls:
-            raise util.CytoflowViewError("No controls specified")
+            raise util.CytoflowViewError('op',
+                                         "No controls specified")
         
         if not self.op.spillover:
-            raise util.CytoflowViewError("No spillover matrix specified")
+            raise util.CytoflowViewError('op',
+                                         "No spillover matrix specified")
         
         kwargs.setdefault('histtype', 'stepfilled')
         kwargs.setdefault('alpha', 0.5)
@@ -337,14 +378,14 @@ class BleedthroughLinearDiagnostic(HasStrictTraits):
                     
                 tube_data = tube_exp.data
                 
-                xscale = util.scale_factory("logicle", tube_exp, channel = from_channel)
-                yscale = util.scale_factory("logicle", tube_exp, channel = to_channel)
+                xscale = util.scale_factory("log", tube_exp, channel = from_channel)
+                yscale = util.scale_factory("log", tube_exp, channel = to_channel)
 
                 plt.subplot(num_channels, 
                             num_channels, 
                             from_idx + (to_idx * num_channels) + 1)
-                plt.xscale('logicle', **xscale.mpl_params)
-                plt.yscale('logicle', **yscale.mpl_params)
+                plt.xscale('log', **xscale.mpl_params)
+                plt.yscale('log', **yscale.mpl_params)
                 plt.xlabel(from_channel)
                 plt.ylabel(to_channel)
                 plt.scatter(tube_data[from_channel],
