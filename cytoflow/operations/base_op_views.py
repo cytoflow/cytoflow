@@ -17,9 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 '''
-Created on Jul 30, 2017
-
-@author: brian
+cytoflow.operations.base_op_views
+---------------------------------
 '''
 
 from warnings import warn
@@ -82,6 +81,9 @@ class Op2DView(OpView, Base2DView):
 @provides(IView)
 class ByView(OpView):
     """
+    A view that can plot various plots based on the ``plot_name`` parameter
+    of :meth:`plot`.
+    
     Attributes
     ----------
     facets : List(String)
@@ -117,26 +119,31 @@ class ByView(OpView):
         """
                 
         if len(self.by) == 0 and len(self.facets) > 1:
-            raise util.CytoflowViewError("You can only facet this view if you "
+            raise util.CytoflowViewError('facets',
+                                         "You can only facet this view if you "
                                          "specify some variables in `by`")
         
         for facet in self.facets:
             if facet not in experiment.conditions:        
-                raise util.CytoflowViewError("Facet {} not in the experiment"
+                raise util.CytoflowViewError('facets',
+                                             "Facet {} not in the experiment"
                                             .format(facet))
             
             if facet not in self.by:
-                raise util.CytoflowViewError("Facet {} must be one of {}"
+                raise util.CytoflowViewError('facets',
+                                             "Facet {} must be one of {}"
                                              .format(facet, self.by))
                 
         if len(self.facets) != len(set(self.facets)):
-            raise util.CytoflowViewError("You can't reuse facets!")
+            raise util.CytoflowViewError('facets',
+                                         "You can't reuse facets!")
             
         for b in self.by:
             if b not in experiment.data:
-                raise util.CytoflowOpError("Aggregation metadata {} not found"
-                                      " in the experiment"
-                                      .format(b))
+                raise util.CytoflowOpError('by',
+                                           "Aggregation metadata {} not found"
+                                           " in the experiment"
+                                           .format(b))
                 
         if self.subset:
             try:
@@ -144,12 +151,14 @@ class ByView(OpView):
             except util.CytoflowError as e:
                 raise util.CytoflowViewError(str(e)) from e
             except Exception as e:
-                raise util.CytoflowViewError("Subset string '{0}' isn't valid"
-                                        .format(self.subset)) from e
+                raise util.CytoflowViewError('subset',
+                                             "Subset string '{0}' isn't valid"
+                                             .format(self.subset)) from e
                  
             if len(experiment) == 0:
-                raise util.CytoflowViewError("Subset string '{0}' returned no events"
-                                        .format(self.subset))
+                raise util.CytoflowViewError('subset',
+                                             "Subset string '{0}' returned no events"
+                                             .format(self.subset))
                 
         by = list(set(self.by) - set(self.facets)) 
         
@@ -178,40 +187,61 @@ class ByView(OpView):
         return plot_enum(by, experiment)
     
     def plot(self, experiment, **kwargs): 
+        """
+        Make the plot.
+        
+        Parameters
+        ----------
+        plot_name
+            If this :class:`IView` can make multiple plots, ``plot_name`` is
+            the name of the plot to make.  Must be one of the values retrieved
+            from :meth:`enum_plots`.
+        """
 
         if len(self.by) == 0 and len(self.facets) > 1:
-            raise util.CytoflowViewError("You can only facet this view if you "
+            raise util.CytoflowViewError('facets', 
+                                         "You can only facet this view if you "
                                          "specify some variables in `by`")
 
         for facet in self.facets:
             if facet not in experiment.conditions:        
-                raise util.CytoflowViewError("Facet {} not in the experiment"
-                                            .format(facet))
+                raise util.CytoflowViewError('facets',
+                                             "Facet {} not in the experiment"
+                                             .format(facet))
              
             if facet not in self.by:
-                raise util.CytoflowViewError("Facet {} must be one of {}"
+                raise util.CytoflowViewError('facets',
+                                             "Facet {} must be one of {}"
                                              .format(facet, self.by))
                 
         if len(self.facets) != len(set(self.facets)):
-            raise util.CytoflowViewError("You can't reuse facets!")
+            raise util.CytoflowViewError('facets',
+                                         "You can't reuse facets!")
             
         for b in self.by:
             if b not in experiment.data:
-                raise util.CytoflowOpError("Aggregation metadata {} not found"
-                                      " in the experiment"
-                                      .format(b))
+                raise util.CytoflowOpError('by',
+                                           "Aggregation metadata {} not found "
+                                           "in the experiment"
+                                           .format(b))
+        
+        # yes, this is going to happen again in BaseDataView, but we need to do
+        # it here to see if we're dropping any levels (via reset_index) before
+        # doing the groupby
         
         if self.subset:
             try:
                 experiment = experiment.query(self.subset)
                 experiment.data.reset_index(drop = True, inplace = True)
             except Exception as e:
-                raise util.CytoflowViewError("Subset string '{0}' isn't valid"
-                                        .format(self.subset)) from e
+                raise util.CytoflowViewError('subset',
+                                             "Subset string '{0}' isn't valid"
+                                             .format(self.subset)) from e
                 
             if len(experiment) == 0:
-                raise util.CytoflowViewError("Subset string '{0}' returned no events"
-                                        .format(self.subset))   
+                raise util.CytoflowViewError('subset',
+                                             "Subset string '{0}' returned no events"
+                                             .format(self.subset))   
                 
         # see if we're making subplots
         
@@ -220,7 +250,8 @@ class ByView(OpView):
         plot_name = kwargs.get('plot_name', None)
 
         if by and plot_name is None:
-            raise util.CytoflowViewError("You must use facets {} in either the "
+            raise util.CytoflowViewError('plot_name',
+                                         "You must use facets {} in either the "
                                          "plot facets or the plot name. "
                                          "Possible plot names: {}"
                                          .format(by, [x for x in self.enum_plots(experiment)]))
@@ -233,7 +264,8 @@ class ByView(OpView):
             groupby = experiment.data.groupby(by)
 
             if plot_name not in set(groupby.groups.keys()):
-                raise util.CytoflowViewError("Plot {} not from plot_enum"
+                raise util.CytoflowViewError('plot_name',
+                                             "Plot {} not from plot_enum"
                                              .format(plot_name))
                 
             experiment = experiment.clone()
@@ -262,19 +294,40 @@ class NullView(BaseDataView):
 
 @provides(IView)
 class AnnotatingView(BaseDataView):
-                 
+    """
+    A :class:`IView` that plots an underlying data plot, then plots some
+    annotations on top of it.  See :class:`~.GaussianMixture1DView` for an
+    example.  By default, it assumes that the annotations are to be plotted
+    in the same color as the view's :attr:`huefacet`, and sets :attr:`huefacet`
+    accordingly if the annotation isn't already set to a different facet.
+    
+    .. note::
+    
+        The ``annotation_facet`` and ``annotation_plot`` parameters that the
+        :meth:`plot` method consumes are only for internal use, which is why
+        they're not documented in the :meth:`plot` docstring.
+    """
+        
     def plot(self, experiment, **kwargs):
+        """
+        Parameters
+        ----------
+        color : matplotlib color
+            The color to plot the annotations.  Overrides the default color
+            cycle.
+        """
+        
         annotation_facet = kwargs.pop('annotation_facet', None)
         annotation_trait = kwargs.pop('annotation_trait', None)
                 
         if annotation_facet is not None and annotation_facet in experiment.data:
             if annotation_trait:
                 self.trait_set(**{annotation_trait : annotation_facet})
-            else:
+            elif not self.huefacet:
                 warn("Setting 'huefacet' to '{}'".format(annotation_facet),
                      util.CytoflowViewWarning)
                 annotation_trait = 'huefacet'
-                self.trait_set(**{'huefacet' : annotation_facet})                
+                self.trait_set(**{'huefacet' : annotation_facet})           
                       
         super().plot(experiment,
                      annotation_facet = annotation_facet,

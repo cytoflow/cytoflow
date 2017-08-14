@@ -83,6 +83,16 @@ class BaseView(HasStrictTraits):
             If `xfacet` is set and `yfacet` is not set, you can "wrap" the
             subplots around so that they form a multi-row grid by setting
             `col_wrap` to the number of columns you want. 
+
+        Other Parameters
+        ----------------
+        cmap : matplotlib colormap
+            If plotting a huefacet with many values, use this color map instead
+            of the default.
+            
+        norm : matplotlib.colors.Normalize
+            If plotting a huefacet with many values, use this object for color
+            scale normalization.
         """
 
         col_wrap = kwargs.pop('col_wrap', None)
@@ -209,6 +219,9 @@ class BaseView(HasStrictTraits):
         raise NotImplementedError("You must override _grid_plot in a derived class")
         
 class BaseDataView(BaseView):
+    """
+    The base class for data views (as opposed to statistics views).
+    """
 
     subset = Str
     
@@ -254,11 +267,34 @@ class BaseDataView(BaseView):
         
 
 class Base1DView(BaseDataView):
+    """
+    A data view that plots data from a single channel.
+    
+    Attributes
+    ----------
+    channel : Str
+        The channel to view
+        
+    scale : {'linear', 'log', 'logicle'}
+        The scale applied to the data before plotting it.
+    """
     
     channel = Str
     scale = util.ScaleEnum
     
     def plot(self, experiment, **kwargs):
+        """
+        Parameters
+        ----------
+        min_quantile : float (>0.0 and <1.0, default = 0.001)
+            Clip data that is less than this quantile.
+            
+        max_quantile : float (>0.0 and <1.0, default = 1.00)
+            Clip data that is greater than this quantile.
+            
+        xlim : (float, float)
+            Set the range of the plot's axis.
+        """
         
         if experiment is None:
             raise util.CytoflowViewError("No experiment specified")
@@ -299,6 +335,17 @@ class Base1DView(BaseDataView):
     
 
 class Base2DView(BaseDataView):
+    """
+    A data view that plots data from two channels.
+    
+    Attributes
+    ----------
+    xchannel, ychannel : Str
+        The schannel to view
+        
+    xscale, yscale : {'linear', 'log', 'logicle'}
+        The scales applied to the data before plotting it.
+    """
     
     xchannel = Str
     xscale = util.ScaleEnum
@@ -306,6 +353,18 @@ class Base2DView(BaseDataView):
     yscale = util.ScaleEnum
 
     def plot(self, experiment, **kwargs):
+        """
+        Parameters
+        ----------
+        min_quantile : float (>0.0 and <1.0, default = 0.001)
+            Clip data that is less than this quantile.
+            
+        max_quantile : float (>0.0 and <1.0, default = 1.00)
+            Clip data that is greater than this quantile.
+            
+        xlim, ylim : (float, float)
+            Set the range of the plot's axis.
+        """
 
         if experiment is None:
             raise util.CytoflowViewError("No experiment specified")
@@ -373,6 +432,21 @@ class BaseNDView(BaseView):
 
 @provides(IView)
 class BaseStatisticsView(BaseView):
+    """
+    The base class for statisticxs views (as opposed to data views).
+    
+    Attributes
+    ----------
+    variable : str
+        The condition that varies when plotting this statistic: used for the
+        x axis of line plots, the bar groups in bar plots, etc.
+        
+    subset : str
+        An expression that specifies the subset of the statistic to plot.
+        
+    xscale, yscale : {'linear', 'log', 'logicle'}
+        The scales applied to the data before plotting it.
+    """
     
     # deprecated or removed attributes give warnings & errors, respectively
     by = util.Deprecated(new = 'variable', err_string = "'by' is deprecated, please use 'variable'")
@@ -385,7 +459,7 @@ class BaseStatisticsView(BaseView):
     
     def enum_plots(self, experiment, data):
         """
-        Enumerate the named plots we can make from this set of statistics
+        Enumerate the named plots we can make from this set of statistics.
         """
         
         if not self.variable:
@@ -425,9 +499,10 @@ class BaseStatisticsView(BaseView):
     
     def plot(self, experiment, data, plot_name = None, **kwargs):
         """
-        Plot some data from a statistic.  This function takes care of
-        checking for facet name validity and subsetting, then passes the
-        dataframe to `BaseView.plot`
+        Plot some data from a statistic.
+        
+        This function takes care of checking for facet name validity and 
+        subsetting, then passes the dataframe to `BaseView.plot`
         """
         
         if not self.variable:
@@ -516,6 +591,22 @@ class BaseStatisticsView(BaseView):
         return data, facets, names
 
 class Base1DStatisticsView(BaseStatisticsView):
+    """
+    The base class for 1-dimensional statistic views -- ie, the :attr:`variable`
+    attribute is on the x axis, and the statistic value is on the y axis.
+    
+    Attributes
+    ----------
+    statistic : (str, str)
+        The name of the statistic to plot.  Must be a key in the  
+        :attr:`~Experiment.statistics` attribute of the :class:`~.Experiment`
+        being plotted.
+        
+    error_statistic : (str, str)
+        The name of the statistic used to plot error bars.  Must be a key in the
+        :attr:`~Experiment.statistics` attribute of the :class:`~.Experiment`
+        being plotted.
+    """
     
     REMOVED_ERROR = "Statistics changed dramatically in 0.5; please see the documentation"
     by = util.Removed(err_string = REMOVED_ERROR)
@@ -596,6 +687,23 @@ class Base1DStatisticsView(BaseStatisticsView):
         return data
 
 class Base2DStatisticsView(BaseStatisticsView):
+    """
+    The base class for 2-dimensional statistic views -- ie, the :attr:`variable`
+    attribute varies independently, and the corresponding values from the x and
+    y statistics are plotted on the x and y axes.
+    
+    Attributes
+    ----------
+    xstatistic, ystatistic : (str, str)
+        The name of the statistics to plot.  Must be a keys in the  
+        :attr:`~Experiment.statistics` attribute of the :class:`~.Experiment`
+        being plotted.
+        
+    x_error_statistic, y_error_statistic : (str, str)
+        The name of the statistics used to plot error bars.  Must be keys in the
+        :attr:`~Experiment.statistics` attribute of the :class:`~.Experiment`
+        being plotted.
+    """
 
     STATS_REMOVED = "{} has been removed. Statistics changed dramatically in 0.5; please see the documentation."
     
