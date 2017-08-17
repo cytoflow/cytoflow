@@ -17,9 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 '''
-Created on Sep 13, 2016
-
-@author: brian
+cytoflow.operations.channel_stat
+--------------------------------
 '''
 from warnings import warn
 import pandas as pd
@@ -38,48 +37,50 @@ class ChannelStatisticOp(HasStrictTraits):
     Apply a function to subsets of a data set, and add it as a statistic
     to the experiment.
     
-    The `apply()` function groups the data by the variables in `by`, then
-    applies the `function` callable to the `channel` series in each subset.  
-    The callable should take a single Series as an argument.  The return type
-    is arbitrary, but to be used with the rest of `Cytoflow` it should probably
-    be a numeric type or an iterable of numeric types.
+    The :meth:`apply` function groups the data by the variables in :attr:`by`, 
+    then applies the :attr:`function` callable to the :attr:`channel` series 
+    in each subset.  The callable should take a single :class:`pandas.Series` 
+    as an argument.  The return type is arbitrary, but to be used with the rest 
+    of :mod:`cytoflow` it should probably be a numeric type or an iterable of 
+    numeric types.
     
     Attributes
     ----------
     name : Str
         The operation name.  Becomes the first element in the
-        Experiment.statistics key tuple.
+        :attr:`.Experiment.statistics` key tuple.
     
     channel : Str
         The channel to apply the function to.
         
     function : Callable
-        The function used to compute the statistic.  `function` must take a 
-        Series as its only parameter.  The return type is arbitrary, but to be 
-        used with the rest of `Cytoflow` it should probably be a numeric type or
-        an iterable of numeric types..  If `statistic_name` is unset, the name 
-        of the function becomes the second in element in the 
-        Experiment.statistics key tuple.
+        The function used to compute the statistic.  :attr:`function` must take 
+        a :class:`pandas.Series` as its only parameter.  The return type is 
+        arbitrary, but to be used with the rest of :mod:`cytoflow` it should 
+        probably be a numeric type or an iterable of numeric types.  If 
+        :attr:`statistic_name` is unset, the name of the function becomes the 
+        second in element in the :attr:`.Experiment.statistics` key tuple.
         
-        Be careful!  Sometimes this function is called with an empty input!
-        If this is the case, poorly-behaved functions can return NaN or throw
-        an error.  If this happens, it will be reported.
+        .. warning::
+            Be careful!  Sometimes this function is called with an empty input!
+            If this is the case, poorly-behaved functions can return ``NaN`` or 
+            throw an error.  If this happens, it will be reported.
         
     statistic_name : Str
         The name of the function; if present, becomes the second element in
-        the Experiment.statistics key tuple.  Particularly useful if `function`
-        is a lambda.
+        the :attr:`.Experiment.statistics` key tuple.  Particularly useful if 
+        :attr:`function` is a lambda expression.
         
     by : List(Str)
         A list of metadata attributes to aggregate the data before applying the
         function.  For example, if the experiment has two pieces of metadata,
-        `Time` and `Dox`, setting `by = ["Time", "Dox"]` will apply `function` 
-        separately to each subset of the data with a unique combination of
-        `Time` and `Dox`.
+        ``Time`` and ``Dox``, setting ``by = ["Time", "Dox"]`` will apply 
+        :attr:`function` separately to each subset of the data with a unique 
+        combination of ``Time`` and ``Dox``.
         
     subset : Str
-        A Python expression sent to Experiment.query() to subset the data before
-        computing the statistic.
+        A Python expression sent to :meth:`.Experiment.query` to subset the 
+        data before computing the statistic.
         
     fill : Any (default = 0)
         The value to use in the statistic if a slice of the data is empty.
@@ -87,11 +88,42 @@ class ChannelStatisticOp(HasStrictTraits):
     Examples
     --------
     
-    >>> stats_op = ChannelStatisticOp(name = "Mean",
-    ...                           channel = "Y2-A",
-    ...                           function = np.mean,
-    ...                           by = ["Dox"])
-    >>> ex2 = stats_op.apply(ex)
+    .. plot::
+        :context: close-figs
+        
+        Make a little data set.
+    
+        >>> import cytoflow as flow
+        >>> import_op = flow.ImportOp()
+        >>> import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",
+        ...                              conditions = {'Dox' : 10.0}),
+        ...                    flow.Tube(file = "Plate01/CFP_Well_A4.fcs",
+        ...                              conditions = {'Dox' : 1.0})]
+        >>> import_op.conditions = {'Dox' : 'float'}
+        >>> ex = import_op.apply()
+    
+    Create and parameterize the operation.
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> ch_op = flow.ChannelStatisticOp(name = 'MeanByDox',
+        ...                     channel = 'Y2-A',
+        ...                     function = flow.geom_mean,
+        ...                     by = ['Dox'])
+        >>> ex2 = ch_op.apply(ex)
+        
+    View the new operation
+    
+    >>> print(ex2.statistics.keys())
+    dict_keys([('MeanByDox', 'geom_mean')])
+
+    >>> print(ex2.statistics[('MeanByDox', 'geom_mean')])
+    Dox
+    1.0      19.805601
+    10.0    446.981927
+    dtype: float64
+
     """
     
     id = Constant('edu.mit.synbio.cytoflow.operations.channel_statistic')
@@ -106,24 +138,43 @@ class ChannelStatisticOp(HasStrictTraits):
     fill = Any(0)
     
     def apply(self, experiment):
+        """
+        Apply the operation to an :class:`.Experiment`.
+        
+        Parameters
+        ----------
+        experiment
+            The :class:`.Experiment` to apply this operation to.
+            
+        Returns
+        -------
+        Experiment
+            A new :class:`.Experiment`, containing a new entry in 
+            :attr:`.Experiment.statistics`.  The key of the new entry is a 
+            tuple ``(name, function)`` (or ``(name, statistic_name)`` if 
+            :attr:`statistic_name` is set.
+        """
+        
         if experiment is None:
-            raise util.CytoflowOpError("Must specify an experiment")
+            raise util.CytoflowOpError(None, "Must specify an experiment")
 
         if not self.name:
-            raise util.CytoflowOpError("Must specify a name")
+            raise util.CytoflowOpError('name', "Must specify a name")
         
         if not self.channel:
-            raise util.CytoflowOpError("Must specify a channel")
+            raise util.CytoflowOpError('channel', "Must specify a channel")
 
         if not self.function:
-            raise util.CytoflowOpError("Must specify a function")
+            raise util.CytoflowOpError('function', "Must specify a function")
 
         if self.channel not in experiment.data:
-            raise util.CytoflowOpError("Channel {0} not found in the experiment"
-                                  .format(self.channel))
+            raise util.CytoflowOpError('channel',
+                                       "Channel {0} not found in the experiment"
+                                       .format(self.channel))
             
         if not self.by:
-            raise util.CytoflowOpError("Must specify some grouping conditions "
+            raise util.CytoflowOpError('by',
+                                       "Must specify some grouping conditions "
                                        "in 'by'")
 
         new_experiment = experiment.clone()
@@ -131,23 +182,28 @@ class ChannelStatisticOp(HasStrictTraits):
             try:
                 experiment = experiment.query(self.subset)
             except Exception as exc:
-                raise util.CytoflowOpError("Subset string '{0}' isn't valid".format(self.subset)) from exc
+                raise util.CytoflowOpError('subset',
+                                           "Subset string '{0}' isn't valid"
+                                           .format(self.subset)) from exc
                 
             if len(experiment) == 0:
-                raise util.CytoflowOpError("Subset string '{0}' returned no events"
-                                        .format(self.subset))
+                raise util.CytoflowOpError('subset',
+                                           "Subset string '{0}' returned no events"
+                                           .format(self.subset))
        
         for b in self.by:
             if b not in experiment.data:
-                raise util.CytoflowOpError("Aggregation metadata {} not found"
-                                      " in the experiment"
-                                      .format(b))
+                raise util.CytoflowOpError('by',
+                                           "Aggregation metadata {} not found"
+                                           " in the experiment"
+                                           .format(b))
             unique = experiment.data[b].unique()
-            if len(unique) > 100: #WARNING - magic number
-                raise util.CytoflowOpError("More than 100 unique values found for"
-                                      " aggregation metadata {}.  Did you"
-                                      " accidentally specify a data channel?"
-                                      .format(b))
+            if len(unique) > 100: #TODO - magic number
+                raise util.CytoflowOpError('by',
+                                           "More than 100 unique values found for"
+                                           " aggregation metadata {}.  Did you"
+                                           " accidentally specify a data channel?"
+                                           .format(b))
             if len(unique) == 1:
                 warn("Only one category for {}".format(b), util.CytoflowOpWarning)
 
@@ -173,12 +229,14 @@ class ChannelStatisticOp(HasStrictTraits):
             try:
                 stat.loc[group] = self.function(data_subset[self.channel])
             except Exception as e:
-                raise util.CytoflowOpError("Your function threw an error in group {}"
+                raise util.CytoflowOpError(None,
+                                           "Your function threw an error in group {}"
                                            .format(group)) from e
             
             # check for, and warn about, NaNs.
             if np.any(np.isnan(stat.loc[group])):
-                warn("Category {} returned {}".format(group, stat.loc[group]), 
+                warn("Found NaN in category {} returned {}"
+                     .format(group, stat.loc[group]), 
                      util.CytoflowOpWarning)
                     
         # try to convert to numeric, but if there are non-numeric bits ignore

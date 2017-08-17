@@ -285,7 +285,7 @@ class BleedthroughLinearOp(HasStrictTraits):
         Returns
         -------
         IView
-            An IView, call :meth:`plot` to see the diagnostic plots
+            An IView, call :meth:`~BleedthroughLinearDiagnostic.plot` to see the diagnostic plots
         """
  
         # the completely arbitrary ordering of the channels

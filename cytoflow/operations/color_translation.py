@@ -17,9 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 '''
-Created on Sep 2, 2015
-
-@author: brian
+cytoflow.operations.color_translation
+-------------------------------------
 '''
 import math
 
@@ -41,54 +40,81 @@ class ColorTranslationOp(HasStrictTraits):
     Translate measurements from one color's scale to another, using a two-color
     or three-color control.
     
-    To use, set up the `channels` dict with the desired mapping and the 
-    `controls` dict with the multi-color controls.  Call `estimate()` to
-    paramterize the module; check that the plots look good with 
-    `default_view().plot()`; then `apply()` to an Experiment.
+    To use, set up the :attr:`controls` dictionary with the channels to convert
+    and the FCS files to compute the mapping.  Call :meth:`estimate` to
+    paramterize the module; check that the plots look good by calling the 
+    :meth:`~ColorTranslationDiagnostic.plot` method of the 
+    :class:`ColorTranslationDiagnostic` instance returned by :meth:`default_view`;
+    then call :meth:`apply` to apply the translation to an :class:`.Experiment`.
     
     Attributes
     ----------
-    name : Str
-        The operation name (for UI representation; optional for interactive use)
-        
     controls : Dict((Str, Str), File)
         Two-color controls used to determine the mapping.  They keys are 
-        tuples of *from-channel* and *to-channel*.  The values are FCS files 
+        tuples of **from-channel** and **to-channel**.  The values are FCS files 
         containing two-color constitutive fluorescent expression data 
         for the mapping.
         
     mixture_model : Bool (default = False)
-        If "True", try to model the "from" channel as a mixture of expressing
+        If ``True``, try to model the **from** channel as a mixture of expressing
         cells and non-expressing cells (as you would get with a transient
-        transfection.)  Make sure you check the diagnostic plots!
-        
-    Metadata
-    --------
-    channel_translation : Str
-        Which channel was this one translated to?
-        
-    channel_translation_fn : Callable (pandas.Series --> pandas.Series)
-        The function that translated this channel
+        transfection), then weight the regression by the probability that the
+        the cell is from the top (transfected) distribution.  Make sure you 
+        check the diagnostic plots to see that this worked!
+
         
     Notes
     -----
     In the TASBE workflow, this operation happens *after* the application of
-    `AutofluorescenceOp` and `BleedthroughPiecewiseOp`.  Both must be applied
-    to the single-color controls before the translation coefficients are
-    estimated; the autofluorescence and bleedthrough parameters for each channel 
-    are retrieved from the channel metadata and applied in `estimate()`.
+    :class:`.AutofluorescenceOp` and :class:`.BleedthroughLinearOp`.  The entire
+    operation history of the :class:`.Experiment` that is passed to 
+    :meth:`estimate` is replayed on the control files in :attr:`controls`, so
+    they are also corrected for autofluorescence and bleedthrough, and have
+    metadata for subsetting.
     
 
     Examples
     --------
-    >>> ct_op = flow.ColorTranslationOp()
-    >>> ct_op.controls = {("Pacific Blue-A", "FITC-A") : "merged/rby.fcs",
-    ...                   ("PE-Tx-Red-YG-A", "FITC-A") : "merged/rby.fcs"}
-    >>> ct_op.mixture_model = True
-    >>>
-    >>> ct_op.estimate(ex4)
-    >>> ct_op.default_view().plot(ex4)
-    >>> ex5 = ct_op.apply(ex4)
+    Create a small experiment:
+    
+    .. plot::
+        :context: close-figs
+    
+        >>> import cytoflow as flow
+        >>> import_op = flow.ImportOp()
+        >>> import_op.tubes = [flow.Tube(file = "tasbe/mkate.fcs")]
+        >>> ex = import_op.apply()
+    
+    Create and parameterize the operation
+    
+    .. plot::
+        :context: close-figs
+
+        >>> color_op = flow.ColorTranslationOp()
+        >>> color_op.controls = {("Pacific Blue-A", "FITC-A") : "tasbe/rby.fcs",
+        ...                      ("PE-Tx-Red-YG-A", "FITC-A") : "tasbe/rby.fcs"}
+        >>> color_op.mixture_model = True
+    
+    Estimate the model parameters
+    
+    .. plot::
+        :context: close-figs 
+    
+        >>> color_op.estimate(ex)
+    
+    Plot the diagnostic plot
+    
+    .. plot::
+        :context: close-figs
+
+        >>> color_op.default_view().plot(ex)  
+
+    Apply the operation to the experiment
+    
+    .. plot::
+        :context: close-figs
+    
+        >>> ex = color_op.apply(ex)  
     """
     
     # traits
@@ -114,13 +140,26 @@ class ColorTranslationOp(HasStrictTraits):
     def estimate(self, experiment, subset = None): 
         """
         Estimate the mapping from the two-channel controls
+        
+        Parameters
+        ----------
+        experiment : Experiment
+            The :class:`.Experiment` used to check the voltages, etc. of the
+            control tubes.  Also the source of the operation history that
+            is replayed on the control tubes.
+            
+        subset : Str
+            A Python expression used to subset the controls before estimating
+            the color translation parameters.
         """
 
         if experiment is None:
-            raise util.CytoflowOpError("No experiment specified")
+            raise util.CytoflowOpError(None,
+                                       "No experiment specified")
         
         if not self.controls:
-            raise util.CytoflowOpError("No controls specified")
+            raise util.CytoflowOpError('controls',
+                                       "No controls specified")
 
         tubes = {}
         
@@ -159,11 +198,13 @@ class ColorTranslationOp(HasStrictTraits):
                     try:
                         tube_exp = tube_exp.query(subset)
                     except Exception as e:
-                        raise util.CytoflowOpError("Subset string '{0}' isn't valid"
+                        raise util.CytoflowOpError(None,
+                                                   "Subset string '{0}' isn't valid"
                                               .format(subset)) from e
                                     
                     if len(tube_exp.data) == 0:
-                        raise util.CytoflowOpError("Subset string '{0}' returned no events"
+                        raise util.CytoflowOpError(None,
+                                                   "Subset string '{0}' returned no events"
                                               .format(subset))
                 
                 tube_data = tube_exp.data                
@@ -242,27 +283,36 @@ class ColorTranslationOp(HasStrictTraits):
             
         Returns
         -------
-            a new experiment with the color translation applied.
+        Experiment 
+            a new experiment with the color translation applied.  The corrected
+            channels also have the following new metadata:
+    
+            **channel_translation** : Str
+            Which channel was this one translated to?
+        
+            **channel_translation_fn** : Callable (pandas.Series --> pandas.Series)
+            The function that translated this channel
         """
 
         if experiment is None:
-            raise util.CytoflowOpError("No experiment specified")
+            raise util.CytoflowOpError(None, "No experiment specified")
         
         if not self.controls:
-            raise util.CytoflowOpError("No controls specified")
+            raise util.CytoflowOpError(None, "No controls specified")
         
         if not self._trans_fn:
-            raise util.CytoflowOpError("Transfer functions aren't set. "
-                                  "Did you call estimate()?")
+            raise util.CytoflowOpError(None, "Transfer functions aren't set. "
+                                       "Did you forget to call estimate()?")
             
         translation = {x[0] : x[1] for x in list(self.controls.keys())}
         from_channels = [x[0] for x in list(self.controls.keys())]
 
         for key, val in translation.items():
             if (key, val) not in self._coefficients:
-                raise util.CytoflowOpError("Coefficients aren't set for translation "
-                                      "{1} --> {2}.  Did you call estimate()?"
-                                      .format(key, val))
+                raise util.CytoflowOpError(None,
+                                           "Coefficients aren't set for translation "
+                                           "{1} --> {2}.  Did you call estimate()?"
+                                           .format(key, val))
                        
         new_experiment = experiment.clone()
         
@@ -288,7 +338,9 @@ class ColorTranslationOp(HasStrictTraits):
         
         Returns
         -------
-            IView : An IView, call plot() to see the diagnostic plots
+        IView
+            A diagnostic view, call :meth:`ColorTranslationDiagnostic.plot` to 
+            see the diagnostic plots
         """
 
         return ColorTranslationDiagnostic(op = self, **kwargs)
@@ -303,6 +355,10 @@ class ColorTranslationDiagnostic(HasStrictTraits):
     
     op : Instance(ColorTranslationOp)
         The op whose parameters we're viewing
+        
+    subset : str
+        A Python expression specifying a subset of the events in the control 
+        FCS files to plot
     """
     
     # traits   
@@ -317,17 +373,25 @@ class ColorTranslationDiagnostic(HasStrictTraits):
     def plot(self, experiment, **kwargs):
         """
         Plot the plots
+        
+        Parameters
+        ----------
+        experiment : Experiment
+            
         """
         
         if experiment is None:
-            raise util.CytoflowViewError("No experiment specified")
+            raise util.CytoflowViewError(None,
+                                         "No experiment specified")
         
         if not self.op.controls:
-            raise util.CytoflowViewError("No controls specified")
+            raise util.CytoflowViewError(None,
+                                         "No controls specified")
         
         if not self.op._trans_fn:
-            raise util.CytoflowViewError("Transfer functions aren't set. "
-                                  "Did you call estimate()?")
+            raise util.CytoflowViewError(None,
+                                         "Transfer functions aren't set. "
+                                         "Did you forget to call estimate()?")
 
         tubes = {}
         
@@ -340,8 +404,9 @@ class ColorTranslationDiagnostic(HasStrictTraits):
         for from_channel, to_channel in translation.items():
             
             if (from_channel, to_channel) not in self.op.controls:
-                raise util.CytoflowViewError("Control file for {0} --> {1} not specified"
-                                   .format(from_channel, to_channel))
+                raise util.CytoflowViewError(None,
+                                             "Control file for {0} --> {1} not specified"
+                                             .format(from_channel, to_channel))
             tube_file = self.op.controls[(from_channel, to_channel)]
             
             if tube_file not in tubes: 
@@ -365,12 +430,14 @@ class ColorTranslationDiagnostic(HasStrictTraits):
                     try:
                         tube_exp = tube_exp.query(self.subset)
                     except Exception as e:
-                        raise util.CytoflowViewError("Subset string '{0}' isn't valid"
-                                              .format(self.subset)) from e
+                        raise util.CytoflowViewError('subset',
+                                                     "Subset string '{0}' isn't valid"
+                                                     .format(self.subset)) from e
                                     
                     if len(tube_exp.data) == 0:
-                        raise util.CytoflowViewError("Subset string '{0}' returned no events"
-                                              .format(self.subset))
+                        raise util.CytoflowViewError('subset',
+                                                     "Subset string '{0}' returned no events"
+                                                     .format(self.subset))
                 
                 tube_data = tube_exp.data                
 

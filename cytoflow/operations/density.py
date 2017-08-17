@@ -17,9 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 '''
-Created on Dec 16, 2015
-
-@author: brian
+cytoflow.operations.density
+---------------------------
 '''
 
 from traits.api import (HasStrictTraits, Str, CStr, Dict, Any, Instance, 
@@ -50,19 +49,19 @@ class DensityGateOp(HasStrictTraits):
         The operation name; determines the name of the new metadata column
         
     xchannel : Str
-        The X channel to apply the mixture model to.
+        The X channel to apply the binning to.
         
     ychannel : Str
-        The Y channel to apply the mixture model to.
+        The Y channel to apply the binning to.
 
-    xscale : Enum("linear", "logicle", "log") (default = "linear")
+    xscale : {"linear", "logicle", "log"} (default = "linear")
         Re-scale the data on the X acis before fitting the data?  
 
-    yscale : Enum("linear", "logicle", "log") (default = "linear")
+    yscale : {"linear", "logicle", "log"} (default = "linear")
         Re-scale the data on the Y axis before fitting the data?  
         
     keep : Float (default = 0.9)
-        What proportion of events to keep?  Must be positive.
+        What proportion of events to keep?  Must be ``>0`` and ``<1`` 
         
     bins : Int (default = 100)
         How many bins should there be on each axis?  Must be positive.
@@ -79,9 +78,9 @@ class DensityGateOp(HasStrictTraits):
     by : List(Str)
         A list of metadata attributes to aggregate the data before estimating
         the model.  For example, if the experiment has two pieces of metadata,
-        `Time` and `Dox`, setting `by = ["Time", "Dox"]` will fit the model 
+        ``Time`` and ``Dox``, setting ``by = ["Time", "Dox"]`` will fit the model 
         separately to each subset of the data with a unique combination of
-        `Time` and `Dox`.
+        ``Time`` and ``Dox``.
         
     Notes
     -----
@@ -112,13 +111,53 @@ class DensityGateOp(HasStrictTraits):
     Examples
     --------
     
-    >>> density_op = DensityGateOp(name = "Density",
-    ...                            xchannel = "V2-A",
-    ...                            ychannel = "Y2-A",
-    ...                            keep = 0.7)
-    >>> density_op.estimate(ex2)
-    >>> density_op.default_view().plot(ex2)
-    >>> ex3 = density_op.apply(ex2)
+    .. plot::
+        :context: close-figs
+        
+        Make a little data set.
+    
+        >>> import cytoflow as flow
+        >>> import_op = flow.ImportOp()
+        >>> import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",
+        ...                              conditions = {'Dox' : 10.0}),
+        ...                    flow.Tube(file = "Plate01/CFP_Well_A4.fcs",
+        ...                              conditions = {'Dox' : 1.0})]
+        >>> import_op.conditions = {'Dox' : 'float'}
+        >>> ex = import_op.apply()
+    
+    Create and parameterize the operation.
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> dens_op = flow.DensityGateOp(name = 'Density',
+        ...                              xchannel = 'FSC-A',
+        ...                              xscale = 'log',
+        ...                              ychannel = 'SSC-A',
+        ...                              yscale = 'log',
+        ...                              keep = 0.7)
+        
+    Find the bins to keep
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> dens_op.estimate(ex)
+        
+    Plot a diagnostic view
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> dens_op.default_view().plot(ex)
+        
+    Apply the gate
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> ex2 = dens_op.apply(ex)
+        
     """
     
     id = Constant('edu.mit.synbio.cytoflow.operations.density')
@@ -148,52 +187,72 @@ class DensityGateOp(HasStrictTraits):
     
     def estimate(self, experiment, subset = None):
         """
-        Estimate the Gaussian mixture model parameters
+        Split the data set into bins and determine which ones to keep.
+        
+        Parameters
+        ----------
+        experiment : Experiment
+            The :class:`.Experiment` to use to estimate the gate parameters.
+            
+        subset : Str (default = None)
+            If set, determine the gate parameters on only a subset of the
+            ``experiment`` parameter.
         """
         
         if experiment is None:
-            raise util.CytoflowOpError("No experiment specified")
+            raise util.CytoflowOpError(None,
+                                       "No experiment specified")
 
         if self.xchannel not in experiment.data:
-            raise util.CytoflowOpError("Column {0} not found in the experiment"
-                                  .format(self.xchannel))
+            raise util.CytoflowOpError('xchannel',
+                                       "Column {0} not found in the experiment"
+                                       .format(self.xchannel))
             
         if self.ychannel not in experiment.data:
-            raise util.CytoflowOpError("Column {0} not found in the experiment"
-                                  .format(self.ychannel))
+            raise util.CytoflowOpError('ychannel',
+                                       "Column {0} not found in the experiment"
+                                       .format(self.ychannel))
+
+        if self.min_quantile > 1.0:
+            raise util.CytoflowOpError('min_quantile',
+                                       "min_quantile must be <= 1.0")
             
-        if self.max_quantile > 1.0 or self.min_quantile > 1.0:
-            raise util.CytoflowOpError("min_quantile and max_quantile must be <= 1.0")
+        if self.max_quantile > 1.0:
+            raise util.CytoflowOpError('max_quantile',
+                                       "max_quantile must be <= 1.0")
                
         if not (self.max_quantile > self.min_quantile):
-            raise util.CytoflowOpError("max_quantile must be > min_quantile")
-        
-        if self.sigma < 0.0:
-            raise util.CytoflowOpError("sigma must be >= 0.0")
+            raise util.CytoflowOpError('max_quantile',
+                                       "max_quantile must be > min_quantile")
         
         if self.keep > 1.0:
-            raise util.CytoflowOpError("keep must be <= 1.0")
+            raise util.CytoflowOpError('keep',
+                                       "keep must be <= 1.0")
 
         for b in self.by:
             if b not in experiment.data:
-                raise util.CytoflowOpError("Aggregation metadata {0} not found"
-                                      " in the experiment"
-                                      .format(b))
+                raise util.CytoflowOpError('by',
+                                           "Aggregation metadata {0} not found"
+                                           " in the experiment"
+                                           .format(b))
             if len(experiment.data[b].unique()) > 100: #WARNING - magic number
-                raise util.CytoflowOpError("More than 100 unique values found for"
-                                      " aggregation metadata {0}.  Did you"
-                                      " accidentally specify a data channel?"
-                                      .format(b))
+                raise util.CytoflowOpError('by',
+                                           "More than 100 unique values found for"
+                                           " aggregation metadata {0}.  Did you"
+                                           " accidentally specify a data channel?"
+                                           .format(b))
                 
         if subset:
             try:
                 experiment = experiment.query(subset)
             except:
-                raise util.CytoflowViewError("Subset string '{0}' isn't valid"
+                raise util.CytoflowViewError(None,
+                                             "Subset string '{0}' isn't valid"
                                         .format(subset))
                 
             if len(experiment) == 0:
-                raise util.CytoflowViewError("Subset string '{0}' returned no events"
+                raise util.CytoflowViewError(None,
+                                             "Subset string '{0}' returned no events"
                                         .format(subset))
                 
         if self.by:
@@ -225,7 +284,8 @@ class DensityGateOp(HasStrictTraits):
                     
         for group, group_data in groupby:
             if len(group_data) == 0:
-                raise util.CytoflowOpError("Group {} had no data"
+                raise util.CytoflowOpError('by',
+                                           "Group {} had no data"
                                            .format(group))
 
             h, _, _ = np.histogram2d(group_data[self.xchannel], 
@@ -254,57 +314,79 @@ class DensityGateOp(HasStrictTraits):
             
     def apply(self, experiment):
         """
-        Assigns new metadata to events using the mixture model estimated
-        in `estimate`.
+        Creates a new condition based on membership in the gate that was
+        parameterized with :meth:`estimate`.
+        
+        Parameters
+        ----------
+        experiment : Experiment
+            the :class:`.Experiment` to apply the gate to.
+            
+        Returns
+        -------
+        Experiment
+            a new :class:`.Experiment` with the new gate applied.
         """
             
         if experiment is None:
-            raise util.CytoflowOpError("No experiment specified")
+            raise util.CytoflowOpError(None,
+                                       "No experiment specified")
         
         if not self.xchannel:
-            raise util.CytoflowOpError("Must set X channel")
+            raise util.CytoflowOpError('xchannel',
+                                       "Must set X channel")
 
         if not self.ychannel:
-            raise util.CytoflowOpError("Must set Y channel")
+            raise util.CytoflowOpError('ychannel',
+                                       "Must set Y channel")
         
         # make sure name got set!
         if not self.name:
-            raise util.CytoflowOpError("You have to set the gate's name "
-                                  "before applying it!")
+            raise util.CytoflowOpError('name',
+                                       "You have to set the gate's name "
+                                       "before applying it!")
 
         if self.name in experiment.data.columns:
-            raise util.CytoflowOpError("Experiment already has a column named {0}"
-                                  .format(self.name))
+            raise util.CytoflowOpError('name',
+                                       "Experiment already has a column named {0}"
+                                       .format(self.name))
         
         if not (self._xbins.size and self._ybins.size and self._keep_xbins):
-            raise util.CytoflowOpError("No gate estimate found.  Did you forget to "
-                                  "call estimate()?")
+            raise util.CytoflowOpError(None,
+                                       "No gate estimate found.  Did you forget to "
+                                       "call estimate()?")
 
         if not self._xscale:
-            raise util.CytoflowOpError("Couldn't find _xscale.  What happened??")
+            raise util.CytoflowOpError(None,
+                                       "Couldn't find _xscale.  What happened??")
         
         if not self._yscale:
-            raise util.CytoflowOpError("Couldn't find _yscale.  What happened??")
+            raise util.CytoflowOpError(None,
+                                       "Couldn't find _yscale.  What happened??")
 
         if self.xchannel not in experiment.data:
-            raise util.CytoflowOpError("Column {0} not found in the experiment"
-                                  .format(self.xchannel))
+            raise util.CytoflowOpError('xchannel',
+                                       "Column {0} not found in the experiment"
+                                       .format(self.xchannel))
 
         if self.ychannel not in experiment.data:
-            raise util.CytoflowOpError("Column {0} not found in the experiment"
-                                  .format(self.ychannel))
+            raise util.CytoflowOpError('ychannel',
+                                       "Column {0} not found in the experiment"
+                                       .format(self.ychannel))
        
         for b in self.by:
             if b not in experiment.data:
-                raise util.CytoflowOpError("Aggregation metadata {0} not found"
-                                      " in the experiment"
-                                      .format(b))
+                raise util.CytoflowOpError('by',
+                                           "Aggregation metadata {0} not found"
+                                           " in the experiment"
+                                           .format(b))
 
             if len(experiment.data[b].unique()) > 100: #WARNING - magic number
-                raise util.CytoflowOpError("More than 100 unique values found for"
-                                      " aggregation metadata {0}.  Did you"
-                                      " accidentally specify a data channel?"
-                                      .format(b))
+                raise util.CytoflowOpError('by',
+                                           "More than 100 unique values found for"
+                                           " aggregation metadata {0}.  Did you"
+                                           " accidentally specify a data channel?"
+                                           .format(b))
         
         if self.by:
             groupby = experiment.data.groupby(self.by)
@@ -349,21 +431,35 @@ class DensityGateOp(HasStrictTraits):
          
         Returns
         -------
-            IView : an IView, call plot() to see the diagnostic plot.
+        IView
+            a diagnostic view, call :meth:`~DensityGateView.plot` to see the 
+            diagnostic plot.
         """
         return DensityGateView(op = self, **kwargs)
           
 @provides(IView)
 class DensityGateView(By2DView, AnnotatingView, DensityView):
+    """
+    A diagnostic view for :class:`DensityGateOp`.  Draws a density plot,
+    then outlines the selected bins in white.
+    
+    Attributes
+    ----------
+    
+    """
      
     id = Constant('edu.mit.synbio.cytoflow.view.densitygateview')
-    friendly_id = ("Density Gate Diagnostic Plot")
+    friendly_id = Constant("Density Gate Diagnostic Plot")
 
     huefacet = Constant(None)
     
     def plot(self, experiment, **kwargs):
         """
         Plot the plots.
+        
+        Parameters
+        ----------
+        
         """
         
         annotations = {}
@@ -389,3 +485,6 @@ class DensityGateView(By2DView, AnnotatingView, DensityView):
         last_level = h[keep_x[-1], keep_y[-1]]
 
         axes.contour(xbins, ybins, h.T, [last_level])
+        
+util.expand_class_attributes(DensityGateView)
+util.expand_method_parameters(DensityGateView, DensityGateView.plot)

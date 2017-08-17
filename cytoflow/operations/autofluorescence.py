@@ -243,7 +243,8 @@ class AutofluorescenceOp(HasStrictTraits):
         Returns
         -------
         IView
-            An view instance, call :meth:`plot()` to see the diagnostic plots
+            An diagnostic view, call :meth:`~AutofluorescenceDiagnosticView.plot` 
+            to see the diagnostic plots
         """
         return AutofluorescenceDiagnosticView(op = self, **kwargs)
     

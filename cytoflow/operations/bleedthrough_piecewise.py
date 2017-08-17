@@ -227,11 +227,13 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
                 try:
                     tube_exp = tube_exp.query(subset)
                 except Exception as e:
-                    raise util.CytoflowOpError("Subset string '{0}' isn't valid"
+                    raise util.CytoflowOpError('subset',
+                                               "Subset string '{0}' isn't valid"
                                           .format(self.subset)) from e
                                 
                 if len(tube_exp.data) == 0:
-                    raise util.CytoflowOpError("Subset string '{0}' returned no events"
+                    raise util.CytoflowOpError('subset',
+                                               "Subset string '{0}' returned no events"
                                           .format(self.subset))
             
             tube_data = tube_exp.data
@@ -388,7 +390,8 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
         
         Returns
         -------
-            IView : An IView, call plot() to see the diagnostic plots
+        IView
+            An IView, call plot() to see the diagnostic plots
         """
         
         if not self.ignore_deprecated:

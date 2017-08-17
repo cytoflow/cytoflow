@@ -448,7 +448,8 @@ class BeadCalibrationOp(HasStrictTraits):
         Returns
         -------
         IView
-            An view instance, call :meth:`plot()` to see the diagnostic plots
+            An diagnostic view, call :meth:`~BeadCalibrationDiagnostic.plot` to 
+            see the diagnostic plots
         """
 
         return BeadCalibrationDiagnostic(op = self, **kwargs)

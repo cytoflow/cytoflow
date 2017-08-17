@@ -17,9 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 '''
-Created on Dec 16, 2015
-
-@author: brian
+cytoflow.operations.flowpeaks
+-----------------------------
 '''
 
 import matplotlib.pyplot as plt
@@ -43,19 +42,20 @@ from .base_op_views import By1DView, By2DView, AnnotatingView, NullView
 @provides(IOperation)
 class FlowPeaksOp(HasStrictTraits):
     """
-    This module uses the flowPeaks algorithm to assign events to clusters in
+    This module uses the **flowPeaks** algorithm to assign events to clusters in
     an unsupervised manner.
     
-    Call `estimate()` to compute the clusters.
+    Call :meth:`estimate` to compute the clusters.
       
-    Calling `apply()` creates a new categorical metadata variable 
-    named `name`, with possible values `{name}_1` .... `name_n` where `n` is 
-    the number of clusters, specified with `n_clusters`.
+    Calling :meth:`apply` creates a new categorical metadata variable 
+    named ``name``, with possible values ``{name}_1`` .... ``name_n`` where 
+    ``n`` is the number of clusters estimated.
     
     The same model may not be appropriate for different subsets of the data set.
-    If this is the case, you can use the `by` attribute to specify metadata by 
-    which to aggregate the data before estimating (and applying) a model.  The 
-    number of clusters is the same across each subset, though.
+    If this is the case, you can use the :attr:`by` attribute to specify 
+    metadata by which to aggregate the data before estimating (and applying) 
+    a model.  The number of clusters is a model parameter and it may vary in 
+    each subset. 
 
     Attributes
     ----------
@@ -67,27 +67,27 @@ class FlowPeaksOp(HasStrictTraits):
 
     scale : Dict(Str : Enum("linear", "logicle", "log"))
         Re-scale the data in the specified channels before fitting.  If a 
-        channel is in `channels` but not in `scale`, the current package-wide
-        default (set with `set_default_scale`) is used.
+        channel is in :attr:`channels` but not in :attr:`scale`, the current 
+        package-wide default (set with :func:`set_default_scale`) is used.
     
     by : List(Str)
         A list of metadata attributes to aggregate the data before estimating
         the model.  For example, if the experiment has two pieces of metadata,
-        `Time` and `Dox`, setting `by = ["Time", "Dox"]` will fit the model 
+        ``Time`` and ``Dox``, setting ``by = ["Time", "Dox"]`` will fit the model 
         separately to each subset of the data with a unique combination of
-        `Time` and `Dox`.
+        ``Time`` and ``Dox``.
         
     h : Float (default = 1.5)
         A scalar value by which to scale the covariance matrices of the 
-        underlying density function.  (See `Notes`, below, for more details.)
+        underlying density function.  (See ``Notes``, below, for more details.)
         
     h0 : Float (default = 1.0)
         A scalar value by which to smooth the covariance matrices of the
-        underlying density function.  (See `Notes`, below, for more details.)
+        underlying density function.  (See ``Notes``, below, for more details.)
         
     tol : Float (default = 0.5)
         How readily should clusters be merged?  Must be between 0 and 1.
-        See `Notes`, below, for more details.
+        See ``Notes``, below, for more details.
         
     merge_dist : Float (default = 5)
         How far apart can clusters be before they are merged?  This is
@@ -96,14 +96,16 @@ class FlowPeaksOp(HasStrictTraits):
         
     find_outliers : Bool (default = False)
         Should the algorithm use an extra step to identify outliers?
-        *Note: I have disabled this code until I can try to make it faster.*
+        
+        .. note::
+            I have disabled this code until I can try to make it faster.
         
     Notes
     -----
     
     This algorithm uses kmeans to find a large number of clusters, then 
     hierarchically merges those clusters.  Thus, the user does not need to
-    specify the number of clusters in advance; and it can find non-convex
+    specify the number of clusters in advance, and it can find non-convex
     clusters.  It also operates in an arbitrary number of dimensions.
     
     The merging happens in two steps.  First, the cluster centroids are used
@@ -113,43 +115,92 @@ class FlowPeaksOp(HasStrictTraits):
     are merged.  Finally, these clusters-of-clusters are merged if their local 
     maxima are (a) close enough, and (b) the density function between them is 
     smooth enough.  Thus, the final assignment of each event depends on the 
-    k-means cluster it ends up in, and which  cluster-of-clusters that k-means 
+    k-means cluster it ends up in, and which cluster-of-clusters that k-means 
     centroid is assigned to.
     
     There are a lot of parameters that affect this process.  The k-means
     clustering is pretty robust (though somewhat sensitive to the number of 
     clusters, which is currently not exposed in the API.) The most important
-    are exposed as traits of the `FlowPeaksOp` class.  These include:
-     - h, h0: sometimes the density function is too "rough" to find good
-              local maxima.  These parameters smooth it out by widening the
-              covariance matrices.  Increasing `h` makes the density rougher;
-              increasing `h0` makes it smoother.
+    are exposed as attributes of the :class:`FlowPeaksOp` class.  These include:
+    
+     - :attr:`h`, :attr:`h0`: sometimes the density function is too "rough" to 
+         find good local maxima.  These parameters smooth it out by widening the
+         covariance matrices.  Increasing :attr:`h` makes the density rougher; 
+         increasing :attr:`h0` makes it smoother.
               
-    - tol: How smooth does the density function have to be between two density
-           maxima to merge them?  Must be between 0 and 1.
+    - :attr:`tol`: How smooth does the density function have to be between two 
+        density maxima to merge them?  Must be between 0 and 1.
            
-    - merge_dist: How close must two maxima be to merge them?  This value is
-                  a unit-free scalar, and is approximately the number of
-                  k-means clusters between the two maxima.
+    - :attr:`merge_dist`: How close must two maxima be to merge them?  This 
+        value is a unit-free scalar, and is approximately the number of
+        k-means clusters between the two maxima.
+        
+    For details and a theoretical justification, see [1]_
     
+    References
+    ----------
     
-    For details and a theoretical justification, see
-    
-    flowPeaks: a fast unsupervised clustering for flow cytometry data via
-    K-means and density peak finding 
-    
-    Yongchao Ge  Stuart C. Sealfon
-    Bioinformatics (2012) 28 (15): 2052-2058.         
+    .. [1] Ge, Yongchao and Sealfon, Stuart C.  "flowPeaks: a fast unsupervised
+       clustering for flow cytometry data via K-means and density peak finding" 
+       Bioinformatics (2012) 28 (15): 2052-2058.         
   
     Examples
     --------
     
-    >>> fp_op = FlowPeaksOp(name = "Clust",
-    ...                     channels = ["V2-A", "Y2-A"],
-    ...                     scale = {"V2-A" : "log"})
-    >>> fp_op.estimate(ex2)
-    >>> fp_op.default_view(channels = ["V2-A"], ["Y2-A"]).plot(ex2)
-    >>> ex3 = fp_op.apply(ex2)
+    .. plot::
+        :context: close-figs
+        
+        Make a little data set.
+    
+        >>> import cytoflow as flow
+        >>> import_op = flow.ImportOp()
+        >>> import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",
+        ...                              conditions = {'Dox' : 10.0}),
+        ...                    flow.Tube(file = "Plate01/CFP_Well_A4.fcs",
+        ...                              conditions = {'Dox' : 1.0})]
+        >>> import_op.conditions = {'Dox' : 'float'}
+        >>> ex = import_op.apply()
+    
+    Create and parameterize the operation.
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> fp_op = flow.FlowPeaksOp(name = 'Flow',
+        ...                          channels = ['V2-A', 'Y2-A'],
+        ...                          scale = {'V2-A' : 'log',
+        ...                                   'Y2-A' : 'log'},
+        ...                          h0 = 3)
+        
+    Estimate the clusters
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> fp_op.estimate(ex)
+        
+    Plot a diagnostic view of the underlying density
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> fp_op.default_view(density = True).plot(ex)
+
+    Apply the gate
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> ex2 = fp_op.apply(ex)
+
+    Plot a diagnostic view with the event assignments
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> fp_op.default_view().plot(ex)
+        
+
     """
     
     id = Constant('edu.mit.synbio.cytoflow.operations.flowpeaks')
@@ -180,7 +231,16 @@ class FlowPeaksOp(HasStrictTraits):
     
     def estimate(self, experiment, subset = None):
         """
-        Estimate the Gaussian mixture model parameters
+        Estimate the k-means clusters, then hierarchically merge them.
+        
+        Parameters
+        ----------
+        experiment : Experiment
+            The :class:`.Experiment` to use to estimate the k-means clusters
+            
+        subset : str (default = None)
+            A Python expression that specifies a subset of the data in 
+            ``experiment`` to use to parameterize the operation.
         """
 
         if experiment is None:
@@ -378,10 +438,6 @@ class FlowPeaksOp(HasStrictTraits):
 #                             x = y
 #                             
 #                     n += 1 
-#                     
-#                     
-#                     
-#                 print("{} --> {}, {}".format(x0, x, n))
                                         
                 merged = False
                 for pi, p in enumerate(peaks):
@@ -507,7 +563,21 @@ class FlowPeaksOp(HasStrictTraits):
          
     def apply(self, experiment):
         """
-        Apply the KMeans clustering to the data
+        Assign events to a cluster.
+        
+        Assigns each event to one of the k-means centroids from :meth:`estimate`,
+        then groups together events in the same cluster hierarchy.
+        
+        Parameters
+        ----------
+        experiment : Experiment
+            the :class:`.Experiment` to apply the gate to.
+            
+        Returns
+        -------
+        Experiment
+            A new :class:`.Experiment` with the gate applied to it.  
+            TODO - document the extra statistics
         """
  
         if experiment is None:
@@ -671,10 +741,22 @@ class FlowPeaksOp(HasStrictTraits):
     def default_view(self, **kwargs):
         """
         Returns a diagnostic plot of the Gaussian mixture model.
+        
+        Parameters
+        ----------
+        channels : List(Str)
+            Which channels to plot?  Must be contain either one or two channels.
+            
+        scale : List({'linear', 'log', 'logicle'})
+            How to scale the channels before plotting them
+            
+        density : bool
+            Should we plot a scatterplot or the estimated density function?
          
         Returns
         -------
-            IView : an IView, call plot() to see the diagnostic plot.
+        IView
+            an IView, call :meth:`plot` to see the diagnostic plot.
         """
         channels = kwargs.pop('channels', self.channels)
         scale = kwargs.pop('scale', self.scale)
@@ -723,10 +805,12 @@ class FlowPeaksOp(HasStrictTraits):
 @provides(IView)
 class FlowPeaks1DView(By1DView, AnnotatingView, HistogramView):
     """
+    A one-dimensional diagnostic view for :class:`FlowPeaksOp`.  Plots a histogram
+    of the channel, then overlays the k-means centroids in blue.
+
     Attributes
     ----------    
-    op : Instance(FlowpeaksOp)
-        The op whose parameters we're viewing.
+
     """
     
     id = Constant('edu.mit.synbio.cytoflow.view.flowpeaks1dview')
@@ -738,6 +822,10 @@ class FlowPeaks1DView(By1DView, AnnotatingView, HistogramView):
     def plot(self, experiment, **kwargs):
         """
         Plot the plots.
+        
+        Parameters
+        ----------
+        
         """
                 
         view, trait_name = self._strip_trait(self.op.name)
@@ -760,10 +848,13 @@ class FlowPeaks1DView(By1DView, AnnotatingView, HistogramView):
      
 class FlowPeaks2DView(By2DView, AnnotatingView, ScatterplotView):
     """
+    A two-dimensional diagnostic view for :class:`FlowPeaksOp`.  Plots a 
+    scatter-plot of the two channels, then overlays the k-means centroids in 
+    blue and the clusters-of-k-means in pink.
+
     Attributes
-    ----------
-    op : Instance(FlowPeaksOp)
-        The op whose parameters we're viewing.        
+    ----------    
+
     """
      
     id = Constant('edu.mit.synbio.cytoflow.view.flowpeaks2dview')
@@ -777,6 +868,10 @@ class FlowPeaks2DView(By2DView, AnnotatingView, ScatterplotView):
     def plot(self, experiment, plot_name = None, **kwargs):
         """
         Plot the plots.
+        
+        Parameters
+        ----------
+        
         """
 
         annotations = {}
@@ -825,10 +920,13 @@ class FlowPeaks2DView(By2DView, AnnotatingView, ScatterplotView):
                 
 class FlowPeaks2DDensityView(By2DView, AnnotatingView, NullView):
     """
+    A two-dimensional diagnostic view for :class:`FlowPeaksOp`.  Plots the
+    estimated density function of the two channels, then overlays the k-means 
+    centroids in blue and the clusters-of-k-means in pink.
+
     Attributes
-    ----------
-    op : Instance(FlowPeaksOp)
-        The op whose parameters we're viewing.        
+    ----------    
+        
     """
      
     id = Constant('edu.mit.synbio.cytoflow.view.flowpeaks2ddensityview')
@@ -843,6 +941,9 @@ class FlowPeaks2DDensityView(By2DView, AnnotatingView, NullView):
     def plot(self, experiment, plot_name = None, **kwargs):
         """
         Plot the plots.
+        
+        Parameters
+        ----------
         """
 
         annotations = {}
@@ -932,3 +1033,11 @@ class FlowPeaks2DDensityView(By2DView, AnnotatingView, NullView):
                 y = self.op._scale[self.xchannel].inverse(peak[1])
                 plt.plot(x, y, 'o', color = "magenta")   
 
+util.expand_class_attributes(FlowPeaks1DView)
+util.expand_method_parameters(FlowPeaks1DView, FlowPeaks1DView.plot)
+
+util.expand_class_attributes(FlowPeaks2DView)
+util.expand_method_parameters(FlowPeaks2DView, FlowPeaks2DView.plot)
+
+util.expand_class_attributes(FlowPeaks2DDensityView)
+util.expand_method_parameters(FlowPeaks2DDensityView, FlowPeaks2DDensityView.plot)
