@@ -42,8 +42,8 @@ class AutofluorescenceOp(HasStrictTraits):
     of the blank cells.  Then, :meth:`apply` subtracts the median from the 
     experiment data.
     
-    To use, set the :attrib:`blank_file` property to point to an FCS file with
-    unstained or nonfluorescing cells in it; set the :attrib:`channels` 
+    To use, set the :attr:`blank_file` property to point to an FCS file with
+    unstained or nonfluorescing cells in it; set the :attr:`channels` 
     property to a  list of channels to correct.
     
     :meth:`apply` also adds the ``af_median`` and ``af_stdev`` metadata to the 
@@ -116,8 +116,8 @@ class AutofluorescenceOp(HasStrictTraits):
     
     def estimate(self, experiment, subset = None): 
         """
-        Estimate the autofluorescence from :attrib:`blank_file` in channels
-        specified in :attrib:`channels`.  
+        Estimate the autofluorescence from :attr:`blank_file` in channels
+        specified in :attr:`channels`.  
         
         Parameters
         ----------

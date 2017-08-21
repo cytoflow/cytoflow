@@ -198,7 +198,7 @@ class FlowPeaksOp(HasStrictTraits):
     .. plot::
         :context: close-figs
         
-        >>> fp_op.default_view().plot(ex)
+        >>> fp_op.default_view().plot(ex2)
         
 
     """

@@ -192,7 +192,7 @@ class ByView(OpView):
         
         Parameters
         ----------
-        plot_name
+        plot_name : str
             If this :class:`IView` can make multiple plots, ``plot_name`` is
             the name of the plot to make.  Must be one of the values retrieved
             from :meth:`enum_plots`.

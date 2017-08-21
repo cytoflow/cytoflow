@@ -293,7 +293,7 @@ class Base1DView(BaseDataView):
             Clip data that is greater than this quantile.
             
         xlim : (float, float)
-            Set the range of the plot's axis.
+            Set the range of the plot's x axis.
         """
         
         if experiment is None:

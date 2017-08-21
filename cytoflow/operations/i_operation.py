@@ -16,10 +16,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+'''
+cytoflow.operations.i_operation
+-------------------------------
+'''
+
 from traits.api import Interface, Str
 
 class IOperation(Interface):
-    """The basic interface for an operation on cytometry data.
+    """
+    The basic interface for an operation on cytometry data.
     
     Attributes
     ----------

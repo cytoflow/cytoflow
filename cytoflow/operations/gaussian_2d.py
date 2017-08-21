@@ -17,11 +17,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 '''
-Created on Dec 16, 2015
-
-@author: brian
+cytoflow.operations.gaussian_2d
+-------------------------------
 '''
 import re
+from warnings import warn
 
 from traits.api import (HasStrictTraits, Str, CStr, Dict, Any, Instance, Bool, 
                         Constant, List, provides)
@@ -43,25 +43,32 @@ class GaussianMixture2DOp(HasStrictTraits):
     This module fits a 2D Gaussian mixture model with a specified number of
     components to a pair of channels.
     
-    Creates a new categorical metadata variable named `name`, with possible
-    values `name_1` .... `name_n` where `n` is the number of components.
-    An event is assigned to `name_i` category if it falls within `sigma`
+    .. warning:: 
+    
+        :class:`GaussianMixture2DOp` is **DEPRECATED** and will be removed
+        in a future release.  It doesn't correctly handle the case where an 
+        event is present in more than one component.  Please use
+        :class:`GaussianMixtureOp` instead!
+    
+    Creates a new categorical metadata variable named :attr:`name`, with possible
+    values ``name_1`` .... ``name_n`` where ``n`` is the number of components.
+    An event is assigned to ``name_i`` category if it falls within :attr:`sigma`
     standard deviations of the component's mean.  If that is true for multiple
-    categories (or if `sigma == 0.0`), the event is assigned to the category 
+    categories (or if :attr:`sigma` is ``0.0``), the event is assigned to the category 
     with the highest posterior probability.  If the event doesn't fall into
-    any category, it is assigned to `name_None`.
+    any category, it is assigned to ``name_None``.
     
-    As a special case, if `num_components` is `1` and `sigma` > 0.0, then
-    the new condition is boolean, `True` if the event fell in the gate and
-    `False` otherwise.
+    As a special case, if :attr:`num_components` is ``1`` and :attr:`sigma` 
+    ``> 0.0``, then the new condition is boolean, ``True`` if the event fell 
+    in the gate and ``False`` otherwise.
     
-    Optionally, if `posteriors` is `True`, this module will also compute the 
+    Optionally, if :attr:`posteriors` is ``True``, this module will also compute the 
     posterior probability of each event in its assigned component, returning
-    it in a new colunm named `{Name}_Posterior`.
+    it in a new colunm named ``{Name}_Posterior``.
     
     Finally, the same mixture model (mean and standard deviation) may not
     be appropriate for every subset of the data.  If this is the case, you
-    can use the `by` attribute to specify metadata by which to aggregate
+    can use the :attr:`by` attribute to specify metadata by which to aggregate
     the data before estimating (and applying) a mixture model.  The number of 
     components is the same across each subset, though.
     
@@ -76,10 +83,10 @@ class GaussianMixture2DOp(HasStrictTraits):
     ychannel : Str
         The Y channel to apply the mixture model to.
 
-    xscale : Enum("linear", "logicle", "log") (default = "linear")
+    xscale : {"linear", "logicle", "log"} (default = "linear")
         Re-scale the data on the X acis before fitting the data?  
 
-    yscale : Enum("linear", "logicle", "log") (default = "linear")
+    yscale : {"linear", "logicle", "log"} (default = "linear")
         Re-scale the data on the Y axis before fitting the data?  
         
     num_components : Int (default = 1)
@@ -89,46 +96,79 @@ class GaussianMixture2DOp(HasStrictTraits):
         How many standard deviations on either side of the mean to include
         in each category?  If an event is in multiple components, assign it
         to the component with the highest posterior probability.  If 
-        `sigma == 0.0`, categorize *all* the data by assigning each event to
-        the component with the highest posterior probability.  Must be >= 0.0.
+        :attr:`sigma` is ``0.0``, categorize *all* the data by assigning each event to
+        the component with the highest posterior probability.  Must be ``>= 0.0``.
     
     by : List(Str)
         A list of metadata attributes to aggregate the data before estimating
         the model.  For example, if the experiment has two pieces of metadata,
-        `Time` and `Dox`, setting `by = ["Time", "Dox"]` will fit the model 
-        separately to each subset of the data with a unique combination of
-        `Time` and `Dox`.
+        ``Time`` and ``Dox``, setting :attr:`by` to ``["Time", "Dox"]`` will fit
+        the model separately to each subset of the data with a unique combination of
+        ``Time`` and ``Dox``.
 
     posteriors : Bool (default = False)
-        If `True`, add a column named `{Name}_Posterior` giving the posterior
+        If ``True``, add a column named ``{Name}_Posterior`` giving the posterior
         probability that the event is in the component to which it was
         assigned.  Useful for filtering out low-probability events.
-        
-    Statistics
-    ----------
-    xmean : Float
-        the mean of the fitted gaussian in the x dimension.
-        
-    ymean : Float
-        the mean of the fitted gaussian in the y dimension.
-        
-    proportion : Float
-        the proportion of events in each component of the mixture model.  only
-        set if `num_components` > 1.
-        
-    PS -- if someone has good ideas for summarizing spread in a 2D (non-isotropic)
-    Gaussian, or other useful statistics, let me know!
+
     
     Examples
     --------
     
-    >>> gauss_op = GaussianMixture2DOp(name = "Gaussian",
-    ...                                xchannel = "V2-A",
-    ...                                ychannel = "Y2-A",
-    ...                                num_components = 2)
-    >>> gauss_op.estimate(ex2)
-    >>> gauss_op.default_view().plot(ex2)
-    >>> ex3 = gauss_op.apply(ex2)
+    .. plot::
+        :context: close-figs
+        
+        Make a little data set.
+    
+        >>> import cytoflow as flow
+        >>> import_op = flow.ImportOp()
+        >>> import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",
+        ...                              conditions = {'Dox' : 10.0}),
+        ...                    flow.Tube(file = "Plate01/CFP_Well_A4.fcs",
+        ...                              conditions = {'Dox' : 1.0})]
+        >>> import_op.conditions = {'Dox' : 'float'}
+        >>> ex = import_op.apply()
+    
+    Create and parameterize the operation.
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> gm_op = flow.GaussianMixture2DOp(name = 'Flow',
+        ...                          xchannel = 'V2-A',
+        ...                          xscale = 'log',
+        ...                          ychannel = 'Y2-A',
+        ...                          yscale = 'log',
+        ...                          num_components = 2)
+        
+    Estimate the clusters
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> gm_op.estimate(ex)
+        
+    Plot a diagnostic view with the distributions
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> gm_op.default_view().plot(ex)
+
+    Apply the gate
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> ex2 = gm_op.apply(ex)
+
+    Plot a diagnostic view with the event assignments
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> gm_op.default_view().plot(ex2)
+
     """
     
     id = Constant('edu.mit.synbio.cytoflow.operations.gaussian_2d')
@@ -152,8 +192,20 @@ class GaussianMixture2DOp(HasStrictTraits):
     
     def estimate(self, experiment, subset = None):
         """
-        Estimate the Gaussian mixture model parameters
+        Estimate the Gaussian mixture model parameters.
+        
+        Parameters
+        ----------
+        experiment : Experiment
+            The data to use to estimate the mixture parameters
+            
+        subset : str (default = None)
+            If set, a Python expression to determine the subset of the data
+            to use to in the estimation.
         """
+        
+        warn("GaussianMixture2DOp is DEPRECATED.  Please use GaussianMixtureOp.",
+             util.CytoflowOpWarning)
         
         if experiment is None:
             raise util.CytoflowOpError("No experiment specified")
@@ -250,8 +302,32 @@ class GaussianMixture2DOp(HasStrictTraits):
     def apply(self, experiment):
         """
         Assigns new metadata to events using the mixture model estimated
-        in `estimate`.
+        in :meth:`estimate`.
+        
+        Returns
+        -------
+        Experiment
+            A new :class:`.Experiment` with a column named :attr:`name` and
+            optionally one named :attr:`name` ``_Posterior``.  Also includes
+            the following new statistics:
+
+            - **xmean** : Float
+                the mean of the fitted gaussian in the x dimension.
+                
+            - **ymean** : Float
+                the mean of the fitted gaussian in the y dimension.
+                
+            - **proportion** : Float
+                the proportion of events in each component of the mixture model.  only
+                set if :attr:`num_components` ``> 1``.
+        
+            PS -- if someone has good ideas for summarizing spread in a 2D (non-isotropic)
+            Gaussian, or other useful statistics, let me know!
+
         """
+           
+        warn("GaussianMixture2DOp is DEPRECATED.  Please use GaussianMixtureOp.",
+             util.CytoflowOpWarning)
             
         if experiment is None:
             raise util.CytoflowOpError("No experiment specified")
@@ -479,8 +555,14 @@ class GaussianMixture2DOp(HasStrictTraits):
         
         Returns
         -------
-            IView : an IView, call plot() to see the diagnostic plot.
+            IView : an IView, call :meth:`~GaussianMixture2DView.plot` to see 
+            the diagnostic plot.
+        
         """
+        
+        warn("GaussianMixture1DOp is DEPRECATED.  Please use GaussianMixtureOp.",
+             util.CytoflowOpWarning)
+        
         return GaussianMixture2DView(op = self, **kwargs)
     
     
@@ -493,10 +575,11 @@ import matplotlib.transforms as transforms
 @provides(IView)
 class GaussianMixture2DView(By2DView, AnnotatingView, ScatterplotView):
     """
+    A diagnostic plot for a :class:`GaussianMixture2DOp`.
+
     Attributes
     ----------
-    op : Instance(GaussianMixture2DOp)
-        The op whose parameters we're viewing.        
+      
     """
     
     id = Constant('edu.mit.synbio.cytoflow.view.gaussianmixture2dview')
@@ -505,6 +588,10 @@ class GaussianMixture2DView(By2DView, AnnotatingView, ScatterplotView):
     def plot(self, experiment, **kwargs):
         """
         Plot the plots.
+        
+        Parameters
+        ----------
+        
         """
         
         view, trait_name = self._strip_trait(self.op.name)
@@ -527,9 +614,12 @@ class GaussianMixture2DView(By2DView, AnnotatingView, ScatterplotView):
                 self._annotation_plot(axes, xlim, ylim, xscale, yscale, annotation, annotation_facet, i, annotation_color)
             return
         elif type(annotation_value) is str:
-            idx_re = re.compile(annotation_facet + '_(\d+)')
-            idx = idx_re.match(annotation_value).group(1)
-            idx = int(idx) - 1             
+            try:
+                idx_re = re.compile(annotation_facet + '_(\d+)')
+                idx = idx_re.match(annotation_value).group(1)
+                idx = int(idx) - 1   
+            except:
+                return          
         else:
             idx = annotation_value
         
@@ -591,6 +681,6 @@ class GaussianMixture2DView(By2DView, AnnotatingView, ScatterplotView):
         scaled_patch = patches.PathPatch(scaled_path, **kwargs)
         ax.add_patch(scaled_patch)
             
-             
-
+util.expand_class_attributes(GaussianMixture2DView)
+util.expand_method_parameters(GaussianMixture2DView, GaussianMixture2DView.plot)
     

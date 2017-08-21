@@ -17,9 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 '''
-Created on Dec 16, 2015
-
-@author: brian
+cytoflow.operations.gaussian
+----------------------------
 '''
 
 import re
@@ -48,30 +47,32 @@ class GaussianMixtureOp(HasStrictTraits):
     This module fits a Gaussian mixture model with a specified number of
     components to one or more channels.
     
-    If `num_components > 1`, `apply()` creates a new categorical metadata 
-    variable named  `name`, with possible values `{name}_1` .... `name_n` 
-    where `n` is the number of components.  An event is assigned to `name_i` 
-    category if it has the highest posterior probability of having been 
-    produced by component `i`.  If an event has a value that is outside the
-    range of one of the channels' scales, then it is assigned to `{name}_None`.
+    If :attr:`num_components` ``> 1``, :meth:`apply` creates a new categorical 
+    metadata variable named  ``name``, with possible values ``{name}_1`` .... 
+    ``name_n`` where ``n`` is the number of components.  An event is assigned to 
+    ``name_i`` category if it has the highest posterior probability of having been 
+    produced by component ``i``.  If an event has a value that is outside the
+    range of one of the channels' scales, then it is assigned to ``{name}_None``.
     
-    Optionally, if `sigma` is greater than 0, `apply()` creates new  `boolean` 
-    metadata variables named `{name}_1` ... `{name}_n` where `n` is the number 
-    of components.  The column `{name}_i` is `True` if the event is less than 
-    `sigma` standard deviations from the mean of component `i`.  If 
-    `num_components == 1`, `sigma` must be greater than 0.
+    Optionally, if :attr:`sigma` is greater than 0, :meth:`apply` creates new  
+    ``boolean`` metadata variables named ``{name}_1`` ... ``{name}_n`` where 
+    ``n`` is the number of components.  The column ``{name}_i`` is ``True`` if 
+    the event is less than :attr:`sigma` standard deviations from the mean of 
+    component ``i``.  If :attr:`num_components` is ``1``, :attr:`sigma` must be 
+    greater than 0.
     
-    Optionally, if `posteriors` is `True`, `apply()` creates a new `double`
-    metadata variables named `{name}_1_posterior` ... `{name}_n_posterior` 
-    where `n` is the number of components.  The column `{name}_i_posterior`
-    contains the posterior probability that this event is a member of 
-    component `i`.
+    Optionally, if :attr:`posteriors` is ``True``, :meth:`apply` creates a new 
+    ``double`` metadata variables named ``{name}_1_posterior`` ... 
+    ``{name}_n_posterior`` where ``n`` is the number of components.  The column 
+    ``{name}_i_posterior`` contains the posterior probability that this event is 
+    a member of component ``i``.
     
     Finally, the same mixture model (mean and standard deviation) may not
     be appropriate for every subset of the data.  If this is the case, you
-    can use the `by` attribute to specify metadata by which to aggregate
+    can use the :attr:`by` attribute to specify metadata by which to aggregate
     the data before estimating (and applying) a mixture model.  The number of 
     components must be the same across each subset, though.
+    
     
     Attributes
     ----------
@@ -81,47 +82,30 @@ class GaussianMixtureOp(HasStrictTraits):
     channels : List(Str)
         The channels to apply the mixture model to.
 
-    scale : Dict(Str : Enum("linear", "logicle", "log"))
+    scale : Dict(Str : {"linear", "logicle", "log"})
         Re-scale the data in the specified channels before fitting.  If a 
-        channel is in `channels` but not in `scale`, the current package-wide
-        default (set with `set_default_scale`) is used.
+        channel is in :attr:`channels` but not in :attr:`scale`, the current 
+        package-wide default (set with :func:`~.set_default_scale`) is used.
 
     num_components : Int (default = 1)
         How many components to fit to the data?  Must be a positive integer.
 
     sigma : Float (default = 0.0)
         How many standard deviations on either side of the mean to include
-        in the boolean variable `{name}_i`?  Must be >= 0.0.  If 
-        `num_components == 1`, must be > 0.
+        in the boolean variable ``{name}_i``?  Must be ``>= 0.0``.  If 
+        :attr:`num_components` is ``1``, must be ``> 0``.
     
     by : List(Str)
         A list of metadata attributes to aggregate the data before estimating
         the model.  For example, if the experiment has two pieces of metadata,
-        `Time` and `Dox`, setting `by = ["Time", "Dox"]` will fit the model 
-        separately to each subset of the data with a unique combination of
-        `Time` and `Dox`.
+        ``Time`` and ``Dox``, setting :attr:`by` to ``["Time", "Dox"]`` will fit 
+        the model separately to each subset of the data with a unique combination of
+        ``Time`` and ``Dox``.
 
     posteriors : Bool (default = False)
-        If `True`, add columns named `{Name}_{i}_Posterior` giving the posterior
-        probability that the event is in component `i`.  Useful for filtering 
-        out low-probability events.
-        
-    Statistics
-    ----------
-    mean : Float
-        the mean of the fitted gaussian in each channel for each component.
-        
-    sigma : (Float, Float)
-        the locations the mean +/- one standard deviation in each channel
-        for each component.
-        
-    correlation : Float
-        the correlation coefficient between each pair of channels for each
-        component.
-        
-    proportion : Float
-        the proportion of events in each component of the mixture model.  only
-        added if `num_components` > 1.
+        If ``True``, add columns named ``{name}_{i}_posterior`` giving the 
+        posterior probability that the event is in component ``i``.  Useful for 
+        filtering out low-probability events.
         
     Notes
     -----
@@ -135,17 +119,76 @@ class GaussianMixtureOp(HasStrictTraits):
     Examples
     --------
     
-    >>> gauss_op = GaussianMixtureOp(name = "Gaussian",
-    ...                              channels = ["V2-A", "Y2-A"],
-    ...                              scale = {"V2-A" : "log"},
-    ...                              num_components = 2)
-    >>> gauss_op.estimate(ex2)
-    >>> gauss_op.default_view(channels = ["V2-A"], ["Y2-A"]).plot(ex2)
-    >>> ex3 = gauss_op.apply(ex2)
+    .. plot::
+        :context: close-figs
+        
+        Make a little data set.
+    
+        >>> import cytoflow as flow
+        >>> import_op = flow.ImportOp()
+        >>> import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",
+        ...                              conditions = {'Dox' : 10.0}),
+        ...                    flow.Tube(file = "Plate01/CFP_Well_A4.fcs",
+        ...                              conditions = {'Dox' : 1.0})]
+        >>> import_op.conditions = {'Dox' : 'float'}
+        >>> ex = import_op.apply()
+    
+    Create and parameterize the operation.
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> gm_op = flow.GaussianMixtureOp(name = 'Gauss',
+        ...                                channels = ['Y2-A'],
+        ...                                scale = {'Y2-A' : 'log'},
+        ...                                num_components = 2)
+        
+    Estimate the clusters
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> gm_op.estimate(ex)
+        
+    Plot a diagnostic view
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> gm_op.default_view().plot(ex)
+
+    Apply the gate
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> ex2 = gm_op.apply(ex)
+
+    Plot a diagnostic view with the event assignments
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> gm_op.default_view().plot(ex2)
+        
+    And with two channels:
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> gm_op = flow.GaussianMixtureOp(name = 'Gauss',
+        ...                                channels = ['V2-A', 'Y2-A'],
+        ...                                scale = {'V2-A' : 'log',
+        ...                                         'Y2-A' : 'log'},
+        ...                                num_components = 2)
+        >>> gm_op.estimate(ex)   
+        >>> ex2 = gm_op.apply(ex)
+        >>> gm_op.default_view().plot(ex2)
+        
     """
     
     id = Constant('edu.mit.synbio.cytoflow.operations.gaussian')
-    friendly_id = Constant("Gaussian Mixture")
+    friendly_id = Constant("Gaussian Mixture Model")
     
     name = CStr()
     channels = List(Str)
@@ -163,47 +206,64 @@ class GaussianMixtureOp(HasStrictTraits):
     def estimate(self, experiment, subset = None):
         """
         Estimate the Gaussian mixture model parameters
+        
+        Parameters
+        ----------
+        experiment : Experiment
+            The data to use to estimate the mixture parameters
+            
+        subset : str (default = None)
+            If set, a Python expression to determine the subset of the data
+            to use to in the estimation.
         """
 
         if experiment is None:
-            raise util.CytoflowOpError("No experiment specified")
+            raise util.CytoflowOpError('experiment',
+                                       "No experiment specified")
         
         if len(self.channels) == 0:
-            raise util.CytoflowOpError("Must set at least one channel")
+            raise util.CytoflowOpError('channels',
+                                       "Must set at least one channel")
 
         for c in self.channels:
             if c not in experiment.data:
-                raise util.CytoflowOpError("Channel {0} not found in the experiment"
+                raise util.CytoflowOpError('channels',
+                                           "Channel {0} not found in the experiment"
                                       .format(c))
                 
         for c in self.scale:
             if c not in self.channels:
-                raise util.CytoflowOpError("Scale set for channel {0}, but it isn't "
+                raise util.CytoflowOpError('channels',
+                                           "Scale set for channel {0}, but it isn't "
                                            "in the experiment"
                                            .format(c))
        
         for b in self.by:
             if b not in experiment.data:
-                raise util.CytoflowOpError("Aggregation metadata {0} not found"
-                                      " in the experiment"
-                                      .format(b))
+                raise util.CytoflowOpError('by',
+                                           "Aggregation metadata {0} not found"
+                                           " in the experiment"
+                                           .format(b))
             if len(experiment.data[b].unique()) > 100: #WARNING - magic number
-                raise util.CytoflowOpError("More than 100 unique values found for"
-                                      " aggregation metadata {0}.  Did you"
-                                      " accidentally specify a data channel?"
-                                      .format(b))
+                raise util.CytoflowOpError('by',
+                                           "More than 100 unique values found for"
+                                           " aggregation metadata {0}.  Did you"
+                                           " accidentally specify a data channel?"
+                                           .format(b))
 
                 
         if subset:
             try:
                 experiment = experiment.query(subset)
             except:
-                raise util.CytoflowViewError("Subset string '{0}' isn't valid"
-                                        .format(subset))
+                raise util.CytoflowViewError('subset',
+                                             "Subset string '{0}' isn't valid"
+                                             .format(subset))
                 
             if len(experiment) == 0:
-                raise util.CytoflowViewError("Subset string '{0}' returned no events"
-                                        .format(subset))
+                raise util.CytoflowViewError('subset',
+                                             "Subset string '{0}' returned no events"
+                                             .format(subset))
                 
         if self.by:
             groupby = experiment.data.groupby(self.by)
@@ -225,7 +285,8 @@ class GaussianMixtureOp(HasStrictTraits):
             
         for group, data_subset in groupby:
             if len(data_subset) == 0:
-                raise util.CytoflowOpError("Group {} had no data"
+                raise util.CytoflowOpError(None,
+                                           "Group {} had no data"
                                            .format(group))
             x = data_subset.loc[:, self.channels[:]]
             for c in self.channels:
@@ -242,9 +303,10 @@ class GaussianMixtureOp(HasStrictTraits):
             gmm.fit(x)
             
             if not gmm.converged_:
-                raise util.CytoflowOpError("Estimator didn't converge"
-                                      " for group {0}"
-                                      .format(group))
+                raise util.CytoflowOpError(None,
+                                           "Estimator didn't converge"
+                                           " for group {0}"
+                                           .format(group))
                 
             # in the 1D version, we sorted the components by the means -- so
             # the first component has the lowest mean, the second component
@@ -268,37 +330,65 @@ class GaussianMixtureOp(HasStrictTraits):
     def apply(self, experiment):
         """
         Assigns new metadata to events using the mixture model estimated
-        in `estimate`.
+        in :meth:`estimate`.
+        
+        Returns
+        -------
+        Experiment
+            A new :class:`.Experiment` with the new condition variables as
+            described in the class documentation.  Also adds the following
+            new statistics:
+            
+            - **mean** : Float
+                the mean of the fitted gaussian in each channel for each component.
+                
+            - **sigma** : (Float, Float)
+                the locations the mean +/- one standard deviation in each channel
+                for each component.
+                
+            - **correlation** : Float
+                the correlation coefficient between each pair of channels for each
+                component.
+                
+            - **proportion** : Float
+                the proportion of events in each component of the mixture model.  only
+                added if :attr:`num_components` ``> 1``.
         """
              
         if experiment is None:
-            raise util.CytoflowOpError("No experiment specified")
+            raise util.CytoflowOpError('experiment',
+                                       "No experiment specified")
          
         if len(self.channels) == 0:
-            raise util.CytoflowOpError("Must set at least one channel")
+            raise util.CytoflowOpError('channels',
+                                       "Must set at least one channel")
          
         # make sure name got set!
         if not self.name:
-            raise util.CytoflowOpError("You have to set the gate's name "
-                                  "before applying it!")
+            raise util.CytoflowOpError('name',
+                                       "You have to set the gate's name "
+                                       "before applying it!")
         
         if self.num_components > 1 and self.name in experiment.data.columns:
-            raise util.CytoflowOpError("Experiment already has a column named {0}"
-                                  .format(self.name))
+            raise util.CytoflowOpError('name',
+                                       "Experiment already has a column named {0}"
+                                       .format(self.name))
             
         if self.sigma > 0:
             for i in range(1, self.num_components + 1):
                 cname = "{}_{}".format(self.name, i)
                 if cname in experiment.data.columns:
-                    raise util.CytoflowOpError("Experiment already has a column named {}"
-                                  .format(cname))
+                    raise util.CytoflowOpError('name',
+                                               "Experiment already has a column named {}"
+                                               .format(cname))
  
         if self.posteriors:
             for i in range(1, self.num_components + 1):
                 cname = "{}_{}_posterior".format(self.name, i)
                 if cname in experiment.data.columns:
-                    raise util.CytoflowOpError("Experiment already has a column named {}"
-                                  .format(cname))               
+                    raise util.CytoflowOpError('name',
+                                               "Experiment already has a column named {}"
+                                               .format(cname))               
          
         if not self._gmms:
             raise util.CytoflowOpError("No components found.  Did you forget to "
@@ -306,33 +396,32 @@ class GaussianMixtureOp(HasStrictTraits):
  
         for c in self.channels:
             if c not in experiment.channels:
-                raise util.CytoflowOpError("Channel {0} not found in the experiment"
-                                      .format(c))
-             
-        if self.posteriors:
-            col_name = "{0}_Posterior".format(self.name)
-            if col_name in experiment.data:
-                raise util.CytoflowOpError("Column {0} already found in the experiment"
-                              .format(col_name))
+                raise util.CytoflowOpError('channels',
+                                           "Channel {0} not found in the experiment"
+                                           .format(c))
         
         for b in self.by:
             if b not in experiment.data:
-                raise util.CytoflowOpError("Aggregation metadata {0} not found"
-                                      " in the experiment"
-                                      .format(b))
+                raise util.CytoflowOpError('by',
+                                           "Aggregation metadata {0} not found"
+                                           " in the experiment"
+                                           .format(b))
  
             if len(experiment.data[b].unique()) > 100: #WARNING - magic number
-                raise util.CytoflowOpError("More than 100 unique values found for"
-                                      " aggregation metadata {0}.  Did you"
-                                      " accidentally specify a data channel?"
-                                      .format(b))
+                raise util.CytoflowOpError('by',
+                                           "More than 100 unique values found for"
+                                           " aggregation metadata {0}.  Did you"
+                                           " accidentally specify a data channel?"
+                                           .format(b))
                             
         if self.num_components == 1 and self.sigma == 0.0:
-            raise util.CytoflowOpError("if num_components is 1, sigma must be > 0.0")
+            raise util.CytoflowOpError('sigma',
+                                       "if num_components is 1, sigma must be > 0.0")
         
                 
         if self.num_components == 1 and self.posteriors:
-            raise util.CytoflowOpError("If num_components == 1, all posteriors will be 1.")
+            raise util.CytoflowOpError('posteriors',
+                                       "If num_components == 1, all posteriors will be 1.")
          
         if self.num_components > 1:
             event_assignments = pd.Series(["{}_None".format(self.name)] * len(experiment), dtype = "object")
@@ -491,12 +580,14 @@ class GaussianMixtureOp(HasStrictTraits):
         
         for c in channels:
             if c not in self.channels:
-                raise util.CytoflowViewError("Channel {} isn't in the operation's channels"
+                raise util.CytoflowViewError('channels',
+                                             "Channel {} isn't in the operation's channels"
                                              .format(c))
                 
         for s in scale:
             if s not in self.channels:
-                raise util.CytoflowViewError("Channel {} isn't in the operation's channels"
+                raise util.CytoflowViewError('scale',
+                                             "Channel {} isn't in the operation's channels"
                                              .format(s))
             
         for c in channels:
@@ -504,7 +595,8 @@ class GaussianMixtureOp(HasStrictTraits):
                 scale[c] = util.get_default_scale()
             
         if len(channels) == 0:
-            raise util.CytoflowViewError("Must specify at least one channel for a default view")
+            raise util.CytoflowViewError('channels',
+                                         "Must specify at least one channel for a default view")
         elif len(channels) == 1:
             return GaussianMixture1DView(op = self, 
                                          channel = channels[0], 
@@ -523,10 +615,12 @@ class GaussianMixtureOp(HasStrictTraits):
 @provides(IView)
 class GaussianMixture1DView(By1DView, AnnotatingView, HistogramView):
     """
+    A default view for :class:`GaussianMixtureOp` that plots the histogram
+    of a single channel, then the estimated Gaussian distributions on top of it.
+    
     Attributes
     ----------    
-    op : Instance(GaussianMixture1DOp)
-        The op whose parameters we're viewing.
+
     """
     
     id = Constant('edu.mit.synbio.cytoflow.view.gaussianmixture1dview')
@@ -538,6 +632,9 @@ class GaussianMixture1DView(By1DView, AnnotatingView, HistogramView):
     def plot(self, experiment, **kwargs):
         """
         Plot the plots.
+        
+        Parameters
+        ----------
         """
         
         view, trait_name = self._strip_trait(self.op.name)
@@ -560,9 +657,12 @@ class GaussianMixture1DView(By1DView, AnnotatingView, HistogramView):
                 self._annotation_plot(axes, xlim, ylim, xscale, yscale, annotation, annotation_facet, i, annotation_color)
             return
         elif type(annotation_value) is str:
-            idx_re = re.compile(annotation_facet + '_(\d+)')
-            idx = idx_re.match(annotation_value).group(1)
-            idx = int(idx) - 1             
+            try:
+                idx_re = re.compile(annotation_facet + '_(\d+)')
+                idx = idx_re.match(annotation_value).group(1)
+                idx = int(idx) - 1            
+            except:
+                return 
         else:
             idx = annotation_value
               
@@ -594,10 +694,12 @@ import matplotlib.transforms as transforms
 @provides(IView)
 class GaussianMixture2DView(By2DView, AnnotatingView, ScatterplotView):
     """
+    A default view for :class:`GaussianMixtureOp` that plots the scatter plot
+    of a two channels, then the estimated 2D Gaussian distributions on top of it.
+    
     Attributes
     ----------
-    op : Instance(GaussianMixture2DOp)
-        The op whose parameters we're viewing.        
+   
     """
     
     id = Constant('edu.mit.synbio.cytoflow.view.gaussianmixture2dview')
@@ -611,6 +713,9 @@ class GaussianMixture2DView(By2DView, AnnotatingView, ScatterplotView):
     def plot(self, experiment, **kwargs):
         """
         Plot the plots.
+        
+        Parameters
+        ----------
         """
         
         view, trait_name = self._strip_trait(self.op.name)
@@ -633,9 +738,12 @@ class GaussianMixture2DView(By2DView, AnnotatingView, ScatterplotView):
                 self._annotation_plot(axes, xlim, ylim, xscale, yscale, annotation, annotation_facet, i, annotation_color)
             return
         elif type(annotation_value) is str:
-            idx_re = re.compile(annotation_facet + '_(\d+)')
-            idx = idx_re.match(annotation_value).group(1)
-            idx = int(idx) - 1             
+            try:
+                idx_re = re.compile(annotation_facet + '_(\d+)')
+                idx = idx_re.match(annotation_value).group(1)
+                idx = int(idx) - 1             
+            except:
+                return
         else:
             idx = annotation_value
         
@@ -703,3 +811,9 @@ def _plot_ellipse(ax, xscale, yscale, center, width, height, angle, **kwargs):
     scaled_patch = patches.PathPatch(scaled_path, **kwargs)
     ax.add_patch(scaled_patch)
             
+            
+util.expand_class_attributes(GaussianMixture1DView)
+util.expand_method_parameters(GaussianMixture1DView, GaussianMixture1DView.plot)
+
+util.expand_class_attributes(GaussianMixture2DView)
+util.expand_method_parameters(GaussianMixture2DView, GaussianMixture2DView.plot)

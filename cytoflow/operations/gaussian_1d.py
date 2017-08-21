@@ -17,9 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 '''
-Created on Dec 16, 2015
-
-@author: brian
+cytoflow.operations.gaussian_1d
+-------------------------------
 '''
 
 import re
@@ -45,25 +44,32 @@ class GaussianMixture1DOp(HasStrictTraits):
     This module fits a Gaussian mixture model with a specified number of
     components to a channel.
     
-    Creates a new categorical metadata variable named `name`, with possible
-    values `name_1` .... `name_n` where `n` is the number of components.
-    An event is assigned to `name_i` category if it falls within `sigma`
+    .. warning:: 
+    
+        :class:`GaussianMixture1DOp` is **DEPRECATED** and will be removed
+        in a future release.  It doesn't correctly handle the case where an 
+        event is present in more than one component.  Please use
+        :class:`GaussianMixtureOp` instead!
+    
+    Creates a new categorical metadata variable named :attr:`name`, with possible
+    values ``name_1`` .... ``name_n`` where ``n`` is the number of components.
+    An event is assigned to ``name_i`` category if it falls within :attr:`sigma`
     standard deviations of the component's mean.  If that is true for multiple
-    categories (or if `sigma == 0.0`), the event is assigned to the category 
+    categories (or if :attr:`sigma` is ``0.0``), the event is assigned to the category 
     with the highest posterior probability.  If the event doesn't fall into
-    any category, it is assigned to `name_None`.
+    any category, it is assigned to ``name_None``.
     
-    As a special case, if `num_components` is `1` and `sigma` > 0.0, then
-    the new condition is boolean, `True` if the event fell in the gate and
-    `False` otherwise.
+    As a special case, if :attr:`num_components` is `1` and :attr:`sigma` 
+    ``> 0.0``, then the new condition is boolean, ``True`` if the event fell in 
+    the gate and ``False`` otherwise.
     
-    Optionally, if `posteriors` is `True`, this module will also compute the 
-    posterior probability of each event in its assigned component, returning
-    it in a new colunm named `{Name}_Posterior`.
+    Optionally, if :attr:`posteriors` is ``True``, this module will also 
+    compute the posterior probability of each event in its assigned component, 
+    returning it in a new colunm named ``{Name}_Posterior``.
     
     Finally, the same mixture model (mean and standard deviation) may not
     be appropriate for every subset of the data.  If this is the case, you
-    can use the `by` attribute to specify metadata by which to aggregate
+    can use the :attr:`by` attribute to specify metadata by which to aggregate
     the data before estimating (and applying) a mixture.  The number of 
     components is the same across each subset, though.
     
@@ -99,36 +105,63 @@ class GaussianMixture1DOp(HasStrictTraits):
         If `True`, add a column named `{Name}_Posterior` giving the posterior
         probability that the event is in the component to which it was
         assigned.  Useful for filtering out low-probability events.
-
-    Statistics
-    ----------
-    mean : Float
-        the mean of the fitted gaussian
         
-    stdev : Float
-        the inverse-scaled standard deviation of the fitted gaussian.  on a 
-        linear scale, this is in the same units as the mean; on a log scale,
-        this is a scalar multiple; and on a logicle scale, this is probably
-        meaningless!
-        
-    interval : (Float, Float)
-        the inverse-scaled (mean - stdev, mean + stdev) of the fitted gaussian.
-        this is likely more meaningful than `stdev`, especially on the
-        `logicle` scale.
-        
-    proportion : Float
-        the proportion of events in each component of the mixture model.  only
-        set if `num_components` > 1.
         
     Examples
     --------
     
-    >>> gauss_op = GaussianMixture1DOp(name = "Gaussian",
-    ...                                channel = "Y2-A",
-    ...                                num_components = 2)
-    >>> gauss_op.estimate(ex2)
-    >>> gauss_op.default_view().plot(ex2)
-    >>> ex3 = gauss_op.apply(ex2)
+    .. plot::
+        :context: close-figs
+        
+        Make a little data set.
+    
+        >>> import cytoflow as flow
+        >>> import_op = flow.ImportOp()
+        >>> import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",
+        ...                              conditions = {'Dox' : 10.0}),
+        ...                    flow.Tube(file = "Plate01/CFP_Well_A4.fcs",
+        ...                              conditions = {'Dox' : 1.0})]
+        >>> import_op.conditions = {'Dox' : 'float'}
+        >>> ex = import_op.apply()
+    
+    Create and parameterize the operation.
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> gm_op = flow.GaussianMixture1DOp(name = 'GM',
+        ...                                  channel = 'Y2-A',
+        ...                                  scale = 'log',
+        ...                                  num_components = 2)
+        
+    Estimate the clusters
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> gm_op.estimate(ex)
+        
+    Plot a diagnostic view
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> gm_op.default_view().plot(ex)
+
+    Apply the gate
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> ex2 = gm_op.apply(ex)
+
+    Plot a diagnostic view with the event assignments
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> gm_op.default_view().plot(ex2)
+
     """
     
     id = Constant('edu.mit.synbio.cytoflow.operations.gaussian_1d')
@@ -148,41 +181,59 @@ class GaussianMixture1DOp(HasStrictTraits):
     
     def estimate(self, experiment, subset = None):
         """
-        Estimate the Gaussian mixture model parameters
+        Estimate the Gaussian mixture model parameters.
+        
+        Parameters
+        ----------
+        experiment : Experiment
+            The data to use to estimate the mixture parameters
+            
+        subset : str (default = None)
+            If set, a Python expression to determine the subset of the data
+            to use to in the estimation.
         """
         
+        warn("GaussianMixture1DOp is DEPRECATED.  Please use GaussianMixtureOp.",
+             util.CytoflowOpWarning)
+        
         if experiment is None:
-            raise util.CytoflowOpError("No experiment specified")
+            raise util.CytoflowOpError('experiment', "No experiment specified")
 
         if self.channel not in experiment.data:
-            raise util.CytoflowOpError("Column {0} not found in the experiment"
-                                  .format(self.channel))
+            raise util.CytoflowOpError('channel',
+                                       "Column {0} not found in the experiment"
+                                       .format(self.channel))
        
         for b in self.by:
             if b not in experiment.data:
-                raise util.CytoflowOpError("Aggregation metadata {0} not found"
-                                      " in the experiment"
-                                      .format(b))
+                raise util.CytoflowOpError('by',
+                                           "Aggregation metadata {0} not found"
+                                           " in the experiment"
+                                           .format(b))
             if len(experiment.data[b].unique()) > 100: #WARNING - magic number
-                raise util.CytoflowOpError("More than 100 unique values found for"
-                                      " aggregation metadata {0}.  Did you"
-                                      " accidentally specify a data channel?"
-                                      .format(b))
+                raise util.CytoflowOpError('by',
+                                           "More than 100 unique values found for"
+                                           " aggregation metadata {0}.  Did you"
+                                           " accidentally specify a data channel?"
+                                           .format(b))
                 
             
         if self.num_components == 1 and self.posteriors:
-            raise util.CytoflowOpError("If num_components == 1, all posteriors are 1.")
+            raise util.CytoflowOpError('num_components',
+                                       "If num_components == 1, all posteriors are 1.")
         
         if subset:
             try:
                 experiment = experiment.query(subset)
             except Exception as e:
-                raise util.CytoflowViewError("Subset string '{0}' isn't valid"
-                                        .format(subset)) from e
+                raise util.CytoflowViewError('subset',
+                                             "Subset string '{0}' isn't valid"
+                                             .format(subset)) from e
                 
             if len(experiment) == 0:
-                raise util.CytoflowViewError("Subset string '{0}' returned no events"
-                                        .format(subset))
+                raise util.CytoflowViewError('subset',
+                                             "Subset string '{0}' returned no events"
+                                             .format(subset))
                 
         if self.by:
             by = sorted(self.by)
@@ -215,9 +266,10 @@ class GaussianMixture1DOp(HasStrictTraits):
             gmm.fit(x[:, np.newaxis])
             
             if not gmm.converged_:
-                raise util.CytoflowOpError("Estimator didn't converge"
-                                      " for group {0}"
-                                      .format(group))
+                raise util.CytoflowOpError(None,
+                                           "Estimator didn't converge"
+                                           " for group {0}"
+                                           .format(group))
                 
             # to make sure we have a stable ordering, sort the components
             # by the means (so the first component has the lowest mean, 
@@ -235,56 +287,96 @@ class GaussianMixture1DOp(HasStrictTraits):
     def apply(self, experiment):
         """
         Assigns new metadata to events using the mixture model estimated
-        in `estimate`.
+        in :meth:`estimate`.
+        
+        Returns
+        -------
+        Experiment
+            A new :class:`.Experiment`, with a new column named :attr:`name`,
+            and possibly one named :attr:`name` _Posterior.  Also the following
+            new :attr:`~.Experiment.statistics`:
+            
+            - **mean** : Float
+                the mean of the fitted gaussian
+            
+            - **stdev** : Float
+                the inverse-scaled standard deviation of the fitted gaussian.  on a 
+                linear scale, this is in the same units as the mean; on a log scale,
+                this is a scalar multiple; and on a logicle scale, this is probably
+                meaningless!
+            
+            - **interval** : (Float, Float)
+                the inverse-scaled (mean - stdev, mean + stdev) of the fitted gaussian.
+                this is likely more meaningful than ``stdev``, especially on the
+                ``logicle`` scale.
+            
+            - **proportion** : Float
+                the proportion of events in each component of the mixture model.  only
+                set if :attr:`num_components` ``> 1``.
+             
         """
+        
+        warn("GaussianMixture1DOp is DEPRECATED.  Please use GaussianMixtureOp.",
+             util.CytoflowOpWarning)
             
         if experiment is None:
-            raise util.CytoflowOpError("No experiment specified")
+            raise util.CytoflowOpError('experiment',
+                                       "No experiment specified")
 
         if not self._gmms:
-            raise util.CytoflowOpError("No model found.  Did you forget to "
+            raise util.CytoflowOpError(None,
+                                       "No model found.  Did you forget to "
                                        "call estimate()?")
         
         # make sure name got set!
         if not self.name:
-            raise util.CytoflowOpError("You have to set the gate's name "
-                                  "before applying it!")
+            raise util.CytoflowOpError('name',
+                                       "You have to set the gate's name "
+                                       "before applying it!")
 
         if self.name in experiment.data.columns:
-            raise util.CytoflowOpError("Experiment already has a column named {0}"
-                                  .format(self.name))
+            raise util.CytoflowOpError('name',
+                                       "Experiment already has a column named {0}"
+                                       .format(self.name))
             
         if not self._gmms:
-            raise util.CytoflowOpError("No components found.  Did you forget to "
-                                  "call estimate()?")
+            raise util.CytoflowOpError(None,
+                                       "No components found.  Did you forget to "
+                                       "call estimate()?")
 
         if not self._scale:
-            raise util.CytoflowOpError("Couldn't find _scale.  What happened??")
+            raise util.CytoflowOpError(None,
+                                       "Couldn't find _scale.  What happened??")
 
         if self.channel not in experiment.data:
-            raise util.CytoflowOpError("Column {0} not found in the experiment"
-                                  .format(self.channel))
+            raise util.CytoflowOpError('channel',
+                                       "Column {0} not found in the experiment"
+                                       .format(self.channel))
 
         if self.posteriors:
             col_name = "{0}_Posterior".format(self.name)
             if col_name in experiment.data:
-                raise util.CytoflowOpError("Column {0} already found in the experiment"
+                raise util.CytoflowOpError('posteriors',
+                                           "Column {0} already found in the experiment"
                               .format(col_name))
        
         for b in self.by:
             if b not in experiment.data:
-                raise util.CytoflowOpError("Aggregation metadata {0} not found"
-                                      " in the experiment"
-                                      .format(b))
+                raise util.CytoflowOpError('by',
+                                           "Aggregation metadata {0} not found"
+                                           " in the experiment"
+                                           .format(b))
 
             if len(experiment.data[b].unique()) > 100: #WARNING - magic number
-                raise util.CytoflowOpError("More than 100 unique values found for"
-                                      " aggregation metadata {0}.  Did you"
-                                      " accidentally specify a data channel?"
-                                      .format(b))
+                raise util.CytoflowOpError(None,
+                                           "More than 100 unique values found for"
+                                           " aggregation metadata {0}.  Did you"
+                                           " accidentally specify a data channel?"
+                                           .format(b))
                            
         if self.sigma < 0.0:
-            raise util.CytoflowOpError("sigma must be >= 0.0")
+            raise util.CytoflowOpError('sigma',
+                                       "sigma must be >= 0.0")
 
         if self.by:
             by = sorted(self.by)
@@ -430,15 +522,18 @@ class GaussianMixture1DOp(HasStrictTraits):
         -------
             IView : an IView, call plot() to see the diagnostic plot.
         """
+        warn("GaussianMixture1DOp is DEPRECATED.  Please use GaussianMixtureOp.",
+             util.CytoflowOpWarning)
+        
         return GaussianMixture1DView(op = self, **kwargs)
     
 @provides(IView)
 class GaussianMixture1DView(By1DView, AnnotatingView, HistogramView):
     """
+    A diagnostic view for a GaussianMixture1DOp.
+    
     Attributes
     ----------    
-    op : Instance(GaussianMixture1DOp)
-        The op whose parameters we're viewing.
     """
     
     id = Constant('edu.mit.synbio.cytoflow.view.gaussianmixture1dview')
@@ -447,6 +542,9 @@ class GaussianMixture1DView(By1DView, AnnotatingView, HistogramView):
     def plot(self, experiment, **kwargs):
         """
         Plot the plots.
+        
+        Parameters
+        ----------
         """
         
         view, trait_name = self._strip_trait(self.op.name)
@@ -469,9 +567,12 @@ class GaussianMixture1DView(By1DView, AnnotatingView, HistogramView):
                 self._annotation_plot(axes, xlim, ylim, xscale, yscale, annotation, annotation_facet, i, annotation_color)
             return
         elif type(annotation_value) is str:
-            idx_re = re.compile(annotation_facet + '_(\d+)')
-            idx = idx_re.match(annotation_value).group(1)
-            idx = int(idx) - 1             
+            try:
+                idx_re = re.compile(annotation_facet + '_(\d+)')
+                idx = idx_re.match(annotation_value).group(1)
+                idx = int(idx) - 1     
+            except:
+                return        
         else:
             idx = annotation_value
               
@@ -493,3 +594,6 @@ class GaussianMixture1DView(By1DView, AnnotatingView, HistogramView):
 # from http://stackoverflow.com/questions/24467972/calculate-area-of-polygon-given-x-y-coordinates
 def poly_area(x,y):
     return 0.5*np.abs(np.dot(x,np.roll(y,1))-np.dot(y,np.roll(x,1)))
+
+util.expand_class_attributes(GaussianMixture1DView)
+util.expand_method_parameters(GaussianMixture1DView, GaussianMixture1DView.plot)

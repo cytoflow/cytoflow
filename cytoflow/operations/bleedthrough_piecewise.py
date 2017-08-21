@@ -113,42 +113,28 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
 
     Create a small experiment:
     
-    .. plot::
-        :context: close-figs
-    
         >>> import cytoflow as flow
         >>> import_op = flow.ImportOp()
         >>> import_op.tubes = [flow.Tube(file = "tasbe/rby.fcs")]
         >>> ex = import_op.apply()
     
     Create and parameterize the operation
-    
-    .. plot::
-        :context: close-figs
         
         >>> bl_op = flow.BleedthroughPiecewiseOp()
         >>> bl_op.controls = {'Pacific Blue-A' : 'tasbe/ebfp.fcs',
         ...                   'FITC-A' : 'tasbe/eyfp.fcs',
         ...                   'PE-Tx-Red-YG-A' : 'tasbe/mkate.fcs'}
+        >>> bl_op.ignore_deprecated = True
     
     Estimate the model parameters
-    
-    .. plot::
-        :context: close-figs 
     
         >>> bl_op.estimate(ex)
     
     Plot the diagnostic plot
-    
-    .. plot::
-        :context: close-figs
 
         >>> bl_op.default_view().plot(ex)  
 
     Apply the operation to the experiment
-    
-    .. plot::
-        :context: close-figs
     
         >>> ex2 = bl_op.apply(ex)  
  
