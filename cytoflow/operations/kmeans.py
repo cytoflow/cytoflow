@@ -17,25 +17,18 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 '''
-Created on Dec 16, 2015
-
-@author: brian
+cytoflow.operations.kmeans
+--------------------------
 '''
 
-from warnings import warn
-from itertools import product
 
-import matplotlib.pyplot as plt
-
-from traits.api import (HasStrictTraits, Str, CStr, Dict, Any, Instance, Bool, 
-                        Constant, List, provides, Property, Enum)
+from traits.api import (HasStrictTraits, Str, CStr, Dict, Any, Instance, 
+                        Constant, List, provides)
 
 import numpy as np
 import sklearn.cluster
-import scipy.stats
 
 import pandas as pd
-import seaborn as sns
 
 from cytoflow.views import IView, HistogramView, ScatterplotView
 import cytoflow.utility as util
@@ -46,18 +39,18 @@ from .base_op_views import By1DView, By2DView, AnnotatingView
 @provides(IOperation)
 class KMeansOp(HasStrictTraits):
     """
-    This module uses a K-means clustering algorithm to cluster events.  
+    Use a K-means clustering algorithm to cluster events.  
     
-    Call `estimate()` to compute the cluster centroids.
+    Call :meth:`estimate` to compute the cluster centroids.
       
-    Calling `apply()` creates a new categorical metadata variable 
-    named `name`, with possible values `{name}_1` .... `name_n` where `n` is 
-    the number of clusters, specified with `n_clusters`.
+    Calling :meth:`apply` creates a new categorical metadata variable 
+    named :attr:`name`, with possible values ``{name}_1`` .... ``name_n`` where 
+    ``n`` is the number of clusters, specified with :attr:`num_clusters`.
     
     The same model may not be appropriate for different subsets of the data set.
-    If this is the case, you can use the `by` attribute to specify metadata by 
-    which to aggregate the data before estimating (and applying) a model.  The 
-    number of clusters is the same across each subset, though.
+    If this is the case, you can use the :attr:`by` attribute to specify 
+    metadata by which to aggregate the data before estimating (and applying) a 
+    model.  The  number of clusters is the same across each subset, though.
 
     Attributes
     ----------
@@ -67,10 +60,10 @@ class KMeansOp(HasStrictTraits):
     channels : List(Str)
         The channels to apply the clustering algorithm to.
 
-    scale : Dict(Str : Enum("linear", "logicle", "log"))
+    scale : Dict(Str : {"linear", "logicle", "log"})
         Re-scale the data in the specified channels before fitting.  If a 
-        channel is in `channels` but not in `scale`, the current package-wide
-        default (set with `set_default_scale`) is used.
+        channel is in :attr:`channels` but not in :attr:`scale`, the current 
+        package-wide default (set with :func:`.set_default_scale`) is used.
 
     num_clusters : Int (default = 2)
         How many components to fit to the data?  Must be a positive integer.
@@ -78,9 +71,9 @@ class KMeansOp(HasStrictTraits):
     by : List(Str)
         A list of metadata attributes to aggregate the data before estimating
         the model.  For example, if the experiment has two pieces of metadata,
-        `Time` and `Dox`, setting `by = ["Time", "Dox"]` will fit the model 
-        separately to each subset of the data with a unique combination of
-        `Time` and `Dox`.
+        ``Time`` and ``Dox``, setting :attr:`by` to ``["Time", "Dox"]`` will 
+        fit the model separately to each subset of the data with a unique 
+        combination of ``Time`` and ``Dox``.
         
     Statistics
     ----------       
@@ -90,13 +83,61 @@ class KMeansOp(HasStrictTraits):
     Examples
     --------
     
-    >>> clust_op = KMeansOp(name = "Clust",
-    ...                         channels = ["V2-A", "Y2-A"],
-    ...                         scale = {"V2-A" : "log"},
-    ...                         num_clusters = 2)
-    >>> clust_op.estimate(ex2)
-    >>> clust_op.default_view(channels = ["V2-A"], ["Y2-A"]).plot(ex2)
-    >>> ex3 = clust_op.apply(ex2)
+    Examples
+    --------
+    
+    .. plot::
+        :context: close-figs
+        
+        Make a little data set.
+    
+        >>> import cytoflow as flow
+        >>> import_op = flow.ImportOp()
+        >>> import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",
+        ...                              conditions = {'Dox' : 10.0}),
+        ...                    flow.Tube(file = "Plate01/CFP_Well_A4.fcs",
+        ...                              conditions = {'Dox' : 1.0})]
+        >>> import_op.conditions = {'Dox' : 'float'}
+        >>> ex = import_op.apply()
+    
+    Create and parameterize the operation.
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> km_op = flow.KMeansOp(name = 'KMeans',
+        ...                       channels = ['V2-A', 'Y2-A'],
+        ...                       scale = {'V2-A' : 'log',
+        ...                                'Y2-A' : 'log'},
+        ...                       num_clusters = 2)
+        
+    Estimate the clusters
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> km_op.estimate(ex)
+        
+    Plot a diagnostic view
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> km_op.default_view().plot(ex)
+
+    Apply the gate
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> ex2 = km_op.apply(ex)
+
+    Plot a diagnostic view with the event assignments
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> km_op.default_view().plot(ex2)
     """
     
     id = Constant('edu.mit.synbio.cytoflow.operations.kmeans')
@@ -113,51 +154,68 @@ class KMeansOp(HasStrictTraits):
     
     def estimate(self, experiment, subset = None):
         """
-        Estimate the Gaussian mixture model parameters
+        Estimate the k-means clusters
+        
+        Parameters
+        ----------
+        experiment : Experiment
+            The :class:`.Experiment` to use to estimate the k-means clusters
+            
+        subset : str (default = None)
+            A Python expression that specifies a subset of the data in 
+            ``experiment`` to use to parameterize the operation.
         """
 
         if experiment is None:
-            raise util.CytoflowOpError("No experiment specified")
+            raise util.CytoflowOpError('experiment',
+                                       "No experiment specified")
         
         if self.num_clusters < 2:
-            raise util.CytoflowOpError("num_clusters must be >= 2")
+            raise util.CytoflowOpError('num_clusters',
+                                       "num_clusters must be >= 2")
         
         if len(self.channels) == 0:
-            raise util.CytoflowOpError("Must set at least one channel")
+            raise util.CytoflowOpError('channels',
+                                       "Must set at least one channel")
 
         for c in self.channels:
             if c not in experiment.data:
-                raise util.CytoflowOpError("Channel {0} not found in the experiment"
+                raise util.CytoflowOpError('channels',
+                                           "Channel {0} not found in the experiment"
                                       .format(c))
                 
         for c in self.scale:
             if c not in self.channels:
-                raise util.CytoflowOpError("Scale set for channel {0}, but it isn't "
+                raise util.CytoflowOpError('scale',
+                                           "Scale set for channel {0}, but it isn't "
                                            "in the experiment"
                                            .format(c))
        
         for b in self.by:
             if b not in experiment.data:
-                raise util.CytoflowOpError("Aggregation metadata {0} not found"
-                                      " in the experiment"
-                                      .format(b))
+                raise util.CytoflowOpError('by',
+                                           "Aggregation metadata {0} not found"
+                                           " in the experiment"
+                                           .format(b))
             if len(experiment.data[b].unique()) > 100: #WARNING - magic number
-                raise util.CytoflowOpError("More than 100 unique values found for"
-                                      " aggregation metadata {0}.  Did you"
-                                      " accidentally specify a data channel?"
-                                      .format(b))
+                raise util.CytoflowOpError('by',
+                                           "More than 100 unique values found for"
+                                           " aggregation metadata {0}.  Did you"
+                                           " accidentally specify a data channel?"
+                                           .format(b))
 
-                
         if subset:
             try:
                 experiment = experiment.query(subset)
             except:
-                raise util.CytoflowViewError("Subset string '{0}' isn't valid"
-                                        .format(subset))
+                raise util.CytoflowOpError('subset',
+                                            "Subset string '{0}' isn't valid"
+                                            .format(subset))
                 
             if len(experiment) == 0:
-                raise util.CytoflowViewError("Subset string '{0}' returned no events"
-                                        .format(subset))
+                raise util.CytoflowOpError('subset',
+                                           "Subset string '{0}' returned no events"
+                                           .format(subset))
                 
         if self.by:
             groupby = experiment.data.groupby(self.by)
@@ -200,41 +258,49 @@ class KMeansOp(HasStrictTraits):
         """
  
         if experiment is None:
-            raise util.CytoflowOpError("No experiment specified")
+            raise util.CytoflowOpError('experiment',
+                                       "No experiment specified")
          
         # make sure name got set!
         if not self.name:
-            raise util.CytoflowOpError("You have to set the gate's name "
-                                  "before applying it!")
+            raise util.CytoflowOpError('name',
+                                       "You have to set the gate's name "
+                                       "before applying it!")
          
         if self.name in experiment.data.columns:
-            raise util.CytoflowOpError("Experiment already has a column named {0}"
-                                  .format(self.name))
+            raise util.CytoflowOpError('name',
+                                       "Experiment already has a column named {0}"
+                                       .format(self.name))
          
         if len(self.channels) == 0:
-            raise util.CytoflowOpError("Must set at least one channel")
+            raise util.CytoflowOpError('channels',
+                                       "Must set at least one channel")
  
         for c in self.channels:
             if c not in experiment.data:
-                raise util.CytoflowOpError("Channel {0} not found in the experiment"
+                raise util.CytoflowOpError('channels',
+                                           "Channel {0} not found in the experiment"
                                       .format(c))
                  
         for c in self.scale:
             if c not in self.channels:
-                raise util.CytoflowOpError("Scale set for channel {0}, but it isn't "
+                raise util.CytoflowOpError('scale',
+                                           "Scale set for channel {0}, but it isn't "
                                            "in the experiment"
                                            .format(c))
         
         for b in self.by:
             if b not in experiment.data:
-                raise util.CytoflowOpError("Aggregation metadata {0} not found"
-                                      " in the experiment"
-                                      .format(b))
+                raise util.CytoflowOpError('by',
+                                           "Aggregation metadata {0} not found"
+                                           " in the experiment"
+                                           .format(b))
             if len(experiment.data[b].unique()) > 100: #WARNING - magic number
-                raise util.CytoflowOpError("More than 100 unique values found for"
-                                      " aggregation metadata {0}.  Did you"
-                                      " accidentally specify a data channel?"
-                                      .format(b))
+                raise util.CytoflowOpError('by',
+                                           "More than 100 unique values found for"
+                                           " aggregation metadata {0}.  Did you"
+                                           " accidentally specify a data channel?"
+                                           .format(b))
                  
         if self.by:
             groupby = experiment.data.groupby(self.by)
@@ -309,19 +375,21 @@ class KMeansOp(HasStrictTraits):
          
         Returns
         -------
-            IView : an IView, call plot() to see the diagnostic plot.
+            IView : an IView, call :meth:`KMeans1DView.plot` to see the diagnostic plot.
         """
         channels = kwargs.pop('channels', self.channels)
         scale = kwargs.pop('scale', self.scale)
         
         for c in channels:
             if c not in self.channels:
-                raise util.CytoflowViewError("Channel {} isn't in the operation's channels"
+                raise util.CytoflowViewError('channels',
+                                             "Channel {} isn't in the operation's channels"
                                              .format(c))
                 
         for s in scale:
             if s not in self.channels:
-                raise util.CytoflowViewError("Channel {} isn't in the operation's channels"
+                raise util.CytoflowViewError('scale',
+                                             "Channel {} isn't in the operation's channels"
                                              .format(s))
 
         for c in channels:
@@ -343,7 +411,8 @@ class KMeansOp(HasStrictTraits):
                                 yscale = scale[channels[1]], 
                                 **kwargs)
         else:
-            raise util.CytoflowViewError("Can't specify more than two channels for a default view")
+            raise util.CytoflowViewError('channels',
+                                         "Can't specify more than two channels for a default view")
     
 @provides(IView)
 class KMeans1DView(By1DView, AnnotatingView, HistogramView):

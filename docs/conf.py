@@ -57,8 +57,8 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.autosummary',
     'sphinxcontrib.napoleon',
-    'plot_directive',
-
+    'sphinx.ext.mathjax',
+    'plot_directive', 
 ]
 
 # Generate the API documentation when building
@@ -319,7 +319,7 @@ def run_apidoc(_):
     sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
     cur_dir = os.path.abspath(os.path.dirname(__file__))
     module = os.path.join(cur_dir,"..","cytoflow")
-    main([None, '-e', '-E', '-f', '-o', cur_dir, module])    
+#     main([None, '-e', '-E', '-f', '-o', cur_dir, module])    
 
 
     

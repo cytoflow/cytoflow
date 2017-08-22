@@ -226,14 +226,14 @@ class GaussianMixture1DOp(HasStrictTraits):
             try:
                 experiment = experiment.query(subset)
             except Exception as e:
-                raise util.CytoflowViewError('subset',
-                                             "Subset string '{0}' isn't valid"
-                                             .format(subset)) from e
+                raise util.CytoflowOpError('subset',
+                                           "Subset string '{0}' isn't valid"
+                                           .format(subset)) from e
                 
             if len(experiment) == 0:
-                raise util.CytoflowViewError('subset',
-                                             "Subset string '{0}' returned no events"
-                                             .format(subset))
+                raise util.CytoflowOpError('subset',
+                                           "Subset string '{0}' returned no events"
+                                           .format(subset))
                 
         if self.by:
             by = sorted(self.by)

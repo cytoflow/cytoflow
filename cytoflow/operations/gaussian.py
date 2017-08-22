@@ -110,11 +110,11 @@ class GaussianMixtureOp(HasStrictTraits):
     Notes
     -----
     
-    We use the Mahalnobis distance as a multivariate generalization of 
-    the number of standard deviations an event is from the mean of the
-    multivariate gaussian.  If \vec{x} is an observation from a distribution
-    with mean \vec{mu} and S is the covariance matrix, then the Mahalanobis
-    distance is sqrt((x - mu)^T * S^-1 *(x - mu)).
+    We use the Mahalnobis distance as a multivariate generalization of the 
+    number of standard deviations an event is from the mean of the multivariate
+    gaussian.  If :math:`\\vec{x}` is an observation from a distribution with 
+    mean :math:`\\vec{\\mu}` and :math:`S` is the covariance matrix, then the 
+    Mahalanobis distance is :math:`\\sqrt{(x - \\mu)^T \\cdot S^{-1} \\cdot (x - \\mu)}`.
     
     Examples
     --------

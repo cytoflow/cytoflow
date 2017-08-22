@@ -276,11 +276,11 @@ class FlowPeaksOp(HasStrictTraits):
             try:
                 experiment = experiment.query(subset)
             except:
-                raise util.CytoflowViewError("Subset string '{0}' isn't valid"
+                raise util.CytoflowOpError("Subset string '{0}' isn't valid"
                                         .format(subset))
                 
             if len(experiment) == 0:
-                raise util.CytoflowViewError("Subset string '{0}' returned no events"
+                raise util.CytoflowOpError("Subset string '{0}' returned no events"
                                         .format(subset))
                 
         if self.by:

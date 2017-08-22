@@ -17,9 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 '''
-Created on Mar 20, 2015
-
-@author: brian
+cytoflow.operations.import_op
+-----------------------------
 '''
 
 import warnings
@@ -66,75 +65,74 @@ class Tube(HasTraits):
 @provides(IOperation)
 class ImportOp(HasStrictTraits):
     """
-    An operation for importing data and making an `Experiment`.
+    An operation for importing data and making an :class:`.Experiment`.
     
-    To use, set the `conditions` dict to a mapping between condition name and
-    NumPy `dtype`.  Useful dtypes include `category`, `float`, `int`, `bool`.
+    To use, set the :attr:`conditions` dict to a mapping between condition name 
+    and NumPy ``dtype``.  Useful dtypes include ``category``, ``float``, 
+    ``int``, ``bool``.
     
-    Next, set `tubes` to a list of `Tube` containing FCS filenames and the
-    corresponding conditions.
+    Next, set :attr:`tubes` to a list of :class:`Tube` containing FCS filenames 
+    and the corresponding conditions.
     
     If you would rather not analyze every single event in every FCS file,
-    set events` to the number of events from each FCS file you want to load.
+    set :attr:`events` to the number of events from each FCS file you want to 
+    load.
     
-    Call `apply()` to load the data.
+    Call :meth:`apply` to load the data.  The usual ``experiment`` parameter
+    can be ``None``.
     
     Attributes
     ----------
-    
     conditions : Dict(Str, Str)
-        A dictionary mapping condition names (keys) to NumPy `dtype`s (values).
-        Useful `dtype`s include "category", "float", "int", and "bool".
+        A dictionary mapping condition names (keys) to NumPy ``dtype``s (values).
+        Useful ``dtype``s include ``category``, ``float``, ``int``, and ``bool``.
         
     tubes : List(Tube)
-        A list of `Tube` instances, which map FCS files to their corresponding
-        experimental conditions.  Each `Tube` must have a `conditions` dict
-        whose keys match `self.conditions.keys()`.
+        A list of :class:``Tube`` instances, which map FCS files to their corresponding
+        experimental conditions.  Each :class:``Tube`` must have a 
+        :attr:``~Tube.conditions`` dict whose keys match those of 
+        :attr:`conditions`.
         
-    channels = Dict(Str, Str)
+    channels : Dict(Str, Str)
         If you only need a subset of the channels available in the data set,
-        specify them here.  Each (key, value) pair specifies a channel to
+        specify them here.  Each ``(key, value)`` pair specifies a channel to
         include in the output experiment.  The key is the channel name in the 
         FCS file, and the value is the name of the channel in the Experiment.
         You can use this to rename channels as you import data (because flow
         channel names are frequently not terribly informative.)  New channel
-        names must be valid Python identifiers: start with a letter or `_`, and
-        all characters must be letters, numbers or `_`.  If `channels` is
+        names must be valid Python identifiers: start with a letter or ``_``, and
+        all characters must be letters, numbers or ``_``.  If :attr:`channels` is
         empty, load all channels in the FCS files.
         
     events : Int (default = 0)
-        If >= 0, import only a random subset of events of size `events`. 
+        If ``> 0``, import only a random subset of events of size :attr:`events`. 
         Presumably the analysis will go faster but less precisely; good for
-        interactive data exploration.  Then, unset `events` and re-run
+        interactive data exploration.  Then, unset :attr:`events` and re-run
         the analysis non-interactively.
         
-    name_metadata : Enum(None, "$PnN", "$PnS") (default = None)
-        Which FCS metadata is the channel name?  If `None`, attempt to  
+    name_metadata : {None, "$PnN", "$PnS"} (default = None)
+        Which FCS metadata is the channel name?  If ``None``, attempt to  
         autodetect.
         
     ignore_v : List(Str)
-        **Cytoflow** is designed to operate on an `Experiment` containing
+        :class:`cytoflow` is designed to operate on an :class:`.Experiment` containing
         tubes that were all collected under the same instrument settings.
         In particular, the same PMT voltages ensure that data can be
         compared across samples.
         
-        *Very rarely*, you may need to set up an Experiment with different 
-        voltage settings.  This is likely only to be the case when you are
-        trying to figure out which voltages should be used in future
-        experiments.  If so, set `ignore_v` to a List of channel names
-        to ignore particular channels.  **BE WARNED - THIS WILL BREAK REAL 
-        EXPERIMENTS.**
+        *Very rarely*, you may need to set up an :class:`.Experiment` with 
+        different voltage settings on different :class:`Tube`s.  This is likely 
+        only to be the case when you are trying to figure out which voltages 
+        should be used in future experiments.  If so, set :attr:`ignore_v` to a 
+        :class:`List` of channel names to ignore particular channels.  
+        
+        .. warning::
+        
+            THIS WILL BREAK REAL EXPERIMENTS
         
     Metadata
     --------
-    
-    This operation adds `voltage` and `range` metadata for each channel, 
-    corresponding to the `$PnV` and `$PnR` FCS fields.  If `ignore_v` is
-    specified, it also gets added as experiment-wide metadata.
-    
-    For each condition, this operation adds "experiment == True" to its
-    metadata.  This is to distinguish between conditions that were added by
-    gates, etc.
+
         
     Examples
     --------
@@ -169,16 +167,44 @@ class ImportOp(HasStrictTraits):
     ignore_v = List(Str)
       
     def apply(self, experiment = None):
+        """
+        Load a new :class:`.Experiment`.  
+        
+        Returns
+        -------
+        Experiment
+            The new :class:`.Experiment`.  New channels have the following
+            metadata:
+            
+            - **voltage** - int
+                The voltage that this channel was collected at.  Determined
+                by the ``$PnV`` field from the first FCS file.
+                
+            - **range** - int
+                The maximum range of this channel.  Determined by the ``$PnR``
+                field from the first FCS file.
+                
+            New experimental conditions do not have **voltage** or **range**
+            metadata, obviously.  Instead, they have **experiment** set to 
+            ``True``, to distinguish the experimental variables from the
+            conditions that were added by gates, etc.
+            
+            If :attr:`ignore_v` is set, it is added as a key to the 
+            :class:`.Experiment`-wide metadata.
+            
+        """
         
         if not self.tubes or len(self.tubes) == 0:
-            raise util.CytoflowOpError("Must specify some tubes!")
+            raise util.CytoflowOpError('tubes',
+                                       "Must specify some tubes!")
         
         # if we have channel renaming, make sure the new names are valid
         # python identifiers
         if self.channels:
             for old_name, new_name in self.channels.items():
                 if old_name != new_name and new_name != util.sanitize_identifier(new_name):
-                    raise util.CytoflowOpError("Channel name {} must be a "
+                    raise util.CytoflowOpError('channels',
+                                               "Channel name {} must be a "
                                                "valid Python identifier."
                                                .format(new_name))
         
@@ -187,17 +213,19 @@ class ImportOp(HasStrictTraits):
         for tube in self.tubes:
             tube_conditions = set(tube.conditions)
             if len(tube0_conditions ^ tube_conditions) > 0:
-                raise util.CytoflowOpError("Tube {0} didn't have the same "
-                                      "conditions as tube {1}"
-                                      .format(tube.file, self.tubes[0].file))
+                raise util.CytoflowOpError('tubes',
+                                           "Tube {0} didn't have the same "
+                                           "conditions as tube {1}"
+                                           .format(tube.file, self.tubes[0].file))
 
         # make sure experimental conditions are unique
         for idx, i in enumerate(self.tubes[0:-1]):
             for j in self.tubes[idx+1:]:
                 if i.conditions_equal(j):
-                    raise util.CytoflowOpError("The same conditions specified for "
-                                          "tube {0} and tube {1}"
-                                          .format(i.file, j.file))
+                    raise util.CytoflowOpError('tubes',
+                                               "The same conditions specified for "
+                                               "tube {0} and tube {1}"
+                                               .format(i.file, j.file))
         
         experiment = Experiment()
         
@@ -216,7 +244,8 @@ class ImportOp(HasStrictTraits):
                                              meta_data_only = True,
                                              reformat_meta = True)
         except Exception as e:
-            raise util.CytoflowOpError("FCS reader threw an error reading metadata "
+            raise util.CytoflowOpError(None,
+                                       "FCS reader threw an error reading metadata "
                                        "for tube {}"
                                        .format(self.tubes[0].file)) from e
               
@@ -257,7 +286,8 @@ class ImportOp(HasStrictTraits):
         
         for channel in channels:
             if channel not in meta_channels.index:
-                raise util.CytoflowOpError("Channel {0} not in tube {1}"
+                raise util.CytoflowOpError('channels',
+                                           "Channel {0} not in tube {1}"
                                            .format(channel, self.tubes[0].file))                         
         
         # now that we have the metadata, load it into experiment
@@ -318,13 +348,13 @@ def check_tube(filename, experiment):
                                      meta_data_only = True,
                                      reformat_meta = True)
     except Exception as e:
-        raise util.CytoflowOpError("FCS reader threw an error reading metadata "
-                                   "for tube {0}"
-                                   .format(filename)) from e
+        raise util.CytoflowError("FCS reader threw an error reading metadata "
+                                 "for tube {0}"
+                                 .format(filename)) from e
     
     # first make sure the tube has the right channels    
     if not set([experiment.metadata[c]["fcs_name"] for c in experiment.channels]) <= set(tube_meta["_channel_names_"]):
-        raise util.CytoflowOpError("Tube {0} doesn't have the same channels"
+        raise util.CytoflowError("Tube {0} doesn't have the same channels"
                                  .format(filename))
      
     tube_channels = tube_meta["_channels_"]
@@ -337,14 +367,14 @@ def check_tube(filename, experiment):
         # first check voltage
         if "voltage" in experiment.metadata[channel]:    
             if not "$PnV" in tube_channels.loc[fcs_name]:
-                raise util.CytoflowOpError("Didn't find a voltage for channel {0}" \
+                raise util.CytoflowError("Didn't find a voltage for channel {0}" \
                                    "in tube {1}".format(channel, filename))
             
             old_v = experiment.metadata[channel]["voltage"]
             new_v = tube_channels.loc[fcs_name]['$PnV']
             
             if old_v != new_v and not channel in ignore_v:
-                raise util.CytoflowOpError("Tube {0} doesn't have the same voltages"
+                raise util.CytoflowError("Tube {0} doesn't have the same voltages"
                                     .format(filename))
 
         # TODO check the delay -- and any other params?
@@ -360,8 +390,8 @@ def parse_tube(filename, experiment):
                             filename, 
                             channel_naming = experiment.metadata["name_metadata"])
     except Exception as e:
-        raise util.CytoflowOpError("FCS reader threw an error reading data for tube {}"
-                                   .format(filename)) from e
+        raise util.CytoflowError("FCS reader threw an error reading data for tube {}"
+                                 .format(filename)) from e
             
     return tube_data
 

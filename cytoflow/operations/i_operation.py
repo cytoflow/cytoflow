@@ -33,11 +33,11 @@ class IOperation(Interface):
         a unique identifier for this class. prefix: edu.mit.synbio.cytoflow.operations
         
     friendly_id : Str
-        The operation's human-readable id (like "Logicle" or "Hyperlog").  Used
+        The operation's human-readable id (like "Threshold" or "K-means").  Used
         for UI implementations.
         
     name : Str
-        The name of this IOperation instance (like "Debris Filter").  Useful for
+        The name of this IOperation instance (like "Debris_Filter").  Useful for
         UI implementations; sometimes used for naming gates' metadata
     """
     
@@ -47,7 +47,8 @@ class IOperation(Interface):
     name = Str
         
     def estimate(self, experiment, subset = None):
-        """Estimate this operation's parameters from some data.
+        """
+        Estimate this operation's parameters from some data.
         
         For operations that are data-driven (for example, a mixture model,
         or the Logicle transform), estimate the operation's parameters from
