@@ -244,44 +244,52 @@ class FlowPeaksOp(HasStrictTraits):
         """
 
         if experiment is None:
-            raise util.CytoflowOpError("No experiment specified")
+            raise util.CytoflowOpError('experiment',
+                                       "No experiment specified")
         
         if len(self.channels) == 0:
-            raise util.CytoflowOpError("Must set at least one channel")
+            raise util.CytoflowOpError('channels',
+                                       "Must set at least one channel")
 
         for c in self.channels:
             if c not in experiment.data:
-                raise util.CytoflowOpError("Channel {0} not found in the experiment"
+                raise util.CytoflowOpError('channels',
+                                           "Channel {0} not found in the experiment"
                                       .format(c))
                 
         for c in self.scale:
             if c not in self.channels:
-                raise util.CytoflowOpError("Scale set for channel {0}, but it isn't "
+                raise util.CytoflowOpError('scale',
+                                           "Scale set for channel {0}, but it isn't "
                                            "in the experiment"
                                            .format(c))
        
         for b in self.by:
             if b not in experiment.data:
-                raise util.CytoflowOpError("Aggregation metadata {0} not found"
-                                      " in the experiment"
-                                      .format(b))
+                raise util.CytoflowOpError('by',
+                                           "Aggregation metadata {0} not found"
+                                           " in the experiment"
+                                           .format(b))
             if len(experiment.data[b].unique()) > 100: #WARNING - magic number
-                raise util.CytoflowOpError("More than 100 unique values found for"
-                                      " aggregation metadata {0}.  Did you"
-                                      " accidentally specify a data channel?"
-                                      .format(b))
+                raise util.CytoflowOpError('by',
+                                           "More than 100 unique values found for"
+                                           " aggregation metadata {0}.  Did you"
+                                           " accidentally specify a data channel?"
+                                           .format(b))
 
                 
         if subset:
             try:
                 experiment = experiment.query(subset)
             except:
-                raise util.CytoflowOpError("Subset string '{0}' isn't valid"
-                                        .format(subset))
+                raise util.CytoflowOpError('subset',
+                                           "Subset string '{0}' isn't valid"
+                                           .format(subset))
                 
             if len(experiment) == 0:
-                raise util.CytoflowOpError("Subset string '{0}' returned no events"
-                                        .format(subset))
+                raise util.CytoflowOpError('subset',
+                                           "Subset string '{0}' returned no events"
+                                           .format(subset))
                 
         if self.by:
             groupby = experiment.data.groupby(self.by)
@@ -397,7 +405,8 @@ class FlowPeaksOp(HasStrictTraits):
                                               options = {'rhobeg' : beta_max[k],
                                                          'maxiter' : 5000})
                 if not res.success:
-                    raise util.CytoflowOpError("Peak finding failed for cluster {}: {}"
+                    raise util.CytoflowOpError(None,
+                                               "Peak finding failed for cluster {}: {}"
                                                .format(k, res.message))
 
 #                 ### The peak-searching algorithm from the paper.  works fine,
@@ -476,7 +485,8 @@ class FlowPeaksOp(HasStrictTraits):
                                                      method = 'Bounded')
                 
                 if res.status != 0:
-                    raise util.CytoflowOpError("tol optimization failed for {}, {}"
+                    raise util.CytoflowOpError(None,
+                                               "tol optimization failed for {}, {}"
                                                .format(x, y))
                 return -1.0 * res.fun
                 
@@ -581,41 +591,49 @@ class FlowPeaksOp(HasStrictTraits):
         """
  
         if experiment is None:
-            raise util.CytoflowOpError("No experiment specified")
+            raise util.CytoflowOpError('experiment',
+                                       "No experiment specified")
          
         # make sure name got set!
         if not self.name:
-            raise util.CytoflowOpError("You have to set the gate's name "
-                                  "before applying it!")
+            raise util.CytoflowOpError('name',
+                                       "You have to set the gate's name "
+                                       "before applying it!")
          
         if self.name in experiment.data.columns:
-            raise util.CytoflowOpError("Experiment already has a column named {0}"
-                                  .format(self.name))
+            raise util.CytoflowOpError('name',
+                                       "Experiment already has a column named {0}"
+                                       .format(self.name))
          
         if len(self.channels) == 0:
-            raise util.CytoflowOpError("Must set at least one channel")
+            raise util.CytoflowOpError('channels',
+                                       "Must set at least one channel")
  
         for c in self.channels:
             if c not in experiment.data:
-                raise util.CytoflowOpError("Channel {0} not found in the experiment"
-                                      .format(c))
+                raise util.CytoflowOpError('channels',
+                                           "Channel {0} not found in the experiment"
+                                           .format(c))
                  
         for c in self.scale:
             if c not in self.channels:
-                raise util.CytoflowOpError("Scale set for channel {0}, but it isn't "
+                raise util.CytoflowOpError('scale',
+                                           "Scale set for channel {0}, but it isn't "
                                            "in the experiment"
                                            .format(c))
         
         for b in self.by:
             if b not in experiment.data:
-                raise util.CytoflowOpError("Aggregation metadata {0} not found"
-                                      " in the experiment"
-                                      .format(b))
+                raise util.CytoflowOpError('by',
+                                           "Aggregation metadata {0} not found"
+                                           " in the experiment"
+                                           .format(b))
             if len(experiment.data[b].unique()) > 100: #WARNING - magic number
-                raise util.CytoflowOpError("More than 100 unique values found for"
-                                      " aggregation metadata {0}.  Did you"
-                                      " accidentally specify a data channel?"
-                                      .format(b))
+                raise util.CytoflowOpError('by',
+                                           "More than 100 unique values found for"
+                                           " aggregation metadata {0}.  Did you"
+                                           " accidentally specify a data channel?"
+                                           .format(b))
                  
         if self.by:
             groupby = experiment.data.groupby(self.by)
@@ -635,7 +653,8 @@ class FlowPeaksOp(HasStrictTraits):
                      
         for group, data_subset in groupby:
             if len(data_subset) == 0:
-                raise util.CytoflowOpError("Group {} had no data"
+                raise util.CytoflowOpError('by',
+                                           "Group {} had no data"
                                            .format(group))
             x = data_subset.loc[:, self.channels[:]]
             for c in self.channels:
@@ -764,12 +783,14 @@ class FlowPeaksOp(HasStrictTraits):
         
         for c in channels:
             if c not in self.channels:
-                raise util.CytoflowViewError("Channel {} isn't in the operation's channels"
+                raise util.CytoflowViewError('channels',
+                                             "Channel {} isn't in the operation's channels"
                                              .format(c))
                 
         for s in scale:
             if s not in self.channels:
-                raise util.CytoflowViewError("Channel {} isn't in the operation's channels"
+                raise util.CytoflowViewError('channels',
+                                             "Channel {} isn't in the operation's channels"
                                              .format(s))
 
         for c in channels:
@@ -777,7 +798,8 @@ class FlowPeaksOp(HasStrictTraits):
                 scale[c] = util.get_default_scale()
             
         if len(channels) == 0:
-            raise util.CytoflowViewError("Must specify at least one channel for a default view")
+            raise util.CytoflowViewError('channels',
+                                         "Must specify at least one channel for a default view")
         elif len(channels) == 1:
             return FlowPeaks1DView(op = self, 
                                    channel = channels[0], 
@@ -799,7 +821,8 @@ class FlowPeaksOp(HasStrictTraits):
                                        yscale = scale[channels[1]], 
                                        **kwargs)
         else:
-            raise util.CytoflowViewError("Can't specify more than two channels for a default view")
+            raise util.CytoflowViewError(None,
+                                         "Can't specify more than two channels for a default view")
         
     
 @provides(IView)

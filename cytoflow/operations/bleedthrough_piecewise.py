@@ -173,7 +173,7 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
                                        "to True.")
         
         if experiment is None:
-            raise util.CytoflowOpError(None, 
+            raise util.CytoflowOpError('experiment', 
                                        "No experiment specified")
         
         if self.num_knots < 3:
@@ -327,7 +327,7 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
                                        "to True.")
             
         if experiment is None:
-            raise util.CytoflowOpError(None,
+            raise util.CytoflowOpError('experiment',
                                        "No experiment specified")
         
         if not self._interpolators:
@@ -446,15 +446,15 @@ class BleedthroughPiecewiseDiagnostic(HasStrictTraits):
         """Plot a faceted histogram view of a channel"""
         
         if experiment is None:
-            raise util.CytoflowViewError(None,
+            raise util.CytoflowViewError('experiment',
                                          "No experiment specified")
         
         if not self.op.controls:
-            raise util.CytoflowViewError(None,
+            raise util.CytoflowViewError('op',
                                          "No controls specified")
         
         if not self.op._splines:
-            raise util.CytoflowViewError(None,
+            raise util.CytoflowViewError('op',
                                          "No splines. Did you forget to call estimate()?")
         
         kwargs.setdefault('histtype', 'stepfilled')

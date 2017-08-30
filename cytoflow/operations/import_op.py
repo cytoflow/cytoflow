@@ -130,10 +130,6 @@ class ImportOp(HasStrictTraits):
         
             THIS WILL BREAK REAL EXPERIMENTS
         
-    Metadata
-    --------
-
-        
     Examples
     --------
     >>> tube1 = flow.Tube(file = 'RFP_Well_A3.fcs', conditions = {"Dox" : 10.0})
@@ -244,7 +240,7 @@ class ImportOp(HasStrictTraits):
                                              meta_data_only = True,
                                              reformat_meta = True)
         except Exception as e:
-            raise util.CytoflowOpError(None,
+            raise util.CytoflowOpError('tubes',
                                        "FCS reader threw an error reading metadata "
                                        "for tube {}"
                                        .format(self.tubes[0].file)) from e

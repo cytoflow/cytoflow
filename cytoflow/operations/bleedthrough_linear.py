@@ -132,8 +132,7 @@ class BleedthroughLinearOp(HasStrictTraits):
         Estimate the bleedthrough from simgle-channel controls in :attr:`controls`
         """
         if experiment is None:
-            raise util.CytoflowOpError(None,
-                                       "No experiment specified")
+            raise util.CytoflowOpError('experiment', "No experiment specified")
         
         channels = list(self.controls.keys())
 

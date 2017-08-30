@@ -341,9 +341,9 @@ class Base2DView(BaseDataView):
     Attributes
     ----------
     xchannel, ychannel : Str
-        The schannel to view
+        The channels to view
         
-    xscale, yscale : {'linear', 'log', 'logicle'}
+    xscale, yscale : {'linear', 'log', 'logicle'} (default = 'linear')
         The scales applied to the data before plotting it.
     """
     

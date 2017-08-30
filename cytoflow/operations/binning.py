@@ -141,7 +141,7 @@ class BinningOp(HasStrictTraits):
 
         """
         if experiment is None:
-            raise util.CytoflowOpError(None, "no experiment specified")
+            raise util.CytoflowOpError('experiment', "no experiment specified")
         
         if not self.name:
             raise util.CytoflowOpError('name', "Name is not set")

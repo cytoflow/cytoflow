@@ -156,7 +156,7 @@ class ChannelStatisticOp(HasStrictTraits):
         """
         
         if experiment is None:
-            raise util.CytoflowOpError(None, "Must specify an experiment")
+            raise util.CytoflowOpError('experiment', "Must specify an experiment")
 
         if not self.name:
             raise util.CytoflowOpError('name', "Must specify a name")

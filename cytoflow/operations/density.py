@@ -200,7 +200,7 @@ class DensityGateOp(HasStrictTraits):
         """
         
         if experiment is None:
-            raise util.CytoflowOpError(None,
+            raise util.CytoflowOpError('experiment',
                                        "No experiment specified")
 
         if self.xchannel not in experiment.data:
@@ -246,14 +246,14 @@ class DensityGateOp(HasStrictTraits):
             try:
                 experiment = experiment.query(subset)
             except:
-                raise util.CytoflowViewError(None,
-                                             "Subset string '{0}' isn't valid"
-                                        .format(subset))
+                raise util.CytoflowOpError('subset',
+                                            "Subset string '{0}' isn't valid"
+                                            .format(subset))
                 
             if len(experiment) == 0:
-                raise util.CytoflowViewError(None,
-                                             "Subset string '{0}' returned no events"
-                                        .format(subset))
+                raise util.CytoflowOpError('subset',
+                                           "Subset string '{0}' returned no events"
+                                           .format(subset))
                 
         if self.by:
             groupby = experiment.data.groupby(self.by)
@@ -329,7 +329,7 @@ class DensityGateOp(HasStrictTraits):
         """
             
         if experiment is None:
-            raise util.CytoflowOpError(None,
+            raise util.CytoflowOpError('experiment',
                                        "No experiment specified")
         
         if not self.xchannel:

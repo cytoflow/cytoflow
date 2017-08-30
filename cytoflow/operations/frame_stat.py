@@ -17,9 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 '''
-Created on Sep 13, 2016
-
-@author: brian
+cytoflow.operations.frame_stat
+------------------------------
 '''
 from warnings import warn
 import pandas as pd
@@ -38,37 +37,38 @@ class FrameStatisticOp(HasStrictTraits):
     Apply a function to subsets of a data set, and add it as a statistic
     to the experiment.
     
-    The `apply()` function groups the data by the variables in `by`, then
-    applies the `function` callable to each pandas.DataFrame subset.  The 
-    callable should take a DataFrame as its only parameter.  The return type
-    is arbitrary, but to be used with the rest of `Cytoflow` it should probably
-    be a numeric type or an iterable of numeric types.
+    The :meth:`apply` function groups the data by the variables in :attr:`by`, 
+    then applies the :attr:`function` callable to each :class:`pandas.DataFrame` 
+    subset.  The callable should take a :class:`DataFrame` as its only parameter.  
+    The return type is arbitrary, but to be used with the rest of 
+    :class:`cytoflow` it should probably be a numeric type or an iterable of 
+    numeric types.
     
     Attributes
     ----------
     name : Str
         The operation name.  Becomes the first element in the
-        Experiment.statistics key tuple.
+        :attr:`Experiment.statistics` key tuple.
         
     function : Callable
         The function used to compute the statistic.  Must take a 
-        pandas.DataFrame as its only argument.  The return type is arbitrary, 
-        but to be used with the rest of `Cytoflow` it should probably be a 
-        numeric type or an iterable of numeric types.  If `statistic_name` is 
-        unset, the name of the function becomes the second in element in the 
-        Experiment.statistics key tuple.
+        :class:`pandas.DataFrame` as its only argument.  The return type is 
+        arbitrary, but to be used with the rest of :class:`cytoflow` it should 
+        probably be a numeric type or an iterable of numeric types.  If 
+        :attr:`statistic_name` is unset, the name of the function becomes the 
+        second in element in the :attr:`Experiment.statistics` key tuple.
         
     statistic_name : Str
         The name of the function; if present, becomes the second element in
-        the Experiment.statistics key tuple.  Particularly useful if `function`
-        is a lambda.
+        the :attr:`Experiment.statistics` key tuple.  Particularly useful if 
+        :attr:`function` is a lambda.
         
     by : List(Str)
         A list of metadata attributes to aggregate the data before applying the
         function.  For example, if the experiment has two pieces of metadata,
-        `Time` and `Dox`, setting `by = ["Time", "Dox"]` will apply `function` 
-        separately to each subset of the data with a unique combination of
-        `Time` and `Dox`.
+        ``Time`` and ``Dox``, setting ``by = ["Time", "Dox"]`` will apply 
+        :attr:`function` separately to each subset of the data with a unique 
+        combination of ``Time`` and ``Dox``.
         
     subset : Str
         A Python expression sent to Experiment.query() to subset the data before
@@ -99,16 +99,20 @@ class FrameStatisticOp(HasStrictTraits):
     
     def apply(self, experiment):
         if experiment is None:
-            raise util.CytoflowOpError("No experiment specified")
+            raise util.CytoflowOpError('experiment',
+                                       "No experiment specified")
 
         if not self.name:
-            raise util.CytoflowOpError("Must specify a name")
+            raise util.CytoflowOpError('name',
+                                       "Must specify a name")
 
         if not self.function:
-            raise util.CytoflowOpError("Must specify a function")
+            raise util.CytoflowOpError('function',
+                                       "Must specify a function")
             
         if not self.by:
-            raise util.CytoflowOpError("Must specify some grouping conditions "
+            raise util.CytoflowOpError('by',
+                                       "Must specify some grouping conditions "
                                        "in 'by'")
 
         new_experiment = experiment.clone()
@@ -117,24 +121,28 @@ class FrameStatisticOp(HasStrictTraits):
             try:
                 experiment = experiment.query(self.subset)
             except Exception as e:
-                raise util.CytoflowOpError("Subset string '{0}' isn't valid"
-                                        .format(self.subset)) from e
+                raise util.CytoflowOpError('subset',
+                                           "Subset string '{0}' isn't valid"
+                                           .format(self.subset)) from e
                 
             if len(experiment) == 0:
-                raise util.CytoflowOpError("Subset string '{0}' returned no events"
-                                        .format(self.subset))
+                raise util.CytoflowOpError('subset',
+                                           "Subset string '{0}' returned no events"
+                                           .format(self.subset))
        
         for b in self.by:
             if b not in experiment.data:
-                raise util.CytoflowOpError("Aggregation metadata {0} not found"
-                                      " in the experiment"
-                                      .format(b))
+                raise util.CytoflowOpError('by',
+                                           "Aggregation metadata {0} not found"
+                                           " in the experiment"
+                                           .format(b))
             unique = experiment.data[b].unique()
             if len(unique) > 100: #WARNING - magic number
-                raise util.CytoflowOpError("More than 100 unique values found for"
-                                      " aggregation metadata {0}.  Did you"
-                                      " accidentally specify a data channel?"
-                                      .format(b))
+                raise util.CytoflowOpError('by',
+                                           "More than 100 unique values found for"
+                                           " aggregation metadata {0}.  Did you"
+                                           " accidentally specify a data channel?"
+                                           .format(b))
                 
             if len(unique) == 1:
                 warn("Only one category for {}".format(b), util.CytoflowOpWarning)
@@ -162,7 +170,8 @@ class FrameStatisticOp(HasStrictTraits):
                 stat.loc[group] = self.function(data_subset)
 
             except Exception as e:
-                raise util.CytoflowOpError("Your function threw an error in group {}"
+                raise util.CytoflowOpError('function',
+                                           "Your function threw an error in group {}"
                                            .format(group)) from e    
                             
             # check for, and warn about, NaNs.

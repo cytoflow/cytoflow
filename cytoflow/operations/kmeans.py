@@ -235,7 +235,8 @@ class KMeansOp(HasStrictTraits):
                     
         for group, data_subset in groupby:
             if len(data_subset) == 0:
-                raise util.CytoflowOpError("Group {} had no data"
+                raise util.CytoflowOpError('by',
+                                           "Group {} had no data"
                                            .format(group))
             x = data_subset.loc[:, self.channels[:]]
             for c in self.channels:
@@ -320,7 +321,8 @@ class KMeansOp(HasStrictTraits):
                      
         for group, data_subset in groupby:
             if len(data_subset) == 0:
-                raise util.CytoflowOpError("Group {} had no data"
+                raise util.CytoflowOpError('by',
+                                           "Group {} had no data"
                                            .format(group))
             x = data_subset.loc[:, self.channels[:]]
             for c in self.channels:
@@ -371,7 +373,7 @@ class KMeansOp(HasStrictTraits):
     
     def default_view(self, **kwargs):
         """
-        Returns a diagnostic plot of the Gaussian mixture model.
+        Returns a diagnostic plot of the k-means clustering.
          
         Returns
         -------
@@ -419,12 +421,12 @@ class KMeans1DView(By1DView, AnnotatingView, HistogramView):
     """
     Attributes
     ----------    
-    op : Instance(GaussianMixture1DOp)
+    op : Instance(KMeansOp)
         The op whose parameters we're viewing.
     """
     
-    id = Constant('edu.mit.synbio.cytoflow.view.gaussianmixture1dview')
-    friendly_id = Constant("1D Gaussian Mixture Diagnostic Plot")
+    id = Constant('edu.mit.synbio.cytoflow.views.kmeans1dview')
+    friendly_id = Constant("1D KMeans Diagnostic Plot")
     
     channel = Str
     scale = util.ScaleEnum
@@ -432,6 +434,9 @@ class KMeans1DView(By1DView, AnnotatingView, HistogramView):
     def plot(self, experiment, **kwargs):
         """
         Plot the plots.
+        
+        Parameters
+        ----------
         """
                 
         view, trait_name = self._strip_trait(self.op.name)
@@ -460,12 +465,12 @@ class KMeans2DView(By2DView, AnnotatingView, ScatterplotView):
     """
     Attributes
     ----------
-    op : Instance(GaussianMixture2DOp)
+    op : Instance(KMeansOp)
         The op whose parameters we're viewing.        
     """
      
-    id = Constant('edu.mit.synbio.cytoflow.view.gaussianmixture2dview')
-    friendly_id = Constant("Gaussian Mixture Diagnostic Plot")
+    id = Constant('edu.mit.synbio.cytoflow.view.kmeans2dview')
+    friendly_id = Constant("2D Kmeans Diagnostic Plot")
     
     xchannel = Str
     ychannel = Str
@@ -476,6 +481,9 @@ class KMeans2DView(By2DView, AnnotatingView, ScatterplotView):
     def plot(self, experiment, **kwargs):
         """
         Plot the plots.
+        
+        Parameters
+        ----------
         """
                 
         view, trait_name = self._strip_trait(self.op.name)
@@ -502,3 +510,9 @@ class KMeans2DView(By2DView, AnnotatingView, ScatterplotView):
             y = yscale.inverse(km.cluster_centers_[k][iy])
             
             axes.plot(x, y, '*', color = 'blue')
+
+util.expand_class_attributes(KMeans1DView)
+util.expand_method_parameters(KMeans1DView, KMeans1DView.plot)
+
+util.expand_class_attributes(KMeans2DView)
+util.expand_method_parameters(KMeans2DView, KMeans2DView.plot)

@@ -33,12 +33,12 @@ class IOperation(Interface):
         a unique identifier for this class. prefix: edu.mit.synbio.cytoflow.operations
         
     friendly_id : Str
-        The operation's human-readable id (like "Threshold" or "K-means").  Used
-        for UI implementations.
+        The operation's human-readable id (like ``Threshold`` or ``K-means``).  
+        Used for UI implementations.
         
     name : Str
-        The name of this IOperation instance (like "Debris_Filter").  Useful for
-        UI implementations; sometimes used for naming gates' metadata
+        The name of this IOperation instance (like ``Debris_Filter``).  Useful 
+        for UI implementations; sometimes used for naming gates' metadata
     """
     
     # interface traits
@@ -50,17 +50,16 @@ class IOperation(Interface):
         """
         Estimate this operation's parameters from some data.
         
-        For operations that are data-driven (for example, a mixture model,
-        or the Logicle transform), estimate the operation's parameters from
-        an experiment.
+        For operations that are data-driven (for example, a mixture model), 
+        estimate the operation's parameters from an experiment.
         
         Parameters
         ----------
         experiment : Experiment
-            the Experiment to use in the estimation.
+            the :class:`.Experiment` to use in the estimation.
         
         subset : Str (optional)
-            a string passed to pandas.DataFrame.query() to select the subset
+            a string passed to :meth:`pandas.DataFrame.query` to select the subset
             of data on which to run the parameter estimation.
             
         Raises
@@ -77,12 +76,12 @@ class IOperation(Interface):
         Parameters
         ----------
         experiment : Experiment
-            the Experiment to apply this op to
+            the :class:`Experiment` to apply this op to
                     
         Returns
         -------
         Experiment
-            the old Experiment with this operation applied
+            the old :class:`Experiment` with this operation applied
                 
         Raises
         ------
@@ -94,11 +93,11 @@ class IOperation(Interface):
     def default_view(self, **kwargs):
         """
         Many operations have a "default" view.  This can either be a diagnostic
-        for the operation's estimate() method, an interactive for setting
+        for the operation's :meth:`estimate` method, an interactive for setting
         gates, etc.  Frequently it makes sense to link the properties of the
-        view to the properties of the IOperation; sometimes, *default_view()*
-        is the only way to get the view (ie, it's not useful when it doesn't
-        reference an IOperation instance.)
+        view to the properties of the :class:`IOperation`; sometimes, 
+        :meth:`default_view` is the only way to get the view (ie, it's not 
+        useful when it doesn't reference an :class:`IOperation` instance.)
         
         Parameters
         ----------

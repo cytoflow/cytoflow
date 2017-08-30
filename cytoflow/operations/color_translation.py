@@ -154,7 +154,7 @@ class ColorTranslationOp(HasStrictTraits):
         """
 
         if experiment is None:
-            raise util.CytoflowOpError(None,
+            raise util.CytoflowOpError('experiment',
                                        "No experiment specified")
         
         if not self.controls:
@@ -168,17 +168,20 @@ class ColorTranslationOp(HasStrictTraits):
         for from_channel, to_channel in translation.items():
             
             if from_channel not in experiment.channels:
-                raise util.CytoflowOpError("Channel {0} not in the experiment"
-                                      .format(from_channel))
+                raise util.CytoflowOpError('translatin',
+                                           "Channel {0} not in the experiment"
+                                           .format(from_channel))
                 
             if to_channel not in experiment.channels:
-                raise util.CytoflowOpError("Channel {0} not in the experiment"
-                                      .format(to_channel))
+                raise util.CytoflowOpError('translation',
+                                           "Channel {0} not in the experiment"
+                                           .format(to_channel))
             
             if (from_channel, to_channel) not in self.controls:
-                raise util.CytoflowOpError("Control file for {0} --> {1} "
-                                      "not specified"
-                                      .format(from_channel, to_channel))
+                raise util.CytoflowOpError('translation',
+                                           "Control file for {0} --> {1} "
+                                           "not specified"
+                                           .format(from_channel, to_channel))
                 
             tube_file = self.controls[(from_channel, to_channel)]
             
@@ -295,10 +298,10 @@ class ColorTranslationOp(HasStrictTraits):
         """
 
         if experiment is None:
-            raise util.CytoflowOpError(None, "No experiment specified")
+            raise util.CytoflowOpError('experiment', "No experiment specified")
         
         if not self.controls:
-            raise util.CytoflowOpError(None, "No controls specified")
+            raise util.CytoflowOpError('controls', "No controls specified")
         
         if not self._trans_fn:
             raise util.CytoflowOpError(None, "Transfer functions aren't set. "
@@ -381,15 +384,15 @@ class ColorTranslationDiagnostic(HasStrictTraits):
         """
         
         if experiment is None:
-            raise util.CytoflowViewError(None,
+            raise util.CytoflowViewError('experiment',
                                          "No experiment specified")
         
         if not self.op.controls:
-            raise util.CytoflowViewError(None,
+            raise util.CytoflowViewError('op',
                                          "No controls specified")
         
         if not self.op._trans_fn:
-            raise util.CytoflowViewError(None,
+            raise util.CytoflowViewError('op',
                                          "Transfer functions aren't set. "
                                          "Did you forget to call estimate()?")
 
@@ -404,7 +407,7 @@ class ColorTranslationDiagnostic(HasStrictTraits):
         for from_channel, to_channel in translation.items():
             
             if (from_channel, to_channel) not in self.op.controls:
-                raise util.CytoflowViewError(None,
+                raise util.CytoflowViewError('op',
                                              "Control file for {0} --> {1} not specified"
                                              .format(from_channel, to_channel))
             tube_file = self.op.controls[(from_channel, to_channel)]

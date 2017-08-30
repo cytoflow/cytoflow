@@ -36,37 +36,6 @@ class ScatterplotView(Base2DView):
     
     Attributes
     ----------
-    
-    name : Str
-        The name of the plot, for visualization (and the plot title)
-        
-    xchannel : Str
-        The channel to plot on the X axis
-        
-    xscale : Enum("linear", "log", "logicle") (default = "linear")
-        What scale to use on the X axis
-        
-    ychannel : Str
-        The channel to plot on the Y axis
-        
-    yscale : Enum("linear", "log", "logicle") (default = "linear")
-        The scale to use on the Y axis
-        
-    xfacet : Str
-        The conditioning variable for multiple plots (horizontal)
-        
-    yfacet = Str
-        The conditioning variable for multiple plots (vertical)
-        
-    huefacet = Str
-        The conditioning variable for multiple plots (color)
-        
-    huescale = Enum("linear", "log", "logicle") (default = "linear")
-        What scale to use on the color bar, if there is one plotted
-
-    subset = Str
-        A string passed to pandas.DataFrame.query() to subset the data before
-        we plot it.
         
     """
     

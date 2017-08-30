@@ -130,7 +130,8 @@ class AutofluorescenceOp(HasStrictTraits):
 
         """
         if experiment is None:
-            raise util.CytoflowOpError(None, "No experiment specified")
+            raise util.CytoflowOpError('experiment', 
+                                       "No experiment specified")
         
         if not self.channels:
             raise util.CytoflowOpError('channels', "No channels specified")
@@ -199,7 +200,7 @@ class AutofluorescenceOp(HasStrictTraits):
               The standard deviation of the non-fluorescent distribution
         """
         if experiment is None:
-            raise util.CytoflowOpError(None, "No experiment specified")
+            raise util.CytoflowOpError('experiment', "No experiment specified")
         
         if not self.channels:
             raise util.CytoflowOpError('channels', "No channels specified")
@@ -279,30 +280,30 @@ class AutofluorescenceDiagnosticView(HasStrictTraits):
         """
         
         if experiment is None:
-            raise util.CytoflowViewError(None, "No experiment specified")
+            raise util.CytoflowViewError('experiment', "No experiment specified")
         
         if not self.op.channels:
-            raise util.CytoflowViewError(None, "No channels specified")
+            raise util.CytoflowViewError('op', "No channels specified")
         
         if not self.op._af_median:
-            raise util.CytoflowViewError(None, 
+            raise util.CytoflowViewError('op', 
                                          "Autofluorescence values aren't set. Did "
                                          "you forget to run estimate()?")
             
         if not set(self.op._af_median.keys()) <= set(experiment.channels) or \
            not set(self.op._af_stdev.keys()) <= set(experiment.channels):
-            raise util.CytoflowOpError(None, 
+            raise util.CytoflowOpError('op', 
                                        "Autofluorescence estimates aren't set, or are "
                                        "different than those in the experiment "
                                        "parameter. Did you forget to run estimate()?")
 
         if not set(self.op._af_median.keys()) == set(self.op._af_stdev.keys()):
-            raise util.CytoflowOpError(None,
+            raise util.CytoflowOpError('op',
                                        "Median and stdev keys are different! "
                                        "What the hell happened?!")
         
         if not set(self.op.channels) == set(self.op._af_median.keys()):
-            raise util.CytoflowOpError(None, 
+            raise util.CytoflowOpError('op', 
                                        "Estimated channels differ from the channels "
                                        "parameter.  Did you forget to (re)run estimate()?")
         

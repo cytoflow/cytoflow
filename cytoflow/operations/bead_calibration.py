@@ -222,7 +222,7 @@ class BeadCalibrationOp(HasStrictTraits):
             
         """
         if experiment is None:
-            raise util.CytoflowOpError(None, "No experiment specified")
+            raise util.CytoflowOpError('experiment', "No experiment specified")
         
         if not self.beads_file:
             raise util.CytoflowOpError('beads_file', "No beads file specified")
@@ -395,7 +395,7 @@ class BeadCalibrationOp(HasStrictTraits):
         """
         
         if experiment is None:
-            raise util.CytoflowOpError(None, "No experiment specified")
+            raise util.CytoflowOpError('experiment', "No experiment specified")
         
         channels = list(self.units.keys())
 
@@ -554,12 +554,12 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
         """
 
         if experiment is None:
-            raise util.CytoflowViewError("No experiment specified")
+            raise util.CytoflowViewError('experiment', "No experiment specified")
 
         channels = list(self.op.units.keys())
 
         if not channels:
-            raise util.CytoflowViewError("No channels to plot")
+            raise util.CytoflowViewError(None, "No channels to plot")
 
         # make a little Experiment
         try:
@@ -574,7 +574,7 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
         
         for idx, channel in enumerate(channels):
             if channel not in beads_exp.channels:
-                raise util.CytoflowViewError("Channel {} not in the beads!"
+                raise util.CytoflowViewError(None, "Channel {} not in the beads!"
                                              .format(channel))
             data = beads_exp.data[channel]
             data_range = experiment.metadata[channel]['range']
