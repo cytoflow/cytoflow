@@ -16,6 +16,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+'''
+cytoflow.operations.threshold
+-----------------------------
+'''
+
 from traits.api import (HasStrictTraits, CFloat, Str, CStr, Instance, 
                         Bool, on_trait_change, provides, DelegatesTo, Any, 
                         Constant)
@@ -27,19 +32,21 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 
 import cytoflow.utility as util
-import cytoflow.views
+from cytoflow.views import ISelectionView, HistogramView
 
 from .i_operation import IOperation
+from .base_op_views import Op1DView
 
 @provides(IOperation)
 class ThresholdOp(HasStrictTraits):
-    """Apply a threshold to a cytometry experiment.
+    """
+    Apply a threshold gate to a cytometry experiment.
     
     Attributes
     ----------
     name : Str
-        The operation name.  Used to name the new metadata field in the
-        experiment that's created by apply()
+        The operation name.  Used to name the new column in the
+        experiment that's created by :meth:`apply`
         
     channel : Str
         The name of the channel to apply the threshold on.
@@ -49,26 +56,49 @@ class ThresholdOp(HasStrictTraits):
         
     Examples
     --------
-    >>> thresh = flow.ThresholdOp()
-    >>> thresh.name = "Y2-A+"
-    >>> thresh.channel = 'Y2-A'
-    >>> thresh.threshold = 0.3
-    >>> 
-    >>> ex3 = thresh.apply(ex2)    
     
-    Alternately, in an IPython notebook with `%matplotlib notebook`
+    .. plot::
+        :context: close-figs
+        
+        Make a little data set.
     
-    >>> h = flow.HistogramView()
-    >>> h.channel = 'Y2-A'
-    >>> h.huefacet = 'Dox'
-    >>> ts = flow.ThresholdSelection(view = h)
-    >>> ts.plot(ex2)
-    >>> ts.interactive = True
-    >>> # .... draw a threshold on the plot
-    >>> thresh = flow.ThresholdOp(name = "Y2-A+",
-    ...                           channel = "Y2-A",
-    ...                           thresh.threshold = ts.threshold)
-    >>> ex3 = thresh.apply(ex2)
+        >>> import cytoflow as flow
+        >>> import_op = flow.ImportOp()
+        >>> import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",
+        ...                              conditions = {'Dox' : 10.0}),
+        ...                    flow.Tube(file = "Plate01/CFP_Well_A4.fcs",
+        ...                              conditions = {'Dox' : 1.0})]
+        >>> import_op.conditions = {'Dox' : 'float'}
+        >>> ex = import_op.apply()
+    
+    Create and parameterize the operation.
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> thresh_op = flow.ThresholdOp(name = 'Threshold',
+        ...                              channel = 'Y2-A',
+        ...                              threshold = 2000)
+        
+
+    Plot a diagnostic view
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> thresh_op.default_view(scale = 'log').plot(ex)
+        
+    Apply the gate, and show the result
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> ex2 = thresh_op.apply(ex)
+        >>> ex2.data.groupby('Threshold').size()
+        Threshold
+        False    15786
+        True      4214
+        dtype: int64
     """
     
     # traits
@@ -84,19 +114,21 @@ class ThresholdOp(HasStrictTraits):
         
         Parameters
         ----------
-        old_experiment : Experiment
-            the experiment to which this op is applied
+        experiment : Experiment
+            the experiment to which this operation is applied
             
         Returns
         -------
-            a new experiment, the same as old_experiment but with a new
-            column the same as the operation name.  The bool is True if the
-            event's measurement in self.channel is greater than self.threshold;
-            it is False otherwise.
+        Experiment
+            a new :class:`~experiment`, the same as the old experiment but with 
+            a new column of type ``bool`` with the same name as the operation 
+            :attr:`name`.  The new condition is ``True`` if the event's 
+            measurement in :attr:`channel` is greater than :attr:`threshold`;
+            it is ``False`` otherwise.
         """
         
         if experiment is None:
-            raise util.CytoflowOpError(None, "No experiment specified")
+            raise util.CytoflowOpError('experiment', "No experiment specified")
         
         # make sure name got set!
         if not self.name:
@@ -126,8 +158,8 @@ class ThresholdOp(HasStrictTraits):
         return ThresholdSelection(op = self, **kwargs)
 
 
-@provides(cytoflow.views.ISelectionView)
-class ThresholdSelection(cytoflow.views.HistogramView):
+@provides(ISelectionView)
+class ThresholdSelection(Op1DView, HistogramView):
     """
     Plots, and lets the user interact with, a threshold on the X axis.
     
@@ -135,15 +167,6 @@ class ThresholdSelection(cytoflow.views.HistogramView):
     
     Attributes
     ----------
-    op : Instance(ThresholdOp)
-        the ThresholdOp we're working on.
-        
-    huefacet : Str
-        The conditioning variable to show multiple colors on this plot
-
-    subset : Str    
-        the string passed to Experiment.subset() defining the subset we plot
-
     interactive : Bool
         is this view interactive?
         
@@ -154,7 +177,7 @@ class ThresholdSelection(cytoflow.views.HistogramView):
         
     Examples
     --------
-    In an IPython notebook with `%matplotlib notebook`
+    In an Jupyter notebook with `%matplotlib notebook`
     
     >>> t = flow.ThresholdOp(name = "Threshold",
     ...                      channel = "Y2-A")
@@ -167,10 +190,11 @@ class ThresholdSelection(cytoflow.views.HistogramView):
     
     id = Constant('edu.mit.synbio.cytoflow.views.threshold')
     friendly_id = Constant("Threshold Selection")
+
+    xfacet = Constant(None)
+    yfacet = Constant(None)
     
-    op = Instance(IOperation)
-    name = DelegatesTo('op')
-    channel = DelegatesTo('op')
+    scale = util.ScaleEnum
     threshold = DelegatesTo('op')
     interactive = Bool(False, transient = True)
 
@@ -180,17 +204,16 @@ class ThresholdSelection(cytoflow.views.HistogramView):
     _cursor = Instance(Cursor, transient = True)
     
     def plot(self, experiment, **kwargs):
-        """Plot the histogram and then plot the threshold on top of it."""
+        """
+        Plot the histogram and then plot the threshold on top of it.
+        
+        Parameters
+        ----------
+        """
         
         if experiment is None:
-            raise util.CytoflowViewError(None, "No experiment specified")
-        
-        if self.xfacet:
-            raise util.CytoflowViewError('xfacet', "ThresholdSelection.xfacet must be empty")
-        
-        if self.yfacet:
-            raise util.CytoflowViewError('yfacet', "ThresholdSelection.yfacet must be empty")
-        
+            raise util.CytoflowViewError('experiment', "No experiment specified")
+
         super(ThresholdSelection, self).plot(experiment, **kwargs)
         self._ax = plt.gca()        
         self._draw_threshold()
@@ -236,6 +259,9 @@ class ThresholdSelection(cytoflow.views.HistogramView):
         # sometimes the axes aren't set up and we don't get xdata (??)
         if event.xdata:
             self.threshold = event.xdata
+            
+util.expand_class_attributes(ThresholdSelection)
+util.expand_method_parameters(ThresholdSelection, ThresholdSelection.plot)  
         
 if __name__ == '__main__':
     import cytoflow as flow

@@ -16,6 +16,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+'''
+cytoflow.operations.range
+-------------------------
+'''
+
 from traits.api import (HasStrictTraits, CFloat, Str, CStr, Instance, Bool, 
                         provides, on_trait_change, DelegatesTo, Any, Constant)
 
@@ -24,19 +29,21 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D    
 
 import cytoflow.utility as util
-import cytoflow.views
+from cytoflow.views import HistogramView, ISelectionView
 
 from .i_operation import IOperation
+from .base_op_views import Op1DView
 
 @provides(IOperation)
 class RangeOp(HasStrictTraits):
-    """Apply a range gate to a cytometry experiment.
+    """
+    Apply a range gate to a cytometry experiment.
     
     Attributes
     ----------
     name : Str
         The operation name.  Used to name the new metadata field in the
-        experiment that's created by apply()
+        experiment that's created by :meth:`apply`
         
     channel : Str
         The name of the channel to apply the range gate.
@@ -46,26 +53,53 @@ class RangeOp(HasStrictTraits):
         
     high : Float
         The highest value to include in this gate.
-        
+
     Examples
     --------
-    >>> range = flow.RangeOp()
-    >>> range.name = "Y2-A+"
-    >>> range.channel = 'Y2-A'
-    >>> range.low = 0.3
-    >>> range.high = 0.8
-    >>> 
-    >>> ex3 = range.apply(ex2)
     
-    Alternately  (in an IPython notebook with `%matplotlib notebook`)
+    .. plot::
+        :context: close-figs
+        
+        Make a little data set.
     
-    >>> r = RangeOp(name = 'Y2-A+',
-    ...             channel = 'Y2-A')
-    >>> rv = r.default_view()
-    >>> rv.interactive = True
-    >>> rv.plot(ex2)
-    >>> ### draw a range on the plot ###
-    >>> ex3 = r.apply(ex2)
+        >>> import cytoflow as flow
+        >>> import_op = flow.ImportOp()
+        >>> import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",
+        ...                              conditions = {'Dox' : 10.0}),
+        ...                    flow.Tube(file = "Plate01/CFP_Well_A4.fcs",
+        ...                              conditions = {'Dox' : 1.0})]
+        >>> import_op.conditions = {'Dox' : 'float'}
+        >>> ex = import_op.apply()
+    
+    Create and parameterize the operation.
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> range_op = flow.RangeOp(name = 'Range',
+        ...                         channel = 'Y2-A',
+        ...                         low = 2000,
+        ...                         high = 10000)
+        
+
+    Plot a diagnostic view
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> range_op.default_view(scale = 'log').plot(ex)
+        
+    Apply the gate, and show the result
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> ex2 = range_op.apply(ex)
+        >>> ex2.data.groupby('Range').size()
+        Range
+        False    16042
+        True      3958
+        dtype: int64
     """
     
     # traits
@@ -78,7 +112,7 @@ class RangeOp(HasStrictTraits):
     high = CFloat()
         
     def apply(self, experiment):
-        """Applies the threshold to an experiment.
+        """Applies the range gate to an experiment.
         
         Parameters
         ----------
@@ -87,40 +121,48 @@ class RangeOp(HasStrictTraits):
             
         Returns
         -------
-            a new experiment, the same as old_experiment but with a new
-            column the same as the operation name.  The bool is True if the
-            event's measurement in self.channel is greater than self.low and
-            less than self.high; it is False otherwise.
+        Experiment
+            a new experiment, the same as old :class:`~Experiment` but with a new
+            column of type ``bool`` with the same as the operation name.  The 
+            bool is ``True`` if the event's measurement in :attr:`channel` is 
+            greater than :attr:`low` and less than :attr:`high`; it is ``False`` 
+            otherwise.
         """
 
         if experiment is None:
-            raise util.CytoflowOpError("No experiment specified")
+            raise util.CytoflowOpError('experiment', "No experiment specified")
         
         # make sure name got set!
         if not self.name:
-            raise util.CytoflowOpError("You have to set the gate's name "
-                                  "before applying it!")
+            raise util.CytoflowOpError('name', 
+                                       "You have to set the gate's name "
+                                       "before applying it!")
 
         if self.name in experiment.data.columns:
-            raise util.CytoflowOpError("Experiment already has a column named {0}"
-                                  .format(self.name))
+            raise util.CytoflowOpError('name', 
+                                       "Experiment already has a column named {0}"
+                                       .format(self.name))
         
         if not self.channel:
-            raise util.CytoflowOpError("Channel not specified")
+            raise util.CytoflowOpError('channel', "Channel not specified")
         
         if not self.channel in experiment.channels:
-            raise util.CytoflowOpError("Channel {0} not in the experiment"
-                                  .format(self.channel))
+            raise util.CytoflowOpError('channel',
+                                       "Channel {0} not in the experiment"
+                                       .format(self.channel))
         
         if self.high <= self.low:
-            raise util.CytoflowOpError("range high must be > range low")
+            raise util.CytoflowOpError('high',
+                                       "range high must be > range low")
         
         if self.high <= experiment[self.channel].min():
-            raise util.CytoflowOpError("range high must be > {0}"
-                                  .format(experiment[self.channel].min()))
+            raise util.CytoflowOpError('high',
+                                       "range high must be > {0}"
+                                       .format(experiment[self.channel].min()))
         if self.low >= experiment[self.channel].max():
-            raise util.CytoflowOpError("range low must be < {0}"
-                                  .format(experiment[self.channel].max()))
+            raise util.CytoflowOpError('low',
+                                       "range low must be < {0}"
+                                       .format(experiment[self.channel].max()))
         
         gate = experiment[self.channel].between(self.low, self.high)
         new_experiment = experiment.clone()
@@ -132,23 +174,14 @@ class RangeOp(HasStrictTraits):
     def default_view(self, **kwargs):
         return RangeSelection(op = self, **kwargs)
     
-@provides(cytoflow.views.ISelectionView)
-class RangeSelection(cytoflow.views.HistogramView):
-    """Plots, and lets the user interact with, a selection on the X axis.
+@provides(ISelectionView)
+class RangeSelection(Op1DView, HistogramView):
+    """
+    Plots, and lets the user interact with, a selection on the X axis.
     
-    Is it beautiful?  No.  Does it demonstrate the capabilities I desire?  Yes.
     
     Attributes
     ----------
-    op : Instance(RangeOp)
-        the RangeOp instance that this view is, well, viewing
-        
-    huefacet : Str
-        The conditioning variable to show multiple colors on this plot
-        
-    subset : Str
-        The string passed to `Experiment.query()` to subset the data before
-        plotting
         
     interactive : Bool
         is this view interactive?  Ie, can the user set min and max
@@ -156,7 +189,7 @@ class RangeSelection(cytoflow.views.HistogramView):
         
     Notes
     -----
-    We inherit `xfacet` and `yfacet` from `cytoflow.views.HistogramView`, but
+    We inherit :attr:`xfacet` and :attr:`yfacet` from `cytoflow.views.HistogramView`, but
     they must both be unset!
         
     Examples
@@ -176,11 +209,14 @@ class RangeSelection(cytoflow.views.HistogramView):
     id = Constant('edu.mit.synbio.cytoflow.views.range')
     friendly_id = Constant("Range Selection")
 
-    op = Instance(IOperation)
-    name = DelegatesTo('op')
-    channel = DelegatesTo('op')
+    xfacet = Constant(None)
+    yfacet = Constant(None)
+
     low = DelegatesTo('op')
     high = DelegatesTo('op')
+    
+    scale = util.ScaleEnum
+    
     interactive = Bool(False, transient = True)
 
     # internal state.
@@ -192,17 +228,17 @@ class RangeSelection(cytoflow.views.HistogramView):
     _hline = Instance(Line2D, transient = True)
         
     def plot(self, experiment, **kwargs):
-        """Plot the underlying histogram and then plot the selection on top of it."""
+        """
+        Plot the underlying histogram and then plot the selection on top of it.
+        
+        Parameters
+        ----------
+        """
         
         if experiment is None:
-            raise util.CytoflowViewError("No experiment specified")
-        
-        if self.xfacet:
-            raise util.CytoflowViewError("RangeSelection.xfacet must be empty or `Undefined`")
-        
-        if self.yfacet:
-            raise util.CytoflowViewError("RangeSelection.yfacet must be empty or `Undefined`")
-        
+            raise util.CytoflowViewError('experiment',
+                                         "No experiment specified")
+
         super(RangeSelection, self).plot(experiment, **kwargs)
         self._ax = plt.gca()
         self._draw_span()
@@ -260,6 +296,9 @@ class RangeSelection(cytoflow.views.HistogramView):
         """Update selection traits"""
         self.low = xmin
         self.high = xmax
+        
+util.expand_class_attributes(RangeSelection)
+util.expand_method_parameters(RangeSelection, RangeSelection.plot)  
         
 if __name__ == '__main__':
     import cytoflow as flow

@@ -18,9 +18,7 @@
 
 
 '''
-Created on Jan 18, 2017
-
-@author: brian
+cytoflow.operations.ratio
 '''
 
 import numpy as np
@@ -45,16 +43,6 @@ class RatioOp(HasStrictTraits):
         
     denominator : Str
         The channel that is the denominator of the ratio.
-
-        
-    Metadata
-    --------
-    numerator : Str
-        What was the numerator channel for the new one?
-        
-    denominator : Str
-        What was the denominator channel for the new one?
-    
 
     Examples
     --------
@@ -81,27 +69,42 @@ class RatioOp(HasStrictTraits):
             
         Returns
         -------
+        Experiment
             a new experiment with the new ratio channel
+            
+            The new channel also has the following new metadata:
+
+            - **numerator** : Str
+                What was the numerator channel for the new one?
+        
+            - **denominator** : Str
+                What was the denominator channel for the new one?
+    
         """
 
         if experiment is None:
-            raise util.CytoflowOpError("No experiment specified")
+            raise util.CytoflowOpError('experiment',
+                                       "No experiment specified")
         
         if self.numerator not in experiment.channels:
-            raise util.CytoflowOpError("Channel {0} not in the experiment"
-                                  .format(self.numerator))
+            raise util.CytoflowOpError('numerator',
+                                       "Channel {0} not in the experiment"
+                                       .format(self.numerator))
             
         if self.denominator not in experiment.channels:
-            raise util.CytoflowOpError("Channel {0} not in the experiment"
-                                  .format(self.denominator))
+            raise util.CytoflowOpError('denominator',
+                                       "Channel {0} not in the experiment"
+                                       .format(self.denominator))
             
         if self.name != util.sanitize_identifier(self.name):
-            raise util.CytoflowOpError("New channel {0} must be a valid Python identifier"
-                                  .format(self.name))            
+            raise util.CytoflowOpError('name',
+                                       "New channel {0} must be a valid Python identifier"
+                                       .format(self.name))            
             
         if self.name in experiment.channels:
-            raise util.CytoflowOpError("New channel {0} is already in the experiment"
-                                  .format(self.name))
+            raise util.CytoflowOpError('name',
+                                       "New channel {0} is already in the experiment"
+                                       .format(self.name))
 
         new_experiment = experiment.clone()
         new_experiment.add_channel(self.name, 

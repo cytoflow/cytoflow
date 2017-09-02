@@ -27,7 +27,6 @@ from traits.api import (HasStrictTraits, Str, CStr, List, Float, provides,
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from matplotlib import scale
 import numpy as np
 
 import cytoflow.utility as util
@@ -90,8 +89,13 @@ class PolygonOp(HasStrictTraits):
         >>> p = flow.PolygonOp(name = "Polygon",
         ...                    xchannel = "V2-A",
         ...                    ychannel = "Y2-A")
-        >>> p.vertices = [(-95, 12436), (116, 22530), (767, 4873), 
-        ...               (101, 939), (-266, 2914)]
+        >>> p.vertices = [(23.411982294776319, 5158.7027015021222), 
+        ...               (102.22182270573683, 23124.058843387455), 
+        ...               (510.94519955277201, 23124.058843387455), 
+        ...               (1089.5215641232173, 3800.3424832180476), 
+        ...               (340.56382570202402, 801.98947404942271), 
+        ...               (65.42597937575897, 1119.3133482602157)]
+
         
     Show the default view.  
 
@@ -235,7 +239,7 @@ class PolygonSelection(Op2DView, ScatterplotView):
     
     Attributes
     ----------
-    interactive : Bool
+    interactive : bool
         is this view interactive?  Ie, can the user set the polygon verticies
         with mouse clicks?
         
@@ -265,7 +269,6 @@ class PolygonSelection(Op2DView, ScatterplotView):
     xscale = DelegatesTo('op', prefix = '_xscale')
     yscale = DelegatesTo('op', prefix = '_yscale')
 
-    vertices = DelegatesTo('op')
     interactive = Bool(False, transient = True)
 
     # internal state.
@@ -287,7 +290,7 @@ class PolygonSelection(Op2DView, ScatterplotView):
         self._draw_poly()
         self._interactive()
     
-    @on_trait_change('vertices', post_init = True)
+    @on_trait_change('op.vertices', post_init = True)
     def _draw_poly(self):
         if not self._ax:
             return
@@ -295,10 +298,10 @@ class PolygonSelection(Op2DView, ScatterplotView):
         if self._patch and self._patch in self._ax.patches:
             self._patch.remove()
             
-        if not self.vertices or len(self.vertices) < 3:
+        if not self.op.vertices or len(self.op.vertices) < 3:
             return
              
-        patch_vert = np.concatenate((np.array(self.vertices), 
+        patch_vert = np.concatenate((np.array(self.op.vertices), 
                                     np.array((0,0), ndmin = 2)))
                                     
         self._patch = \
@@ -320,7 +323,7 @@ class PolygonSelection(Op2DView, ScatterplotView):
             self._widget = None       
     
     def _onselect(self, vertices):
-        self.vertices = vertices
+        self.op.vertices = vertices
     
 util.expand_class_attributes(PolygonSelection)
 util.expand_method_parameters(PolygonSelection, PolygonSelection.plot)

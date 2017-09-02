@@ -16,6 +16,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+'''
+cytoflow.operations.quad
+------------------------
+'''
+
 from traits.api import (HasStrictTraits, CFloat, Str, CStr, Bool, Instance,
                         provides, on_trait_change, DelegatesTo, Any, Constant)
 
@@ -27,22 +32,25 @@ import numpy as np
 import pandas as pd
 
 import cytoflow.utility as util
-import cytoflow.views
+from cytoflow.views import ISelectionView, ScatterplotView
 
 from .i_operation import IOperation
+from .base_op_views import Op2DView
+
 
 @provides(IOperation)
 class QuadOp(HasStrictTraits):
-    """Apply a quadrant gate to a cytometry experiment.
+    """
+    Apply a quadrant gate to a cytometry experiment.
     
-    Creates a new metadata column named `name`, with values `name_1`,
-    `name_2`, `name_3`, `name_4` ordered CLOCKWISE from upper-left.
+    Creates a new metadata column named ``name``, with values ``name_1``,
+    `name_2`, `name_3`, `name_4`` ordered CLOCKWISE from upper-left.
     
     Attributes
     ----------
     name : Str
         The operation name.  Used to name the new metadata field in the
-        experiment that's created by apply()
+        experiment that's created by :meth:`apply`
         
     xchannel : Str
         The name of the first channel to apply the range gate.
@@ -58,19 +66,53 @@ class QuadOp(HasStrictTraits):
         
     Examples
     --------
-    
-    >>> quad = flow.QuadOp(name = "Quad",
-    ...                    xchannel = "V2-A",
-    ...                    xthreshold = 0.5,
-    ...                    ychannel = "Y2-A",
-    ...                    ythreshold = 0.4)
-    >>> ex3 = quad.apply(ex2)
 
-    Alternately, in an IPython notebook with `%matplotlib notebook`
+    Make a little data set.
     
-    >>> qv = quad.default_view()
-    >>> qv.plot(ex2)
-    >>> ### draw a box on the plot in the notebook ### 
+    .. plot::
+        :context: close-figs
+        
+        >>> import cytoflow as flow
+        >>> import_op = flow.ImportOp()
+        >>> import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",
+        ...                              conditions = {'Dox' : 10.0}),
+        ...                    flow.Tube(file = "Plate01/CFP_Well_A4.fcs",
+        ...                              conditions = {'Dox' : 1.0})]
+        >>> import_op.conditions = {'Dox' : 'float'}
+        >>> ex = import_op.apply()
+
+    Create and parameterize the operation.
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> quad = flow.QuadOp(name = "Quad",
+        ...                    xchannel = "V2-A",
+        ...                    xthreshold = 100,
+        ...                    ychannel = "Y2-A",
+        ...                    ythreshold = 1000)
+
+    Show the default view
+
+    .. plot::
+        :context: close-figs
+    
+        >>> qv = quad.default_view(xscale = 'log', yscale = 'log')
+        >>> qv.plot(ex)
+
+    Apply the gate and show the result
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> ex2 = quad.apply(ex)
+        >>> ex2.data.groupby('Quad').size()   
+        Quad
+        Quad_1    1783
+        Quad_2    2584
+        Quad_3    8236
+        Quad_4    7397
+        dtype: int64
     """
     
     # traits
@@ -86,25 +128,28 @@ class QuadOp(HasStrictTraits):
     ythreshold = CFloat()
 
     def apply(self, experiment):
-        """Applies the threshold to an experiment.
+        """Applies the quad gate to an experiment.
         
         Parameters
         ----------
         experiment : Experiment
-            the old_experiment to which this op is applied
+            the old experiment to which this op is applied
             
         Returns
         -------
-            a new experiment, the same as old_experiment but with a new
-            column the same as the operation name.  The new column is of type
-            Enum, with values `name_1`, `name_2`, `name_3`, and `name_4`, 
-            applied to events CLOCKWISE from upper-left.
+        Experiment
+            a new :class:`~Experiment`, the same as the old :class:`~Experiment` 
+            but with a new column the same as the operation :attr:`name`.  
+            The new column is of type Enum, with values ``name_1``, ``name_2``, 
+            ``name_3``, and ``name_4``, applied to events CLOCKWISE from upper-left.
             
-            TODO - this is semantically weak sauce.  Add some (generalizable??)
-            way to rename these populations?  It's an Enum; should be pretty
-            easy.
+
             
         """
+
+        # TODO - the naming scheme (name_1, name_2, etc) is semantically weak.  
+        # Add some (generalizable??) way to rename these populations?  
+        # It's an Enum; should be pretty easy.
         
         if experiment is None:
             raise util.CytoflowOpError("No experiment specified")
@@ -168,35 +213,25 @@ class QuadOp(HasStrictTraits):
     def default_view(self, **kwargs):
         return QuadSelection(op = self, **kwargs)
     
-@provides(cytoflow.views.ISelectionView)
-class QuadSelection(cytoflow.views.ScatterplotView):
+@provides(ISelectionView)
+class QuadSelection(Op2DView, ScatterplotView):
     """Plots, and lets the user interact with, a quadrant gate.
     
     Attributes
     ----------
-    op : Instance(Range2DOp)
-        The instance of Range2DOp that we're viewing / editing
-        
-    huefacet : Str
-        The conditioning variable to plot multiple colors
-        
-    subset : Str
-        The string passed to `Experiment.query()` to subset the data before
-        plotting
-        
     interactive : Bool
         is this view interactive?  Ie, can the user set the threshold with a 
         mouse click?
         
     Notes
     -----
-    We inherit `xfacet` and `yfacet` from `cytoflow.views.ScatterplotView`, but
-    they must both be unset!
+    We inherit :attr:`xfacet` and :attr:`yfacet` from 
+    :class:`cytoflow.views.ScatterplotView`, but they must both be unset!
         
     Examples
     --------
     
-    In an IPython notebook with `%matplotlib notebook`
+    In an Jupyter notebook with `%matplotlib notebook`
     
     >>> q = flow.QuadOp(name = "Quad",
     ...                 xchannel = "V2-A",
@@ -209,12 +244,16 @@ class QuadSelection(cytoflow.views.ScatterplotView):
     id = Constant('edu.mit.synbio.cytoflow.views.quad')
     friendly_id = Constant("Quadrant Selection")
     
-    op = Instance(IOperation)
-    name = DelegatesTo('op')
-    xchannel = DelegatesTo('op')
+    xfacet = Constant(None)
+    yfacet = Constant(None)
+    
+    # override the Op2DView
+    xscale = util.ScaleEnum
+    yscale = util.ScaleEnum
+    
     xthreshold = DelegatesTo('op')
-    ychannel = DelegatesTo('op')
     ythreshold = DelegatesTo('op')
+
     interactive = Bool(False, transient = True)
     
     # internal state.
@@ -224,18 +263,18 @@ class QuadSelection(cytoflow.views.ScatterplotView):
     _cursor = Instance(Cursor, transient = True)
         
     def plot(self, experiment, **kwargs):
-        """Plot the underlying scatterplot and then plot the selection on top of it."""
+        """
+        Plot the underlying scatterplot and then plot the selection on top of it.
+        
+        Parameters
+        ----------
+        
+        """
         
         if experiment is None:
             raise util.CytoflowViewError("No experiment specified")
         
-        if self.xfacet:
-            raise util.CytoflowViewError("RangeSelection.xfacet must be empty or `Undefined`")
-        
-        if self.yfacet:
-            raise util.CytoflowViewError("RangeSelection.yfacet must be empty or `Undefined`")
-        
-        super(QuadSelection, self).plot(experiment, **kwargs)
+        super().plot(experiment, **kwargs)
         self._ax = plt.gca()
         self._draw_lines()
         self._interactive()
@@ -277,7 +316,10 @@ class QuadSelection(cytoflow.views.ScatterplotView):
     def _onclick(self, event):
         """Update the threshold location"""
         self.xthreshold = event.xdata
-        self.ythreshold = event.ydata    
+        self.ythreshold = event.ydata  
+        
+util.expand_class_attributes(QuadSelection)
+util.expand_method_parameters(QuadSelection, QuadSelection.plot)  
     
 if __name__ == '__main__':
     import cytoflow as flow

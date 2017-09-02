@@ -17,9 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 '''
-Created on Sep 13, 2016
-
-@author: brian
+cytoflow.operations.xform_stat
+------------------------------
 '''
 
 from warnings import warn
@@ -38,43 +37,43 @@ class TransformStatisticOp(HasStrictTraits):
     """
     Apply a function to a statistic, creating a new statistic.  The function can
     be applied to the entire statistic, or it can be applied individually to 
-    groups of the statistic.  The function should take a `pandas.Series` as its
-    only argument.  Return type is arbitrary, but a to be used with the rest of
-    Cytoflow it should probably be a numeric type or an iterable of numeric
-    types.
+    groups of the statistic.  The function should take a :class:`pandas.Series` 
+    as its only argument.  Return type is arbitrary, but a to be used with the 
+    rest of :class:`cytoflow` it should probably be a numeric type or an 
+    iterable of numeric types.
     
-    As a special case, if the function returns a pandas.Series *with the same
-    index that it was passed*, it is interpreted as a transformation.  The 
-    resulting statistic will have the same length, index names and index levels
-    as the original statistic.
+    As a special case, if the function returns a :class:`pandas.Series` *with 
+    the same index that it was passed*, it is interpreted as a transformation.  
+    The resulting statistic will have the same length, index names and index 
+    levels as the original statistic.
 
     Attributes
     ----------
     name : Str
         The operation name.  Becomes the first element in the
-        Experiment.statistics key tuple.
+        :attr:`~Experiment.statistics` key tuple.
     
     statistic : Tuple(Str, Str)
         The statistic to apply the function to.
         
     function : Callable
-        The function used to transform the statistic.  `function` must take a 
-        Series as its only parameter.  The return type is arbitrary, to work 
-        with the rest of Cytoflow it should probably be a numeric type or an
-        iterable of numeric types..  If `statistic_name` is unset, the name of 
-        the function becomes the second in element in the Experiment.statistics
-        key tuple.
+        The function used to transform the statistic.  :attr:`function` must 
+        take a :class:`pandas.Series` as its only parameter.  The return type is 
+        arbitrary, but to work with the rest of :class:`cytoflow` it should 
+        probably be a numeric type or an iterable of numeric types..  If 
+        :attr:`statistic_name` is unset, the name of the function becomes the 
+        second in element in the :attr:`~Experiment.statistics` key tuple.
         
     statistic_name : Str
         The name of the function; if present, becomes the second element in
-        the Experiment.statistics key tuple.
+        the :attr:`~Experiment.statistics` key tuple.
         
     by : List(Str)
         A list of metadata attributes to aggregate the input statistic before 
         applying the function.  For example, if the statistic has two indices
-        `Time` and `Dox`, setting `by = ["Time", "Dox"]` will apply `function` 
-        separately to each subset of the data with a unique combination of
-        `Time` and `Dox`.
+        ``Time`` and ``Dox``, setting ``by = ["Time", "Dox"]`` will apply 
+        :attr:`function` separately to each subset of the data with a unique 
+        combination of ``Time`` and ``Dox``.
         
     fill : Any (default = 0)
         Value to use in the statistic if a slice of the data is empty.
@@ -104,18 +103,37 @@ class TransformStatisticOp(HasStrictTraits):
     fill = Any(0)
 
     def apply(self, experiment):
+        """
+        Applies :attr:`function` to a statistic.
+        
+        Parameters
+        ----------
+        experiment : Experiment
+            The experiment to apply the operation to
+        
+        Returns
+        -------
+        Experiment
+            The same as the old experiment, but with a new statistic that
+            results from applying :attr:`function` to the statistic specified
+            in :attr:`statistic`.
+        """
         
         if experiment is None:
-            raise util.CytoflowOpError("Must specify an experiment")
+            raise util.CytoflowOpError('experiment',
+                                       "Must specify an experiment")
 
         if not self.name:
-            raise util.CytoflowOpError("Must specify a name")
+            raise util.CytoflowOpError('name',
+                                       "Must specify a name")
         
         if not self.statistic:
-            raise util.CytoflowViewError("Statistic not set")
+            raise util.CytoflowViewError('statistic',
+                                         "Statistic not set")
         
         if self.statistic not in experiment.statistics:
-            raise util.CytoflowViewError("Can't find the statistic {} in the experiment"
+            raise util.CytoflowViewError('statistic',
+                                         "Can't find the statistic {} in the experiment"
                                          .format(self.statistic))
         else:
             stat = experiment.statistics[self.statistic]
@@ -125,7 +143,8 @@ class TransformStatisticOp(HasStrictTraits):
 
         for b in self.by:
             if b not in stat.index.names:
-                raise util.CytoflowOpError("{} is not a statistic index; "
+                raise util.CytoflowOpError('by',
+                                           "{} is not a statistic index; "
                                            " must be one of {}"
                                            .format(b, stat.index.names))
                 
@@ -154,7 +173,8 @@ class TransformStatisticOp(HasStrictTraits):
                 try:
                     new_stat[group] = self.function(s)
                 except Exception as e:
-                    raise util.CytoflowOpError("Your function threw an error in group {}".format(group)) from e
+                    raise util.CytoflowOpError('function',
+                                               "Your function threw an error in group {}".format(group)) from e
                                         
                 # check for, and warn about, NaNs.
                 if np.any(np.isnan(new_stat.loc[group])):
