@@ -16,6 +16,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+'''
+cytoflow.utility.scale
+----------------------
+'''
+
 import numbers
 
 from traits.api import Interface, Str, Dict, Instance, Tuple, Array
@@ -25,7 +30,8 @@ from .util_functions import is_numeric
 from traits.has_traits import HasStrictTraits
 
 class IScale(Interface):
-    """An interface for various ways we could rescale flow data.
+    """
+    An interface for various ways we could rescale flow data.
     
     Attributes
     ----------
@@ -49,6 +55,9 @@ class IScale(Interface):
         What statistic to scale.  Needed because some scales have parameters
         estimated from a statistic.  The statistic must be numeric or an
         iterable of numerics; else instantiating the scale should fail.
+        
+    data : array_like
+        What raw data to scale.
         
     mpl_params : Dict
         A dictionary of named parameters to pass to plt.xscale() and 
@@ -133,6 +142,21 @@ _scale_mapping = {}
 _scale_default = "linear"
 
 def scale_factory(scale, experiment, **scale_params):
+    """
+    Make a new instance of a named scale.
+    
+    Parameters
+    ----------
+    scale : string
+        The name of the scale to build
+        
+    experiment : Experiment
+        The experiment to use to parameterize the new scale.
+        
+    **scale_params : kwargs
+        Other parameters to pass to the scale constructor
+    """
+    
     scale = scale.lower()
         
     if scale not in _scale_mapping:
@@ -141,9 +165,17 @@ def scale_factory(scale, experiment, **scale_params):
     return _scale_mapping[scale](experiment = experiment, **scale_params)
  
 def register_scale(scale_class):
+    """
+    Register a new scale for the :func:`scale_factory` and :class:`.ScaleEnum`.
+    """
+    
     _scale_mapping[scale_class.name] = scale_class
     
 def set_default_scale(scale):
+    """
+    Set a default scale for :class:`.ScaleEnum`
+    """
+    
     global _scale_default
     
     scale = scale.lower()

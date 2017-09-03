@@ -17,9 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 '''
-Created on Feb 24, 2016
-
-@author: brian
+cytoflow.utility.linear_scale
+-----------------------------
 '''
 
 import matplotlib.colors
@@ -30,6 +29,10 @@ from .cytoflow_errors import CytoflowError
 
 @provides(IScale)
 class LinearScale(ScaleMixin):
+    """
+    A scale that doesn't transform the data at all.
+    """
+    
     id = Constant("edu.mit.synbio.cytoflow.utility.linear_scale")
     name = "linear"
     

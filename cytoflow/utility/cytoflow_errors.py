@@ -17,9 +17,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Created on Mar 5, 2015
+cytoflow.utility.cytoflow_errors
+--------------------------------
 
-@author: brian
+Custom errors for :class:`.cytoflow`.  Allows for custom handling in the GUI.
 """
 
 import warnings
@@ -30,22 +31,62 @@ warnings.formatwarning = lambda message, category, filename, lineno, line=None: 
     formatwarning_orig(message, category, filename, lineno, line='')
 
 class CytoflowError(RuntimeError):
-    pass
+    """
+    A general error
+    """
 
 class CytoflowOpError(CytoflowError):
-    pass
+    """
+    An error raised by an operation.  
+    
+    Parameters
+    ----------
+    args[0] : string
+        The attribute or parameter whose bad value caused the error, or ``None``
+        if there isn't one.
+        
+    args[1] : string
+        A more verbose error message.
+    """
 
 class CytoflowViewError(CytoflowError):
-    pass
+    """
+    An error raised by a view.  
+    
+    Parameters
+    ----------
+    args[0] : string
+        The attribute or parameter whose bad value caused the error, or ``None``
+        if there isn't one.
+        
+    args[1] : string
+        A more verbose error message.
+    """
 
 class CytoflowWarning(UserWarning):
-    pass
+    """
+    A general warning.
+    """
 
 class CytoflowOpWarning(CytoflowWarning):
-    pass
+    """
+    A warning raised by an operation.
+    
+    Parameters
+    ----------
+    args[0] : string
+        A verbose warning message
+    """
 
 class CytoflowViewWarning(CytoflowWarning):
-    pass
+    """
+    A warning raised by a view.
+    
+    Parameters
+    ----------
+    args[0] : string
+        A verbose warning message
+    """
 
 # make sure these warnings show up all the time, instead of just once.
 

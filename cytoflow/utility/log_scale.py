@@ -17,9 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 '''
-Created on Feb 24, 2016
-
-@author: brian
+cytoflow.utility.log_scale
+--------------------------
 '''
 
 from traits.api import (Instance, Str, Dict, provides, Constant, Enum, Float, 

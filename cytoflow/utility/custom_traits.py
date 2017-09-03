@@ -17,9 +17,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 '''
-Created on Oct 12, 2015
+cytoflow.utility.custom_traits
+------------------------------
 
-@author: brian
+Custom traits for :class:`~cytoflow`
 '''
 
 from warnings import warn
@@ -31,6 +32,9 @@ from . import CytoflowError, CytoflowWarning
 
 
 class PositiveInt(BaseCInt):
+    """
+    Defines a trait whose value must be a positive integer
+    """
     
     info_text = 'a positive integer'
     
@@ -43,6 +47,9 @@ class PositiveInt(BaseCInt):
         
         
 class PositiveFloat(BaseCFloat):
+    """
+    Defines a trait whose value must be a positive float
+    """
     
     info_text = 'a positive float'
     
@@ -54,6 +61,10 @@ class PositiveFloat(BaseCFloat):
         self.error(obj, name, value)
         
 class ScaleEnum(BaseEnum):
+    """
+    Defines an enumeration that contains one of the registered data scales
+    """
+    
     info_text = 'an enum containing one of the registered scales'
 
     def __init__ ( self, *args, **metadata ):
@@ -75,6 +86,19 @@ class ScaleEnum(BaseEnum):
         return scale._scale_default
 
 class Removed(TraitType):
+    """
+    Names a trait that was present in a previous version but was removed.
+    
+    Trait metadata:
+    
+        - **err_string** : the error string in the error
+        
+        - **gui** : if ``True``, don't return a backtrace (because it's very slow)
+        
+        - **warning** : if ``True``, raise a warning when the trait is referenced.
+        Otherwise, raise an exception.
+    """
+    
     gui = False
     
     def __init__(self, **metadata):
@@ -108,6 +132,19 @@ class Removed(TraitType):
                 raise CytoflowError(self.err_string.format(name))
     
 class Deprecated(TraitType):  
+    """
+    Names a trait that was present in a previous version but was renamed in this
+    version.  When the trait is accessed, a warning is raised, and the access
+    is passed through to the new trait.
+    
+    Trait metadata:
+        - **new** : the name of the new trait
+        
+        - **err_string** : the error string in the error
+        
+        - **gui** : if ``True``, don't return a backtrace (because it's very slow)
+
+    """
     gui = False
     
     def __init__(self, **metadata):

@@ -17,9 +17,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 '''
-Created on Apr 27, 2016
+cytoflow.utility.matplotlib_widgets
+-----------------------------------
 
-@author: brian
+Additional widgets to be used with matplotlib
 '''
 
 import time

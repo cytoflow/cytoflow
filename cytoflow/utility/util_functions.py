@@ -17,9 +17,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Created on Mar 5, 2015
+cytoflow.utility.util_functions
+-------------------------------
 
-@author: brian
+Useful utility functions
 """
 
 import random, string
@@ -29,15 +30,40 @@ import pandas as pd
 from scipy import stats
 
 def iqr(a):
-    """Calculate the IQR for an array of numbers."""
+    """
+    Calculate the inter-quartile range for an array of numbers.
+    
+    Parameters
+    ----------
+    a : array_like
+        The array of numbers to compute the IQR for.
+        
+    Returns
+    -------
+    float
+        The IQR of the data.
+    """
     a = np.asarray(a)
     q1 = np.nanpercentile(a, 25)
     q3 = np.nanpercentile(a, 75)
     return q3 - q1
 
 def num_hist_bins(a):
-    """Calculate number of hist bins using Freedman-Diaconis rule."""
-    # From http://stats.stackexchange.com/questions/798/
+    """
+    Calculate number of histogram bins using Freedman-Diaconis rule.
+    
+    From http://stats.stackexchange.com/questions/798/
+    
+    Parameters
+    ----------
+    a : array_like
+        The data to make a histogram of.
+        
+    Returns
+    -------
+    int
+        The number of bins in the histogram
+    """
     a = np.asarray(a)
     h = 2 * iqr(a) / (len(a) ** (1 / 3))
       
@@ -80,13 +106,7 @@ def geom_mean(a):
         International Journal of Research and Reviews in Applied Sciences
         11:419 (2012)
         http://www.arpapress.com/Volumes/Vol11Issue3/IJRRAS_11_3_08.pdf
-        
-        A new "Logicle" display method avoids deceptive effects of logarithmic 
-        scaling for low signals and compensated data.
-        Parks DR, Roederer M, Moore WA.
-        Cytometry A. 2006 Jun;69(6):541-51.
-        PMID: 16604519
-        http://onlinelibrary.wiley.com/doi/10.1002/cyto.a.20258/full
+
     """
     
     a = np.array(a)
@@ -106,8 +126,8 @@ def geom_sd(a):
     Compute the geometric standard deviation for an "abitrary" data set, ie one
     that contains zeros and negative numbers.  Since we're in log space, this
     gives a *dimensionless scaling factor*, not a measure.  If you want 
-    traditional "error bars", don't plot `[geom_mean - geom_sd, geom_mean + sd]`;
-    rather, plot `[geom_mean / geom_sd, geom_mean * geom_sd]`.
+    traditional "error bars", don't plot ``[geom_mean - geom_sd, geom_mean + geom_sd]``;
+    rather, plot ``[geom_mean / geom_sd, geom_mean * geom_sd]``.
     
     Parameters
     ----------
@@ -117,11 +137,11 @@ def geom_sd(a):
         
     Returns
     -------
-    The geometric mean of the distribution.
+    The geometric standard deviation of the distribution.
     
     Notes
     -----
-    As with `geom_mean`, non-positive numbers pose a problem.  The approach
+    As with :func:`geom_mean`, non-positive numbers pose a problem.  The approach
     here, though less rigorously validated than the one above, is to replace
     negative numbers with their absolute value plus 2 * geometric mean, then
     go about our business as per the Wikipedia page for geometric sd[1].
@@ -164,8 +184,6 @@ def geom_sem(a):
     
     Parameters
     ----------
-     Parameters
-    ----------
     
     a : array-like
         A numpy.ndarray, or something that can be converted to an ndarray
@@ -176,7 +194,7 @@ def geom_sem(a):
     
     Notes
     -----
-    As with `geom_mean`, non-positive numbers pose a problem.  The approach
+    As with :func:`geom_mean`, non-positive numbers pose a problem.  The approach
     here, though less rigorously validated than the one above, is to replace
     negative numbers with their absolute value plus 2 * geometric mean.  The
     geometric SEM is computed as in [1].
@@ -187,7 +205,7 @@ def geom_sem(a):
         Nilan Norris
         The Annals of Mathematical Statistics
         Vol. 11, No. 4 (Dec., 1940), pp. 445-448
-    
+        
         http://www.jstor.org/stable/2235723?seq=1#page_scan_tab_contents
     """
     
@@ -210,7 +228,7 @@ def geom_sem_range(a):
         
     Returns
     -------
-    A tuple, with `(geom_mean / geom_sem, geom_mean * geom_sem)`
+    A tuple, with ``(geom_mean / geom_sem, geom_mean * geom_sem)``
     """
     
     u = geom_mean(a)
@@ -273,7 +291,9 @@ def cartesian(arrays, out=None):
     return out
 
 def sanitize_identifier(name):
-    """Makes name a Python identifier by replacing all nonsafe characters with '_'"""
+    """
+    Makes name a Python identifier by replacing all nonsafe characters with '_'
+    """
     
     new_name = list(name)
     for i, c in enumerate(list(name)): # character by character
@@ -285,13 +305,15 @@ def sanitize_identifier(name):
     return  "".join(new_name)
 
 def categorical_order(values, order=None):
-    """Return a list of unique data values.
+    """
+    Return a list of unique data values.
     Determine an ordered list of levels in ``values``.
     
     Parameters
     ----------
     values : list, array, Categorical, or Series
         Vector of "categorical" values
+        
     order : list-like, optional
         Desired order of category levels to override the order determined
         from the ``values`` object.
@@ -323,12 +345,16 @@ def categorical_order(values, order=None):
     return list(order)
 
 def random_string(n):
-    """from http://stackoverflow.com/questions/2257441/random-string-generation-with-upper-case-letters-and-digits-in-python"""
+    """
+    Makes a random string of ascii digits and lowercase letters of length ``n``
+    
+    from http://stackoverflow.com/questions/2257441/random-string-generation-with-upper-case-letters-and-digits-in-python
+    """
     return ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(n))
 
 def is_numeric(s):
     """
-    s is a pandas.Series or a numpy.ndarray; try to determine if it's numeric
+    Determine if a ``pandas.Series`` or ``numpy.ndarray`` is numeric
     from its dtype.
     """
     return s.dtype.kind in 'iufc'
@@ -337,8 +363,9 @@ def is_numeric(s):
 
 def cov2corr(covariance):
     ''' 
-    From https://github.com/AndreaCensi/procgraph/blob/master/src/procgraph_statistics/cov2corr.py
     Compute the correlation matrix from the covariance matrix.
+
+    From https://github.com/AndreaCensi/procgraph/blob/master/src/procgraph_statistics/cov2corr.py
     '''
 
     sigma = np.sqrt(covariance.diagonal())

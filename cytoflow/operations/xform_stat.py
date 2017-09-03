@@ -23,7 +23,7 @@ cytoflow.operations.xform_stat
 
 from warnings import warn
 import pandas as pd
-import numpy as np
+import numpy as np 
 
 from traits.api import (HasStrictTraits, Str, List, Constant, provides, CStr,
                         Callable, Tuple, Any)

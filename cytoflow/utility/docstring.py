@@ -1,13 +1,46 @@
-'''
-Created on Aug 13, 2017
+#!/usr/bin/env python3.4
+# coding: latin-1
 
-@author: brian
+# (c) Massachusetts Institute of Technology 2015-2017
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+'''
+cytoflow.utility.docstring
+--------------------------
+
+Utility functions for operating on docstrings.
 '''
 
 import re
 from warnings import warn
 
 def expand_class_attributes(cls):
+    """
+    Takes entries in the ``Attributes`` section of a class's ancestors' 
+    docstrings and adds them to the ``Attributes`` section of this class's 
+    docstring.
+    
+    All the classes must have docstrings formatted with the using the ``numpy``
+    docstring style.
+    
+    Parameters
+    ----------
+    cls : class
+        The class whose docstring is to be expanded.
+    """
     
     if cls.__doc__ is None:
         return
@@ -55,6 +88,21 @@ def expand_class_attributes(cls):
     cls.__doc__ = "\n".join(lines)
     
 def expand_method_parameters(cls, method):
+    """
+    Expand the ``Parameters`` section of a method's docstring with 
+    ``Parameters`` from the overridden methods in the class's ancestors.
+
+    All the methods must have docstrings formatted with the using the ``numpy``
+    docstring style.
+    
+    Parameters
+    ----------
+    cls : class
+        The class whose ancestors are to be parsed for more parameters.
+        
+    method : callable
+        The method whose docstring is to be expanded.
+    """
     if method.__doc__ is None:
         return
     
@@ -107,7 +155,22 @@ def expand_method_parameters(cls, method):
 
 
 def find_section(section, lines):
-    # find the attributes section
+    """
+    Find a named section in a ``numpy``-formatted docstring.
+    
+    Parameters
+    ----------
+    section : string
+        The name of the section to find
+        
+    lines : array of string
+        The docstring, split into lines
+        
+    Returns
+    -------
+    int, int
+        The indices of the first and last lines of the section.
+    """
     first_line = None
     for i, line in enumerate(lines):
         if "----" in line and i > 0 and section in lines[i - 1]:
@@ -131,6 +194,26 @@ def find_section(section, lines):
         
 
 def get_class_attributes(cls):
+    """
+    Gets the entries from the ``Attributes`` section of a class's
+    ``numpy``-formated docstring.
+    
+    Parameters
+    ----------
+    cls : class
+        The class whose docstring to parse
+        
+    Returns
+    ------
+    array of (name, type, body)
+        
+        - name : the attribute's name
+        
+        - type : the attribute's type
+        
+        - body : the attribute's description body
+    """
+    
     if not cls.__doc__:
         return []
 
@@ -140,12 +223,32 @@ def get_class_attributes(cls):
     attributes = []
                 
     # consume the attributes
-    for  attr_name, attr_value, attr_body in get_params_and_attrs(lines, first_attr_line, last_attr_line):
+    for  attr_name, attr_value, attr_body in _get_params_and_attrs(lines, first_attr_line, last_attr_line):
         attributes.append((attr_name, attr_value, attr_body))
         
     return attributes
 
 def get_method_parameters(method):
+    """
+    Gets the entries from the ``Parameters`` section of a method's 
+    ``numpy``-formatted docstring.
+    
+    Parameters
+    ----------
+    method : callable
+        The method whose docstring to parse.
+        
+    Returns
+    ------
+    array of (name, type, body)
+        
+        - name : the attribute's name
+        
+        - type : the attribute's type
+        
+        - body : the attribute's description body
+        
+    """
     if not method.__doc__:
         return []
 
@@ -155,13 +258,13 @@ def get_method_parameters(method):
     params = []
                 
     # consume the attributes
-    for param_name, param_value, param_body in get_params_and_attrs(lines, first_param_line, last_param_line):
+    for param_name, param_value, param_body in _get_params_and_attrs(lines, first_param_line, last_param_line):
         params.append((param_name, param_value, param_body))
         
     return params
 
 
-def get_params_and_attrs(lines, first_attr_line, last_attr_line):
+def _get_params_and_attrs(lines, first_attr_line, last_attr_line):
     if first_attr_line is None:
         return
         

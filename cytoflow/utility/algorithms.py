@@ -17,28 +17,58 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 '''
-Created on May 28, 2016
+cytoflow.utility.algorithms
+---------------------------
 
-@author: brian
+Useful algorithms.
 '''
 
 import numpy as np
 from scipy import stats
 
 def ci(data, func, which=95, boots=1000):
+    """
+    Determine the confidence interval of a function applied to a data set by
+    bootstrapping.
+    
+    Parameters
+    ----------
+    data : pandas.DataFrame
+        The data to resample.
+        
+    func : callable
+        A function that is called on a resampled ``data``
+        
+    which : int
+        The percentile to use for the confidence interval
+        
+    boots : int (default = 1000):
+        How many times to bootstrap
+        
+    Returns
+    -------
+    (float, float)
+        The confidence interval.
+        
+    """
     boots = bootstrap(data, func = func, n_boot = boots)
     p = 50 - which / 2, 50 + which / 2
     return tuple(percentiles(boots, p))
     
 def percentiles(a, pcts, axis=None):
-    """Like scoreatpercentile but can take and return array of percentiles.
+    """
+    Like scoreatpercentile but can take and return array of percentiles.
+
+    from seaborn: https://github.com/mwaskom/seaborn/blob/master/seaborn/utils.py
     
     Parameters
     ----------
     a : array
         data
+        
     pcts : sequence of percentile values
         percentile or percentiles to find score at
+        
     axis : int or None
         if not None, computes scores over this axis
         
@@ -48,7 +78,6 @@ def percentiles(a, pcts, axis=None):
         array of scores at requested percentiles
         first dimension is length of object passed to ``pcts``
         
-    from seaborn: https://github.com/mwaskom/seaborn/blob/master/seaborn/utils.py
     """
     scores = []
     try:
@@ -68,30 +97,40 @@ def percentiles(a, pcts, axis=None):
     return scores
 
 def bootstrap(*args, **kwargs):
-    """Resample one or more arrays with replacement and store aggregate values.
+    """
+    Resample one or more arrays with replacement and store aggregate values.
     Positional arguments are a sequence of arrays to bootstrap along the first
     axis and pass to a summary function.
-    Keyword arguments:
-        n_boot : int, default 10000
-            Number of iterations
-        axis : int, default None
-            Will pass axis to ``func`` as a keyword argument.
-        units : array, default None
-            Array of sampling unit IDs. When used the bootstrap resamples units
-            and then observations within units instead of individual
-            datapoints.
-        smooth : bool, default False
-            If True, performs a smoothed bootstrap (draws samples from a kernel
-            destiny estimate); only works for one-dimensional inputs and cannot
-            be used `units` is present.
-        func : callable, default np.mean
-            Function to call on the args that are passed in.
-        random_seed : int | None, default None
-            Seed for the random number generator; useful if you want
-            reproducible resamples.
+    
+    
+    Parameters
+    ----------
+    n_boot : int, default 10000
+        Number of iterations
+
+    axis : int, default None
+        Will pass axis to ``func`` as a keyword argument.
+
+    units : array, default None
+        Array of sampling unit IDs. When used the bootstrap resamples units
+        and then observations within units instead of individual
+        datapoints.
+
+    smooth : bool, default False
+        If True, performs a smoothed bootstrap (draws samples from a kernel
+        destiny estimate); only works for one-dimensional inputs and cannot
+        be used `units` is present.
+
+    func : callable, default np.mean
+        Function to call on the args that are passed in.
+
+    random_seed : int | None, default None
+        Seed for the random number generator; useful if you want
+        reproducible resamples.
+            
     Returns
     -------
-    boot_dist: array
+    array
         array of bootstrapped statistic values
         
     from seaborn: https://github.com/mwaskom/seaborn/blob/master/seaborn/algorithms.py
