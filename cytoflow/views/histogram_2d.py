@@ -17,14 +17,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Created on Apr 19, 2015
-
-@author: brian
+cytoflow.views.histogram_2d
+---------------------------
 """
 
 import warnings
 
-from traits.api import provides, Str
+from traits.api import provides
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -38,52 +37,56 @@ from .base_views import Base2DView
 @provides(IView)
 class Histogram2DView(Base2DView):
     """
-    Plots a 2-d histogram.  
+    Plots a 2-d histogram.  Similar to a density plot, but the number of
+    events in a bin change the bin's opacity, so you can use different colors.  
     
     Attributes
     ----------
+
+    Examples
+    --------
     
-    name : Str
-        The name of the plot, for visualization (and the plot title)
+    Make a little data set.
+    
+    .. plot::
+        :context: close-figs
+            
+        >>> import cytoflow as flow
+        >>> import_op = flow.ImportOp()
+        >>> import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",
+        ...                              conditions = {'Dox' : 10.0}),
+        ...                    flow.Tube(file = "Plate01/CFP_Well_A4.fcs",
+        ...                              conditions = {'Dox' : 1.0})]
+        >>> import_op.conditions = {'Dox' : 'float'}
+        >>> ex = import_op.apply()
         
-    xchannel : Str
-        The channel to plot on the X axis
+    Plot a density plot
+    
+    .. plot::
+        :context: close-figs
+    
+        >>> flow.Histogram2DView(xchannel = 'V2-A',
+        ...                      xscale = 'log',
+        ...                      ychannel = 'Y2-A',
+        ...                      yscale = 'log',
+        ...                      huefacet = 'Dox').plot(ex)
         
-    ychannel : Str
-        The channel to plot on the Y axis
-        
-    xfacet : Str
-        The conditioning variable for multiple plots (horizontal)
-        
-    yfacet = Str
-        The conditioning variable for multiple plots (vertical)
-        
-    huefacet = Str
-        The conditioning variable for multiple plots (color)
-        
-    huescale = Enum("linear", "log", "logicle") (default = "linear")
-        What scale to use on the color bar, if there is one plotted
+    The same plot, smoothed, with a log color scale.  *Note - you can change
+    the hue scale, even if you don't have control over the hue facet!*
+    
+    .. plot::
+        :context: close-figs
 
-    subset = Str
-        A string passed to pandas.DataFrame.query() to subset the data before
-        we plot it.
-x
-
+        >>> flow.Histogram2DView(xchannel = 'V2-A',
+        ...                      xscale = 'log',
+        ...                      ychannel = 'Y2-A',
+        ...                      yscale = 'log',
+        ...                      huefacet = 'Dox',
+        ...                      huescale = 'log').plot(ex, smoothed = True)  
     """
     
     id = 'edu.mit.synbio.cytoflow.view.histogram2d'
     friend_id = "2D Histogram"
-    
-    name = Str
-    xchannel = Str
-    ychannel = Str
-    xscale = util.ScaleEnum
-    yscale = util.ScaleEnum
-    xfacet = Str
-    yfacet = Str
-    huefacet = Str
-    huescale = util.ScaleEnum
-    subset = Str
         
     def plot(self, experiment, **kwargs):
         """
@@ -107,56 +110,26 @@ x
         smoothed_sigma : int
             The standard deviation of the smoothing kernel.  default = 1.
             
-        Other Parameters
-        ----------------
-        Other `kwargs` are passed to matplotlib.axes.Axes.pcolormesh_.
-        
-        .. _matplotlib.axes.Axes.pcolormesh: https://matplotlib.org/api/_as_gen/matplotlib.axes.Axes.pcolormesh.html
+        Notes
+        -----
+        Other `kwargs` are passed to `matplotlib.axes.Axes.pcolormesh <https://matplotlib.org/api/_as_gen/matplotlib.axes.Axes.pcolormesh.html>`_
     
-        See Also
-        --------
-        BaseView.plot : common parameters for data views
-        
         """
         
         super().plot(experiment, **kwargs)
         
     def _grid_plot(self, experiment, grid, xlim, ylim, xscale, yscale, **kwargs):
 
-        scaled_xdata = xscale(experiment[self.xchannel])
-        scaled_xdata = scaled_xdata[~np.isnan(scaled_xdata)]
-
-        scaled_ydata = yscale(experiment[self.ychannel])
-        scaled_ydata = scaled_ydata[~np.isnan(scaled_ydata)]
-        
-        # find good bin counts
-        num_xbins = kwargs.pop('xbins', util.num_hist_bins(scaled_xdata))
-        num_ybins = kwargs.pop('ybins', util.num_hist_bins(scaled_ydata))
-        
-        max_bins = kwargs.pop('max_bins', 100)
-        
-        # there are situations where this produces an unreasonable estimate.
-        if num_xbins > max_bins:
-            warnings.warn("Capping X bins to {}! To increase this limit, "
-                          "change max_bins"
-                          .format(max_bins))
-            num_xbins = max_bins
-            
-        if num_ybins > max_bins:
-            warnings.warn("Capping Y bins to {}! To increase this limit, "
-                          "change max_bins"
-                          .format(max_bins))
-            num_ybins = max_bins
-      
-        kwargs.setdefault('smoothed', False)
-
-        xbins = xscale.inverse(np.linspace(xscale(xlim[0]), xscale(xlim[1]), num_xbins))
-        ybins = yscale.inverse(np.linspace(yscale(ylim[0]), yscale(ylim[1]), num_ybins))
-
         kwargs.setdefault('antialiased', False)
         kwargs.setdefault('linewidth', 0)
         kwargs.setdefault('edgecolors', 'face')
-            
+        
+        gridsize = kwargs.pop('gridsize', 50)
+        xbins = xscale.inverse(np.linspace(xscale(xlim[0]), xscale(xlim[1]), gridsize))
+        ybins = yscale.inverse(np.linspace(yscale(ylim[0]), yscale(ylim[1]), gridsize))
+      
+        kwargs.setdefault('smoothed', False)
+           
         grid.map(_hist2d, self.xchannel, self.ychannel, xbins = xbins, ybins = ybins, **kwargs)
         
         return {}
@@ -171,14 +144,11 @@ def _hist2d(x, y, xbins, ybins, **kwargs):
     
     if smoothed:
         h = gaussian_filter(h, sigma = smoothed_sigma)
-    else:
-        h = h.T
 
     ax = plt.gca()
-    ax.pcolormesh(X, Y, h, **kwargs)
 
     color = kwargs.pop("color")   
-    ax.pcolormesh(X, Y, h, cmap = AlphaColormap("AlphaColor", color), **kwargs)
+    ax.pcolormesh(X, Y, h.T, cmap = AlphaColormap("AlphaColor", color), **kwargs)
         
     return ax
 
@@ -197,3 +167,6 @@ class AlphaColormap(Colormap):
         self._lut[:-3, 3] = np.linspace(self._min_alpha, self._max_alpha, num = self.N, dtype = np.float)
         self._isinit = True
         self._set_extremes()    
+        
+util.expand_class_attributes(Histogram2DView)
+util.expand_method_parameters(Histogram2DView, Histogram2DView.plot)

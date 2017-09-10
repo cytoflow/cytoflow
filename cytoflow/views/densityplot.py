@@ -17,9 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Created on Apr 19, 2015
-
-@author: brian
+cytoflow.views.densityplot
+--------------------------
 """
 
 from traits.api import provides, Constant
@@ -41,35 +40,51 @@ class DensityView(Base2DView):
     Attributes
     ----------
     
-    xchannel : Str
-        The channel to plot on the X axis
+    huefacet : None
+        You must leave the hue facet unset!
         
-    xscale : Enum("linear", "log", "logicle") (default = "linear")
-        What scale to use on the X axis
+    Examples
+    --------
+    
+    Make a little data set.
+    
+    .. plot::
+        :context: close-figs
+            
+        >>> import cytoflow as flow
+        >>> import_op = flow.ImportOp()
+        >>> import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",
+        ...                              conditions = {'Dox' : 10.0}),
+        ...                    flow.Tube(file = "Plate01/CFP_Well_A4.fcs",
+        ...                              conditions = {'Dox' : 1.0})]
+        >>> import_op.conditions = {'Dox' : 'float'}
+        >>> ex = import_op.apply()
         
-    ychannel : Str
-        The channel to plot on the Y axis
+    Plot a density plot
+    
+    .. plot::
+        :context: close-figs
+    
+        >>> flow.DensityView(xchannel = 'V2-A',
+        ...                 xscale = 'log',
+        ...                 ychannel = 'Y2-A',
+        ...                 yscale = 'log').plot(ex)
         
-    yscale : Enum("linear", "log", "logicle") (default = "linear")
-        The scale to use on the Y axis
-        
-    xfacet : Str
-        The conditioning variable for multiple plots (horizontal)
-        
-    yfacet = Str
-        The conditioning variable for multiple plots (vertical)
-        
-    huescale = Enum("linear", "log", "logicle") (default = "linear")
-        What scale to use on the color bar, if there is one plotted
+    The same plot, smoothed, with a log color scale.  *Note - you can change
+    the hue scale, even if you don't have control over the hue facet!*
+    
+    .. plot::
+        :context: close-figs
 
-    subset = Str
-        A string passed to pandas.DataFrame.query() to subset the data before
-        we plot it.
-        
+        >>> flow.DensityView(xchannel = 'V2-A',
+        ...                  xscale = 'log',
+        ...                  ychannel = 'Y2-A',
+        ...                  yscale = 'log',
+        ...                  huescale = 'log').plot(ex, smoothed = True)        
     """
     
-    id = 'edu.mit.synbio.cytoflow.view.density'
-    friend_id = "Density Plot"
+    id = Constant('edu.mit.synbio.cytoflow.view.density')
+    friend_id = Constant("Density Plot")
     
     huefacet = Constant(None)
     
@@ -98,15 +113,9 @@ class DensityView(Base2DView):
         bad_color : matplotlib color
             Set the color to be used for masked values.
             
-        Other Parameters
-        ----------------
-        Other `kwargs` are passed to matplotlib.axes.Axes.pcolormesh_.
-        
-        .. _matplotlib.axes.Axes.pcolormesh: https://matplotlib.org/api/_as_gen/matplotlib.axes.Axes.pcolormesh.html
-    
-        See Also
-        --------
-        BaseView.plot : common parameters for data views
+        Notes
+        -----
+        Other `kwargs` are passed to `matplotlib.axes.Axes.pcolormesh <https://matplotlib.org/api/_as_gen/matplotlib.axes.Axes.pcolormesh.html>`_
         
         """
         
@@ -161,11 +170,12 @@ def _densityplot(x, y, xbins, ybins, **kwargs):
     
     if smoothed:
         h = scipy.ndimage.filters.gaussian_filter(h, sigma = smoothed_sigma)
-    else:
-        h = h.T
 
     ax = plt.gca()
-    ax.pcolormesh(X, Y, h, **kwargs)
+    ax.pcolormesh(X, Y, h.T, **kwargs)
+    
+util.expand_class_attributes(DensityView)
+util.expand_method_parameters(DensityView, DensityView.plot)
          
          
 if __name__ == '__main__':
