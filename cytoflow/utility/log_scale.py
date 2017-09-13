@@ -149,7 +149,7 @@ class LogScale(ScaleMixin):
             return max(data, self.threshold)
         else:
             try:
-                return [max(data, self.threshold) for x in data]
+                return [max(x, self.threshold) for x in data]
             except TypeError as e:
                 raise CytoflowError("Unknown data type in LogScale.clip") from e
             
