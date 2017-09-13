@@ -17,9 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 '''
-Created on Jul 30, 2017
-
-@author: brian
+cytoflow.views.base_views
+-------------------------
 '''
 
 from traits.api import HasStrictTraits, Str, Tuple, provides
@@ -98,10 +97,12 @@ class BaseView(HasStrictTraits):
         col_wrap = kwargs.pop('col_wrap', None)
         
         if col_wrap and self.yfacet:
-            raise util.CytoflowViewError("Can't set yfacet and col_wrap at the same time.")
+            raise util.CytoflowViewError('yfacet',
+                                         "Can't set yfacet and col_wrap at the same time.")
         
         if col_wrap and not self.xfacet:
-            raise util.CytoflowViewError("Must set xfacet to use col_wrap.")
+            raise util.CytoflowViewError('xfacet',
+                                         "Must set xfacet to use col_wrap.")
         
         sharex = kwargs.pop("sharex", True)
         sharey = kwargs.pop("sharey", True)
@@ -234,21 +235,25 @@ class BaseDataView(BaseView):
         """
 
         if self.xfacet and self.xfacet not in experiment.conditions:
-            raise util.CytoflowViewError("X facet {0} not in the experiment"
-                                    .format(self.xfacet))
+            raise util.CytoflowViewError('xfacet',
+                                         "X facet {0} not in the experiment"
+                                         .format(self.xfacet))
          
         if self.yfacet and self.yfacet not in experiment.conditions:
-            raise util.CytoflowViewError("Y facet {0} not in the experiment"
-                                    .format(self.yfacet))
+            raise util.CytoflowViewError('yfacet',
+                                         "Y facet {0} not in the experiment"
+                                         .format(self.yfacet))
          
         if self.huefacet and self.huefacet not in experiment.conditions:
-            raise util.CytoflowViewError("Hue facet {0} not in the experiment"
-                                    .format(self.huefacet))
+            raise util.CytoflowViewError('huefacet',
+                                         "Hue facet {0} not in the experiment"
+                                         .format(self.huefacet))
              
         facets = [x for x in [self.xfacet, self.yfacet, self.huefacet] if x]
          
         if len(facets) != len(set(facets)):
-            raise util.CytoflowViewError("Can't reuse facets")
+            raise util.CytoflowViewError(None,
+                                         "Can't reuse facets")
          
         if self.subset:
             try:
@@ -256,12 +261,14 @@ class BaseDataView(BaseView):
             except util.CytoflowError as e:
                 raise util.CytoflowViewError(str(e)) from e
             except Exception as e:
-                raise util.CytoflowViewError("Subset string '{0}' isn't valid"
-                                        .format(self.subset)) from e
+                raise util.CytoflowViewError('subset',
+                                             "Subset string '{0}' isn't valid"
+                                             .format(self.subset)) from e
                  
             if len(experiment) == 0:
-                raise util.CytoflowViewError("Subset string '{0}' returned no events"
-                                        .format(self.subset))
+                raise util.CytoflowViewError('subset',
+                                             "Subset string '{0}' returned no events"
+                                             .format(self.subset))
                  
         super().plot(experiment, experiment.data, **kwargs)
         
@@ -297,14 +304,17 @@ class Base1DView(BaseDataView):
         """
         
         if experiment is None:
-            raise util.CytoflowViewError("No experiment specified")
+            raise util.CytoflowViewError('experiment',
+                                         "No experiment specified")
         
         if not self.channel:
-            raise util.CytoflowViewError("Must specify a channel")
+            raise util.CytoflowViewError('channel',
+                                         "Must specify a channel")
         
         if self.channel not in experiment.data:
-            raise util.CytoflowViewError("Channel {0} not in the experiment"
-                                    .format(self.channel))
+            raise util.CytoflowViewError('channel',
+                                         "Channel {0} not in the experiment"
+                                         .format(self.channel))
         
         # get the scale
         scale = kwargs.pop('scale', None)
@@ -316,13 +326,16 @@ class Base1DView(BaseDataView):
         max_quantile = kwargs.pop("max_quantile", 1.0) 
         
         if min_quantile < 0.0 or min_quantile > 1:
-            raise util.CytoflowViewError("min_quantile must be between 0 and 1")
+            raise util.CytoflowViewError('min_quantile',
+                                         "min_quantile must be between 0 and 1")
 
         if max_quantile < 0.0 or max_quantile > 1:
-            raise util.CytoflowViewError("max_quantile must be between 0 and 1")     
+            raise util.CytoflowViewError('max_quantile',
+                                         "max_quantile must be between 0 and 1")     
         
         if min_quantile >= max_quantile:
-            raise util.CytoflowViewError("min_quantile must be less than max_quantile")   
+            raise util.CytoflowViewError('min_quantile',
+                                         "min_quantile must be less than max_quantile")   
                 
         xlim = kwargs.pop("xlim", None)
         if xlim is None:
@@ -367,20 +380,25 @@ class Base2DView(BaseDataView):
         """
 
         if experiment is None:
-            raise util.CytoflowViewError("No experiment specified")
+            raise util.CytoflowViewError('experiment',
+                                         "No experiment specified")
 
         if not self.xchannel:
-            raise util.CytoflowViewError("Must specify an xchannel")
+            raise util.CytoflowViewError('xchannel',
+                                         "Must specify an xchannel")
         
         if self.xchannel not in experiment.data:
-            raise util.CytoflowViewError("Channel {} not in the experiment"
+            raise util.CytoflowViewError('xchannel',
+                                         "Channel {} not in the experiment"
                                     .format(self.xchannel))
 
         if not self.ychannel:
-            raise util.CytoflowViewError("Must specify a ychannel")
+            raise util.CytoflowViewError('ychannel',
+                                         "Must specify a ychannel")
         
         if self.ychannel not in experiment.data:
-            raise util.CytoflowViewError("Channel {} not in the experiment"
+            raise util.CytoflowViewError('ychannel',
+                                         "Channel {} not in the experiment"
                                     .format(self.ychannel))
         
         # get the scale
@@ -397,13 +415,16 @@ class Base2DView(BaseDataView):
         max_quantile = kwargs.pop("max_quantile", 1.0) 
         
         if min_quantile < 0.0 or min_quantile > 1:
-            raise util.CytoflowViewError("min_quantile must be between 0 and 1")
+            raise util.CytoflowViewError('min_quantile',
+                                         "min_quantile must be between 0 and 1")
 
         if max_quantile < 0.0 or max_quantile > 1:
-            raise util.CytoflowViewError("max_quantile must be between 0 and 1")     
+            raise util.CytoflowViewError('max_quantile',
+                                         "max_quantile must be between 0 and 1")     
         
         if min_quantile >= max_quantile:
-            raise util.CytoflowViewError("min_quantile must be less than max_quantile")   
+            raise util.CytoflowViewError('min_quantile',
+                                         "min_quantile must be less than max_quantile")   
                 
         xlim = kwargs.pop("xlim", None)
         if xlim is None:
@@ -463,10 +484,12 @@ class BaseStatisticsView(BaseView):
         """
         
         if not self.variable:
-            raise util.CytoflowViewError("variable not set")
+            raise util.CytoflowViewError('variable',
+                                         "variable not set")
             
         if self.variable not in experiment.conditions:
-            raise util.CytoflowViewError("variable {0} not in the experiment"
+            raise util.CytoflowViewError('variable',
+                                         "variable {0} not in the experiment"
                                     .format(self.variable))
             
         data, facets, names = self._subset_data(data)
@@ -506,10 +529,12 @@ class BaseStatisticsView(BaseView):
         """
         
         if not self.variable:
-            raise util.CytoflowViewError("variable not set")
+            raise util.CytoflowViewError('variable',
+                                         "variable not set")
             
         if self.variable not in experiment.conditions:
-            raise util.CytoflowViewError("variable {0} not in the experiment"
+            raise util.CytoflowViewError('variable',
+                                         "variable {0} not in the experiment"
                                     .format(self.variable))
             
         data, facets, names = self._subset_data(data)
@@ -517,20 +542,23 @@ class BaseStatisticsView(BaseView):
         unused_names = list(set(names) - set(facets))
 
         if plot_name is not None and not unused_names:
-            raise util.CytoflowViewError("You specified a plot name, but all "
+            raise util.CytoflowViewError('plot_name',
+                                         "You specified a plot name, but all "
                                          "the facets are already used")
         
         if unused_names:
             groupby = data.groupby(unused_names)
 
             if plot_name is None:
-                raise util.CytoflowViewError("You must use facets {} in either the "
+                raise util.CytoflowViewError('plot_name',
+                                             "You must use facets {} in either the "
                                              "plot variables or the plot name. "
                                              "Possible plot names: {}"
                                              .format(unused_names, list(groupby.groups.keys())))
 
             if plot_name not in set(groupby.groups.keys()):
-                raise util.CytoflowViewError("Plot {} not from plot_enum; must "
+                raise util.CytoflowViewError('plot_name',
+                                             "Plot {} not from plot_enum; must "
                                              "be one of {}"
                                              .format(plot_name, list(groupby.groups.keys())))
                 
@@ -548,12 +576,14 @@ class BaseStatisticsView(BaseView):
                 # all conditions are valid Python variables
                 data = data.query(self.subset)
             except Exception as e:
-                raise util.CytoflowViewError("Subset string '{0}' isn't valid"
-                                        .format(self.subset)) from e
+                raise util.CytoflowViewError('subset',
+                                             "Subset string '{0}' isn't valid"
+                                             .format(self.subset)) from e
                 
             if len(data) == 0:
-                raise util.CytoflowViewError("Subset string '{0}' returned no values"
-                                        .format(self.subset))
+                raise util.CytoflowViewError('subset',
+                                             "Subset string '{0}' returned no values"
+                                             .format(self.subset))
                 
         names = list(data.index.names)
         
@@ -565,28 +595,32 @@ class BaseStatisticsView(BaseView):
                 try:
                     data.index = data.index.droplevel(name)
                 except AttributeError as e:
-                    raise util.CytoflowViewError("Must have more than one "
+                    raise util.CytoflowViewError(None,
+                                                 "Must have more than one "
                                                  "value to plot.") from e
                 
         names = list(data.index.names)
 
         if self.xfacet and self.xfacet not in data.index.names:
-            raise util.CytoflowViewError("X facet {} not in statistics; must be one of {}"
+            raise util.CytoflowViewError('xfacet',
+                                         "X facet {} not in statistics; must be one of {}"
                                          .format(self.xfacet, data.index.names))
 
         
         if self.yfacet and self.yfacet not in data.index.names:
-            raise util.CytoflowViewError("Y facet {} not in statistics; must be one of {}"
+            raise util.CytoflowViewError('yfacet',
+                                         "Y facet {} not in statistics; must be one of {}"
                                          .format(self.yfacet, data.index.names))
             
         if self.huefacet and self.huefacet not in data.index.names:
-            raise util.CytoflowViewError("Hue facet {} not in statistics; must be one of {}"
+            raise util.CytoflowViewError('huefacet',
+                                         "Hue facet {} not in statistics; must be one of {}"
                                          .format(self.huefacet, data.index.names))
             
             
         facets = [x for x in [self.variable, self.xfacet, self.yfacet, self.huefacet] if x]
         if len(facets) != len(set(facets)):
-            raise util.CytoflowViewError("Can't reuse facets")
+            raise util.CytoflowViewError(None, "Can't reuse facets")
         
         return data, facets, names
 
@@ -647,23 +681,26 @@ class Base1DStatisticsView(BaseStatisticsView):
         
     def _make_data(self, experiment):
         if experiment is None:
-            raise util.CytoflowViewError("No experiment specified")
+            raise util.CytoflowViewError('experiment', "No experiment specified")
         
         if not self.statistic:
-            raise util.CytoflowViewError("Statistic not set")
+            raise util.CytoflowViewError('statistic', "Statistic not set")
         
         if self.statistic not in experiment.statistics:
-            raise util.CytoflowViewError("Can't find the statistic {} in the experiment"
+            raise util.CytoflowViewError('statistic',
+                                         "Can't find the statistic {} in the experiment"
                                          .format(self.statistic))
         else:
             stat = experiment.statistics[self.statistic]
             
         if not util.is_numeric(stat):
-            raise util.CytoflowViewError("Statistic must be numeric")
+            raise util.CytoflowViewError('statistic',
+                                         "Statistic must be numeric")
             
         if self.error_statistic[0]:
             if self.error_statistic not in experiment.statistics:
-                raise util.CytoflowViewError("Can't find the error statistic in the experiment")
+                raise util.CytoflowViewError('error_statistic',
+                                             "Can't find the error statistic in the experiment")
             else:
                 error_stat = experiment.statistics[self.error_statistic]
         else:
@@ -671,11 +708,13 @@ class Base1DStatisticsView(BaseStatisticsView):
          
         if error_stat is not None:
             if not stat.index.equals(error_stat.index):
-                raise util.CytoflowViewError("Data statistic and error statistic "
+                raise util.CytoflowViewError('error_statistic',
+                                             "Data statistic and error statistic "
                                              " don't have the same index.")
                
             if stat.name == error_stat.name:
-                raise util.CytoflowViewError("Data statistic and error statistic can "
+                raise util.CytoflowViewError('error_statistic',
+                                             "Data statistic and error statistic can "
                                              "not have the same name.")
                
         data = pd.DataFrame(index = stat.index)
@@ -740,23 +779,28 @@ class Base2DStatisticsView(BaseStatisticsView):
         
     def _make_data(self, experiment):
         if experiment is None:
-            raise util.CytoflowViewError("No experiment specified")
+            raise util.CytoflowViewError('experiment',
+                                         "No experiment specified")
         
         if not self.xstatistic:
-            raise util.CytoflowViewError("X Statistic not set")
+            raise util.CytoflowViewError('xstatistic',
+                                         "X Statistic not set")
         
         if self.xstatistic not in experiment.statistics:
-            raise util.CytoflowViewError("Can't find the statistic {} in the experiment"
+            raise util.CytoflowViewError('xstatistic',
+                                         "Can't find the statistic {} in the experiment"
                                          .format(self.xstatistic))
         else:
             xstat = experiment.statistics[self.xstatistic]
             
         if not util.is_numeric(xstat):
-            raise util.CytoflowViewError("X statistic must be numeric")
+            raise util.CytoflowViewError('xstatistic',
+                                         "X statistic must be numeric")
             
         if self.x_error_statistic[0]:
             if self.x_error_statistic not in experiment.statistics:
-                raise util.CytoflowViewError("Can't find the X error statistic in the experiment")
+                raise util.CytoflowViewError('x_error_statistic',
+                                             "Can't find the X error statistic in the experiment")
             else:
                 x_error_stat = experiment.statistics[self.x_error_statistic]
         else:
@@ -764,28 +808,34 @@ class Base2DStatisticsView(BaseStatisticsView):
             
         if x_error_stat is not None:
             if not xstat.index.equals(x_error_stat.index):
-                raise util.CytoflowViewError("Data statistic and error statistic "
+                raise util.CytoflowViewError('x_error_statistic',
+                                             "Data statistic and error statistic "
                                              " don't have the same index.")
                
             if xstat.name == x_error_stat.name:
-                raise util.CytoflowViewError("Data statistic and error statistic can "
+                raise util.CytoflowViewError('x_error_statistic',
+                                             "Data statistic and error statistic can "
                                              "not have the same name.")
             
         if not self.ystatistic:
-            raise util.CytoflowViewError("Y statistic not set")
+            raise util.CytoflowViewError('ystatistic',
+                                         "Y statistic not set")
         
         if self.ystatistic not in experiment.statistics:
-            raise util.CytoflowViewError("Can't find the Y statistic {} in the experiment"
+            raise util.CytoflowViewError('ystatistic',
+                                         "Can't find the Y statistic {} in the experiment"
                                          .format(self.ystatistic))
         else:
             ystat = experiment.statistics[self.ystatistic]
             
         if not util.is_numeric(ystat):
-            raise util.CytoflowViewError("Y statistic must be numeric")
+            raise util.CytoflowViewError('ystatistic',
+                                         "Y statistic must be numeric")
         
         if self.y_error_statistic[0]:
             if self.y_error_statistic not in experiment.statistics:
-                raise util.CytoflowViewError("Can't find the Y error statistic in the experiment")
+                raise util.CytoflowViewError('y_error_statistic',
+                                             "Can't find the Y error statistic in the experiment")
             else:
                 y_error_stat = experiment.statistics[self.y_error_statistic]
         else:
@@ -793,15 +843,18 @@ class Base2DStatisticsView(BaseStatisticsView):
          
         if y_error_stat is not None:
             if not ystat.index.equals(y_error_stat.index):
-                raise util.CytoflowViewError("Data statistic and error statistic "
+                raise util.CytoflowViewError('y_error_statistic',
+                                             "Data statistic and error statistic "
                                              " don't have the same index.")
                
             if ystat.name == y_error_stat.name:
-                raise util.CytoflowViewError("Data statistic and error statistic can "
+                raise util.CytoflowViewError('y_error_statistic',
+                                             "Data statistic and error statistic can "
                                              "not have the same name.")
                 
         if xstat.name == ystat.name:
-            raise util.CytoflowViewError("X and Y statistics can "
+            raise util.CytoflowViewError('ystatistic',
+                                         "X and Y statistics can "
                                          "not have the same name.")
                
         try:
@@ -818,12 +871,14 @@ class Base2DStatisticsView(BaseStatisticsView):
              
         if self.x_error_statistic[0]:
             if self.x_error_statistic not in experiment.statistics:
-                raise util.CytoflowViewError("X error statistic not in experiment")
+                raise util.CytoflowViewError('x_error_statistic',
+                                             "X error statistic not in experiment")
             else:
                 x_error_stat = experiment.statistics[self.x_error_statistic]
                 
             if set(x_error_stat.index.names) != set(xstat.index.names):
-                raise util.CytoflowViewError("X error statistic doesn't have the "
+                raise util.CytoflowViewError('x_error_statistic',
+                                             "X error statistic doesn't have the "
                                              "same indices as the X statistic")
             
             try:
@@ -836,19 +891,22 @@ class Base2DStatisticsView(BaseStatisticsView):
             x_error_stat.sort_index(inplace = True)
             
             if not x_error_stat.index.equals(xstat.index):
-                raise util.CytoflowViewError("X error statistic doesn't have the "
-                                             "same values as the X statistic")                
+                raise util.CytoflowViewError('x_error_statistic',
+                                             "X error statistic doesn't have the "
+                                             "same indices as the X statistic")                
         else:
             x_error_stat = None
             
         if self.y_error_statistic[0]:
             if self.y_error_statistic not in experiment.statistics:
-                raise util.CytoflowViewError("Y error statistic not in experiment")
+                raise util.CytoflowViewError('y_error_statistic',
+                                             "Y error statistic not in experiment")
             else:
                 y_error_stat = experiment.statistics[self.y_error_statistic]
                 
             if set(y_error_stat.index.names) != set(ystat.index.names):
-                raise util.CytoflowViewError("Y error statistic doesn't have the "
+                raise util.CytoflowViewError('y_error_statistic',
+                                             "Y error statistic doesn't have the "
                                              "same indices as the Y statistic")
                 
             try:
@@ -861,7 +919,8 @@ class Base2DStatisticsView(BaseStatisticsView):
             y_error_stat.sort_index(inplace = True)
             
             if not y_error_stat.index.equals(ystat.index):
-                raise util.CytoflowViewError("Y error statistic doesn't have the "
+                raise util.CytoflowViewError('y_error_statistic',
+                                             "Y error statistic doesn't have the "
                                              "same values as the Y statistic")   
         else:
             y_error_stat = None

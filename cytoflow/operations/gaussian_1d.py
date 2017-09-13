@@ -110,11 +110,11 @@ class GaussianMixture1DOp(HasStrictTraits):
     Examples
     --------
     
+    Make a little data set.
+    
     .. plot::
         :context: close-figs
-        
-        Make a little data set.
-    
+            
         >>> import cytoflow as flow
         >>> import_op = flow.ImportOp()
         >>> import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",

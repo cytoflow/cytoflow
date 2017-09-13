@@ -16,9 +16,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from warnings import warn
+'''
+cytoflow.views.histogram
+------------------------
+'''
 
-from traits.api import Str, provides
+from traits.api import Constant, provides
 import matplotlib.pyplot as plt
 
 import numpy as np
@@ -38,17 +41,34 @@ class HistogramView(Base1DView):
         
     Examples
     --------
-    >>> hist = flow.HistogramView()
-    >>> hist.name = "Histogram view, grid"
-    >>> hist.channel = 'Y2-A'
-    >>> hist.xfacet = 'Dox'
-    >>> hist.yfacet = 'Y2-A+'
-    >>> hist.plot(ex)
+    
+    Make a little data set.
+    
+    .. plot::
+        :context: close-figs
+            
+        >>> import cytoflow as flow
+        >>> import_op = flow.ImportOp()
+        >>> import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",
+        ...                              conditions = {'Dox' : 10.0}),
+        ...                    flow.Tube(file = "Plate01/CFP_Well_A4.fcs",
+        ...                              conditions = {'Dox' : 1.0})]
+        >>> import_op.conditions = {'Dox' : 'float'}
+        >>> ex = import_op.apply()
+        
+    Plot a histogram
+    
+    .. plot::
+        :context: close-figs
+    
+        >>> flow.HistogramView(channel = 'Y2-A',
+        ...                    scale = 'log',
+        ...                    huefacet = 'Dox').plot(ex)
     """
     
     # traits   
-    id = "edu.mit.synbio.cytoflow.view.histogram"
-    friendly_id = "Histogram" 
+    id = Constant("edu.mit.synbio.cytoflow.view.histogram")
+    friendly_id = Constant("Histogram") 
     
     def plot(self, experiment, **kwargs):
         """
@@ -67,15 +87,10 @@ class HistogramView(Base1DView):
             If `True`, re-scale the histogram to form a probability density
             function, so the area under the histogram is 1.
             
-        Other Parameters
-        ----------------
-        Other `kwargs` are passed to matplotlib.pyplot.hist_.
-    
-        .. _matplotlib.pyplot.hist: https://matplotlib.org/devdocs/api/_as_gen/matplotlib.pyplot.hist.html
+        Notes
+        -----
+        Other ``kwargs`` are passed to `matplotlib.pyplot.hist <https://matplotlib.org/devdocs/api/_as_gen/matplotlib.pyplot.hist.html>`_
 
-        See Also
-        --------
-        BaseView.plot : common parameters for data views
         
         """
         
@@ -158,3 +173,6 @@ class HistogramView(Base1DView):
         plt.ylim(0, 1.05 * max(ymax))
         
         return {}
+
+util.expand_class_attributes(HistogramView)
+util.expand_method_parameters(HistogramView, HistogramView.plot)

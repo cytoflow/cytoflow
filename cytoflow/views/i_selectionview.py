@@ -16,6 +16,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+'''
+cytoflow.views.i_selectionview
+------------------------------
+'''
+
 from traits.api import Bool
 from .i_view import IView
 

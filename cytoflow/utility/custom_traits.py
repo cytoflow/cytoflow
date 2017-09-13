@@ -96,7 +96,8 @@ class Removed(TraitType):
         - **gui** : if ``True``, don't return a backtrace (because it's very slow)
         
         - **warning** : if ``True``, raise a warning when the trait is referenced.
-        Otherwise, raise an exception.
+            Otherwise, raise an exception.
+        
     """
     
     gui = False

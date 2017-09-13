@@ -16,7 +16,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from traits.api import provides
+'''
+cytoflow.views.bar_chart
+------------------------
+'''
+
+from traits.api import provides, Constant
+
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
@@ -28,55 +34,62 @@ from .base_views import Base1DStatisticsView
 
 @provides(IView)
 class BarChartView(Base1DStatisticsView):
-    """Plots a bar chart of some summary statistic
+    """
+    Plots a bar chart of some summary statistic
     
     Attributes
     ----------
-    name : Str
-        The bar chart's name 
     
-    statistic : Tuple(Str, Str)
-        the statistic we're plotting
-        
-    scale : Enum("linear", "log", "logicle") (default = "linear")
-        The scale to use on the Y axis.
-        
-    variable : Str
-        the name of the conditioning variable to group the chart's bars
-        
-    error_statistic : Tuple(Str, Str)
-        if specified, a statistic to draw error bars.  if values are numeric,
-        the bars are drawn +/- the value.  if the values are tuples, then
-        the first element is the low error and the second element is the
-        high error.
-        
-    xfacet : Str
-        the conditioning variable for horizontal subplots
-        
-    yfacet : Str
-        the conditioning variable for vertical subplots
-        
-    huefacet : Str
-        the conditioning variable to make multiple bar colors
-        
-    subset : String
-        Passed to pandas.DataFrame.query(), to get a subset of the statistic
-        before we plot it.
-        
     Examples
     --------
-    >>> bar = flow.BarChartView()
-    >>> bar.name = "Bar Chart"
-    >>> bar.channel = 'Y2-A'
-    >>> bar.variable = 'Y2-A+'
-    >>> bar.huefacet = 'Dox'
-    >>> bar.function = len
-    >>> bar.plot(ex)
+    
+    Make a little data set.
+    
+    .. plot::
+        :context: close-figs
+            
+        >>> import cytoflow as flow
+        >>> import_op = flow.ImportOp()
+        >>> import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",
+        ...                              conditions = {'Dox' : 10.0}),
+        ...                    flow.Tube(file = "Plate01/CFP_Well_A4.fcs",
+        ...                              conditions = {'Dox' : 1.0})]
+        >>> import_op.conditions = {'Dox' : 'float'}
+        >>> ex = import_op.apply()
+        
+    Add a threshold gate
+    
+    .. plot::
+        :context: close-figs
+    
+        >>> ex2 = flow.ThresholdOp(name = 'Threshold',
+        ...                        channel = 'Y2-A',
+        ...                        threshold = 2000).apply(ex)
+        
+    Add a statistic
+    
+    .. plot::
+        :context: close-figs
+
+        >>> ex3 = flow.ChannelStatisticOp(name = "ByDox",
+        ...                               channel = "Y2-A",
+        ...                               by = ['Dox', 'Threshold'],
+        ...                               function = len).apply(ex2) 
+    
+    Plot the bar chart
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> flow.BarChartView(statistic = ("ByDox", "len"),
+        ...                   variable = "Dox",
+        ...                   huefacet = "Threshold").plot(ex3)
+        
     """
     
     # traits   
-    id = "edu.mit.synbio.cytoflow.view.barchart"
-    friendly_id = "Bar Chart" 
+    id = Constant("edu.mit.synbio.cytoflow.view.barchart")
+    friendly_id = Constant("Bar Chart") 
     
     orientation = util.Removed(err_string = "`orientation` is now a parameter to `plot`")
     
@@ -95,7 +108,8 @@ class BarChartView(Base1DStatisticsView):
         
         Parameters
         ----------
-        orientation : ['vertical', 'horizontal']
+        
+        orientation : {'vertical', 'horizontal'}
             Sets the orientation to vertical (the default) or horizontal
             
         color : a matplotlib color
@@ -110,15 +124,11 @@ class BarChartView(Base1DStatisticsView):
         capsize : scalar
             The size of the error bar caps, in points
             
-        Other Parameters
-        ----------------
-        Other `kwargs` are passed to matplotlib.axes.Axes.bar_.
-    
-        .. _matplotlib.axes.Axes.bar_: https://matplotlib.org/devdocs/api/_as_gen/matplotlib.axes.Axes.bar.html
+        Notes
+        -----
+        
+        Other ``kwargs`` are passed to `matplotlib.axes.Axes.bar <https://matplotlib.org/devdocs/api/_as_gen/matplotlib.axes.Axes.bar.html>`_
 
-        See Also
-        --------
-        BaseView.plot : common parameters for data views
         """
         
         super().plot(experiment, plot_name, **kwargs)
@@ -303,3 +313,6 @@ def _draw_confints(ax, at_group, stat, confints, colors,
                 ax.plot([hi, hi],
                         [at - capsize / 2, at + capsize / 2],
                         color=color, **kws)
+
+util.expand_class_attributes(BarChartView)
+util.expand_method_parameters(BarChartView, BarChartView.plot)

@@ -71,8 +71,7 @@ class Histogram2DView(Base2DView):
         ...                      yscale = 'log',
         ...                      huefacet = 'Dox').plot(ex)
         
-    The same plot, smoothed, with a log color scale.  *Note - you can change
-    the hue scale, even if you don't have control over the hue facet!*
+    The same plot, smoothed, with a log color scale.  
     
     .. plot::
         :context: close-figs

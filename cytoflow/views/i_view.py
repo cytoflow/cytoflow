@@ -17,15 +17,15 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 '''
-Created on Feb 23, 2015
-
-@author: brian
+cytoflow.views.i_view
+---------------------
 '''
 
 from traits.api import Interface, Constant
 
 class IView(Interface):
-    """An interface for a visualization of flow data.
+    """
+    An interface for a visualization of flow data.
     
     Could be a histogram, a density plot, a scatter plot, a statistical
     visualization like a bar chart of population means; even a textual 
