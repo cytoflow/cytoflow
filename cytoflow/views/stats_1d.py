@@ -16,7 +16,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from traits.api import Tuple, Str, provides
+'''
+cytoflow.views.stats_1d
+-----------------------
+'''
+
+from traits.api import provides, Constant
 import matplotlib.pyplot as plt
 
 import numpy as np
@@ -35,76 +40,51 @@ class Stats1DView(Base1DStatisticsView):
     
     Attributes
     ----------
-    name : Str
-        The plot's name 
-        
-    statistic : Tuple(Str, Str)
-        The statistic to plot.  The first element is the name of the module that
-        added the statistic, and the second element is the name of the statistic.
-    
-    variable : Str
-        the name of the conditioning variable to put on the X axis.  Must be
-        numeric (float or int).
-        
-    xscale : Enum("linear", "log") (default = "linear")
-        The scale to use on the X axis
-        
-    yscale : Enum("linear", "log", "logicle") (default = "linear")
-        The scale to use on the Y axis
-        
-    xfacet : Str
-        the conditioning variable for horizontal subplots
-        
-    yfacet : Str
-        the conditioning variable for vertical subplots
-        
-    huefacet : 
-        the conditioning variable for color.
-        
-    huescale :
-        the scale to use on the "hue" axis, if there are many values of
-        the hue facet.
-        
-    error_statistic : Tuple(Str, Str)
-        A statistic to use to draw error bars; the bars are +- the value of
-        the statistic.
-        
-    subset : String
-        Passed to pandas.DataFrame.query(), to get a subset of the statistic
-        before we plot it.
-
         
     Examples
     --------
     
-    Assume we want a Dox induction curve in a transient transfection experiment.  
-    We have induced several wells with different amounts of Dox and the output
-    of the Dox-inducible channel is "Pacific Blue-A".  We have a constitutive
-    expression channel in "PE-Tx-Red-YG-A". We want to bin all the data by
-    constitutive expression level, then plot the dose-response (geometric mean)
-    curve in each bin. 
+    .. plot::
+        :context: close-figs
+        
+        Make a little data set.
     
-    >>> ex_bin = flow.BinningOp(name = "CFP_Bin",
-    ...                         channel = "PE-Tx-Red-YG-A",
-    ...                         scale = "log",
-    ...                         bin_width = 0.1).apply(ex)
-    >>> ex_stat = flow.ChannelStatisticOp(name = "DoxCFP",
-    ...                                   by = ["Dox", "CFP_Bin"],
-    ...                                   channel = "Pacific Blue-A",
-    ...                                   function = flow.geom_mean).apply(ex_bin)
-    >>> view = flow.Stats1DView(name = "Dox vs IFP",
-    ...                         statistic = ("DoxCFP", "geom_mean"),
-    ...                         variable = "Dox",
-    ...                         xscale = "log",
-    ...                         huefacet = "CFP_Bin").plot(ex_stat)
-    >>> view.plot(ex_stat)
+        >>> import cytoflow as flow
+        >>> import_op = flow.ImportOp()
+        >>> import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",
+        ...                              conditions = {'Dox' : 10.0}),
+        ...                    flow.Tube(file = "Plate01/CFP_Well_A4.fcs",
+        ...                              conditions = {'Dox' : 1.0})]
+        >>> import_op.conditions = {'Dox' : 'float'}
+        >>> ex = import_op.apply()
+    
+    Create and parameterize the operation.
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> ch_op = flow.ChannelStatisticOp(name = 'MeanByDox',
+        ...                     channel = 'Y2-A',
+        ...                     function = flow.geom_mean,
+        ...                     by = ['Dox'])
+        >>> ex2 = ch_op.apply(ex)
+        
+    View the new statistic
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> flow.Stats1DView(variable = 'Dox',
+        ...                  statistic = ('MeanByDox', 'geom_mean'),
+        ...                  xscale = 'log',
+        ...                  yscale = 'log').plot(ex2)
     """
     
     # traits   
-    id = "edu.mit.synbio.cytoflow.view.stats1d"
-    friendly_id = "1D Statistics View" 
+    id = Constant("edu.mit.synbio.cytoflow.view.stats1d")
+    friendly_id = Constant("1D Statistics View")
     
-    REMOVED_ERROR = "Statistics changed dramatically in 0.5; please see the documentation"
+    REMOVED_ERROR = Constant("Statistics changed dramatically in 0.5; please see the documentation")
     by = util.Removed(err_string = REMOVED_ERROR)
     yfunction = util.Removed(err_string = REMOVED_ERROR)
     ychannel = util.Removed(err_string = REMOVED_ERROR)
@@ -113,7 +93,7 @@ class Stats1DView(Base1DStatisticsView):
     def enum_plots(self, experiment):
         """
         Returns an iterator over the possible plots that this View can
-        produce.  The values returned can be passed to "plot".
+        produce.  The values returned can be passed to :meth:`plot`.
         """
                 
         return super().enum_plots(experiment)
@@ -141,16 +121,10 @@ class Stats1DView(Base1DStatisticsView):
             
         alpha : the alpha blending value, from 0.0 (transparent) to 1.0 (opaque)
         
-        Other Parameters
-        ----------------
-        
-        Other `kwargs` are passed to matplotlib.pyplot.plot_.
-    
-        .. _matplotlib.pyplot.hist: https://matplotlib.org/devdocs/api/_as_gen/matplotlib.pyplot.plot.html
-        
-        See Also
-        --------
-        BaseView.plot : common parameters for data views
+        Notes
+        -----
+                
+        Other `kwargs` are passed to `matplotlib.pyplot.plot <https://matplotlib.org/devdocs/api/_as_gen/matplotlib.pyplot.plot.html>`_
         
         """
         
@@ -204,6 +178,9 @@ def _error_bars(x, y, yerr, ax = None, color = None, **kwargs):
         hi = [y.iloc[i] + ye for i, ye in yerr.reset_index(drop = True).items()]
 
     plt.vlines(x, lo, hi, color = color, **kwargs)
+    
+util.expand_class_attributes(Stats1DView)
+util.expand_method_parameters(Stats1DView, Stats1DView.plot)
     
 
 if __name__ == '__main__':

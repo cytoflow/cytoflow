@@ -74,14 +74,7 @@ class KMeansOp(HasStrictTraits):
         ``Time`` and ``Dox``, setting :attr:`by` to ``["Time", "Dox"]`` will 
         fit the model separately to each subset of the data with a unique 
         combination of ``Time`` and ``Dox``.
-        
-    Statistics
-    ----------       
-    centers : Float
-        the location of each cluster's centroid in each channel
   
-    Examples
-    --------
     
     Examples
     --------
@@ -255,7 +248,19 @@ class KMeansOp(HasStrictTraits):
          
     def apply(self, experiment):
         """
-        Apply the KMeans clustering to the data
+        Apply the KMeans clustering to the data.
+        
+        Returns
+        -------
+        Experiment
+            a new Experiment with one additional :attr:`~Experiment.condition` 
+            named :attr:`name`, of type ``category``.  The new category has 
+            values  ``name_1, name_2, etc`` to indicate which k-means cluster 
+            an event is a member of.
+            
+            The new :class:`.Experiment` also has one new statistic called
+            ``centers``, which is a list of tuples encoding the centroids of each
+            k-means cluster.
         """
  
         if experiment is None:

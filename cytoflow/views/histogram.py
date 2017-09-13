@@ -34,7 +34,8 @@ from .base_views import Base1DView
 
 @provides(IView)
 class HistogramView(Base1DView):
-    """Plots a one-channel histogram
+    """
+    Plots a one-channel histogram
     
     Attributes
     ----------

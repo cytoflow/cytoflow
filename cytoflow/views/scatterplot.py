@@ -17,14 +17,15 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Created on Apr 19, 2015
-
-@author: brian
+cytoflow.views.scatterplot
+--------------------------
 """
 
-from traits.api import provides
+from traits.api import provides, Constant
 
 import matplotlib.pyplot as plt
+
+import cytoflow.utility as util
 
 from .i_view import IView
 from .base_views import Base2DView
@@ -36,38 +37,61 @@ class ScatterplotView(Base2DView):
     
     Attributes
     ----------
+    
+    Examples
+    --------
+    
+    Make a little data set.
+    
+    .. plot::
+        :context: close-figs
+            
+        >>> import cytoflow as flow
+        >>> import_op = flow.ImportOp()
+        >>> import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",
+        ...                              conditions = {'Dox' : 10.0}),
+        ...                    flow.Tube(file = "Plate01/CFP_Well_A4.fcs",
+        ...                              conditions = {'Dox' : 1.0})]
+        >>> import_op.conditions = {'Dox' : 'float'}
+        >>> ex = import_op.apply()
+        
+    Plot a density plot
+    
+    .. plot::
+        :context: close-figs
+    
+        >>> flow.ScatterplotView(xchannel = 'V2-A',
+        ...                      xscale = 'log',
+        ...                      ychannel = 'Y2-A',
+        ...                      yscale = 'log',
+        ...                      huefacet = 'Dox').plot(ex)
         
     """
     
-    id = 'edu.mit.synbio.cytoflow.view.scatterplot'
-    friend_id = "Scatter Plot"
+    id = Constant('edu.mit.synbio.cytoflow.view.scatterplot')
+    friend_id = Constant("Scatter Plot")
     
     def plot(self, experiment, **kwargs):
         """
         Plot a faceted scatter plot view of a channel
         
-        alpha : float
+        alpha : float (default = 0.25)
             The alpha blending value, between 0 (transparent) and 1 (opaque).
-            Default = 0.25
             
-        s : int
-            The size in points^2.  Default = 2
+        s : int (default = 2)
+            The size in points^2.
             
         marker : a matplotlib marker style, usually a string
             Specfies the glyph to draw for each point on the scatterplot.
-            See _matplotlib.markers for examples.  Default: 'o'
+            See `matplotlib.markers`_ for examples.  Default: 'o'
             
         .. _matplotlib.markers: http://matplotlib.org/api/markers_api.html#module-matplotlib.markers
         
-        Other Parameters
-        ----------------
-        Other `kwargs` is passed to matplotlib.pyplot.scatter_.
-    
-        .. _matplotlib.pyplot.scatter: https://matplotlib.org/devdocs/api/_as_gen/matplotlib.pyplot.scatter.html
 
-        See Also
-        --------
-        BaseView.plot : common parameters for data views
+        Notes
+        -----
+        Other ``kwargs`` are passed to `matplotlib.pyplot.scatter <https://matplotlib.org/devdocs/api/_as_gen/matplotlib.pyplot.scatter.html>`_
+  
         
         """
         
@@ -83,6 +107,9 @@ class ScatterplotView(Base2DView):
         grid.map(plt.scatter, self.xchannel, self.ychannel, **kwargs)   
                 
         return {}
+    
+util.expand_class_attributes(ScatterplotView)
+util.expand_method_parameters(ScatterplotView, ScatterplotView.plot)
         
 if __name__ == '__main__':
     import cytoflow as flow

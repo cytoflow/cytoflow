@@ -17,67 +17,63 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Created on Apr 19, 2015
-
-@author: brian
+cytoflow.views.kde_2d
+---------------------
 """
 
-from traits.api import HasStrictTraits, provides, Str
+from traits.api import provides, Constant
 
 import matplotlib.pyplot as plt
-import seaborn as sns
 import numpy as np
-import matplotlib as mpl
 import statsmodels.nonparametric.api as smnp
 
 import cytoflow.utility as util
+
 from .i_view import IView
 from .base_views import Base2DView
 
 @provides(IView)
 class Kde2DView(Base2DView):
     """
-    Plots a 2-d kernel density estimate.  
+    Plots a 2-d kernel-density estimate.  Sort of like a smoothed histogram.
+    The density is visualized with a set of isolines.
+    
+    .. warning:: :class:`Kde2DView` is currently **VERY SLOW.**  
     
     Attributes
     ----------
-    
-    name : Str
-        The name of the plot, for visualization (and the plot title)
-        
-    xchannel : Str
-        The channel to plot on the X axis
-        
-    xscale : Enum("linear", "log", "logicle") (default = "linear")
-        What scale to use on the X axis
-        
-    ychannel : Str
-        The channel to plot on the Y axis
-        
-    yscale : Enum("linear", "log", "logicle") (default = "linear")
-        The scale to use on the Y axis
-        
-    xfacet : Str
-        The conditioning variable for multiple plots (horizontal)
-        
-    yfacet = Str
-        The conditioning variable for multiple plots (vertical)
-        
-    huefacet = Str
-        The conditioning variable for multiple plots (color)
-        
-    huescale = Enum("linear", "log", "logicle") (default = "linear")
-        What scale to use on the color bar, if there is one plotted
 
-    subset = Str
-        A string passed to pandas.DataFrame.query() to subset the data before
-        we plot it.
+    Examples
+    --------
+    
+    Make a little data set.
+    
+    .. plot::
+        :context: close-figs
+            
+        >>> import cytoflow as flow
+        >>> import_op = flow.ImportOp()
+        >>> import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",
+        ...                              conditions = {'Dox' : 10.0}),
+        ...                    flow.Tube(file = "Plate01/CFP_Well_A4.fcs",
+        ...                              conditions = {'Dox' : 1.0})]
+        >>> import_op.conditions = {'Dox' : 'float'}
+        >>> ex = import_op.apply()
         
-        .. note: should this be a param instead?
+    Plot a density plot
+    
+    .. plot::
+        :context: close-figs
+    
+        >>> flow.Kde2DView(xchannel = 'V2-A',
+        ...                xscale = 'log',
+        ...                ychannel = 'Y2-A',
+        ...                yscale = 'log',
+        ...                huefacet = 'Dox').plot(ex)
     """
     
-    id = 'edu.mit.synbio.cytoflow.view.kde2d'
-    friend_id = "2D Kernel Density Estimate"
+    id = Constant('edu.mit.synbio.cytoflow.view.kde2d')
+    friend_id = Constant("2D Kernel Density Estimate")
     
     def plot(self, experiment, **kwargs):
         """
@@ -97,29 +93,33 @@ class Kde2DView(Base2DView):
             
         kernel : str
             The kernel to use for the kernel density estimate. Choices are:
-                - "gau" for Gaussian (the default)
-                - "biw" for biweight
-                - "cos" for cosine
-                - "epa" for Epanechnikov
-                - "tri" for triangular
-                - "triw" for triweight
-                - "uni" for uniform
+                - ``gau`` for Gaussian (the default)
+                - ``biw`` for biweight
+                - ``cos`` for cosine
+                - ``epa`` for Epanechnikov
+                - ``tri`` for triangular
+                - ``triw`` for triweight
+                - ``uni`` for uniform
             
         bw : str or float
             The bandwidth for the kernel, controls how lumpy or smooth the
             kernel estimate is.  Choices are:
-                - "scott" (the default) - 1.059 * A * nobs ** (-1/5.), where A is min(std(X),IQR/1.34)
-                - "silverman" - .9 * A * nobs ** (-1/5.), where A is min(std(X),IQR/1.34)
-                - "normal_reference" - C * A * nobs ** (-1/5.), where C is calculated from the kernel. Equivalent (up to 2 dp) to the "scott" bandwidth for gaussian kernels. See bandwidths.py
+            
+                - ``scott`` (the default) - ``1.059 * A * nobs ** (-1/5.)``, where ``A`` is ``min(std(X),IQR/1.34)``
+                
+                - ``silverman`` - ``.9 * A * nobs ** (-1/5.)``, where ``A`` is ``min(std(X),IQR/1.34)``
+                
+                - ``normal_reference`` - ``C * A * nobs ** (-1/5.)``, where ``C`` is calculated from the kernel. Equivalent (up to 2 dp) to the ``scott`` bandwidth for gaussian kernels. See bandwidths.py
 
-            If a float is given, it is the bandwidth.
+            If a float is given, it is used as the bandwidth.
             
         gridsize : int
             How many times to compute the kernel on each axis?  (default: 100)
         
-        See Also
-        --------
-        BaseView.plot : common parameters for data views
+        Notes
+        -----
+        Other ``kwargs`` are passed to `matplotlib.axes.Axes.contour <https://matplotlib.org/api/_as_gen/matplotlib.axes.Axes.contour.html>`_
+
         """
         
         super().plot(experiment, **kwargs)
@@ -132,7 +132,14 @@ class Kde2DView(Base2DView):
         kwargs.setdefault('max_alpha', 0.9)
         kwargs.setdefault('n_levels', 10)
 
-        grid.map(_bivariate_kdeplot, self.xchannel, self.ychannel, **kwargs)
+        grid.map(_bivariate_kdeplot, 
+                 self.xchannel, 
+                 self.ychannel, 
+                 xscale = xscale, 
+                 yscale = yscale, 
+                 **kwargs)
+        
+        return {}
         
 # yoinked from seaborn/distributions.py, with modifications for scaling.
 def _bivariate_kdeplot(x, y, xscale=None, yscale=None, shade=False, kernel="gau",
@@ -142,9 +149,15 @@ def _bivariate_kdeplot(x, y, xscale=None, yscale=None, shade=False, kernel="gau"
     
     # Determine the clipping
     clip = [(-np.inf, np.inf), (-np.inf, np.inf)]
-         
+        
     x = xscale(x)
     y = yscale(y)
+
+    x_nan = np.isnan(x)
+    y_nan = np.isnan(y)
+    
+    x = x[~(x_nan | y_nan)]
+    y = y[~(x_nan | y_nan)]
 
     # Compute a bivariate kde using statsmodels.
     if isinstance(bw, str):
@@ -197,6 +210,9 @@ def _kde_support(data, bw, gridsize, cut, clip):
     support_min = max(data.min() - bw * cut, clip[0])
     support_max = min(data.max() + bw * cut, clip[1])
     return np.linspace(support_min, support_max, gridsize)
+
+util.expand_class_attributes(Kde2DView)
+util.expand_method_parameters(Kde2DView, Kde2DView.plot)
 
 
 if __name__ == '__main__':

@@ -16,56 +16,61 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from traits.api import provides
+'''
+cytoflow.views.kde_1d
+---------------------
+'''
+
+from traits.api import provides, Constant
 import matplotlib.pyplot as plt
 
 import numpy as np
 import statsmodels.nonparametric.api as smnp
+
+import cytoflow.utility as util
 
 from .i_view import IView
 from .base_views import Base1DView
 
 @provides(IView)
 class Kde1DView(Base1DView):
-    """Plots a one-channel kernel density estimate
+    """
+    Plots a one-channel kernel density estimate, which is like a smoothed
+    histogram.
     
     Attributes
     ----------
-    name : Str
-        The view's name (for serialization, UI etc.)
-    
-    channel : Str
-        the name of the channel we're plotting
-    
-    xfacet : Str 
-        the conditioning variable for multiple plots (horizontal)
-    
-    yfacet : Str
-        the conditioning variable for multiple plots (vertical)
-    
-    huefacet : Str
-        the conditioning variable for multiple plots (color)
         
-    huescale = Enum("linear", "log", "logicle") (default = "linear")
-        What scale to use on the color bar, if there is one plotted
-        
-    subset : Str
-        a string passed to pandas.DataFrame.query() to subset the data before 
-        we plot it.
-                
     Examples
     --------
-    >>> kde = flow.Kde1DView()
-    >>> kde.name = "Kernel Density 1D"
-    >>> kde.channel = 'Y2-A'
-    >>> kde.xfacet = 'Dox'
-    >>> kde.yfacet = 'Y2-A+'
-    >>> kde.plot(ex)
+    
+    Make a little data set.
+    
+    .. plot::
+        :context: close-figs
+            
+        >>> import cytoflow as flow
+        >>> import_op = flow.ImportOp()
+        >>> import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",
+        ...                              conditions = {'Dox' : 10.0}),
+        ...                    flow.Tube(file = "Plate01/CFP_Well_A4.fcs",
+        ...                              conditions = {'Dox' : 1.0})]
+        >>> import_op.conditions = {'Dox' : 'float'}
+        >>> ex = import_op.apply()
+        
+    Plot a histogram
+    
+    .. plot::
+        :context: close-figs
+    
+        >>> flow.Kde1DView(channel = 'Y2-A',
+        ...                scale = 'log',
+        ...                huefacet = 'Dox').plot(ex)
     """
     
     # traits   
-    id = "edu.mit.synbio.cytoflow.view.kde1d"
-    friendly_id = "1D Kernel Density" 
+    id = Constant("edu.mit.synbio.cytoflow.view.kde1d")
+    friendly_id = Constant("1D Kernel Density") 
     
     def plot(self, experiment, **kwargs):
         """
@@ -78,30 +83,36 @@ class Kde1DView(Base1DView):
             
         kernel : str
             The kernel to use for the kernel density estimate. Choices are:
-                - "gau" for Gaussian (the default)
-                - "biw" for biweight
-                - "cos" for cosine
-                - "epa" for Epanechnikov
-                - "tri" for triangular
-                - "triw" for triweight
-                - "uni" for uniform
+                - ``gau`` for Gaussian (the default)
+                - ``biw`` for biweight
+                - ``cos`` for cosine
+                - ``epa`` for Epanechnikov
+                - ``tri`` for triangular
+                - ``triw`` for triweight
+                - ``uni`` for uniform
                 
         bw : str or float
             The bandwidth for the kernel, controls how lumpy or smooth the
             kernel estimate is.  Choices are:
-                "scott" (the default) - 1.059 * A * nobs ** (-1/5.), where A is min(std(X),IQR/1.34)
-                "silverman" - .9 * A * nobs ** (-1/5.), where A is min(std(X),IQR/1.34)
-                "normal_reference" - C * A * nobs ** (-1/5.), where C is calculated from the kernel. Equivalent (up to 2 dp) to the "scott" bandwidth for gaussian kernels. See bandwidths.py
+                
+                - ``scott`` (the default) - ``1.059 * A * nobs ** (-1/5.)``, where ``A`` is ``min(std(X),IQR/1.34)``
+                
+                - ``silverman`` - ``.9 * A * nobs ** (-1/5.)``, where ``A`` is ``min(std(X),IQR/1.34)``
+                
+                - ``normal_reference`` - ``C * A * nobs ** (-1/5.)``, where ``C`` 
+                    is calculated from the kernel. Equivalent (up to 2 dp) to 
+                    the ``scott`` bandwidth for gaussian kernels. 
+                    See ``bandwidths.py``
 
             If a float is given, it is the bandwidth.
             
-        gridsize : int
-            How many times to compute the kernel?  (default: 100)
+        gridsize : int (default = 100)
+            How many times to compute the kernel? 
 
-
-        See Also
-        --------
-        BaseView.plot : common parameters for data views
+        Notes
+        -----
+        Other ``kwargs`` are passed to `matplotlib.pyplot.plot <https://matplotlib.org/devdocs/api/_as_gen/matplotlib.pyplot.plot.html>`_
+  
         
         """
         
@@ -167,3 +178,6 @@ def _univariate_kdeplot(data, scale=None, shade=False, kernel="gau",
         ax.fill_between(x, 1e-12, y, facecolor=color, alpha=alpha)
 
     return ax
+
+util.expand_class_attributes(Kde1DView)
+util.expand_method_parameters(Kde1DView, Kde1DView.plot)
