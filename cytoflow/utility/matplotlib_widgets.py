@@ -29,14 +29,19 @@ from matplotlib.widgets import AxesWidget
 
 class PolygonSelector(AxesWidget):
     """Selection polygon.
+    
     The selected path can be used in conjunction with
     :func:`~matplotlib.path.Path.contains_point` to select data points
     from an image.
-    Parameters:
-    *ax* : :class:`~matplotlib.axes.Axes`
+    
+    Parameters
+    ----------
+    
+    ax : :class:`~matplotlib.axes.Axes`
         The parent axes for the widget.
-    *callback* : function
-        When the user double-clicks, the polygon closes and the`callback` 
+        
+    callback : callable
+        When the user double-clicks, the polygon closes and the ``callback`` 
         function is called and passed the vertices of the selected path.
     """
 

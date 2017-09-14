@@ -16,11 +16,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from traits.api import HasStrictTraits, Str, provides
+'''
+cytoflow.views.violin
+---------------------
+'''
+
+from traits.api import Str, provides, Constant
 
 import numpy as np
-import seaborn as sns
-import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 import cytoflow.utility as util
@@ -29,46 +32,45 @@ from .base_views import Base1DView
 
 @provides(IView)
 class ViolinPlotView(Base1DView):
-    """Plots a violin plot -- a set of kernel density estimates
+    """Plots a violin plot -- a facetted set of kernel density estimates.
     
     Attributes
     ----------
 
-    channel : Str
-        the name of the channel we're plotting
-        
     variable : Str
         the main variable by which we're faceting
     
-    xfacet : Str 
-        the conditioning variable for multiple plots (horizontal)
-    
-    yfacet : Str
-        the conditioning variable for multiple plots (vertical)
-    
-    huefacet : Str
-        the conditioning variable for multiple plots (color)
-        
-    huescale = Enum("linear", "log", "logicle") (default = "linear")
-        What scale to use on the color bar, if there is one plotted
-        
-    subset : Str
-        a string passed to pandas.DataFrame.query() to subset the data before 
-        we plot it.
-        
-        .. note: Should this be a param instead?
         
     Examples
     --------
-    >>> viol = flow.ViolinPlotView()
-    >>> viol.channel = 'Y2-A'
-    >>> viol.variable = 'Dox'
-    >>> viol.plot(ex)
+    
+    Make a little data set.
+    
+    .. plot::
+        :context: close-figs
+            
+        >>> import cytoflow as flow
+        >>> import_op = flow.ImportOp()
+        >>> import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",
+        ...                              conditions = {'Dox' : 10.0}),
+        ...                    flow.Tube(file = "Plate01/CFP_Well_A4.fcs",
+        ...                              conditions = {'Dox' : 1.0})]
+        >>> import_op.conditions = {'Dox' : 'float'}
+        >>> ex = import_op.apply()
+        
+    Plot a violin plot
+    
+    .. plot::
+        :context: close-figs
+    
+        >>> flow.ViolinPlotView(channel = 'Y2-A',
+        ...                     scale = 'log',
+        ...                     variable = 'Dox').plot(ex)
     """
     
     # traits   
-    id = "edu.mit.synbio.cytoflow.view.violin"
-    friendly_id = "Violin Plot" 
+    id = Constant("edu.mit.synbio.cytoflow.view.violin")
+    friendly_id = Constant("Violin Plot")
 
     variable = Str
     
@@ -114,10 +116,7 @@ class ViolinPlotView(Base1DView):
             When using hue nesting with a variable that takes two levels, setting
             ``split`` to True will draw half of a violin for each level. This can
             make it easier to directly compare the distributions.
-            
-        See Also
-        --------
-        BaseView.plot : common parameters for data views
+
         """
         
         if experiment is None:
@@ -161,7 +160,10 @@ class ViolinPlotView(Base1DView):
                  hue_order = (np.sort(experiment[self.huefacet].unique()) if self.huefacet else None),
                  **kwargs)
         
-        return {}
+        if kwargs['orient'] == 'h':
+            return {"yscale" : None}
+        else:
+            return {"xscale" : None}
         
 # this uses an internal interface to seaborn's violin plot.
 
@@ -172,6 +174,8 @@ def _violinplot(x=None, y=None, hue=None, data=None, order=None, hue_order=None,
                 width=.8, inner="box", split=False, orient=None, linewidth=None,
                 color=None, palette=None, saturation=.75, ax=None, data_scale = None,
                 **kwargs):
+    
+    # discards kwargs
     
     if orient and orient == 'h':
         x = data_scale(x)
@@ -200,3 +204,7 @@ def _violinplot(x=None, y=None, hue=None, data=None, order=None, hue_order=None,
 
     plotter.plot(ax)
     return ax
+
+
+util.expand_class_attributes(ViolinPlotView)
+util.expand_method_parameters(ViolinPlotView, ViolinPlotView.plot)

@@ -144,6 +144,9 @@ class BaseView(HasStrictTraits):
         
         kwargs.update(plot_ret)
         
+        xscale = kwargs.pop("xscale", xscale)
+        yscale = kwargs.pop("yscale", yscale)
+        
         for ax in g.axes.flatten():
             if xscale:
                 ax.set_xscale(xscale.name, **xscale.mpl_params) 
@@ -762,13 +765,16 @@ class Base2DStatisticsView(BaseStatisticsView):
     
     def plot(self, experiment, plot_name = None, **kwargs):
         data = self._make_data(experiment)
-            
-        xscale = util.scale_factory(self.xscale, experiment, condition = self.variable) 
+
+        xscale = util.scale_factory(self.xscale, 
+                                    experiment, 
+                                    statistic = self.xstatistic, 
+                                    error_statistic = self.x_error_statistic)
         
         yscale = util.scale_factory(self.yscale, 
                                     experiment, 
-                                    statistic = self.statistic, 
-                                    error_statistic = self.error_statistic)
+                                    statistic = self.ystatistic, 
+                                    error_statistic = self.y_error_statistic)
             
         super().plot(experiment, 
                      data, 
@@ -851,7 +857,7 @@ class Base2DStatisticsView(BaseStatisticsView):
                 raise util.CytoflowViewError('y_error_statistic',
                                              "Data statistic and error statistic can "
                                              "not have the same name.")
-                
+
         if xstat.name == ystat.name:
             raise util.CytoflowViewError('ystatistic',
                                          "X and Y statistics can "

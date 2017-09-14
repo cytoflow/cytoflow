@@ -58,7 +58,7 @@ class Stats1DView(Base1DStatisticsView):
         >>> import_op.conditions = {'Dox' : 'float'}
         >>> ex = import_op.apply()
     
-    Create and parameterize the operation.
+    Create and a new statistic.
     
     .. plot::
         :context: close-figs

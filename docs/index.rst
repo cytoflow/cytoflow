@@ -18,7 +18,7 @@ Cytoflow's more advanced features.
 
 If you decide you want to have a go, see the 
 :ref:`installation notes <install>`.
-Quick hint: if you have a working Python v2.7 development environment, say
+Quick hint: if you have a working Python v3.4 development environment, say
 ``pip install cytoflow`` to install the latest package from the 
 `Python Package Index <https://pypi.python.org/pypi>`_.
 
@@ -40,15 +40,14 @@ Contents:
 *********
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    
    INSTALL
    design
    TODO
    RELEASE
+   modules
    
-:doc:`Module reference <modules>`
-
 Indices and tables
 ==================
 

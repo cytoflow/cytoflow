@@ -205,7 +205,7 @@ def get_class_attributes(cls):
         
     Returns
     ------
-    array of (name, type, body)
+    array of ``(name, type, body)``
         
         - name : the attribute's name
         
@@ -240,7 +240,7 @@ def get_method_parameters(method):
         
     Returns
     ------
-    array of (name, type, body)
+    array of ``(name, type, body)``
         
         - name : the attribute's name
         

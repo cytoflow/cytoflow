@@ -17,9 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 '''
-Created on Jul 27, 2016
-
-@author: teague@mit.edu
+cytoflow.scripts.channel_voltages
+---------------------------------
 '''
 
 import argparse

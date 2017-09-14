@@ -19,6 +19,7 @@
 
 '''
 cytoflow.operations.ratio
+-------------------------
 '''
 
 import numpy as np

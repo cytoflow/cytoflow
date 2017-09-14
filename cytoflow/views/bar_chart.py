@@ -175,7 +175,10 @@ class BarChartView(Base1DStatisticsView):
                  grid = grid,
                  **kwargs)
         
-        return {}
+        if orient == 'horizontal':
+            return {"yscale" : None}
+        else:
+            return {"xscale" : None}
             
 def _barplot(*args, view, stat_name, error_name, orient, grid, **kwargs):
     """ 

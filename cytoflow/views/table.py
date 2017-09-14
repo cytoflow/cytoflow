@@ -16,8 +16,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+'''
+cytoflow.views.table
+--------------------
+'''
+
 from warnings import warn
-from traits.api import HasStrictTraits, Str, provides, Tuple
+from traits.api import HasStrictTraits, Str, provides, Tuple, Constant
 import matplotlib.pyplot as plt
 
 from matplotlib.table import Table
@@ -29,16 +34,87 @@ import cytoflow.utility as util
 
 @provides(IView)
 class TableView(HasStrictTraits):
+    """
+    "Plot" a tabular view of a statistic.  Mostly useful for GUIs.  Each level 
+    of the statistic's index must be used in :attr:`row_facet`, 
+    :attr:`column_facet`, :attr:`subrow_facet`, or :attr:`subcolumn_facet`.
+    This module can't "plot" a statistic with more than four index levels
+    unless :attr:`subset` is set and that results in extra levels being 
+    dropped.
+    
+    Attributes
+    ----------
+    statistic : (str, str)
+        The name of the statistic to plot.  Must be a key in the  
+        :attr:`~Experiment.statistics` attribute of the :class:`~.Experiment`
+        being plotted.  Each level of the statistic's index must be used 
+        in :attr:`row_facet`, :attr:`column_facet`, :attr:`subrow_facet`, or
+        :attr:`subcolumn_facet`.
+        
+    row_facet, column_facet : str
+        The statistic facets to be used as row and column headers.
+        
+    subrow_facet, subcolumn_facet : str
+        The statistic facets to be used as subrow and subcolumn headers.
+        
+    subset : str
+        A Python expression used to select a subset of the statistic to plot.
+        
+    Examples
+    --------
+    
+    Make a little data set.
+    
+    .. plot::
+        :context: close-figs
+            
+        >>> import cytoflow as flow
+        >>> import_op = flow.ImportOp()
+        >>> import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",
+        ...                              conditions = {'Dox' : 10.0}),
+        ...                    flow.Tube(file = "Plate01/CFP_Well_A4.fcs",
+        ...                              conditions = {'Dox' : 1.0})]
+        >>> import_op.conditions = {'Dox' : 'float'}
+        >>> ex = import_op.apply()
+        
+    Add a threshold gate
+    
+    .. plot::
+        :context: close-figs
+    
+        >>> ex2 = flow.ThresholdOp(name = 'Threshold',
+        ...                        channel = 'Y2-A',
+        ...                        threshold = 2000).apply(ex)
+        
+    Add a statistic
+    
+    .. plot::
+        :context: close-figs
+
+        >>> ex3 = flow.ChannelStatisticOp(name = "ByDox",
+        ...                               channel = "Y2-A",
+        ...                               by = ['Dox', 'Threshold'],
+        ...                               function = len).apply(ex2) 
+    
+    "Plot" the table
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> flow.TableView(statistic = ("ByDox", "len"),
+        ...                row_facet = "Dox",
+        ...                column_facet = "Threshold").plot(ex3)
+        
+    """
 
     # traits   
-    id = "edu.mit.synbio.cytoflow.view.table"
-    friendly_id = "Table View" 
+    id = Constant("edu.mit.synbio.cytoflow.view.table")
+    friendly_id = Constant("Table View") 
 
-    REMOVED_ERROR = "Statistics have changed dramatically in 0.5; please see the documentation"
+    REMOVED_ERROR = Constant("Statistics have changed dramatically in 0.5; please see the documentation")
     channel = util.Removed(err_string = REMOVED_ERROR)
     function = util.Removed(err_string = REMOVED_ERROR)
     
-    name = Str
     statistic = Tuple(Str, Str)
     row_facet = Str
     subrow_facet = Str

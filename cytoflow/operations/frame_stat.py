@@ -114,7 +114,16 @@ class FrameStatisticOp(HasStrictTraits):
             raise util.CytoflowOpError('by',
                                        "Must specify some grouping conditions "
                                        "in 'by'")
-
+            
+        stat_name = (self.name, self.statistic_name) \
+                     if self.statistic_name \
+                     else (self.name, self.function.__name__)
+                     
+        if stat_name in experiment.statistics:
+            raise util.CytoflowOpError('name',
+                                       "{} is already in the experiment's statistics"
+                                       .format(stat_name))
+                    
         new_experiment = experiment.clone()
 
         if self.subset:
@@ -160,6 +169,7 @@ class FrameStatisticOp(HasStrictTraits):
 
         stat = pd.Series(data = self.fill,
                          index = idx, 
+                         name = "{} : {}".format(stat_name[0], stat_name[1]),
                          dtype = np.dtype(object)).sort_index()
         
         for group, data_subset in groupby:
@@ -183,10 +193,7 @@ class FrameStatisticOp(HasStrictTraits):
         stat = pd.to_numeric(stat, errors = 'ignore')
 
         new_experiment.history.append(self.clone_traits(transient = lambda t: True))
-        if self.statistic_name:
-            new_experiment.statistics[(self.name, self.statistic_name)] = stat
-        else:
-            new_experiment.statistics[(self.name, self.function.__name__)] = stat
+        new_experiment.statistics[stat_name] = stat
 
         
         return new_experiment

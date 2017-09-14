@@ -16,7 +16,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from traits.api import provides
+'''
+cytoflow.views.stats_2d
+-----------------------
+'''
+
+from traits.api import provides, Constant
 import matplotlib.pyplot as plt
 
 import numpy as np
@@ -30,99 +35,66 @@ from .base_views import Base2DStatisticsView
 class Stats2DView(Base2DStatisticsView):
     """
     Plot two statistics on a scatter plot.  A point (X,Y) is drawn for every
-    pair of elements with the same value of `variable`; the X value is from 
-    `xstatistic` and the Y value is from `ystatistic`.
+    pair of elements with the same value of :attr:`variable`; the X value is from 
+    :attr:`xstatistic` and the Y value is from :attr:`ystatistic`.
     
     Attributes
     ----------
-    name : Str
-        The plot's name 
-    
-    variable : Str
-        the name of the conditioning variable
-        
-    xstatistic : Tuple(Str, Str)
-        The statistic to plot on the X axis.  Must have the same indices
-        as `ystatistic`.
-        
-    xscale : Enum("linear", "log", "logicle") (default = "linear")
-        What scale to use on the X axis
-    
-    ystatistic : Tuple(Str, Str)
-       The statistic to plot on the Y axis.  Must have the same indices
-       as `xstatistic`.
-        
-    yscale : Enum("linear", "log", "logicle") (default = "linear")
-        What scale to use on the Y axis
-        
-    xfacet : Str
-        the conditioning variable for horizontal subplots
-        
-    yfacet : Str
-        the conditioning variable for vertical subplots
-        
-    huefacet : 
-        the conditioning variable for color.
-        
-    huescale : Enum("linear", "log", "logicle") (default = "linear")
-        scale for the hue facet, if there are a lot of hue values.
-        
-    x_error_statistic, y_error_statistic : Tuple(Str, Str)
-        if specified, draw error bars.  must be the name of a statistic,
-        with the same indices as `xstatistic` and `ystatistic`.
-    
-    subset : Str
-        What subset of the data to plot?
+
         
     Examples
     --------
     
-    Assume we want an input-output curve for a repressor that's under the
-    control of a Dox-inducible promoter.  We have an "input" channel
-    `(Dox --> eYFP, FITC-A channel)` and an output channel 
-    `(Dox --> repressor --| eBFP, Pacific Blue channel)` as well as a 
-    constitutive expression channel (mKate, PE-Tx-Red-YG-A channel). 
-    We have induced several wells with different amounts of Dox.  We want 
-    to plot the relationship between the input and output channels (binned by 
-    input channel intensity) as we vary Dox, faceted by constitutive channel 
-    bin.
+    .. plot::
+        :context: close-figs
+        
+        Make a little data set.
     
-    >>> cfp_bin_op = flow.BinningOp(name = "CFP_Bin",
-    ...                             channel = "PE-Tx-Red-YG-A",
-    ...                             scale = "log",
-    ...                             bin_width = 0.1)
-    >>> ifp_bin_op = flow.BinningOp(name = "IFP_Bin",
-    ...                             channel = "Pacific Blue-A",
-    ...                             scale = "log",
-    ...                             bin_width = 0.1).apply(ex_cfp_binned)
-    >>> ifp_mean = flow.ChannelStatisticOp(name = "IFP",
-    ...                                    channel = "FITC-A",
-    ...                                    by = ["IFP_Bin", "CFP_Bin"],
-    ...                                    function = flow.geom_mean)
-    >>> ofp_mean = flow.ChannelStatisticOp(name = "OFP",
-    ...                                    channel = "Pacific_Blue-A",
-    ...                                    by = ["IFP_Bin", "CFP_Bin"],
-    ...                                    function = flow.geom_mean)
-    >>> ex = cfp_bin_op.apply(ex)
-    >>> ex = ifp_bin_op.apply(ex)
-    >>> ex = ifp_mean.apply(ex)
-    >>> ex = ofp_mean.apply(ex)
-    >>> view = flow.Stats2DView(name = "IFP vs OFP",
-    ...                         variable = "IFP_Bin",
-    ...                         xstatistic = ("IFP", "geom_mean"),
-    ...                         ystatistic = ("OFP", "geom_mean"),
-    ...                         huefacet = "CFP_Bin").plot(ex_ifp_binned)
-    >>> view.plot(ex_binned)
+        >>> import cytoflow as flow
+        >>> import_op = flow.ImportOp()
+        >>> import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",
+        ...                              conditions = {'Dox' : 10.0}),
+        ...                    flow.Tube(file = "Plate01/CFP_Well_A4.fcs",
+        ...                              conditions = {'Dox' : 1.0})]
+        >>> import_op.conditions = {'Dox' : 'float'}
+        >>> ex = import_op.apply()
+    
+    Create two new statistics
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> ch_op = flow.ChannelStatisticOp(name = 'MeanByDox',
+        ...                     channel = 'Y2-A',
+        ...                     function = flow.geom_mean,
+        ...                     by = ['Dox'])
+        >>> ex2 = ch_op.apply(ex)
+        >>> ch_op_2 = flow.ChannelStatisticOp(name = 'SdByDox',
+        ...                       channel = 'Y2-A',
+        ...                       function = flow.geom_sd,
+        ...                       by = ['Dox'])
+        >>> ex3 = ch_op_2.apply(ex2)
+        
+    Plot the statistics
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> flow.Stats2DView(variable = 'Dox',
+        ...                  xstatistic = ('MeanByDox', 'geom_mean'),
+        ...                  xscale = 'log',
+        ...                  ystatistic = ('SdByDox', 'geom_sd'),
+        ...                  yscale = 'log').plot(ex3)
     """
     
     # traits   
-    id = "edu.mit.synbio.cytoflow.view.stats2d"
-    friendly_id = "2D Statistics View" 
+    id = Constant("edu.mit.synbio.cytoflow.view.stats2d")
+    friendly_id = Constant("2D Statistics View")
    
     def enum_plots(self, experiment):
         """
         Returns an iterator over the possible plots that this View can
-        produce.  The values returned can be passed to "plot".
+        produce.  The values returned can be passed to :meth:`plot`.
         """
                 
         return super().enum_plots(experiment)
@@ -135,9 +107,9 @@ class Stats2DView(Base2DStatisticsView):
         ----------
         
         color : a matplotlib color
-            The color to plot with.  Overridden if `huefacet` is not `None`
+            The color to plot with.  Overridden if :attr:`huefacet` is not ``None``
             
-        linestyle : ['solid' | 'dashed', 'dashdot', 'dotted' | (offset, on-off-dash-seq) | '-' | '--' | '-.' | ':' | 'None' | ' ' | '']
+        linestyle : {'solid' | 'dashed', 'dashdot', 'dotted' | (offset, on-off-dash-seq) | '-' | '--' | '-.' | ':' | 'None' | ' ' | ''}
             
         marker : a matplotlib marker style
             See http://matplotlib.org/api/markers_api.html#module-matplotlib.markers
@@ -146,20 +118,14 @@ class Stats2DView(Base2DStatisticsView):
             The marker size in points
             
         markerfacecolor : a matplotlib color
-            The color to make the markers.  Overridden (?) if `huefacet` is not `None`
+            The color to make the markers.  Overridden (?) if :attr:`huefacet` is not ``None``
             
         alpha : the alpha blending value, from 0.0 (transparent) to 1.0 (opaque)
         
-        Other Parameters
-        ----------------
+        Notes
+        -----
         
-        Other `kwargs` are passed to matplotlib.pyplot.plot_.
-    
-        .. _matplotlib.pyplot.hist: https://matplotlib.org/devdocs/api/_as_gen/matplotlib.pyplot.plot.html
-        
-        See Also
-        --------
-        BaseView.plot : common parameters for data views
+        Other ``kwargs`` are passed to `matplotlib.pyplot.plot <https://matplotlib.org/devdocs/api/_as_gen/matplotlib.pyplot.plot.html>`_
         
         """
 
@@ -220,6 +186,8 @@ class Stats2DView(Base2DStatisticsView):
             grid.map(_y_error_bars, xname, yname, y_error_name)
 
         grid.map(plt.plot, xname, yname, **kwargs)
+        
+        return {}
 
 
 def _x_error_bars(x, y, xerr, ax = None, color = None, **kwargs):
@@ -245,6 +213,8 @@ def _y_error_bars(x, y, yerr, ax = None, color = None, **kwargs):
         
     plt.vlines(x, y_lo, y_hi, color = color, **kwargs)
     
+util.expand_class_attributes(Stats2DView)
+util.expand_method_parameters(Stats2DView, Stats2DView.plot)
     
 if __name__ == '__main__':
     import cytoflow as flow
