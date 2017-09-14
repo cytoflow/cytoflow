@@ -112,7 +112,7 @@ class LogScale(ScaleMixin):
         elif isinstance(data, (np.ndarray, pd.Series)):
             mask_value = np.nan if self.mode == "mask" else self.threshold
             x = pd.Series(data)
-            x = x.mask(lambda x: x < self.threshold, other = mask_value)
+            x = x.mask(x < self.threshold, other = mask_value)
             ret = np.log10(x)
             
             if isinstance(data, pd.Series):

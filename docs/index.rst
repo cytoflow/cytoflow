@@ -46,7 +46,6 @@ Contents:
    design
    TODO
    RELEASE
-   modules
    
 Indices and tables
 ==================
