@@ -68,7 +68,7 @@ setup(
                         'matplotlib>=1.5.1',
                         'scipy>=0.18.1',
                         'scikit-learn>=0.18.1',
-                        'seaborn>=0.7.1',
+                        'seaborn>=0.8.1',
                         'traits>=4.6.0',
                         'pyface>=5.1.0',
                         'traitsui>=5.1.0',

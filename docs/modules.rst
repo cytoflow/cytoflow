@@ -1,7 +1,7 @@
-API Reference
-=============
+cytoflow
+========
 
 .. toctree::
-   :maxdepth: 5
+   :maxdepth: 4
 
    cytoflow

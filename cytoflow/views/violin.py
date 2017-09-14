@@ -171,7 +171,7 @@ from seaborn.categorical import _ViolinPlotter
 
 def _violinplot(x=None, y=None, hue=None, data=None, order=None, hue_order=None,
                 bw="scott", cut=2, scale="area", scale_hue=True, gridsize=100,
-                width=.8, inner="box", split=False, orient=None, linewidth=None,
+                width=.8, inner="box", split=False, dodge=True, orient=None, linewidth=None,
                 color=None, palette=None, saturation=.75, ax=None, data_scale = None,
                 **kwargs):
     
@@ -184,7 +184,7 @@ def _violinplot(x=None, y=None, hue=None, data=None, order=None, hue_order=None,
             
     plotter = _ViolinPlotter(x, y, hue, data, order, hue_order,
                              bw, cut, scale, scale_hue, gridsize,
-                             width, inner, split, orient, linewidth,
+                             width, inner, split, dodge, orient, linewidth,
                              color, palette, saturation)
 
     for i in range(len(plotter.support)):
