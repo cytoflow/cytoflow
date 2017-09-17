@@ -56,7 +56,7 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
     'sphinx.ext.autosummary',
-    'sphinxcontrib.napoleon',
+    'sphinx.ext.napoleon',
     'sphinx.ext.mathjax',
     'plot_directive', 
 ]
@@ -67,6 +67,9 @@ autosummary_generate = True
 # autodoc options
 autodoc_default_flags = ['no-show-inheritance']
 autodoc_member_order = 'bysource'
+
+# napoleon options
+napoleon_use_param = False
 
 # Include the example source for plots in API docs
 plot_include_source = True
@@ -224,7 +227,7 @@ html_static_path = ['_static']
 #html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'CytoFlowdoc'
+htmlhelp_basename = 'cytoflowdoc'
 
 
 # -- Options for LaTeX output ---------------------------------------------

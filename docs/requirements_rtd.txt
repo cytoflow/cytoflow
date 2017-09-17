@@ -1,4 +1,3 @@
-sphinxcontrib-napoleon
 mock
 pandas
 bottleneck
