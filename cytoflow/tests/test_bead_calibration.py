@@ -64,16 +64,16 @@ class TestBeads(unittest.TestCase):
         #    table.
          
         self.assertAlmostEqual(self.op._calibration_functions["PE-Tx-Red-YG-A"](100),
-                               908.2389, delta = 0.1)
+                               887.5296, delta = 0.1)
         
         self.assertAlmostEqual(self.op._calibration_functions["PE-Tx-Red-YG-A"](1000),
-                               8992.904, delta = 1)
+                               8911.2549, delta = 1)
                                
         self.assertAlmostEqual(self.op._calibration_functions["PE-Tx-Red-YG-A"](10000),
-                               89022.543, delta = 10)
+                               89473.5903, delta = 10)
                                
         self.assertAlmostEqual(self.op._calibration_functions["PE-Tx-Red-YG-A"](100000),
-                               881251.765, delta = 100)
+                               898360.9384, delta = 100)
         
     def testApply(self):
         # this is just to make sure the code doesn't crash;

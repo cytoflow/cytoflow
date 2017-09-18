@@ -57,41 +57,34 @@ class Test(unittest.TestCase):
         # suppress unicode warning.
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            flow.Histogram2DView(name = "Hist2D",
-                                 xchannel = "V2-A",
+            flow.Histogram2DView(xchannel = "V2-A",
                                  ychannel = "Y2-A",
                                  huefacet = "Dox").plot(self.ex)
                            
     def testHistogram(self):
-        flow.HistogramView(name = "Histogram",
-                           channel = "V2-A",
+        flow.HistogramView(channel = "V2-A",
                            huefacet = "Dox").plot(self.ex)
                            
-        flow.HistogramView(name = "Histogram",
-                           channel = "V2-A",
+        flow.HistogramView(channel = "V2-A",
                            huefacet = "Dox",
                            scale = "log").plot(self.ex)
                            
-        flow.HistogramView(name = "Histogram",
-                           channel = "V2-A",
+        flow.HistogramView(channel = "V2-A",
                            huefacet = "Dox",
                            scale = "logicle").plot(self.ex)
                            
     def testScatterplot(self):
-        flow.ScatterplotView(name = "Scatterplot",
-                             xchannel = "V2-A",
+        flow.ScatterplotView(xchannel = "V2-A",
                              ychannel = "Y2-A",
                              huefacet = "Dox").plot(self.ex)
                              
-        flow.ScatterplotView(name = "Scatterplot",
-                             xchannel = "V2-A",
+        flow.ScatterplotView(xchannel = "V2-A",
                              ychannel = "Y2-A",
                              xscale = "log",
                              yscale = "log",
                              huefacet = "Dox").plot(self.ex)
                              
-        flow.ScatterplotView(name = "Scatterplot",
-                             xchannel = "V2-A",
+        flow.ScatterplotView(xchannel = "V2-A",
                              ychannel = "Y2-A",
                              xscale = "logicle",
                              yscale = "logicle",
