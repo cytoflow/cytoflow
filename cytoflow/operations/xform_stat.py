@@ -139,7 +139,8 @@ class TransformStatisticOp(HasStrictTraits):
             stat = experiment.statistics[self.statistic]
 
         if not self.function:
-            raise util.CytoflowOpError("Must specify a function")
+            raise util.CytoflowOpError('function',
+                                       "Must specify a function")
 
         for b in self.by:
             if b not in stat.index.names:

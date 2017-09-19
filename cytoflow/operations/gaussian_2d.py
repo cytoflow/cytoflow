@@ -208,39 +208,41 @@ class GaussianMixture2DOp(HasStrictTraits):
              util.CytoflowOpWarning)
         
         if experiment is None:
-            raise util.CytoflowOpError("No experiment specified")
+            raise util.CytoflowOpError('experiment',
+                                       "No experiment specified")
 
         if self.xchannel not in experiment.data:
-            raise util.CytoflowOpError("Column {0} not found in the experiment"
-                                  .format(self.xchannel))
+            raise util.CytoflowOpError('xchannel',
+                                       "Column {0} not found in the experiment"
+                                       .format(self.xchannel))
             
         if self.ychannel not in experiment.data:
-            raise util.CytoflowOpError("Column {0} not found in the experiment"
-                                  .format(self.ychannel))
+            raise util.CytoflowOpError('ychannel',
+                                       "Column {0} not found in the experiment"
+                                       .format(self.ychannel))
        
         for b in self.by:
             if b not in experiment.data:
-                raise util.CytoflowOpError("Aggregation metadata {0} not found"
-                                      " in the experiment"
-                                      .format(b))
-            if len(experiment.data[b].unique()) > 100: #WARNING - magic number
-                raise util.CytoflowOpError("More than 100 unique values found for"
-                                      " aggregation metadata {0}.  Did you"
-                                      " accidentally specify a data channel?"
-                                      .format(b))
+                raise util.CytoflowOpError('by',
+                                           "Aggregation metadata {} not found, "
+                                           "must be one of {}"
+                                           .format(b, experiment.conditions))
                 
         if self.num_components == 1 and self.posteriors:
-            raise util.CytoflowOpError("If num_components == 1, all posteriors are 1.")
+            raise util.CytoflowOpError('posteriors',
+                                       "If num_components == 1, all posteriors are 1.")
                 
         if subset:
             try:
                 experiment = experiment.query(subset)
             except Exception as e:
-                raise util.CytoflowOpError("Subset string '{0}' isn't valid"
+                raise util.CytoflowOpError('subset',
+                                           "Subset string '{0}' isn't valid"
                                            .format(subset)) from e
                 
             if len(experiment) == 0:
-                raise util.CytoflowOpError("Subset string '{0}' returned no events"
+                raise util.CytoflowOpError('subset',
+                                           "Subset string '{0}' returned no events"
                                            .format(subset))
                 
         if self.by:
@@ -260,7 +262,8 @@ class GaussianMixture2DOp(HasStrictTraits):
             
         for group, data_subset in groupby:
             if len(data_subset) == 0:
-                raise util.CytoflowOpError("Group {} had no data"
+                raise util.CytoflowOpError(None,
+                                           "Group {} had no data"
                                            .format(group))
             x = data_subset.loc[:, [self.xchannel, self.ychannel]]
             x[self.xchannel] = self._xscale(x[self.xchannel])
@@ -276,9 +279,10 @@ class GaussianMixture2DOp(HasStrictTraits):
             gmm.fit(x)
             
             if not gmm.converged_:
-                raise util.CytoflowOpError("Estimator didn't converge"
-                                      " for group {0}"
-                                      .format(group))
+                raise util.CytoflowOpError(None,
+                                           "Estimator didn't converge"
+                                           " for group {0}"
+                                           .format(group))
                 
             # in the 1D version, we sort the components by the means -- so
             # the first component has the lowest mean, the second component
@@ -330,61 +334,68 @@ class GaussianMixture2DOp(HasStrictTraits):
              util.CytoflowOpWarning)
             
         if experiment is None:
-            raise util.CytoflowOpError("No experiment specified")
+            raise util.CytoflowOpError('experiment',
+                                       "No experiment specified")
         
         if not self.xchannel:
-            raise util.CytoflowOpError("Must set X channel")
+            raise util.CytoflowOpError('xchannel',
+                                       "Must set X channel")
 
         if not self.ychannel:
-            raise util.CytoflowOpError("Must set Y channel")
+            raise util.CytoflowOpError('ychannel',
+                                       "Must set Y channel")
         
         # make sure name got set!
         if not self.name:
-            raise util.CytoflowOpError("You have to set the gate's name "
-                                  "before applying it!")
+            raise util.CytoflowOpError('name',
+                                       "You have to set the gate's name "
+                                       "before applying it!")
 
         if self.name in experiment.data.columns:
-            raise util.CytoflowOpError("Experiment already has a column named {0}"
-                                  .format(self.name))
+            raise util.CytoflowOpError('name',
+                                       "Experiment already has a column named {0}"
+                                       .format(self.name))
         
         if not self._gmms:
-            raise util.CytoflowOpError("No components found.  Did you forget to "
-                                  "call estimate()?")
+            raise util.CytoflowOpError(None,
+                                       "No components found.  Did you forget to "
+                                       "call estimate()?")
             
         if not self._xscale:
-            raise util.CytoflowOpError("Couldn't find _xscale.  What happened??")
+            raise util.CytoflowOpError(None,
+                                       "Couldn't find _xscale.  What happened??")
         
         if not self._yscale:
-            raise util.CytoflowOpError("Couldn't find _yscale.  What happened??")
+            raise util.CytoflowOpError(None,
+                                       "Couldn't find _yscale.  What happened??")
 
         if self.xchannel not in experiment.data:
-            raise util.CytoflowOpError("Column {0} not found in the experiment"
-                                  .format(self.xchannel))
+            raise util.CytoflowOpError('xchannel',
+                                       "Column {0} not found in the experiment"
+                                       .format(self.xchannel))
 
         if self.ychannel not in experiment.data:
-            raise util.CytoflowOpError("Column {0} not found in the experiment"
-                                  .format(self.ychannel))
+            raise util.CytoflowOpError('ychannel',
+                                       "Column {0} not found in the experiment"
+                                       .format(self.ychannel))
             
         if self.posteriors:
             col_name = "{0}_Posterior".format(self.name)
             if col_name in experiment.data:
-                raise util.CytoflowOpError("Column {0} already found in the experiment"
-                              .format(col_name))
+                raise util.CytoflowOpError('channels',
+                                           "Column {0} already found in the experiment"
+                                           .format(col_name))
        
         for b in self.by:
             if b not in experiment.data:
-                raise util.CytoflowOpError("Aggregation metadata {0} not found"
-                                      " in the experiment"
-                                      .format(b))
-
-            if len(experiment.data[b].unique()) > 100: #WARNING - magic number
-                raise util.CytoflowOpError("More than 100 unique values found for"
-                                      " aggregation metadata {0}.  Did you"
-                                      " accidentally specify a data channel?"
-                                      .format(b))
+                raise util.CytoflowOpError('by',
+                                           "Aggregation metadata {} not found, "
+                                           "must be one of {}"
+                                           .format(b, experiment.conditions))
                            
         if self.sigma < 0.0:
-            raise util.CytoflowOpError("sigma must be >= 0.0")
+            raise util.CytoflowOpError('sigma',
+                                       "sigma must be >= 0.0")
         
         event_assignments = pd.Series([None] * len(experiment), dtype = "object")
 

@@ -262,7 +262,7 @@ class BaseDataView(BaseView):
             try:
                 experiment = experiment.query(self.subset)
             except util.CytoflowError as e:
-                raise util.CytoflowViewError(str(e)) from e
+                raise util.CytoflowViewError('subset', str(e)) from e
             except Exception as e:
                 raise util.CytoflowViewError('subset',
                                              "Subset string '{0}' isn't valid"

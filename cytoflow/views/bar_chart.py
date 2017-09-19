@@ -152,7 +152,7 @@ class BarChartView(Base1DStatisticsView):
             elif orient == 'vertical':
                 ax.set_yscale(yscale.name, **yscale.mpl_params)
             else:
-                raise util.CytoflowViewError("'orient' param must be 'h' or 'v'")  
+                raise util.CytoflowViewError('orient', "'orient' param must be 'horizontal' or 'vertical'")  
                 
         stat = experiment.statistics[self.statistic]
         map_args = [self.variable, stat.name]

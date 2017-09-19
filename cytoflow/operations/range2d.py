@@ -175,7 +175,8 @@ class Range2DOp(HasStrictTraits):
                                        "Must specify xchannel")
 
         if not self.xchannel in experiment.channels:
-            raise util.CytoflowOpError("xchannel isn't in the experiment")
+            raise util.CytoflowOpError('xchannel',
+                                       "xchannel isn't in the experiment")
 
         if not self.ychannel:
             raise util.CytoflowOpError('ychannel',

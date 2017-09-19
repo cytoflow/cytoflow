@@ -265,18 +265,11 @@ class FlowPeaksOp(HasStrictTraits):
                                            .format(c))
        
         for b in self.by:
-            if b not in experiment.data:
+            if b not in experiment.conditions:
                 raise util.CytoflowOpError('by',
-                                           "Aggregation metadata {0} not found"
-                                           " in the experiment"
-                                           .format(b))
-            if len(experiment.data[b].unique()) > 100: #WARNING - magic number
-                raise util.CytoflowOpError('by',
-                                           "More than 100 unique values found for"
-                                           " aggregation metadata {0}.  Did you"
-                                           " accidentally specify a data channel?"
-                                           .format(b))
-
+                                           "Aggregation metadata {} not found, "
+                                           "must be one of {}"
+                                           .format(b, experiment.conditions))
                 
         if subset:
             try:
@@ -311,8 +304,8 @@ class FlowPeaksOp(HasStrictTraits):
                                     
         for data_group, data_subset in groupby:
             if len(data_subset) == 0:
-                raise util.CytoflowOpError("Group {} had no data"
-                                           .format(data_group))
+                raise util.CytoflowOpError('by',
+                                           "Group {} had no data".format(data_group))
             x = data_subset.loc[:, self.channels[:]]
             for c in self.channels:
                 x[c] = self._scale[c](x[c])
@@ -623,17 +616,11 @@ class FlowPeaksOp(HasStrictTraits):
                                            .format(c))
         
         for b in self.by:
-            if b not in experiment.data:
+            if b not in experiment.conditions:
                 raise util.CytoflowOpError('by',
-                                           "Aggregation metadata {0} not found"
-                                           " in the experiment"
-                                           .format(b))
-            if len(experiment.data[b].unique()) > 100: #WARNING - magic number
-                raise util.CytoflowOpError('by',
-                                           "More than 100 unique values found for"
-                                           " aggregation metadata {0}.  Did you"
-                                           " accidentally specify a data channel?"
-                                           .format(b))
+                                           "Aggregation metadata {} not found, "
+                                           "must be one of {}"
+                                           .format(b, experiment.conditions))
                  
         if self.by:
             groupby = experiment.data.groupby(self.by)

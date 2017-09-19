@@ -201,18 +201,13 @@ class ChannelStatisticOp(HasStrictTraits):
                                            .format(self.subset))
        
         for b in self.by:
-            if b not in experiment.data:
+            if b not in experiment.conditions:
                 raise util.CytoflowOpError('by',
-                                           "Aggregation metadata {} not found"
-                                           " in the experiment"
-                                           .format(b))
+                                           "Aggregation metadata {} not found, "
+                                           "must be one of {}"
+                                           .format(b, experiment.conditions))
             unique = experiment.data[b].unique()
-            if len(unique) > 100: #TODO - magic number
-                raise util.CytoflowOpError('by',
-                                           "More than 100 unique values found for"
-                                           " aggregation metadata {}.  Did you"
-                                           " accidentally specify a data channel?"
-                                           .format(b))
+
             if len(unique) == 1:
                 warn("Only one category for {}".format(b), util.CytoflowOpWarning)
 

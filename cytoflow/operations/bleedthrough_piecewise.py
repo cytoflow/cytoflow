@@ -322,7 +322,8 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
         """
         
         if not self.ignore_deprecated:
-            raise util.CytoflowOpError("BleedthroughPiecewiseOp is DEPRECATED. "
+            raise util.CytoflowOpError(None,
+                                       "BleedthroughPiecewiseOp is DEPRECATED. "
                                        "To use it anyway, set ignore_deprected "
                                        "to True.")
             
@@ -487,12 +488,14 @@ class BleedthroughPiecewiseDiagnostic(HasStrictTraits):
                     try:
                         tube_exp = tube_exp.query(self.subset)
                     except Exception as e:
-                        raise util.CytoflowOpError("Subset string '{0}' isn't valid"
-                                              .format(self.subset)) from e
+                        raise util.CytoflowOpError('subset',
+                                                   "Subset string '{0}' isn't valid"
+                                                   .format(self.subset)) from e
                                     
                     if len(tube_exp.data) == 0:
-                        raise util.CytoflowOpError("Subset string '{0}' returned no events"
-                                              .format(self.subset))
+                        raise util.CytoflowOpError('subset',
+                                                   "Subset string '{0}' returned no events"
+                                                   .format(self.subset))
                     
                 # get scales
                 xscale = util.scale_factory("log", tube_exp, channel = from_channel)

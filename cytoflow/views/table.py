@@ -127,10 +127,11 @@ class TableView(HasStrictTraits):
         """Plot a table"""
         
         if experiment is None:
-            raise util.CytoflowViewError("No experiment specified")   
+            raise util.CytoflowViewError('experiment', "No experiment specified")   
         
         if self.statistic not in experiment.statistics:
-            raise util.CytoflowViewError("Can't find the statistic {} in the experiment"
+            raise util.CytoflowViewError('statistic', 
+                                         "Can't find the statistic {} in the experiment"
                                          .format(self.statistic))
         else:
             stat = experiment.statistics[self.statistic]    
@@ -142,12 +143,14 @@ class TableView(HasStrictTraits):
             try:
                 data = data.query(self.subset)
             except Exception as e:
-                raise util.CytoflowViewError("Subset string '{0}' isn't valid"
-                                        .format(self.subset)) from e
+                raise util.CytoflowViewError('subset',
+                                             "Subset string '{0}' isn't valid"
+                                             .format(self.subset)) from e
                 
             if len(data) == 0:
-                raise util.CytoflowViewError("Subset string '{0}' returned no values"
-                                        .format(self.subset))
+                raise util.CytoflowViewError('subset',
+                                             "Subset string '{0}' returned no values"
+                                             .format(self.subset))
             
         names = list(data.index.names)
         for name in names:
@@ -158,64 +161,82 @@ class TableView(HasStrictTraits):
                 try:
                     data.index = data.index.droplevel(name)
                 except AttributeError as e:
-                    raise util.CytoflowViewError("Must have more than one "
+                    raise util.CytoflowViewError(None,
+                                                 "Must have more than one "
                                                  "value to plot.") from e
         
         if not (self.row_facet or self.column_facet):
-            raise util.CytoflowViewError("Must set at least one of row_facet "
+            raise util.CytoflowViewError('row_facet',
+                                         "Must set at least one of row_facet "
                                          "or column_facet")
             
         if self.subrow_facet and not self.row_facet:
-            raise util.CytoflowViewError("Must set row_facet before using "
+            raise util.CytoflowViewError('subrow_facet',
+                                         "Must set row_facet before using "
                                          "subrow_facet")
             
         if self.subcolumn_facet and not self.column_facet:
-            raise util.CytoflowViewError("Must set column_facet before using "
+            raise util.CytoflowViewError('subcolumn_facet',
+                                         "Must set column_facet before using "
                                          "subcolumn_facet")
             
         if self.row_facet and self.row_facet not in experiment.conditions:
-            raise util.CytoflowViewError("Row facet {} not in the experiment"
-                                    .format(self.row_facet))        
+            raise util.CytoflowViewError('row_facet',
+                                         "Row facet {} not in the experiment, "
+                                         "must be one of {}"
+                                         .format(self.row_facet, experiment.conditions))        
 
         if self.row_facet and self.row_facet not in data.index.names:
-            raise util.CytoflowViewError("Row facet {} not a statistic index; "
+            raise util.CytoflowViewError('row_facet',
+                                         "Row facet {} not a statistic index; "
                                          "must be one of {}"
                                          .format(self.row_facet, data.index.names))  
             
         if self.subrow_facet and self.subrow_facet not in experiment.conditions:
-            raise util.CytoflowViewError("Subrow facet {} not in the experiment"
-                                    .format(self.subrow_facet))  
+            raise util.CytoflowViewError('subrow_facet',
+                                         "Subrow facet {} not in the experiment, "
+                                         "must be one of {}"
+                                         .format(self.subrow_facet, experiment.conditions))  
             
         if self.subrow_facet and self.subrow_facet not in data.index.names:
-            raise util.CytoflowViewError("Subrow facet {} not a statistic index; "
+            raise util.CytoflowViewError('subrow_facet',
+                                         "Subrow facet {} not a statistic index; "
                                          "must be one of {}"
                                          .format(self.subrow_facet, data.index.names))  
             
         if self.column_facet and self.column_facet not in experiment.conditions:
-            raise util.CytoflowViewError("Column facet {} not in the experiment"
-                                    .format(self.column_facet))  
+            raise util.CytoflowViewError('column_facet',
+                                         "Column facet {} not in the experiment, "
+                                         "must be one of {}"
+                                         .format(self.column_facet, experiment.conditions))  
             
         if self.column_facet and self.column_facet not in data.index.names:
-            raise util.CytoflowViewError("Column facet {} not a statistic index; "
+            raise util.CytoflowViewError('column_facet',
+                                         "Column facet {} not a statistic index; "
                                          "must be one of {}"
                                          .format(self.column_facet, data.index.names)) 
             
         if self.subcolumn_facet and self.subcolumn_facet not in experiment.conditions:
-            raise util.CytoflowViewError("Subcolumn facet {} not in the experiment"
-                                    .format(self.subcolumn_facet))  
+            raise util.CytoflowViewError('subcolumn_facet',
+                                         "Subcolumn facet {} not in the experiment, "
+                                         "must be one of {}"
+                                         .format(self.subcolumn_facet, experiment.conditions))  
             
         if self.subcolumn_facet and self.subcolumn_facet not in data.index.names:
-            raise util.CytoflowViewError("Subcolumn facet {} not a statistic index; "
+            raise util.CytoflowViewError('subcolumn_facet',
+                                         "Subcolumn facet {} not a statistic index; "
                                          "must be one of {}"
                                          .format(self.subcolumn_facet, data.index.names))  
 
         facets = [x for x in [self.row_facet, self.subrow_facet, 
                                       self.column_facet, self.subcolumn_facet] if x]
         if len(facets) != len(set(facets)):
-            raise util.CytoflowViewError("Can't reuse facets")
+            raise util.CytoflowViewError(None, 
+                                         "Can't reuse facets")
         
         if set(facets) != set(data.index.names):
-            raise util.CytoflowViewError("Must use all the statistic indices as variables or facets: {}"
+            raise util.CytoflowViewError(None,
+                                         "Must use all the statistic indices as variables or facets: {}"
                                          .format(data.index.names))
             
         row_groups = data.index.get_level_values(self.row_facet).unique() \

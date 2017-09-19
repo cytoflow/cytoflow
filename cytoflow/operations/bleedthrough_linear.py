@@ -237,20 +237,24 @@ class BleedthroughLinearOp(HasStrictTraits):
             raise util.CytoflowOpError('experiment', "No experiment specified")
         
         if not self.spillover:
-            raise util.CytoflowOpError("Spillover matrix isn't set. "
-                                  "Did you forget to run estimate()?")
+            raise util.CytoflowOpError('spillover',
+                                       "Spillover matrix isn't set. "
+                                       "Did you forget to run estimate()?")
         
         for (from_channel, to_channel) in self.spillover:
             if not from_channel in experiment.data:
-                raise util.CytoflowOpError("Can't find channel {0} in experiment"
-                                      .format(from_channel))
+                raise util.CytoflowOpError('spillover',
+                                           "Can't find channel {0} in experiment"
+                                           .format(from_channel))
             if not to_channel in experiment.data:
-                raise util.CytoflowOpError("Can't find channel {0} in experiment"
-                                      .format(to_channel))
+                raise util.CytoflowOpError('spillover',
+                                           "Can't find channel {0} in experiment"
+                                           .format(to_channel))
                 
             if not (to_channel, from_channel) in self.spillover:
-                raise util.CytoflowOpError("Must have both (from, to) and "
-                                      "(to, from) keys in self.spillover")
+                raise util.CytoflowOpError('spillover',
+                                           "Must have both (from, to) and "
+                                           "(to, from) keys in self.spillover")
         
         new_experiment = experiment.clone()
         
@@ -291,7 +295,8 @@ class BleedthroughLinearOp(HasStrictTraits):
         channels = list(set([x for (x, _) in list(self.spillover.keys())]))
         
         if set(self.controls.keys()) != set(channels):
-            raise util.CytoflowOpError("Must have both the controls and bleedthrough to plot")
+            raise util.CytoflowOpError('controls',
+                                       "Must have both the controls and bleedthrough to plot")
 
         return BleedthroughLinearDiagnostic(op = self, **kwargs)
     
@@ -368,11 +373,13 @@ class BleedthroughLinearDiagnostic(HasStrictTraits):
                     try:
                         tube_exp = tube_exp.query(self.subset)
                     except Exception as e:
-                        raise util.CytoflowOpError("Subset string '{0}' isn't valid"
+                        raise util.CytoflowViewError('subset',
+                                                   "Subset string '{0}' isn't valid"
                                               .format(self.subset)) from e
                                     
                     if len(tube_exp.data) == 0:
-                        raise util.CytoflowOpError("Subset string '{0}' returned no events"
+                        raise util.CytoflowViewError('subset',
+                                                   "Subset string '{0}' returned no events"
                                               .format(self.subset))
                     
                 tube_data = tube_exp.data

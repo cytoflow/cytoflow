@@ -292,7 +292,7 @@ class AutofluorescenceDiagnosticView(HasStrictTraits):
             
         if not set(self.op._af_median.keys()) <= set(experiment.channels) or \
            not set(self.op._af_stdev.keys()) <= set(experiment.channels):
-            raise util.CytoflowOpError('op', 
+            raise util.CytoflowViewError('op', 
                                        "Autofluorescence estimates aren't set, or are "
                                        "different than those in the experiment "
                                        "parameter. Did you forget to run estimate()?")
@@ -321,7 +321,7 @@ class AutofluorescenceDiagnosticView(HasStrictTraits):
                                  channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels},
                                  name_metadata = experiment.metadata['name_metadata']).apply()
         except util.CytoflowOpError as e:
-            raise util.CytoflowViewError(e.__str__()) from e
+            raise util.CytoflowViewError('op', e.__str__()) from e
         
         # apply previous operations
         for op in experiment.history:

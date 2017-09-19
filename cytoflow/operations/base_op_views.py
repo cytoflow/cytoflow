@@ -139,17 +139,17 @@ class ByView(OpView):
                                          "You can't reuse facets!")
             
         for b in self.by:
-            if b not in experiment.data:
+            if b not in experiment.conditions:
                 raise util.CytoflowOpError('by',
-                                           "Aggregation metadata {} not found"
-                                           " in the experiment"
-                                           .format(b))
+                                           "Aggregation metadata {} not found, "
+                                           "must be one of {}"
+                                           .format(b, experiment.conditions))
                 
         if self.subset:
             try:
                 experiment = experiment.query(self.subset)
             except util.CytoflowError as e:
-                raise util.CytoflowViewError(str(e)) from e
+                raise util.CytoflowViewError('subset', str(e)) from e
             except Exception as e:
                 raise util.CytoflowViewError('subset',
                                              "Subset string '{0}' isn't valid"
@@ -219,11 +219,11 @@ class ByView(OpView):
                                          "You can't reuse facets!")
             
         for b in self.by:
-            if b not in experiment.data:
+            if b not in experiment.conditions:
                 raise util.CytoflowOpError('by',
-                                           "Aggregation metadata {} not found "
-                                           "in the experiment"
-                                           .format(b))
+                                           "Aggregation metadata {} not found, "
+                                           "must be one of {}"
+                                           .format(b, experiment.conditions))
         
         # yes, this is going to happen again in BaseDataView, but we need to do
         # it here to see if we're dropping any levels (via reset_index) before
@@ -258,7 +258,8 @@ class ByView(OpView):
                                         
         if plot_name is not None:
             if plot_name is not None and not by:
-                raise util.CytoflowViewError("Plot {} not from plot_enum"
+                raise util.CytoflowViewError('plot_name',
+                                             "Plot {} not from plot_enum"
                                              .format(plot_name))
                                
             groupby = experiment.data.groupby(by)

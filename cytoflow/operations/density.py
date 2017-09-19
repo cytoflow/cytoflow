@@ -230,17 +230,11 @@ class DensityGateOp(HasStrictTraits):
                                        "keep must be <= 1.0")
 
         for b in self.by:
-            if b not in experiment.data:
+            if b not in experiment.conditions:
                 raise util.CytoflowOpError('by',
-                                           "Aggregation metadata {0} not found"
-                                           " in the experiment"
-                                           .format(b))
-            if len(experiment.data[b].unique()) > 100: #WARNING - magic number
-                raise util.CytoflowOpError('by',
-                                           "More than 100 unique values found for"
-                                           " aggregation metadata {0}.  Did you"
-                                           " accidentally specify a data channel?"
-                                           .format(b))
+                                           "Aggregation metadata {} not found, "
+                                           "must be one of {}"
+                                           .format(b, experiment.conditions))
                 
         if subset:
             try:
@@ -375,18 +369,11 @@ class DensityGateOp(HasStrictTraits):
                                        .format(self.ychannel))
        
         for b in self.by:
-            if b not in experiment.data:
+            if b not in experiment.conditions:
                 raise util.CytoflowOpError('by',
-                                           "Aggregation metadata {0} not found"
-                                           " in the experiment"
-                                           .format(b))
-
-            if len(experiment.data[b].unique()) > 100: #WARNING - magic number
-                raise util.CytoflowOpError('by',
-                                           "More than 100 unique values found for"
-                                           " aggregation metadata {0}.  Did you"
-                                           " accidentally specify a data channel?"
-                                           .format(b))
+                                           "Aggregation metadata {} not found, "
+                                           "must be one of {}"
+                                           .format(b, experiment.conditions))
         
         if self.by:
             groupby = experiment.data.groupby(self.by)

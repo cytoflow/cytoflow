@@ -420,7 +420,7 @@ class ColorTranslationDiagnostic(HasStrictTraits):
                                         channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels},
                                         name_metadata = experiment.metadata['name_metadata']).apply()
                 except util.CytoflowOpError as e:
-                    raise util.CytoflowViewError(e.__str__()) from e
+                    raise util.CytoflowViewError('translation', e.__str__()) from e
                 
                 # apply previous operations
                 for op in experiment.history:

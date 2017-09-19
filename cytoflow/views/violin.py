@@ -120,10 +120,12 @@ class ViolinPlotView(Base1DView):
         """
         
         if experiment is None:
-            raise util.CytoflowViewError("No experiment specified")
+            raise util.CytoflowViewError('experiment',
+                                         "No experiment specified")
         
         if not self.variable:
-            raise util.CytoflowViewError("Variable not specified")
+            raise util.CytoflowViewError('variable',
+                                         "Variable not specified")
         
         facets = [x for x in [self.xfacet, self.yfacet, self.huefacet, self.variable] if x]
         if len(facets) != len(set(facets)):

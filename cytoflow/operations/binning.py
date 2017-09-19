@@ -193,7 +193,7 @@ class BinningOp(HasStrictTraits):
                                   num = num_bins)
         
         if len(scaled_bins) < 2:
-            raise util.CytoflowOpError(None, "Must have more than one bin")
+            raise util.CytoflowOpError('num_bins', "Must have more than one bin")
         
         # put the data in bins
         bin_idx = np.digitize(scaled_data, scaled_bins[1:-1])

@@ -43,8 +43,8 @@ class QuadOp(HasStrictTraits):
     """
     Apply a quadrant gate to a cytometry experiment.
     
-    Creates a new metadata column named ``name``, with values ``name_1``,
-    `name_2`, `name_3`, `name_4`` ordered CLOCKWISE from upper-left.
+    Creates a new metadata column named :attr:`name`, with values ``name_1``,
+    `name_2`, `name_3`, `name_4`` ordered *clockwise* from upper-left.
     
     Attributes
     ----------
@@ -140,11 +140,9 @@ class QuadOp(HasStrictTraits):
         Experiment
             a new :class:`~Experiment`, the same as the old :class:`~Experiment` 
             but with a new column the same as the operation :attr:`name`.  
-            The new column is of type Enum, with values ``name_1``, ``name_2``, 
+            The new column is of type *Category*, with values ``name_1``, ``name_2``, 
             ``name_3``, and ``name_4``, applied to events CLOCKWISE from upper-left.
-            
 
-            
         """
 
         # TODO - the naming scheme (name_1, name_2, etc) is semantically weak.  
@@ -152,32 +150,40 @@ class QuadOp(HasStrictTraits):
         # It's an Enum; should be pretty easy.
         
         if experiment is None:
-            raise util.CytoflowOpError("No experiment specified")
+            raise util.CytoflowOpError('experiment',
+                                       "No experiment specified")
         
         # make sure name got set!
         if not self.name:
-            raise util.CytoflowOpError("You have to set the gate's name "
-                                  "before applying it!")
+            raise util.CytoflowOpError('name',
+                                       "You have to set the gate's name "
+                                       "before applying it!")
         
         # make sure old_experiment doesn't already have a column named self.name
         if(self.name in experiment.data.columns):
-            raise util.CytoflowOpError("Experiment already contains a column {0}"
-                               .format(self.name))
+            raise util.CytoflowOpError('name',
+                                       "Experiment already contains a column {0}"
+                                       .format(self.name))
         
-        if not self.xchannel or not self.ychannel:
-            raise util.CytoflowOpError("Must specify xchannel and ychannel")
+        if not self.xchannel:
+            raise util.CytoflowOpError('xchannel', "Must specify xchannel")
 
         if not self.xchannel in experiment.channels:
-            raise util.CytoflowOpError("xchannel isn't in the experiment")
+            raise util.CytoflowOpError('xchannel',
+                                       "xchannel isn't in the experiment")
+
+        if not self.ychannel:
+            raise util.CytoflowOpError('ychannel', "Must specify ychannel")
         
         if not self.ychannel in experiment.channels:
-            raise util.CytoflowOpError("ychannel isn't in the experiment")
+            raise util.CytoflowOpError('ychanel', 
+                                       "ychannel isn't in the experiment")
         
         if not self.xthreshold:
-            raise util.CytoflowOpError('xthreshold must be set!')
+            raise util.CytoflowOpError('xthreshold', 'xthreshold must be set!')
         
         if not self.ythreshold:
-            raise util.CytoflowOpError('ythreshold must be set!')
+            raise util.CytoflowOpError('ythreshold', 'ythreshold must be set!')
 
         gate = pd.Series([None] * len(experiment))
         
@@ -272,7 +278,8 @@ class QuadSelection(Op2DView, ScatterplotView):
         """
         
         if experiment is None:
-            raise util.CytoflowViewError("No experiment specified")
+            raise util.CytoflowViewError('experiment',
+                                         "No experiment specified")
         
         super().plot(experiment, **kwargs)
         self._ax = plt.gca()

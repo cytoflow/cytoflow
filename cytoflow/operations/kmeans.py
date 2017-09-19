@@ -187,15 +187,9 @@ class KMeansOp(HasStrictTraits):
         for b in self.by:
             if b not in experiment.data:
                 raise util.CytoflowOpError('by',
-                                           "Aggregation metadata {0} not found"
-                                           " in the experiment"
-                                           .format(b))
-            if len(experiment.data[b].unique()) > 100: #WARNING - magic number
-                raise util.CytoflowOpError('by',
-                                           "More than 100 unique values found for"
-                                           " aggregation metadata {0}.  Did you"
-                                           " accidentally specify a data channel?"
-                                           .format(b))
+                                           "Aggregation metadata {} not found, "
+                                           "must be one of {}"
+                                           .format(b, experiment.conditions))
 
         if subset:
             try:
@@ -298,15 +292,9 @@ class KMeansOp(HasStrictTraits):
         for b in self.by:
             if b not in experiment.data:
                 raise util.CytoflowOpError('by',
-                                           "Aggregation metadata {0} not found"
-                                           " in the experiment"
-                                           .format(b))
-            if len(experiment.data[b].unique()) > 100: #WARNING - magic number
-                raise util.CytoflowOpError('by',
-                                           "More than 100 unique values found for"
-                                           " aggregation metadata {0}.  Did you"
-                                           " accidentally specify a data channel?"
-                                           .format(b))
+                                           "Aggregation metadata {} not found, "
+                                           "must be one of {}"
+                                           .format(b, experiment.conditions))
                  
         if self.by:
             groupby = experiment.data.groupby(self.by)
@@ -404,7 +392,8 @@ class KMeansOp(HasStrictTraits):
                 scale[c] = util.get_default_scale()
             
         if len(channels) == 0:
-            raise util.CytoflowViewError("Must specify at least one channel for a default view")
+            raise util.CytoflowViewError('channels',
+                                         "Must specify at least one channel for a default view")
         elif len(channels) == 1:
             return KMeans1DView(op = self, 
                                 channel = channels[0], 

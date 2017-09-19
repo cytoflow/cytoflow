@@ -568,7 +568,7 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
                                  channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels},
                                  name_metadata = experiment.metadata['name_metadata']).apply()
         except util.CytoflowOpError as e:
-            raise util.CytoflowViewError(e.__str__()) from e
+            raise util.CytoflowViewError('op', e.__str__()) from e
 
         plt.figure()
         

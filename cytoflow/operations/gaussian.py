@@ -241,16 +241,9 @@ class GaussianMixtureOp(HasStrictTraits):
         for b in self.by:
             if b not in experiment.data:
                 raise util.CytoflowOpError('by',
-                                           "Aggregation metadata {0} not found"
-                                           " in the experiment"
-                                           .format(b))
-            if len(experiment.data[b].unique()) > 100: #WARNING - magic number
-                raise util.CytoflowOpError('by',
-                                           "More than 100 unique values found for"
-                                           " aggregation metadata {0}.  Did you"
-                                           " accidentally specify a data channel?"
-                                           .format(b))
-
+                                           "Aggregation metadata {} not found, "
+                                           "must be one of {}"
+                                           .format(b, experiment.conditions))
                 
         if subset:
             try:
@@ -391,8 +384,9 @@ class GaussianMixtureOp(HasStrictTraits):
                                                .format(cname))               
          
         if not self._gmms:
-            raise util.CytoflowOpError("No components found.  Did you forget to "
-                                  "call estimate()?")
+            raise util.CytoflowOpError(None, 
+                                       "No components found.  Did you forget to "
+                                       "call estimate()?")
  
         for c in self.channels:
             if c not in experiment.channels:
@@ -401,18 +395,11 @@ class GaussianMixtureOp(HasStrictTraits):
                                            .format(c))
         
         for b in self.by:
-            if b not in experiment.data:
+            if b not in experiment.conditions:
                 raise util.CytoflowOpError('by',
-                                           "Aggregation metadata {0} not found"
-                                           " in the experiment"
-                                           .format(b))
- 
-            if len(experiment.data[b].unique()) > 100: #WARNING - magic number
-                raise util.CytoflowOpError('by',
-                                           "More than 100 unique values found for"
-                                           " aggregation metadata {0}.  Did you"
-                                           " accidentally specify a data channel?"
-                                           .format(b))
+                                           "Aggregation metadata {} not found, "
+                                           "must be one of {}"
+                                           .format(b, experiment.conditions))
                             
         if self.num_components == 1 and self.sigma == 0.0:
             raise util.CytoflowOpError('sigma',
@@ -570,6 +557,7 @@ class GaussianMixtureOp(HasStrictTraits):
     def default_view(self, **kwargs):
         """
         Returns a diagnostic plot of the Gaussian mixture model.
+
          
         Returns
         -------
@@ -610,7 +598,8 @@ class GaussianMixtureOp(HasStrictTraits):
                                          yscale = scale[channels[1]], 
                                          **kwargs)
         else:
-            raise util.CytoflowViewError("Can't specify more than two channels for a default view")
+            raise util.CytoflowViewError('channels',
+                                         "Can't specify more than two channels for a default view")
 
 @provides(IView)
 class GaussianMixture1DView(By1DView, AnnotatingView, HistogramView):
