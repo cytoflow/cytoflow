@@ -313,12 +313,11 @@ class RemoteWorkflowItem(WorkflowItem):
                 plt.show()
                 
             except CytoflowViewError as e:                
-                self.result = None
                 if e.args[0]:
                     self.view_error_trait = e.args[0]
                 self.view_error = e.args[-1]    
-                self.status = "invalid"
-                return
+                plt.clf()
+                plt.show()
                                      
             except CytoflowError as e:
                 self.view_error = e.__str__()   
