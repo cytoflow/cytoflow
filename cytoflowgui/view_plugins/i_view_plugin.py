@@ -147,3 +147,18 @@ class ViewHandlerMixin(HasTraits):
                             if util.is_numeric(self.context.statistics[x])]
         else:
             return []
+
+    @on_trait_change('context.view_error_trait', 
+                     dispatch = 'ui', 
+                     post_init = True)
+    def _view_trait_error(self):
+        
+        # check if we're getting called on the local or remote process
+        if self.info is None:
+            return
+        
+        for ed in self.info.ui._editors:
+            if ed.name == self.context.view_error_trait:
+                ed.set_error_state(True)
+            else:
+                ed.set_error_state(False)

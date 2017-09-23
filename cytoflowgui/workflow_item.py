@@ -1,6 +1,5 @@
 #!/usr/bin/env python3.4
 # coding: latin-1
-from cytoflow.utility.cytoflow_errors import CytoflowOpError
 
 # (c) Massachusetts Institute of Technology 2015-2017
 #
@@ -37,7 +36,7 @@ import pandas as pd
 from cytoflow import Experiment
 from cytoflow.operations.i_operation import IOperation
 from cytoflow.views.i_view import IView
-from cytoflow.utility import CytoflowError
+from cytoflow.utility import CytoflowError, CytoflowOpError, CytoflowViewError
 
 from cytoflowgui.flow_task_pane import TabListEditor
 
@@ -242,7 +241,8 @@ class RemoteWorkflowItem(WorkflowItem):
             
             except CytoflowOpError as e:                
                 self.result = None
-                self.op_error_trait = e.args[0]
+                if e.args[0]:
+                    self.op_error_trait = e.args[0]
                 self.op_error = e.args[-1]    
                 self.status = "invalid"
                 return
@@ -311,6 +311,14 @@ class RemoteWorkflowItem(WorkflowItem):
                 # is NOT interactive.  this call lets us batch together all 
                 # the plot updates
                 plt.show()
+                
+            except CytoflowViewError as e:                
+                self.result = None
+                if e.args[0]:
+                    self.view_error_trait = e.args[0]
+                self.view_error = e.args[-1]    
+                self.status = "invalid"
+                return
                                      
             except CytoflowError as e:
                 self.view_error = e.__str__()   

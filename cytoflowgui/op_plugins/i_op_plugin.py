@@ -29,8 +29,6 @@ from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.subset import ISubset
 from cytoflowgui.workflow import Changed
 
-
-
 OP_PLUGIN_EXT = 'edu.mit.synbio.cytoflow.op_plugins'
 
 
@@ -178,6 +176,11 @@ class OpHandlerMixin(HasTraits):
                      dispatch = 'ui', 
                      post_init = True)
     def _op_trait_error(self):
+        
+        # check if we're getting called from the local or remote process
+        if self.info is None:
+            return
+        
         for ed in self.info.ui._editors:
             if ed.name == self.context.op_error_trait:
                 ed.set_error_state(True)
