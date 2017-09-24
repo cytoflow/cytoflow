@@ -110,7 +110,7 @@ def expand_method_parameters(cls, method):
     
     first_param_line, last_param_line = find_section("Parameters", lines)
     if first_param_line is None:
-        warn("Couldn't find a 'Parameters' section for {}".format(method.__name__))
+        warn("Couldn't find a 'Parameters' section for {}:{}".format(cls.__name__, method.__name__))
         return
     
     method_params = []
