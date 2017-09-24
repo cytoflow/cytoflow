@@ -21,13 +21,12 @@ Created on Mar 15, 2015
 
 @author: brian
 """
+from pyface.qt import QtGui
 
 from traits.api import Interface, Str, HasTraits, Event, Instance, Property, List, on_trait_change
 from traitsui.api import Group, Item
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.workflow_item import WorkflowItem
-from cytoflowgui.subset import ISubset
-from cytoflowgui.workflow import Changed
 
 OP_PLUGIN_EXT = 'edu.mit.synbio.cytoflow.op_plugins'
 
@@ -178,11 +177,34 @@ class OpHandlerMixin(HasTraits):
     def _op_trait_error(self):
         
         # check if we're getting called from the local or remote process
-        if self.info is None:
+        if self.info is None or self.info.ui is None:
             return
         
         for ed in self.info.ui._editors:
             if ed.name == self.context.op_error_trait:
-                ed.set_error_state(True)
+                err_state = True
             else:
-                ed.set_error_state(False)
+                err_state = False
+
+            if not ed.label_control:
+                continue
+            
+            item = ed.label_control
+            
+            if not err_state and not hasattr(item, '_ok_color'):
+                continue
+            
+            pal = QtGui.QPalette(item.palette())  # @UndefinedVariable
+            
+            if err_state:
+                setattr(item, 
+                        '_ok_color', 
+                        QtGui.QColor(pal.color(item.backgroundRole())))  # @UndefinedVariable
+                pal.setColor(item.backgroundRole(), QtGui.QColor(255, 145, 145))  # @UndefinedVariable
+                item.setAutoFillBackground(True)
+                item.setPalette(pal)
+            else:
+                pal.setColor(item.backgroundRole(), item._ok_color)
+                delattr(item, '_ok_color')
+                item.setAutoFillBackground(False)
+                item.setPalette(pal)

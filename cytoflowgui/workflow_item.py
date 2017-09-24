@@ -163,11 +163,11 @@ class WorkflowItem(HasStrictTraits):
     @cached_property
     def _get_icon(self):
         if self.status == "valid":
-            return QtGui.QStyle.SP_DialogApplyButton
+            return QtGui.QStyle.SP_DialogApplyButton  # @UndefinedVariable
         elif self.status == "estimating" or self.status == "applying":
-            return QtGui.QStyle.SP_BrowserReload
+            return QtGui.QStyle.SP_BrowserReload  # @UndefinedVariable
         else: # self.valid == "invalid" or None
-            return QtGui.QStyle.SP_DialogCancelButton
+            return QtGui.QStyle.SP_DialogCancelButton  # @UndefinedVariable
         
     @cached_property
     def _get_operation_handler(self):
@@ -278,7 +278,9 @@ class RemoteWorkflowItem(WorkflowItem):
             return
 
         self.view_warning = ""
+        self.view_warning_trait = ""
         self.view_error = ""
+        self.view_error_trait = ""
 
         try:
             if len(self.current_view_plot_names) > 0 and self.current_plot not in self.current_view_plot_names:
