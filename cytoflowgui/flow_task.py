@@ -37,6 +37,7 @@ from envisage.ui.tasks.api import TaskFactory
 from cytoflowgui.flow_task_pane import FlowTaskPane
 from cytoflowgui.workflow_pane import WorkflowDockPane
 from cytoflowgui.view_pane import ViewDockPane
+from cytoflowgui.help_pane import HelpDockPane
 from cytoflowgui.workflow import Workflow
 from cytoflowgui.op_plugins import IOperationPlugin, ImportPlugin, ChannelStatisticPlugin, OP_PLUGIN_EXT
 from cytoflowgui.view_plugins import IViewPlugin, VIEW_PLUGIN_EXT
@@ -63,6 +64,7 @@ class FlowTask(Task):
     plot_pane = Instance(FlowTaskPane)
     workflow_pane = Instance(WorkflowDockPane)
     view_pane = Instance(ViewDockPane)
+    help_pane = Instance(HelpDockPane)
     
     # plugin lists, to setup the interface
     op_plugins = List(IOperationPlugin)
@@ -183,7 +185,9 @@ class FlowTask(Task):
                                       plugins = self.view_plugins,
                                       task = self)
         
-        return [self.workflow_pane, self.view_pane]
+        self.help_pane = HelpDockPane(task = self)
+        
+        return [self.workflow_pane, self.view_pane, self.help_pane]
         
     def on_new(self):
         if self.model.modified:
@@ -256,7 +260,7 @@ class FlowTask(Task):
 
         try:
             new_workflow = unpickler.load()
-        except TraitError as e:
+        except TraitError:
             error(parent = None,
                   message = "Error trying to load the workflow.")
             return
@@ -495,7 +499,6 @@ DEBUG LOG: {1}
             view = plugin.get_view()
             self.model.selected.views.append(view)
             self.model.selected.current_view = view
-
     
     def add_operation(self, op_id):
         # first, find the matching plugin
