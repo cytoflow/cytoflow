@@ -75,8 +75,6 @@ class ScatterplotView(Base2DView):
         """
         Plot a faceted scatter plot view of a channel
         
-        Parameters
-        ----------
         alpha : float (default = 0.25)
             The alpha blending value, between 0 (transparent) and 1 (opaque).
             
