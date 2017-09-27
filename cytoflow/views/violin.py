@@ -17,8 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 '''
-Violin Plot
------------
+cytoflow.views.violin
+---------------------
 '''
 
 from traits.api import Str, provides, Constant

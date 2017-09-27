@@ -17,8 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Autofluorescence correction
----------------------------
+cytoflow.operations.autofluorescence
+------------------------------------
 """
 
 from traits.api import (HasStrictTraits, Str, CFloat, File, Dict,
