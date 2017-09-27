@@ -17,8 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-cytoflow.operations.bead_calibration
-------------------------------------
+Bead Calibration
+----------------
 """
 
 from traits.api import (HasStrictTraits, Str, File, Dict, Bool, Int, List, 

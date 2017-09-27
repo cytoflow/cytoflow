@@ -42,7 +42,7 @@ from cytoflow.operations.i_operation import IOperation
 from cytoflowgui.import_dialog import ExperimentDialog
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
 from cytoflowgui.toggle_button import ToggleButtonEditor
-from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
+from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin
 
 
 class ImportHandler(OpHandlerMixin, Controller):
@@ -121,7 +121,7 @@ class ImportPluginOp(PluginOpMixin, ImportOp):
     
             
 @provides(IOperationPlugin)
-class ImportPlugin(Plugin):
+class ImportPlugin(Plugin, PluginHelpMixin):
     """
     class docs
     """

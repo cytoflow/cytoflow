@@ -34,7 +34,7 @@ from .preferences import CytoflowPreferences
   
 def gui_handler_callback(msg, app):
     app.application_error = msg
-
+    
 class CytoflowApplication(TasksApplication):
     """ The cytoflow Tasks application.
     """

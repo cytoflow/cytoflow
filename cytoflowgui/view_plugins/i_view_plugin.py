@@ -22,10 +22,12 @@ Created on Mar 15, 2015
 @author: brian
 """
 
+import os
+
 from pyface.qt import QtGui
 
 from traits.api import (Interface, Str, HasTraits, Instance, Event, 
-                        List, Property, on_trait_change)
+                        List, Property, on_trait_change, HTML)
 from traitsui.api import Handler
 
 import cytoflow.utility as util
@@ -64,7 +66,33 @@ class IViewPlugin(Interface):
         """
         Returns an icon for this plugin
         """
-        
+class PluginHelpMixin(HasTraits):
+    
+    _cached_help = HTML
+    
+    def get_help(self):
+        if self._cached_help == "":
+            current_dir = os.path.abspath(__file__)
+            help_dir = os.path.split(current_dir)[0]
+            help_dir = os.path.split(help_dir)[0]
+            help_dir = os.path.join(help_dir, "help")
+            
+            view = self.get_view()
+            help_file = None
+            for klass in view.__class__.__mro__:
+                mod = klass.__module__
+                mod_html = mod + ".html"
+                
+                h = os.path.join(help_dir, mod_html)
+                if os.path.exists(h):
+                    help_file = h
+                    break
+                
+            with open(help_file, encoding = 'utf-8') as f:
+                self._cached_help = f.read()
+                
+        return self._cached_help
+                        
 class PluginViewMixin(HasTraits):
     handler = Instance(Handler, transient = True)    
     

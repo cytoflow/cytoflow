@@ -36,7 +36,7 @@ from cytoflowgui.subset import SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
-    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin
+    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, PluginHelpMixin
     
 class Stats1DHandler(ViewHandlerMixin, Controller):
     """
@@ -171,7 +171,7 @@ class Stats1DPluginView(PluginViewMixin, Stats1DView):
         
 
 @provides(IViewPlugin)
-class Stats1DPlugin(Plugin):
+class Stats1DPlugin(Plugin, PluginHelpMixin):
     """
     classdocs
     """

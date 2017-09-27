@@ -30,7 +30,7 @@ from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewM
 from cytoflowgui.subset import SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
-from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
+from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin
 from cytoflowgui.workflow import Changed
 
 class RangeHandler(OpHandlerMixin, Controller):
@@ -103,7 +103,7 @@ class RangePluginOp(PluginOpMixin, RangeOp):
         return RangeSelectionView(op = self, **kwargs)
 
 @provides(IOperationPlugin)
-class RangePlugin(Plugin):
+class RangePlugin(Plugin, PluginHelpMixin):
     """
     class docs
     """

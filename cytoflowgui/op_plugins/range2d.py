@@ -32,7 +32,7 @@ from cytoflow.operations.range2d import Range2DOp, RangeSelection2D
 from cytoflow.views.i_selectionview import ISelectionView
 
 from cytoflowgui.op_plugins.i_op_plugin \
-    import IOperationPlugin, OpHandlerMixin, PluginOpMixin, OP_PLUGIN_EXT, shared_op_traits
+    import IOperationPlugin, OpHandlerMixin, PluginOpMixin, OP_PLUGIN_EXT, shared_op_traits, PluginHelpMixin
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
 from cytoflowgui.subset import SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
@@ -126,7 +126,7 @@ class Range2DPluginOp(Range2DOp, PluginOpMixin):
         return Range2DSelectionView(op = self, **kwargs)
 
 @provides(IOperationPlugin)
-class Range2DPlugin(Plugin):
+class Range2DPlugin(Plugin, PluginHelpMixin):
     """
     class docs
     """

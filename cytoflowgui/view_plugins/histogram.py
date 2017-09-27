@@ -38,7 +38,7 @@ from cytoflowgui.subset import SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
-    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin
+    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, PluginHelpMixin
     
 class HistogramHandler(ViewHandlerMixin, Controller):
     """
@@ -117,7 +117,7 @@ class HistogramPluginView(PluginViewMixin, HistogramView):
             plt.title("{0} = {1}".format(self.plotfacet, plot_name))
 
 @provides(IViewPlugin)
-class HistogramPlugin(Plugin):
+class HistogramPlugin(Plugin, PluginHelpMixin):
     """
     classdocs
     """

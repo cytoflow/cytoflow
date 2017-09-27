@@ -21,9 +21,12 @@ Created on Mar 15, 2015
 
 @author: brian
 """
+import os
+
 from pyface.qt import QtGui
 
-from traits.api import Interface, Str, HasTraits, Event, Instance, Property, List, on_trait_change
+from traits.api import (Interface, Str, HasTraits, Event, Instance, Property, 
+                        on_trait_change, HTML)
 from traitsui.api import Group, Item
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.workflow_item import WorkflowItem
@@ -64,6 +67,34 @@ class IOperationPlugin(Interface):
         """
         
         """
+        
+class PluginHelpMixin(HasTraits):
+    
+    _cached_help = HTML
+    
+    def get_help(self):
+        if self._cached_help == "":
+            current_dir = os.path.abspath(__file__)
+            help_dir = os.path.split(current_dir)[0]
+            help_dir = os.path.split(help_dir)[0]
+            help_dir = os.path.join(help_dir, "help")
+            
+            op = self.get_operation()
+            help_file = None
+            for klass in op.__class__.__mro__:
+                mod = klass.__module__
+                mod_html = mod + ".html"
+                
+                h = os.path.join(help_dir, mod_html)
+                if os.path.exists(h):
+                    help_file = h
+                    break
+                
+            with open(help_file, encoding = 'utf-8') as f:
+                self._cached_help = f.read()
+                
+        return self._cached_help
+                        
 
 class PluginOpMixin(HasTraits):
     # there are a few pieces of metadata that determine which traits get

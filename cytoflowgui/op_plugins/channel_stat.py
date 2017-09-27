@@ -37,7 +37,7 @@ import cytoflow.utility as util
 
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
 from cytoflowgui.subset import ISubset, SubsetListEditor
-from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
+from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin
 from cytoflowgui.workflow import Changed
 
 mean_95ci = lambda x: util.ci(x, np.mean, boots = 100)
@@ -128,7 +128,7 @@ class ChannelStatisticPluginOp(PluginOpMixin, ChannelStatisticOp):
         return ChannelStatisticOp.apply(self, experiment) 
 
 @provides(IOperationPlugin)
-class ChannelStatisticPlugin(Plugin):
+class ChannelStatisticPlugin(Plugin, PluginHelpMixin):
     """
     class docs
     """

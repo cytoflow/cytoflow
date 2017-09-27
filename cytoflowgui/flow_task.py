@@ -185,7 +185,9 @@ class FlowTask(Task):
                                       plugins = self.view_plugins,
                                       task = self)
         
-        self.help_pane = HelpDockPane(task = self)
+        self.help_pane = HelpDockPane(view_plugins = self.view_plugins,
+                                      op_plugins = self.op_plugins,
+                                      task = self)
         
         return [self.workflow_pane, self.view_pane, self.help_pane]
         
@@ -481,6 +483,7 @@ DEBUG LOG: {1}
             self.view_pane.enabled = (selected is not None)
             self.view_pane.default_view = selected.default_view.id if selected.default_view else ""
             self.view_pane.selected_view = selected.current_view.id if selected.current_view else ""
+            self.help_pane.help_id = selected.operation.id
         else:
             self.view_pane.enabled = False
             
@@ -499,6 +502,8 @@ DEBUG LOG: {1}
             view = plugin.get_view()
             self.model.selected.views.append(view)
             self.model.selected.current_view = view
+            
+        self.help_pane.help_id = view_id
     
     def add_operation(self, op_id):
         # first, find the matching plugin

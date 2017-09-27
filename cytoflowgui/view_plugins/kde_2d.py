@@ -38,7 +38,7 @@ from cytoflowgui.subset import SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
-    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin
+    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, PluginHelpMixin
 
 class Kde2DHandler(ViewHandlerMixin, Controller):
     '''
@@ -125,7 +125,7 @@ class Kde2DPluginView(PluginViewMixin, Kde2DView):
         if self.plotfacet and plot_name is not None:
             plt.title("{0} = {1}".format(self.plotfacet, plot_name))
 @provides(IViewPlugin)
-class Kde2DPlugin(Plugin):
+class Kde2DPlugin(Plugin, PluginHelpMixin):
     """
     classdocs
     """

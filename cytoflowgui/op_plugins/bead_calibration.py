@@ -37,7 +37,7 @@ from cytoflow.views.i_selectionview import IView
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
 from cytoflowgui.color_text_editor import ColorTextEditor
-from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
+from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin
 from cytoflowgui.vertical_list_editor import VerticalListEditor
 from cytoflowgui.workflow import Changed
 
@@ -209,7 +209,7 @@ class BeadCalibrationPluginView(PluginViewMixin, BeadCalibrationDiagnostic):
     
 
 @provides(IOperationPlugin)
-class BeadCalibrationPlugin(Plugin):
+class BeadCalibrationPlugin(Plugin, PluginHelpMixin):
     """
     class docs
     """

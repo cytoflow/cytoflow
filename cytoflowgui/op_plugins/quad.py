@@ -25,7 +25,7 @@ from cytoflow.operations import IOperation
 from cytoflow.operations.quad import QuadOp, QuadSelection
 
 from cytoflowgui.op_plugins.i_op_plugin \
-    import IOperationPlugin, OpHandlerMixin, PluginOpMixin, OP_PLUGIN_EXT, shared_op_traits
+    import IOperationPlugin, OpHandlerMixin, PluginOpMixin, OP_PLUGIN_EXT, shared_op_traits, PluginHelpMixin
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
 from cytoflowgui.subset import SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
@@ -114,7 +114,7 @@ class QuadPluginOp(QuadOp, PluginOpMixin):
         return QuadSelectionView(op = self, **kwargs)
 
 @provides(IOperationPlugin)
-class QuadPlugin(Plugin):
+class QuadPlugin(Plugin, PluginHelpMixin): 
     """
     class docs
     """

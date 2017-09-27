@@ -54,7 +54,7 @@ def expand_class_attributes(cls):
     
     cls_attr = []
      
-    for mro_cls in reversed(cls.__mro__):
+    for mro_cls in cls.__mro__:
         mro_attr = get_class_attributes(mro_cls)
                 
         for mro_attr_name, mro_attr_type, mro_attr_body in mro_attr:

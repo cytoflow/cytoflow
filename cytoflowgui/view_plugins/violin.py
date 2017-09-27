@@ -38,13 +38,10 @@ from cytoflowgui.subset import SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
-    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin
+    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, PluginHelpMixin
     
 class ViolinHandler(ViewHandlerMixin, Controller):
-    """
-    docs
-    """
-    
+
     def default_traits_view(self):
         return View(VGroup(
                     VGroup(Item('variable',
@@ -122,15 +119,15 @@ class ViolinPlotPluginView(PluginViewMixin, ViolinPlotView):
             plt.title("{0} = {1}".format(self.plotfacet, plot_name))
 
 @provides(IViewPlugin)
-class ViolinPlotPlugin(Plugin):
+class ViolinPlotPlugin(Plugin, PluginHelpMixin):
     """
     classdocs
     """
 
-    id = 'edu.mit.synbio.cytoflowgui.view.violin'
+    id = 'edu.mit.synbio.cytoflowgui.view_plugins.violin'
     view_id = 'edu.mit.synbio.cytoflow.view.violin'
     short_name = "Violin Plot"
-    
+
     def get_view(self):
         return ViolinPlotPluginView()
 

@@ -16,15 +16,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from traits.api import Instance, List, on_trait_change, Str, Dict, Bool, HTML
-from traitsui.api import View, Item, HTMLEditor
+from traits.api import Instance, List, on_trait_change, Str, HTML
+from traitsui.api import View, Item
 from pyface.tasks.api import TraitsDockPane, Task
-from pyface.action.api import ToolBarManager
-from pyface.tasks.action.api import TaskAction
-from pyface.api import ImageResource
-from pyface.qt import QtGui, QtCore
 
 from cytoflowgui.view_plugins import IViewPlugin
+from cytoflowgui.op_plugins import IOperationPlugin
 
 class HelpDockPane(TraitsDockPane):
     """
@@ -39,7 +36,28 @@ class HelpDockPane(TraitsDockPane):
     # the Task that serves as the controller
     task = Instance(Task)
     
-    html = HTML("Some default HTML")
+    view_plugins = List(IViewPlugin)
+    op_plugins = List(IOperationPlugin)
+    
+    help_id = Str
+    
+    html = HTML("<b>Welcome to Cytoflow!</b>")
     
     traits_view = View(Item('html',
                             show_label = False))
+    
+    @on_trait_change('help_id', post_init = True)
+    def _on_help_id_changed(self):
+        for plugin in self.view_plugins:
+            if self.help_id == plugin.view_id:
+                try:
+                    self.html = plugin.get_help()
+                except AttributeError:
+                    pass
+                
+        for plugin in self.op_plugins:
+            if self.help_id == plugin.operation_id:
+                try:
+                    self.html = plugin.get_help()
+                except AttributeError:
+                    pass

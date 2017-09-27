@@ -27,10 +27,6 @@ class Mock(MagicMock):
 MOCK_MODULES = ['cytoflow.utility.logicle_ext.Logicle']
 
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
- 
-
-#import cytoflow
-#import cytoflowgui
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -58,14 +54,17 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.napoleon',
     'sphinx.ext.mathjax',
-    'plot_directive', 
+    'plot_directive',
+    'embeddedhelp'
 ]
+
+if tags.has("embedded_help"):  # @UndefinedVariable
+    extensions.remove('sphinx.ext.viewcode')
 
 # Generate the API documentation when building
 autosummary_generate = True
 
 # autodoc options
-autodoc_default_flags = ['no-show-inheritance']
 autodoc_member_order = 'bysource'
 
 # napoleon options
@@ -309,21 +308,72 @@ texinfo_documents = [
 #texinfo_no_detailmenu = False
 
 
-
 def setup(app):
     app.connect('builder-inited', run_apidoc)
-    
-    import sys
-    sys.modules['sys'].IN_SPHINX = True
-    
+    app.connect('builder-inited', set_builder_config)
 
-def run_apidoc(_):
+    app.connect('autodoc-process-docstring', strip_rubrics)
+    app.connect('autodoc-skip-member', skip_methods)
+
+    sys.modules['sys'].IN_SPHINX = True
+        
+def set_builder_config(app):
+    if tags.has("embedded_help"):
+        app.builder.config.html_copy_source = False
+        app.builder.config.html_show_sourcelink = False
+        app.builder.config.html_show_copyright = False
+        app.builder.config.html_show_sphinx = False
+        
+        app.builder.copysource = False
+        app.builder.add_permalinks = False
+        app.builder.embedded = True
+        app.builder.download_support = False
+        app.builder.search = False
+
+
+def run_apidoc(app):
+    if tags.has("embedded_help"):
+        os.environ['SPHINX_APIDOC_OPTIONS'] = 'members'
+
     from sphinx.apidoc import main
     sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
     cur_dir = os.path.abspath(os.path.dirname(__file__))
-    module = os.path.join(cur_dir,"..","cytoflow")
-    main([None, '-T', '-e', '-E', '-f', '-o', cur_dir, module])    
-
-
+    module = os.path.join(cur_dir,"..","cytoflow")    
     
+    main([None, '-T', '-e', '-E', '-f', '-o', cur_dir, module])    
+    
+def skip_methods(app, what, name, obj, skip, options):
+#     print(name, what)
+    if tags.has("embedded_help") and what == 'class':
+        return True
+    
+    return None
 
+def strip_rubrics(app, what, name, obj, options, lines):
+    if tags.has("embedded_help") and what == 'class':
+        strip_rubric('Examples', lines)
+        strip_rubric('Notes', lines)
+        
+def strip_rubric(name, lines):
+        first_line = None
+        for i, line in enumerate(lines):
+            if line == ".. rubric:: " + name:
+                first_line = i
+                break    
+            
+        if first_line is None:
+            return None, None
+           
+        last_line = None
+            
+        for i in range(first_line + 1, len(lines)):
+            if lines[i].startswith(".. rubric::"):
+                last_line = i - 2
+                break
+            
+        if last_line is None:
+            last_line = len(lines) - 1
+            
+        if first_line is not None and last_line is not None:
+            del lines[first_line:last_line]
+    

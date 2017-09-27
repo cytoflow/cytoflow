@@ -39,7 +39,7 @@ from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewM
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
 from cytoflowgui.subset import SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
-from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
+from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin
 
 class BinningHandler(Controller, OpHandlerMixin):
     def default_traits_view(self):
@@ -122,7 +122,7 @@ class BinningPluginView(PluginViewMixin, BinningView):
 
 
 @provides(IOperationPlugin)
-class BinningPlugin(Plugin):
+class BinningPlugin(Plugin, PluginHelpMixin):
     """
     class docs
     """
