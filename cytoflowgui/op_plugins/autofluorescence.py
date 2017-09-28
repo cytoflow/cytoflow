@@ -17,9 +17,38 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 '''
-Created on Oct 9, 2015
+Autofluorescence correction
+---------------------------
 
-@author: brian
+Apply autofluorescence correction to a set of fluorescence channels.
+
+This module estimates the arithmetic median fluorescence from cells that are
+not fluorescent, then subtracts the median from the experimental data.
+
+Check the diagnostic plot to make sure that the sample is actually 
+non-fluorescent, and that the module found the population median.
+
+.. object:: Channels
+
+    The channels to correct
+
+.. object:: Blank file
+
+    The FCS file containing measurements of blank cells.
+    
+.. plot::
+
+    import cytoflow as flow
+    import_op = flow.ImportOp()
+    import_op.tubes = [flow.Tube(file = "tasbe/rby.fcs")]
+    ex = import_op.apply()
+
+    af_op = flow.AutofluorescenceOp()
+    af_op.channels = ["Pacific Blue-A", "FITC-A", "PE-Tx-Red-YG-A"]
+    af_op.blank_file = "tasbe/blank.fcs"
+
+    af_op.estimate(ex)
+    af_op.default_view().plot(ex) 
 '''
 import warnings
 
@@ -153,10 +182,7 @@ class AutofluorescencePluginView(PluginViewMixin, AutofluorescenceDiagnosticView
 
 @provides(IOperationPlugin)
 class AutofluorescencePlugin(Plugin, PluginHelpMixin):
-    """
-    class docs
-    """
-    
+
     id = 'edu.mit.synbio.cytoflowgui.op_plugins.autofluorescence'
     operation_id = 'edu.mit.synbio.cytoflow.operations.autofluorescence'
 

@@ -14,6 +14,7 @@
 
 import sys
 import os
+import glob
 import matplotlib as mpl
 mpl.use("Agg")
 
@@ -54,8 +55,7 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.napoleon',
     'sphinx.ext.mathjax',
-    'plot_directive',
-    'embeddedhelp'
+    'plot_directive'
 ]
 
 if tags.has("embedded_help"):  # @UndefinedVariable
@@ -77,6 +77,9 @@ plot_html_show_formats = False
 plot_html_show_source_link = False
 plot_working_directory = "../cytoflow/tests/data/"
 
+if tags.has("embedded_help"):
+    plot_include_source = False
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
@@ -90,7 +93,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'CytoFlow'
+project = u'Cytoflow'
 import time
 copyright = u'Massachusetts Institute of Technology 2015-{}'.format(time.strftime("%Y"))
 
@@ -226,7 +229,7 @@ html_static_path = ['_static']
 #html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'cytoflowdoc'
+htmlhelp_basename = 'cytoflow'
 
 
 # -- Options for LaTeX output ---------------------------------------------
@@ -246,7 +249,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  ('index', 'CytoFlow.tex', u'CytoFlow Documentation',
+  ('index', 'Cytoflow.tex', u'Cytoflow Documentation',
    u'Brian Teague', 'manual'),
 ]
 
@@ -276,7 +279,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'cytoflow', u'CytoFlow Documentation',
+    ('index', 'cytoflow', u'Cytoflow Documentation',
      [u'Brian Teague'], 1)
 ]
 
@@ -290,8 +293,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'CytoFlow', u'CytoFlow Documentation',
-   u'Brian Teague', 'CytoFlow', 'One line description of project.',
+  ('index', 'Cytoflow', u'Cytoflow Documentation',
+   u'Brian Teague', 'Cytoflow', 'One line description of project.',
    'Miscellaneous'),
 ]
 
@@ -311,9 +314,6 @@ texinfo_documents = [
 def setup(app):
     app.connect('builder-inited', run_apidoc)
     app.connect('builder-inited', set_builder_config)
-
-    app.connect('autodoc-process-docstring', strip_rubrics)
-    app.connect('autodoc-skip-member', skip_methods)
 
     sys.modules['sys'].IN_SPHINX = True
         
@@ -338,42 +338,26 @@ def run_apidoc(app):
     from sphinx.apidoc import main
     sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
     cur_dir = os.path.abspath(os.path.dirname(__file__))
-    module = os.path.join(cur_dir,"..","cytoflow")    
     
-    main([None, '-T', '-e', '-E', '-f', '-o', cur_dir, module])    
+    try:
+        filelist = glob.glob(os.path.join(cur_dir, "cytoflow.*.rst"))
+        for f in filelist:
+            print(f)
+            os.unlink(f)
+    except FileNotFoundError:
+        pass
     
-def skip_methods(app, what, name, obj, skip, options):
-#     print(name, what)
-    if tags.has("embedded_help") and what == 'class':
-        return True
+    try:
+        filelist = glob.glob(os.path.join(cur_dir, "cytoflowgui.*.rst"))
+        for f in filelist:
+            print(f)
+            os.unlink(f)
+    except FileNotFoundError:
+        pass
     
-    return None
-
-def strip_rubrics(app, what, name, obj, options, lines):
-    if tags.has("embedded_help") and what == 'class':
-        strip_rubric('Examples', lines)
-        strip_rubric('Notes', lines)
-        
-def strip_rubric(name, lines):
-        first_line = None
-        for i, line in enumerate(lines):
-            if line == ".. rubric:: " + name:
-                first_line = i
-                break    
-            
-        if first_line is None:
-            return None, None
-           
-        last_line = None
-            
-        for i in range(first_line + 1, len(lines)):
-            if lines[i].startswith(".. rubric::"):
-                last_line = i - 2
-                break
-            
-        if last_line is None:
-            last_line = len(lines) - 1
-            
-        if first_line is not None and last_line is not None:
-            del lines[first_line:last_line]
-    
+    if tags.has("embedded_help"):
+        module = os.path.join(cur_dir,"..","cytoflowgui")
+        main([None, '-T', '-e', '-E', '-f', '-o', cur_dir, module])    
+    else:
+        module = os.path.join(cur_dir,"..","cytoflow")    
+        main([None, '-T', '-e', '-E', '-f', '-o', cur_dir, module])    
