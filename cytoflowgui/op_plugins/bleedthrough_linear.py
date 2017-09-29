@@ -17,9 +17,58 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 '''
-Created on Oct 9, 2015
+Linear Bleedthrough Compensation
+--------------------------------
 
-@author: brian
+Apply matrix-based bleedthrough correction to a set of fluorescence channels.
+
+This is a traditional matrix-based compensation for bleedthrough.  For each
+pair of channels, the module estimates the proportion of the first channel
+that bleeds through into the second, then performs a matrix multiplication to 
+compensate the raw data.
+
+This works best on data that has had autofluorescence removed first;
+if that is the case, then the autofluorescence will be subtracted from
+the single-color controls too.
+
+To use, specify the single-color control files and which channels they should
+be measured in, then click **Estimate**.  Check the diagnostic plot to make sure
+the estimation looks good.  There must be at least two channels corrected.
+
+.. object:: Add Control, Remove Control
+
+    Add or remove single-color controls.
+    
+.. object: Subset
+
+    If you specify a subset here, only that data will be used to calculate the
+    bleedthrough matrix.  For example, if you applied a gate to the morphological
+    channels, that gate can be specified here to restrict the estimation to
+    only events that are in that gate.
+    
+.. plot:: 
+
+    import cytoflow as flow
+    import_op = flow.ImportOp()
+    import_op.tubes = [flow.Tube(file = "tasbe/rby.fcs")]
+    ex = import_op.apply()
+    
+    af_op = flow.AutofluorescenceOp()
+    af_op.channels = ["Pacific Blue-A", "FITC-A", "PE-Tx-Red-YG-A"]
+    af_op.blank_file = "tasbe/blank.fcs"
+
+    af_op.estimate(ex)
+    ex2 = af_op.apply(ex)
+
+    bl_op = flow.BleedthroughLinearOp()
+    bl_op.controls = {'Pacific Blue-A' : 'tasbe/ebfp.fcs',
+                      'FITC-A' : 'tasbe/eyfp.fcs',
+                      'PE-Tx-Red-YG-A' : 'tasbe/mkate.fcs'}    
+
+    bl_op.estimate(ex2)
+    bl_op.default_view().plot(ex2)  
+
+    ex2 = bl_op.apply(ex2)  
 '''
 
 import warnings
@@ -180,9 +229,6 @@ class BleedthroughLinearPluginView(PluginViewMixin, BleedthroughLinearDiagnostic
 
 @provides(IOperationPlugin)
 class BleedthroughLinearPlugin(Plugin, PluginHelpMixin):
-    """
-    class docs
-    """
     
     id = 'edu.mit.synbio.cytoflowgui.op_plugins.bleedthrough_linear'
     operation_id = 'edu.mit.synbio.cytoflow.operations.bleedthrough_linear'

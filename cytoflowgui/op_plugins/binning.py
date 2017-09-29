@@ -17,9 +17,54 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 '''
-Created on Oct 9, 2015
+Binning
+-------
 
-@author: brian
+Bin data along an axis.
+
+This operation creates equally spaced bins (in linear or log space)
+along an axis and adds a condition assigning each event to a bin.  The
+value of the event's condition is the left end of the bin's interval in
+which the event is located.
+
+.. object:: Name
+
+    The name of the new condition created by this operation.
+    
+.. object:: Channel
+
+    The channel to apply the binning to.
+    
+.. object:: Scale
+
+    The scale to apply to the channel before binning.
+    
+.. object:: Num Bins
+
+    How many (equi-spaced) bins to create?  Must set either **Num Bins** or
+    **Bin Width**.  If both are set, **Num Bins** takes precedence.
+    
+.. object:: Bin Width
+
+    How wide should each bin be?  Can only set if **Scale** is *linear* or
+    *log* (in which case, **Bin Width** is in log10-units.)
+
+.. plot::
+
+    import cytoflow as flow
+    import_op = flow.ImportOp()
+    import_op.tubes = [flow.Tube(file = "tasbe/rby.fcs")]
+    ex = import_op.apply()
+
+    bin_op = flow.BinningOp()
+    bin_op.name = "Bin"
+    bin_op.channel = "FITC-A"
+    bin_op.scale = "log"
+    bin_op.bin_width = 0.2
+
+    ex2 = bin_op.apply(ex)
+
+    bin_op.default_view().plot(ex2) 
 '''
 
 import random, string, warnings
@@ -123,10 +168,7 @@ class BinningPluginView(PluginViewMixin, BinningView):
 
 @provides(IOperationPlugin)
 class BinningPlugin(Plugin, PluginHelpMixin):
-    """
-    class docs
-    """
-    
+ 
     id = 'edu.mit.synbio.cytoflowgui.op_plugins.binning'
     operation_id = 'edu.mit.synbio.cytoflow.operations.binning'
 

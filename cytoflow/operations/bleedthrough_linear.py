@@ -84,6 +84,20 @@ class BleedthroughLinearOp(HasStrictTraits):
         >>> import_op = flow.ImportOp()
         >>> import_op.tubes = [flow.Tube(file = "tasbe/rby.fcs")]
         >>> ex = import_op.apply()
+
+    Correct for autofluorescence
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> af_op = flow.AutofluorescenceOp()
+        >>> af_op.channels = ["Pacific Blue-A", "FITC-A", "PE-Tx-Red-YG-A"]
+        >>> af_op.blank_file = "tasbe/blank.fcs"
+        
+        >>> af_op.estimate(ex)
+        >>> af_op.default_view().plot(ex)  
+
+        >>> ex2 = af_op.apply(ex) 
     
     Create and parameterize the operation
     
@@ -100,21 +114,21 @@ class BleedthroughLinearOp(HasStrictTraits):
     .. plot::
         :context: close-figs 
     
-        >>> bl_op.estimate(ex)
+        >>> bl_op.estimate(ex2)
     
     Plot the diagnostic plot
     
     .. plot::
         :context: close-figs
 
-        >>> bl_op.default_view().plot(ex)  
+        >>> bl_op.default_view().plot(ex2)  
 
     Apply the operation to the experiment
     
     .. plot::
         :context: close-figs
     
-        >>> ex2 = bl_op.apply(ex)  
+        >>> ex2 = bl_op.apply(ex2)  
     
     """
     
@@ -384,14 +398,21 @@ class BleedthroughLinearDiagnostic(HasStrictTraits):
                     
                 tube_data = tube_exp.data
                 
-                xscale = util.scale_factory("log", tube_exp, channel = from_channel)
-                yscale = util.scale_factory("log", tube_exp, channel = to_channel)
+                # for ReadTheDocs, which doesn't have swig
+                import sys
+                if sys.modules['cytoflow.utility.logicle_ext.Logicle'].__name__ != 'cytoflow.utility.logicle_ext.Logicle':
+                    scale_name = 'log'
+                else:
+                    scale_name = 'logicle'
+                
+                xscale = util.scale_factory(scale_name, tube_exp, channel = from_channel)
+                yscale = util.scale_factory(scale_name, tube_exp, channel = to_channel)
 
                 plt.subplot(num_channels, 
                             num_channels, 
                             from_idx + (to_idx * num_channels) + 1)
-                plt.xscale('log', **xscale.mpl_params)
-                plt.yscale('log', **yscale.mpl_params)
+                plt.xscale(scale_name, **xscale.mpl_params)
+                plt.yscale(scale_name, **yscale.mpl_params)
                 plt.xlabel(from_channel)
                 plt.ylabel(to_channel)
                 plt.scatter(tube_data[from_channel],

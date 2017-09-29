@@ -17,9 +17,43 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 '''
-Created on Oct 9, 2015
+Color Translation
+-----------------
 
-@author: brian
+Translate measurements from one color's scale to another, using a two-color
+or three-color control.
+    
+To use, set up the **Controls** list with the channels to convert and the FCS 
+files to compute the mapping.  Click **Estimate** and make sure to check that 
+the diagnostic plots look good.
+    
+.. object:: Add Control, Remove Control
+
+    Add and remove controls to compute the channel mappings.
+    
+.. object:: Use mixture model?
+
+    If ``True``, try to model the **from** channel as a mixture of expressing
+    cells and non-expressing cells (as you would get with a transient
+    transfection), then weight the regression by the probability that the
+    the cell is from the top (transfected) distribution.  Make sure you 
+    check the diagnostic plots to see that this worked!
+    
+.. plot::
+    
+    import cytoflow as flow
+    import_op = flow.ImportOp()
+    import_op.tubes = [flow.Tube(file = "tasbe/mkate.fcs")]
+    ex = import_op.apply()
+
+    color_op = flow.ColorTranslationOp()
+    color_op.controls = {("Pacific Blue-A", "FITC-A") : "tasbe/rby.fcs",
+                         ("PE-Tx-Red-YG-A", "FITC-A") : "tasbe/rby.fcs"}
+    color_op.mixture_model = True
+
+    color_op.estimate(ex)
+    color_op.default_view().plot(ex)  
+    ex = color_op.apply(ex)  
 '''
 
 import warnings
@@ -193,10 +227,7 @@ class ColorTranslationPluginView(PluginViewMixin, ColorTranslationDiagnostic):
 
 @provides(IOperationPlugin)
 class ColorTranslationPlugin(Plugin, PluginHelpMixin):
-    """
-    class docs
-    """
-    
+ 
     id = 'edu.mit.synbio.cytoflowgui.op_plugins.color_translation'
     operation_id = 'edu.mit.synbio.cytoflow.operations.color_translation'
 

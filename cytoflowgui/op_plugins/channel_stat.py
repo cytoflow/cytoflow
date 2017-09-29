@@ -17,9 +17,34 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 '''
-Created on Oct 9, 2015
+Channel statistic
+-----------------
 
-@author: brian
+Apply a function to subsets of a data set, and add it as a statistic
+to the experiment.
+
+First, the module groups the data by the unique values of the variables
+in **By**, then applies **Function** callable to the **Channel** in each 
+group.
+    
+
+.. object:: Name
+
+    The operation name.  Becomes the first part of the new statistic's name.
+    
+.. object:: Channel
+
+    The channel to apply the function to.
+    
+.. object:: Function
+
+    The function to compute on each group.
+        
+.. object:: Subset
+
+    Only apply the function to a subset of the data.  Useful if the function 
+    is very slow.
+
 '''
 
 import numpy as np
@@ -129,9 +154,6 @@ class ChannelStatisticPluginOp(PluginOpMixin, ChannelStatisticOp):
 
 @provides(IOperationPlugin)
 class ChannelStatisticPlugin(Plugin, PluginHelpMixin):
-    """
-    class docs
-    """
     
     id = 'edu.mit.synbio.cytoflowgui.op_plugins.channel_statistic'
     operation_id = 'edu.mit.synbio.cytoflow.operations.channel_statistic'

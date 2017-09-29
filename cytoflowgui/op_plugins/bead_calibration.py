@@ -17,9 +17,73 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 '''
-Created on Oct 9, 2015
+Bead Calibration
+----------------
 
-@author: brian
+Calibrate arbitrary channels to molecules-of-fluorophore using fluorescent
+beads (eg, the **Spherotech RCP-30-5A** rainbow beads.)
+
+Computes a log-linear calibration function that maps arbitrary fluorescence
+units to physical units (ie molecules equivalent fluorophore, or *MEF*).
+
+To use, set **Beads** to the beads you calibrated with (check the lot!) and
+**Beads File** to an FCS file containing events collected *using
+the same cytometer settings as the data you're calibrating*.  Then, click 
+**Add a channel** to add the channels to calibrate, and set both the channel 
+name and the units you want calibrate to.  Click **Estimate**, and *make sure
+you check the diagnostic plot to see that the correct peaks were found.*
+
+If it didn't find all the peaks (or found too many), try tweaking 
+**Peak Quantile**, **Peak Threshold** and **Peak Cutoff**.  If you can't make 
+the peak finding work by tweaking , please submit a bug report!
+
+.. object:: Beads
+
+    The beads you're calibrating with.  Make sure to check the lot number!
+
+.. object:: Beads file
+
+    A file containing the FCS events from the beads.
+    
+.. object:: Channels
+    
+    A list of the channels you want calibrated and the units you want them 
+    calibrated in.       
+    
+.. object:: Peak Quantile
+
+    Peaks must be at least this quantile high to be considered.  Default = 80.
+    
+.. object:: Peak Threshold
+
+    Don't search for peaks below this brightness.  Default = 100.
+    
+.. object: Peak Cutoff
+
+    Don't search for peaks above this brightness.  Default: 70% of detector range.
+
+    
+.. plot::
+    
+    import cytoflow as flow
+    import_op = flow.ImportOp()
+    import_op.tubes = [flow.Tube(file = "tasbe/rby.fcs")]
+    ex = import_op.apply()
+
+    bead_op = flow.BeadCalibrationOp()
+    beads = "Spherotech RCP-30-5A Lot AA01-AA04, AB01, AB02, AC01, GAA01-R"
+    bead_op.beads = flow.BeadCalibrationOp.BEADS[beads]
+    bead_op.units = {"Pacific Blue-A" : "MEBFP",
+                     "FITC-A" : "MEFL",
+                     "PE-Tx-Red-YG-A" : "MEPTR"}
+    
+    bead_op.beads_file = "tasbe/beads.fcs"
+
+    bead_op.estimate(ex)
+
+    bead_op.default_view().plot(ex)  
+
+    ex = bead_op.apply(ex)  
 '''
 
 from traitsui.api import (View, Item, EnumEditor, Controller, VGroup, 
@@ -210,9 +274,6 @@ class BeadCalibrationPluginView(PluginViewMixin, BeadCalibrationDiagnostic):
 
 @provides(IOperationPlugin)
 class BeadCalibrationPlugin(Plugin, PluginHelpMixin):
-    """
-    class docs
-    """
     
     id = 'edu.mit.synbio.cytoflowgui.op_plugins.bead_calibrate'
     operation_id = 'edu.mit.synbio.cytoflow.operations.bead_calibrate'

@@ -18,16 +18,17 @@ import glob
 import matplotlib as mpl
 mpl.use("Agg")
 
-from mock import Mock as MagicMock
-
-class Mock(MagicMock):
-    @classmethod
-    def __getattr__(cls, name):
-            return Mock()
-
-MOCK_MODULES = ['cytoflow.utility.logicle_ext.Logicle']
-
-sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+if not tags.has("embedded_help"):  # @UndefinedVariable
+    from mock import Mock as MagicMock
+    
+    class Mock(MagicMock):
+        @classmethod
+        def __getattr__(cls, name):
+                return Mock()
+    
+    MOCK_MODULES = ['cytoflow.utility.logicle_ext.Logicle']
+    
+    sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
