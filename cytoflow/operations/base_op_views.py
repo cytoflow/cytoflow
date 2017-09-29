@@ -129,10 +129,10 @@ class ByView(OpView):
                                              "Facet {} not in the experiment"
                                             .format(facet))
             
-            if facet not in self.by:
-                raise util.CytoflowViewError('facets',
-                                             "Facet {} must be one of {}"
-                                             .format(facet, self.by))
+#             if facet not in self.by:
+#                 raise util.CytoflowViewError('facets',
+#                                              "Facet {} must be one of {}"
+#                                              .format(facet, self.by))
                 
         if len(self.facets) != len(set(self.facets)):
             raise util.CytoflowViewError('facets',

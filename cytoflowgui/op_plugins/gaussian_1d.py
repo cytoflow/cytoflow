@@ -17,9 +17,152 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 '''
-Created on Oct 9, 2015
+Gaussian Mixture Model (1D)
+---------------------------
 
-@author: brian
+
+    This module fits a Gaussian mixture model with a specified number of
+    components to one channel.
+    
+    If **Num_components` ``> 1``, :meth:`apply` creates a new categorical 
+    metadata variable named  ``name``, with possible values ``{name}_1`` .... 
+    ``name_n`` where ``n`` is the number of components.  An event is assigned to 
+    ``name_i`` category if it has the highest posterior probability of having been 
+    produced by component ``i``.  If an event has a value that is outside the
+    range of one of the channels' scales, then it is assigned to ``{name}_None``.
+    
+    Optionally, if :attr:`sigma` is greater than 0, :meth:`apply` creates new  
+    ``boolean`` metadata variables named ``{name}_1`` ... ``{name}_n`` where 
+    ``n`` is the number of components.  The column ``{name}_i`` is ``True`` if 
+    the event is less than :attr:`sigma` standard deviations from the mean of 
+    component ``i``.  If :attr:`num_components` is ``1``, :attr:`sigma` must be 
+    greater than 0.
+    
+    Optionally, if :attr:`posteriors` is ``True``, :meth:`apply` creates a new 
+    ``double`` metadata variables named ``{name}_1_posterior`` ... 
+    ``{name}_n_posterior`` where ``n`` is the number of components.  The column 
+    ``{name}_i_posterior`` contains the posterior probability that this event is 
+    a member of component ``i``.
+    
+    Finally, the same mixture model (mean and standard deviation) may not
+    be appropriate for every subset of the data.  If this is the case, you
+    can use the :attr:`by` attribute to specify metadata by which to aggregate
+    the data before estimating (and applying) a mixture model.  The number of 
+    components must be the same across each subset, though.
+    
+    
+    Attributes
+    ----------
+    name : Str
+        The operation name; determines the name of the new metadata column
+        
+    channels : List(Str)
+        The channels to apply the mixture model to.
+
+    scale : Dict(Str : {"linear", "logicle", "log"})
+        Re-scale the data in the specified channels before fitting.  If a 
+        channel is in :attr:`channels` but not in :attr:`scale`, the current 
+        package-wide default (set with :func:`~.set_default_scale`) is used.
+
+    num_components : Int (default = 1)
+        How many components to fit to the data?  Must be a positive integer.
+
+    sigma : Float (default = 0.0)
+        How many standard deviations on either side of the mean to include
+        in the boolean variable ``{name}_i``?  Must be ``>= 0.0``.  If 
+        :attr:`num_components` is ``1``, must be ``> 0``.
+    
+    by : List(Str)
+        A list of metadata attributes to aggregate the data before estimating
+        the model.  For example, if the experiment has two pieces of metadata,
+        ``Time`` and ``Dox``, setting :attr:`by` to ``["Time", "Dox"]`` will fit 
+        the model separately to each subset of the data with a unique combination of
+        ``Time`` and ``Dox``.
+
+    posteriors : Bool (default = False)
+        If ``True``, add columns named ``{name}_{i}_posterior`` giving the 
+        posterior probability that the event is in component ``i``.  Useful for 
+        filtering out low-probability events.
+        
+    Notes
+    -----
+    
+    We use the Mahalnobis distance as a multivariate generalization of the 
+    number of standard deviations an event is from the mean of the multivariate
+    gaussian.  If :math:`\\vec{x}` is an observation from a distribution with 
+    mean :math:`\\vec{\\mu}` and :math:`S` is the covariance matrix, then the 
+    Mahalanobis distance is :math:`\\sqrt{(x - \\mu)^T \\cdot S^{-1} \\cdot (x - \\mu)}`.
+    
+    Examples
+    --------
+    
+    .. plot::
+        :context: close-figs
+        
+        Make a little data set.
+    
+        >>> import cytoflow as flow
+        >>> import_op = flow.ImportOp()
+        >>> import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",
+        ...                              conditions = {'Dox' : 10.0}),
+        ...                    flow.Tube(file = "Plate01/CFP_Well_A4.fcs",
+        ...                              conditions = {'Dox' : 1.0})]
+        >>> import_op.conditions = {'Dox' : 'float'}
+        >>> ex = import_op.apply()
+    
+    Create and parameterize the operation.
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> gm_op = flow.GaussianMixtureOp(name = 'Gauss',
+        ...                                channels = ['Y2-A'],
+        ...                                scale = {'Y2-A' : 'log'},
+        ...                                num_components = 2)
+        
+    Estimate the clusters
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> gm_op.estimate(ex)
+        
+    Plot a diagnostic view
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> gm_op.default_view().plot(ex)
+
+    Apply the gate
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> ex2 = gm_op.apply(ex)
+
+    Plot a diagnostic view with the event assignments
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> gm_op.default_view().plot(ex2)
+        
+    And with two channels:
+    
+    .. plot::
+        :context: close-figs
+        
+        >>> gm_op = flow.GaussianMixtureOp(name = 'Gauss',
+        ...                                channels = ['V2-A', 'Y2-A'],
+        ...                                scale = {'V2-A' : 'log',
+        ...                                         'Y2-A' : 'log'},
+        ...                                num_components = 2)
+        >>> gm_op.estimate(ex)   
+        >>> ex2 = gm_op.apply(ex)
+        >>> gm_op.default_view().plot(ex2)
+        
+
 '''
 
 from sklearn import mixture
@@ -32,7 +175,7 @@ from traits.api import (provides, Callable, Instance, Str, List, Dict, Any,
 from pyface.api import ImageResource
 
 from cytoflow.operations import IOperation
-from cytoflow.operations.gaussian_1d import GaussianMixture1DOp, GaussianMixture1DView
+from cytoflow.operations.gaussian import GaussianMixtureOp, GaussianMixture1DView
 from cytoflow.views.i_selectionview import IView
 import cytoflow.utility as util
 
@@ -50,7 +193,7 @@ class GaussianMixture1DHandler(OpHandlerMixin, Controller):
                     Item('channel',
                          editor=EnumEditor(name='context.previous_wi.channels'),
                          label = "Channel"),
-                    Item('scale'),
+                    Item('channel_scale'),
                     VGroup(
                     Item('num_components', 
                          editor = TextEditor(auto_set = False),
@@ -76,14 +219,16 @@ class GaussianMixture1DHandler(OpHandlerMixin, Controller):
                     show_border = False),
                     shared_op_traits)
 
-class GaussianMixture1DPluginOp(PluginOpMixin, GaussianMixture1DOp):
+class GaussianMixture1DPluginOp(PluginOpMixin, GaussianMixtureOp):
     handler_factory = Callable(GaussianMixture1DHandler)
+    
+    channel = Str
+    channel_scale = util.ScaleEnum(estimate = True)
     
     # add "estimate" metadata
     num_components = util.PositiveInt(1, estimate = True)
     sigma = util.PositiveFloat(0.0, allow_zero = True, estimate = True)
     by = List(Str, estimate = True)
-    scale = util.ScaleEnum(estimate = True)
  
     # bits to support the subset editor
     
@@ -99,13 +244,27 @@ class GaussianMixture1DPluginOp(PluginOpMixin, GaussianMixture1DOp):
         self.changed = (Changed.ESTIMATE, ('subset_list', self.subset_list))
     
     _gmms = Dict(Any, Instance(mixture.GaussianMixture), transient = True)
+
+    @on_trait_change('channel')
+    def _channel_changed(self):
+        self.channels = [self.channel]
+        self.changed = (Changed.ESTIMATE, ('channels', self.channels))
+        
+    @on_trait_change('channel_scale')
+    def _scale_changed(self):
+        if self.channel:
+            self.scale[self.channel] = self.channel_scale
+        self.changed = (Changed.ESTIMATE, ('scale', self.scale))
     
     def estimate(self, experiment):
-        GaussianMixture1DOp.estimate(self, experiment, subset = self.subset)
+        super().estimate(experiment, subset = self.subset)
         self.changed = (Changed.ESTIMATE_RESULT, self)
     
     def default_view(self, **kwargs):
-        return GaussianMixture1DPluginView(op = self, **kwargs)
+        return GaussianMixture1DPluginView(op = self, 
+#                                            channel = self.channel,
+#                                            scale = self.channel_scale,
+                                           **kwargs)
     
     def should_clear_estimate(self, changed):
         if changed == Changed.ESTIMATE:
@@ -114,7 +273,7 @@ class GaussianMixture1DPluginOp(PluginOpMixin, GaussianMixture1DOp):
     
     def clear_estimate(self):
         self._gmms = {}
-        self._scale = None
+        self._scale = {}
         self.changed = (Changed.ESTIMATE_RESULT, self)
         
 class GaussianMixture1DViewHandler(ViewHandlerMixin, Controller):
@@ -145,31 +304,36 @@ class GaussianMixture1DPluginView(PluginViewMixin, GaussianMixture1DView):
     op = Instance(IOperation, fixed = True)
     subset = DelegatesTo('op', transient = True)
     by = DelegatesTo('op', status = True)
+    channel = DelegatesTo('op', transient = True)
+    scale = DelegatesTo('op', 'channel_scale', transient = True)
 
     def plot_wi(self, wi):
-        if wi.current_view_plot_names:
-            self.plot(wi.previous_wi.result, plot_name = wi.current_plot)
+        if wi.result:
+            if wi.current_view_plot_names:
+                self.plot(wi.result, plot_name = wi.current_plot)
+            else:
+                self.plot(wi.result)
         else:
-            self.plot(wi.previous_wi.result)
+            if wi.current_view_plot_names:
+                self.plot(wi.previous_wi.result, plot_name = wi.current_plot)
+            else:
+                self.plot(wi.previous_wi.result)
         
     def enum_plots_wi(self, wi):
-        try:
-            return self.enum_plots(wi.previous_wi.result)
-        except:
-            return []
-        
-    def should_plot(self, changed):
-        if changed == Changed.RESULT:
-            return False
-        
-        return True
+        if wi.result:
+            try:
+                return self.enum_plots(wi.result)
+            except:
+                return []
+        else:
+            try:
+                return self.enum_plots(wi.previous_wi.result)
+            except:
+                return []
 
 @provides(IOperationPlugin)
 class GaussianMixture1DPlugin(Plugin, PluginHelpMixin):
-    """
-    class docs
-    """
-    
+
     id = 'edu.mit.synbio.cytoflowgui.op_plugins.gaussian_1d'
     operation_id = 'edu.mit.synbio.cytoflow.operations.gaussian_1d'
 

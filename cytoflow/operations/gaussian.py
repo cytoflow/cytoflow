@@ -627,12 +627,17 @@ class GaussianMixture1DView(By1DView, AnnotatingView, HistogramView):
         """
         
         view, trait_name = self._strip_trait(self.op.name)
+        
+        if self.channel in self.op._scale:
+            scale = self.op._scale[self.channel]
+        else:
+            scale = util.scale_factory(self.scale, experiment, channel = self.channel)
     
         super(GaussianMixture1DView, view).plot(experiment,
                                                 annotation_facet = self.op.name,
                                                 annotation_trait = trait_name,
                                                 annotations = self.op._gmms,
-                                                scale = self.op._scale[self.channel],
+                                                scale = scale,
                                                 **kwargs)
         
         
