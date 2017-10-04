@@ -198,13 +198,12 @@ class GaussianMixture1DPluginOp(PluginOpMixin, GaussianMixtureOp):
     
     def default_view(self, **kwargs):
         return GaussianMixture1DPluginView(op = self, 
-#                                            channel = self.channel,
-#                                            scale = self.channel_scale,
                                            **kwargs)
     
     def should_clear_estimate(self, changed):
         if changed == Changed.ESTIMATE:
             return True
+        
         return False
     
     def clear_estimate(self):
