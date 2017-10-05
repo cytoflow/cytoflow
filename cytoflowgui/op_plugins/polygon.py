@@ -17,9 +17,66 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 '''
-Created on Apr 25, 2015
+Polygon Gate
+------------
 
-@author: brian
+Draw a polygon gate.  To add vertices, use a single-click; to close the
+polygon, double-click.
+
+.. object:: Name
+
+    The operation name.  Used to name the new metadata field that's created by 
+    this module.
+    
+.. object:: X Channel
+
+    The name of the channel on the gate's X axis.
+
+.. object:: Y Channel
+
+    The name of the channel on the gate's Y axis.
+    
+.. object:: X Scale
+
+    The scale of the X axis for the interactive plot.
+    
+.. object:: Y Scale
+
+    The scale of the Y axis for the interactive plot
+    
+.. object:: Hue facet
+
+    Show different experimental conditions in different colors.
+    
+.. object:: Subset
+
+    Show only a subset of the data.
+   
+.. plot::
+
+    import cytoflow as flow
+    import_op = flow.ImportOp()
+    import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",
+                                 conditions = {'Dox' : 10.0}),
+                       flow.Tube(file = "Plate01/CFP_Well_A4.fcs",
+                                 conditions = {'Dox' : 1.0})]
+    import_op.conditions = {'Dox' : 'float'}
+    ex = import_op.apply()
+
+    p = flow.PolygonOp(name = "Polygon",
+                       xchannel = "V2-A",
+                       ychannel = "Y2-A")
+    p.vertices = [(23.411982294776319, 5158.7027015021222), 
+                  (102.22182270573683, 23124.058843387455), 
+                  (510.94519955277201, 23124.058843387455), 
+                  (1089.5215641232173, 3800.3424832180476), 
+                  (340.56382570202402, 801.98947404942271), 
+                  (65.42597937575897, 1119.3133482602157)]
+
+    p.default_view(huefacet = "Dox",
+                   xscale = 'log',
+                   yscale = 'log').plot(ex)
+
 '''
 
 from traits.api import provides, Callable, Str, Instance, DelegatesTo
@@ -46,7 +103,7 @@ class PolygonHandler(OpHandlerMixin, Controller):
                     Item('xchannel',
                          editor=EnumEditor(name='context.previous_wi.channels'),
                          label = "X Channel"),
-                    Item('object.ychannel',
+                    Item('ychannel',
                          editor=EnumEditor(name='context.previous_wi.channels'),
                          label = "Y Channel"),
                     shared_op_traits) 
@@ -111,9 +168,6 @@ class PolygonPluginOp(PluginOpMixin, PolygonOp):
 
 @provides(IOperationPlugin)
 class PolygonPlugin(Plugin, PluginHelpMixin):
-    """
-    class docs
-    """
     
     id = 'edu.mit.synbio.cytoflowgui.op_plugins.polygon'
     operation_id = 'edu.mit.synbio.cytoflow.operations.polygon'

@@ -47,10 +47,10 @@ class PolygonOp(HasStrictTraits):
         experiment that's created by :meth:`apply`
         
     xchannel : Str
-        The name of the first channel to apply the range gate.
+        The name of the x channel to apply the gate.
         
     ychannel : Str
-        The name of the second channel to apply the range gate.
+        The name of the y channel to apply the gate.
         
     vertices : List((Float, Float))
         The polygon verticies.  An ordered list of 2-tuples, representing

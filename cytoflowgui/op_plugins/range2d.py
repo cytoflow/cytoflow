@@ -39,6 +39,82 @@ from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.workflow import Changed
 
+'''
+2D Range Gate
+-------------
+
+Draw a 2-dimensional range gate (eg, a rectangle).  To set the gate, 
+click-and-drag on the plot.
+
+.. object:: Name
+
+    The operation name.  Used to name the new metadata field that's created by 
+    this operation.
+        
+.. object:: X channel
+
+    The name of the channel on the X axis.
+        
+.. object:: X Low
+
+    The low threshold in the X channel.
+
+.. object:: X High
+
+    The high threshold in the X channel.
+
+.. object:: Y channel
+
+    The name of the channel on the Y axis.
+        
+.. object:: Y Low
+
+    The low threshold in the Y channel.
+
+.. object:: Y High
+
+    The high threshold in the Y channel.
+
+.. object:: X Scale
+
+    The scale of the X axis for the interactive plot.
+    
+.. object:: Y Scale
+
+    The scale of the Y axis for the interactive plot
+    
+.. object:: Hue facet
+
+    Show different experimental conditions in different colors.
+    
+.. object:: Subset
+
+    Show only a subset of the data.
+        
+.. plot::
+    
+    import cytoflow as flow
+    import_op = flow.ImportOp()
+    import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",
+                                 conditions = {'Dox' : 10.0}),
+                       flow.Tube(file = "Plate01/CFP_Well_A4.fcs",
+                                 conditions = {'Dox' : 1.0})]
+    import_op.conditions = {'Dox' : 'float'}
+    ex = import_op.apply()
+
+    r = flow.Range2DOp(name = "Range2D",
+                       xchannel = "V2-A",
+                       xlow = 10,
+                       xhigh = 1000,
+                       ychannel = "Y2-A",
+                       ylow = 1000,
+                       yhigh = 20000)
+
+    r.default_view(huefacet = "Dox",
+                   xscale = 'log',
+                   yscale = 'log').plot(ex)
+'''
+
 class Range2DHandler(OpHandlerMixin, Controller):
     
     def default_traits_view(self):

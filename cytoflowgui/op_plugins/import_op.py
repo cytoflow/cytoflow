@@ -1,5 +1,4 @@
 #!/usr/bin/env python3.4
-from traits.has_traits import on_trait_change
 
 # (c) Massachusetts Institute of Technology 2015-2017
 #
@@ -17,21 +16,86 @@ from traits.has_traits import on_trait_change
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Created on Mar 15, 2015
+Import Files
+------------
 
-@author: brian
+Import FCS files and associate them with experimental conditions (metadata.)
+
+.. object:: Edit samples
+
+    Open the sample editor dialog box.
+
+.. object:: Random subsample
+
+    For very large data sets, *Cytoflow*'s interactive operation may be too slow.
+    By clicking **Random subsample**, you can tell *Cytoflow* to import a
+    smaller number of events from each FCS file, which will make interactive
+    data exploration much faster.  When you're done setting up your workflow,
+    toggle **Random subsample** off to automatically re-run the workflow with
+    the full data set.
+    
+
+..  object:: The import dialog
+
+    .. image:: _images/import.png
+
+    Allows you to specify FCS files in the experiment, and
+    the experimental conditions that each tube (or well) was subject to.
+    
+    .. note::
+    
+        You can select sort the table by clicking on a row header.
+        
+    .. note::
+    
+        You can select multiple entries in a column by clicking one, holding
+        down *Shift*, and clicking another (to select a range); or, by holding
+        down *Ctrl* and clicking multiple additional cells in the table.  If 
+        multiple cells are selected, typing a value will update all of them.
+        
+    .. note:: 
+    
+        **Each tube must have a unique set of experimental conditions.**  If a
+        tube's conditions are not unique, the row is red and you will not be
+        able to click "OK".
+    
+    .. object:: Add tubes
+    
+        Opens a file selector to add tubes.
+        
+    .. object: Remove tubes
+    
+        Removes the currently selected tubes (rows) in the table.
+        
+    .. object: Add condition
+    
+        Opens a dialog (see below) to add a new experimental condition.
+        
+    .. object: Remove condition
+    
+        Removes the currently selected condition (column) in the table.
+
+    .. object:: The new condition dialog box
+
+    
+        .. image:: _images/condition.png
+        
+            
+        .. object:: Condition name
+        
+            The name of the new condition.  The name must be a valid Python identifier:
+            it must start with a letter or _, and contain only letters, numbers and _.
+            
+        .. object: Condition type
+        
+            The type of the new condition.  Allowed types are **Category**, **Number**
+            and **True/False**.
+
 """
-# 
-# if __name__ == '__main__':
-#     from traits.etsconfig.api import ETSConfig
-#     ETSConfig.toolkit = 'qt4'
-# 
-#     import os
-#     os.environ['TRAITS_DEBUG'] = "1"
 
 from traitsui.api import View, Item, Controller, TextEditor
 from traits.api import Button, Property, cached_property, provides, Callable, \
-                       Bool
+                       Bool, on_trait_change
 from pyface.api import OK as PyfaceOK
 from envisage.api import Plugin, contributes_to
 
@@ -46,9 +110,6 @@ from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin
 
 
 class ImportHandler(OpHandlerMixin, Controller):
-    """
-    A WorkflowItem that handles importing data and making a new Experiment
-    """
     
     import_event = Button(label="Edit samples...")
     samples = Property(depends_on = 'model.tubes', status = True)
@@ -122,9 +183,6 @@ class ImportPluginOp(PluginOpMixin, ImportOp):
             
 @provides(IOperationPlugin)
 class ImportPlugin(Plugin, PluginHelpMixin):
-    """
-    class docs
-    """
     
     id = 'edu.mit.synbio.cytoflowgui.op_plugins.import'
     operation_id = 'edu.mit.synbio.cytoflow.operations.import'

@@ -17,9 +17,142 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 '''
-Created on Oct 9, 2015
+TASBE Calibrated Flow Cytometry
+-------------------------------
 
-@author: brian
+This module combines all of the other calibrated flow cytometry modules
+(autofluorescence, bleedthrough compensation, bead calibration, and channel
+translation) into one easy-use-interface.
+
+.. object:: Channels
+
+    Which channels are you calibrating?
+    
+.. object:: Autofluorescence
+
+    .. object:: Blank File
+
+        The FCS file with the blank (unstained or untransformed) cells, for 
+        autofluorescence correction.
+        
+    .. plot:: 
+       :context: close-figs 
+    
+        import cytoflow as flow
+        import_op = flow.ImportOp()
+        import_op.tubes = [flow.Tube(file = "tasbe/rby.fcs")]
+        ex = import_op.apply()
+    
+        af_op = flow.AutofluorescenceOp()
+        af_op.channels = ["Pacific Blue-A", "FITC-A", "PE-Tx-Red-YG-A"]
+        af_op.blank_file = "tasbe/blank.fcs"
+    
+        af_op.estimate(ex)
+        af_op.default_view().plot(ex) 
+        ex2 = af_op.apply(ex)
+
+    
+.. object:: Bleedthrough Correction
+
+    A list of single-color controls to use in bleedthrough compensation.  
+    There's one entry per channel to compensate.
+    
+    .. object:: Channel
+    
+    The channel that this file is the single-color control for.
+    
+    .. object:: File
+    
+    The FCS file containing the single-color control data.
+    
+    .. plot::
+       :context: close-figs 
+    
+        bl_op = flow.BleedthroughLinearOp()
+        bl_op.controls = {'Pacific Blue-A' : 'tasbe/ebfp.fcs',
+                          'FITC-A' : 'tasbe/eyfp.fcs',
+                          'PE-Tx-Red-YG-A' : 'tasbe/mkate.fcs'}    
+    
+        bl_op.estimate(ex2)
+        bl_op.default_view().plot(ex2)  
+    
+        ex3 = bl_op.apply(ex2)  
+    
+.. object:: Bead Calibration
+
+    .. object: Beads
+    
+    The beads that you used for calibration.  Make sure to check the lot
+    number as well!
+    
+    .. object: Beads File
+    
+    The FCS file containing the bead data.
+    
+    .. object: Beads Unit
+    
+    The unit (such as *MEFL*) to calibrate to.
+    
+    .. object:: Peak Quantile
+    
+    The minimum quantile required to call a peak in the bead data.  Check
+    the diagnostic plot: if you have peaks that aren't getting called, decrease
+    this.  If you have "noise" peaks that are getting called incorrectly, 
+    increase this.
+    
+    .. object:: Peak Threshold
+    
+    The minumum brightness where the module will call a peak.
+    
+    .. object:: Peak Cutoff
+    
+    The maximum brightness where the module will call a peak.  Use this to 
+    remove peaks that are saturating the detector.
+    
+    .. plot::
+       :context: close-figs 
+    
+        bead_op = flow.BeadCalibrationOp()
+        beads = "Spherotech RCP-30-5A Lot AA01-AA04, AB01, AB02, AC01, GAA01-R"
+        bead_op.beads = flow.BeadCalibrationOp.BEADS[beads]
+        bead_op.units = {"Pacific Blue-A" : "MEBFP",
+                         "FITC-A" : "MEFL",
+                         "PE-Tx-Red-YG-A" : "MEPTR"}
+        bead_op.beads_file = "tasbe/beads.fcs"
+    
+        bead_op.estimate(ex2)
+        bead_op.default_view().plot(ex2)  
+        ex3 = bead_op.apply(ex2) 
+    
+.. object:: Color Translation
+
+    .. object:: To Channel
+    
+    Which channel should we rescale all the other channels to?
+    
+    .. object:: Use mixture model?
+    
+    If this is set, the module will try to separate the data using a 
+    mixture-of-Gaussians, then only compute the translation using the higher
+    population.  This is the kind of behavior that you see in a transient
+    transfection in mammalian cells, for example.
+    
+    .. object:: Translation list
+    
+    Each pair of channels must have a multi-color control from which to
+    compute the scaling factor.
+
+    .. plot::
+       :context: close-figs 
+    
+        color_op = flow.ColorTranslationOp()
+        color_op.controls = {("Pacific Blue-A", "FITC-A") : "tasbe/rby.fcs",
+                             ("PE-Tx-Red-YG-A", "FITC-A") : "tasbe/rby.fcs"}
+        color_op.mixture_model = True
+    
+        color_op.estimate(ex3)
+        color_op.default_view().plot(ex3)  
+        ex4 = color_op.apply(ex3)  
 '''
 
 import warnings
@@ -399,10 +532,7 @@ class TasbePluginView(PluginViewMixin):
 
 @provides(IOperationPlugin)
 class TasbePlugin(Plugin, PluginHelpMixin):
-    """
-    class docs
-    """
-    
+
     id = 'edu.mit.synbio.cytoflowgui.op_plugins.tasbe'
     operation_id = 'edu.mit.synbio.cytoflowgui.op_plugins.tasbe'
 

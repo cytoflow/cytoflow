@@ -16,6 +16,27 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+'''
+Ratio
+-----
+
+Adds a new "channel" to the workflow, where the value of the channel is the
+ratio of two other channels.
+
+.. object:: Name
+
+    The name of the new channel.
+    
+.. object:: Numerator
+
+    The numerator for the ratio.
+    
+.. object:: Denominator
+
+    The denominator for the ratio.
+    
+'''
+
 from traits.api import provides, Callable
 from traitsui.api import View, Item, EnumEditor, Controller, TextEditor
 from envisage.api import Plugin, contributes_to
@@ -44,10 +65,7 @@ class RatioPluginOp(PluginOpMixin, RatioOp):
 
 @provides(IOperationPlugin)
 class RatioPlugin(Plugin, PluginHelpMixin):
-    """
-    class docs
-    """
-    
+
     id = 'edu.mit.synbio.cytoflowgui.op_plugins.ratio'
     operation_id = 'edu.mit.synbio.cytoflow.operations.ratio'
 

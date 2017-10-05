@@ -44,8 +44,7 @@ estimating and applying a mixture model.
 
 .. note:: 
 
-    The number of components (and other model parameters) must be the same 
-    across each subset. 
+    **Num Components** and **Sigma** withh be the same for each subset. 
     
 .. object:: Name
         
@@ -60,7 +59,7 @@ estimating and applying a mixture model.
     Re-scale the data in **Channel** before fitting. 
 
 .. object:: Num Components
-    
+
     How many components to fit to the data?  Must be a positive integer.
 
 .. object:: Sigma 

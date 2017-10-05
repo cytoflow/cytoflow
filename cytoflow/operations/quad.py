@@ -44,7 +44,7 @@ class QuadOp(HasStrictTraits):
     Apply a quadrant gate to a cytometry experiment.
     
     Creates a new metadata column named :attr:`name`, with values ``name_1``,
-    `name_2`, `name_3`, `name_4`` ordered *clockwise* from upper-left.
+    ``name_2``, ``name_3``, ``name_4`` ordered *clockwise* from upper-left.
     
     Attributes
     ----------

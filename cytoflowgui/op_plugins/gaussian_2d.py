@@ -17,9 +17,85 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 '''
-Created on Oct 9, 2015
+Gaussian Mixture Model (2D)
+---------------------------
 
-@author: brian
+Fit a Gaussian mixture model with a specified number of components to one 
+channel.
+
+If **Num Components** is greater than 1, then this module creates a new 
+categorical metadata variable named **Name**, with possible values 
+``{name}_1`` .... ``name_n`` where ``n`` is the number of components.  
+An event is assigned to  ``name_i`` category if it has the highest posterior 
+probability of having been produced by component ``i``.  If an event has a 
+value that is outside the range of one of the channels' scales, then it is 
+assigned to ``{name}_None``.
+    
+Additionally, if **Sigma** is greater than 0, this module creates new boolean
+metadata variables named ``{name}_1`` ... ``{name}_n`` where ``n`` is the 
+number of components.  The column ``{name}_i`` is ``True`` if the event is less 
+than **Sigma** standard deviations from the mean of component ``i``.  If 
+**Num Components** is ``1``, **Sigma** must be greater than 0.
+    
+Finally, the same mixture model (mean and standard deviation) may not
+be appropriate for every subset of the data.  If this is the case, you
+can use **By** to specify metadata by which to aggregate the data before 
+estimating and applying a mixture model.  
+
+.. note:: 
+
+    **Num Components** and **Sigma** withh be the same for each subset. 
+    
+.. object:: Name
+        
+    The operation name; determines the name of the new metadata
+        
+.. object:: Channel
+    
+    The channels to apply the mixture model to.
+
+.. object:: Scale 
+
+    Re-scale the data in **Channel** before fitting. 
+
+.. object:: Num Components
+    
+    How many components to fit to the data?  Must be a positive integer.
+
+.. object:: Sigma 
+    
+    How many standard deviations on either side of the mean to include
+    in the boolean variable ``{name}_i``?  Must be ``>= 0.0``.  If 
+    **Num Components** is ``1``, must be ``> 0``.
+    
+.. object:: By 
+
+    A list of metadata attributes to aggregate the data before estimating
+    the model.  For example, if the experiment has two pieces of metadata,
+    ``Time`` and ``Dox``, setting :attr:`by` to ``["Time", "Dox"]`` will fit 
+    the model separately to each subset of the data with a unique combination of
+    ``Time`` and ``Dox``.
+
+.. plot::
+
+    import cytoflow as flow
+    import_op = flow.ImportOp()
+    import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",
+                                 conditions = {'Dox' : 10.0}),
+                       flow.Tube(file = "Plate01/CFP_Well_A4.fcs",
+                                 conditions = {'Dox' : 1.0})]
+    import_op.conditions = {'Dox' : 'float'}
+    ex = import_op.apply()
+    
+
+    gm_op = flow.GaussianMixtureOp(name = 'Gauss',
+                                   channels = ['V2-A', 'Y2-A'],
+                                   scale = {'V2-A' : 'log',
+                                            'Y2-A' : 'log'},
+                                   num_components = 2)
+    gm_op.estimate(ex)   
+    ex2 = gm_op.apply(ex)
+    gm_op.default_view().plot(ex2)
 '''
 
 from sklearn import mixture
