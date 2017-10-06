@@ -17,9 +17,37 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 '''
-Created on Oct 9, 2015
+Transform statistic
+-------------------
 
-@author: brian
+Apply a function to a statistic, and add it as a statistic
+to the experiment.
+
+First, the module groups the data by the unique values of the variables
+in **By**, then applies **Function** to the statistic in each group.
+
+.. note:: 
+
+    Statistics are a central part of *Cytoflow*.  More documentation is
+    forthcoming.
+
+.. object:: Name
+
+    The operation name.  Becomes the first part of the new statistic's name.
+    
+.. object:: Statistic
+
+    The statistic to apply the function to.
+    
+.. object:: Function
+
+    The function to compute on each group.
+        
+.. object:: Subset
+
+    Only apply the function to a subset of the input statistic.  Useful if the 
+    function is very slow.
+
 '''
 
 import numpy as np
