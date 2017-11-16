@@ -17,9 +17,60 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Created on Feb 24, 2015
+Histogram
+------------
 
-@author: brian
+Plots a histogram.
+
+.. object:: Channel
+
+    The channel for the plot.
+    
+.. object:: Scale
+
+    How to scale the X axis of the plot.
+    
+.. object:: Horizonal Facet
+
+    Make multiple plots.  Each column has a unique value of this variable.
+    
+.. object:: Vertical Facet
+
+    Make multiple plots.  Each row has a unique value of this variable.
+    
+.. object:: Color Facet
+
+    Plot with multiple colors.  Each color has a unique value of this variable.
+    
+.. object:: Color Scale
+
+    If **Color Facet** is a numeric variable, use this scale for the color
+    bar.
+    
+.. object:: Tab Facet
+
+    Make multiple plots in differen tabs; each tab's plot has a unique value
+    of this variable.
+    
+.. object:: Subset
+
+    Plot only a subset of the data in the experiment.
+    
+    
+.. plot::
+        
+    import cytoflow as flow
+    import_op = flow.ImportOp()
+    import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",
+                                 conditions = {'Dox' : 10.0}),
+                       flow.Tube(file = "Plate01/CFP_Well_A4.fcs",
+                                 conditions = {'Dox' : 1.0})]
+    import_op.conditions = {'Dox' : 'float'}
+    ex = import_op.apply()
+
+    flow.HistogramView(channel = 'Y2-A',
+                       scale = 'log',
+                       huefacet = 'Dox').plot(ex)
 """
 
 import numpy as np
@@ -41,10 +92,7 @@ from cytoflowgui.view_plugins.i_view_plugin \
     import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, PluginHelpMixin
     
 class HistogramHandler(ViewHandlerMixin, Controller):
-    """
-    docs
-    """
-    
+
     def default_traits_view(self):
         return View(VGroup(
                     VGroup(Item('channel',
@@ -118,9 +166,6 @@ class HistogramPluginView(PluginViewMixin, HistogramView):
 
 @provides(IViewPlugin)
 class HistogramPlugin(Plugin, PluginHelpMixin):
-    """
-    classdocs
-    """
 
     id = 'edu.mit.synbio.cytoflowgui.view.histogram'
     view_id = 'edu.mit.synbio.cytoflow.view.histogram'

@@ -78,7 +78,7 @@ plot_html_show_formats = False
 plot_html_show_source_link = False
 plot_working_directory = "../cytoflow/tests/data/"
 
-if tags.has("embedded_help"):
+if tags.has("embedded_help"):  # @UndefinedVariable
     plot_include_source = False
 
 # Add any paths that contain templates here, relative to this directory.
@@ -319,7 +319,7 @@ def setup(app):
     sys.modules['sys'].IN_SPHINX = True
         
 def set_builder_config(app):
-    if tags.has("embedded_help"):
+    if tags.has("embedded_help"):  # @UndefinedVariable
         app.builder.config.html_copy_source = False
         app.builder.config.html_show_sourcelink = False
         app.builder.config.html_show_copyright = False
@@ -332,8 +332,8 @@ def set_builder_config(app):
         app.builder.search = False
 
 
-def run_apidoc(app):
-    if tags.has("embedded_help"):
+def run_apidoc(_):
+    if tags.has("embedded_help"):  # @UndefinedVariable
         os.environ['SPHINX_APIDOC_OPTIONS'] = 'members'
 
     from sphinx.apidoc import main
@@ -356,9 +356,9 @@ def run_apidoc(app):
     except FileNotFoundError:
         pass
     
-    if tags.has("embedded_help"):
+    if tags.has("embedded_help"):  # @UndefinedVariable
         module = os.path.join(cur_dir,"..","cytoflowgui")
         main([None, '-T', '-e', '-E', '-f', '-o', cur_dir, module])    
     else:
         module = os.path.join(cur_dir,"..","cytoflow")    
-        main([None, '-T', '-e', '-E', '-f', '-o', cur_dir, module])    
+#         main([None, '-T', '-e', '-E', '-f', '-o', cur_dir, module])    

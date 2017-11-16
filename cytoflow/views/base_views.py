@@ -662,8 +662,17 @@ class Base1DStatisticsView(BaseStatisticsView):
         data = self._make_data(experiment)
         return super().enum_plots(experiment, data)
     
-    def plot(self, experiment, plot_name = None, **kwargs):
+    def plot(self, experiment, plot_name = None, **kwargs):       
         data = self._make_data(experiment)
+        
+        if not self.variable:
+            raise util.CytoflowViewError('variable',
+                                         "variable not set")
+            
+        if self.variable not in experiment.conditions:
+            raise util.CytoflowViewError('variable',
+                                         "variable {0} not in the experiment"
+                                    .format(self.variable))
             
         if util.is_numeric(experiment[self.variable]):
             xscale = util.scale_factory(self.xscale, experiment, condition = self.variable)

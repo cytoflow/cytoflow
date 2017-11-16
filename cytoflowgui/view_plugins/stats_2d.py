@@ -17,9 +17,88 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Created on Feb 24, 2015
+Plot two statistics on a scatter plot.  A point (X,Y) is drawn for every
+pair of elements with the same value of **Variable**; the X value is from 
+** X statistic** and the Y value is from **Y statistic**.
 
-@author: brian
+.. object:: X Statistic
+
+    Which statistic to plot on the X axis.
+
+.. object:: Y Statistic
+
+    Which statistic to plot on the Y axis.  Must have the same indices as
+    **X Statistic**.
+
+.. object:: X Scale, Y Scale
+
+    How to scale the X and Y axes.
+    
+.. object:: Variable
+
+    The statistic variable to put on the plot.
+
+.. object:: Horizontal Facet
+
+    Make muliple plots, with each column representing a subset of the statistic
+    with a different value for this variable.
+        
+.. object:: Vertical Facet
+
+    Make multiple plots, with each row representing a subset of the statistic
+    with a different value for this variable.
+    
+.. object:: Color Facet
+
+    Make lines on the plot with different colors; each color represents a subset
+    of the statistic with a different value for this variable.
+    
+.. object:: Color Scale
+
+    If **Color Facet** is a numeric variable, use this scale for the color
+    bar.
+    
+.. object:: X Error Statistic
+
+    A statistic to use to make error bars in the X direction.  Must have the 
+    same indices as the statistic in **X Statistic**.
+
+.. object:: Y Error Statistic
+
+    A statistic to use to make error bars in the Y direction.  Must have the 
+    same indices as the statistic in **Y Statistic**.
+    
+.. object:: Subset
+
+    Plot only a subset of the statistic.
+
+.. plot::
+
+    import cytoflow as flow
+    import_op = flow.ImportOp()
+    import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",
+                                 conditions = {'Dox' : 10.0}),
+                       flow.Tube(file = "Plate01/CFP_Well_A4.fcs",
+                                 conditions = {'Dox' : 1.0})]
+    import_op.conditions = {'Dox' : 'float'}
+    ex = import_op.apply()
+
+    ch_op = flow.ChannelStatisticOp(name = 'MeanByDox',
+                        channel = 'Y2-A',
+                        function = flow.geom_mean,
+                        by = ['Dox'])
+    ex2 = ch_op.apply(ex)
+    ch_op_2 = flow.ChannelStatisticOp(name = 'SdByDox',
+                          channel = 'Y2-A',
+                          function = flow.geom_sd,
+                          by = ['Dox'])
+    ex3 = ch_op_2.apply(ex2)
+    
+    flow.Stats2DView(variable = 'Dox',
+                     xstatistic = ('MeanByDox', 'geom_mean'),
+                     xscale = 'log',
+                     ystatistic = ('SdByDox', 'geom_sd'),
+                     yscale = 'log').plot(ex3)
 """
 
 import pandas as pd
@@ -39,10 +118,7 @@ from cytoflowgui.view_plugins.i_view_plugin \
     import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, PluginHelpMixin
     
 class Stats2DHandler(ViewHandlerMixin, Controller):
-    """
-    docs
-    """
-    
+
     indices = Property(depends_on = "context.statistics, model.xstatistic, model.ystatistic, model.subset")
     numeric_indices = Property(depends_on = "context.statistics, model.xstatistic, model.ystatistic, model.subset")
     levels = Property(depends_on = "context.statistics, model.xstatistic, model.ystatistic")
@@ -191,9 +267,6 @@ class Stats2DPluginView(PluginViewMixin, Stats2DView):
 
 @provides(IViewPlugin)
 class Stats2DPlugin(Plugin, PluginHelpMixin):
-    """
-    classdocs
-    """
 
     id = 'edu.mit.synbio.cytoflowgui.view.stats2d'
     view_id = 'edu.mit.synbio.cytoflow.view.stats2d'

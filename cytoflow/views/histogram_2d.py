@@ -21,8 +21,6 @@ cytoflow.views.histogram_2d
 ---------------------------
 """
 
-import warnings
-
 from traits.api import provides
 
 import matplotlib.pyplot as plt

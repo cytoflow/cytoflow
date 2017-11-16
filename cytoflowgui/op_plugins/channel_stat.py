@@ -24,8 +24,7 @@ Apply a function to subsets of a data set, and add it as a statistic
 to the experiment.
 
 First, the module groups the data by the unique values of the variables
-in **By**, then applies **Function** callable to the **Channel** in each 
-group.
+in **By**, then applies **Function** to the **Channel** in each group.
     
 
 .. object:: Name

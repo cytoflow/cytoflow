@@ -158,7 +158,7 @@ translation) into one easy-use-interface.
 import warnings
 
 from traitsui.api import (View, Item, EnumEditor, Controller, VGroup, 
-                          CheckListEditor, ButtonEditor, Heading, 
+                          CheckListEditor, ButtonEditor, 
                           HGroup, InstanceEditor)
 from envisage.api import Plugin, contributes_to
 from traits.api import (provides, Callable, Bool, List, Str, HasTraits,

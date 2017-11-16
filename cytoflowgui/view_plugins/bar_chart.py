@@ -17,12 +17,50 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
+Bar Chart
+---------
+
 Plots a bar chart of a statistic.
 
-.. 
+Each variable in the statistic (ie, each variable chosen in the statistic
+operation's **Group By**) must be set as **Variable** or as a facet.
 
-Make a little data set.
+.. object:: Statistic
 
+    Which statistic to plot.
+    
+.. object:: Variable
+
+    The statistic variable to use as the major bar groups.
+    
+.. object:: Scale
+
+    How to scale the statistic plot.
+    
+.. object:: Horizontal Facet
+
+    Make muliple plots, with each column representing a subset of the statistic
+    with a different value for this variable.
+        
+.. object:: Vertical Facet
+
+    Make multiple plots, with each row representing a subset of the statistic
+    with a different value for this variable.
+    
+.. object:: Hue Facet
+
+    Make multiple bars with different colors; each color represents a subset
+    of the statistic with a different value for this variable.
+    
+.. object:: Error Statistic
+
+    A statistic to use to make the error bars.  Must have the same variables
+    as the statistic in **Statistic**.
+    
+.. object:: Subset
+
+    Plot only a subset of the statistic.
+    
 .. plot::
         
     import cytoflow as flow
@@ -64,9 +102,6 @@ from cytoflowgui.view_plugins.i_view_plugin \
     import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, PluginHelpMixin
         
 class BarChartHandler(ViewHandlerMixin, Controller):
-    """
-    docs
-    """
     
     indices = Property(depends_on = "context.statistics, model.statistic, model.subset")
     levels = Property(depends_on = "context.statistics, model.statistic")
@@ -79,8 +114,7 @@ class BarChartHandler(ViewHandlerMixin, Controller):
                            Item('variable',
                                 editor=EnumEditor(name='handler.indices'),
                                 label = "Variable"),
-                           Item('orientation'),
-                           Item('scale', label = "Scale"),
+                           Item('yscale', label = "Scale"),
                            Item('xfacet',
                                 editor=ExtendableEnumEditor(name='handler.indices',
                                                             extra_items = {"None" : ""}),
@@ -169,9 +203,6 @@ class BarChartPluginView(PluginViewMixin, BarChartView):
 
 @provides(IViewPlugin)
 class BarChartPlugin(Plugin, PluginHelpMixin):
-    """
-    classdocs
-    """
 
     id = 'edu.mit.synbio.cytoflowgui.view.barchart'
     view_id = 'edu.mit.synbio.cytoflow.view.barchart'
