@@ -39,8 +39,8 @@ before_install:
   - conda update --yes conda
 
 install:
-  - conda install --yes --quiet python=3.4
-  - conda install --yes --quiet nomkl
+  - conda create --yes --quiet --name=py34 python=3.4 nomkl
+  - source activate py34
   - conda install --yes --quiet --file=packaging/conda-requirements.txt
   - conda install --yes --quiet pip sphinx
   - python setup.py develop build_sphinx bdist_wheel
