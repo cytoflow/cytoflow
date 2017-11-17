@@ -39,7 +39,6 @@ before_install:
   - conda update --yes conda
 
 install:
-  - conda remove --yes --quiet pysocks
   - conda install --yes --quiet python=3.4
   - conda install --yes --quiet nomkl
   - conda install --yes --quiet --file=packaging/conda-requirements.txt
