@@ -12,3 +12,20 @@
 /.settings/
 
 /build/
+
+/cytoflowgui/help/
+
+# Eclipse bits
+.classpath
+.project
+.pydevproject
+
+# submodule bits
+docs/examples-basic
+docs/examples-advanced
+examples-advanced
+
+# logicle build bits
+Logicle_wrap.cpp
+_Logicle.cpython-34m.so
+
