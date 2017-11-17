@@ -12,9 +12,7 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys
-import os
-import glob
+import sys, os, glob, pathlib, shutil
 import matplotlib as mpl
 mpl.use("Agg")
 
@@ -56,7 +54,8 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.napoleon',
     'sphinx.ext.mathjax',
-    'plot_directive'
+    'plot_directive',
+    'embedded_builder'
 ]
 
 if tags.has("embedded_help"):  # @UndefinedVariable
@@ -76,10 +75,8 @@ plot_include_source = True
 plot_formats = [("png", 90)]
 plot_html_show_formats = False
 plot_html_show_source_link = False
-plot_working_directory = "../cytoflow/tests/data/"
+plot_working_directory = pathlib.Path(__file__).parents[1].joinpath('cytoflow', 'tests', 'data').as_posix()
 
-if tags.has("embedded_help"):  # @UndefinedVariable
-    plot_include_source = False
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -311,15 +308,17 @@ texinfo_documents = [
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
 
-
 def setup(app):
     app.connect('builder-inited', run_apidoc)
     app.connect('builder-inited', set_builder_config)
+    app.connect('build-finished', cleanup_apidoc)
+    app.connect('build-finished', copy_embedded_help)
+
 
     sys.modules['sys'].IN_SPHINX = True
         
 def set_builder_config(app):
-    if tags.has("embedded_help"):  # @UndefinedVariable
+    if app.builder.name == 'embedded_help':  # @UndefinedVariable
         app.builder.config.html_copy_source = False
         app.builder.config.html_show_sourcelink = False
         app.builder.config.html_show_copyright = False
@@ -330,10 +329,12 @@ def set_builder_config(app):
         app.builder.embedded = True
         app.builder.download_support = False
         app.builder.search = False
+        
+        app.config.plot_include_source = False
 
 
-def run_apidoc(_):
-    if tags.has("embedded_help"):  # @UndefinedVariable
+def run_apidoc(app):
+    if app.builder.name == 'embedded_help':  # @UndefinedVariable
         os.environ['SPHINX_APIDOC_OPTIONS'] = 'members'
 
     from sphinx.apidoc import main
@@ -341,24 +342,43 @@ def run_apidoc(_):
     cur_dir = os.path.abspath(os.path.dirname(__file__))
     
     try:
-        filelist = glob.glob(os.path.join(cur_dir, "cytoflow.*.rst"))
+        filelist = glob.glob(os.path.join(cur_dir, "cytoflow*.rst"))
         for f in filelist:
-            print(f)
             os.unlink(f)
     except FileNotFoundError:
         pass
     
-    try:
-        filelist = glob.glob(os.path.join(cur_dir, "cytoflowgui.*.rst"))
-        for f in filelist:
-            print(f)
-            os.unlink(f)
-    except FileNotFoundError:
-        pass
-    
-    if tags.has("embedded_help"):  # @UndefinedVariable
+    if app.builder.name == 'embedded_help':  # @UndefinedVariable
         module = os.path.join(cur_dir,"..","cytoflowgui")
         main([None, '-T', '-e', '-E', '-f', '-o', cur_dir, module])    
     else:
         module = os.path.join(cur_dir,"..","cytoflow")    
-#         main([None, '-T', '-e', '-E', '-f', '-o', cur_dir, module])    
+        main([None, '-T', '-e', '-E', '-f', '-o', cur_dir, module])    
+        
+def cleanup_apidoc(app, exc):  # @UnusedVariable
+    cur_dir = os.path.abspath(os.path.dirname(__file__))
+    
+    try:
+        filelist = glob.glob(os.path.join(cur_dir, "cytoflow*.rst"))
+        for f in filelist:
+            os.unlink(f)
+    except FileNotFoundError:
+        pass
+
+def copy_embedded_help(app, exc):  # @UnusedVariable
+    if app.builder.name == 'embedded_help':
+        dest_dir = pathlib.Path(__file__).parents[1].joinpath('cytoflowgui', 'help').as_posix()
+        print("Copying {} to {}".format(app.outdir, dest_dir))
+        shutil.rmtree(dest_dir, ignore_errors = True)
+        shutil.copytree(app.outdir, dest_dir)
+        
+        img_dir_in = pathlib.Path(app.srcdir).joinpath('images').as_posix()
+        img_dir_out = pathlib.Path(dest_dir).joinpath('_images').as_posix()
+        
+        try:
+            filelist = glob.glob(os.path.join(img_dir_in, "*"))
+            for f in filelist:
+                print(f)
+                shutil.copy(f, img_dir_out)
+        except FileNotFoundError:
+            pass

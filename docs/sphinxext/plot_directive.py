@@ -451,7 +451,7 @@ def run_code(code, code_path, ns=None, function_name=None):
     # it can get at its data files, if any.  Add its path to sys.path
     # so it can import any helper modules sitting beside it.
     if six.PY2:
-        pwd = os.getcwdu()
+        pwd = os.getcwdu()  # @UndefinedVariable
     else:
         pwd = os.getcwd()
     old_sys_path = list(sys.path)
@@ -481,7 +481,7 @@ def run_code(code, code_path, ns=None, function_name=None):
     if six.PY3:
         sys.stdout = io.StringIO()
     else:
-        sys.stdout = cStringIO.StringIO()
+        sys.stdout = cStringIO.StringIO()  # @UndefinedVariable
 
     # Assign a do-nothing print function to the namespace.  There
     # doesn't seem to be any other way to provide a way to (not) print
