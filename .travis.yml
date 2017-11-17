@@ -43,7 +43,9 @@ install:
   - source activate py34
   - conda install --yes --quiet --file=packaging/conda-requirements.txt
   - conda install --yes --quiet pip sphinx mock
-  - python setup.py develop build_sphinx bdist_wheel
+  - python setup.py develop 
+  - python setup.py build_sphinx 
+  - python setup.py bdist_wheel
   - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then python setup.py sdist; fi
   - python setup.py develop build_sphinx -b embedded_help
   - pip install nose2 
