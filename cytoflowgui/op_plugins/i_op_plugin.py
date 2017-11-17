@@ -68,7 +68,6 @@ class PluginHelpMixin(HasTraits):
     _cached_help = HTML
     
     def get_help(self):
-        return ""
         if self._cached_help == "":
             current_dir = os.path.abspath(__file__)
             help_dir = os.path.split(current_dir)[0]

@@ -71,28 +71,27 @@ class PluginHelpMixin(HasTraits):
     _cached_help = HTML
     
     def get_help(self):
-        return ""
-#         if self._cached_help == "":
-#             current_dir = os.path.abspath(__file__)
-#             help_dir = os.path.split(current_dir)[0]
-#             help_dir = os.path.split(help_dir)[0]
-#             help_dir = os.path.join(help_dir, "help")
-#             
-#             view = self.get_view()
-#             help_file = None
-#             for klass in view.__class__.__mro__:
-#                 mod = klass.__module__
-#                 mod_html = mod + ".html"
-#                 
-#                 h = os.path.join(help_dir, mod_html)
-#                 if os.path.exists(h):
-#                     help_file = h
-#                     break
-#                 
-#             with open(help_file, encoding = 'utf-8') as f:
-#                 self._cached_help = f.read()
-#                 
-#         return self._cached_help
+        if self._cached_help == "":
+            current_dir = os.path.abspath(__file__)
+            help_dir = os.path.split(current_dir)[0]
+            help_dir = os.path.split(help_dir)[0]
+            help_dir = os.path.join(help_dir, "help")
+             
+            view = self.get_view()
+            help_file = None
+            for klass in view.__class__.__mro__:
+                mod = klass.__module__
+                mod_html = mod + ".html"
+                 
+                h = os.path.join(help_dir, mod_html)
+                if os.path.exists(h):
+                    help_file = h
+                    break
+                 
+            with open(help_file, encoding = 'utf-8') as f:
+                self._cached_help = f.read()
+                 
+        return self._cached_help
                         
 class PluginViewMixin(HasTraits):
     handler = Instance(Handler, transient = True)    

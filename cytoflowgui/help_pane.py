@@ -16,8 +16,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import os, pathlib, urllib, urllib.parse
+
 from traits.api import Instance, List, on_trait_change, Str, HTML
-from traitsui.api import View, Item
+from traitsui.api import View, Item, HTMLEditor
 from pyface.tasks.api import TraitsDockPane, Task
 
 from cytoflowgui.view_plugins import IViewPlugin
@@ -44,7 +46,9 @@ class HelpDockPane(TraitsDockPane):
     html = HTML("<b>Welcome to Cytoflow!</b>")
     
     traits_view = View(Item('html',
+                            editor = HTMLEditor(base_url = pathlib.Path(__file__).parent.joinpath('help').as_posix()),
                             show_label = False))
+
     
     @on_trait_change('help_id', post_init = True)
     def _on_help_id_changed(self):
@@ -54,6 +58,8 @@ class HelpDockPane(TraitsDockPane):
                     self.html = plugin.get_help()
                 except AttributeError:
                     pass
+                finally:
+                    return
                 
         for plugin in self.op_plugins:
             if self.help_id == plugin.operation_id:
@@ -61,3 +67,5 @@ class HelpDockPane(TraitsDockPane):
                     self.html = plugin.get_help()
                 except AttributeError:
                     pass
+                finally:
+                    return
