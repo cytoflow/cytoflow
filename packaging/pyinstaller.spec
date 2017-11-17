@@ -1,12 +1,15 @@
 import sys
 
+sys.setrecursionlimit(10000) # or more
+
 a = Analysis(['../cytoflowgui/run.py'],
              pathex=['cytoflowgui/'],
              binaries=None,
              datas=[('../cytoflowgui/preferences.ini', 'cytoflowgui'),
                     ('../cytoflowgui/images', '.'),
                     ('../cytoflowgui/op_plugins/images', 'cytoflowgui/op_plugins/images'),
-                    ('../cytoflowgui/view_plugins/images', 'cytoflowgui/view_plugins/images')],
+                    ('../cytoflowgui/view_plugins/images', 'cytoflowgui/view_plugins/images'),
+                    ('../cytoflowgui/help', 'cytoflowgui/help')],
              hiddenimports = [
                  'packaging.qt',
                  'matplotlib.backends.backend_qt4agg',
@@ -32,7 +35,6 @@ a = Analysis(['../cytoflowgui/run.py'],
                        'pyface.wx', 'traitsui.wx', 'OpenGL',
                        'OpenGL.GLUT', 'OpenGL.platform',
                        'IPython', 'PyQt4.QtAssistant',
-                       'PyQt4.QtNetwork', 'PyQt4.QtWebKit',
                        'PyQt4.QtSql', 'PyQt4.QtXml', 'PyQt4.QtTest', 
                        'PyQt4.QtOpenGL', 'wx',
                        'gtk', 'gi', 'sphinx', 'twisted', 'zope',

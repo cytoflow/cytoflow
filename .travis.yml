@@ -42,10 +42,12 @@ install:
   - conda install --yes --quiet python=3.4
   - conda install --yes --quiet nomkl
   - conda install --yes --quiet --file=packaging/conda-requirements.txt
-  - conda install --yes --quiet pip
-  - python setup.py develop bdist_wheel
+  - conda install --yes --quiet pip sphinx
+  - python setup.py develop build_sphinx bdist_wheel
   - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then python setup.py sdist; fi
-  - pip install pyinstaller nose2 
+  - python setup.py develop build_sphinx -b embedded_help
+  - pip install nose2 
+  - pip install "pyinstaller==3.2.1"
   - pyinstaller --log-level=DEBUG packaging/pyinstaller.spec
   - pyi-archive_viewer -l dist/cytoflow
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then cd dist/; zip -r cytoflow.macos.zip Cytoflow.app/; rm -rf Cytoflow.app cytoflow; cd ..; fi
