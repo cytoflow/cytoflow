@@ -506,6 +506,7 @@ def run_code(code, code_path, ns=None, function_name=None):
             if "__main__" in code:
                 six.exec_("__name__ = '__main__'", ns)
             code = remove_coding(code)
+            print(code)
             six.exec_(code, ns)
             if function_name is not None:
                 six.exec_(function_name + "()", ns)
