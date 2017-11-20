@@ -42,7 +42,8 @@ install:
   - conda create --yes --quiet --name=py34 python=3.4 nomkl
   - source activate py34
   - conda install --yes --quiet --file=packaging/conda-requirements.txt
-  - conda install --yes --quiet pip sphinx mock
+  - conda install --yes --quiet pip mock
+  - pip install --upgrade sphinx
   - python setup.py develop 
   - python setup.py build_sphinx 
   - python setup.py bdist_wheel
