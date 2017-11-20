@@ -79,10 +79,10 @@ plot_html_show_formats = False
 plot_html_show_source_link = False
 plot_working_directory = pathlib.Path(__file__).parents[1].joinpath('cytoflow', 'tests', 'data').as_posix()
 
-# plot_pre_code = "import matplotlib; matplotlib.use('Agg')"
-plot_rcparams = {'backend' : "Agg"}
-plot_apply_rcparams = True
-plot_pre_code = 'import matplotlib; matplotlib.use("Agg")'
+plot_pre_code = "import matplotlib.pyplot as plt; plt.switch_backend('agg')"
+# plot_rcparams = {'backend' : "Agg"}
+# plot_apply_rcparams = True
+# plot_pre_code = 'import matplotlib; matplotlib.use("Agg")'
 
 
 # Add any paths that contain templates here, relative to this directory.
