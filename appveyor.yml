@@ -44,12 +44,15 @@ install:
 
   # Install the build and runtime dependencies of the project.
   - conda update --yes conda
+  - conda create --yes --quiet --name=py34 python=3.4 nomkl
+  - activate py34
   - conda install --yes --quiet --file=packaging\conda-requirements.txt
-  - conda install --yes --quiet msvc_runtime pip sphinx
+  - conda install --yes --quiet msvc_runtime pip sphinx mock
   - pip.exe install nose2
   - pip.exe install "pyinstaller==3.2.1"
 
   - "%WITH_COMPILER% python setup.py develop"
+  - "%WITH_COMPILER% python setup.py build_sphinx -b embedded_help"
 
 build: off
 

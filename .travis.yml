@@ -47,7 +47,7 @@ install:
   - python setup.py build_sphinx 
   - python setup.py bdist_wheel
   - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then python setup.py sdist; fi
-  - python setup.py develop build_sphinx -b embedded_help
+  - python setup.py build_sphinx -b embedded_help
   - pip install nose2 
   - pip install "pyinstaller==3.2.1"
   - pyinstaller --log-level=DEBUG packaging/pyinstaller.spec

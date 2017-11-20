@@ -22,8 +22,6 @@ import io, os, re
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 no_logicle = os.environ.get('NO_LOGICLE', None) == 'True'
 
-print(os.environ)
-
 here = os.path.abspath(os.path.dirname(__file__))
 
 def read_rst(*filenames, **kwargs):

@@ -63,9 +63,10 @@ def run_gui():
 
     remote_process, remote_connection = start_remote_process(debug)
     
-    import matplotlib
+    # We want matplotlib to use our backend .... in both the GUI and the
+    # remote process
     
-    # We want matplotlib to use our backend
+    import matplotlib
     matplotlib.use('module://cytoflowgui.matplotlib_backend')
     
     # getting real tired of the matplotlib deprecation warnings
@@ -172,7 +173,7 @@ def run_gui():
 
         sys.exit(1)
         
-    from pyface.qt.QtCore import qInstallMsgHandler
+    from pyface.qt.QtCore import qInstallMsgHandler  # @UnresolvedImport
     qInstallMsgHandler(QtMsgHandler)
     
     # if we're frozen, add _MEIPASS to the pyface search path for icons etc
@@ -269,6 +270,12 @@ def start_remote_process(debug):
         return (remote_process, (child_workflow_conn, child_matplotlib_conn, log_q))
     
 def remote_main(parent_workflow_conn, parent_mpl_conn, log_q, running_event, debug):
+    # We want matplotlib to use our backend .... in both the GUI and the
+    # remote process.  Must be called BEFORE cytoflow is imported
+    
+    import matplotlib
+    matplotlib.use('module://cytoflowgui.matplotlib_backend')
+    
     from traits.api import push_exception_handler    
     from cytoflowgui.workflow import RemoteWorkflow
     
