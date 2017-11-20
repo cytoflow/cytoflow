@@ -152,8 +152,8 @@ sphinx_version = sphinx.__version__.split(".")
 sphinx_version = tuple([int(re.split('[^0-9]', x)[0])
                         for x in sphinx_version[:2]])
 
-from sphinx.util import logging  # Load on top of python's logging module
-logger = logging.getLogger(__name__)
+from sphinx.util import logging as sp_logging  # Load on top of python's logging module
+logger = sp_logging.getLogger(__name__)
 
 try:
     # Sphinx depends on either Jinja or Jinja2
