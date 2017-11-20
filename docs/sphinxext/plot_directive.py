@@ -164,9 +164,9 @@ except ImportError:
 
 import matplotlib
 import matplotlib.cbook as cbook
-print(mpl.rcParams['backend'])
-matplotlib.use('Agg')
-print(mpl.rcParams['backend'])
+# print(matplotlib.rcParams['backend'])
+# matplotlib.use('Agg')
+# print(matplotlib.rcParams['backend'])
 import matplotlib.pyplot as plt
 from matplotlib import _pylab_helpers
 

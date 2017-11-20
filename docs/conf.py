@@ -13,10 +13,10 @@
 # serve to show the default.
 
 import sys, os, glob, pathlib, shutil
-import matplotlib as mpl
-print(mpl.rcParams['backend'])
-mpl.use("Agg")
-print(mpl.rcParams['backend'])
+# import matplotlib as mpl
+# print(mpl.rcParams['backend'])
+# mpl.use("Agg")
+# print(mpl.rcParams['backend'])
 
 if not tags.has("embedded_help"):  # @UndefinedVariable
     from mock import Mock as MagicMock
@@ -78,6 +78,10 @@ plot_formats = [("png", 90)]
 plot_html_show_formats = False
 plot_html_show_source_link = False
 plot_working_directory = pathlib.Path(__file__).parents[1].joinpath('cytoflow', 'tests', 'data').as_posix()
+
+# plot_pre_code = "import matplotlib; matplotlib.use('Agg')"
+plot_rcparams = {'backend' : "Agg"}
+plot_apply_rcparams = True
 
 
 # Add any paths that contain templates here, relative to this directory.
