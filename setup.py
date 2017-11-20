@@ -19,6 +19,8 @@
 from setuptools import setup, find_packages, Extension
 import io, os, re
 
+from sphinx.setup_command import BuildDoc
+
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 no_logicle = os.environ.get('NO_LOGICLE', None) == 'True'
 
@@ -56,6 +58,7 @@ setup(
     name = "cytoflow",
     version = find_version("cytoflow", "__init__.py"),
     packages = find_packages(),
+    cmdclass = {'build_sphinx': BuildDoc},
     
     # Project uses reStructuredText, so ensure that the docutils get
     # installed or upgraded on the target machine

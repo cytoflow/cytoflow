@@ -40,18 +40,26 @@ before_install:
   - conda update --yes conda
 
 install:
+
   - conda create --yes --quiet --name=py34 python=3.4 nomkl
   - source activate py34
   - conda install --yes --quiet --file=packaging/conda-requirements.txt
   - conda install --yes --quiet pip mock
-  - pip install setuptools sphinx
+  - pip install nose2 sphinx
+  - pip install "pyinstaller==3.2.1"
+
   - python setup.py develop 
+
+
+script: nose2 -c packaging/nose2.cfg
+
+after_success:
+
   - python setup.py build_sphinx 
   - python setup.py bdist_wheel
   - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then python setup.py sdist; fi
   - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then xvfb-run python setup.py build_sphinx -b embedded_help; else python setup.py build_sphinx -b embedded_help; fi
-  - pip install nose2 
-  - pip install "pyinstaller==3.2.1"
+
   - pyinstaller --log-level=DEBUG packaging/pyinstaller.spec
   - pyi-archive_viewer -l dist/cytoflow
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then cd dist/; zip -r cytoflow.macos.zip Cytoflow.app/; rm -rf Cytoflow.app cytoflow; cd ..; fi
@@ -59,7 +67,6 @@ install:
   - ls -al dist/*
   - python3 -c 'import sys, packaging; print(sys.modules["packaging"])'
 
-script: nose2 -c packaging/nose2.cfg
 
 deploy:
   - provider: releases
