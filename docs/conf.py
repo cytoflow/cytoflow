@@ -13,6 +13,7 @@
 # serve to show the default.
 
 import sys, os, glob, pathlib, shutil
+sys.setrecursionlimit(5000)
 
 from unittest.mock import MagicMock
 
