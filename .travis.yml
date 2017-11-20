@@ -43,7 +43,7 @@ install:
   - source activate py34
   - conda install --yes --quiet --file=packaging/conda-requirements.txt
   - conda install --yes --quiet pip mock
-  - pip install --upgrade sphinx
+  - pip install setuptools sphinx
   - python setup.py develop 
   - python setup.py build_sphinx 
   - python setup.py bdist_wheel
