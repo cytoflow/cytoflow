@@ -49,7 +49,8 @@ install:
   - conda install --yes --quiet mkl=2017.0.3-0
   - conda install --yes --quiet --file=packaging\conda-requirements.txt
   - conda install --yes --quiet msvc_runtime pip
-  - pip.exe install nose2 sphinx setuptools
+  - pip.exe install setuptools --upgrade
+  - pip.exe install nose2 sphinx
   - pip.exe install "pyinstaller==3.2.1"
 
   - "%WITH_COMPILER% python setup.py develop"
@@ -60,8 +61,8 @@ test_script:
   - "nose2 -c packaging\\nose2.cfg"
 
 after_test:
-  - "%WITH_COMPILER% %PYTHON%/python setup.py bdist_wheel bdist_wininst"
-  - "%WITH_COMPILER% %PYTHON%/python setup.py build_sphinx -b embedded_help"
+  - "%WITH_COMPILER% %PYTHON%\python setup.py bdist_wheel bdist_wininst"
+  - "%WITH_COMPILER% %PYTHON%\python setup.py build_sphinx -b embedded_help"
   - "pyinstaller packaging/pyinstaller.spec"
   - "pyi-archive_viewer -l dist\\cytoflow.exe"
   - "move dist\\cytoflow.exe dist\\cytoflow-%PYTHON_ARCH%.exe"

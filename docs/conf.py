@@ -13,7 +13,6 @@
 # serve to show the default.
 
 import sys, os, glob, pathlib, shutil
-sys.setrecursionlimit(5000)
 
 from unittest.mock import MagicMock
 
@@ -21,14 +20,6 @@ class Mock(MagicMock):
     @classmethod
     def __getattr__(cls, name):
             return Mock()
-        
-    @classmethod
-    def __iter__(cls):
-        return Mock()
-
-    @classmethod
-    def next(cls):
-        return Mock()
 
 MOCK_MODULES = ['cytoflow.utility.logicle_ext.Logicle']
     
