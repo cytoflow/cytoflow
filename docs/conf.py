@@ -13,9 +13,8 @@
 # serve to show the default.
 
 import sys, os, glob, pathlib, shutil
-sys.setrecursionlimit(2000)
 
-from mock import MagicMock
+from mock import Mock as MagicMock
 
 class Mock(MagicMock):
     @classmethod
