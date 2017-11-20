@@ -82,6 +82,7 @@ plot_working_directory = pathlib.Path(__file__).parents[1].joinpath('cytoflow', 
 # plot_pre_code = "import matplotlib; matplotlib.use('Agg')"
 plot_rcparams = {'backend' : "Agg"}
 plot_apply_rcparams = True
+plot_pre_code = 'import matplotlib; matplotlib.use("Agg")'
 
 
 # Add any paths that contain templates here, relative to this directory.
