@@ -44,7 +44,7 @@ install:
 
   # Install the build and runtime dependencies of the project.
   - conda update --yes conda
-  - conda create --yes --quiet --name=py34 python=3.4 nomkl
+  - conda create --yes --quiet --name=py34 python=3.4
   - activate py34
   - conda install --yes --quiet --file=packaging\conda-requirements.txt
   - conda install --yes --quiet msvc_runtime pip sphinx mock

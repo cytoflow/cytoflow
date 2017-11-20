@@ -14,7 +14,9 @@
 
 import sys, os, glob, pathlib, shutil
 import matplotlib as mpl
+print(mpl.rcParams['backend'])
 mpl.use("Agg")
+print(mpl.rcParams['backend'])
 
 if not tags.has("embedded_help"):  # @UndefinedVariable
     from mock import Mock as MagicMock
