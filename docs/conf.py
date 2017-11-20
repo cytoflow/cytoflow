@@ -14,7 +14,7 @@
 
 import sys, os, glob, pathlib, shutil
 
-from unittest.mock import MagicMock
+from mock import MagicMock
 
 class Mock(MagicMock):
     @classmethod
@@ -100,9 +100,6 @@ copyright = u'Massachusetts Institute of Technology 2015-{}'.format(time.strftim
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
-
-import matplotlib
-matplotlib.use("agg")
 
 import cytoflow
 # The short X.Y version.
