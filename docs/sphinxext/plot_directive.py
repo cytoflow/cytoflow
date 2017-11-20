@@ -152,9 +152,6 @@ sphinx_version = sphinx.__version__.split(".")
 sphinx_version = tuple([int(re.split('[^0-9]', x)[0])
                         for x in sphinx_version[:2]])
 
-from sphinx.util import logging  # Load on top of python's logging module
-logger = logging.getLogger(__name__)
-
 try:
     # Sphinx depends on either Jinja or Jinja2
     import jinja2
@@ -167,9 +164,6 @@ except ImportError:
 
 import matplotlib
 import matplotlib.cbook as cbook
-# print(matplotlib.rcParams['backend'])
-# matplotlib.use('Agg')
-# print(matplotlib.rcParams['backend'])
 import matplotlib.pyplot as plt
 from matplotlib import _pylab_helpers
 
@@ -501,20 +495,14 @@ def run_code(code, code_path, ns=None, function_name=None):
                 ns = {}
             if not ns:
                 if setup.config.plot_pre_code is None:
-                    logger.info('no precode')
                     six.exec_(six.text_type("import numpy as np\n" +
                     "from matplotlib import pyplot as plt\n"), ns)
                 else:
-                    logger.info(six.text_type(setup.config.plot_pre_code))
                     six.exec_(six.text_type(setup.config.plot_pre_code), ns)
             ns['print'] = _dummy_print
             if "__main__" in code:
                 six.exec_("__name__ = '__main__'", ns)
             code = remove_coding(code)
-
-            logger.info('-->')
-            logger.info(code)
-            logger.info('<--')           
             six.exec_(code, ns)
             if function_name is not None:
                 six.exec_(function_name + "()", ns)

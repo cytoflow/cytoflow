@@ -13,22 +13,25 @@
 # serve to show the default.
 
 import sys, os, glob, pathlib, shutil
-# import matplotlib as mpl
-# print(mpl.rcParams['backend'])
-# mpl.use("Agg")
-# print(mpl.rcParams['backend'])
 
-if not tags.has("embedded_help"):  # @UndefinedVariable
-    from mock import Mock as MagicMock
+from unittest.mock import MagicMock
+
+class Mock(MagicMock):
+    @classmethod
+    def __getattr__(cls, name):
+            return Mock()
+        
+    @classmethod
+    def __iter__(cls):
+        return Mock()
+
+    @classmethod
+    def next(cls):
+        return Mock()
+
+MOCK_MODULES = ['cytoflow.utility.logicle_ext.Logicle']
     
-    class Mock(MagicMock):
-        @classmethod
-        def __getattr__(cls, name):
-                return Mock()
-    
-    MOCK_MODULES = ['cytoflow.utility.logicle_ext.Logicle']
-    
-    sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -105,6 +108,9 @@ copyright = u'Massachusetts Institute of Technology 2015-{}'.format(time.strftim
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
+
+import matplotlib
+matplotlib.use("agg")
 
 import cytoflow
 # The short X.Y version.
@@ -360,7 +366,7 @@ def run_apidoc(app):
         main([None, '-T', '-e', '-E', '-f', '-o', cur_dir, module])    
     else:
         module = os.path.join(cur_dir,"..","cytoflow")    
-        main([None, '-T', '-e', '-E', '-f', '-o', cur_dir, module])    
+        main([None, '-T', '-e', '-E', '-f', '-o', cur_dir, module])
         
 def cleanup_apidoc(app, exc):  # @UnusedVariable
     cur_dir = os.path.abspath(os.path.dirname(__file__))
