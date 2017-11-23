@@ -101,7 +101,7 @@ class IScale(Interface):
         Clips the data to the scale's domain.
         """
         
-    def norm(self):
+    def norm(self, vmin = None, vmax = None):
         """
         Return an instance of matplotlib.colors.Normalize, which normalizes
         this scale to [0, 1].  Among other things, this is used to correctly

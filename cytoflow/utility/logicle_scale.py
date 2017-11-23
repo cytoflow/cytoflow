@@ -210,15 +210,12 @@ class LogicleScale(HasStrictTraits):
         
     def norm(self, vmin = None, vmax = None):
         # it turns out that Logicle is already defined as a normalization to 
-        # [0, 1].
+        # [0, 1].  vmin and vmax don't actually do anything here.
         class LogicleNormalize(matplotlib.colors.Normalize):
             def __init__(self, scale = None, vmin = None, vmax = None):
                 self._scale = scale
-                if vmin is not None:
-                    self.vmin = scale.inverse(0.0)
-                    
-                if vmax is not None:
-                    self.vmax = scale.inverse(1.0 - sys.float_info.epsilon)
+                self.vmin = scale.inverse(0.0)
+                self.vmax = scale.inverse(1.0 - sys.float_info.epsilon)
                 
             def __call__(self, data, clip = None):
                 # it turns out that Logicle is already defined as a
