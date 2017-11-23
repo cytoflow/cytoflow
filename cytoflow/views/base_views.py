@@ -21,7 +21,7 @@ cytoflow.views.base_views
 -------------------------
 '''
 
-from traits.api import HasStrictTraits, Str, Tuple, provides
+from traits.api import HasStrictTraits, Str, Tuple, List, Dict, provides
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
@@ -213,7 +213,7 @@ class BaseView(HasStrictTraits):
     
                     mpl.colorbar.ColorbarBase(cax, 
                                               cmap = cmap, 
-                                              norm = hue_scale.color_norm(), 
+                                              norm = hue_scale.norm(), 
                                               label = self.huefacet)
                     plt.sca(plot_ax)
                 else:
@@ -450,8 +450,99 @@ class Base2DView(BaseDataView):
                      yscale = yscale, 
                      **kwargs)        
 
-class BaseNDView(BaseView):
-    pass
+class BaseNDView(BaseDataView):
+    """
+    A data view that plots data from one or more channels.
+    
+    Attributes
+    ----------
+    channels : List(Str)
+        The channels to view
+
+    scale : Dict(Str : {"linear", "logicle", "log"})
+        Re-scale the data in the specified channels before plotting.  If a 
+        channel isn't specified, assume that the scale is linear.
+    """
+    
+    channels = List(Str)
+    scale = Dict(Str, util.ScaleEnum)
+
+    def plot(self, experiment, **kwargs):
+        """
+        Parameters
+        ----------
+        min_quantile : float (>0.0 and <1.0, default = 0.001)
+            Clip data that is less than this quantile.
+            
+        max_quantile : float (>0.0 and <1.0, default = 1.00)
+            Clip data that is greater than this quantile.
+            
+        lim : Dict(Str : (float, float))
+            Set the range of each channel's axis.  If unspecified, assume
+            that the limits are the minimum and maximum of the clipped data
+        """
+
+        if experiment is None:
+            raise util.CytoflowViewError('experiment',
+                                         "No experiment specified")
+
+        if len(self.channels) == 0:
+            raise util.CytoflowOpError('channels',
+                                       "Must set at least one channel")
+
+        for c in self.channels:
+            if c not in experiment.data:
+                raise util.CytoflowOpError('channels',
+                                           "Channel {0} not found in the experiment"
+                                      .format(c))
+                
+        for c in self.scale:
+            if c not in self.channels:
+                raise util.CytoflowOpError('scale',
+                                           "Scale set for channel {0}, but it isn't "
+                                           "in the experiment"
+                                           .format(c))
+       
+        
+        # get the scale
+        scale = {}
+        for c in self.channels:
+            if c in self.scale:
+                scale[c] = util.scale_factory(self.scale[c], experiment, channel = c)
+            else:
+                scale[c] = util.scale_factory(util.get_default_scale(), experiment, channel = c)
+        
+        # adjust the limits to clip extreme values
+        min_quantile = kwargs.pop("min_quantile", 0.001)
+        max_quantile = kwargs.pop("max_quantile", 1.0) 
+        
+        if min_quantile < 0.0 or min_quantile > 1:
+            raise util.CytoflowViewError('min_quantile',
+                                         "min_quantile must be between 0 and 1")
+
+        if max_quantile < 0.0 or max_quantile > 1:
+            raise util.CytoflowViewError('max_quantile',
+                                         "max_quantile must be between 0 and 1")     
+        
+        if min_quantile >= max_quantile:
+            raise util.CytoflowViewError('min_quantile',
+                                         "min_quantile must be less than max_quantile")   
+            
+        lim = kwargs.pop("lim", {})
+        
+        for c in self.channels:
+            if c not in lim:
+                lim[c] = (experiment[c].quantile(min_quantile),
+                          experiment[c].quantile(max_quantile))
+                
+            lim[c] = [scale[c].clip(x) for x in lim[c]]
+    
+        
+        super().plot(experiment, 
+                     lim = lim,
+                     scale = scale,
+                     **kwargs)        
+
     
 
 @provides(IView)

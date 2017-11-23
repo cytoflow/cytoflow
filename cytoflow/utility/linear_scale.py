@@ -56,8 +56,10 @@ class LinearScale(ScaleMixin):
     def clip(self, data):
         return data
     
-    def color_norm(self):
-        if self.channel:
+    def norm(self, vmin = None, vmax = None):
+        if vmin is not None and vmax is not None:
+            pass
+        elif self.channel:
             vmin = self.experiment[self.channel].min()
             vmax = self.experiment[self.channel].max()
         elif self.condition:

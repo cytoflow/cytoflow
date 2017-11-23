@@ -208,14 +208,17 @@ class LogicleScale(HasStrictTraits):
         except ValueError as e:
             raise CytoflowError(e.strerror)
         
-    def color_norm(self):
+    def norm(self, vmin = None, vmax = None):
         # it turns out that Logicle is already defined as a normalization to 
         # [0, 1].
         class LogicleNormalize(matplotlib.colors.Normalize):
-            def __init__(self, scale = None):
+            def __init__(self, scale = None, vmin = None, vmax = None):
                 self._scale = scale
-                self.vmin = scale.inverse(0.0)
-                self.vmax = scale.inverse(1.0 - sys.float_info.epsilon)
+                if vmin is not None:
+                    self.vmin = scale.inverse(0.0)
+                    
+                if vmax is not None:
+                    self.vmax = scale.inverse(1.0 - sys.float_info.epsilon)
                 
             def __call__(self, data, clip = None):
                 # it turns out that Logicle is already defined as a
@@ -223,7 +226,7 @@ class LogicleScale(HasStrictTraits):
                 ret = self._scale(data)
                 return np.ma.masked_array(ret)
             
-        return LogicleNormalize(scale = self)
+        return LogicleNormalize(scale = self, vmin = vmin, vmax = vmax)
         
     
     @cached_property
