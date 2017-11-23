@@ -68,6 +68,7 @@ from .views.kde_2d import Kde2DView
 from .views.histogram_2d import Histogram2DView
 from .views.violin import ViolinPlotView
 from .views.table import TableView
+from .views.radviz import RadvizView
 
 # util
 from .utility.util_functions import (geom_mean, geom_sd, geom_sd_range,
