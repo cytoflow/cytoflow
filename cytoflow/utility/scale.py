@@ -101,10 +101,11 @@ class IScale(Interface):
         Clips the data to the scale's domain.
         """
         
-    def color_norm(self):
+    def norm(self):
         """
-        Return an instance of matplotlib.colors.Normalize, which is used to
-        correctly scale a color bar.
+        Return an instance of matplotlib.colors.Normalize, which normalizes
+        this scale to [0, 1].  Among other things, this is used to correctly
+        scale a color bar.
         """
         
         

@@ -154,7 +154,7 @@ class DensityView(Base2DView):
             hue_scale = util.scale_factory(self.huescale, 
                                            experiment, 
                                            data = np.array([1, data_max]))
-            kwargs['norm'] = hue_scale.color_norm()
+            kwargs['norm'] = hue_scale.norm()
         
         grid.map(_densityplot, self.xchannel, self.ychannel, xbins = xbins, ybins = ybins, **kwargs)
                

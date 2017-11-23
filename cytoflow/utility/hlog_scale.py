@@ -129,7 +129,7 @@ class HlogScale(ScaleMixin):
     def clip(self, data):
         return data
     
-    def color_norm(self):
+    def norm(self):
         if self.channel:
             vmin = self.experiment[self.channel].min()
             vmax = self.experiment[self.channel].max()
