@@ -67,10 +67,11 @@ class ParallelCoordinatesView(BaseNDView):
     .. plot::
         :context: close-figs
     
-        >>> flow.ParallelCoordinatesView(channels = ['B1-A', 'V2-A', 'Y2-A'],
-        ...                              scale = {'Y2-A' : 'logicle',
-        ...                                       'V2-A' : 'logicle',
-        ...                                       'B1-A' : 'logicle'},
+        >>> flow.ParallelCoordinatesView(channels = ['B1-A', 'V2-A', 'Y2-A', 'FSC-A'],
+        ...                              scale = {'Y2-A' : 'log',
+        ...                                       'V2-A' : 'log',
+        ...                                       'B1-A' : 'log',
+        ...                                       'FSC-A' : 'log'},
         ...                              huefacet = 'Dox').plot(ex)
             
     """
@@ -102,6 +103,7 @@ class ParallelCoordinatesView(BaseNDView):
         
         super().plot(experiment, **kwargs)
         
+        # clean up the plot
         for ax in plt.gcf().get_axes():
             ax.set_xlabel("")
             ax.set_ylabel("")

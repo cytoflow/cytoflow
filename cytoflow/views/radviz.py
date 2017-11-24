@@ -99,9 +99,9 @@ class RadvizView(BaseNDView):
         :context: close-figs
     
         >>> flow.RadvizView(channels = ['B1-A', 'V2-A', 'Y2-A'],
-        ...                 scale = {'Y2-A' : 'logicle',
-        ...                          'V2-A' : 'logicle',
-        ...                          'B1-A' : 'logicle'},
+        ...                 scale = {'Y2-A' : 'log',
+        ...                          'V2-A' : 'log',
+        ...                          'B1-A' : 'log'},
         ...                 huefacet = 'Dox').plot(ex)
             
     """
