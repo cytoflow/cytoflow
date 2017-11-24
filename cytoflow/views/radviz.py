@@ -17,8 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-cytoflow.views.densityplot
---------------------------
+cytoflow.views.radviz
+---------------------
 """
 
 from traits.api import provides, Constant
@@ -108,9 +108,7 @@ class RadvizView(BaseNDView):
     
     id = Constant('edu.mit.synbio.cytoflow.view.radviz')
     friend_id = Constant("Radviz Plot")
-    
-#     huefacet = Constant(None)
-    
+        
     def plot(self, experiment, **kwargs):
         """
         Plot a faceted Radviz plot

@@ -45,3 +45,4 @@ from .histogram_2d import Histogram2DView
 from .violin import ViolinPlotView
 from .table import TableView
 from .radviz import RadvizView
+from .parallel_coords import ParallelCoordinatesView
