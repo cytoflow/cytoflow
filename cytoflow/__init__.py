@@ -69,6 +69,7 @@ from .views.histogram_2d import Histogram2DView
 from .views.violin import ViolinPlotView
 from .views.table import TableView
 from .views.radviz import RadvizView
+from .views.parallel_coords import ParallelCoordinatesView
 
 # util
 from .utility.util_functions import (geom_mean, geom_sd, geom_sd_range,
