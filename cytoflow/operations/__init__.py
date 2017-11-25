@@ -34,6 +34,9 @@ from .gaussian_2d import GaussianMixture2DOp
 from .gaussian import GaussianMixtureOp
 from .kmeans import KMeansOp
 from .flowpeaks import FlowPeaksOp
+from .pca import PCAOp
+
+# statistics
 from .channel_stat import ChannelStatisticOp
 from .frame_stat import FrameStatisticOp
 from .xform_stat import TransformStatisticOp
