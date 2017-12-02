@@ -25,7 +25,7 @@ Created on Mar 7, 2015
 from traits.etsconfig.api import ETSConfig
 ETSConfig.toolkit = 'qt4'
 
-import sip
+import sip  # @UnresolvedImport
 
 sip.setapi(u'QDate', 2)
 sip.setapi(u'QDateTime', 2)

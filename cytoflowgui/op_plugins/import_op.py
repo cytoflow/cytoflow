@@ -100,9 +100,10 @@ from pyface.api import OK as PyfaceOK
 from envisage.api import Plugin, contributes_to
 
 import cytoflow.utility as util
-from cytoflow import ImportOp
+from cytoflow import ImportOp, Tube
 from cytoflow.operations.i_operation import IOperation
                        
+from cytoflowgui.serialization import camel_registry
 from cytoflowgui.import_dialog import ExperimentDialog
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
 from cytoflowgui.toggle_button import ToggleButtonEditor
@@ -179,8 +180,7 @@ class ImportPluginOp(PluginOpMixin, ImportOp):
         self.ret_events = len(ret.data)
 
         return ret
-    
-            
+
 @provides(IOperationPlugin)
 class ImportPlugin(Plugin, PluginHelpMixin):
     
@@ -199,3 +199,27 @@ class ImportPlugin(Plugin, PluginHelpMixin):
     @contributes_to(OP_PLUGIN_EXT)
     def get_plugin(self):
         return self
+    
+### Serialization
+    
+@camel_registry.dumper(ImportPluginOp, 'import', 1)
+def _dump_op(op):
+    return dict(tubes = list(op.tubes),
+                conditions = dict(op.conditions),
+                channels = dict(op.channels),
+                events = op.events,
+                name_metadata = op.name_metadata)
+
+@camel_registry.loader('import', 1)
+def _load_op(data, version):
+    return ImportPluginOp(**data)
+
+@camel_registry.dumper(Tube, 'tube', 1)
+def _dump_tube(tube):
+    return dict(file = tube.file,
+                conditions = dict(tube.conditions))
+
+@camel_registry.loader('tube', 1)
+def _load_tube(data, version):
+    return Tube(**data)
+            

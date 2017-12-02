@@ -26,6 +26,7 @@ Created on Feb 11, 2015
 # ETSConfig.toolkit = 'qt4'
 
 import os.path
+from camel import Camel
 
 from traits.api import Instance, List, Bool, on_trait_change, Any, Unicode, TraitError
 from pyface.tasks.api import Task, TaskLayout, PaneItem
@@ -39,11 +40,12 @@ from cytoflowgui.workflow_pane import WorkflowDockPane
 from cytoflowgui.view_pane import ViewDockPane
 from cytoflowgui.help_pane import HelpDockPane
 from cytoflowgui.workflow import Workflow
-from cytoflowgui.op_plugins import IOperationPlugin, ImportPlugin, ChannelStatisticPlugin, OP_PLUGIN_EXT
+from cytoflowgui.op_plugins import IOperationPlugin, ImportPlugin, OP_PLUGIN_EXT
 from cytoflowgui.view_plugins import IViewPlugin, VIEW_PLUGIN_EXT
 from cytoflowgui.notebook import JupyterNotebookWriter
 from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.util import DefaultFileDialog
+from cytoflowgui.serialization import camel_registry, standard_types_registry
 
 # from . import mailto
 
@@ -158,6 +160,8 @@ class FlowTask(Task):
          
             import_op.tubes = [tube1, tube2, tube3, tube4]
             
+#             from cytoflowgui.op_plugins import ChannelStatisticPlugin
+
 #             self.add_operation(ChannelStatisticPlugin().id)
 #             stat_op = self.model.workflow[1].operation
 #             stat_op.name = "Test"
@@ -237,36 +241,71 @@ class FlowTask(Task):
             self.filename = dialog.path
             self.window.title = "Cytoflow - " + self.filename
             
+#     def open_file(self, path):
+#         f = open(path, 'r')
+#         unpickler = pickle.Unpickler(f)
+#         
+#         try:
+#             version = unpickler.load()
+#         except TraitError:
+#             error(parent = None,
+#                   message = "This doesn't look like a Cytoflow file. Or maybe "
+#                             "you tried to load a workflow older than version "
+#                             "0.5?")
+#             return
+#         
+#         if version != self.model.version:
+#             ret = confirm(parent = None,
+#                           message = "This is Cytoflow {}, but you're trying "
+#                           "to load a workflow from version {}. This may or "
+#                           "may not work!  Are you sure you want to proceed?"
+#                           .format(self.model.version, version),
+#                           title = "Load workflow?")
+#             if ret != YES:
+#                 return
+# 
+#         try:
+#             new_workflow = unpickler.load()
+#         except TraitError:
+#             error(parent = None,
+#                   message = "Error trying to load the workflow.")
+#             return
+# 
+#         # a few things to take care of when reloading
+#         for wi_idx, wi in enumerate(new_workflow):
+#             
+#             # get wi lock
+#             wi.lock.acquire()
+#             
+#             # clear the wi status
+#             wi.status = "loading"
+# 
+#             # re-link the linked list.  i thought this would get taken care
+#             # of in deserialization, but i guess not...
+#             if wi_idx > 0:
+#                 wi.previous_wi = new_workflow[wi_idx - 1]
+# 
+#         # replace the current workflow with the one we just loaded
+#         
+#         if False:  # for debugging the loading of things
+#             from .event_tracer import record_events 
+#             
+#             with record_events() as container:
+#                 self.model.workflow = new_workflow
+#                                 
+#             container.save_to_directory(os.getcwd()) 
+#         else:
+#             self.model.workflow = new_workflow
+#             self.model.modified = False
+#             
+#         for wi in self.model.workflow:
+#             wi.lock.release()
+
     def open_file(self, path):
-        f = open(path, 'r')
-        unpickler = pickle.Unpickler(f)
         
-        try:
-            version = unpickler.load()
-        except TraitError:
-            error(parent = None,
-                  message = "This doesn't look like a Cytoflow file. Or maybe "
-                            "you tried to load a workflow older than version "
-                            "0.5?")
-            return
+        with open(path, 'r') as f:
+            new_workflow = Camel([camel_registry]).load(f.read())
         
-        if version != self.model.version:
-            ret = confirm(parent = None,
-                          message = "This is Cytoflow {}, but you're trying "
-                          "to load a workflow from version {}. This may or "
-                          "may not work!  Are you sure you want to proceed?"
-                          .format(self.model.version, version),
-                          title = "Load workflow?")
-            if ret != YES:
-                return
-
-        try:
-            new_workflow = unpickler.load()
-        except TraitError:
-            error(parent = None,
-                  message = "Error trying to load the workflow.")
-            return
-
         # a few things to take care of when reloading
         for wi_idx, wi in enumerate(new_workflow):
             
@@ -316,14 +355,15 @@ class FlowTask(Task):
             self.save_file(dialog.path)
             self.filename = dialog.path
             self.window.title = "Cytoflow - " + self.filename
-        pass
             
     def save_file(self, path):
         # TODO - error handling
-        f = open(path, 'w')
-        pickler = pickle.Pickler(f, 0)  # text protocol for now
-        pickler.dump(self.model.version)
-        pickler.dump(self.model.workflow)
+        with open(path, 'w') as f:
+            f.write(Camel([standard_types_registry,
+                           camel_registry]).dump(self.model.workflow))
+#         pickler = pickle.Pickler(f, 0)  # text protocol for now
+#         pickler.dump(self.model.version)
+#         pickler.dump(self.model.workflow)
         self.model.modified = False
         
     @on_trait_change('model.modified', post_init = True)

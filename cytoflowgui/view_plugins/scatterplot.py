@@ -86,6 +86,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
+from cytoflowgui.serialization import camel_registry
 from cytoflowgui.subset import SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
@@ -189,5 +190,24 @@ class ScatterplotPlugin(Plugin, PluginHelpMixin):
     @contributes_to(VIEW_PLUGIN_EXT)
     def get_plugin(self):
         return self
+    
 
+### Serialization
+
+@camel_registry.dumper(ScatterplotPluginView, 'scatterplot', 1)
+def _dump(view):
+    return dict(xchannel = view.xchannel,
+                xscale = view.xscale,
+                ychannel = view.ychannel,
+                yscale = view.yscale,
+                xfacet = view.xfacet,
+                yfacet = view.yfacet,
+                huefacet = view.huefacet,
+                huescale = view.huescale,
+                plotfacet = view.plotfacet,
+                subset_list = view.subset_list)
+    
+@camel_registry.loader('scatterplot', 1)
+def _load(data, version):
+    return ScatterplotPluginView(**data)
         

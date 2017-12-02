@@ -39,6 +39,8 @@ from traitsui.api import View, CheckListEditor, Item, HGroup
 
 from cytoflowgui.value_bounds_editor import ValuesBoundsEditor
 from cytoflowgui.vertical_list_editor import VerticalListEditor, _VerticalListEditor
+from cytoflowgui.serialization import camel_registry
+
 import cytoflow.utility as util
 
 class ISubset(Interface):
@@ -68,6 +70,17 @@ class BoolSubset(HasStrictTraits):
             return "({0} == False)".format(util.sanitize_identifier(self.name))
         else:
             return ""
+        
+@camel_registry.dumper(BoolSubset, 'bool-subset', 1)
+def _dump_bool_subset(bs):
+    return dict(name = bs.name,
+                values = bs.values,
+                selected_t = bs.selected_t,
+                selected_f = bs.selected_f)
+    
+@camel_registry.loader('bool-subset', 1)
+def _load_bool_subset(data, version):
+    return BoolSubset(**data)
 
 @provides(ISubset)
 class CategorySubset(HasStrictTraits):
@@ -97,6 +110,16 @@ class CategorySubset(HasStrictTraits):
         phrase += ")"
         
         return phrase
+    
+@camel_registry.dumper(CategorySubset, 'category-subset', 1)
+def _dump_category_subset(cs):
+    return dict(name = cs.name,
+                values = cs.values,
+                selected = cs.selected)
+    
+@camel_registry.loader('category-subset', 1)
+def _load_category_subset(data, version):
+    return CategorySubset(**data)
 
 @provides(ISubset)
 class RangeSubset(HasStrictTraits):
@@ -141,6 +164,18 @@ class RangeSubset(HasStrictTraits):
             return min(self.values)
         else:
             return 0    
+        
+@camel_registry.dumper(RangeSubset, 'range-subset', 1)
+def _dump_range_subset(rs):
+    return dict(name = rs.name,
+                values = rs.values,
+                high = rs.high,
+                low = rs.low)
+    
+@camel_registry.loader('range-subset', 1)
+def _load_range_subset(data, version):
+    return RangeSubset(**data)
+
 
 class _SubsetListEditor(_VerticalListEditor):
 

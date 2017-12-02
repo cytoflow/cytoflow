@@ -39,6 +39,7 @@ from cytoflow.views.i_view import IView
 from cytoflow.utility import CytoflowError, CytoflowOpError, CytoflowViewError
 
 from cytoflowgui.flow_task_pane import TabListEditor
+from cytoflowgui.serialization import camel_registry
 
 # http://stackoverflow.com/questions/1977362/how-to-create-module-wide-variables-in-python
 this = sys.modules[__name__]
@@ -185,6 +186,23 @@ class WorkflowItem(HasStrictTraits):
 
     def __repr__(self):
         return "<{}: {}>".format(self.__class__.__name__, self.operation.__class__.__name__)
+    
+@camel_registry.dumper(WorkflowItem, 'workflow-item', 1)
+def _dump_wi(wi):
+    return dict(operation = wi.operation,
+                views = list(wi.views),
+                current_view = wi.views.index(wi.current_view)
+                               if wi.current_view is not None
+                               else None)
+
+@camel_registry.loader('workflow-item', 1)
+def _load_wi(data, version):
+    ret = WorkflowItem(operation = data['operation'],
+                       views = data['views'])
+    if data['current_view'] is not None:
+        ret.current_view = data['views'][data['current_view']]
+        
+    return ret
 
     
 class RemoteWorkflowItem(WorkflowItem):
