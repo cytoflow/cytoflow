@@ -146,7 +146,7 @@ class ScatterplotHandler(ViewHandlerMixin, Controller):
 
 
 class ScatterplotPluginView(PluginViewMixin, ScatterplotView):
-    handler_factory = Callable(ScatterplotHandler)
+    handler_factory = Callable(ScatterplotHandler, transient = True)
     plotfacet = Str
 
     def enum_plots_wi(self, wi):

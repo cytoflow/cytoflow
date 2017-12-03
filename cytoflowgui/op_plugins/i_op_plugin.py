@@ -129,6 +129,20 @@ class PluginOpMixin(HasTraits):
          - Changed.PREV_RESULT -- the previous WorkflowItem's result changed
          """
         return True
+    
+    def __repr__(self):
+        traits = self.trait_get(transient = lambda x: x is not True).items()
+        # todo - sort these?
+        
+        # filter out traits that haven't changed
+        default_traits = self.__class__().trait_get(transient = lambda x: x is not True)
+        
+        traits = [(k, v) for k, v in traits if v != default_traits[k]]
+        
+        # %s uses the str function and %r uses the repr function
+        traits_str = ', '.join(["%s = %r" % (k, v) for k, v in traits])
+        
+        return self.__class__.__name__ + '(' + traits_str + ')'
 
           
 shared_op_traits = Group(Item('context.estimate_warning',

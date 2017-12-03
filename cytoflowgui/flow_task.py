@@ -42,14 +42,11 @@ from cytoflowgui.help_pane import HelpDockPane
 from cytoflowgui.workflow import Workflow
 from cytoflowgui.op_plugins import IOperationPlugin, ImportPlugin, OP_PLUGIN_EXT
 from cytoflowgui.view_plugins import IViewPlugin, VIEW_PLUGIN_EXT
-from cytoflowgui.notebook import JupyterNotebookWriter
 from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.util import DefaultFileDialog
-from cytoflowgui.serialization import camel_registry, standard_types_registry
+from cytoflowgui.serialization import save_yaml, load_yaml, save_notebook
 
 # from . import mailto
-
-import pickle as pickle
 
 class FlowTask(Task):
     """
@@ -85,9 +82,9 @@ class FlowTask(Task):
                               TaskAction(name='Save Plot...',
                                          method='on_export',
                                          accelerator='Ctrl+x'),
-#                               TaskAction(name='Export Jupyter notebook...',
-#                                          method='on_notebook',
-#                                          accelerator='Ctrl+I'),                              
+                            TaskAction(name='Export Jupyter notebook...',
+                                       method='on_notebook',
+                                       accelerator='Ctrl+I'),                              
 #                               TaskAction(name='Preferences...',
 #                                          method='on_prefs',
 #                                          accelerator='Ctrl+P'),
@@ -115,10 +112,10 @@ class FlowTask(Task):
                                       name = "Save Plot",
                                       tooltip='Save the current plot',
                                       image=ImageResource('export')),
-#                            TaskAction(method='on_notebook',
-#                                       name='Notebook',
-#                                       tooltip="Export to an Jupyter notebook...",
-#                                       image=ImageResource('ipython')),
+                            TaskAction(method='on_notebook',
+                                       name='Notebook',
+                                       tooltip="Export to an Jupyter notebook...",
+                                       image=ImageResource('ipython')),
 #                            TaskAction(method='on_prefs',
 #                                       name = "Prefs",
 #                                       tooltip='Preferences',
@@ -140,7 +137,7 @@ class FlowTask(Task):
         # if we're debugging, add a few data bits
         if self.model.debug:
             from cytoflow import Tube
-            
+                        
             import_op = self.model.workflow[0].operation
             import_op.conditions = {"Dox" : "float", "Well" : "category"}
 #             import_op.conditions["Dox"] = "float"
@@ -303,8 +300,7 @@ class FlowTask(Task):
 
     def open_file(self, path):
         
-        with open(path, 'r') as f:
-            new_workflow = Camel([camel_registry]).load(f.read())
+        new_workflow = load_yaml(path)
         
         # a few things to take care of when reloading
         for wi_idx, wi in enumerate(new_workflow):
@@ -340,7 +336,8 @@ class FlowTask(Task):
     def on_save(self):
         """ Save the file to the previous filename  """
         if self.filename:
-            self.save_file(self.filename)
+            save_yaml(self.model.workflow, self.filename)
+            self.model.modified = False
         else:
             self.on_save_as()
             
@@ -352,20 +349,11 @@ class FlowTask(Task):
                                                FileDialog.create_wildcard("All files", "*")))                    #@UndefinedVariable  
         
         if dialog.open() == OK:
-            self.save_file(dialog.path)
+            save_yaml(self.model.workflow, dialog.path)
             self.filename = dialog.path
+            self.model.modified = False
             self.window.title = "Cytoflow - " + self.filename
             
-    def save_file(self, path):
-        # TODO - error handling
-        with open(path, 'w') as f:
-            f.write(Camel([standard_types_registry,
-                           camel_registry]).dump(self.model.workflow))
-#         pickler = pickle.Pickler(f, 0)  # text protocol for now
-#         pickler.dump(self.model.version)
-#         pickler.dump(self.model.workflow)
-        self.model.modified = False
-        
     @on_trait_change('model.modified', post_init = True)
     def _on_model_modified(self, val):
         if val:
@@ -412,16 +400,13 @@ class FlowTask(Task):
         """
         Shows a dialog to export the workflow to an Jupyter notebook
         """
-        
-        return
     
         dialog = FileDialog(parent = self.window.control,
                             action = 'save as',
                             wildcard = '*.ipynb')
         if dialog.open() == OK:
-            writer = JupyterNotebookWriter(file = dialog.path)
-            writer.export(self.model.workflow)
-   
+            save_notebook(self.model.workflow, dialog.path)
+
     
     def on_prefs(self):
         pass

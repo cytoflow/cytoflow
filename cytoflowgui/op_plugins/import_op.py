@@ -109,6 +109,7 @@ from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_E
 from cytoflowgui.toggle_button import ToggleButtonEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin
 
+Tube.__repr__ = PluginOpMixin.__repr__
 
 class ImportHandler(OpHandlerMixin, Controller):
     
@@ -204,9 +205,9 @@ class ImportPlugin(Plugin, PluginHelpMixin):
     
 @camel_registry.dumper(ImportPluginOp, 'import', 1)
 def _dump_op(op):
-    return dict(tubes = list(op.tubes),
-                conditions = dict(op.conditions),
-                channels = dict(op.channels),
+    return dict(tubes = op.tubes,
+                conditions = op.conditions,
+                channels = op.channels,
                 events = op.events,
                 name_metadata = op.name_metadata)
 
@@ -217,7 +218,7 @@ def _load_op(data, version):
 @camel_registry.dumper(Tube, 'tube', 1)
 def _dump_tube(tube):
     return dict(file = tube.file,
-                conditions = dict(tube.conditions))
+                conditions = tube.conditions)
 
 @camel_registry.loader('tube', 1)
 def _load_tube(data, version):
