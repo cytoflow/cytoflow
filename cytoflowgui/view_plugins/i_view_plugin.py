@@ -23,6 +23,7 @@ Created on Mar 15, 2015
 """
 
 import os
+from textwrap import dedent
 
 from pyface.qt import QtGui
 
@@ -137,18 +138,34 @@ class PluginViewMixin(HasTraits):
             return []
             
     def __repr__(self):
-        traits = self.trait_get(transient = lambda x: x is not True).items()
+        traits = self.trait_get(transient = lambda x: x is not True)
         # todo - sort these?
         
         # filter out traits that haven't changed
-        default_traits = self.__class__().trait_get(transient = lambda x: x is not True)
+        default_traits = self.__class__().trait_get(transient = lambda x: x is not True,
+                                                    status = lambda x: x is not True)
         
-        traits = [(k, v) for k, v in traits if v != default_traits[k]]
+        traits = {k: v for k, v in traits.items() if k in default_traits 
+                                                  and v != default_traits[k]}
+        
+        # swap out subset_list for subset
+        traits.pop('subset_list', None)
+        if self.subset != "":
+            traits['subset'] = self.subset
+            
+        # remove kwargs
+        traits.pop('kwargs', None)
         
         # %s uses the str function and %r uses the repr function
-        traits_str = ', '.join(["%s = %r" % (k, v) for k, v in traits])
+        traits_str = ', '.join(["%s = %r" % (k, v) for k, v in traits.items()])
         
         return self.__class__.__name__ + '(' + traits_str + ')'
+    
+    def get_notebook_code(self, idx):
+        return dedent("""
+            {repr}.plot(ex_{idx})
+            """
+            .format(repr(self), idx))
         
 
 class ViewHandlerMixin(HasTraits):

@@ -100,7 +100,8 @@ from pyface.api import OK as PyfaceOK
 from envisage.api import Plugin, contributes_to
 
 import cytoflow.utility as util
-from cytoflow import ImportOp, Tube
+from cytoflow import ImportOp as _ImportOp
+from cytoflow import Tube
 from cytoflow.operations.i_operation import IOperation
                        
 from cytoflowgui.serialization import camel_registry
@@ -172,12 +173,12 @@ class ImportHandler(OpHandlerMixin, Controller):
         
 
 @provides(IOperation)
-class ImportPluginOp(PluginOpMixin, ImportOp):
+class ImportOp(PluginOpMixin, _ImportOp):
     handler_factory = Callable(ImportHandler, transient = True)
     ret_events = util.PositiveInt(0, allow_zero = True, status = True)
     
     def apply(self, experiment = None):
-        ret = super(ImportPluginOp, self).apply(experiment = experiment)
+        ret = super(ImportOp, self).apply(experiment = experiment)
         self.ret_events = len(ret.data)
 
         return ret
@@ -192,7 +193,7 @@ class ImportPlugin(Plugin, PluginHelpMixin):
     menu_group = "TOP"
     
     def get_operation(self):
-        return ImportPluginOp()
+        return ImportOp()
     
     def get_icon(self):
         return None
@@ -203,7 +204,7 @@ class ImportPlugin(Plugin, PluginHelpMixin):
     
 ### Serialization
     
-@camel_registry.dumper(ImportPluginOp, 'import', 1)
+@camel_registry.dumper(ImportOp, 'import', version = 1)
 def _dump_op(op):
     return dict(tubes = op.tubes,
                 conditions = op.conditions,
@@ -211,16 +212,16 @@ def _dump_op(op):
                 events = op.events,
                 name_metadata = op.name_metadata)
 
-@camel_registry.loader('import', 1)
+@camel_registry.loader('import', version = 1)
 def _load_op(data, version):
-    return ImportPluginOp(**data)
+    return ImportOp(**data)
 
-@camel_registry.dumper(Tube, 'tube', 1)
+@camel_registry.dumper(Tube, 'tube', version = 1)
 def _dump_tube(tube):
     return dict(file = tube.file,
                 conditions = tube.conditions)
 
-@camel_registry.loader('tube', 1)
+@camel_registry.loader('tube', version = 1)
 def _load_tube(data, version):
     return Tube(**data)
             

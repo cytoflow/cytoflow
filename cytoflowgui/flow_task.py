@@ -26,12 +26,11 @@ Created on Feb 11, 2015
 # ETSConfig.toolkit = 'qt4'
 
 import os.path
-from camel import Camel
 
-from traits.api import Instance, List, Bool, on_trait_change, Any, Unicode, TraitError
+from traits.api import Instance, List, Bool, on_trait_change, Any, Unicode
 from pyface.tasks.api import Task, TaskLayout, PaneItem
 from pyface.tasks.action.api import SMenu, SMenuBar, SToolBar, TaskAction
-from pyface.api import FileDialog, ImageResource, AboutDialog, information, error, confirm, OK, YES
+from pyface.api import FileDialog, ImageResource, AboutDialog, information, confirm, OK, YES
 from envisage.api import Plugin, ExtensionPoint, contributes_to
 from envisage.ui.tasks.api import TaskFactory
 
@@ -311,10 +310,19 @@ class FlowTask(Task):
             # clear the wi status
             wi.status = "loading"
 
-            # re-link the linked list.  i thought this would get taken care
-            # of in deserialization, but i guess not...
+            # re-link the linked list.
             if wi_idx > 0:
                 wi.previous_wi = new_workflow[wi_idx - 1]
+            
+            if wi_idx < len(new_workflow) - 1:
+                wi.next_wi = new_workflow[wi_idx + 1]
+                
+            # connect default views back to their operations
+            if hasattr(wi.operation, 'default_view'):
+                for view in wi.views:
+                    if view.id == wi.operation.default_view().id:
+                        view.op = wi.operation
+                        wi.default_view = view
 
         # replace the current workflow with the one we just loaded
         
@@ -400,10 +408,12 @@ class FlowTask(Task):
         """
         Shows a dialog to export the workflow to an Jupyter notebook
         """
-    
+
         dialog = FileDialog(parent = self.window.control,
                             action = 'save as',
-                            wildcard = '*.ipynb')
+                            default_suffix = "ipynb",
+                            wildcard = (FileDialog.create_wildcard("Jupyter notebook", "*.ipynb") + ';' + #@UndefinedVariable  
+                                        FileDialog.create_wildcard("All files", "*")))  # @UndefinedVariable
         if dialog.open() == OK:
             save_notebook(self.model.workflow, dialog.path)
 

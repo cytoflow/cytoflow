@@ -6,6 +6,9 @@ Created on Dec 2, 2017
 '''
 
 from textwrap import dedent
+import logging
+
+from pyface.api import error
 
 #### YAML serialization
 
@@ -26,7 +29,7 @@ def save_yaml(data, path):
         f.write(Camel([standard_types_registry,
                        camel_registry]).dump(data))
 
-# camel adaptors for traits lists, dicts, numpy types
+# camel adapters for traits lists, dicts, numpy types
 from numpy import float64
 @standard_types_registry.dumper(float64, 'float', version = None)
 def _dump_float(fl):
@@ -57,22 +60,36 @@ def save_notebook(workflow, path):
     nb['cells'].append(nbf.v4.new_code_cell(header))
         
     for i, wi in enumerate(workflow):
-        code = "op_{} = {}\n\n".format(i, repr(wi.operation))
+
+        code = wi.operation.get_notebook_code(i)
         
-        if(hasattr(wi.operation, 'estimate')):
-            code += "op_{}.estimate()\n".format(i)
-            
-        if i == 0:
-            code += "ex_{} = op_{}.apply()\n".format(i, i)
-        else:
-            code += "ex_{} = op_{}.apply(ex_{})\n".format(i, i, i-1)
-            
-#         code = FormatCode(code)
-        nb['cells'].append(nbf.v4.new_code_cell(code))
-            
+        logging.debug("Op cell:")
+        logging.debug(code)
+        try:
+            code = FormatCode(code, style_config = 'pep8')[0]
+        except:
+            error(parent = None,
+                  message = "Had trouble serializing the {} operation"
+                            .format(wi.operation.friendly_id))
+        
+        nb['cells'].append(nbf.v4.new_code_cell(code))   
+                    
         for view in wi.views:
-            code = "{}.plot(ex_{})\n".format(repr(view), i)
-#             code = FormatCode(code)
+            if hasattr(wi.operation, 'default_view') and \
+                wi.operation.default_view().id == view.id:
+                continue
+
+            code = view.get_notebook_code(i)
+    
+            logging.debug("View cell")
+            logging.debug(code)
+            try:
+                code = FormatCode(code, style_config = 'pep8')[0]
+            except:
+                error(parent = None,
+                      message = "Had trouble serializing the {} view of the {} operation"
+                                 .format(view.friendly_id, wi.operation.friendly_id))
+            
             nb['cells'].append(nbf.v4.new_code_cell(code))
             
     with open(path, 'w') as f:

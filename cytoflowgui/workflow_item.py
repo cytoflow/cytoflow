@@ -190,10 +190,12 @@ class WorkflowItem(HasStrictTraits):
 @camel_registry.dumper(WorkflowItem, 'workflow-item', 1)
 def _dump_wi(wi):
     return dict(operation = wi.operation,
-                views = list(wi.views),
+                views = wi.views,
                 current_view = wi.views.index(wi.current_view)
                                if wi.current_view is not None
-                               else None)
+                               else None,
+                channels = wi.channels,
+                conditions = wi.conditions)
 
 @camel_registry.loader('workflow-item', 1)
 def _load_wi(data, version):
