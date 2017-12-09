@@ -189,20 +189,43 @@ class WorkflowItem(HasStrictTraits):
     
 @camel_registry.dumper(WorkflowItem, 'workflow-item', 1)
 def _dump_wi(wi):
-    return dict(operation = wi.operation,
+    current_view_idx = wi.views.index(wi.current_view) \
+                           if wi.current_view is not None \
+                           else None
+                       
+    default_view_idx = wi.views.index(wi.default_view) \
+                            if wi.default_view is not None \
+                            else None
+                            
+    return dict(deletable = wi.deletable,
+                operation = wi.operation,
                 views = wi.views,
-                current_view = wi.views.index(wi.current_view)
-                               if wi.current_view is not None
-                               else None,
                 channels = wi.channels,
-                conditions = wi.conditions)
+                conditions = list(wi.conditions.keys()),
+                metadata = wi.metadata,
+                statistics = list(wi.statistics.keys()),
+                current_view_idx = current_view_idx,
+                default_view_idx = default_view_idx)
 
 @camel_registry.loader('workflow-item', 1)
 def _load_wi(data, version):
-    ret = WorkflowItem(operation = data['operation'],
-                       views = data['views'])
-    if data['current_view'] is not None:
-        ret.current_view = data['views'][data['current_view']]
+    current_view_idx = data.pop('current_view_idx', None)
+    default_view_idx = data.pop('default_view_idx', None)
+    
+    data['conditions'] = {k : pd.Series() for k in data['conditions']}
+#     data['metadata'] = {k : None for k in data['metadata']}
+    data['statistics'] = {k : pd.Series() for k in data['statistics']}
+    
+    ret = WorkflowItem(**data)
+
+    if default_view_idx is not None:
+        default_view_traits = ret.views[default_view_idx].trait_get(transient = lambda x: x is not True)
+        default_view_traits.pop('op', None)
+        
+        ret.default_view = ret.views[default_view_idx] = ret.operation.default_view(**default_view_traits)
+
+    if current_view_idx is not None:
+        ret.current_view = ret.views[current_view_idx]
         
     return ret
 

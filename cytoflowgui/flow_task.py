@@ -316,13 +316,7 @@ class FlowTask(Task):
             
             if wi_idx < len(new_workflow) - 1:
                 wi.next_wi = new_workflow[wi_idx + 1]
-                
-            # connect default views back to their operations
-            if hasattr(wi.operation, 'default_view'):
-                for view in wi.views:
-                    if view.id == wi.operation.default_view().id:
-                        view.op = wi.operation
-                        wi.default_view = view
+
 
         # replace the current workflow with the one we just loaded
         
