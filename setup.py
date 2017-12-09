@@ -77,6 +77,8 @@ setup(
                         'python-dateutil>=2.6.0',
                         'statsmodels>=0.6.1',
                         'envisage>=4.6.0',
+                        'camel>=0.1.2',
+                        'yapf>=0.20',
                         'fcsparser>=0.1.3'] 
                 if not on_rtd else None,
                         
