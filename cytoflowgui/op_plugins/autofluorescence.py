@@ -225,8 +225,8 @@ def _load(data, version):
 
 @camel_registry.dumper(AutofluorescencePluginView, 'autofluorescence-view', version = 1)
 def _dump_view(view):
-    return dict()
+    return dict(op = view.op)
 
 @camel_registry.loader('autofluorescence-view', version = 1)
 def _load_view(data, version):
-    return AutofluorescencePluginView()
+    return AutofluorescencePluginView(**data)

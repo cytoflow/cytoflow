@@ -86,7 +86,7 @@ from pyface.api import ImageResource
 
 from cytoflow.operations import IOperation
 from cytoflow.views.i_selectionview import ISelectionView
-from cytoflow.operations.polygon import PolygonOp, PolygonSelection
+from cytoflow.operations.polygon import PolygonOp as _PolygonOp, PolygonSelection
 
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
@@ -95,6 +95,7 @@ from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin
 from cytoflowgui.workflow import Changed
+from cytoflowgui.serialization import camel_registry
 
 class PolygonHandler(OpHandlerMixin, Controller):
     def default_traits_view(self):
@@ -149,7 +150,6 @@ class PolygonSelectionView(PluginViewMixin, PolygonSelection):
     handler_factory = Callable(PolygonViewHandler)
     op = Instance(IOperation, fixed = True)
     vertices = DelegatesTo('op', status = True)
-    name = Str
     
     def should_plot(self, changed):
         if changed == Changed.PREV_RESULT or changed == Changed.VIEW:
@@ -160,7 +160,7 @@ class PolygonSelectionView(PluginViewMixin, PolygonSelection):
     def plot_wi(self, wi):
         self.plot(wi.previous_wi.result)
     
-class PolygonPluginOp(PluginOpMixin, PolygonOp):
+class PolygonOp(PluginOpMixin, _PolygonOp):
     handler_factory = Callable(PolygonHandler)
     
     def default_view(self, **kwargs):
@@ -176,7 +176,7 @@ class PolygonPlugin(Plugin, PluginHelpMixin):
     menu_group = "Gates"
     
     def get_operation(self):
-        return PolygonPluginOp()
+        return PolygonOp()
     
     def get_icon(self):
         return ImageResource('polygon')
@@ -184,3 +184,27 @@ class PolygonPlugin(Plugin, PluginHelpMixin):
     @contributes_to(OP_PLUGIN_EXT)
     def get_plugin(self):
         return self
+
+### Serialization
+@camel_registry.dumper(PolygonOp, 'polygon', version = 1)
+def _dump(op):
+    return dict(name = op.name,
+                xchannel = op.xchannel,
+                ychannel = op.ychannel,
+                vertices = op.vertices,
+                _xscale = op._xscale,
+                _yscale = op._yscale)
+    
+@camel_registry.loader('polygon', version = 1)
+def _load(data, version):
+    return PolygonOp(**data)
+
+@camel_registry.dumper(PolygonSelectionView, 'polygon-view', version = 1)
+def _dump_view(view):
+    return dict(op = view.op,
+                huefacet = view.huefacet,
+                subset_list = view.subset_list)
+
+@camel_registry.loader('polygon-view', version = 1)
+def _load_view(data, version):
+    return PolygonSelectionView(**data)

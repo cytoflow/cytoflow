@@ -184,6 +184,7 @@ from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin
 from cytoflowgui.vertical_list_editor import VerticalListEditor
 from cytoflowgui.workflow import Changed
+from cytoflowgui.serialization import camel_registry
 
 class _BleedthroughControl(HasTraits):
     channel = Str
@@ -549,3 +550,50 @@ class TasbePlugin(Plugin, PluginHelpMixin):
     def get_plugin(self):
         return self
     
+### Serialization
+@camel_registry.dumper(TasbePluginOp, 'tasbe', version = 1)
+def _dump(op):
+    return dict(channels = op.channels,
+                blank_file = op.blank_file,
+                bleedthrough_list = op.bleedthrough_list,
+                beads_name = op.beads_name,
+                beads_file = op.beads_file,
+                beads_unit = op.beads_unit,
+                bead_peak_quantile = op.bead_peak_quantile,
+                bead_brightness_threshold = op.bead_brightness_threshold,
+                bead_brightness_cutoff = op.bead_brightness_cutoff,
+                to_channel = op.to_channel,
+                mixture_model = op.mixture_model,
+                translation_list = op.translation_list,
+                subset_list = op.subset_list)
+    
+@camel_registry.loader('tasbe', version = 1)
+def _load(data, version):
+    return TasbePluginOp(**data)
+
+@camel_registry.dumper(_BleedthroughControl, 'tasbe-bleedthrough-control', version = 1)
+def _dump_bleedthrough_control(bl):
+    return dict(channel = bl.channel,
+                file = bl.file)
+    
+@camel_registry.loader('tasbe-bleedthrough-control', version = 1)
+def _load_bleedthrough_control(data, version):
+    return _BleedthroughControl(**data)
+
+@camel_registry.dumper(_TranslationControl, 'tasbe-translation-control', version = 1)
+def _dump_translation_control(tl):
+    return dict(from_channel = tl.from_channel,
+                to_channel = tl.to_channel,
+                file = tl.file)
+    
+@camel_registry.loader('tasbe-translation-control', version = 1)
+def _load_translation_control(data, version):
+    return _TranslationControl(**data)
+
+@camel_registry.dumper(TasbePluginView, 'tasbe-view', version = 1)
+def _dump_view(view):
+    return dict(op = view.op)
+
+@camel_registry.loader('tasbe-view', version = 1)
+def _load_view(data, version):
+    return TasbePluginView(**data)

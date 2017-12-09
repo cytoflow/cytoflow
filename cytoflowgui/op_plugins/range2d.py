@@ -28,7 +28,7 @@ from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
 from cytoflow.operations import IOperation
-from cytoflow.operations.range2d import Range2DOp, RangeSelection2D
+from cytoflow.operations.range2d import Range2DOp as _Range2DOp, RangeSelection2D
 from cytoflow.views.i_selectionview import ISelectionView
 
 from cytoflowgui.op_plugins.i_op_plugin \
@@ -38,6 +38,7 @@ from cytoflowgui.subset import SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.workflow import Changed
+from cytoflowgui.serialization import camel_registry
 
 '''
 2D Range Gate
@@ -195,7 +196,7 @@ class Range2DSelectionView(PluginViewMixin, RangeSelection2D):
     def plot_wi(self, wi):
         self.plot(wi.previous_wi.result)
     
-class Range2DPluginOp(Range2DOp, PluginOpMixin):
+class Range2DOp(_Range2DOp, PluginOpMixin):
     handler_factory = Callable(Range2DHandler, transient = True)
     
     def default_view(self, **kwargs):
@@ -214,7 +215,7 @@ class Range2DPlugin(Plugin, PluginHelpMixin):
     menu_group = "Gates"
     
     def get_operation(self):
-        return Range2DPluginOp()
+        return Range2DOp()
 
     def get_icon(self):
         return ImageResource('range2d')
@@ -222,3 +223,30 @@ class Range2DPlugin(Plugin, PluginHelpMixin):
     @contributes_to(OP_PLUGIN_EXT)
     def get_plugin(self):
         return self
+    
+### Serialization
+@camel_registry.dumper(Range2DOp, 'range2d', version = 1)
+def _dump(op):
+    return dict(name = op.name,
+                xchannel = op.xchannel,
+                xlow = op.xlow,
+                xhigh = op.xhigh,
+                ychannel = op.ychannel,
+                ylow = op.ylow,
+                yhigh = op.yhigh)
+    
+@camel_registry.loader('range2d', version = 1)
+def _load(data, version):
+    return Range2DOp(**data)
+
+@camel_registry.dumper(Range2DSelectionView, 'range2d-view', version = 1)
+def _dump_view(view):
+    return dict(op = view.op,
+                xscale = view.xscale,
+                yscale = view.yscale,
+                huefacet = view.huefacet,
+                subset_list = view.subset_list)
+    
+@camel_registry.loader('range2d-view', version = 1)
+def _load_view(data, version):
+    return Range2DSelectionView(**data)

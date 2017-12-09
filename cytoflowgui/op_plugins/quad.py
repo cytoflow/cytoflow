@@ -93,7 +93,7 @@ from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
 from cytoflow.operations import IOperation
-from cytoflow.operations.quad import QuadOp, QuadSelection
+from cytoflow.operations.quad import QuadOp as _QuadOp, QuadSelection
 
 from cytoflowgui.op_plugins.i_op_plugin \
     import IOperationPlugin, OpHandlerMixin, PluginOpMixin, OP_PLUGIN_EXT, shared_op_traits, PluginHelpMixin
@@ -102,6 +102,7 @@ from cytoflowgui.subset import SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.workflow import Changed
+from cytoflowgui.serialization import camel_registry
 
 class QuadHandler(OpHandlerMixin, Controller):
     def default_traits_view(self):
@@ -178,7 +179,7 @@ class QuadSelectionView(PluginViewMixin, QuadSelection):
     def plot_wi(self, wi):        
         self.plot(wi.previous_wi.result)
     
-class QuadPluginOp(QuadOp, PluginOpMixin):
+class QuadOp(_QuadOp, PluginOpMixin):
     handler_factory = Callable(QuadHandler, transient = True)
      
     def default_view(self, **kwargs):
@@ -194,7 +195,7 @@ class QuadPlugin(Plugin, PluginHelpMixin):
     menu_group = "Gates"
     
     def get_operation(self):
-        return QuadPluginOp()
+        return QuadOp()
 
     def get_icon(self):
         return ImageResource(u'quad')
@@ -203,3 +204,27 @@ class QuadPlugin(Plugin, PluginHelpMixin):
     def get_plugin(self):
         return self
     
+### Serialization
+@camel_registry.dumper(QuadOp, 'quad', version = 1)
+def _dump(op):
+    return dict(name = op.name,
+                xchannel = op.xchannel,
+                xthreshold = op.xthreshold,
+                ychannel = op.ychannel,
+                ythreshold = op.ythreshold)
+    
+@camel_registry.loader('quad', version = 1)
+def _load(data, version):
+    return QuadOp(**data)
+
+@camel_registry.dumper(QuadSelectionView, 'quad-view', version = 1)
+def _dump_view(view):
+    return dict(op = view.op,
+                xscale = view.xscale,
+                yscale = view.yscale,
+                huefacet = view.huefacet,
+                subset_list = view.subset_list)
+    
+@camel_registry.loader('quad-view', version = 1)
+def _load_view(data, version):
+    return QuadSelectionView(**data)

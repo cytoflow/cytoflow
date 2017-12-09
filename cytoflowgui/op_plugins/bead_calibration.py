@@ -315,3 +315,11 @@ def _dump_unit(unit):
 @camel_registry.loader('bead-unit', version = 1)
 def _load_unit(data, version):
     return _Unit(**data)
+
+@camel_registry.dumper(BeadCalibrationPluginView, 'bead-calibration-view', version = 1)
+def _dump_view(view):
+    return dict(op = view.op)
+
+@camel_registry.loader('bead-calibration-view', version = 1)
+def _load_view(data, version):
+    return BeadCalibrationPluginView(**data)

@@ -183,7 +183,8 @@ def _load(data, version):
 
 @camel_registry.dumper(BinningPluginView, 'binning-view', version = 1)
 def _dump_view(view):
-    return dict(subset_list = view.subset_list)
+    return dict(op = view.op,
+                subset_list = view.subset_list)
 
 @camel_registry.loader('binning-view', version = 1)
 def _load_view(data, version):

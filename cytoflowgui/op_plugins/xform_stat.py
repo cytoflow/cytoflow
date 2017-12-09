@@ -61,13 +61,14 @@ from traits.api import (provides, Callable, List, Property, on_trait_change,
                         Str)
 from pyface.api import ImageResource
 
-from cytoflow.operations.xform_stat import TransformStatisticOp
+from cytoflow.operations.xform_stat import TransformStatisticOp as _TransformStatisticOp
 import cytoflow.utility as util
 
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
 from cytoflowgui.subset import SubsetListEditor, ISubset
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
 from cytoflowgui.workflow import Changed
+from cytoflowgui.serialization import camel_registry
 
 mean_95ci = lambda x: util.ci(x, np.mean, boots = 100)
 geomean_95ci = lambda x: util.ci(x, util.geom_mean, boots = 100)
@@ -175,7 +176,7 @@ class TransformStatisticHandler(OpHandlerMixin, Controller):
                            show_labels = False),
                     shared_op_traits)
 
-class TransformStatisticPluginOp(PluginOpMixin, TransformStatisticOp):
+class TransformStatisticOp(PluginOpMixin, _TransformStatisticOp):
     handler_factory = Callable(TransformStatisticHandler)
 
     # functions aren't picklable, so send the name instead
@@ -201,7 +202,7 @@ class TransformStatisticPluginOp(PluginOpMixin, TransformStatisticOp):
         
         self.function = transform_functions[self.statistic_name]
         
-        return TransformStatisticOp.apply(self, experiment)
+        return _TransformStatisticOp.apply(self, experiment)
 
 @provides(IOperationPlugin)
 class TransformStatisticPlugin(Plugin):
@@ -216,7 +217,7 @@ class TransformStatisticPlugin(Plugin):
     menu_group = "Gates"
     
     def get_operation(self):
-        return TransformStatisticPluginOp()
+        return TransformStatisticOp()
     
     def get_icon(self):
         return ImageResource('xform_stat')
@@ -225,3 +226,15 @@ class TransformStatisticPlugin(Plugin):
     def get_plugin(self):
         return self
     
+### Serialization
+@camel_registry.dumper(TransformStatisticOp, 'transform-statistic', version = 1)
+def _dump(op):
+    return dict(name = op.name,
+                statistic = op.statistic,
+                statistic_name = op.statistic_name,
+                by = op.by,
+                subset_list = op.subset_list)
+    
+@camel_registry.loader('transform-statistic', version = 1)
+def _load(data, version):
+    return TransformStatisticOp(**data)

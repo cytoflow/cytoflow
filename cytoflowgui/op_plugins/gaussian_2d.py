@@ -20,8 +20,8 @@
 Gaussian Mixture Model (2D)
 ---------------------------
 
-Fit a Gaussian mixture model with a specified number of components to one 
-channel.
+Fit a Gaussian mixture model with a specified number of components to two 
+channels.
 
 If **Num Components** is greater than 1, then this module creates a new 
 categorical metadata variable named **Name**, with possible values 
@@ -119,6 +119,7 @@ from cytoflowgui.subset import ISubset, SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin
 from cytoflowgui.workflow import Changed
+from cytoflowgui.serialization import camel_registry
 
 class GaussianMixture2DHandler(OpHandlerMixin, Controller):
     def default_traits_view(self):
@@ -298,3 +299,26 @@ class GaussianMixture2DPlugin(Plugin, PluginHelpMixin):
     def get_plugin(self):
         return self
     
+@camel_registry.dumper(GaussianMixture2DPluginOp, 'gaussian-2d', version = 1)
+def _dump(op):
+    return dict(name = op.name,
+                xchannel = op.xchannel,
+                ychannel = op.ychannel,
+                x_channel_scale = op.x_channel_scale,
+                y_channel_scale = op.y_channel_scale,
+                num_components = op.num_components,
+                sigma = op.sigma,
+                by = op.by,
+                subset_list = op.subset_list)
+    
+@camel_registry.loader('gaussian-2d', version = 1)
+def _load(data, version):
+    return GaussianMixture2DPluginOp(**data)
+
+@camel_registry.dumper(GaussianMixture2DPluginView, 'gaussian-2d-view', version = 1)
+def _dump_view(view):
+    return dict(op = view.op)
+
+@camel_registry.loader('gaussian-2d-view', version = 1)
+def _load_view(data, ver):
+    return GaussianMixture2DPluginView(**data)

@@ -42,10 +42,12 @@ from traitsui.api import View, Item, EnumEditor, Controller, TextEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
-from cytoflow.operations.ratio import RatioOp
+from cytoflow.operations.ratio import RatioOp as _RatioOp
 
 from cytoflowgui.op_plugins.i_op_plugin \
     import IOperationPlugin, OpHandlerMixin, PluginOpMixin, OP_PLUGIN_EXT, shared_op_traits, PluginHelpMixin
+
+from cytoflowgui.serialization import camel_registry
 
 class RatioHandler(OpHandlerMixin, Controller):
     def default_traits_view(self):
@@ -60,7 +62,7 @@ class RatioHandler(OpHandlerMixin, Controller):
                     shared_op_traits) 
 
     
-class RatioPluginOp(PluginOpMixin, RatioOp):
+class RatioOp(PluginOpMixin, _RatioOp):
     handler_factory = Callable(RatioHandler, transient = True)
 
 @provides(IOperationPlugin)
@@ -73,7 +75,7 @@ class RatioPlugin(Plugin, PluginHelpMixin):
     menu_group = "Data"
     
     def get_operation(self):
-        return RatioPluginOp()
+        return RatioOp()
 
     def get_icon(self):
         return ImageResource('ratio')
@@ -82,3 +84,13 @@ class RatioPlugin(Plugin, PluginHelpMixin):
     def get_plugin(self):
         return self
     
+### Serialization
+@camel_registry.dumper(RatioOp, 'ratio', version = 1)
+def _dump(op):
+    return dict(name = op.name,
+                numerator = op.numerator,
+                denominator = op.denominator)
+    
+@camel_registry.loader('ratio', version = 1)
+def _load(data, version):
+    return RatioOp(**data)

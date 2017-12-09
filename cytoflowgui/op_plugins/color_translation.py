@@ -68,7 +68,7 @@ from pyface.api import ImageResource
 
 import cytoflow.utility as util
 
-from cytoflow.operations.color_translation import ColorTranslationOp, ColorTranslationDiagnostic
+from cytoflow.operations.color_translation import ColorTranslationOp as _ColorTranslationOp, ColorTranslationDiagnostic
 from cytoflow.views.i_selectionview import IView
 
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
@@ -78,6 +78,7 @@ from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin
 from cytoflowgui.vertical_list_editor import VerticalListEditor
 from cytoflowgui.workflow import Changed
+from cytoflowgui.serialization import camel_registry
 
 class _Control(HasTraits):
     from_channel = Str
@@ -136,7 +137,7 @@ class ColorTranslationHandler(OpHandlerMixin, Controller):
                          show_label = False),
                     shared_op_traits)
 
-class ColorTranslationPluginOp(PluginOpMixin, ColorTranslationOp):
+class ColorTranslationOp(PluginOpMixin, _ColorTranslationOp):
     handler_factory = Callable(ColorTranslationHandler)
 
     add_control = Event
@@ -183,7 +184,7 @@ class ColorTranslationPluginOp(PluginOpMixin, ColorTranslationOp):
                           "used to estimate the model?",
                           util.CytoflowOpWarning)
                     
-        ColorTranslationOp.estimate(self, experiment, subset = self.subset)
+        _ColorTranslationOp.estimate(self, experiment, subset = self.subset)
         
         self.changed = (Changed.ESTIMATE_RESULT, self)
         
@@ -235,7 +236,7 @@ class ColorTranslationPlugin(Plugin, PluginHelpMixin):
     menu_group = "Gates"
     
     def get_operation(self):
-        return ColorTranslationPluginOp()
+        return ColorTranslationOp()
     
     def get_icon(self):
         return ImageResource('color_translation')
@@ -244,3 +245,31 @@ class ColorTranslationPlugin(Plugin, PluginHelpMixin):
     def get_plugin(self):
         return self
     
+### Serialization
+@camel_registry.dumper(ColorTranslationOp, 'color-translation', version = 1)
+def _dump(op):
+    return dict(controls_list = op.controls_list,
+                mixture_model = op.mixture_model,
+                subset_list = op.subset_list)
+    
+@camel_registry.loader('color-translation', version = 1)
+def _load(data, version):
+    return ColorTranslationOp(**data)
+
+@camel_registry.dumper(_Control, 'color-translation-control', version = 1)
+def _dump_control(c):
+    return dict(from_channel = c.from_channel,
+                to_channel = c.to_channel,
+                file = c.file)
+    
+@camel_registry.loader('color-translation-control', version = 1)
+def _load_control(data, version):
+    return _Control(**data)
+
+@camel_registry.dumper(ColorTranslationPluginView, 'color-translation-view', version = 1)
+def _dump_view(view):
+    return dict(op = view.op)
+
+@camel_registry.loader('color-translation-view', version = 1)
+def _load_view(data, ver):
+    return ColorTranslationPluginView(**data)

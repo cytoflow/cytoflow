@@ -268,9 +268,9 @@ def _load_control(data, version):
 
 @camel_registry.dumper(BleedthroughLinearPluginView, 'bleedthrough-linear-view', version = 1)
 def _dump_view(view):
-    return dict()
+    return dict(op = view.op)
 
 @camel_registry.loader('bleedthrough-linear-view', version = 1)
 def _load_view(data, version):
-    return BleedthroughLinearPluginView()
+    return BleedthroughLinearPluginView(**data)
                 

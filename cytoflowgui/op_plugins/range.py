@@ -78,7 +78,7 @@ from pyface.api import ImageResource
 
 from cytoflow.views.i_selectionview import ISelectionView
 from cytoflow.operations import IOperation
-from cytoflow.operations.range import RangeOp, RangeSelection
+from cytoflow.operations.range import RangeOp as _RangeOp, RangeSelection
 
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
@@ -87,6 +87,7 @@ from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin
 from cytoflowgui.workflow import Changed
+from cytoflowgui.serialization import camel_registry
 
 class RangeHandler(OpHandlerMixin, Controller):
     
@@ -151,7 +152,7 @@ class RangeSelectionView(PluginViewMixin, RangeSelection):
     
     
 @provides(IOperation)
-class RangePluginOp(PluginOpMixin, RangeOp):
+class RangeOp(PluginOpMixin, _RangeOp):
     handler_factory = Callable(RangeHandler)
     
     def default_view(self, **kwargs):
@@ -167,7 +168,7 @@ class RangePlugin(Plugin, PluginHelpMixin):
     menu_group = "Gates"
     
     def get_operation(self):
-        return RangePluginOp()
+        return RangeOp()
     
     def get_icon(self):
         return ImageResource('range')
@@ -176,3 +177,25 @@ class RangePlugin(Plugin, PluginHelpMixin):
     def get_plugin(self):
         return self
     
+### Serialization
+@camel_registry.dumper(RangeOp, 'range', version = 1)
+def _dump(op):
+    return dict(name = op.name,
+                channel = op.channel,
+                low = op.low,
+                high = op.high)
+    
+@camel_registry.loader('range', version = 1)
+def _load(data, version):
+    return RangeOp(**data)
+
+@camel_registry.dumper(RangeSelectionView, 'range-view', version = 1)
+def _dump_view(view):
+    return dict(op = view.op,
+                scale = view.scale,
+                huefacet = view.huefacet,
+                subset_list = view.subset_list)
+    
+@camel_registry.loader('range-view', version = 1)
+def _load_view(data, version):
+    return RangeSelectionView(**data)

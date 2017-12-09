@@ -72,7 +72,7 @@ from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
 from cytoflow.operations import IOperation
-from cytoflow.operations.threshold import ThresholdOp, ThresholdSelection
+from cytoflow.operations.threshold import ThresholdOp as _ThresholdOp, ThresholdSelection
 
 from cytoflowgui.op_plugins.i_op_plugin \
     import IOperationPlugin, OpHandlerMixin, PluginOpMixin, OP_PLUGIN_EXT, shared_op_traits, PluginHelpMixin
@@ -81,6 +81,7 @@ from cytoflowgui.subset import SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.workflow import Changed
+from cytoflowgui.serialization import camel_registry
 
 class ThresholdHandler(OpHandlerMixin, Controller):
     def default_traits_view(self):
@@ -141,7 +142,7 @@ class ThresholdSelectionView(PluginViewMixin, ThresholdSelection):
     def plot_wi(self, wi):        
         self.plot(wi.previous_wi.result)
     
-class ThresholdPluginOp(PluginOpMixin, ThresholdOp):
+class ThresholdOp(PluginOpMixin, _ThresholdOp):
     handler_factory = Callable(ThresholdHandler, transient = True)
      
     def default_view(self, **kwargs):
@@ -160,7 +161,7 @@ class ThresholdPlugin(Plugin, PluginHelpMixin):
     menu_group = "Gates"
     
     def get_operation(self):
-        return ThresholdPluginOp()
+        return ThresholdOp()
 
     def get_icon(self):
         return ImageResource('threshold')
@@ -169,3 +170,24 @@ class ThresholdPlugin(Plugin, PluginHelpMixin):
     def get_plugin(self):
         return self
     
+### Serialization
+@camel_registry.dumper(ThresholdOp, 'threshold', version = 1)
+def _dump(op):
+    return dict(name = op.name,
+                channel = op.channel,
+                threshold = op.threshold)
+    
+@camel_registry.loader('threshold', version = 1)
+def _load(data, version):
+    return ThresholdOp(**data)
+
+@camel_registry.dumper(ThresholdSelectionView, 'threshold-view', version = 1)
+def _dump_view(view):
+    return dict(op = view.op,
+                scale = view.scale,
+                huefacet = view.huefacet,
+                subset_list = view.subset_list)
+    
+@camel_registry.loader('threshold-view', version = 1)
+def _load_view(data, version):
+    return ThresholdSelectionView(**data)

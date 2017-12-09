@@ -119,6 +119,7 @@ from cytoflowgui.subset import ISubset, SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin
 from cytoflowgui.workflow import Changed
+from cytoflowgui.serialization import camel_registry
 
 class GaussianMixture1DHandler(OpHandlerMixin, Controller):
     def default_traits_view(self):
@@ -283,4 +284,26 @@ class GaussianMixture1DPlugin(Plugin, PluginHelpMixin):
     @contributes_to(OP_PLUGIN_EXT)
     def get_plugin(self):
         return self
+    
+@camel_registry.dumper(GaussianMixture1DPluginOp, 'gaussian-1d', version = 1)
+def _dump(op):
+    return dict(name = op.name,
+                channel = op.channel,
+                channel_scale = op.channel_scale,
+                num_components = op.num_components,
+                sigma = op.sigma,
+                by = op.by,
+                subset_list = op.subset_list)
+    
+@camel_registry.loader('gaussian-1d', version = 1)
+def _load(data, version):
+    return GaussianMixture1DPluginOp(**data)
+
+@camel_registry.dumper(GaussianMixture1DPluginView, 'gaussian-1d-view', version = 1)
+def _dump_view(view):
+    return dict(op = view.op)
+
+@camel_registry.loader('gaussian-1d-view', version = 1)
+def _load_view(data, version):
+    return GaussianMixture1DPluginView(**data)
     

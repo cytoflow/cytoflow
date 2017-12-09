@@ -31,7 +31,7 @@ def save_yaml(data, path):
                        camel_registry]).dump(data))
 
 # camel adapters for traits lists, dicts, numpy types
-from numpy import float64, int64
+from numpy import float64, int64, bool_
 @standard_types_registry.dumper(float64, 'float', version = None)
 def _dump_float(fl):
     return repr(float(fl)).lower()
@@ -40,7 +40,12 @@ def _dump_float(fl):
 def _dump_int(i):
     return repr(int(i)).lower()
 
+@standard_types_registry.dumper(bool_, 'bool', version = None)
+def _dump_bool(b):
+    return repr(bool(b)).lower()
+
 from traits.trait_handlers import TraitListObject, TraitDictObject
+from traits.api import Undefined
 
 @standard_types_registry.dumper(TraitListObject, 'seq', version = None)
 def _dump_list(tlo):
@@ -50,15 +55,27 @@ def _dump_list(tlo):
 def _dump_dict(tdo):
     return dict(tdo)
 
+@camel_registry.dumper(Undefined.__class__, 'undefined', version = 1)
+def _dump_undef(ud):
+    return "Undefined"
+
+@camel_registry.loader('undefined', version = 1)
+def _load_undef(data, version):
+    return Undefined
+
 @camel_registry.dumper(pandas.Series, 'pandas-series', version = 1)
 def _dump_series(s):
     return dict(index = list(s.index),
                 data = list(s.values))
     
+# this is quite simplistic.  i don't know if it works for hierarchical
+# indices.
 @camel_registry.loader('pandas-series', version = 1)
 def _load_series(data, version):
     return pandas.Series(data = data['data'],
                          index = data['index'])
+    
+
 
 #### Jupyter notebook serialization
 
