@@ -7,6 +7,7 @@ Created on Dec 2, 2017
 
 from textwrap import dedent
 import logging
+import pandas
 
 from pyface.api import error
 
@@ -30,10 +31,14 @@ def save_yaml(data, path):
                        camel_registry]).dump(data))
 
 # camel adapters for traits lists, dicts, numpy types
-from numpy import float64
+from numpy import float64, int64
 @standard_types_registry.dumper(float64, 'float', version = None)
 def _dump_float(fl):
     return repr(float(fl)).lower()
+
+@standard_types_registry.dumper(int64, 'int', version = None)
+def _dump_int(i):
+    return repr(int(i)).lower()
 
 from traits.trait_handlers import TraitListObject, TraitDictObject
 
@@ -44,6 +49,16 @@ def _dump_list(tlo):
 @standard_types_registry.dumper(TraitDictObject, 'map', version = None)
 def _dump_dict(tdo):
     return dict(tdo)
+
+@camel_registry.dumper(pandas.Series, 'pandas-series', version = 1)
+def _dump_series(s):
+    return dict(index = list(s.index),
+                data = list(s.values))
+    
+@camel_registry.loader('pandas-series', version = 1)
+def _load_series(data, version):
+    return pandas.Series(data = data['data'],
+                         index = data['index'])
 
 #### Jupyter notebook serialization
 

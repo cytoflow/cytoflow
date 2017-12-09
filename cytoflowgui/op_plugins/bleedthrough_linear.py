@@ -82,7 +82,7 @@ from pyface.api import ImageResource
 
 import cytoflow.utility as util
 
-from cytoflow.operations.bleedthrough_linear import BleedthroughLinearOp, BleedthroughLinearDiagnostic
+from cytoflow.operations.bleedthrough_linear import BleedthroughLinearOp as _BleedthroughLinearOp, BleedthroughLinearDiagnostic
 from cytoflow.views.i_selectionview import IView
 
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
@@ -92,6 +92,7 @@ from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin
 from cytoflowgui.vertical_list_editor import VerticalListEditor
 from cytoflowgui.workflow import Changed
+from cytoflowgui.serialization import camel_registry
 
 class _Control(HasTraits):
     channel = Str
@@ -145,7 +146,7 @@ class BleedthroughLinearHandler(OpHandlerMixin, Controller):
                          show_label = False),
                     shared_op_traits)
 
-class BleedthroughLinearPluginOp(PluginOpMixin, BleedthroughLinearOp):
+class BleedthroughLinearOp(PluginOpMixin, _BleedthroughLinearOp):
     handler_factory = Callable(BleedthroughLinearHandler)
 
     controls = Dict(Str, File, transient = True)
@@ -187,7 +188,7 @@ class BleedthroughLinearPluginOp(PluginOpMixin, BleedthroughLinearOp):
                           "used to estimate the model?",
                           util.CytoflowOpWarning)
                     
-        BleedthroughLinearOp.estimate(self, experiment, subset = self.subset)
+        _BleedthroughLinearOp.estimate(self, experiment, subset = self.subset)
         
         self.changed = (Changed.ESTIMATE_RESULT, self)
         
@@ -237,7 +238,7 @@ class BleedthroughLinearPlugin(Plugin, PluginHelpMixin):
     menu_group = "Gates"
     
     def get_operation(self):
-        return BleedthroughLinearPluginOp()
+        return BleedthroughLinearOp()
     
     def get_icon(self):
         return ImageResource('bleedthrough_linear')
@@ -246,3 +247,30 @@ class BleedthroughLinearPlugin(Plugin, PluginHelpMixin):
     def get_plugin(self):
         return self
     
+### Serialization
+@camel_registry.dumper(BleedthroughLinearOp, 'bleedthrough-linear', version = 1)
+def _dump(op):
+    return dict(controls_list = op.controls_list,
+                subset_list = op.subset_list)
+                
+@camel_registry.loader('bleedthrough-linear', version = 1)
+def _load(data, version):
+    return BleedthroughLinearOp(**data)
+
+@camel_registry.dumper(_Control, 'bleedthrough-linear-control', version = 1)
+def _dump_control(control):
+    return dict(channel = control.channel,
+                file = control.file)
+    
+@camel_registry.loader('bleedthrough-linear-control', version = 1)
+def _load_control(data, version):
+    return _Control(**data)
+
+@camel_registry.dumper(BleedthroughLinearPluginView, 'bleedthrough-linear-view', version = 1)
+def _dump_view(view):
+    return dict()
+
+@camel_registry.loader('bleedthrough-linear-view', version = 1)
+def _load_view(data, version):
+    return BleedthroughLinearPluginView()
+                

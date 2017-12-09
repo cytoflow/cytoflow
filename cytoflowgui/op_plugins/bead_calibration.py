@@ -313,5 +313,5 @@ def _dump_unit(unit):
                 unit = unit.unit)
     
 @camel_registry.loader('bead-unit', version = 1)
-def _load_umit(data, version):
+def _load_unit(data, version):
     return _Unit(**data)

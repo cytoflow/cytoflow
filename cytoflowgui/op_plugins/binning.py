@@ -75,7 +75,7 @@ from traits.api import provides, Callable, Str, Instance
 from pyface.api import ImageResource
 
 from cytoflow.operations import IOperation
-from cytoflow.operations.binning import BinningOp, BinningView
+from cytoflow.operations.binning import BinningOp as _BinningOp, BinningView
 from cytoflow.views.histogram import HistogramView
 from cytoflow.views.i_selectionview import IView
 import cytoflow.utility as util
@@ -85,6 +85,7 @@ from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_E
 from cytoflowgui.subset import SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin
+from cytoflowgui.serialization import camel_registry
 
 class BinningHandler(Controller, OpHandlerMixin):
     def default_traits_view(self):
@@ -102,7 +103,7 @@ class BinningHandler(Controller, OpHandlerMixin):
                          label = "Bin Width"),
                     shared_op_traits)
 
-class BinningPluginOp(PluginOpMixin, BinningOp):
+class BinningOp(PluginOpMixin, _BinningOp):
     handler_factory = Callable(BinningHandler)
     
     def default_view(self, **kwargs):
@@ -142,28 +143,10 @@ class BinningPluginView(PluginViewMixin, BinningView):
     huescale = util.ScaleEnum(status = True)
     
     def plot_wi(self, wi):
-        self.plot(wi.previous_wi.result)
-
-    def plot(self, experiment, **kwargs):
-    
-        if self.op.name:
-            op = self.op
-            self.huefacet = op.name
-            self.huescale = op.scale
-            legend = True
+        if wi.result is not None:
+            self.plot(wi.result)
         else:
-            op = self.op.clone_traits()
-            op.name = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
-            self.huefacet = op.name
-            legend = False      
-
-        try:
-            experiment = op.apply(experiment)
-        except util.CytoflowOpError as e:
-            warnings.warn(e.__str__(), util.CytoflowViewWarning)
-            self.huefacet = ""
-        
-        HistogramView.plot(self, experiment, legend = legend, **kwargs)
+            self.plot(wi.previous_wi.result)
 
 
 @provides(IOperationPlugin)
@@ -176,7 +159,7 @@ class BinningPlugin(Plugin, PluginHelpMixin):
     menu_group = "Gates"
     
     def get_operation(self):
-        return BinningPluginOp()
+        return BinningOp()
     
     def get_icon(self):
         return ImageResource('binning')
@@ -185,3 +168,24 @@ class BinningPlugin(Plugin, PluginHelpMixin):
     def get_plugin(self):
         return self
     
+### Serialization
+@camel_registry.dumper(BinningOp, 'binning', version = 1)
+def _dump(op):
+    return dict(name = op.name,
+                channel = op.channel,
+                scale = op.scale,
+                num_bins = op.num_bins,
+                bin_width = op.bin_width)
+    
+@camel_registry.loader('binning', version = 1)
+def _load(data, version):
+    return BinningOp(**data)
+
+@camel_registry.dumper(BinningPluginView, 'binning-view', version = 1)
+def _dump_view(view):
+    return dict(subset_list = view.subset_list)
+
+@camel_registry.loader('binning-view', version = 1)
+def _load_view(data, version):
+    return BinningPluginView(**data)
+                       

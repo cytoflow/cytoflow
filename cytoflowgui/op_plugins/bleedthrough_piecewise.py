@@ -87,7 +87,7 @@ from pyface.api import ImageResource
 
 import cytoflow.utility as util
 
-from cytoflow.operations.bleedthrough_piecewise import BleedthroughPiecewiseOp, BleedthroughPiecewiseDiagnostic
+from cytoflow.operations.bleedthrough_piecewise import BleedthroughPiecewiseOp as _BleedthroughPiecewiseOp, BleedthroughPiecewiseDiagnostic
 from cytoflow.views.i_selectionview import IView
 
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
@@ -97,6 +97,7 @@ from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin
 from cytoflowgui.vertical_list_editor import VerticalListEditor
 from cytoflowgui.workflow import Changed
+from cytoflowgui.serialization import camel_registry
 
 class _Control(HasTraits):
     channel = Str
@@ -151,7 +152,7 @@ class BleedthroughPiecewiseHandler(OpHandlerMixin, Controller):
                          show_label = False),
                     shared_op_traits)
 
-class BleedthroughPiecewisePluginOp(PluginOpMixin, BleedthroughPiecewiseOp):
+class BleedthroughPiecewiseOp(PluginOpMixin, _BleedthroughPiecewiseOp):
     handler_factory = Callable(BleedthroughPiecewiseHandler)
 
     add_control = Event
@@ -205,7 +206,7 @@ class BleedthroughPiecewisePluginOp(PluginOpMixin, BleedthroughPiecewiseOp):
                           "used to estimate the model?",
                           util.CytoflowOpWarning)
                     
-        BleedthroughPiecewiseOp.estimate(self, experiment, subset = self.subset)
+        _BleedthroughPiecewiseOp.estimate(self, experiment, subset = self.subset)
         
         self.changed = (Changed.ESTIMATE_RESULT, self)
         
@@ -261,7 +262,7 @@ class BleedthroughPiecewisePlugin(Plugin, PluginHelpMixin):
     menu_group = "Gates"
     
     def get_operation(self):
-        return BleedthroughPiecewisePluginOp()
+        return BleedthroughPiecewiseOp()
     
     def get_icon(self):
         return ImageResource('bleedthrough_piecewise')
@@ -269,4 +270,31 @@ class BleedthroughPiecewisePlugin(Plugin, PluginHelpMixin):
     @contributes_to(OP_PLUGIN_EXT)
     def get_plugin(self):
         return self
+    
+### Serialization
+@camel_registry.dumper(BleedthroughPiecewiseOp, 'bleedthrough-piecewise', version = 1)
+def _dump(op):
+    return dict(controls_list = op.controls_list,
+                subset_list = op.subset_list)
+                
+@camel_registry.loader('bleedthrough-piecewise', version = 1)
+def _load(data, version):
+    return BleedthroughPiecewiseOp(**data)
+
+@camel_registry.dumper(_Control, 'bleedthrough-piecewise-control', version = 1)
+def _dump_control(control):
+    return dict(channel = control.channel,
+                file = control.file)
+    
+@camel_registry.loader('bleedthrough-piecewise-control', version = 1)
+def _load_control(data, version):
+    return _Control(**data)
+
+@camel_registry.dumper(BleedthroughPiecewisePluginView, 'bleedthrough-piecewise-view', version = 1)
+def _dump_view(view):
+    return dict()
+
+@camel_registry.loader('bleedthrough-linear-view', version = 1)
+def _load_view(data, version):
+    return BleedthroughPiecewisePluginView()
     

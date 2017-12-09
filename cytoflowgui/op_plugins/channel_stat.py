@@ -56,13 +56,14 @@ from traits.api import (provides, Callable, List, Str, Property, Any,
                         on_trait_change)
 from pyface.api import ImageResource
 
-from cytoflow.operations.channel_stat import ChannelStatisticOp
+from cytoflow.operations.channel_stat import ChannelStatisticOp as _ChannelStatisticOp
 import cytoflow.utility as util
 
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
 from cytoflowgui.subset import ISubset, SubsetListEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin
 from cytoflowgui.workflow import Changed
+from cytoflowgui.serialization import camel_registry
 
 mean_95ci = lambda x: util.ci(x, np.mean, boots = 100)
 geomean_95ci = lambda x: util.ci(x, util.geom_mean, boots = 100)
@@ -113,7 +114,7 @@ class ChannelStatisticHandler(OpHandlerMixin, Controller):
                            show_labels = False),
                     shared_op_traits)
 
-class ChannelStatisticPluginOp(PluginOpMixin, ChannelStatisticOp):
+class ChannelStatisticOp(PluginOpMixin, _ChannelStatisticOp):
     handler_factory = Callable(ChannelStatisticHandler)
     
     # functions aren't picklable, so make this one transient 
@@ -149,7 +150,7 @@ class ChannelStatisticPluginOp(PluginOpMixin, ChannelStatisticOp):
         
         self.function = summary_functions[self.statistic_name]
         
-        return ChannelStatisticOp.apply(self, experiment) 
+        return _ChannelStatisticOp.apply(self, experiment) 
 
 @provides(IOperationPlugin)
 class ChannelStatisticPlugin(Plugin, PluginHelpMixin):
@@ -161,7 +162,7 @@ class ChannelStatisticPlugin(Plugin, PluginHelpMixin):
     menu_group = "Gates"
     
     def get_operation(self):
-        return ChannelStatisticPluginOp()
+        return ChannelStatisticOp()
     
     def get_icon(self):
         return ImageResource('channel_stat')
@@ -170,3 +171,16 @@ class ChannelStatisticPlugin(Plugin, PluginHelpMixin):
     def get_plugin(self):
         return self
     
+    
+### Serialization
+@camel_registry.dumper(ChannelStatisticOp, 'channel-statistic', version = 1)
+def _dump(op):
+    return dict(name = op.name,
+                channel = op.channel,
+                statistic_name = op.statistic_name,
+                by = op.by,
+                subset_list = op.subset_list)
+    
+@camel_registry.loader('channel-statistic', version = 1)
+def _load(data, version):
+    return ChannelStatisticOp(**data)
