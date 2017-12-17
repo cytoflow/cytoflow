@@ -187,7 +187,7 @@ class WorkflowItem(HasStrictTraits):
     def __repr__(self):
         return "<{}: {}>".format(self.__class__.__name__, self.operation.__class__.__name__)
     
-@camel_registry.dumper(WorkflowItem, 'workflow-item', 1)
+@camel_registry.dumper(WorkflowItem, 'workflow-item', version = 1)
 def _dump_wi(wi):
                             
     return dict(deletable = wi.deletable,
@@ -200,7 +200,8 @@ def _dump_wi(wi):
                 current_view = wi.current_view,
                 default_view = wi.default_view)
 
-@camel_registry.loader('workflow-item', 1)
+
+@camel_registry.loader('workflow-item', version = 1)
 def _load_wi(data, version):
     
     data['statistics'] = {tuple(k) : pd.Series() for k in data['statistics']}
