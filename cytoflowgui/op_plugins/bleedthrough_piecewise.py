@@ -294,7 +294,7 @@ def _load_control(data, version):
 def _dump_view(view):
     return dict(op = view.op)
 
-@camel_registry.loader('bleedthrough-linear-view', version = 1)
+@camel_registry.loader('bleedthrough-piecewise-view', version = 1)
 def _load_view(data, version):
     return BleedthroughPiecewisePluginView(**data)
     

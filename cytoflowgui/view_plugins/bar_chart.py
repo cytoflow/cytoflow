@@ -100,6 +100,7 @@ from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
     import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, PluginHelpMixin
+from cytoflowgui.serialization import camel_registry
         
 class BarChartHandler(ViewHandlerMixin, Controller):
     
@@ -217,3 +218,19 @@ class BarChartPlugin(Plugin, PluginHelpMixin):
     @contributes_to(VIEW_PLUGIN_EXT)
     def get_plugin(self):
         return self
+    
+### Serialization
+@camel_registry.dumper(BarChartPluginView, 'bar-chart', version = 1)
+def _dump(view):
+    return dict(statistic = view.statistic,
+                variable = view.variable,
+                yscale = view.yscale,
+                xfacet = view.xfacet,
+                yfacet = view.yfacet,
+                huefacet = view.huefacet,
+                error_statistic = view.error_statistic,
+                subset_list = view.subset_list)
+    
+@camel_registry.loader('bar-chart', version = 1)
+def _load(data, version):
+    return BarChartPluginView(**data)

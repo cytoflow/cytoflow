@@ -67,18 +67,14 @@ which the event is located.
     bin_op.default_view().plot(ex2) 
 '''
 
-import random, string, warnings
-
 from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor
 from envisage.api import Plugin, contributes_to
-from traits.api import provides, Callable, Str, Instance
+from traits.api import provides, Callable, Str, Instance, DelegatesTo
 from pyface.api import ImageResource
 
 from cytoflow.operations import IOperation
 from cytoflow.operations.binning import BinningOp as _BinningOp, BinningView
-from cytoflow.views.histogram import HistogramView
 from cytoflow.views.i_selectionview import IView
-import cytoflow.utility as util
 
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
@@ -140,7 +136,7 @@ class BinningPluginView(PluginViewMixin, BinningView):
     handler_factory = Callable(BinningViewHandler)
     op = Instance(IOperation, fixed = True)
     huefacet = Str(status = True)
-    huescale = util.ScaleEnum(status = True)
+    huescale = DelegatesTo('op', 'scale', status = True)
     
     def plot_wi(self, wi):
         if wi.result is not None:

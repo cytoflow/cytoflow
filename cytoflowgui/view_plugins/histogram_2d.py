@@ -93,6 +93,7 @@ from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.view_plugins.i_view_plugin \
     import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, PluginHelpMixin
+from cytoflowgui.serialization import camel_registry
 
 class Histogram2DHandler(ViewHandlerMixin, Controller):
 
@@ -192,3 +193,20 @@ class Histogram2DPlugin(Plugin, PluginHelpMixin):
     def get_plugin(self):
         return self
         
+### Serialization
+@camel_registry.dumper(Histogram2DPluginView, '2d-histogram', version = 1)
+def _dump(view):
+    return dict(xchannel = view.xchannel,
+                xscale = view.xscale,
+                ychannel = view.ychannel,
+                yscale = view.yscale,
+                xfacet = view.xfacet,
+                yfacet = view.yfacet,
+                huefacet = view.huefacet,
+                huescale = view.huescale,
+                plotfacet = view.plotfacet,
+                subset_list = view.subset_list)
+    
+@camel_registry.loader('2d-histogram', version = 1)
+def _load(data, version):
+    return Histogram2DPluginView(**data)
