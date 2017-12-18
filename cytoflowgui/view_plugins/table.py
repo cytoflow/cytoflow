@@ -91,6 +91,7 @@ from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
     import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, PluginHelpMixin
 from cytoflowgui.util import DefaultFileDialog
+from cytoflowgui.serialization import camel_registry
 
 class TableHandler(ViewHandlerMixin, Controller):
 
@@ -340,3 +341,18 @@ class TablePlugin(Plugin, PluginHelpMixin):
     @contributes_to(VIEW_PLUGIN_EXT)
     def get_plugin(self):
         return self
+    
+### Serialization
+
+@camel_registry.dumper(TablePluginView, 'table-view', version = 1)
+def _dump(view):
+    return dict(statistic = view.statistic,
+                row_facet = view.row_facet,
+                subrow_facet = view.subrow_facet,
+                column_facet = view.column_facet,
+                subcolumn_facet = view.subcolumn_facet,
+                subset_list = view.subset_list)
+    
+@camel_registry.loader('table-view', version = 1)
+def _load(data, version):
+    return TablePluginView(**data)

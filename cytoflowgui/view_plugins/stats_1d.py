@@ -252,3 +252,22 @@ class Stats1DPlugin(Plugin, PluginHelpMixin):
     def get_plugin(self):
         return self
     
+
+### Serialization
+
+@camel_registry.dumper(Stats1DPluginView, 'stats-1d', version = 1)
+def _dump(view):
+    return dict(statistic = view.statistic,
+                variable = view.variable,
+                xscale = view.xscale,
+                yscale = view.yscale,
+                xfacet = view.xfacet,
+                yfacet = view.yfacet,
+                huefacet = view.huefacet,
+                huescale = view.huescale,
+                error_statistic = view.error_statistic,
+                subset_list = view.subset_list)
+    
+@camel_registry.loader('stats-1d', version = 1)
+def _load(data, version):
+    return Stats1DPluginView(**data)

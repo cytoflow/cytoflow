@@ -17,6 +17,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
+2D Statistics Plot
+------------------
+
 Plot two statistics on a scatter plot.  A point (X,Y) is drawn for every
 pair of elements with the same value of **Variable**; the X value is from 
 ** X statistic** and the Y value is from **Y statistic**.
@@ -116,6 +119,7 @@ from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
     import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, PluginHelpMixin
+from cytoflowgui.serialization import camel_registry
     
 class Stats2DHandler(ViewHandlerMixin, Controller):
 
@@ -187,6 +191,12 @@ class Stats2DHandler(ViewHandlerMixin, Controller):
         xstat = self.context.statistics[self.model.xstatistic]
         ystat = self.context.statistics[self.model.ystatistic]
         
+        try:
+            ystat.index = ystat.index.reorder_levels(xstat.index.names)
+            ystat.sort_index(inplace = True)
+        except AttributeError:
+            pass
+        
         index = xstat.index.intersection(ystat.index)
         
         data = pd.DataFrame(index = index)
@@ -214,6 +224,13 @@ class Stats2DHandler(ViewHandlerMixin, Controller):
         
         xstat = self.context.statistics[self.model.xstatistic]
         ystat = self.context.statistics[self.model.ystatistic]
+        
+        try:
+            ystat.index = ystat.index.reorder_levels(xstat.index.names)
+            ystat.sort_index(inplace = True)
+        except AttributeError:
+            pass
+        
         index = xstat.index.intersection(ystat.index)
         data = pd.DataFrame(index = index)
         
@@ -281,3 +298,24 @@ class Stats2DPlugin(Plugin, PluginHelpMixin):
     @contributes_to(VIEW_PLUGIN_EXT)
     def get_plugin(self):
         return self
+    
+### Serialization
+
+@camel_registry.dumper(Stats2DPluginView, 'stats-2d', version = 1)
+def _dump(view):
+    return dict(xstatistic = view.xstatistic,
+                xscale = view.xscale,
+                ystatistic = view.ystatistic,
+                yscale = view.yscale,
+                variable = view.variable,
+                xfacet = view.xfacet,
+                yfacet = view.yfacet,
+                huefacet = view.huefacet,
+                huescale = view.huescale,
+                x_error_statistic = view.x_error_statistic,
+                y_error_statistic = view.y_error_statistic,
+                subset_list = view.subset_list)
+    
+@camel_registry.loader('stats-2d', version = 1)
+def _load(data, version):
+    return Stats2DPluginView(**data)

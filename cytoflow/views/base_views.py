@@ -719,6 +719,13 @@ class Base1DStatisticsView(BaseStatisticsView):
             error_stat = None
          
         if error_stat is not None:
+
+            try:
+                error_stat.index = error_stat.index.reorder_levels(stat.index.names)
+                error_stat.sort_index(inplace = True)
+            except AttributeError:
+                pass
+            
             if not stat.index.equals(error_stat.index):
                 raise util.CytoflowViewError('error_statistic',
                                              "Data statistic and error statistic "
@@ -822,6 +829,13 @@ class Base2DStatisticsView(BaseStatisticsView):
             x_error_stat = None
             
         if x_error_stat is not None:
+               
+            try:
+                x_error_stat.index = x_error_stat.index.reorder_levels(xstat.index.names)
+                x_error_stat.sort_index(inplace = True)
+            except AttributeError:
+                pass
+            
             if not xstat.index.equals(x_error_stat.index):
                 raise util.CytoflowViewError('x_error_statistic',
                                              "Data statistic and error statistic "
@@ -857,6 +871,13 @@ class Base2DStatisticsView(BaseStatisticsView):
             y_error_stat = None
          
         if y_error_stat is not None:
+            
+            try:
+                y_error_stat.index = y_error_stat.index.reorder_levels(ystat.index.names)
+                y_error_stat.sort_index(inplace = True)
+            except AttributeError:
+                pass
+            
             if not ystat.index.equals(y_error_stat.index):
                 raise util.CytoflowViewError('y_error_statistic',
                                              "Data statistic and error statistic "

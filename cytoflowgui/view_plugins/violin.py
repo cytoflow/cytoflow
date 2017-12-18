@@ -90,6 +90,7 @@ from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
     import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, PluginHelpMixin
+from cytoflowgui.serialization import camel_registry
     
 class ViolinHandler(ViewHandlerMixin, Controller):
 
@@ -185,3 +186,21 @@ class ViolinPlotPlugin(Plugin, PluginHelpMixin):
     @contributes_to(VIEW_PLUGIN_EXT)
     def get_plugin(self):
         return self
+    
+### Serialization
+
+@camel_registry.dumper(ViolinPlotPluginView, 'violin-plot', version = 1)
+def _dump(view):
+    return dict(variable = view.variable,
+                channel = view.channel,
+                scale = view.scale,
+                xfacet = view.xfacet,
+                yfacet = view.yfacet,
+                huefacet = view.huefacet,
+                huescale = view.huescale,
+                plotfacet = view.plotfacet,
+                subset_list = view.subset_list)
+    
+@camel_registry.loader('violin-plot', version = 1)
+def _load(data, version):
+    return ViolinPlotPluginView(**data)
