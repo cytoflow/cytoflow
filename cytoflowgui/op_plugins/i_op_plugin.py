@@ -130,36 +130,6 @@ class PluginOpMixin(HasTraits):
          - Changed.PREV_RESULT -- the previous WorkflowItem's result changed
          """
         return True
-    
-    def __repr__(self):
-        traits = self.trait_get(transient = lambda x: x is not True,
-                                status = lambda x: x is not True).items()
-        
-        # filter out traits that haven't changed
-        default_traits = self.__class__().trait_get(transient = lambda x: x is not True)
-        
-        traits = [(k, v) for k, v in traits if k in default_traits 
-                                            and v != default_traits[k]]
-        
-        # deal with subsets
-        try:
-            traits.pop('subset_list')
-            if self.subset != "":
-                traits['subset'] = self.subset
-        except:
-            pass
-        
-        # %s uses the str function and %r uses the repr function
-        traits_str = ', '.join(["%s = %r" % (k, v) for k, v in traits])
-        
-        return self.__class__.__name__ + '(' + traits_str + ')'
-    
-    def get_notebook_code(self, idx):
-        return dedent("""
-            op_{idx} = {repr}
-            
-            ex_{idx} = op_{idx}.apply(ex_{prev_idx})"""
-            .format(repr = repr(self), prev_idx = idx - 1, idx = idx))
 
           
 shared_op_traits = Group(Item('context.estimate_warning',

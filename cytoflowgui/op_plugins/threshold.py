@@ -72,7 +72,7 @@ from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
 from cytoflow.operations import IOperation
-from cytoflow.operations.threshold import ThresholdOp as _ThresholdOp, ThresholdSelection
+from cytoflow.operations.threshold import ThresholdOp, ThresholdSelection
 
 from cytoflowgui.op_plugins.i_op_plugin \
     import IOperationPlugin, OpHandlerMixin, PluginOpMixin, OP_PLUGIN_EXT, shared_op_traits, PluginHelpMixin
@@ -81,7 +81,9 @@ from cytoflowgui.subset import SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.workflow import Changed
-from cytoflowgui.serialization import camel_registry
+from cytoflowgui.serialization import camel_registry, traits_str, traits_repr, dedent
+
+ThresholdOp.__repr__ = traits_repr
 
 class ThresholdHandler(OpHandlerMixin, Controller):
     def default_traits_view(self):
@@ -141,12 +143,33 @@ class ThresholdSelectionView(PluginViewMixin, ThresholdSelection):
         
     def plot_wi(self, wi):        
         self.plot(wi.previous_wi.result)
+        
+    def get_notebook_code(self, wi, idx):
+        return dedent("""
+        op_{idx}.default_view().plot(ex_{prev_idx})
+        """
+        .format(idx = idx, 
+                prev_idx = idx - 1))
     
-class ThresholdOp(PluginOpMixin, _ThresholdOp):
+class ThresholdPluginOp(PluginOpMixin, ThresholdOp):
     handler_factory = Callable(ThresholdHandler, transient = True)
      
     def default_view(self, **kwargs):
         return ThresholdSelectionView(op = self, **kwargs)
+    
+    def get_notebook_code(self, wi, idx):
+        op = ThresholdOp()
+        op.copy_traits(self, op.copyable_trait_names())
+
+        return dedent("""
+        op_{idx} = {repr}
+                
+        ex_{idx} = op_{idx}.apply(ex_{prev_idx})
+        """
+        .format(repr = repr(op),
+                idx = idx,
+                prev_idx = idx - 1))
+
 
 @provides(IOperationPlugin)
 class ThresholdPlugin(Plugin, PluginHelpMixin):
@@ -161,7 +184,7 @@ class ThresholdPlugin(Plugin, PluginHelpMixin):
     menu_group = "Gates"
     
     def get_operation(self):
-        return ThresholdOp()
+        return ThresholdPluginOp()
 
     def get_icon(self):
         return ImageResource('threshold')
@@ -171,7 +194,7 @@ class ThresholdPlugin(Plugin, PluginHelpMixin):
         return self
     
 ### Serialization
-@camel_registry.dumper(ThresholdOp, 'threshold', version = 1)
+@camel_registry.dumper(ThresholdPluginOp, 'threshold', version = 1)
 def _dump(op):
     return dict(name = op.name,
                 channel = op.channel,
@@ -179,7 +202,7 @@ def _dump(op):
     
 @camel_registry.loader('threshold', version = 1)
 def _load(data, version):
-    return ThresholdOp(**data)
+    return ThresholdPluginOp(**data)
 
 @camel_registry.dumper(ThresholdSelectionView, 'threshold-view', version = 1)
 def _dump_view(view):

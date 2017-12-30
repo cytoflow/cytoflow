@@ -77,12 +77,13 @@ from traitsui.api import View, Item, EnumEditor, Controller, VGroup, HGroup, \
                          ButtonEditor, InstanceEditor
 from envisage.api import Plugin, contributes_to
 from traits.api import (provides, Callable, List, Str, HasTraits, Property,
-                        File, Event, Dict, Tuple, Float, on_trait_change)
+                        File, Event, Dict, Tuple, Float, on_trait_change,
+                        DelegatesTo)
 from pyface.api import ImageResource
 
 import cytoflow.utility as util
 
-from cytoflow.operations.bleedthrough_linear import BleedthroughLinearOp as _BleedthroughLinearOp, BleedthroughLinearDiagnostic
+from cytoflow.operations.bleedthrough_linear import BleedthroughLinearOp, BleedthroughLinearDiagnostic
 from cytoflow.views.i_selectionview import IView
 
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
@@ -92,7 +93,9 @@ from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin
 from cytoflowgui.vertical_list_editor import VerticalListEditor
 from cytoflowgui.workflow import Changed
-from cytoflowgui.serialization import camel_registry
+from cytoflowgui.serialization import camel_registry, traits_repr, traits_str, dedent
+
+BleedthroughLinearOp.__repr__ = traits_repr
 
 class _Control(HasTraits):
     channel = Str
@@ -146,7 +149,7 @@ class BleedthroughLinearHandler(OpHandlerMixin, Controller):
                          show_label = False),
                     shared_op_traits)
 
-class BleedthroughLinearOp(PluginOpMixin, _BleedthroughLinearOp):
+class BleedthroughLinearPluginOp(PluginOpMixin, BleedthroughLinearOp):
     handler_factory = Callable(BleedthroughLinearHandler)
 
     controls = Dict(Str, File, transient = True)
@@ -188,7 +191,7 @@ class BleedthroughLinearOp(PluginOpMixin, _BleedthroughLinearOp):
                           "used to estimate the model?",
                           util.CytoflowOpWarning)
                     
-        _BleedthroughLinearOp.estimate(self, experiment, subset = self.subset)
+        BleedthroughLinearOp.estimate(self, experiment, subset = self.subset)
         
         self.changed = (Changed.ESTIMATE_RESULT, self)
         
@@ -201,6 +204,25 @@ class BleedthroughLinearOp(PluginOpMixin, _BleedthroughLinearOp):
     def clear_estimate(self):
         self.spillover.clear()
         self.changed = (Changed.ESTIMATE_RESULT, self)
+        
+    def get_notebook_code(self, wi, idx):
+        op = BleedthroughLinearOp()
+        op.copy_traits(self, op.copyable_trait_names())
+
+        for control in self.controls_list:
+            op.controls[control.channel] = control.file        
+
+        return dedent("""
+        op_{idx} = {repr}
+        
+        op_{idx}.estimate(ex_{prev_idx}{subset})
+        ex_{idx} = op_{idx}.apply(ex_{prev_idx})
+        """
+        .format(beads = self.beads_name,
+                repr = repr(op),
+                idx = idx,
+                prev_idx = idx - 1,
+                subset = ", subset = " + repr(self.subset) if self.subset else ""))
 
 class BleedthroughLinearViewHandler(ViewHandlerMixin, Controller):
     def default_traits_view(self):
@@ -218,6 +240,7 @@ class BleedthroughLinearViewHandler(ViewHandlerMixin, Controller):
 @provides(IView)
 class BleedthroughLinearPluginView(PluginViewMixin, BleedthroughLinearDiagnostic):
     handler_factory = Callable(BleedthroughLinearViewHandler)
+    subset = DelegatesTo('op')
     
     def plot_wi(self, wi):
         self.plot(wi.previous_wi.result)
@@ -227,6 +250,18 @@ class BleedthroughLinearPluginView(PluginViewMixin, BleedthroughLinearDiagnostic
             return True
         
         return False
+    
+    def get_notebook_code(self, wi, idx):
+        view = BleedthroughLinearDiagnostic()
+        view.copy_traits(self, view.copyable_trait_names())
+        view.subset = self.subset
+        
+        return dedent("""
+        op_{idx}.default_view({traits}).plot(ex_{prev_idx})
+        """
+        .format(traits = traits_str(view),
+                idx = idx,
+                prev_idx = idx - 1))
 
 @provides(IOperationPlugin)
 class BleedthroughLinearPlugin(Plugin, PluginHelpMixin):
@@ -238,7 +273,7 @@ class BleedthroughLinearPlugin(Plugin, PluginHelpMixin):
     menu_group = "Gates"
     
     def get_operation(self):
-        return BleedthroughLinearOp()
+        return BleedthroughLinearPluginOp()
     
     def get_icon(self):
         return ImageResource('bleedthrough_linear')
@@ -248,14 +283,14 @@ class BleedthroughLinearPlugin(Plugin, PluginHelpMixin):
         return self
     
 ### Serialization
-@camel_registry.dumper(BleedthroughLinearOp, 'bleedthrough-linear', version = 1)
+@camel_registry.dumper(BleedthroughLinearPluginOp, 'bleedthrough-linear', version = 1)
 def _dump(op):
     return dict(controls_list = op.controls_list,
                 subset_list = op.subset_list)
                 
 @camel_registry.loader('bleedthrough-linear', version = 1)
 def _load(data, version):
-    return BleedthroughLinearOp(**data)
+    return BleedthroughLinearPluginOp(**data)
 
 @camel_registry.dumper(_Control, 'bleedthrough-linear-control', version = 1)
 def _dump_control(control):

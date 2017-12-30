@@ -21,7 +21,8 @@ cytoflow.operations.binning
 ---------------------------
 '''
 
-from traits.api import (HasStrictTraits, Str, CStr, provides, Constant, Int)
+from traits.api import (HasStrictTraits, Str, CStr, provides, Constant, Int, 
+                        DelegatesTo)
 import numpy as np
 import bottleneck as bn
 
@@ -249,6 +250,9 @@ class BinningView(Op1DView, AnnotatingView, HistogramView):
      
     id = Constant('edu.mit.synbio.cytoflow.views.binning')
     friendly_id = Constant('Binning Setup')                                 
+    
+    huescale = DelegatesTo('op', 'scale')
+
     
     def plot(self, experiment, **kwargs):
         """

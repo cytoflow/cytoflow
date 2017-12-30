@@ -42,12 +42,14 @@ from traitsui.api import View, Item, EnumEditor, Controller, TextEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
-from cytoflow.operations.ratio import RatioOp as _RatioOp
+from cytoflow.operations.ratio import RatioOp
 
 from cytoflowgui.op_plugins.i_op_plugin \
     import IOperationPlugin, OpHandlerMixin, PluginOpMixin, OP_PLUGIN_EXT, shared_op_traits, PluginHelpMixin
 
-from cytoflowgui.serialization import camel_registry
+from cytoflowgui.serialization import camel_registry, traits_repr, dedent
+
+RatioOp.__repr__ = traits_repr
 
 class RatioHandler(OpHandlerMixin, Controller):
     def default_traits_view(self):
@@ -62,8 +64,21 @@ class RatioHandler(OpHandlerMixin, Controller):
                     shared_op_traits) 
 
     
-class RatioOp(PluginOpMixin, _RatioOp):
+class RatioPluginOp(PluginOpMixin, RatioOp):
     handler_factory = Callable(RatioHandler, transient = True)
+    
+    def get_notebook_code(self, wi, idx):
+        op = RatioOp()
+        op.copy_traits(self, op.copyable_trait_names())
+
+        return dedent("""
+        op_{idx} = {repr}
+                
+        ex_{idx} = op_{idx}.apply(ex_{prev_idx})
+        """
+        .format(repr = repr(op),
+                idx = idx,
+                prev_idx = idx - 1))
 
 @provides(IOperationPlugin)
 class RatioPlugin(Plugin, PluginHelpMixin):
@@ -75,7 +90,7 @@ class RatioPlugin(Plugin, PluginHelpMixin):
     menu_group = "Data"
     
     def get_operation(self):
-        return RatioOp()
+        return RatioPluginOp()
 
     def get_icon(self):
         return ImageResource('ratio')
@@ -85,7 +100,7 @@ class RatioPlugin(Plugin, PluginHelpMixin):
         return self
     
 ### Serialization
-@camel_registry.dumper(RatioOp, 'ratio', version = 1)
+@camel_registry.dumper(RatioPluginOp, 'ratio', version = 1)
 def _dump(op):
     return dict(name = op.name,
                 numerator = op.numerator,
@@ -93,4 +108,4 @@ def _dump(op):
     
 @camel_registry.loader('ratio', version = 1)
 def _load(data, version):
-    return RatioOp(**data)
+    return RatioPluginOp(**data)

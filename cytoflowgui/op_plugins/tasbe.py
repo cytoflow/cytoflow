@@ -184,7 +184,12 @@ from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin
 from cytoflowgui.vertical_list_editor import VerticalListEditor
 from cytoflowgui.workflow import Changed
-from cytoflowgui.serialization import camel_registry
+from cytoflowgui.serialization import camel_registry, traits_repr, traits_str, dedent
+
+AutofluorescenceOp.__repr__ = traits_repr
+BleedthroughLinearOp.__repr__ = traits_repr
+BeadCalibrationOp.__repr__ = traits_repr
+ColorTranslationOp.__repr__ = traits_repr
 
 class _BleedthroughControl(HasTraits):
     channel = Str
@@ -451,6 +456,68 @@ class TasbePluginOp(PluginOpMixin):
     
     def default_view(self, **kwargs):
         return TasbePluginView(op = self, **kwargs)
+    
+    def get_notebook_code(self, wi, idx):
+        self._af_op.channels = self.channels
+        self._af_op.blank_file = self.blank_file
+        
+        self._bleedthrough_op.controls.clear()
+        for control in self.bleedthrough_list:
+            self._bleedthrough_op.controls[control.channel] = control.file
+        
+        self._bead_calibration_op.beads = BeadCalibrationOp.BEADS[self.beads_name]
+        self._bead_calibration_op.beads_file = self.beads_file
+        self._bead_calibration_op.bead_peak_quantile = self.bead_peak_quantile
+        self._bead_calibration_op.bead_brightness_threshold = self.bead_brightness_threshold
+        self._bead_calibration_op.bead_brightness_cutoff = self.bead_brightness_cutoff        
+        
+        self._bead_calibration_op.units.clear()
+        self._bead_calibration_op.units[self.to_channel] = self.beads_unit
+       
+        self._color_translation_op.mixture_model = self.mixture_model
+        
+        self._color_translation_op.controls.clear()
+        for control in self.translation_list:
+            self._color_translation_op.controls[(control.from_channel,
+                                                 control.to_channel)] = control.file      
+
+        return dedent("""
+        # the TASBE-style calibration is not a single Cytoflow module.  Instead, it
+        # is a specific sequence of four calibrations: autofluorescence correction,
+        # bleedthrough, bead calibration and color translation.
+        
+        # autofluorescence
+        op_{idx}_af = {af_repr}
+        
+        op_{idx}_af.estimate(ex_{prev_idx}{subset})
+        ex_{idx}_af = op_{idx}_af.apply(ex_{prev_idx})
+        
+        # bleedthrough
+        op_{idx}_bleedthrough = {bleedthrough_repr}
+        
+        op_{idx}_bleedthrough.estimate(ex_{idx}_af{subset})
+        ex_{idx}_bleedthrough = op_{idx}_bleedthrough.apply(ex_{idx}_af)
+        
+        # bead calibration
+        # beads: {beads}
+        op_{idx}_beads = {beads_repr}
+        
+        op_{idx}_beads.estimate(ex_{idx}_bleedthrough)
+        ex_{idx}_beads = op_{idx}_beads.apply(ex_{idx}_bleedthrough)
+        
+        # color translation
+        op_{idx}_color = {color_repr}
+        
+        op_{idx}_color.estimate(ex_{idx}_beads{subset})
+        ex_{idx} = op_{idx}_color.apply(ex_{idx}_beads)
+        """
+        .format(idx = idx,
+                prev_idx = idx - 1,
+                af_repr = repr(self._af_op),
+                bleed_repr = repr(self._bleedthrough_op),
+                beads = self.beads_name,
+                beads_repr = repr(self._bead_calibration_op),
+                subset = ", subset = " + repr(self.subset) if self.subset else ""))
 
 class TasbeViewHandler(ViewHandlerMixin, Controller):
     def default_traits_view(self):
@@ -529,6 +596,24 @@ class TasbePluginView(PluginViewMixin):
             
         if plot_name == "Color Translation":
             self.op._color_translation_op.default_view().plot(new_ex, **kwargs)
+            
+    def get_notebook_code(self, wi, idx):
+        
+        return dedent("""
+        # Autofluorescence
+        op_{idx}_af.default_view().plot(ex_{prev_idx})
+        
+        # Bleedthrough
+        op_{idx}_bleedthrough.default_view().plot(ex_{idx}_af)
+        
+        # Bead calibration
+        op_{idx}_beads.default_view().plot(ex_{idx}_bleedthrough)
+        
+        # Color translation
+        op_{idx}_color.default_view().plot(ex_{idx}_beads)
+        """
+        .format(idx = idx,
+                prev_idx = idx - 1))
 
 
 @provides(IOperationPlugin)

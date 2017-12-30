@@ -56,14 +56,16 @@ from traits.api import (provides, Callable, List, Str, Property, Any,
                         on_trait_change)
 from pyface.api import ImageResource
 
-from cytoflow.operations.channel_stat import ChannelStatisticOp as _ChannelStatisticOp
+from cytoflow.operations.channel_stat import ChannelStatisticOp
 import cytoflow.utility as util
 
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
 from cytoflowgui.subset import ISubset, SubsetListEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin
 from cytoflowgui.workflow import Changed
-from cytoflowgui.serialization import camel_registry
+from cytoflowgui.serialization import camel_registry, traits_repr, dedent
+
+ChannelStatisticOp.__repr__ = traits_repr
 
 mean_95ci = lambda x: util.ci(x, np.mean, boots = 100)
 geomean_95ci = lambda x: util.ci(x, util.geom_mean, boots = 100)
@@ -84,7 +86,7 @@ fill = {"Mean" : 0,
         "Count" : 0,
         "Std.Dev" : 0,
         "Geom.SD" : (0,0),
-        "SEM" : scipy.stats.sem,
+        "SEM" : 0,
         "Geom.SEM" : (0,0),
         "Mean 95% CI" : 0,
         "Geom.Mean 95% CI" : 0
@@ -114,7 +116,7 @@ class ChannelStatisticHandler(OpHandlerMixin, Controller):
                            show_labels = False),
                     shared_op_traits)
 
-class ChannelStatisticOp(PluginOpMixin, _ChannelStatisticOp):
+class ChannelStatisticPluginOp(PluginOpMixin, ChannelStatisticOp):
     handler_factory = Callable(ChannelStatisticHandler)
     
     # functions aren't picklable, so make this one transient 
@@ -150,7 +152,49 @@ class ChannelStatisticOp(PluginOpMixin, _ChannelStatisticOp):
         
         self.function = summary_functions[self.statistic_name]
         
-        return _ChannelStatisticOp.apply(self, experiment) 
+        return ChannelStatisticOp.apply(self, experiment) 
+    
+    def get_notebook_code(self, wi, idx):
+        op = ChannelStatisticOp()
+        op.copy_traits(self, op.copyable_trait_names())
+        
+        fn_import = {"Mean" : "from numpy import mean",
+                  "Geom.Mean" : None,
+                  "Count" : None,
+                  "Std.Dev" : "from numpy import std",
+                  "Geom.SD" : None,
+                  "SEM" : "from scipy.stats import sem",
+                  "Geom.SEM" : None,
+                  "Mean 95% CI" : "from numpy import mean\nmean_ci = lambda x: ci(x, mean, boots = 100)",
+                  "Geom.Mean 95% CI" : "geom_mean_ci = lambda x: ci(x, geom_mean, boots = 100)"
+                  }
+        
+        fn_name = {"Mean" : "mean",
+                   "Geom.Mean" : "geom_mean",
+                   "Count" : "len",
+                   "Std.Dev" : "std",
+                   "Geom.SD" : "geom_sd_range",
+                   "SEM" : "sem",
+                   "Geom.SEM" : "geom_sem_range",
+                   "Mean 95% CI" : "mean_ci",
+                   "Geom.Mean 95% CI" : "geom_mean_ci"
+                   }
+        
+        op.function = summary_functions[self.statistic_name]
+        op.function.__name__ = fn_name[self.statistic_name]
+        
+        return dedent("""
+        {import_statement}
+        op_{idx} = {repr}
+                
+        ex_{idx} = op_{idx}.apply(ex_{prev_idx})
+        """
+        .format(import_statement = (fn_import[self.statistic_name] + "\n" 
+                                    if fn_import[self.statistic_name] is not None
+                                    else ""),
+                repr = repr(op),
+                idx = idx,
+                prev_idx = idx - 1))
 
 @provides(IOperationPlugin)
 class ChannelStatisticPlugin(Plugin, PluginHelpMixin):
@@ -162,7 +206,7 @@ class ChannelStatisticPlugin(Plugin, PluginHelpMixin):
     menu_group = "Gates"
     
     def get_operation(self):
-        return ChannelStatisticOp()
+        return ChannelStatisticPluginOp()
     
     def get_icon(self):
         return ImageResource('channel_stat')
@@ -173,7 +217,7 @@ class ChannelStatisticPlugin(Plugin, PluginHelpMixin):
     
     
 ### Serialization
-@camel_registry.dumper(ChannelStatisticOp, 'channel-statistic', version = 1)
+@camel_registry.dumper(ChannelStatisticPluginOp, 'channel-statistic', version = 1)
 def _dump(op):
     return dict(name = op.name,
                 channel = op.channel,
@@ -183,4 +227,4 @@ def _dump(op):
     
 @camel_registry.loader('channel-statistic', version = 1)
 def _load(data, version):
-    return ChannelStatisticOp(**data)
+    return ChannelStatisticPluginOp(**data)

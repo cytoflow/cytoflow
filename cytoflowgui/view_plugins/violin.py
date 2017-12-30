@@ -90,7 +90,9 @@ from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
     import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, PluginHelpMixin
-from cytoflowgui.serialization import camel_registry
+from cytoflowgui.serialization import camel_registry, traits_repr, dedent
+
+ViolinPlotView.__repr__ = traits_repr
     
 class ViolinHandler(ViewHandlerMixin, Controller):
 
@@ -169,6 +171,19 @@ class ViolinPlotPluginView(PluginViewMixin, ViolinPlotView):
         
         if self.plotfacet and plot_name is not None:
             plt.title("{0} = {1}".format(self.plotfacet, plot_name))
+            
+    
+    def get_notebook_code(self, wi, idx):
+        view = ViolinPlotView()
+        view.copy_traits(self, view.copyable_trait_names())
+
+        return dedent("""
+        {repr}.plot(ex_{idx}{plot})
+        """
+        .format(repr = repr(view),
+                idx = idx,
+                plot = ", plot = " + repr(wi.current_plot) if wi.current_plot is not None else ""))
+
 
 @provides(IViewPlugin)
 class ViolinPlotPlugin(Plugin, PluginHelpMixin):

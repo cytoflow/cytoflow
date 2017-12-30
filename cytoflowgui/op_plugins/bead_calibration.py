@@ -95,7 +95,7 @@ from pyface.api import ImageResource
 
 import cytoflow.utility as util
 
-from cytoflow.operations.bead_calibration import BeadCalibrationOp as _BeadCalibrationOp, BeadCalibrationDiagnostic
+from cytoflow.operations.bead_calibration import BeadCalibrationOp, BeadCalibrationDiagnostic
 from cytoflow.views.i_selectionview import IView
 
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
@@ -104,7 +104,9 @@ from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin
 from cytoflowgui.vertical_list_editor import VerticalListEditor
 from cytoflowgui.workflow import Changed
-from cytoflowgui.serialization import camel_registry
+from cytoflowgui.serialization import camel_registry, traits_repr, traits_str, dedent
+
+BeadCalibrationOp.__repr__ = traits_repr
 
 class _Unit(HasTraits):
     channel = Str
@@ -176,7 +178,7 @@ class BeadCalibrationHandler(OpHandlerMixin, Controller):
                          show_label = False),
                     shared_op_traits)
 
-class BeadCalibrationOp(PluginOpMixin, _BeadCalibrationOp):
+class BeadCalibrationPluginOp(PluginOpMixin, BeadCalibrationOp):
     handler_factory = Callable(BeadCalibrationHandler)
 
     beads_name = Str(estimate = True)   
@@ -213,7 +215,7 @@ class BeadCalibrationOp(PluginOpMixin, _BeadCalibrationOp):
             self.units[unit.channel] = unit.unit
                     
         self.beads = self.BEADS[self.beads_name]
-        return _BeadCalibrationOp.apply(self, experiment)
+        return BeadCalibrationOp.apply(self, experiment)
     
     def estimate(self, experiment):
         if not self.beads_name:
@@ -230,7 +232,7 @@ class BeadCalibrationOp(PluginOpMixin, _BeadCalibrationOp):
             self.units[unit.channel] = unit.unit
                     
         self.beads = self.BEADS[self.beads_name]
-        _BeadCalibrationOp.estimate(self, experiment)
+        BeadCalibrationOp.estimate(self, experiment)
         self.changed = (Changed.ESTIMATE_RESULT, self)
 
     
@@ -245,6 +247,28 @@ class BeadCalibrationOp(PluginOpMixin, _BeadCalibrationOp):
         self._peaks.clear()
         self._mefs.clear()
         self.changed = (Changed.ESTIMATE_RESULT, self)
+        
+    def get_notebook_code(self, wi, idx):
+        op = BeadCalibrationOp()
+        op.copy_traits(self, op.copyable_trait_names())
+
+        for unit in self.units_list:
+            op.units[unit.channel] = unit.unit
+                    
+        op.beads = self.BEADS[self.beads_name]
+        
+
+        return dedent("""
+        # Beads: {beads}
+        op_{idx} = {repr}
+        
+        op_{idx}.estimate(ex_{prev_idx})
+        ex_{idx} = op_{idx}.apply(ex_{prev_idx})
+        """
+        .format(beads = self.beads_name,
+                repr = repr(op),
+                idx = idx,
+                prev_idx = idx - 1))
 
 class BeadCalibrationViewHandler(ViewHandlerMixin, Controller):
     def default_traits_view(self):
@@ -272,6 +296,17 @@ class BeadCalibrationPluginView(PluginViewMixin, BeadCalibrationDiagnostic):
         
         return False
     
+    def get_notebook_code(self, wi, idx):
+        view = BeadCalibrationDiagnostic()
+        view.copy_traits(self, view.copyable_trait_names())
+        
+        return dedent("""
+        op_{idx}.default_view({traits}).plot(ex_{prev_idx})
+        """
+        .format(traits = traits_str(view),
+                idx = idx,
+                prev_idx = idx - 1))
+    
 
 @provides(IOperationPlugin)
 class BeadCalibrationPlugin(Plugin, PluginHelpMixin):
@@ -283,7 +318,7 @@ class BeadCalibrationPlugin(Plugin, PluginHelpMixin):
     menu_group = "Calibration"
     
     def get_operation(self):
-        return BeadCalibrationOp()
+        return BeadCalibrationPluginOp()
     
     def get_icon(self):
         return ImageResource('bead_calibration')
@@ -294,7 +329,7 @@ class BeadCalibrationPlugin(Plugin, PluginHelpMixin):
     
     
 ### Serialization
-@camel_registry.dumper(BeadCalibrationOp, 'bead-calibration', version = 1)
+@camel_registry.dumper(BeadCalibrationPluginOp, 'bead-calibration', version = 1)
 def _dump(bead_op):
     return dict(beads_name = bead_op.beads_name,
                 beads_file = bead_op.beads_file,
@@ -305,7 +340,7 @@ def _dump(bead_op):
     
 @camel_registry.loader('bead-calibration', version = 1)
 def _load(data, version):
-    return BeadCalibrationOp(**data)
+    return BeadCalibrationPluginOp(**data)
 
 @camel_registry.dumper(_Unit, 'bead-unit', version = 1)
 def _dump_unit(unit):

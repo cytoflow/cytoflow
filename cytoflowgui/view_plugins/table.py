@@ -91,7 +91,9 @@ from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
     import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, PluginHelpMixin
 from cytoflowgui.util import DefaultFileDialog
-from cytoflowgui.serialization import camel_registry
+from cytoflowgui.serialization import camel_registry, traits_repr, dedent
+
+TableView.__repr__ = traits_repr
 
 class TableHandler(ViewHandlerMixin, Controller):
 
@@ -202,6 +204,17 @@ class TablePluginView(PluginViewMixin, TableView):
     def plot(self, experiment, plot_name = None, **kwargs):
         TableView.plot(self, experiment, **kwargs)
         self.result = experiment.statistics[self.statistic]
+        
+    def get_notebook_code(self, wi, idx):
+        view = TableView()
+        view.copy_traits(self, view.copyable_trait_names())
+
+        return dedent("""
+        {repr}.plot(ex_{idx}{plot})
+        """
+        .format(repr = repr(view),
+                idx = idx,
+                plot = ", plot = " + repr(wi.current_plot) if wi.current_plot is not None else ""))
 
     @on_trait_change('export')
     def _on_export(self):

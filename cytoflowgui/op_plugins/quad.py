@@ -93,7 +93,7 @@ from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
 from cytoflow.operations import IOperation
-from cytoflow.operations.quad import QuadOp as _QuadOp, QuadSelection
+from cytoflow.operations.quad import QuadOp, QuadSelection
 
 from cytoflowgui.op_plugins.i_op_plugin \
     import IOperationPlugin, OpHandlerMixin, PluginOpMixin, OP_PLUGIN_EXT, shared_op_traits, PluginHelpMixin
@@ -102,7 +102,9 @@ from cytoflowgui.subset import SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.workflow import Changed
-from cytoflowgui.serialization import camel_registry
+from cytoflowgui.serialization import camel_registry, traits_repr, traits_str, dedent
+
+QuadOp.__repr__ = traits_repr
 
 class QuadHandler(OpHandlerMixin, Controller):
     def default_traits_view(self):
@@ -178,12 +180,32 @@ class QuadSelectionView(PluginViewMixin, QuadSelection):
         
     def plot_wi(self, wi):        
         self.plot(wi.previous_wi.result)
+        
+    def get_notebook_code(self, wi, idx):
+        return dedent("""
+        op_{idx}.default_view().plot(ex_{prev_idx})
+        """
+        .format(idx = idx, 
+                prev_idx = idx - 1))
     
-class QuadOp(_QuadOp, PluginOpMixin):
+class QuadPluginOp(QuadOp, PluginOpMixin):
     handler_factory = Callable(QuadHandler, transient = True)
      
     def default_view(self, **kwargs):
         return QuadSelectionView(op = self, **kwargs)
+    
+    def get_notebook_code(self, wi, idx):
+        op = QuadOp()
+        op.copy_traits(self, op.copyable_trait_names())
+
+        return dedent("""
+        op_{idx} = {repr}
+                
+        ex_{idx} = op_{idx}.apply(ex_{prev_idx})
+        """
+        .format(repr = repr(op),
+                idx = idx,
+                prev_idx = idx - 1))
 
 @provides(IOperationPlugin)
 class QuadPlugin(Plugin, PluginHelpMixin): 
@@ -195,7 +217,7 @@ class QuadPlugin(Plugin, PluginHelpMixin):
     menu_group = "Gates"
     
     def get_operation(self):
-        return QuadOp()
+        return QuadPluginOp()
 
     def get_icon(self):
         return ImageResource(u'quad')
@@ -205,7 +227,7 @@ class QuadPlugin(Plugin, PluginHelpMixin):
         return self
     
 ### Serialization
-@camel_registry.dumper(QuadOp, 'quad', version = 1)
+@camel_registry.dumper(QuadPluginOp, 'quad', version = 1)
 def _dump(op):
     return dict(name = op.name,
                 xchannel = op.xchannel,
@@ -215,7 +237,7 @@ def _dump(op):
     
 @camel_registry.loader('quad', version = 1)
 def _load(data, version):
-    return QuadOp(**data)
+    return QuadPluginOp(**data)
 
 @camel_registry.dumper(QuadSelectionView, 'quad-view', version = 1)
 def _dump_view(view):

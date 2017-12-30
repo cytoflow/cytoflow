@@ -61,14 +61,16 @@ from traits.api import (provides, Callable, List, Property, on_trait_change,
                         Str)
 from pyface.api import ImageResource
 
-from cytoflow.operations.xform_stat import TransformStatisticOp as _TransformStatisticOp
+from cytoflow.operations.xform_stat import TransformStatisticOp
 import cytoflow.utility as util
 
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
 from cytoflowgui.subset import SubsetListEditor, ISubset
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
 from cytoflowgui.workflow import Changed
-from cytoflowgui.serialization import camel_registry
+from cytoflowgui.serialization import camel_registry, traits_repr, dedent
+
+TransformStatisticOp.__repr__ = traits_repr
 
 mean_95ci = lambda x: util.ci(x, np.mean, boots = 100)
 geomean_95ci = lambda x: util.ci(x, util.geom_mean, boots = 100)
@@ -176,7 +178,7 @@ class TransformStatisticHandler(OpHandlerMixin, Controller):
                            show_labels = False),
                     shared_op_traits)
 
-class TransformStatisticOp(PluginOpMixin, _TransformStatisticOp):
+class TransformStatisticPluginOp(PluginOpMixin, TransformStatisticOp):
     handler_factory = Callable(TransformStatisticHandler)
 
     # functions aren't picklable, so send the name instead
@@ -202,7 +204,60 @@ class TransformStatisticOp(PluginOpMixin, _TransformStatisticOp):
         
         self.function = transform_functions[self.statistic_name]
         
-        return _TransformStatisticOp.apply(self, experiment)
+        return TransformStatisticOp.apply(self, experiment)
+
+
+    def get_notebook_code(self, wi, idx):
+        op = TransformStatisticOp()
+        op.copy_traits(self, op.copyable_trait_names())
+        
+        fn_import = {"Mean" : "from numpy import mean",
+                     "Geom.Mean" : None,
+                     "Count" : None,
+                     "Std.Dev" : "from numpy import std",
+                     "Geom.SD" : None,
+                     "SEM" : "from scipy.stats import sem",
+                     "Geom.SEM" : None,
+                     "Mean 95% CI" : "from numpy import mean\nmean_ci = lambda x: ci(x, mean, boots = 100)",
+                     "Geom.Mean 95% CI" : "geom_mean_ci = lambda x: ci(x, geom_mean, boots = 100)",
+                     "Sum" : "from numpy import sum",
+                     "Proportion" : "proportion = lambda a: pd.Series(a / a.sum())",
+                     "Percentage" : "percentage = lambda a: pd.Series(a / a.sum()) * 100.0",
+                     "Fold" : "fold = lambda a: pd.Series(a / a.min())"
+                  }
+        
+        fn_name = {"Mean" : "mean",
+                   "Geom.Mean" : "geom_mean",
+                   "Count" : "len",
+                   "Std.Dev" : "std",
+                   "Geom.SD" : "geom_sd_range",
+                   "SEM" : "sem",
+                   "Geom.SEM" : "geom_sem_range",
+                   "Mean 95% CI" : "mean_ci",
+                   "Geom.Mean 95% CI" : "geom_mean_ci",
+                   "Sum" : "sum",
+                   "Proportion" : "proportion",
+                   "Percentage" : "percentage",
+                   "Fold" : "fold"
+                   }
+        
+        op.function = transform_functions[self.statistic_name]
+        op.function.__name__ = fn_name[self.statistic_name]
+        
+        return dedent("""
+        {import_statement}
+        op_{idx} = {repr}
+                
+        ex_{idx} = op_{idx}.apply(ex_{prev_idx})
+        """
+        .format(import_statement = (fn_import[self.statistic_name] + "\n" 
+                                    if fn_import[self.statistic_name] is not None
+                                    else ""),
+                repr = repr(op),
+                idx = idx,
+                prev_idx = idx - 1))
+        pass
+
 
 @provides(IOperationPlugin)
 class TransformStatisticPlugin(Plugin):
@@ -217,7 +272,7 @@ class TransformStatisticPlugin(Plugin):
     menu_group = "Gates"
     
     def get_operation(self):
-        return TransformStatisticOp()
+        return TransformStatisticPluginOp()
     
     def get_icon(self):
         return ImageResource('xform_stat')
@@ -227,7 +282,7 @@ class TransformStatisticPlugin(Plugin):
         return self
     
 ### Serialization
-@camel_registry.dumper(TransformStatisticOp, 'transform-statistic', version = 1)
+@camel_registry.dumper(TransformStatisticPluginOp, 'transform-statistic', version = 1)
 def _dump(op):
     return dict(name = op.name,
                 statistic = op.statistic,
@@ -237,4 +292,4 @@ def _dump(op):
     
 @camel_registry.loader('transform-statistic', version = 1)
 def _load(data, version):
-    return TransformStatisticOp(**data)
+    return TransformStatisticPluginOp(**data)

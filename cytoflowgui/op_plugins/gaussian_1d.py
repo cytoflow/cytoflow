@@ -119,7 +119,9 @@ from cytoflowgui.subset import ISubset, SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin
 from cytoflowgui.workflow import Changed
-from cytoflowgui.serialization import camel_registry
+from cytoflowgui.serialization import camel_registry, traits_repr, traits_str, dedent
+
+GaussianMixtureOp.__repr__ = traits_repr
 
 class GaussianMixture1DHandler(OpHandlerMixin, Controller):
     def default_traits_view(self):
@@ -211,6 +213,24 @@ class GaussianMixture1DPluginOp(PluginOpMixin, GaussianMixtureOp):
         self._scale = {}
         self.changed = (Changed.ESTIMATE_RESULT, self)
         
+    def get_notebook_code(self, wi, idx):
+        op = GaussianMixtureOp()
+        op.copy_traits(self, op.copyable_trait_names())      
+
+        return dedent("""
+        op_{idx} = {repr}
+        
+        op_{idx}.estimate(ex_{prev_idx}{subset})
+        ex_{idx} = op_{idx}.apply(ex_{prev_idx})
+        """
+        .format(beads = self.beads_name,
+                repr = repr(op),
+                idx = idx,
+                prev_idx = idx - 1,
+                subset = ", subset = " + repr(self.subset) if self.subset else ""))
+        
+    
+        
 class GaussianMixture1DViewHandler(ViewHandlerMixin, Controller):
     def default_traits_view(self):
         return View(VGroup(
@@ -265,6 +285,17 @@ class GaussianMixture1DPluginView(PluginViewMixin, GaussianMixture1DView):
                 return self.enum_plots(wi.previous_wi.result)
             except:
                 return []
+            
+    def get_notebook_code(self, wi, idx):
+        view = GaussianMixture1DView()
+        view.copy_traits(self, view.copyable_trait_names())
+        view.subset = self.subset
+        
+        return dedent("""
+        op_{idx}.default_view({traits}).plot(ex_{idx})
+        """
+        .format(traits = traits_str(view),
+                idx = idx))
 
 @provides(IOperationPlugin)
 class GaussianMixture1DPlugin(Plugin, PluginHelpMixin):

@@ -28,7 +28,7 @@ from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
 from cytoflow.operations import IOperation
-from cytoflow.operations.range2d import Range2DOp as _Range2DOp, RangeSelection2D
+from cytoflow.operations.range2d import Range2DOp, RangeSelection2D
 from cytoflow.views.i_selectionview import ISelectionView
 
 from cytoflowgui.op_plugins.i_op_plugin \
@@ -38,7 +38,9 @@ from cytoflowgui.subset import SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.workflow import Changed
-from cytoflowgui.serialization import camel_registry
+from cytoflowgui.serialization import camel_registry, traits_repr, traits_str, dedent
+
+Range2DOp.__repr__ = traits_repr
 
 '''
 2D Range Gate
@@ -195,12 +197,33 @@ class Range2DSelectionView(PluginViewMixin, RangeSelection2D):
     
     def plot_wi(self, wi):
         self.plot(wi.previous_wi.result)
+        
+    def get_notebook_code(self, wi, idx):
+        return dedent("""
+        op_{idx}.default_view().plot(ex_{prev_idx})
+        """
+        .format(idx = idx, 
+                prev_idx = idx - 1))
     
-class Range2DOp(_Range2DOp, PluginOpMixin):
+    
+class Range2DPluginOp(Range2DOp, PluginOpMixin):
     handler_factory = Callable(Range2DHandler, transient = True)
     
     def default_view(self, **kwargs):
         return Range2DSelectionView(op = self, **kwargs)
+    
+    def get_notebook_code(self, wi, idx):
+        op = Range2DOp()
+        op.copy_traits(self, op.copyable_trait_names())
+
+        return dedent("""
+        op_{idx} = {repr}
+                
+        ex_{idx} = op_{idx}.apply(ex_{prev_idx})
+        """
+        .format(repr = repr(op),
+                idx = idx,
+                prev_idx = idx - 1))
 
 @provides(IOperationPlugin)
 class Range2DPlugin(Plugin, PluginHelpMixin):
@@ -215,7 +238,7 @@ class Range2DPlugin(Plugin, PluginHelpMixin):
     menu_group = "Gates"
     
     def get_operation(self):
-        return Range2DOp()
+        return Range2DPluginOp()
 
     def get_icon(self):
         return ImageResource('range2d')
@@ -225,7 +248,7 @@ class Range2DPlugin(Plugin, PluginHelpMixin):
         return self
     
 ### Serialization
-@camel_registry.dumper(Range2DOp, 'range2d', version = 1)
+@camel_registry.dumper(Range2DPluginOp, 'range2d', version = 1)
 def _dump(op):
     return dict(name = op.name,
                 xchannel = op.xchannel,
@@ -237,7 +260,7 @@ def _dump(op):
     
 @camel_registry.loader('range2d', version = 1)
 def _load(data, version):
-    return Range2DOp(**data)
+    return Range2DPluginOp(**data)
 
 @camel_registry.dumper(Range2DSelectionView, 'range2d-view', version = 1)
 def _dump_view(view):

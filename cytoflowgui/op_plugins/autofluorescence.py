@@ -51,7 +51,6 @@ non-fluorescent, and that the module found the population median.
     af_op.default_view().plot(ex) 
 '''
 import warnings
-from textwrap import dedent
 
 from traitsui.api import (View, Item, Controller, ButtonEditor, CheckListEditor,
                           VGroup)
@@ -62,7 +61,7 @@ from pyface.api import ImageResource
 
 import cytoflow.utility as util
 
-from cytoflow.operations.autofluorescence import AutofluorescenceOp as _AutofluorescenceOp, AutofluorescenceDiagnosticView
+from cytoflow.operations.autofluorescence import AutofluorescenceOp, AutofluorescenceDiagnosticView
 from cytoflow.views.i_selectionview import IView
 
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
@@ -71,8 +70,9 @@ from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.subset import ISubset, SubsetListEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin
 from cytoflowgui.workflow import Changed
-from cytoflowgui.serialization import camel_registry
+from cytoflowgui.serialization import camel_registry, traits_repr, traits_str, dedent
 
+AutofluorescenceOp.__repr__ = traits_repr
 
 class AutofluorescenceHandler(OpHandlerMixin, Controller):
     
@@ -96,7 +96,7 @@ class AutofluorescenceHandler(OpHandlerMixin, Controller):
                          show_label = False),
                     shared_op_traits)
 
-class AutofluorescenceOp(PluginOpMixin, _AutofluorescenceOp):
+class AutofluorescencePluginOp(PluginOpMixin, AutofluorescenceOp):
     handler_factory = Callable(AutofluorescenceHandler)
     
     channels = List(Str, estimate = True)
@@ -128,7 +128,7 @@ class AutofluorescenceOp(PluginOpMixin, _AutofluorescenceOp):
                           "used to estimate the model?",
                           util.CytoflowOpWarning)
             
-        _AutofluorescenceOp.estimate(self, experiment, subset = self.subset)
+        super().estimate(experiment, subset = self.subset)
         self.changed = (Changed.ESTIMATE_RESULT, self)
         
         
@@ -151,17 +151,20 @@ class AutofluorescenceOp(PluginOpMixin, _AutofluorescenceOp):
         
         return False
     
-    def get_notebook_code(self, idx):
+    def get_notebook_code(self, wi, idx):
+        op = AutofluorescenceOp()
+        op.copy_traits(self, op.copyable_trait_names())
+
         return dedent("""
         op_{idx} = {repr}
-        op_{idx}.estimate(ex_{prev_idx})
-        op_idx.default_view().plot(ex_{prev_idx})
         
+        op_{idx}.estimate(ex_{prev_idx}{subset})
         ex_{idx} = op_{idx}.apply(ex_{prev_idx})
         """
-        .format(repr = repr(self),
+        .format(repr = repr(op),
+                idx = idx,
                 prev_idx = idx - 1,
-                idx = idx))
+                subset = ", subset = " + repr(self.subset) if self.subset else ""))
         
 
 class AutofluorescenceViewHandler(ViewHandlerMixin, Controller):
@@ -184,13 +187,23 @@ class AutofluorescencePluginView(PluginViewMixin, AutofluorescenceDiagnosticView
     
     def plot_wi(self, wi):
         self.plot(wi.previous_wi.result)
-
     
     def should_plot(self, changed):
         if changed == Changed.ESTIMATE_RESULT:
             return True
         
         return False
+    
+    def get_notebook_code(self, wi, idx):
+        view = AutofluorescenceDiagnosticView()
+        view.copy_traits(self, view.copyable_trait_names())
+        
+        return dedent("""
+        op_{idx}.default_view({traits}).plot(ex_{prev_idx})
+        """
+        .format(traits = traits_str(view),
+                idx = idx,
+                prev_idx = idx - 1))
     
 
 @provides(IOperationPlugin)
@@ -203,7 +216,7 @@ class AutofluorescencePlugin(Plugin, PluginHelpMixin):
     menu_group = "Calibration"
     
     def get_operation(self):
-        return AutofluorescenceOp()
+        return AutofluorescencePluginOp()
     
     def get_icon(self):
         return ImageResource('autofluorescence')
@@ -213,7 +226,7 @@ class AutofluorescencePlugin(Plugin, PluginHelpMixin):
         return self
     
 ### Serialization
-@camel_registry.dumper(AutofluorescenceOp, 'autofluorescence', version = 1)
+@camel_registry.dumper(AutofluorescencePluginOp, 'autofluorescence', version = 1)
 def _dump(op):
     return dict(blank_file = op.blank_file,
                 channels = op.channels,
@@ -221,7 +234,7 @@ def _dump(op):
     
 @camel_registry.loader('autofluorescence', version = 1)
 def _load(data, version):
-    return AutofluorescenceOp(**data)
+    return AutofluorescencePluginOp(**data)
 
 @camel_registry.dumper(AutofluorescencePluginView, 'autofluorescence-view', version = 1)
 def _dump_view(view):

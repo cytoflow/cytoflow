@@ -82,12 +82,12 @@ from traitsui.api import View, Item, EnumEditor, Controller, VGroup, \
                          ButtonEditor, Heading, HGroup, InstanceEditor
 from envisage.api import Plugin, contributes_to
 from traits.api import (provides, Callable, List, Str, HasTraits, File, Event, 
-                        Dict, on_trait_change, Property)
+                        Dict, on_trait_change, Property, DelegatesTo)
 from pyface.api import ImageResource
 
 import cytoflow.utility as util
 
-from cytoflow.operations.bleedthrough_piecewise import BleedthroughPiecewiseOp as _BleedthroughPiecewiseOp, BleedthroughPiecewiseDiagnostic
+from cytoflow.operations.bleedthrough_piecewise import BleedthroughPiecewiseOp, BleedthroughPiecewiseDiagnostic
 from cytoflow.views.i_selectionview import IView
 
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
@@ -97,7 +97,9 @@ from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin
 from cytoflowgui.vertical_list_editor import VerticalListEditor
 from cytoflowgui.workflow import Changed
-from cytoflowgui.serialization import camel_registry
+from cytoflowgui.serialization import camel_registry, traits_repr, traits_str, dedent
+
+BleedthroughPiecewiseOp.__repr__ = traits_repr
 
 class _Control(HasTraits):
     channel = Str
@@ -152,7 +154,7 @@ class BleedthroughPiecewiseHandler(OpHandlerMixin, Controller):
                          show_label = False),
                     shared_op_traits)
 
-class BleedthroughPiecewiseOp(PluginOpMixin, _BleedthroughPiecewiseOp):
+class BleedthroughPiecewisePluginOp(PluginOpMixin, BleedthroughPiecewiseOp):
     handler_factory = Callable(BleedthroughPiecewiseHandler)
 
     add_control = Event
@@ -206,7 +208,7 @@ class BleedthroughPiecewiseOp(PluginOpMixin, _BleedthroughPiecewiseOp):
                           "used to estimate the model?",
                           util.CytoflowOpWarning)
                     
-        _BleedthroughPiecewiseOp.estimate(self, experiment, subset = self.subset)
+        BleedthroughPiecewiseOp.estimate(self, experiment, subset = self.subset)
         
         self.changed = (Changed.ESTIMATE_RESULT, self)
         
@@ -222,6 +224,25 @@ class BleedthroughPiecewiseOp(PluginOpMixin, _BleedthroughPiecewiseOp):
             return True
         
         return False
+    
+    def get_notebook_code(self, wi, idx):
+        op = BleedthroughPiecewiseOp()
+        op.copy_traits(self, op.copyable_trait_names())
+
+        for control in self.controls_list:
+            op.controls[control.channel] = control.file        
+
+        return dedent("""
+        op_{idx} = {repr}
+        
+        op_{idx}.estimate(ex_{prev_idx}{subset})
+        ex_{idx} = op_{idx}.apply(ex_{prev_idx})
+        """
+        .format(beads = self.beads_name,
+                repr = repr(op),
+                idx = idx,
+                prev_idx = idx - 1,
+                subset = ", subset = " + repr(self.subset) if self.subset else ""))
 
 class BleedthroughPiecewiseViewHandler(ViewHandlerMixin, Controller):
     def default_traits_view(self):
@@ -239,6 +260,7 @@ class BleedthroughPiecewiseViewHandler(ViewHandlerMixin, Controller):
 @provides(IView)
 class BleedthroughPiecewisePluginView(PluginViewMixin, BleedthroughPiecewiseDiagnostic):
     handler_factory = Callable(BleedthroughPiecewiseViewHandler)
+    subset = DelegatesTo('op')
     
     def plot_wi(self, wi):
         self.plot(wi.previous_wi.result)
@@ -248,6 +270,18 @@ class BleedthroughPiecewisePluginView(PluginViewMixin, BleedthroughPiecewiseDiag
             return True
         
         return False
+    
+    def get_notebook_code(self, wi, idx):
+        view = BleedthroughPiecewiseDiagnostic()
+        view.copy_traits(self, view.copyable_trait_names())
+        view.subset = self.subset
+        
+        return dedent("""
+        op_{idx}.default_view({traits}).plot(ex_{prev_idx})
+        """
+        .format(traits = traits_str(view),
+                idx = idx,
+                prev_idx = idx - 1))
 
 @provides(IOperationPlugin)
 class BleedthroughPiecewisePlugin(Plugin, PluginHelpMixin):
@@ -262,7 +296,7 @@ class BleedthroughPiecewisePlugin(Plugin, PluginHelpMixin):
     menu_group = "Gates"
     
     def get_operation(self):
-        return BleedthroughPiecewiseOp()
+        return BleedthroughPiecewisePluginOp()
     
     def get_icon(self):
         return ImageResource('bleedthrough_piecewise')
@@ -272,14 +306,14 @@ class BleedthroughPiecewisePlugin(Plugin, PluginHelpMixin):
         return self
     
 ### Serialization
-@camel_registry.dumper(BleedthroughPiecewiseOp, 'bleedthrough-piecewise', version = 1)
+@camel_registry.dumper(BleedthroughPiecewisePluginOp, 'bleedthrough-piecewise', version = 1)
 def _dump(op):
     return dict(controls_list = op.controls_list,
                 subset_list = op.subset_list)
                 
 @camel_registry.loader('bleedthrough-piecewise', version = 1)
 def _load(data, version):
-    return BleedthroughPiecewiseOp(**data)
+    return BleedthroughPiecewisePluginOp(**data)
 
 @camel_registry.dumper(_Control, 'bleedthrough-piecewise-control', version = 1)
 def _dump_control(control):

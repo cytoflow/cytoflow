@@ -73,7 +73,7 @@ from traits.api import provides, Callable, Str, Instance, DelegatesTo
 from pyface.api import ImageResource
 
 from cytoflow.operations import IOperation
-from cytoflow.operations.binning import BinningOp as _BinningOp, BinningView
+from cytoflow.operations.binning import BinningOp, BinningView
 from cytoflow.views.i_selectionview import IView
 
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
@@ -81,7 +81,9 @@ from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_E
 from cytoflowgui.subset import SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin
-from cytoflowgui.serialization import camel_registry
+from cytoflowgui.serialization import camel_registry, traits_repr, traits_str, dedent
+
+BinningOp.__repr__ = traits_repr
 
 class BinningHandler(Controller, OpHandlerMixin):
     def default_traits_view(self):
@@ -99,11 +101,24 @@ class BinningHandler(Controller, OpHandlerMixin):
                          label = "Bin Width"),
                     shared_op_traits)
 
-class BinningOp(PluginOpMixin, _BinningOp):
+class BinningPluginOp(PluginOpMixin, BinningOp):
     handler_factory = Callable(BinningHandler)
     
     def default_view(self, **kwargs):
         return BinningPluginView(op = self, **kwargs)
+    
+    def get_notebook_code(self, wi, idx):
+        op = BinningOp()
+        op.copy_traits(self, op.copyable_trait_names())
+
+        return dedent("""
+        op_{idx} = {repr}
+                
+        ex_{idx} = op_{idx}.apply(ex_{prev_idx})
+        """
+        .format(repr = repr(op),
+                idx = idx,
+                prev_idx = idx - 1))
 
 class BinningViewHandler(Controller, ViewHandlerMixin):
     def default_traits_view(self):
@@ -143,6 +158,12 @@ class BinningPluginView(PluginViewMixin, BinningView):
             self.plot(wi.result)
         else:
             self.plot(wi.previous_wi.result)
+            
+    def get_notebook_code(self, wi, idx):
+        return dedent("""
+        op_{idx}.default_view().plot(ex_{idx})
+        """
+        .format(idx = idx))
 
 
 @provides(IOperationPlugin)
@@ -155,7 +176,7 @@ class BinningPlugin(Plugin, PluginHelpMixin):
     menu_group = "Gates"
     
     def get_operation(self):
-        return BinningOp()
+        return BinningPluginOp()
     
     def get_icon(self):
         return ImageResource('binning')
@@ -165,7 +186,7 @@ class BinningPlugin(Plugin, PluginHelpMixin):
         return self
     
 ### Serialization
-@camel_registry.dumper(BinningOp, 'binning', version = 1)
+@camel_registry.dumper(BinningPluginOp, 'binning', version = 1)
 def _dump(op):
     return dict(name = op.name,
                 channel = op.channel,
@@ -175,7 +196,7 @@ def _dump(op):
     
 @camel_registry.loader('binning', version = 1)
 def _load(data, version):
-    return BinningOp(**data)
+    return BinningPluginOp(**data)
 
 @camel_registry.dumper(BinningPluginView, 'binning-view', version = 1)
 def _dump_view(view):

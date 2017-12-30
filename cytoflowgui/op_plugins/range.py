@@ -78,7 +78,7 @@ from pyface.api import ImageResource
 
 from cytoflow.views.i_selectionview import ISelectionView
 from cytoflow.operations import IOperation
-from cytoflow.operations.range import RangeOp as _RangeOp, RangeSelection
+from cytoflow.operations.range import RangeOp, RangeSelection
 
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
@@ -87,7 +87,7 @@ from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin
 from cytoflowgui.workflow import Changed
-from cytoflowgui.serialization import camel_registry
+from cytoflowgui.serialization import camel_registry, traits_repr, traits_str, dedent
 
 class RangeHandler(OpHandlerMixin, Controller):
     
@@ -149,14 +149,34 @@ class RangeSelectionView(PluginViewMixin, RangeSelection):
     
     def plot_wi(self, wi):
         self.plot(wi.previous_wi.result)
+        
+    def get_notebook_code(self, wi, idx):
+        return dedent("""
+        op_{idx}.default_view().plot(ex_{prev_idx})
+        """
+        .format(idx = idx, 
+                prev_idx = idx - 1))
     
     
 @provides(IOperation)
-class RangeOp(PluginOpMixin, _RangeOp):
+class RangePluginOp(PluginOpMixin, RangeOp):
     handler_factory = Callable(RangeHandler)
     
     def default_view(self, **kwargs):
         return RangeSelectionView(op = self, **kwargs)
+    
+    def get_notebook_code(self, wi, idx):
+        op = RangeOp()
+        op.copy_traits(self, op.copyable_trait_names())
+
+        return dedent("""
+        op_{idx} = {repr}
+                
+        ex_{idx} = op_{idx}.apply(ex_{prev_idx})
+        """
+        .format(repr = repr(op),
+                idx = idx,
+                prev_idx = idx - 1))
 
 @provides(IOperationPlugin)
 class RangePlugin(Plugin, PluginHelpMixin):
@@ -168,7 +188,7 @@ class RangePlugin(Plugin, PluginHelpMixin):
     menu_group = "Gates"
     
     def get_operation(self):
-        return RangeOp()
+        return RangePluginOp()
     
     def get_icon(self):
         return ImageResource('range')
@@ -178,7 +198,7 @@ class RangePlugin(Plugin, PluginHelpMixin):
         return self
     
 ### Serialization
-@camel_registry.dumper(RangeOp, 'range', version = 1)
+@camel_registry.dumper(RangePluginOp, 'range', version = 1)
 def _dump(op):
     return dict(name = op.name,
                 channel = op.channel,
@@ -187,7 +207,7 @@ def _dump(op):
     
 @camel_registry.loader('range', version = 1)
 def _load(data, version):
-    return RangeOp(**data)
+    return RangePluginOp(**data)
 
 @camel_registry.dumper(RangeSelectionView, 'range-view', version = 1)
 def _dump_view(view):

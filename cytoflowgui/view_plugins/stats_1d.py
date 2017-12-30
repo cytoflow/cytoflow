@@ -104,7 +104,9 @@ from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
     import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, PluginHelpMixin
-from cytoflowgui.serialization import camel_registry
+from cytoflowgui.serialization import camel_registry, traits_repr, dedent
+
+Stats1DView.__repr__ = traits_repr
     
 class Stats1DHandler(ViewHandlerMixin, Controller):
 
@@ -233,7 +235,17 @@ class Stats1DHandler(ViewHandlerMixin, Controller):
 
 class Stats1DPluginView(PluginViewMixin, Stats1DView):
     handler_factory = Callable(Stats1DHandler)
-        
+    
+    def get_notebook_code(self, wi, idx):
+        view = Stats1DView()
+        view.copy_traits(self, view.copyable_trait_names())
+
+        return dedent("""
+        {repr}.plot(ex_{idx}{plot})
+        """
+        .format(repr = repr(view),
+                idx = idx,
+                plot = ", plot = " + repr(wi.current_plot) if wi.current_plot is not None else ""))
 
 @provides(IViewPlugin)
 class Stats1DPlugin(Plugin, PluginHelpMixin):

@@ -68,7 +68,7 @@ from pyface.api import ImageResource
 
 import cytoflow.utility as util
 
-from cytoflow.operations.color_translation import ColorTranslationOp as _ColorTranslationOp, ColorTranslationDiagnostic
+from cytoflow.operations.color_translation import ColorTranslationOp, ColorTranslationDiagnostic
 from cytoflow.views.i_selectionview import IView
 
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
@@ -78,7 +78,9 @@ from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin
 from cytoflowgui.vertical_list_editor import VerticalListEditor
 from cytoflowgui.workflow import Changed
-from cytoflowgui.serialization import camel_registry
+from cytoflowgui.serialization import camel_registry, traits_repr, traits_str, dedent
+
+ColorTranslationOp.__repr__ = traits_repr
 
 class _Control(HasTraits):
     from_channel = Str
@@ -137,7 +139,7 @@ class ColorTranslationHandler(OpHandlerMixin, Controller):
                          show_label = False),
                     shared_op_traits)
 
-class ColorTranslationOp(PluginOpMixin, _ColorTranslationOp):
+class ColorTranslationPluginOp(PluginOpMixin, ColorTranslationOp):
     handler_factory = Callable(ColorTranslationHandler)
 
     add_control = Event
@@ -184,7 +186,7 @@ class ColorTranslationOp(PluginOpMixin, _ColorTranslationOp):
                           "used to estimate the model?",
                           util.CytoflowOpWarning)
                     
-        _ColorTranslationOp.estimate(self, experiment, subset = self.subset)
+        ColorTranslationOp.estimate(self, experiment, subset = self.subset)
         
         self.changed = (Changed.ESTIMATE_RESULT, self)
         
@@ -198,6 +200,26 @@ class ColorTranslationOp(PluginOpMixin, _ColorTranslationOp):
     def clear_estimate(self):
         self._coefficients.clear()        
         self.changed = (Changed.ESTIMATE_RESULT, self)
+        
+        
+    def get_notebook_code(self, wi, idx):
+        op = ColorTranslationOp()
+        op.copy_traits(self, op.copyable_trait_names())
+
+        for control in self.controls_list:
+            op.controls[(control.from_channel, control.to_channel)] = control.file        
+
+        return dedent("""
+        op_{idx} = {repr}
+        
+        op_{idx}.estimate(ex_{prev_idx}{subset})
+        ex_{idx} = op_{idx}.apply(ex_{prev_idx})
+        """
+        .format(beads = self.beads_name,
+                repr = repr(op),
+                idx = idx,
+                prev_idx = idx - 1,
+                subset = ", subset = " + repr(self.subset) if self.subset else ""))
 
 class ColorTranslationViewHandler(ViewHandlerMixin, Controller):
     def default_traits_view(self):
@@ -224,6 +246,18 @@ class ColorTranslationPluginView(PluginViewMixin, ColorTranslationDiagnostic):
             return True
         
         return False
+    
+    def get_notebook_code(self, wi, idx):
+        view = ColorTranslationDiagnostic()
+        view.copy_traits(self, view.copyable_trait_names())
+        view.subset = self.subset
+        
+        return dedent("""
+        op_{idx}.default_view({traits}).plot(ex_{prev_idx})
+        """
+        .format(traits = traits_str(view),
+                idx = idx,
+                prev_idx = idx - 1))
 
 
 @provides(IOperationPlugin)
@@ -236,7 +270,7 @@ class ColorTranslationPlugin(Plugin, PluginHelpMixin):
     menu_group = "Gates"
     
     def get_operation(self):
-        return ColorTranslationOp()
+        return ColorTranslationPluginOp()
     
     def get_icon(self):
         return ImageResource('color_translation')
@@ -246,7 +280,7 @@ class ColorTranslationPlugin(Plugin, PluginHelpMixin):
         return self
     
 ### Serialization
-@camel_registry.dumper(ColorTranslationOp, 'color-translation', version = 1)
+@camel_registry.dumper(ColorTranslationPluginOp, 'color-translation', version = 1)
 def _dump(op):
     return dict(controls_list = op.controls_list,
                 mixture_model = op.mixture_model,
@@ -254,7 +288,7 @@ def _dump(op):
     
 @camel_registry.loader('color-translation', version = 1)
 def _load(data, version):
-    return ColorTranslationOp(**data)
+    return ColorTranslationPluginOp(**data)
 
 @camel_registry.dumper(_Control, 'color-translation-control', version = 1)
 def _dump_control(c):

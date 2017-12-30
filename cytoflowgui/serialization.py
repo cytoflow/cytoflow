@@ -10,6 +10,7 @@ import logging
 import pandas
 
 from pyface.api import error
+from traits.api import DelegationError
 
 #### YAML serialization
 
@@ -93,10 +94,8 @@ def save_notebook(workflow, path):
         
     for i, wi in enumerate(workflow):
 
-        code = wi.operation.get_notebook_code(i)
-        
-        logging.debug("Op cell:")
-        logging.debug(code)
+        code = wi.operation.get_notebook_code(wi, i)
+
         try:
             code = FormatCode(code, style_config = 'pep8')[0]
         except:
@@ -104,17 +103,12 @@ def save_notebook(workflow, path):
                   message = "Had trouble serializing the {} operation"
                             .format(wi.operation.friendly_id))
         
-        nb['cells'].append(nbf.v4.new_code_cell(code))   
+        nb['cells'].append(nbf.v4.new_code_cell(code))
                     
         for view in wi.views:
-            if hasattr(wi.operation, 'default_view') and \
-                wi.operation.default_view().id == view.id:
-                continue
 
-            code = view.get_notebook_code(i)
-    
-            logging.debug("View cell")
-            logging.debug(code)
+            code = view.get_notebook_code(wi, i)
+
             try:
                 code = FormatCode(code, style_config = 'pep8')[0]
             except:
@@ -127,3 +121,33 @@ def save_notebook(workflow, path):
     with open(path, 'w') as f:
         nbf.write(nb, f)
 
+# set underlying cytoflow repr
+def traits_repr(obj):
+    return obj.__class__.__name__ + '(' + traits_str(obj) + ')'
+
+def traits_str(obj):
+    try:
+        traits = obj.trait_get(transient = lambda x: x is not True,
+                               status = lambda x: x is not True,
+                               type = lambda x: x != 'delegate')
+        
+        traits.pop('op', None)
+        
+        # filter out traits that haven't changed
+        default_traits = obj.__class__().trait_get(transient = lambda x: x is not True,
+                                                   status = lambda x: x is not True,
+                                                   type = lambda x: x != 'delegate')
+        
+        traits = [(k, v) for k, v in traits.items() if k not in default_traits 
+                                            or v != default_traits[k]]
+
+        # %s uses the str function and %r uses the repr function
+        traits_str = ', '.join(["%s = %s" % (k, v.__name__) 
+                                if callable(v)
+                                else "%s = %r" % (k, v)  
+                                for k, v in traits])
+        
+        return traits_str
+                
+    except DelegationError:
+        return obj.__class__.__name__ + '(<Delegation error>)'

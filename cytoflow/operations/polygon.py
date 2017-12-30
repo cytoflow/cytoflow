@@ -46,11 +46,11 @@ class PolygonOp(HasStrictTraits):
         The operation name.  Used to name the new metadata field in the
         experiment that's created by :meth:`apply`
         
-    xchannel : Str
-        The name of the x channel to apply the gate.
+    xchannel, ychannel : Str
+        The names of the x and y channels to apply the gate.
         
-    ychannel : Str
-        The name of the y channel to apply the gate.
+    xscale, yscale : {'linear', 'log', 'logicle'} (default = 'linear')
+        The scales applied to the data before drawing the polygon.
         
     vertices : List((Float, Float))
         The polygon verticies.  An ordered list of 2-tuples, representing
@@ -129,8 +129,8 @@ class PolygonOp(HasStrictTraits):
     ychannel = Str()
     vertices = List((Float, Float))
     
-    _xscale = util.ScaleEnum()
-    _yscale = util.ScaleEnum()
+    xscale = util.ScaleEnum()
+    yscale = util.ScaleEnum()
         
     def apply(self, experiment):
         """Applies the threshold to an experiment.
@@ -207,8 +207,8 @@ class PolygonOp(HasStrictTraits):
         # selected with an interactive plot, and that plot had scaled
         # axes, we need to apply that scale function to both the
         # vertices and the data before looking for path membership
-        xscale = util.scale_factory(self._xscale, experiment, channel = self.xchannel)
-        yscale = util.scale_factory(self._yscale, experiment, channel = self.ychannel)
+        xscale = util.scale_factory(self.xscale, experiment, channel = self.xchannel)
+        yscale = util.scale_factory(self.yscale, experiment, channel = self.ychannel)
         
         vertices = [(xscale(x), yscale(y)) for (x, y) in self.vertices]
         data = experiment.data[[self.xchannel, self.ychannel]].copy()
@@ -243,18 +243,13 @@ class PolygonSelection(Op2DView, ScatterplotView):
         is this view interactive?  Ie, can the user set the polygon verticies
         with mouse clicks?
         
-    Notes
-    -----
-    We inherit :attr:`xfacet` and :attr:`yfacet` from 
-    :class:`cytoflow.views.ScatterPlotView`, but they must both be unset!
-        
     Examples
     --------
 
     In a Jupyter notebook with `%matplotlib notebook`
     
-    >>> s = flow.ScatterplotView(xchannel = "V2-A",
-    ...                          ychannel = "Y2-A")
+    >>> s = flow.PolygonOp(xchannel = "V2-A",
+    ...                    ychannel = "Y2-A")
     >>> poly = s.default_view()
     >>> poly.plot(ex2)
     >>> poly.interactive = True
@@ -265,9 +260,6 @@ class PolygonSelection(Op2DView, ScatterplotView):
     
     xfacet = Constant(None)
     yfacet = Constant(None)
-    
-    xscale = DelegatesTo('op', prefix = '_xscale')
-    yscale = DelegatesTo('op', prefix = '_yscale')
 
     interactive = Bool(False, transient = True)
 
@@ -326,8 +318,7 @@ class PolygonSelection(Op2DView, ScatterplotView):
         self.op.vertices = vertices
     
 util.expand_class_attributes(PolygonSelection)
-util.expand_method_parameters(PolygonSelection, PolygonSelection.plot)
-        
+util.expand_method_parameters(PolygonSelection, PolygonSelection.plot)        
         
 if __name__ == '__main__':
     import cytoflow as flow
