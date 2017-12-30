@@ -514,7 +514,8 @@ class TasbePluginOp(PluginOpMixin):
         .format(idx = idx,
                 prev_idx = idx - 1,
                 af_repr = repr(self._af_op),
-                bleed_repr = repr(self._bleedthrough_op),
+                bleedthrough_repr = repr(self._bleedthrough_op),
+                color_repr = repr(self._color_translation_op),
                 beads = self.beads_name,
                 beads_repr = repr(self._bead_calibration_op),
                 subset = ", subset = " + repr(self.subset) if self.subset else ""))

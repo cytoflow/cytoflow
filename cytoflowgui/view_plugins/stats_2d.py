@@ -292,7 +292,7 @@ class Stats2DPluginView(PluginViewMixin, Stats2DView):
         """
         .format(repr = repr(view),
                 idx = idx,
-                plot = ", plot = " + repr(wi.current_plot) if wi.current_plot is not None else ""))
+                plot = ", plot_name = " + repr(wi.current_plot) if wi.current_view_plot_names is not None else ""))
 
 @provides(IViewPlugin)
 class Stats2DPlugin(Plugin, PluginHelpMixin):
@@ -330,4 +330,9 @@ def _dump(view):
     
 @camel_registry.loader('stats-2d', version = 1)
 def _load(data, version):
+    data['xstatistic'] = tuple(data['xstatistic'])
+    data['ystatistic'] = tuple(data['ystatistic'])
+    data['x_error_statistic'] = tuple(data['x_error_statistic'])
+    data['y_error_statistic'] = tuple(data['y_error_statistic'])
+
     return Stats2DPluginView(**data)

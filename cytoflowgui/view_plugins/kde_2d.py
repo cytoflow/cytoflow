@@ -189,7 +189,7 @@ class Kde2DPluginView(PluginViewMixin, Kde2DView):
         """
         .format(repr = repr(view),
                 idx = idx,
-                plot = ", plot = " + repr(wi.current_plot) if wi.current_plot is not None else ""))
+                plot = ", plot_name = " + repr(wi.current_plot) if wi.current_view_plot_names is not None else ""))
             
 @provides(IViewPlugin)
 class Kde2DPlugin(Plugin, PluginHelpMixin):

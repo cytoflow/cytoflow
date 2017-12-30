@@ -214,7 +214,7 @@ class TablePluginView(PluginViewMixin, TableView):
         """
         .format(repr = repr(view),
                 idx = idx,
-                plot = ", plot = " + repr(wi.current_plot) if wi.current_plot is not None else ""))
+                plot = ", plot_name = " + repr(wi.current_plot) if wi.current_view_plot_names is not None else ""))
 
     @on_trait_change('export')
     def _on_export(self):
@@ -368,4 +368,5 @@ def _dump(view):
     
 @camel_registry.loader('table-view', version = 1)
 def _load(data, version):
+    data['statistic'] = tuple(data['statistic'])
     return TablePluginView(**data)

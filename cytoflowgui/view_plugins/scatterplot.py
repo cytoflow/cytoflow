@@ -186,7 +186,7 @@ class ScatterplotPluginView(PluginViewMixin, ScatterplotView):
         """
         .format(repr = repr(view),
                 idx = idx,
-                plot = ", plot = " + repr(wi.current_plot) if wi.current_plot is not None else ""))
+                plot = ", plot_name = " + repr(wi.current_plot) if wi.current_view_plot_names is not None else ""))
 
 
 @provides(IViewPlugin)

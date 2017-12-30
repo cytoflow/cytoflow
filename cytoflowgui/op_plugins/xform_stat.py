@@ -292,4 +292,5 @@ def _dump(op):
     
 @camel_registry.loader('transform-statistic', version = 1)
 def _load(data, version):
+    data['statistic'] = tuple(data['statistic'])
     return TransformStatisticPluginOp(**data)

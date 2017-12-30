@@ -213,7 +213,7 @@ class BarChartPluginView(PluginViewMixin, BarChartView):
         """
         .format(repr = repr(view),
                 idx = idx,
-                plot = ", plot = " + repr(wi.current_plot) if wi.current_plot is not None else ""))
+                plot = ", plot_name = " + repr(wi.current_plot) if wi.current_view_plot_names is not None else ""))
 
 @provides(IViewPlugin)
 class BarChartPlugin(Plugin, PluginHelpMixin):
@@ -246,4 +246,6 @@ def _dump(view):
     
 @camel_registry.loader('bar-chart', version = 1)
 def _load(data, version):
+    data['statistic'] = tuple(data['statistic'])
+    data['error_statistic'] = tuple(data['error_statistic'])
     return BarChartPluginView(**data)
