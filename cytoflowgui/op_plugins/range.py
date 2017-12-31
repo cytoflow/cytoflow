@@ -87,7 +87,9 @@ from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin
 from cytoflowgui.workflow import Changed
-from cytoflowgui.serialization import camel_registry, traits_repr, traits_str, dedent
+from cytoflowgui.serialization import camel_registry, traits_repr, dedent
+
+RangeOp.__repr__ = traits_repr
 
 class RangeHandler(OpHandlerMixin, Controller):
     
