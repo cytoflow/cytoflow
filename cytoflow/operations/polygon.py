@@ -22,7 +22,7 @@ cytoflow.operations.polygon
 '''
 
 from traits.api import (HasStrictTraits, Str, CStr, List, Float, provides,
-                        Instance, Bool, on_trait_change, DelegatesTo, Any,
+                        Instance, Bool, on_trait_change, Any,
                         Constant)
 
 import matplotlib as mpl

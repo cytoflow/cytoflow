@@ -22,7 +22,7 @@ cytoflow.operations.range
 '''
 
 from traits.api import (HasStrictTraits, CFloat, Str, CStr, Instance, Bool, 
-                        provides, on_trait_change, DelegatesTo, Any, Constant)
+                        provides, on_trait_change, Any, Constant)
 
 from matplotlib.widgets import SpanSelector, Cursor
 import matplotlib.pyplot as plt
@@ -211,9 +211,6 @@ class RangeSelection(Op1DView, HistogramView):
 
     xfacet = Constant(None)
     yfacet = Constant(None)
-
-    low = DelegatesTo('op')
-    high = DelegatesTo('op')
     
     scale = util.ScaleEnum
     
@@ -244,9 +241,9 @@ class RangeSelection(Op1DView, HistogramView):
         self._draw_span()
         self._interactive()
 
-    @on_trait_change('low,high', post_init = True)
+    @on_trait_change('op.low, op.high', post_init = True)
     def _draw_span(self):
-        if not (self._ax and self.low and self.high):
+        if not (self._ax and self.op.low and self.op.high):
             return
         
         if self._low_line and self._low_line in self._ax.lines:
@@ -259,12 +256,12 @@ class RangeSelection(Op1DView, HistogramView):
             self._hline.remove()
             
 
-        self._low_line = plt.axvline(self.low, linewidth=3, color='blue')
-        self._high_line = plt.axvline(self.high, linewidth=3, color='blue')
+        self._low_line = plt.axvline(self.op.low, linewidth=3, color='blue')
+        self._high_line = plt.axvline(self.op.high, linewidth=3, color='blue')
             
         ymin, ymax = plt.ylim()
         y = (ymin + ymax) / 2.0
-        self._hline = plt.plot([self.low, self.high], 
+        self._hline = plt.plot([self.op.low, self.op.high], 
                                [y, y], 
                                color='blue', 
                                linewidth = 2)[0]
@@ -294,8 +291,8 @@ class RangeSelection(Op1DView, HistogramView):
     
     def _onselect(self, xmin, xmax): 
         """Update selection traits"""
-        self.low = xmin
-        self.high = xmax
+        self.op.low = xmin
+        self.op.high = xmax
         
 util.expand_class_attributes(RangeSelection)
 util.expand_method_parameters(RangeSelection, RangeSelection.plot)  

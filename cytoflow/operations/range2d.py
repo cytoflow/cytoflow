@@ -24,7 +24,7 @@ cytoflow.operations.range2d
 import pandas as pd
 
 from traits.api import HasStrictTraits, CFloat, Str, CStr, Bool, Instance, \
-    provides, on_trait_change, DelegatesTo, Any, Constant
+    provides, on_trait_change, Any, Constant
 
 from matplotlib.widgets import RectangleSelector
 import matplotlib.pyplot as plt
@@ -254,14 +254,6 @@ class RangeSelection2D(Op2DView, ScatterplotView):
     xscale = util.ScaleEnum
     yscale = util.ScaleEnum
     
-    xchannel = DelegatesTo('op')
-    xlow = DelegatesTo('op')
-    xhigh = DelegatesTo('op')
-    
-    ychannel = DelegatesTo('op')
-    ylow = DelegatesTo('op')
-    yhigh = DelegatesTo('op')
-    
     interactive = Bool(False, transient = True)
     
     # internal state.
@@ -287,7 +279,7 @@ class RangeSelection2D(Op2DView, ScatterplotView):
         self._draw_rect()
         self._interactive()
 
-    @on_trait_change('xlow, xhigh, ylow, yhigh', post_init = True)
+    @on_trait_change('op.xlow, op.xhigh, op.ylow, op.yhigh', post_init = True)
     def _draw_rect(self):
         if not self._ax:
             return
@@ -295,10 +287,10 @@ class RangeSelection2D(Op2DView, ScatterplotView):
         if self._box and self._box in self._ax.patches:
             self._box.remove()
             
-        if self.xlow and self.xhigh and self.ylow and self.yhigh:
-            self._box = Rectangle((self.xlow, self.ylow), 
-                                  (self.xhigh - self.xlow), 
-                                  (self.yhigh - self.ylow), 
+        if self.op.xlow and self.op.xhigh and self.op.ylow and self.op.yhigh:
+            self._box = Rectangle((self.op.xlow, self.op.ylow), 
+                                  (self.op.xhigh - self.op.xlow), 
+                                  (self.op.yhigh - self.op.ylow), 
                                   facecolor="grey",
                                   alpha = 0.2)
             self._ax.add_patch(self._box)
@@ -319,10 +311,10 @@ class RangeSelection2D(Op2DView, ScatterplotView):
     
     def _onselect(self, pos1, pos2): 
         """Update selection traits"""
-        self.xlow = min(pos1.xdata, pos2.xdata)
-        self.xhigh = max(pos1.xdata, pos2.xdata)
-        self.ylow = min(pos1.ydata, pos2.ydata)
-        self.yhigh = max(pos1.ydata, pos2.ydata)
+        self.op.xlow = min(pos1.xdata, pos2.xdata)
+        self.op.xhigh = max(pos1.xdata, pos2.xdata)
+        self.op.ylow = min(pos1.ydata, pos2.ydata)
+        self.op.yhigh = max(pos1.ydata, pos2.ydata)
         
 util.expand_class_attributes(RangeSelection2D)
 util.expand_method_parameters(RangeSelection2D, RangeSelection2D.plot) 

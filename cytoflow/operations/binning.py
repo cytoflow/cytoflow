@@ -1,5 +1,6 @@
 #!/usr/bin/env python3.4
 # coding: latin-1
+from cytoflow.utility.util_functions import roundToSigFigs
 
 # (c) Massachusetts Institute of Technology 2015-2017
 #
@@ -20,9 +21,9 @@
 cytoflow.operations.binning
 ---------------------------
 '''
+from math import log10, floor
 
-from traits.api import (HasStrictTraits, Str, CStr, provides, Constant, Int, 
-                        DelegatesTo)
+from traits.api import (HasStrictTraits, Str, CStr, provides, Constant, Int)
 import numpy as np
 import bottleneck as bn
 
@@ -54,21 +55,12 @@ class BinningOp(HasStrictTraits):
     scale : {"linear", "log", "logicle"}
         Make the bins equidistant along what scale?
         
-    num_bins : Int
-        The number of bins to make.  Must set either :attr:`num_bins` or 
-        :attr:`bin_width`. If both are defined, :attr:`num_bins` takes precedence.
-        
     bin_width : Float
-        The width of the bins.  Must set either :attr:`num_bins` or :attr:`bin_width`.  If
-        :attr:`scale` is ``log``, :attr:`bin_width` is in log-10 units; if :attr:`scale` is
-        ``logicle``, and error is thrown because the units are ill-defined.
-        If both :attr:`num_bins` and :attr:`bin_width` are defined, :attr:`num_bins` takes 
-        precedence. 
-        
-    bin_count_name : Str
-        If :attr:`bin_count_name` is set, :meth:`apply` adds another column to 
-        the resulting :class:`Experiment` that contains the number of events in 
-        the bin that this event falls in.  Useful for filtering bins by number of events.
+        The width of the bins. If :attr:`scale` is ``log``, :attr:`bin_width` 
+        is in log-10 units; if :attr:`scale` is ``logicle``, and error is 
+        thrown because the units are ill-defined.
+ 
+
         
     Examples
     --------
@@ -116,7 +108,8 @@ class BinningOp(HasStrictTraits):
     name = CStr()
     bin_count_name = CStr()
     channel = Str()
-    num_bins = util.PositiveInt(0, allow_zero = True)
+#     num_bins = util.PositiveInt(0, allow_zero = True)
+    num_bins = util.Removed(err_string = "'num_bins' was removed in 0.9")
     bin_width = util.PositiveFloat(0, allow_zero = True)
     scale = util.ScaleEnum
     
@@ -165,43 +158,54 @@ class BinningOp(HasStrictTraits):
                                        "channel {} isn't in the experiment"
                                        .format(self.channel))
               
-        if not self.num_bins and not self.bin_width:
-            raise util.CytoflowOpError('num_bins',
-                                       "must set either bin number or width")
+        if not self.bin_width:
+            raise util.CytoflowOpError('bin_width',
+                                       "must set bin width")
         
-        if self.bin_width \
-           and not (self.scale == "linear" or self.scale == "log"):
+        if not (self.scale == "linear" or self.scale == "log"):
             raise util.CytoflowOpError('scale',
-                                       "Can only use bin_width with linear or log scale") 
+                                       "Can only use binning op with linear or log scale") 
         
         scale = util.scale_factory(self.scale, experiment, channel = self.channel)
-        scaled_data = scale(experiment.data[self.channel])
             
-        scaled_min = bn.nanmin(scaled_data)
-        scaled_max = bn.nanmax(scaled_data)
+        scaled_min = scale(scale.clip(experiment.data[self.channel]).min())
+        scaled_max = scale(scale.clip(experiment.data[self.channel]).max())
+                
+        if self.scale == 'linear':
+            start = 0
+        else:
+            start = 1
+            
+        scaled_bins_left = np.arange(start = -1.0 * start,
+                                     stop = (-1.0 * scaled_min) + self.bin_width,
+                                     step = self.bin_width) * -1.0
+        scaled_bins_left = scaled_bins_left[::-1][:-1]
         
-        num_bins = self.num_bins if self.num_bins else \
-                   (scaled_max - scaled_min) / self.bin_width
-                   
-        if num_bins > self._max_num_bins:
+        scaled_bins_right = np.arange(start = start,
+                                      stop = scaled_max + self.bin_width,
+                                      step = self.bin_width)
+        scaled_bins = np.append(scaled_bins_left, scaled_bins_right)
+                  
+        if len(scaled_bins) > self._max_num_bins:
             raise util.CytoflowOpError(None,
                                        "Too many bins! To increase this limit, "
                                        "change _max_num_bins (currently {})"
                                        .format(self._max_num_bins))
 
-        scaled_bins = np.linspace(start = scaled_min, 
-                                  stop = scaled_max,
-                                  num = num_bins)
+
         
         if len(scaled_bins) < 2:
-            raise util.CytoflowOpError('num_bins', "Must have more than one bin")
-        
-        # put the data in bins
-        bin_idx = np.digitize(scaled_data, scaled_bins[1:-1])
-        
+            raise util.CytoflowOpError('bin_width', "Must have more than one bin")
+
         # now, back into data space
         bins = scale.inverse(scaled_bins)
-            
+        
+        # reduce to 4 sig figs
+        bins = roundToSigFigs(bins, 4)
+        
+        # put the data in bins
+        bin_idx = np.digitize(experiment.data[self.channel], bins[1:-1])
+
         new_experiment = experiment.clone()
         new_experiment.add_condition(self.name, "float", bins[bin_idx])
         
@@ -251,9 +255,6 @@ class BinningView(Op1DView, AnnotatingView, HistogramView):
     id = Constant('edu.mit.synbio.cytoflow.views.binning')
     friendly_id = Constant('Binning Setup')                                 
     
-    huescale = DelegatesTo('op', 'scale')
-
-    
     def plot(self, experiment, **kwargs):
         """
         Plot the histogram.
@@ -263,6 +264,7 @@ class BinningView(Op1DView, AnnotatingView, HistogramView):
         
         """
         
+        self.huescale = self.op.scale
         view, trait_name = self._strip_trait(self.op.name)
     
         super(BinningView, view).plot(experiment,

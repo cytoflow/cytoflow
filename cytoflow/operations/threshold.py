@@ -22,7 +22,7 @@ cytoflow.operations.threshold
 '''
 
 from traits.api import (HasStrictTraits, CFloat, Str, CStr, Instance, 
-                        Bool, on_trait_change, provides, DelegatesTo, Any, 
+                        Bool, on_trait_change, provides, Any, 
                         Constant)
     
 import pandas as pd
@@ -195,7 +195,6 @@ class ThresholdSelection(Op1DView, HistogramView):
     yfacet = Constant(None)
     
     scale = util.ScaleEnum
-    threshold = DelegatesTo('op')
     interactive = Bool(False, transient = True)
 
     # internal state
@@ -219,9 +218,9 @@ class ThresholdSelection(Op1DView, HistogramView):
         self._draw_threshold()
         self._interactive()
     
-    @on_trait_change('threshold', post_init = True)
+    @on_trait_change('op.threshold', post_init = True)
     def _draw_threshold(self):
-        if not self._ax or not self.threshold:
+        if not self._ax or not self.op.threshold:
             return
         
         if self._line:
@@ -235,8 +234,8 @@ class ThresholdSelection(Op1DView, HistogramView):
  
             self._line = None
         
-        if self.threshold:    
-            self._line = plt.axvline(self.threshold, linewidth=3, color='blue')
+        if self.op.threshold:    
+            self._line = plt.axvline(self.op.threshold, linewidth=3, color='blue')
             
         plt.draw()
         
@@ -258,7 +257,7 @@ class ThresholdSelection(Op1DView, HistogramView):
         """Update the threshold location"""
         # sometimes the axes aren't set up and we don't get xdata (??)
         if event.xdata:
-            self.threshold = event.xdata
+            self.op.threshold = event.xdata
             
 util.expand_class_attributes(ThresholdSelection)
 util.expand_method_parameters(ThresholdSelection, ThresholdSelection.plot)  

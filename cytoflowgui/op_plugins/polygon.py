@@ -81,7 +81,7 @@ polygon, double-click.
 
 from textwrap import dedent
 
-from traits.api import provides, Callable, Str, Instance, DelegatesTo
+from traits.api import provides, Callable, Instance, DelegatesTo
 from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
@@ -165,10 +165,14 @@ class PolygonSelectionView(PluginViewMixin, PolygonSelection):
         self.plot(wi.previous_wi.result)
         
     def get_notebook_code(self, wi, idx):
+        view = PolygonSelection()
+        view.copy_traits(self, view.copyable_trait_names())
+        
         return dedent("""
-        op_{idx}.default_view().plot(ex_{prev_idx})
+        op_{idx}.default_view({traits}).plot(ex_{prev_idx})
         """
-        .format(idx = idx, 
+        .format(idx = idx,
+                traits = traits_str(view), 
                 prev_idx = idx - 1))
     
 class PolygonPluginOp(PluginOpMixin, PolygonOp):

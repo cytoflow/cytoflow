@@ -93,9 +93,6 @@ class BinningHandler(Controller, OpHandlerMixin):
                          editor=EnumEditor(name='context.previous_wi.channels'),
                          label = "Channel"),
                     Item('scale'),
-                    Item('num_bins', 
-                         editor = TextEditor(auto_set = False),
-                         label = "Num Bins"),
                     Item('bin_width',
                          editor = TextEditor(auto_set = False),
                          label = "Bin Width"),
@@ -160,10 +157,14 @@ class BinningPluginView(PluginViewMixin, BinningView):
             self.plot(wi.previous_wi.result)
             
     def get_notebook_code(self, wi, idx):
+        view = BinningView()
+        view.copy_traits(self, view.copyable_trait_names())
+        
         return dedent("""
-        op_{idx}.default_view().plot(ex_{idx})
+        op_{idx}.default_view({traits}).plot(ex_{idx})
         """
-        .format(idx = idx))
+        .format(idx = idx,
+                traits = traits_str(view)))
 
 
 @provides(IOperationPlugin)
@@ -206,4 +207,4 @@ def _dump_view(view):
 @camel_registry.loader('binning-view', version = 1)
 def _load_view(data, version):
     return BinningPluginView(**data)
-                       
+

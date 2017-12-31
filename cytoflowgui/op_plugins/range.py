@@ -87,7 +87,7 @@ from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin
 from cytoflowgui.workflow import Changed
-from cytoflowgui.serialization import camel_registry, traits_repr, dedent
+from cytoflowgui.serialization import camel_registry, traits_repr, traits_str, dedent
 
 RangeOp.__repr__ = traits_repr
 
@@ -153,10 +153,14 @@ class RangeSelectionView(PluginViewMixin, RangeSelection):
         self.plot(wi.previous_wi.result)
         
     def get_notebook_code(self, wi, idx):
+        view = RangeSelection()
+        view.copy_traits(self, view.copyable_trait_names())
+        
         return dedent("""
-        op_{idx}.default_view().plot(ex_{prev_idx})
+        op_{idx}.default_view({traits}).plot(ex_{prev_idx})
         """
         .format(idx = idx, 
+                traits = traits_str(view),
                 prev_idx = idx - 1))
     
     

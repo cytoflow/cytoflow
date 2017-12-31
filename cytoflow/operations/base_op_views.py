@@ -259,14 +259,14 @@ class ByView(OpView):
         if plot_name is not None:
             if plot_name is not None and not by:
                 raise util.CytoflowViewError('plot_name',
-                                             "Plot {} not from plot_enum"
+                                             "Plot {} not from enum_plots()"
                                              .format(plot_name))
                                
             groupby = experiment.data.groupby(by)
 
             if plot_name not in set(groupby.groups.keys()):
                 raise util.CytoflowViewError('plot_name',
-                                             "Plot {} not from plot_enum"
+                                             "Plot {} not from enum_plots()"
                                              .format(plot_name))
                 
             experiment = experiment.clone()

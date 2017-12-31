@@ -22,7 +22,7 @@ cytoflow.operations.quad
 '''
 
 from traits.api import (HasStrictTraits, CFloat, Str, CStr, Bool, Instance,
-                        provides, on_trait_change, DelegatesTo, Any, Constant)
+                        provides, on_trait_change, Any, Constant)
 
 from matplotlib.widgets import Cursor
 import matplotlib.pyplot as plt
@@ -256,9 +256,6 @@ class QuadSelection(Op2DView, ScatterplotView):
     # override the Op2DView
     xscale = util.ScaleEnum
     yscale = util.ScaleEnum
-    
-    xthreshold = DelegatesTo('op')
-    ythreshold = DelegatesTo('op')
 
     interactive = Bool(False, transient = True)
     
@@ -286,7 +283,7 @@ class QuadSelection(Op2DView, ScatterplotView):
         self._draw_lines()
         self._interactive()
 
-    @on_trait_change('xthreshold, ythreshold', post_init = True)
+    @on_trait_change('op.xthreshold, op.ythreshold', post_init = True)
     def _draw_lines(self):
         if not self._ax:
             return
@@ -297,11 +294,11 @@ class QuadSelection(Op2DView, ScatterplotView):
         if self._vline and self._vline in self._ax.lines:
             self._vline.remove()
             
-        if self.xthreshold and self.ythreshold:
-            self._hline = plt.axhline(self.ythreshold, 
+        if self.op.xthreshold and self.op.ythreshold:
+            self._hline = plt.axhline(self.op.ythreshold, 
                                       linewidth = 3, 
                                       color = 'blue')
-            self._vline = plt.axvline(self.xthreshold,
+            self._vline = plt.axvline(self.op.xthreshold,
                                       linewidth = 3,
                                       color = 'blue')
 
@@ -322,8 +319,8 @@ class QuadSelection(Op2DView, ScatterplotView):
             
     def _onclick(self, event):
         """Update the threshold location"""
-        self.xthreshold = event.xdata
-        self.ythreshold = event.ydata  
+        self.op.xthreshold = event.xdata
+        self.op.ythreshold = event.ydata  
         
 util.expand_class_attributes(QuadSelection)
 util.expand_method_parameters(QuadSelection, QuadSelection.plot)  
