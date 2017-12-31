@@ -225,7 +225,8 @@ class ColorTranslationOp(HasStrictTraits):
             data[to_channel] = np.log10(data[to_channel])
             
             if self.mixture_model:    
-                gmm = sklearn.mixture.BayesianGaussianMixture(n_components=2)
+                gmm = sklearn.mixture.BayesianGaussianMixture(n_components=2,
+                                                              random_state = 1)
                 fit = gmm.fit(data)
 
                 # pick the component with the maximum mean
