@@ -23,19 +23,19 @@ Created on Mar 15, 2015
 """
 
 import os
-from textwrap import dedent
 
 from pyface.qt import QtGui
 
 from traits.api import (Interface, Str, HasTraits, Instance, Event, 
-                        List, Property, on_trait_change, HTML, DelegationError)
-from traitsui.api import Handler
+                        List, Property, on_trait_change, HTML, Any)
+from traitsui.api import View, Item, Handler
 
 import cytoflow.utility as util
 
 from cytoflowgui.subset import ISubset
 from cytoflowgui.workflow import Changed
 from cytoflowgui.workflow_item import WorkflowItem
+from cytoflowgui.flow_task_pane import TabListEditor
 
 VIEW_PLUGIN_EXT = 'edu.mit.synbio.cytoflow.view_plugins'
 
@@ -102,6 +102,7 @@ class PluginViewMixin(HasTraits):
     
     # plot names
     plot_names = List(Str, status = True)
+    current_plot = Any
     
     subset_list = List(ISubset)
     subset = Property(Str, depends_on = "subset_list.str")
@@ -126,19 +127,20 @@ class PluginViewMixin(HasTraits):
         return True
     
     def plot_wi(self, wi):
-        if wi.current_view_plot_names:
-            self.plot(wi.result, plot_name = wi.current_plot)
+        if self.plot_names:
+            self.plot(wi.result, plot_name = self.current_plot)
         else:
             self.plot(wi.result)
             
-    def enum_plots_wi(self, wi):
+    def update_plot_names(self, wi):
         try:
-            return self.enum_plots(wi.result)
+            self.plot_names = [x for x in self.enum_plots(wi.result)]
         except:
-            return []
+            self.current_plot = None
+            self.plot_names = []
 
     
-    def get_notebook_code(self, wi, idx):
+    def get_notebook_code(self, idx):
         raise NotImplementedError("get_notebook_code is unimplemented for {id}"
                                   .format(id = self.id))
         
@@ -147,6 +149,12 @@ class ViewHandlerMixin(HasTraits):
     """
     Useful bits for view handlers. 
     """
+    
+    # the view for the current plot
+    current_plot_view = View(Item('current_plot',
+                                  editor = TabListEditor(name = 'plot_names'),
+                                  style = 'custom',
+                                  show_label = False))
     
     context = Instance(WorkflowItem)
     

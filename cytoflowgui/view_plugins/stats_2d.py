@@ -283,7 +283,7 @@ class Stats2DHandler(ViewHandlerMixin, Controller):
 class Stats2DPluginView(PluginViewMixin, Stats2DView):
     handler_factory = Callable(Stats2DHandler)
     
-    def get_notebook_code(self, wi, idx):
+    def get_notebook_code(self, idx):
         view = Stats2DView()
         view.copy_traits(self, view.copyable_trait_names())
 
@@ -292,7 +292,7 @@ class Stats2DPluginView(PluginViewMixin, Stats2DView):
         """
         .format(repr = repr(view),
                 idx = idx,
-                plot = ", plot_name = " + repr(wi.current_plot) if wi.current_view_plot_names is not None else ""))
+                plot = ", plot_name = " + repr(self.current_plot) if self.plot_names else ""))
 
 @provides(IViewPlugin)
 class Stats2DPlugin(Plugin, PluginHelpMixin):

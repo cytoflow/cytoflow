@@ -202,7 +202,7 @@ class ColorTranslationPluginOp(PluginOpMixin, ColorTranslationOp):
         self.changed = (Changed.ESTIMATE_RESULT, self)
         
         
-    def get_notebook_code(self, wi, idx):
+    def get_notebook_code(self, idx):
         op = ColorTranslationOp()
         op.copy_traits(self, op.copyable_trait_names())
 
@@ -247,7 +247,7 @@ class ColorTranslationPluginView(PluginViewMixin, ColorTranslationDiagnostic):
         
         return False
     
-    def get_notebook_code(self, wi, idx):
+    def get_notebook_code(self, idx):
         view = ColorTranslationDiagnostic()
         view.copy_traits(self, view.copyable_trait_names())
         view.subset = self.subset

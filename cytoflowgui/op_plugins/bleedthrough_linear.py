@@ -205,7 +205,7 @@ class BleedthroughLinearPluginOp(PluginOpMixin, BleedthroughLinearOp):
         self.spillover.clear()
         self.changed = (Changed.ESTIMATE_RESULT, self)
         
-    def get_notebook_code(self, wi, idx):
+    def get_notebook_code(self, idx):
         op = BleedthroughLinearOp()
         op.copy_traits(self, op.copyable_trait_names())
 
@@ -251,7 +251,7 @@ class BleedthroughLinearPluginView(PluginViewMixin, BleedthroughLinearDiagnostic
         
         return False
     
-    def get_notebook_code(self, wi, idx):
+    def get_notebook_code(self, idx):
         view = BleedthroughLinearDiagnostic()
         view.copy_traits(self, view.copyable_trait_names())
         view.subset = self.subset

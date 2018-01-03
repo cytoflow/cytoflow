@@ -184,7 +184,7 @@ class ImportPluginOp(PluginOpMixin, ImportOp):
         return ret
     
     
-    def get_notebook_code(self, wi, idx):
+    def get_notebook_code(self, idx):
         op = ImportOp()
         op.copy_traits(self, op.copyable_trait_names())
         

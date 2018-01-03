@@ -104,7 +104,7 @@ class BinningPluginOp(PluginOpMixin, BinningOp):
     def default_view(self, **kwargs):
         return BinningPluginView(op = self, **kwargs)
     
-    def get_notebook_code(self, wi, idx):
+    def get_notebook_code(self, idx):
         op = BinningOp()
         op.copy_traits(self, op.copyable_trait_names())
 
@@ -156,7 +156,7 @@ class BinningPluginView(PluginViewMixin, BinningView):
         else:
             self.plot(wi.previous_wi.result)
             
-    def get_notebook_code(self, wi, idx):
+    def get_notebook_code(self, idx):
         view = BinningView()
         view.copy_traits(self, view.copyable_trait_names())
         

@@ -31,7 +31,7 @@ def save_yaml(data, path):
         f.write(Camel([standard_types_registry,
                        camel_registry]).dump(data))
 
-# camel adapters for traits lists, dicts, numpy types
+# camel adapters for traits lists and dicts, numpy types
 from numpy import float64, int64, bool_
 @standard_types_registry.dumper(float64, 'float', version = None)
 def _dump_float(fl):
@@ -94,7 +94,7 @@ def save_notebook(workflow, path):
         
     for i, wi in enumerate(workflow):
 
-        code = wi.operation.get_notebook_code(wi, i)
+        code = wi.operation.get_notebook_code(i)
 
         try:
             code = FormatCode(code, style_config = 'pep8')[0]
@@ -107,7 +107,7 @@ def save_notebook(workflow, path):
                     
         for view in wi.views:
 
-            code = view.get_notebook_code(wi, i)
+            code = view.get_notebook_code(i)
 
             try:
                 code = FormatCode(code, style_config = 'pep8')[0]

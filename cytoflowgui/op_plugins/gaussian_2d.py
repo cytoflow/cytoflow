@@ -226,7 +226,7 @@ class GaussianMixture2DPluginOp(PluginOpMixin, GaussianMixtureOp):
         
         return False
     
-    def get_notebook_code(self, wi, idx):
+    def get_notebook_code(self, idx):
         op = GaussianMixtureOp()
         op.copy_traits(self, op.copyable_trait_names())      
 
@@ -297,7 +297,7 @@ class GaussianMixture2DPluginView(PluginViewMixin, GaussianMixture2DView):
             except:
                 return []
             
-    def get_notebook_code(self, wi, idx):
+    def get_notebook_code(self, idx):
         view = GaussianMixture2DView()
         view.copy_traits(self, view.copyable_trait_names())
         view.subset = self.subset

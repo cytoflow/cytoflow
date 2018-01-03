@@ -181,7 +181,7 @@ class QuadSelectionView(PluginViewMixin, QuadSelection):
     def plot_wi(self, wi):        
         self.plot(wi.previous_wi.result)
         
-    def get_notebook_code(self, wi, idx):
+    def get_notebook_code(self, idx):
         view = QuadSelection()
         view.copy_traits(self, view.copyable_trait_names())
         return dedent("""
@@ -197,7 +197,7 @@ class QuadPluginOp(QuadOp, PluginOpMixin):
     def default_view(self, **kwargs):
         return QuadSelectionView(op = self, **kwargs)
     
-    def get_notebook_code(self, wi, idx):
+    def get_notebook_code(self, idx):
         op = QuadOp()
         op.copy_traits(self, op.copyable_trait_names())
 

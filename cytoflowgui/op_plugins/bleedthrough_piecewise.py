@@ -225,7 +225,7 @@ class BleedthroughPiecewisePluginOp(PluginOpMixin, BleedthroughPiecewiseOp):
         
         return False
     
-    def get_notebook_code(self, wi, idx):
+    def get_notebook_code(self, idx):
         op = BleedthroughPiecewiseOp()
         op.copy_traits(self, op.copyable_trait_names())
 
@@ -271,7 +271,7 @@ class BleedthroughPiecewisePluginView(PluginViewMixin, BleedthroughPiecewiseDiag
         
         return False
     
-    def get_notebook_code(self, wi, idx):
+    def get_notebook_code(self, idx):
         view = BleedthroughPiecewiseDiagnostic()
         view.copy_traits(self, view.copyable_trait_names())
         view.subset = self.subset

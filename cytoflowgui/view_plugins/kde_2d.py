@@ -180,7 +180,7 @@ class Kde2DPluginView(PluginViewMixin, Kde2DView):
         if self.plotfacet and plot_name is not None:
             plt.title("{0} = {1}".format(self.plotfacet, plot_name))
             
-    def get_notebook_code(self, wi, idx):
+    def get_notebook_code(self, idx):
         view = Kde2DView()
         view.copy_traits(self, view.copyable_trait_names())
 
@@ -189,7 +189,7 @@ class Kde2DPluginView(PluginViewMixin, Kde2DView):
         """
         .format(repr = repr(view),
                 idx = idx,
-                plot = ", plot_name = " + repr(wi.current_plot) if wi.current_view_plot_names is not None else ""))
+                plot = ", plot_name = " + repr(self.current_plot) if self.plot_names else ""))
             
 @provides(IViewPlugin)
 class Kde2DPlugin(Plugin, PluginHelpMixin):

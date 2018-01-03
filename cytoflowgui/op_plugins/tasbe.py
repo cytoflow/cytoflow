@@ -457,7 +457,7 @@ class TasbePluginOp(PluginOpMixin):
     def default_view(self, **kwargs):
         return TasbePluginView(op = self, **kwargs)
     
-    def get_notebook_code(self, wi, idx):
+    def get_notebook_code(self, idx):
         self._af_op.channels = self.channels
         self._af_op.blank_file = self.blank_file
         
@@ -598,7 +598,7 @@ class TasbePluginView(PluginViewMixin):
         if plot_name == "Color Translation":
             self.op._color_translation_op.default_view().plot(new_ex, **kwargs)
             
-    def get_notebook_code(self, wi, idx):
+    def get_notebook_code(self, idx):
         
         return dedent("""
         # Autofluorescence

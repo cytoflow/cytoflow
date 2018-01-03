@@ -26,7 +26,7 @@ import warnings, logging, sys, threading
 from traits.api import HasStrictTraits, Instance, List, DelegatesTo, Enum, \
                        Property, cached_property, Bool, \
                        Str, Dict, Any, Event, Tuple
-from traitsui.api import View, Item, Handler
+from traitsui.api import View, Item, Handler, InstanceEditor
 from pyface.qt import QtGui
 
 import matplotlib.pyplot as plt
@@ -38,7 +38,7 @@ from cytoflow.operations.i_operation import IOperation
 from cytoflow.views.i_view import IView
 from cytoflow.utility import CytoflowError, CytoflowOpError, CytoflowViewError
 
-from cytoflowgui.flow_task_pane import TabListEditor
+# from cytoflowgui.flow_task_pane import TabListEditor
 from cytoflowgui.serialization import camel_registry
 
 # http://stackoverflow.com/questions/1977362/how-to-create-module-wide-variables-in-python
@@ -107,15 +107,15 @@ class WorkflowItem(HasStrictTraits):
                                     style = 'custom',
                                     show_label = False))
     
-    # the plot names for the currently selected view
-    current_view_plot_names = List(Any, status = True)
-    
-    # if there are multiple plots, which are we viewing?
-    current_plot = Any
+#     # the plot names for the currently selected view
+#     current_view_plot_names = List(Any, status = True)
+#     
+#     # if there are multiple plots, which are we viewing?
+#     current_plot = Any
     
     # the view for the current plot
-    current_plot_view = View(Item('current_plot',
-                                  editor = TabListEditor(name = 'current_view_plot_names'),
+    current_plot_view = View(Item('current_view_handler',
+                                  editor = InstanceEditor(view = 'current_plot_view'),
                                   style = 'custom',
                                   show_label = False))
     
@@ -276,17 +276,7 @@ class RemoteWorkflowItem(WorkflowItem):
                 self.op_error = e.args[-1]    
                 self.status = "invalid"
                 return
- 
-        
-    def update_plot_names(self):
-        if self.current_view:
-            plot_names = [x for x in self.current_view.enum_plots_wi(self)]
-            if plot_names == [None] or plot_names == []:
-                self.current_view_plot_names = []
-            else:
-                self.current_view_plot_names = plot_names
-        else:
-            self.current_view_plot_names = []
+
         
     def plot(self):              
         logging.debug("WorkflowItem.plot :: {}".format((self)))
@@ -307,13 +297,13 @@ class RemoteWorkflowItem(WorkflowItem):
         self.view_error_trait = ""
 
         try:
-            if len(self.current_view_plot_names) > 0 and self.current_plot not in self.current_view_plot_names:
-                self.view_error = "Plot {} not in current plot names {}".format(self.current_plot, self.current_view_plot_names)
+            if len(self.current_view.plot_names) > 0 and self.current_view.current_plot not in self.current_view.plot_names:
+                self.view_error = "Plot {} not in current plot names {}".format(self.current_view.current_plot, self.current_view.plot_names)
                 return
         except Exception as e:
             # occasionally if the types are really different the "in" statement 
             # above will throw an error
-            self.view_error = "Plot {} not in current plot names {}".format(self.current_plot, self.current_view_plot_names)
+            self.view_error = "Plot {} not in current plot names {}".format(self.current_view.current_plot, self.current_view.plot_names)
             return
           
         with warnings.catch_warnings(record = True) as w:

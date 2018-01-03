@@ -144,7 +144,7 @@ class ThresholdSelectionView(PluginViewMixin, ThresholdSelection):
     def plot_wi(self, wi):        
         self.plot(wi.previous_wi.result)
         
-    def get_notebook_code(self, wi, idx):
+    def get_notebook_code(self, idx):
         view = ThresholdSelection()
         view.copy_traits(self, view.copyable_trait_names())
         
@@ -161,7 +161,7 @@ class ThresholdPluginOp(PluginOpMixin, ThresholdOp):
     def default_view(self, **kwargs):
         return ThresholdSelectionView(op = self, **kwargs)
     
-    def get_notebook_code(self, wi, idx):
+    def get_notebook_code(self, idx):
         op = ThresholdOp()
         op.copy_traits(self, op.copyable_trait_names())
 

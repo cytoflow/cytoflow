@@ -67,7 +67,7 @@ class RatioHandler(OpHandlerMixin, Controller):
 class RatioPluginOp(PluginOpMixin, RatioOp):
     handler_factory = Callable(RatioHandler, transient = True)
     
-    def get_notebook_code(self, wi, idx):
+    def get_notebook_code(self, idx):
         op = RatioOp()
         op.copy_traits(self, op.copyable_trait_names())
 

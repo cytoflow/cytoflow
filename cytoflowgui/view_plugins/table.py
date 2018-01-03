@@ -205,7 +205,7 @@ class TablePluginView(PluginViewMixin, TableView):
         TableView.plot(self, experiment, **kwargs)
         self.result = experiment.statistics[self.statistic]
         
-    def get_notebook_code(self, wi, idx):
+    def get_notebook_code(self, idx):
         view = TableView()
         view.copy_traits(self, view.copyable_trait_names())
 
@@ -214,7 +214,7 @@ class TablePluginView(PluginViewMixin, TableView):
         """
         .format(repr = repr(view),
                 idx = idx,
-                plot = ", plot_name = " + repr(wi.current_plot) if wi.current_view_plot_names is not None else ""))
+                plot = ", plot_name = " + repr(self.current_plot) if self.plot_names else ""))
 
     @on_trait_change('export')
     def _on_export(self):

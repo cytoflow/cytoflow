@@ -154,7 +154,7 @@ class ChannelStatisticPluginOp(PluginOpMixin, ChannelStatisticOp):
         
         return ChannelStatisticOp.apply(self, experiment) 
     
-    def get_notebook_code(self, wi, idx):
+    def get_notebook_code(self, idx):
         op = ChannelStatisticOp()
         op.copy_traits(self, op.copyable_trait_names())
         

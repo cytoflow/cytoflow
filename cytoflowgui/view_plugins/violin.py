@@ -182,7 +182,7 @@ class ViolinPlotPluginView(PluginViewMixin, ViolinPlotView):
         """
         .format(repr = repr(view),
                 idx = idx,
-                plot = ", plot_name = " + repr(wi.current_plot) if wi.current_view_plot_names is not None else ""))
+                plot = ", plot_name = " + repr(self.current_plot) if self.plot_names else ""))
 
 
 @provides(IViewPlugin)
