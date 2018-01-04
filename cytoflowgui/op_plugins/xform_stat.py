@@ -162,7 +162,7 @@ class TransformStatisticHandler(OpHandlerMixin, Controller):
                          editor=EnumEditor(name='handler.previous_statistics_names'),
                          label = "Statistic"),
                     Item('statistic_name',
-                         editor = EnumEditor(values = list(transform_functions.keys())),
+                         editor = EnumEditor(values = sorted(transform_functions.keys())),
                          label = "Function"),
                     Item('by',
                          editor = CheckListEditor(cols = 2,

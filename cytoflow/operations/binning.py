@@ -1,6 +1,5 @@
 #!/usr/bin/env python3.4
 # coding: latin-1
-from cytoflow.utility.util_functions import roundToSigFigs
 
 # (c) Massachusetts Institute of Technology 2015-2017
 #
@@ -25,7 +24,8 @@ from math import log10, floor
 
 from traits.api import (HasStrictTraits, Str, CStr, provides, Constant, Int)
 import numpy as np
-import bottleneck as bn
+import pandas as pd
+# import bottleneck as bn
 
 from cytoflow.views import IView, HistogramView
 import cytoflow.utility as util
@@ -201,13 +201,17 @@ class BinningOp(HasStrictTraits):
         bins = scale.inverse(scaled_bins)
         
         # reduce to 4 sig figs
-        bins = roundToSigFigs(bins, 4)
+        print(type(bins))
+        bins = ['%.4g' % x for x in bins]
+        bins = [float(x) for x in bins]
+        bins = np.array(bins)
         
         # put the data in bins
         bin_idx = np.digitize(experiment.data[self.channel], bins[1:-1])
+#         print(bins[bin_idx])
 
         new_experiment = experiment.clone()
-        new_experiment.add_condition(self.name, "float", bins[bin_idx])
+        new_experiment.add_condition(self.name, "float64", bins[bin_idx])
         
         # keep track of the bins we used, for prettier plotting later.
         new_experiment.metadata[self.name]["bin_scale"] = self.scale
