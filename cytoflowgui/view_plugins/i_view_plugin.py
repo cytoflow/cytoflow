@@ -28,7 +28,7 @@ from pyface.qt import QtGui
 
 from traits.api import (Interface, Str, HasTraits, Instance, Event, 
                         List, Property, on_trait_change, HTML, Any)
-from traitsui.api import View, Item, Handler
+from traitsui.api import View, Item, Handler, HGroup, TextEditor
 
 import cytoflow.utility as util
 
@@ -101,7 +101,8 @@ class PluginViewMixin(HasTraits):
     changed = Event
     
     # plot names
-    plot_names = List(Str, status = True)
+    plot_names = List(Any, status = True)
+    plot_names_by = Str(status = True)
     current_plot = Any
     
     subset_list = List(ISubset)
@@ -132,10 +133,27 @@ class PluginViewMixin(HasTraits):
         else:
             self.plot(wi.result)
             
+    def enum_plots_wi(self, wi):
+        try:
+            return self.enum_plots(wi.result)
+        except:
+            return []
+            
     def update_plot_names(self, wi):
         try:
-            self.plot_names = [x for x in self.enum_plots(wi.result)]
-        except:
+            # plot_iter = self.enum_plots(wi.result)
+            plot_iter = self.enum_plots_wi(wi)
+            plot_names = [x for x in plot_iter]
+            if plot_names == [None] or plot_names == []:
+                self.plot_names = []
+                self.plot_names_by = []
+            else:
+                self.plot_names = plot_names
+                self.plot_names_by = ", ".join(plot_iter.by)
+                if self.current_plot == None:
+                    self.current_plot = self.plot_names[0]
+                    
+        except Exception as e:
             self.current_plot = None
             self.plot_names = []
 
@@ -151,10 +169,17 @@ class ViewHandlerMixin(HasTraits):
     """
     
     # the view for the current plot
-    current_plot_view = View(Item('current_plot',
-                                  editor = TabListEditor(name = 'plot_names'),
-                                  style = 'custom',
-                                  show_label = False))
+    current_plot_view = \
+        View(
+            HGroup(
+                Item('plot_names_by',
+                     editor = TextEditor(),
+                     style = "readonly",
+                     show_label = False),
+                Item('current_plot',
+                     editor = TabListEditor(name = 'plot_names'),
+                     style = 'custom',
+                     show_label = False)))
     
     context = Instance(WorkflowItem)
     

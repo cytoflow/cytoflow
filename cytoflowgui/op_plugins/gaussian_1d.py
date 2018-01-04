@@ -264,13 +264,13 @@ class GaussianMixture1DPluginView(PluginViewMixin, GaussianMixture1DView):
 
     def plot_wi(self, wi):
         if wi.result:
-            if wi.current_view_plot_names:
-                self.plot(wi.result, plot_name = wi.current_plot)
+            if self.plot_names:
+                self.plot(wi.result, plot_name = self.current_plot)
             else:
                 self.plot(wi.result)
         else:
-            if wi.current_view_plot_names:
-                self.plot(wi.previous_wi.result, plot_name = wi.current_plot)
+            if self.plot_names:
+                self.plot(wi.previous_wi.result, plot_name = self.current_plot)
             else:
                 self.plot(wi.previous_wi.result)
         

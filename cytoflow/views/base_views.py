@@ -502,6 +502,7 @@ class BaseStatisticsView(BaseView):
         class plot_enum(object):
             
             def __init__(self, data, by):
+                self.by = by
                 self._iter = None
                 self._returned = False
                 

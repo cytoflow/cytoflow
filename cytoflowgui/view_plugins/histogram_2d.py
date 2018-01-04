@@ -94,6 +94,7 @@ from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.view_plugins.i_view_plugin \
     import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, PluginHelpMixin
 from cytoflowgui.serialization import camel_registry, traits_repr, dedent
+from cytoflowgui.util import IterWrapper
 
 Histogram2DView.__repr__ = traits_repr
 
@@ -160,10 +161,8 @@ class Histogram2DPluginView(PluginViewMixin, Histogram2DView):
             raise util.CytoflowViewError("Plot facet {0} not in the experiment"
                                     .format(self.huefacet))
         values = np.sort(pd.unique(wi.result[self.plotfacet]))
-        return iter(values)
-    
-    def plot_wi(self, wi):
-        self.plot(wi.result, wi.current_plot)
+        return IterWrapper(iter(values), [self.plotfacet])
+
     
     def plot(self, experiment, plot_name = None, **kwargs):
         

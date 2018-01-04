@@ -69,3 +69,14 @@ class DefaultFileDialog(FileDialog):
         dlg = FileDialog._create_control(self, parent)
         dlg.setDefaultSuffix(self.default_suffix)
         return dlg
+
+class IterWrapper(object):
+    def __init__(self, iterator, by):
+        self.iterator = iterator
+        self.by = by
+        
+    def __iter__(self):
+        return self
+        
+    def __next__(self):
+        return next(self.iterator)

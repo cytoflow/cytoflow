@@ -91,6 +91,7 @@ from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
     import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, PluginHelpMixin
 from cytoflowgui.serialization import camel_registry, traits_repr, dedent
+from cytoflowgui.util import IterWrapper
 
 HistogramView.__repr__ = traits_repr
     
@@ -152,7 +153,7 @@ class HistogramPluginView(PluginViewMixin, HistogramView):
             raise util.CytoflowViewError("Plot facet {0} not in the experiment"
                                     .format(self.huefacet))
         values = np.sort(pd.unique(wi.result[self.plotfacet]))
-        return iter(values)
+        return IterWrapper(iter(values), [self.plotfacet])
     
     def plot(self, experiment, plot_name = None, **kwargs):
         
@@ -163,9 +164,9 @@ class HistogramPluginView(PluginViewMixin, HistogramView):
             experiment = experiment.subset(self.plotfacet, plot_name)
 
         HistogramView.plot(self, experiment, **kwargs)
-        
-        if self.plotfacet and plot_name is not None:
-            plt.title("{0} = {1}".format(self.plotfacet, plot_name))
+#          
+#         if self.plotfacet and plot_name is not None:
+#             plt.title("{0} = {1}".format(self.plotfacet, plot_name))
             
     def get_notebook_code(self, idx):
         view = HistogramView()

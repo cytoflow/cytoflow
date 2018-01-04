@@ -165,6 +165,7 @@ class ByView(OpView):
         class plot_enum(object):
             
             def __init__(self, by, experiment):
+                self.by = by
                 self._iter = None
                 self._returned = False
                 

@@ -544,13 +544,8 @@ class TasbePluginView(PluginViewMixin):
     name = Constant("TASBE Calibration")
     
     def plot_wi(self, wi):
-        self.plot(wi.previous_wi.result, plot_name = wi.current_plot)
+        self.plot(wi.previous_wi.result, plot_name = self.current_plot)
         
-    def enum_plots(self, experiment):
-        return iter(["Autofluorescence",
-                     "Bleedthrough",
-                     "Bead Calibration",
-                     "Color Translation"])
         
     def enum_plots_wi(self, wi):
         return iter(["Autofluorescence",
