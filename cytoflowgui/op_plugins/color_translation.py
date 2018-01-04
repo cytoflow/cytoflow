@@ -163,7 +163,7 @@ class ColorTranslationPluginOp(PluginOpMixin, ColorTranslationOp):
     def _get_subset(self):
         return " and ".join([subset.str for subset in self.subset_list if subset.str])
     
-    @on_trait_change('subset_list.str', post_init = True)
+    @on_trait_change('subset_list.str')
     def _subset_changed(self, obj, name, old, new):
         self.changed = (Changed.ESTIMATE, ('subset_list', self.subset_list))
     
