@@ -590,11 +590,14 @@ class RemoteWorkflow(HasStrictTraits):
                 elif msg == Msg.ADD_ITEMS:
                     (idx, new_item) = payload
                     wi = RemoteWorkflowItem()
+                    wi.lock.acquire()
                     wi.copy_traits(new_item)
                     wi.matplotlib_events = self.matplotlib_events
                     wi.plot_lock = self.plot_lock
                     
                     self.workflow.insert(idx, wi)
+                    self.exec_q.put((idx, (wi, wi.apply)))
+                    wi.lock.release()
     
                 elif msg == Msg.REMOVE_ITEMS:
                     idx = payload

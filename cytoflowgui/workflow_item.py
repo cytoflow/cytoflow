@@ -291,11 +291,6 @@ class RemoteWorkflowItem(WorkflowItem):
             self.plot_lock.release()
             return
 
-        self.view_warning = ""
-        self.view_warning_trait = ""
-        self.view_error = ""
-        self.view_error_trait = ""
-
         try:
             if len(self.current_view.plot_names) > 0 and self.current_view.current_plot not in self.current_view.plot_names:
                 self.view_error = "Plot {} not in current plot names {}".format(self.current_view.current_plot, self.current_view.plot_names)
@@ -314,6 +309,8 @@ class RemoteWorkflowItem(WorkflowItem):
                 plt.clf()
                 
                 self.current_view.plot_wi(self)
+                self.view_error = ""
+                self.view_error_trait = ""
             
                 if this.last_view_plotted and "interactive" in this.last_view_plotted.traits():
                     this.last_view_plotted.interactive = False
@@ -345,6 +342,8 @@ class RemoteWorkflowItem(WorkflowItem):
 
                 if w:
                     self.view_warning = w[-1].message.__str__()
+                else:
+                    self.view_warning = ""
                     
             return True
 
