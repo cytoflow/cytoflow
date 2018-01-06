@@ -4,7 +4,7 @@ Created on Jan 4, 2018
 @author: brian
 '''
 
-import unittest, threading, multiprocessing, os
+import unittest, threading, multiprocessing, os, logging
 
 from cytoflowgui.workflow import Workflow, RemoteWorkflow
 from cytoflowgui.workflow_item import WorkflowItem
@@ -19,6 +19,10 @@ def wait_for(obj, name, f, timeout):
 class WorkflowTest(unittest.TestCase):
     
     def setUp(self):
+        
+        ##### set up logging
+        logging.getLogger().setLevel(logging.DEBUG)
+        
         def remote_main(parent_workflow_conn, parent_mpl_conn, log_q, running_event):
             running_event.set()
             RemoteWorkflow().run(parent_workflow_conn, parent_mpl_conn, log_q)
@@ -42,12 +46,18 @@ class WorkflowTest(unittest.TestCase):
         
         self.workflow = Workflow((child_workflow_conn, child_matplotlib_conn, log_q))
         self.remote_process = remote_process
+
+    def tearDown(self):
+        self.workflow.shutdown_remote_process()
+        self.remote_process.join()
+        
+class ImportedDataTest(WorkflowTest):
+    
+    def setUp(self):
+        WorkflowTest.setUp(self)
         
         plugin = ImportPlugin()
         op = plugin.get_operation()
-        wi = WorkflowItem(operation = op) 
-        self.workflow.workflow.append(wi)
-        self.workflow.selected = wi
 
         from cytoflow import Tube
         
@@ -69,11 +79,27 @@ class WorkflowTest(unittest.TestCase):
      
         op.tubes = [tube1, tube2, tube3, tube4]
         
-        old_apply_calls = self.workflow.apply_calls
+        wi = WorkflowItem(operation = op) 
+        self.workflow.workflow.append(wi)
         self.assertTrue(wait_for(wi, 'status', lambda v: v == 'valid', 5))
-        self.assertTrue(self.workflow.apply_calls > old_apply_calls)
         self.assertTrue(self.workflow.remote_eval("self.workflow[0].result is not None"))  
 
-    def tearDown(self):
-        self.workflow.shutdown_remote_process()
-        self.remote_process.join()
+class TasbeTest(WorkflowTest):
+    
+    def setUp(self):
+        WorkflowTest.setUp(self)
+        
+        plugin = ImportPlugin()
+        op = plugin.get_operation()
+
+        from cytoflow import Tube
+             
+        self.cwd = os.path.dirname(os.path.abspath(__file__))
+     
+        tube = Tube(file = self.cwd + "/../../cytoflow/tests/data/tasbe/rby.fcs")
+        op.tubes = [tube]
+        
+        wi = WorkflowItem(operation = op) 
+        self.workflow.workflow.append(wi)
+        self.assertTrue(wait_for(wi, 'status', lambda v: v == 'valid', 5))
+        self.assertTrue(self.workflow.remote_eval("self.workflow[0].result is not None"))

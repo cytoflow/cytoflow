@@ -8,13 +8,13 @@ import unittest
 import matplotlib
 matplotlib.use("Agg")
 
-from cytoflowgui.tests.test_base import WorkflowTest, wait_for
+from cytoflowgui.tests.test_base import ImportedDataTest, wait_for
 from cytoflowgui.view_plugins import ScatterplotPlugin
 
-class TestScatterplot(WorkflowTest):
+class TestScatterplot(ImportedDataTest):
 
     def setUp(self):
-        WorkflowTest.setUp(self)
+        ImportedDataTest.setUp(self)
 
         old_plot_calls = self.workflow.plot_calls
         self.wi = wi = self.workflow.workflow[0]
