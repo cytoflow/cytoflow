@@ -22,7 +22,7 @@ class Test(ImportedDataTest):
         op.coarse_events = 1000
         self.assertTrue(wait_for(wi, 'status', lambda v: v == 'valid', 5))
         self.assertTrue(self.workflow.apply_calls > old_apply_calls)
-        self.assertEqual(self.workflow.remote_eval('len(self.workflow[0].result)'), 4000)
+        self.assertTrue(self.workflow.remote_eval('len(self.workflow[0].result) == 4000'))
         self.assertEqual(op.ret_events, 4000)
 
 
