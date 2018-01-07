@@ -22,7 +22,7 @@ Created on Mar 15, 2015
 @author: brian
 '''
 
-import sys, logging, io
+import logging, io
 from cytoflowgui import multiprocess_logging
 
 from envisage.ui.tasks.api import TasksApplication
@@ -48,11 +48,15 @@ class CytoflowApplication(TasksApplication):
     # Override two traits from TasksApplication so we can provide defaults, below
 
     # The default window-level layout for the application.
-    default_layout = List(TaskWindowLayout)
+#     default_layout = List(TaskWindowLayout)
+    default_layout = [ TaskWindowLayout('edu.mit.synbio.cytoflow.tasbe_task',
+                                        size = (800, 600))]
 
     # Whether to restore the previous application-level layout when the
     # applicaton is started.
-    always_use_default_layout = Property(Bool)
+#     always_use_default_layout = Property(Bool)
+    always_use_default_layout = True
+
 
     # are we debugging? at the moment, just for sending logs to the console
     debug = Bool
@@ -108,12 +112,12 @@ class CytoflowApplication(TasksApplication):
     
     #### Trait initializers ###################################################
 
-    def _default_layout_default(self):
-        active_task = self.preferences_helper.default_task
-        tasks = [ factory.id for factory in self.task_factories ]
-        return [ TaskWindowLayout(*tasks,
-                                  active_task = active_task,
-                                  size = (800, 600)) ]
+#     def _default_layout_default(self):
+#         active_task = self.preferences_helper.default_task
+#         tasks = [ factory.id for factory in self.task_factories ]
+#         return [ TaskWindowLayout(*tasks,
+#                                   active_task = active_task,
+#                                   size = (800, 600)) ]
 
     def _preferences_helper_default(self):
         return CytoflowPreferences(preferences = self.preferences)
