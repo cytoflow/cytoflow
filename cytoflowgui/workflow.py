@@ -100,6 +100,9 @@ class Msg(object):
     # evaluation.
     EVAL = "EVAL"
     
+    # statement execution
+    EXEC = "EXEC"
+    
     SHUTDOWN = "SHUTDOWN"
     
 class Changed(object):
@@ -477,9 +480,10 @@ class Workflow(HasStrictTraits):
         
         self.eval_event.wait()
         return self.eval_result
-        
-        
 
+    def remote_exec(self, expr):
+        self.message_q.put((Msg.EXEC, expr))
+        
         
 class RemoteWorkflow(HasStrictTraits):
     workflow = List(RemoteWorkflowItem)
@@ -645,7 +649,7 @@ class RemoteWorkflow(HasStrictTraits):
                             raise RuntimeError("Tried to set a remote transient trait")
                         
                         view.trait_set(**{name : new})
-    
+
                 elif msg == Msg.CHANGE_CURRENT_VIEW:
                     (idx, view) = payload
                     wi = self.workflow[idx]
@@ -672,7 +676,11 @@ class RemoteWorkflow(HasStrictTraits):
                     expr = payload
                     ret = eval(expr)
                     self.message_q.put((Msg.EVAL, ret))
-                                            
+                    
+                elif msg == Msg.EXEC:
+                    expr = payload
+                    exec(expr)
+                                                 
                 else:
                     raise RuntimeError("Bad command in the remote workflow")
             

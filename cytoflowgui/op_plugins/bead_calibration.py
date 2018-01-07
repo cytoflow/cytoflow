@@ -111,6 +111,15 @@ BeadCalibrationOp.__repr__ = traits_repr
 class _Unit(HasTraits):
     channel = Str
     unit = Str
+    
+    def __repr__(self):
+        return traits_repr(self)
+    
+    def __eq__(self, other):
+        return self.channel == other.channel and self.unit == other.unit
+    
+    def __hash__(self):
+        return hash(self.channel, self.unit)
 
 class BeadCalibrationHandler(OpHandlerMixin, Controller):
     
@@ -189,7 +198,7 @@ class BeadCalibrationPluginOp(PluginOpMixin, BeadCalibrationOp):
     units = Dict(Str, Str, transient = True)
 
     bead_peak_quantile = Int(80, estimate = True)
-    bead_brightness_threshold = Float(100, estimate = True)
+    bead_brightness_threshold = Float(100.0, estimate = True)
     bead_brightness_cutoff = Float(Undefined, estimate = True)
 
     @on_trait_change('units_list_items,units_list.+', post_init = True)

@@ -4,11 +4,12 @@ Created on Jan 4, 2018
 @author: brian
 '''
 
-import unittest, threading, multiprocessing, os, logging
+import unittest, threading, multiprocessing, os, logging, tempfile
 
 from cytoflowgui.workflow import Workflow, RemoteWorkflow
 from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.op_plugins import ImportPlugin
+from cytoflowgui.serialization import load_yaml, save_yaml
 
 
 def wait_for(obj, name, f, timeout):
@@ -79,10 +80,13 @@ class ImportedDataTest(WorkflowTest):
      
         op.tubes = [tube1, tube2, tube3, tube4]
         
-        wi = WorkflowItem(operation = op) 
+        wi = WorkflowItem(operation = op,
+                          view_error = "Not yet plotted") 
         self.workflow.workflow.append(wi)
         self.assertTrue(wait_for(wi, 'status', lambda v: v == 'valid', 5))
-        self.assertTrue(self.workflow.remote_eval("self.workflow[0].result is not None"))  
+        self.assertTrue(self.workflow.remote_eval("self.workflow[0].result is not None"))
+
+
 
 class TasbeTest(WorkflowTest):
     
@@ -99,7 +103,9 @@ class TasbeTest(WorkflowTest):
         tube = Tube(file = self.cwd + "/../../cytoflow/tests/data/tasbe/rby.fcs")
         op.tubes = [tube]
         
-        wi = WorkflowItem(operation = op) 
+        wi = WorkflowItem(operation = op,
+                          view_error = "Not yet plotted") 
         self.workflow.workflow.append(wi)
         self.assertTrue(wait_for(wi, 'status', lambda v: v == 'valid', 5))
         self.assertTrue(self.workflow.remote_eval("self.workflow[0].result is not None"))
+

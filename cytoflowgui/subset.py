@@ -39,7 +39,7 @@ from traitsui.api import View, CheckListEditor, Item, HGroup
 
 from cytoflowgui.value_bounds_editor import ValuesBoundsEditor
 from cytoflowgui.vertical_list_editor import VerticalListEditor, _VerticalListEditor
-from cytoflowgui.serialization import camel_registry
+from cytoflowgui.serialization import camel_registry, traits_repr
 
 import cytoflow.utility as util
 
@@ -71,6 +71,21 @@ class BoolSubset(HasStrictTraits):
         else:
             return ""
         
+    def __eq__(self, other):
+        return (self.name == other.name and
+                self.values == other.values and
+                self.selected_t == other.selected_t and
+                self.selected_f == other.selected_f)
+        
+    def __hash__(self):
+        return hash((self.name, 
+                     tuple(self.values), 
+                     self.selected_t, 
+                     self.selected_f))
+            
+        
+BoolSubset.__repr__ = traits_repr
+                
 @camel_registry.dumper(BoolSubset, 'bool-subset', 1)
 def _dump_bool_subset(bs):
     return dict(name = bs.name,
@@ -110,6 +125,19 @@ class CategorySubset(HasStrictTraits):
         phrase += ")"
         
         return phrase
+    
+        
+    def __eq__(self, other):
+        return (self.name == other.name and
+                self.values == other.values and
+                self.selected == other.selected)
+        
+    def __hash__(self):
+        return hash((self.name, 
+                     tuple(self.values), 
+                     tuple(self.selected)))
+    
+CategorySubset.__repr__ = traits_repr
     
 @camel_registry.dumper(CategorySubset, 'category-subset', 1)
 def _dump_category_subset(cs):
@@ -164,6 +192,21 @@ class RangeSubset(HasStrictTraits):
             return min(self.values)
         else:
             return 0    
+        
+        
+    def __eq__(self, other):
+        return (self.name == other.name and
+                self.values == other.values and
+                self.low == other.low and
+                self.high == other.high)
+        
+    def __hash__(self):
+        return hash((self.name, 
+                     tuple(self.values), 
+                     self.low, 
+                     self.high))
+        
+RangeSubset.__repr__ = traits_repr
         
 @camel_registry.dumper(RangeSubset, 'range-subset', 1)
 def _dump_range_subset(rs):

@@ -6,7 +6,6 @@ Created on Dec 2, 2017
 '''
 
 from textwrap import dedent
-import logging
 import pandas
 
 from pyface.api import error
@@ -76,8 +75,6 @@ def _load_series(data, version):
     return pandas.Series(data = data['data'],
                          index = data['index'])
     
-
-
 #### Jupyter notebook serialization
 
 import nbformat as nbf
