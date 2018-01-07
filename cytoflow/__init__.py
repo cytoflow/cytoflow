@@ -74,6 +74,8 @@ from .views.table import TableView
 from .views.radviz import RadvizView
 from .views.parallel_coords import ParallelCoordinatesView
 
+from .views.export_fcs import ExportFCS
+
 # util
 from .utility.util_functions import (geom_mean, geom_sd, geom_sd_range,
                                      geom_sem, geom_sem_range)

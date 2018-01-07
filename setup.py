@@ -79,7 +79,8 @@ setup(
                         'envisage>=4.6.0',
                         'camel>=0.1.2',
                         'yapf>=0.20',
-                        'fcsparser>=0.1.3'] 
+                        'fcsparser>=0.1.3',
+                        'fcswrite>=0.1.3'] 
                 if not on_rtd else None,
                         
                         # ALSO requires PyQt4 >= 4.11.4, but it's not available
