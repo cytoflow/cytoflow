@@ -191,10 +191,7 @@ def run_gui():
     
     sys.excepthook = log_excepthook
 
-    plugins = [CorePlugin(), TasksPlugin(), FlowTaskPlugin(debug = debug,
-                                                           remote_connection = remote_connection),
-                                            TASBETaskPlugin(debug = debug,
-                                                            remote_connection = remote_connection)]    
+    plugins = [CorePlugin(), TasksPlugin(), FlowTaskPlugin(), TASBETaskPlugin()]    
     
     # reverse of the order on the toolbar
     view_plugins = [TablePlugin(),
@@ -239,6 +236,7 @@ def run_gui():
     app = CytoflowApplication(id = 'edu.mit.synbio.cytoflow',
                               plugins = plugins,
                               icon = icon,
+                              remote_connection = remote_connection,
                               debug = debug)
     app.run()
     remote_process.join()

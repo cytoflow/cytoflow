@@ -27,34 +27,14 @@ Created on Feb 11, 2015
 
 import os.path
 
-from traits.api import Instance, List, Bool, on_trait_change, Any, Unicode, TraitError
+from traits.api import Instance, Bool, Any
 from pyface.tasks.api import Task, TaskLayout, PaneItem, TraitsDockPane
-from pyface.tasks.action.api import SMenu, SMenuBar, SToolBar, TaskAction
-from pyface.api import FileDialog, ImageResource, AboutDialog, information, error, confirm, OK, YES
-from envisage.api import Plugin, ExtensionPoint, contributes_to
+from envisage.api import Plugin, contributes_to
 from envisage.ui.tasks.api import TaskFactory
 
-from cytoflowgui.flow_task_pane import FlowTaskPane
-from cytoflowgui.workflow_pane import WorkflowDockPane
-from cytoflowgui.view_pane import ViewDockPane
-from cytoflowgui.help_pane import HelpDockPane
+# from cytoflowgui.flow_task_pane import FlowTaskPane, getFlowTaskPane
 from cytoflowgui.workflow import Workflow
-from cytoflowgui.op_plugins import IOperationPlugin, ImportPlugin, ChannelStatisticPlugin, OP_PLUGIN_EXT
-from cytoflowgui.view_plugins import IViewPlugin, VIEW_PLUGIN_EXT
-from cytoflowgui.notebook import JupyterNotebookWriter
 from cytoflowgui.workflow_item import WorkflowItem
-from cytoflowgui.util import DefaultFileDialog
-
-# from . import mailto
-
-from traits.api import provides, Instance, List
-
-from pyface.qt import QtGui, QtCore
-from pyface.tasks.api import TraitsDockPane, IDockPane, Task
-from pyface.action.api import ToolBarManager
-from pyface.tasks.action.api import TaskAction
-
-from cytoflowgui.op_plugins import IOperationPlugin
 
 from cytoflowgui.tasbe_calibration import TasbeCalibrationOp
 
@@ -92,7 +72,7 @@ class TASBETask(Task):
     model = Instance(Workflow)
         
     # the center pane
-    plot_pane = Instance(FlowTaskPane)
+#     plot_pane = Instance(FlowTaskPane)
     calibration_pane = Instance(TraitsDockPane)
 #     help_pane = Instance(HelpDockPane)
     
@@ -124,8 +104,9 @@ class TASBETask(Task):
         return TaskLayout(left = PaneItem("edu.mit.synbio.calibration_pane"))
      
     def create_central_pane(self):
-        self.plot_pane = FlowTaskPane(model = self.model)
-        return self.plot_pane
+#         self.plot_pane = getFlowTaskPane(self.model)
+        return self.application.plot_pane
+#         return TaskPane()
      
     def create_dock_panes(self):
         self.calibration_pane = CalibrationPane(model = self.model, 
@@ -155,10 +136,13 @@ class TASBETaskPlugin(Plugin):
 
     # The plugin's unique identifier.
     id = 'edu.mit.synbio.cytoflow.tasbe'
+    
+    # the local process's model
+    model = Instance(Workflow)
 
     # The plugin's name (suitable for displaying to the user).
     name = 'TASBE Calibration'
-
+    
     ###########################################################################
     # Protected interface.
     ###########################################################################
@@ -178,6 +162,5 @@ class TASBETaskPlugin(Plugin):
         return [TaskFactory(id = 'edu.mit.synbio.cytoflow.tasbe_task',
                             name = 'TASBE Calibration',
                             factory = lambda **x: TASBETask(application = self.application,
-                                                            model = Workflow(self.remote_connection,
-                                                                             debug = self.debug),
+                                                            model = self.application.model,
                                                             **x))]

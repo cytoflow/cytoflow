@@ -163,7 +163,6 @@ class Workflow(HasStrictTraits):
     
     workflow = List(WorkflowItem)
     selected = Instance(WorkflowItem)
-    version = Str
     
     modified = Bool
     debug = Bool

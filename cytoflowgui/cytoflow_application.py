@@ -24,11 +24,13 @@ Created on Mar 15, 2015
 
 import logging, io
 from cytoflowgui import multiprocess_logging
+from cytoflowgui.workflow import Workflow
+from cytoflowgui.flow_task_pane import FlowTaskPane
 
 from envisage.ui.tasks.api import TasksApplication
 from pyface.api import error
 from pyface.tasks.api import TaskWindowLayout
-from traits.api import Bool, Instance, List, Property, Str
+from traits.api import Bool, Instance, List, Property, Str, Any
 
 from .preferences import CytoflowPreferences
   
@@ -48,15 +50,11 @@ class CytoflowApplication(TasksApplication):
     # Override two traits from TasksApplication so we can provide defaults, below
 
     # The default window-level layout for the application.
-#     default_layout = List(TaskWindowLayout)
-    default_layout = [ TaskWindowLayout('edu.mit.synbio.cytoflow.tasbe_task',
-                                        size = (800, 600))]
+    default_layout = List(TaskWindowLayout)
 
     # Whether to restore the previous application-level layout when the
     # applicaton is started.
-#     always_use_default_layout = Property(Bool)
-    always_use_default_layout = True
-
+    always_use_default_layout = Property(Bool)
 
     # are we debugging? at the moment, just for sending logs to the console
     debug = Bool
@@ -66,10 +64,21 @@ class CytoflowApplication(TasksApplication):
     
     # keep the application log in memory
     application_log = Instance(io.StringIO, ())
+    
+    # local process's central model
+    remote_connection = Any
+    model = Instance(Workflow)
+    
+    # the shared task pane
+    plot_pane = Instance(FlowTaskPane)
             
     def run(self):
-
-        ##### set up logging
+ 
+        # Clear the default logging so we can use our own format
+        rootLogger = logging.getLogger()
+        list(map(rootLogger.removeHandler, rootLogger.handlers[:]))
+        list(map(rootLogger.removeFilter, rootLogger.filters[:]))
+        
         logging.getLogger().setLevel(logging.DEBUG)
         
         ## send the log to STDERR
@@ -94,6 +103,13 @@ class CytoflowApplication(TasksApplication):
         # must redirect to the gui thread
         self.on_trait_change(self.show_error, 'application_error', dispatch = 'ui')
         
+        # set up the model
+        self.model = Workflow(remote_connection = self.remote_connection,
+                              debug = self.debug)
+        
+        # and the shared central pane
+        self.plot_pane = FlowTaskPane(model = self.model)
+        
         # run the GUI
         super(CytoflowApplication, self).run()
         
@@ -112,12 +128,12 @@ class CytoflowApplication(TasksApplication):
     
     #### Trait initializers ###################################################
 
-#     def _default_layout_default(self):
-#         active_task = self.preferences_helper.default_task
-#         tasks = [ factory.id for factory in self.task_factories ]
-#         return [ TaskWindowLayout(*tasks,
-#                                   active_task = active_task,
-#                                   size = (800, 600)) ]
+    def _default_layout_default(self):
+        active_task = self.preferences_helper.default_task
+        tasks = [ factory.id for factory in self.task_factories ]
+        return [ TaskWindowLayout(*tasks,
+                                  active_task = active_task,
+                                  size = (800, 600)) ]
 
     def _preferences_helper_default(self):
         return CytoflowPreferences(preferences = self.preferences)
