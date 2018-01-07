@@ -20,6 +20,7 @@
 Created on Feb 11, 2015
 @author: brian
 """
+import sys
 
 from traits.api import Instance, provides, Str, Any
 from traitsui.editor_factory import EditorWithListFactory
@@ -42,13 +43,16 @@ class FlowTaskPane(TaskPane):
     id = 'edu.mit.synbio.cytoflow.flow_task_pane'
     name = 'Cytometry Data Viewer'
     
-    layout = Instance(QtGui.QVBoxLayout)
+    layout = Instance(QtGui.QVBoxLayout)                    # @UndefinedVariable
     canvas = Instance(FigureCanvasQTAggLocal)
         
     def create(self, parent):
+        if self.canvas is not None:
+            return
+        
         # create a layout for the tab widget and the main view
-        self.layout = layout = QtGui.QVBoxLayout()
-        self.control = QtGui.QWidget()
+        self.layout = layout = QtGui.QVBoxLayout()          # @UndefinedVariable
+        self.control = QtGui.QWidget()                      # @UndefinedVariable
         self.control.setLayout(layout)
         
         tabs_ui = self.model.edit_traits(view = 'plot_view',
@@ -58,12 +62,13 @@ class FlowTaskPane(TaskPane):
         
         # add the main plot
         self.canvas = FigureCanvasQTAggLocal(Figure(), self.model.child_matplotlib_conn)
-        self.canvas.setSizePolicy(QtGui.QSizePolicy.Expanding,
-                                  QtGui.QSizePolicy.Expanding)
+        self.canvas.setSizePolicy(QtGui.QSizePolicy.Expanding,  # @UndefinedVariable
+                                  QtGui.QSizePolicy.Expanding)  # @UndefinedVariable
         layout.addWidget(self.canvas)
 
     def destroy(self):
-        self.layout = self.control = None 
+        pass
+#         self.layout = self.control = None 
                   
     def export(self, filename):
         # TODO - eventually give a preview, allow changing size, dpi, aspect 
@@ -80,13 +85,13 @@ class _TabListEditor(BaseEnumerationEditor):
     def init(self, parent):        
         super(_TabListEditor, self).init(parent)
         
-        self.control = QtGui.QTabBar()
-        self.control.setDocumentMode(True)
+        self.control = QtGui.QTabBar()                      # @UndefinedVariable
+        self.control.setDocumentMode(True)  
         for name in self.names:
             self.control.addTab(str(name))
             
-        QtCore.QObject.connect(self.control, 
-                               QtCore.SIGNAL('currentChanged(int)'), 
+        QtCore.QObject.connect(self.control,                # @UndefinedVariable 
+                               QtCore.SIGNAL('currentChanged(int)'), # @UndefinedVariable
                                self.update_object )
 
 

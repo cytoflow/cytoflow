@@ -58,8 +58,8 @@ class WorkflowDockPane(TraitsDockPane):
                                      image = plugin.get_icon())
             self.toolbar.append(task_action)
              
-        window = QtGui.QMainWindow()
-        window.addToolBar(QtCore.Qt.LeftToolBarArea, 
+        window = QtGui.QMainWindow()                    # @UndefinedVariable
+        window.addToolBar(QtCore.Qt.LeftToolBarArea,    # @UndefinedVariable
                           self.toolbar.create_tool_bar(window))
          
         self.ui = self.model.edit_traits(view = 'operations_traits',

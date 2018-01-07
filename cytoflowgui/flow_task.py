@@ -29,12 +29,12 @@ import os.path
 
 from traits.api import Instance, List, Bool, on_trait_change, Any, Unicode
 from pyface.tasks.api import Task, TaskLayout, PaneItem
-from pyface.tasks.action.api import SMenu, SMenuBar, SToolBar, TaskAction
-from pyface.api import FileDialog, ImageResource, AboutDialog, information, confirm, OK, YES
+from pyface.tasks.action.api import SMenu, SMenuBar, SToolBar, TaskAction, TaskToggleGroup
+from pyface.api import FileDialog, ImageResource, AboutDialog, information, error, confirm, OK, YES
 from envisage.api import Plugin, ExtensionPoint, contributes_to
 from envisage.ui.tasks.api import TaskFactory
 
-from cytoflowgui.flow_task_pane import FlowTaskPane
+# from cytoflowgui.flow_task_pane import FlowTaskPane
 from cytoflowgui.workflow_pane import WorkflowDockPane
 from cytoflowgui.view_pane import ViewDockPane
 from cytoflowgui.help_pane import HelpDockPane
@@ -59,7 +59,7 @@ class FlowTask(Task):
     model = Instance(Workflow)
         
     # the center pane
-    plot_pane = Instance(FlowTaskPane)
+#     plot_pane = Instance(FlowTaskPane)
     workflow_pane = Instance(WorkflowDockPane)
     view_pane = Instance(ViewDockPane)
     help_pane = Instance(HelpDockPane)
@@ -88,7 +88,8 @@ class FlowTask(Task):
 #                                          method='on_prefs',
 #                                          accelerator='Ctrl+P'),
                               id='File', name='&File'),
-                        SMenu(id = 'View', name = '&View'),
+                        SMenu(TaskToggleGroup(),
+                              id = 'View', name = '&View'),
                         SMenu(TaskAction(name = 'Report a problem....',
                                          method = 'on_problem'),
                               TaskAction(name='About...',
@@ -172,9 +173,9 @@ class FlowTask(Task):
         return TaskLayout(left = PaneItem("edu.mit.synbio.workflow_pane"),
                           right = PaneItem("edu.mit.synbio.view_traits_pane"))
      
-    def create_central_pane(self):
-        self.plot_pane = FlowTaskPane(model = self.model)
-        return self.plot_pane
+    def create_central_pane(self):       
+#         self.plot_pane = self.application.plot_pane
+        return self.application.plot_pane
      
     def create_dock_panes(self):
         self.workflow_pane = WorkflowDockPane(model = self.model, 
@@ -374,7 +375,7 @@ class FlowTask(Task):
                           "to a file.", "Export")
         
         f = ""
-        filetypes_groups = self.plot_pane.canvas.get_supported_filetypes_grouped()
+        filetypes_groups = self.application.plot_pane.canvas.get_supported_filetypes_grouped()
         filename_exts = []
         for name, ext in filetypes_groups.items():
             if f:
@@ -387,14 +388,14 @@ class FlowTask(Task):
                             wildcard = f)
         
         if dialog.open() == OK:
-            filetypes = list(self.plot_pane.canvas.get_supported_filetypes().keys())
+            filetypes = list(self.application.plot_pane.canvas.get_supported_filetypes().keys())
             if not [ext for ext in ["." + ext for ext in filetypes] if dialog.path.endswith(ext)]:
                 selected_exts = filename_exts[dialog.wildcard_index]
                 ext = sorted(selected_exts, key = len)[0]
                 dialog.path += "."
                 dialog.path += ext
                 
-            self.plot_pane.export(dialog.path)
+            self.application.plot_pane.export(dialog.path)
 
                 
             
@@ -579,10 +580,7 @@ class FlowTaskPlugin(Plugin):
     # these need to be declared in a Plugin instance; we pass them to
     # the task instance thru its factory, below.
     op_plugins = ExtensionPoint(List(IOperationPlugin), OP_PLUGIN_EXT)
-    view_plugins = ExtensionPoint(List(IViewPlugin), VIEW_PLUGIN_EXT)
-    
-    debug = Bool(False)
-    remote_connection = Any
+    view_plugins = ExtensionPoint(List(IViewPlugin), VIEW_PLUGIN_EXT)    
 
     #### 'IPlugin' interface ##################################################
 
@@ -608,14 +606,10 @@ class FlowTaskPlugin(Plugin):
 
     @contributes_to(TASKS)
     def _get_tasks(self):
-        from cytoflow import __version__ as cf_version
-
         return [TaskFactory(id = 'edu.mit.synbio.cytoflow.flow_task',
                             name = 'Cytometry analysis',
                             factory = lambda **x: FlowTask(application = self.application,
                                                            op_plugins = self.op_plugins,
                                                            view_plugins = self.view_plugins,
-                                                           model = Workflow(self.remote_connection,
-                                                                            version = cf_version,
-                                                                            debug = self.debug),
+                                                           model = self.application.model,
                                                            **x))]
