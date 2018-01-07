@@ -93,8 +93,8 @@ These are all in the `setuptools` spec.
 
 For the core `cytoflow` library, you need the following Python packages:
 ```
-python >= 2.7
-pandas >= 0.19.2
+python >= 3.4
+pandas >= 0.20.3
 numpy >= 1.9.0
 numexpr >= 2.4.6
 matplotlib >= 1.5.1
@@ -105,14 +105,15 @@ traits >= 4.6.0
 nbformat >= 4.0
 python-dateutil >= 2.5.2
 statsmodels >= 0.8.0
-fcsparser >= 0.1.1
+fcsparser >= 0.1.3
+fcswrite >= 0.1.3
 ```
 
 For the GUI, you additionally need:
 ```
 faulthandler >= 2.4
 pyface == 5.1.0
-envisage >= 4.5
+envisage >= 4.6
 pyqt >= 4.10 -- this must be installed separately!
 ```
 

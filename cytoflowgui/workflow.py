@@ -168,7 +168,10 @@ class Workflow(HasStrictTraits):
     modified = Bool
     debug = Bool
 
-#     default_scale = util.ScaleEnum
+    single_operation = View(Item('selected',
+                                 editor = InstanceEditor(view = 'operation_traits'),
+                                 style = 'custom',
+                                 show_label = False))
     
     # a view for the entire workflow's list of operations 
     operations_traits = View(Item('workflow',

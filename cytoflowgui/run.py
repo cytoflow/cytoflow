@@ -137,6 +137,7 @@ def run_gui():
     from pyface.image_resource import ImageResource
     
     from cytoflowgui.flow_task import FlowTaskPlugin
+    from cytoflowgui.tasbe_task import TASBETaskPlugin
     from cytoflowgui.cytoflow_application import CytoflowApplication
     from cytoflowgui.op_plugins import (ImportPlugin, ThresholdPlugin, RangePlugin, QuadPlugin,
                             Range2DPlugin, PolygonPlugin, BinningPlugin,
@@ -191,7 +192,9 @@ def run_gui():
     sys.excepthook = log_excepthook
 
     plugins = [CorePlugin(), TasksPlugin(), FlowTaskPlugin(debug = debug,
-                                                           remote_connection = remote_connection)]    
+                                                           remote_connection = remote_connection),
+                                            TASBETaskPlugin(debug = debug,
+                                                            remote_connection = remote_connection)]    
     
     # reverse of the order on the toolbar
     view_plugins = [TablePlugin(),
