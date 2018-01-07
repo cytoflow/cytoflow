@@ -46,3 +46,4 @@ from .violin import ViolinPlotView
 from .table import TableView
 from .radviz import RadvizView
 from .parallel_coords import ParallelCoordinatesView
+from .export_fcs import ExportFCS
