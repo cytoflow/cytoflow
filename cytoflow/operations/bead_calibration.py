@@ -196,7 +196,7 @@ class BeadCalibrationOp(HasStrictTraits):
     beads_file = File(exists = True)
     bead_peak_quantile = Int(80)
 
-    bead_brightness_threshold = Float(100)
+    bead_brightness_threshold = Float(100.0)
     bead_brightness_cutoff = Float(Undefined)
     bead_histogram_bins = Int(512)
     

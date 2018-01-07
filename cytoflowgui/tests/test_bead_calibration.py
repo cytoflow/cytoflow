@@ -4,7 +4,7 @@ Created on Jan 5, 2018
 @author: brian
 '''
 
-import os, unittest
+import os, unittest, tempfile
 
 import matplotlib
 matplotlib.use("Agg")
@@ -13,7 +13,9 @@ from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.tests.test_base import TasbeTest, wait_for
 from cytoflowgui.op_plugins import BeadCalibrationPlugin
 from cytoflowgui.op_plugins.bead_calibration import _Unit
-from cytoflowgui.subset import BoolSubset
+from cytoflowgui.serialization import save_yaml, load_yaml
+import cytoflowgui.op_plugins.bead_calibration  # @UnusedImport
+from cytoflowgui.tests.deep_eq import deep_eq
 
 class TestBeadCalibration(TasbeTest):
     
@@ -73,7 +75,7 @@ class TestBeadCalibration(TasbeTest):
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
 
     def testBeadThreshold(self):
-        self.op.bead_brightness_threshold = 95
+        self.op.bead_brightness_threshold = 95.0
         
         self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 5))
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
@@ -95,8 +97,36 @@ class TestBeadCalibration(TasbeTest):
     def testPlot(self):
         self.wi.current_view = self.wi.default_view
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", None))
-   
+           
+
+    def testSerialize(self):
+        fh, filename = tempfile.mkstemp()
+        try:
+            os.close(fh)
+            
+            save_yaml(self.op, filename)
+            new_op = load_yaml(filename)
+            
+        finally:
+            os.unlink(filename)
+            
+        self.maxDiff = None
+                     
+        self.assertDictEqual(self.op.trait_get(self.op.copyable_trait_names()),
+                             new_op.trait_get(self.op.copyable_trait_names()))
+        
+        
+    def testNotebook(self):
+        code = "from cytoflow import *\n"
+        for i, wi in enumerate(self.workflow.workflow):
+            code = code + wi.operation.get_notebook_code(i)
+        
+        exec(code)
+        nb_data = locals()['ex_1'].data
+        remote_data = self.workflow.remote_eval("self.workflow[-1].result.data")
+        self.assertTrue((nb_data == remote_data).all().all())
+        
 
 if __name__ == "__main__":
-#     import sys;sys.argv = ['', 'TestAutofluorescence.testPlot']
+#     import sys;sys.argv = ['', 'TestBeadCalibration.testNotebook']
     unittest.main()
