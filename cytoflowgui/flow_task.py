@@ -1,5 +1,6 @@
 #!/usr/bin/env python3.4
 # coding: latin-1
+from pyface.tasks.action.task_toggle_group import TaskToggleGroup
 
 # (c) Massachusetts Institute of Technology 2015-2017
 #
@@ -28,11 +29,13 @@ Created on Feb 11, 2015
 import os.path
 
 from traits.api import Instance, List, Bool, on_trait_change, Any, Unicode, TraitError
-from pyface.tasks.api import Task, TaskLayout, PaneItem
+from pyface.tasks.api import Task, TaskLayout, PaneItem, TaskWindowLayout
 from pyface.tasks.action.api import SMenu, SMenuBar, SToolBar, TaskAction, TaskToggleGroup
+from pyface.tasks.action.task_toggle_group import TaskToggleAction
 from pyface.api import FileDialog, ImageResource, AboutDialog, information, error, confirm, OK, YES
 from envisage.api import Plugin, ExtensionPoint, contributes_to
 from envisage.ui.tasks.api import TaskFactory
+from envisage.ui.tasks.action.api import TaskWindowLaunchAction, TaskWindowToggleGroup
 
 # from cytoflowgui.flow_task_pane import FlowTaskPane
 from cytoflowgui.workflow_pane import WorkflowDockPane
@@ -61,7 +64,6 @@ class FlowTask(Task):
     model = Instance(Workflow)
         
     # the center pane
-#     plot_pane = Instance(FlowTaskPane)
     workflow_pane = Instance(WorkflowDockPane)
     view_pane = Instance(ViewDockPane)
     help_pane = Instance(HelpDockPane)
@@ -91,6 +93,7 @@ class FlowTask(Task):
 #                                          accelerator='Ctrl+P'),
                               id='File', name='&File'),
                         SMenu(TaskToggleGroup(),
+#                               TaskWindowToggleGroup(),
                               id = 'View', name = '&View'),
                         SMenu(TaskAction(name = 'Report a problem....',
                                          method = 'on_problem'),
@@ -118,6 +121,10 @@ class FlowTask(Task):
 #                                       name='Notebook',
 #                                       tooltip="Export to an Jupyter notebook...",
 #                                       image=ImageResource('ipython')),
+                           TaskAction(method = "on_calibrate",
+                                      name = "Calibrate FCS...",
+                                      tooltip = "Calibrate FCS files",
+                                      image = ImageResource('tasbe')),
 #                            TaskAction(method='on_prefs',
 #                                       name = "Prefs",
 #                                       tooltip='Preferences',
@@ -367,7 +374,11 @@ class FlowTask(Task):
                 
             self.application.plot_pane.export(dialog.path)
 
-                
+
+    def on_calibrate(self):
+        task = next(x for x in self.window.tasks if x.id == 'edu.mit.synbio.cytoflow.tasbe_task')
+        self.window.activate_task(task)
+        
             
     def on_notebook(self):
         """
