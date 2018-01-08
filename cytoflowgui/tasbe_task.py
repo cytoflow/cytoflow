@@ -71,8 +71,6 @@ class TASBETask(Task):
     # the main workflow instance.
     model = Instance(Workflow)
         
-    # the center pane
-#     plot_pane = Instance(FlowTaskPane)
     calibration_pane = Instance(TraitsDockPane)
 #     help_pane = Instance(HelpDockPane)
     
