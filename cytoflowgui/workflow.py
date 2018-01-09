@@ -162,6 +162,7 @@ def log_exception():
 class Workflow(HasStrictTraits):
     
     workflow = List(WorkflowItem)
+    backup_workflow = List(WorkflowItem)  # for the TASBE task
     selected = Instance(WorkflowItem)
     
     modified = Bool

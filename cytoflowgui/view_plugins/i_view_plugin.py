@@ -141,7 +141,6 @@ class PluginViewMixin(HasTraits):
             
     def update_plot_names(self, wi):
         try:
-            # plot_iter = self.enum_plots(wi.result)
             plot_iter = self.enum_plots_wi(wi)
             plot_names = [x for x in plot_iter]
             if plot_names == [None] or plot_names == []:
@@ -149,7 +148,11 @@ class PluginViewMixin(HasTraits):
                 self.plot_names_by = []
             else:
                 self.plot_names = plot_names
-                self.plot_names_by = ", ".join(plot_iter.by)
+                try:
+                    self.plot_names_by = ", ".join(plot_iter.by)
+                except Exception as e:
+                    self.plot_names_by = ""
+                    
                 if self.current_plot == None:
                     self.current_plot = self.plot_names[0]
                     

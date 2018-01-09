@@ -132,11 +132,18 @@ class FlowTask(Task):
     # the file to save to if the user clicks "save" and has already clicked
     # "open" or "save as".
     filename = Unicode
-    
-    def prepare_destroy(self):
-        self.model.shutdown_remote_process()
-    
+        
     def activated(self):
+        
+        # if we're coming back from the TASBE task, re-load the saved
+        # workflow
+        if self.model.backup_workflow:
+            self.model.workflow = self.model.backup_workflow
+            self.model.backup_workflow = []
+            return
+        
+        # else, set up a new workflow
+        
         # add the import op
         self.add_operation(ImportPlugin().id) 
         self.model.selected = self.model.workflow[0]
@@ -147,8 +154,6 @@ class FlowTask(Task):
                         
             import_op = self.model.workflow[0].operation
             import_op.conditions = {"Dox" : "float", "Well" : "category"}
-#             import_op.conditions["Dox"] = "float"
-#             import_op.conditions["Well"] = "category"
          
             tube1 = Tube(file = "../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs",
                          conditions = {"Dox" : 0.0, "Well" : 'A'})
@@ -245,65 +250,6 @@ class FlowTask(Task):
             self.filename = dialog.path
             self.window.title = "Cytoflow - " + self.filename
             
-#     def open_file(self, path):
-#         f = open(path, 'r')
-#         unpickler = pickle.Unpickler(f)
-#         
-#         try:
-#             version = unpickler.load()
-#         except TraitError:
-#             error(parent = None,
-#                   message = "This doesn't look like a Cytoflow file. Or maybe "
-#                             "you tried to load a workflow older than version "
-#                             "0.5?")
-#             return
-#         
-#         if version != self.model.version:
-#             ret = confirm(parent = None,
-#                           message = "This is Cytoflow {}, but you're trying "
-#                           "to load a workflow from version {}. This may or "
-#                           "may not work!  Are you sure you want to proceed?"
-#                           .format(self.model.version, version),
-#                           title = "Load workflow?")
-#             if ret != YES:
-#                 return
-# 
-#         try:
-#             new_workflow = unpickler.load()
-#         except TraitError:
-#             error(parent = None,
-#                   message = "Error trying to load the workflow.")
-#             return
-# 
-#         # a few things to take care of when reloading
-#         for wi_idx, wi in enumerate(new_workflow):
-#             
-#             # get wi lock
-#             wi.lock.acquire()
-#             
-#             # clear the wi status
-#             wi.status = "loading"
-# 
-#             # re-link the linked list.  i thought this would get taken care
-#             # of in deserialization, but i guess not...
-#             if wi_idx > 0:
-#                 wi.previous_wi = new_workflow[wi_idx - 1]
-# 
-#         # replace the current workflow with the one we just loaded
-#         
-#         if False:  # for debugging the loading of things
-#             from .event_tracer import record_events 
-#             
-#             with record_events() as container:
-#                 self.model.workflow = new_workflow
-#                                 
-#             container.save_to_directory(os.getcwd()) 
-#         else:
-#             self.model.workflow = new_workflow
-#             self.model.modified = False
-#             
-#         for wi in self.model.workflow:
-#             wi.lock.release()
 
     def open_file(self, path):
         
@@ -406,9 +352,7 @@ class FlowTask(Task):
 
 
     def on_calibrate(self):
-#         try:
         task = next(x for x in self.window.tasks if x.id == 'edu.mit.synbio.cytoflow.tasbe_task')
-        
         self.window.activate_task(task)
         
             

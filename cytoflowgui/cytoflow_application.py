@@ -22,17 +22,21 @@ Created on Mar 15, 2015
 @author: brian
 '''
 
-import logging, io
+import logging, io, os, pickle
+
 from cytoflowgui import multiprocess_logging
 from cytoflowgui.workflow import Workflow
 from cytoflowgui.flow_task_pane import FlowTaskPane
 
 from envisage.ui.tasks.api import TasksApplication
+from envisage.ui.tasks.tasks_application import TasksApplicationState
 from pyface.api import error
 from pyface.tasks.api import TaskWindowLayout
 from traits.api import Bool, Instance, List, Property, Str, Any
 
-from .preferences import CytoflowPreferences
+logger = logging.getLogger(__name__)
+
+# from .preferences import CytoflowPreferences
   
 def gui_handler_callback(msg, app):
     app.application_error = msg
@@ -54,7 +58,8 @@ class CytoflowApplication(TasksApplication):
 
     # Whether to restore the previous application-level layout when the
     # applicaton is started.
-    always_use_default_layout = Property(Bool)
+#     always_use_default_layout = Property(Bool)
+    always_use_default_layout = False
 
     # are we debugging? at the moment, just for sending logs to the console
     debug = Bool
@@ -109,7 +114,7 @@ class CytoflowApplication(TasksApplication):
         
         # and the shared central pane
         self.plot_pane = FlowTaskPane(model = self.model)
-        
+
         # run the GUI
         super(CytoflowApplication, self).run()
         
@@ -117,15 +122,64 @@ class CytoflowApplication(TasksApplication):
         error(None, "An exception has occurred.  Please report a problem from the Help menu!\n\n"
                     "Afterwards, may need to restart Cytoflow to continue working.\n\n" 
                     + error_string)
+        
+    def exit(self, force=False):
+        self.model.shutdown_remote_process()
+        
+        return TasksApplication.exit(self, force=force)
 
-    #### 'AttractorsApplication' interface ####################################
-
-    preferences_helper = Instance(CytoflowPreferences)
+#     preferences_helper = Instance(CytoflowPreferences)
 
     ###########################################################################
     # Private interface.
     ###########################################################################
-    
+     
+    def _load_state(self):
+        """ 
+        Loads saved application state, if possible.  Overload the envisage-
+        defined one to fix a py3k bug and increment the TasksApplicationState
+        version.
+        
+        """
+        state = TasksApplicationState(version = 2)
+        filename = os.path.join(self.state_location, 'application_memento')
+        if os.path.exists(filename):
+            # Attempt to unpickle the saved application state.
+            try:
+                with open(filename, 'rb') as f:
+                    restored_state = pickle.load(f)
+                if state.version == restored_state.version:
+                    state = restored_state
+                else:
+                    logger.warn('Discarding outdated application layout')
+            except:
+                # If anything goes wrong, log the error and continue.
+                logger.exception('Had a problem restoring application layout from %s',
+                                 filename)
+                 
+        self._state = state
+     
+    def _save_state(self):
+        """
+        Saves the application state -- ONLY IF THE CYTOFLOW TASK IS ACTIVE
+        
+        """
+        if self.active_window.active_task.id != "edu.mit.synbio.cytoflow.flow_task":
+            logger.info("Not saving application layout from TASBE task")
+            return
+        
+        # Grab the current window layouts.
+        window_layouts = [w.get_window_layout() for w in self.windows]
+        self._state.previous_window_layouts = window_layouts
+     
+        # Attempt to pickle the application state.
+        filename = os.path.join(self.state_location, 'application_memento')
+        try:
+            with open(filename, 'wb') as f:
+                pickle.dump(self._state, f)
+        except:
+            # If anything goes wrong, log the error and continue.
+            logger.exception('Had a problem saving application layout')
     #### Trait initializers ###################################################
 
     def _default_layout_default(self):
@@ -135,10 +189,10 @@ class CytoflowApplication(TasksApplication):
                                   active_task = active_task,
                                   size = (800, 600)) ]
 
-    def _preferences_helper_default(self):
-        return CytoflowPreferences(preferences = self.preferences)
+#     def _preferences_helper_default(self):
+#         return CytoflowPreferences(preferences = self.preferences)
 
     #### Trait property getter/setters ########################################
-
-    def _get_always_use_default_layout(self):
-        return self.preferences_helper.always_use_default_layout
+# 
+#     def _get_always_use_default_layout(self):
+#         return self.preferences_helper.always_use_default_layout

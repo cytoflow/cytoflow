@@ -191,19 +191,20 @@ from traitsui.api import (View, Item, EnumEditor, Controller, VGroup,
 from envisage.api import Plugin, contributes_to
 from traits.api import (provides, Callable, Bool, List, Str, HasTraits,
                         on_trait_change, File, Constant, Directory,
-                        Property, Instance, Int, Float, Undefined, Event)
+                        Property, Instance, Int, Float, Undefined, Event,
+                        DelegatesTo)
 from pyface.api import ImageResource
 
 import pandas as pd
 
 import cytoflow.utility as util
 
-from cytoflow import Experiment, ImportOp, Tube
 from cytoflow.operations import IOperation
-from cytoflow.operations.autofluorescence import AutofluorescenceOp
-from cytoflow.operations.bleedthrough_linear import BleedthroughLinearOp
-from cytoflow.operations.bead_calibration import BeadCalibrationOp
-from cytoflow.operations.color_translation import ColorTranslationOp
+from cytoflow import (Experiment, ImportOp, Tube, AutofluorescenceOp, 
+                      BleedthroughLinearOp, BeadCalibrationOp, 
+                      ColorTranslationOp, PolygonOp)
+from cytoflow.operations.polygon import PolygonSelection
+
 from cytoflow.views.i_selectionview import IView
 
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
@@ -318,6 +319,9 @@ class TasbeHandler(OpHandlerMixin, Controller):
                     Item('do_convert',
                          editor = ButtonEditor(value = True,
                                                label = "Convert files...")),
+                    Item('do_exit',
+                         editor = ButtonEditor(value = True,
+                                               label = "Return to Cytoflow")),
                     shared_op_traits)
 
 @provides(IOperation)
@@ -327,10 +331,9 @@ class TasbeCalibrationOp(PluginOpMixin):
     id = Constant('edu.mit.synbio.cytoflowgui.op_plugins.bleedthrough_piecewise')
     friendly_id = Constant("Quantitative Pipeline")
     name = Constant("TASBE")
-
-    fcs_channels = List(['A', 'B', 'C'])
-    fsc_channel = Str
-    ssc_channel = Str
+    
+    fsc_channel = DelegatesTo('_polygon_op', 'xchannel')
+    ssc_channel = DelegatesTo('_polygon_op', 'ychannel')
     channels = List(Str, estimate = True)
     
     blank_file = File(filter = ["*.fcs"], estimate = True)
@@ -352,10 +355,14 @@ class TasbeCalibrationOp(PluginOpMixin):
     
     do_estimate = Event
     do_convert = Event
+    do_exit = Event
     output_directory = Directory
         
     _blank_exp = Instance(Experiment, transient = True)
     _blank_exp_channels = List(Str, status = True)
+    _polygon_op = Instance(PolygonOp, 
+                           kw = {'xscale' : 'log', 'yscale' : 'log'}, 
+                           transient = True)
     _af_op = Instance(AutofluorescenceOp, (), transient = True)
     _bleedthrough_op = Instance(BleedthroughLinearOp, (), transient = True)
     _bead_calibration_op = Instance(BeadCalibrationOp, (), transient = True)
@@ -411,10 +418,10 @@ class TasbeCalibrationOp(PluginOpMixin):
 #                           "used to estimate the model?",
 #                           util.CytoflowOpWarning)
             
-        if experiment is None:
-            raise util.CytoflowOpError("No valid result to estimate with")
+#         if experiment is None:
+#             raise util.CytoflowOpError("No valid result to estimate with")
         
-        experiment = experiment.clone()
+#         experiment = experiment.clone()
         
         self._af_op.channels = self.channels
         self._af_op.blank_file = self.blank_file
@@ -463,6 +470,13 @@ class TasbeCalibrationOp(PluginOpMixin):
         
         
     def should_clear_estimate(self, changed):
+        """
+        Should the owning WorkflowItem clear the estimated model by calling
+        op.clear_estimate()?  `changed` can be:
+         - Changed.ESTIMATE -- the parameters required to call 'estimate()' (ie
+            traits with estimate = True metadata) have changed
+         - Changed.PREV_RESULT -- the previous WorkflowItem's result changed
+         """
         if changed == Changed.ESTIMATE:
             return True
         
@@ -477,14 +491,27 @@ class TasbeCalibrationOp(PluginOpMixin):
         
         self.changed = (Changed.ESTIMATE_RESULT, self)
         
+                
+    def should_apply(self, changed):
+        """
+        Should the owning WorkflowItem apply this operation when certain things
+        change?  `changed` can be:
+         - Changed.OPERATION -- the operation's parameters changed
+         - Changed.PREV_RESULT -- the previous WorkflowItem's result changed
+         - Changed.ESTIMATE_RESULT -- the results of calling "estimate" changed
+        """
+        return True
+        
         
     def apply(self, experiment):
+
+#         if experiment is None:
+#             raise util.CytoflowOpError("No experiment was specified")
 
         self._blank_exp = ImportOp(tubes = [Tube(file = self.blank_file)] ).apply()
         self._blank_exp_channels = self._blank_exp.channels
         
-        if experiment is None:
-            raise util.CytoflowOpError("No experiment was specified")
+#         self.changed = (Changed.ESTIMATE_RESULT, self)
         
         experiment = self._af_op.apply(experiment)
         experiment = self._bleedthrough_op.apply(experiment)
@@ -519,9 +546,22 @@ class TasbeCalibrationView(PluginViewMixin):
     friendly_id = "TASBE Calibration" 
     
     name = Constant("TASBE Calibration")
+
+    _polygon_view = Instance(PolygonSelection)
+    interactive = Property(Bool)
+    
+    def _get_interactive(self):
+        if self._polygon_view:
+            return self._polygon_view.interactive
+        else:
+            return False
+        
+    def _set_interactive(self, val):
+        if self._polygon_view:
+            self._polygon_view.interactive = val
     
     def plot_wi(self, wi):
-        self.plot(wi.result, plot_name = self.current_plot)
+        self.plot(None, plot_name = self.current_plot)
         
     def enum_plots(self, experiment):
         return iter(["Morphology",
@@ -537,12 +577,6 @@ class TasbeCalibrationView(PluginViewMixin):
                      "Bead Calibration",
                      "Color Translation"])
         
-    def should_plot(self, changed):
-        if changed == Changed.RESULT or changed == Changed.PREV_RESULT:
-            return False
-        
-        return True
-        
     def plot(self, experiment, plot_name = None, **kwargs):
         
         if plot_name not in ["Morphology", 
@@ -555,26 +589,36 @@ class TasbeCalibrationView(PluginViewMixin):
                                          "\"Bleedthrough\", \"Bead Calibration\", "
                                          "or \"Color Translation\"")
                     
-        if experiment is None:
-            raise util.CytoflowViewError("No experiment to plot")
+        if not self.op._blank_exp:
+            raise util.CytoflowViewError("Must set at least the blank control file!")
         
-        new_ex = experiment.clone()
-        
-        # we don't need to actually apply any ops to data
-        new_ex.data = pd.DataFrame(data = {x : pd.Series() for x in new_ex.data})
+        new_ex = self.op._blank_exp.clone()
+
+        if plot_name == "Morphology":
+            if not self._polygon_view:
+                self._polygon_view = self.op._polygon_op.default_view()
+            
+            self._polygon_view.plot(new_ex, **kwargs)
+            
+            return
+        else:
+            new_ex = self.op._polygon_op.apply(new_ex)
                     
         if plot_name == "Autofluorescence":
             self.op._af_op.default_view().plot(new_ex, **kwargs)
+            return
         else:
             new_ex = self.op._af_op.apply(new_ex)
 
         if plot_name == "Bleedthrough":
             self.op._bleedthrough_op.default_view().plot(new_ex, **kwargs)
+            return
         else:
             new_ex = self.op._bleedthrough_op.apply(new_ex)
             
         if plot_name == "Bead Calibration":
             self.op._bead_calibration_op.default_view().plot(new_ex, **kwargs)
+            return
         else:
             new_ex = self.op._bead_calibration_op.apply(new_ex)
             

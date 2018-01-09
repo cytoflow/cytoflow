@@ -27,10 +27,12 @@ Created on Feb 11, 2015
 
 import os.path
 
-from traits.api import Instance, Bool, Any
+from traits.api import Instance, Bool, Any, on_trait_change
 from pyface.tasks.api import Task, TaskLayout, PaneItem, TraitsDockPane
 from envisage.api import Plugin, contributes_to
 from envisage.ui.tasks.api import TaskFactory
+
+from cytoflow.operations import IOperation
 
 # from cytoflowgui.flow_task_pane import FlowTaskPane, getFlowTaskPane
 from cytoflowgui.workflow import Workflow
@@ -57,7 +59,8 @@ class CalibrationPane(TraitsDockPane):
         """
         self.ui = self.model.edit_traits(view = 'single_operation',
                                          kind='subpanel', 
-                                         parent=parent)
+                                         parent=parent,
+                                         scrollable = True)
         return self.ui.control
 
 class TASBETask(Task):
@@ -70,6 +73,8 @@ class TASBETask(Task):
     
     # the main workflow instance.
     model = Instance(Workflow)
+    
+    op = Instance(IOperation)
         
     calibration_pane = Instance(TraitsDockPane)
 #     help_pane = Instance(HelpDockPane)
@@ -78,33 +83,29 @@ class TASBETask(Task):
         self.model.shutdown_remote_process()
     
     def activated(self):
-        
+        self.model.backup_workflow = self.model.workflow
         self.model.workflow = []
+        self.model.modified = False
         
         # add the op
-        op = TasbeCalibrationOp()
+        self.op = TasbeCalibrationOp()
         
         # make a new workflow item
-        wi = WorkflowItem(operation = op,
+        wi = WorkflowItem(operation = self.op,
                           deletable = False)
        
-        wi.default_view = op.default_view() 
+        wi.default_view = self.op.default_view() 
         wi.views.append(wi.default_view)
         wi.current_view = wi.default_view
              
         self.model.workflow.append(wi)
-        
-        # and make sure to actually select the new wi.  not that the UI
-        # will be updated or anything...
         self.model.selected = wi
     
     def _default_layout_default(self):
         return TaskLayout(left = PaneItem("edu.mit.synbio.calibration_pane"))
      
     def create_central_pane(self):
-#         self.plot_pane = getFlowTaskPane(self.model)
         return self.application.plot_pane
-#         return TaskPane()
      
     def create_dock_panes(self):
         self.calibration_pane = CalibrationPane(model = self.model, 
@@ -115,6 +116,11 @@ class TASBETask(Task):
 #                                       task = self)
         
         return [self.calibration_pane]
+    
+    @on_trait_change('op:do_exit', post_init = True)
+    def activate_cytoflow_task(self):
+        task = next(x for x in self.window.tasks if x.id == 'edu.mit.synbio.cytoflow.flow_task')
+        self.window.activate_task(task)
      
         
 class TASBETaskPlugin(Plugin):
