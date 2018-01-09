@@ -190,14 +190,15 @@ from traitsui.api import (View, Item, EnumEditor, Controller, VGroup,
                           HGroup, InstanceEditor)
 from envisage.api import Plugin, contributes_to
 from traits.api import (provides, Callable, Bool, List, Str, HasTraits,
-                        on_trait_change, File, Constant,
-                        Property, Instance, Int, Float, Undefined)
+                        on_trait_change, File, Constant, Directory,
+                        Property, Instance, Int, Float, Undefined, Event)
 from pyface.api import ImageResource
 
 import pandas as pd
 
 import cytoflow.utility as util
 
+from cytoflow import Experiment, ImportOp, Tube
 from cytoflow.operations import IOperation
 from cytoflow.operations.autofluorescence import AutofluorescenceOp
 from cytoflow.operations.bleedthrough_linear import BleedthroughLinearOp
@@ -251,13 +252,25 @@ class TasbeHandler(OpHandlerMixin, Controller):
                     handler = self)
     
     def default_traits_view(self):
-        return View(Item("channels",
-                         editor = CheckListEditor(cols = 2,
-                                                  name = 'fcs_channels'),
-                         style = 'custom'),
+        return View(
                     VGroup(
                         Item('blank_file'),
                         label = "Autofluorescence"),
+                    VGroup(
+                        Item('fsc_channel',
+                             editor = EnumEditor(name = '_blank_exp_channels'),
+                             label = "Forward Scatter Channel"),
+                        Item('ssc_channel',
+                             editor = EnumEditor(name = '_blank_exp_channels'),
+                             label = "Side Scatter Channel"),
+                        label = "Morphology"),
+                    VGroup(
+                        Item("channels",
+                             editor = CheckListEditor(cols = 2,
+                                                      name = '_blank_exp_channels'),
+                             style = 'custom'),
+                        label = "Channels To Calibrate",
+                        show_labels = False),
                     VGroup(
                         Item('bleedthrough_list',
                                 editor = VerticalListEditor(editor = InstanceEditor(view = self.bleedthrough_traits_view()),
@@ -297,18 +310,14 @@ class TasbeHandler(OpHandlerMixin, Controller):
                                 style = 'custom'),
 
                         show_labels = False),
-                    VGroup(Item('subset_list',
-                                show_label = False,
-                                editor = SubsetListEditor(conditions = "context.previous_wi.conditions",
-                                                      metadata = "context.previous_wi.metadata",
-                                                      when = "'experiment' not in vars() or not experiment")),
-                           label = "Subset",
-                           show_border = False,
-                           show_labels = False),
+                    Item('output_directory'),
                     Item('do_estimate',
                          editor = ButtonEditor(value = True,
-                                               label = "Estimate!"),
+                                               label = "Estimate parameters"),
                          show_label = False),
+                    Item('do_convert',
+                         editor = ButtonEditor(value = True,
+                                               label = "Convert files...")),
                     shared_op_traits)
 
 @provides(IOperation)
@@ -320,6 +329,8 @@ class TasbeCalibrationOp(PluginOpMixin):
     name = Constant("TASBE")
 
     fcs_channels = List(['A', 'B', 'C'])
+    fsc_channel = Str
+    ssc_channel = Str
     channels = List(Str, estimate = True)
     
     blank_file = File(filter = ["*.fcs"], estimate = True)
@@ -338,23 +349,25 @@ class TasbeCalibrationOp(PluginOpMixin):
     to_channel = Str(estimate = True)
     translation_list = List(_TranslationControl, estimate = True)
     mixture_model = Bool(False, estimate = True)
+    
+    do_estimate = Event
+    do_convert = Event
+    output_directory = Directory
         
+    _blank_exp = Instance(Experiment, transient = True)
+    _blank_exp_channels = List(Str, status = True)
     _af_op = Instance(AutofluorescenceOp, (), transient = True)
     _bleedthrough_op = Instance(BleedthroughLinearOp, (), transient = True)
     _bead_calibration_op = Instance(BeadCalibrationOp, (), transient = True)
     _color_translation_op = Instance(ColorTranslationOp, (), transient = True)
-    
-    subset_list = List(ISubset, estimate = True)    
-    subset = Property(Str, depends_on = "subset_list.str")
-        
-    # MAGIC - returns the value of the "subset" Property, above
-    def _get_subset(self):
-        return " and ".join([subset.str for subset in self.subset_list if subset.str])
-    
-    @on_trait_change("subset_list.str", post_init = True)
-    def _subset_changed(self, obj, name, old, new):
-        self.changed = (Changed.ESTIMATE, ('subset_list', self.subset_list))
-    
+
+    subset = Str
+# 
+#     # use blank_file to get the morpho
+#     @on_trait_change('blank_file', post_init = True)
+#     def _setup_blank_experiment(self):
+# 
+#     
     @on_trait_change('channels[]', post_init = True)
     def _channels_changed(self, obj, name, old, new):
         self.bleedthrough_list = []
@@ -393,10 +406,10 @@ class TasbeCalibrationOp(PluginOpMixin):
         self.changed = (Changed.ESTIMATE, ('translation_list', self.translation_list))
     
     def estimate(self, experiment, subset = None):
-        if not self.subset:
-            warnings.warn("Are you sure you don't want to specify a subset "
-                          "used to estimate the model?",
-                          util.CytoflowOpWarning)
+#         if not self.subset:
+#             warnings.warn("Are you sure you don't want to specify a subset "
+#                           "used to estimate the model?",
+#                           util.CytoflowOpWarning)
             
         if experiment is None:
             raise util.CytoflowOpError("No valid result to estimate with")
@@ -466,6 +479,9 @@ class TasbeCalibrationOp(PluginOpMixin):
         
         
     def apply(self, experiment):
+
+        self._blank_exp = ImportOp(tubes = [Tube(file = self.blank_file)] ).apply()
+        self._blank_exp_channels = self._blank_exp.channels
         
         if experiment is None:
             raise util.CytoflowOpError("No experiment was specified")
@@ -505,7 +521,7 @@ class TasbeCalibrationView(PluginViewMixin):
     name = Constant("TASBE Calibration")
     
     def plot_wi(self, wi):
-        self.plot(wi.result, plot_name = wi.current_plot)
+        self.plot(wi.result, plot_name = self.current_plot)
         
     def enum_plots(self, experiment):
         return iter(["Morphology",

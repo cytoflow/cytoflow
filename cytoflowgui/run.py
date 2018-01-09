@@ -95,7 +95,7 @@ def run_gui():
         def _envisage_load_state(self):
             """ Loads saved application state, if possible.
             """
-            state = TasksApplicationState()
+            state = TasksApplicationState(version = 2)
             filename = os.path.join(self.state_location, 'application_memento')
             if os.path.exists(filename):
                 # Attempt to unpickle the saved application state.

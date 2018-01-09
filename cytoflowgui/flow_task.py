@@ -406,7 +406,9 @@ class FlowTask(Task):
 
 
     def on_calibrate(self):
+#         try:
         task = next(x for x in self.window.tasks if x.id == 'edu.mit.synbio.cytoflow.tasbe_task')
+        
         self.window.activate_task(task)
         
             

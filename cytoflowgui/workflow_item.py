@@ -107,12 +107,6 @@ class WorkflowItem(HasStrictTraits):
                                     style = 'custom',
                                     show_label = False))
     
-#     # the plot names for the currently selected view
-#     current_view_plot_names = List(Any, status = True)
-#     
-#     # if there are multiple plots, which are we viewing?
-#     current_plot = Any
-    
     # the view for the current plot
     current_plot_view = View(Item('current_view_handler',
                                   editor = InstanceEditor(view = 'current_plot_view'),
