@@ -119,7 +119,6 @@ class FlowTask(Task):
                                        name='Notebook',
                                        tooltip="Export to an Jupyter notebook...",
                                        image=ImageResource('ipython')),
-
                            TaskAction(method = "on_calibrate",
                                       name = "Calibrate FCS...",
                                       tooltip = "Calibrate FCS files",
