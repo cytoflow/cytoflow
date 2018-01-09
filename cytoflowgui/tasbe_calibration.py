@@ -334,6 +334,7 @@ class TasbeCalibrationOp(PluginOpMixin):
     bead_brightness_threshold = Float(100, estimate = True)
     bead_brightness_cutoff = Float(Undefined, estimate = True)
     
+    do_color_translation = Bool(estimate = True)
     to_channel = Str(estimate = True)
     translation_list = List(_TranslationControl, estimate = True)
     mixture_model = Bool(False, estimate = True)

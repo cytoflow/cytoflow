@@ -27,6 +27,7 @@ from traits.api import (HasStrictTraits, Str, File, Dict, Any, Callable,
 import numpy as np
 import matplotlib.pyplot as plt
 import sklearn.mixture
+import scipy.optimize
 
 import cytoflow.views
 import cytoflow.utility as util
@@ -233,47 +234,36 @@ class ColorTranslationOp(HasStrictTraits):
                 weights = [x[idx] for x in fit.predict_proba(data)]
             else:
                 weights = [1] * len(data.index)
-            
-            # this estimation method yields different results than the TASBE
-            # method.  TASBE ..... does something with binned means, or
-            # something ..... I can't read the MATLAB code too well, and I 
-            # don't know if the code I have is the same as is running on the
-            # TASBE website ...... anyways.  It computes a linear, multiplicative
-            # scaling constant.  Ie, OUT = m * IN, where OUT is the color we're
-            # translating TO and IN is the color we're translating FROM.
-            
-            # this code uses a different approach: it uses a log-linear model,
-            # computing the linear Y = a * X + b coefficients on a log-log
-            # plot.  this is a more general model of the underlying physical
-            # behavior -- but it may not be more "correct."
-            
-            # which is better?  idunno.  i'd love to try EQUIP predictions with
-            # both.  i'd like to note that i can't reproduce the TASBE method
-            # precisely anyways; if i replace this with a linear model, i get
-            # coefficients that are close to (but not quite the same as) the
-            # TASBE website, and WAY off the color model I have in the same
-            # directory as my test data.
-             
-            lr = np.polyfit(data[from_channel], 
-                            data[to_channel], 
-                            deg = 1, 
-                            w = weights)
-                        
-            # remember, these (linear) coefficients came from logspace, so 
-            # if the relationship in log10 space is Y = aX + b, then in
-            # linear space the relationship is x = 10**X, y = 10**Y,
-            # and y = (10**b) * x ^ a
-            
-            # also remember that the result of np.polyfit is a list of
-            # coefficients with the highest power first!  so if we
-            # solve y=ax + b, coeff #0 is a and coeff #1 is b
+                
+            if self.linear_model:
+                # this mimics the TASBE approach, which constrains the fit to
+                # a multiplicative scaling (eg, a linear fit with an intercept
+                # of 0.)  I disagree that this is the right approach, which is
+                # why it's not the default.
                  
-            a = lr[0]
-            b = 10 ** lr[1]
-            trans_fn = lambda x, a=a, b=b: b * np.power(x, a)
-  
-            self._coefficients[(from_channel, to_channel)] = lr
-            self._trans_fn[(from_channel, to_channel)] = trans_fn
+                f = lambda x: weights * (data[to_channel] - x[0] * data[from_channel])
+                x0 = [1]
+                
+                trans_fn = lambda data, x: np.power(data, x[0])
+                 
+            else:
+
+                # this code uses a different approach from TASBE. instead of
+                # computing a multiplicative scaling constant, it computes a
+                # full linear regression on the log-scaled data (ie, allowing
+                # the intercept to vary as well as the slope).  this is a 
+                # more general model of the underlying physical behavior, and
+                # fits the data better -- but it may not be more "correct."
+                 
+                f = lambda x: weights * (data[to_channel] - x[0] * data[from_channel] - x[1])
+                x0 = [1, 0]
+                
+                trans_fn = lambda data, x: (10 ** x[1]) * np.power(data, x[0])
+                 
+                 
+            opt = scipy.optimize.least_squares(f, x0)
+            self._coefficients[(from_channel, to_channel)] = opt.x
+            self._trans_fn[(from_channel, to_channel)] = lambda data, x = opt.x: trans_fn(data, x)
 
 
     def apply(self, experiment):
