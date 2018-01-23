@@ -753,7 +753,7 @@ class RemoteWorkflow(HasStrictTraits):
         (msg, payload) = new
         
         if msg == Changed.OPERATION:
-            if wi.operation.should_apply(Changed.OPERATION):
+            if wi.operation.should_apply(Changed.OPERATION, payload):
                 with wi.lock:
                     wi.result = None
                     wi.status = "invalid"
@@ -761,12 +761,12 @@ class RemoteWorkflow(HasStrictTraits):
         
         elif msg == Changed.VIEW:
             (view, name, new) = payload
-            if wi.current_view == view and wi.current_view.should_plot(Changed.VIEW):
+            if wi.current_view == view and wi.current_view.should_plot(Changed.VIEW, payload):
                 wi.current_view.update_plot_names(wi)
                 self.exec_q.put((idx - 0.1, (wi, wi.plot)))
                 
         elif msg == Changed.ESTIMATE:
-            if wi.operation.should_clear_estimate(Changed.ESTIMATE):
+            if wi.operation.should_clear_estimate(Changed.ESTIMATE, payload):
                 try:
                     wi.operation.clear_estimate()
                 except AttributeError:
@@ -775,11 +775,11 @@ class RemoteWorkflow(HasStrictTraits):
         elif msg == Changed.ESTIMATE_RESULT:
             if (wi == self.selected 
                 and wi.current_view 
-                and wi.current_view.should_plot(Changed.ESTIMATE_RESULT)):
+                and wi.current_view.should_plot(Changed.ESTIMATE_RESULT, payload)):
                 wi.current_view.update_plot_names(wi)
                 self.exec_q.put((idx - 0.1, (wi, wi.plot)))
                 
-            if wi.operation.should_apply(Changed.ESTIMATE_RESULT):
+            if wi.operation.should_apply(Changed.ESTIMATE_RESULT, payload):
                 self.exec_q.put((idx, (wi, wi.apply)))
                         
         elif msg == Changed.OP_STATUS:
@@ -793,18 +793,18 @@ class RemoteWorkflow(HasStrictTraits):
         elif msg == Changed.RESULT:
             if (wi == self.selected 
                 and wi.current_view 
-                and wi.current_view.should_plot(Changed.RESULT)):
+                and wi.current_view.should_plot(Changed.RESULT, payload)):
                 wi.current_view.update_plot_names(wi)
                 self.exec_q.put((idx - 0.1, (wi, wi.plot)))
                 
         elif msg == Changed.PREV_RESULT:
-            if wi.operation.should_clear_estimate(Changed.PREV_RESULT):
+            if wi.operation.should_clear_estimate(Changed.PREV_RESULT, payload):
                 try:
                     wi.operation.clear_estimate()
                 except AttributeError:
                     pass
                 
-            if wi.operation.should_apply(Changed.PREV_RESULT):
+            if wi.operation.should_apply(Changed.PREV_RESULT, payload):
                 with wi.lock:
                     wi.result = None
                     wi.status = "invalid"
@@ -812,7 +812,7 @@ class RemoteWorkflow(HasStrictTraits):
                 
             if (wi == self.selected 
                 and wi.current_view 
-                and wi.current_view.should_plot(Changed.PREV_RESULT)):
+                and wi.current_view.should_plot(Changed.PREV_RESULT, payload)):
                 wi.current_view.update_plot_names(wi)
                 self.exec_q.put((idx - 0.1, (wi, wi.plot)))
 

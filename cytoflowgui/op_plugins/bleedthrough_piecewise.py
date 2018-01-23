@@ -219,7 +219,7 @@ class BleedthroughPiecewisePluginOp(PluginOpMixin, BleedthroughPiecewiseOp):
         
         self.changed = (Changed.ESTIMATE_RESULT, self)
         
-    def should_clear_estimate(self, changed):
+    def should_clear_estimate(self, changed, payload):
         if changed == Changed.ESTIMATE:
             return True
         
@@ -265,7 +265,7 @@ class BleedthroughPiecewisePluginView(PluginViewMixin, BleedthroughPiecewiseDiag
     def plot_wi(self, wi):
         self.plot(wi.previous_wi.result)
     
-    def should_plot(self, changed):
+    def should_plot(self, changed, payload):
         if changed == Changed.ESTIMATE_RESULT:
             return True
         

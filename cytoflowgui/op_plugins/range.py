@@ -143,7 +143,7 @@ class RangeSelectionView(PluginViewMixin, RangeSelection):
     high = DelegatesTo('op', status = True)
     name = Str
     
-    def should_plot(self, changed):
+    def should_plot(self, changed, payload):
         if changed == Changed.PREV_RESULT or changed == Changed.VIEW:
             return True
         else:
