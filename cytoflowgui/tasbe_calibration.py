@@ -361,20 +361,15 @@ class TasbeCalibrationOp(PluginOpMixin):
     _blank_exp = Instance(Experiment, transient = True)
     _blank_exp_channels = List(Str, status = True)
     _polygon_op = Instance(PolygonOp, 
-                           kw = {'xscale' : 'log', 'yscale' : 'log'}, 
+                           kw = dict(name = 'polygon',
+                                     xscale = 'log', 
+                                     yscale = 'log'), 
                            transient = True)
     _af_op = Instance(AutofluorescenceOp, (), transient = True)
     _bleedthrough_op = Instance(BleedthroughLinearOp, (), transient = True)
     _bead_calibration_op = Instance(BeadCalibrationOp, (), transient = True)
     _color_translation_op = Instance(ColorTranslationOp, (), transient = True)
 
-    subset = Str
-# 
-#     # use blank_file to get the morpho
-#     @on_trait_change('blank_file', post_init = True)
-#     def _setup_blank_experiment(self):
-# 
-#     
     @on_trait_change('channels[]', post_init = True)
     def _channels_changed(self, obj, name, old, new):
         self.bleedthrough_list = []
@@ -426,7 +421,7 @@ class TasbeCalibrationOp(PluginOpMixin):
         self._af_op.channels = self.channels
         self._af_op.blank_file = self.blank_file
         
-        self._af_op.estimate(experiment, subset = self.subset)
+        self._af_op.estimate(experiment, subset = 'polygon == True')
         self.changed = (Changed.ESTIMATE_RESULT, self)
         experiment = self._af_op.apply(experiment)
         
@@ -434,7 +429,7 @@ class TasbeCalibrationOp(PluginOpMixin):
         for control in self.bleedthrough_list:
             self._bleedthrough_op.controls[control.channel] = control.file
 
-        self._bleedthrough_op.estimate(experiment, subset = self.subset) 
+        self._bleedthrough_op.estimate(experiment, subset = 'polygon == True') 
         self.changed = (Changed.ESTIMATE_RESULT, self)
         experiment = self._bleedthrough_op.apply(experiment)
         
@@ -464,7 +459,7 @@ class TasbeCalibrationOp(PluginOpMixin):
             self._color_translation_op.controls[(control.from_channel,
                                                  control.to_channel)] = control.file
                                                  
-        self._color_translation_op.estimate(experiment, subset = self.subset)                                         
+        self._color_translation_op.estimate(experiment, subset = 'polygon == True')                                         
         
         self.changed = (Changed.ESTIMATE_RESULT, self)
         
