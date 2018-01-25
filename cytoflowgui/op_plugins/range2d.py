@@ -189,7 +189,7 @@ class Range2DSelectionView(PluginViewMixin, RangeSelection2D):
     yhigh = DelegatesTo('op', status = True)
     name = Str
     
-    def should_plot(self, changed, payload):
+    def should_plot(self, changed):
         if changed == Changed.PREV_RESULT or changed == Changed.VIEW:
             return True
         else:

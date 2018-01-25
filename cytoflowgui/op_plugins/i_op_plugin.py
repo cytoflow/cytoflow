@@ -110,7 +110,7 @@ class PluginOpMixin(HasTraits):
     changed = Event
     
                 
-    def should_apply(self, changed, payload):
+    def should_apply(self, changed):
         """
         Should the owning WorkflowItem apply this operation when certain things
         change?  `changed` can be:
@@ -121,7 +121,7 @@ class PluginOpMixin(HasTraits):
         return True
 
     
-    def should_clear_estimate(self, changed, payload):
+    def should_clear_estimate(self, changed):
         """
         Should the owning WorkflowItem clear the estimated model by calling
         op.clear_estimate()?  `changed` can be:

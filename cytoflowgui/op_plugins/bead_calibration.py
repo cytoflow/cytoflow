@@ -236,7 +236,7 @@ class BeadCalibrationPluginOp(PluginOpMixin, BeadCalibrationOp):
         self.changed = (Changed.ESTIMATE_RESULT, self)
 
     
-    def should_clear_estimate(self, changed, payload):
+    def should_clear_estimate(self, changed):
         if changed == Changed.ESTIMATE:
             return True
         
@@ -290,7 +290,7 @@ class BeadCalibrationPluginView(PluginViewMixin, BeadCalibrationDiagnostic):
     def plot_wi(self, wi):
         self.plot(wi.previous_wi.result)
         
-    def should_plot(self, changed, payload):
+    def should_plot(self, changed):
         if changed == Changed.ESTIMATE_RESULT:
             return True
         

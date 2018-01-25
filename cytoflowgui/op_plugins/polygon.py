@@ -155,7 +155,7 @@ class PolygonSelectionView(PluginViewMixin, PolygonSelection):
     op = Instance(IOperation, fixed = True)
     vertices = DelegatesTo('op', status = True)    
     
-    def should_plot(self, changed, payload):
+    def should_plot(self, changed):
         if changed == Changed.PREV_RESULT or changed == Changed.VIEW:
             return True
         else:

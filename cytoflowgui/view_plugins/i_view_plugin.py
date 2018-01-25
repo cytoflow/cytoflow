@@ -116,7 +116,7 @@ class PluginViewMixin(HasTraits):
     def _subset_changed(self, obj, name, old, new):
         self.changed = (Changed.VIEW, (self, 'subset_list', self.subset_list))  
             
-    def should_plot(self, changed, payload):
+    def should_plot(self, changed):
         """
         Should the owning WorkflowItem refresh the plot when certain things
         change?  `changed` can be:

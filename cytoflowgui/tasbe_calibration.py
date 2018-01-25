@@ -358,35 +358,23 @@ class TasbeCalibrationOp(PluginOpMixin):
     do_exit = Event
     output_directory = Directory
         
-    _blank_exp_file = File(transient = True)
     _blank_exp = Instance(Experiment, transient = True)
     _blank_exp_channels = List(Str, status = True)
     _polygon_op = Instance(PolygonOp, 
-                           kw = {'name' : 'polygon',
-                                 'xscale' : 'log', 
-                                 'yscale' : 'log'}, 
+                           kw = {'xscale' : 'log', 'yscale' : 'log'}, 
                            transient = True)
     _af_op = Instance(AutofluorescenceOp, (), transient = True)
     _bleedthrough_op = Instance(BleedthroughLinearOp, (), transient = True)
     _bead_calibration_op = Instance(BeadCalibrationOp, (), transient = True)
     _color_translation_op = Instance(ColorTranslationOp, (), transient = True)
 
-#     subset = Str
- 
+    subset = Str
+# 
 #     # use blank_file to get the morpho
 #     @on_trait_change('blank_file', post_init = True)
 #     def _setup_blank_experiment(self):
-#         self._blank_exp = ImportOp(tubes = [Tube(file = self.blank_file)] ).apply()
-#         self._blank_exp_channels = self._blank_exp.channels
- 
-    @on_trait_change('fsc_channel', post_init = True)
-    def _fsc_changed(self, obj, name, old, new):
-        self.changed = (Changed.ESTIMATE, ('fsc_channel', self.fsc_channel))
-     
-    @on_trait_change('ssc_channel', post_init = True)
-    def _ssc_changed(self, obj, name, old, new):
-        self.changed = (Changed.ESTIMATE, ('ssc_channel', self.ssc_channel))
-     
+# 
+#     
     @on_trait_change('channels[]', post_init = True)
     def _channels_changed(self, obj, name, old, new):
         self.bleedthrough_list = []
@@ -402,7 +390,6 @@ class TasbeCalibrationOp(PluginOpMixin):
                     continue
                 self.translation_list.append(_TranslationControl(from_channel = c,
                                                                  to_channel = self.to_channel))
-                
         self.changed = (Changed.ESTIMATE, ('translation_list', self.translation_list))
 
 
@@ -435,15 +422,11 @@ class TasbeCalibrationOp(PluginOpMixin):
 #             raise util.CytoflowOpError("No valid result to estimate with")
         
 #         experiment = experiment.clone()
-
-        experiment = self._blank_exp.clone()
-        
-        experiment = self._polygon_op.apply(experiment)
         
         self._af_op.channels = self.channels
         self._af_op.blank_file = self.blank_file
         
-        self._af_op.estimate(experiment, subset = "polygon == TRUE")
+        self._af_op.estimate(experiment, subset = self.subset)
         self.changed = (Changed.ESTIMATE_RESULT, self)
         experiment = self._af_op.apply(experiment)
         
@@ -486,7 +469,7 @@ class TasbeCalibrationOp(PluginOpMixin):
         self.changed = (Changed.ESTIMATE_RESULT, self)
         
         
-    def should_clear_estimate(self, changed, payload):
+    def should_clear_estimate(self, changed):
         """
         Should the owning WorkflowItem clear the estimated model by calling
         op.clear_estimate()?  `changed` can be:
@@ -509,7 +492,7 @@ class TasbeCalibrationOp(PluginOpMixin):
         self.changed = (Changed.ESTIMATE_RESULT, self)
         
                 
-    def should_apply(self, changed, payload):
+    def should_apply(self, changed):
         """
         Should the owning WorkflowItem apply this operation when certain things
         change?  `changed` can be:
@@ -524,21 +507,18 @@ class TasbeCalibrationOp(PluginOpMixin):
 
 #         if experiment is None:
 #             raise util.CytoflowOpError("No experiment was specified")
- 
-        if self._blank_exp_file != self.blank_file:
-            self._blank_exp_file = self.blank_file
-            self._blank_exp = ImportOp(tubes = [Tube(file = self.blank_file)] ).apply()
-            self._blank_exp_channels = self._blank_exp.channels
-            self.changed = (Changed.RESULT, self)
 
+        self._blank_exp = ImportOp(tubes = [Tube(file = self.blank_file)] ).apply()
+        self._blank_exp_channels = self._blank_exp.channels
+        
 #         self.changed = (Changed.ESTIMATE_RESULT, self)
-#         
-#         experiment = self._af_op.apply(experiment)
-#         experiment = self._bleedthrough_op.apply(experiment)
-#         experiment = self._bead_calibration_op.apply(experiment)
-#         experiment = self._color_translation_op.apply(experiment)
-#         
-#         return experiment
+        
+        experiment = self._af_op.apply(experiment)
+        experiment = self._bleedthrough_op.apply(experiment)
+        experiment = self._bead_calibration_op.apply(experiment)
+        experiment = self._color_translation_op.apply(experiment)
+        
+        return experiment
     
     
     def default_view(self, **kwargs):
@@ -596,13 +576,6 @@ class TasbeCalibrationView(PluginViewMixin):
                      "Bleedthrough",
                      "Bead Calibration",
                      "Color Translation"])
-        
-        
-    def should_plot(self, changed, payload):
-        if changed == Changed.RESULT or changed == Changed.PREV_RESULT:
-            return False
-        
-        return True
         
     def plot(self, experiment, plot_name = None, **kwargs):
         

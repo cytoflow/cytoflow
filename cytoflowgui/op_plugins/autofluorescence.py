@@ -138,14 +138,14 @@ class AutofluorescencePluginOp(PluginOpMixin, AutofluorescenceOp):
         self.changed = (Changed.ESTIMATE_RESULT, self)
         
     
-    def should_apply(self, changed, payload):
+    def should_apply(self, changed):
         if changed == Changed.PREV_RESULT or changed == Changed.ESTIMATE_RESULT:
             return True
         
         return False
 
     
-    def should_clear_estimate(self, changed, payload):
+    def should_clear_estimate(self, changed):
         if changed == Changed.ESTIMATE:
             return True
         
@@ -188,7 +188,7 @@ class AutofluorescencePluginView(PluginViewMixin, AutofluorescenceDiagnosticView
     def plot_wi(self, wi):
         self.plot(wi.previous_wi.result)
     
-    def should_plot(self, changed, payload):
+    def should_plot(self, changed):
         if changed == Changed.ESTIMATE_RESULT:
             return True
         

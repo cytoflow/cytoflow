@@ -377,7 +377,6 @@ class TasbePluginOp(PluginOpMixin):
         if experiment is None:
             raise util.CytoflowOpError("No valid result to estimate with")
         
-        # TODO - don't actually need to apply these operations to data in estimate
         experiment = experiment.clone()
         
         self._af_op.channels = self.channels
@@ -426,7 +425,7 @@ class TasbePluginOp(PluginOpMixin):
         self.changed = (Changed.ESTIMATE_RESULT, self)
         
         
-    def should_clear_estimate(self, changed, payload):
+    def should_clear_estimate(self, changed):
         if changed == Changed.ESTIMATE:
             return True
         
@@ -554,7 +553,7 @@ class TasbePluginView(PluginViewMixin):
                      "Bead Calibration",
                      "Color Translation"])
         
-    def should_plot(self, changed, payload):
+    def should_plot(self, changed):
         if changed == Changed.RESULT or changed == Changed.PREV_RESULT:
             return False
         

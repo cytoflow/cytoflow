@@ -172,7 +172,7 @@ class QuadSelectionView(PluginViewMixin, QuadSelection):
 
     name = Str
     
-    def should_plot(self, changed, payload):
+    def should_plot(self, changed):
         if changed == Changed.PREV_RESULT or changed == Changed.VIEW:
             return True
         else:

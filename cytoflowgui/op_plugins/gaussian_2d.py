@@ -220,7 +220,7 @@ class GaussianMixture2DPluginOp(PluginOpMixin, GaussianMixtureOp):
         self._scale = {}
         self.changed = (Changed.ESTIMATE_RESULT, self)
         
-    def should_clear_estimate(self, changed, payload):
+    def should_clear_estimate(self, changed):
         if changed == Changed.ESTIMATE:
             return True
         
