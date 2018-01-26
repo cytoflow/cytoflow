@@ -36,7 +36,7 @@ from traits.api import Bool, Instance, List, Property, Str, Any
 
 logger = logging.getLogger(__name__)
 
-from .preferences import CytoflowPreferences
+# from .preferences import CytoflowPreferences
   
 def gui_handler_callback(msg, app):
     app.application_error = msg
@@ -58,8 +58,8 @@ class CytoflowApplication(TasksApplication):
 
     # Whether to restore the previous application-level layout when the
     # applicaton is started.
-    always_use_default_layout = Property(Bool)
-#     always_use_default_layout = False
+#     always_use_default_layout = Property(Bool)
+    always_use_default_layout = False
 
     # are we debugging? at the moment, just for sending logs to the console
     debug = Bool
@@ -128,7 +128,7 @@ class CytoflowApplication(TasksApplication):
         
         return TasksApplication.exit(self, force=force)
 
-    preferences_helper = Instance(CytoflowPreferences)
+#     preferences_helper = Instance(CytoflowPreferences)
 
     ###########################################################################
     # Private interface.
@@ -189,10 +189,10 @@ class CytoflowApplication(TasksApplication):
                                   active_task = active_task,
                                   size = (800, 600)) ]
 
-    def _preferences_helper_default(self):
-        return CytoflowPreferences(preferences = self.preferences)
+#     def _preferences_helper_default(self):
+#         return CytoflowPreferences(preferences = self.preferences)
 
     #### Trait property getter/setters ########################################
- 
-    def _get_always_use_default_layout(self):
-        return self.preferences_helper.always_use_default_layout
+# 
+#     def _get_always_use_default_layout(self):
+#         return self.preferences_helper.always_use_default_layout
