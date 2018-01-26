@@ -359,14 +359,14 @@ class TasbePluginOp(PluginOpMixin):
                 self.translation_list.append(_TranslationControl(from_channel = c,
                                                                  to_channel = self.to_channel))
         self.changed = (Changed.ESTIMATE, ('translation_list', self.translation_list))
-        
-    @on_trait_change("bleedthrough_list_items, bleedthrough_list.+", post_init = True)
-    def _bleedthrough_controls_changed(self, obj, name, old, new):
-        self.changed = (Changed.ESTIMATE, ('bleedthrough_list', self.bleedthrough_list))
-    
-    @on_trait_change("translation_list_items, translation_list.+", post_init = True)
-    def _translation_controls_changed(self, obj, name, old, new):
-        self.changed = (Changed.ESTIMATE, ('translation_list', self.translation_list))
+#         
+#     @on_trait_change("bleedthrough_list_items, bleedthrough_list.+", post_init = True)
+#     def _bleedthrough_controls_changed(self, obj, name, old, new):
+#         self.changed = (Changed.ESTIMATE, ('bleedthrough_list', self.bleedthrough_list))
+#     
+#     @on_trait_change("translation_list_items, translation_list.+", post_init = True)
+#     def _translation_controls_changed(self, obj, name, old, new):
+#         self.changed = (Changed.ESTIMATE, ('translation_list', self.translation_list))
     
     def estimate(self, experiment, subset = None):
         if not self.subset:
