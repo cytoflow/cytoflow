@@ -31,6 +31,7 @@ if __name__ == '__main__':
     os.environ['TRAITS_DEBUG'] = "1"
     
 from collections import OrderedDict
+from pathlib import Path
     
 from traits.api import (HasTraits, HasStrictTraits, provides, Instance, Str, 
                         Int, List, Bool, Enum, Float, DelegatesTo,
@@ -544,6 +545,11 @@ class ExperimentDialogHandler(Controller):
                 col = int(pos[1:3])
                 
                 tube.trait_set(**{"Row" : row, "Col" : col})
+                
+            if not '$SRC' in tube_meta and not 'TUBE NAME' in tube_meta:
+                self._add_metadata('Tube', 'Tube', Str(condition = False))
+                tube.trait_set(**{"Tube" : Path(path).stem})
+                
                 
             new_tubes.append(tube)
 

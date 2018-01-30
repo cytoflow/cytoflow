@@ -1,6 +1,5 @@
 #!/usr/bin/env python3.4
 # coding: latin-1
-from pyface.tasks.action.task_toggle_group import TaskToggleGroup
 
 # (c) Massachusetts Institute of Technology 2015-2017
 #

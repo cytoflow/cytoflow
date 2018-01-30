@@ -184,6 +184,7 @@ translation) into one easy-use-interface.
 '''
 
 import warnings
+from pathlib import Path
 
 from traitsui.api import (View, Item, EnumEditor, Controller, VGroup, 
                           CheckListEditor, ButtonEditor, 
@@ -197,12 +198,14 @@ from pyface.api import ImageResource
 
 import pandas as pd
 
+from pyface.api import FileDialog, ImageResource, AboutDialog, information, error, confirm, OK, YES
+
 import cytoflow.utility as util
 
 from cytoflow.operations import IOperation
 from cytoflow import (Experiment, ImportOp, Tube, AutofluorescenceOp, 
                       BleedthroughLinearOp, BeadCalibrationOp, 
-                      ColorTranslationOp, PolygonOp)
+                      ColorTranslationOp, PolygonOp, ExportFCS)
 from cytoflow.operations.polygon import PolygonSelection
 
 from cytoflow.views.i_selectionview import IView
@@ -213,6 +216,7 @@ from cytoflowgui.subset import ISubset, SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin
 from cytoflowgui.vertical_list_editor import VerticalListEditor
+from cytoflowgui.toggle_button import ToggleButtonEditor
 from cytoflowgui.workflow import Changed
 
 class _BleedthroughControl(HasTraits):
@@ -229,6 +233,7 @@ class TasbeHandler(OpHandlerMixin, Controller):
     beads_name_choices = Property(transient = True)
     beads_units = Property(depends_on = 'model.beads_name',
                            transient = True)
+    do_convert = Event
     
     def _get_beads_name_choices(self):
         return list(BeadCalibrationOp.BEADS.keys())
@@ -297,12 +302,17 @@ class TasbeHandler(OpHandlerMixin, Controller):
                              label = "Peak\nCutoff"),
                         label = "Bead Calibration",
                         show_border = False),
+                    Item('do_color_translation',
+                         label = "Do color translation?",
+                         editor = ToggleButtonEditor(),
+                         show_label = False),
                     VGroup(
                         Item('to_channel',
                              editor = EnumEditor(name = 'channels')),
                         Item('mixture_model',
                              label = "Use mixture\nmodel?"),
-                           label = "Color Translation"),
+                           label = "Color Translation",
+                           visible_when = 'do_color_translation == True'),
                     VGroup(
                         Item('translation_list',
                                 editor = VerticalListEditor(editor = InstanceEditor(view = self.translation_traits_view()),
@@ -310,19 +320,32 @@ class TasbeHandler(OpHandlerMixin, Controller):
                                                             mutable = False),
                                 style = 'custom'),
 
-                        show_labels = False),
+                        show_labels = False,
+                        visible_when = 'do_color_translation == True'),
                     Item('output_directory'),
                     Item('do_estimate',
                          editor = ButtonEditor(value = True,
                                                label = "Estimate parameters"),
                          show_label = False),
-                    Item('do_convert',
+                    Item('handler.do_convert',
                          editor = ButtonEditor(value = True,
-                                               label = "Convert files...")),
+                                               label = "Convert files..."),
+                         enabled_when = "valid_model == True",
+                         show_label = False),
                     Item('do_exit',
                          editor = ButtonEditor(value = True,
-                                               label = "Return to Cytoflow")),
+                                               label = "Return to Cytoflow"),
+                         show_label = False),
                     shared_op_traits)
+        
+    
+    def _do_convert_fired(self):
+        
+        dialog = FileDialog(action = 'open files',
+                            wildcard = (FileDialog.create_wildcard("FCS files", "*.fcs"))) #@UndefinedVariable  
+        if dialog.open() == OK:            
+            self.model.input_files = dialog.paths
+
 
 @provides(IOperation)
 class TasbeCalibrationOp(PluginOpMixin):
@@ -338,7 +361,7 @@ class TasbeCalibrationOp(PluginOpMixin):
     
     blank_file = File(filter = ["*.fcs"], estimate = True)
     
-    bleedthrough_list = List(_BleedthroughControl, transient = True)
+    bleedthrough_list = List(_BleedthroughControl, estimate = True)
 
     beads_name = Str(estimate = True)
     beads_file = File(filter = ["*.fcs"], estimate = True)
@@ -350,12 +373,13 @@ class TasbeCalibrationOp(PluginOpMixin):
     
     do_color_translation = Bool(estimate = True)
     to_channel = Str(estimate = True)
-    translation_list = List(_TranslationControl, transient = True)
+    translation_list = List(_TranslationControl, estimate = True)
     mixture_model = Bool(False, estimate = True)
     
     do_estimate = Event
-    do_convert = Event
+    valid_model = Bool(False, status = True)
     do_exit = Event
+    input_files = List(File)
     output_directory = Directory
         
     _blank_exp_file = File(transient = True)
@@ -371,10 +395,6 @@ class TasbeCalibrationOp(PluginOpMixin):
     _bleedthrough_op = Instance(BleedthroughLinearOp, (), transient = True)
     _bead_calibration_op = Instance(BeadCalibrationOp, (), transient = True)
     _color_translation_op = Instance(ColorTranslationOp, (), transient = True)
-
-#     @on_trait_change('fsc_channel, ssc_channel', post_init = True)
-#     def _morpho_channel_changed(self, obj, name, old, new):
-#         self.changed = (Changed.PREV_RESULT, name)
     
     @on_trait_change('channels[]', post_init = True)
     def _channels_changed(self, obj, name, old, new):
@@ -382,7 +402,7 @@ class TasbeCalibrationOp(PluginOpMixin):
         for c in self.channels:
             self.bleedthrough_list.append(_BleedthroughControl(channel = c))
             
-#         self.changed = (Changed.ESTIMATE, ('bleedthrough_list', self.bleedthrough_list))
+        self.changed = (Changed.ESTIMATE, ('bleedthrough_list', self.bleedthrough_list))
             
         self.translation_list = []
         if self.to_channel:
@@ -392,8 +412,11 @@ class TasbeCalibrationOp(PluginOpMixin):
                 self.translation_list.append(_TranslationControl(from_channel = c,
                                                                  to_channel = self.to_channel))
                 
-#         self.changed = (Changed.ESTIMATE, ('translation_list', self.translation_list))
+        self.changed = (Changed.ESTIMATE, ('translation_list', self.translation_list))
 
+    @on_trait_change('_polygon_op:vertices', post_init = True)
+    def _polygon_changed(self, obj, name, old, new):
+        self.changed = (Changed.ESTIMATE, (None, None))
 
     @on_trait_change('to_channel', post_init = True)
     def _to_channel_changed(self, obj, name, old, new):
@@ -404,15 +427,15 @@ class TasbeCalibrationOp(PluginOpMixin):
                     continue
                 self.translation_list.append(_TranslationControl(from_channel = c,
                                                                  to_channel = self.to_channel))
-#         self.changed = (Changed.ESTIMATE, ('translation_list', self.translation_list))
+        self.changed = (Changed.ESTIMATE, ('translation_list', self.translation_list))
         
-#     @on_trait_change("bleedthrough_list_items, bleedthrough_list.+", post_init = True)
-#     def _bleedthrough_controls_changed(self, obj, name, old, new):
-#         self.changed = (Changed.ESTIMATE, ('bleedthrough_list', self.bleedthrough_list))
-#     
-#     @on_trait_change("translation_list_items, translation_list.+", post_init = True)
-#     def _translation_controls_changed(self, obj, name, old, new):
-#         self.changed = (Changed.ESTIMATE, ('translation_list', self.translation_list))
+    @on_trait_change("bleedthrough_list_items, bleedthrough_list.+", post_init = True)
+    def _bleedthrough_controls_changed(self, obj, name, old, new):
+        self.changed = (Changed.ESTIMATE, ('bleedthrough_list', self.bleedthrough_list))
+     
+    @on_trait_change("translation_list_items, translation_list.+", post_init = True)
+    def _translation_controls_changed(self, obj, name, old, new):
+        self.changed = (Changed.ESTIMATE, ('translation_list', self.translation_list))
 #     
     def estimate(self, experiment, subset = None):
 #         if not self.subset:
@@ -432,16 +455,16 @@ class TasbeCalibrationOp(PluginOpMixin):
         self._af_op.channels = self.channels
         self._af_op.blank_file = self.blank_file
         
-        self._af_op.estimate(experiment, subset = "polygon == TRUE")
-        self.changed = (Changed.ESTIMATE_RESULT, self)
+        self._af_op.estimate(experiment, subset = "polygon == True")
+        self.changed = (Changed.ESTIMATE_RESULT, "Autofluorescence")
         experiment = self._af_op.apply(experiment)
         
         self._bleedthrough_op.controls.clear()
         for control in self.bleedthrough_list:
             self._bleedthrough_op.controls[control.channel] = control.file
 
-        self._bleedthrough_op.estimate(experiment, subset = self.subset) 
-        self.changed = (Changed.ESTIMATE_RESULT, self)
+        self._bleedthrough_op.estimate(experiment, subset = "polygon == True") 
+        self.changed = (Changed.ESTIMATE_RESULT, "Bleedthrough")
         experiment = self._bleedthrough_op.apply(experiment)
         
         self._bead_calibration_op.beads = BeadCalibrationOp.BEADS[self.beads_name]
@@ -460,19 +483,23 @@ class TasbeCalibrationOp(PluginOpMixin):
         self._bead_calibration_op.units[self.to_channel] = self.beads_unit
             
         self._bead_calibration_op.estimate(experiment)
-        self.changed = (Changed.ESTIMATE_RESULT, self)
-        experiment = self._bead_calibration_op.apply(experiment)
+        self.changed = (Changed.ESTIMATE_RESULT, "Bead Calibration")
         
-        self._color_translation_op.mixture_model = self.mixture_model
-        
-        self._color_translation_op.controls.clear()
-        for control in self.translation_list:
-            self._color_translation_op.controls[(control.from_channel,
-                                                 control.to_channel)] = control.file
-                                                 
-        self._color_translation_op.estimate(experiment, subset = self.subset)                                         
-        
-        self.changed = (Changed.ESTIMATE_RESULT, self)
+        if self.do_color_translation:
+            experiment = self._bead_calibration_op.apply(experiment)
+            
+            self._color_translation_op.mixture_model = self.mixture_model
+            
+            self._color_translation_op.controls.clear()
+            for control in self.translation_list:
+                self._color_translation_op.controls[(control.from_channel,
+                                                     control.to_channel)] = control.file
+                                                     
+            self._color_translation_op.estimate(experiment, subset = 'polygon == True')                                         
+            
+            self.changed = (Changed.ESTIMATE_RESULT, "Color Translation")
+            
+        self.valid_model = True
         
         
     def should_clear_estimate(self, changed, payload):
@@ -496,6 +523,7 @@ class TasbeCalibrationOp(PluginOpMixin):
         self._bleedthrough_op = BleedthroughLinearOp()
         self._bead_calibration_op = BeadCalibrationOp()
         self._color_translation_op = ColorTranslationOp()
+        self.valid_model = False
         
         self.changed = (Changed.ESTIMATE_RESULT, self)
                         
@@ -507,7 +535,13 @@ class TasbeCalibrationOp(PluginOpMixin):
          - Changed.PREV_RESULT -- the previous WorkflowItem's result changed
          - Changed.ESTIMATE_RESULT -- the results of calling "estimate" changed
         """
-        return True
+        if changed == Changed.ESTIMATE_RESULT and \
+            self.blank_file != self._blank_exp_file:
+            return True
+        elif changed == Changed.OPERATION:
+            return True
+        
+        return False
 
         
         
@@ -520,14 +554,30 @@ class TasbeCalibrationOp(PluginOpMixin):
             self.changed = (Changed.PREV_RESULT, None)
             return
         
-#         self.changed = (Changed.ESTIMATE_RESULT, self)
-#         
-#         experiment = self._af_op.apply(experiment)
-#         experiment = self._bleedthrough_op.apply(experiment)
-#         experiment = self._bead_calibration_op.apply(experiment)
-#         experiment = self._color_translation_op.apply(experiment)
-#         
-#         return experiment
+            
+        out_dir = Path(self.output_directory)
+        for path in self.input_files:
+            in_file_path = Path(path)
+            out_file_path = out_dir / in_file_path.name
+            if out_file_path.exists():
+                raise util.CytoflowOpError(None,
+                                           "File {} already exists"
+                                           .format(out_file_path))
+                
+        tubes = [Tube(file = path, conditions = {'filename' : Path(path).stem})
+                 for path in self.input_files]
+        experiment = ImportOp(tubes = tubes, conditions = {'filename' : 'category'}).apply()
+        
+        experiment = self._af_op.apply(experiment)
+        experiment = self._bleedthrough_op.apply(experiment)
+        experiment = self._bead_calibration_op.apply(experiment)
+        
+        if self.do_color_translation:
+            experiment = self._color_translation_op.apply(experiment)
+                
+        ExportFCS(path = self.output_directory,
+                  by = ['filename'],
+                  _include_by = False).export(experiment)
     
     
     def default_view(self, **kwargs):
@@ -561,10 +611,6 @@ class TasbeCalibrationView(PluginViewMixin):
 
     _polygon_view = Instance(PolygonSelection, transient = True)
     interactive = Property(Bool)
-#     
-#     @on_trait_change('op:_polygon_op:xchannel, op:_polygon_op:ychannel', post_init = True)
-#     def _morpho_channels_changed(self, obj, name, old, new):
-#         self.changed = (Changed.VIEW, (obj, name, new))
     
     def _get_interactive(self):
         if self._polygon_view:
@@ -603,23 +649,17 @@ class TasbeCalibrationView(PluginViewMixin):
          - Changed.ESTIMATE_RESULT -- the results of calling "estimate" changed
         """
         if changed == Changed.VIEW:
-            return True
+            _, name, _ = payload
+            if self.current_plot == 'Morphology' and (name == 'fsc_channel' or name == 'ssc_channel'):
+                return True
+            elif name == 'current_plot':
+                return True
+        elif changed == Changed.PREV_RESULT:
+            if self.current_plot == payload:
+                return True
         else:
             return False
-#                 pass
-#         return False
-#         if changed == Changed.ESTIMATE:
-#             name, val = payload
-#             if self.current_plot == "Morphology" and (name == "fsc_channel" or name == "ssc_channel"):
-#                 return True
-#         if changed == Changed.PREV_RESULT and self.current_plot == "Morphology":
-#             return True
-#         elif changed == Changed.ESTIMATE_RESULT and self.current_plot != "Morphology":
-#             return True
-#         elif changed == Changed.VIEW:
-#             return True
-#         else:
-#             return False
+
         
     def plot(self, experiment, plot_name = None, **kwargs):
         

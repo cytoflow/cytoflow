@@ -68,9 +68,9 @@ class ExportFCS(HasStrictTraits):
     Export the data
         
     >>> import tempfile
-    >>> flow.ExportFCSView(path = 'export/',
-    ...                    by = ["Dox"],
-    ...                    subset = "Dox == 10.0").export(ex)
+    >>> flow.ExportFCS(path = 'export/',
+    ...                by = ["Dox"],
+    ...                subset = "Dox == 10.0").export(ex)
         
     """
     
