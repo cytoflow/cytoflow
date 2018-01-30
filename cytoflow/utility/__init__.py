@@ -30,3 +30,5 @@ from .custom_traits import PositiveInt, PositiveFloat, ScaleEnum, Deprecated, Re
 from .matplotlib_widgets import PolygonSelector
 
 from .docstring import expand_class_attributes, expand_method_parameters
+
+from .fcswrite import write_fcs

@@ -22,9 +22,10 @@ cytoflow.views.export_fcs
 """
 
 from pathlib import Path
-import fcswrite
+from copy import copy
 
-from traits.api import Constant, List, Str, Bool, Directory, HasStrictTraits
+from traits.api import (Constant, List, Str, Bool, Dict, Directory, 
+                        HasStrictTraits)
 
 import cytoflow.utility as util
 
@@ -35,6 +36,9 @@ class ExportFCS(HasStrictTraits):
     This isn't a traditional view, in that it doesn't implement :meth:`plot`.
     Instead, use :meth:`enum_files` to figure out which files will be created
     from a particular experiment, and :meth:`export` to export the FCS files.
+    
+    The Cytoflow attributes will be encoded in keywords in the FCS TEXT
+    segment, starting with the characters "CF_".
     
     Attributes
     ----------
@@ -47,6 +51,11 @@ class ExportFCS(HasStrictTraits):
     by : List(Str)
         A list of conditions from :attr:`~.Experiment.conditions`; each unique
         combination of conditions will be exported to an FCS file.
+        
+    keywords : Dict(Str, Str)
+        The FCS files are exported with only the minimum of required keywords.
+        If you want to add more keywords to the FCS files' TEXT segment, 
+        specify them here.
         
     subset : str
         A Python expression used to select a subset of the data
@@ -81,6 +90,7 @@ class ExportFCS(HasStrictTraits):
     base = Str
     path = Directory(exists = True)
     by = List(Str)
+    keywords = Dict(Str, Str)
     
     subset = Str
     
@@ -218,11 +228,14 @@ class ExportFCS(HasStrictTraits):
                 group = [group]
             
             parts = []
+            kws = copy(self.keywords)
             for i, name in enumerate(self.by):
                 if self._include_by:
                     parts.append(name + '_' + str(group[i]))
                 else:
                     parts.append(str(group[i]))
+                    
+                kws["CF_" + name] = str(group[i])
                 
             if self.base:
                 filename = self.base + '_' + '_'.join(parts) + '.fcs'
@@ -231,11 +244,12 @@ class ExportFCS(HasStrictTraits):
                 
         
             full_path = d / filename
-            fcswrite.write_fcs(str(full_path), 
-                               experiment.channels, 
-                               data_subset.values,
-                               compat_chn_names = False,
-                               compat_negative = False)
+            util.write_fcs(str(full_path), 
+                           experiment.channels, 
+                           data_subset.values,
+                           compat_chn_names = False,
+                           compat_negative = False,
+                           **kws)
             
             
     

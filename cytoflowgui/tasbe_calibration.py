@@ -186,6 +186,8 @@ translation) into one easy-use-interface.
 import warnings
 from pathlib import Path
 
+import fcsparser
+
 from traitsui.api import (View, Item, EnumEditor, Controller, VGroup, 
                           CheckListEditor, ButtonEditor, 
                           HGroup, InstanceEditor)
@@ -322,6 +324,8 @@ class TasbeHandler(OpHandlerMixin, Controller):
 
                         show_labels = False,
                         visible_when = 'do_color_translation == True'),
+                    Item('status',
+                         style = 'readonly'),
                     Item('output_directory'),
                     Item('do_estimate',
                          editor = ButtonEditor(value = True,
@@ -396,6 +400,8 @@ class TasbeCalibrationOp(PluginOpMixin):
     _bead_calibration_op = Instance(BeadCalibrationOp, (), transient = True)
     _color_translation_op = Instance(ColorTranslationOp, (), transient = True)
     
+    status = Str(status = True)
+    
     @on_trait_change('channels[]', post_init = True)
     def _channels_changed(self, obj, name, old, new):
         self.bleedthrough_list = []
@@ -448,6 +454,7 @@ class TasbeCalibrationOp(PluginOpMixin):
         
 #         experiment = experiment.clone()
 
+
         experiment = self._blank_exp.clone()
         
         experiment = self._polygon_op.apply(experiment)
@@ -459,6 +466,8 @@ class TasbeCalibrationOp(PluginOpMixin):
         self.changed = (Changed.ESTIMATE_RESULT, "Autofluorescence")
         experiment = self._af_op.apply(experiment)
         
+        self.status = "Estimating bleedthrough"
+        
         self._bleedthrough_op.controls.clear()
         for control in self.bleedthrough_list:
             self._bleedthrough_op.controls[control.channel] = control.file
@@ -466,6 +475,8 @@ class TasbeCalibrationOp(PluginOpMixin):
         self._bleedthrough_op.estimate(experiment, subset = "polygon == True") 
         self.changed = (Changed.ESTIMATE_RESULT, "Bleedthrough")
         experiment = self._bleedthrough_op.apply(experiment)
+        
+        self.status = "Estimating bead calibration"
         
         self._bead_calibration_op.beads = BeadCalibrationOp.BEADS[self.beads_name]
         self._bead_calibration_op.beads_file = self.beads_file
@@ -486,6 +497,8 @@ class TasbeCalibrationOp(PluginOpMixin):
         self.changed = (Changed.ESTIMATE_RESULT, "Bead Calibration")
         
         if self.do_color_translation:
+            self.status = "Estimating color translation"
+
             experiment = self._bead_calibration_op.apply(experiment)
             
             self._color_translation_op.mixture_model = self.mixture_model
@@ -499,6 +512,7 @@ class TasbeCalibrationOp(PluginOpMixin):
             
             self.changed = (Changed.ESTIMATE_RESULT, "Color Translation")
             
+        self.status = "Done estimating"
         self.valid_model = True
         
         
@@ -566,18 +580,42 @@ class TasbeCalibrationOp(PluginOpMixin):
                 
         tubes = [Tube(file = path, conditions = {'filename' : Path(path).stem})
                  for path in self.input_files]
-        experiment = ImportOp(tubes = tubes, conditions = {'filename' : 'category'}).apply()
         
-        experiment = self._af_op.apply(experiment)
-        experiment = self._bleedthrough_op.apply(experiment)
-        experiment = self._bead_calibration_op.apply(experiment)
-        
-        if self.do_color_translation:
-            experiment = self._color_translation_op.apply(experiment)
+        for tube in tubes:
+            self.status = "Converting " + Path(tube.file).stem
+            experiment = ImportOp(tubes = [tube], conditions = {'filename' : 'category'}).apply()
+            
+            experiment = self._af_op.apply(experiment)
+            experiment = self._bleedthrough_op.apply(experiment)
+            experiment = self._bead_calibration_op.apply(experiment)
+            
+            if self.do_color_translation:
+                experiment = self._color_translation_op.apply(experiment)
                 
-        ExportFCS(path = self.output_directory,
-                  by = ['filename'],
-                  _include_by = False).export(experiment)
+            tube_meta = fcsparser.parse( tube.file, 
+                                         channel_naming = experiment.metadata["name_metadata"],
+                                         meta_data_only = True,
+                                         reformat_meta = False)
+            
+            del tube_meta['__header__']
+            
+            tube_meta = {k:v for (k,v) in tube_meta.items() if not k.startswith("flowCore_")}
+            tube_meta = {k:v for (k,v) in tube_meta.items() if not (k.startswith("$P") and k[2].isdigit())}
+            
+            drop_kws = ["$BEGINANALYSIS", "$ENDANALYSIS", 
+                        "$BEGINSTEXT", "$ENDSTEXT",
+                        "$BEGINDATA", "$ENDDATA",
+                        "$BYTEORD", "$DATATYPE",
+                        "$MODE", "$NEXTDATA", "$TOT", "$PAR"]
+            
+            tube_meta = {k:v for (k,v) in tube_meta.items() if not k in drop_kws}                                                     
+                    
+            ExportFCS(path = self.output_directory,
+                      by = ['filename'],
+                      _include_by = False,
+                      keywords = tube_meta).export(experiment)
+                      
+        self.status = "Done converting!"
     
     
     def default_view(self, **kwargs):
