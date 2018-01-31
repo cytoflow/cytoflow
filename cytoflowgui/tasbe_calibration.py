@@ -229,6 +229,10 @@ class _TranslationControl(HasTraits):
     from_channel = Str
     to_channel = Str
     file = File
+    
+class _Unit(HasTraits):
+    channel = Str
+    unit = Str
 
 class TasbeHandler(OpHandlerMixin, Controller):
                 
@@ -251,6 +255,15 @@ class TasbeHandler(OpHandlerMixin, Controller):
                            Item('file', show_label = False),
                            show_labels = False),
                     handler = self)
+        
+        
+    def unit_traits_view(self):
+        return View(HGroup(Item('channel', style = 'readonly', show_label = False),
+                           Item('unit',
+                                editor = EnumEditor(name = 'handler.beads_units'),
+                                show_label = False)),
+                    handler = self)
+    
         
     def translation_traits_view(self):
         return View(HGroup(Item('from_channel', style = 'readonly', show_label = False),
@@ -294,8 +307,13 @@ class TasbeHandler(OpHandlerMixin, Controller):
                              label = "Beads",
                              width = -125),
                         Item('beads_file'),
-                        Item('beads_unit', 
-                             editor = EnumEditor(name = 'handler.beads_units')),
+                    VGroup(Item('units_list',
+                                editor = VerticalListEditor(editor = InstanceEditor(view = self.unit_traits_view()),
+                                                            style = 'custom',
+                                                            mutable = False),
+                                style = 'custom')),
+#                         Item('beads_unit', 
+#                              editor = EnumEditor(name = 'handler.beads_units')),
                         Item('bead_peak_quantile',
                              label = "Peak\nQuantile"),
                         Item('bead_brightness_threshold',
@@ -369,7 +387,8 @@ class TasbeCalibrationOp(PluginOpMixin):
 
     beads_name = Str(estimate = True)
     beads_file = File(filter = ["*.fcs"], estimate = True)
-    beads_unit = Str(estimate = True)
+#     beads_unit = Str(estimate = True)
+    units_list = List(_Unit, estimate = True)
     
     bead_peak_quantile = Int(80, estimate = True)
     bead_brightness_threshold = Float(100, estimate = True)
@@ -409,6 +428,15 @@ class TasbeCalibrationOp(PluginOpMixin):
             self.bleedthrough_list.append(_BleedthroughControl(channel = c))
             
         self.changed = (Changed.ESTIMATE, ('bleedthrough_list', self.bleedthrough_list))
+        
+        if self.do_color_translation and self.to_channel and self.to_channel in self.channels:
+            self.units_list = [_Unit(channel = self.to_channel)]
+        elif not self.do_color_translation:
+            self.units_list = [_Unit(channel = c) for c in self.channels]
+        else:
+            self.units_list = []
+            
+        self.changed = (Changed.ESTIMATE, ('units_list', self.units_list))
             
         self.translation_list = []
         if self.to_channel:
@@ -427,12 +455,16 @@ class TasbeCalibrationOp(PluginOpMixin):
     @on_trait_change('to_channel', post_init = True)
     def _to_channel_changed(self, obj, name, old, new):
         self.translation_list = []
-        if self.to_channel:
+        if self.do_color_translation and self.to_channel:
             for c in self.channels:
                 if c == self.to_channel:
                     continue
                 self.translation_list.append(_TranslationControl(from_channel = c,
                                                                  to_channel = self.to_channel))
+            
+            self.units_list = [_Unit(channel = self.to_channel)]
+            self.changed = (Changed.ESTIMATE, ('units_list', self.units_list))
+            
         self.changed = (Changed.ESTIMATE, ('translation_list', self.translation_list))
         
     @on_trait_change("bleedthrough_list_items, bleedthrough_list.+", post_init = True)
@@ -442,6 +474,10 @@ class TasbeCalibrationOp(PluginOpMixin):
     @on_trait_change("translation_list_items, translation_list.+", post_init = True)
     def _translation_controls_changed(self, obj, name, old, new):
         self.changed = (Changed.ESTIMATE, ('translation_list', self.translation_list))
+        
+    @on_trait_change('units_list_items,units_list.+', post_init = True)
+    def _units_changed(self, obj, name, old, new):
+        self.changed = (Changed.ESTIMATE, ('units_list', self.units_list))
 #     
     def estimate(self, experiment, subset = None):
 #         if not self.subset:
