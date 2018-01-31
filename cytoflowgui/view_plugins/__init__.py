@@ -19,6 +19,7 @@
 from .i_view_plugin import IViewPlugin, PluginViewMixin, VIEW_PLUGIN_EXT
 from .histogram import HistogramPlugin
 from .histogram_2d import Histogram2DPlugin
+from .density import DensityPlugin
 from .scatterplot import ScatterplotPlugin
 from .bar_chart import BarChartPlugin
 from .stats_1d import Stats1DPlugin
