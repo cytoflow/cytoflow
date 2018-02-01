@@ -141,6 +141,8 @@ class DensityGatePluginOp(PluginOpMixin, DensityGateOp):
     handler_factory = Callable(DensityGateHandler)
     
     # add "estimate" metadata
+    xchannel = Str(estimate = True)
+    ychannel = Str(estimate = True)
     keep = util.PositiveFloat(0.9, allow_zero = False, estimate = True)
     by = List(Str, estimate = True)
     xscale = util.ScaleEnum(estimate = True)
@@ -189,8 +191,7 @@ class DensityGatePluginOp(PluginOpMixin, DensityGateOp):
         op_{idx}.estimate(ex_{prev_idx}{subset})
         ex_{idx} = op_{idx}.apply(ex_{prev_idx})
         """
-        .format(beads = self.beads_name,
-                repr = repr(op),
+        .format(repr = repr(op),
                 idx = idx,
                 prev_idx = idx - 1,
                 subset = ", subset = " + repr(self.subset) if self.subset else ""))
@@ -294,9 +295,9 @@ def _dump(op):
     return dict(name = op.name,
                 xchannel = op.xchannel,
                 ychannel = op.ychannel,
-                xscale = op.x_channel_scale,
-                yscale = op.y_channel_scale,
-                keep = op.num_components,
+                xscale = op.xscale,
+                yscale = op.yscale,
+                keep = op.keep,
                 by = op.by,
                 subset_list = op.subset_list)
     
