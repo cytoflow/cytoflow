@@ -34,7 +34,7 @@ import pandas as pd
 
 from traits.api import (HasStrictTraits, List, CFloat, Str, Dict, Interface, 
                         Property, Bool, provides, on_trait_change, Any, Trait,
-                        TraitPrefixList)
+                        TraitPrefixList, Undefined)
 from traitsui.api import View, CheckListEditor, Item, HGroup
 
 from cytoflowgui.value_bounds_editor import ValuesBoundsEditor
@@ -153,8 +153,8 @@ def _load_category_subset(data, version):
 class RangeSubset(HasStrictTraits):
     name = Str
     values = List
-    high = CFloat
-    low = CFloat
+    high = CFloat(Undefined)
+    low = CFloat(Undefined)
     
     str = Property(Str, depends_on = "name, values, high, low")
     
@@ -177,21 +177,15 @@ class RangeSubset(HasStrictTraits):
                    .format(util.sanitize_identifier(self.name), self.low)
         else:
             return "({0} >= {1} and {0} <= {2})" \
-                   .format(util.sanitize_identifier(self.name), self.low, self.high)
-    
-    # MAGIC: the default value for self.high
-    def _high_default(self):
-        if self.values:
-            return max(self.values)
-        else:
-            return 0
-    
-    # MAGIC: the default value for self.low
-    def _low_default(self):
-        if self.values:
-            return min(self.values)
-        else:
-            return 0    
+                   .format(util.sanitize_identifier(self.name), self.low, self.high) 
+        
+    @on_trait_change('values, values[]')
+    def _values_changed(self):
+        if self.high is Undefined:
+            self.high = max(self.values)
+            
+        if self.low is Undefined:
+            self.low = min(self.values)
         
         
     def __eq__(self, other):
