@@ -232,6 +232,10 @@ class Workflow(HasStrictTraits):
     eval_event = Instance(threading.Event, ())
     eval_result = Any
     
+    # evaluate an expression in the remote process.  useful for debugging.
+    eval_event = Instance(threading.Event, ())
+    eval_result = Any
+    
     def __init__(self, remote_connection, **kwargs):
         super(Workflow, self).__init__(**kwargs)  
         
