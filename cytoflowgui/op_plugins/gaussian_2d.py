@@ -50,11 +50,11 @@ estimating and applying a mixture model.
         
     The operation name; determines the name of the new metadata
         
-.. object:: Channel
+.. object:: X Channel, Y Channel
     
     The channels to apply the mixture model to.
 
-.. object:: Scale 
+.. object:: X Scale, Y Scale 
 
     Re-scale the data in **Channel** before fitting. 
 
