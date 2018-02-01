@@ -401,8 +401,8 @@ class DensityGateOp(HasStrictTraits):
             keep_y = self._keep_ybins[group]
             
             for (xbin, ybin) in zip(keep_x, keep_y):
-                group_keep[(cX == xbin) & (cY == ybin)] = True
-            
+                group_keep = group_keep | ((cX == xbin) & (cY == ybin))
+                            
             event_assignments.iloc[group_idx] = group_keep
                     
         new_experiment = experiment.clone()
