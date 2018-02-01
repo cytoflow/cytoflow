@@ -104,5 +104,5 @@ class TestAutofluorescence(TasbeTest):
         self.assertTrue((nb_data == remote_data).all().all())
 
 if __name__ == "__main__":
-    import sys;sys.argv = ['', 'TestAutofluorescence.testPlot']
+#     import sys;sys.argv = ['', 'TestAutofluorescence.testPlot']
     unittest.main()
