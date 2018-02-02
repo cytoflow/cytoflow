@@ -133,9 +133,9 @@ class GaussianMixture2DHandler(OpHandlerMixin, Controller):
                     Item('ychannel',
                          editor=EnumEditor(name='context.previous_wi.channels'),
                          label = "Y Channel"),
-                    Item('x_channel_scale',
+                    Item('xscale',
                          label = "X Scale"),
-                    Item('y_channel_scale',
+                    Item('yscale',
                          label = "Y Scale"),
                     VGroup(
                     Item('num_components', 
@@ -167,8 +167,6 @@ class GaussianMixture2DPluginOp(PluginOpMixin, GaussianMixtureOp):
     
     xchannel = Str
     ychannel = Str
-    x_channel_scale = util.ScaleEnum(estimate = True)
-    y_channel_scale = util.ScaleEnum(estimate = True)
     
     # add "estimate" metadata
     num_components = util.PositiveInt(1, estimate = True)
@@ -198,13 +196,13 @@ class GaussianMixture2DPluginOp(PluginOpMixin, GaussianMixtureOp):
         self.channels = [self.xchannel, self.ychannel]
         self.changed = (Changed.ESTIMATE, ('channels', self.channels))
         
-    @on_trait_change('x_channel_scale, y_channel_scale')
+    @on_trait_change('xscale, yscale')
     def _scale_changed(self):
         if self.xchannel:
-            self.scale[self.xchannel] = self.x_channel_scale
+            self.scale[self.xchannel] = self.xscale
             
         if self.ychannel:
-            self.scale[self.ychannel] = self.y_channel_scale
+            self.scale[self.ychannel] = self.yscale
             
         self.changed = (Changed.ESTIMATE, ('scale', self.scale))
 
@@ -269,9 +267,9 @@ class GaussianMixture2DPluginView(PluginViewMixin, GaussianMixture2DView):
     subset = DelegatesTo('op', transient = True)
     by = DelegatesTo('op', status = True)
     xchannel = DelegatesTo('op', 'xchannel', transient = True)
-    xscale = DelegatesTo('op', 'x_channel_scale', transient = True)
+    xscale = DelegatesTo('op', 'xscale', transient = True)
     ychannel = DelegatesTo('op', 'ychannel', transient = True)
-    yscale = DelegatesTo('op', 'y_channel_scale', transient = True)
+    yscale = DelegatesTo('op', 'yscale', transient = True)
     
     def plot_wi(self, wi):
         if wi.result:
@@ -333,8 +331,8 @@ def _dump(op):
     return dict(name = op.name,
                 xchannel = op.xchannel,
                 ychannel = op.ychannel,
-                x_channel_scale = op.x_channel_scale,
-                y_channel_scale = op.y_channel_scale,
+                xscale = op.xscale,
+                yscale = op.yscale,
                 num_components = op.num_components,
                 sigma = op.sigma,
                 by = op.by,

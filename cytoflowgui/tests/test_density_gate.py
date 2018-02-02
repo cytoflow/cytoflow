@@ -26,8 +26,8 @@ class TestDensityGate(ImportedDataTest):
         op.name = "Density"
         op.xchannel = "V2-A"
         op.ychannel = "Y2-A"
-        op.xscale = "log"
-        op.yscale = "log"
+        op.xscale = "logicle"
+        op.yscale = "logicle"
         op.keep = 0.7
         
         op.subset_list.append(CategorySubset(name = "Well", values = ["A", "B"]))
@@ -36,7 +36,6 @@ class TestDensityGate(ImportedDataTest):
         wi.default_view = op.default_view()
         wi.view_error = "Not yet plotted"
         wi.views.append(self.wi.default_view)
-#         wi.current_view = wi.default_view
         
         self.workflow.workflow.append(wi)
         self.workflow.selected = wi
@@ -44,7 +43,6 @@ class TestDensityGate(ImportedDataTest):
         # run estimate
         op.do_estimate = True
         self.assertTrue(wait_for(wi, 'status', lambda v: v == 'valid', 30))
-#         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
 
     def testEstimate(self):
         self.assertIsNotNone(self.workflow.remote_eval("self.workflow[-1].result"))
@@ -56,6 +54,42 @@ class TestDensityGate(ImportedDataTest):
          
         self.op.do_estimate = True
         self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
+        
+        self.op.ychannel = "V2-A"
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 5))
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
+         
+        self.op.do_estimate = True
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
+        
+
+    def testChangeScale(self):
+        self.op.xscale = "log"
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 5))
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
+         
+        self.op.do_estimate = True
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
+
+        self.op.yscale = "log"
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 5))
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
+         
+        self.op.do_estimate = True
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
+        
+    def testChangeBy(self):
+        self.op.by = ["Dox"]
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 5))
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
+         
+        self.op.do_estimate = True
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
+        
+    def testChangeParams(self):
+        self.op.keep = 0.5
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 5))
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
    
     def testChangeSubset(self):
         self.op.subset_list[0].selected = ["A"]

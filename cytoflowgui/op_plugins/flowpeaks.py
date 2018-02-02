@@ -17,16 +17,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 '''
-Density 
--------
+FlowPeaks
+---------
 
-Computes a gate based on a 2D density plot.  The user chooses what proportion
-of events to keep, and the module creates a gate that selects those events in
-the highest-density bins of a 2D density histogram.
-    
-A single gate may not be appropriate for an entire experiment.  If this is the 
-case, you can use **By** to specify metadata by which to aggregate the data 
-before computing and applying the gate.  
+This module uses the **flowPeaks** algorithm to assign events to clusters in
+an unsupervized manner.
     
 .. object:: Name
         
@@ -40,9 +35,19 @@ before computing and applying the gate.
 
     Re-scale the data in **Channel** before fitting. 
 
-.. object:: Keep
+.. object:: h, h0
 
-    The proportion of events to keep in the gate.  Defaults to 0.9.
+    Scalar values that control the smoothness of the estimated distribution.
+    Increasing **h** makes it "rougher," while increasing **h0** makes it
+    smoother.
+    
+.. object:: tol
+
+    How readily should clusters be merged?  Must be between 0 and 1.
+    
+.. object:: Merge Distance
+
+    How far apart can clusters be before they are merged?
     
 .. object:: By 
 
@@ -64,30 +69,29 @@ before computing and applying the gate.
     ex = import_op.apply()
     
 
-    density_op = flow.DensityGateOp(name = 'Density',
-                                    xchannel = 'FSC-A',
-                                    xscale = 'log',
-                                    ychannel = 'SSC-A',
-                                    yscale = 'log',
-                                    keep = 0.7)
-    density_op.estimate(ex)   
-    density_op.default_view().plot(ex2)
-    ex2 = density_op.apply(ex)
+    fp_op = flow.FlowPeaksOp(name = 'Flow',
+                             channels = ['V2-A', 'Y2-A'],
+                             scale = {'V2-A' : 'log',
+                                      'Y2-A' : 'log'},
+                             h0 = 3)
+    fp_op.estimate(ex)   
+    fp_op.default_view().plot(ex)
+    ex2 = fp_op.apply(ex)
 '''
 
-import numpy as np
+from sklearn import mixture
 
 from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor, \
                          CheckListEditor, ButtonEditor
 from envisage.api import Plugin, contributes_to
-from traits.api import (provides, Callable, List, Str, Instance,
+from traits.api import (provides, Callable, List, Str, Bool, Instance, Constant,
                         DelegatesTo, Property, on_trait_change)
 from pyface.api import ImageResource
 
 import cytoflow.utility as util
 
 from cytoflow.operations import IOperation
-from cytoflow.operations.density import DensityGateOp, DensityGateView
+from cytoflow.operations.flowpeaks import FlowPeaksOp, FlowPeaks2DView, FlowPeaks2DDensityView
 from cytoflow.views.i_selectionview import IView
 
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
@@ -98,9 +102,9 @@ from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin
 from cytoflowgui.workflow import Changed
 from cytoflowgui.serialization import camel_registry, traits_repr, traits_str, dedent
 
-DensityGateOp.__repr__ = traits_repr
+FlowPeaksOp.__repr__ = traits_repr
 
-class DensityGateHandler(OpHandlerMixin, Controller):
+class FlowPeaksHandler(OpHandlerMixin, Controller):
     def default_traits_view(self):
         return View(Item('name',
                          editor = TextEditor(auto_set = False)),
@@ -115,9 +119,15 @@ class DensityGateHandler(OpHandlerMixin, Controller):
                     Item('yscale',
                          label = "Y Scale"),
                     VGroup(
-                    Item('keep', 
+                    Item('h', 
+                         editor = TextEditor(auto_set = False)),
+                    Item('h0',
+                         editor = TextEditor(auto_set = False)),
+                    Item('tol',
+                         editor = TextEditor(auto_set = False)),
+                    Item('merge_dist',
                          editor = TextEditor(auto_set = False),
-                         label = "Proportion\nto keep"),
+                         label = "Merge\nDistance"),
                     Item('by',
                          editor = CheckListEditor(cols = 2,
                                                   name = 'handler.previous_conditions_names'),
@@ -137,16 +147,20 @@ class DensityGateHandler(OpHandlerMixin, Controller):
                     show_border = False),
                     shared_op_traits)
 
-class DensityGatePluginOp(PluginOpMixin, DensityGateOp):
-    handler_factory = Callable(DensityGateHandler)
-    
+class FlowPeaksPluginOp(PluginOpMixin, FlowPeaksOp):
+    handler_factory = Callable(FlowPeaksHandler)
+
     # add "estimate" metadata
     xchannel = Str(estimate = True)
     ychannel = Str(estimate = True)
-    keep = util.PositiveFloat(0.9, allow_zero = False, estimate = True)
-    by = List(Str, estimate = True)
     xscale = util.ScaleEnum(estimate = True)
     yscale = util.ScaleEnum(estimate = True)
+    h = util.PositiveFloat(1.5, allow_zero = False, estimate = True)
+    h0 = util.PositiveFloat(1, allow_zero = False, estimate = True)
+    tol = util.PositiveFloat(0.5, allow_zero = False, estimate = True)
+    merge_dist = util.PositiveFloat(5, allow_zero = False, estimate = True)
+    
+    by = List(Str, estimate = True)
         
     # bits to support the subset editor
     
@@ -160,29 +174,43 @@ class DensityGatePluginOp(PluginOpMixin, DensityGateOp):
     @on_trait_change('subset_list.str')
     def _subset_changed(self, obj, name, old, new):
         self.changed = (Changed.ESTIMATE, ('subset_list', self.subset_list))
+        
+
+    @on_trait_change('xchannel, ychannel')
+    def _channel_changed(self):
+        self.channels = [self.xchannel, self.ychannel]
+        self.changed = (Changed.ESTIMATE, ('channels', self.channels))
+        
+    @on_trait_change('xscale, yscale')
+    def _scale_changed(self):
+        if self.xchannel:
+            self.scale[self.xchannel] = self.xscale
+            
+        if self.ychannel:
+            self.scale[self.ychannel] = self.yscale
+            
+        self.changed = (Changed.ESTIMATE, ('scale', self.scale))
 
     def default_view(self, **kwargs):
-        return DensityGatePluginView(op = self, **kwargs)
+        return FlowPeaksPluginView(op = self, **kwargs)
     
     def estimate(self, experiment):
         super().estimate(experiment, subset = self.subset)
         self.changed = (Changed.ESTIMATE_RESULT, self)
     
     def clear_estimate(self):
-        self._xscale = self._yscale = None
-        self._xbins = np.empty(1)
-        self._ybins = np.empty(1)
-        self._keep_xbins = dict()
-        self._keep_ybins = dict()
-        self._histogram = {}
-
-        self.changed = (Changed.ESTIMATE_RESULT, self)
+        self._kmeans.clear()
+        self._normals.clear()
+        self._density.clear()
+        self._peaks.clear()
+        self._cluster_peak.clear()
+        self._cluster_group.clear()
+        self._scale.clear()
         
-    def should_clear_estimate(self, changed, payload):
-        return True
-            
+        self.changed = (Changed.ESTIMATE_RESULT, self)
+    
     def get_notebook_code(self, idx):
-        op = DensityGateOp()
+        op = FlowPeaksOp()
         op.copy_traits(self, op.copyable_trait_names())      
 
         return dedent("""
@@ -196,19 +224,16 @@ class DensityGatePluginOp(PluginOpMixin, DensityGateOp):
                 prev_idx = idx - 1,
                 subset = ", subset = " + repr(self.subset) if self.subset else ""))
 
-class DensityGateViewHandler(ViewHandlerMixin, Controller):
+class FlowPeaksViewHandler(ViewHandlerMixin, Controller):
     def default_traits_view(self):
         return View(VGroup(
                     VGroup(Item('xchannel',
                                 style = 'readonly'),
                            Item('ychannel',
                                 style = 'readonly'),
-                           Item('xscale',
-                                style = 'readonly'),
-                           Item('yscale',
-                                style = 'readonly'),
-                           Item('huescale'),
-                           label = "Density Gate Default Plot",
+                           Item('show_density',
+                                label = "Show density plot?"),
+                           label = "Flow Peaks Default Plot",
                            show_border = False)),
                     Item('context.view_warning',
                          resizable = True,
@@ -222,45 +247,67 @@ class DensityGateViewHandler(ViewHandlerMixin, Controller):
                                                   background_color = "#ff9191")))
 
 @provides(IView)
-class DensityGatePluginView(PluginViewMixin, DensityGateView):
-    handler_factory = Callable(DensityGateViewHandler)
+class FlowPeaksPluginView(PluginViewMixin):
+    handler_factory = Callable(FlowPeaksViewHandler)
     op = Instance(IOperation, fixed = True)
-#     subset = DelegatesTo('op', transient = True)
-#     by = DelegatesTo('op', status = True)
-#     xchannel = DelegatesTo('op', 'xchannel', transient = True)
-#     xscale = DelegatesTo('op', 'xscale', transient = True)
-#     ychannel = DelegatesTo('op', 'ychannel', transient = True)
-#     yscale = DelegatesTo('op', 'yscale', transient = True)
+    subset = DelegatesTo('op', transient = True)
+    by = DelegatesTo('op', status = True)
+    xchannel = DelegatesTo('op', 'xchannel', transient = True)
+    xscale = DelegatesTo('op', 'xscale', transient = True)
+    ychannel = DelegatesTo('op', 'ychannel', transient = True)
+    yscale = DelegatesTo('op', 'yscale', transient = True)
     
+    show_density = Bool(False)
+
     
-    def should_plot(self, changed, payload):
-        """
-        Should the owning WorkflowItem refresh the plot when certain things
-        change?  `changed` can be:
-         - Changed.VIEW -- the view's parameters changed
-         - Changed.RESULT -- this WorkflowItem's result changed
-         - Changed.PREV_RESULT -- the previous WorkflowItem's result changed
-         - Changed.ESTIMATE_RESULT -- the results of calling "estimate" changed
-        """
-        if changed == Changed.RESULT:
-            return False
-        
-        return True
+    id = "edu.mit.synbio.cytoflowgui.op_plugins.flowpeaks"
+    friendly_id = "FlowPeaks" 
     
-    def plot_wi(self, wi):
-        if self.plot_names:
-            self.plot(wi.previous_wi.result, plot_name = self.current_plot)
+    name = Constant("FlowPeaks")
+    
+    def plot(self, experiment, **kwargs):
+        if self.show_density:
+            FlowPeaks2DDensityView(op = self.op,
+                                   xchannel = self.xchannel,
+                                   ychannel = self.ychannel,
+                                   xscale = self.xscale,
+                                   yscale = self.yscale).plot(experiment, 
+                                                              **kwargs)
         else:
-            self.plot(wi.previous_wi.result)
+            FlowPeaks2DView(op = self.op,
+                            xchannel = self.xchannel,
+                            ychannel = self.ychannel,
+                            xscale = self.xscale,
+                            yscale = self.yscale).plot(experiment, 
+                                                       **kwargs)
+            
+        
+    def plot_wi(self, wi):
+        if wi.result:
+            if self.plot_names:
+                self.plot(wi.result, plot_name = self.current_plot)
+            else:
+                self.plot(wi.result)
+        else:
+            if self.plot_names:
+                self.plot(wi.previous_wi.result, plot_name = self.current_plot)
+            else:
+                self.plot(wi.previous_wi.result)
         
     def enum_plots_wi(self, wi):
-        try:
-            return self.enum_plots(wi.previous_wi.result)
-        except:
-            return []
+        if wi.result:
+            try:
+                return self.enum_plots(wi.result)
+            except:
+                return []
+        else:
+            try:
+                return self.enum_plots(wi.previous_wi.result)
+            except:
+                return []
             
     def get_notebook_code(self, idx):
-        view = DensityGateView()
+        view = FlowPeaks2DView()
         view.copy_traits(self, view.copyable_trait_names())
         view.subset = self.subset
         
@@ -272,43 +319,45 @@ class DensityGatePluginView(PluginViewMixin, DensityGateView):
     
 
 @provides(IOperationPlugin)
-class DensityGatePlugin(Plugin, PluginHelpMixin):
+class FlowPeaksPlugin(Plugin, PluginHelpMixin):
     
-    id = 'edu.mit.synbio.cytoflowgui.op_plugins.density'
-    operation_id = 'edu.mit.synbio.cytoflow.operations.density'
+    id = 'edu.mit.synbio.cytoflowgui.op_plugins.flowpeaks'
+    operation_id = 'edu.mit.synbio.cytoflow.operations.flowpeaks'
 
-    short_name = "2D Mixture Model"
+    short_name = "Flow Peaks"
     menu_group = "Gates"
     
     def get_operation(self):
-        return DensityGatePluginOp()
+        return FlowPeaksPluginOp()
     
     def get_icon(self):
-        return ImageResource('density')
+        return ImageResource('flowpeaks')
     
     @contributes_to(OP_PLUGIN_EXT)
     def get_plugin(self):
         return self
     
-@camel_registry.dumper(DensityGatePluginOp, 'density-gate', version = 1)
+@camel_registry.dumper(FlowPeaksPluginOp, 'flowpeaks-op', version = 1)
 def _dump(op):
     return dict(name = op.name,
                 xchannel = op.xchannel,
                 ychannel = op.ychannel,
                 xscale = op.xscale,
                 yscale = op.yscale,
-                keep = op.keep,
-                by = op.by,
+                h = op.h,
+                h0 = op.h0,
+                tol = op.tol,
+                merge_dist = op.merge_dist,
                 subset_list = op.subset_list)
     
-@camel_registry.loader('density-gate', version = 1)
+@camel_registry.loader('flowpeaks-op', version = 1)
 def _load(data, version):
-    return DensityGatePluginOp(**data)
+    return FlowPeaksPluginOp(**data)
 
-@camel_registry.dumper(DensityGatePluginView, 'density-gate-view', version = 1)
+@camel_registry.dumper(FlowPeaksPluginView, 'flowpeaks-view', version = 1)
 def _dump_view(view):
     return dict(op = view.op)
 
-@camel_registry.loader('density-gate-view', version = 1)
+@camel_registry.loader('flowpeaks-view', version = 1)
 def _load_view(data, ver):
-    return DensityGatePluginView(**data)
+    return FlowPeaksPluginView(**data)
