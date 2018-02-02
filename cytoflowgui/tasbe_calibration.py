@@ -540,13 +540,9 @@ class TasbeCalibrationOp(PluginOpMixin):
         self._bead_calibration_op.bead_brightness_cutoff = self.bead_brightness_cutoff        
         
         self._bead_calibration_op.units.clear()
-        
-        # this is the old way
-#         for channel in self.channels:
-#             self._bead_calibration_op.units[channel] = self.beads_unit
 
-        # this way matches TASBE better
-        self._bead_calibration_op.units[self.to_channel] = self.beads_unit
+        for unit in self.units_list:
+            self._bead_calibration_op.units[unit.channel] = unit.unit
             
         self._bead_calibration_op.estimate(experiment)
         self.changed = (Changed.ESTIMATE_RESULT, "Bead Calibration")
