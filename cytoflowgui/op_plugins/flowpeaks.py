@@ -17,34 +17,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 '''
-Gaussian Mixture Model (2D)
----------------------------
+FlowPeaks
+---------
 
-Fit a Gaussian mixture model with a specified number of components to two 
-channels.
-
-If **Num Components** is greater than 1, then this module creates a new 
-categorical metadata variable named **Name**, with possible values 
-``{name}_1`` .... ``name_n`` where ``n`` is the number of components.  
-An event is assigned to  ``name_i`` category if it has the highest posterior 
-probability of having been produced by component ``i``.  If an event has a 
-value that is outside the range of one of the channels' scales, then it is 
-assigned to ``{name}_None``.
-    
-Additionally, if **Sigma** is greater than 0, this module creates new boolean
-metadata variables named ``{name}_1`` ... ``{name}_n`` where ``n`` is the 
-number of components.  The column ``{name}_i`` is ``True`` if the event is less 
-than **Sigma** standard deviations from the mean of component ``i``.  If 
-**Num Components** is ``1``, **Sigma** must be greater than 0.
-    
-Finally, the same mixture model (mean and standard deviation) may not
-be appropriate for every subset of the data.  If this is the case, you
-can use **By** to specify metadata by which to aggregate the data before 
-estimating and applying a mixture model.  
-
-.. note:: 
-
-    **Num Components** and **Sigma** withh be the same for each subset. 
+This module uses the **flowPeaks** algorithm to assign events to clusters in
+an unsupervized manner.
     
 .. object:: Name
         
@@ -58,15 +35,19 @@ estimating and applying a mixture model.
 
     Re-scale the data in **Channel** before fitting. 
 
-.. object:: Num Components
-    
-    How many components to fit to the data?  Must be a positive integer.
+.. object:: h, h0
 
-.. object:: Sigma 
+    Scalar values that control the smoothness of the estimated distribution.
+    Increasing **h** makes it "rougher," while increasing **h0** makes it
+    smoother.
     
-    How many standard deviations on either side of the mean to include
-    in the boolean variable ``{name}_i``?  Must be ``>= 0.0``.  If 
-    **Num Components** is ``1``, must be ``> 0``.
+.. object:: tol
+
+    How readily should clusters be merged?  Must be between 0 and 1.
+    
+.. object:: Merge Distance
+
+    How far apart can clusters be before they are merged?
     
 .. object:: By 
 
@@ -88,14 +69,14 @@ estimating and applying a mixture model.
     ex = import_op.apply()
     
 
-    gm_op = flow.GaussianMixtureOp(name = 'Gauss',
-                                   channels = ['V2-A', 'Y2-A'],
-                                   scale = {'V2-A' : 'log',
-                                            'Y2-A' : 'log'},
-                                   num_components = 2)
-    gm_op.estimate(ex)   
-    ex2 = gm_op.apply(ex)
-    gm_op.default_view().plot(ex2)
+    fp_op = flow.FlowPeaksOp(name = 'Flow',
+                             channels = ['V2-A', 'Y2-A'],
+                             scale = {'V2-A' : 'log',
+                                      'Y2-A' : 'log'},
+                             h0 = 3)
+    fp_op.estimate(ex)   
+    fp_op.default_view().plot(ex)
+    ex2 = fp_op.apply(ex)
 '''
 
 from sklearn import mixture
@@ -103,14 +84,14 @@ from sklearn import mixture
 from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor, \
                          CheckListEditor, ButtonEditor
 from envisage.api import Plugin, contributes_to
-from traits.api import (provides, Callable, List, Str, Dict, Any, Instance,
+from traits.api import (provides, Callable, List, Str, Bool, Instance, Constant,
                         DelegatesTo, Property, on_trait_change)
 from pyface.api import ImageResource
 
 import cytoflow.utility as util
 
 from cytoflow.operations import IOperation
-from cytoflow.operations.gaussian import GaussianMixtureOp, GaussianMixture2DView
+from cytoflow.operations.flowpeaks import FlowPeaksOp, FlowPeaks2DView, FlowPeaks2DDensityView
 from cytoflow.views.i_selectionview import IView
 
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
@@ -121,9 +102,9 @@ from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin
 from cytoflowgui.workflow import Changed
 from cytoflowgui.serialization import camel_registry, traits_repr, traits_str, dedent
 
-GaussianMixtureOp.__repr__ = traits_repr
+FlowPeaksOp.__repr__ = traits_repr
 
-class GaussianMixture2DHandler(OpHandlerMixin, Controller):
+class FlowPeaksHandler(OpHandlerMixin, Controller):
     def default_traits_view(self):
         return View(Item('name',
                          editor = TextEditor(auto_set = False)),
@@ -138,11 +119,15 @@ class GaussianMixture2DHandler(OpHandlerMixin, Controller):
                     Item('yscale',
                          label = "Y Scale"),
                     VGroup(
-                    Item('num_components', 
-                         editor = TextEditor(auto_set = False),
-                         label = "Num\nComponents"),
-                    Item('sigma',
+                    Item('h', 
                          editor = TextEditor(auto_set = False)),
+                    Item('h0',
+                         editor = TextEditor(auto_set = False)),
+                    Item('tol',
+                         editor = TextEditor(auto_set = False)),
+                    Item('merge_dist',
+                         editor = TextEditor(auto_set = False),
+                         label = "Merge\nDistance"),
                     Item('by',
                          editor = CheckListEditor(cols = 2,
                                                   name = 'handler.previous_conditions_names'),
@@ -162,21 +147,21 @@ class GaussianMixture2DHandler(OpHandlerMixin, Controller):
                     show_border = False),
                     shared_op_traits)
 
-class GaussianMixture2DPluginOp(PluginOpMixin, GaussianMixtureOp):
-    handler_factory = Callable(GaussianMixture2DHandler)
-    
-    xchannel = Str
-    ychannel = Str
-    
+class FlowPeaksPluginOp(PluginOpMixin, FlowPeaksOp):
+    handler_factory = Callable(FlowPeaksHandler)
+
     # add "estimate" metadata
-    num_components = util.PositiveInt(1, estimate = True)
-    sigma = util.PositiveFloat(0.0, allow_zero = True, estimate = True)
-    by = List(Str, estimate = True)
+    xchannel = Str(estimate = True)
+    ychannel = Str(estimate = True)
     xscale = util.ScaleEnum(estimate = True)
     yscale = util.ScaleEnum(estimate = True)
+    h = util.PositiveFloat(1.5, allow_zero = False, estimate = True)
+    h0 = util.PositiveFloat(1, allow_zero = False, estimate = True)
+    tol = util.PositiveFloat(0.5, allow_zero = False, estimate = True)
+    merge_dist = util.PositiveFloat(5, allow_zero = False, estimate = True)
     
-    _gmms = Dict(Any, Instance(mixture.GaussianMixture), transient = True)
-    
+    by = List(Str, estimate = True)
+        
     # bits to support the subset editor
     
     subset_list = List(ISubset, estimate = True)    
@@ -207,25 +192,25 @@ class GaussianMixture2DPluginOp(PluginOpMixin, GaussianMixtureOp):
         self.changed = (Changed.ESTIMATE, ('scale', self.scale))
 
     def default_view(self, **kwargs):
-        return GaussianMixture2DPluginView(op = self, **kwargs)
+        return FlowPeaksPluginView(op = self, **kwargs)
     
     def estimate(self, experiment):
         super().estimate(experiment, subset = self.subset)
         self.changed = (Changed.ESTIMATE_RESULT, self)
     
     def clear_estimate(self):
-        self._gmms.clear()
-        self._scale = {}
+        self._kmeans.clear()
+        self._normals.clear()
+        self._density.clear()
+        self._peaks.clear()
+        self._cluster_peak.clear()
+        self._cluster_group.clear()
+        self._scale.clear()
+        
         self.changed = (Changed.ESTIMATE_RESULT, self)
-        
-    def should_clear_estimate(self, changed, payload):
-        if changed == Changed.ESTIMATE:
-            return True
-        
-        return False
     
     def get_notebook_code(self, idx):
-        op = GaussianMixtureOp()
+        op = FlowPeaksOp()
         op.copy_traits(self, op.copyable_trait_names())      
 
         return dedent("""
@@ -234,20 +219,21 @@ class GaussianMixture2DPluginOp(PluginOpMixin, GaussianMixtureOp):
         op_{idx}.estimate(ex_{prev_idx}{subset})
         ex_{idx} = op_{idx}.apply(ex_{prev_idx})
         """
-        .format(beads = self.beads_name,
-                repr = repr(op),
+        .format(repr = repr(op),
                 idx = idx,
                 prev_idx = idx - 1,
                 subset = ", subset = " + repr(self.subset) if self.subset else ""))
 
-class GaussianMixture2DViewHandler(ViewHandlerMixin, Controller):
+class FlowPeaksViewHandler(ViewHandlerMixin, Controller):
     def default_traits_view(self):
         return View(VGroup(
                     VGroup(Item('xchannel',
                                 style = 'readonly'),
                            Item('ychannel',
                                 style = 'readonly'),
-                           label = "2D Mixture Model Default Plot",
+                           Item('show_density',
+                                label = "Show density plot?"),
+                           label = "Flow Peaks Default Plot",
                            show_border = False)),
                     Item('context.view_warning',
                          resizable = True,
@@ -261,8 +247,8 @@ class GaussianMixture2DViewHandler(ViewHandlerMixin, Controller):
                                                   background_color = "#ff9191")))
 
 @provides(IView)
-class GaussianMixture2DPluginView(PluginViewMixin, GaussianMixture2DView):
-    handler_factory = Callable(GaussianMixture2DViewHandler)
+class FlowPeaksPluginView(PluginViewMixin):
+    handler_factory = Callable(FlowPeaksViewHandler)
     op = Instance(IOperation, fixed = True)
     subset = DelegatesTo('op', transient = True)
     by = DelegatesTo('op', status = True)
@@ -271,6 +257,31 @@ class GaussianMixture2DPluginView(PluginViewMixin, GaussianMixture2DView):
     ychannel = DelegatesTo('op', 'ychannel', transient = True)
     yscale = DelegatesTo('op', 'yscale', transient = True)
     
+    show_density = Bool(False)
+
+    
+    id = "edu.mit.synbio.cytoflowgui.op_plugins.flowpeaks"
+    friendly_id = "FlowPeaks" 
+    
+    name = Constant("FlowPeaks")
+    
+    def plot(self, experiment, **kwargs):
+        if self.show_density:
+            FlowPeaks2DDensityView(op = self.op,
+                                   xchannel = self.xchannel,
+                                   ychannel = self.ychannel,
+                                   xscale = self.xscale,
+                                   yscale = self.yscale).plot(experiment, 
+                                                              **kwargs)
+        else:
+            FlowPeaks2DView(op = self.op,
+                            xchannel = self.xchannel,
+                            ychannel = self.ychannel,
+                            xscale = self.xscale,
+                            yscale = self.yscale).plot(experiment, 
+                                                       **kwargs)
+            
+        
     def plot_wi(self, wi):
         if wi.result:
             if self.plot_names:
@@ -296,7 +307,7 @@ class GaussianMixture2DPluginView(PluginViewMixin, GaussianMixture2DView):
                 return []
             
     def get_notebook_code(self, idx):
-        view = GaussianMixture2DView()
+        view = FlowPeaks2DView()
         view.copy_traits(self, view.copyable_trait_names())
         view.subset = self.subset
         
@@ -308,44 +319,45 @@ class GaussianMixture2DPluginView(PluginViewMixin, GaussianMixture2DView):
     
 
 @provides(IOperationPlugin)
-class GaussianMixture2DPlugin(Plugin, PluginHelpMixin):
+class FlowPeaksPlugin(Plugin, PluginHelpMixin):
     
-    id = 'edu.mit.synbio.cytoflowgui.op_plugins.gaussian_2d'
-    operation_id = 'edu.mit.synbio.cytoflow.operations.gaussian_2d'
+    id = 'edu.mit.synbio.cytoflowgui.op_plugins.flowpeaks'
+    operation_id = 'edu.mit.synbio.cytoflow.operations.flowpeaks'
 
-    short_name = "2D Mixture Model"
+    short_name = "Flow Peaks"
     menu_group = "Gates"
     
     def get_operation(self):
-        return GaussianMixture2DPluginOp()
+        return FlowPeaksPluginOp()
     
     def get_icon(self):
-        return ImageResource('gauss_2d')
+        return ImageResource('flowpeaks')
     
     @contributes_to(OP_PLUGIN_EXT)
     def get_plugin(self):
         return self
     
-@camel_registry.dumper(GaussianMixture2DPluginOp, 'gaussian-2d', version = 1)
+@camel_registry.dumper(FlowPeaksPluginOp, 'flowpeaks-op', version = 1)
 def _dump(op):
     return dict(name = op.name,
                 xchannel = op.xchannel,
                 ychannel = op.ychannel,
                 xscale = op.xscale,
                 yscale = op.yscale,
-                num_components = op.num_components,
-                sigma = op.sigma,
-                by = op.by,
+                h = op.h,
+                h0 = op.h0,
+                tol = op.tol,
+                merge_dist = op.merge_dist,
                 subset_list = op.subset_list)
     
-@camel_registry.loader('gaussian-2d', version = 1)
+@camel_registry.loader('flowpeaks-op', version = 1)
 def _load(data, version):
-    return GaussianMixture2DPluginOp(**data)
+    return FlowPeaksPluginOp(**data)
 
-@camel_registry.dumper(GaussianMixture2DPluginView, 'gaussian-2d-view', version = 1)
+@camel_registry.dumper(FlowPeaksPluginView, 'flowpeaks-view', version = 1)
 def _dump_view(view):
     return dict(op = view.op)
 
-@camel_registry.loader('gaussian-2d-view', version = 1)
+@camel_registry.loader('flowpeaks-view', version = 1)
 def _load_view(data, ver):
-    return GaussianMixture2DPluginView(**data)
+    return FlowPeaksPluginView(**data)

@@ -96,6 +96,13 @@ class Msg(object):
     APPLY_CALLED = "APPLY_CALLED"
     PLOT_CALLED = "PLOT_CALLED"
     
+    # a statement to evaluate in the remote process, or the result of that
+    # evaluation.
+    EVAL = "EVAL"
+    
+    # statement execution
+    EXEC = "EXEC"
+    
     SHUTDOWN = "SHUTDOWN"
     
 class Changed(object):
@@ -221,6 +228,14 @@ class Workflow(HasStrictTraits):
     apply_calls = Int(0)
     plot_calls = Int(0)
     
+    # evaluate an expression in the remote process.  useful for debugging.
+    eval_event = Instance(threading.Event, ())
+    eval_result = Any
+    
+    # evaluate an expression in the remote process.  useful for debugging.
+    eval_event = Instance(threading.Event, ())
+    eval_result = Any
+    
     def __init__(self, remote_connection, **kwargs):
         super(Workflow, self).__init__(**kwargs)  
         
@@ -290,6 +305,10 @@ class Workflow(HasStrictTraits):
                     
                 elif msg == Msg.PLOT_CALLED:
                     self.plot_calls = payload
+                    
+                elif msg == Msg.EVAL:
+                    self.eval_result = payload
+                    self.eval_event.set()
                     
                 else:
                     raise RuntimeError("Bad message from remote")
@@ -461,7 +480,17 @@ class Workflow(HasStrictTraits):
         wi = next((x for x in self.workflow if x.operation == obj))
         idx = self.workflow.index(wi)
         self.message_q.put((Msg.ESTIMATE, idx))
+        
+    def remote_eval(self, expr):
+        self.eval_event.clear()
+        self.message_q.put((Msg.EVAL, expr))
+        
+        self.eval_event.wait()
+        return self.eval_result
 
+    def remote_exec(self, expr):
+        self.message_q.put((Msg.EXEC, expr))
+        
         
 class RemoteWorkflow(HasStrictTraits):
     workflow = List(RemoteWorkflowItem)
@@ -572,11 +601,14 @@ class RemoteWorkflow(HasStrictTraits):
                 elif msg == Msg.ADD_ITEMS:
                     (idx, new_item) = payload
                     wi = RemoteWorkflowItem()
+                    wi.lock.acquire()
                     wi.copy_traits(new_item)
                     wi.matplotlib_events = self.matplotlib_events
                     wi.plot_lock = self.plot_lock
                     
                     self.workflow.insert(idx, wi)
+                    self.exec_q.put((idx, (wi, wi.apply)))
+                    wi.lock.release()
     
                 elif msg == Msg.REMOVE_ITEMS:
                     idx = payload
@@ -624,7 +656,7 @@ class RemoteWorkflow(HasStrictTraits):
                             raise RuntimeError("Tried to set a remote transient trait")
                         
                         view.trait_set(**{name : new})
-    
+
                 elif msg == Msg.CHANGE_CURRENT_VIEW:
                     (idx, view) = payload
                     wi = self.workflow[idx]
@@ -646,7 +678,16 @@ class RemoteWorkflow(HasStrictTraits):
                     
                 elif msg == Msg.SHUTDOWN:
                     self.exec_q.put((0, (None, None)))
-                                            
+                    
+                elif msg == Msg.EVAL:
+                    expr = payload
+                    ret = eval(expr)
+                    self.message_q.put((Msg.EVAL, ret))
+                    
+                elif msg == Msg.EXEC:
+                    expr = payload
+                    exec(expr)
+                                                 
                 else:
                     raise RuntimeError("Bad command in the remote workflow")
             

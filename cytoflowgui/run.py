@@ -97,7 +97,7 @@ def run_gui():
                             BeadCalibrationPlugin, AutofluorescencePlugin,
                             ColorTranslationPlugin, TasbePlugin, 
                             ChannelStatisticPlugin, TransformStatisticPlugin, 
-                            RatioPlugin)
+                            RatioPlugin, DensityGatePlugin, FlowPeaksPlugin)
     
     from cytoflowgui.view_plugins import (HistogramPlugin, Histogram2DPlugin, ScatterplotPlugin,
                               BarChartPlugin, Stats1DPlugin, Kde1DPlugin, Kde2DPlugin,
@@ -159,6 +159,8 @@ def run_gui():
     plugins.extend(view_plugins)
     
     op_plugins = [RatioPlugin(),
+                  FlowPeaksPlugin(),
+                  DensityGatePlugin(),
                   TransformStatisticPlugin(),
                   ChannelStatisticPlugin(),
                   TasbePlugin(),

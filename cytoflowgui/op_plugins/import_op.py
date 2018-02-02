@@ -222,7 +222,8 @@ def _dump_op(op):
                 conditions = op.conditions,
                 channels = op.channels,
                 events = op.events,
-                name_metadata = op.name_metadata)
+                name_metadata = op.name_metadata,
+                ret_events = op.ret_events)
 
 @camel_registry.loader('import', version = 1)
 def _load_op(data, version):

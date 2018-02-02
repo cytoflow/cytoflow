@@ -5,8 +5,9 @@ Project Structure
 
 The source is organized into two main components.
 
-* The ``cytoflow`` package.  This package contains the actual tools for
-  operating on cytometry data.  Key modules and subpackages:
+* The ``cytoflow`` package.  This package contains the actual tools for 
+  operating on cytometry data.  
+  Key modules and subpackages:
 
   * The ``Experiment`` class is the primary container for cytometry data. See
     the module docstrings for its use.  Modify this class's API only with care,
@@ -22,7 +23,13 @@ The source is organized into two main components.
   * A ``utility`` subpackage.  Useful functions and classes, like
     ``geom_mean``.
 
-* The ``cytoflowgui`` package.  Implements the GUI.  (Duh.)
+* The ``cytoflowgui`` package.  Implements the GUI. 
+
+  * The ``op_plugins`` subpackage.  Contains ``envisage`` plugins to wrap
+    the operations.
+    
+  * The ``op_views`` subpackage.  Contains ``envisage`` plugins to wrap the
+    views.
 
 
 Design decisions & justifications
@@ -33,7 +40,7 @@ Design decisions & justifications
   uses.
 
 * Instead of keeping "tubes" or "wells" as first-class objects, represent all
-  the events from all the samples as a big long DataFrame, distinguishing
+  the events from all the samples as a big long ``DataFrame``, distinguishing
   events from different tubes via their varying experimental conditions.  Most
   of my flow analysis experience is with the R Bioconductor package's flowCore,
   which treats tubes as first-class objects akin to separate microarrays.

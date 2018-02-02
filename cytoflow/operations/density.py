@@ -39,8 +39,8 @@ from .base_op_views import By2DView, AnnotatingView
 class DensityGateOp(HasStrictTraits):
     """
     This module computes a gate based on a 2D density plot.  The user chooses
-    what proportion of cells to keep, and the module creates a gate that selects
-    that proportion of cells in the highest-density bins of the 2D density
+    what proportion of events to keep, and the module creates a gate that selects
+    that proportion of events in the highest-density bins of the 2D density
     histogram.
     
     Attributes
@@ -77,9 +77,9 @@ class DensityGateOp(HasStrictTraits):
     
     by : List(Str)
         A list of metadata attributes to aggregate the data before estimating
-        the model.  For example, if the experiment has two pieces of metadata,
-        ``Time`` and ``Dox``, setting ``by = ["Time", "Dox"]`` will fit the model 
-        separately to each subset of the data with a unique combination of
+        the gate.  For example, if the experiment has two pieces of metadata,
+        ``Time`` and ``Dox``, setting ``by = ["Time", "Dox"]`` will fit a 
+        separate gate to each subset of the data with a unique combination of
         ``Time`` and ``Dox``.
         
     Notes
@@ -401,8 +401,8 @@ class DensityGateOp(HasStrictTraits):
             keep_y = self._keep_ybins[group]
             
             for (xbin, ybin) in zip(keep_x, keep_y):
-                group_keep[(cX == xbin) & (cY == ybin)] = True
-            
+                group_keep = group_keep | ((cX == xbin) & (cY == ybin))
+                            
             event_assignments.iloc[group_idx] = group_keep
                     
         new_experiment = experiment.clone()
@@ -471,7 +471,7 @@ class DensityGateView(By2DView, AnnotatingView, DensityView):
         ybins = self.op._ybins[0:-1]
         last_level = h[keep_x[-1], keep_y[-1]]
 
-        axes.contour(xbins, ybins, h.T, [last_level])
+        axes.contour(xbins, ybins, h.T, [last_level], colors = 'w')
         
 util.expand_class_attributes(DensityGateView)
 util.expand_method_parameters(DensityGateView, DensityGateView.plot)

@@ -136,6 +136,8 @@ class DensityView(Base2DView):
 
         bad_color = kwargs.pop('bad_color', None)
         if bad_color is not None:
+            kwargs['cmap'].set_bad(color = bad_color)
+        else:
             kwargs['cmap'].set_bad(color = kwargs['cmap'](0.0))
             
         gridsize = kwargs.pop('gridsize', 50)
