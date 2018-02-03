@@ -201,14 +201,12 @@ class BinningOp(HasStrictTraits):
         bins = scale.inverse(scaled_bins)
         
         # reduce to 4 sig figs
-        print(type(bins))
         bins = ['%.4g' % x for x in bins]
         bins = [float(x) for x in bins]
         bins = np.array(bins)
         
         # put the data in bins
         bin_idx = np.digitize(experiment.data[self.channel], bins[1:-1])
-#         print(bins[bin_idx])
 
         new_experiment = experiment.clone()
         new_experiment.add_condition(self.name, "float64", bins[bin_idx])

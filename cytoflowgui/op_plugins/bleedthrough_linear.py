@@ -218,8 +218,7 @@ class BleedthroughLinearPluginOp(PluginOpMixin, BleedthroughLinearOp):
         op_{idx}.estimate(ex_{prev_idx}{subset})
         ex_{idx} = op_{idx}.apply(ex_{prev_idx})
         """
-        .format(beads = self.beads_name,
-                repr = repr(op),
+        .format(repr = repr(op),
                 idx = idx,
                 prev_idx = idx - 1,
                 subset = ", subset = " + repr(self.subset) if self.subset else ""))

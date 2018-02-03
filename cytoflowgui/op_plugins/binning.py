@@ -39,11 +39,6 @@ which the event is located.
 
     The scale to apply to the channel before binning.
     
-.. object:: Num Bins
-
-    How many (equi-spaced) bins to create?  Must set either **Num Bins** or
-    **Bin Width**.  If both are set, **Num Bins** takes precedence.
-    
 .. object:: Bin Width
 
     How wide should each bin be?  Can only set if **Scale** is *linear* or
@@ -92,7 +87,8 @@ class BinningHandler(Controller, OpHandlerMixin):
                     Item('channel',
                          editor=EnumEditor(name='context.previous_wi.channels'),
                          label = "Channel"),
-                    Item('scale'),
+                    Item('scale',
+                         editor = EnumEditor(values = ['linear', 'log'])),
                     Item('bin_width',
                          editor = TextEditor(auto_set = False),
                          label = "Bin Width"),
@@ -192,7 +188,6 @@ def _dump(op):
     return dict(name = op.name,
                 channel = op.channel,
                 scale = op.scale,
-                num_bins = op.num_bins,
                 bin_width = op.bin_width)
     
 @camel_registry.loader('binning', version = 1)
