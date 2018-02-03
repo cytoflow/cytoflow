@@ -382,6 +382,7 @@ class TasbeCalibrationOp(PluginOpMixin):
     
     fsc_channel = DelegatesTo('_polygon_op', 'xchannel', estimate = True)
     ssc_channel = DelegatesTo('_polygon_op', 'ychannel', estimate = True)
+    vertices = DelegatesTo('_polygon_op', 'vertices', estimate = True)
     channels = List(Str, estimate = True)
     
     blank_file = File(filter = ["*.fcs"], estimate = True)
@@ -447,7 +448,7 @@ class TasbeCalibrationOp(PluginOpMixin):
                 to_remove.append(unit)
         
         for unit in to_remove:        
-            self.unit_list.remove(unit)
+            self.units_list.remove(unit)
                 
         if self.do_color_translation:
             to_remove = []
@@ -505,7 +506,7 @@ class TasbeCalibrationOp(PluginOpMixin):
         if not self.ssc_channel:
             raise util.CytoflowOpError('ssc_channel',
                                        "Must set SSC channel")
-
+        
         if not self._polygon_op.vertices:
             raise util.CytoflowOpError(None, "Please draw a polygon around the "
                                              "single-cell population in the "
