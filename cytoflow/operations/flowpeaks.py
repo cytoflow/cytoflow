@@ -22,6 +22,7 @@ cytoflow.operations.flowpeaks
 '''
 
 import matplotlib.pyplot as plt
+from warnings import warn
 
 from traits.api import (HasStrictTraits, Str, CStr, Dict, Any, Instance, 
                         Constant, List, provides, Array, Function)
@@ -340,7 +341,7 @@ class FlowPeaksOp(HasStrictTraits):
             means = []
             weights = []
             normals = []
-            beta_max = []
+#             beta_max = []
                         
             for k in range(num_clusters):
                 xk = x[x_labels == k]
@@ -358,11 +359,11 @@ class FlowPeaksOp(HasStrictTraits):
                 normals.append(lambda x, n = n: n.pdf(x))
                 
                 # get appropriate step size for peak finding
-                min_b = np.inf
-                for b in np.diagonal(s_smooth):
-                    if np.sqrt(b) < min_b:
-                        min_b = np.sqrt(b)
-                beta_max.append(b)
+#                 min_b = np.inf
+#                 for b in np.diagonal(s_smooth):
+#                     if np.sqrt(b) < min_b:
+#                         min_b = np.sqrt(b)
+#                 beta_max.append(b)
                        
             self._normals[data_group] = normals         
             self._density[data_group] = density = lambda x, weights = weights, normals = normals: np.sum([w * n(x) for w, n in zip(weights, normals)], axis = 0)
@@ -383,25 +384,38 @@ class FlowPeaksOp(HasStrictTraits):
                     if mu[ci] > max_mu[ci]:
                         max_mu[ci] = mu[ci]
              
-            constraints = []
-            for ci, c in enumerate(self.channels):                  
-                constraints.append({'type' : 'ineq',
-                                    'fun' : lambda x, min_mu = min_mu[ci]: x - min_mu})
-                constraints.append({'type' : 'ineq',
-                                    'fun' : lambda x, max_mu = max_mu[ci]: max_mu - x})
+#             constraints = []
+#             for ci, c in enumerate(self.channels):                  
+#                 constraints.append({'type' : 'ineq',
+#                                     'fun' : lambda x, min_mu = min_mu[ci]: x - min_mu})
+#                 constraints.append({'type' : 'ineq',
+#                                     'fun' : lambda x, max_mu = max_mu[ci]: max_mu - x})
                         
             for k in range(num_clusters):
                 mu = means[k]
                 f = lambda x: -1.0 * density(x)
+                
+#                 import sys;sys.path.append(r'/home/brian/.p2/pool/plugins/org.python.pydev_6.2.0.201711281614/pysrc')
+#                 import pydevd;pydevd.settrace()
                  
-                res = scipy.optimize.minimize(f, mu, method = 'COBYLA',
-                                              constraints = constraints,
-                                              options = {'rhobeg' : beta_max[k],
-                                                         'maxiter' : 5000})
+                res = scipy.optimize.minimize(f, mu, method = "CG",
+                                              options = {'gtol' : 1e-3})
+                 
+#                 res = scipy.optimize.minimize(f, mu, method = 'COBYLA',
+#                                               constraints = constraints,
+#                                               options = {'rhobeg' : beta_max[k],
+#                                                          'maxiter' : 5000,
+#                                                          'disp' : True})
+#                 print(mu, beta_max[k], res.x)
+#                 if not res.success:
+#                     raise util.CytoflowOpError(None,
+#                                                "Peak finding failed for cluster {}: {}"
+#                                                .format(k, res.message))
+
                 if not res.success:
-                    raise util.CytoflowOpError(None,
-                                               "Peak finding failed for cluster {}: {}"
-                                               .format(k, res.message))
+                    warn("Peak finding failed for cluster {}: {}"
+                         .format(k, res.message),
+                         util.CytoflowWarning)
 
 #                 ### The peak-searching algorithm from the paper.  works fine,
 #                 ### but slow!  we get similar results with the COBYLA
@@ -444,7 +458,8 @@ class FlowPeaksOp(HasStrictTraits):
                                         
                 merged = False
                 for pi, p in enumerate(peaks):
-                    if np.linalg.norm(p - res.x) < (1e-2):
+                    # TODO - this probably only works for scaled measurements
+                    if np.linalg.norm(p - res.x) < (1e-2):  
                         peak_clusters[pi].append(k)
                         merged = True
                         break
