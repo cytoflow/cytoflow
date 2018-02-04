@@ -235,7 +235,8 @@ class KMeansOp(HasStrictTraits):
             x = x.values
             
             self._kmeans[group] = kmeans = \
-                sklearn.cluster.MiniBatchKMeans(n_clusters = self.num_clusters)
+                sklearn.cluster.MiniBatchKMeans(n_clusters = self.num_clusters,
+                                                random_state = 0)
             
             kmeans.fit(x)
                                                  

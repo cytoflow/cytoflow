@@ -321,7 +321,8 @@ class FlowPeaksOp(HasStrictTraits):
             num_clusters = int(num_clusters)
             
             self._kmeans[data_group] = kmeans = \
-                sklearn.cluster.MiniBatchKMeans(n_clusters = num_clusters)
+                sklearn.cluster.MiniBatchKMeans(n_clusters = num_clusters,
+                                                random_state = 0)
             
             kmeans.fit(x)
             x_labels = kmeans.predict(x)
