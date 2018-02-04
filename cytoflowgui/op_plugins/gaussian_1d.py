@@ -187,11 +187,15 @@ class GaussianMixture1DPluginOp(PluginOpMixin, GaussianMixtureOp):
     def _channel_changed(self):
         self.channels = [self.channel]
         self.changed = (Changed.ESTIMATE, ('channels', self.channels))
+
+        if self.channel_scale:
+            self.scale = {self.channel : self.channel_scale}
+            self.changed = (Changed.ESTIMATE, ('scale', self.scale))
         
     @on_trait_change('channel_scale')
     def _scale_changed(self):
         if self.channel:
-            self.scale[self.channel] = self.channel_scale
+            self.scale = {self.channel : self.channel_scale}
         self.changed = (Changed.ESTIMATE, ('scale', self.scale))
     
     def estimate(self, experiment):
@@ -223,12 +227,10 @@ class GaussianMixture1DPluginOp(PluginOpMixin, GaussianMixtureOp):
         op_{idx}.estimate(ex_{prev_idx}{subset})
         ex_{idx} = op_{idx}.apply(ex_{prev_idx})
         """
-        .format(beads = self.beads_name,
-                repr = repr(op),
+        .format(repr = repr(op),
                 idx = idx,
                 prev_idx = idx - 1,
                 subset = ", subset = " + repr(self.subset) if self.subset else ""))
-        
     
         
 class GaussianMixture1DViewHandler(ViewHandlerMixin, Controller):

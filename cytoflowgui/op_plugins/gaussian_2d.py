@@ -193,11 +193,31 @@ class GaussianMixture2DPluginOp(PluginOpMixin, GaussianMixtureOp):
 
     @on_trait_change('xchannel, ychannel')
     def _channel_changed(self):
-        self.channels = [self.xchannel, self.ychannel]
+        self.channels = []
+        self.scale = {}
+        if self.xchannel:
+            self.channels.append(self.xchannel)
+            
+            if self.xchannel in self.scale:
+                del self.scale[self.xchannel]
+                
+            self.scale[self.xchannel] = self.xscale
+            
+        if self.ychannel:
+            self.channels.append(self.ychannel)
+            
+            if self.ychannel in self.scale:
+                del self.scale[self.ychannel]
+            
+            self.scale[self.ychannel] = self.yscale
+            
         self.changed = (Changed.ESTIMATE, ('channels', self.channels))
-        
+        self.changed = (Changed.ESTIMATE, ('scale', self.scale))
+                
     @on_trait_change('xscale, yscale')
     def _scale_changed(self):
+        self.scale = {}
+
         if self.xchannel:
             self.scale[self.xchannel] = self.xscale
             
@@ -210,6 +230,14 @@ class GaussianMixture2DPluginOp(PluginOpMixin, GaussianMixtureOp):
         return GaussianMixture2DPluginView(op = self, **kwargs)
     
     def estimate(self, experiment):
+        if not self.xchannel:
+            raise util.CytoflowOpError('xchannel',
+                                       "Must set X channel")
+
+        if not self.ychannel:
+            raise util.CytoflowOpError('ychannel',
+                                       "Must set Y channel")          
+            
         super().estimate(experiment, subset = self.subset)
         self.changed = (Changed.ESTIMATE_RESULT, self)
     
@@ -234,8 +262,7 @@ class GaussianMixture2DPluginOp(PluginOpMixin, GaussianMixtureOp):
         op_{idx}.estimate(ex_{prev_idx}{subset})
         ex_{idx} = op_{idx}.apply(ex_{prev_idx})
         """
-        .format(beads = self.beads_name,
-                repr = repr(op),
+        .format(repr = repr(op),
                 idx = idx,
                 prev_idx = idx - 1,
                 subset = ", subset = " + repr(self.subset) if self.subset else ""))

@@ -79,8 +79,6 @@ an unsupervized manner.
     ex2 = fp_op.apply(ex)
 '''
 
-from sklearn import mixture
-
 from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor, \
                          CheckListEditor, ButtonEditor
 from envisage.api import Plugin, contributes_to

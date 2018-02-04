@@ -387,6 +387,12 @@ class GaussianMixtureOp(HasStrictTraits):
             raise util.CytoflowOpError(None, 
                                        "No components found.  Did you forget to "
                                        "call estimate()?")
+            
+        for c in self.channels:
+            if c not in self._scale:
+                raise util.CytoflowOpError(None,
+                                           "Model scale not set.  Did you forget "
+                                           "to call estimate()?")
  
         for c in self.channels:
             if c not in experiment.channels:
