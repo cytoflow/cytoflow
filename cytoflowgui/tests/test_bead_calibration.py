@@ -15,7 +15,6 @@ from cytoflowgui.op_plugins import BeadCalibrationPlugin
 from cytoflowgui.op_plugins.bead_calibration import _Unit
 from cytoflowgui.serialization import save_yaml, load_yaml
 import cytoflowgui.op_plugins.bead_calibration  # @UnusedImport
-from cytoflowgui.tests.deep_eq import deep_eq
 
 class TestBeadCalibration(TasbeTest):
     

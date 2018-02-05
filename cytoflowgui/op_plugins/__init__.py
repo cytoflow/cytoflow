@@ -37,6 +37,7 @@ from .xform_stat import TransformStatisticPlugin
 from .density import DensityGatePlugin
 from .flowpeaks import FlowPeaksPlugin
 from .kmeans import KMeansPlugin
+from .pca import PCAPlugin
 
 # tasbe
 from .bleedthrough_linear import BleedthroughLinearPlugin

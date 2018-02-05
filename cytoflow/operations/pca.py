@@ -55,7 +55,7 @@ class PCAOp(HasStrictTraits):
         The operation name; determines the name of the new columns.
         
     channels : List(Str)
-        The channels to apply the clustering algorithm to.
+        The channels to apply the decomposition to.
 
     scale : Dict(Str : {"linear", "logicle", "log"})
         Re-scale the data in the specified channels before fitting.  If a 
@@ -104,7 +104,8 @@ class PCAOp(HasStrictTraits):
         ...                           'V2-H' : 'log',
         ...                           'Y2-A' : 'log',
         ...                           'Y2-H' : 'log'},
-        ...                  num_components = 2)
+        ...                  num_components = 2,
+        ...                  by = ["Dox"])
         
     Estimate the decomposition
     
@@ -120,13 +121,34 @@ class PCAOp(HasStrictTraits):
         
         >>> ex2 = pca.apply(ex)
 
-    Plot a scatterplot of the PCA
+    Plot a scatterplot of the PCA.  Compare to a scatterplot of the underlying
+    channels.
     
     .. plot::
         :context: close-figs
         
-        >>> flow.ScatterplotView(xchannel = 'PCA_1', 
-        ...                      ychannel = 'PCA_2').plot(ex2)
+        >>> flow.ScatterplotView(xchannel = "V2-A",
+        ...                      xscale = "log",
+        ...                      ychannel = "Y2-A",
+        ...                      yscale = "log",
+        ...                      subset = "Dox == 0.0").plot(ex2)
+
+        >>> flow.ScatterplotView(xchannel = "PCA_1",
+        ...                      ychannel = "PCA_2",
+        ...                      subset = "Dox == 0.0").plot(ex2)
+       
+    .. plot::
+        :context: close-figs
+        
+        >>> flow.ScatterplotView(xchannel = "V2-A",
+        ...                      xscale = "log",
+        ...                      ychannel = "Y2-A",
+        ...                      yscale = "log",
+        ...                      subset = "Dox == 10.0").plot(ex2)
+
+        >>> flow.ScatterplotView(xchannel = "PCA_1",
+        ...                      ychannel = "PCA_2",
+        ...                      subset = "Dox == 10.0").plot(ex2)
     """
     
     id = Constant('edu.mit.synbio.cytoflow.operations.pca')
@@ -170,6 +192,11 @@ class PCAOp(HasStrictTraits):
                 raise util.CytoflowOpError('channels',
                                            "Channel {0} not found in the experiment"
                                       .format(c))
+                
+        if self.num_components > len(self.channels):
+            raise util.CytoflowOpError('num_components',
+                                       "Number of components must be less than "
+                                       "or equal to number of channels.")
                 
         for c in self.scale:
             if c not in self.channels:
@@ -230,7 +257,8 @@ class PCAOp(HasStrictTraits):
              
             self._pca[group] = pca = \
                 sklearn.decomposition.PCA(n_components = self.num_components,
-                                          whiten = self.whiten)
+                                          whiten = self.whiten,
+                                          random_state = 0)
             
             pca.fit(x)
                                                  
@@ -250,6 +278,10 @@ class PCAOp(HasStrictTraits):
         if experiment is None:
             raise util.CytoflowOpError('experiment',
                                        "No experiment specified")
+            
+        if not self._pca:
+            raise util.CytoflowOpError(None,
+                                       "No PCA found.  Did you forget to call estimate()?")
          
         # make sure name got set!
         if not self.name:

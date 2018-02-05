@@ -98,7 +98,7 @@ def run_gui():
                             ColorTranslationPlugin, TasbePlugin, 
                             ChannelStatisticPlugin, TransformStatisticPlugin, 
                             RatioPlugin, DensityGatePlugin, FlowPeaksPlugin,
-                            KMeansPlugin)
+                            KMeansPlugin, PCAPlugin)
     
     from cytoflowgui.view_plugins import (HistogramPlugin, Histogram2DPlugin, ScatterplotPlugin,
                               BarChartPlugin, Stats1DPlugin, Kde1DPlugin, Kde2DPlugin,
@@ -160,6 +160,7 @@ def run_gui():
     plugins.extend(view_plugins)
     
     op_plugins = [RatioPlugin(),
+                  PCAPlugin(),
                   KMeansPlugin(),
                   FlowPeaksPlugin(),
                   DensityGatePlugin(),
