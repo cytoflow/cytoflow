@@ -635,6 +635,13 @@ class FlowPeaksOp(HasStrictTraits):
                 raise util.CytoflowOpError('by',
                                            "Group {} had no data"
                                            .format(group))
+                
+            if group not in self._kmeans:
+                raise util.CytoflowOpError('by',
+                                           "Group {} not found in the estimated "
+                                           "model.  Do you need to re-run estimate()?"
+                                           .format(group))
+                
             x = data_subset.loc[:, self.channels[:]]
             
             for c in self.channels:

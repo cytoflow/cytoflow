@@ -72,11 +72,12 @@ an unsupervized manner.
     fp_op = flow.FlowPeaksOp(name = 'Flow',
                              channels = ['V2-A', 'Y2-A'],
                              scale = {'V2-A' : 'log',
-                                      'Y2-A' : 'log'},
-                             h0 = 3)
+                                      'Y2-A' : 'log'})
     fp_op.estimate(ex)   
-    fp_op.default_view().plot(ex)
     ex2 = fp_op.apply(ex)
+    fp_op.default_view(density = True).plot(ex2)
+    fp_op.default_view().plot(ex2)
+
 '''
 
 from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor, \
@@ -176,23 +177,48 @@ class FlowPeaksPluginOp(PluginOpMixin, FlowPeaksOp):
 
     @on_trait_change('xchannel, ychannel')
     def _channel_changed(self):
-        self.channels = [self.xchannel, self.ychannel]
-        self.changed = (Changed.ESTIMATE, ('channels', self.channels))
+        self.channels = []
+        self.scale = {}
+        if self.xchannel:
+            self.channels.append(self.xchannel)
+            
+            if self.xchannel in self.scale:
+                del self.scale[self.xchannel]
+                
+            self.scale[self.xchannel] = self.xscale
+            
+        if self.ychannel:
+            self.channels.append(self.ychannel)
+            
+            if self.ychannel in self.scale:
+                del self.scale[self.ychannel]
+            
+            self.scale[self.ychannel] = self.yscale
+
         
     @on_trait_change('xscale, yscale')
     def _scale_changed(self):
+        self.scale = {}
+
         if self.xchannel:
             self.scale[self.xchannel] = self.xscale
             
         if self.ychannel:
             self.scale[self.ychannel] = self.yscale
             
-        self.changed = (Changed.ESTIMATE, ('scale', self.scale))
 
     def default_view(self, **kwargs):
         return FlowPeaksPluginView(op = self, **kwargs)
     
     def estimate(self, experiment):
+        if not self.xchannel:
+            raise util.CytoflowOpError('xchannel',
+                                       "Must set X channel")
+            
+        if not self.ychannel:
+            raise util.CytoflowOpError('ychannel',
+                                       "Must set Y channel")
+            
         super().estimate(experiment, subset = self.subset)
         self.changed = (Changed.ESTIMATE_RESULT, self)
     
@@ -335,7 +361,7 @@ class FlowPeaksPlugin(Plugin, PluginHelpMixin):
     def get_plugin(self):
         return self
     
-@camel_registry.dumper(FlowPeaksPluginOp, 'flowpeaks-op', version = 1)
+@camel_registry.dumper(FlowPeaksPluginOp, 'flowpeaks', version = 1)
 def _dump(op):
     return dict(name = op.name,
                 xchannel = op.xchannel,
@@ -348,13 +374,14 @@ def _dump(op):
                 merge_dist = op.merge_dist,
                 subset_list = op.subset_list)
     
-@camel_registry.loader('flowpeaks-op', version = 1)
+@camel_registry.loader('flowpeaks', version = 1)
 def _load(data, version):
     return FlowPeaksPluginOp(**data)
 
 @camel_registry.dumper(FlowPeaksPluginView, 'flowpeaks-view', version = 1)
 def _dump_view(view):
-    return dict(op = view.op)
+    return dict(op = view.op,
+                show_density = view.show_density)
 
 @camel_registry.loader('flowpeaks-view', version = 1)
 def _load_view(data, ver):

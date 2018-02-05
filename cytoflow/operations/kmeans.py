@@ -272,6 +272,11 @@ class KMeansOp(HasStrictTraits):
             raise util.CytoflowOpError('name',
                                        "Experiment already has a column named {0}"
                                        .format(self.name))
+            
+        if not self._kmeans:
+            raise util.CytoflowOpError(None, 
+                                       "No components found.  Did you forget to "
+                                       "call estimate()?")
          
         if len(self.channels) == 0:
             raise util.CytoflowOpError('channels',
@@ -296,6 +301,7 @@ class KMeansOp(HasStrictTraits):
                                            "Aggregation metadata {} not found, "
                                            "must be one of {}"
                                            .format(b, experiment.conditions))
+        
                  
         if self.by:
             groupby = experiment.data.groupby(self.by)
@@ -318,6 +324,13 @@ class KMeansOp(HasStrictTraits):
                 raise util.CytoflowOpError('by',
                                            "Group {} had no data"
                                            .format(group))
+            
+            if group not in self._kmeans:
+                raise util.CytoflowOpError('by',
+                                           "Group {} not found in the estimated model. "
+                                           "Do you need to re-run estimate()?"
+                                           .format(group))    
+            
             x = data_subset.loc[:, self.channels[:]]
             for c in self.channels:
                 x[c] = self._scale[c](x[c])
@@ -435,12 +448,18 @@ class KMeans1DView(By1DView, AnnotatingView, HistogramView):
         """
                 
         view, trait_name = self._strip_trait(self.op.name)
+        
+        
+        if self.channel in self.op._scale:
+            scale = self.op._scale[self.channel]
+        else:
+            scale = util.scale_factory(self.scale, experiment, channel = self.channel)
     
         super(KMeans1DView, view).plot(experiment,
                                        annotation_facet = self.op.name,
                                        annotation_trait = trait_name,
                                        annotations = self.op._kmeans,
-                                       scale = self.op._scale[self.channel],
+                                       scale = scale,
                                        **kwargs)
  
     def _annotation_plot(self, axes, xlim, ylim, xscale, yscale, annotation, annotation_facet, annotation_value, annotation_color):
@@ -482,13 +501,23 @@ class KMeans2DView(By2DView, AnnotatingView, ScatterplotView):
         """
                 
         view, trait_name = self._strip_trait(self.op.name)
+        
+        if self.xchannel in self.op._scale:
+            xscale = self.op._scale[self.xchannel]
+        else:
+            xscale = util.scale_factory(self.xscale, experiment, channel = self.xchannel)
+
+        if self.ychannel in self.op._scale:
+            yscale = self.op._scale[self.ychannel]
+        else:
+            yscale = util.scale_factory(self.yscale, experiment, channel = self.ychannel)
     
         super(KMeans2DView, view).plot(experiment,
                                        annotation_facet = self.op.name,
                                        annotation_trait = trait_name,
                                        annotations = self.op._kmeans,
-                                       xscale = self.op._scale[self.xchannel],
-                                       yscale = self.op._scale[self.ychannel],
+                                       xscale = xscale,
+                                       yscale = yscale,
                                        **kwargs)
  
     def _annotation_plot(self, axes, xlim, ylim, xscale, yscale, annotation, annotation_facet, annotation_value, annotation_color):

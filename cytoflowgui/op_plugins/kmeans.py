@@ -17,34 +17,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 '''
-Gaussian Mixture Model (2D)
----------------------------
+KMeans
+------
 
-Fit a Gaussian mixture model with a specified number of components to two 
-channels.
-
-If **Num Components** is greater than 1, then this module creates a new 
-categorical metadata variable named **Name**, with possible values 
-``{name}_1`` .... ``name_n`` where ``n`` is the number of components.  
-An event is assigned to  ``name_i`` category if it has the highest posterior 
-probability of having been produced by component ``i``.  If an event has a 
-value that is outside the range of one of the channels' scales, then it is 
-assigned to ``{name}_None``.
-    
-Additionally, if **Sigma** is greater than 0, this module creates new boolean
-metadata variables named ``{name}_1`` ... ``{name}_n`` where ``n`` is the 
-number of components.  The column ``{name}_i`` is ``True`` if the event is less 
-than **Sigma** standard deviations from the mean of component ``i``.  If 
-**Num Components** is ``1``, **Sigma** must be greater than 0.
-    
-Finally, the same mixture model (mean and standard deviation) may not
-be appropriate for every subset of the data.  If this is the case, you
-can use **By** to specify metadata by which to aggregate the data before 
-estimating and applying a mixture model.  
-
-.. note:: 
-
-    **Num Components** and **Sigma** withh be the same for each subset. 
+This module uses the **KMeans** algorithm to assign events to clusters in
+an unsupervized manner.
     
 .. object:: Name
         
@@ -58,15 +35,9 @@ estimating and applying a mixture model.
 
     Re-scale the data in **Channel** before fitting. 
 
-.. object:: Num Components
-    
-    How many components to fit to the data?  Must be a positive integer.
+.. object:: Num Clusters
 
-.. object:: Sigma 
-    
-    How many standard deviations on either side of the mean to include
-    in the boolean variable ``{name}_i``?  Must be ``>= 0.0``.  If 
-    **Num Components** is ``1``, must be ``> 0``.
+    How many clusters to assign the data to.
     
 .. object:: By 
 
@@ -88,29 +59,28 @@ estimating and applying a mixture model.
     ex = import_op.apply()
     
 
-    gm_op = flow.GaussianMixtureOp(name = 'Gauss',
-                                   channels = ['V2-A', 'Y2-A'],
-                                   scale = {'V2-A' : 'log',
-                                            'Y2-A' : 'log'},
-                                   num_components = 2)
-    gm_op.estimate(ex)   
-    ex2 = gm_op.apply(ex)
-    gm_op.default_view().plot(ex2)
-'''
+    km_op = flow.KMeans(name = 'KM',
+                        channels = ['V2-A', 'Y2-A'],
+                        scale = {'V2-A' : 'log',
+                                 'Y2-A' : 'log'},
+                        num_clusters = 2)
+    km_op.estimate(ex)   
+    ex2 = fp_op.apply(ex)
+    km_op.default_view().plot(ex2)
 
-from sklearn import mixture
+'''
 
 from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor, \
                          CheckListEditor, ButtonEditor
 from envisage.api import Plugin, contributes_to
-from traits.api import (provides, Callable, List, Str, Dict, Any, Instance,
+from traits.api import (provides, Callable, List, Str, Bool, Instance, Constant,
                         DelegatesTo, Property, on_trait_change)
 from pyface.api import ImageResource
 
 import cytoflow.utility as util
 
 from cytoflow.operations import IOperation
-from cytoflow.operations.gaussian import GaussianMixtureOp, GaussianMixture2DView
+from cytoflow.operations.kmeans import KMeansOp, KMeans2DView
 from cytoflow.views.i_selectionview import IView
 
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
@@ -121,9 +91,9 @@ from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin
 from cytoflowgui.workflow import Changed
 from cytoflowgui.serialization import camel_registry, traits_repr, traits_str, dedent
 
-GaussianMixtureOp.__repr__ = traits_repr
+KMeansOp.__repr__ = traits_repr
 
-class GaussianMixture2DHandler(OpHandlerMixin, Controller):
+class FlowPeaksHandler(OpHandlerMixin, Controller):
     def default_traits_view(self):
         return View(Item('name',
                          editor = TextEditor(auto_set = False)),
@@ -138,10 +108,7 @@ class GaussianMixture2DHandler(OpHandlerMixin, Controller):
                     Item('yscale',
                          label = "Y Scale"),
                     VGroup(
-                    Item('num_components', 
-                         editor = TextEditor(auto_set = False),
-                         label = "Num\nComponents"),
-                    Item('sigma',
+                    Item('num_clusters', 
                          editor = TextEditor(auto_set = False)),
                     Item('by',
                          editor = CheckListEditor(cols = 2,
@@ -162,22 +129,18 @@ class GaussianMixture2DHandler(OpHandlerMixin, Controller):
                     show_border = False),
                     shared_op_traits)
 
-class GaussianMixture2DPluginOp(PluginOpMixin, GaussianMixtureOp):
-    handler_factory = Callable(GaussianMixture2DHandler)
-    
+class KMeansPluginOp(PluginOpMixin, KMeansOp):
+    handler_factory = Callable(FlowPeaksHandler)
+
+    # add "estimate" metadata
     xchannel = Str(estimate = True)
     ychannel = Str(estimate = True)
     xscale = util.ScaleEnum(estimate = True)
     yscale = util.ScaleEnum(estimate = True)
-        
-    # add "estimate" metadata
-    num_components = util.PositiveInt(1, estimate = True)
-    sigma = util.PositiveFloat(0.0, allow_zero = True, estimate = True)
+    num_clusters = util.PositiveInt(2, allow_zero = False, estimate = True)
+    
     by = List(Str, estimate = True)
-
-    
-    _gmms = Dict(Any, Instance(mixture.GaussianMixture), transient = True)
-    
+        
     # bits to support the subset editor
     
     subset_list = List(ISubset, estimate = True)    
@@ -193,7 +156,7 @@ class GaussianMixture2DPluginOp(PluginOpMixin, GaussianMixtureOp):
         
 
     @on_trait_change('xchannel, ychannel')
-    def _channel_changed(self):
+    def _channel_changed(self, obj, name, old, new):
         self.channels = []
         self.scale = {}
         if self.xchannel:
@@ -211,10 +174,9 @@ class GaussianMixture2DPluginOp(PluginOpMixin, GaussianMixtureOp):
                 del self.scale[self.ychannel]
             
             self.scale[self.ychannel] = self.yscale
-
-                
+        
     @on_trait_change('xscale, yscale')
-    def _scale_changed(self):
+    def _scale_changed(self, obj, name, old, new):
         self.scale = {}
 
         if self.xchannel:
@@ -223,34 +185,27 @@ class GaussianMixture2DPluginOp(PluginOpMixin, GaussianMixtureOp):
         if self.ychannel:
             self.scale[self.ychannel] = self.yscale
             
-
     def default_view(self, **kwargs):
-        return GaussianMixture2DPluginView(op = self, **kwargs)
+        return KMeansPluginView(op = self, **kwargs)
     
     def estimate(self, experiment):
         if not self.xchannel:
             raise util.CytoflowOpError('xchannel',
                                        "Must set X channel")
-
+            
         if not self.ychannel:
             raise util.CytoflowOpError('ychannel',
-                                       "Must set Y channel")          
+                                       "Must set Y channel")
             
         super().estimate(experiment, subset = self.subset)
         self.changed = (Changed.ESTIMATE_RESULT, self)
     
     def clear_estimate(self):
-        self._gmms.clear()
+        self._kmeans.clear()        
         self.changed = (Changed.ESTIMATE_RESULT, self)
-        
-    def should_clear_estimate(self, changed, payload):
-        if changed == Changed.ESTIMATE:
-            return True
-        
-        return False
     
     def get_notebook_code(self, idx):
-        op = GaussianMixtureOp()
+        op = KMeansOp()
         op.copy_traits(self, op.copyable_trait_names())      
 
         return dedent("""
@@ -264,14 +219,14 @@ class GaussianMixture2DPluginOp(PluginOpMixin, GaussianMixtureOp):
                 prev_idx = idx - 1,
                 subset = ", subset = " + repr(self.subset) if self.subset else ""))
 
-class GaussianMixture2DViewHandler(ViewHandlerMixin, Controller):
+class KMeansViewHandler(ViewHandlerMixin, Controller):
     def default_traits_view(self):
         return View(VGroup(
                     VGroup(Item('xchannel',
                                 style = 'readonly'),
                            Item('ychannel',
                                 style = 'readonly'),
-                           label = "2D Mixture Model Default Plot",
+                           label = "KMeans Default Plot",
                            show_border = False)),
                     Item('context.view_warning',
                          resizable = True,
@@ -285,8 +240,8 @@ class GaussianMixture2DViewHandler(ViewHandlerMixin, Controller):
                                                   background_color = "#ff9191")))
 
 @provides(IView)
-class GaussianMixture2DPluginView(PluginViewMixin, GaussianMixture2DView):
-    handler_factory = Callable(GaussianMixture2DViewHandler)
+class KMeansPluginView(PluginViewMixin):
+    handler_factory = Callable(KMeansViewHandler)
     op = Instance(IOperation, fixed = True)
     subset = DelegatesTo('op', transient = True)
     by = DelegatesTo('op', status = True)
@@ -295,6 +250,20 @@ class GaussianMixture2DPluginView(PluginViewMixin, GaussianMixture2DView):
     ychannel = DelegatesTo('op', 'ychannel', transient = True)
     yscale = DelegatesTo('op', 'yscale', transient = True)
     
+    id = "edu.mit.synbio.cytoflowgui.op_plugins.kmeans"
+    friendly_id = "KMeans" 
+    
+    name = Constant("KMeans")
+    
+    def plot(self, experiment, **kwargs):
+        KMeans2DView(op = self.op,
+                     xchannel = self.xchannel,
+                     ychannel = self.ychannel,
+                     xscale = self.xscale,
+                     yscale = self.yscale).plot(experiment, 
+                                                **kwargs)
+            
+        
     def plot_wi(self, wi):
         if wi.result:
             if self.plot_names:
@@ -320,7 +289,7 @@ class GaussianMixture2DPluginView(PluginViewMixin, GaussianMixture2DView):
                 return []
             
     def get_notebook_code(self, idx):
-        view = GaussianMixture2DView()
+        view = KMeans2DView()
         view.copy_traits(self, view.copyable_trait_names())
         view.subset = self.subset
         
@@ -332,44 +301,42 @@ class GaussianMixture2DPluginView(PluginViewMixin, GaussianMixture2DView):
     
 
 @provides(IOperationPlugin)
-class GaussianMixture2DPlugin(Plugin, PluginHelpMixin):
+class KMeansPlugin(Plugin, PluginHelpMixin):
     
-    id = 'edu.mit.synbio.cytoflowgui.op_plugins.gaussian_2d'
-    operation_id = 'edu.mit.synbio.cytoflow.operations.gaussian_2d'
+    id = 'edu.mit.synbio.cytoflowgui.op_plugins.kmeans'
+    operation_id = 'edu.mit.synbio.cytoflow.operations.kmeans'
 
-    short_name = "2D Mixture Model"
+    short_name = "KMeans"
     menu_group = "Gates"
     
     def get_operation(self):
-        return GaussianMixture2DPluginOp()
+        return KMeansPluginOp()
     
     def get_icon(self):
-        return ImageResource('gauss_2d')
+        return ImageResource('kmeans')
     
     @contributes_to(OP_PLUGIN_EXT)
     def get_plugin(self):
         return self
     
-@camel_registry.dumper(GaussianMixture2DPluginOp, 'gaussian-2d', version = 1)
+@camel_registry.dumper(KMeansPluginOp, 'kmeans', version = 1)
 def _dump(op):
     return dict(name = op.name,
                 xchannel = op.xchannel,
                 ychannel = op.ychannel,
                 xscale = op.xscale,
                 yscale = op.yscale,
-                num_components = op.num_components,
-                sigma = op.sigma,
-                by = op.by,
+                num_clusters = op.num_clusters,
                 subset_list = op.subset_list)
     
-@camel_registry.loader('gaussian-2d', version = 1)
+@camel_registry.loader('kmeans', version = 1)
 def _load(data, version):
-    return GaussianMixture2DPluginOp(**data)
+    return KMeansPluginOp(**data)
 
-@camel_registry.dumper(GaussianMixture2DPluginView, 'gaussian-2d-view', version = 1)
+@camel_registry.dumper(KMeansPluginView, 'kmeans-view', version = 1)
 def _dump_view(view):
     return dict(op = view.op)
 
-@camel_registry.loader('gaussian-2d-view', version = 1)
+@camel_registry.loader('kmeans-view', version = 1)
 def _load_view(data, ver):
-    return GaussianMixture2DPluginView(**data)
+    return KMeansPluginView(**data)

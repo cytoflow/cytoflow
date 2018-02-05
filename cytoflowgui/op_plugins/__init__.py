@@ -36,6 +36,7 @@ from .channel_stat import ChannelStatisticPlugin
 from .xform_stat import TransformStatisticPlugin
 from .density import DensityGatePlugin
 from .flowpeaks import FlowPeaksPlugin
+from .kmeans import KMeansPlugin
 
 # tasbe
 from .bleedthrough_linear import BleedthroughLinearPlugin
