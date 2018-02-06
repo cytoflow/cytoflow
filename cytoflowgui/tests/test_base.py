@@ -13,6 +13,9 @@ from cytoflowgui.serialization import load_yaml, save_yaml
 
 
 def wait_for(obj, name, f, timeout):
+    if f(obj.trait_get()[name]):
+        return True
+    
     evt = threading.Event()
     obj.on_trait_change(lambda: evt.set() if f(obj.trait_get()[name]) else None, name)
     return evt.wait(timeout)

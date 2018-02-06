@@ -305,7 +305,7 @@ class ColorTranslationOp(HasStrictTraits):
             if (key, val) not in self._coefficients:
                 raise util.CytoflowOpError(None,
                                            "Coefficients aren't set for translation "
-                                           "{1} --> {2}.  Did you call estimate()?"
+                                           "{} --> {}.  Did you call estimate()?"
                                            .format(key, val))
                        
         new_experiment = experiment.clone()

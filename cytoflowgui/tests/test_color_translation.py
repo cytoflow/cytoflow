@@ -11,11 +11,12 @@ matplotlib.use("Agg")
 
 from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.tests.test_base import TasbeTest, wait_for
-from cytoflowgui.op_plugins import AutofluorescencePlugin, ThresholdPlugin
+from cytoflowgui.op_plugins import ColorTranslationPlugin, ThresholdPlugin
+from cytoflowgui.op_plugins.color_translation import _Control
 from cytoflowgui.subset import BoolSubset
 from cytoflowgui.serialization import load_yaml, save_yaml
 
-class TestAutofluorescence(TasbeTest):
+class TestColorTranslation(TasbeTest):
     
     def setUp(self):
         TasbeTest.setUp(self)
@@ -31,12 +32,15 @@ class TestAutofluorescence(TasbeTest):
         self.workflow.workflow.append(wi)        
         self.assertTrue(wait_for(wi, 'status', lambda v: v == 'valid', 5))
  
-        plugin = AutofluorescencePlugin()
+        plugin = ColorTranslationPlugin()
         self.op = op = plugin.get_operation()
         
         self.cwd = os.path.dirname(os.path.abspath(__file__))
-        op.blank_file = self.cwd + "/../../cytoflow/tests/data/tasbe/blank.fcs"
-        op.channels = ["FITC-A", "Pacific Blue-A", "PE-Tx-Red-YG-A"]
+        self.rby_file = self.cwd + "/../../cytoflow/tests/data/tasbe/rby.fcs"
+        op.controls_list = [_Control(from_channel = "Pacific Blue-A",
+                                     to_channel = "FITC-A",
+                                     file = self.rby_file)]
+#         op.channels = ["FITC-A", "Pacific Blue-A", "PE-Tx-Red-YG-A"]
         op.subset_list.append(BoolSubset(name = "Morpho"))
         op.subset_list[0].selected_t = True
         
@@ -50,31 +54,50 @@ class TestAutofluorescence(TasbeTest):
           
         # run the estimate
         op.do_estimate = True
-        self.assertTrue(wait_for(wi, 'status', lambda v: v == 'valid', 5))
+        self.assertTrue(wait_for(wi, 'status', lambda v: v == 'valid', 30))
 
     def testEstimate(self):
-        self.assertIsNotNone(self.workflow.remote_eval("self.workflow[-1].result"))
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
   
-    def testChangeChannels(self):
-        self.op.channels = ["FITC-A"]
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 5))
+    def testAddChannel(self):
+        self.op.controls_list.append(_Control(from_channel = "PE-Tx-Red-YG-A",
+                                              to_channel = "FITC-A",
+                                              file = self.rby_file))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 5))
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
         
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
+  
+    def testChangeMixtureModel(self):
+        self.op.mixture_model = True
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 5))
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
+        
+        self.op.do_estimate = True
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
   
     def testChangeSubset(self):
         self.op.subset_list[0].selected_t = False
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 5))
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
         
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
          
     def testPlot(self):
         self.wi.current_view = self.wi.default_view
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", None))
-  
+
+    def testPlotMixtureModel(self):
+        self.op.mixture_model = True
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 5))
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
+        
+        self.op.do_estimate = True
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
+        self.wi.current_view = self.wi.default_view
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", None))  
 
     def testSerialize(self):
         fh, filename = tempfile.mkstemp()
@@ -104,5 +127,5 @@ class TestAutofluorescence(TasbeTest):
         self.assertTrue((nb_data == remote_data).all().all())
 
 if __name__ == "__main__":
-#     import sys;sys.argv = ['', 'TestAutofluorescence.testNotebook']
+#     import sys;sys.argv = ['', 'TestColorTranslation.testNotebook']
     unittest.main()

@@ -114,10 +114,10 @@ class TestBleedthroughLinear(TasbeTest):
             code = code + wi.operation.get_notebook_code(i)
         
         exec(code)
-        nb_data = locals()['ex_1'].data
+        nb_data = locals()['ex_2'].data
         remote_data = self.workflow.remote_eval("self.workflow[-1].result.data")
         self.assertTrue((nb_data == remote_data).all().all())
 
 if __name__ == "__main__":
-#     import sys;sys.argv = ['', 'TestBleedthroughLinear.testEstimate']
+#     import sys;sys.argv = ['', 'TestBleedthroughLinear.testNotebook']
     unittest.main()

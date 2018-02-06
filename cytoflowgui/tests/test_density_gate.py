@@ -12,7 +12,7 @@ matplotlib.use("Agg")
 from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.tests.test_base import ImportedDataTest, wait_for
 from cytoflowgui.op_plugins import DensityGatePlugin
-from cytoflowgui.subset import BoolSubset, CategorySubset
+from cytoflowgui.subset import CategorySubset
 from cytoflowgui.serialization import load_yaml, save_yaml
 
 class TestDensityGate(ImportedDataTest):
@@ -49,7 +49,7 @@ class TestDensityGate(ImportedDataTest):
    
     def testChangeChannels(self):
         self.op.xchannel = "B1-A"
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 5))
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
          
         self.op.do_estimate = True

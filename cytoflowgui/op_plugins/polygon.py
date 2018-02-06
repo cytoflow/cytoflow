@@ -81,7 +81,7 @@ polygon, double-click.
 
 from textwrap import dedent
 
-from traits.api import provides, Callable, Instance, DelegatesTo
+from traits.api import provides, Callable, Instance, DelegatesTo, on_trait_change
 from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
@@ -178,6 +178,10 @@ class PolygonSelectionView(PluginViewMixin, PolygonSelection):
 class PolygonPluginOp(PluginOpMixin, PolygonOp):
     handler_factory = Callable(PolygonHandler)
     
+    @on_trait_change('xchannel, ychannel, xscale, yscale', post_init = True)
+    def _reset_polygon(self):
+        self.vertices = []
+    
     def default_view(self, **kwargs):
         return PolygonSelectionView(op = self, **kwargs)
     
@@ -226,6 +230,7 @@ def _dump(op):
     
 @camel_registry.loader('polygon', version = 1)
 def _load(data, version):
+    data['vertices'] = [(v[0], v[1]) for v in data['vertices']]
     return PolygonPluginOp(**data)
 
 @camel_registry.dumper(PolygonSelectionView, 'polygon-view', version = 1)
