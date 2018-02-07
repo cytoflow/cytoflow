@@ -134,6 +134,11 @@ class RadvizView(BaseNDView):
   
         """
         
+        
+        if len(self.channels) < 3:
+            raise util.CytoflowViewError('channels',
+                                         "Must have at least 3 channels")
+        
         super().plot(experiment, **kwargs)
         
     def _grid_plot(self, experiment, grid, xlim, ylim, xscale, yscale, **kwargs):

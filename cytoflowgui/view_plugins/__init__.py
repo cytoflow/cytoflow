@@ -29,3 +29,4 @@ from .kde_2d import Kde2DPlugin
 from .violin import ViolinPlotPlugin
 from .table import TablePlugin
 from .parallel_coords import ParallelCoordinatesPlugin
+from .radviz import RadvizPlugin
