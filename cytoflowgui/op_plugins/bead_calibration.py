@@ -114,12 +114,7 @@ class _Unit(HasTraits):
     
     def __repr__(self):
         return traits_repr(self)
-    
-    def __eq__(self, other):
-        return self.channel == other.channel and self.unit == other.unit
-    
-    def __hash__(self):
-        return hash((self.channel, self.unit))
+
 
 class BeadCalibrationHandler(OpHandlerMixin, Controller):
     

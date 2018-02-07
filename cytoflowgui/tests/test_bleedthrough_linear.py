@@ -92,6 +92,18 @@ class TestBleedthroughLinear(TasbeTest):
   
 
     def testSerialize(self):
+
+    
+        def control_eq(self, other):
+            return self.channel == other.channel \
+                and self.file == other.file
+    
+        def control_hash(self):
+            return hash((self.channel, self.file))
+        
+        _Control.__eq__ = control_eq
+        _Control.__hash__ = control_hash
+        
         fh, filename = tempfile.mkstemp()
         try:
             os.close(fh)
@@ -119,5 +131,5 @@ class TestBleedthroughLinear(TasbeTest):
         self.assertTrue((nb_data == remote_data).all().all())
 
 if __name__ == "__main__":
-#     import sys;sys.argv = ['', 'TestBleedthroughLinear.testNotebook']
+#     import sys;sys.argv = ['', 'TestBleedthroughLinear.testSerialize']
     unittest.main()

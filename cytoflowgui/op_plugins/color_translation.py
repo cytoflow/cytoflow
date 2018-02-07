@@ -90,14 +90,7 @@ class _Control(HasTraits):
     
     def __repr__(self):
         return traits_repr(self)
-    
-    def __eq__(self, other):
-        return self.from_channel == other.from_channel \
-            and self.to_channel == other.to_channel \
-            and self.file == other.file
-    
-    def __hash__(self):
-        return hash((self.from_channel, self.to_channel, self.file))
+
 
 class ColorTranslationHandler(OpHandlerMixin, Controller):
     

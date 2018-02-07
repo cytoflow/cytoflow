@@ -99,6 +99,16 @@ class TestBeadCalibration(TasbeTest):
            
 
     def testSerialize(self):
+        
+        def unit_eq(self, other):
+            return self.channel == other.channel and self.unit == other.unit
+         
+        def unit_hash(self):
+            return hash((self.channel, self.unit))
+        
+        _Unit.__eq__ = unit_eq
+        _Unit.__hash__ = unit_hash
+        
         fh, filename = tempfile.mkstemp()
         try:
             os.close(fh)
@@ -127,5 +137,5 @@ class TestBeadCalibration(TasbeTest):
         
 
 if __name__ == "__main__":
-#     import sys;sys.argv = ['', 'TestBeadCalibration.testNotebook']
+#     import sys;sys.argv = ['', 'TestBeadCalibration.testSerialize']
     unittest.main()

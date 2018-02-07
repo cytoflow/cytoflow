@@ -101,6 +101,10 @@ class ParallelCoordinatesView(BaseNDView):
   
         """
         
+        if len(self.channels) < 3:
+            raise util.CytoflowViewError('channels',
+                                         "Must have at least 3 channels")
+        
         super().plot(experiment, **kwargs)
         
         # clean up the plot

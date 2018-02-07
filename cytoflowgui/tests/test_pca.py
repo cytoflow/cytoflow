@@ -108,6 +108,16 @@ class TestPCA(ImportedDataTest):
         self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
    
     def testSerializeOp(self):
+    
+        def channel_eq(self, other):
+            return self.channel == other.channel and self.scale == other.scale
+        
+        def channel_hash(self):
+            return hash((self.channel, self.scale))
+        
+        _Channel.__eq__ = channel_eq
+        _Channel.__hash__ = channel_hash
+         
         fh, filename = tempfile.mkstemp()
         try:
             os.close(fh)

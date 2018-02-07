@@ -17,18 +17,20 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 '''
-Density Plot
-------------
+Parallel Coordinates Plot
+-------------------------
 
-Plots a 2-dimensional density plot.
+Plots a parallel coordinates plot.  PC plots are good for multivariate data; 
+each vertical line represents one attribute, and one set of connected line 
+segments represents one data point.
 
-.. object:: X Channel, Y Channel
+.. object:: Channels
 
-    The channels to plot on the X and Y axes.
+    The channels to plot, and their scales.  Drag the blue dot to re-order.
     
-.. object:: X Scale, Y Scale
+.. object:: Add Channel, Remove Channel
 
-    How to scale the X and Y axes of the plot.
+    Add or remove a channel
     
 .. object:: Horizonal Facet
 
@@ -37,6 +39,10 @@ Plots a 2-dimensional density plot.
 .. object:: Vertical Facet
 
     Make multiple plots.  Each row has a unique value of this variable.
+    
+.. object:: Color Facet
+
+    Plot different values of a condition with different colors.
 
 .. object:: Color Scale
 
@@ -52,7 +58,7 @@ Plots a 2-dimensional density plot.
     Plot only a subset of the data in the experiment.
     
 .. plot::
-        
+            
     import cytoflow as flow
     import_op = flow.ImportOp()
     import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",
@@ -61,16 +67,19 @@ Plots a 2-dimensional density plot.
                                  conditions = {'Dox' : 1.0})]
     import_op.conditions = {'Dox' : 'float'}
     ex = import_op.apply()
-
-    flow.DensityView(xchannel = 'V2-A',
-                     xscale = 'log',
-                     ychannel = 'Y2-A',
-                     yscale = 'log').plot(ex)
-
+  
+    flow.ParallelCoordinatesView(channels = ['B1-A', 'V2-A', 'Y2-A', 'FSC-A'],
+                                 scale = {'Y2-A' : 'log',
+                                          'V2-A' : 'log',
+                                          'B1-A' : 'log',
+                                          'FSC-A' : 'log'},
+                                 huefacet = 'Dox').plot(ex)
 '''
 
-from traits.api import provides, Callable, Str
-from traitsui.api import View, Item, Controller, EnumEditor, VGroup
+from traits.api import (provides, Callable, Str, List, HasTraits, Event, Dict,
+                        on_trait_change)
+from traitsui.api import (View, Item, Controller, EnumEditor, HGroup, VGroup, 
+                          InstanceEditor, ButtonEditor)
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
@@ -78,7 +87,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from cytoflow import DensityView
+from cytoflow import ParallelCoordinatesView
 import cytoflow.utility as util
 
 from cytoflowgui.subset import SubsetListEditor
@@ -87,24 +96,43 @@ from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.view_plugins.i_view_plugin \
     import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, PluginHelpMixin
 from cytoflowgui.serialization import camel_registry, traits_repr, dedent
+from cytoflowgui.vertical_list_editor import VerticalListEditor
 from cytoflowgui.util import IterWrapper
+from cytoflowgui.workflow import Changed
 
-DensityView.__repr__ = traits_repr
+ParallelCoordinatesView.__repr__ = traits_repr
 
-class DensityHandler(ViewHandlerMixin, Controller):
+class _Channel(HasTraits):
+    channel = Str
+    scale = util.ScaleEnum
+    
+    # something here screws up traits' change notifications.
+    
+    def __repr__(self):
+        return traits_repr(self)
+
+
+class ParallelCoordinatesHandler(ViewHandlerMixin, Controller):
+    
+    add_channel = Event
+    remove_channel = Event
 
     def default_traits_view(self):
-        return View(VGroup(
-                    VGroup(Item('xchannel',
-                                editor=EnumEditor(name='context.channels'),
-                                label = "X Channel"),
-                           Item('xscale',
-                                label = "X Scale"),
-                           Item('ychannel',
-                                editor=EnumEditor(name='context.channels'),
-                                label = "Y Channel"),
-                           Item('yscale',
-                                label = "Y Scale"),
+        return View(
+                    VGroup(
+                        Item('channels_list',
+                                editor = VerticalListEditor(editor = InstanceEditor(view = self.channel_traits_view()),
+                                                            style = 'custom',
+                                                            mutable = False),
+                                style = 'custom'),
+                        Item('handler.add_channel',
+                             editor = ButtonEditor(value = True,
+                                                   label = "Add a channel")),
+                        Item('handler.remove_channel',
+                             editor = ButtonEditor(value = True,
+                                                   label = "Remove a channel")),
+                        show_labels = False),
+                    VGroup(
                            Item('xfacet',
                                 editor=ExtendableEnumEditor(name='handler.conditions_names',
                                                             extra_items = {"None" : ""}),
@@ -113,6 +141,10 @@ class DensityHandler(ViewHandlerMixin, Controller):
                                 editor=ExtendableEnumEditor(name='handler.conditions_names',
                                                             extra_items = {"None" : ""}),
                                 label = "Vertical\nFacet"),
+                           Item('huefacet',
+                                editor=ExtendableEnumEditor(name='handler.conditions_names',
+                                                            extra_items = {"None" : ""}),
+                                label = "Color\nFacet"),
                            Item('huescale',
                                 label = "Color\nScale"),
                            Item('plotfacet',
@@ -136,11 +168,30 @@ class DensityHandler(ViewHandlerMixin, Controller):
                          resizable = True,
                          visible_when = 'context.view_error',
                          editor = ColorTextEditor(foreground_color = "#000000",
-                                                  background_color = "#ff9191"))))
+                                                  background_color = "#ff9191")))
+        
 
-class DensityPluginView(PluginViewMixin, DensityView):
-    handler_factory = Callable(DensityHandler)
+    # MAGIC: called when add_control is set
+    def _add_channel_fired(self):
+        self.model.channels_list.append(_Channel())
+        
+    def _remove_channel_fired(self):
+        if self.model.channels_list:
+            self.model.channels_list.pop()   
+            
+    def channel_traits_view(self):
+        return View(HGroup(Item('channel',
+                                editor = EnumEditor(name = 'handler.context.channels')),
+                           Item('scale')),
+                    handler = self)
+
+class ParallelCoordinatesPluginView(PluginViewMixin, ParallelCoordinatesView):
+    handler_factory = Callable(ParallelCoordinatesHandler)
     plotfacet = Str
+    
+    channels_list = List(_Channel)
+    channels = List(Str, transient = True)
+    scale = Dict(Str, util.ScaleEnum, transient = True)
 
     def enum_plots_wi(self, wi):
         if not self.plotfacet:
@@ -151,7 +202,11 @@ class DensityPluginView(PluginViewMixin, DensityView):
                                     .format(self.huefacet))
         values = np.sort(pd.unique(wi.result[self.plotfacet]))
         return IterWrapper(iter(values), [self.plotfacet])
-
+    
+    @on_trait_change('channels_list[], channels_list:+', post_init = True)
+    def _channels_changed(self, obj, name, old, new):
+        self.changed = (Changed.VIEW, (self, 'channels_list', self.channels_list))
+        
     
     def plot(self, experiment, plot_name = None, **kwargs):
         
@@ -160,15 +215,25 @@ class DensityPluginView(PluginViewMixin, DensityView):
         
         if self.plotfacet and plot_name is not None:
             experiment = experiment.subset(self.plotfacet, plot_name)
+            
+        self.channels = []
+        self.scale = {}
+        for channel in self.channels_list:
+            self.channels.append(channel.channel)
+            self.scale[channel.channel] = channel.scale
 
-        DensityView.plot(self, experiment, **kwargs)
+        ParallelCoordinatesView.plot(self, experiment, **kwargs)
         
         if self.plotfacet and plot_name is not None:
             plt.title("{0} = {1}".format(self.plotfacet, plot_name))
             
     def get_notebook_code(self, idx):
-        view = DensityView()
+        view = ParallelCoordinatesView()
         view.copy_traits(self, view.copyable_trait_names())
+        
+        for channel in self.channels_list:
+            view.channels.append(channel.channel)
+            view.scale[channel.channel] = channel.scale
 
         return dedent("""
         {repr}.plot(ex_{idx}{plot})
@@ -178,35 +243,42 @@ class DensityPluginView(PluginViewMixin, DensityView):
                 plot = ", plot_name = " + repr(self.current_plot) if self.plot_names else ""))
 
 @provides(IViewPlugin)
-class DensityPlugin(Plugin, PluginHelpMixin):
+class ParallelCoordinatesPlugin(Plugin, PluginHelpMixin):
 
-    id = 'edu.mit.synbio.cytoflowgui.view.density'
-    view_id = 'edu.mit.synbio.cytoflow.view.density'
-    short_name = "Density Plot"
+    id = 'edu.mit.synbio.cytoflowgui.view.parallel_coords'
+    view_id = 'edu.mit.synbio.cytoflow.view.parallel_coords'
+    short_name = "Parallel Coordinates Plot"
 
     def get_view(self):
-        return DensityPluginView()
+        return ParallelCoordinatesPluginView()
     
     def get_icon(self):
-        return ImageResource('density')
+        return ImageResource('parallel_coords')
 
     @contributes_to(VIEW_PLUGIN_EXT)
     def get_plugin(self):
         return self
         
 ### Serialization
-@camel_registry.dumper(DensityPluginView, 'density-view', version = 1)
+@camel_registry.dumper(ParallelCoordinatesPluginView, 'parallel-coords', version = 1)
 def _dump(view):
-    return dict(xchannel = view.xchannel,
-                xscale = view.xscale,
-                ychannel = view.ychannel,
-                yscale = view.yscale,
+    return dict(channels_list = view.channels_list,
                 xfacet = view.xfacet,
                 yfacet = view.yfacet,
+                huefacet = view.huefacet,
                 huescale = view.huescale,
                 plotfacet = view.plotfacet,
                 subset_list = view.subset_list)
     
-@camel_registry.loader('density-view', version = 1)
+@camel_registry.loader('parallel-coords', version = 1)
 def _load(data, version):
-    return DensityPluginView(**data)
+    return ParallelCoordinatesPluginView(**data)
+
+@camel_registry.dumper(_Channel, 'parallel-coords-channel', version = 1)
+def _dump_channel(channel):
+    return dict(channel = channel.channel,
+                scale = channel.scale)
+    
+@camel_registry.loader('parallel-coords-channel', version = 1)
+def _load_channel(data, version):
+    return _Channel(**data)

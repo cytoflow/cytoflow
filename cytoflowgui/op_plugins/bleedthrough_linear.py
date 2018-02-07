@@ -104,13 +104,6 @@ class _Control(HasTraits):
     def __repr__(self):
         return traits_repr(self)
     
-    def __eq__(self, other):
-        return self.channel == other.channel \
-            and self.file == other.file
-    
-    def __hash__(self):
-        return hash((self.channel, self.file))
-    
 class BleedthroughLinearHandler(OpHandlerMixin, Controller):
     
     add_control = Event

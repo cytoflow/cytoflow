@@ -94,12 +94,7 @@ class _Channel(HasTraits):
     
     def __repr__(self):
         return traits_repr(self)
-    
-    def __eq__(self, other):
-        return self.channel == other.channel and self.scale == other.scale
-    
-    def __hash__(self):
-        return hash((self.channel, self.scale))
+
 
 class PCAHandler(OpHandlerMixin, Controller):
     
@@ -116,12 +111,15 @@ class PCAHandler(OpHandlerMixin, Controller):
                                 style = 'custom'),
                     Item('handler.add_channel',
                          editor = ButtonEditor(value = True,
-                                               label = "Add a channel")),
+                                               label = "Add a channel"),
+                         show_label = False),
                     Item('handler.remove_channel',
                          editor = ButtonEditor(value = True,
-                                               label = "Remove a channel"))),
+                                               label = "Remove a channel")),
+                    show_labels = False),
                     VGroup(Item('num_components',
-                                editor = TextEditor(auto_set = False)),
+                                editor = TextEditor(auto_set = False),
+                                label = "Num\nComponents"),
                            Item('whiten'),
                            Item('by',
                                 editor = CheckListEditor(cols = 2,
@@ -167,7 +165,7 @@ class PCAPluginOp(PluginOpMixin, PCAOp):
     num_components = util.PositiveInt(2, allow_zero = False, estimate = True)
     whiten = Bool(False, estimate = True)
 
-    @on_trait_change('channels_list_items, channels_list.channel, channels_list.scale', post_init = True)
+    @on_trait_change('channels_list_items, channels_list.+', post_init = True)
     def _channels_changed(self, obj, name, old, new):
         self.changed = (Changed.ESTIMATE, ('channels_list', self.channels_list))
     

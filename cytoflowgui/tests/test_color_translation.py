@@ -100,6 +100,19 @@ class TestColorTranslation(TasbeTest):
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", None))  
 
     def testSerialize(self):
+        
+    
+        def control_eq(self, other):
+            return self.from_channel == other.from_channel \
+                and self.to_channel == other.to_channel \
+                and self.file == other.file
+        
+        def control_hash(self):
+            return hash((self.from_channel, self.to_channel, self.file))
+        
+        _Control.__eq__ = control_eq
+        _Control.__hash__ = control_hash
+        
         fh, filename = tempfile.mkstemp()
         try:
             os.close(fh)
@@ -127,5 +140,5 @@ class TestColorTranslation(TasbeTest):
         self.assertTrue((nb_data == remote_data).all().all())
 
 if __name__ == "__main__":
-#     import sys;sys.argv = ['', 'TestColorTranslation.testNotebook']
+#     import sys;sys.argv = ['', 'TestColorTranslation.testSerialize']
     unittest.main()

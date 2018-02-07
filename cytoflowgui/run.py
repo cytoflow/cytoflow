@@ -102,7 +102,8 @@ def run_gui():
     
     from cytoflowgui.view_plugins import (HistogramPlugin, Histogram2DPlugin, ScatterplotPlugin,
                               BarChartPlugin, Stats1DPlugin, Kde1DPlugin, Kde2DPlugin,
-                              ViolinPlotPlugin, TablePlugin, Stats2DPlugin, DensityPlugin)
+                              ViolinPlotPlugin, TablePlugin, Stats2DPlugin, DensityPlugin,
+                              ParallelCoordinatesPlugin)
     
     from cytoflow.utility.custom_traits import Removed, Deprecated
     Removed.gui = True
@@ -146,6 +147,7 @@ def run_gui():
     
     # reverse of the order on the toolbar
     view_plugins = [TablePlugin(),
+                    ParallelCoordinatesPlugin(),
                     Stats2DPlugin(),
                     Stats1DPlugin(),
                     BarChartPlugin(),
