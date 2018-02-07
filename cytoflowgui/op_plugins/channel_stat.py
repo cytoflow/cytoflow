@@ -181,7 +181,12 @@ class ChannelStatisticPluginOp(PluginOpMixin, ChannelStatisticOp):
                    }
         
         op.function = summary_functions[self.statistic_name]
-        op.function.__name__ = fn_name[self.statistic_name]
+        
+        try:
+            # this doesn't work for builtins like "len"
+            op.function.__name__ = fn_name[self.statistic_name]
+        except:
+            pass
         
         return dedent("""
         {import_statement}

@@ -26,6 +26,7 @@ from traits.api import HasStrictTraits, Str, File, Dict, Instance, \
                        Constant, Tuple, Float, provides
     
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 import scipy.optimize
 
@@ -282,7 +283,12 @@ class BleedthroughLinearOp(HasStrictTraits):
         # invert it.  use the pseudoinverse in case a is singular
         a_inv = np.linalg.pinv(a)
         
-        new_experiment.data[channels] = np.dot(experiment.data[channels], a_inv)
+        # compute the corrected channels
+        new_channels = np.dot(experiment.data[channels], a_inv)
+        
+        # and assign to the new experiment
+        for i, c in enumerate(channels):
+            new_experiment[c] = pd.Series(new_channels[:, i])
         
         for channel in channels:
             # add the spillover values to the channel's metadata

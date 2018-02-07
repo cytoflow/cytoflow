@@ -64,6 +64,9 @@ class TestExperiment(unittest.TestCase):
         self.assertAlmostEqual(np.median(ex2["Pacific Blue-A"]), 0.0)
         self.assertAlmostEqual(np.median(ex2["PE-Tx-Red-YG-A"]), 0.0)
         
+        with self.assertRaises(ValueError):
+            self.assertFalse((self.ex.data == ex2.data).all().all())
+        
     def test_plot(self):
         self.op.default_view().plot(self.ex)
         

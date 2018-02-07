@@ -79,7 +79,10 @@ class TestBeads(unittest.TestCase):
         # this is just to make sure the code doesn't crash;
         # nothing about correctness.
         
-        self.op.apply(self.ex)
+        ex2 = self.op.apply(self.ex)
+        
+        with self.assertRaises(ValueError):
+            self.assertFalse((self.ex.data == ex2.data).all().all())
 
     def testPlot(self):
         # this is to make sure the code doesn't crash;

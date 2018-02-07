@@ -221,9 +221,9 @@ class TransformStatisticPluginOp(PluginOpMixin, TransformStatisticOp):
                      "Mean 95% CI" : "from numpy import mean\nmean_ci = lambda x: ci(x, mean, boots = 100)",
                      "Geom.Mean 95% CI" : "geom_mean_ci = lambda x: ci(x, geom_mean, boots = 100)",
                      "Sum" : "from numpy import sum",
-                     "Proportion" : "proportion = lambda a: pd.Series(a / a.sum())",
-                     "Percentage" : "percentage = lambda a: pd.Series(a / a.sum()) * 100.0",
-                     "Fold" : "fold = lambda a: pd.Series(a / a.min())"
+                     "Proportion" : "from pandas import Series; proportion = lambda a: Series(a / a.sum())",
+                     "Percentage" : "from pandas import Series; percentage = lambda a: Series(a / a.sum()) * 100.0",
+                     "Fold" : "from pandas import Series; fold = lambda a: Series(a / a.min())"
                   }
         
         fn_name = {"Mean" : "mean",

@@ -195,10 +195,32 @@ class _BleedthroughControl(HasTraits):
     channel = Str
     file = File
     
+    def __repr__(self):
+        return traits_repr(self)
+    
+    def __eq__(self, other):
+        return self.channel == other.channel \
+            and self.file == other.file
+    
+    def __hash__(self):
+        return hash((self.channel, self.file))
+    
+    
 class _TranslationControl(HasTraits):
     from_channel = Str
     to_channel = Str
     file = File
+    
+    def __repr__(self):
+        return traits_repr(self)
+    
+    def __eq__(self, other):
+        return self.from_channel == other.from_channel \
+            and self.to_channel == other.to_channel \
+            and self.file == other.file
+    
+    def __hash__(self):
+        return hash((self.from_channel, self.to_channel, self.file))
 
 class TasbeHandler(OpHandlerMixin, Controller):
                 

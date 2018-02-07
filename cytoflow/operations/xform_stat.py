@@ -184,6 +184,12 @@ class TransformStatisticOp(HasStrictTraits):
                     
         else:
             new_stat = self.function(stat)
+            
+            if not isinstance(new_stat, pd.Series):
+                raise util.CytoflowOpError('by',
+                                           "Transform function {} does not return a Series; "
+                                           "in this case, you must set 'by'"
+                                           .format(self.function))
                                                     
         matched_series = True
         for group in data[self.by].itertuples(index = False, name = None):

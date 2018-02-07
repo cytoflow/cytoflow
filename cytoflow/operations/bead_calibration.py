@@ -426,7 +426,7 @@ class BeadCalibrationOp(HasStrictTraits):
         for channel in channels:
             new_experiment.data = \
                 new_experiment.data[new_experiment.data[channel] > 0]
-                
+                                
         new_experiment.data.reset_index(drop = True, inplace = True)
         
         for channel in channels:

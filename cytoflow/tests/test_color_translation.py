@@ -48,7 +48,10 @@ class Test(unittest.TestCase):
         self.op.estimate(self.ex)
 
     def test_apply(self):
-        self.op.apply(self.ex)
+        ex2 = self.op.apply(self.ex)
+        
+        with self.assertRaises(ValueError):
+            self.assertFalse((self.ex.data == ex2.data).all().all())
     
     def test_plot(self):
         self.op.default_view().plot(self.ex)

@@ -54,7 +54,10 @@ class TestBleedthroughLinear(unittest.TestCase):
         self.assertAlmostEqual(self.op.spillover[('PE-Tx-Red-YG-A', 'FITC-A')], 0.0014315458081464413, places = 3)
 
     def testApply(self):
-        self.op.apply(self.ex)
+        ex2 = self.op.apply(self.ex)
+        
+        with self.assertRaises(ValueError):
+            self.assertFalse((self.ex.data == ex2.data).all().all())
     
     def testPlot(self):
         self.op.default_view().plot(self.ex)

@@ -199,6 +199,7 @@ class AutofluorescenceOp(HasStrictTraits):
             - **af_stdev** : Float
               The standard deviation of the non-fluorescent distribution
         """
+        
         if experiment is None:
             raise util.CytoflowOpError('experiment', "No experiment specified")
         
