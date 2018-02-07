@@ -16,6 +16,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# check python version
+import sys
+if sys.version_info < (3, 4):
+    raise Exception("Cytoflow requires Python 3.4 or later")
+
 # suppress meaningless warnings from seaborn
 import warnings
 warnings.filterwarnings('ignore', '.*IPython widgets are experimental.*')
