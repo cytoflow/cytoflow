@@ -342,20 +342,58 @@ class TasbePluginOp(PluginOpMixin):
     
     @on_trait_change('channels[]', post_init = True)
     def _channels_changed(self, obj, name, old, new):
-        self.bleedthrough_list = []
+        for channel in self.channels:
+            if channel not in [control.channel for control in self.bleedthrough_list]:
+                self.bleedthrough_list.append(_BleedthroughControl(channel = channel))
+
+        to_remove = []    
+        for control in self.bleedthrough_list:
+            if control.channel not in self.channels:
+                to_remove.append(control)
+                
+        for control in to_remove:
+            self.bleedthrough_list.remove(control)
+            
+#         if self.to_channel:
+#             for c in self.channels:
+#                 if c == self.to_channel:
+#                     continue
+#                 self.translation_list.append()
+             
         for c in self.channels:
-            self.bleedthrough_list.append(_BleedthroughControl(channel = c))
-            
-        self.changed = (Changed.ESTIMATE, ('bleedthrough_list', self.bleedthrough_list))
-            
-        self.translation_list = []
-        if self.to_channel:
-            for c in self.channels:
-                if c == self.to_channel:
-                    continue
+            if c == self.to_channel:
+                continue
+            if channel not in [control.from_channel for control in self.translation_list]:
                 self.translation_list.append(_TranslationControl(from_channel = c,
                                                                  to_channel = self.to_channel))
+            
+        to_remove = []
+        for control in self.translation_list:
+            if control.from_channel not in self.channels:
+                to_remove.append(control)
+                
+        for control in to_remove:
+            self.translation_list.remove(control)
+            
         self.changed = (Changed.ESTIMATE, ('translation_list', self.translation_list))
+        self.changed = (Changed.ESTIMATE, ('bleedthrough_list', self.bleedthrough_list))            
+#         self.changed = (Changed.ESTIMATE, ('units_list', self.units_list))
+        
+        
+#         self.bleedthrough_list = []
+#         for c in self.channels:
+#             self.bleedthrough_list.append(_BleedthroughControl(channel = c))
+#             
+#         self.changed = (Changed.ESTIMATE, ('bleedthrough_list', self.bleedthrough_list))
+#             
+#         self.translation_list = []
+#         if self.to_channel:
+#             for c in self.channels:
+#                 if c == self.to_channel:
+#                     continue
+#                 self.translation_list.append(_TranslationControl(from_channel = c,
+#                                                                  to_channel = self.to_channel))
+#         self.changed = (Changed.ESTIMATE, ('translation_list', self.translation_list))
 
 
     @on_trait_change('to_channel', post_init = True)

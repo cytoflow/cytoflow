@@ -74,6 +74,9 @@ class TestTASBECalibrationMode(WorkflowTest):
 
         shutil.rmtree(self.op.output_directory)
 
+        WorkflowTest.tearDown(self)
+
+
     def testEstimate(self):
         pass
   

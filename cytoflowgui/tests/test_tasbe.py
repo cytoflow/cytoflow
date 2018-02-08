@@ -79,7 +79,7 @@ class TestTASBE(TasbeTest):
     def testChangeChannels(self):
         self.op.channels = ["FITC-A", "Pacific Blue-A"]
         self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 5))
-        self.assertTrue(len(self.op.units_list) == 2)
+        self.assertTrue(len(self.op.translation_list) == 1)
         self.assertTrue(len(self.op.bleedthrough_list) == 2)
 
         self.op.do_estimate = True
@@ -163,5 +163,5 @@ class TestTASBE(TasbeTest):
         self.assertTrue((nb_data == remote_data).all().all())
         
 if __name__ == "__main__":
-#     import sys;sys.argv = ['', 'TestTASBE.testSerialize']
+#     import sys;sys.argv = ['', 'TestTASBE.testChangeChannels']
     unittest.main()

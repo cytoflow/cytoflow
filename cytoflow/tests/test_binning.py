@@ -42,42 +42,24 @@ class Test(unittest.TestCase):
 
     def testApply(self):
         """Just run apply(); don't actually test functionality"""
-        self.op = flow.BinningOp(name = "Bin",
-                                 channel = "PE-Tx-Red-YG-A",
-                                 num_bins = 50,
-                                 bin_count_name = "Bin_Count").apply(self.ex)
                                  
         self.op = flow.BinningOp(name = "Bin",
                                  channel = "PE-Tx-Red-YG-A",
                                  bin_width = 0.1,
                                  scale = "log",
-                                 bin_count_name = "Bin_Count").apply(self.ex)
-                                 
-        self.op = flow.BinningOp(name = "Bin",
-                                 channel = "PE-Tx-Red-YG-A",
-                                 num_bins = 50,
-                                 scale = "logicle",
-                                 bin_count_name = "Bin_Count").apply(self.ex)
-        #self.op.apply(self.ex)
+                                 bin_count_name = "Bin_Count")
+
+        self.op.apply(self.ex)
         
     def testView(self):
         """Just run default_view().plot(); don't actually test functionality"""
-        self.op = flow.BinningOp(name = "Bin",
-                                 channel = "PE-Tx-Red-YG-A",
-                                 num_bins = 50,
-                                 bin_count_name = "Bin_Count").default_view().plot(self.ex)
                                  
         self.op = flow.BinningOp(name = "Bin",
                                  channel = "PE-Tx-Red-YG-A",
                                  bin_width = 0.1,
                                  scale = "log",
                                  bin_count_name = "Bin_Count").default_view().plot(self.ex)
-                                 
-        self.op = flow.BinningOp(name = "Bin",
-                                 channel = "PE-Tx-Red-YG-A",
-                                 num_bins = 50,
-                                 scale = "logicle",
-                                 bin_count_name = "Bin_Count").default_view().plot(self.ex)
+
 
 
 if __name__ == "__main__":
