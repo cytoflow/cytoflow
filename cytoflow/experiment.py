@@ -173,7 +173,8 @@ class Experiment(HasStrictTraits):
      
     def __setitem__(self, key, value):
         """Override __setitem__ so we can assign columns like ex.column = ..."""
-        self.data.drop(key, axis = 'columns', inplace = True)
+        if key in self.data:
+            self.data.drop(key, axis = 'columns', inplace = True)
         return self.data.__setitem__(key, value)
     
     def __len__(self):
