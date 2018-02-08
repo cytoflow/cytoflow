@@ -125,3 +125,26 @@ class ViewDockPane(TraitsDockPane):
         # toggle the right button
         if view_id:
             self._actions[view_id].checked = True
+            
+class PlotParamsPane(TraitsDockPane):
+    
+    id = 'edu.mit.synbio.params_pane'
+    name = "Plot Parameters"
+
+    # the task serving as the dock pane's controller
+    task = Instance(Task)
+    
+    closable = True
+    dock_area = 'right'
+    floatable = True
+    movable = True
+    visible = True
+    
+    def create_contents(self, parent):
+        """ Create and return the toolkit-specific contents of the dock pane.
+        """
+        self.ui = self.model.edit_traits(view = 'plot_params_traits',
+                                         kind='subpanel', 
+                                         parent=parent,
+                                         scrollable = True)
+        return self.ui.control

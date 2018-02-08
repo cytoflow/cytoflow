@@ -96,7 +96,6 @@ from cytoflowgui.util import IterWrapper
 
 ScatterplotView.__repr__ = traits_repr
 
-
 class ScatterplotHandler(ViewHandlerMixin, Controller):
     
     def default_traits_view(self):

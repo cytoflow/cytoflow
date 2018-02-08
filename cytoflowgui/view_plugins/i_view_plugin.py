@@ -26,9 +26,10 @@ import os
 
 from pyface.qt import QtGui
 
-from traits.api import (Interface, Str, HasTraits, Instance, Event, 
-                        List, Property, on_trait_change, HTML, Any)
-from traitsui.api import View, Item, Handler, HGroup, TextEditor
+from traits.api import (Interface, Str, HasTraits, Instance, Event, Int, 
+                        List, Property, on_trait_change, HTML, Any, Bool,
+                        Tuple, Float, Undefined)
+from traitsui.api import View, Item, Handler, HGroup, TextEditor, InstanceEditor
 
 import cytoflow.utility as util
 
@@ -93,6 +94,31 @@ class PluginHelpMixin(HasTraits):
                 self._cached_help = f.read()
                  
         return self._cached_help
+    
+class PlotParams(HasTraits):
+    title = Str
+    xlabel = Str
+    ylabel = Str
+    huelabel = Str
+    
+    legend = Bool(True)
+    sharex = Bool(True)
+    sharey = Bool(True)
+#     xlim = Tuple(util.FloatOrNone(None), util.FloatOrNone(None))
+#     ylim = Tuple(util.FloatOrNone(None), util.FloatOrNone(None))
+#     col_wrap = util.PositiveInt(None, allow_zero = False, allow_none = True)
+    
+    def default_traits_view(self):
+        return View(
+                    Item('title',
+                         editor = TextEditor(auto_set = False)),
+                    Item('xlabel',
+                         editor = TextEditor(auto_set = False)),
+                    Item('ylabel',
+                         editor = TextEditor(auto_set = False)),
+                    Item('huelabel',
+                         editor = TextEditor(auto_set = False)))
+
                         
 class PluginViewMixin(HasTraits):
     handler = Instance(Handler, transient = True)    
@@ -105,6 +131,9 @@ class PluginViewMixin(HasTraits):
     plot_names_by = Str(status = True)
     current_plot = Any
     
+    # kwargs to pass to plot()
+    plot_params = Instance(PlotParams, ())
+    
     subset_list = List(ISubset)
     subset = Property(Str, depends_on = "subset_list.str")
         
@@ -115,6 +144,10 @@ class PluginViewMixin(HasTraits):
     @on_trait_change('subset_list.str')
     def _subset_changed(self, obj, name, old, new):
         self.changed = (Changed.VIEW, (self, 'subset_list', self.subset_list))  
+        
+    @on_trait_change('plot_params.+', post_init = True)
+    def _plot_params_changed(self, obj, name, old, new):
+        self.changed = (Changed.VIEW, (self, 'plot_params', self.plot_params))
             
     def should_plot(self, changed, payload):
         """
@@ -129,9 +162,12 @@ class PluginViewMixin(HasTraits):
     
     def plot_wi(self, wi):
         if self.plot_names:
-            self.plot(wi.result, plot_name = self.current_plot)
+            self.plot(wi.result, 
+                      plot_name = self.current_plot,
+                      **self.plot_params.trait_get())
         else:
-            self.plot(wi.result)
+            self.plot(wi.result,
+                      **self.plot_params.trait_get())
             
     def enum_plots_wi(self, wi):
         try:
@@ -183,6 +219,11 @@ class ViewHandlerMixin(HasTraits):
                      editor = TabListEditor(name = 'plot_names'),
                      style = 'custom',
                      show_label = False)))
+        
+    plot_params_traits = View(Item('plot_params',
+                                   editor = InstanceEditor(),
+                                   style = 'custom',
+                                   show_label = False))
     
     context = Instance(WorkflowItem)
     

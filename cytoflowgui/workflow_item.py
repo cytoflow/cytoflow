@@ -107,6 +107,12 @@ class WorkflowItem(HasStrictTraits):
                                     style = 'custom',
                                     show_label = False))
     
+    # the view for the plot params
+    plot_params_traits = View(Item('current_view_handler',
+                                   editor = InstanceEditor(view = 'plot_params_traits'),
+                                   style = 'custom',
+                                   show_label = False))
+    
     # the view for the current plot
     current_plot_view = View(Item('current_view_handler',
                                   editor = InstanceEditor(view = 'current_plot_view'),
