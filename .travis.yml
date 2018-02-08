@@ -43,6 +43,7 @@ install:
 
   - conda create --yes --quiet --name=py34 python=3.4 nomkl
   - source activate py34
+  - python --version
   - conda install --yes --quiet --file=packaging/conda-requirements.txt
   - conda install --yes --quiet pip mock
   - pip install nose2 sphinx
