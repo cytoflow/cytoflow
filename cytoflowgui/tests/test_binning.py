@@ -66,7 +66,7 @@ class TestBinning(ImportedDataTest):
           
     def testPlot(self):
         self.wi.current_view = self.wi.default_view
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", None))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
         
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))

@@ -73,7 +73,7 @@ class TestAutofluorescence(TasbeTest):
          
     def testPlot(self):
         self.wi.current_view = self.wi.default_view
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", None))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
   
 
     def testSerialize(self):

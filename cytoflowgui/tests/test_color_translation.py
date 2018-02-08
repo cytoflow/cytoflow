@@ -87,7 +87,7 @@ class TestColorTranslation(TasbeTest):
          
     def testPlot(self):
         self.wi.current_view = self.wi.default_view
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", None))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
 
     def testPlotMixtureModel(self):
         self.op.mixture_model = True
@@ -97,7 +97,7 @@ class TestColorTranslation(TasbeTest):
         self.op.do_estimate = True
         self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
         self.wi.current_view = self.wi.default_view
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", None))  
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))  
 
     def testSerialize(self):
         

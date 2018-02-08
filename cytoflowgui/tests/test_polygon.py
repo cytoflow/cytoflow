@@ -49,7 +49,7 @@ class TestPolygon(ImportedDataTest):
         self.workflow.workflow.append(wi)
         self.workflow.selected = wi
         
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", None))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
         
         self.workflow.remote_exec("self.workflow[-1].default_view.vertices = [(23.411982294776319, 5158.7027015021222), (102.22182270573683, 23124.058843387455), (510.94519955277201, 23124.058843387455), (1089.5215641232173, 3800.3424832180476), (340.56382570202402, 801.98947404942271), (65.42597937575897, 1119.3133482602157)]")
         

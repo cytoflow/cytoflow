@@ -71,7 +71,7 @@ class TestTASBE(TasbeTest):
           
         # run the estimate
         op.do_estimate = True
-        self.assertTrue(wait_for(wi, 'status', lambda v: v == 'valid', None))
+        self.assertTrue(wait_for(wi, 'status', lambda v: v == 'valid', 30))
 
     def testEstimate(self):
         pass

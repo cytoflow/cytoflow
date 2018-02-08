@@ -97,7 +97,7 @@ class TestPCA(ImportedDataTest):
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
          
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', None))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
 
     def testChangeSubset(self):
         self.op.subset_list[0].selected = ["A"]

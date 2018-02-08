@@ -40,7 +40,7 @@ class TestRange(ImportedDataTest):
         self.workflow.workflow.append(wi)
         self.workflow.selected = wi
         
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", None))        
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))        
         self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 15))
 
     def testApply(self):
