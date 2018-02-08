@@ -1,5 +1,8 @@
 language: generic
 
+env:
+  - MPLBACKEND=Agg
+
 matrix:
   include:
     - os: linux
