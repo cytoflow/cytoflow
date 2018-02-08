@@ -11,5 +11,5 @@ pyface==5.1.0
 nbformat==4.2.0
 python-dateutil==2.6.0
 statsmodels>=0.6.1
-pyqt==4.10.4
+pyqt<5.0
 python>=3.4
