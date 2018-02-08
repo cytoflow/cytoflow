@@ -28,7 +28,7 @@ Created on Feb 11, 2015
 import os.path
 
 from traits.api import Instance, List, Bool, on_trait_change, Any, Unicode, TraitError
-from pyface.tasks.api import Task, TaskLayout, PaneItem, TaskWindowLayout
+from pyface.tasks.api import Task, TaskLayout, PaneItem, TaskWindowLayout, TraitsDockPane
 from pyface.tasks.action.api import SMenu, SMenuBar, SToolBar, TaskAction, TaskToggleGroup
 from pyface.tasks.action.task_toggle_group import TaskToggleAction
 from pyface.api import FileDialog, ImageResource, AboutDialog, information, error, confirm, OK, YES
@@ -38,7 +38,7 @@ from envisage.ui.tasks.action.api import TaskWindowLaunchAction, TaskWindowToggl
 
 # from cytoflowgui.flow_task_pane import FlowTaskPane
 from cytoflowgui.workflow_pane import WorkflowDockPane
-from cytoflowgui.view_pane import ViewDockPane
+from cytoflowgui.view_pane import ViewDockPane, PlotParamsPane
 from cytoflowgui.help_pane import HelpDockPane
 from cytoflowgui.workflow import Workflow
 from cytoflowgui.op_plugins import IOperationPlugin, ImportPlugin, OP_PLUGIN_EXT
@@ -64,6 +64,7 @@ class FlowTask(Task):
     workflow_pane = Instance(WorkflowDockPane)
     view_pane = Instance(ViewDockPane)
     help_pane = Instance(HelpDockPane)
+    plot_params_pane = Instance(PlotParamsPane)
     
     # plugin lists, to setup the interface
     op_plugins = List(IOperationPlugin)
@@ -82,9 +83,9 @@ class FlowTask(Task):
                               TaskAction(name='Save Plot...',
                                          method='on_export',
                                          accelerator='Ctrl+x'),
-                            TaskAction(name='Export Jupyter notebook...',
-                                       method='on_notebook',
-                                       accelerator='Ctrl+I'),                              
+                              TaskAction(name='Export Jupyter notebook...',
+                                         method='on_notebook',
+                                         accelerator='Ctrl+I'),                              
 #                               TaskAction(name='Preferences...',
 #                                          method='on_prefs',
 #                                          accelerator='Ctrl+P'),
@@ -201,7 +202,10 @@ class FlowTask(Task):
                                       op_plugins = self.op_plugins,
                                       task = self)
         
-        return [self.workflow_pane, self.view_pane, self.help_pane]
+        self.plot_params_pane = PlotParamsPane(model = self.model,
+                                               task = self)
+        
+        return [self.workflow_pane, self.view_pane, self.help_pane, self.plot_params_pane]
         
     def on_new(self):
         if self.model.modified:

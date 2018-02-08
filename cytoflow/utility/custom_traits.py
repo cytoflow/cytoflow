@@ -39,6 +39,9 @@ class PositiveInt(BaseCInt):
     info_text = 'a positive integer'
     
     def validate(self, obj, name, value):
+        if self.allow_none and (value == "" or value == None):
+            return None
+        
         value = super(PositiveInt, self).validate(obj, name, value)
         if (value > 0 or (self.allow_zero and value >= 0)):
             return value 
@@ -54,11 +57,31 @@ class PositiveFloat(BaseCFloat):
     info_text = 'a positive float'
     
     def validate(self, obj, name, value):
+        if self.allow_none and (value == "" or value == None):
+            return None
+        
         value = super(PositiveFloat, self).validate(obj, name, value)
         if (value > 0.0 or (self.allow_zero and value >= 0.0)):
             return value 
         
         self.error(obj, name, value)
+        
+class FloatOrNone(BaseCFloat):
+    
+    def validate(self, obj, name, value):
+        if value == "" or value == None:
+            return None
+        else:
+            return super(BaseCFloat, self).validate(obj, name, value)
+
+class IntOrNone(BaseCInt):
+    
+    def validate(self, obj, name, value):
+        if value == "" or value == None:
+            return None
+        else:
+            return super(BaseCInt, self).validate(obj, name, value)
+        
         
 class ScaleEnum(BaseEnum):
     """

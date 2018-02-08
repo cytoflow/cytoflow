@@ -68,6 +68,15 @@ class BaseView(HasStrictTraits):
         experiment: Experiment
             The :class:`.Experiment` to plot using this view.
             
+        title : str
+            Set the plot title
+            
+        xlabel, ylabel : str
+            Set the X and Y axis labels
+            
+        huelabel : str
+            Set the label for the hue facet (in the legend)
+            
         legend : bool
             Plot a legend for the color or hue facet?  Defaults to `True`.
             
@@ -103,6 +112,11 @@ class BaseView(HasStrictTraits):
         if col_wrap and not self.xfacet:
             raise util.CytoflowViewError('xfacet',
                                          "Must set xfacet to use col_wrap.")
+        
+        title = kwargs.pop("title", None)
+        xlabel = kwargs.pop("xlabel", None)
+        ylabel = kwargs.pop("ylabel", None)
+        huelabel = kwargs.pop("huelabel", self.huefacet)
         
         sharex = kwargs.pop("sharex", True)
         sharey = kwargs.pop("sharey", True)
@@ -222,6 +236,15 @@ class BaseView(HasStrictTraits):
                     legend = ax.legend_
                     for lh in legend.legendHandles:
                         lh.set_alpha(0.5)
+                        
+        if title:
+            plt.title(title)
+            
+        if xlabel:
+            plt.xlabel(xlabel)
+            
+        if ylabel:
+            plt.ylabel(ylabel)
                     
                     
     def _grid_plot(self, experiment, grid, xlim, ylim, xscale, yscale, **kwargs):

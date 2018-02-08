@@ -48,7 +48,7 @@ import threading, sys, logging, traceback
 from queue import Queue
 
 from traits.api import (HasStrictTraits, Instance, List, on_trait_change, Any, 
-                        Bool, Str, Int)
+                        Bool, Int)
                        
 from traitsui.api import View, Item, InstanceEditor, Spring
 
@@ -213,6 +213,11 @@ class Workflow(HasStrictTraits):
                           editor = InstanceEditor(view = 'current_plot_view'),
                           style = 'custom',
                           show_label = False))
+    
+    plot_params_traits = View(Item('selected',
+                                   editor = InstanceEditor(view = 'plot_params_traits'),
+                                   style = 'custom',
+                                   show_label = False))
     
     recv_thread = Instance(threading.Thread)
     send_thread = Instance(threading.Thread)
