@@ -543,7 +543,7 @@ class GaussianMixture2DOp(HasStrictTraits):
                         if len(g) > 1:
                             g = tuple(g)
                         else:
-                            g = g[0]
+                            g = (g[0],)
                     else:
                         g = group
                                                                              

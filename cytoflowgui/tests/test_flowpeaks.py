@@ -46,7 +46,7 @@ class TestFlowPeaks(ImportedDataTest):
 
     def testEstimate(self):
         self.assertIsNotNone(self.workflow.remote_eval("self.workflow[-1].result"))
-        self.assertEqual(self.workflow.remote_eval("len(self.workflow[-1].operation._peaks[True])"), 4)
+        self.assertEqual(self.workflow.remote_eval("len(self.workflow[-1].operation._peaks[True])"), 2)
    
     def testChangeChannels(self):
         self.op.xchannel = "B1-A"

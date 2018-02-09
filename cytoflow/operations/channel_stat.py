@@ -231,15 +231,15 @@ class ChannelStatisticOp(HasStrictTraits):
             if len(data_subset) == 0:
                 continue
             
+            if not isinstance(group, tuple):
+                group = (group,)
+            
             try:
                 stat.loc[group] = self.function(data_subset[self.channel])
             except Exception as e:
                 raise util.CytoflowOpError(None,
                                            "Your function threw an error in group {}"
                                            .format(group)) from e
-            
-            if not isinstance(group, (list, tuple)):
-                group = [group]
             
             # check for, and warn about, NaNs.
             if stat.loc[list(group)].isna().any():

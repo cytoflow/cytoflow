@@ -55,6 +55,11 @@ class TestChannelStat(ImportedDataTest):
         self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 5))
         self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
 
+    def testGeomSD(self):        
+        self.op.statistic_name = "Geom.SD"
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', None))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', None))
+
 
     def testAllFunctions(self):
         self.op.statistic_name = "Mean"
@@ -118,5 +123,5 @@ class TestChannelStat(ImportedDataTest):
         self.assertTrue((nb_data == remote_data).all().all())
 
 if __name__ == "__main__":
-#     import sys;sys.argv = ['', 'TestChannelStat.testChangeBy']
+#     import sys;sys.argv = ['', 'TestChannelStat.testGeomSD']
     unittest.main()
