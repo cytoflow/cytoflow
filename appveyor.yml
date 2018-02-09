@@ -45,7 +45,7 @@ install:
   # Install the build and runtime dependencies of the project.
   - conda update --yes conda
   - conda create --yes --quiet --name=py35 python=3.5
-  - activate py34
+  - activate py35
   
   # Check again for the expected version and architecture for Python
   - "python --version"
