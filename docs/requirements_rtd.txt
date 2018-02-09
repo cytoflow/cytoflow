@@ -1,5 +1,5 @@
 mock
-pandas
+pandas>=0.20
 bottleneck
 numpy
 numexpr
