@@ -81,12 +81,9 @@ A few things.
 -  **Extensible.** Adding a new analysis module is simple; the interface
    to implement is only two or three functions.
 
--  **Quantitative and tatistically sound.** Ready access to useful
+-  **Quantitative and statistically sound.** Ready access to useful
    data-driven tools for analysis, such as fitting 2-dimensional
-   Gaussians for automated gating and mixture modeling. ``cytoflow``
-   discourages (but does not prevent) wholesale rescaling of data, for
-   example using the ``log10`` operation. Instead, it encourages
-   rescaling of the data's **plots** instead.
+   Gaussians for automated gating and mixture modeling.
 
 Note: this is still beta software! Caveat emptor!
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -94,11 +91,13 @@ Note: this is still beta software! Caveat emptor!
 Installation
 ~~~~~~~~~~~~
 
+\*\*If you just want the point-and-click version (not the Python
+modules), you can install it from http://bpteague.github.io/cytoflow/
+
 See the `installation
 notes <http://cytoflow.readthedocs.org/en/latest/INSTALL.html>`__ on
 `ReadTheDocs <http://cytoflow.readthedocs.org/>`__. Installation has
-been tested on Linux (Ubuntu Trusty) and Windows 7 (x86\_64). Mac
-installation should be similar.
+been tested on Linux (Ubuntu Trusty), Windows (x86\_64) and Mac.
 
 Documentation
 ~~~~~~~~~~~~~
@@ -120,19 +119,19 @@ packages:
 
 ::
 
-    python >= 2.7
-    pandas >= 0.19.2
-    numpy >= 1.9.0
-    numexpr >= 2.4.6
-    matplotlib >= 1.5.1
-    scipy >= 0.17
-    scikit-learn >= 0.18
-    seaborn >= 0.7.0
+    python >= 3.4
+    pandas >= 0.21.1
+    numpy >= 1.11.3
+    numexpr >= 2.6.4
+    matplotlib >= 1.5.1, <= 1.5.3
+    scipy >= 1.0.0
+    scikit-learn >= 0.19.1
+    seaborn >= 0.8.1
     traits >= 4.6.0
-    nbformat >= 4.0
-    python-dateutil >= 2.5.2
+    nbformat >= 4.2.0
+    python-dateutil >= 2.6.0
     statsmodels >= 0.8.0
-    fcsparser >= 0.1.1
+    fcsparser >= 0.1.3
 
 For the GUI, you additionally need:
 
@@ -140,8 +139,8 @@ For the GUI, you additionally need:
 
     faulthandler >= 2.4
     pyface == 5.1.0
-    envisage >= 4.5
-    pyqt >= 4.10 -- this must be installed separately!
+    envisage >= 4.6
+    pyqt >= 4.10 -- this must be installed separately!  it's not available through PyPI!
 
 Note that many of these packages have additional dependencies, including
 but not limited to ``traitsui``, ``decorator``, etc. Everything except

@@ -56,8 +56,7 @@ Windows
 the fastest.**
 
 * Start by installing the Anaconda Python distribution. **Make sure to install
-  version 2.7.**  (Some day we will be Python 3 compatible, but not until 
-  all of our dependencies are.)
+  version 3.6.** 
 
   `Download Anaconda here <https://www.continuum.io/downloads>`_
 
@@ -65,14 +64,14 @@ the fastest.**
 
 * Install the conda package dependencies.  At the command prompt, type::
 
-    conda install pandas bottleneck numpy numexpr matplotlib scipy scikit-learn seaborn traits pyface envisage nbformat python-dateutil statsmodels qt pip
+    conda install pandas bottleneck numpy numexpr matplotlib scipy scikit-learn seaborn traits traitsui pyface nbformat python-dateutil statsmodels qt pip
 
 * Install the package with pip::
 
    pip install cytoflow
    
-* To verify installation, start an IPython notebook.  From the Start menu, in 
-  the Anaconda folder, run ``IPython (Py 2.7) Notebook``.  In the first cell,
+* To verify installation, start an Jupyter notebook.  From the Start menu, in 
+  the Anaconda folder, run ``Jupyter (Py 3.6) Notebook``.  In the first cell,
   type ``import cytoflow`` and press ``Shift+Enter``.  If Python doesn't complain,
   you're good to go.  (If it does, please submit a bug report!)
   
@@ -82,8 +81,7 @@ MacOS
 ** As with Windows, this is not the only way to install CytoFlow but it is the fastest.
 
 * Start by installing the Anaconda Python distribution. **Make sure to install
-  version 2.7.**  (Some day we will be Python 3 compatible, but not until 
-  all of our dependencies are.)
+  version 3.6.**
 
   `Download Anaconda here <https://www.continuum.io/downloads>`_
  
@@ -91,14 +89,14 @@ MacOS
  
 * Install the conda package dependencies.  At the Terminal prompt, type::
      
-     conda install pandas bottleneck numpy numexpr matplotlib scipy scikit-learn seaborn traits pyface envisage nbformat python-dateutil statsmodels qt pip
-     
+     conda install pandas bottleneck numpy numexpr matplotlib scipy scikit-learn seaborn traits traitsui pyface nbformat python-dateutil statsmodels qt pip
+  
 * Install the `cytoflow` package with `pip`.  At the Terminal prompt, type::
      
      pip install cytoflow
      
 * To verify the installation, start a Jupyter notebook from the Anaconda Navigator.  A
-  browser window will open.  Create a new Python 2 notebook, and in the first cell type
+  browser window will open.  Create a new Python 3 notebook, and in the first cell type
   ``import cytoflow`` and press ``Shift+Enter``.  If Python doesn't complain,
   you're good to go.  (If it does, please submit a bug report!)
 
@@ -163,9 +161,9 @@ Windows
 ^^^^^^^
 
 ``cytoflow`` has one C++ module, compiled with ``swig``.  Unfortunately, compiling
-modules on Windows requires Microsoft Visual C++, which is a huge dependency
-and a huge pain in the ass.  And once you get it installed, setting up 
-Python to talk with it?  Forget about it.
+modules on Windows requires Microsoft Visual C++ and the Windows Development Kit,
+which are huge dependencies and a huge pain in the ass.  And once you get it 
+installed, setting up Python to talk with it?  Forget about it.
 
 The instructions below assume that you do not want to fight that fight. Instead,
 the ``cytoflow`` continuous integration servers build the compiled extension, and
@@ -178,8 +176,7 @@ when I roll a release they get posted on the GitHub release page.
     git clone https://github.com/bpteague/cytoflow.git
 
 * Install the Anaconda Python distribution. **Make sure to install
-  version 2.7.**  (Some day we will be Python 3 compatible, but not until 
-  all of our dependencies are.)
+  version 3.6.**
 
   `Download Anaconda here <https://www.continuum.io/downloads>`_
 
@@ -232,8 +229,7 @@ pre-built MacOS Python packages.  That's the approach outlined below.
     git clone https://github.com/bpteague/cytoflow.git
 
 * Install the Anaconda Python distribution. **Make sure to install
-  version 2.7.**  (Some day we will be Python 3 compatible, but not until 
-  all of our dependencies are.)
+  version 3.6.**
 
   `Download Anaconda here <https://www.continuum.io/downloads>`_
 
@@ -251,7 +247,9 @@ pre-built MacOS Python packages.  That's the approach outlined below.
   ``SystemError: Cannot locate working compiler``, make sure you set NO_LOGICLE, try it again,
   then please file a bug report.
   
-* Download the ``cytoflow`` wheel from the Github release page or the PyPI release.  These 
+  
+  
+* **TODO - fix this with a new py3k wheel**  Download the ``cytoflow`` wheel from the Github release page or the PyPI release.  These 
   commands get version 0.4.1 from PyPI; but the Logicle extension hasn't changed in many 
   releases, and hopefully won't be changing any time soon, so they are likely still valid
   for the master Git branch::
@@ -262,7 +260,7 @@ pre-built MacOS Python packages.  That's the approach outlined below.
     unzip cytoflow.zip
     cp cytoflow/utility/logicle_ext/_Logicle.so ../cytoflow/utility/logicle_ext/
 
-* Start an IPython notebook.  Say ``import cytoflow`` to make sure that everything
+* Start a Jupyter notebook.  Say ``import cytoflow`` to make sure that everything
   is installed properly.  If you get an error, make sure you've followed the
   instructions above carefully then file a bug report!
   
