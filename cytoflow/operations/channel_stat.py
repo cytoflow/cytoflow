@@ -238,8 +238,11 @@ class ChannelStatisticOp(HasStrictTraits):
                                            "Your function threw an error in group {}"
                                            .format(group)) from e
             
+            if not isinstance(group, (list, tuple)):
+                group = [group]
+            
             # check for, and warn about, NaNs.
-            if np.any(np.isnan(stat.loc[group])):
+            if stat.loc[list(group)].isna().any():
                 warn("Found NaN in category {} returned {}"
                      .format(group, stat.loc[group]), 
                      util.CytoflowOpWarning)

@@ -125,7 +125,7 @@ class Test(unittest.TestCase):
                          variable = "Dox").plot(ex3)
 
 if __name__ == "__main__":
-    #import sys;sys.argv = ['', 'Test.testName']
+#     import sys;sys.argv = ['', 'Test.testBarChart']
     with warnings.catch_warnings():
         warnings.filterwarnings('error')
         unittest.main()

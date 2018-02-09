@@ -62,7 +62,7 @@ install:
 build: off
 
 test_script:
-  - "nose2 -c packaging\\nose2.cfg"
+  - "nose2 -c packaging\\nose2.cfg -s cytoflow\\tests"
 
 after_test:
   - "python setup.py bdist_wheel bdist_wininst"
