@@ -156,5 +156,5 @@ class TestScatterplot(ImportedDataTest):
 
            
 if __name__ == "__main__":
-#     import sys;sys.argv = ['', 'TestScatterplot.testBase']
+#     import sys;sys.argv = ['', 'TestScatterplot.testSubset']
     unittest.main()
