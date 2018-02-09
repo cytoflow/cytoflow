@@ -38,7 +38,7 @@ before_install:
 
   - chmod +x miniconda.sh
   - ./miniconda.sh -b
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export PATH=/Users/travis/miniconda3/bin:$PATH; export DYLD_LIBRARY_PATH=/Users/travis/miniconda3/envs/py35/lib; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export PATH=/Users/travis/miniconda3/bin:$PATH; fi
   - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then export PATH=/home/travis/miniconda3/bin:$PATH; export LD_LIBRARY_PATH=/home/travis/miniconda3/envs/py35/lib; fi
   - conda update --yes conda
 
