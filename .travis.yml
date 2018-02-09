@@ -50,6 +50,7 @@ install:
   - conda install --yes --quiet pip mock
   - pip install nose2 sphinx
   - pip install "pyinstaller==3.3.1"
+  - pip install "pyyaml==3.11"
 
   - python setup.py develop 
 

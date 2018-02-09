@@ -12,11 +12,11 @@ environment:
     # a later point release.
 
     - PYTHON: "C:\\Miniconda35"
-      PYTHON_VERSION: "3.5.x"   # currently 3.4.3
+      PYTHON_VERSION: "3.5.x"   # currently 3.5.2
       PYTHON_ARCH: "32"
 
     - PYTHON: "C:\\Miniconda35-x64"
-      PYTHON_VERSION: "3.5.x"       # currently 3.4.3
+      PYTHON_VERSION: "3.5.x"       # currently 3.5.2
       PYTHON_ARCH: "64"
 
 init:
@@ -56,6 +56,7 @@ install:
   - conda install --yes --quiet msvc_runtime pip mock
   - pip.exe install nose2 sphinx
   - pip.exe install "pyinstaller==3.3.1"
+  - pip.exe install "pyyaml==3.11"  # 3.12 doesn't work with pyinstaller
 
   - "%WITH_COMPILER% python setup.py develop"
 
