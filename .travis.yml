@@ -65,7 +65,7 @@ after_success:
   - python setup.py build_sphinx 
   - python setup.py bdist_wheel
   - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then python setup.py sdist; fi
-  - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then xvfb-run python setup.py build_sphinx -b embedded_help; else python setup.py build_sphinx -b embedded_help; fi
+  - python setup.py build_sphinx -b embedded_help
 
   - pyinstaller --log-level=DEBUG packaging/pyinstaller.spec
   - pyi-archive_viewer -l dist/cytoflow
