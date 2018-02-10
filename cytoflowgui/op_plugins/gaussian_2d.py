@@ -242,12 +242,6 @@ class GaussianMixture2DPluginOp(PluginOpMixin, GaussianMixtureOp):
     def clear_estimate(self):
         self._gmms.clear()
         self.changed = (Changed.ESTIMATE_RESULT, self)
-        
-    def should_clear_estimate(self, changed, payload):
-        if changed == Changed.ESTIMATE:
-            return True
-        
-        return False
     
     def get_notebook_code(self, idx):
         op = GaussianMixtureOp()

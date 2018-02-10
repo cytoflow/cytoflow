@@ -206,11 +206,6 @@ class GaussianMixture1DPluginOp(PluginOpMixin, GaussianMixtureOp):
         return GaussianMixture1DPluginView(op = self, 
                                            **kwargs)
     
-    def should_clear_estimate(self, changed, payload):
-        if changed == Changed.ESTIMATE:
-            return True
-        
-        return False
     
     def clear_estimate(self):
         self._gmms = {}
