@@ -25,13 +25,13 @@ Created on Feb 11, 2015
 # from traits.etsconfig.api import ETSConfig
 # ETSConfig.toolkit = 'qt4'
 
-import os.path
+import os.path, webbrowser
 
 from traits.api import Instance, List, Bool, on_trait_change, Any, Unicode, TraitError
 from pyface.tasks.api import Task, TaskLayout, PaneItem, TaskWindowLayout
 from pyface.tasks.action.api import SMenu, SMenuBar, SToolBar, TaskAction, TaskToggleGroup
 from pyface.tasks.action.task_toggle_group import TaskToggleAction
-from pyface.api import FileDialog, ImageResource, AboutDialog, information, error, confirm, OK, YES
+from pyface.api import FileDialog, ImageResource, AboutDialog, information, error, confirm, OK, YES, NO, ConfirmationDialog
 from envisage.api import Plugin, ExtensionPoint, contributes_to
 from envisage.ui.tasks.api import TaskFactory
 from envisage.ui.tasks.action.api import TaskWindowLaunchAction, TaskWindowToggleGroup
@@ -47,7 +47,7 @@ from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.util import DefaultFileDialog
 from cytoflowgui.serialization import save_yaml, load_yaml, save_notebook
 
-# from . import mailto
+from cytoflowgui.mailto import mailto
 
 class FlowTask(Task):
     """
@@ -82,9 +82,9 @@ class FlowTask(Task):
                               TaskAction(name='Save Plot...',
                                          method='on_export',
                                          accelerator='Ctrl+x'),
-                            TaskAction(name='Export Jupyter notebook...',
-                                       method='on_notebook',
-                                       accelerator='Ctrl+I'),                              
+                              TaskAction(name='Export Jupyter notebook...',
+                                         method='on_notebook',
+                                         accelerator='Ctrl+I'),                              
 #                               TaskAction(name='Preferences...',
 #                                          method='on_prefs',
 #                                          accelerator='Ctrl+P'),
@@ -122,6 +122,10 @@ class FlowTask(Task):
                                       name = "Calibrate FCS...",
                                       tooltip = "Calibrate FCS files",
                                       image = ImageResource('tasbe')),
+                           TaskAction(method = 'on_problem',
+                                      name = "Report a bug...",
+                                      tooltib = "Report a bug",
+                                      image = ImageResource('bug')),
 #                            TaskAction(method='on_prefs',
 #                                       name = "Prefs",
 #                                       tooltip='Preferences',
@@ -373,11 +377,39 @@ class FlowTask(Task):
         pass
     
     def on_problem(self):
+
+        log = str(self._get_package_versions()) + "\n" + self.application.application_log.getvalue()
         
-        information(None, "Your email client will now create a new message to the "
-                    "developer.  Debugging logs are attached.  Please fill "
-                    "out the template bug report and send -- thank you for "
-                    "reporting a bug!")
+        msg = "The best way to report a problem is send an application log to " \
+              "the developers.  You can do so by either sending us an email " \
+              "with the log in it, or saving the log to a file and filing a " \
+              "new issue on GitHub at " \
+              "https://github.com/bpteague/cytoflow/issues/new" 
+        
+        dialog = ConfirmationDialog(message = msg,
+                                    informative = "Which would you like to do?",
+                                    yes_label = "Send an email...",
+                                    no_label = "Save to a file...")
+                
+        if dialog.open() == NO:
+            dialog = DefaultFileDialog(parent = self.window.control,
+                                       action = 'save as', 
+                                       default_suffix = "log",
+                                       wildcard = (FileDialog.create_wildcard("Log files", "*.log") + ';' + #@UndefinedVariable  
+                                                   FileDialog.create_wildcard("All files", "*")))                    #@UndefinedVariable  
+            
+            if dialog.open() == OK:
+                with open(dialog.path, 'w') as f:
+                    f.write(log)
+                  
+                webbrowser.open_new_tab("https://github.com/bpteague/cytoflow/issues/new")
+                  
+            return
+        
+        information(None, "I'll now try to open your email client and create a "
+                    "new message to the developer.  Debugging logs are "
+                    "attached.  Please fill out the template bug report and " 
+                    "send -- thank you for reporting a bug!")
 
         log = self.application.application_log.getvalue()
         
@@ -397,15 +429,12 @@ DESCRIPTION:
   - What happened?
   - What did you expect to happen?
   
+DEBUG LOG: {0}
+""".format(log)
 
-PACKAGE VERSIONS: {0}
-
-DEBUG LOG: {1}
-""".format(versions, log)
-
-#         mailto.mailto("teague@mit.edu", 
-#                       subject = "Cytoflow bug report",
-#                       body = body)
+        mailto("teague@mit.edu", 
+               subject = "Cytoflow bug report",
+               body = body)
     
     def _get_package_versions(self):
     
@@ -420,10 +449,14 @@ DEBUG LOG: {1}
         from matplotlib import __version__ as mpl_version
         from scipy import __version__ as scipy_version
         from sklearn import __version__ as skl_version
+        from statsmodels import __version__ as stats_version
         from pyface import __version__ as pyf_version
         from envisage import __version__ as env_version
         from traits import __version__ as trt_version
         from traitsui import __version__ as trt_ui_version
+        from yapf import __version__ as yapf_version
+        from nbformat import __version__ as nb_version
+        from yaml import __version__ as yaml_version
         
         return {"python" : sys.version,
                 "cytoflow" : cf_version,
@@ -436,10 +469,14 @@ DEBUG LOG: {1}
                 "matplotlib" : mpl_version,
                 "scipy" : scipy_version,
                 "scikit-learn" : skl_version,
+                "statsmodels" : stats_version,
                 "pyface" : pyf_version,
                 "envisage" : env_version,
                 "traits" : trt_version,
-                "traitsui" : trt_ui_version}
+                "traitsui" : trt_ui_version,
+                "nbformat" : nb_version,
+                "yapf" : yapf_version,
+                "yaml" : yaml_version}
         
         
     def on_about(self):

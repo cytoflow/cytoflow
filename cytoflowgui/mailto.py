@@ -23,17 +23,55 @@ From http://code.activestate.com/recipes/511443-cross-platform-startfile-and-mai
 '''
 
 __version__ = '1.1'
-__all__ = ['open', 'mailto']
+__all__ = ['mailto']
 
 import os
 import sys
 import webbrowser
 import subprocess
+import stat
 
 from email.utils import encode_rfc2231
 
 _controllers = {}
 _open = None
+
+# the following three definitions were copied out of the python 2.7 webbrowser
+# library.
+
+if sys.platform[:3] == "win":
+    def _isexecutable(cmd):
+        cmd = cmd.lower()
+        if os.path.isfile(cmd) and cmd.endswith((".exe", ".bat")):
+            return True
+        for ext in ".exe", ".bat":
+            if os.path.isfile(cmd + ext):
+                return True
+        return False
+else:
+    def _isexecutable(cmd):
+        if os.path.isfile(cmd):
+            mode = os.stat(cmd)[stat.ST_MODE]
+            if mode & stat.S_IXUSR or mode & stat.S_IXGRP or mode & stat.S_IXOTH:
+                return True
+        return False
+
+
+def _iscommand(cmd):
+    """Return True if cmd is executable or can be found on the executable
+    search path."""
+    if _isexecutable(cmd):
+        return True
+    path = os.environ.get("PATH")
+    if not path:
+        return False
+    for d in path.split(os.pathsep):
+        exe = os.path.join(d, cmd)
+        if _isexecutable(exe):
+            return True
+    return False
+
+
 
 
 class BaseController(object):
@@ -42,7 +80,7 @@ class BaseController(object):
     def __init__(self, name):
         self.name = name
 
-    def open(self, filename):
+    def _open(self, filename):
         raise NotImplementedError
 
 
@@ -64,7 +102,7 @@ class Controller(BaseController):
 
         if (os.environ.get('DISPLAY') or sys.platform[:3] == 'win' or
                                                     sys.platform == 'darwin'):
-            inout = file(os.devnull, 'r+')
+            inout = open(os.devnull, 'r+')
         else:
             # for TTY programs, we need stdin/out
             inout = None
@@ -88,8 +126,8 @@ class Controller(BaseController):
             returncode = self.fixreturncode(returncode)
         return not returncode
 
-    def open(self, filename):
-        if isinstance(filename, basestring):
+    def _open(self, filename):
+        if isinstance(filename, str):
             cmdline = self.args + [filename]
         else:
             # assume it is a sequence
@@ -106,7 +144,7 @@ if sys.platform[:3] == 'win':
     class Start(BaseController):
         '''Controller for the win32 start progam through os.startfile.'''
 
-        def open(self, filename):
+        def _open(self, filename):
             try:
                 os.startfile(filename)  # @UndefinedVariable
             except WindowsError:        # @UndefinedVariable
@@ -117,22 +155,19 @@ if sys.platform[:3] == 'win':
                 return True
 
     _controllers['windows-default'] = Start('start')
-    _open = _controllers['windows-default'].open
+    _open = _controllers['windows-default']._open
 
 
 # Platform support for MacOS
 elif sys.platform == 'darwin':
     _controllers['open']= Controller('open')
-    _open = _controllers['open'].open
+    _open = _controllers['open']._open
 
 
 # Platform support for Unix
 else:
 
     import subprocess
-
-    # @WARNING: use the private API of the webbrowser module
-    from webbrowser import _iscommand
 
     class KfmClient(Controller):
         '''Controller for the KDE kfmclient program.'''
@@ -205,11 +240,11 @@ else:
 
         try:
             controller_name = controllers_map[desktop_environment]
-            return _controllers[controller_name].open
+            return _controllers[controller_name]._open
 
         except KeyError:
             if 'xdg-open' in _controllers:
-                return _controllers['xdg-open'].open
+                return _controllers['xdg-open']._open
             else:
                 return webbrowser.open
 
@@ -219,12 +254,6 @@ else:
     _open = get()
 
 
-def open(filename):
-    '''Open a file or an URL in the registered default application.'''
-
-    return _open(filename)
-
-
 def _fix_addersses(**kwargs):
     for headername in ('address', 'to', 'cc', 'bcc'):
         try:
@@ -232,7 +261,7 @@ def _fix_addersses(**kwargs):
             if not headervalue:
                 del kwargs[headername]
                 continue
-            elif not isinstance(headervalue, basestring):
+            elif not isinstance(headervalue, str):
                 # assume it is a sequence
                 headervalue = ','.join(headervalue)
 
@@ -301,7 +330,7 @@ def mailto(address, to=None, cc=None, bcc=None, subject=None, body=None,
     '''
 
     mailto_string = mailto_format(**locals())
-    return open(mailto_string)
+    return _open(mailto_string)
 
 
 if __name__ == '__main__':
