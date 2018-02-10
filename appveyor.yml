@@ -58,7 +58,7 @@ install:
   - pip.exe install "pyinstaller==3.3.1"
   
   # the PyYAML wheels are busted.  install from source instead
-  - pip.exe install --no-binary :all: PyYAML
+  - pip.exe install --no-use-wheel pyyaml
 
   - "%WITH_COMPILER% python setup.py develop"
 

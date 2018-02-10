@@ -53,7 +53,7 @@ install:
   - pip install "pyinstaller==3.3.1"
   
   # the PyYAML wheels are busted.  install from source instead.
-  - pip install --no-binary :all: pyyaml
+  - pip install --no-use-wheel pyyaml
 
   - python setup.py develop 
 
