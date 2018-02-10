@@ -56,7 +56,9 @@ install:
   - conda install --yes --quiet msvc_runtime pip mock
   - pip.exe install nose2 sphinx
   - pip.exe install "pyinstaller==3.3.1"
-  - pip.exe install "pyyaml==3.11"  # 3.12 doesn't work with pyinstaller
+  
+  # the PyYAML wheels are busted.  install from source instead
+  - pip.exe install --no-binary :all: PyYAML
 
   - "%WITH_COMPILER% python setup.py develop"
 

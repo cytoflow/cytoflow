@@ -51,7 +51,9 @@ install:
   - conda install --yes --quiet pip mock
   - pip install nose2 sphinx
   - pip install "pyinstaller==3.3.1"
-  - pip install "pyyaml==3.11"
+  
+  # the PyYAML wheels are busted.  install from source instead.
+  - pip install --no-binary :all: pyyaml
 
   - python setup.py develop 
 
