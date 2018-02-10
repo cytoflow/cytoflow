@@ -71,7 +71,7 @@ before computing and applying the gate.
                                     yscale = 'log',
                                     keep = 0.7)
     density_op.estimate(ex)   
-    density_op.default_view().plot(ex2)
+    density_op.default_view().plot(ex)
     ex2 = density_op.apply(ex)
 '''
 

@@ -131,11 +131,11 @@ class PCAOp(HasStrictTraits):
         ...                      xscale = "log",
         ...                      ychannel = "Y2-A",
         ...                      yscale = "log",
-        ...                      subset = "Dox == 0.0").plot(ex2)
+        ...                      subset = "Dox == 1.0").plot(ex2)
 
         >>> flow.ScatterplotView(xchannel = "PCA_1",
         ...                      ychannel = "PCA_2",
-        ...                      subset = "Dox == 0.0").plot(ex2)
+        ...                      subset = "Dox == 1.0").plot(ex2)
        
     .. plot::
         :context: close-figs
@@ -144,7 +144,7 @@ class PCAOp(HasStrictTraits):
         ...                      xscale = "log",
         ...                      ychannel = "Y2-A",
         ...                      yscale = "log",
-        ...                      subset = "Dox == 10.0").plot(ex2)
+        ...                      subset = "Dox == 10.0").plot(ex2) 
 
         >>> flow.ScatterplotView(xchannel = "PCA_1",
         ...                      ychannel = "PCA_2",

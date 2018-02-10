@@ -47,15 +47,15 @@ class RadvizView(BaseNDView):
     Notes
     -----
     
-    The Radviz plot is based on a method of "dimensional anchors" [1].
+    The Radviz plot is based on a method of "dimensional anchors" [#f1]_.
     The variables are conceived as points equidistant around a unit circle,
     and each data point connected to each anchor by a spring whose stiffness
     corresponds to the value of that data point.  The location of the data
     point is the location where springs' tensions are minimized.  Fortunately,
     there is fast matrix math to do this.
     
-    As per [2], the order of the anchors can make a huge difference.  I've 
-    adapted the code from the R ``radviz`` package to compute the cosine
+    As per [#f2]_, the order of the anchors can make a huge difference.  I've 
+    adapted the code from the R ``radviz`` package [#f3]_ to compute the cosine
     similarity of all possible circular permutations ("necklaces").  For a
     moderate number of anchors such as is likely to be encountered here,
     computing them all is completely feasible.
@@ -63,18 +63,18 @@ class RadvizView(BaseNDView):
     References
     ----------
         
-    .. [1] Hoffman P, Grinstein G, Pinkney D. Dimensional anchors: a graphic 
+    .. [#f1] Hoffman P, Grinstein G, Pinkney D. Dimensional anchors: a graphic 
         primitive for multidimensional multivariate information visualizations. 
         Proceedings of the 1999 workshop on new paradigms in information 
         visualization and manipulation in conjunction with the eighth ACM 
         internation conference on Information and knowledge management. 
         1999 Nov 1 (pp. 9-16). ACM.
     
-    .. [2] Di Caro L, Frias-Martinez V, Frias-Martinez E. Analyzing the role 
+    .. [#f2] Di Caro L, Frias-Martinez V, Frias-Martinez E. Analyzing the role 
         of dimension arrangement for data visualization in radviz. Advances in 
         Knowledge Discovery and Data Mining. 2010:125-32.
         
-    .. [3] https://github.com/yannabraham/Radviz
+    .. [#f3] https://github.com/yannabraham/Radviz
         
     Examples
     --------
@@ -124,10 +124,8 @@ class RadvizView(BaseNDView):
             
         marker : a matplotlib marker style, usually a string
             Specfies the glyph to draw for each point on the scatterplot.
-            See `matplotlib.markers`_ for examples.  Default: 'o'
-            
-        .. _matplotlib.markers: http://matplotlib.org/api/markers_api.html#module-matplotlib.markers
-        
+            See `matplotlib.markers <http://matplotlib.org/api/markers_api.html#module-matplotlib.markers>`_ for examples.  Default: 'o'
+                    
         Notes
         -----
         Other ``kwargs`` are passed to `matplotlib.pyplot.scatter <https://matplotlib.org/devdocs/api/_as_gen/matplotlib.pyplot.scatter.html>`_
@@ -186,7 +184,7 @@ class RadvizView(BaseNDView):
         best_p = None
         best_score = -np.inf
         
-        for p in get_necklaces(np.arange(m)):
+        for p in _get_necklaces(np.arange(m)):
             score = similarity_metric(s, sim, p)
 
             if score > best_score:
@@ -276,7 +274,7 @@ def _radviz_plot(*channels, ax_annotations, scale, lim, order, **kwargs):
 
     ax.axis('equal')
     
-def get_necklaces(L):
+def _get_necklaces(L):
     import itertools as it
 
     B = it.combinations(L,2)

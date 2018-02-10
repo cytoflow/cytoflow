@@ -86,16 +86,13 @@ class ScatterplotView(Base2DView):
             
         marker : a matplotlib marker style, usually a string
             Specfies the glyph to draw for each point on the scatterplot.
-            See `matplotlib.markers`_ for examples.  Default: 'o'
+            See `matplotlib.markers <http://matplotlib.org/api/markers_api.html#module-matplotlib.markers>`_ for examples.  Default: 'o'
             
-        .. _matplotlib.markers: http://matplotlib.org/api/markers_api.html#module-matplotlib.markers
         
-
         Notes
         -----
         Other ``kwargs`` are passed to `matplotlib.pyplot.scatter <https://matplotlib.org/devdocs/api/_as_gen/matplotlib.pyplot.scatter.html>`_
-  
-        
+
         """
         
         super().plot(experiment, **kwargs)

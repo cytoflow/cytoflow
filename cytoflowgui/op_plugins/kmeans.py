@@ -59,13 +59,13 @@ an unsupervized manner.
     ex = import_op.apply()
     
 
-    km_op = flow.KMeans(name = 'KM',
-                        channels = ['V2-A', 'Y2-A'],
-                        scale = {'V2-A' : 'log',
-                                 'Y2-A' : 'log'},
-                        num_clusters = 2)
+    km_op = flow.KMeansOp(name = 'KM',
+                          channels = ['V2-A', 'Y2-A'],
+                          scale = {'V2-A' : 'log',
+                                   'Y2-A' : 'log'},
+                          num_clusters = 2)
     km_op.estimate(ex)   
-    ex2 = fp_op.apply(ex)
+    ex2 = km_op.apply(ex)
     km_op.default_view().plot(ex2)
 
 '''

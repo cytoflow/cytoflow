@@ -17,6 +17,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
+Violin Plot
+-----------
+
 Plots a violin plot, which is a nice way to compare several distributions.
 
 .. object:: X Variable

@@ -871,7 +871,7 @@ class FlowPeaks2DView(By2DView, AnnotatingView, ScatterplotView):
     blue and the clusters-of-k-means in pink.
 
     Attributes
-    ----------    
+    ----------
 
     """
      

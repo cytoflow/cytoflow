@@ -16,65 +16,65 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-'''
-Piecewise bleedthrough correction
----------------------------------
-
-.. warning::
-    **THIS OPERATION IS DEPRECATED.**
-
-Apply bleedthrough correction to a set of fluorescence channels.
-
-This is not a traditional bleedthrough matrix-based compensation; it uses
-a similar set of single-color controls, but instead of computing a compensation
-matrix, it fits a piecewise-linear spline to the untransformed data and
-uses those splines to compute the correction factor at each point in
-a mesh across the color space. 
-    
-This works best on data that has had autofluorescence removed first;
-if that is the case, then the autofluorescence will be subtracted from
-the single-color controls too.
-
-To use, specify the single-color control files and which channels they should
-be measured in, then click **Estimate**.  Check the diagnostic plot to make sure
-the estimation looks good.  There must be at least two channels corrected.
-    
-.. object:: Add Control, Remove Control
-
-    Add or remove single-color controls.
-    
-.. object: Subset
-
-    If you specify a subset here, only that data will be used to calculate the
-    bleedthrough matrix.  For example, if you applied a gate to the morphological
-    channels, that gate can be specified here to restrict the estimation to
-    only events that are in that gate.
-    
-.. plot:: 
-
-    import cytoflow as flow
-    import_op = flow.ImportOp()
-    import_op.tubes = [flow.Tube(file = "tasbe/rby.fcs")]
-    ex = import_op.apply()
-    
-    af_op = flow.AutofluorescenceOp()
-    af_op.channels = ["Pacific Blue-A", "FITC-A", "PE-Tx-Red-YG-A"]
-    af_op.blank_file = "tasbe/blank.fcs"
-
-    af_op.estimate(ex)
-    ex2 = af_op.apply(ex)
-
-    bl_op = flow.BleedthroughPiecewiseOp()
-    bl_op.controls = {'Pacific Blue-A' : 'tasbe/ebfp.fcs',
-                      'FITC-A' : 'tasbe/eyfp.fcs',
-                      'PE-Tx-Red-YG-A' : 'tasbe/mkate.fcs'}    
-
-    bl_op.estimate(ex2)
-    bl_op.default_view().plot(ex2)  
-
-    ex2 = bl_op.apply(ex2)  
-
-'''
+# '''
+# Piecewise bleedthrough correction
+# ---------------------------------
+# 
+# .. warning::
+#     **THIS OPERATION IS DEPRECATED.**
+# 
+# Apply bleedthrough correction to a set of fluorescence channels.
+# 
+# This is not a traditional bleedthrough matrix-based compensation; it uses
+# a similar set of single-color controls, but instead of computing a compensation
+# matrix, it fits a piecewise-linear spline to the untransformed data and
+# uses those splines to compute the correction factor at each point in
+# a mesh across the color space. 
+#     
+# This works best on data that has had autofluorescence removed first;
+# if that is the case, then the autofluorescence will be subtracted from
+# the single-color controls too.
+# 
+# To use, specify the single-color control files and which channels they should
+# be measured in, then click **Estimate**.  Check the diagnostic plot to make sure
+# the estimation looks good.  There must be at least two channels corrected.
+#     
+# .. object:: Add Control, Remove Control
+# 
+#     Add or remove single-color controls.
+#     
+# .. object: Subset
+# 
+#     If you specify a subset here, only that data will be used to calculate the
+#     bleedthrough matrix.  For example, if you applied a gate to the morphological
+#     channels, that gate can be specified here to restrict the estimation to
+#     only events that are in that gate.
+#     
+# .. plot:: 
+# 
+#     import cytoflow as flow
+#     import_op = flow.ImportOp()
+#     import_op.tubes = [flow.Tube(file = "tasbe/rby.fcs")]
+#     ex = import_op.apply()
+#     
+#     af_op = flow.AutofluorescenceOp()
+#     af_op.channels = ["Pacific Blue-A", "FITC-A", "PE-Tx-Red-YG-A"]
+#     af_op.blank_file = "tasbe/blank.fcs"
+# 
+#     af_op.estimate(ex)
+#     ex2 = af_op.apply(ex)
+# 
+#     bl_op = flow.BleedthroughPiecewiseOp(ignore_deprecated = True)
+#     bl_op.controls = {'Pacific Blue-A' : 'tasbe/ebfp.fcs',
+#                       'FITC-A' : 'tasbe/eyfp.fcs',
+#                       'PE-Tx-Red-YG-A' : 'tasbe/mkate.fcs'}    
+# 
+#     bl_op.estimate(ex2)
+#     bl_op.default_view().plot(ex2)  
+# 
+#     ex2 = bl_op.apply(ex2)  
+# 
+# '''
 
 import warnings
 

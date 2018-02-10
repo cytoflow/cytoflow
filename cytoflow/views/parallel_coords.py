@@ -90,9 +90,8 @@ class ParallelCoordinatesView(BaseNDView):
             The alpha blending value, between 0 (transparent) and 1 (opaque).
 
         axvlines_kwds : dict
-            A dictionary of parameters to pass to `ax.axvline`_
-        
-        .. _ax.axvline: https://matplotlib.org/api/_as_gen/matplotlib.axes.Axes.axvline.html
+            A dictionary of parameters to pass to `ax.axvline <https://matplotlib.org/api/_as_gen/matplotlib.axes.Axes.axvline.html>`_
+
         
         Notes
         -----

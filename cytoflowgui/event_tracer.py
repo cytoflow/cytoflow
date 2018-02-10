@@ -11,8 +11,8 @@
 #  Thanks for using Enthought open source!
 #
 #------------------------------------------------------------------------------
-""" Record trait change events in single and multi-threaded environments.
-
+""" 
+Record trait change events in single and multi-threaded environments.
 """
 
 import inspect
@@ -337,16 +337,12 @@ class MultiThreadChangeEventRecorder(object):
 
 @contextmanager
 def record_events():
-    """ Multi-threaded trait change event tracer.
+    """ Multi-threaded trait change event tracer.::
 
-    Usage
-    -----
-    ::
-
-        >>> from trace_recorder import record_events
-        >>> with record_events() as change_event_container:
-        ...     my_model.some_trait = True
-        >>> change_event_container.save_to_directory('C:\\dev\\trace')
+            from trace_recorder import record_events
+            with record_events() as change_event_container:
+                my_model.some_trait = True
+            change_event_container.save_to_directory('C:\\dev\\trace')
 
     This will install a tracer that will record all events that occur from
     setting of some_trait on the my_model instance.

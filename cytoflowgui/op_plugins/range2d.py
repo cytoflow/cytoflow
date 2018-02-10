@@ -16,31 +16,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-'''
-Created on Apr 25, 2015
-
-@author: brian
-'''
-
-from traits.api import provides, Callable, Str, Instance, DelegatesTo
-from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor
-from envisage.api import Plugin, contributes_to
-from pyface.api import ImageResource
-
-from cytoflow.operations import IOperation
-from cytoflow.operations.range2d import Range2DOp, RangeSelection2D
-from cytoflow.views.i_selectionview import ISelectionView
-
-from cytoflowgui.op_plugins.i_op_plugin \
-    import IOperationPlugin, OpHandlerMixin, PluginOpMixin, OP_PLUGIN_EXT, shared_op_traits, PluginHelpMixin
-from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
-from cytoflowgui.subset import SubsetListEditor
-from cytoflowgui.color_text_editor import ColorTextEditor
-from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
-from cytoflowgui.workflow import Changed
-from cytoflowgui.serialization import camel_registry, traits_repr, traits_str, dedent
-
-Range2DOp.__repr__ = traits_repr
 
 '''
 2D Range Gate
@@ -117,6 +92,27 @@ click-and-drag on the plot.
                    xscale = 'log',
                    yscale = 'log').plot(ex)
 '''
+
+from traits.api import provides, Callable, Str, Instance, DelegatesTo
+from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor
+from envisage.api import Plugin, contributes_to
+from pyface.api import ImageResource
+
+from cytoflow.operations import IOperation
+from cytoflow.operations.range2d import Range2DOp, RangeSelection2D
+from cytoflow.views.i_selectionview import ISelectionView
+
+from cytoflowgui.op_plugins.i_op_plugin \
+    import IOperationPlugin, OpHandlerMixin, PluginOpMixin, OP_PLUGIN_EXT, shared_op_traits, PluginHelpMixin
+from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
+from cytoflowgui.subset import SubsetListEditor
+from cytoflowgui.color_text_editor import ColorTextEditor
+from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
+from cytoflowgui.workflow import Changed
+from cytoflowgui.serialization import camel_registry, traits_repr, traits_str, dedent
+
+Range2DOp.__repr__ = traits_repr
+
 
 class Range2DHandler(OpHandlerMixin, Controller):
     

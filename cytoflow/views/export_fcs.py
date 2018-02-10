@@ -18,7 +18,7 @@
 
 """
 cytoflow.views.export_fcs
---------------------------
+-------------------------
 """
 
 from pathlib import Path
@@ -38,7 +38,7 @@ class ExportFCS(HasStrictTraits):
     from a particular experiment, and :meth:`export` to export the FCS files.
     
     The Cytoflow attributes will be encoded in keywords in the FCS TEXT
-    segment, starting with the characters "CF_".
+    segment, starting with the characters ``CF_``.
     
     Attributes
     ----------

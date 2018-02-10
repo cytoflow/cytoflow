@@ -2,16 +2,18 @@
 # -*- coding: utf-8 -*-
 
 """
+fcswrite.py
+-----------
+
 Write .fcs files for flow cytometry
+
 Adapted from https://github.com/ZELLMECHANIK-DRESDEN/fcswrite
-Copyright (c) 2016, ZELLMECHANIK DRESDEN
+
 """
 from __future__ import print_function, unicode_literals, division
 
 import numpy as np
 import struct
-import re
-
 
 def write_fcs(filename, chn_names, data,
               compat_chn_names=True,
@@ -20,34 +22,42 @@ def write_fcs(filename, chn_names, data,
               compat_copy=True,
               verbose=0,
               **kws):
-    """Write numpy data to an .fcs file (FCS3.0 file format)
+    """
+    Write numpy data to an .fcs file (FCS3.0 file format)
     
     
     Parameters
     ----------
     filename: str
         Path to the output .fcs file
+        
     ch_names: list of str, length C
         Names of the output channels
+        
     data: 2d ndarray of shape (N,C)
         The numpy array data to store as .fcs file format. 
+        
     compat_chn_names: bool
         Compatibility mode for 3rd party flow analysis software:
         The characters " ", "?", and "_" are removed in the output
         channel names.
+        
     compat_percent: bool
         Compatibliity mode for 3rd party flow analysis software:
         If a column in `data` contains values only between 0 and 1,
         they are multiplied by 100.
+        
     compat_negative: bool
         Compatibliity mode for 3rd party flow analysis software:
         Flip the sign of `data` if its mean is smaller than zero.
+        
     compat_copy: bool
         Do not override the input array `data` when modified in
         compatibility mode.
 
-    Additional keyword arguments are written as keyword/value pairs in
-    the TEXT segment of the FCS file.
+    kwargs : Str
+        Additional keyword arguments are written as keyword/value pairs in
+        the TEXT segment of the FCS file.
 
     Notes
     -----
@@ -159,11 +169,4 @@ def write_fcs(filename, chn_names, data,
         fd.write(TEXT.encode("ascii"))
         fd.write(DATA)
         fd.write(b'00000000')
-
-
-'''
-Created on Jan 30, 2018
-
-@author: brian
-'''
 
