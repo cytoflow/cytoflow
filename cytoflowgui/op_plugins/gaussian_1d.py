@@ -105,7 +105,7 @@ from traitsui.api import View, Item, EnumEditor, Controller, VGroup, \
                          CheckListEditor, ButtonEditor, TextEditor
 from envisage.api import Plugin, contributes_to
 from traits.api import (provides, Callable, Instance, Str, List, Dict, Any, 
-                        DelegatesTo, Property, on_trait_change)
+                        DelegatesTo, Property, on_trait_change, Constant)
 from pyface.api import ImageResource
 
 from cytoflow.operations import IOperation
@@ -158,6 +158,8 @@ class GaussianMixture1DHandler(OpHandlerMixin, Controller):
                     shared_op_traits)
 
 class GaussianMixture1DPluginOp(PluginOpMixin, GaussianMixtureOp):
+    id = Constant('edu.mit.synbio.cytoflowgui.operations.gaussian_1d')
+
     handler_factory = Callable(GaussianMixture1DHandler)
     
     channel = Str
@@ -298,7 +300,7 @@ class GaussianMixture1DPluginView(PluginViewMixin, GaussianMixture1DView):
 class GaussianMixture1DPlugin(Plugin, PluginHelpMixin):
 
     id = 'edu.mit.synbio.cytoflowgui.op_plugins.gaussian_1d'
-    operation_id = 'edu.mit.synbio.cytoflow.operations.gaussian_1d'
+    operation_id = 'edu.mit.synbio.cytoflowgui.operations.gaussian_1d'
 
     short_name = "1D Mixture Model"
     menu_group = "Gates"

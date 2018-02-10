@@ -44,7 +44,7 @@ estimating and applying a mixture model.
 
 .. note:: 
 
-    **Num Components** and **Sigma** withh be the same for each subset. 
+    **Num Components** and **Sigma** will be the same for each subset. 
     
 .. object:: Name
         
@@ -104,7 +104,7 @@ from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor,
                          CheckListEditor, ButtonEditor
 from envisage.api import Plugin, contributes_to
 from traits.api import (provides, Callable, List, Str, Dict, Any, Instance,
-                        DelegatesTo, Property, on_trait_change)
+                        DelegatesTo, Property, on_trait_change, Constant)
 from pyface.api import ImageResource
 
 import cytoflow.utility as util
@@ -163,6 +163,8 @@ class GaussianMixture2DHandler(OpHandlerMixin, Controller):
                     shared_op_traits)
 
 class GaussianMixture2DPluginOp(PluginOpMixin, GaussianMixtureOp):
+    id = Constant('edu.mit.synbio.cytoflowgui.operations.gaussian_2d')
+
     handler_factory = Callable(GaussianMixture2DHandler)
     
     xchannel = Str(estimate = True)
@@ -329,7 +331,7 @@ class GaussianMixture2DPluginView(PluginViewMixin, GaussianMixture2DView):
 class GaussianMixture2DPlugin(Plugin, PluginHelpMixin):
     
     id = 'edu.mit.synbio.cytoflowgui.op_plugins.gaussian_2d'
-    operation_id = 'edu.mit.synbio.cytoflow.operations.gaussian_2d'
+    operation_id = 'edu.mit.synbio.cytoflowgui.operations.gaussian_2d'
 
     short_name = "2D Mixture Model"
     menu_group = "Gates"
