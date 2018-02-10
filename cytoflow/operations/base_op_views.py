@@ -117,6 +117,10 @@ class ByView(OpView):
         experiment : Experiment
             The :class:`Experiment` that will be producing the plots.
         """
+        
+        if experiment is None:
+            raise util.CytoflowViewError('experiment',
+                                         "No experiment specified")
                 
         if len(self.by) == 0 and len(self.facets) > 1:
             raise util.CytoflowViewError('facets',
@@ -198,6 +202,9 @@ class ByView(OpView):
             the name of the plot to make.  Must be one of the values retrieved
             from :meth:`enum_plots`.
         """
+        if experiment is None:
+            raise util.CytoflowViewError('experiment',
+                                         "No experiment specified")
 
         if len(self.by) == 0 and len(self.facets) > 1:
             raise util.CytoflowViewError('facets', 
@@ -318,6 +325,9 @@ class AnnotatingView(BaseDataView):
             The color to plot the annotations.  Overrides the default color
             cycle.
         """
+        if experiment is None:
+            raise util.CytoflowViewError('experiment',
+                                         "No experiment specified")
         
         annotation_facet = kwargs.pop('annotation_facet', None)
         annotation_trait = kwargs.pop('annotation_trait', None)

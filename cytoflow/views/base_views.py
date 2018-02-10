@@ -93,6 +93,9 @@ class BaseView(HasStrictTraits):
             If plotting a huefacet with many values, use this object for color
             scale normalization.
         """
+        if experiment is None:
+            raise util.CytoflowViewError('experiment',
+                                         "No experiment specified")
 
         col_wrap = kwargs.pop('col_wrap', None)
         
@@ -241,6 +244,9 @@ class BaseDataView(BaseView):
         underlying dataframe to `BaseView.plot`
 
         """
+        if experiment is None:
+            raise util.CytoflowViewError('experiment',
+                                         "No experiment specified")
 
         if self.xfacet and self.xfacet not in experiment.conditions:
             raise util.CytoflowViewError('xfacet',
@@ -756,10 +762,17 @@ class Base1DStatisticsView(BaseStatisticsView):
     error_statistic = Tuple(Str, Str)
     
     def enum_plots(self, experiment):
+        if experiment is None:
+            raise util.CytoflowViewError('experiment',
+                                         "No experiment specified")
         data = self._make_data(experiment)
         return super().enum_plots(experiment, data)
     
-    def plot(self, experiment, plot_name = None, **kwargs):       
+    def plot(self, experiment, plot_name = None, **kwargs):
+        if experiment is None:
+            raise util.CytoflowViewError('experiment',
+                                         "No experiment specified")
+               
         data = self._make_data(experiment)
         
         if not self.variable:
@@ -873,10 +886,17 @@ class Base2DStatisticsView(BaseStatisticsView):
     y_error_statistic = Tuple(Str, Str)
     
     def enum_plots(self, experiment):
+        if experiment is None:
+            raise util.CytoflowViewError('experiment',
+                                         "No experiment specified")
         data = self._make_data(experiment)
         return super().enum_plots(experiment, data)
     
     def plot(self, experiment, plot_name = None, **kwargs):
+        if experiment is None:
+            raise util.CytoflowViewError('experiment',
+                                         "No experiment specified")
+        
         data = self._make_data(experiment)
 
         xscale = util.scale_factory(self.xscale, 
