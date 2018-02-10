@@ -66,7 +66,7 @@ import cytoflow.utility as util
 
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
 from cytoflowgui.subset import SubsetListEditor, ISubset
-from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
+from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin
 from cytoflowgui.workflow import Changed
 from cytoflowgui.serialization import camel_registry, traits_repr, dedent
 
@@ -260,10 +260,7 @@ class TransformStatisticPluginOp(PluginOpMixin, TransformStatisticOp):
 
 
 @provides(IOperationPlugin)
-class TransformStatisticPlugin(Plugin):
-    """
-    class docs
-    """
+class TransformStatisticPlugin(Plugin, PluginHelpMixin):
     
     id = 'edu.mit.synbio.cytoflowgui.op_plugins.transform_statistic'
     operation_id = 'edu.mit.synbio.cytoflow.operations.transform_statistic'

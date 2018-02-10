@@ -315,8 +315,8 @@ class BeadCalibrationPluginView(PluginViewMixin, BeadCalibrationDiagnostic):
 @provides(IOperationPlugin)
 class BeadCalibrationPlugin(Plugin, PluginHelpMixin):
     
-    id = 'edu.mit.synbio.cytoflowgui.op_plugins.bead_calibrate'
-    operation_id = 'edu.mit.synbio.cytoflow.operations.bead_calibrate'
+    id = 'edu.mit.synbio.cytoflowgui.op_plugins.beads_calibrate'
+    operation_id = 'edu.mit.synbio.cytoflow.operations.beads_calibrate'
 
     short_name = "Bead Calibration"
     menu_group = "Calibration"
