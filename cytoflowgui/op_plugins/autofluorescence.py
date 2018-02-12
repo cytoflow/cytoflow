@@ -56,7 +56,7 @@ from traitsui.api import (View, Item, Controller, ButtonEditor, CheckListEditor,
                           VGroup)
 from envisage.api import Plugin, contributes_to
 from traits.api import (provides, Callable, List, Str, File, on_trait_change,
-                        Property, DelegatesTo)
+                        Property, DelegatesTo, Instance, HasTraits)
 from pyface.api import ImageResource
 
 import cytoflow.utility as util
@@ -64,7 +64,8 @@ import cytoflow.utility as util
 from cytoflow.operations.autofluorescence import AutofluorescenceOp, AutofluorescenceDiagnosticView
 from cytoflow.views.i_selectionview import IView
 
-from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
+from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin,\
+    EmptyPlotParams
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.subset import ISubset, SubsetListEditor
@@ -183,6 +184,8 @@ class AutofluorescenceViewHandler(ViewHandlerMixin, Controller):
 @provides(IView)
 class AutofluorescencePluginView(PluginViewMixin, AutofluorescenceDiagnosticView):
     handler_factory = Callable(AutofluorescenceViewHandler)
+    plot_params = Instance(EmptyPlotParams, ())
+
     subset = DelegatesTo('op', transient = True)
     
     def plot_wi(self, wi):

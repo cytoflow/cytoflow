@@ -37,6 +37,7 @@ from cytoflowgui.subset import ISubset
 from cytoflowgui.workflow import Changed
 from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.flow_task_pane import TabListEditor
+from cytoflowgui.serialization import camel_registry
 
 VIEW_PLUGIN_EXT = 'edu.mit.synbio.cytoflow.view_plugins'
 
@@ -118,6 +119,36 @@ class PlotParams(HasTraits):
                          editor = TextEditor(auto_set = False)),
                     Item('huelabel',
                          editor = TextEditor(auto_set = False)))
+        
+@camel_registry.dumper(PlotParams, 'plot-params', version = 1)
+def _dump_plot_params(params):
+    return dict(title = params.title,
+                xlabel = params.xlabel,
+                ylabel = params.ylabel,
+                huelabel = params.huelabel,
+                legend = params.legend,
+                sharex = params.sharex,
+                sharey = params.sharey)
+#                 xlim = params.xlim,
+#                 ylim = params.ylim,
+#                 col_wrap = params.col_wrap)
+
+@camel_registry.loader('plot-params', version = 1)
+def _load_plot_params(data, version):
+    return PlotParams(**data)
+        
+class EmptyPlotParams(HasTraits):
+    
+    def default_traits_view(self):
+        return View()
+    
+@camel_registry.dumper(EmptyPlotParams, 'empty-plot-params', version = 1)
+def _dump_empty_plot_params(params):
+    return dict()
+
+@camel_registry.loader('empty-plot-params', version = 1)
+def _load_empty_plot_params(data, version):
+    return EmptyPlotParams()
 
                         
 class PluginViewMixin(HasTraits):

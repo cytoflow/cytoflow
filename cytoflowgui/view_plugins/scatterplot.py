@@ -74,8 +74,9 @@ Plot a scatterplot.
                          huefacet = 'Dox').plot(ex)
 '''
 
-from traits.api import provides, Callable, Str
-from traitsui.api import View, Item, Controller, EnumEditor, VGroup
+from traits.api import provides, Callable, Str, Instance, Enum
+from traitsui.api import (View, Item, Controller, EnumEditor, VGroup, Include,
+                          TextEditor)
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
@@ -90,7 +91,8 @@ from cytoflowgui.subset import SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
-    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, PluginHelpMixin
+    import (IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, 
+            PluginHelpMixin, PlotParams)
 from cytoflowgui.serialization import camel_registry, traits_repr, dedent
 from cytoflowgui.util import IterWrapper
 
@@ -148,9 +150,36 @@ class ScatterplotHandler(ViewHandlerMixin, Controller):
                                                   background_color = "#ff9191"))))
 
 
+class ScatterplotPlotParams(PlotParams):
+    
+    min_quantile = util.PositiveFloat(0.001)
+    max_quantile = util.PositiveFloat(1.00)
+    alpha = util.PositiveFloat(0.25)
+    s = util.PositiveFloat(2)
+    marker = Enum("o", ",", "v", "^", "<", ">", "1", "2", "3", "4", "8",
+                  "s", "p", "*", "h", "H", "+", "x", "X", "D", "d")
+    
+    def default_traits_view(self):
+        dv = PlotParams.default_traits_view(self)
+        
+        return View(Item('min_quantile',
+                         editor = TextEditor(auto_set = False)),
+                    Item('max_quantile',
+                         editor = TextEditor(auto_set = False)),
+                    Item('alpha',
+                         editor = TextEditor(auto_set = False)),
+                    Item('s',
+                         editor = TextEditor(auto_set = False),
+                         label = "Size"),
+                    Item('marker'),
+                    dv.content)
+
 class ScatterplotPluginView(PluginViewMixin, ScatterplotView):
     handler_factory = Callable(ScatterplotHandler, transient = True)
     plotfacet = Str
+    
+    plot_params = Instance(ScatterplotPlotParams, ())
+
 
     def enum_plots_wi(self, wi):
         if not self.plotfacet:
@@ -187,6 +216,8 @@ class ScatterplotPluginView(PluginViewMixin, ScatterplotView):
                 plot = ", plot_name = " + repr(self.current_plot) if self.plot_names else ""))
 
 
+
+
 @provides(IViewPlugin)
 class ScatterplotPlugin(Plugin, PluginHelpMixin):
 
@@ -207,7 +238,7 @@ class ScatterplotPlugin(Plugin, PluginHelpMixin):
 
 ### Serialization
 
-@camel_registry.dumper(ScatterplotPluginView, 'scatterplot', 1)
+@camel_registry.dumper(ScatterplotPluginView, 'scatterplot', version = 2)
 def _dump(view):
     return dict(xchannel = view.xchannel,
                 xscale = view.xscale,
@@ -218,9 +249,31 @@ def _dump(view):
                 huefacet = view.huefacet,
                 huescale = view.huescale,
                 plotfacet = view.plotfacet,
-                subset_list = view.subset_list)
+                subset_list = view.subset_list,
+                plot_params = view.plot_params)
     
-@camel_registry.loader('scatterplot', 1)
+@camel_registry.dumper(ScatterplotPlotParams, 'scatterplot-params', version = 1)
+def _dump_params(params):
+    return dict(title = params.title,
+                xlabel = params.xlabel,
+                ylabel = params.ylabel,
+                huelabel = params.huelabel,
+                legend = params.legend,
+                sharex = params.sharex,
+                sharey = params.sharey,
+#                 xlim = params.xlim,
+#                 ylim = params.ylim,
+#                 col_wrap = params.col_wrap,
+                min_quantile = params.min_quantile,
+                max_quantile = params.max_quantile,
+                alpha = params.alpha,
+                s = params.s,
+                marker = params.marker )
+    
+@camel_registry.loader('scatterplot', version = any)
 def _load(data, version):
     return ScatterplotPluginView(**data)
-        
+
+@camel_registry.loader('scatterplot-params', version = 1)
+def _load_params(data, version):
+    return ScatterplotPlotParams(**data)
