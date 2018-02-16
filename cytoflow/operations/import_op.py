@@ -23,7 +23,7 @@ cytoflow.operations.import_op
 
 import warnings
 from traits.api import (HasTraits, HasStrictTraits, provides, Str, List, Any,
-                        Dict, File, Constant, Enum)
+                        Dict, File, Constant, Enum, Instance)
 
 import fcsparser
 import numpy as np
@@ -32,6 +32,8 @@ import cytoflow.utility as util
 
 from ..experiment import Experiment
 from .i_operation import IOperation
+
+from pandas import DataFrame
 
 class Tube(HasTraits):
     """
@@ -50,10 +52,14 @@ class Tube(HasTraits):
     --------
     >>> tube1 = flow.Tube(file = 'RFP_Well_A3.fcs', conditions = {"Dox" : 10.0})
     >>> tube2 = flow.Tube(file='CFP_Well_A4.fcs', conditions = {"Dox" : 1.0})
+    >>> tube3 = flow.Tube(frame=myframe, conditions = {"Dox" : 1.0})
     """
     
     # the file name for the FCS file to import
     file = File
+    
+    # or the frame to import
+    frame = Instance(DataFrame)
     
     # a dict of experimental conditions: name --> value
     conditions = Dict(Str, Any)
@@ -64,10 +70,12 @@ class Tube(HasTraits):
                    
     def __eq__(self, other):
         return (self.file == other.file and
+                self.frame.equals(other.frame) and
                 self.conditions == other.conditions)
         
     def __hash__(self):
-        return hash((self.file, 
+        return hash((self.file,
+                     self.frame,
                      (frozenset(self.conditions.keys()),
                       frozenset(self.conditions.itervalues()))))
 
@@ -240,80 +248,91 @@ class ImportOp(HasStrictTraits):
             experiment.add_condition(condition, dtype)
             experiment.metadata[condition]['experiment'] = True
 
-        try:
-            # silence warnings about duplicate channels;
-            # we'll figure that out below
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                tube0_meta = fcsparser.parse(self.tubes[0].file,
-                                             meta_data_only = True,
-                                             reformat_meta = True)
-        except Exception as e:
-            raise util.CytoflowOpError('tubes',
-                                       "FCS reader threw an error reading metadata "
-                                       "for tube {}"
-                                       .format(self.tubes[0].file)) from e
-              
-        meta_channels = tube0_meta["_channels_"]
-        
-        if self.name_metadata:
-            experiment.metadata["name_metadata"] = self.name_metadata
-        else:
-            # try to autodetect the metadata
-            if "$PnN" in meta_channels and not "$PnS" in meta_channels:
-                experiment.metadata["name_metadata"] = "$PnN"
-            elif "$PnN" not in meta_channels and "$PnS" in meta_channels:
-                experiment.metadata["name_metadata"] = "$PnS"
+        if (self.tubes[0].file):
+            try:
+                # silence warnings about duplicate channels;
+                # we'll figure that out below
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    if (self.tubes[0].file):
+                        tube0_meta = fcsparser.parse(self.tubes[0].file,
+                                                     meta_data_only = True,
+                                                     reformat_meta = True)
+            except Exception as e:
+                raise util.CytoflowOpError('tubes',
+                                           "FCS reader threw an error reading metadata "
+                                           "for tube {}"
+                                           .format(self.tubes[0].file)) from e
+
+            meta_channels = tube0_meta["_channels_"]
+
+            if self.name_metadata:
+                experiment.metadata["name_metadata"] = self.name_metadata
             else:
-                PnN = meta_channels["$PnN"]
-                PnS = meta_channels["$PnS"]
-                
-                # sometimes one is unique and the other isn't
-                if (len(set(PnN)) == len(PnN) and 
-                    len(set(PnS)) != len(PnS)):
+                # try to autodetect the metadata
+                if "$PnN" in meta_channels and not "$PnS" in meta_channels:
                     experiment.metadata["name_metadata"] = "$PnN"
-                elif (len(set(PnN)) != len(PnN) and 
-                      len(set(PnS)) == len(PnS)):
+                elif "$PnN" not in meta_channels and "$PnS" in meta_channels:
                     experiment.metadata["name_metadata"] = "$PnS"
                 else:
-                    # as per fcsparser.api, $PnN is the "short name" (like FL-1)
-                    # and $PnS is the "actual name" (like "FSC-H").  so let's
-                    # use $PnS.
-                    experiment.metadata["name_metadata"] = "$PnS"
+                    PnN = meta_channels["$PnN"]
+                    PnS = meta_channels["$PnS"]
 
-        meta_channels.set_index(experiment.metadata["name_metadata"], 
-                                inplace = True)
-        
-        channels = list(self.channels.keys()) if self.channels \
-                   else list(tube0_meta["_channel_names_"])
+                    # sometimes one is unique and the other isn't
+                    if (len(set(PnN)) == len(PnN) and 
+                        len(set(PnS)) != len(PnS)):
+                        experiment.metadata["name_metadata"] = "$PnN"
+                    elif (len(set(PnN)) != len(PnN) and 
+                          len(set(PnS)) == len(PnS)):
+                        experiment.metadata["name_metadata"] = "$PnS"
+                    else:
+                        # as per fcsparser.api, $PnN is the "short name" (like FL-1)
+                        # and $PnS is the "actual name" (like "FSC-H").  so let's
+                        # use $PnS.
+                        experiment.metadata["name_metadata"] = "$PnS"
 
-        # make sure everything in self.channels is in the tube channels
+            meta_channels.set_index(experiment.metadata["name_metadata"], 
+                                    inplace = True)
+
+            channels = list(self.channels.keys()) if self.channels \
+                       else list(tube0_meta["_channel_names_"])
+            # make sure everything in self.channels is in the tube channels
         
-        for channel in channels:
-            if channel not in meta_channels.index:
-                raise util.CytoflowOpError('channels',
-                                           "Channel {0} not in tube {1}"
-                                           .format(channel, self.tubes[0].file))                         
-        
+            for channel in channels:
+                if channel not in meta_channels.index:
+                    raise util.CytoflowOpError('channels',
+                                               "Channel {0} not in tube {1}"
+                                               .format(channel, self.tubes[0].file))                         
+        else:
+            channels = list(self.channels.keys()) if self.channels else list(self.tubes[0].frame)
+            meta_channels = DataFrame()
+
         # now that we have the metadata, load it into experiment
 
         for channel in channels:
             experiment.add_channel(channel)
             
             experiment.metadata[channel]["fcs_name"] = channel
-            
-            # keep track of the channel's PMT voltage
-            if("$PnV" in meta_channels.loc[channel]):
-                v = meta_channels.loc[channel]['$PnV']
-                if v: experiment.metadata[channel]["voltage"] = v
-            
-            # add the maximum possible value for this channel.
-            data_range = meta_channels.loc[channel]['$PnR']
-            data_range = float(data_range)
-            experiment.metadata[channel]['range'] = data_range
-        
+
+            if (list(meta_channels)):
+                # keep track of the channel's PMT voltage
+                if("$PnV" in meta_channels.loc[channel]):
+                    v = meta_channels.loc[channel]['$PnV']
+                    if v: experiment.metadata[channel]["voltage"] = v
+
+                # add the maximum possible value for this channel.
+                data_range = meta_channels.loc[channel]['$PnR']
+                data_range = float(data_range)
+                experiment.metadata[channel]['range'] = data_range
+
         for tube in self.tubes:
-            tube_data = parse_tube(tube.file, experiment)
+            if (tube.file and tube.frame != None):
+                raise util.CytoflowError("Both a DataFrame and an FCS file were specified, "
+                                         "tube with file {0} and conditions {1}".format(tube.file,tube.conditions))
+            elif (tube.file and tube.frame == None):
+                tube_data = parse_tube(tube.file, experiment)
+            elif (not tube.file and not tube.frame.empty):
+                tube_data = tube.frame
 
             if self.events:
                 if self.events <= len(tube_data):
