@@ -409,7 +409,7 @@ class ColorTranslationDiagnostic(HasStrictTraits):
 
         tubes = {}
 
-        if (self.controls != {}):
+        if (self.op.controls != {}):
             controls = self.op.controls
         else:
             controls = self.op.controls_frames
