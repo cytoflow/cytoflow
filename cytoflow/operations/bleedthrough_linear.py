@@ -36,6 +36,9 @@ import cytoflow.utility as util
 from .i_operation import IOperation
 from .import_op import Tube, ImportOp, check_tube
 
+from pandas import DataFrame
+from ..experiment import Experiment
+
 @provides(IOperation)
 class BleedthroughLinearOp(HasStrictTraits):
     """
@@ -140,6 +143,7 @@ class BleedthroughLinearOp(HasStrictTraits):
     name = Constant("Bleedthrough")
 
     controls = Dict(Str, File)
+    controls_frames = Dict(Str, Instance(DataFrame))
     spillover = Dict(Tuple(Str, Str), Float)
     
     def estimate(self, experiment, subset = None): 
@@ -149,27 +153,38 @@ class BleedthroughLinearOp(HasStrictTraits):
         if experiment is None:
             raise util.CytoflowOpError('experiment', "No experiment specified")
         
-        channels = list(self.controls.keys())
+        if ( self.controls_frames != {} ):
+            channels = list(self.controls_frames.keys())
+        else:
+            channels = list(self.controls.keys())
+        
 
         if len(channels) < 2:
             raise util.CytoflowOpError('channels',
                                        "Need at least two channels to correct bleedthrough.")
 
         # make sure the control files exist
-        for channel in channels:
-            if not os.path.isfile(self.controls[channel]):
-                raise util.CytoflowOpError('channels',
-                                           "Can't find file {0} for channel {1}."
-                                           .format(self.controls[channel], channel))
+        if ( self.controls != {} ):
+            for channel in channels:
+                if not os.path.isfile(self.controls[channel]):
+                    raise util.CytoflowOpError('channels',
+                                               "Can't find file {0} for channel {1}."
+                                               .format(self.controls[channel], channel))
                 
         for channel in channels:
-            
-            # make a little Experiment
-            check_tube(self.controls[channel], experiment)
-            tube_exp = ImportOp(tubes = [Tube(file = self.controls[channel])],
-                                channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels},
-                                name_metadata = experiment.metadata['name_metadata']).apply()
-            
+            ex_channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels}
+            name_metadata = experiment.metadata['name_metadata']
+            if ( self.controls != {} ):
+                # make a little Experiment
+                check_tube(self.controls[channel], experiment)
+                tube_exp = ImportOp(tubes = [Tube(file = self.controls[channel])],
+                                    channels = ex_channels,
+                                    name_metadata = name_metadata).apply()
+            else:
+                tube_exp = ImportOp(tubes = [Tube(frame = self.controls_frames[channel])],
+                                    channels = ex_channels,
+                                    name_metadata = name_metadata).apply()
+
             # apply previous operations
             for op in experiment.history:
                 tube_exp = op.apply(tube_exp)
@@ -314,9 +329,14 @@ class BleedthroughLinearOp(HasStrictTraits):
         # the completely arbitrary ordering of the channels
         channels = list(set([x for (x, _) in list(self.spillover.keys())]))
         
-        if set(self.controls.keys()) != set(channels):
-            raise util.CytoflowOpError('controls',
-                                       "Must have both the controls and bleedthrough to plot")
+        if ( self.controls_frames != {} ):
+            mykeys = self.controls_frames.keys()
+        else:
+            mykeys = self.controls.keys()
+
+            if set(mykeys) != set(channels):
+                raise util.CytoflowOpError('controls',
+                                           "Must have both the controls and bleedthrough to plot")
 
         return BleedthroughLinearDiagnostic(op = self, **kwargs)
     
@@ -356,7 +376,7 @@ class BleedthroughLinearDiagnostic(HasStrictTraits):
             raise util.CytoflowViewError('experiment',
                                          "No experiment specified")
 
-        if not self.op.controls:
+        if not self.op.controls and not self.op.controls_frames:
             raise util.CytoflowViewError('op',
                                          "No controls specified")
         
@@ -379,10 +399,18 @@ class BleedthroughLinearDiagnostic(HasStrictTraits):
                 if from_idx == to_idx:
                     continue
                 
-                check_tube(self.op.controls[from_channel], experiment)
-                tube_exp = ImportOp(tubes = [Tube(file = self.op.controls[from_channel])],
-                                    channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels},
-                                    name_metadata = experiment.metadata['name_metadata']).apply()
+                ex_channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels}
+                name_metadata = experiment.metadata['name_metadata']
+                if ( self.op.controls != {} ):
+                    # make a little Experiment
+                    check_tube(self.op.controls[from_channel], experiment)
+                    tube_exp = ImportOp(tubes = [Tube(file = self.op.controls[from_channel])],
+                                        channels = ex_channels,
+                                        name_metadata = name_metadata).apply()
+                else:
+                    tube_exp = ImportOp(tubes = [Tube(frame = self.op.controls_frames[from_channel])],
+                                        channels = ex_channels,
+                                        name_metadata = name_metadata).apply()
                 
                 # apply previous operations
                 for op in experiment.history:
