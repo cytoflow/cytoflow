@@ -35,6 +35,9 @@ import cytoflow.utility as util
 from .i_operation import IOperation
 from .import_op import Tube, ImportOp, check_tube
 
+from pandas import DataFrame
+from ..experiment import Experiment
+
 @provides(IOperation)
 class ColorTranslationOp(HasStrictTraits):
     """
@@ -126,6 +129,7 @@ class ColorTranslationOp(HasStrictTraits):
 
     translation = util.Removed(err_string = "'translation' is removed; the same info is found in 'controls'", warning = True)
     controls = Dict(Tuple(Str, Str), File)
+    controls_frames = Dict(Tuple(Str, Str), Instance(DataFrame))
     mixture_model = Bool(False)
     linear_model = Bool(False)
 
@@ -158,14 +162,19 @@ class ColorTranslationOp(HasStrictTraits):
             raise util.CytoflowOpError('experiment',
                                        "No experiment specified")
         
-        if not self.controls:
+        if not self.controls and not self.controls_frames:
             raise util.CytoflowOpError('controls',
                                        "No controls specified")
 
         tubes = {}
-        
-        translation = {x[0] : x[1] for x in list(self.controls.keys())}
-        
+
+        if (self.controls != {}):
+            controls = self.controls
+        else:
+            controls = self.controls_frames
+            
+        translation = {x[0] : x[1] for x in list(controls.keys())}
+
         for from_channel, to_channel in translation.items():
             
             if from_channel not in experiment.channels:
@@ -178,21 +187,27 @@ class ColorTranslationOp(HasStrictTraits):
                                            "Channel {0} not in the experiment"
                                            .format(to_channel))
             
-            if (from_channel, to_channel) not in self.controls:
+            if (from_channel, to_channel) not in controls:
                 raise util.CytoflowOpError('translation',
                                            "Control file for {0} --> {1} "
                                            "not specified"
                                            .format(from_channel, to_channel))
                 
-            tube_file = self.controls[(from_channel, to_channel)]
+            tube_file_or_frame = controls[(from_channel, to_channel)]
             
-            if tube_file not in tubes: 
-                # make a little Experiment
-                check_tube(tube_file, experiment)
-                tube_exp = ImportOp(tubes = [Tube(file = tube_file)],
-                                    channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels},
-                                    name_metadata = experiment.metadata['name_metadata']).apply()
-                
+            if tube_file_or_frame not in tubes:
+                channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels}
+                name_metadata = experiment.metadata['name_metadata']
+                if (self.controls != {}):
+                    # make a little Experiment
+                    check_tube(tube_file_or_frame, experiment)
+                    tube_exp = ImportOp(tubes = [Tube(file = tube_file_or_frame)],
+                                        channels = channels,
+                                        name_metadata = name_metadata).apply()
+                else:
+                    tube_exp = ImportOp(tubes = [Tube(frame = tube_file_or_frame)],
+                                        channels = channels,
+                                        name_metadata = name_metadata).apply()
                 # apply previous operations
                 for op in experiment.history:
                     tube_exp = op.apply(tube_exp) 
@@ -213,10 +228,10 @@ class ColorTranslationOp(HasStrictTraits):
                 
                 tube_data = tube_exp.data                
 
-                tubes[tube_file] = tube_data
+                tubes[tube_file_or_frame] = tube_data
 
                 
-            data = tubes[tube_file][[from_channel, to_channel]].copy()
+            data = tubes[tube_file_or_frame][[from_channel, to_channel]].copy()
             data = data[data[from_channel] > 0]
             data = data[data[to_channel] > 0]
             
@@ -291,15 +306,20 @@ class ColorTranslationOp(HasStrictTraits):
         if experiment is None:
             raise util.CytoflowOpError('experiment', "No experiment specified")
         
-        if not self.controls:
+        if not self.controls and not self.controls_frames:
             raise util.CytoflowOpError('controls', "No controls specified")
         
         if not self._trans_fn:
             raise util.CytoflowOpError(None, "Transfer functions aren't set. "
                                        "Did you forget to call estimate()?")
             
-        translation = {x[0] : x[1] for x in list(self.controls.keys())}
-        from_channels = [x[0] for x in list(self.controls.keys())]
+        if (self.controls != {}):
+            controls = self.controls
+        else:
+            controls = self.controls_frames            
+
+        translation = {x[0] : x[1] for x in list(controls.keys())}
+        from_channels = [x[0] for x in list(controls.keys())]
 
         for key, val in translation.items():
             if (key, val) not in self._coefficients:
@@ -378,7 +398,7 @@ class ColorTranslationDiagnostic(HasStrictTraits):
             raise util.CytoflowViewError('experiment',
                                          "No experiment specified")
         
-        if not self.op.controls:
+        if not self.op.controls and not self.op.controls_frames:
             raise util.CytoflowViewError('op',
                                          "No controls specified")
         
@@ -388,28 +408,42 @@ class ColorTranslationDiagnostic(HasStrictTraits):
                                          "Did you forget to call estimate()?")
 
         tubes = {}
-        
-        translation = {x[0] : x[1] for x in list(self.op.controls.keys())}
+
+        if (self.controls != {}):
+            controls = self.op.controls
+        else:
+            controls = self.op.controls_frames
+            
+        translation = {x[0] : x[1] for x in list(controls.keys())}
         
         plt.figure()
-        num_plots = len(list(self.op.controls.keys()))
+        num_plots = len(list(controls.keys()))
         plt_idx = 0
         
         for from_channel, to_channel in translation.items():
             
-            if (from_channel, to_channel) not in self.op.controls:
+            if (from_channel, to_channel) not in controls:
                 raise util.CytoflowViewError('op',
                                              "Control file for {0} --> {1} not specified"
                                              .format(from_channel, to_channel))
-            tube_file = self.op.controls[(from_channel, to_channel)]
+            tube_file_or_frame = controls[(from_channel, to_channel)]
             
-            if tube_file not in tubes: 
+            if tube_file_or_frame not in tubes: 
                 # make a little Experiment
                 try:
-                    check_tube(tube_file, experiment)
-                    tube_exp = ImportOp(tubes = [Tube(file = tube_file)],
-                                        channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels},
-                                        name_metadata = experiment.metadata['name_metadata']).apply()
+                    channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels}
+                    name_metadata = experiment.metadata['name_metadata']
+                    if (self.op.controls != {}):
+                        # make a little Experiment
+                        check_tube(tube_file_or_frame, experiment)
+                        tube_exp = ImportOp(tubes = [Tube(file = tube_file_or_frame)],
+                                            channels = channels,
+                                            name_metadata = name_metadata).apply()
+                    else:
+                        tube_exp = ImportOp(tubes = [Tube(frame = tube_file_or_frame)],
+                                            channels = channels,
+                                            name_metadata = name_metadata).apply()
+                    
                 except util.CytoflowOpError as e:
                     raise util.CytoflowViewError('translation', e.__str__()) from e
                 
@@ -435,11 +469,11 @@ class ColorTranslationDiagnostic(HasStrictTraits):
                 
                 tube_data = tube_exp.data                
 
-                tubes[tube_file] = tube_data               
+                tubes[tube_file_or_frame] = tube_data               
                 
             from_range = experiment.metadata[from_channel]['range']
             to_range = experiment.metadata[to_channel]['range']
-            data = tubes[tube_file][[from_channel, to_channel]]
+            data = tubes[tube_file_or_frame][[from_channel, to_channel]]
             data = data[data[from_channel] > 0]
             data = data[data[to_channel] > 0]
             _ = data.reset_index(drop = True, inplace = True)
