@@ -28,7 +28,7 @@ from pyface.qt import QtGui
 
 from traits.api import (Interface, Str, HasTraits, Instance, Event, Int, 
                         List, Property, on_trait_change, HTML, Any, Bool,
-                        Tuple, Float, Undefined)
+                        Tuple, Enum)
 from traitsui.api import View, Item, Handler, HGroup, TextEditor, InstanceEditor
 
 import cytoflow.utility as util
@@ -102,12 +102,17 @@ class PlotParams(HasTraits):
     ylabel = Str
     huelabel = Str
     
-    legend = Bool(True)
-    sharex = Bool(True)
-    sharey = Bool(True)
 #     xlim = Tuple(util.FloatOrNone(None), util.FloatOrNone(None))
 #     ylim = Tuple(util.FloatOrNone(None), util.FloatOrNone(None))
 #     col_wrap = util.PositiveInt(None, allow_zero = False, allow_none = True)
+
+    sns_style = Enum(['whitegrid', 'darkgrid', 'white', 'dark', 'ticks'])
+    sns_context = Enum(['talk', 'poster', 'notebook', 'paper'])
+
+    legend = Bool(True)
+    sharex = Bool(True)
+    sharey = Bool(True)
+    despine = Bool(True)
     
     def default_traits_view(self):
         return View(
@@ -118,7 +123,16 @@ class PlotParams(HasTraits):
                     Item('ylabel',
                          editor = TextEditor(auto_set = False)),
                     Item('huelabel',
-                         editor = TextEditor(auto_set = False)))
+                         editor = TextEditor(auto_set = False)),
+#                     Item('xlim'),
+#                     Item('ylim'),
+#                     Item('col_wrap'),
+                    Item('sns_style'),
+                    Item('sns_context'),
+                    Item('legend'),
+                    Item('sharex'),
+                    Item('sharey'),
+                    Item('despine'))
         
 @camel_registry.dumper(PlotParams, 'plot-params', version = 1)
 def _dump_plot_params(params):

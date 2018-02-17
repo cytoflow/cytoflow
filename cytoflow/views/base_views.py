@@ -91,6 +91,16 @@ class BaseView(HasStrictTraits):
             If `xfacet` is set and `yfacet` is not set, you can "wrap" the
             subplots around so that they form a multi-row grid by setting
             `col_wrap` to the number of columns you want. 
+            
+        sns_style : {"darkgrid", "whitegrid", "dark", "white", "ticks"}
+            Which `seaborn` style to apply to the plot?  Default is `whitegrid`.
+            
+        sns_context : {"paper", "notebook", "talk", "poster"}
+            Which `seaborn` context to use?  Controls the scaling of plot 
+            elements such as tick labels and the legend.  Default is `talk`.
+            
+        despine : Bool
+            Remove the top and right axes from the plot?
 
         Other Parameters
         ----------------
@@ -132,8 +142,15 @@ class BaseView(HasStrictTraits):
         
         legend = kwargs.pop('legend', True)
         
+        sns_style = kwargs.pop('sns_style', 'whitegrid')
+        sns_context = kwargs.pop('sns_context', 'talk')
+        despine = kwargs.pop('despine', False)
+        
         cols = col_wrap if col_wrap else \
                len(data[self.xfacet].unique()) if self.xfacet else 1
+               
+        sns.set_style(sns_style)
+        sns.set_context(sns_context)
             
         g = sns.FacetGrid(data, 
                           size = 6 / cols,
@@ -231,10 +248,10 @@ class BaseView(HasStrictTraits):
                     mpl.colorbar.ColorbarBase(cax, 
                                               cmap = cmap, 
                                               norm = hue_scale.norm(), 
-                                              label = self.huefacet)
+                                              label = huelabel)
                     plt.sca(plot_ax)
                 else:
-                    g.add_legend(title = self.huefacet)
+                    g.add_legend(title = huelabel)
                     ax = g.axes.flat[0]
                     legend = ax.legend_
                     for lh in legend.legendHandles:
@@ -248,6 +265,11 @@ class BaseView(HasStrictTraits):
             
         if ylabel:
             plt.ylabel(ylabel)
+ 
+        sns.despine(top = despine, 
+                    right = despine,
+                    bottom = False,
+                    left = False)
                     
                     
     def _grid_plot(self, experiment, grid, xlim, ylim, xscale, yscale, **kwargs):

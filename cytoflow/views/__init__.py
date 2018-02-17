@@ -20,13 +20,6 @@ import matplotlib as mpl
 import seaborn as sns
 
 mpl.rc('legend', markerscale = 5)
-sns.set_style("whitegrid", {
-                "xtick.major.size": 6,
-                "ytick.major.size": 6,
-                "xtick.minor.size": 3,
-                "ytick.minor.size": 3,
-                })
-sns.set_context("talk")
 
 from .i_view import IView
 from .i_selectionview import ISelectionView
