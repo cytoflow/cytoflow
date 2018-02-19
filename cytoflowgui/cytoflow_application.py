@@ -123,9 +123,14 @@ class CytoflowApplication(TasksApplication):
                     + error_string)
         
     def exit(self, force=False):
-        self.model.shutdown_remote_process()
+
+        ret = TasksApplication.exit(self, force=force)
         
-        return TasksApplication.exit(self, force=force)
+        if ret:
+            self.model.shutdown_remote_process()
+            
+        return ret
+        
 
     preferences_helper = Instance(CytoflowPreferences)
 
@@ -163,7 +168,7 @@ class CytoflowApplication(TasksApplication):
         Saves the application state -- ONLY IF THE CYTOFLOW TASK IS ACTIVE
         
         """
-        if self.active_window.active_task.id != "edu.mit.synbio.cytoflow.flow_task":
+        if self.active_window.active_task.id != "edu.mit.synbio.cytoflowgui.flow_task":
             logger.info("Not saving application layout from TASBE task")
             return
         

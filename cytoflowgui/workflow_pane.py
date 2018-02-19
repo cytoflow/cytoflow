@@ -28,7 +28,7 @@ from cytoflowgui.op_plugins import IOperationPlugin
 @provides(IDockPane)
 class WorkflowDockPane(TraitsDockPane):
     
-    id = 'edu.mit.synbio.workflow_pane'
+    id = 'edu.mit.synbio.cytoflowgui.workflow_pane'
     name = "Workflow"
     
     # the application instance from which to get plugin instances

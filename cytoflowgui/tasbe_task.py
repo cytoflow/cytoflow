@@ -71,7 +71,7 @@ class TASBETask(Task):
     classdocs
     """
     
-    id = "edu.mit.synbio.cytoflow.tasbe_task"
+    id = "edu.mit.synbio.cytoflowgui.tasbe_task"
     name = "TASBE calibration"
     
     # the main workflow instance.
@@ -123,7 +123,7 @@ class TASBETask(Task):
     
     @on_trait_change('op:do_exit', post_init = True)
     def activate_cytoflow_task(self):
-        task = next(x for x in self.window.tasks if x.id == 'edu.mit.synbio.cytoflow.flow_task')
+        task = next(x for x in self.window.tasks if x.id == 'edu.mit.synbio.cytoflowgui.flow_task')
         self.window.activate_task(task)
 
         
@@ -167,7 +167,7 @@ class TASBETaskPlugin(Plugin):
 
     @contributes_to(TASKS)
     def _get_tasks(self):
-        return [TaskFactory(id = 'edu.mit.synbio.cytoflow.tasbe_task',
+        return [TaskFactory(id = 'edu.mit.synbio.cytoflowgui.tasbe_task',
                             name = 'TASBE Calibration',
                             factory = lambda **x: TASBETask(application = self.application,
                                                             model = self.application.model,

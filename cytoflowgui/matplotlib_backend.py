@@ -408,7 +408,15 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
                     (args, kwargs) = payload
                     if self.process_events.is_set():
                         with self.plot_lock:
+                            old_size = self.figure.get_size_inches()
+                            
+                            width = kwargs.pop('width')
+                            height = kwargs.pop('height')
+                            self.figure.set_size_inches(width, height)
+
                             FigureCanvasAgg.print_figure(self, *args, **kwargs)
+                            
+                            self.figure.set_size_inches(old_size[0], old_size[1])
                 else:
                     raise RuntimeError("FigureCanvasAggRemote received bad message {}".format(msg))
             except Exception:

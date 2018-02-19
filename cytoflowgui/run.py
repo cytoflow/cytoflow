@@ -89,6 +89,7 @@ def run_gui():
     
     from cytoflowgui.flow_task import FlowTaskPlugin
     from cytoflowgui.tasbe_task import TASBETaskPlugin
+    from cytoflowgui.export_task import ExportFigurePlugin
     from cytoflowgui.cytoflow_application import CytoflowApplication
     from cytoflowgui.op_plugins import (ImportPlugin, ThresholdPlugin, RangePlugin, QuadPlugin,
                             Range2DPlugin, PolygonPlugin, BinningPlugin,
@@ -143,7 +144,8 @@ def run_gui():
     
     sys.excepthook = log_excepthook
 
-    plugins = [CorePlugin(), TasksPlugin(), FlowTaskPlugin(), TASBETaskPlugin()]    
+    plugins = [CorePlugin(), TasksPlugin(), FlowTaskPlugin(), TASBETaskPlugin(),
+               ExportFigurePlugin()]    
     
     # reverse of the order on the toolbar
     view_plugins = [TablePlugin(),

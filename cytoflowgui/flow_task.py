@@ -27,14 +27,12 @@ Created on Feb 11, 2015
 
 import os.path, webbrowser
 
-from traits.api import Instance, List, Bool, on_trait_change, Any, Unicode, TraitError
-from pyface.tasks.api import Task, TaskLayout, PaneItem, TaskWindowLayout, TraitsDockPane
+from traits.api import Instance, List, on_trait_change, Unicode
+from pyface.tasks.api import Task, TaskLayout, PaneItem, VSplitter
 from pyface.tasks.action.api import SMenu, SMenuBar, SToolBar, TaskAction, TaskToggleGroup
-from pyface.tasks.action.task_toggle_group import TaskToggleAction
-from pyface.api import FileDialog, ImageResource, AboutDialog, information, error, confirm, OK, YES, NO, ConfirmationDialog
+from pyface.api import FileDialog, ImageResource, AboutDialog, information, confirm, OK, YES, NO, ConfirmationDialog
 from envisage.api import Plugin, ExtensionPoint, contributes_to
 from envisage.ui.tasks.api import TaskFactory
-from envisage.ui.tasks.action.api import TaskWindowLaunchAction, TaskWindowToggleGroup
 
 # from cytoflowgui.flow_task_pane import FlowTaskPane
 from cytoflowgui.workflow_pane import WorkflowDockPane
@@ -54,7 +52,7 @@ class FlowTask(Task):
     classdocs
     """
     
-    id = "edu.mit.synbio.cytoflow.flow_task"
+    id = "edu.mit.synbio.cytoflowgui.flow_task"
     name = "Cytometry analysis"
     
     # the main workflow instance.
@@ -115,7 +113,7 @@ class FlowTask(Task):
                                       name = "Save Plot",
                                       tooltip='Save the current plot',
                                       image=ImageResource('export')),
-                            TaskAction(method='on_notebook',
+                           TaskAction(method='on_notebook',
                                        name='Notebook',
                                        tooltip="Export to an Jupyter notebook...",
                                        image=ImageResource('ipython')),
@@ -186,11 +184,16 @@ class FlowTask(Task):
         self.model.modified = False
     
     def _default_layout_default(self):
-        return TaskLayout(left = PaneItem("edu.mit.synbio.workflow_pane"),
-                          right = PaneItem("edu.mit.synbio.view_traits_pane"))
+        return TaskLayout(left = VSplitter(PaneItem("edu.mit.synbio.cytoflowgui.workflow_pane"),
+                                           PaneItem("edu.mit.synbio.cytoflowgui.help_pane")),
+                          right = VSplitter(PaneItem("edu.mit.synbio.cytoflowgui.view_traits_pane"),
+                                            PaneItem("edu.mit.synbio.cytoflowgui.params_pane")),
+                          top_left_corner = 'left',
+                          bottom_left_corner = 'left',
+                          top_right_corner = 'right',
+                          bottom_right_corner = 'right')
      
     def create_central_pane(self):       
-#         self.plot_pane = self.application.plot_pane
         return self.application.plot_pane
      
     def create_dock_panes(self):
@@ -326,40 +329,14 @@ class FlowTask(Task):
             if self.window.title.endswith("*"):
                 self.window.title = self.window.title[:-1]
         
+
     def on_export(self):
-        """
-        Shows a dialog to export a file
-        """
-                
-        information(None, "This will save exactly what you see on the screen "
-                          "to a file.", "Export")
-        
-        f = ""
-        filetypes_groups = self.application.plot_pane.canvas.get_supported_filetypes_grouped()
-        filename_exts = []
-        for name, ext in filetypes_groups.items():
-            if f:
-                f += ";"
-            f += FileDialog.create_wildcard(name, " ".join(["*." + e for e in ext])) #@UndefinedVariable  
-            filename_exts.append(ext)
-        
-        dialog = FileDialog(parent = self.window.control,
-                            action = 'save as',
-                            wildcard = f)
-        
-        if dialog.open() == OK:
-            filetypes = list(self.application.plot_pane.canvas.get_supported_filetypes().keys())
-            if not [ext for ext in ["." + ext for ext in filetypes] if dialog.path.endswith(ext)]:
-                selected_exts = filename_exts[dialog.wildcard_index]
-                ext = sorted(selected_exts, key = len)[0]
-                dialog.path += "."
-                dialog.path += ext
-                
-            self.application.plot_pane.export(dialog.path)
+        task = next(x for x in self.window.tasks if x.id == 'edu.mit.synbio.cytoflowgui.export_task')
+        self.window.activate_task(task)        
 
 
     def on_calibrate(self):
-        task = next(x for x in self.window.tasks if x.id == 'edu.mit.synbio.cytoflow.tasbe_task')
+        task = next(x for x in self.window.tasks if x.id == 'edu.mit.synbio.cytoflowgui.tasbe_task')
         self.window.activate_task(task)
         
             
@@ -603,7 +580,7 @@ class FlowTaskPlugin(Plugin):
 
     @contributes_to(TASKS)
     def _get_tasks(self):
-        return [TaskFactory(id = 'edu.mit.synbio.cytoflow.flow_task',
+        return [TaskFactory(id = 'edu.mit.synbio.cytoflowgui.flow_task',
                             name = 'Cytometry analysis',
                             factory = lambda **x: FlowTask(application = self.application,
                                                            op_plugins = self.op_plugins,

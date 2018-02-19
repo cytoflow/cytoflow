@@ -32,7 +32,7 @@ class HelpDockPane(TraitsDockPane):
 
     #### TaskPane interface ###############################################
 
-    id = 'edu.mit.synbio.help_pane'
+    id = 'edu.mit.synbio.cytoflowgui.help_pane'
     name = 'Help'
 
     # the Task that serves as the controller

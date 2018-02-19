@@ -22,10 +22,10 @@ Created on Feb 11, 2015
 """
 import sys
 
-from traits.api import Instance, provides, Str, Any
+from traits.api import Instance, provides
 from traitsui.editor_factory import EditorWithListFactory
 from traitsui.qt4.enum_editor import BaseEditor as BaseEnumerationEditor
-from traitsui.qt4.constants import OKColor, ErrorColor
+from traitsui.qt4.constants import ErrorColor
 
 from pyface.qt import QtCore, QtGui
 from pyface.tasks.api import TaskPane, ITaskPane
@@ -70,12 +70,8 @@ class FlowTaskPane(TaskPane):
         pass
 #         self.layout = self.control = None 
                   
-    def export(self, filename):
-        # TODO - eventually give a preview, allow changing size, dpi, aspect 
-        # ratio, plot layout, etc.  at the moment, just export exactly what's
-        # on the screen
-        
-        self.canvas.print_figure(filename, bbox_inches = 'tight')
+    def export(self, filename, **kwargs):      
+        self.canvas.print_figure(filename, bbox_inches = 'tight', **kwargs)
     
 class _TabListEditor(BaseEnumerationEditor):
     

@@ -32,7 +32,7 @@ class ViewDockPane(TraitsDockPane):
 
     #### TaskPane interface ###############################################
 
-    id = 'edu.mit.synbio.view_traits_pane'
+    id = 'edu.mit.synbio.cytoflowgui.view_traits_pane'
     name = 'View Properties'
 
     # the Task that serves as the controller
@@ -128,7 +128,7 @@ class ViewDockPane(TraitsDockPane):
             
 class PlotParamsPane(TraitsDockPane):
     
-    id = 'edu.mit.synbio.params_pane'
+    id = 'edu.mit.synbio.cytoflowgui.params_pane'
     name = "Plot Parameters"
 
     # the task serving as the dock pane's controller
