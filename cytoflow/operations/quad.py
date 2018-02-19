@@ -21,7 +21,7 @@ cytoflow.operations.quad
 ------------------------
 '''
 
-from traits.api import (HasStrictTraits, CFloat, Str, CStr, Bool, Instance,
+from traits.api import (HasStrictTraits, Float, Str, Bool, Instance,
                         provides, on_trait_change, Any, Constant)
 
 from matplotlib.widgets import Cursor
@@ -119,13 +119,13 @@ class QuadOp(HasStrictTraits):
     id = Constant('edu.mit.synbio.cytoflow.operations.quad')
     friendly_id = Constant("Quadrant Gate")
     
-    name = CStr()
+    name = Str
     
-    xchannel = Str()
-    xthreshold = CFloat()
+    xchannel = Str
+    xthreshold = Float
     
-    ychannel = Str()
-    ythreshold = CFloat()
+    ychannel = Str
+    ythreshold = Float
 
     def apply(self, experiment):
         """Applies the quad gate to an experiment.

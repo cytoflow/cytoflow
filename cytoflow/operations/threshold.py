@@ -21,7 +21,7 @@ cytoflow.operations.threshold
 -----------------------------
 '''
 
-from traits.api import (HasStrictTraits, CFloat, Str, CStr, Instance, 
+from traits.api import (HasStrictTraits, Float, Str, Instance, 
                         Bool, on_trait_change, provides, Any, 
                         Constant)
     
@@ -105,9 +105,9 @@ class ThresholdOp(HasStrictTraits):
     id = Constant('edu.mit.synbio.cytoflow.operations.threshold')
     friendly_id = Constant("Threshold")
     
-    name = CStr
+    name = Str
     channel = Str
-    threshold = CFloat
+    threshold = Float
         
     def apply(self, experiment):
         """Applies the threshold to an experiment.

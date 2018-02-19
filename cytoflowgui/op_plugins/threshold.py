@@ -66,7 +66,7 @@ Draw a threshold gate.  To set a new threshold, click on the plot.
     
 '''
 
-from traits.api import provides, Callable, Instance, Str, DelegatesTo
+from traits.api import provides, Callable, Instance, Str, CFloat, DelegatesTo
 from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
@@ -157,6 +157,7 @@ class ThresholdSelectionView(PluginViewMixin, ThresholdSelection):
     
 class ThresholdPluginOp(PluginOpMixin, ThresholdOp):
     handler_factory = Callable(ThresholdHandler, transient = True)
+    threshold = CFloat
      
     def default_view(self, **kwargs):
         return ThresholdSelectionView(op = self, **kwargs)

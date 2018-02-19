@@ -23,7 +23,7 @@ cytoflow.operations.range2d
 
 import pandas as pd
 
-from traits.api import HasStrictTraits, CFloat, Str, CStr, Bool, Instance, \
+from traits.api import HasStrictTraits, Float, Str, Bool, Instance, \
     provides, on_trait_change, Any, Constant
 
 from matplotlib.widgets import RectangleSelector
@@ -124,15 +124,15 @@ class Range2DOp(HasStrictTraits):
     id = Constant('edu.mit.synbio.cytoflow.operations.range2d')
     friendly_id = Constant("2D Range")
     
-    name = CStr()
+    name = Str
     
-    xchannel = Str()
-    xlow = CFloat()
-    xhigh = CFloat()
+    xchannel = Str
+    xlow = Float
+    xhigh = Float
     
-    ychannel = Str()
-    ylow = CFloat()
-    yhigh = CFloat()
+    ychannel = Str
+    ylow = Float
+    yhigh = Float
 
     def apply(self, experiment):
         """Applies the threshold to an experiment.

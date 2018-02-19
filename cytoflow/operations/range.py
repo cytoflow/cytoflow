@@ -21,7 +21,7 @@ cytoflow.operations.range
 -------------------------
 '''
 
-from traits.api import (HasStrictTraits, CFloat, Str, CStr, Instance, Bool, 
+from traits.api import (HasStrictTraits, Float, Str, Instance, Bool, 
                         provides, on_trait_change, Any, Constant)
 
 from matplotlib.widgets import SpanSelector, Cursor
@@ -106,10 +106,10 @@ class RangeOp(HasStrictTraits):
     id = Constant('edu.mit.synbio.cytoflow.operations.range')
     friendly_id = Constant('Range')
     
-    name = CStr()
-    channel = Str()
-    low = CFloat()
-    high = CFloat()
+    name = Str
+    channel = Str
+    low = Float
+    high = Float
         
     def apply(self, experiment):
         """Applies the range gate to an experiment.

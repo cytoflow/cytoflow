@@ -71,7 +71,7 @@ Draw a range gate.  To draw a new range, click-and-drag across the plot.
 
 '''
 
-from traits.api import provides, Callable, Str, Instance, DelegatesTo
+from traits.api import provides, Callable, Str, Instance, DelegatesTo, CFloat
 from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
@@ -167,6 +167,8 @@ class RangeSelectionView(PluginViewMixin, RangeSelection):
 @provides(IOperation)
 class RangePluginOp(PluginOpMixin, RangeOp):
     handler_factory = Callable(RangeHandler)
+    low = CFloat
+    high = CFloat
     
     def default_view(self, **kwargs):
         return RangeSelectionView(op = self, **kwargs)

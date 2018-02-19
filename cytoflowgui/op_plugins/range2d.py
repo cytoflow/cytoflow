@@ -93,7 +93,7 @@ click-and-drag on the plot.
                    yscale = 'log').plot(ex)
 '''
 
-from traits.api import provides, Callable, Str, Instance, DelegatesTo
+from traits.api import provides, Callable, Str, Instance, DelegatesTo, CFloat
 from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
@@ -208,6 +208,10 @@ class Range2DSelectionView(PluginViewMixin, RangeSelection2D):
     
 class Range2DPluginOp(Range2DOp, PluginOpMixin):
     handler_factory = Callable(Range2DHandler, transient = True)
+    xlow = CFloat
+    xhigh = CFloat
+    ylow = CFloat
+    yhigh = CFloat
     
     def default_view(self, **kwargs):
         return Range2DSelectionView(op = self, **kwargs)

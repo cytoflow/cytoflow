@@ -87,7 +87,7 @@ intersection to be.  Creates a new metadata **Name**, with values ``name_1``,
     qv.plot(ex)
 '''
 
-from traits.api import provides, Callable, Instance, Str, DelegatesTo, on_trait_change
+from traits.api import provides, Callable, Instance, Str, DelegatesTo, CFloat
 from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
@@ -193,6 +193,8 @@ class QuadSelectionView(PluginViewMixin, QuadSelection):
     
 class QuadPluginOp(QuadOp, PluginOpMixin):
     handler_factory = Callable(QuadHandler, transient = True)
+    xthreshold = CFloat
+    ythreshold = CFloat
 
     def default_view(self, **kwargs):
         return QuadSelectionView(op = self, **kwargs)
