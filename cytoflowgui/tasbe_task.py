@@ -27,7 +27,7 @@ Created on Feb 11, 2015
 
 import os.path
 
-from traits.api import Instance, Bool, Any, on_trait_change
+from traits.api import Instance, Bool, Any, on_trait_change, HTML
 from pyface.tasks.api import Task, TaskLayout, PaneItem, TraitsDockPane
 from envisage.api import Plugin, contributes_to
 from envisage.ui.tasks.api import TaskFactory
@@ -37,6 +37,9 @@ from cytoflow.operations import IOperation
 # from cytoflowgui.flow_task_pane import FlowTaskPane, getFlowTaskPane
 from cytoflowgui.workflow import Workflow
 from cytoflowgui.workflow_item import WorkflowItem
+from cytoflowgui.help_pane import HelpDockPane
+from cytoflowgui.op_plugins import IOperationPlugin
+from cytoflowgui.view_plugins import IViewPlugin
 
 from cytoflowgui.tasbe_calibration import TasbeCalibrationOp
 
@@ -76,11 +79,11 @@ class TASBETask(Task):
     
     op = Instance(IOperation)
         
-    calibration_pane = Instance(TraitsDockPane)
-#     help_pane = Instance(HelpDockPane)
+    calibration_pane = Instance(CalibrationPane)
+    help_pane = Instance(HelpDockPane)
     
-    def prepare_destroy(self):
-        self.model.shutdown_remote_process()
+    _cached_help = HTML
+
     
     def activated(self):
         self.model.backup_workflow = self.model.workflow
@@ -100,9 +103,12 @@ class TASBETask(Task):
              
         self.model.workflow.append(wi)
         self.model.selected = wi
+        
+        self.help_pane.html = self.op.get_help()
     
     def _default_layout_default(self):
-        return TaskLayout(left = PaneItem("edu.mit.synbio.calibration_pane"))
+        return TaskLayout(left = PaneItem("edu.mit.synbio.cytoflowgui.calibration_pane"),
+                          right = PaneItem("edu.mit.synbio.cytoflowgui.help_pane"))
      
     def create_central_pane(self):
         return self.application.plot_pane
@@ -110,18 +116,16 @@ class TASBETask(Task):
     def create_dock_panes(self):
         self.calibration_pane = CalibrationPane(model = self.model, 
                                                 task = self)
-#         
-#         self.help_pane = HelpDockPane(view_plugins = self.view_plugins,
-#                                       op_plugins = self.op_plugins,
-#                                       task = self)
+         
+        self.help_pane = HelpDockPane(task = self)
         
-        return [self.calibration_pane]
+        return [self.calibration_pane, self.help_pane]
     
     @on_trait_change('op:do_exit', post_init = True)
     def activate_cytoflow_task(self):
         task = next(x for x in self.window.tasks if x.id == 'edu.mit.synbio.cytoflow.flow_task')
         self.window.activate_task(task)
-     
+
         
 class TASBETaskPlugin(Plugin):
     """

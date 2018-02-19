@@ -183,7 +183,7 @@ translation) into one easy-use-interface.
     Return to the main Cytoflow interface
 '''
 
-import warnings
+import os
 from pathlib import Path
 
 import fcsparser
@@ -191,16 +191,13 @@ import fcsparser
 from traitsui.api import (View, Item, EnumEditor, Controller, VGroup, 
                           CheckListEditor, ButtonEditor, 
                           HGroup, InstanceEditor)
-from envisage.api import Plugin, contributes_to
 from traits.api import (provides, Callable, Bool, List, Str, HasTraits,
                         on_trait_change, File, Constant, Directory,
-                        Property, Instance, Int, Float, Undefined, Event,
+                        Property, Instance, Int, Float, Event,
                         DelegatesTo)
-from pyface.api import ImageResource
 
-import pandas as pd
 
-from pyface.api import FileDialog, ImageResource, AboutDialog, information, error, confirm, OK, YES
+from pyface.api import FileDialog, OK
 
 import cytoflow.utility as util
 
@@ -213,10 +210,9 @@ from cytoflow.operations.polygon import PolygonSelection
 from cytoflow.views.i_selectionview import IView
 
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
-from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
-from cytoflowgui.subset import ISubset, SubsetListEditor
+from cytoflowgui.op_plugins import OpHandlerMixin, shared_op_traits
 from cytoflowgui.color_text_editor import ColorTextEditor
-from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin
+from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin
 from cytoflowgui.vertical_list_editor import VerticalListEditor
 from cytoflowgui.toggle_button import ToggleButtonEditor
 from cytoflowgui.workflow import Changed
@@ -395,7 +391,7 @@ class TasbeCalibrationOp(PluginOpMixin):
     
     bead_peak_quantile = Int(80, estimate = True)
     bead_brightness_threshold = Float(100, estimate = True)
-    bead_brightness_cutoff = Float(Undefined, estimate = True)
+    bead_brightness_cutoff = util.FloatOrNone("", estimate = True)
     
     do_color_translation = Bool(estimate = True)
     to_channel = Str(estimate = True)
@@ -678,7 +674,27 @@ class TasbeCalibrationOp(PluginOpMixin):
     
     def default_view(self, **kwargs):
         return TasbeCalibrationView(op = self, **kwargs)
-
+    
+    def get_help(self):
+        current_dir = os.path.abspath(__file__)
+        help_dir = os.path.split(current_dir)[0]
+        help_dir = os.path.join(help_dir, "help")
+        
+        help_file = None
+        for klass in self.__class__.__mro__:
+            mod = klass.__module__
+            mod_html = mod + ".html"
+            
+            h = os.path.join(help_dir, mod_html)
+            if os.path.exists(h):
+                help_file = h
+                break
+                
+        with open(help_file, encoding = 'utf-8') as f:
+            help_html = f.read()
+            
+        return help_html
+                
 class TasbeViewHandler(ViewHandlerMixin, Controller):
     def default_traits_view(self):
         return View(Item('context.view_warning',
