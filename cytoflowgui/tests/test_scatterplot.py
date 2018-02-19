@@ -10,6 +10,7 @@ matplotlib.use("Agg")
 
 from cytoflowgui.tests.test_base import ImportedDataTest, wait_for
 from cytoflowgui.view_plugins import ScatterplotPlugin
+from cytoflowgui.view_plugins.scatterplot import SCATTERPLOT_MARKERS
 
 class TestScatterplot(ImportedDataTest):
 
@@ -153,8 +154,97 @@ class TestScatterplot(ImportedDataTest):
         self.view.subset_list[0].selected = ['A']
 
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+        
+    def testPlotArgs(self):
 
-           
+        # Common params
+        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.xfacet = "Dox"
+        self.view.yfacet = "Well"
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+
+        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.title = "Title"
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+
+        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.title = "Title"
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+
+        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.title = "Title"
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+
+        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.xlabel = "X label"
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+
+        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.ylabel = "Y label"
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+
+        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.sharex = False
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+
+        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.sharey = False
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+
+        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.despine = False
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+
+
+        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.xfacet = ""
+        self.view.huefacet = "Dox"
+        self.view.plot_params.huelabel = "Hue label"
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+
+        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.legend = False
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+
+        ## Scatterplot-specific params
+        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.min_quantile = 0.01
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+
+        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.max_quantile = 0.90
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+
+        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.alpha = 0.5
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+
+        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.s = 5
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+                                    
+        for m in SCATTERPLOT_MARKERS:
+            self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
+            self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+            self.view.plot_params.marker = m
+            self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+                        
+                      
 if __name__ == "__main__":
-#     import sys;sys.argv = ['', 'TestScatterplot.testSubset']
+    import sys;sys.argv = ['', 'TestScatterplot.testPlotArgs']
     unittest.main()
