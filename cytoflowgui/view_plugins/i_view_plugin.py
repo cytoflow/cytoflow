@@ -29,7 +29,7 @@ from pyface.qt import QtGui
 from traits.api import (Interface, Str, HasTraits, Instance, Event, Int, 
                         List, Property, on_trait_change, HTML, Any, Bool,
                         Tuple, Enum)
-from traitsui.api import View, Item, Handler, HGroup, TextEditor, InstanceEditor
+from traitsui.api import View, Item, Handler, HGroup, TextEditor, InstanceEditor, TupleEditor, VGroup
 
 import cytoflow.utility as util
 
@@ -102,9 +102,9 @@ class PlotParams(HasTraits):
     ylabel = Str
     huelabel = Str
     
-#     xlim = Tuple(util.FloatOrNone(None), util.FloatOrNone(None))
-#     ylim = Tuple(util.FloatOrNone(None), util.FloatOrNone(None))
-#     col_wrap = util.PositiveInt(None, allow_zero = False, allow_none = True)
+    xlim = Tuple(util.FloatOrNone(None), util.FloatOrNone(None))
+    ylim = Tuple(util.FloatOrNone(None), util.FloatOrNone(None))
+    col_wrap = util.PositiveInt(None, allow_zero = False, allow_none = True)
 
     sns_style = Enum(['whitegrid', 'darkgrid', 'white', 'dark', 'ticks'])
     sns_context = Enum(['talk', 'poster', 'notebook', 'paper'])
@@ -119,20 +119,38 @@ class PlotParams(HasTraits):
                     Item('title',
                          editor = TextEditor(auto_set = False)),
                     Item('xlabel',
+                         label = "X label",
                          editor = TextEditor(auto_set = False)),
                     Item('ylabel',
+                         label = "Y label",
                          editor = TextEditor(auto_set = False)),
                     Item('huelabel',
+                         label = "Hue label",
                          editor = TextEditor(auto_set = False)),
-#                     Item('xlim'),
-#                     Item('ylim'),
-#                     Item('col_wrap'),
-                    Item('sns_style'),
-                    Item('sns_context'),
+                    VGroup(
+                        Item('xlim',
+                             editor = TupleEditor(labels = ["Min X", "Max X"],
+                                                  editors = [TextEditor(auto_set = False),
+                                                             TextEditor(auto_set = False)])),
+                        Item('ylim',
+                             editor = TupleEditor(labels = ["Min Y", "Max Y"],
+                                                  editors = [TextEditor(auto_set = False),
+                                                             TextEditor(auto_set = False)])),
+                    show_labels = False),
+                    Item('col_wrap',
+                         label = "Columns",
+                         editor = TextEditor(auto_set = False)),
+                    Item('sns_style',
+                         label = "Style"),
+                    Item('sns_context',
+                         label = "Context"),
                     Item('legend'),
-                    Item('sharex'),
-                    Item('sharey'),
-                    Item('despine'))
+                    Item('sharex',
+                         label = "Share\nX axis?"),
+                    Item('sharey',
+                         label = "Share\nY axis?"),
+                    Item('despine',
+                         label = "Despine?"))
         
 @camel_registry.dumper(PlotParams, 'plot-params', version = 1)
 def _dump_plot_params(params):
@@ -142,10 +160,10 @@ def _dump_plot_params(params):
                 huelabel = params.huelabel,
                 legend = params.legend,
                 sharex = params.sharex,
-                sharey = params.sharey)
-#                 xlim = params.xlim,
-#                 ylim = params.ylim,
-#                 col_wrap = params.col_wrap)
+                sharey = params.sharey,
+                xlim = params.xlim,
+                ylim = params.ylim,
+                col_wrap = params.col_wrap)
 
 @camel_registry.loader('plot-params', version = 1)
 def _load_plot_params(data, version):

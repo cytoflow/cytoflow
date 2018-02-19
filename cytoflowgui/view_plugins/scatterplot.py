@@ -98,6 +98,9 @@ from cytoflowgui.util import IterWrapper
 
 ScatterplotView.__repr__ = traits_repr
 
+SCATTERPLOT_MARKERS = ["o", ",", "v", "^", "<", ">", "1", "2", "3", "4", "8",
+                       "s", "p", "*", "h", "H", "+", "x", "X", "D", "d"]
+
 class ScatterplotHandler(ViewHandlerMixin, Controller):
     
     def default_traits_view(self):
@@ -156,8 +159,7 @@ class ScatterplotPlotParams(PlotParams):
     max_quantile = util.PositiveFloat(1.00)
     alpha = util.PositiveFloat(0.25)
     s = util.PositiveFloat(2)
-    marker = Enum("o", ",", "v", "^", "<", ">", "1", "2", "3", "4", "8",
-                  "s", "p", "*", "h", "H", "+", "x", "X", "D", "d")
+    marker = Enum(SCATTERPLOT_MARKERS)
     
     def default_traits_view(self):
         dv = PlotParams.default_traits_view(self)

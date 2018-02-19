@@ -138,7 +138,12 @@ class BaseView(HasStrictTraits):
         yscale = kwargs.pop("yscale", None)
         
         xlim = kwargs.pop("xlim", None)
+        if isinstance(xlim, list) and (xlim[0] is None or xlim[1] is None):
+            xlim = None
+            
         ylim = kwargs.pop("ylim", None)
+        if isinstance(ylim, list) and (ylim[0] is None or ylim[1] is None):
+            ylim = None
         
         legend = kwargs.pop('legend', True)
         
