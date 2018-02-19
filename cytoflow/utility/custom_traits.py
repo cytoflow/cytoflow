@@ -26,12 +26,12 @@ Custom traits for :class:`~cytoflow`
 from warnings import warn
 import inspect
 
-from traits.api import BaseCInt, BaseCFloat, BaseEnum, TraitType
+from traits.api import BaseInt, BaseFloat, BaseEnum, TraitType
 from . import scale
 from . import CytoflowError, CytoflowWarning
 
 
-class PositiveInt(BaseCInt):
+class PositiveInt(BaseInt):
     """
     Defines a trait whose value must be a positive integer
     """
@@ -49,7 +49,7 @@ class PositiveInt(BaseCInt):
         self.error(obj, name, value)
         
         
-class PositiveFloat(BaseCFloat):
+class PositiveFloat(BaseFloat):
     """
     Defines a trait whose value must be a positive float
     """
@@ -66,21 +66,21 @@ class PositiveFloat(BaseCFloat):
         
         self.error(obj, name, value)
         
-class FloatOrNone(BaseCFloat):
+class FloatOrNone(BaseFloat):
     
     def validate(self, obj, name, value):
         if value == "" or value == None:
             return None
         else:
-            return super(BaseCFloat, self).validate(obj, name, value)
+            return super().validate(obj, name, value)
 
-class IntOrNone(BaseCInt):
+class IntOrNone(BaseInt):
     
     def validate(self, obj, name, value):
         if value == "" or value == None:
             return None
         else:
-            return super(BaseCInt, self).validate(obj, name, value)
+            return super().validate(obj, name, value)
         
         
 class ScaleEnum(BaseEnum):

@@ -405,6 +405,21 @@ class Base1DView(BaseDataView):
         if xlim is None:
             xlim = (experiment[self.channel].quantile(min_quantile),
                     experiment[self.channel].quantile(max_quantile))
+        elif isinstance(xlim, list) or isinstance(xlim, tuple):
+            if len(xlim) != 2:
+                raise util.CytoflowError('xlim',
+                                         'Length of xlim must be 2')
+            if xlim[0] is None:
+                xlim = (experiment[self.channel].quantile(min_quantile),
+                        xlim[1])
+                 
+            if xlim[1] is None:
+                xlim = (xlim[0],
+                           experiment[self.channel].quantile(max_quantile))
+                
+        else:
+            raise util.CytoflowError('xlim',
+                                     "xlim is an unknown data type")
             
         xlim = [scale.clip(x) for x in xlim]
         
@@ -494,6 +509,22 @@ class Base2DView(BaseDataView):
         if xlim is None:
             xlim = (experiment[self.xchannel].quantile(min_quantile),
                     experiment[self.xchannel].quantile(max_quantile))
+             
+        elif isinstance(xlim, list) or isinstance(xlim, tuple):
+            if len(xlim) != 2:
+                raise util.CytoflowError('xlim',
+                                         'Length of xlim must be 2')
+            if xlim[0] is None:
+                xlim = (experiment[self.xchannel].quantile(min_quantile),
+                        xlim[1])
+                 
+            if xlim[1] is None:
+                xlim = (xlim[0],
+                        experiment[self.xchannel].quantile(max_quantile))
+                
+        else:
+            raise util.CytoflowError('xlim',
+                                     "xlim is an unknown data type")
             
         xlim = [xscale.clip(x) for x in xlim]
 
@@ -501,6 +532,21 @@ class Base2DView(BaseDataView):
         if ylim is None:
             ylim = (experiment[self.ychannel].quantile(min_quantile),
                     experiment[self.ychannel].quantile(max_quantile))
+            
+        elif isinstance(ylim, list) or isinstance(ylim, tuple):
+            if len(ylim) != 2:
+                raise util.CytoflowError('ylim',
+                                         'Length of xlim must be 2')
+            if ylim[0] is None:
+                ylim = (experiment[self.ychannel].quantile(min_quantile),
+                        ylim[1])
+                 
+            if ylim[1] is None:
+                ylim = (ylim[0],
+                           experiment[self.ychannel].quantile(max_quantile))
+        else:
+            raise util.CytoflowError('ylim',
+                                     'ylim is an unknown data type')
             
         ylim = [yscale.clip(y) for y in ylim]
         
@@ -595,7 +641,24 @@ class BaseNDView(BaseDataView):
             if c not in lim:
                 lim[c] = (experiment[c].quantile(min_quantile),
                           experiment[c].quantile(max_quantile))
+            elif isinstance(lim, list) or isinstance(lim, tuple):
+                if len(lim) != 2:
+                    raise util.CytoflowError('lim',
+                                             'Length of lim\{{}\} must be 2'
+                                             .format(c))
+                if lim[0] is None:
+                    lim = (experiment[c].quantile(min_quantile),
+                           lim[1])
+                     
+                if lim[1] is None:
+                    lim = (lim[0],
+                           experiment[c].quantile(max_quantile))
                 
+            else:
+                raise util.CytoflowError('lim',
+                                         "lim\{{}\} is an unknown data type"
+                                         .format(c))
+
             lim[c] = [scale[c].clip(x) for x in lim[c]]
     
         

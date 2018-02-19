@@ -21,7 +21,7 @@ cytoflow.operations.autofluorescence
 ------------------------------------
 """
 
-from traits.api import (HasStrictTraits, Str, CFloat, File, Dict,
+from traits.api import (HasStrictTraits, Str, Float, File, Dict,
                         Instance, List, Constant, provides)
                        
 import numpy as np
@@ -111,8 +111,8 @@ class AutofluorescenceOp(HasStrictTraits):
     channels = List(Str)
     blank_file = File(exists = True)
 
-    _af_median = Dict(Str, CFloat, transient = True)
-    _af_stdev = Dict(Str, CFloat, transient = True)
+    _af_median = Dict(Str, Float, transient = True)
+    _af_stdev = Dict(Str, Float, transient = True)
     
     def estimate(self, experiment, subset = None): 
         """

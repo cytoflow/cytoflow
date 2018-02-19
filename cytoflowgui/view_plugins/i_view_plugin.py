@@ -26,7 +26,7 @@ import os
 
 from pyface.qt import QtGui
 
-from traits.api import (Interface, Str, HasTraits, Instance, Event, Int, 
+from traits.api import (Interface, Str, HasTraits, Instance, Event,
                         List, Property, on_trait_change, HTML, Any, Bool,
                         Tuple, Enum)
 from traitsui.api import View, Item, Handler, HGroup, TextEditor, InstanceEditor, TupleEditor, VGroup
@@ -102,9 +102,9 @@ class PlotParams(HasTraits):
     ylabel = Str
     huelabel = Str
     
-    xlim = Tuple(util.FloatOrNone(None), util.FloatOrNone(None))
-    ylim = Tuple(util.FloatOrNone(None), util.FloatOrNone(None))
-    col_wrap = util.PositiveInt(None, allow_zero = False, allow_none = True)
+    xlim = Tuple(util.FloatOrNone(""), util.FloatOrNone(""))
+    ylim = Tuple(util.FloatOrNone(""), util.FloatOrNone(""))
+    col_wrap = util.PositiveInt("", allow_zero = False, allow_none = True)
 
     sns_style = Enum(['whitegrid', 'darkgrid', 'white', 'dark', 'ticks'])
     sns_context = Enum(['talk', 'poster', 'notebook', 'paper'])
@@ -130,16 +130,21 @@ class PlotParams(HasTraits):
                     VGroup(
                         Item('xlim',
                              editor = TupleEditor(labels = ["Min X", "Max X"],
-                                                  editors = [TextEditor(auto_set = False),
-                                                             TextEditor(auto_set = False)])),
+                                                  editors = [TextEditor(auto_set = False,
+                                                                        evaluate = float),
+                                                             TextEditor(auto_set = False,
+                                                                        evaluate = float)])),
                         Item('ylim',
                              editor = TupleEditor(labels = ["Min Y", "Max Y"],
-                                                  editors = [TextEditor(auto_set = False),
-                                                             TextEditor(auto_set = False)])),
+                                                  editors = [TextEditor(auto_set = False,
+                                                                        evaluate = float),
+                                                             TextEditor(auto_set = False,
+                                                                        evaluate = float)])),
                     show_labels = False),
                     Item('col_wrap',
                          label = "Columns",
-                         editor = TextEditor(auto_set = False)),
+                         editor = TextEditor(auto_set = False,
+                                             evaluate = int)),
                     Item('sns_style',
                          label = "Style"),
                     Item('sns_context',
@@ -249,13 +254,13 @@ class PluginViewMixin(HasTraits):
                 self.plot_names = plot_names
                 try:
                     self.plot_names_by = ", ".join(plot_iter.by)
-                except Exception as e:
+                except Exception:
                     self.plot_names_by = ""
                     
                 if self.current_plot == None:
                     self.current_plot = self.plot_names[0]
                     
-        except Exception as e:
+        except Exception:
             self.current_plot = None
             self.plot_names = []
 

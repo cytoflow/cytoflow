@@ -87,11 +87,10 @@ the peak finding work by tweaking , please submit a bug report!
 '''
 
 from traitsui.api import (View, Item, EnumEditor, Controller, VGroup, 
-                          ButtonEditor, HGroup, InstanceEditor)
+                          ButtonEditor, HGroup, InstanceEditor, TextEditor)
 from envisage.api import Plugin, contributes_to
 from traits.api import (provides, Callable, List, Str, HasTraits, File, Event, 
-                        on_trait_change, Property, Dict, Int, Float, Undefined,
-                        Instance)
+                        on_trait_change, Property, Dict, Int, Float, Instance)
 from pyface.api import ImageResource
 
 import cytoflow.utility as util
@@ -173,10 +172,13 @@ class BeadCalibrationHandler(OpHandlerMixin, Controller):
                     label = "Controls",
                     show_labels = False),
                     Item('bead_peak_quantile',
+                         editor = TextEditor(auto_set = False),
                          label = "Peak\nQuantile"),
                     Item('bead_brightness_threshold',
+                         editor = TextEditor(auto_set = False),
                          label = "Peak\nThreshold "),
                     Item('bead_brightness_cutoff',
+                         editor = TextEditor(auto_set = False),
                          label = "Peak\nCutoff"),
                     Item('do_estimate',
                          editor = ButtonEditor(value = True,
@@ -196,7 +198,7 @@ class BeadCalibrationPluginOp(PluginOpMixin, BeadCalibrationOp):
 
     bead_peak_quantile = Int(80, estimate = True)
     bead_brightness_threshold = Float(100.0, estimate = True)
-    bead_brightness_cutoff = Float(Undefined, estimate = True)
+    bead_brightness_cutoff = util.FloatOrNone("", estimate = True)
 
     @on_trait_change('units_list_items,units_list.+', post_init = True)
     def _controls_changed(self, obj, name, old, new):
