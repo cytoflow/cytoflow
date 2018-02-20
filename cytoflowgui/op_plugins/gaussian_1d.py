@@ -117,6 +117,7 @@ from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewM
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
 from cytoflowgui.subset import ISubset, SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
+from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin
 from cytoflowgui.workflow import Changed
 from cytoflowgui.serialization import camel_registry, traits_repr, traits_str, dedent
@@ -166,8 +167,8 @@ class GaussianMixture1DPluginOp(PluginOpMixin, GaussianMixtureOp):
     channel_scale = util.ScaleEnum(estimate = True)
     
     # add "estimate" metadata
-    num_components = util.PositiveInt(1, estimate = True)
-    sigma = util.PositiveFloat(0.0, allow_zero = True, estimate = True)
+    num_components = util.PositiveCInt(1, estimate = True)
+    sigma = util.PositiveCFloat(0.0, allow_zero = True, estimate = True)
     by = List(Str, estimate = True)
  
     # bits to support the subset editor
@@ -239,6 +240,18 @@ class GaussianMixture1DViewHandler(ViewHandlerMixin, Controller):
                                 editor = TextEditor(),
                                 style = 'readonly',
                                 label = "Group\nBy"),
+                           Item('xfacet',
+                                editor=ExtendableEnumEditor(name='by',
+                                                            extra_items = {"None" : ""}),
+                                label = "Horizontal\nFacet"),
+                           Item('yfacet',
+                                editor=ExtendableEnumEditor(name='by',
+                                                            extra_items = {"None" : ""}),
+                                label = "Vertical\nFacet"),
+                           Item('huefacet',
+                                editor=ExtendableEnumEditor(name='by',
+                                                            extra_items = {"None" : ""}),
+                                label="Color\nFacet"),
                            label = "1D Mixture Model Default Plot",
                            show_border = False)),
                     Item('context.view_warning',
@@ -264,14 +277,18 @@ class GaussianMixture1DPluginView(PluginViewMixin, GaussianMixture1DView):
     def plot_wi(self, wi):
         if wi.result:
             if self.plot_names:
-                self.plot(wi.result, plot_name = self.current_plot)
+                self.plot(wi.result, 
+                          plot_name = self.current_plot,
+                          **self.plot_params.trait_get())
             else:
-                self.plot(wi.result)
+                self.plot(wi.result, **self.plot_params.trait_get())
         else:
             if self.plot_names:
-                self.plot(wi.previous_wi.result, plot_name = self.current_plot)
+                self.plot(wi.previous_wi.result, 
+                          plot_name = self.current_plot,
+                          **self.plot_params.trait_get())
             else:
-                self.plot(wi.previous_wi.result)
+                self.plot(wi.previous_wi.result, **self.plot_params.trait_get())
         
     def enum_plots_wi(self, wi):
         if wi.result:
@@ -329,9 +346,13 @@ def _dump(op):
 def _load(data, version):
     return GaussianMixture1DPluginOp(**data)
 
-@camel_registry.dumper(GaussianMixture1DPluginView, 'gaussian-1d-view', version = 1)
+@camel_registry.dumper(GaussianMixture1DPluginView, 'gaussian-1d-view', version = 2)
 def _dump_view(view):
-    return dict(op = view.op)
+    return dict(op = view.op,
+                xfacet = view.xfacet,
+                yfacet = view.yfacet,
+                huefacet = view.huefacet,
+                plot_params = view.plot_params)
 
 @camel_registry.loader('gaussian-1d-view', version = 1)
 def _load_view(data, version):

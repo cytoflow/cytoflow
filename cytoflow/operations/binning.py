@@ -20,12 +20,8 @@
 cytoflow.operations.binning
 ---------------------------
 '''
-from math import log10, floor
-
 from traits.api import (HasStrictTraits, Str, CStr, provides, Constant, Int)
 import numpy as np
-import pandas as pd
-# import bottleneck as bn
 
 from cytoflow.views import IView, HistogramView
 import cytoflow.utility as util
@@ -108,7 +104,6 @@ class BinningOp(HasStrictTraits):
     name = CStr()
     bin_count_name = CStr()
     channel = Str()
-#     num_bins = util.PositiveInt(0, allow_zero = True)
     num_bins = util.Removed(err_string = "'num_bins' was removed in 0.9")
     bin_width = util.PositiveFloat(0, allow_zero = True)
     scale = util.ScaleEnum

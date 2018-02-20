@@ -90,7 +90,8 @@ from traitsui.api import (View, Item, EnumEditor, Controller, VGroup,
                           ButtonEditor, HGroup, InstanceEditor, TextEditor)
 from envisage.api import Plugin, contributes_to
 from traits.api import (provides, Callable, List, Str, HasTraits, File, Event, 
-                        on_trait_change, Property, Dict, Int, Float, Instance)
+                        on_trait_change, Property, Dict, CInt, CFloat, Instance,
+                        Float)
 from pyface.api import ImageResource
 
 import cytoflow.utility as util
@@ -196,9 +197,9 @@ class BeadCalibrationPluginOp(PluginOpMixin, BeadCalibrationOp):
     units_list = List(_Unit, estimate = True)
     units = Dict(Str, Str, transient = True)
 
-    bead_peak_quantile = Int(80, estimate = True)
-    bead_brightness_threshold = Float(100.0, estimate = True)
-    bead_brightness_cutoff = util.FloatOrNone("", estimate = True)
+    bead_peak_quantile = CInt(80, estimate = True)
+    bead_brightness_threshold = CFloat(100.0, estimate = True)
+    bead_brightness_cutoff = util.CFloatOrNone("", estimate = True)
 
     @on_trait_change('units_list_items,units_list.+', post_init = True)
     def _controls_changed(self, obj, name, old, new):

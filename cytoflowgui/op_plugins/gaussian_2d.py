@@ -115,8 +115,10 @@ from cytoflow.views.i_selectionview import IView
 
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
+from cytoflowgui.view_plugins.scatterplot import ScatterplotPlotParams
 from cytoflowgui.subset import ISubset, SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
+from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin
 from cytoflowgui.workflow import Changed
 from cytoflowgui.serialization import camel_registry, traits_repr, traits_str, dedent
@@ -173,8 +175,8 @@ class GaussianMixture2DPluginOp(PluginOpMixin, GaussianMixtureOp):
     yscale = util.ScaleEnum(estimate = True)
         
     # add "estimate" metadata
-    num_components = util.PositiveInt(1, estimate = True)
-    sigma = util.PositiveFloat(0.0, allow_zero = True, estimate = True)
+    num_components = util.PositiveCInt(1, estimate = True)
+    sigma = util.PositiveCFloat(0.0, allow_zero = True, estimate = True)
     by = List(Str, estimate = True)
 
     
@@ -267,6 +269,18 @@ class GaussianMixture2DViewHandler(ViewHandlerMixin, Controller):
                                 style = 'readonly'),
                            Item('ychannel',
                                 style = 'readonly'),
+                           Item('xfacet',
+                                editor=ExtendableEnumEditor(name='by',
+                                                            extra_items = {"None" : ""}),
+                                label = "Horizontal\nFacet"),
+                           Item('yfacet',
+                                editor=ExtendableEnumEditor(name='by',
+                                                            extra_items = {"None" : ""}),
+                                label = "Vertical\nFacet"),
+                           Item('huefacet',
+                                editor=ExtendableEnumEditor(name='by',
+                                                            extra_items = {"None" : ""}),
+                                label="Color\nFacet"),
                            label = "2D Mixture Model Default Plot",
                            show_border = False)),
                     Item('context.view_warning',
@@ -283,6 +297,8 @@ class GaussianMixture2DViewHandler(ViewHandlerMixin, Controller):
 @provides(IView)
 class GaussianMixture2DPluginView(PluginViewMixin, GaussianMixture2DView):
     handler_factory = Callable(GaussianMixture2DViewHandler)
+    plot_params = Instance(ScatterplotPlotParams, ())
+
     op = Instance(IOperation, fixed = True)
     subset = DelegatesTo('op', transient = True)
     by = DelegatesTo('op', status = True)
@@ -362,9 +378,13 @@ def _dump(op):
 def _load(data, version):
     return GaussianMixture2DPluginOp(**data)
 
-@camel_registry.dumper(GaussianMixture2DPluginView, 'gaussian-2d-view', version = 1)
+@camel_registry.dumper(GaussianMixture2DPluginView, 'gaussian-2d-view', version = 2)
 def _dump_view(view):
-    return dict(op = view.op)
+    return dict(op = view.op,
+                xfacet = view.xfacet,
+                yfacet = view.yfacet,
+                huefacet = view.huefacet,
+                plot_params = view.plot_params)
 
 @camel_registry.loader('gaussian-2d-view', version = 1)
 def _load_view(data, ver):

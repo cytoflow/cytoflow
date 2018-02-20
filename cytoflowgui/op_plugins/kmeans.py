@@ -137,7 +137,7 @@ class KMeansPluginOp(PluginOpMixin, KMeansOp):
     ychannel = Str(estimate = True)
     xscale = util.ScaleEnum(estimate = True)
     yscale = util.ScaleEnum(estimate = True)
-    num_clusters = util.PositiveInt(2, allow_zero = False, estimate = True)
+    num_clusters = util.PositiveCInt(2, allow_zero = False, estimate = True)
     
     by = List(Str, estimate = True)
         

@@ -154,10 +154,10 @@ class FlowPeaksPluginOp(PluginOpMixin, FlowPeaksOp):
     ychannel = Str(estimate = True)
     xscale = util.ScaleEnum(estimate = True)
     yscale = util.ScaleEnum(estimate = True)
-    h = util.PositiveFloat(1.5, allow_zero = False, estimate = True)
-    h0 = util.PositiveFloat(1, allow_zero = False, estimate = True)
-    tol = util.PositiveFloat(0.5, allow_zero = False, estimate = True)
-    merge_dist = util.PositiveFloat(5, allow_zero = False, estimate = True)
+    h = util.PositiveCFloat(1.5, allow_zero = False, estimate = True)
+    h0 = util.PositiveCFloat(1, allow_zero = False, estimate = True)
+    tol = util.PositiveCFloat(0.5, allow_zero = False, estimate = True)
+    merge_dist = util.PositiveCFloat(5, allow_zero = False, estimate = True)
     
     by = List(Str, estimate = True)
         

@@ -163,7 +163,7 @@ from traitsui.api import (View, Item, EnumEditor, Controller, VGroup,
 from envisage.api import Plugin, contributes_to
 from traits.api import (provides, Callable, Bool, List, Str, HasTraits,
                         on_trait_change, File, Constant,
-                        Property, Instance, Int, Float, Undefined)
+                        Property, Instance, CInt, CFloat)
 from pyface.api import ImageResource
 
 import pandas as pd
@@ -184,7 +184,7 @@ from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin
 from cytoflowgui.vertical_list_editor import VerticalListEditor
 from cytoflowgui.workflow import Changed
-from cytoflowgui.serialization import camel_registry, traits_repr, traits_str, dedent
+from cytoflowgui.serialization import camel_registry, traits_repr, dedent
 
 AutofluorescenceOp.__repr__ = traits_repr
 BleedthroughLinearOp.__repr__ = traits_repr
@@ -316,9 +316,9 @@ class TasbePluginOp(PluginOpMixin):
     beads_file = File(filter = ["*.fcs"], estimate = True)
     beads_unit = Str(estimate = True)
     
-    bead_peak_quantile = Int(80, estimate = True)
-    bead_brightness_threshold = Float(100, estimate = True)
-    bead_brightness_cutoff = Float(Undefined, estimate = True)
+    bead_peak_quantile = CInt(80, estimate = True)
+    bead_brightness_threshold = CFloat(100, estimate = True)
+    bead_brightness_cutoff = util.CFloatOrNone("", estimate = True)
     
     to_channel = Str(estimate = True)
     translation_list = List(_TranslationControl, estimate = True)

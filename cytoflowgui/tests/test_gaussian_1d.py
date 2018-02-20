@@ -100,6 +100,33 @@ class TestGaussian1D(ImportedDataTest):
     def testPlot(self):
         self.wi.current_view = self.wi.default_view
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
+        
+    def testPlotFacets(self):
+        self.op.by = ["Dox", "Well"]
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 5))
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
+         
+        self.op.do_estimate = True
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
+        
+        self.view = self.wi.current_view = self.wi.default_view
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
+        
+        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.xfacet = "Dox"
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+
+        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.yfacet = "Well"
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+
+        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.yfacet = ""
+        self.view.huefacet = "Well"
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
    
  
     def testSerialize(self):
@@ -130,5 +157,5 @@ class TestGaussian1D(ImportedDataTest):
         self.assertTrue((nb_data == remote_data).all().all())
 
 if __name__ == "__main__":
-#     import sys;sys.argv = ['', 'TestGaussian1D.testEstimate']
+    import sys;sys.argv = ['', 'TestGaussian1D.testPlotFacets']
     unittest.main()

@@ -26,7 +26,7 @@ Custom traits for :class:`~cytoflow`
 from warnings import warn
 import inspect
 
-from traits.api import BaseInt, BaseFloat, BaseEnum, TraitType
+from traits.api import (BaseInt, BaseCInt, BaseFloat, BaseCFloat, BaseEnum, TraitType)
 from . import scale
 from . import CytoflowError, CytoflowWarning
 
@@ -42,7 +42,24 @@ class PositiveInt(BaseInt):
         if self.allow_none and (value == "" or value == None):
             return None
         
-        value = super(PositiveInt, self).validate(obj, name, value)
+        value = super().validate(obj, name, value)
+        if (value > 0 or (self.allow_zero and value >= 0)):
+            return value 
+        
+        self.error(obj, name, value)
+        
+class PositiveCInt(BaseCInt):
+    """
+    Defines a trait whose value must be a positive integer
+    """
+    
+    info_text = 'a positive integer'
+    
+    def validate(self, obj, name, value):
+        if self.allow_none and (value == "" or value == None):
+            return None
+        
+        value = super().validate(obj, name, value)
         if (value > 0 or (self.allow_zero and value >= 0)):
             return value 
         
@@ -60,7 +77,24 @@ class PositiveFloat(BaseFloat):
         if self.allow_none and (value == "" or value == None):
             return None
         
-        value = super(PositiveFloat, self).validate(obj, name, value)
+        value = super().validate(obj, name, value)
+        if (value > 0.0 or (self.allow_zero and value >= 0.0)):
+            return value 
+        
+        self.error(obj, name, value)
+        
+class PositiveCFloat(BaseCFloat):
+    """
+    Defines a trait whose value must be a positive float
+    """
+    
+    info_text = 'a positive float'
+    
+    def validate(self, obj, name, value):
+        if self.allow_none and (value == "" or value == None):
+            return None
+        
+        value = super().validate(obj, name, value)
         if (value > 0.0 or (self.allow_zero and value >= 0.0)):
             return value 
         
@@ -74,7 +108,23 @@ class FloatOrNone(BaseFloat):
         else:
             return super().validate(obj, name, value)
 
+class CFloatOrNone(BaseCFloat):
+    
+    def validate(self, obj, name, value):
+        if value == "" or value == None:
+            return None
+        else:
+            return super().validate(obj, name, value)
+
 class IntOrNone(BaseInt):
+    
+    def validate(self, obj, name, value):
+        if value == "" or value == None:
+            return None
+        else:
+            return super().validate(obj, name, value)
+        
+class CIntOrNone(BaseCInt):
     
     def validate(self, obj, name, value):
         if value == "" or value == None:
@@ -96,7 +146,7 @@ class ScaleEnum(BaseEnum):
         self.name = ''
         self.values = list(scale._scale_mapping.keys())
         self.init_fast_validator( 5, self.values )
-        super( BaseEnum, self ).__init__(scale._scale_default, **metadata )
+        super(BaseEnum, self).__init__(scale._scale_default, **metadata )
         
     def get_default_value(self):
         # this is so silly.  get_default_value is ... called once?  as traits
@@ -128,7 +178,7 @@ class Removed(TraitType):
     def __init__(self, **metadata):
         metadata.setdefault('err_string', 'Trait {} has been removed')
         metadata.setdefault('transient', True)
-        super(Removed, self).__init__(**metadata)
+        super().__init__(**metadata)
     
     def get(self, obj, name):
         if not self.gui:
@@ -174,7 +224,7 @@ class Deprecated(TraitType):
     def __init__(self, **metadata):
         metadata.setdefault('err_string', 'Trait {} is deprecated; please use {}')
         metadata.setdefault('transient', True)
-        super(Deprecated, self).__init__(**metadata)
+        super().__init__(**metadata)
       
     def get(self, obj, name):
         if not self.gui:

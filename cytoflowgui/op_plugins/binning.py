@@ -70,6 +70,7 @@ from pyface.api import ImageResource
 from cytoflow.operations import IOperation
 from cytoflow.operations.binning import BinningOp, BinningView
 from cytoflow.views.i_selectionview import IView
+import cytoflow.utility as util
 
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
@@ -96,6 +97,7 @@ class BinningHandler(Controller, OpHandlerMixin):
 
 class BinningPluginOp(PluginOpMixin, BinningOp):
     handler_factory = Callable(BinningHandler)
+    bin_width = util.PositiveCFloat(0, allow_zero = True)
     
     def default_view(self, **kwargs):
         return BinningPluginView(op = self, **kwargs)

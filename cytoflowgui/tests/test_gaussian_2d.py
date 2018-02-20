@@ -12,7 +12,8 @@ matplotlib.use("Agg")
 from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.tests.test_base import ImportedDataTest, wait_for
 from cytoflowgui.op_plugins import GaussianMixture2DPlugin
-from cytoflowgui.subset import BoolSubset, CategorySubset
+from cytoflowgui.subset import CategorySubset
+from cytoflowgui.view_plugins.scatterplot import SCATTERPLOT_MARKERS
 from cytoflowgui.serialization import load_yaml, save_yaml
 
 class TestGaussian2D(ImportedDataTest):
@@ -115,6 +116,123 @@ class TestGaussian2D(ImportedDataTest):
     def testPlot(self):
         self.wi.current_view = self.wi.default_view
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
+        
+        
+    def testPlotFacets(self):
+        self.op.by = ["Dox", "Well"]
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 5))
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
+         
+        self.op.do_estimate = True
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
+        
+        self.view = self.wi.current_view = self.wi.default_view
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
+        
+        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.xfacet = "Dox"
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+
+        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.yfacet = "Well"
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+
+        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.yfacet = ""
+        self.view.huefacet = "Well"
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+        
+        
+    def testPlotArgs(self):
+        self.op.by = ["Dox", "Well"]
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 5))
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
+         
+        self.op.do_estimate = True
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
+        
+        self.view = self.wi.current_view = self.wi.default_view
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
+
+        # Common params
+        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.xfacet = "Dox"
+        self.view.yfacet = "Well"
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+
+        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.title = "Title"
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+
+        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.xlabel = "X label"
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+
+        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.ylabel = "Y label"
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+
+        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.sharex = False
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+
+        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.sharey = False
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+
+        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.despine = False
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+
+        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.xfacet = ""
+        self.view.huefacet = "Dox"
+        self.view.plot_params.huelabel = "Hue label"
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+
+        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.legend = False
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+
+        ## Scatterplot-specific params
+        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.min_quantile = 0.01
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+
+        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.max_quantile = 0.90
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+
+        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.alpha = 0.5
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+
+        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.s = 5
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+                                    
+        for m in SCATTERPLOT_MARKERS:
+            self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
+            self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+            self.view.plot_params.marker = m
+            self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+                        
    
  
     def testSerialize(self):
@@ -145,5 +263,5 @@ class TestGaussian2D(ImportedDataTest):
         self.assertTrue((nb_data == remote_data).all().all())
 
 if __name__ == "__main__":
-#     import sys;sys.argv = ['', 'TestGaussian2D.testNotebook']
+    import sys;sys.argv = ['', 'TestGaussian2D.testPlotArgs']
     unittest.main()

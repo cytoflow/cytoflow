@@ -80,8 +80,8 @@ import numpy as np
 from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor, \
                          CheckListEditor, ButtonEditor
 from envisage.api import Plugin, contributes_to
-from traits.api import (provides, Callable, List, Str, Instance,
-                        DelegatesTo, Property, on_trait_change)
+from traits.api import (provides, Callable, List, Str, Instance, Property, 
+                        on_trait_change)
 from pyface.api import ImageResource
 
 import cytoflow.utility as util
@@ -143,7 +143,7 @@ class DensityGatePluginOp(PluginOpMixin, DensityGateOp):
     # add "estimate" metadata
     xchannel = Str(estimate = True)
     ychannel = Str(estimate = True)
-    keep = util.PositiveFloat(0.9, allow_zero = False, estimate = True)
+    keep = util.PositiveCFloat(0.9, allow_zero = False, estimate = True)
     by = List(Str, estimate = True)
     xscale = util.ScaleEnum(estimate = True)
     yscale = util.ScaleEnum(estimate = True)
