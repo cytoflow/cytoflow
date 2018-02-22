@@ -91,18 +91,11 @@ class Histogram2DView(Base2DView):
         
         Parameters
         ----------
-        xbins : int
-            The number of bins on the x axis
-            
-        ybins : int
-            The number of bins on the y axis.
-            
-        max_bins : int
-            Sometimes the number of bins estimated by the plot function is
-            unreasonable.  This caps the maximum number.  Defaults to 100.
+        gridsize : int
+            The number of bins on the X and Y axis.
             
         smoothed : bool
-            Should the resulting mesh be smoothed?
+            Should the mesh be smoothed?
             
         smoothed_sigma : int
             The standard deviation of the smoothing kernel.  default = 1.

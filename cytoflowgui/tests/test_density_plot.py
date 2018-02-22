@@ -12,7 +12,7 @@ from cytoflowgui.tests.test_base import ImportedDataTest, wait_for
 from cytoflowgui.view_plugins import DensityPlugin
 from cytoflowgui.serialization import save_yaml, load_yaml
 
-class Test(ImportedDataTest):
+class TestDensityPlot(ImportedDataTest):
 
     def setUp(self):
         ImportedDataTest.setUp(self)
@@ -146,7 +146,78 @@ class Test(ImportedDataTest):
         self.view.subset_list[0].selected = ['A']
 
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+        
+    def testPlotParams(self):
+        
+        # Common params
+        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.xfacet = "Dox"
+        self.view.yfacet = "Well"
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
 
+        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.title = "Title"
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+
+        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.xlabel = "X label"
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+
+        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.ylabel = "Y label"
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+
+        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.sharex = False
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+
+        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.sharey = False
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+
+        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.despine = False
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+
+        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.legend = False
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+
+        ## Scatterplot-specific params
+        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.min_quantile = 0.01
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+
+        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.max_quantile = 0.90
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+
+        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.gridsize = 25
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+
+        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.smoothed = True
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+        
+
+        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.smoothed_sigmal = 2
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+                            
         
     def testSerialize(self):
         fh, filename = tempfile.mkstemp()
@@ -154,7 +225,7 @@ class Test(ImportedDataTest):
             os.close(fh)
             
             save_yaml(self.view, filename)
-            new_op = load_yaml(filename)
+            new_view = load_yaml(filename)
             
         finally:
             os.unlink(filename)
@@ -162,9 +233,16 @@ class Test(ImportedDataTest):
         self.maxDiff = None
                      
         self.assertDictEqual(self.view.trait_get(self.view.copyable_trait_names()),
-                             new_op.trait_get(self.view.copyable_trait_names()))
+                             new_view.trait_get(self.view.copyable_trait_names()))
+        
+    def testNotebook(self):
+        code = "from cytoflow import *\n"
+        for i, wi in enumerate(self.workflow.workflow):
+            code = code + wi.operation.get_notebook_code(i)
+           
+        exec(code) # smoke test
         
            
 if __name__ == "__main__":
-#     import sys;sys.argv = ['', 'Test.testAll']
+#     import sys;sys.argv = ['', 'TestDensityPlot.testSerialize']
     unittest.main()

@@ -76,8 +76,8 @@ events in a bin change the bin's opacity, so you can use different colors.
 
 '''
 
-from traits.api import provides, Callable, Str
-from traitsui.api import View, Item, Controller, EnumEditor, VGroup
+from traits.api import provides, Callable, Str, Instance, Bool
+from traitsui.api import View, Item, Controller, EnumEditor, VGroup, TextEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
@@ -92,8 +92,9 @@ from cytoflowgui.subset import SubsetListEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.view_plugins.i_view_plugin \
-    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, PluginHelpMixin
-from cytoflowgui.serialization import camel_registry, traits_repr, dedent
+    import (IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, 
+            PluginHelpMixin, BasePlotParams)
+from cytoflowgui.serialization import camel_registry, traits_repr, traits_str, dedent
 from cytoflowgui.util import IterWrapper
 
 Histogram2DView.__repr__ = traits_repr
@@ -149,8 +150,35 @@ class Histogram2DHandler(ViewHandlerMixin, Controller):
                          editor = ColorTextEditor(foreground_color = "#000000",
                                                   background_color = "#ff9191"))))
 
+class Histogram2DParams(BasePlotParams):
+    
+    min_quantile = util.PositiveCFloat(0.001)
+    max_quantile = util.PositiveCFloat(1.00)
+    gridsize = util.PositiveCInt(50, allow_zero = False)
+    smoothed = Bool(False)
+    smoothed_sigma = util.PositiveCFloat(1.0, allow_zero = False)
+    
+    def default_traits_view(self):
+        base_view = BasePlotParams.default_traits_view(self)
+        
+        return View(Item('min_quantile',
+                         editor = TextEditor(auto_set = False)),
+                    Item('max_quantile',
+                         editor = TextEditor(auto_set = False)),
+                    Item('gridsize',
+                         editor = TextEditor(auto_set = False),
+                         label = "Grid size"),
+                    Item('smoothed',
+                         label = "Smooth"),
+                    Item('smoothed_sigma',
+                         editor = TextEditor(auto_set = False),
+                         label = "Smooth\nsigma",
+                         visible_when = "smoothed == True"),
+                    base_view.content)
+
 class Histogram2DPluginView(PluginViewMixin, Histogram2DView):
     handler_factory = Callable(Histogram2DHandler)
+    plot_params = Instance(Histogram2DParams, ())
     plotfacet = Str
 
     def enum_plots_wi(self, wi):
@@ -206,7 +234,7 @@ class Histogram2DPlugin(Plugin, PluginHelpMixin):
         return self
         
 ### Serialization
-@camel_registry.dumper(Histogram2DPluginView, '2d-histogram', version = 1)
+@camel_registry.dumper(Histogram2DPluginView, '2d-histogram', version = 2)
 def _dump(view):
     return dict(xchannel = view.xchannel,
                 xscale = view.xscale,
@@ -217,8 +245,33 @@ def _dump(view):
                 huefacet = view.huefacet,
                 huescale = view.huescale,
                 plotfacet = view.plotfacet,
-                subset_list = view.subset_list)
+                subset_list = view.subset_list,
+                plot_params = view.plot_params)
     
-@camel_registry.loader('2d-histogram', version = 1)
+    
+@camel_registry.dumper(Histogram2DParams, '2d-histogram-params', version = 1)
+def _dump_params(params):
+    return dict(title = params.title,
+                xlabel = params.xlabel,
+                ylabel = params.ylabel,
+                huelabel = params.huelabel,
+                legend = params.legend,
+                sharex = params.sharex,
+                sharey = params.sharey,
+                xlim = params.xlim,
+                ylim = params.ylim,
+                col_wrap = params.col_wrap,
+                min_quantile = params.min_quantile,
+                max_quantile = params.max_quantile,
+                gridsize = params.gridsize,
+                smoothed = params.smoothed,
+                smoothed_sigma = params.smoothed_sigma )
+
+@camel_registry.loader('2d-histogram', version = any)
 def _load(data, version):
     return Histogram2DPluginView(**data)
+    
+@camel_registry.loader('2d-histogram-params', version = any)
+def _load_params(data, version):
+    return Histogram2DParams(**data)
+    

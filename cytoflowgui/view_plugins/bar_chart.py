@@ -307,4 +307,4 @@ def _load_v2(data, version):
 @camel_registry.loader('barchart-params', version = any)
 def _load_params(data, version):
     return BarChartPlotParams(**data)
-                       
+

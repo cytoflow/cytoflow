@@ -29,7 +29,7 @@ from pyface.qt import QtGui
 from traits.api import (Interface, Str, HasTraits, Instance, Event,
                         List, Property, on_trait_change, HTML, Any, Bool,
                         Tuple, Enum)
-from traitsui.api import View, Item, Handler, HGroup, TextEditor, InstanceEditor, TupleEditor, VGroup
+from traitsui.api import View, Item, Handler, HGroup, TextEditor, InstanceEditor, TupleEditor
 
 import cytoflow.utility as util
 
@@ -37,7 +37,7 @@ from cytoflowgui.subset import ISubset
 from cytoflowgui.workflow import Changed
 from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.flow_task_pane import TabListEditor
-from cytoflowgui.serialization import camel_registry, traits_repr, traits_eq, traits_hash
+from cytoflowgui.serialization import traits_repr, traits_eq, traits_hash
 
 VIEW_PLUGIN_EXT = 'edu.mit.synbio.cytoflow.view_plugins'
 
@@ -165,6 +165,9 @@ class BasePlotParams(HasTraits):
         
     def __repr__(self):
         return traits_repr(self)
+    
+BasePlotParams.__eq__ = traits_eq
+BasePlotParams.__hash__ = traits_hash
         
 class EmptyPlotParams(HasTraits):
      

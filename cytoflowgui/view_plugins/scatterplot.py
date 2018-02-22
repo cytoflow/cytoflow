@@ -177,10 +177,9 @@ class ScatterplotPlotParams(BasePlotParams):
                     base_view.content)
 
 class ScatterplotPluginView(PluginViewMixin, ScatterplotView):
-    handler_factory = Callable(ScatterplotHandler, transient = True)
-    plotfacet = Str
-    
+    handler_factory = Callable(ScatterplotHandler)
     plot_params = Instance(ScatterplotPlotParams, ())
+    plotfacet = Str
 
 
     def enum_plots_wi(self, wi):
@@ -216,8 +215,6 @@ class ScatterplotPluginView(PluginViewMixin, ScatterplotView):
         .format(repr = repr(view),
                 idx = idx,
                 plot = ", plot_name = " + repr(self.current_plot) if self.plot_names else ""))
-
-
 
 
 @provides(IViewPlugin)

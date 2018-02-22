@@ -3,7 +3,7 @@ Created on Jan 4, 2018
 
 @author: brian
 '''
-import unittest
+import unittest, os, tempfile
 
 import matplotlib
 matplotlib.use("Agg")
@@ -11,6 +11,7 @@ matplotlib.use("Agg")
 from cytoflowgui.tests.test_base import ImportedDataTest, wait_for
 from cytoflowgui.view_plugins import ScatterplotPlugin
 from cytoflowgui.view_plugins.scatterplot import SCATTERPLOT_MARKERS
+from cytoflowgui.serialization import load_yaml, save_yaml
 
 class TestScatterplot(ImportedDataTest):
 
