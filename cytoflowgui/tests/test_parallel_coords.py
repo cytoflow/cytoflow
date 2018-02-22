@@ -9,9 +9,8 @@ import matplotlib
 matplotlib.use("Agg")
 
 from cytoflowgui.tests.test_base import ImportedDataTest, wait_for
-from cytoflowgui.view_plugins import ParallelCoordinatesPlugin
-from cytoflowgui.view_plugins.parallel_coords import _Channel
-from cytoflowgui.serialization import save_yaml, load_yaml
+from cytoflowgui.view_plugins.parallel_coords import ParallelCoordinatesPlugin, _Channel
+from cytoflowgui.serialization import save_yaml, load_yaml, traits_eq, traits_hash
 
 class TestParallelCoords(ImportedDataTest):
 
@@ -134,16 +133,9 @@ class TestParallelCoords(ImportedDataTest):
         exec(code)
         
     def testSerialize(self):
-        
-     
-        def channel_eq(self, other):
-            return self.channel == other.channel and self.scale == other.scale
-          
-        def channel_hash(self):
-            return hash((self.channel, self.scale))
-        
-        _Channel.__eq__ = channel_eq
-        _Channel.__hash__ = channel_hash
+
+        _Channel.__eq__ = traits_eq
+        _Channel.__hash__ = traits_hash
         
         fh, filename = tempfile.mkstemp()
         try:
@@ -161,5 +153,5 @@ class TestParallelCoords(ImportedDataTest):
                              new_op.trait_get(self.view.copyable_trait_names()))
            
 if __name__ == "__main__":
-    import sys;sys.argv = ['', 'TestParallelCoords.testSerialize']
+#     import sys;sys.argv = ['', 'TestParallelCoords.testSerialize']
     unittest.main()

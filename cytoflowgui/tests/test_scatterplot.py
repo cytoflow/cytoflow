@@ -232,6 +232,22 @@ class TestScatterplot(ImportedDataTest):
             self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
             self.view.plot_params.marker = m
             self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+            
+    def testSerialize(self):
+        fh, filename = tempfile.mkstemp()
+        try:
+            os.close(fh)
+            
+            save_yaml(self.view, filename)
+            new_op = load_yaml(filename)
+            
+        finally:
+            os.unlink(filename)
+            
+        self.maxDiff = None
+                     
+        self.assertDictEqual(self.view.trait_get(self.view.copyable_trait_names()),
+                             new_op.trait_get(self.view.copyable_trait_names()))
                         
                       
 if __name__ == "__main__":

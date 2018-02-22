@@ -14,9 +14,7 @@ from cytoflowgui.tests.test_base import TasbeTest, wait_for
 from cytoflowgui.op_plugins import ThresholdPlugin, TasbePlugin
 from cytoflowgui.op_plugins.tasbe import _BleedthroughControl, _TranslationControl
 from cytoflowgui.subset import BoolSubset
-from cytoflowgui.serialization import load_yaml, save_yaml
-
-import cytoflow.utility as util
+from cytoflowgui.serialization import load_yaml, save_yaml, traits_eq, traits_hash
 
 class TestTASBE(TasbeTest):
     
@@ -110,29 +108,12 @@ class TestTASBE(TasbeTest):
 
   
     def testSerialize(self):
-        
-    
-        def bl_eq(self, other):
-            return self.channel == other.channel \
-                and self.file == other.file
-        
-        def bl_hash(self):
-            return hash((self.channel, self.file))
-        
-        _BleedthroughControl.__eq__ = bl_eq
-        _BleedthroughControl.__hash__ = bl_hash
-        
-    
-        def tr_eq(self, other):
-            return self.from_channel == other.from_channel \
-                and self.to_channel == other.to_channel \
-                and self.file == other.file
-        
-        def tr_hash(self):
-            return hash((self.from_channel, self.to_channel, self.file))
-        
-        _TranslationControl.__eq__ = tr_eq
-        _TranslationControl.__hash__ = tr_hash
+      
+        _BleedthroughControl.__eq__ = traits_eq
+        _BleedthroughControl.__hash__ = traits_hash
+             
+        _TranslationControl.__eq__ = traits_eq
+        _TranslationControl.__hash__ = traits_hash
         
         fh, filename = tempfile.mkstemp()
         try:
@@ -163,5 +144,5 @@ class TestTASBE(TasbeTest):
         self.assertTrue((nb_data == remote_data).all().all())
         
 if __name__ == "__main__":
-#     import sys;sys.argv = ['', 'TestTASBE.testChangeChannels']
+#     import sys;sys.argv = ['', 'TestTASBE.testSerialize']
     unittest.main()

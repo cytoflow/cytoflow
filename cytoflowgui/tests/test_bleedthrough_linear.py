@@ -14,7 +14,7 @@ from cytoflowgui.tests.test_base import TasbeTest, wait_for
 from cytoflowgui.op_plugins import BleedthroughLinearPlugin, ThresholdPlugin
 from cytoflowgui.op_plugins.bleedthrough_linear import _Control
 from cytoflowgui.subset import BoolSubset
-from cytoflowgui.serialization import load_yaml, save_yaml
+from cytoflowgui.serialization import load_yaml, save_yaml, traits_eq, traits_hash
 
 class TestBleedthroughLinear(TasbeTest):
     
@@ -93,16 +93,8 @@ class TestBleedthroughLinear(TasbeTest):
 
     def testSerialize(self):
 
-    
-        def control_eq(self, other):
-            return self.channel == other.channel \
-                and self.file == other.file
-    
-        def control_hash(self):
-            return hash((self.channel, self.file))
-        
-        _Control.__eq__ = control_eq
-        _Control.__hash__ = control_hash
+        _Control.__eq__ = traits_eq
+        _Control.__hash__ = traits_hash
         
         fh, filename = tempfile.mkstemp()
         try:

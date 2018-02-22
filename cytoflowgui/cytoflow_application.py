@@ -107,6 +107,8 @@ class CytoflowApplication(TasksApplication):
         # must redirect to the gui thread
         self.on_trait_change(self.show_error, 'application_error', dispatch = 'ui')
         
+        # monkey-patch traitsui.qt4.text_editor.SimpleEditor._
+        
         # set up the model
         self.model = Workflow(remote_connection = self.remote_connection,
                               debug = self.debug)

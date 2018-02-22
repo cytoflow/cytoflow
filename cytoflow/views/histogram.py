@@ -77,8 +77,8 @@ class HistogramView(Base1DView):
         
         Parameters
         ----------
-        bins : int
-            The number of bins to plot in the histogram
+        num_bins : int
+            The number of bins to plot in the histogram.  Clipped to [100, 1000]
             
         histtype : {'stepfilled', 'step', 'bar'}
             The type of histogram to draw.  `stepfilled` is the default, which
@@ -107,7 +107,8 @@ class HistogramView(Base1DView):
         # for a reference.
         
         scaled_data = xscale(experiment[self.channel])
-        num_bins = util.num_hist_bins(scaled_data)
+        num_bins = kwargs.pop('num_bins', util.num_hist_bins(scaled_data))
+        num_bins = util.num_hist_bins(scaled_data) if num_bins is None else num_bins
         
         # clip num_bins to (100, 1000)
         num_bins = max(min(num_bins, 1000), 100)
@@ -145,7 +146,6 @@ class HistogramView(Base1DView):
             xmin = bottleneck.nanmin(scaled_data)
             xmax = bottleneck.nanmax(scaled_data)
             bins = xscale.inverse(np.linspace(xmin, xmax, num=num_bins, endpoint = True))
-            bins = np.append(bins, xscale.inverse(xmax))
                     
         kwargs.setdefault('bins', bins) 
         

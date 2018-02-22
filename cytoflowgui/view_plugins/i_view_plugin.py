@@ -37,7 +37,7 @@ from cytoflowgui.subset import ISubset
 from cytoflowgui.workflow import Changed
 from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.flow_task_pane import TabListEditor
-from cytoflowgui.serialization import camel_registry
+from cytoflowgui.serialization import camel_registry, traits_repr, traits_eq, traits_hash
 
 VIEW_PLUGIN_EXT = 'edu.mit.synbio.cytoflow.view_plugins'
 
@@ -96,15 +96,15 @@ class PluginHelpMixin(HasTraits):
                  
         return self._cached_help
     
-class PlotParams(HasTraits):
+class BasePlotParams(HasTraits):
     title = Str
     xlabel = Str
     ylabel = Str
     huelabel = Str
     
-    xlim = Tuple(util.FloatOrNone(""), util.FloatOrNone(""))
-    ylim = Tuple(util.FloatOrNone(""), util.FloatOrNone(""))
-    col_wrap = util.PositiveInt("", allow_zero = False, allow_none = True)
+    xlim = Tuple(util.FloatOrNone(None), util.FloatOrNone(None))
+    ylim = Tuple(util.FloatOrNone(None), util.FloatOrNone(None))
+    col_wrap = util.PositiveInt(None, allow_zero = False, allow_none = True)
 
     sns_style = Enum(['whitegrid', 'darkgrid', 'white', 'dark', 'ticks'])
     sns_context = Enum(['talk', 'poster', 'notebook', 'paper'])
@@ -130,23 +130,27 @@ class PlotParams(HasTraits):
                     Item('xlim',
                          label = "X limits",
                          editor = TupleEditor(editors = [TextEditor(auto_set = False,
-                                                                    evaluate = float),
+                                                                    evaluate = float,
+                                                                    format_func = lambda x: "" if x == None else str(x)),
                                                          TextEditor(auto_set = False,
-                                                                    evaluate = float)],
+                                                                    evaluate = float,
+                                                                    format_func = lambda x: "" if x == None else str(x))],
                                               labels = ["Min", "Max"],
                                               cols = 1)),
                     Item('ylim',
                          label = "Y limits",
                          editor = TupleEditor(editors = [TextEditor(auto_set = False,
-                                                                    evaluate = float),
+                                                                    evaluate = float,
+                                                                    format_func = lambda x: "" if x == None else str(x)),
                                                          TextEditor(auto_set = False,
-                                                                    evaluate = float)],
+                                                                    evaluate = float,
+                                                                    format_func = lambda x: "" if x == None else str(x))],
                                               labels = ["Min", "Max"],
                                               cols = 1)),
                     Item('col_wrap',
                          label = "Columns",
                          editor = TextEditor(auto_set = False,
-                                             evaluate = int)),
+                                             format_func = lambda x: "" if x == None else str(x))),
                     Item('sns_style',
                          label = "Style"),
                     Item('sns_context',
@@ -159,36 +163,16 @@ class PlotParams(HasTraits):
                     Item('despine',
                          label = "Despine?"))
         
-@camel_registry.dumper(PlotParams, 'plot-params', version = 1)
-def _dump_plot_params(params):
-    return dict(title = params.title,
-                xlabel = params.xlabel,
-                ylabel = params.ylabel,
-                huelabel = params.huelabel,
-                legend = params.legend,
-                sharex = params.sharex,
-                sharey = params.sharey,
-                xlim = params.xlim,
-                ylim = params.ylim,
-                col_wrap = params.col_wrap)
-
-@camel_registry.loader('plot-params', version = 1)
-def _load_plot_params(data, version):
-    return PlotParams(**data)
+    def __repr__(self):
+        return traits_repr(self)
         
 class EmptyPlotParams(HasTraits):
-    
+     
     def default_traits_view(self):
         return View()
     
-@camel_registry.dumper(EmptyPlotParams, 'empty-plot-params', version = 1)
-def _dump_empty_plot_params(params):
-    return dict()
-
-@camel_registry.loader('empty-plot-params', version = 1)
-def _load_empty_plot_params(data, version):
-    return EmptyPlotParams()
-
+EmptyPlotParams.__eq__ = traits_eq
+EmptyPlotParams.__hash__ = traits_hash
                         
 class PluginViewMixin(HasTraits):
     handler = Instance(Handler, transient = True)    
@@ -202,7 +186,7 @@ class PluginViewMixin(HasTraits):
     current_plot = Any
     
     # kwargs to pass to plot()
-    plot_params = Instance(PlotParams, ())
+    plot_params = Instance(EmptyPlotParams, ())
     
     subset_list = List(ISubset)
     subset = Property(Str, depends_on = "subset_list.str")

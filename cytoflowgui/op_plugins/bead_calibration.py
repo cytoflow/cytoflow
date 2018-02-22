@@ -108,7 +108,7 @@ from cytoflowgui.vertical_list_editor import VerticalListEditor
 from cytoflowgui.workflow import Changed
 from cytoflowgui.serialization import camel_registry, traits_repr, traits_str, dedent
 
-BeadCalibrationOp.__repr__ = traits_repr
+BeadCalibrationOp.__repr__ = traits_repr    
 
 class _Unit(HasTraits):
     channel = Str
@@ -179,7 +179,8 @@ class BeadCalibrationHandler(OpHandlerMixin, Controller):
                          editor = TextEditor(auto_set = False),
                          label = "Peak\nThreshold "),
                     Item('bead_brightness_cutoff',
-                         editor = TextEditor(auto_set = False),
+                         editor = TextEditor(auto_set = False,
+                                             format_func = lambda x: "" if x == None else str(x)),
                          label = "Peak\nCutoff"),
                     Item('do_estimate',
                          editor = ButtonEditor(value = True,
@@ -199,7 +200,7 @@ class BeadCalibrationPluginOp(PluginOpMixin, BeadCalibrationOp):
 
     bead_peak_quantile = CInt(80, estimate = True)
     bead_brightness_threshold = CFloat(100.0, estimate = True)
-    bead_brightness_cutoff = util.CFloatOrNone("", estimate = True)
+    bead_brightness_cutoff = util.CFloatOrNone(None, estimate = True)
 
     @on_trait_change('units_list_items,units_list.+', post_init = True)
     def _controls_changed(self, obj, name, old, new):
@@ -295,7 +296,6 @@ class BeadCalibrationViewHandler(ViewHandlerMixin, Controller):
 @provides(IView)
 class BeadCalibrationPluginView(PluginViewMixin, BeadCalibrationDiagnostic):
     handler_factory = Callable(BeadCalibrationViewHandler)
-    plot_params = Instance(EmptyPlotParams, ())
     
     def plot_wi(self, wi):
         self.plot(wi.previous_wi.result)

@@ -14,7 +14,7 @@ from cytoflowgui.tests.test_base import TasbeTest, wait_for
 from cytoflowgui.op_plugins import ColorTranslationPlugin, ThresholdPlugin
 from cytoflowgui.op_plugins.color_translation import _Control
 from cytoflowgui.subset import BoolSubset
-from cytoflowgui.serialization import load_yaml, save_yaml
+from cytoflowgui.serialization import load_yaml, save_yaml, traits_eq, traits_hash
 
 class TestColorTranslation(TasbeTest):
     
@@ -100,18 +100,9 @@ class TestColorTranslation(TasbeTest):
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))  
 
     def testSerialize(self):
-        
-    
-        def control_eq(self, other):
-            return self.from_channel == other.from_channel \
-                and self.to_channel == other.to_channel \
-                and self.file == other.file
-        
-        def control_hash(self):
-            return hash((self.from_channel, self.to_channel, self.file))
-        
-        _Control.__eq__ = control_eq
-        _Control.__hash__ = control_hash
+
+        _Control.__eq__ = traits_eq
+        _Control.__hash__ = traits_hash
         
         fh, filename = tempfile.mkstemp()
         try:

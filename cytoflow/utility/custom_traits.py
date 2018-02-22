@@ -39,7 +39,7 @@ class PositiveInt(BaseInt):
     info_text = 'a positive integer'
     
     def validate(self, obj, name, value):
-        if self.allow_none and (value == "" or value == None):
+        if self.allow_none and value == None:
             return None
         
         value = super().validate(obj, name, value)
@@ -74,7 +74,7 @@ class PositiveFloat(BaseFloat):
     info_text = 'a positive float'
     
     def validate(self, obj, name, value):
-        if self.allow_none and (value == "" or value == None):
+        if self.allow_none and value == None:
             return None
         
         value = super().validate(obj, name, value)
@@ -102,6 +102,8 @@ class PositiveCFloat(BaseCFloat):
         
 class FloatOrNone(BaseFloat):
     
+    info_text = 'a float or None'
+    
     def validate(self, obj, name, value):
         if value == "" or value == None:
             return None
@@ -110,24 +112,30 @@ class FloatOrNone(BaseFloat):
 
 class CFloatOrNone(BaseCFloat):
     
+    info_text = 'a float or None'
+    
     def validate(self, obj, name, value):
-        if value == "" or value == None:
+        if value == None or value == "":
             return None
         else:
             return super().validate(obj, name, value)
 
 class IntOrNone(BaseInt):
     
+    info_text = 'an int or None'
+    
     def validate(self, obj, name, value):
-        if value == "" or value == None:
+        if value == None:
             return None
         else:
             return super().validate(obj, name, value)
         
 class CIntOrNone(BaseCInt):
     
+    info_text = 'an int or None'
+    
     def validate(self, obj, name, value):
-        if value == "" or value == None:
+        if value == None or value == "":
             return None
         else:
             return super().validate(obj, name, value)

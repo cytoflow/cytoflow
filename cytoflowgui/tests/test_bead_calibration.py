@@ -13,7 +13,7 @@ from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.tests.test_base import TasbeTest, wait_for
 from cytoflowgui.op_plugins import BeadCalibrationPlugin
 from cytoflowgui.op_plugins.bead_calibration import _Unit
-from cytoflowgui.serialization import save_yaml, load_yaml
+from cytoflowgui.serialization import save_yaml, load_yaml, traits_eq, traits_hash
 import cytoflowgui.op_plugins.bead_calibration  # @UnusedImport
 
 class TestBeadCalibration(TasbeTest):
@@ -44,6 +44,19 @@ class TestBeadCalibration(TasbeTest):
 
     def testEstimate(self):
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
+        
+    def testTextParams(self):
+        self.op.bead_peak_quantile = "75"
+        self.op.bead_brightness_threshold = "95.0"
+        self.op.bead_brightness_cutoff = "262000"
+        
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 5))
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
+
+        self.op.do_estimate = True
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 5))
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
+
         
     def testRemoveChannel(self):
         self.op.units_list.pop()
@@ -99,15 +112,9 @@ class TestBeadCalibration(TasbeTest):
            
 
     def testSerialize(self):
-        
-        def unit_eq(self, other):
-            return self.channel == other.channel and self.unit == other.unit
-         
-        def unit_hash(self):
-            return hash((self.channel, self.unit))
-        
-        _Unit.__eq__ = unit_eq
-        _Unit.__hash__ = unit_hash
+
+        _Unit.__eq__ = traits_eq
+        _Unit.__hash__ = traits_hash
         
         fh, filename = tempfile.mkstemp()
         try:

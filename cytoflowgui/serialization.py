@@ -44,7 +44,7 @@ def _dump_int(i):
 def _dump_bool(b):
     return repr(bool(b)).lower()
 
-from traits.trait_handlers import TraitListObject, TraitDictObject
+from traits.trait_handlers import TraitListObject, TraitDictObject, TraitTuple
 from traits.api import Undefined
 
 @standard_types_registry.dumper(TraitListObject, 'seq', version = None)
@@ -54,6 +54,20 @@ def _dump_list(tlo):
 @standard_types_registry.dumper(TraitDictObject, 'map', version = None)
 def _dump_dict(tdo):
     return dict(tdo)
+
+# for some reason, the version of this in camel.__init__ doesn't get called.
+# if we re-define it here, everything is fine.
+@standard_types_registry.dumper(tuple, 'python/tuple', version=None)
+def _dump_tuple(data):
+    return list(data)
+
+@standard_types_registry.loader('python/tuple', version=None)
+def _load_tuple(data, version):
+    return tuple(data)
+
+# @standard_types_registry.dumper(TraitTuple, 'python/tuple', version = None)
+# def _dump_tuple(tt):
+#     return list(tt)
 
 @camel_registry.dumper(Undefined.__class__, 'undefined', version = 1)
 def _dump_undef(ud):
@@ -74,6 +88,13 @@ def _dump_series(s):
 def _load_series(data, version):
     return pandas.Series(data = data['data'],
                          index = data['index'])
+    
+# a few bits for testing serialization
+def traits_eq(self, other):
+    return self.trait_get(self.copyable_trait_names()) == other.trait_get(self.copyable_trait_names())
+
+def traits_hash(self):
+    return hash(tuple(self.trait_get(self.copyable_trait_names()).items()))
     
 #### Jupyter notebook serialization
 

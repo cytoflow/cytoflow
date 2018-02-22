@@ -92,7 +92,7 @@ from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
     import (IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, 
-            PluginHelpMixin, PlotParams)
+            PluginHelpMixin, BasePlotParams)
 from cytoflowgui.serialization import camel_registry, traits_repr, dedent
 from cytoflowgui.util import IterWrapper
 
@@ -153,16 +153,16 @@ class ScatterplotHandler(ViewHandlerMixin, Controller):
                                                   background_color = "#ff9191"))))
 
 
-class ScatterplotPlotParams(PlotParams):
+class ScatterplotPlotParams(BasePlotParams):
     
-    min_quantile = util.PositiveFloat(0.001)
-    max_quantile = util.PositiveFloat(1.00)
-    alpha = util.PositiveFloat(0.25)
-    s = util.PositiveFloat(2)
+    min_quantile = util.PositiveCFloat(0.001)
+    max_quantile = util.PositiveCFloat(1.00)
+    alpha = util.PositiveCFloat(0.25)
+    s = util.PositiveCFloat(2)
     marker = Enum(SCATTERPLOT_MARKERS)
     
     def default_traits_view(self):
-        dv = PlotParams.default_traits_view(self)
+        base_view = BasePlotParams.default_traits_view(self)
         
         return View(Item('min_quantile',
                          editor = TextEditor(auto_set = False)),
@@ -174,7 +174,7 @@ class ScatterplotPlotParams(PlotParams):
                          editor = TextEditor(auto_set = False),
                          label = "Size"),
                     Item('marker'),
-                    dv.content)
+                    base_view.content)
 
 class ScatterplotPluginView(PluginViewMixin, ScatterplotView):
     handler_factory = Callable(ScatterplotHandler, transient = True)

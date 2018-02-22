@@ -75,10 +75,9 @@ Plots a histogram.
 
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 
-from traits.api import provides, Callable, Str
-from traitsui.api import View, Item, Controller, EnumEditor, VGroup
+from traits.api import provides, Callable, Str, Enum, Bool, Instance
+from traitsui.api import View, Item, Controller, EnumEditor, VGroup, TextEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
@@ -89,8 +88,9 @@ from cytoflowgui.subset import SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
-    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, PluginHelpMixin
-from cytoflowgui.serialization import camel_registry, traits_repr, dedent
+    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, PluginHelpMixin,\
+    BasePlotParams
+from cytoflowgui.serialization import camel_registry, traits_repr, traits_str, dedent
 from cytoflowgui.util import IterWrapper
 
 HistogramView.__repr__ = traits_repr
@@ -140,10 +140,29 @@ class HistogramHandler(ViewHandlerMixin, Controller):
                          visible_when = 'context.view_error',
                          editor = ColorTextEditor(foreground_color = "#000000",
                                                   background_color = "#ff9191"))))
+        
+class HistogramPlotParams(BasePlotParams):
+    
+    min_quantile = util.PositiveCFloat(0.001)
+    max_quantile = util.PositiveCFloat(1.00)
+    num_bins = util.PositiveCInt(None, allow_none = True)
+    histtype = Enum(['stepfilled', 'step', 'bar'])
+    normed = Bool(False)
+    
+    def default_traits_view(self):
+        base_view = BasePlotParams.default_traits_view(self)
+        
+        return View(Item('num_bins',
+                         editor = TextEditor(auto_set = False,
+                                             format_func = lambda x: "" if x == None else str(x))),
+                    Item('histtype'),
+                    Item('normed'),
+                    base_view.content)
     
 class HistogramPluginView(PluginViewMixin, HistogramView):
-    handler_factory = Callable(HistogramHandler)
+    handler_factory = Callable(HistogramHandler, transient = True)
     plotfacet = Str
+    plot_params = Instance(HistogramPlotParams, ())
 
     def enum_plots_wi(self, wi):
         if not self.plotfacet:
@@ -164,20 +183,19 @@ class HistogramPluginView(PluginViewMixin, HistogramView):
             experiment = experiment.subset(self.plotfacet, plot_name)
 
         HistogramView.plot(self, experiment, **kwargs)
-#          
-#         if self.plotfacet and plot_name is not None:
-#             plt.title("{0} = {1}".format(self.plotfacet, plot_name))
             
     def get_notebook_code(self, idx):
         view = HistogramView()
         view.copy_traits(self, view.copyable_trait_names())
+        plot_params_str = traits_str(self.plot_params)
 
         return dedent("""
-        {repr}.plot(ex_{idx}{plot})
+        {repr}.plot(ex_{idx}{plot}{plot_params})
         """
         .format(repr = repr(view),
                 idx = idx,
-                plot = ", plot_name = " + repr(self.current_plot) if self.plot_names else ""))
+                plot = ", plot_name = " + repr(self.current_plot) if self.plot_names else "",
+                plot_params = ", " + plot_params_str if plot_params_str else ""))
 
 @provides(IViewPlugin)
 class HistogramPlugin(Plugin, PluginHelpMixin):
@@ -196,7 +214,7 @@ class HistogramPlugin(Plugin, PluginHelpMixin):
     def get_plugin(self):
         return self
     
-@camel_registry.dumper(HistogramPluginView, 'histogram', version = 1)
+@camel_registry.dumper(HistogramPluginView, 'histogram', version = 2)
 def _dump(view):
     return dict(channel = view.channel,
                 scale = view.scale,
@@ -205,8 +223,38 @@ def _dump(view):
                 huefacet = view.huefacet,
                 huescale = view.huescale,
                 plotfacet = view.plotfacet,
-                subset_list = view.subset_list)
+                subset_list = view.subset_list,
+                plot_params = view.plot_params)
     
-@camel_registry.loader('histogram', version = 1)
+@camel_registry.dumper(HistogramPlotParams, 'histogram-params', version = 1)
+def _dump_params(params):
+    return dict(title = params.title,
+                xlabel = params.xlabel,
+                ylabel = params.ylabel,
+                huelabel = params.huelabel,
+
+                xlim = params.xlim,
+                ylim = params.ylim,
+                col_wrap = params.col_wrap,
+                
+                sns_style = params.sns_style,
+                sns_context = params.sns_context,
+                
+                legend = params.legend,
+                sharex = params.sharex,
+                sharey = params.sharey,
+                despine = params.despine,
+
+                min_quantile = params.min_quantile,
+                max_quantile = params.max_quantile,
+                num_bins = params.num_bins,
+                histtype = params.histtype,
+                normed = params.normed)
+    
+@camel_registry.loader('histogram', version = any)
 def _load(data, version):
     return HistogramPluginView(**data)
+
+@camel_registry.loader('histogram-params', version = any)
+def _load_params(data, version):
+    return HistogramPlotParams(**data)

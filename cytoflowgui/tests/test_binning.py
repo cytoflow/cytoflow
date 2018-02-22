@@ -62,6 +62,12 @@ class TestBinning(ImportedDataTest):
         self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 5))         
         self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
 
+        
+    def testChangeBinWidthText(self):
+        self.op.bin_width = "0.1"
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 5))         
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
+
 
           
     def testPlot(self):
@@ -105,5 +111,5 @@ class TestBinning(ImportedDataTest):
         self.assertTrue((nb_data == remote_data).all().all())
 
 if __name__ == "__main__":
-#     import sys;sys.argv = ['', 'TestBinning.testPlot']
+    import sys;sys.argv = ['', 'TestBinning.testChangeBinWidth']
     unittest.main()
