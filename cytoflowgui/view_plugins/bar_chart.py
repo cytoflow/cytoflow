@@ -86,21 +86,23 @@ operation's **Group By**) must be set as **Variable** or as a facet.
                       huefacet = "Threshold").plot(ex3)
 """
 
-from traits.api import provides, Callable, Property
-from traitsui.api import View, Item, VGroup, Controller, EnumEditor
+from traits.api import provides, Callable, Property, Enum, Instance
+from traitsui.api import View, Item, VGroup, Controller, EnumEditor, TextEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
 import pandas as pd
 
 from cytoflow import BarChartView
+import cytoflow.utility as util
 
 from cytoflowgui.subset import SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
-    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, PluginHelpMixin
-from cytoflowgui.serialization import camel_registry, traits_repr, dedent
+    import (IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, 
+            PluginHelpMixin, BasePlotParams)
+from cytoflowgui.serialization import camel_registry, traits_repr, traits_str, dedent
 
 BarChartView.__repr__ = traits_repr
         
@@ -201,19 +203,43 @@ class BarChartHandler(ViewHandlerMixin, Controller):
             
         return ret
     
+class BarChartPlotParams(BasePlotParams):
+    
+    orientation = Enum(['vertical', 'horizontal'])
+    errwidth = util.PositiveCFloat(None, allow_none = True, allow_zero = False)
+    capsize = util.PositiveCFloat(None, allow_none = True, allow_zero = False)
+    
+    def default_traits_view(self):
+        base_view = BasePlotParams.default_traits_view(self)
+        
+        return View(Item('orientation'),
+                    Item('errwidth',
+                         editor = TextEditor(auto_set = False,
+                                             format_func = lambda x: "" if x == None else str(x)),
+                        label = "Error bar\nwidth"),
+                    Item('capsize',
+                         editor = TextEditor(auto_set = False,
+                                             format_func = lambda x: "" if x == None else str(x)),
+                         label = "Cap width"),
+                    base_view.content)
+
+    
 class BarChartPluginView(PluginViewMixin, BarChartView):
     handler_factory = Callable(BarChartHandler)
+    plot_params = Instance(BarChartPlotParams, ())
     
     def get_notebook_code(self, idx):
         view = BarChartView()
         view.copy_traits(self, view.copyable_trait_names())
+        plot_params_str = traits_str(self.plot_params)
 
         return dedent("""
-        {repr}.plot(ex_{idx}{plot})
+        {repr}.plot(ex_{idx}{plot}{plot_params)
         """
         .format(repr = repr(view),
                 idx = idx,
-                plot = ", plot_name = " + repr(self.current_plot) if self.plot_names else ""))
+                plot = ", plot_name = " + repr(self.current_plot) if self.plot_names else "",
+                plot_params = ", " + plot_params_str if plot_params_str else ""))
 
 @provides(IViewPlugin)
 class BarChartPlugin(Plugin, PluginHelpMixin):
@@ -233,7 +259,7 @@ class BarChartPlugin(Plugin, PluginHelpMixin):
         return self
     
 ### Serialization
-@camel_registry.dumper(BarChartPluginView, 'bar-chart', version = 1)
+@camel_registry.dumper(BarChartPluginView, 'bar-chart', version = 2)
 def _dump(view):
     return dict(statistic = view.statistic,
                 variable = view.variable,
@@ -242,10 +268,43 @@ def _dump(view):
                 yfacet = view.yfacet,
                 huefacet = view.huefacet,
                 error_statistic = view.error_statistic,
-                subset_list = view.subset_list)
+                subset_list = view.subset_list,
+                plot_params = view.plot_params)
+    
+@camel_registry.dumper(BarChartPlotParams, 'barchart-params', version = 1)
+def _dump_params(params):
+    return dict(title = params.title,
+                xlabel = params.xlabel,
+                ylabel = params.ylabel,
+                huelabel = params.huelabel,
+
+                xlim = params.xlim,
+                ylim = params.ylim,
+                col_wrap = params.col_wrap,
+                
+                sns_style = params.sns_style,
+                sns_context = params.sns_context,
+                
+                legend = params.legend,
+                sharex = params.sharex,
+                sharey = params.sharey,
+                despine = params.despine,
+
+                orientation = params.orientation,
+                errwidth = params.errwidth,
+                capsize = params.capsize)
     
 @camel_registry.loader('bar-chart', version = 1)
-def _load(data, version):
+def _load_v1(data, version):
     data['statistic'] = tuple(data['statistic'])
     data['error_statistic'] = tuple(data['error_statistic'])
     return BarChartPluginView(**data)
+
+@camel_registry.loader('bar-chart', version = 2)
+def _load_v2(data, version):
+    return BarChartPluginView(**data)
+
+@camel_registry.loader('barchart-params', version = any)
+def _load_params(data, version):
+    return BarChartPlotParams(**data)
+                       

@@ -75,7 +75,7 @@ Plot a scatterplot.
 '''
 
 from traits.api import provides, Callable, Str, Instance, Enum
-from traitsui.api import (View, Item, Controller, EnumEditor, VGroup, Include,
+from traitsui.api import (View, Item, Controller, EnumEditor, VGroup,
                           TextEditor)
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource

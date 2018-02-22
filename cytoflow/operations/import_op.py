@@ -59,11 +59,11 @@ class Tube(HasTraits):
     conditions = Dict(Str, Any)
 
     def conditions_equal(self, other):        
-        return len(set(self.conditions.items()) ^ 
+        return other and len(set(self.conditions.items()) ^ 
                    set(other.conditions.items())) == 0
                    
     def __eq__(self, other):
-        return (self.file == other.file and
+        return other and (self.file == other.file and
                 self.conditions == other.conditions)
         
     def __hash__(self):
