@@ -170,7 +170,7 @@ class BarChartView(Base1DStatisticsView):
                  *map_args,
                  view = self,
                  stat_name = stat.name,
-                 error_name = error_stat.name if error_stat else None,
+                 error_name = error_stat.name if error_stat is not None else None,
                  orient = orient,
                  grid = grid,
                  **kwargs)
