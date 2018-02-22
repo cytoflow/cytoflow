@@ -232,16 +232,16 @@ class LogicleScale(HasStrictTraits):
         if self.experiment:
             if self.channel and self.channel in self.experiment.channels:
                 if "range" in self.experiment.metadata[self.channel]:
-                    return self.experiment.metadata[self.channel]["range"]
+                    return float(self.experiment.metadata[self.channel]["range"])
                 else:
-                    return self.experiment.data[self.channel].max()
+                    return float(self.experiment.data[self.channel].max())
             elif self.condition and self.condition in self.experiment.conditions:
-                return self.experiment.data[self.condition].max()
+                return float(self.experiment.data[self.condition].max())
             elif self.statistic in self.experiment.statistics \
                  and not self.error_statistic in self.experiment.statistics:
                 stat = self.experiment.statistics[self.statistic]
                 assert is_numeric(stat)
-                return stat.max()
+                return float(stat.max())
             elif self.statistic in self.experiment.statistics and \
                  self.error_statistic in self.experiment.statistics:
                 stat = self.experiment.statistics[self.statistic]
@@ -249,14 +249,14 @@ class LogicleScale(HasStrictTraits):
                 
                 try:
                     err_max = max([max(x) for x in err_stat])
-                    return err_max
+                    return float(err_max)
                 except (TypeError, IndexError):
                     err_max = err_stat.max()
                     stat_max = stat.max()
 
-                    return stat_max + err_max 
+                    return float(stat_max + err_max)
             elif self.data.size > 0:
-                return self.data.max()
+                return float(self.data.max())
             else:
                 return Undefined
         else:
