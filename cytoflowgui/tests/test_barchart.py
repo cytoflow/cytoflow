@@ -12,9 +12,9 @@ matplotlib.use("Agg")
 from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.tests.test_base import ImportedDataTest, wait_for
 from cytoflowgui.op_plugins import ChannelStatisticPlugin
-from cytoflowgui.view_plugins import BarChartPlugin
+from cytoflowgui.view_plugins.bar_chart import BarChartPlugin, BarChartPlotParams
 from cytoflowgui.subset import CategorySubset
-from cytoflowgui.serialization import load_yaml, save_yaml
+from cytoflowgui.serialization import load_yaml, save_yaml, traits_eq, traits_hash
 
 class TestBarchart(ImportedDataTest):
     
@@ -80,6 +80,9 @@ class TestBarchart(ImportedDataTest):
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
  
     def testSerialize(self):
+        BarChartPlotParams.__eq__ = traits_eq
+        BarChartPlotParams.__hash__ = traits_hash
+        
         fh, filename = tempfile.mkstemp()
         try:
             os.close(fh)
@@ -105,5 +108,5 @@ class TestBarchart(ImportedDataTest):
 
 
 if __name__ == "__main__":
-#     import sys;sys.argv = ['', 'TestBarchart.testYfacet']
+#     import sys;sys.argv = ['', 'TestBarchart.testSerialize']
     unittest.main()

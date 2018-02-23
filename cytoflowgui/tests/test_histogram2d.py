@@ -9,8 +9,8 @@ import matplotlib
 matplotlib.use("Agg")
 
 from cytoflowgui.tests.test_base import ImportedDataTest, wait_for
-from cytoflowgui.view_plugins import Histogram2DPlugin
-from cytoflowgui.serialization import save_yaml, load_yaml
+from cytoflowgui.view_plugins.histogram_2d import Histogram2DPlugin, Histogram2DParams
+from cytoflowgui.serialization import save_yaml, load_yaml, traits_eq, traits_hash
 
 class Test(ImportedDataTest):
 
@@ -235,11 +235,12 @@ class Test(ImportedDataTest):
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
         self.view.plot_params.smoothed_sigmal = 2
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
-                            
-        
 
         
     def testSerialize(self):
+        Histogram2DParams.__eq__ = traits_eq
+        Histogram2DParams.__hash__ = traits_hash
+        
         fh, filename = tempfile.mkstemp()
         try:
             os.close(fh)

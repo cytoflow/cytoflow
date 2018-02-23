@@ -9,8 +9,8 @@ import matplotlib
 matplotlib.use("Agg")
 
 from cytoflowgui.tests.test_base import ImportedDataTest, wait_for
-from cytoflowgui.view_plugins import DensityPlugin
-from cytoflowgui.serialization import save_yaml, load_yaml
+from cytoflowgui.view_plugins.density import DensityPlugin, DensityPlotParams
+from cytoflowgui.serialization import save_yaml, load_yaml, traits_eq, traits_hash
 
 class TestDensityPlot(ImportedDataTest):
 
@@ -220,6 +220,9 @@ class TestDensityPlot(ImportedDataTest):
                             
         
     def testSerialize(self):
+        DensityPlotParams.__eq__ = traits_eq
+        DensityPlotParams.__hash__ = traits_hash
+        
         fh, filename = tempfile.mkstemp()
         try:
             os.close(fh)

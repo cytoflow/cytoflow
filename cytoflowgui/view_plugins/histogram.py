@@ -88,8 +88,8 @@ from cytoflowgui.subset import SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
-    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, PluginHelpMixin,\
-    BasePlotParams
+    import (IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, 
+            PluginHelpMixin, BasePlotParams)
 from cytoflowgui.serialization import camel_registry, traits_repr, traits_str, dedent
 from cytoflowgui.util import IterWrapper
 
@@ -152,7 +152,11 @@ class HistogramPlotParams(BasePlotParams):
     def default_traits_view(self):
         base_view = BasePlotParams.default_traits_view(self)
         
-        return View(Item('num_bins',
+        return View(Item('min_quantile',
+                         editor = TextEditor(auto_set = False)),
+                    Item('max_quantile',
+                         editor = TextEditor(auto_set = False)),
+                    Item('num_bins',
                          editor = TextEditor(auto_set = False,
                                              format_func = lambda x: "" if x == None else str(x))),
                     Item('histtype'),

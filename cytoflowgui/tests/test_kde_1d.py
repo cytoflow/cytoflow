@@ -9,16 +9,16 @@ import matplotlib
 matplotlib.use("Agg")
 
 from cytoflowgui.tests.test_base import ImportedDataTest, wait_for
-from cytoflowgui.view_plugins.histogram import HistogramPlugin, HistogramPlotParams
+from cytoflowgui.view_plugins.kde_1d import Kde1DPlugin, Kde1DPlotParams
 from cytoflowgui.serialization import save_yaml, load_yaml, traits_eq, traits_hash
 
-class TestHistogram(ImportedDataTest):
+class TestKde1D(ImportedDataTest):
 
     def setUp(self):
         ImportedDataTest.setUp(self)
 
         self.wi = wi = self.workflow.workflow[0]
-        plugin = HistogramPlugin()
+        plugin = Kde1DPlugin()
         self.view = view = plugin.get_view()
         view.channel = "Y2-A"
         wi.views.append(view)
@@ -175,86 +175,89 @@ class TestHistogram(ImportedDataTest):
         self.view.xfacet = "Dox"
         self.view.yfacet = "Well"
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
-
+ 
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
         self.view.plot_params.title = "Title"
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
-
+ 
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
         self.view.plot_params.xlabel = "X label"
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
-
+ 
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
         self.view.plot_params.ylabel = "Y label"
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
-
+ 
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
         self.view.plot_params.sharex = False
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
-
+ 
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
         self.view.plot_params.sharey = False
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
-
+ 
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
         self.view.plot_params.despine = False
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
-
+ 
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
         self.view.xfacet = ""
         self.view.huefacet = "Dox"
         self.view.plot_params.huelabel = "Hue label"
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
-
+ 
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
         self.view.plot_params.legend = False
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
-
+ 
         ## Histogram-specific params
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
         self.view.plot_params.min_quantile = 0.01
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
-
+ 
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
         self.view.plot_params.max_quantile = 0.90
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
-
+ 
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
-        self.view.plot_params.num_bins = 500
+        self.view.plot_params.shade = False
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+ 
+        for k in ["biw", "cos", "epa", "tri", "triw", "uni", "gau"]:
+            self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
+            self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+            self.view.plot_params.kernel = k
+            self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+
+        for bw in ["silverman", "scott", "normal_reference"]:
+            print(bw)
+            self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
+            self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+            self.view.plot_params.bw = bw
+            self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+
 
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
-        self.view.plot_params.histtype = "step"
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
-
-        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
-        self.view.plot_params.histtype = "bar"
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
-
-
-        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
-        self.view.plot_params.normed = True
+        self.view.plot_params.gridsize = 50
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))                    
 
         
     def testSerialize(self):
         
-        HistogramPlotParams.__eq__ = traits_eq
-        HistogramPlotParams.__hash__ = traits_hash
+        Kde1DPlotParams.__eq__ = traits_eq
+        Kde1DPlotParams.__hash__ = traits_hash
         
         fh, filename = tempfile.mkstemp()
         try:
@@ -282,5 +285,5 @@ class TestHistogram(ImportedDataTest):
         
            
 if __name__ == "__main__":
-    import sys;sys.argv = ['', 'TestHistogram.testSerialize']
+#     import sys;sys.argv = ['', 'TestKde1D.testPlotArgs']
     unittest.main()

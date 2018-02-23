@@ -165,17 +165,11 @@ class BasePlotParams(HasTraits):
         
     def __repr__(self):
         return traits_repr(self)
-    
-BasePlotParams.__eq__ = traits_eq
-BasePlotParams.__hash__ = traits_hash
         
 class EmptyPlotParams(HasTraits):
      
     def default_traits_view(self):
         return View()
-    
-EmptyPlotParams.__eq__ = traits_eq
-EmptyPlotParams.__hash__ = traits_hash
                         
 class PluginViewMixin(HasTraits):
     handler = Instance(Handler, transient = True)    

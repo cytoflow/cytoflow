@@ -73,8 +73,8 @@ Plots a "smoothed" histogram.
                    
 """
 
-from traits.api import provides, Callable, Str
-from traitsui.api import View, Item, Controller, EnumEditor, VGroup
+from traits.api import provides, Callable, Str, Enum, Bool, Instance
+from traitsui.api import View, Item, Controller, EnumEditor, VGroup, TextEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
@@ -89,8 +89,9 @@ from cytoflowgui.subset import SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
-    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, PluginHelpMixin
-from cytoflowgui.serialization import camel_registry, traits_repr, dedent
+    import (IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, 
+            PluginHelpMixin, BasePlotParams)
+from cytoflowgui.serialization import camel_registry, traits_repr, traits_str, dedent
 from cytoflowgui.util import IterWrapper
 
 Kde1DView.__repr__ = traits_repr
@@ -139,9 +140,35 @@ class Kde1DHandler(ViewHandlerMixin, Controller):
                          visible_when = 'context.view_error',
                          editor = ColorTextEditor(foreground_color = "#000000",
                                                   background_color = "#ff9191"))))
+        
+        
+class Kde1DPlotParams(BasePlotParams):
+    
+    min_quantile = util.PositiveCFloat(0.001)
+    max_quantile = util.PositiveCFloat(1.00)
+    shade = Bool(True)
+    kernel = Enum(['gau', 'biw', 'cos', 'epa', 'tri', 'triw', 'uni'])
+    bw = Enum(['scott', 'silverman', 'normal_reference'])
+    gridsize = util.PositiveCInt(100, allow_zero = False)
+    
+    def default_traits_view(self):
+        base_view = BasePlotParams.default_traits_view(self)
+        
+        return View(Item('min_quantile',
+                         editor = TextEditor(auto_set = False)),
+                    Item('max_quantile',
+                         editor = TextEditor(auto_set = False)),
+                    Item('shade'),
+                    Item('kernel'),
+                    Item('bw', label = "Bandwidth"),
+                    Item('gridsize',
+                         editor = TextEditor(auto_set = False),
+                         label = "Grid size"),
+                    base_view.content)
     
 class Kde1DPluginView(PluginViewMixin, Kde1DView):
     handler_factory = Callable(Kde1DHandler)
+    plot_params = Instance(Kde1DPlotParams, ())
     plotfacet = Str
 
     def enum_plots_wi(self, wi):
@@ -196,7 +223,7 @@ class Kde1DPlugin(Plugin, PluginHelpMixin):
         return self
     
 ### Serialization
-@camel_registry.dumper(Kde1DPluginView, 'kde-1d', version = 1)
+@camel_registry.dumper(Kde1DPluginView, 'kde-1d', version = 2)
 def _dump(view):
     return dict(channel = view.channel,
                 scale = view.scale,
@@ -205,8 +232,40 @@ def _dump(view):
                 huefacet = view.huefacet,
                 huescale = view.huescale,
                 plotfacet = view.plotfacet,
-                subset_list = view.subset_list)
+                subset_list = view.subset_list,
+                plot_params = view.plot_params)
     
-@camel_registry.loader('kde-1d', version = 1)
+    
+@camel_registry.dumper(Kde1DPlotParams, 'kde-1d-params', version = 1)
+def _dump_params(params):
+    return dict(title = params.title,
+                xlabel = params.xlabel,
+                ylabel = params.ylabel,
+                huelabel = params.huelabel,
+
+                xlim = params.xlim,
+                ylim = params.ylim,
+                col_wrap = params.col_wrap,
+                
+                sns_style = params.sns_style,
+                sns_context = params.sns_context,
+                
+                legend = params.legend,
+                sharex = params.sharex,
+                sharey = params.sharey,
+                despine = params.despine,
+
+                min_quantile = params.min_quantile,
+                max_quantile = params.max_quantile,
+                shade = params.shade,
+                kernel = params.kernel,
+                bw = params.bw,
+                gridsize = params.gridsize)
+    
+@camel_registry.loader('kde-1d', version = any)
 def _load(data, version):
     return Kde1DPluginView(**data)
+
+@camel_registry.loader('kde-1d-params', version = any)
+def _load_params(data, version):
+    return Kde1DPlotParams(**data)
