@@ -77,8 +77,8 @@ The density is visualized with a set of isolines.
                    huefacet = 'Dox').plot(ex)
 '''
 
-from traits.api import provides, Callable, Str
-from traitsui.api import View, Item, Controller, EnumEditor, VGroup, Heading
+from traits.api import provides, Callable, Str, Bool, Instance, Enum
+from traitsui.api import View, Item, Controller, EnumEditor, VGroup, Heading, TextEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
@@ -93,7 +93,8 @@ from cytoflowgui.subset import SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
-    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, PluginHelpMixin
+    import (IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, 
+            PluginHelpMixin, BasePlotParams)
 from cytoflowgui.serialization import camel_registry, traits_repr, dedent
 from cytoflowgui.util import IterWrapper
 
@@ -150,10 +151,45 @@ class Kde2DHandler(ViewHandlerMixin, Controller):
                          visible_when = 'context.view_error',
                          editor = ColorTextEditor(foreground_color = "#000000",
                                                   background_color = "#ff9191"))))
+        
+class Kde2DPlotParams(BasePlotParams):
+    
+    min_quantile = util.PositiveCFloat(0.001)
+    max_quantile = util.PositiveCFloat(1.00)
+    shade = Bool(False)
+    min_alpha = util.PositiveCFloat(0.2, allow_zero = False)
+    max_alpha = util.PositiveCFloat(0.9, allow_zero = False)
+    n_levels = util.PositiveCInt(10, allow_zero = False)
+    kernel = Enum(['gau', 'biw', 'cos', 'epa', 'tri', 'triw', 'uni'])
+    bw = Enum(['scott', 'silverman', 'normal_reference'])
+    gridsize = util.PositiveCInt(100, allow_zero = False)
+    
+    def default_traits_view(self):
+        base_view = BasePlotParams.default_traits_view(self)
+        
+        return View(Item('min_quantile',
+                         editor = TextEditor(auto_set = False)),
+                    Item('max_quantile',
+                         editor = TextEditor(auto_set = False)),
+                    Item('shade'),
+                    Item('min_alpha',
+                         editor = TextEditor(auto_set = False)),
+                    Item('max_alpha',
+                         editor = TextEditor(auto_set = False)),
+                    Item('n_levels',
+                         editor = TextEditor(auto_set = False),
+                         label = "Num\nlevels"),
+                    Item('kernel'),
+                    Item('bw', label = "Bandwidth"),
+                    Item('gridsize',
+                         editor = TextEditor(auto_set = False),
+                         label = "Grid size"),
+                    base_view.content)
 
 
 class Kde2DPluginView(PluginViewMixin, Kde2DView):
     handler_factory = Callable(Kde2DHandler)
+    plot_params = Instance(Kde2DPlotParams, ())
     plotfacet = Str
 
     def enum_plots_wi(self, wi):
@@ -208,7 +244,7 @@ class Kde2DPlugin(Plugin, PluginHelpMixin):
         return self
 
 ### Serialization
-@camel_registry.dumper(Kde2DPluginView, 'kde-2d', version = 1)
+@camel_registry.dumper(Kde2DPluginView, 'kde-2d', version = 2)
 def _dump(view):
     return dict(xchannel = view.xchannel,
                 xscale = view.xscale,
@@ -218,9 +254,44 @@ def _dump(view):
                 yfacet = view.yfacet,
                 huefacet = view.huefacet,
                 huescale = view.huescale,
-                plotfacet = view.plot_facet,
-                subset_list = view.subset_list)
+                plotfacet = view.plotfacet,
+                subset_list = view.subset_list,
+                plot_params = view.plot_params)
     
-@camel_registry.loader('kde-2d', version = 1)
+@camel_registry.dumper(Kde2DPlotParams, 'kde-2d-params', version = 1)
+def _dump_params(params):
+    return dict(title = params.title,
+                xlabel = params.xlabel,
+                ylabel = params.ylabel,
+                huelabel = params.huelabel,
+
+                xlim = params.xlim,
+                ylim = params.ylim,
+                col_wrap = params.col_wrap,
+                
+                sns_style = params.sns_style,
+                sns_context = params.sns_context,
+                
+                legend = params.legend,
+                sharex = params.sharex,
+                sharey = params.sharey,
+                despine = params.despine,
+
+                min_quantile = params.min_quantile,
+                max_quantile = params.max_quantile,
+                shade = params.shade,
+                min_alpha = params.min_alpha,
+                max_alpha = params.max_alpha,
+                n_levels = params.n_levels,
+                kernel = params.kernel,
+                bw = params.bw,
+                gridsize = params.gridsize)
+    
+@camel_registry.loader('kde-2d', version = any)
 def _load(data, version):
     return Kde2DPluginView(**data)
+
+
+@camel_registry.loader('kde-2d-params', version = any)
+def _load_params(data, version):
+    return Kde2DPlotParams(**data)
