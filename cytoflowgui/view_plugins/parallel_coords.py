@@ -77,9 +77,9 @@ segments represents one data point.
 '''
 
 from traits.api import (provides, Callable, Str, List, HasTraits, Event, Dict,
-                        on_trait_change)
+                        on_trait_change, Instance)
 from traitsui.api import (View, Item, Controller, EnumEditor, HGroup, VGroup, 
-                          InstanceEditor, ButtonEditor)
+                          InstanceEditor, ButtonEditor, TextEditor)
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
@@ -94,8 +94,9 @@ from cytoflowgui.subset import SubsetListEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.view_plugins.i_view_plugin \
-    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, PluginHelpMixin
-from cytoflowgui.serialization import camel_registry, traits_repr, dedent
+    import (IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, 
+            PluginHelpMixin, BasePlotParams)
+from cytoflowgui.serialization import camel_registry, traits_repr, traits_str, dedent
 from cytoflowgui.vertical_list_editor import VerticalListEditor
 from cytoflowgui.util import IterWrapper
 from cytoflowgui.workflow import Changed
@@ -184,9 +185,29 @@ class ParallelCoordinatesHandler(ViewHandlerMixin, Controller):
                                 editor = EnumEditor(name = 'handler.context.channels')),
                            Item('scale')),
                     handler = self)
+        
+class ParallelCoordinatesPlotParams(BasePlotParams):
+    
+    
+    min_quantile = util.PositiveCFloat(0.001)
+    max_quantile = util.PositiveCFloat(1.00)
+    alpha = util.PositiveCFloat(0.02)
+    
+    def default_traits_view(self):
+        base_view = BasePlotParams.default_traits_view(self)
+        
+        return View(Item('min_quantile',
+                         editor = TextEditor(auto_set = False)),
+                    Item('max_quantile',
+                         editor = TextEditor(auto_set = False)),
+                    Item('alpha',
+                         editor = TextEditor(auto_set = False)),
+                    base_view.content)
+    
 
 class ParallelCoordinatesPluginView(PluginViewMixin, ParallelCoordinatesView):
     handler_factory = Callable(ParallelCoordinatesHandler)
+    plot_params = Instance(ParallelCoordinatesPlotParams, ())
     plotfacet = Str
     
     channels_list = List(_Channel)
@@ -234,13 +255,16 @@ class ParallelCoordinatesPluginView(PluginViewMixin, ParallelCoordinatesView):
         for channel in self.channels_list:
             view.channels.append(channel.channel)
             view.scale[channel.channel] = channel.scale
+            
+        plot_params_str = traits_str(self.plot_params)
 
         return dedent("""
-        {repr}.plot(ex_{idx}{plot})
+        {repr}.plot(ex_{idx}{plot}{plot_params})
         """
         .format(repr = repr(view),
                 idx = idx,
-                plot = ", plot_name = " + repr(self.current_plot) if self.plot_names else ""))
+                plot = ", plot_name = " + repr(self.current_plot) if self.plot_names else "",
+                plot_params = ", " + plot_params_str if plot_params_str else ""))
 
 @provides(IViewPlugin)
 class ParallelCoordinatesPlugin(Plugin, PluginHelpMixin):
@@ -260,7 +284,7 @@ class ParallelCoordinatesPlugin(Plugin, PluginHelpMixin):
         return self
         
 ### Serialization
-@camel_registry.dumper(ParallelCoordinatesPluginView, 'parallel-coords', version = 1)
+@camel_registry.dumper(ParallelCoordinatesPluginView, 'parallel-coords', version = 2)
 def _dump(view):
     return dict(channels_list = view.channels_list,
                 xfacet = view.xfacet,
@@ -268,11 +292,39 @@ def _dump(view):
                 huefacet = view.huefacet,
                 huescale = view.huescale,
                 plotfacet = view.plotfacet,
-                subset_list = view.subset_list)
+                subset_list = view.subset_list,
+                plot_params = view.plot_params)
     
-@camel_registry.loader('parallel-coords', version = 1)
+@camel_registry.dumper(ParallelCoordinatesPlotParams, 'parallel-coords-params', version = 1)
+def _dump_params(params):
+    return dict(title = params.title,
+                xlabel = params.xlabel,
+                ylabel = params.ylabel,
+                huelabel = params.huelabel,
+
+                xlim = params.xlim,
+                ylim = params.ylim,
+                col_wrap = params.col_wrap,
+                
+                sns_style = params.sns_style,
+                sns_context = params.sns_context,
+                
+                legend = params.legend,
+                sharex = params.sharex,
+                sharey = params.sharey,
+                despine = params.despine,
+
+                min_quantile = params.min_quantile,
+                max_quantile = params.max_quantile,
+                alpha = params.alpha)
+    
+@camel_registry.loader('parallel-coords', version = any)
 def _load(data, version):
     return ParallelCoordinatesPluginView(**data)
+
+@camel_registry.loader('parallel-coords-params', version = any)
+def _load_params(data, version):
+    return ParallelCoordinatesPlotParams(**data)
 
 @camel_registry.dumper(_Channel, 'parallel-coords-channel', version = 1)
 def _dump_channel(channel):

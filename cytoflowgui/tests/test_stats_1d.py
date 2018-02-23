@@ -12,11 +12,12 @@ matplotlib.use("Agg")
 from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.tests.test_base import ImportedDataTest, wait_for
 from cytoflowgui.op_plugins import ChannelStatisticPlugin
-from cytoflowgui.view_plugins.bar_chart import BarChartPlugin, BarChartPlotParams
+from cytoflowgui.view_plugins.stats_1d import Stats1DPlugin, Stats1DPlotParams, LINE_STYLES
+from cytoflowgui.view_plugins.scatterplot import SCATTERPLOT_MARKERS
 from cytoflowgui.subset import CategorySubset
 from cytoflowgui.serialization import load_yaml, save_yaml, traits_eq, traits_hash
 
-class TestBarchart(ImportedDataTest):
+class TestStats1D(ImportedDataTest):
     
     def setUp(self):
         ImportedDataTest.setUp(self)
@@ -45,7 +46,7 @@ class TestBarchart(ImportedDataTest):
 
         self.assertTrue(wait_for(wi, 'status', lambda v: v == 'valid', 10))
         
-        plugin = BarChartPlugin()
+        plugin = Stats1DPlugin()
         self.view = view = plugin.get_view()
         view.statistic = ("MeanByDox", "Geom.Mean")
         view.variable = "Dox"
@@ -69,7 +70,16 @@ class TestBarchart(ImportedDataTest):
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
   
-        self.view.yscale = "log"
+        self.view.xscale = "log"
+          
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+
+ 
+    def testLogicleScale(self):
+        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+  
+        self.view.xscale = "logicle"
           
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
 
@@ -88,18 +98,14 @@ class TestBarchart(ImportedDataTest):
         self.view.yfacet = "Well"
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
         
+        
     def testErrorBars(self):
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
         self.view.error_statistic = ("MeanByDox", "Geom.SD")
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
-
-    def testPlotArgs(self):
         
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
-        self.view.error_statistic = ("MeanByDox", "Geom.SD")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+    def testPlotArgs(self):
 
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
@@ -146,23 +152,34 @@ class TestBarchart(ImportedDataTest):
         ## stats1d-specific params
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
-        self.view.plot_params.orientation = "horizontal"
+        self.view.plot_params.alpha = 0.5
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
 
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
-        self.view.plot_params.errwidth = 2
+        self.view.plot_params.marker = "+"
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
-        
+                                    
+        for m in SCATTERPLOT_MARKERS:
+            self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
+            self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+            self.view.plot_params.marker = m
+            self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+            
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
-        self.view.plot_params.capsize = 5
+        self.view.plot_params.linestyle = "dashed"
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
-
+            
+        for el in LINE_STYLES:
+            self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
+            self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+            self.view.plot_params.linestyle = el
+            self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
  
     def testSerialize(self):
-        BarChartPlotParams.__eq__ = traits_eq
-        BarChartPlotParams.__hash__ = traits_hash
+        Stats1DPlotParams.__eq__ = traits_eq
+        Stats1DPlotParams.__hash__ = traits_hash
         
         fh, filename = tempfile.mkstemp()
         try:
@@ -189,5 +206,5 @@ class TestBarchart(ImportedDataTest):
 
 
 if __name__ == "__main__":
-#     import sys;sys.argv = ['', 'TestBarchart.testSerialize']
+    import sys;sys.argv = ['', 'TestStats1D.testSerialize']
     unittest.main()

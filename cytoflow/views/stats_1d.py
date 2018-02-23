@@ -139,6 +139,8 @@ class Stats1DView(Base1DStatisticsView):
         if self.error_statistic[0]:
             err_stat = experiment.statistics[self.error_statistic]
             err_stat_name = err_stat.name
+        else:
+            err_stat = None
                     
         xlim = kwargs.pop("xlim", None)
         if xlim is None:
@@ -154,14 +156,15 @@ class Stats1DView(Base1DStatisticsView):
                 try: 
                     ylim = (yscale.clip(min([x[0] for x in data[err_stat_name]]) * 0.9),
                             yscale.clip(max([x[1] for x in data[err_stat_name]]) * 1.1))
-                except IndexError:
+                except (TypeError, IndexError):
                     ylim = (yscale.clip((data[stat_name].min() - data[err_stat_name].min()) * 0.9), 
                             yscale.clip((data[stat_name].max() + data[err_stat_name].max()) * 1.1))
 
 
         # plot the error bars first so the axis labels don't get overwritten
-        if self.error_statistic[0]:
-            grid.map(_error_bars, self.variable, stat_name, err_stat_name, **kwargs)
+        if err_stat is not None:
+#             err_kwargs = {k:v for k in kwargs if k in ['']}
+            grid.map(_error_bars, self.variable, stat_name, err_stat_name)
         
         grid.map(plt.plot, self.variable, stat_name, **kwargs)
         
@@ -169,6 +172,9 @@ class Stats1DView(Base1DStatisticsView):
 
                 
 def _error_bars(x, y, yerr, ax = None, color = None, **kwargs):
+    
+    kwargs.pop('markersize', None)
+    kwargs.pop('markersize', None)
     
     if isinstance(yerr.iloc[0], tuple):
         lo = [ye[0] for ye in yerr]

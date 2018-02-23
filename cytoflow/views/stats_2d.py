@@ -161,7 +161,7 @@ class Stats2DView(Base2DStatisticsView):
                 try: 
                     xlim = (xscale.clip(min([x[0] for x in data[x_error_name]]) * 0.9),
                             xscale.clip(max([x[1] for x in data[x_error_name]]) * 1.1))
-                except IndexError:
+                except (TypeError, IndexError):
                     xlim = (xscale.clip((data[xname].min() - data[x_error_name].min()) * 0.9), 
                             xscale.clip((data[xname].max() + data[x_error_name].max()) * 1.1))
                       
@@ -174,15 +174,15 @@ class Stats2DView(Base2DStatisticsView):
                 try: 
                     ylim = (yscale.clip(min([x[0] for x in data[y_error_name]]) * 0.9),
                             yscale.clip(max([x[1] for x in data[y_error_name]]) * 1.1))
-                except IndexError:
+                except (TypeError, IndexError):
                     ylim = (yscale.clip((data[yname].min() - data[y_error_name].min()) * 0.9), 
                             yscale.clip((data[yname].max() + data[y_error_name].max()) * 1.1))
         
         # plot the error bars first so the axis labels don't get overwritten
-        if x_error_stat:
+        if x_error_stat is not None:
             grid.map(_x_error_bars, xname, yname, x_error_name)
             
-        if y_error_stat:
+        if y_error_stat is not None:
             grid.map(_y_error_bars, xname, yname, y_error_name)
 
         grid.map(plt.plot, xname, yname, **kwargs)

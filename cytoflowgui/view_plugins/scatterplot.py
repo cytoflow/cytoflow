@@ -93,13 +93,13 @@ from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
     import (IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, 
             PluginHelpMixin, BasePlotParams)
-from cytoflowgui.serialization import camel_registry, traits_repr, dedent
+from cytoflowgui.serialization import camel_registry, traits_repr, traits_str, dedent
 from cytoflowgui.util import IterWrapper
 
 ScatterplotView.__repr__ = traits_repr
 
 SCATTERPLOT_MARKERS = ["o", ",", "v", "^", "<", ">", "1", "2", "3", "4", "8",
-                       "s", "p", "*", "h", "H", "+", "x", "X", "D", "d"]
+                       "s", "p", "*", "h", "H", "+", "x", "D", "d", ""]
 
 class ScatterplotHandler(ViewHandlerMixin, Controller):
     
@@ -208,13 +208,15 @@ class ScatterplotPluginView(PluginViewMixin, ScatterplotView):
     def get_notebook_code(self, idx):
         view = ScatterplotView()
         view.copy_traits(self, view.copyable_trait_names())
+        plot_params_str = traits_str(self.plot_params)
 
         return dedent("""
-        {repr}.plot(ex_{idx}{plot})
+        {repr}.plot(ex_{idx}{plot}{plot_params})
         """
         .format(repr = repr(view),
                 idx = idx,
-                plot = ", plot_name = " + repr(self.current_plot) if self.plot_names else ""))
+                plot = ", plot_name = " + repr(self.current_plot) if self.plot_names else "",
+                plot_params = ", " + plot_params_str if plot_params_str else ""))
 
 
 @provides(IViewPlugin)

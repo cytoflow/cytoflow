@@ -12,16 +12,36 @@ matplotlib.use("Agg")
 from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.tests.test_base import ImportedDataTest, wait_for
 from cytoflowgui.op_plugins import ChannelStatisticPlugin
-from cytoflowgui.view_plugins.bar_chart import BarChartPlugin, BarChartPlotParams
+from cytoflowgui.view_plugins.stats_2d import Stats2DPlugin, Stats2DPlotParams, LINE_STYLES
+from cytoflowgui.view_plugins.scatterplot import SCATTERPLOT_MARKERS
 from cytoflowgui.subset import CategorySubset
 from cytoflowgui.serialization import load_yaml, save_yaml, traits_eq, traits_hash
 
-class TestBarchart(ImportedDataTest):
+class TestStats2D(ImportedDataTest):
     
     def setUp(self):
         ImportedDataTest.setUp(self)
 
         plugin = ChannelStatisticPlugin()
+        
+        op = plugin.get_operation()
+        op.name = "MeanByDox"
+        op.channel = "Y2-A"
+        op.statistic_name = "Mean"
+        op.by = ['Dox', 'Well']
+
+        wi = WorkflowItem(operation = op)        
+        self.workflow.workflow.append(wi)
+        
+        
+        op = plugin.get_operation()
+        op.name = "MeanByDox"
+        op.channel = "Y2-A"
+        op.statistic_name = "Std.Dev"
+        op.by = ['Dox', 'Well']
+
+        wi = WorkflowItem(operation = op)        
+        self.workflow.workflow.append(wi)
         
         op = plugin.get_operation()
         op.name = "MeanByDox"
@@ -41,13 +61,15 @@ class TestBarchart(ImportedDataTest):
                 
         self.wi = wi = WorkflowItem(operation = op)        
         self.workflow.workflow.append(wi)
+        
         self.workflow.selected = wi
 
         self.assertTrue(wait_for(wi, 'status', lambda v: v == 'valid', 10))
         
-        plugin = BarChartPlugin()
+        plugin = Stats2DPlugin()
         self.view = view = plugin.get_view()
-        view.statistic = ("MeanByDox", "Geom.Mean")
+        view.xstatistic = ("MeanByDox", "Mean")
+        view.ystatistic = ("MeanByDox", "Geom.Mean")
         view.variable = "Dox"
         view.huefacet = "Well"
         
@@ -69,7 +91,16 @@ class TestBarchart(ImportedDataTest):
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
   
-        self.view.yscale = "log"
+        self.view.xscale = "log"
+          
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+
+ 
+    def testLogicleScale(self):
+        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+  
+        self.view.xscale = "logicle"
           
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
 
@@ -88,18 +119,29 @@ class TestBarchart(ImportedDataTest):
         self.view.yfacet = "Well"
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
         
+        
     def testErrorBars(self):
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
-        self.view.error_statistic = ("MeanByDox", "Geom.SD")
+        self.view.x_error_statistic = ("MeanByDox", "Std.Dev")
+        self.view.y_error_statistic = ("MeanByDox", "Geom.SD")
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
-
-    def testPlotArgs(self):
         
+        
+    def testXErrorBars(self):
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
-        self.view.error_statistic = ("MeanByDox", "Geom.SD")
+        self.view.x_error_statistic = ("MeanByDox", "Std.Dev")
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+        
+        
+    def testYErrorBars(self):
+        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.y_error_statistic = ("MeanByDox", "Geom.SD")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+        
+    def testPlotArgs(self):
 
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
@@ -146,23 +188,34 @@ class TestBarchart(ImportedDataTest):
         ## stats1d-specific params
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
-        self.view.plot_params.orientation = "horizontal"
+        self.view.plot_params.alpha = 0.5
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
 
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
-        self.view.plot_params.errwidth = 2
+        self.view.plot_params.marker = "+"
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
-        
+                                    
+        for m in SCATTERPLOT_MARKERS:
+            self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
+            self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+            self.view.plot_params.marker = m
+            self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+            
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
-        self.view.plot_params.capsize = 5
+        self.view.plot_params.linestyle = "dashed"
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
-
+            
+        for el in LINE_STYLES:
+            self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
+            self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+            self.view.plot_params.linestyle = el
+            self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
  
     def testSerialize(self):
-        BarChartPlotParams.__eq__ = traits_eq
-        BarChartPlotParams.__hash__ = traits_hash
+        Stats2DPlotParams.__eq__ = traits_eq
+        Stats2DPlotParams.__hash__ = traits_hash
         
         fh, filename = tempfile.mkstemp()
         try:
@@ -189,5 +242,5 @@ class TestBarchart(ImportedDataTest):
 
 
 if __name__ == "__main__":
-#     import sys;sys.argv = ['', 'TestBarchart.testSerialize']
+#     import sys;sys.argv = ['', 'TestStats1D.testPlotArgs']
     unittest.main()

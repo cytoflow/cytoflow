@@ -227,6 +227,11 @@ class TestScatterplot(ImportedDataTest):
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
         self.view.plot_params.s = 5
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+        
+        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.marker = '+'
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
                                     
         for m in SCATTERPLOT_MARKERS:
             self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
@@ -240,7 +245,7 @@ class TestScatterplot(ImportedDataTest):
             os.close(fh)
             
             save_yaml(self.view, filename)
-            new_op = load_yaml(filename)
+            new_view = load_yaml(filename)
             
         finally:
             os.unlink(filename)
@@ -248,9 +253,9 @@ class TestScatterplot(ImportedDataTest):
         self.maxDiff = None
                      
         self.assertDictEqual(self.view.trait_get(self.view.copyable_trait_names()),
-                             new_op.trait_get(self.view.copyable_trait_names()))
+                             new_view.trait_get(self.view.copyable_trait_names()))
                         
                       
 if __name__ == "__main__":
-    import sys;sys.argv = ['', 'TestScatterplot.testPlotArgs']
+#     import sys;sys.argv = ['', 'TestScatterplot.testPlotArgs']
     unittest.main()

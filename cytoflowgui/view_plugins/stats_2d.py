@@ -106,8 +106,8 @@ pair of elements with the same value of **Variable**; the X value is from
 
 import pandas as pd
 
-from traits.api import provides, Callable, Property
-from traitsui.api import View, Item, Controller, EnumEditor, VGroup
+from traits.api import provides, Callable, Property, Enum, Instance
+from traitsui.api import View, Item, Controller, EnumEditor, VGroup, TextEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
@@ -118,8 +118,11 @@ from cytoflowgui.subset import SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
-    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, PluginHelpMixin
-from cytoflowgui.serialization import camel_registry, traits_repr, dedent
+    import (IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, 
+            PluginHelpMixin, BasePlotParams)
+from cytoflowgui.view_plugins.scatterplot import SCATTERPLOT_MARKERS
+from cytoflowgui.view_plugins.stats_1d import LINE_STYLES
+from cytoflowgui.serialization import camel_registry, traits_repr, traits_str, dedent
 
 Stats2DView.__repr__ = traits_repr
     
@@ -278,21 +281,42 @@ class Stats2DHandler(ViewHandlerMixin, Controller):
             ret[name] = pd.Series(ret[name].unique())
             
         return ret
+    
+class Stats2DPlotParams(BasePlotParams):
+
+    linestyle = Enum(LINE_STYLES)
+    marker = Enum(SCATTERPLOT_MARKERS)
+    markersize = util.PositiveCFloat(6, allow_zero = False)
+    alpha = util.PositiveCFloat(1.0)
+    
+    def default_traits_view(self):
+        base_view = BasePlotParams.default_traits_view(self)
+        
+        return View(Item('linestyle'),
+                    Item('marker'),
+                    Item('markersize',
+                         editor = TextEditor(auto_set = False),
+                         format_func = lambda x: "" if x == None else str(x)),
+                    Item('alpha'),
+                    base_view.content)
 
     
 class Stats2DPluginView(PluginViewMixin, Stats2DView):
     handler_factory = Callable(Stats2DHandler)
+    plot_params = Instance(Stats2DPlotParams, ())
     
     def get_notebook_code(self, idx):
         view = Stats2DView()
         view.copy_traits(self, view.copyable_trait_names())
+        plot_params_str = traits_str(self.plot_params)
 
         return dedent("""
-        {repr}.plot(ex_{idx}{plot})
+        {repr}.plot(ex_{idx}{plot}{plot_params})
         """
         .format(repr = repr(view),
                 idx = idx,
-                plot = ", plot_name = " + repr(self.current_plot) if self.plot_names else ""))
+                plot = ", plot_name = " + repr(self.current_plot) if self.plot_names else "",
+                plot_params = ", " + plot_params_str if plot_params_str else ""))
 
 @provides(IViewPlugin)
 class Stats2DPlugin(Plugin, PluginHelpMixin):
@@ -313,7 +337,7 @@ class Stats2DPlugin(Plugin, PluginHelpMixin):
     
 ### Serialization
 
-@camel_registry.dumper(Stats2DPluginView, 'stats-2d', version = 1)
+@camel_registry.dumper(Stats2DPluginView, 'stats-2d', version = 2)
 def _dump(view):
     return dict(xstatistic = view.xstatistic,
                 xscale = view.xscale,
@@ -326,13 +350,39 @@ def _dump(view):
                 huescale = view.huescale,
                 x_error_statistic = view.x_error_statistic,
                 y_error_statistic = view.y_error_statistic,
-                subset_list = view.subset_list)
+                subset_list = view.subset_list,
+                plot_params = view.plot_params)
     
 @camel_registry.loader('stats-2d', version = 1)
-def _load(data, version):
+def _load_v1(data, version):
     data['xstatistic'] = tuple(data['xstatistic'])
     data['ystatistic'] = tuple(data['ystatistic'])
     data['x_error_statistic'] = tuple(data['x_error_statistic'])
     data['y_error_statistic'] = tuple(data['y_error_statistic'])
 
     return Stats2DPluginView(**data)
+
+@camel_registry.loader('stats-2d', version = 2)
+def _load_v2(data, version):
+    return Stats2DPluginView(**data)
+
+@camel_registry.dumper(Stats2DPlotParams, 'stats-2d-params', version = 1)
+def _dump_params(params):
+    return dict(title = params.title,
+                xlabel = params.xlabel,
+                ylabel = params.ylabel,
+                huelabel = params.huelabel,
+                legend = params.legend,
+                sharex = params.sharex,
+                sharey = params.sharey,
+                xlim = params.xlim,
+                ylim = params.ylim,
+                col_wrap = params.col_wrap,
+                linestyle = params.linestyle,
+                marker = params.marker,
+                markersize = params.markersize,
+                alpha = params.alpha)
+
+@camel_registry.loader('stats-2d-params', version = any)
+def _load_params(data, version):
+    return Stats2DPlotParams(**data)

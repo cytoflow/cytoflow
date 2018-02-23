@@ -246,7 +246,7 @@ class Test(ImportedDataTest):
             os.close(fh)
             
             save_yaml(self.view, filename)
-            new_op = load_yaml(filename)
+            new_view = load_yaml(filename)
             
         finally:
             os.unlink(filename)
@@ -254,7 +254,7 @@ class Test(ImportedDataTest):
         self.maxDiff = None
                      
         self.assertDictEqual(self.view.trait_get(self.view.copyable_trait_names()),
-                             new_op.trait_get(self.view.copyable_trait_names()))
+                             new_view.trait_get(self.view.copyable_trait_names()))
         
         
     def testNotebook(self):

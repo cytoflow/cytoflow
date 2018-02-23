@@ -89,8 +89,8 @@ operation's **Group By**) must be set as **Variable** or as a facet.
                      yscale = 'log').plot(ex2)
 """
 
-from traits.api import provides, Callable, Property
-from traitsui.api import View, Item, Controller, EnumEditor, VGroup
+from traits.api import provides, Callable, Property, Enum, Instance
+from traitsui.api import View, Item, Controller, EnumEditor, VGroup, TextEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
@@ -103,10 +103,14 @@ from cytoflowgui.subset import SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
-    import IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, PluginHelpMixin
-from cytoflowgui.serialization import camel_registry, traits_repr, dedent
+    import (IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, 
+            PluginHelpMixin, BasePlotParams)
+from cytoflowgui.view_plugins.scatterplot import SCATTERPLOT_MARKERS
+from cytoflowgui.serialization import camel_registry, traits_repr, traits_str, dedent
 
 Stats1DView.__repr__ = traits_repr
+
+LINE_STYLES = ["solid", "dashed", "dashdot", "dotted", ""]
     
 class Stats1DHandler(ViewHandlerMixin, Controller):
 
@@ -232,20 +236,41 @@ class Stats1DHandler(ViewHandlerMixin, Controller):
         
         data.reset_index(inplace = True)
         return [x for x in data if util.is_numeric(data[x])]
+    
+class Stats1DPlotParams(BasePlotParams):
+
+    linestyle = Enum(LINE_STYLES)
+    marker = Enum(SCATTERPLOT_MARKERS)
+    markersize = util.PositiveCFloat(6, allow_zero = False)
+    alpha = util.PositiveCFloat(1.0)
+    
+    def default_traits_view(self):
+        base_view = BasePlotParams.default_traits_view(self)
+        
+        return View(Item('linestyle'),
+                    Item('marker'),
+                    Item('markersize',
+                         editor = TextEditor(auto_set = False),
+                         format_func = lambda x: "" if x == None else str(x)),
+                    Item('alpha'),
+                    base_view.content)
 
 class Stats1DPluginView(PluginViewMixin, Stats1DView):
     handler_factory = Callable(Stats1DHandler)
+    plot_params = Instance(Stats1DPlotParams, ())
     
     def get_notebook_code(self, idx):
         view = Stats1DView()
         view.copy_traits(self, view.copyable_trait_names())
+        plot_params_str = traits_str(self.plot_params)
 
         return dedent("""
-        {repr}.plot(ex_{idx}{plot})
+        {repr}.plot(ex_{idx}{plot}{plot_params})
         """
         .format(repr = repr(view),
                 idx = idx,
-                plot = ", plot_name = " + repr(self.current_plot) if self.plot_names else ""))
+                plot = ", plot_name = " + repr(self.current_plot) if self.plot_names else "",
+                plot_params = ", " + plot_params_str if plot_params_str else ""))
 
 @provides(IViewPlugin)
 class Stats1DPlugin(Plugin, PluginHelpMixin):
@@ -267,7 +292,7 @@ class Stats1DPlugin(Plugin, PluginHelpMixin):
 
 ### Serialization
 
-@camel_registry.dumper(Stats1DPluginView, 'stats-1d', version = 1)
+@camel_registry.dumper(Stats1DPluginView, 'stats-1d', version = 2)
 def _dump(view):
     return dict(statistic = view.statistic,
                 variable = view.variable,
@@ -278,11 +303,37 @@ def _dump(view):
                 huefacet = view.huefacet,
                 huescale = view.huescale,
                 error_statistic = view.error_statistic,
-                subset_list = view.subset_list)
+                subset_list = view.subset_list,
+                plot_params = view.plot_params)
     
 @camel_registry.loader('stats-1d', version = 1)
-def _load(data, version):
+def _load_v1(data, version):
     data['statistic'] = tuple(data['statistic'])
     data['error_statistic'] = tuple(data['error_statistic'])
 
     return Stats1DPluginView(**data)
+
+@camel_registry.loader('stats-1d', version = 2)
+def _load(data, version):
+    return Stats1DPluginView(**data)
+
+@camel_registry.dumper(Stats1DPlotParams, 'stats-1d-params', version = 1)
+def _dump_params(params):
+    return dict(title = params.title,
+                xlabel = params.xlabel,
+                ylabel = params.ylabel,
+                huelabel = params.huelabel,
+                legend = params.legend,
+                sharex = params.sharex,
+                sharey = params.sharey,
+                xlim = params.xlim,
+                ylim = params.ylim,
+                col_wrap = params.col_wrap,
+                linestyle = params.linestyle,
+                marker = params.marker,
+                markersize = params.markersize,
+                alpha = params.alpha)
+
+@camel_registry.loader('stats-1d-params', version = any)
+def _load_params(data, version):
+    return Stats1DPlotParams(**data)
