@@ -102,8 +102,8 @@ class BasePlotParams(HasTraits):
     ylabel = Str
     huelabel = Str
     
-    xlim = Tuple(util.FloatOrNone(None), util.FloatOrNone(None))
-    ylim = Tuple(util.FloatOrNone(None), util.FloatOrNone(None))
+#     xlim = Tuple(util.FloatOrNone(None), util.FloatOrNone(None))
+#     ylim = Tuple(util.FloatOrNone(None), util.FloatOrNone(None))
     col_wrap = util.PositiveInt(None, allow_zero = False, allow_none = True)
 
     sns_style = Enum(['whitegrid', 'darkgrid', 'white', 'dark', 'ticks'])
@@ -127,26 +127,26 @@ class BasePlotParams(HasTraits):
                     Item('huelabel',
                          label = "Hue label",
                          editor = TextEditor(auto_set = False)),
-                    Item('xlim',
-                         label = "X limits",
-                         editor = TupleEditor(editors = [TextEditor(auto_set = False,
-                                                                    evaluate = float,
-                                                                    format_func = lambda x: "" if x == None else str(x)),
-                                                         TextEditor(auto_set = False,
-                                                                    evaluate = float,
-                                                                    format_func = lambda x: "" if x == None else str(x))],
-                                              labels = ["Min", "Max"],
-                                              cols = 1)),
-                    Item('ylim',
-                         label = "Y limits",
-                         editor = TupleEditor(editors = [TextEditor(auto_set = False,
-                                                                    evaluate = float,
-                                                                    format_func = lambda x: "" if x == None else str(x)),
-                                                         TextEditor(auto_set = False,
-                                                                    evaluate = float,
-                                                                    format_func = lambda x: "" if x == None else str(x))],
-                                              labels = ["Min", "Max"],
-                                              cols = 1)),
+#                     Item('xlim',
+#                          label = "X limits",
+#                          editor = TupleEditor(editors = [TextEditor(auto_set = False,
+#                                                                     evaluate = float,
+#                                                                     format_func = lambda x: "" if x == None else str(x)),
+#                                                          TextEditor(auto_set = False,
+#                                                                     evaluate = float,
+#                                                                     format_func = lambda x: "" if x == None else str(x))],
+#                                               labels = ["Min", "Max"],
+#                                               cols = 1)),
+#                     Item('ylim',
+#                          label = "Y limits",
+#                          editor = TupleEditor(editors = [TextEditor(auto_set = False,
+#                                                                     evaluate = float,
+#                                                                     format_func = lambda x: "" if x == None else str(x)),
+#                                                          TextEditor(auto_set = False,
+#                                                                     evaluate = float,
+#                                                                     format_func = lambda x: "" if x == None else str(x))],
+#                                               labels = ["Min", "Max"],
+#                                               cols = 1)),
                     Item('col_wrap',
                          label = "Columns",
                          editor = TextEditor(auto_set = False,

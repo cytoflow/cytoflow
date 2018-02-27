@@ -83,9 +83,6 @@ class BaseView(HasStrictTraits):
         sharex, sharey : bool
             If there are multiple subplots, should they share axes?  Defaults
             to `True`.
-            
-        xlim, ylim : (float, float)
-            Set the min and max limits of the plots' x and y axes.
 
         col_wrap : int
             If `xfacet` is set and `yfacet` is not set, you can "wrap" the
@@ -292,6 +289,14 @@ class BaseDataView(BaseView):
         Plot some data from an experiment.  This function takes care of
         checking for facet name validity and subsetting, then passes the
         underlying dataframe to `BaseView.plot`
+        
+        Parameters
+        ----------
+        min_quantile : float (>0.0 and <1.0, default = 0.001)
+            Clip data that is less than this quantile.
+            
+        max_quantile : float (>0.0 and <1.0, default = 1.00)
+            Clip data that is greater than this quantile.
 
         """
         if experiment is None:
@@ -334,7 +339,9 @@ class BaseDataView(BaseView):
                                              "Subset string '{0}' returned no events"
                                              .format(self.subset))
                  
-        super().plot(experiment, experiment.data, **kwargs)
+        super().plot(experiment, 
+                     experiment.data, 
+                     **kwargs)
         
 
 class Base1DView(BaseDataView):
@@ -357,14 +364,10 @@ class Base1DView(BaseDataView):
         """
         Parameters
         ----------
-        min_quantile : float (>0.0 and <1.0, default = 0.001)
-            Clip data that is less than this quantile.
+        lim : (float, float)
+            Set the range of the plot's data axis.
             
-        max_quantile : float (>0.0 and <1.0, default = 1.00)
-            Clip data that is greater than this quantile.
-            
-        xlim : (float, float)
-            Set the range of the plot's x axis.
+        orientation : {'vertical', 'horizontal'}
         """
         
         if experiment is None:
@@ -385,45 +388,56 @@ class Base1DView(BaseDataView):
         if scale is None:
             scale = util.scale_factory(self.scale, experiment, channel = self.channel)
         
-        # adjust the limits to clip extreme values
-        min_quantile = kwargs.pop("min_quantile", 0.001)
-        max_quantile = kwargs.pop("max_quantile", 1.0) 
-        
-        if min_quantile < 0.0 or min_quantile > 1:
-            raise util.CytoflowViewError('min_quantile',
-                                         "min_quantile must be between 0 and 1")
+#         # adjust the limits to clip extreme values
+#         min_quantile = kwargs.pop("min_quantile", 0.001)
+#         max_quantile = kwargs.pop("max_quantile", 1.0) 
+#         
+#         if min_quantile < 0.0 or min_quantile > 1:
+#             raise util.CytoflowViewError('min_quantile',
+#                                          "min_quantile must be between 0 and 1")
+# 
+#         if max_quantile < 0.0 or max_quantile > 1:
+#             raise util.CytoflowViewError('max_quantile',
+#                                          "max_quantile must be between 0 and 1")     
+#         
+#         if min_quantile >= max_quantile:
+#             raise util.CytoflowViewError('min_quantile',
+#                                          "min_quantile must be less than max_quantile")   
+#                 
+#         lim = kwargs.pop("xlim", None)
+#         if lim is None:
+#             lim = (experiment[self.channel].quantile(min_quantile),
+#                    experiment[self.channel].quantile(max_quantile))
+#         elif isinstance(lim, list) or isinstance(lim, tuple):
+#             if len(lim) != 2:
+#                 raise util.CytoflowError('lim',
+#                                          'Length of lim must be 2')
+#             if lim[0] is None:
+#                 lim = (experiment[self.channel].quantile(min_quantile),
+#                        lim[1])
+#                  
+#             if lim[1] is None:
+#                 lim = (lim[0],
+#                        experiment[self.channel].quantile(max_quantile))
+#                 
+#         else:
+#             raise util.CytoflowError('lim',
+#                                      "lim is an unknown data type")
+#             
+#         lim = [scale.clip(x) for x in lim]
+#         
+#         orientation = kwargs.get('orientation', 'horizontal')
+#         if orientation == 'horizontal':
+#             super().plot(experiment, xlim = lim, xscale = scale, **kwargs)
+#         else:
+#             super().plot(experiment, ylim = lim, yscale = scale, **kwargs)
 
-        if max_quantile < 0.0 or max_quantile > 1:
-            raise util.CytoflowViewError('max_quantile',
-                                         "max_quantile must be between 0 and 1")     
-        
-        if min_quantile >= max_quantile:
-            raise util.CytoflowViewError('min_quantile',
-                                         "min_quantile must be less than max_quantile")   
-                
-        xlim = kwargs.pop("xlim", None)
-        if xlim is None:
-            xlim = (experiment[self.channel].quantile(min_quantile),
-                    experiment[self.channel].quantile(max_quantile))
-        elif isinstance(xlim, list) or isinstance(xlim, tuple):
-            if len(xlim) != 2:
-                raise util.CytoflowError('xlim',
-                                         'Length of xlim must be 2')
-            if xlim[0] is None:
-                xlim = (experiment[self.channel].quantile(min_quantile),
-                        xlim[1])
-                 
-            if xlim[1] is None:
-                xlim = (xlim[0],
-                           experiment[self.channel].quantile(max_quantile))
-                
-        else:
-            raise util.CytoflowError('xlim',
-                                     "xlim is an unknown data type")
-            
-        xlim = [scale.clip(x) for x in xlim]
-        
-        super().plot(experiment, xlim = xlim, xscale = scale, **kwargs)
+        lim = kwargs.pop("lim", None)
+
+        super().plot(experiment,
+                     lim = {self.channel : lim},
+                     scale = {self.channel : scale},
+                     **kwargs)
     
 
 class Base2DView(BaseDataView):
@@ -437,6 +451,9 @@ class Base2DView(BaseDataView):
         
     xscale, yscale : {'linear', 'log', 'logicle'} (default = 'linear')
         The scales applied to the data before plotting it.
+        
+    xlim, ylim : (float, float)
+        Set the min and max limits of the plots' x and y axes.
     """
     
     xchannel = Str
@@ -447,13 +464,7 @@ class Base2DView(BaseDataView):
     def plot(self, experiment, **kwargs):
         """
         Parameters
-        ----------
-        min_quantile : float (>0.0 and <1.0, default = 0.001)
-            Clip data that is less than this quantile.
-            
-        max_quantile : float (>0.0 and <1.0, default = 1.00)
-            Clip data that is greater than this quantile.
-            
+        ----------  
         xlim, ylim : (float, float)
             Set the range of the plot's axis.
         """
@@ -488,73 +499,76 @@ class Base2DView(BaseDataView):
         yscale = kwargs.pop('yscale', None)
         if yscale is None:
             yscale = util.scale_factory(self.yscale, experiment, channel = self.ychannel)
-        
-        # adjust the limits to clip extreme values
-        min_quantile = kwargs.pop("min_quantile", 0.001)
-        max_quantile = kwargs.pop("max_quantile", 1.0) 
-        
-        if min_quantile < 0.0 or min_quantile > 1:
-            raise util.CytoflowViewError('min_quantile',
-                                         "min_quantile must be between 0 and 1")
-
-        if max_quantile < 0.0 or max_quantile > 1:
-            raise util.CytoflowViewError('max_quantile',
-                                         "max_quantile must be between 0 and 1")     
-        
-        if min_quantile >= max_quantile:
-            raise util.CytoflowViewError('min_quantile',
-                                         "min_quantile must be less than max_quantile")   
-                
-        xlim = kwargs.pop("xlim", None)
-        if xlim is None:
-            xlim = (experiment[self.xchannel].quantile(min_quantile),
-                    experiment[self.xchannel].quantile(max_quantile))
-             
-        elif isinstance(xlim, list) or isinstance(xlim, tuple):
-            if len(xlim) != 2:
-                raise util.CytoflowError('xlim',
-                                         'Length of xlim must be 2')
-            if xlim[0] is None:
-                xlim = (experiment[self.xchannel].quantile(min_quantile),
-                        xlim[1])
-                 
-            if xlim[1] is None:
-                xlim = (xlim[0],
-                        experiment[self.xchannel].quantile(max_quantile))
-                
-        else:
-            raise util.CytoflowError('xlim',
-                                     "xlim is an unknown data type")
             
-        xlim = [xscale.clip(x) for x in xlim]
-
-        ylim = kwargs.pop("ylim", None)
-        if ylim is None:
-            ylim = (experiment[self.ychannel].quantile(min_quantile),
-                    experiment[self.ychannel].quantile(max_quantile))
-            
-        elif isinstance(ylim, list) or isinstance(ylim, tuple):
-            if len(ylim) != 2:
-                raise util.CytoflowError('ylim',
-                                         'Length of xlim must be 2')
-            if ylim[0] is None:
-                ylim = (experiment[self.ychannel].quantile(min_quantile),
-                        ylim[1])
-                 
-            if ylim[1] is None:
-                ylim = (ylim[0],
-                           experiment[self.ychannel].quantile(max_quantile))
-        else:
-            raise util.CytoflowError('ylim',
-                                     'ylim is an unknown data type')
-            
-        ylim = [yscale.clip(y) for y in ylim]
+        xlim = kwargs.pop('xlim', None)
+        ylim = kwargs.pop('ylim', None)
+        
+#         # adjust the limits to clip extreme values
+#         min_quantile = kwargs.pop("min_quantile", 0.001)
+#         max_quantile = kwargs.pop("max_quantile", 1.0) 
+#         
+#         if min_quantile < 0.0 or min_quantile > 1:
+#             raise util.CytoflowViewError('min_quantile',
+#                                          "min_quantile must be between 0 and 1")
+# 
+#         if max_quantile < 0.0 or max_quantile > 1:
+#             raise util.CytoflowViewError('max_quantile',
+#                                          "max_quantile must be between 0 and 1")     
+#         
+#         if min_quantile >= max_quantile:
+#             raise util.CytoflowViewError('min_quantile',
+#                                          "min_quantile must be less than max_quantile")   
+#                 
+#         xlim = kwargs.pop("xlim", None)
+#         if xlim is None:
+#             xlim = (experiment[self.xchannel].quantile(min_quantile),
+#                     experiment[self.xchannel].quantile(max_quantile))
+#              
+#         elif isinstance(xlim, list) or isinstance(xlim, tuple):
+#             if len(xlim) != 2:
+#                 raise util.CytoflowError('xlim',
+#                                          'Length of xlim must be 2')
+#             if xlim[0] is None:
+#                 xlim = (experiment[self.xchannel].quantile(min_quantile),
+#                         xlim[1])
+#                  
+#             if xlim[1] is None:
+#                 xlim = (xlim[0],
+#                         experiment[self.xchannel].quantile(max_quantile))
+#                 
+#         else:
+#             raise util.CytoflowError('xlim',
+#                                      "xlim is an unknown data type")
+#             
+#         xlim = [xscale.clip(x) for x in xlim]
+# 
+#         ylim = kwargs.pop("ylim", None)
+#         if ylim is None:
+#             ylim = (experiment[self.ychannel].quantile(min_quantile),
+#                     experiment[self.ychannel].quantile(max_quantile))
+#             
+#         elif isinstance(ylim, list) or isinstance(ylim, tuple):
+#             if len(ylim) != 2:
+#                 raise util.CytoflowError('ylim',
+#                                          'Length of xlim must be 2')
+#             if ylim[0] is None:
+#                 ylim = (experiment[self.ychannel].quantile(min_quantile),
+#                         ylim[1])
+#                  
+#             if ylim[1] is None:
+#                 ylim = (ylim[0],
+#                            experiment[self.ychannel].quantile(max_quantile))
+#         else:
+#             raise util.CytoflowError('ylim',
+#                                      'ylim is an unknown data type')
+#             
+#         ylim = [yscale.clip(y) for y in ylim]
         
         super().plot(experiment, 
-                     xlim = xlim,
-                     xscale = xscale, 
-                     ylim = ylim,
-                     yscale = yscale, 
+                     lim = {self.xchannel : xlim,
+                            self.ychannel : ylim},
+                     scale = {self.xchannel : xscale,
+                              self.ychannel : yscale},
                      **kwargs)        
 
 class BaseNDView(BaseDataView):
@@ -578,12 +592,6 @@ class BaseNDView(BaseDataView):
         """
         Parameters
         ----------
-        min_quantile : float (>0.0 and <1.0, default = 0.001)
-            Clip data that is less than this quantile.
-            
-        max_quantile : float (>0.0 and <1.0, default = 1.00)
-            Clip data that is greater than this quantile.
-            
         lim : Dict(Str : (float, float))
             Set the range of each channel's axis.  If unspecified, assume
             that the limits are the minimum and maximum of the clipped data
@@ -610,7 +618,6 @@ class BaseNDView(BaseDataView):
                                            "in 'channels'"
                                            .format(c))
        
-        
         # get the scale
         scale = {}
         for c in self.channels:
@@ -638,28 +645,32 @@ class BaseNDView(BaseDataView):
         lim = kwargs.pop("lim", {})
         
         for c in self.channels:
-            if c not in lim:
-                lim[c] = (experiment[c].quantile(min_quantile),
-                          experiment[c].quantile(max_quantile))
-            elif isinstance(lim, list) or isinstance(lim, tuple):
-                if len(lim) != 2:
-                    raise util.CytoflowError('lim',
-                                             'Length of lim\{{}\} must be 2'
-                                             .format(c))
-                if lim[0] is None:
-                    lim = (experiment[c].quantile(min_quantile),
-                           lim[1])
-                     
-                if lim[1] is None:
-                    lim = (lim[0],
-                           experiment[c].quantile(max_quantile))
-                
-            else:
-                raise util.CytoflowError('lim',
-                                         "lim\{{}\} is an unknown data type"
-                                         .format(c))
+            lim[c] = None
 
-            lim[c] = [scale[c].clip(x) for x in lim[c]]
+        
+#         for c in self.channels:
+#             if c not in lim:
+#                 lim[c] = (experiment[c].quantile(min_quantile),
+#                           experiment[c].quantile(max_quantile))
+#             elif isinstance(lim, list) or isinstance(lim, tuple):
+#                 if len(lim) != 2:
+#                     raise util.CytoflowError('lim',
+#                                              'Length of lim\{{}\} must be 2'
+#                                              .format(c))
+#                 if lim[0] is None:
+#                     lim = (experiment[c].quantile(min_quantile),
+#                            lim[1])
+#                      
+#                 if lim[1] is None:
+#                     lim = (lim[0],
+#                            experiment[c].quantile(max_quantile))
+#                 
+#             else:
+#                 raise util.CytoflowError('lim',
+#                                          "lim\{{}\} is an unknown data type"
+#                                          .format(c))
+# 
+#             lim[c] = [scale[c].clip(x) for x in lim[c]]
     
         
         super().plot(experiment, 
@@ -682,9 +693,7 @@ class BaseStatisticsView(BaseView):
         
     subset : str
         An expression that specifies the subset of the statistic to plot.
-        
-    xscale, yscale : {'linear', 'log', 'logicle'}
-        The scales applied to the data before plotting it.
+
     """
     
     # deprecated or removed attributes give warnings & errors, respectively
@@ -692,9 +701,6 @@ class BaseStatisticsView(BaseView):
     
     variable = Str
     subset = Str
-
-    xscale = util.ScaleEnum
-    yscale = util.ScaleEnum
     
     def enum_plots(self, experiment, data):
         """
@@ -859,6 +865,9 @@ class Base1DStatisticsView(BaseStatisticsView):
         The name of the statistic used to plot error bars.  Must be a key in the
         :attr:`~Experiment.statistics` attribute of the :class:`~.Experiment`
         being plotted.
+        
+    scale : {'linear', 'log', 'logicle'}
+        The scale applied to the data before plotting it.
     """
     
     REMOVED_ERROR = "Statistics changed dramatically in 0.5; please see the documentation"
@@ -874,6 +883,8 @@ class Base1DStatisticsView(BaseStatisticsView):
     statistic = Tuple(Str, Str)
     error_statistic = Tuple(Str, Str)
     
+    scale = util.ScaleEnum
+    
     def enum_plots(self, experiment):
         if experiment is None:
             raise util.CytoflowViewError('experiment',
@@ -882,6 +893,15 @@ class Base1DStatisticsView(BaseStatisticsView):
         return super().enum_plots(experiment, data)
     
     def plot(self, experiment, plot_name = None, **kwargs):
+        """
+        Parameters
+        ----------
+        orientation : {'vertical', 'horizontal'}
+        
+        lim : (float, float)
+            Set the range of the plot's axis.
+        """
+        
         if experiment is None:
             raise util.CytoflowViewError('experiment',
                                          "No experiment specified")
@@ -984,6 +1004,9 @@ class Base2DStatisticsView(BaseStatisticsView):
         The name of the statistics used to plot error bars.  Must be keys in the
         :attr:`~Experiment.statistics` attribute of the :class:`~.Experiment`
         being plotted.
+        
+    xscale, yscale : {'linear', 'log', 'logicle'}
+        The scales applied to the data before plotting it.
     """
 
     STATS_REMOVED = "{} has been removed. Statistics changed dramatically in 0.5; please see the documentation."
@@ -998,6 +1021,9 @@ class Base2DStatisticsView(BaseStatisticsView):
     x_error_statistic = Tuple(Str, Str)
     y_error_statistic = Tuple(Str, Str)
     
+    xscale = util.ScaleEnum
+    yscale = util.ScaleEnum
+    
     def enum_plots(self, experiment):
         if experiment is None:
             raise util.CytoflowViewError('experiment',
@@ -1006,6 +1032,13 @@ class Base2DStatisticsView(BaseStatisticsView):
         return super().enum_plots(experiment, data)
     
     def plot(self, experiment, plot_name = None, **kwargs):
+        """
+        Parameters
+        ----------
+        xlim, ylim : (float, float)
+            Set the range of the plot's axis.
+            
+        """
         if experiment is None:
             raise util.CytoflowViewError('experiment',
                                          "No experiment specified")

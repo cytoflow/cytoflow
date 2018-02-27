@@ -90,7 +90,7 @@ class ViolinPlotView(Base1DView):
             determined by multiplying the scale factor by the standard deviation of
             the data within each bin.
 
-        scale : {{"area", "count", "width"}}, optional
+        scale_plot : {{"area", "count", "width"}}, optional
             The method used to scale the width of each violin. If ``area``, each
             violin will have the same area. If ``count``, the width of the violins
             will be scaled by the number of observations in that bin. If ``width``,
@@ -135,20 +135,20 @@ class ViolinPlotView(Base1DView):
         
     def _grid_plot(self, experiment, grid, xlim, ylim, xscale, yscale, **kwargs):
 
-        kwargs.setdefault('orient', 'v')
+        kwargs.setdefault('orientation', 'vertical')
 
         # since the 'scale' kwarg is already used
         kwargs['data_scale'] = xscale
                 
         # set the scale for each set of axes; can't just call plt.xscale() 
         for ax in grid.axes.flatten():
-            if kwargs['orient'] == 'h':
+            if kwargs['orientation'] == 'horizontal':
                 ax.set_xscale(xscale.name, **xscale.mpl_params)  
             else:
                 ax.set_yscale(xscale.name, **xscale.mpl_params)  
             
         # this order-dependent thing weirds me out.      
-        if kwargs['orient'] == 'h':
+        if kwargs['orientation'] == 'horizontal':
             violin_args = [self.channel, self.variable]
         else:
             violin_args = [self.variable, self.channel]
@@ -162,31 +162,31 @@ class ViolinPlotView(Base1DView):
                  hue_order = (np.sort(experiment[self.huefacet].unique()) if self.huefacet else None),
                  **kwargs)
         
-        if kwargs['orient'] == 'h':
-            return {"yscale" : None}
+        if kwargs['orientation'] == 'horizontal':
+            return {"xscale" : xscale, "yscale" : None}
         else:
-            return {"xscale" : None}
+            return {"xscale" : None, "yscale" : xscale}
         
 # this uses an internal interface to seaborn's violin plot.
 
 from seaborn.categorical import _ViolinPlotter
 
 def _violinplot(x=None, y=None, hue=None, data=None, order=None, hue_order=None,
-                bw="scott", cut=2, scale="area", scale_hue=True, gridsize=100,
-                width=.8, inner="box", split=False, dodge=True, orient=None, linewidth=None,
+                bw="scott", cut=2, scale_plot="area", scale_hue=True, gridsize=100,
+                width=.8, inner="box", split=False, dodge=True, orientation=None, linewidth=None,
                 color=None, palette=None, saturation=.75, ax=None, data_scale = None,
                 **kwargs):
     
     # discards kwargs
     
-    if orient and orient == 'h':
+    if orientation and orientation == 'horizontal':
         x = data_scale(x)
     else:
         y = data_scale(y)
             
     plotter = _ViolinPlotter(x, y, hue, data, order, hue_order,
-                             bw, cut, scale, scale_hue, gridsize,
-                             width, inner, split, dodge, orient, linewidth,
+                             bw, cut, scale_plot, scale_hue, gridsize,
+                             width, inner, split, dodge, orientation, linewidth,
                              color, palette, saturation)
 
     for i in range(len(plotter.support)):
