@@ -306,6 +306,7 @@ class ImportOp(HasStrictTraits):
         else:
             channels = list(self.channels.keys()) if self.channels else list(self.tubes[0].frame)
             meta_channels = DataFrame()
+            experiment.metadata["name_metadata"] = None
 
         # now that we have the metadata, load it into experiment
 
