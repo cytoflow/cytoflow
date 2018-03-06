@@ -32,6 +32,9 @@ import cytoflow.utility as util
 from .i_operation import IOperation
 from .import_op import Tube, ImportOp, check_tube
 
+from pandas import DataFrame
+from ..experiment import Experiment
+
 @provides(IOperation)
 class AutofluorescenceOp(HasStrictTraits):
     """
@@ -110,6 +113,7 @@ class AutofluorescenceOp(HasStrictTraits):
     name = Constant("Autofluorescence")
     channels = List(Str)
     blank_file = File(exists = True)
+    blank_frame = Instance(DataFrame)
 
     _af_median = Dict(Str, CFloat, transient = True)
     _af_stdev = Dict(Str, CFloat, transient = True)
@@ -145,10 +149,17 @@ class AutofluorescenceOp(HasStrictTraits):
         # trying to set a bad value
         
         # make a little Experiment
-        check_tube(self.blank_file, experiment)
-        blank_exp = ImportOp(tubes = [Tube(file = self.blank_file)], 
-                             channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels},
-                             name_metadata = experiment.metadata['name_metadata']).apply()
+        channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels}
+        name_metadata = experiment.metadata['name_metadata']
+        if ( self.blank_file != '' ):
+            check_tube(self.blank_file, experiment)
+            blank_exp = ImportOp(tubes = [Tube(file = self.blank_file)], 
+                                 channels = channels,
+                                 name_metadata = name_metadata).apply()
+        else:
+            blank_exp = ImportOp(tubes = [Tube(frame = self.blank_frame)], 
+                                 channels = channels,
+                                 name_metadata = name_metadata).apply()
         
         # apply previous operations
         for op in experiment.history:
@@ -317,10 +328,17 @@ class AutofluorescenceDiagnosticView(HasStrictTraits):
            
         # make a little Experiment
         try:
-            check_tube(self.op.blank_file, experiment)
-            blank_exp = ImportOp(tubes = [Tube(file = self.op.blank_file)], 
-                                 channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels},
-                                 name_metadata = experiment.metadata['name_metadata']).apply()
+            channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels}
+            name_metadata = experiment.metadata['name_metadata']
+            if ( self.op.blank_file != '' ):
+                check_tube(self.op.blank_file, experiment)
+                blank_exp = ImportOp(tubes = [Tube(file = self.op.blank_file)], 
+                                     channels = channels,
+                                     name_metadata = name_metadata).apply()
+            else:
+                blank_exp = ImportOp(tubes = [Tube(frame = self.op.blank_frame)], 
+                                     channels = channels,
+                                     name_metadata = name_metadata).apply()
         except util.CytoflowOpError as e:
             raise util.CytoflowViewError('op', e.__str__()) from e
         

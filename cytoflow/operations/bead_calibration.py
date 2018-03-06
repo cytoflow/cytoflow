@@ -38,6 +38,9 @@ import cytoflow.utility as util
 from .i_operation import IOperation
 from .import_op import check_tube, Tube, ImportOp
 
+from pandas import DataFrame
+from ..experiment import Experiment
+
 @provides(IOperation)
 class BeadCalibrationOp(HasStrictTraits):
     """
@@ -194,6 +197,7 @@ class BeadCalibrationOp(HasStrictTraits):
     units = Dict(Str, Str)
     
     beads_file = File(exists = True)
+    beads_frame = Instance(DataFrame)
     bead_peak_quantile = Int(80)
 
     bead_brightness_threshold = Float(100.0)
@@ -224,7 +228,7 @@ class BeadCalibrationOp(HasStrictTraits):
         if experiment is None:
             raise util.CytoflowOpError('experiment', "No experiment specified")
         
-        if not self.beads_file:
+        if not self.beads_file and not self.beads_frame:
             raise util.CytoflowOpError('beads_file', "No beads file specified")
 
         if not set(self.units.keys()) <= set(experiment.channels):
@@ -237,11 +241,18 @@ class BeadCalibrationOp(HasStrictTraits):
                                        "Units don't match beads.")
                         
         # make a little Experiment
-        check_tube(self.beads_file, experiment)
-        beads_exp = ImportOp(tubes = [Tube(file = self.beads_file)],
-                             channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels},
-                             name_metadata = experiment.metadata['name_metadata']).apply()
-        
+        channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels}
+        name_metadata = experiment.metadata['name_metadata']
+        if (self.beads_file):
+            check_tube(self.beads_file, experiment)
+            beads_exp = ImportOp(tubes = [Tube(file = self.beads_file)],
+                                 channels = channels,
+                                 name_metadata = name_metadata).apply()
+        else:
+            beads_exp = ImportOp(tubes = [Tube(frame = self.beads_frame)],
+                                 channels = channels,
+                                 name_metadata = name_metadata).apply()
+            
         channels = list(self.units.keys())
 
         for channel in channels:
@@ -563,10 +574,17 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
 
         # make a little Experiment
         try:
-            check_tube(self.op.beads_file, experiment)
-            beads_exp = ImportOp(tubes = [Tube(file = self.op.beads_file)],
-                                 channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels},
-                                 name_metadata = experiment.metadata['name_metadata']).apply()
+            channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels}
+            name_metadata = experiment.metadata['name_metadata']
+            if (self.op.beads_file):
+                check_tube(self.op.beads_file, experiment)
+                beads_exp = ImportOp(tubes = [Tube(file = self.op.beads_file)],
+                                     channels = channels,
+                                     name_metadata = name_metadata).apply()
+            else:
+                beads_exp = ImportOp(tubes = [Tube(frame = self.op.beads_frame)],
+                                     channels = channels,
+                                     name_metadata = name_metadata).apply()
         except util.CytoflowOpError as e:
             raise util.CytoflowViewError('op', e.__str__()) from e
 
