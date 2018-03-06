@@ -108,7 +108,10 @@ class BaseView(HasStrictTraits):
         norm : matplotlib.colors.Normalize
             If plotting a huefacet with many values, use this object for color
             scale normalization.
+
         """
+        
+        
         if experiment is None:
             raise util.CytoflowViewError('experiment',
                                          "No experiment specified")
@@ -130,17 +133,6 @@ class BaseView(HasStrictTraits):
         
         sharex = kwargs.pop("sharex", True)
         sharey = kwargs.pop("sharey", True)
-
-        xscale = kwargs.pop("xscale", None)
-        yscale = kwargs.pop("yscale", None)
-        
-        xlim = kwargs.pop("xlim", None)
-        if isinstance(xlim, list) and (xlim[0] is None or xlim[1] is None):
-            xlim = None
-            
-        ylim = kwargs.pop("ylim", None)
-        if isinstance(ylim, list) and (ylim[0] is None or ylim[1] is None):
-            ylim = None
         
         legend = kwargs.pop('legend', True)
         
@@ -166,30 +158,28 @@ class BaseView(HasStrictTraits):
                           col_wrap = col_wrap,
                           legend_out = False,
                           sharex = sharex,
-                          sharey = sharey,
-                          xlim = xlim,
-                          ylim = ylim)
+                          sharey = sharey)
         
-        plot_ret = self._grid_plot(experiment = experiment,
-                                   grid = g, 
-                                   xlim = xlim,
-                                   ylim = ylim,
-                                   xscale = xscale,
-                                   yscale = yscale,
-                                   **kwargs)
+        plot_ret = self._grid_plot(experiment = experiment, grid = g, **kwargs)
         
         kwargs.update(plot_ret)
         
-        xscale = kwargs.pop("xscale", xscale)
-        yscale = kwargs.pop("yscale", yscale)
+        xscale = kwargs.pop("xscale", None)
+        yscale = kwargs.pop("yscale", None)
+        xlim = kwargs.pop("xlim", None)
+        ylim = kwargs.pop("ylim", None)
         
         for ax in g.axes.flatten():
             if xscale:
                 ax.set_xscale(xscale.name, **xscale.mpl_params) 
             if yscale:
                 ax.set_yscale(yscale.name, **yscale.mpl_params)
+            if xlim:
+                ax.set_xlim(xlim)
+            if ylim:
+                ax.set_ylim(ylim)
 
-        # if we are sharing x axes, make sure the x scale is the same for each
+        # if we are sharing x axes, make sure the x limits are the same for each
         if sharex:
             fig = plt.gcf()
             fig_x_min = float("inf")
@@ -205,7 +195,7 @@ class BaseView(HasStrictTraits):
             for ax in fig.get_axes():
                 ax.set_xlim(fig_x_min, fig_x_max)
         
-        # if we are sharing y axes, make sure the y scale is the same for each
+        # if we are sharing y axes, make sure the y limits are the same for each
         if sharey:
             fig = plt.gcf()
             fig_y_max = float("-inf")
@@ -297,7 +287,17 @@ class BaseDataView(BaseView):
             
         max_quantile : float (>0.0 and <1.0, default = 1.00)
             Clip data that is greater than this quantile.
-
+        
+        Other Parameters
+        ----------------
+        lim : Dict(Str : (float, float))
+            Set the range of each channel's axis.  If unspecified, assume
+            that the limits are the minimum and maximum of the clipped data.
+            Required.
+            
+        scale : Dict(Str : IScale)
+            Scale the data on each axis.  Required.
+            
         """
         if experiment is None:
             raise util.CytoflowViewError('experiment',
@@ -317,6 +317,50 @@ class BaseDataView(BaseView):
             raise util.CytoflowViewError('huefacet',
                                          "Hue facet {0} not in the experiment"
                                          .format(self.huefacet))
+            
+        # adjust the limits to clip extreme values
+        min_quantile = kwargs.pop("min_quantile", 0.001)
+        max_quantile = kwargs.pop("max_quantile", 1.0) 
+         
+        if min_quantile < 0.0 or min_quantile > 1:
+            raise util.CytoflowViewError('min_quantile',
+                                         "min_quantile must be between 0 and 1")
+ 
+        if max_quantile < 0.0 or max_quantile > 1:
+            raise util.CytoflowViewError('max_quantile',
+                                         "max_quantile must be between 0 and 1")     
+         
+        if min_quantile >= max_quantile:
+            raise util.CytoflowViewError('min_quantile',
+                                         "min_quantile must be less than max_quantile") 
+            
+        lim = kwargs.get('lim')
+        scale = kwargs.get('scale')
+            
+        for c in lim.keys():
+            if lim[c] is None:
+                lim[c] = (experiment[c].quantile(min_quantile),
+                          experiment[c].quantile(max_quantile))
+            elif isinstance(lim[c], list) or isinstance(lim[c], tuple):
+                if len(lim[c]) != 2:
+                    raise util.CytoflowError('lim',
+                                             'Length of lim\[{}\] must be 2'
+                                             .format(c))
+                if lim[c][0] is None:
+                    lim[c] = (experiment[c].quantile(min_quantile),
+                           lim[c][1])
+                      
+                if lim[c][1] is None:
+                    lim[c] = (lim[c][0],
+                           experiment[c].quantile(max_quantile))
+                 
+            else:
+                raise util.CytoflowError('lim',
+                                         "lim\[{}\] is an unknown data type"
+                                         .format(c))
+ 
+            lim[c] = [scale[c].clip(x) for x in lim[c]]
+            
              
         facets = [x for x in [self.xfacet, self.yfacet, self.huefacet] if x]
          
@@ -387,50 +431,6 @@ class Base1DView(BaseDataView):
         scale = kwargs.pop('scale', None)
         if scale is None:
             scale = util.scale_factory(self.scale, experiment, channel = self.channel)
-        
-#         # adjust the limits to clip extreme values
-#         min_quantile = kwargs.pop("min_quantile", 0.001)
-#         max_quantile = kwargs.pop("max_quantile", 1.0) 
-#         
-#         if min_quantile < 0.0 or min_quantile > 1:
-#             raise util.CytoflowViewError('min_quantile',
-#                                          "min_quantile must be between 0 and 1")
-# 
-#         if max_quantile < 0.0 or max_quantile > 1:
-#             raise util.CytoflowViewError('max_quantile',
-#                                          "max_quantile must be between 0 and 1")     
-#         
-#         if min_quantile >= max_quantile:
-#             raise util.CytoflowViewError('min_quantile',
-#                                          "min_quantile must be less than max_quantile")   
-#                 
-#         lim = kwargs.pop("xlim", None)
-#         if lim is None:
-#             lim = (experiment[self.channel].quantile(min_quantile),
-#                    experiment[self.channel].quantile(max_quantile))
-#         elif isinstance(lim, list) or isinstance(lim, tuple):
-#             if len(lim) != 2:
-#                 raise util.CytoflowError('lim',
-#                                          'Length of lim must be 2')
-#             if lim[0] is None:
-#                 lim = (experiment[self.channel].quantile(min_quantile),
-#                        lim[1])
-#                  
-#             if lim[1] is None:
-#                 lim = (lim[0],
-#                        experiment[self.channel].quantile(max_quantile))
-#                 
-#         else:
-#             raise util.CytoflowError('lim',
-#                                      "lim is an unknown data type")
-#             
-#         lim = [scale.clip(x) for x in lim]
-#         
-#         orientation = kwargs.get('orientation', 'horizontal')
-#         if orientation == 'horizontal':
-#             super().plot(experiment, xlim = lim, xscale = scale, **kwargs)
-#         else:
-#             super().plot(experiment, ylim = lim, yscale = scale, **kwargs)
 
         lim = kwargs.pop("lim", None)
 
@@ -502,67 +502,7 @@ class Base2DView(BaseDataView):
             
         xlim = kwargs.pop('xlim', None)
         ylim = kwargs.pop('ylim', None)
-        
-#         # adjust the limits to clip extreme values
-#         min_quantile = kwargs.pop("min_quantile", 0.001)
-#         max_quantile = kwargs.pop("max_quantile", 1.0) 
-#         
-#         if min_quantile < 0.0 or min_quantile > 1:
-#             raise util.CytoflowViewError('min_quantile',
-#                                          "min_quantile must be between 0 and 1")
-# 
-#         if max_quantile < 0.0 or max_quantile > 1:
-#             raise util.CytoflowViewError('max_quantile',
-#                                          "max_quantile must be between 0 and 1")     
-#         
-#         if min_quantile >= max_quantile:
-#             raise util.CytoflowViewError('min_quantile',
-#                                          "min_quantile must be less than max_quantile")   
-#                 
-#         xlim = kwargs.pop("xlim", None)
-#         if xlim is None:
-#             xlim = (experiment[self.xchannel].quantile(min_quantile),
-#                     experiment[self.xchannel].quantile(max_quantile))
-#              
-#         elif isinstance(xlim, list) or isinstance(xlim, tuple):
-#             if len(xlim) != 2:
-#                 raise util.CytoflowError('xlim',
-#                                          'Length of xlim must be 2')
-#             if xlim[0] is None:
-#                 xlim = (experiment[self.xchannel].quantile(min_quantile),
-#                         xlim[1])
-#                  
-#             if xlim[1] is None:
-#                 xlim = (xlim[0],
-#                         experiment[self.xchannel].quantile(max_quantile))
-#                 
-#         else:
-#             raise util.CytoflowError('xlim',
-#                                      "xlim is an unknown data type")
-#             
-#         xlim = [xscale.clip(x) for x in xlim]
-# 
-#         ylim = kwargs.pop("ylim", None)
-#         if ylim is None:
-#             ylim = (experiment[self.ychannel].quantile(min_quantile),
-#                     experiment[self.ychannel].quantile(max_quantile))
-#             
-#         elif isinstance(ylim, list) or isinstance(ylim, tuple):
-#             if len(ylim) != 2:
-#                 raise util.CytoflowError('ylim',
-#                                          'Length of xlim must be 2')
-#             if ylim[0] is None:
-#                 ylim = (experiment[self.ychannel].quantile(min_quantile),
-#                         ylim[1])
-#                  
-#             if ylim[1] is None:
-#                 ylim = (ylim[0],
-#                            experiment[self.ychannel].quantile(max_quantile))
-#         else:
-#             raise util.CytoflowError('ylim',
-#                                      'ylim is an unknown data type')
-#             
-#         ylim = [yscale.clip(y) for y in ylim]
+
         
         super().plot(experiment, 
                      lim = {self.xchannel : xlim,
@@ -625,60 +565,17 @@ class BaseNDView(BaseDataView):
                 scale[c] = util.scale_factory(self.scale[c], experiment, channel = c)
             else:
                 scale[c] = util.scale_factory(util.get_default_scale(), experiment, channel = c)
-        
-        # adjust the limits to clip extreme values
-        min_quantile = kwargs.pop("min_quantile", 0.001)
-        max_quantile = kwargs.pop("max_quantile", 1.0) 
-        
-        if min_quantile < 0.0 or min_quantile > 1:
-            raise util.CytoflowViewError('min_quantile',
-                                         "min_quantile must be between 0 and 1")
 
-        if max_quantile < 0.0 or max_quantile > 1:
-            raise util.CytoflowViewError('max_quantile',
-                                         "max_quantile must be between 0 and 1")     
-        
-        if min_quantile >= max_quantile:
-            raise util.CytoflowViewError('min_quantile',
-                                         "min_quantile must be less than max_quantile")   
-            
         lim = kwargs.pop("lim", {})
-        
         for c in self.channels:
-            lim[c] = None
-
-        
-#         for c in self.channels:
-#             if c not in lim:
-#                 lim[c] = (experiment[c].quantile(min_quantile),
-#                           experiment[c].quantile(max_quantile))
-#             elif isinstance(lim, list) or isinstance(lim, tuple):
-#                 if len(lim) != 2:
-#                     raise util.CytoflowError('lim',
-#                                              'Length of lim\{{}\} must be 2'
-#                                              .format(c))
-#                 if lim[0] is None:
-#                     lim = (experiment[c].quantile(min_quantile),
-#                            lim[1])
-#                      
-#                 if lim[1] is None:
-#                     lim = (lim[0],
-#                            experiment[c].quantile(max_quantile))
-#                 
-#             else:
-#                 raise util.CytoflowError('lim',
-#                                          "lim\{{}\} is an unknown data type"
-#                                          .format(c))
-# 
-#             lim[c] = [scale[c].clip(x) for x in lim[c]]
-    
+            if c not in lim:
+                lim[c] = None
         
         super().plot(experiment, 
                      lim = lim,
                      scale = scale,
                      **kwargs)        
 
-    
 
 @provides(IView)
 class BaseStatisticsView(BaseView):
@@ -751,6 +648,7 @@ class BaseStatisticsView(BaseView):
         
         This function takes care of checking for facet name validity and 
         subsetting, then passes the dataframe to `BaseView.plot`
+
         """
         
         if not self.variable:
@@ -922,10 +820,10 @@ class Base1DStatisticsView(BaseStatisticsView):
         else:
             xscale = None 
         
-        yscale = util.scale_factory(self.yscale, 
-                                    experiment, 
-                                    statistic = self.statistic, 
-                                    error_statistic = self.error_statistic)
+        scale = util.scale_factory(self.scale, 
+                                   experiment, 
+                                   statistic = self.statistic, 
+                                   error_statistic = self.error_statistic)
             
         super().plot(experiment, 
                      data, 

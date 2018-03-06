@@ -169,7 +169,7 @@ class TestHistogram(ImportedDataTest):
    
     def testPlotArgs(self):
 
-        # Common params
+        # BasePlotParams
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
         self.view.xfacet = "Dox"
@@ -190,6 +190,38 @@ class TestHistogram(ImportedDataTest):
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
         self.view.plot_params.ylabel = "Y label"
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+        
+        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.xfacet = ""
+        self.view.huefacet = "Dox"
+        self.view.plot_params.huelabel = "Hue label"
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+        
+        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.xfacet = "Dox"
+        self.view.yfacet = ""
+        self.view.huefacet = ""
+        self.view.plot_params.col_wrap = 1
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+         
+        for style in ['darkgrid', 'whitegrid', 'white', 'dark', 'ticks']:
+            self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
+            self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+            self.view.plot_params.sns_style = style
+            self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+            
+        for context in ['talk', 'poster', 'notebook', 'paper']:
+            self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
+            self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+            self.view.plot_params.sns_context = context
+            self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+        
+        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.legend = False
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
 
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
@@ -206,19 +238,8 @@ class TestHistogram(ImportedDataTest):
         self.view.plot_params.despine = False
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
 
-        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
-        self.view.xfacet = ""
-        self.view.huefacet = "Dox"
-        self.view.plot_params.huelabel = "Hue label"
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
 
-        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
-        self.view.plot_params.legend = False
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
-
-        ## Histogram-specific params
+        # DataPlotParams
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
         self.view.plot_params.min_quantile = 0.01
@@ -228,7 +249,19 @@ class TestHistogram(ImportedDataTest):
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
         self.view.plot_params.max_quantile = 0.90
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
-
+        
+        # Data1DPlotParams
+        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.lim = (0, 1000)
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+        
+        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.orientation = "horizontal"
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+        
+        # Histogram
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
         self.view.plot_params.num_bins = 500
@@ -244,7 +277,17 @@ class TestHistogram(ImportedDataTest):
         self.view.plot_params.histtype = "bar"
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
 
-
+        for linestyle in ['solid', 'dashed', 'dashdot', 'dotted']:
+            self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
+            self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+            self.view.plot_params.linestyle = linestyle
+            self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+            
+        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.linewidth = "5"
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+            
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
         self.view.plot_params.normed = True
@@ -279,8 +322,7 @@ class TestHistogram(ImportedDataTest):
         
         exec(code)  # smoke test
 
-        
            
 if __name__ == "__main__":
-    import sys;sys.argv = ['', 'TestHistogram.testSerialize']
+#     import sys;sys.argv = ['', 'TestHistogram.testPlotArgs']
     unittest.main()

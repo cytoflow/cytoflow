@@ -89,7 +89,8 @@ from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
     import (IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, 
-            PluginHelpMixin, BasePlotParams)
+            PluginHelpMixin, Data1DPlotParams)
+from cytoflowgui.view_plugins.stats_1d import LINE_STYLES
 from cytoflowgui.serialization import camel_registry, traits_repr, traits_str, dedent
 from cytoflowgui.util import IterWrapper
 
@@ -141,25 +142,25 @@ class HistogramHandler(ViewHandlerMixin, Controller):
                          editor = ColorTextEditor(foreground_color = "#000000",
                                                   background_color = "#ff9191"))))
         
-class HistogramPlotParams(BasePlotParams):
+class HistogramPlotParams(Data1DPlotParams):
     
-    min_quantile = util.PositiveCFloat(0.001)
-    max_quantile = util.PositiveCFloat(1.00)
     num_bins = util.PositiveCInt(None, allow_none = True)
     histtype = Enum(['stepfilled', 'step', 'bar'])
+    linestyle = Enum(LINE_STYLES)
+    linewidth = util.PositiveCFloat(None, allow_none = True, allow_zero = True)
     normed = Bool(False)
     
     def default_traits_view(self):
-        base_view = BasePlotParams.default_traits_view(self)
+        base_view = Data1DPlotParams.default_traits_view(self)
         
-        return View(Item('min_quantile',
-                         editor = TextEditor(auto_set = False)),
-                    Item('max_quantile',
-                         editor = TextEditor(auto_set = False)),
-                    Item('num_bins',
+        return View(Item('num_bins',
                          editor = TextEditor(auto_set = False,
                                              format_func = lambda x: "" if x == None else str(x))),
                     Item('histtype'),
+                    Item('linestyle'),
+                    Item('linewidth',
+                         editor = TextEditor(auto_set = False,
+                                             format_func = lambda x: "" if x == None else str(x))),
                     Item('normed'),
                     base_view.content)
     
@@ -232,27 +233,33 @@ def _dump(view):
     
 @camel_registry.dumper(HistogramPlotParams, 'histogram-params', version = 1)
 def _dump_params(params):
-    return dict(title = params.title,
+    return dict(
+                # BasePlotParams
+                title = params.title,
                 xlabel = params.xlabel,
                 ylabel = params.ylabel,
                 huelabel = params.huelabel,
-
-                xlim = params.xlim,
-                ylim = params.ylim,
                 col_wrap = params.col_wrap,
-                
                 sns_style = params.sns_style,
                 sns_context = params.sns_context,
-                
                 legend = params.legend,
                 sharex = params.sharex,
                 sharey = params.sharey,
                 despine = params.despine,
 
+                # DataplotParams
                 min_quantile = params.min_quantile,
                 max_quantile = params.max_quantile,
+                
+                # Data1DPlotParams
+                lim = params.lim,
+                orientation = params.orientation,
+                
+                # Histogram
                 num_bins = params.num_bins,
                 histtype = params.histtype,
+                linestyle = params.linestyle,
+                linewidth = params.linewidth,
                 normed = params.normed)
     
 @camel_registry.loader('histogram', version = any)

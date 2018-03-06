@@ -108,6 +108,9 @@ class Stats1DView(Base1DStatisticsView):
         color : a matplotlib color
             The color to plot with.  Overridden if `huefacet` is not `None`
             
+        linewidth : float
+            The width of the line, in points
+            
         linestyle : ['solid' | 'dashed', 'dashdot', 'dotted' | (offset, on-off-dash-seq) | '-' | '--' | '-.' | ':' | 'None' | ' ' | '']
             
         marker : a matplotlib marker style

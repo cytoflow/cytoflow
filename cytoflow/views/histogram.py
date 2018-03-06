@@ -1,5 +1,6 @@
 #!/usr/bin/env python3.4
 # coding: latin-1
+from patsy.state import scale
 
 # (c) Massachusetts Institute of Technology 2015-2017
 #
@@ -88,6 +89,17 @@ class HistogramView(Base1DView):
             If `True`, re-scale the histogram to form a probability density
             function, so the area under the histogram is 1.
             
+        orientation : {'horizontal', 'vertical'}
+            The orientation of the histogram.  `horizontal` gives a histogram
+            with the intensity on the Y axis and the count on the X axis;
+            default is `vertical`.
+        
+        linewidth : float
+            The width of the histogram line (in points)
+                    
+        linestyle : ['-' | '--' | '-.' | ':']
+    
+            
         Notes
         -----
         Other ``kwargs`` are passed to `matplotlib.pyplot.hist <https://matplotlib.org/devdocs/api/_as_gen/matplotlib.pyplot.hist.html>`_
@@ -97,7 +109,7 @@ class HistogramView(Base1DView):
         
         super().plot(experiment, **kwargs)
 
-    def _grid_plot(self, experiment, grid, xlim, ylim, xscale, yscale, **kwargs):
+    def _grid_plot(self, experiment, grid, **kwargs):
                         
         kwargs.setdefault('histtype', 'stepfilled')
         kwargs.setdefault('alpha', 0.5)
@@ -105,8 +117,10 @@ class HistogramView(Base1DView):
 
         # estimate a "good" number of bins; see cytoflow.utility.num_hist_bins
         # for a reference.
+        scale = kwargs.pop('scale')[self.channel]
+        lim = kwargs.pop('lim')[self.channel]
         
-        scaled_data = xscale(experiment[self.channel])
+        scaled_data = scale(experiment[self.channel])
         num_bins = kwargs.pop('num_bins', util.num_hist_bins(scaled_data))
         num_bins = util.num_hist_bins(scaled_data) if num_bins is None else num_bins
         
@@ -125,7 +139,7 @@ class HistogramView(Base1DView):
             # number of bins for the histogram is much larger than the
             # number of colors, sub-divide each color into multiple bins.
             bins = experiment.metadata[self.huefacet]["bins"]
-            scaled_bins = xscale(bins)
+            scaled_bins = scale(bins)
      
             num_hues = len(experiment[self.huefacet].unique())
             bins_per_hue = math.floor(num_bins / num_hues)
@@ -141,18 +155,19 @@ class HistogramView(Base1DView):
                                                      bins_per_hue + 1,
                                                      endpoint = False))
 
-            bins = xscale.inverse(new_bins)
+            bins = scale.inverse(new_bins)
         else:
             xmin = bottleneck.nanmin(scaled_data)
             xmax = bottleneck.nanmax(scaled_data)
-            bins = xscale.inverse(np.linspace(xmin, xmax, num=num_bins, endpoint = True))
+            bins = scale.inverse(np.linspace(xmin, xmax, num=num_bins, endpoint = True))
                     
         kwargs.setdefault('bins', bins) 
+        kwargs.setdefault('orientation', 'vertical')
         
         # if we have a hue facet, the y scaling is frequently wrong.  this
         # will capture the maximum bin count of each call to plt.hist, so 
         # we don't have to compute the histogram multiple times
-        ymax = []
+        count_max = []
         
         def hist_lims(*args, **kwargs):
             # there's some bug in the above code where we get data that isn't
@@ -167,13 +182,21 @@ class HistogramView(Base1DView):
                 new_args.append(x)
                 
             n, _, _ = plt.hist(*new_args, **kwargs)
-            ymax.append(max(n))
+            count_max.append(max(n))
                     
         grid.map(hist_lims, self.channel, **kwargs)
         
-        plt.ylim(0, 1.05 * max(ymax))
-        
-        return {}
+        ret = {}
+        if kwargs['orientation'] == 'vertical':
+            ret['xscale'] = scale
+            ret['xlim'] = lim
+            ret['ylim'] = (0, 1.05 * max(count_max))
+        else:
+            ret['yscale'] = scale
+            ret['ylim'] = lim
+            ret['xlim'] = (0, 1.05 * max(count_max))
+            
+        return ret
 
 util.expand_class_attributes(HistogramView)
 util.expand_method_parameters(HistogramView, HistogramView.plot)

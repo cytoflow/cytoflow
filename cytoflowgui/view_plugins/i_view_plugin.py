@@ -96,15 +96,19 @@ class PluginHelpMixin(HasTraits):
                  
         return self._cached_help
     
+        
+class EmptyPlotParams(HasTraits):
+     
+    def default_traits_view(self):
+        return View()
+    
 class BasePlotParams(HasTraits):
     title = Str
     xlabel = Str
     ylabel = Str
     huelabel = Str
-    
-#     xlim = Tuple(util.FloatOrNone(None), util.FloatOrNone(None))
-#     ylim = Tuple(util.FloatOrNone(None), util.FloatOrNone(None))
-    col_wrap = util.PositiveInt(None, allow_zero = False, allow_none = True)
+
+    col_wrap = util.PositiveCInt(None, allow_zero = False, allow_none = True)
 
     sns_style = Enum(['whitegrid', 'darkgrid', 'white', 'dark', 'ticks'])
     sns_context = Enum(['talk', 'poster', 'notebook', 'paper'])
@@ -127,26 +131,7 @@ class BasePlotParams(HasTraits):
                     Item('huelabel',
                          label = "Hue label",
                          editor = TextEditor(auto_set = False)),
-#                     Item('xlim',
-#                          label = "X limits",
-#                          editor = TupleEditor(editors = [TextEditor(auto_set = False,
-#                                                                     evaluate = float,
-#                                                                     format_func = lambda x: "" if x == None else str(x)),
-#                                                          TextEditor(auto_set = False,
-#                                                                     evaluate = float,
-#                                                                     format_func = lambda x: "" if x == None else str(x))],
-#                                               labels = ["Min", "Max"],
-#                                               cols = 1)),
-#                     Item('ylim',
-#                          label = "Y limits",
-#                          editor = TupleEditor(editors = [TextEditor(auto_set = False,
-#                                                                     evaluate = float,
-#                                                                     format_func = lambda x: "" if x == None else str(x)),
-#                                                          TextEditor(auto_set = False,
-#                                                                     evaluate = float,
-#                                                                     format_func = lambda x: "" if x == None else str(x))],
-#                                               labels = ["Min", "Max"],
-#                                               cols = 1)),
+
                     Item('col_wrap',
                          label = "Columns",
                          editor = TextEditor(auto_set = False,
@@ -165,11 +150,72 @@ class BasePlotParams(HasTraits):
         
     def __repr__(self):
         return traits_repr(self)
-        
-class EmptyPlotParams(HasTraits):
-     
+    
+class DataPlotParams(BasePlotParams):
+    
+    min_quantile = util.PositiveCFloat(0.001)
+    max_quantile = util.PositiveCFloat(1.00)   
+    
     def default_traits_view(self):
-        return View()
+        base_view = BasePlotParams.default_traits_view(self)
+    
+        return View(Item('min_quantile',
+                         editor = TextEditor(auto_set = False)),
+                    Item('max_quantile',
+                         editor = TextEditor(auto_set = False)),
+                    base_view.content)
+    
+class Data1DPlotParams(DataPlotParams):
+    
+    lim = Tuple(util.FloatOrNone(None), util.FloatOrNone(None))   
+    orientation = Enum('vertical', 'horizontal')
+    
+    def default_traits_view(self):
+        base_view = BasePlotParams.default_traits_view(self)
+    
+        return View(Item('orientation'),
+                    Item('lim',
+                         label = "Data\nLimits",
+                         editor = TupleEditor(editors = [TextEditor(auto_set = False,
+                                                                    evaluate = float,
+                                                                    format_func = lambda x: "" if x == None else str(x)),
+                                                         TextEditor(auto_set = False,
+                                                                    evaluate = float,
+                                                                    format_func = lambda x: "" if x == None else str(x))],
+                                              labels = ["Min", "Max"],
+                                              cols = 1)),
+                    base_view.content)
+        
+class Data2DPlotParams(DataPlotParams):
+    
+    xlim = Tuple(util.FloatOrNone(None), util.FloatOrNone(None))   
+    ylim = Tuple(util.FloatOrNone(None), util.FloatOrNone(None))   
+    
+    def default_traits_view(self):
+        base_view = BasePlotParams.default_traits_view(self)
+    
+        return View(Item('xlim',
+                         label = "X Limits",
+                         editor = TupleEditor(editors = [TextEditor(auto_set = False,
+                                                                    evaluate = float,
+                                                                    format_func = lambda x: "" if x == None else str(x)),
+                                                         TextEditor(auto_set = False,
+                                                                    evaluate = float,
+                                                                    format_func = lambda x: "" if x == None else str(x))],
+                                              labels = ["Min", "Max"],
+                                              cols = 1)),
+                    Item('ylim',
+                         label = "Y Limits",
+                         editor = TupleEditor(editors = [TextEditor(auto_set = False,
+                                                                    evaluate = float,
+                                                                    format_func = lambda x: "" if x == None else str(x)),
+                                                         TextEditor(auto_set = False,
+                                                                    evaluate = float,
+                                                                    format_func = lambda x: "" if x == None else str(x))],
+                                              labels = ["Min", "Max"],
+                                              cols = 1)),
+                    base_view.content)
+    
                         
 class PluginViewMixin(HasTraits):
     handler = Instance(Handler, transient = True)    
