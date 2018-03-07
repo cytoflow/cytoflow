@@ -4,12 +4,11 @@ Created on Jan 4, 2018
 @author: brian
 '''
 
-import unittest, threading, multiprocessing, os, logging, tempfile
+import unittest, threading, multiprocessing, os, logging
 
 from cytoflowgui.workflow import Workflow, RemoteWorkflow
 from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.op_plugins import ImportPlugin
-from cytoflowgui.serialization import load_yaml, save_yaml
 
 
 def wait_for(obj, name, f, timeout):
@@ -74,14 +73,20 @@ class ImportedDataTest(WorkflowTest):
      
         tube2 = Tube(file = self.cwd + "/../../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs",
                      conditions = {"Dox" : 10.0, "Well" : 'A'})
+
+        tube3 = Tube(file = self.cwd + "/../../cytoflow/tests/data/Plate01/YFP_Well_A7.fcs",
+                     conditions = {"Dox" : 100.0, "Well" : 'A'})
          
-        tube3 = Tube(file = self.cwd + "/../../cytoflow/tests/data/Plate01/CFP_Well_B4.fcs",
+        tube4 = Tube(file = self.cwd + "/../../cytoflow/tests/data/Plate01/CFP_Well_B4.fcs",
                      conditions = {"Dox" : 0.0, "Well" : 'B'})
      
-        tube4 = Tube(file = self.cwd + "/../../cytoflow/tests/data/Plate01/RFP_Well_A6.fcs",
+        tube5 = Tube(file = self.cwd + "/../../cytoflow/tests/data/Plate01/RFP_Well_A6.fcs",
                      conditions = {"Dox" : 10.0, "Well" : 'B'})
+
+        tube6 = Tube(file = self.cwd + "/../../cytoflow/tests/data/Plate01/YFP_Well_C7.fcs",
+                     conditions = {"Dox" : 100.0, "Well" : 'B'})
      
-        op.tubes = [tube1, tube2, tube3, tube4]
+        op.tubes = [tube1, tube2, tube3, tube4, tube5, tube6]
         
         wi = WorkflowItem(operation = op,
                           view_error = "Not yet plotted") 

@@ -38,8 +38,10 @@ class TestBarChart(unittest.TestCase):
 
         tube1 = flow.Tube(file = self.cwd + 'RFP_Well_A3.fcs', conditions = {"Dox" : 10.0})
         tube2 = flow.Tube(file= self.cwd + 'CFP_Well_A4.fcs', conditions = {"Dox" : 1.0})
+        tube3 = flow.Tube(file= self.cwd + 'YFP_Well_A7.fcs', conditions = {"Dox" : 0.1})
+
         import_op = flow.ImportOp(conditions = {"Dox" : "float"},
-                                  tubes = [tube1, tube2])
+                                  tubes = [tube1, tube2, tube3])
         self.ex = import_op.apply()
         
         self.ex = flow.ThresholdOp(name = "T",
@@ -71,8 +73,7 @@ class TestBarChart(unittest.TestCase):
 
         
     def testScale(self):
-        self.view.xscale = "log"
-        self.view.yscale = "logicle"
+        self.view.scale = "log"
         self.view.huescale = "log"
         self.view.plot(self.ex)
         
@@ -89,6 +90,63 @@ class TestBarChart(unittest.TestCase):
                                      
         self.view.error_statistic = ("ByDox", "geom_mean")
         self.view.plot(self.ex)
+        
+    # Base plot params
+    
+    def testTitle(self):
+        self.view.plot(self.ex, title = "Title")
+        
+    def testXlabel(self):
+        self.view.plot(self.ex, xlabel = "X lab")
+        
+    def testYlabel(self):
+        self.view.plot(self.ex, ylabel = "Y lab")
+        
+    def testHueLabel(self):
+        self.view.plot(self.ex, huelabel = "hue lab")
+    
+    def testColWrap(self):
+        self.view.variable = "T"
+        self.view.huefacet = ""
+        self.view.xfacet = "Dox"
+        self.view.plot(self.ex, col_wrap = 2)
+        
+    def testShareAxes(self):
+        self.view.plot(self.ex, sharex = False, sharey = False)
+        
+    def testStyle(self):
+        self.view.plot(self.ex, sns_style = "darkgrid")
+        self.view.plot(self.ex, sns_style = "whitegrid")
+        self.view.plot(self.ex, sns_style = "dark")
+        self.view.plot(self.ex, sns_style = "white")
+        self.view.plot(self.ex, sns_style = "ticks")
+        
+    def testContext(self):
+        self.view.plot(self.ex, sns_context = "paper")
+        self.view.plot(self.ex, sns_context = "notebook")
+        self.view.plot(self.ex, sns_context = "talk")
+        self.view.plot(self.ex, sns_context = "poster")
+
+    def testDespine(self):
+        self.view.plot(self.ex, despine = False)
+        
+    # 1D stats plot params
+    def testOrientation(self):
+        self.view.plot(self.ex, orientation = "horizontal")
+        
+    def testLim(self):
+        self.view.plot(self.ex, lim = (0, 1000))
+        
+    # Bar chart bits
+    
+    def testErrWidth(self):
+        self.view.plot(self.ex, errwidth = 5)
+        
+    def testErrColor(self):
+        self.view.plot(self.ex, errcolor = "red")
+    
+    def testCapSize(self):
+        self.view.plot(self.ex, capsize = 5)
          
     def testPlotParams(self):
         self.view.plot(self.ex,
@@ -98,8 +156,7 @@ class TestBarChart(unittest.TestCase):
                        huelabel = "H",
                        sharex = False,
                        sharey = False,
-                       xlim = (0, 1),
-                       ylim = (-1, 2),
+                       lim = (0, 1),
                        sns_style = "dark",
                        sns_context = "paper",
                        despine = False,
@@ -108,19 +165,9 @@ class TestBarChart(unittest.TestCase):
                        errcolor = "red",
                        capsize = 3)
  
-                 
-#     def testBadFunction(self):
-#         
-#         op = flow.ChannelStatisticOp(name = "ByDox",
-#                                      by = ['T'],
-#                                      channel = "Y2-A",
-#                                      subset = "Dox == 10.0",
-#                                      function = lambda x: len(x) / 0.0)
-#         
-#         with self.assertRaises(util.CytoflowOpError):
-#             op.apply(self.ex)
+
 
 
 if __name__ == "__main__":
-#     import sys;sys.argv = ['', 'Test.testApply']
+#     import sys;sys.argv = ['', 'TestBarChart.testScale']
     unittest.main()

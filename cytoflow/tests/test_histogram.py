@@ -35,7 +35,8 @@ class Test(unittest.TestCase):
     def setUp(self):
         self.cwd = os.path.dirname(os.path.abspath(__file__)) + "/data/Plate01/"
         tube1 = flow.Tube(file = self.cwd + 'RFP_Well_A3.fcs', conditions = {"Dox" : 10.0})
-        tube2 = flow.Tube(file= self.cwd + 'CFP_Well_A4.fcs', conditions = {"Dox" : 1.0})
+        tube2 = flow.Tube(file = self.cwd + 'CFP_Well_A4.fcs', conditions = {"Dox" : 1.0})
+        tube3 = flow.Tube(file = self.cwd + 'YFP_Well_A7.fcs', conditions = {"Dox" : 0.1})
         import_op = flow.ImportOp(conditions = {"Dox" : "float"},
                                   tubes = [tube1, tube2])
         self.ex = import_op.apply()
@@ -68,6 +69,58 @@ class Test(unittest.TestCase):
         self.view.subset = "Dox == 10.0"
         self.view.plot(self.ex)
         
+    # Base plot params
+    
+    def testTitle(self):
+        self.view.plot(self.ex, title = "Title")
+        
+    def testXlabel(self):
+        self.view.plot(self.ex, xlabel = "X lab")
+        
+    def testYlabel(self):
+        self.view.plot(self.ex, ylabel = "Y lab")
+        
+    def testHueLabel(self):
+        self.view.huefacet = "Dox"
+        self.view.plot(self.ex, huelabel = "hue lab")
+    
+    def testColWrap(self):
+        self.view.xfacet = "Dox"
+        self.view.plot(self.ex, col_wrap = 2)
+        
+    def testShareAxes(self):
+        self.view.plot(self.ex, sharex = False, sharey = False)
+        
+    def testStyle(self):
+        self.view.plot(self.ex, sns_style = "darkgrid")
+        self.view.plot(self.ex, sns_style = "whitegrid")
+        self.view.plot(self.ex, sns_style = "dark")
+        self.view.plot(self.ex, sns_style = "white")
+        self.view.plot(self.ex, sns_style = "ticks")
+        
+    def testContext(self):
+        self.view.plot(self.ex, sns_context = "paper")
+        self.view.plot(self.ex, sns_context = "notebook")
+        self.view.plot(self.ex, sns_context = "talk")
+        self.view.plot(self.ex, sns_context = "poster")
+
+    def testDespine(self):
+        self.view.plot(self.ex, despine = False)
+
+    # Data plot params
+    
+    def testQuantiles(self):
+        self.view.plot(self.ex, min_quantile = 0.01, max_quantile = 0.90)
+        
+    # 1D data plot params
+    def testLimits(self):
+        self.view.plot(self.ex, lim = (0, 1000))
+        
+    def testOrientation(self):
+        self.view.plot(self.ex, orientation = "horizontal")
+        
+    # Histogram params
+        
     def testNumBins(self):
         self.view.plot(self.ex, num_bins = 20)
         
@@ -86,12 +139,9 @@ class Test(unittest.TestCase):
     def testLineWidth(self):
         self.view.plot(self.ex, histtype = 'step', linestyle = 'solid', linewidth = 5)
         
-        
     def testNormed(self):
         self.view.huefacet = "Dox"
         self.view.plot(self.ex, histtype = 'step', normed = True)
-        
-
 
         
 if __name__ == "__main__":

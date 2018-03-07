@@ -97,7 +97,7 @@ class BaseView(HasStrictTraits):
             elements such as tick labels and the legend.  Default is `talk`.
             
         despine : Bool
-            Remove the top and right axes from the plot?
+            Remove the top and right axes from the plot?  Default is `True`.
 
         Other Parameters
         ----------------
@@ -111,20 +111,23 @@ class BaseView(HasStrictTraits):
 
         """
         
-        
         if experiment is None:
             raise util.CytoflowViewError('experiment',
                                          "No experiment specified")
 
         col_wrap = kwargs.pop('col_wrap', None)
         
-        if col_wrap and self.yfacet:
+        if col_wrap is not None and self.yfacet:
             raise util.CytoflowViewError('yfacet',
                                          "Can't set yfacet and col_wrap at the same time.")
         
-        if col_wrap and not self.xfacet:
+        if col_wrap is not None and not self.xfacet:
             raise util.CytoflowViewError('xfacet',
                                          "Must set xfacet to use col_wrap.")
+            
+        if col_wrap is not None and col_wrap < 2:
+            raise util.CytoflowViewError(None,
+                                         "col_wrap must be None or > 1")
         
         title = kwargs.pop("title", None)
         xlabel = kwargs.pop("xlabel", None)
@@ -222,7 +225,7 @@ class BaseView(HasStrictTraits):
                 plt.sca(plot_ax)
             elif self.huefacet:
         
-                current_palette = mpl.rcParams['axes.color_cycle']
+                current_palette = mpl.rcParams['axes.prop_cycle']
             
                 if util.is_numeric(data[self.huefacet]) and \
                    len(g.hue_names) > len(current_palette):
@@ -814,22 +817,21 @@ class Base1DStatisticsView(BaseStatisticsView):
             raise util.CytoflowViewError('variable',
                                          "variable {0} not in the experiment"
                                     .format(self.variable))
-            
-        if util.is_numeric(experiment[self.variable]):
-            xscale = util.scale_factory(self.xscale, experiment, condition = self.variable)
-        else:
-            xscale = None 
+#             
+#         if util.is_numeric(experiment[self.variable]):
+#             xscale = util.scale_factory(self.xscale, experiment, condition = self.variable)
+#         else:
+#             xscale = None 
         
         scale = util.scale_factory(self.scale, 
                                    experiment, 
                                    statistic = self.statistic, 
                                    error_statistic = self.error_statistic)
-            
+                    
         super().plot(experiment, 
                      data, 
-                     plot_name, 
-                     xscale = xscale, 
-                     yscale = yscale, 
+                     plot_name = plot_name, 
+                     scale = scale, 
                      **kwargs)
         
     def _make_data(self, experiment):

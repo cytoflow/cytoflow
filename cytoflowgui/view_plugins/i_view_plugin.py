@@ -215,6 +215,27 @@ class Data2DPlotParams(DataPlotParams):
                                               labels = ["Min", "Max"],
                                               cols = 1)),
                     base_view.content)
+        
+class Stats1DPlotParams(BasePlotParams):
+    
+    orientation = Enum(["vertical", "horizontal"])
+    lim = Tuple(util.FloatOrNone(None), util.FloatOrNone(None)) 
+    
+    def default_traits_view(self):
+        base_view = BasePlotParams.default_traits_view(self)
+        
+        return View(Item('orientation'),
+                    Item('lim',
+                         label = "Limits",
+                         editor = TupleEditor(editors = [TextEditor(auto_set = False,
+                                                                    evaluate = float,
+                                                                    format_func = lambda x: "" if x == None else str(x)),
+                                                         TextEditor(auto_set = False,
+                                                                    evaluate = float,
+                                                                    format_func = lambda x: "" if x == None else str(x))],
+                                              labels = ["Min", "Max"],
+                                              cols = 1)),
+                    base_view.content)  
     
                         
 class PluginViewMixin(HasTraits):

@@ -69,7 +69,15 @@ class TestBarchart(ImportedDataTest):
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
   
-        self.view.yscale = "log"
+        self.view.scale = "log"
+          
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+
+    def testLogicleScale(self):
+        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+  
+        self.view.scale = "logicle"
           
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
 
@@ -101,6 +109,8 @@ class TestBarchart(ImportedDataTest):
         self.view.error_statistic = ("MeanByDox", "Geom.SD")
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
 
+        # BasePlotParams
+
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
         self.view.plot_params.title = "Title"
@@ -115,51 +125,78 @@ class TestBarchart(ImportedDataTest):
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
         self.view.plot_params.ylabel = "Y label"
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
-
+        
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
-        self.view.plot_params.sharex = False
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
-
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
-        self.view.plot_params.sharey = False
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
-
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
-        self.view.plot_params.despine = False
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
-
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
-        self.view.xfacet = ""
-        self.view.huefacet = "Well"
         self.view.plot_params.huelabel = "Hue label"
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
-
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
-        self.view.plot_params.legend = False
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
-
-        ## stats1d-specific params
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
-        self.view.plot_params.orientation = "horizontal"
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
-
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
-        self.view.plot_params.errwidth = 2
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
         
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.variable = "Well"
+        self.view.xfacet = "Dox"
+        self.view.huefacet = ""
+        self.view.plot_params.col_wrap = 2
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+           
+        for style in ['darkgrid', 'whitegrid', 'white', 'dark', 'ticks']:
+            self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
+            self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+            print(style)
+            self.view.plot_params.sns_style = style
+            self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+             
+        for context in ['poster', 'talk', 'poster', 'notebook', 'paper']:
+            self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
+            self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+            self.view.plot_params.sns_context = context
+            self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+         
+        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.legend = False
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+ 
+        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.sharex = False
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+ 
+        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.sharey = False
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+ 
+        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.despine = False
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+ 
+        # Base1DStatisticsView
+         
+        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.orientation = "horizontal"
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+ 
+        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.lim = (0,100)
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+ 
+        ## BarChartView
+ 
+        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.errwidth = 2
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+         
+        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
         self.view.plot_params.capsize = 5
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
-
  
+  
     def testSerialize(self):
         BarChartPlotParams.__eq__ = traits_eq
         BarChartPlotParams.__hash__ = traits_hash
@@ -189,5 +226,5 @@ class TestBarchart(ImportedDataTest):
 
 
 if __name__ == "__main__":
-#     import sys;sys.argv = ['', 'TestBarchart.testSerialize']
+    import sys;sys.argv = ['', 'TestBarchart.testPlotArgs']
     unittest.main()

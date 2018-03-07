@@ -108,9 +108,6 @@ class BarChartView(Base1DStatisticsView):
         
         Parameters
         ----------
-        
-        orientation : {'vertical', 'horizontal'}
-            Sets the orientation to vertical (the default) or horizontal
             
         color : a matplotlib color
             Sets the colors of all the bars, even if there is a hue facet
@@ -133,27 +130,30 @@ class BarChartView(Base1DStatisticsView):
         
         super().plot(experiment, plot_name, **kwargs)
         
-    def _grid_plot(self, experiment, grid, xlim, ylim, xscale, yscale, **kwargs):
+    def _grid_plot(self, experiment, grid, **kwargs):
                  
         # because the bottom of a bar chart is "0", masking out bad
         # values on a log scale doesn't work.  we must clip instead.
-        orient = kwargs.pop('orientation', 'vertical')
+        orientation = kwargs.pop('orientation', 'vertical')
         
-        # Base1DStatistic uses xscale for the variable and yscale for
-        # the statistic.
+        # statistic scale
+        scale = kwargs.pop('scale')
         
-        if yscale.name == "log":
-            yscale.mode = "clip"
+        if scale.name == "log":
+            scale.mode = "clip"
+            
+        # limits
+        lim = kwargs.pop('lim', None)
                 
-        # set the scale for each set of axes; can't just call plt.xscale() 
-        for ax in grid.axes.flatten():
-            if orient == 'horizontal':
-                ax.set_xscale(yscale.name, **yscale.mpl_params)  
-            elif orient == 'vertical':
-                ax.set_yscale(yscale.name, **yscale.mpl_params)
-            else:
-                raise util.CytoflowViewError('orient', "'orient' param must be 'horizontal' or 'vertical'")  
-                
+#         # set the scale for each set of axes; can't just call plt.xscale() 
+#         for ax in grid.axes.flatten():
+#             if orient == 'horizontal':
+#                 ax.set_xscale(yscale.name, **yscale.mpl_params)  
+#             elif orient == 'vertical':
+#                 ax.set_yscale(yscale.name, **yscale.mpl_params)
+#             else:
+#                 raise util.CytoflowViewError('orient', "'orient' param must be 'horizontal' or 'vertical'")  
+#                 
         stat = experiment.statistics[self.statistic]
         map_args = [self.variable, stat.name]
         
@@ -171,16 +171,18 @@ class BarChartView(Base1DStatisticsView):
                  view = self,
                  stat_name = stat.name,
                  error_name = error_stat.name if error_stat is not None else None,
-                 orient = orient,
+                 orientation = orientation,
                  grid = grid,
                  **kwargs)
         
-        if orient == 'horizontal':
-            return {"yscale" : None}
+        if orientation == 'horizontal':
+            return dict(xscale = scale,
+                        xlim = lim)
         else:
-            return {"xscale" : None}
+            return dict(yscale = scale,
+                        ylim = lim)
             
-def _barplot(*args, view, stat_name, error_name, orient, grid, **kwargs):
+def _barplot(*args, view, stat_name, error_name, orientation, grid, **kwargs):
     """ 
     A custom barchart function.  This is assembled from pieces cobbled
     together from seaborn v0.7.1.
@@ -208,7 +210,7 @@ def _barplot(*args, view, stat_name, error_name, orient, grid, **kwargs):
     capsize = kwargs.pop('capsize', None)
 
     # Get the right matplotlib function depending on the orientation
-    barfunc = ax.bar if orient == "vertical" else ax.barh
+    barfunc = ax.bar if orientation == "vertical" else ax.barh
     barpos = np.arange(len(categories))
     
     if view.huefacet:
@@ -234,7 +236,7 @@ def _barplot(*args, view, stat_name, error_name, orient, grid, **kwargs):
                            data[data[view.huefacet] == hue_level][stat_name],
                            confint,
                            errcolors,
-                           orient,
+                           orientation,
                            errwidth = errwidth,
                            capsize = capsize)
                 
@@ -249,7 +251,7 @@ def _barplot(*args, view, stat_name, error_name, orient, grid, **kwargs):
                            data[stat_name],
                            confint,
                            errcolors,
-                           orient,
+                           orientation,
                            errwidth = errwidth,
                            capsize = capsize)
 
@@ -264,14 +266,14 @@ def _barplot(*args, view, stat_name, error_name, orient, grid, **kwargs):
 #     if ylabel is not None:
 #         ax.set_ylabel(ylabel)
 
-    if orient == "vertical":
+    if orientation == "vertical":
         ax.set_xticks(np.arange(len(categories)))
         ax.set_xticklabels(categories)
     else:
         ax.set_yticks(np.arange(len(categories)))
         ax.set_yticklabels(categories)
  
-    if orient == "vertical":
+    if orientation == "vertical":
         ax.xaxis.grid(False)
         ax.set_xlim(-.5, len(categories) - .5)
     else:
