@@ -203,7 +203,7 @@ class TestHistogram(ImportedDataTest):
         self.view.xfacet = "Dox"
         self.view.yfacet = ""
         self.view.huefacet = ""
-        self.view.plot_params.col_wrap = 1
+        self.view.plot_params.col_wrap = 2
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
          
         for style in ['darkgrid', 'whitegrid', 'white', 'dark', 'ticks']:
@@ -277,7 +277,7 @@ class TestHistogram(ImportedDataTest):
         self.view.plot_params.histtype = "bar"
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
 
-        for linestyle in ['solid', 'dashed', 'dashdot', 'dotted']:
+        for linestyle in ['solid', 'dashed', 'dashdot', 'dotted', 'none']:
             self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
             self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
             self.view.plot_params.linestyle = linestyle

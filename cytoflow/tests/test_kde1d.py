@@ -31,11 +31,11 @@ matplotlib.use('Agg')
 import cytoflow as flow
 from cytoflow.tests.test_base import ImportedDataTest
 
-class TestHistogram(ImportedDataTest):
+class TestKde1D(ImportedDataTest):
 
     def setUp(self):
         ImportedDataTest.setUp(self)
-        self.view = flow.HistogramView(channel = "B1-A")
+        self.view = flow.Kde1DView(channel = "B1-A")
         
     def testPlot(self):
         self.view.plot(self.ex)
@@ -114,29 +114,34 @@ class TestHistogram(ImportedDataTest):
     def testOrientation(self):
         self.view.plot(self.ex, orientation = "horizontal")
         
-    # Histogram params
+    # KDE params
         
-    def testNumBins(self):
-        self.view.plot(self.ex, num_bins = 20)
+    def testShade(self):
+        self.view.plot(self.ex, shade = False)
         
-    def testStep(self):
-        self.view.plot(self.ex, histtype = 'step') 
-        
-    def testBar(self):
-        self.view.plot(self.ex, histtype = 'bar')
+    def testAlpha(self):
+        self.view.plot(self.ex, alpha = 0.5) 
         
     def testLineStyle(self):
-        self.view.plot(self.ex, histtype = 'step', linestyle = 'solid')
-        self.view.plot(self.ex, histtype = 'step', linestyle = 'dashed')
-        self.view.plot(self.ex, histtype = 'step', linestyle = 'dashdot')
-        self.view.plot(self.ex, histtype = 'step', linestyle = 'dotted')
-        
+        self.view.plot(self.ex, linestyle = 'solid')
+        self.view.plot(self.ex, linestyle = 'dashed')
+        self.view.plot(self.ex, linestyle = 'dashdot')
+        self.view.plot(self.ex, linestyle = 'dotted')
+        self.view.plot(self.ex, linestyle = 'none')
+
     def testLineWidth(self):
-        self.view.plot(self.ex, histtype = 'step', linestyle = 'solid', linewidth = 5)
+        self.view.plot(self.ex, linestyle = 'solid', linewidth = 5)
         
-    def testNormed(self):
-        self.view.huefacet = "Dox"
-        self.view.plot(self.ex, histtype = 'step', normed = True)
+    def testGridsize(self):
+        self.view.plot(self.ex, gridsize = 50)
+        
+    def testKernel(self):
+        for k in ['gau', 'biw', 'cos', 'epa', 'tri', 'triw', 'uni']:
+            self.view.plot(self.ex, kernel = k)
+            
+    def testBandwidth(self):
+        for bw in ['scott', 'silverman', 'normal_reference', 1, 0.1, 0.01]:
+            self.view.plot(self.ex, bw = bw)
 
         
 if __name__ == "__main__":

@@ -81,6 +81,10 @@ class Kde1DView(Base1DView):
         shade : bool
             If `True` (the default), shade the area under the plot.
             
+        alpha : float, >=0 and <= 1
+            The transparency of the shading.  1 is opaque, 0 is transparent.
+            Default = 0.25
+            
         kernel : str
             The kernel to use for the kernel density estimate. Choices are:
                 - ``gau`` for Gaussian (the default)
@@ -114,32 +118,32 @@ class Kde1DView(Base1DView):
         
         super().plot(experiment, **kwargs)
                 
-    def _grid_plot(self, experiment, grid, xlim, ylim, xscale, yscale, **kwargs):
-
+    def _grid_plot(self, experiment, grid, **kwargs):
 
         kwargs.setdefault('shade', True)
+        kwargs.setdefault('orientation', "vertical")
         
-        # set the scale for each set of axes; can't just call plt.xscale() 
-        for ax in grid.axes.flatten():
-            ax.set_xscale(xscale.name, **xscale.mpl_params)  
+        scale = kwargs.pop('scale')[self.channel]
+        lim = kwargs.pop('lim')[self.channel]
                   
-        grid.map(_univariate_kdeplot, self.channel, scale = xscale, **kwargs)
+        grid.map(_univariate_kdeplot, self.channel, scale = scale, **kwargs)
         
-        return {}
-        
-        # i don't think is needed?
-#         def autoscale_x(*args, **kwargs):
-#             d = args[0]
-#             plt.gca().set_xlim(d.quantile(min_quantile),
-#                                d.quantile(max_quantile))
-#             
-#         g.map(autoscale_x, self.channel)
+        ret = {}
+        if kwargs['orientation'] == 'vertical':
+            ret['xscale'] = scale
+            ret['xlim'] = lim
+        else:
+            ret['yscale'] = scale
+            ret['ylim'] = lim
+            
+        return ret
+
 
 # yoinked from seaborn/distributions.py, with modifications for scaling.
 
 def _univariate_kdeplot(data, scale=None, shade=False, kernel="gau",
         bw="scott", gridsize=100, cut=3, clip=None, legend=True,
-        ax=None, **kwargs):
+        ax=None, orientation = "vertical", **kwargs):
     
     if ax is None:
         ax = plt.gca()
@@ -164,14 +168,18 @@ def _univariate_kdeplot(data, scale=None, shade=False, kernel="gau",
 
     # Check if a label was specified in the call
     label = kwargs.pop("label", None)
-
     color = kwargs.pop("color", None)
+    alpha = kwargs.pop("alpha", 0.25)
 
     # Draw the KDE plot and, optionally, shade
-    ax.plot(x, y, color=color, label=label, **kwargs)
-    alpha = kwargs.get("alpha", 0.25)
-    if shade:
-        ax.fill_between(x, 1e-12, y, facecolor=color, alpha=alpha)
+    if orientation == "vertical":
+        ax.plot(x, y, color=color, label=label, **kwargs)
+        if shade:
+            ax.fill_between(x, 1e-12, y, facecolor=color, alpha=alpha)
+    else:
+        ax.plot(y, x, color=color, label=label, **kwargs)
+        if shade:
+            ax.fill_between(y, 1e-12, x, facecolor=color, alpha=alpha)
 
     return ax
 

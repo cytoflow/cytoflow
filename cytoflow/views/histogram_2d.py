@@ -108,11 +108,19 @@ class Histogram2DView(Base2DView):
         
         super().plot(experiment, **kwargs)
         
-    def _grid_plot(self, experiment, grid, xlim, ylim, xscale, yscale, **kwargs):
+    def _grid_plot(self, experiment, grid, **kwargs):
 
         kwargs.setdefault('antialiased', False)
         kwargs.setdefault('linewidth', 0)
         kwargs.setdefault('edgecolors', 'face')
+        
+        lim = kwargs.pop('lim')
+        xlim = lim[self.xchannel]
+        ylim = lim[self.ychannel]
+        
+        scale = kwargs.pop('scale')
+        xscale = scale[self.xchannel]
+        yscale = scale[self.ychannel]
         
         gridsize = kwargs.pop('gridsize', 50)
         xbins = xscale.inverse(np.linspace(xscale(xlim[0]), xscale(xlim[1]), gridsize))
@@ -122,8 +130,10 @@ class Histogram2DView(Base2DView):
            
         grid.map(_hist2d, self.xchannel, self.ychannel, xbins = xbins, ybins = ybins, **kwargs)
         
-        return {}
-            
+        return dict(xlim = xlim,
+                    xscale = xscale,
+                    ylim = ylim,
+                    yscale = yscale)
 
 def _hist2d(x, y, xbins, ybins, **kwargs):
 

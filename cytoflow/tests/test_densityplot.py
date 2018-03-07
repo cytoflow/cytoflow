@@ -22,7 +22,6 @@ Created on Mar 5, 2018
 @author: brian
 '''
 
-import os
 import unittest
 
 import matplotlib
@@ -31,21 +30,24 @@ matplotlib.use('Agg')
 import cytoflow as flow
 from cytoflow.tests.test_base import ImportedDataTest
 
-class TestHistogram(ImportedDataTest):
+class TestDensityPlot(ImportedDataTest):
 
     def setUp(self):
         ImportedDataTest.setUp(self)
-        self.view = flow.HistogramView(channel = "B1-A")
+        self.view = flow.DensityView(xchannel = "B1-A",
+                                     ychannel = "Y2-A")
         
     def testPlot(self):
         self.view.plot(self.ex)
         
     def testLogScale(self):
-        self.view.scale = "log"
+        self.view.xscale = "log"
+        self.view.yscale = "log"
         self.view.plot(self.ex)
         
     def testLogicleScale(self):
-        self.view.scale = "logicle"
+        self.view.xscale = "logicle"
+        self.view.yscale = "logicle"
         self.view.plot(self.ex)
         
     def testXFacet(self):
@@ -54,10 +56,6 @@ class TestHistogram(ImportedDataTest):
         
     def testYFacet(self):
         self.view.yfacet = "Dox"
-        self.view.plot(self.ex)
-        
-    def testHueFacet(self):
-        self.view.huefacet = "Dox"
         self.view.plot(self.ex)
         
     def testSubset(self):
@@ -74,10 +72,6 @@ class TestHistogram(ImportedDataTest):
         
     def testYlabel(self):
         self.view.plot(self.ex, ylabel = "Y lab")
-        
-    def testHueLabel(self):
-        self.view.huefacet = "Dox"
-        self.view.plot(self.ex, huelabel = "hue lab")
     
     def testColWrap(self):
         self.view.xfacet = "Dox"
@@ -107,37 +101,21 @@ class TestHistogram(ImportedDataTest):
     def testQuantiles(self):
         self.view.plot(self.ex, min_quantile = 0.01, max_quantile = 0.90)
         
-    # 1D data plot params
+    # 2D data plot params
     def testLimits(self):
-        self.view.plot(self.ex, lim = (0, 1000))
-        
-    def testOrientation(self):
-        self.view.plot(self.ex, orientation = "horizontal")
-        
-    # Histogram params
-        
-    def testNumBins(self):
-        self.view.plot(self.ex, num_bins = 20)
-        
-    def testStep(self):
-        self.view.plot(self.ex, histtype = 'step') 
-        
-    def testBar(self):
-        self.view.plot(self.ex, histtype = 'bar')
-        
-    def testLineStyle(self):
-        self.view.plot(self.ex, histtype = 'step', linestyle = 'solid')
-        self.view.plot(self.ex, histtype = 'step', linestyle = 'dashed')
-        self.view.plot(self.ex, histtype = 'step', linestyle = 'dashdot')
-        self.view.plot(self.ex, histtype = 'step', linestyle = 'dotted')
-        
-    def testLineWidth(self):
-        self.view.plot(self.ex, histtype = 'step', linestyle = 'solid', linewidth = 5)
-        
-    def testNormed(self):
-        self.view.huefacet = "Dox"
-        self.view.plot(self.ex, histtype = 'step', normed = True)
+        self.view.plot(self.ex, xlim = (0, 1000), ylim = (0, 1000))
 
+    # Density params
+        
+    def testGridsize(self):
+        self.view.plot(self.ex, gridsize = 30)
+        
+    def testSmoothed(self):
+        self.view.plot(self.ex, smoothed = True) 
+        
+    def testSmoothedSigma(self):
+        self.view.plot(self.ex, smoothed = True, smoothed_sigma = 2) 
+        
         
 if __name__ == "__main__":
 #     import sys;sys.argv = ['', 'Test.testName']

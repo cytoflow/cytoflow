@@ -506,7 +506,6 @@ class Base2DView(BaseDataView):
         xlim = kwargs.pop('xlim', None)
         ylim = kwargs.pop('ylim', None)
 
-        
         super().plot(experiment, 
                      lim = {self.xchannel : xlim,
                             self.ychannel : ylim},

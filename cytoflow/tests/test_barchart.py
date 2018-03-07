@@ -30,20 +30,12 @@ matplotlib.use('Agg')
 
 import cytoflow as flow
 import cytoflow.utility as util
+from cytoflow.tests.test_base import ImportedDataTest
 
-class TestBarChart(unittest.TestCase):
+class TestBarChart(ImportedDataTest):
 
     def setUp(self):
-        self.cwd = os.path.dirname(os.path.abspath(__file__)) + "/data/Plate01/"
-
-        tube1 = flow.Tube(file = self.cwd + 'RFP_Well_A3.fcs', conditions = {"Dox" : 10.0})
-        tube2 = flow.Tube(file= self.cwd + 'CFP_Well_A4.fcs', conditions = {"Dox" : 1.0})
-        tube3 = flow.Tube(file= self.cwd + 'YFP_Well_A7.fcs', conditions = {"Dox" : 0.1})
-
-        import_op = flow.ImportOp(conditions = {"Dox" : "float"},
-                                  tubes = [tube1, tube2, tube3])
-        self.ex = import_op.apply()
-        
+        ImportedDataTest.setUp(self)
         self.ex = flow.ThresholdOp(name = "T",
                                    channel = "Y2-A",
                                    threshold = 500).apply(self.ex)

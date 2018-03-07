@@ -95,7 +95,7 @@ class DensityView(Base2DView):
         Parameters
         ----------
         gridsize : int
-            The size of the grid on each axis
+            The size of the grid on each axis.  Default = 50
             
         smoothed : bool
             Should the resulting mesh be smoothed?
@@ -121,12 +121,20 @@ class DensityView(Base2DView):
         
         super().plot(experiment, **kwargs)
         
-    def _grid_plot(self, experiment, grid, xlim, ylim, xscale, yscale, **kwargs):
+    def _grid_plot(self, experiment, grid, **kwargs):
 
         kwargs.setdefault('antialiased', False)
         kwargs.setdefault('linewidth', 0)
         kwargs.setdefault('edgecolors', 'face')
         kwargs.setdefault('cmap', plt.get_cmap('viridis'))
+        
+        lim = kwargs.pop('lim')
+        xlim = lim[self.xchannel]
+        ylim = lim[self.ychannel]
+        
+        scale = kwargs.pop('scale')
+        xscale = scale[self.xchannel]
+        yscale = scale[self.ychannel]
         
         under_color = kwargs.pop('under_color', None)
         if under_color is not None:
@@ -141,6 +149,7 @@ class DensityView(Base2DView):
             kwargs['cmap'].set_bad(color = kwargs['cmap'](0.0))
             
         gridsize = kwargs.pop('gridsize', 50)
+
         xbins = xscale.inverse(np.linspace(xscale(xlim[0]), xscale(xlim[1]), gridsize))
         ybins = yscale.inverse(np.linspace(yscale(ylim[0]), yscale(ylim[1]), gridsize))
   
@@ -160,7 +169,12 @@ class DensityView(Base2DView):
         
         grid.map(_densityplot, self.xchannel, self.ychannel, xbins = xbins, ybins = ybins, **kwargs)
                
-        return {'cmap' : kwargs['cmap'], 'norm' : kwargs['norm']}
+        return dict(xlim = xlim,
+                    xscale = xscale,
+                    ylim = ylim,
+                    yscale = yscale,
+                    cmap = kwargs['cmap'], 
+                    norm = kwargs['norm'])
         
         
 def _densityplot(x, y, xbins, ybins, **kwargs):

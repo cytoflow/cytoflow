@@ -90,7 +90,8 @@ from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
     import (IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, 
-            PluginHelpMixin, BasePlotParams)
+            PluginHelpMixin, Data1DPlotParams)
+from cytoflowgui.view_plugins.stats_1d import LINE_STYLES
 from cytoflowgui.serialization import camel_registry, traits_repr, traits_str, dedent
 from cytoflowgui.util import IterWrapper
 
@@ -142,28 +143,32 @@ class Kde1DHandler(ViewHandlerMixin, Controller):
                                                   background_color = "#ff9191"))))
         
         
-class Kde1DPlotParams(BasePlotParams):
-    
-    min_quantile = util.PositiveCFloat(0.001)
-    max_quantile = util.PositiveCFloat(1.00)
+class Kde1DPlotParams(Data1DPlotParams):
+
     shade = Bool(True)
+    alpha = util.PositiveCFloat(0.25)
     kernel = Enum(['gau', 'biw', 'cos', 'epa', 'tri', 'triw', 'uni'])
     bw = Enum(['scott', 'silverman', 'normal_reference'])
     gridsize = util.PositiveCInt(100, allow_zero = False)
-    
+    linestyle = Enum(LINE_STYLES)
+    linewidth = util.PositiveCFloat(2, allow_zero = True)
+
+
     def default_traits_view(self):
-        base_view = BasePlotParams.default_traits_view(self)
+        base_view = Data1DPlotParams.default_traits_view(self)
         
-        return View(Item('min_quantile',
+        return View(Item('shade'),
+                    Item('alpha',
                          editor = TextEditor(auto_set = False)),
-                    Item('max_quantile',
-                         editor = TextEditor(auto_set = False)),
-                    Item('shade'),
                     Item('kernel'),
                     Item('bw', label = "Bandwidth"),
                     Item('gridsize',
                          editor = TextEditor(auto_set = False),
                          label = "Grid size"),
+                    Item('linestyle'),
+                    Item('linewidth',
+                         editor = TextEditor(auto_set = False,
+                                             format_func = lambda x: "" if x == None else str(x))),
                     base_view.content)
     
 class Kde1DPluginView(PluginViewMixin, Kde1DView):
@@ -240,29 +245,36 @@ def _dump(view):
     
 @camel_registry.dumper(Kde1DPlotParams, 'kde-1d-params', version = 1)
 def _dump_params(params):
-    return dict(title = params.title,
+    return dict(
+                # BasePlotParams
+                title = params.title,
                 xlabel = params.xlabel,
                 ylabel = params.ylabel,
                 huelabel = params.huelabel,
-
-                xlim = params.xlim,
-                ylim = params.ylim,
                 col_wrap = params.col_wrap,
-                
                 sns_style = params.sns_style,
                 sns_context = params.sns_context,
-                
                 legend = params.legend,
                 sharex = params.sharex,
                 sharey = params.sharey,
                 despine = params.despine,
 
+                # DataplotParams
                 min_quantile = params.min_quantile,
                 max_quantile = params.max_quantile,
+                
+                # Data1DPlotParams
+                lim = params.lim,
+                orientation = params.orientation,
+                
+                # KDE params
                 shade = params.shade,
+                alpha = params.alpha, 
                 kernel = params.kernel,
                 bw = params.bw,
-                gridsize = params.gridsize)
+                gridsize = params.gridsize,
+                linestyle = params.linestyle,
+                linewidth = params.linewidth)
     
 @camel_registry.loader('kde-1d', version = any)
 def _load(data, version):

@@ -1,6 +1,5 @@
 #!/usr/bin/env python3.4
 # coding: latin-1
-from patsy.state import scale
 
 # (c) Massachusetts Institute of Technology 2015-2017
 #
@@ -97,7 +96,8 @@ class HistogramView(Base1DView):
         linewidth : float
             The width of the histogram line (in points)
                     
-        linestyle : ['-' | '--' | '-.' | ':']
+        linestyle : ['-' | '--' | '-.' | ':' | "None"]
+            The style of the line to plot
     
             
         Notes

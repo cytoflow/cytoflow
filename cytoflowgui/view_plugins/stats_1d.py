@@ -110,7 +110,7 @@ from cytoflowgui.serialization import camel_registry, traits_repr, traits_str, d
 
 Stats1DView.__repr__ = traits_repr
 
-LINE_STYLES = ["solid", "dashed", "dashdot", "dotted", ""]
+LINE_STYLES = ["solid", "dashed", "dashdot", "dotted", "none"]
     
 class Stats1DHandler(ViewHandlerMixin, Controller):
 
