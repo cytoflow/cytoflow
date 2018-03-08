@@ -89,8 +89,8 @@ operation's **Group By**) must be set as **Variable** or as a facet.
                      yscale = 'log').plot(ex2)
 """
 
-from traits.api import provides, Callable, Property, Enum, Instance
-from traitsui.api import View, Item, Controller, EnumEditor, VGroup, TextEditor
+from traits.api import provides, Callable, Property, Enum, Instance, Tuple
+from traitsui.api import View, Item, Controller, EnumEditor, VGroup, TextEditor, TupleEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
@@ -104,7 +104,7 @@ from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
     import (IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, 
-            PluginHelpMixin, BasePlotParams)
+            PluginHelpMixin, Stats1DPlotParams)
 from cytoflowgui.view_plugins.scatterplot import SCATTERPLOT_MARKERS
 from cytoflowgui.serialization import camel_registry, traits_repr, traits_str, dedent
 
@@ -237,17 +237,28 @@ class Stats1DHandler(ViewHandlerMixin, Controller):
         data.reset_index(inplace = True)
         return [x for x in data if util.is_numeric(data[x])]
     
-class Stats1DPlotParams(BasePlotParams):
+class Stats1DPlotParams(Stats1DPlotParams):
 
+    variable_lim = Tuple(util.FloatOrNone(None), util.FloatOrNone(None))   
     linestyle = Enum(LINE_STYLES)
     marker = Enum(SCATTERPLOT_MARKERS)
     markersize = util.PositiveCFloat(6, allow_zero = False)
     alpha = util.PositiveCFloat(1.0)
     
     def default_traits_view(self):
-        base_view = BasePlotParams.default_traits_view(self)
+        base_view = Stats1DPlotParams.default_traits_view(self)
         
-        return View(Item('linestyle'),
+        return View(Item('variable_lim',
+                         label = "Variable\nLimits",
+                         editor = TupleEditor(editors = [TextEditor(auto_set = False,
+                                                                    evaluate = float,
+                                                                    format_func = lambda x: "" if x == None else str(x)),
+                                                         TextEditor(auto_set = False,
+                                                                    evaluate = float,
+                                                                    format_func = lambda x: "" if x == None else str(x))],
+                                              labels = ["Min", "Max"],
+                                              cols = 1)),
+                    Item('linestyle'),
                     Item('marker'),
                     Item('markersize',
                          editor = TextEditor(auto_set = False),
@@ -296,8 +307,8 @@ class Stats1DPlugin(Plugin, PluginHelpMixin):
 def _dump(view):
     return dict(statistic = view.statistic,
                 variable = view.variable,
-                xscale = view.xscale,
-                yscale = view.yscale,
+                scale = view.scale,
+                variable_scale = view.variable_scale,
                 xfacet = view.xfacet,
                 yfacet = view.yfacet,
                 huefacet = view.huefacet,
@@ -308,10 +319,13 @@ def _dump(view):
     
 @camel_registry.loader('stats-1d', version = 1)
 def _load_v1(data, version):
-    data['statistic'] = tuple(data['statistic'])
-    data['error_statistic'] = tuple(data['error_statistic'])
 
-    return Stats1DPluginView(**data)
+    xscale = data.pop('xscale')
+    yscale = data.pop('yscale')
+
+    return Stats1DPluginView(scale = yscale,
+                             variable_scale = xscale,
+                             **data)
 
 @camel_registry.loader('stats-1d', version = 2)
 def _load(data, version):
@@ -319,16 +333,26 @@ def _load(data, version):
 
 @camel_registry.dumper(Stats1DPlotParams, 'stats-1d-params', version = 1)
 def _dump_params(params):
-    return dict(title = params.title,
+    return dict(
+                # BasePlotParams
+                title = params.title,
                 xlabel = params.xlabel,
                 ylabel = params.ylabel,
                 huelabel = params.huelabel,
+                col_wrap = params.col_wrap,
+                sns_style = params.sns_style,
+                sns_context = params.sns_context,
                 legend = params.legend,
                 sharex = params.sharex,
                 sharey = params.sharey,
-                xlim = params.xlim,
-                ylim = params.ylim,
-                col_wrap = params.col_wrap,
+                despine = params.despine,
+                
+                # Base1DStatisticsView
+                orientation = params.orientation,
+                lim = params.lim,
+                
+                # Stats 1D View
+                variable_lim = params.variable_lim,
                 linestyle = params.linestyle,
                 marker = params.marker,
                 markersize = params.markersize,

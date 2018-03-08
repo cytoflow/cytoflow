@@ -139,7 +139,7 @@ class RadvizView(BaseNDView):
         
         super().plot(experiment, **kwargs)
         
-    def _grid_plot(self, experiment, grid, xlim, ylim, xscale, yscale, **kwargs):
+    def _grid_plot(self, experiment, grid, **kwargs):
         
         # xlim and ylim, xscale and yscale are the limits and scale of the
         # plane onto which we are projecting.  the kwargs 'scale' and 'lim'

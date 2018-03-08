@@ -31,36 +31,34 @@ matplotlib.use('Agg')
 import cytoflow as flow
 from cytoflow.tests.test_base import ImportedDataTest
 
-class TestHistogram2D(ImportedDataTest):
+class TestViolin(ImportedDataTest):
 
     def setUp(self):
         ImportedDataTest.setUp(self)
-        self.view = flow.Histogram2DView(xchannel = "B1-A",
-                                         ychannel = "Y2-A")
+        self.view = flow.ViolinPlotView(channel = "B1-A",
+                                        variable = "Dox")
         
     def testPlot(self):
         self.view.plot(self.ex)
         
     def testLogScale(self):
-        self.view.xscale = "log"
-        self.view.yscale = "log"
+        self.view.scale = "log"
         self.view.plot(self.ex)
         
     def testLogicleScale(self):
-        self.view.xscale = "logicle"
-        self.view.yscale = "logicle"
+        self.view.scale = "logicle"
         self.view.plot(self.ex)
         
     def testXFacet(self):
-        self.view.xfacet = "Dox"
+        self.view.xfacet = "Well"
         self.view.plot(self.ex)
         
     def testYFacet(self):
-        self.view.yfacet = "Dox"
+        self.view.yfacet = "Well"
         self.view.plot(self.ex)
-
+        
     def testHueFacet(self):
-        self.view.huefacet = "Dox"
+        self.view.huefacet = "Well"
         self.view.plot(self.ex)
         
     def testSubset(self):
@@ -77,12 +75,13 @@ class TestHistogram2D(ImportedDataTest):
         
     def testYlabel(self):
         self.view.plot(self.ex, ylabel = "Y lab")
-
-    def testHuelabel(self):
-        self.view.huefacet = "Dox"
-        self.view.plot(self.ex, huelabel = "Y lab")
+        
+    def testHueLabel(self):
+        self.view.huefacet = "Well"
+        self.view.plot(self.ex, huelabel = "hue lab")
     
     def testColWrap(self):
+        self.view.variable = "Well"
         self.view.xfacet = "Dox"
         self.view.plot(self.ex, col_wrap = 2)
         
@@ -110,22 +109,37 @@ class TestHistogram2D(ImportedDataTest):
     def testQuantiles(self):
         self.view.plot(self.ex, min_quantile = 0.01, max_quantile = 0.90)
         
-    # 2D data plot params
+    # 1D data plot params
     def testLimits(self):
-        self.view.plot(self.ex, xlim = (0, 1000), ylim = (0, 1000))
-
-    # 2d histogram params
+        self.view.plot(self.ex, lim = (0, 1000))
+        
+    def testOrientation(self):
+        self.view.plot(self.ex, orientation = "horizontal")
+        
+    # Violin params
+        
+    def testBw(self):
+        self.view.plot(self.ex, bw = 'scott')
+        self.view.plot(self.ex, bw = 'silverman')
+        
+    def testScalePlot(self):
+        self.view.plot(self.ex, scale_plot = 'area')
+        self.view.plot(self.ex, scale_plot = 'count')
+        self.view.plot(self.ex, scale_plot = 'width')
         
     def testGridsize(self):
-        self.view.plot(self.ex, gridsize = 30)
+        self.view.plot(self.ex, gridsize = 200)
         
-    def testSmoothed(self):
-        self.view.plot(self.ex, smoothed = True) 
+    def testInner(self):
+        self.view.plot(self.ex, inner = 'box')
+        self.view.plot(self.ex, inner = 'quartile')
+        self.view.plot(self.ex, inner = None)
         
-    def testSmoothedSigma(self):
-        self.view.plot(self.ex, smoothed = True, smoothed_sigma = 2) 
-        
+    def testSplit(self):
+        self.view.huefacet = 'Well'
+        self.view.plot(self.ex, split = True)
+
         
 if __name__ == "__main__":
-#     import sys;sys.argv = ['', 'Test.testName']
+#     import sys;sys.argv = ['', 'TestViolin.testPlot']
     unittest.main()

@@ -95,7 +95,7 @@ from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.view_plugins.i_view_plugin \
     import (IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, 
-            PluginHelpMixin, BasePlotParams)
+            PluginHelpMixin, DataPlotParams)
 from cytoflowgui.serialization import camel_registry, traits_repr, traits_str, dedent
 from cytoflowgui.vertical_list_editor import VerticalListEditor
 from cytoflowgui.util import IterWrapper
@@ -186,21 +186,14 @@ class ParallelCoordinatesHandler(ViewHandlerMixin, Controller):
                            Item('scale')),
                     handler = self)
         
-class ParallelCoordinatesPlotParams(BasePlotParams):
-    
-    
-    min_quantile = util.PositiveCFloat(0.001)
-    max_quantile = util.PositiveCFloat(1.00)
+class ParallelCoordinatesPlotParams(DataPlotParams):
+
     alpha = util.PositiveCFloat(0.02)
     
     def default_traits_view(self):
-        base_view = BasePlotParams.default_traits_view(self)
+        base_view = DataPlotParams.default_traits_view(self)
         
-        return View(Item('min_quantile',
-                         editor = TextEditor(auto_set = False)),
-                    Item('max_quantile',
-                         editor = TextEditor(auto_set = False)),
-                    Item('alpha',
+        return View(Item('alpha',
                          editor = TextEditor(auto_set = False)),
                     base_view.content)
     
@@ -297,25 +290,25 @@ def _dump(view):
     
 @camel_registry.dumper(ParallelCoordinatesPlotParams, 'parallel-coords-params', version = 1)
 def _dump_params(params):
-    return dict(title = params.title,
+    return dict(
+                # BasePlotParams
+                title = params.title,
                 xlabel = params.xlabel,
                 ylabel = params.ylabel,
                 huelabel = params.huelabel,
-
-                xlim = params.xlim,
-                ylim = params.ylim,
                 col_wrap = params.col_wrap,
-                
                 sns_style = params.sns_style,
                 sns_context = params.sns_context,
-                
                 legend = params.legend,
                 sharex = params.sharex,
                 sharey = params.sharey,
                 despine = params.despine,
 
+                # DataplotParams
                 min_quantile = params.min_quantile,
                 max_quantile = params.max_quantile,
+                
+                # Parallel coords
                 alpha = params.alpha)
     
 @camel_registry.loader('parallel-coords', version = any)

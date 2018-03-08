@@ -22,7 +22,6 @@ Created on Mar 5, 2018
 @author: brian
 '''
 
-import os
 import unittest
 
 import matplotlib
@@ -31,24 +30,25 @@ matplotlib.use('Agg')
 import cytoflow as flow
 from cytoflow.tests.test_base import ImportedDataTest
 
-class TestHistogram2D(ImportedDataTest):
+class TestRadviz(ImportedDataTest):
 
     def setUp(self):
         ImportedDataTest.setUp(self)
-        self.view = flow.Histogram2DView(xchannel = "B1-A",
-                                         ychannel = "Y2-A")
+        self.view = flow.ParallelCoordinatesView(channels = ["B1-A", 'V2-A', 'Y2-A'])
         
     def testPlot(self):
         self.view.plot(self.ex)
         
     def testLogScale(self):
-        self.view.xscale = "log"
-        self.view.yscale = "log"
+        self.view.scale = {'B1-A' : 'log', 
+                           'V2-A' : 'log', 
+                           'Y2-A' : 'log'}
         self.view.plot(self.ex)
         
     def testLogicleScale(self):
-        self.view.xscale = "logicle"
-        self.view.yscale = "logicle"
+        self.view.scale = {'B1-A' : 'logicle', 
+                           'V2-A' : 'logicle', 
+                           'Y2-A' : 'logicle'}
         self.view.plot(self.ex)
         
     def testXFacet(self):
@@ -58,7 +58,7 @@ class TestHistogram2D(ImportedDataTest):
     def testYFacet(self):
         self.view.yfacet = "Dox"
         self.view.plot(self.ex)
-
+        
     def testHueFacet(self):
         self.view.huefacet = "Dox"
         self.view.plot(self.ex)
@@ -77,10 +77,10 @@ class TestHistogram2D(ImportedDataTest):
         
     def testYlabel(self):
         self.view.plot(self.ex, ylabel = "Y lab")
-
-    def testHuelabel(self):
+        
+    def testHueLabel(self):
         self.view.huefacet = "Dox"
-        self.view.plot(self.ex, huelabel = "Y lab")
+        self.view.plot(self.ex, huelabel = "hue lab")
     
     def testColWrap(self):
         self.view.xfacet = "Dox"
@@ -110,21 +110,19 @@ class TestHistogram2D(ImportedDataTest):
     def testQuantiles(self):
         self.view.plot(self.ex, min_quantile = 0.01, max_quantile = 0.90)
         
-    # 2D data plot params
-    def testLimits(self):
-        self.view.plot(self.ex, xlim = (0, 1000), ylim = (0, 1000))
+    # Radviz params
+        
+    def testAlpha(self):
+        self.view.plot(self.ex, alpha = 0.1)
+        
+    def testSize(self):
+        self.view.plot(self.ex, s = 5)
+        
+    def testMarker(self):
+        for mk in ["o", ",", "v", "^", "<", ">", "1", "2", "3", "4", "8",
+                       "s", "p", "*", "h", "H", "+", "x", "D", "d", ""]:
+            self.view.plot(self.ex, marker = mk)
 
-    # 2d histogram params
-        
-    def testGridsize(self):
-        self.view.plot(self.ex, gridsize = 30)
-        
-    def testSmoothed(self):
-        self.view.plot(self.ex, smoothed = True) 
-        
-    def testSmoothedSigma(self):
-        self.view.plot(self.ex, smoothed = True, smoothed_sigma = 2) 
-        
         
 if __name__ == "__main__":
 #     import sys;sys.argv = ['', 'Test.testName']

@@ -93,7 +93,7 @@ from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.view_plugins.i_view_plugin \
     import (IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, 
-            PluginHelpMixin, BasePlotParams)
+            PluginHelpMixin, Data2DPlotParams)
 from cytoflowgui.serialization import camel_registry, traits_repr, traits_str, dedent
 from cytoflowgui.util import IterWrapper
 
@@ -150,22 +150,16 @@ class Histogram2DHandler(ViewHandlerMixin, Controller):
                          editor = ColorTextEditor(foreground_color = "#000000",
                                                   background_color = "#ff9191"))))
 
-class Histogram2DParams(BasePlotParams):
+class Histogram2DParams(Data2DPlotParams):
     
-    min_quantile = util.PositiveCFloat(0.001)
-    max_quantile = util.PositiveCFloat(1.00)
     gridsize = util.PositiveCInt(50, allow_zero = False)
     smoothed = Bool(False)
     smoothed_sigma = util.PositiveCFloat(1.0, allow_zero = False)
     
     def default_traits_view(self):
-        base_view = BasePlotParams.default_traits_view(self)
+        base_view = Data2DPlotParams.default_traits_view(self)
         
-        return View(Item('min_quantile',
-                         editor = TextEditor(auto_set = False)),
-                    Item('max_quantile',
-                         editor = TextEditor(auto_set = False)),
-                    Item('gridsize',
+        return View(Item('gridsize',
                          editor = TextEditor(auto_set = False),
                          label = "Grid size"),
                     Item('smoothed',
@@ -207,14 +201,17 @@ class Histogram2DPluginView(PluginViewMixin, Histogram2DView):
             
     def get_notebook_code(self, idx):
         view = Histogram2DView()
-        view.copy_traits(self, view.copyable_trait_names())
+        view.copy_traits(self, view.copyable_trait_names())\
+        
+        plot_params_str = traits_str(self.plot_params)
 
         return dedent("""
-        {repr}.plot(ex_{idx}{plot})
+        {repr}.plot(ex_{idx}{plot}{plot_params})
         """
         .format(repr = repr(view),
                 idx = idx,
-                plot = ", plot_name = " + repr(self.current_plot) if self.plot_names else ""))
+                plot = ", plot_name = " + repr(self.current_plot) if self.plot_names else "",
+                plot_params = ", " + plot_params_str if plot_params_str else ""))
 
 @provides(IViewPlugin)
 class Histogram2DPlugin(Plugin, PluginHelpMixin):
@@ -251,18 +248,29 @@ def _dump(view):
     
 @camel_registry.dumper(Histogram2DParams, '2d-histogram-params', version = 1)
 def _dump_params(params):
-    return dict(title = params.title,
+    return dict(
+                # BasePlotParams
+                title = params.title,
                 xlabel = params.xlabel,
                 ylabel = params.ylabel,
                 huelabel = params.huelabel,
+                col_wrap = params.col_wrap,
+                sns_style = params.sns_style,
+                sns_context = params.sns_context,
                 legend = params.legend,
                 sharex = params.sharex,
                 sharey = params.sharey,
-                xlim = params.xlim,
-                ylim = params.ylim,
-                col_wrap = params.col_wrap,
+                despine = params.despine,
+
+                # DataplotParams
                 min_quantile = params.min_quantile,
                 max_quantile = params.max_quantile,
+                
+                # Data2DPlotParams
+                xlim = params.xlim,
+                ylim = params.ylim,
+                
+                # 2D Histogram params
                 gridsize = params.gridsize,
                 smoothed = params.smoothed,
                 smoothed_sigma = params.smoothed_sigma )

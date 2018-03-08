@@ -154,24 +154,18 @@ class Kde2DHandler(ViewHandlerMixin, Controller):
         
 class Kde2DPlotParams(BasePlotParams):
     
-    min_quantile = util.PositiveCFloat(0.001)
-    max_quantile = util.PositiveCFloat(1.00)
     shade = Bool(False)
     min_alpha = util.PositiveCFloat(0.2, allow_zero = False)
     max_alpha = util.PositiveCFloat(0.9, allow_zero = False)
     n_levels = util.PositiveCInt(10, allow_zero = False)
     kernel = Enum(['gau', 'biw', 'cos', 'epa', 'tri', 'triw', 'uni'])
-    bw = Enum(['scott', 'silverman', 'normal_reference'])
-    gridsize = util.PositiveCInt(100, allow_zero = False)
+    bw = Enum(['scott', 'silverman'])
+    gridsize = util.PositiveCInt(50, allow_zero = False)
     
     def default_traits_view(self):
         base_view = BasePlotParams.default_traits_view(self)
         
-        return View(Item('min_quantile',
-                         editor = TextEditor(auto_set = False)),
-                    Item('max_quantile',
-                         editor = TextEditor(auto_set = False)),
-                    Item('shade'),
+        return View(Item('shade'),
                     Item('min_alpha',
                          editor = TextEditor(auto_set = False)),
                     Item('max_alpha',
@@ -262,25 +256,29 @@ def _dump(view):
     
 @camel_registry.dumper(Kde2DPlotParams, 'kde-2d-params', version = 1)
 def _dump_params(params):
-    return dict(title = params.title,
+    return dict(
+                # BasePlotParams
+                title = params.title,
                 xlabel = params.xlabel,
                 ylabel = params.ylabel,
                 huelabel = params.huelabel,
-
-                xlim = params.xlim,
-                ylim = params.ylim,
                 col_wrap = params.col_wrap,
-                
                 sns_style = params.sns_style,
                 sns_context = params.sns_context,
-                
                 legend = params.legend,
                 sharex = params.sharex,
                 sharey = params.sharey,
                 despine = params.despine,
 
+                # DataplotParams
                 min_quantile = params.min_quantile,
                 max_quantile = params.max_quantile,
+                
+                # Data2DPlotParams
+                xlim = params.xlim,
+                ylim = params.ylim,
+                
+                # 2D KDE params
                 shade = params.shade,
                 min_alpha = params.min_alpha,
                 max_alpha = params.max_alpha,

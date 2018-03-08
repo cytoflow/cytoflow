@@ -22,7 +22,6 @@ Created on Mar 5, 2018
 @author: brian
 '''
 
-import os
 import unittest
 
 import matplotlib
@@ -35,7 +34,7 @@ class TestHistogram2D(ImportedDataTest):
 
     def setUp(self):
         ImportedDataTest.setUp(self)
-        self.view = flow.Histogram2DView(xchannel = "B1-A",
+        self.view = flow.ScatterplotView(xchannel = "B1-A",
                                          ychannel = "Y2-A")
         
     def testPlot(self):
@@ -114,16 +113,18 @@ class TestHistogram2D(ImportedDataTest):
     def testLimits(self):
         self.view.plot(self.ex, xlim = (0, 1000), ylim = (0, 1000))
 
-    # 2d histogram params
+    # scatterplot params
+    
+    def testAlpha(self):
+        self.view.plot(self.ex, alpha = 0.1)
         
-    def testGridsize(self):
-        self.view.plot(self.ex, gridsize = 30)
+    def testSize(self):
+        self.view.plot(self.ex, s = 5)
         
-    def testSmoothed(self):
-        self.view.plot(self.ex, smoothed = True) 
-        
-    def testSmoothedSigma(self):
-        self.view.plot(self.ex, smoothed = True, smoothed_sigma = 2) 
+    def testMarker(self):
+        for mk in ["o", ",", "v", "^", "<", ">", "1", "2", "3", "4", "8",
+                       "s", "p", "*", "h", "H", "+", "x", "D", "d", ""]:
+            self.view.plot(self.ex, marker = mk)
         
         
 if __name__ == "__main__":

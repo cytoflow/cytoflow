@@ -143,6 +143,8 @@ class TestStats2D(ImportedDataTest):
         
     def testPlotArgs(self):
 
+        # BasePlotParams
+
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
         self.view.plot_params.title = "Title"
@@ -156,6 +158,35 @@ class TestStats2D(ImportedDataTest):
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
         self.view.plot_params.ylabel = "Y label"
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+        
+        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.huelabel = "Hue label"
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+        
+        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.xfacet = "Well"
+        self.view.huefacet = ""
+        self.view.plot_params.col_wrap = 2
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+         
+        for style in ['darkgrid', 'whitegrid', 'white', 'dark', 'ticks']:
+            self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
+            self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+            self.view.plot_params.sns_style = style
+            self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+            
+        for context in ['poster', 'talk', 'poster', 'notebook', 'paper']:
+            self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
+            self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+            self.view.plot_params.sns_context = context
+            self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+        
+        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.legend = False
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
 
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
@@ -173,19 +204,20 @@ class TestStats2D(ImportedDataTest):
         self.view.plot_params.despine = False
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
 
+        
+        # Data2DPlotParams
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
-        self.view.xfacet = ""
-        self.view.huefacet = "Well"
-        self.view.plot_params.huelabel = "Hue label"
+        self.view.plot_params.xlim = (0, 1000)
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
-
+        
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
-        self.view.plot_params.legend = False
+        self.view.plot_params.ylim = (0, 1000)
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
 
-        ## stats1d-specific params
+        ## stats2d-specific params
+
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
         self.view.plot_params.alpha = 0.5
@@ -242,5 +274,5 @@ class TestStats2D(ImportedDataTest):
 
 
 if __name__ == "__main__":
-#     import sys;sys.argv = ['', 'TestStats1D.testPlotArgs']
+#     import sys;sys.argv = ['', 'TestStats2D.testPlotArgs']
     unittest.main()

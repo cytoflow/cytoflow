@@ -816,11 +816,6 @@ class Base1DStatisticsView(BaseStatisticsView):
             raise util.CytoflowViewError('variable',
                                          "variable {0} not in the experiment"
                                     .format(self.variable))
-#             
-#         if util.is_numeric(experiment[self.variable]):
-#             xscale = util.scale_factory(self.xscale, experiment, condition = self.variable)
-#         else:
-#             xscale = None 
         
         scale = util.scale_factory(self.scale, 
                                    experiment, 

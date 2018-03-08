@@ -132,7 +132,7 @@ class Stats2DView(Base2DStatisticsView):
         super().plot(experiment, plot_name, **kwargs)
 
 
-    def _grid_plot(self, experiment, grid, xlim, ylim, xscale, yscale, **kwargs):
+    def _grid_plot(self, experiment, grid, **kwargs):
 
         data = grid.data
         xstat = experiment.statistics[self.xstatistic]
@@ -151,6 +151,9 @@ class Stats2DView(Base2DStatisticsView):
             y_error_name = y_error_stat.name
         else:
             y_error_stat = None
+            
+        xscale = kwargs.pop('xscale')
+        yscale = kwargs.pop('yscale')
         
         xlim = kwargs.pop("xlim", None)
         if xlim is None:
@@ -187,7 +190,10 @@ class Stats2DView(Base2DStatisticsView):
 
         grid.map(plt.plot, xname, yname, **kwargs)
         
-        return {}
+        return dict(xscale = xscale,
+                    xlim = xlim,
+                    yscale = yscale,
+                    ylim = ylim)
 
 
 def _x_error_bars(x, y, xerr, ax = None, color = None, **kwargs):

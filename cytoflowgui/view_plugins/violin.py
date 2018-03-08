@@ -93,7 +93,7 @@ from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
     import (IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, 
-            PluginHelpMixin, BasePlotParams)
+            PluginHelpMixin, Data1DPlotParams)
 from cytoflowgui.serialization import camel_registry, traits_repr, traits_str, dedent
 from cytoflowgui.util import IterWrapper
 
@@ -148,28 +148,19 @@ class ViolinHandler(ViewHandlerMixin, Controller):
                          editor = ColorTextEditor(foreground_color = "#000000",
                                                   background_color = "#ff9191"))))
     
-class ViolinPlotParams(BasePlotParams):
-    
-    min_quantile = util.PositiveCFloat(0.001)
-    max_quantile = util.PositiveCFloat(1.00)
-    orientation = Enum('vertical', 'horizontal')
+class ViolinPlotParams(Data1DPlotParams):
+
     bw = Enum('scott', 'silverman')
     scale_plot = Enum('area', 'count', 'width')
     scale_hue = Bool(False)
     gridsize = CInt(100)
-    inner = Enum("box", "quartile", "point", "stick", None)
+    inner = Enum("box", "quartile", None)
     split = Bool(False)
     
-    
     def default_traits_view(self):
-        base_view = BasePlotParams.default_traits_view(self)
+        base_view = Data1DPlotParams.default_traits_view(self)
         
-        return View(Item('min_quantile',
-                         editor = TextEditor(auto_set = False)),
-                    Item('max_quantile',
-                         editor = TextEditor(auto_set = False)),
-                    Item('orientation'),
-                    Item('bw',
+        return View(Item('bw',
                          label = 'Bandwidth'),
                     Item('scale_plot',
                          label = "Plot scale"),
@@ -212,13 +203,16 @@ class ViolinPlotPluginView(PluginViewMixin, ViolinPlotView):
     def get_notebook_code(self, wi, idx):
         view = ViolinPlotView()
         view.copy_traits(self, view.copyable_trait_names())
+        
+        plot_params_str = traits_str(self.plot_params)
 
         return dedent("""
-        {repr}.plot(ex_{idx}{plot})
+        {repr}.plot(ex_{idx}{plot}{plot_params})
         """
         .format(repr = repr(view),
                 idx = idx,
-                plot = ", plot_name = " + repr(self.current_plot) if self.plot_names else ""))
+                plot = ", plot_name = " + repr(self.current_plot) if self.plot_names else "",
+                plot_params = ", " + plot_params_str if plot_params_str else ""))
 
 
 @provides(IViewPlugin)
@@ -259,21 +253,31 @@ def _load(data, version):
 
 @camel_registry.dumper(ViolinPlotParams, 'violin-plot-params', version = 1)
 def _dump_params(params):
-    return dict(title = params.title,
+    return dict(
+                # BasePlotParams
+                title = params.title,
                 xlabel = params.xlabel,
                 ylabel = params.ylabel,
                 huelabel = params.huelabel,
+                col_wrap = params.col_wrap,
+                sns_style = params.sns_style,
+                sns_context = params.sns_context,
                 legend = params.legend,
                 sharex = params.sharex,
                 sharey = params.sharey,
-                xlim = params.xlim,
-                ylim = params.ylim,
-                col_wrap = params.col_wrap,
+                despine = params.despine,
+
+                # DataplotParams
                 min_quantile = params.min_quantile,
                 max_quantile = params.max_quantile,
+                
+                # Data1DPlotParams
+                lim = params.lim,
                 orientation = params.orientation,
+                
+                # Violin params
                 bw = params.bw,
-                scale = params.scale,
+                scale_plot = params.scale_plot,
                 scale_hue = params.scale_hue,
                 gridsize = params.gridsize,
                 inner = params.inner,

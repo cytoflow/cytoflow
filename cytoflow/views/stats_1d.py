@@ -40,6 +40,8 @@ class Stats1DView(Base1DStatisticsView):
     
     Attributes
     ----------
+    variable_scale : {'linear', 'log', 'logicle'}
+        The scale applied to the variable (on the X axis)
         
     Examples
     --------
@@ -89,6 +91,9 @@ class Stats1DView(Base1DStatisticsView):
     yfunction = util.Removed(err_string = REMOVED_ERROR)
     ychannel = util.Removed(err_string = REMOVED_ERROR)
     xvariable = util.Deprecated(new = "variable")
+    xscale = util.Deprecated(new = 'variable_scale')
+    
+    variable_scale = util.ScaleEnum
     
     def enum_plots(self, experiment):
         """
@@ -104,6 +109,9 @@ class Stats1DView(Base1DStatisticsView):
         
         Parameters
         ----------
+        
+        variable_lim : (float, float)
+            The limits on the variable axis
         
         color : a matplotlib color
             The color to plot with.  Overridden if `huefacet` is not `None`
@@ -131,11 +139,30 @@ class Stats1DView(Base1DStatisticsView):
         
         """
         
-        super().plot(experiment, plot_name, **kwargs)
+        if self.variable not in experiment.conditions:
+            raise util.CytoflowError('variable',
+                                     "Variable {} not in the experiment"
+                                     .format(self.variable))
+        
+        if not util.is_numeric(experiment[self.variable]):
+            raise util.CytoflowError('variable',
+                                     "Variable {} must be numeric"
+                                     .format(self.variable))
+        
+        variable_scale = util.scale_factory(self.variable_scale, 
+                                            experiment, 
+                                            condition = self.variable)
+        
+        super().plot(experiment, 
+                     plot_name, 
+                     variable_scale = variable_scale,
+                     **kwargs)
 
-    def _grid_plot(self, experiment, grid, xlim, ylim, xscale, yscale, **kwargs):
+    def _grid_plot(self, experiment, grid, **kwargs):
 
         data = grid.data
+        data_scale = kwargs.pop('scale')
+        variable_scale = kwargs.pop('variable_scale')
 
         stat = experiment.statistics[self.statistic]
         stat_name = stat.name
@@ -144,37 +171,52 @@ class Stats1DView(Base1DStatisticsView):
             err_stat_name = err_stat.name
         else:
             err_stat = None
-                    
-        xlim = kwargs.pop("xlim", None)
-        if xlim is None:
-            xlim = (xscale.clip(data[self.variable].min() * 0.9),
-                    xscale.clip(data[self.variable].max() * 1.1))
+        
+        variable_lim = kwargs.pop("variable_lim", None)
+        if variable_lim is None:
+            variable_lim = (variable_scale.clip(data[self.variable].min() * 0.9),
+                            variable_scale.clip(data[self.variable].max() * 1.1))
                       
-        ylim = kwargs.pop("ylim", None)
-        if ylim is None:
-            ylim = (yscale.clip(data[stat_name].min() * 0.9),
-                    yscale.clip(data[stat_name].max() * 1.1))
+        lim = kwargs.pop("lim", None)
+        if lim is None:
+            lim = (data_scale.clip(data[stat_name].min() * 0.9),
+                   data_scale.clip(data[stat_name].max() * 1.1))
             
             if self.error_statistic[0]:
                 try: 
-                    ylim = (yscale.clip(min([x[0] for x in data[err_stat_name]]) * 0.9),
-                            yscale.clip(max([x[1] for x in data[err_stat_name]]) * 1.1))
+                    lim = (data_scale.clip(min([x[0] for x in data[err_stat_name]]) * 0.9),
+                           data_scale.clip(max([x[1] for x in data[err_stat_name]]) * 1.1))
                 except (TypeError, IndexError):
-                    ylim = (yscale.clip((data[stat_name].min() - data[err_stat_name].min()) * 0.9), 
-                            yscale.clip((data[stat_name].max() + data[err_stat_name].max()) * 1.1))
+                    lim = (data_scale.clip((data[stat_name].min() - data[err_stat_name].min()) * 0.9), 
+                           data_scale.clip((data[stat_name].max() + data[err_stat_name].max()) * 1.1))
 
 
-        # plot the error bars first so the axis labels don't get overwritten
-        if err_stat is not None:
-#             err_kwargs = {k:v for k in kwargs if k in ['']}
-            grid.map(_error_bars, self.variable, stat_name, err_stat_name)
-        
-        grid.map(plt.plot, self.variable, stat_name, **kwargs)
-        
-        return {'xlim' : xlim, 'ylim' : ylim}
+        orientation = kwargs.pop('orientation', 'vertical')
+        if orientation == 'vertical':
+            # plot the error bars first so the axis labels don't get overwritten
+            if err_stat is not None:
+                grid.map(_v_error_bars, self.variable, stat_name, err_stat_name)
+            
+            grid.map(plt.plot, self.variable, stat_name, **kwargs)
+            
+            return dict(xscale = variable_scale,
+                        xlim = variable_lim,
+                        yscale = data_scale, 
+                        ylim = lim)
+        else:
+            # plot the error bars first so the axis labels don't get overwritten
+            if err_stat is not None:
+                grid.map(_h_error_bars, stat_name, self.variable, err_stat_name)
+            
+            grid.map(plt.plot, stat_name, self.variable, **kwargs)
+            
+            return dict(yscale = variable_scale,
+                        ylim = variable_lim,
+                        xscale = data_scale, 
+                        xlim = lim)
 
                 
-def _error_bars(x, y, yerr, ax = None, color = None, **kwargs):
+def _v_error_bars(x, y, yerr, ax = None, color = None, **kwargs):
     
     kwargs.pop('markersize', None)
     kwargs.pop('markersize', None)
@@ -187,6 +229,20 @@ def _error_bars(x, y, yerr, ax = None, color = None, **kwargs):
         hi = [y.iloc[i] + ye for i, ye in yerr.reset_index(drop = True).items()]
 
     plt.vlines(x, lo, hi, color = color, **kwargs)
+    
+def _h_error_bars(x, y, xerr, ax = None, color = None, **kwargs):
+    
+    kwargs.pop('markersize', None)
+    kwargs.pop('markersize', None)
+    
+    if isinstance(xerr.iloc[0], tuple):
+        lo = [xe[0] for xe in xerr]
+        hi = [xe[1] for xe in xerr]
+    else:
+        lo = [x.iloc[i] - xe for i, xe in xerr.reset_index(drop = True).items()]
+        hi = [x.iloc[i] + xe for i, xe in xerr.reset_index(drop = True).items()]
+
+    plt.hlines(y, lo, hi, color = color, **kwargs)
     
 util.expand_class_attributes(Stats1DView)
 util.expand_method_parameters(Stats1DView, Stats1DView.plot)

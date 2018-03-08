@@ -81,9 +81,6 @@ class ViolinPlotView(Base1DView):
         Parameters
         ----------
         
-        orient : "v" | "h", optional
-            Orientation of the plot (vertical or horizontal). 
-        
         bw : {{'scott', 'silverman', float}}, optional
             Either the name of a reference rule or the scale factor to use when
             computing the kernel bandwidth. The actual kernel size will be
@@ -106,7 +103,7 @@ class ViolinPlotView(Base1DView):
             Number of points in the discrete grid used to compute the kernel
             density estimate.
 
-        inner : {{"box", "quartile", "point", "stick", None}}, optional
+        inner : {{"box", "quartile", None}}, optional
             Representation of the datapoints in the violin interior. If ``box``,
             draw a miniature boxplot. If ``quartiles``, draw the quartiles of the
             distribution.  If ``point`` or ``stick``, show each underlying
@@ -133,19 +130,19 @@ class ViolinPlotView(Base1DView):
         
         super().plot(experiment, **kwargs)
         
-    def _grid_plot(self, experiment, grid, xlim, ylim, xscale, yscale, **kwargs):
+    def _grid_plot(self, experiment, grid, **kwargs):
 
         kwargs.setdefault('orientation', 'vertical')
-
-        # since the 'scale' kwarg is already used
-        kwargs['data_scale'] = xscale
+        
+        scale = kwargs.pop('scale')[self.channel]
+        lim = kwargs.pop('lim')[self.channel]
                 
         # set the scale for each set of axes; can't just call plt.xscale() 
         for ax in grid.axes.flatten():
             if kwargs['orientation'] == 'horizontal':
-                ax.set_xscale(xscale.name, **xscale.mpl_params)  
+                ax.set_xscale(scale.name, **scale.mpl_params)  
             else:
-                ax.set_yscale(xscale.name, **xscale.mpl_params)  
+                ax.set_yscale(scale.name, **scale.mpl_params)  
             
         # this order-dependent thing weirds me out.      
         if kwargs['orientation'] == 'horizontal':
@@ -160,12 +157,13 @@ class ViolinPlotView(Base1DView):
                  *violin_args,      
                  order = np.sort(experiment[self.variable].unique()),
                  hue_order = (np.sort(experiment[self.huefacet].unique()) if self.huefacet else None),
+                 data_scale = scale,
                  **kwargs)
         
         if kwargs['orientation'] == 'horizontal':
-            return {"xscale" : xscale, "yscale" : None}
+            return {"xscale" : scale, "xlim" : lim}
         else:
-            return {"xscale" : None, "yscale" : xscale}
+            return {"yscale" : scale, "ylim" : lim}
         
 # this uses an internal interface to seaborn's violin plot.
 

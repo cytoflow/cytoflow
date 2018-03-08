@@ -22,7 +22,6 @@ Created on Mar 5, 2018
 @author: brian
 '''
 
-import os
 import unittest
 
 import matplotlib
@@ -31,12 +30,12 @@ matplotlib.use('Agg')
 import cytoflow as flow
 from cytoflow.tests.test_base import ImportedDataTest
 
-class TestHistogram2D(ImportedDataTest):
+class TestKde2D(ImportedDataTest):
 
     def setUp(self):
         ImportedDataTest.setUp(self)
-        self.view = flow.Histogram2DView(xchannel = "B1-A",
-                                         ychannel = "Y2-A")
+        self.view = flow.Kde2DView(xchannel = "B1-A",
+                                   ychannel = "Y2-A")
         
     def testPlot(self):
         self.view.plot(self.ex)
@@ -114,18 +113,38 @@ class TestHistogram2D(ImportedDataTest):
     def testLimits(self):
         self.view.plot(self.ex, xlim = (0, 1000), ylim = (0, 1000))
 
-    # 2d histogram params
+    # Kde 2d params
+    def testShade(self):
+        self.view.plot(self.ex, shade = False)
+        
+    def testAlpha(self):
+        self.view.plot(self.ex, min_alpha = 0.5, max_alpha = 0.7) 
+        
+    def testLevels(self):
+        self.view.plot(self.ex, n_levels = 5)
+        
+    def testLineStyle(self):
+        self.view.plot(self.ex, linestyle = 'solid')
+        self.view.plot(self.ex, linestyle = 'dashed')
+        self.view.plot(self.ex, linestyle = 'dashdot')
+        self.view.plot(self.ex, linestyle = 'dotted')
+        self.view.plot(self.ex, linestyle = 'none')
+
+    def testLineWidth(self):
+        self.view.plot(self.ex, linestyle = 'solid', linewidth = 5)
         
     def testGridsize(self):
-        self.view.plot(self.ex, gridsize = 30)
+        self.view.plot(self.ex, gridsize = 50)
         
-    def testSmoothed(self):
-        self.view.plot(self.ex, smoothed = True) 
-        
-    def testSmoothedSigma(self):
-        self.view.plot(self.ex, smoothed = True, smoothed_sigma = 2) 
+    def testKernel(self):
+        for k in ['gau', 'biw', 'cos', 'epa', 'tri', 'triw', 'uni']:
+            self.view.plot(self.ex, kernel = k)
+            
+    def testBandwidth(self):
+        for bw in ['scott', 'silverman']:
+            self.view.plot(self.ex, bw = bw)
         
         
 if __name__ == "__main__":
-#     import sys;sys.argv = ['', 'Test.testName']
+#     import sys;sys.argv = ['', 'TestKde2D.testBandwidth']
     unittest.main()

@@ -247,8 +247,7 @@ class TestKde2D(ImportedDataTest):
             self.view.plot_params.kernel = k
             self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
 
-        for bw in ["silverman", "scott", "normal_reference"]:
-            print(bw)
+        for bw in ["silverman", "scott"]:
             self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
             self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
             self.view.plot_params.bw = bw

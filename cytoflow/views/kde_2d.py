@@ -120,13 +120,21 @@ class Kde2DView(Base2DView):
         
         super().plot(experiment, **kwargs)
         
-    def _grid_plot(self, experiment, grid, xlim, ylim, xscale, yscale, **kwargs):
+    def _grid_plot(self, experiment, grid, **kwargs):
 
         
         kwargs.setdefault('shade', False)
         kwargs.setdefault('min_alpha', 0.2)
         kwargs.setdefault('max_alpha', 0.9)
         kwargs.setdefault('n_levels', 10)
+        
+        lim = kwargs.pop('lim')
+        xlim = lim[self.xchannel]
+        ylim = lim[self.ychannel]
+        
+        scale = kwargs.pop('scale')
+        xscale = scale[self.xchannel]
+        yscale = scale[self.ychannel]
 
         grid.map(_bivariate_kdeplot, 
                  self.xchannel, 
@@ -135,11 +143,14 @@ class Kde2DView(Base2DView):
                  yscale = yscale, 
                  **kwargs)
         
-        return {}
+        return dict(xlim = xlim,
+                    xscale = xscale,
+                    ylim = ylim,
+                    yscale = yscale)
         
 # yoinked from seaborn/distributions.py, with modifications for scaling.
 def _bivariate_kdeplot(x, y, xscale=None, yscale=None, shade=False, kernel="gau",
-                       bw="scott", gridsize=100, cut=3, clip=None, legend=True, **kwargs):
+                       bw="scott", gridsize=50, cut=3, clip=None, legend=True, **kwargs):
     
     ax = plt.gca()
     

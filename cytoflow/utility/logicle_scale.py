@@ -158,6 +158,10 @@ class LogicleScale(HasStrictTraits):
             elif isinstance(data, float):
                 data = max(min(data, logicle_max), logicle_min)
                 return self._logicle.scale(data)
+            elif isinstance(data, int):
+                data = float(data)
+                data = max(min(data, logicle_max), logicle_min)
+                return self._logicle.scale(data)
             else:
                 try:
                     return list(map(self._logicle.scale, data))
@@ -182,6 +186,10 @@ class LogicleScale(HasStrictTraits):
             elif isinstance(data, float):
                 data = max(min(data, 1.0 - sys.float_info.epsilon), 0.0)
                 return self._logicle.inverse(data)
+            elif isinstance(data, int):
+                data = float(data)
+                data = max(min(data, 1.0 - sys.float_info.epsilon), 0.0)
+                return self._logicle.inverse(data)
             else:
                 try:
                     return list(map(self._logicle.inverse, data))
@@ -199,6 +207,9 @@ class LogicleScale(HasStrictTraits):
             elif isinstance(data, np.ndarray):
                 return np.clip(data, logicle_min, logicle_max)
             elif isinstance(data, float):
+                return max(min(data, logicle_max), logicle_min)
+            elif isinstance(data, int):
+                data = float(data)
                 return max(min(data, logicle_max), logicle_min)
             else:
                 try:
@@ -402,6 +413,10 @@ class MatplotlibLogicleScale(HasTraits, matplotlib.scale.ScaleBase):
                 elif isinstance(values, float):
                     data = max(min(values, logicle_max), logicle_min)
                     return self.logicle.scale(data)
+                elif isinstance(values, int):
+                    data = float(data)
+                    data = max(min(values, logicle_max), logicle_min)
+                    return self.logicle.scale(data)
                 else:
                     raise CytoflowError("Unknown data type in MatplotlibLogicleScale.transform_non_affine")
                 
@@ -435,6 +450,10 @@ class MatplotlibLogicleScale(HasTraits, matplotlib.scale.ScaleBase):
                     inverse = np.vectorize(self.logicle.inverse)
                     return inverse(values)
                 elif isinstance(values, float):
+                    values = max(min(values, 1.0 - sys.float_info.epsilon), 0.0)
+                    return self.logicle.inverse(values)
+                elif isinstance(values, int):
+                    values = float(values)
                     values = max(min(values, 1.0 - sys.float_info.epsilon), 0.0)
                     return self.logicle.inverse(values)
                 else:

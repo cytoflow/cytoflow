@@ -147,6 +147,9 @@ class LogScale(ScaleMixin):
             return data.clip(min = self.threshold)
         elif isinstance(data, float):
             return max(data, self.threshold)
+        elif isinstance(data, int):
+            data = float(data)
+            return max(data, self.threshold)
         else:
             try:
                 return [max(x, self.threshold) for x in data]

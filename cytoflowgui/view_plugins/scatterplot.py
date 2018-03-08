@@ -92,7 +92,7 @@ from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
     import (IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, 
-            PluginHelpMixin, BasePlotParams)
+            PluginHelpMixin, Data2DPlotParams)
 from cytoflowgui.serialization import camel_registry, traits_repr, traits_str, dedent
 from cytoflowgui.util import IterWrapper
 
@@ -153,22 +153,16 @@ class ScatterplotHandler(ViewHandlerMixin, Controller):
                                                   background_color = "#ff9191"))))
 
 
-class ScatterplotPlotParams(BasePlotParams):
-    
-    min_quantile = util.PositiveCFloat(0.001)
-    max_quantile = util.PositiveCFloat(1.00)
+class ScatterplotPlotParams(Data2DPlotParams):
+
     alpha = util.PositiveCFloat(0.25)
     s = util.PositiveCFloat(2)
     marker = Enum(SCATTERPLOT_MARKERS)
     
     def default_traits_view(self):
-        base_view = BasePlotParams.default_traits_view(self)
+        base_view = Data2DPlotParams.default_traits_view(self)
         
-        return View(Item('min_quantile',
-                         editor = TextEditor(auto_set = False)),
-                    Item('max_quantile',
-                         editor = TextEditor(auto_set = False)),
-                    Item('alpha',
+        return View(Item('alpha',
                          editor = TextEditor(auto_set = False)),
                     Item('s',
                          editor = TextEditor(auto_set = False),
@@ -255,18 +249,29 @@ def _dump(view):
     
 @camel_registry.dumper(ScatterplotPlotParams, 'scatterplot-params', version = 1)
 def _dump_params(params):
-    return dict(title = params.title,
+    return dict(
+                # BasePlotParams
+                title = params.title,
                 xlabel = params.xlabel,
                 ylabel = params.ylabel,
                 huelabel = params.huelabel,
+                col_wrap = params.col_wrap,
+                sns_style = params.sns_style,
+                sns_context = params.sns_context,
                 legend = params.legend,
                 sharex = params.sharex,
                 sharey = params.sharey,
-                xlim = params.xlim,
-                ylim = params.ylim,
-                col_wrap = params.col_wrap,
+                despine = params.despine,
+
+                # DataplotParams
                 min_quantile = params.min_quantile,
                 max_quantile = params.max_quantile,
+                
+                # Data2DPlotParams
+                xlim = params.xlim,
+                ylim = params.ylim,
+                
+                # Scatterplot params
                 alpha = params.alpha,
                 s = params.s,
                 marker = params.marker )

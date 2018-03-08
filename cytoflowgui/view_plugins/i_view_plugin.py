@@ -236,6 +236,36 @@ class Stats1DPlotParams(BasePlotParams):
                                               labels = ["Min", "Max"],
                                               cols = 1)),
                     base_view.content)  
+        
+class Stats2DPlotParams(BasePlotParams):
+    
+    xlim = Tuple(util.FloatOrNone(None), util.FloatOrNone(None)) 
+    ylim = Tuple(util.FloatOrNone(None), util.FloatOrNone(None)) 
+    
+    def default_traits_view(self):
+        base_view = BasePlotParams.default_traits_view(self)
+        
+        return View(Item('xlim',
+                         label = "X Limits",
+                         editor = TupleEditor(editors = [TextEditor(auto_set = False,
+                                                                    evaluate = float,
+                                                                    format_func = lambda x: "" if x == None else str(x)),
+                                                         TextEditor(auto_set = False,
+                                                                    evaluate = float,
+                                                                    format_func = lambda x: "" if x == None else str(x))],
+                                              labels = ["Min", "Max"],
+                                              cols = 1)),
+                    Item('ylim',
+                         label = "Y Limits",
+                         editor = TupleEditor(editors = [TextEditor(auto_set = False,
+                                                                    evaluate = float,
+                                                                    format_func = lambda x: "" if x == None else str(x)),
+                                                         TextEditor(auto_set = False,
+                                                                    evaluate = float,
+                                                                    format_func = lambda x: "" if x == None else str(x))],
+                                              labels = ["Min", "Max"],
+                                              cols = 1)),
+                    base_view.content)  
     
                         
 class PluginViewMixin(HasTraits):

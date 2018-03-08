@@ -273,7 +273,6 @@ def _dump(view):
 @camel_registry.dumper(BarChartPlotParams, 'barchart-params', version = 1)
 def _dump_params(params):
     return dict(
-        
                 # BasePlotParams
                 title = params.title,
                 xlabel = params.xlabel,

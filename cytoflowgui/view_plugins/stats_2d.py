@@ -119,7 +119,7 @@ from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
     import (IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, 
-            PluginHelpMixin, BasePlotParams)
+            PluginHelpMixin, Stats2DPlotParams)
 from cytoflowgui.view_plugins.scatterplot import SCATTERPLOT_MARKERS
 from cytoflowgui.view_plugins.stats_1d import LINE_STYLES
 from cytoflowgui.serialization import camel_registry, traits_repr, traits_str, dedent
@@ -282,7 +282,7 @@ class Stats2DHandler(ViewHandlerMixin, Controller):
             
         return ret
     
-class Stats2DPlotParams(BasePlotParams):
+class Stats2DPlotParams(Stats2DPlotParams):
 
     linestyle = Enum(LINE_STYLES)
     marker = Enum(SCATTERPLOT_MARKERS)
@@ -290,7 +290,7 @@ class Stats2DPlotParams(BasePlotParams):
     alpha = util.PositiveCFloat(1.0)
     
     def default_traits_view(self):
-        base_view = BasePlotParams.default_traits_view(self)
+        base_view = Stats2DPlotParams.default_traits_view(self)
         
         return View(Item('linestyle'),
                     Item('marker'),
@@ -368,16 +368,25 @@ def _load_v2(data, version):
 
 @camel_registry.dumper(Stats2DPlotParams, 'stats-2d-params', version = 1)
 def _dump_params(params):
-    return dict(title = params.title,
+    return dict(
+                # BasePlotParams
+                title = params.title,
                 xlabel = params.xlabel,
                 ylabel = params.ylabel,
                 huelabel = params.huelabel,
+                col_wrap = params.col_wrap,
+                sns_style = params.sns_style,
+                sns_context = params.sns_context,
                 legend = params.legend,
                 sharex = params.sharex,
                 sharey = params.sharey,
+                despine = params.despine,
+                
+                # Base2DStatisticsView
                 xlim = params.xlim,
                 ylim = params.ylim,
-                col_wrap = params.col_wrap,
+                
+                # Stats 1D View
                 linestyle = params.linestyle,
                 marker = params.marker,
                 markersize = params.markersize,

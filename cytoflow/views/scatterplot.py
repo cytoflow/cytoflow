@@ -97,16 +97,27 @@ class ScatterplotView(Base2DView):
         
         super().plot(experiment, **kwargs)
         
-    def _grid_plot(self, experiment, grid, xlim, ylim, xscale, yscale, **kwargs):
+    def _grid_plot(self, experiment, grid, **kwargs):
 
         kwargs.setdefault('alpha', 0.25)
         kwargs.setdefault('s', 2)
         kwargs.setdefault('marker', 'o')
         kwargs.setdefault('antialiased', True)
+        
+        lim = kwargs.pop('lim')
+        xlim = lim[self.xchannel]
+        ylim = lim[self.ychannel]
+        
+        scale = kwargs.pop('scale')
+        xscale = scale[self.xchannel]
+        yscale = scale[self.ychannel]
 
         grid.map(plt.scatter, self.xchannel, self.ychannel, **kwargs)   
-                
-        return {}
+        
+        return dict(xlim = xlim,
+                    xscale = xscale,
+                    ylim = ylim,
+                    yscale = yscale)
     
 util.expand_class_attributes(ScatterplotView)
 util.expand_method_parameters(ScatterplotView, ScatterplotView.plot)
