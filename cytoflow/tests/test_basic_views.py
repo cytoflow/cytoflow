@@ -103,8 +103,8 @@ class Test(unittest.TestCase):
                          
         flow.Stats1DView(statistic = ("Stats1D", "mean"),
                          variable = "Dox",
-                         xscale = "log",
-                         yscale = "logicle").plot(ex2)
+                         variable_scale = "log",
+                         scale = "logicle").plot(ex2)
 
                          
     def testStats2D(self):

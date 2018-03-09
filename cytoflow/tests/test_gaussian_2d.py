@@ -30,7 +30,7 @@ matplotlib.use('Agg')
 import cytoflow as flow
 import cytoflow.utility as util
 
-class Test(unittest.TestCase):
+class TestGaussian2D(unittest.TestCase):
 
     def setUp(self):
         self.cwd = os.path.dirname(os.path.abspath(__file__)) + "/data/Plate01/"
@@ -40,14 +40,13 @@ class Test(unittest.TestCase):
                                   tubes = [tube1, tube2])
         self.ex = import_op.apply()
 
-        self.gate = flow.GaussianMixture2DOp(name = "Gauss",
-                                             xchannel = "V2-A",
-                                             ychannel = "Y2-A",
-                                             xscale = "logicle",
-                                             yscale = "logicle",
-                                             num_components = 2,
-                                             sigma = 2.0,
-                                             posteriors = True)
+        self.gate = flow.GaussianMixtureOp(name = "Gauss",
+                                           channels = ["V2-A", "Y2-A"],
+                                           scale = {"V2-A" : "logicle",
+                                                    "Y2-A" : "logicle"},
+                                           num_components = 2,
+                                           sigma = 1.0,
+                                           posteriors = True)
 
         
     def testEstimate(self):
@@ -74,33 +73,47 @@ class Test(unittest.TestCase):
         self.gate.estimate(self.ex)
         ex2 = self.gate.apply(self.ex) 
                  
-        self.assertAlmostEqual(ex2.data.groupby("Gauss").size().loc["Gauss_1"], 5207)
-        self.assertAlmostEqual(ex2.data.groupby("Gauss").size().loc["Gauss_2"], 2008)
-        self.assertAlmostEqual(ex2.data.groupby("Gauss").size().loc["Gauss_None"], 12785)
+        self.assertAlmostEqual(ex2.data.groupby("Gauss").size().loc["Gauss_1"], 15565)
+        self.assertAlmostEqual(ex2.data.groupby("Gauss").size().loc["Gauss_2"], 4435)
+
+        self.assertAlmostEqual(ex2.data.groupby("Gauss_1").size().loc[False], 14793)
+        self.assertAlmostEqual(ex2.data.groupby("Gauss_1").size().loc[True], 5207)
+        
+        self.assertAlmostEqual(ex2.data.groupby("Gauss_2").size().loc[False], 17992)
+        self.assertAlmostEqual(ex2.data.groupby("Gauss_2").size().loc[True], 2008)
         
     def testApplyBy(self):
         self.gate.by = ["Dox"]
         self.gate.estimate(self.ex)
         ex2 = self.gate.apply(self.ex)
         
-        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_1", 1.0], 1874)
-        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_1", 10.0], 1994)
+        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_1", 1.0], 5368)
+        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_1", 10.0], 5599)
+        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_2", 1.0], 4632)
+        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_2", 10.0], 4401)
         
-        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_2", 1.0], 2186)
-        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_2", 10.0], 2013)
-         
-        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_None", 1.0], 5940)        
-        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_None", 10.0], 5993) 
+        self.assertAlmostEqual(ex2.data.groupby(["Gauss_1", "Dox"]).size().loc[False, 1.0], 8126)
+        self.assertAlmostEqual(ex2.data.groupby(["Gauss_1", "Dox"]).size().loc[False, 10.0], 8006)
+        self.assertAlmostEqual(ex2.data.groupby(["Gauss_1", "Dox"]).size().loc[True, 1.0], 1874)
+        self.assertAlmostEqual(ex2.data.groupby(["Gauss_1", "Dox"]).size().loc[True, 10.0], 1994)
+        
+        self.assertAlmostEqual(ex2.data.groupby(["Gauss_2", "Dox"]).size().loc[False, 1.0], 7814)
+        self.assertAlmostEqual(ex2.data.groupby(["Gauss_2", "Dox"]).size().loc[False, 10.0], 7987)
+        self.assertAlmostEqual(ex2.data.groupby(["Gauss_2", "Dox"]).size().loc[True, 1.0], 2186)
+        self.assertAlmostEqual(ex2.data.groupby(["Gauss_2", "Dox"]).size().loc[True, 10.0], 2013)
+
         
     def testStatistics(self): 
         self.gate.by = ["Dox"]
         self.gate.estimate(self.ex)
         ex2 = self.gate.apply(self.ex)
         
-        stat = ex2.statistics[("Gauss", "xmean")]
+        stat = ex2.statistics[("Gauss", "mean")]
         
-        self.assertIn("Gauss", stat.index.names)
-        self.assertIn("Dox", stat.index.names)       
+        self.assertIn("Component", stat.index.names)
+        self.assertIn("Dox", stat.index.names)    
+        self.assertIn("Channel", stat.index.names)
+   
     
     def testPlot(self):
         self.gate.estimate(self.ex)
@@ -118,5 +131,5 @@ class Test(unittest.TestCase):
         self.gate.default_view().plot(self.ex, plot_name = 1.0)        
 
 if __name__ == "__main__":
-#     import sys;sys.argv = ['', 'Test.testName']
+#     import sys;sys.argv = ['', 'TestGaussian2D.testStatistics']
     unittest.main()

@@ -30,7 +30,7 @@ matplotlib.use('Agg')
 import cytoflow as flow
 import cytoflow.utility as util
 
-class Test(unittest.TestCase):
+class TestDensityGate(unittest.TestCase):
 
     def setUp(self):
         self.cwd = os.path.dirname(os.path.abspath(__file__)) + "/data/Plate01/"
@@ -40,67 +40,47 @@ class Test(unittest.TestCase):
                                   tubes = [tube1, tube2])
         self.ex = import_op.apply()
 
-        self.gate = flow.GaussianMixture2DOp(name = "Gauss",
-                                             xchannel = "V2-A",
-                                             ychannel = "Y2-A",
-                                             xscale = "logicle",
-                                             yscale = "logicle",
-                                             num_components = 2,
-                                             sigma = 2.0,
-                                             posteriors = True)
+        self.gate = flow.DensityGateOp(name = "D",
+                                       xchannel = "V2-A",
+                                       ychannel = "Y2-A",
+                                       xscale = "logicle",
+                                       yscale = "logicle",
+                                       keep = 0.8)
 
         
     def testEstimate(self):
         self.gate.estimate(self.ex)
-        self.assertAlmostEqual(self.gate._gmms[True].means_[0][0], 0.22138141, places = 3)
-        self.assertAlmostEqual(self.gate._gmms[True].means_[0][1], 0.13820187, places = 3)
-        self.assertAlmostEqual(self.gate._gmms[True].means_[1][0], 0.23076572, places = 3)
-        self.assertAlmostEqual(self.gate._gmms[True].means_[1][1], 0.61884163, places = 3)
+        self.assertEqual(len(self.gate._keep_xbins[True]), 1635)
+        self.assertEqual(len(self.gate._keep_ybins[True]), 1635)
     
     def testEstimateBy(self):
         self.gate.by = ["Dox"]
         self.gate.estimate(self.ex)
 
-        self.assertAlmostEqual(self.gate._gmms[1.0].means_[0][0], 0.16641878, places = 3)
-        self.assertAlmostEqual(self.gate._gmms[1.0].means_[0][1], 0.14040044, places = 3)        
-        self.assertAlmostEqual(self.gate._gmms[1.0].means_[1][0], 0.35156931, places = 3)
-        self.assertAlmostEqual(self.gate._gmms[1.0].means_[1][1], 0.1459792, places = 3)
-        self.assertAlmostEqual(self.gate._gmms[10.0].means_[0][0], 0.16668259, places = 3)
-        self.assertAlmostEqual(self.gate._gmms[10.0].means_[0][1], 0.1328976, places = 3)        
-        self.assertAlmostEqual(self.gate._gmms[10.0].means_[1][0], 0.23071522, places = 3)
-        self.assertAlmostEqual(self.gate._gmms[10.0].means_[1][1], 0.61858629, places = 3)
+        self.assertEqual(len(self.gate._keep_xbins[1.0]), 1145)
+        self.assertEqual(len(self.gate._keep_ybins[1.0]), 1145)
+        self.assertEqual(len(self.gate._keep_xbins[10.0]), 1350)
+        self.assertEqual(len(self.gate._keep_ybins[10.0]), 1350)
     
     def testApply(self):
         self.gate.estimate(self.ex)
         ex2 = self.gate.apply(self.ex) 
                  
-        self.assertAlmostEqual(ex2.data.groupby("Gauss").size().loc["Gauss_1"], 5207)
-        self.assertAlmostEqual(ex2.data.groupby("Gauss").size().loc["Gauss_2"], 2008)
-        self.assertAlmostEqual(ex2.data.groupby("Gauss").size().loc["Gauss_None"], 12785)
+        self.assertAlmostEqual(ex2.data.groupby("D").size().loc[True], 16218)
+        self.assertAlmostEqual(ex2.data.groupby("D").size().loc[False], 3782)
+
         
     def testApplyBy(self):
         self.gate.by = ["Dox"]
         self.gate.estimate(self.ex)
         ex2 = self.gate.apply(self.ex)
         
-        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_1", 1.0], 1874)
-        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_1", 10.0], 1994)
+        self.assertAlmostEqual(ex2.data.groupby(["Dox", "D"]).size().loc[1.0, False], 1886)
+        self.assertAlmostEqual(ex2.data.groupby(["Dox", "D"]).size().loc[1.0, True], 8114)
         
-        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_2", 1.0], 2186)
-        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_2", 10.0], 2013)
-         
-        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_None", 1.0], 5940)        
-        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_None", 10.0], 5993) 
-        
-    def testStatistics(self): 
-        self.gate.by = ["Dox"]
-        self.gate.estimate(self.ex)
-        ex2 = self.gate.apply(self.ex)
-        
-        stat = ex2.statistics[("Gauss", "xmean")]
-        
-        self.assertIn("Gauss", stat.index.names)
-        self.assertIn("Dox", stat.index.names)       
+        self.assertAlmostEqual(ex2.data.groupby(["Dox", "D"]).size().loc[10.0, False], 1859)
+        self.assertAlmostEqual(ex2.data.groupby(["Dox", "D"]).size().loc[10.0, True], 8141)
+ 
     
     def testPlot(self):
         self.gate.estimate(self.ex)
@@ -118,5 +98,5 @@ class Test(unittest.TestCase):
         self.gate.default_view().plot(self.ex, plot_name = 1.0)        
 
 if __name__ == "__main__":
-#     import sys;sys.argv = ['', 'Test.testName']
+#     import sys;sys.argv = ['', 'TestDensityGate.testApplyBy']
     unittest.main()
