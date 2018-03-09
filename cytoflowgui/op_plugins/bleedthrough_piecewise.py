@@ -260,7 +260,7 @@ class BleedthroughPiecewiseViewHandler(ViewHandlerMixin, Controller):
 @provides(IView)
 class BleedthroughPiecewisePluginView(PluginViewMixin, BleedthroughPiecewiseDiagnostic):
     handler_factory = Callable(BleedthroughPiecewiseViewHandler)
-    subset = DelegatesTo('op')
+    subset = DelegatesTo('op', transient = True)
     
     def plot_wi(self, wi):
         self.plot(wi.previous_wi.result)

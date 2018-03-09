@@ -242,7 +242,7 @@ class BleedthroughLinearViewHandler(ViewHandlerMixin, Controller):
 @provides(IView)
 class BleedthroughLinearPluginView(PluginViewMixin, BleedthroughLinearDiagnostic):
     handler_factory = Callable(BleedthroughLinearViewHandler)
-    subset = DelegatesTo('op')
+    subset = DelegatesTo('op', transient = True)
     
     def plot_wi(self, wi):
         self.plot(wi.previous_wi.result)
