@@ -282,7 +282,7 @@ class Stats2DHandler(ViewHandlerMixin, Controller):
             
         return ret
     
-class Stats2DPlotParams(Stats2DPlotParams):
+class Stats2DPluginPlotParams(Stats2DPlotParams):
 
     linestyle = Enum(LINE_STYLES)
     marker = Enum(SCATTERPLOT_MARKERS)
@@ -303,7 +303,7 @@ class Stats2DPlotParams(Stats2DPlotParams):
     
 class Stats2DPluginView(PluginViewMixin, Stats2DView):
     handler_factory = Callable(Stats2DHandler)
-    plot_params = Instance(Stats2DPlotParams, ())
+    plot_params = Instance(Stats2DPluginPlotParams, ())
     
     def get_notebook_code(self, idx):
         view = Stats2DView()
@@ -358,7 +358,7 @@ def _dump(view):
 def _load_v2(data, version):
     return Stats2DPluginView(**data)
 
-@camel_registry.dumper(Stats2DPlotParams, 'stats-2d-params', version = 1)
+@camel_registry.dumper(Stats2DPluginPlotParams, 'stats-2d-params', version = 1)
 def _dump_params(params):
     return dict(
                 # BasePlotParams
@@ -386,4 +386,4 @@ def _dump_params(params):
 
 @camel_registry.loader('stats-2d-params', version = any)
 def _load_params(data, version):
-    return Stats2DPlotParams(**data)
+    return Stats2DPluginPlotParams(**data)

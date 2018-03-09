@@ -24,7 +24,7 @@ class WorkflowTest(unittest.TestCase):
     def setUp(self):
         
         ##### set up logging
-        logging.getLogger().setLevel(logging.DEBUG)
+        logging.getLogger().setLevel(logging.WARNING)
         
         def remote_main(parent_workflow_conn, parent_mpl_conn, log_q, running_event):
             running_event.set()

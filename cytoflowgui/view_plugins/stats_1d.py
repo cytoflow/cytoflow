@@ -123,10 +123,10 @@ class Stats1DHandler(ViewHandlerMixin, Controller):
                     VGroup(Item('statistic',
                                 editor=EnumEditor(name='handler.numeric_statistics_names'),
                                 label = "Statistic"),
+                           Item('scale', label = "Statistic\nScale"),
                            Item('variable',
                                 editor = EnumEditor(name = 'handler.numeric_indices')),
-                           Item('xscale', label = "X Scale"),
-                           Item('yscale', label = "Y Scale"),
+                           Item('variable_scale', label = "Variable\nScale"),
                            Item('xfacet',
                                 editor=ExtendableEnumEditor(name='handler.indices',
                                                             extra_items = {"None" : ""}),
@@ -237,7 +237,7 @@ class Stats1DHandler(ViewHandlerMixin, Controller):
         data.reset_index(inplace = True)
         return [x for x in data if util.is_numeric(data[x])]
     
-class Stats1DPlotParams(Stats1DPlotParams):
+class Stats1DPluginPlotParams(Stats1DPlotParams):
 
     variable_lim = Tuple(util.FloatOrNone(None), util.FloatOrNone(None))   
     linestyle = Enum(LINE_STYLES)
@@ -268,7 +268,7 @@ class Stats1DPlotParams(Stats1DPlotParams):
 
 class Stats1DPluginView(PluginViewMixin, Stats1DView):
     handler_factory = Callable(Stats1DHandler)
-    plot_params = Instance(Stats1DPlotParams, ())
+    plot_params = Instance(Stats1DPluginPlotParams, ())
     
     def get_notebook_code(self, idx):
         view = Stats1DView()
@@ -331,7 +331,7 @@ def _load_v1(data, version):
 def _load(data, version):
     return Stats1DPluginView(**data)
 
-@camel_registry.dumper(Stats1DPlotParams, 'stats-1d-params', version = 1)
+@camel_registry.dumper(Stats1DPluginPlotParams, 'stats-1d-params', version = 1)
 def _dump_params(params):
     return dict(
                 # BasePlotParams
@@ -360,4 +360,4 @@ def _dump_params(params):
 
 @camel_registry.loader('stats-1d-params', version = any)
 def _load_params(data, version):
-    return Stats1DPlotParams(**data)
+    return Stats1DPluginPlotParams(**data)

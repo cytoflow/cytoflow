@@ -386,6 +386,6 @@ def _dump_view(view):
                 huefacet = view.huefacet,
                 plot_params = view.plot_params)
 
-@camel_registry.loader('gaussian-2d-view', version = 1)
-def _load_view(data, ver):
+@camel_registry.loader('gaussian-2d-view', version = any)
+def _load_view(data, version):
     return GaussianMixture2DPluginView(**data)
