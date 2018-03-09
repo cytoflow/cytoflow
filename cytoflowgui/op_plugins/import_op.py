@@ -116,27 +116,20 @@ class ImportHandler(OpHandlerMixin, Controller):
     
     import_event = Button(label="Edit samples...")
     samples = Property(depends_on = 'model.tubes', status = True)
-
-    coarse = Bool
-    coarse_events = util.PositiveInt(0, allow_zero = True)
     
     def default_traits_view(self):
         return View(Item('handler.import_event',
                          show_label=False),
+                    Item('object.events',
+                         editor = TextEditor(auto_set = False,
+                                             format_func = lambda x: "" if x == None else str(x)),
+                         label="Events per\nsample"),
                     Item('handler.samples',
                          label='Samples',
                          style='readonly'),
                     Item('ret_events',
                          label='Events',
                          style='readonly'),
-                    Item('handler.coarse',
-                         label="Random subsample?",
-                         show_label = False,
-                         editor = ToggleButtonEditor()),
-                    Item('object.events',
-                         editor = TextEditor(auto_set = False),
-                         label="Events per\nsample",
-                         visible_when='handler.coarse == True'),
                     shared_op_traits)
         
     def _import_event_fired(self):
@@ -163,19 +156,12 @@ class ImportHandler(OpHandlerMixin, Controller):
     def _get_samples(self):
         return len(self.model.tubes)
         
-    @on_trait_change('coarse')    
-    def _on_coarse_changed(self):
-        if self.coarse:
-            self.model.events = self.coarse_events
-        else:
-            self.coarse_events = self.model.events
-            self.model.events = 0
-        
 
 @provides(IOperation)
 class ImportPluginOp(PluginOpMixin, ImportOp):
     handler_factory = Callable(ImportHandler, transient = True)
     ret_events = util.PositiveInt(0, allow_zero = True, status = True)
+    events = util.PositiveCInt(None, allow_zero = True, allow_none = True)
     
     def apply(self, experiment = None):
         ret = super().apply(experiment = experiment)
@@ -216,17 +202,17 @@ class ImportPlugin(Plugin, PluginHelpMixin):
     
 ### Serialization
     
-@camel_registry.dumper(ImportPluginOp, 'import', version = 1)
+@camel_registry.dumper(ImportPluginOp, 'import', version = 2)
 def _dump_op(op):
     return dict(tubes = op.tubes,
                 conditions = op.conditions,
                 channels = op.channels,
                 events = op.events,
-                name_metadata = op.name_metadata,
-                ret_events = op.ret_events)
+                name_metadata = op.name_metadata)
 
-@camel_registry.loader('import', version = 1)
+@camel_registry.loader('import', version = any)
 def _load_op(data, version):
+    data.pop('ret_events', None)
     return ImportPluginOp(**data)
 
 @camel_registry.dumper(Tube, 'tube', version = 1)
