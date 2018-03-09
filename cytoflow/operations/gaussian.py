@@ -28,7 +28,6 @@ import matplotlib.pyplot as plt
 from traits.api import (HasStrictTraits, Str, CStr, Dict, Any, Instance, Bool, 
                         Constant, List, provides)
 
-import numpy as np
 import sklearn.mixture
 import scipy.stats
 import scipy.linalg
@@ -653,14 +652,16 @@ class GaussianMixture1DView(By1DView, AnnotatingView, HistogramView):
                                                 **kwargs)
         
         
-    def _annotation_plot(self, axes, xlim, ylim, xscale, yscale, annotation, annotation_facet, annotation_value, annotation_color):
+    def _annotation_plot(self, axes, annotation, annotation_facet, 
+                         annotation_value, annotation_color, **kwargs):
 
         # annotation is an instance of mixture.GaussianMixture
         gmm = annotation
         
         if annotation_value is None:
             for i in range(len(gmm.means_)):
-                self._annotation_plot(axes, xlim, ylim, xscale, yscale, annotation, annotation_facet, i, annotation_color)
+                self._annotation_plot(axes, annotation, annotation_facet, 
+                                      i, annotation_color, **kwargs)
             return
         elif type(annotation_value) is str:
             try:
@@ -677,20 +678,40 @@ class GaussianMixture1DView(By1DView, AnnotatingView, HistogramView):
         else:
             idx = annotation_value
               
-        patch_area = 0.0
-                                 
-        for k in range(0, len(axes.patches)):
-            patch = axes.patches[k]
-            xy = patch.get_xy()
-            patch_area += poly_area([xscale(p[0]) for p in xy], [p[1] for p in xy])
-        
-        plt_min, plt_max = plt.gca().get_xlim()
-        x = xscale.inverse(np.linspace(xscale(plt_min), xscale(plt_max), 500))   
-        pdf_scale = patch_area * gmm.weights_[idx]
-        mean = gmm.means_[idx][0]
-        stdev = np.sqrt(gmm.covariances_[idx][0])
-        y = scipy.stats.norm.pdf(xscale(x), mean, stdev) * pdf_scale
-        axes.plot(x, y, color = annotation_color)
+        kwargs.setdefault('orientation', 'vertical')
+            
+        if kwargs['orientation'] == 'horizontal':
+            scale = kwargs['yscale']
+            patch_area = 0.0
+                                     
+            for k in range(0, len(axes.patches)):
+                patch = axes.patches[k]
+                xy = patch.get_xy()
+                patch_area += poly_area([scale(p[1]) for p in xy], [p[0] for p in xy])
+            
+            plt_min, plt_max = plt.gca().get_ylim()
+            y = scale.inverse(np.linspace(scale(plt_min), scale(plt_max), 500))   
+            pdf_scale = patch_area * gmm.weights_[idx]
+            mean = gmm.means_[idx][0]
+            stdev = np.sqrt(gmm.covariances_[idx][0])
+            x = scipy.stats.norm.pdf(scale(y), mean, stdev) * pdf_scale
+            axes.plot(x, y, color = annotation_color)
+        else:
+            scale = kwargs['xscale']
+            patch_area = 0.0
+                                     
+            for k in range(0, len(axes.patches)):
+                patch = axes.patches[k]
+                xy = patch.get_xy()
+                patch_area += poly_area([scale(p[0]) for p in xy], [p[1] for p in xy])
+            
+            plt_min, plt_max = plt.gca().get_xlim()
+            x = scale.inverse(np.linspace(scale(plt_min), scale(plt_max), 500))   
+            pdf_scale = patch_area * gmm.weights_[idx]
+            mean = gmm.means_[idx][0]
+            stdev = np.sqrt(gmm.covariances_[idx][0])
+            y = scipy.stats.norm.pdf(scale(x), mean, stdev) * pdf_scale
+            axes.plot(x, y, color = annotation_color)
                 
 # from http://stackoverflow.com/questions/24467972/calculate-area-of-polygon-given-x-y-coordinates
 def poly_area(x,y):
@@ -754,14 +775,16 @@ class GaussianMixture2DView(By2DView, AnnotatingView, ScatterplotView):
                                                 yscale = yscale,
                                                 **kwargs)
 
-    def _annotation_plot(self, axes, xlim, ylim, xscale, yscale, annotation, annotation_facet, annotation_value, annotation_color):
+    def _annotation_plot(self, axes, annotation, annotation_facet, 
+                         annotation_value, annotation_color, **kwargs):
 
         # annotation is an instance of mixture.GaussianMixture
         gmm = annotation
         
         if annotation_value is None:
             for i in range(len(gmm.means_)):
-                self._annotation_plot(axes, xlim, ylim, xscale, yscale, annotation, annotation_facet, i, annotation_color)
+                self._annotation_plot(axes, annotation, annotation_facet, i, 
+                                      annotation_color, **kwargs)
             return
         elif isinstance(annotation_value, str):
             try:
@@ -777,6 +800,9 @@ class GaussianMixture2DView(By2DView, AnnotatingView, ScatterplotView):
                 return
         else:
             idx = annotation_value
+            
+        xscale = kwargs['xscale']
+        yscale = kwargs['yscale']
         
         mean = gmm.means_[idx]
         covar = gmm.covariances_[idx]

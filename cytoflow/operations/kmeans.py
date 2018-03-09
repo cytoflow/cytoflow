@@ -462,16 +462,27 @@ class KMeans1DView(By1DView, AnnotatingView, HistogramView):
                                        scale = scale,
                                        **kwargs)
  
-    def _annotation_plot(self, axes, xlim, ylim, xscale, yscale, annotation, annotation_facet, annotation_value, annotation_color):
+    def _annotation_plot(self, axes, annotation, annotation_facet, 
+                         annotation_value, annotation_color, **kwargs):
                                                         
         # plot the cluster centers
             
         km = annotation
         
-        cidx = self.op.channels.index(self.channel)
-        for k in range(0, self.op.num_clusters):
-            c = xscale.inverse(km.cluster_centers_[k][cidx])
-            axes.axvline(c, linewidth=3, color='blue')                      
+        kwargs.setdefault('orientation', 'vertical')
+        
+        if kwargs['orientation'] == 'horizontal':
+            scale = kwargs['yscale']
+            cidx = self.op.channels.index(self.channel)
+            for k in range(0, self.op.num_clusters):
+                c = scale.inverse(km.cluster_centers_[k][cidx])
+                axes.axhline(c, linewidth=3, color='blue')         
+        else:
+            scale = kwargs['xscale']
+            cidx = self.op.channels.index(self.channel)
+            for k in range(0, self.op.num_clusters):
+                c = scale.inverse(km.cluster_centers_[k][cidx])
+                axes.axvline(c, linewidth=3, color='blue')                      
 
      
 @provides(IView)
@@ -520,11 +531,14 @@ class KMeans2DView(By2DView, AnnotatingView, ScatterplotView):
                                        yscale = yscale,
                                        **kwargs)
  
-    def _annotation_plot(self, axes, xlim, ylim, xscale, yscale, annotation, annotation_facet, annotation_value, annotation_color):
+    def _annotation_plot(self, axes, annotation, annotation_facet, 
+                         annotation_value, annotation_color, **kwargs):
                                                         
         # plot the cluster centers
             
         km = annotation
+        xscale = kwargs['xscale']
+        yscale = kwargs['yscale']
         
         ix = self.op.channels.index(self.xchannel)
         iy = self.op.channels.index(self.ychannel)

@@ -615,14 +615,16 @@ class GaussianMixture2DView(By2DView, AnnotatingView, ScatterplotView):
                                                 yscale = self.op._yscale,
                                                 **kwargs)
 
-    def _annotation_plot(self, axes, xlim, ylim, xscale, yscale, annotation, annotation_facet, annotation_value, annotation_color):
+    def _annotation_plot(self, axes, annotation, annotation_facet, 
+                         annotation_value, annotation_color, **kwargs):
 
         # annotation is an instance of mixture.GaussianMixture
         gmm = annotation
         
         if annotation_value is None:
             for i in range(len(gmm.means_)):
-                self._annotation_plot(axes, xlim, ylim, xscale, yscale, annotation, annotation_facet, i, annotation_color)
+                self._annotation_plot(axes, annotation, annotation_facet, 
+                                      i, annotation_color, **kwargs)
             return
         elif type(annotation_value) is str:
             try:

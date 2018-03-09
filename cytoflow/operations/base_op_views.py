@@ -294,10 +294,10 @@ class By2DView(ByView, Op2DView):
 @provides(IView)
 class NullView(BaseDataView):
     """
-    An :class:`IView` that doesn't actually do an plotting.
+    An :class:`IView` that doesn't actually do any plotting.
     """
     
-    def _grid_plot(self, experiment, grid, xlim, ylim, xscale, yscale, **kwargs):
+    def _grid_plot(self, experiment, grid, **kwargs):
         return {}
 
 
@@ -345,7 +345,7 @@ class AnnotatingView(BaseDataView):
                      annotation_facet = annotation_facet,
                      **kwargs)
         
-    def _grid_plot(self, experiment, grid, xlim, ylim, xscale, yscale, **kwargs):
+    def _grid_plot(self, experiment, grid, **kwargs):
         
         # pop the annotation stuff off of kwargs so the underlying data plotter 
         # doesn't get confused
@@ -356,7 +356,8 @@ class AnnotatingView(BaseDataView):
         color = kwargs.get('color', None)
 
         # plot the underlying data plots
-        plot_ret = super()._grid_plot(experiment, grid, xlim, ylim, xscale, yscale, **kwargs)
+        plot_ret = super()._grid_plot(experiment, grid, **kwargs)
+        kwargs.update(plot_ret)
                         
         # plot the annotations on top
         for (i, j, k), _ in grid.facet_data():
@@ -410,14 +411,11 @@ class AnnotatingView(BaseDataView):
             annotation_color = grid._facet_color(k, color)
                 
             self._annotation_plot(ax, 
-                                  xlim, 
-                                  ylim, 
-                                  xscale, 
-                                  yscale, 
                                   annotation, 
                                   annotation_facet, 
                                   annotation_value, 
-                                  annotation_color)
+                                  annotation_color,
+                                  **kwargs)
 
         return plot_ret
  

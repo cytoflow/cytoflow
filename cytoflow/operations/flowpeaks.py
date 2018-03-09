@@ -856,11 +856,21 @@ class FlowPeaks1DView(By1DView, AnnotatingView, HistogramView):
                                           **kwargs)
         
         
-    def _annotation_plot(self, axes, xlim, ylim, xscale, yscale, annotation, annotation_facet, annotation_value, annotation_color):
-        cidx = self.op.channels.index(self.channel)
-        for k in range(0, self.op.num_clusters):
-            c = self.op._scale[self.channel].inverse(annotation.cluster_centers_[k][cidx])
-            plt.axvline(c, linewidth=3, color='blue')  
+    def _annotation_plot(self, axes, annotation, annotation_facet, 
+                         annotation_value, annotation_color, **kwargs):
+        
+        kwargs.setdefault('orientation', 'vertical')
+
+        if kwargs['orientation'] == 'horizontal':
+            cidx = self.op.channels.index(self.channel)
+            for k in range(0, self.op.num_clusters):
+                c = self.op._scale[self.channel].inverse(annotation.cluster_centers_[k][cidx])
+                plt.axhline(c, linewidth=3, color='blue')  
+        else:
+            cidx = self.op.channels.index(self.channel)
+            for k in range(0, self.op.num_clusters):
+                c = self.op._scale[self.channel].inverse(annotation.cluster_centers_[k][cidx])
+                plt.axvline(c, linewidth=3, color='blue')  
 
 
      
@@ -918,10 +928,19 @@ class FlowPeaks2DView(By2DView, AnnotatingView, ScatterplotView):
                                           yscale = yscale,
                                           **kwargs)
  
-    def _annotation_plot(self, axes, xlim, ylim, xscale, yscale, annotation, annotation_facet, annotation_value, annotation_color):
+    def _annotation_plot(self, 
+                         axes, 
+                         annotation, 
+                         annotation_facet, 
+                         annotation_value, 
+                         annotation_color,
+                         **kwargs):
 
         ix = self.op.channels.index(self.xchannel)
         iy = self.op.channels.index(self.ychannel)
+        
+        xscale = kwargs['xscale']
+        yscale = kwargs['yscale']
 
         km = annotation[0]
         peaks = annotation[1]
@@ -1007,7 +1026,7 @@ class FlowPeaks2DDensityView(By2DView, AnnotatingView, NullView):
                      yscale = yscale,
                      **kwargs)
         
-    def _grid_plot(self, experiment, grid, xlim, ylim, xscale, yscale, **kwargs):
+    def _grid_plot(self, experiment, grid, **kwargs):
         # all the real plotting happens in _annotation_plot.  this just sets some
         # defaults and then stores them for later.
 
@@ -1015,6 +1034,11 @@ class FlowPeaks2DDensityView(By2DView, AnnotatingView, NullView):
         kwargs.setdefault('linewidth', 0)
         kwargs.setdefault('edgecolors', 'face')
         kwargs.setdefault('cmap', plt.get_cmap('viridis'))
+        
+        xscale = kwargs['scale'][self.xchannel]
+        xlim = kwargs['lim'][self.xchannel]
+        yscale = kwargs['scale'][self.ychannel]
+        ylim = kwargs['lim'][self.ychannel]
         
         under_color = kwargs.pop('under_color', None)
         if under_color is not None:
@@ -1036,11 +1060,16 @@ class FlowPeaks2DDensityView(By2DView, AnnotatingView, NullView):
             ax.fp_ybins = ybins
             ax.fp_keywords = kwargs
 
-        super()._grid_plot(experiment, grid, xlim, ylim, xscale, yscale, **kwargs)
+        super()._grid_plot(experiment, grid, **kwargs)
             
-        return {'cmap' : kwargs['cmap']}
+        return dict(xscale = xscale,
+                    xlim = xlim,
+                    yscale = yscale,
+                    ylim = ylim,
+                    cmap = kwargs['cmap'])
  
-    def _annotation_plot(self, axes, xlim, ylim, xscale, yscale, annotation, annotation_facet, annotation_value, annotation_color):
+    def _annotation_plot(self, axes, annotation, annotation_facet, 
+                         annotation_value, annotation_color, **kwargs):
 
         km = annotation[0]
         peaks = annotation[1]
@@ -1055,6 +1084,12 @@ class FlowPeaks2DDensityView(By2DView, AnnotatingView, NullView):
         kwargs.pop('annotations', None)
         kwargs.pop('annotation_facet', None)
         kwargs.pop('plot_name', None)
+        
+        xscale = kwargs['scale'][self.xchannel]
+        yscale = kwargs['scale'][self.ychannel]
+        
+        kwargs.pop('scale')
+        kwargs.pop('lim')
 
         h = density(util.cartesian([xscale(xbins), yscale(ybins)]))
         h = np.reshape(h, (len(xbins), len(ybins)))

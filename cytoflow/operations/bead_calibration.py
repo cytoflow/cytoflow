@@ -22,7 +22,7 @@ cytoflow.operations.bead_calibration
 """
 
 from traits.api import (HasStrictTraits, Str, File, Dict, Bool, Int, List, 
-                        Float, Constant, provides, Undefined, Callable, Any,
+                        Float, Constant, provides, Callable, Any,
                         Instance)
 import numpy as np
 import math
