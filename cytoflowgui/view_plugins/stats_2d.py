@@ -352,17 +352,9 @@ def _dump(view):
                 y_error_statistic = view.y_error_statistic,
                 subset_list = view.subset_list,
                 plot_params = view.plot_params)
-    
-@camel_registry.loader('stats-2d', version = 1)
-def _load_v1(data, version):
-    data['xstatistic'] = tuple(data['xstatistic'])
-    data['ystatistic'] = tuple(data['ystatistic'])
-    data['x_error_statistic'] = tuple(data['x_error_statistic'])
-    data['y_error_statistic'] = tuple(data['y_error_statistic'])
 
-    return Stats2DPluginView(**data)
 
-@camel_registry.loader('stats-2d', version = 2)
+@camel_registry.loader('stats-2d', version = any)
 def _load_v2(data, version):
     return Stats2DPluginView(**data)
 
@@ -386,7 +378,7 @@ def _dump_params(params):
                 xlim = params.xlim,
                 ylim = params.ylim,
                 
-                # Stats 1D View
+                # Stats 2D View
                 linestyle = params.linestyle,
                 marker = params.marker,
                 markersize = params.markersize,
