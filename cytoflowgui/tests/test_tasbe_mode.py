@@ -144,5 +144,5 @@ class TestTASBECalibrationMode(WorkflowTest):
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 10)) 
 
 if __name__ == "__main__":
-    import sys;sys.argv = ['', 'TestTASBECalibrationMode.testPlot']
+#     import sys;sys.argv = ['', 'TestTASBECalibrationMode.testPlot']
     unittest.main()

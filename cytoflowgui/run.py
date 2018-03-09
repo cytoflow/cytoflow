@@ -249,7 +249,7 @@ def remote_main(parent_workflow_conn, parent_mpl_conn, log_q, running_event, deb
     sys.excepthook = log_excepthook
     
     running_event.set()
-    RemoteWorkflow().run(parent_workflow_conn, parent_mpl_conn, log_q)
+    RemoteWorkflow(debug_level = logging.DEBUG).run(parent_workflow_conn, parent_mpl_conn, log_q)
     
         
 def monitor_remote_process(proc):

@@ -324,5 +324,5 @@ class TestHistogram(ImportedDataTest):
 
            
 if __name__ == "__main__":
-    import sys;sys.argv = ['', 'TestHistogram.testPlotArgs']
+#     import sys;sys.argv = ['', 'TestHistogram.testPlotArgs']
     unittest.main()

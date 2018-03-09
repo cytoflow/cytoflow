@@ -139,5 +139,5 @@ class TestPCA(ImportedDataTest):
         self.assertTrue((nb_data == remote_data).all().all())
 
 if __name__ == "__main__":
-    import sys;sys.argv = ['', 'TestPCA.testSerializeOp']
+#     import sys;sys.argv = ['', 'TestPCA.testSerializeOp']
     unittest.main()

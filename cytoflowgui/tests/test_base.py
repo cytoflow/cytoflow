@@ -24,11 +24,11 @@ class WorkflowTest(unittest.TestCase):
     def setUp(self):
         
         ##### set up logging
-        logging.getLogger().setLevel(logging.WARNING)
+        logging.getLogger().setLevel(logging.INFO)
         
         def remote_main(parent_workflow_conn, parent_mpl_conn, log_q, running_event):
             running_event.set()
-            RemoteWorkflow().run(parent_workflow_conn, parent_mpl_conn, log_q)
+            RemoteWorkflow(debug_level = logging.INFO).run(parent_workflow_conn, parent_mpl_conn, log_q)
         
         # communications channels
         parent_workflow_conn, child_workflow_conn = multiprocessing.Pipe()  

@@ -517,6 +517,7 @@ class RemoteWorkflow(HasStrictTraits):
     
     apply_calls = Int(0)
     plot_calls = Int(0)
+    debug_level = Any
     
     def run(self, parent_workflow_conn, parent_mpl_conn, log_q):
         
@@ -530,7 +531,7 @@ class RemoteWorkflow(HasStrictTraits):
         # make log messages go to log_q
         h = QueueHandler(log_q) 
         rootLogger.addHandler(h)
-        rootLogger.setLevel(logging.DEBUG)
+        rootLogger.setLevel(self.debug_level)
         
         # set up the plotting synchronization primitives
         self.matplotlib_events = threading.Event()

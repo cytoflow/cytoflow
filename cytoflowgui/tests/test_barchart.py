@@ -226,5 +226,5 @@ class TestBarchart(ImportedDataTest):
 
 
 if __name__ == "__main__":
-    import sys;sys.argv = ['', 'TestBarchart.testPlotArgs']
+#     import sys;sys.argv = ['', 'TestBarchart.testPlotArgs']
     unittest.main()
