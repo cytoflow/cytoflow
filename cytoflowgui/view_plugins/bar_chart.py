@@ -86,7 +86,7 @@ operation's **Group By**) must be set as **Variable** or as a facet.
                       huefacet = "Threshold").plot(ex3)
 """
 
-from traits.api import provides, Callable, Property, Enum, Instance
+from traits.api import provides, Callable, Property, Instance
 from traitsui.api import View, Item, VGroup, Controller, EnumEditor, TextEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
@@ -232,7 +232,7 @@ class BarChartPluginView(PluginViewMixin, BarChartView):
         plot_params_str = traits_str(self.plot_params)
 
         return dedent("""
-        {repr}.plot(ex_{idx}{plot}{plot_params)
+        {repr}.plot(ex_{idx}{plot}{plot_params})
         """
         .format(repr = repr(view),
                 idx = idx,
