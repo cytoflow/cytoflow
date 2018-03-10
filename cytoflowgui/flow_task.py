@@ -410,8 +410,10 @@ DESCRIPTION:
   - What happened?
   - What did you expect to happen?
   
-DEBUG LOG: {0}
-""".format(log)
+PACKAGE VERSIONS: {0}
+
+DEBUG LOG: {1}
+""".format(versions, log)
 
         mailto("teague@mit.edu", 
                subject = "Cytoflow bug report",
