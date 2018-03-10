@@ -60,7 +60,7 @@ install:
 before_script:
   - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then export DISPLAY=:99.0; sh -e /etc/init.d/xvfb start; sleep 3; fi
 
-script: nose2 -c packaging/nose2.cfg -s cytoflow/tests
+script: nose2 -c packaging/nose2.cfg
 
 after_success:
 
