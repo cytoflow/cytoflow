@@ -252,7 +252,7 @@ class ExperimentDialogModel(HasStrictTraits):
             if '$SMNO' in tube_meta:
                 self.tube_traits["$SMNO"] = Str(condition = False)
                 tube.add_trait("$SMNO", Str(condition = False))
-                tube.trait_set(**{"$SMNO" : tube_meta['SMNO']})
+                tube.trait_set(**{"$SMNO" : tube_meta['$SMNO']})
                 
             if 'WELL ID' in tube_meta:                
                 pos = tube_meta['WELL ID']
