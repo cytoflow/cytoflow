@@ -173,28 +173,28 @@ class OpHandlerMixin(HasTraits):
     # MAGIC: gets value for property "conditions_names"
     def _get_conditions_names(self):
         if self.context and self.context.conditions:
-            return list(self.context.conditions.keys())
+            return sorted(list(self.context.conditions.keys()))
         else:
             return []
     
     # MAGIC: gets value for property "previous_conditions_names"
     def _get_previous_conditions_names(self):
         if self.context and self.context.previous_wi and self.context.previous_wi.conditions:
-            return list(self.context.previous_wi.conditions.keys())
+            return sorted(list(self.context.previous_wi.conditions.keys()))
         else:
             return []
         
     # MAGIC: gets value for property "statistics_names"
     def _get_statistics_names(self):
         if self.context and self.context.statistics:
-            return list(self.context.statistics.keys())
+            return sorted(list(self.context.statistics.keys()))
         else:
             return []
         
     # MAGIC: gets value for property "previous_statistics_names"
     def _get_previous_statistics_names(self):
         if self.context and self.context.previous_wi and self.context.previous_wi.statistics:
-            return list(self.context.previous_wi.statistics.keys())
+            return sorted(list(self.context.previous_wi.statistics.keys()))
         else:
             return []
         

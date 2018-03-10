@@ -184,7 +184,7 @@ class Experiment(HasStrictTraits):
 
     def _get_channels(self):
         """Getter for the `channels` property"""
-        return [x for x in self.data if self.metadata[x]['type'] == "channel"]
+        return sorted([x for x in self.data if self.metadata[x]['type'] == "channel"])
     
     def _get_conditions(self):
         """Getter for the `conditions` property"""

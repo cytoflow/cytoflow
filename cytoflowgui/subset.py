@@ -256,7 +256,7 @@ class _SubsetListEditor(_VerticalListEditor):
                                      values = list(values))
             elif dtype.kind in "OSU":
                 subset = CategorySubset(name = name,
-                                        values = list(values))
+                                        values = sorted(list(values)))
             else:
                 raise util.CytoflowError("Unknown dtype {} in ViewController"
                                          .format(dtype))
@@ -268,6 +268,8 @@ class _SubsetListEditor(_VerticalListEditor):
             subset = next((x for x in self.value if x.name == name))
             if set(subset.values) != set(self.conditions[name]):
                 subset.values = list(self.conditions[name].sort_values())
+                
+        self.value = sorted(self.value, key = lambda x: x.name)
                 
     def include_condition(self, condition):
         if not self.when:
