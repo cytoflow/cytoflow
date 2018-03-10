@@ -54,7 +54,8 @@ install:
   # - conda install --yes --quiet mkl=2017.0.3-0  # new version of mkl has bad interaction with numpy
   - conda install --yes --quiet --file=packaging\conda-requirements.txt
   - conda install --yes --quiet msvc_runtime pip mock
-  - pip.exe install nose2 sphinx
+  - pip.exe install nose2 
+  - pip.exe install "sphinx==1.6.7"
   - pip.exe install "pyinstaller==3.3.1"
   
   # the PyYAML wheels are busted.  install from source instead

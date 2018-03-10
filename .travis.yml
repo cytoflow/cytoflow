@@ -49,7 +49,8 @@ install:
   - python --version
   - conda install --yes --quiet --file=packaging/conda-requirements.txt
   - conda install --yes --quiet pip mock
-  - pip install nose2 sphinx
+  - pip install nose2 
+  - pip install "sphinx==1.6.7"
   - pip install "pyinstaller==3.3.1"
   
   # the PyYAML wheels are busted.  install from source instead.
