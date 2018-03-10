@@ -19,7 +19,13 @@
 from setuptools import setup, find_packages, Extension
 import io, os, re
 
-from sphinx.setup_command import BuildDoc
+# sphinx is only required for building packages, not for end-users
+try:
+    from sphinx.setup_command import BuildDoc
+    has_sphinx = True
+except ImportError:
+    has_sphinx = False
+    
 
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 no_logicle = os.environ.get('NO_LOGICLE', None) == 'True'
@@ -58,32 +64,32 @@ setup(
     name = "cytoflow",
     version = find_version("cytoflow", "__init__.py"),
     packages = find_packages(),
-    cmdclass = {'build_sphinx': BuildDoc},
+    cmdclass = {'build_sphinx': BuildDoc} if has_sphinx else {},
     
     # Project uses reStructuredText, so ensure that the docutils get
     # installed or upgraded on the target machine
-    install_requires = ['pandas>=0.21.1',  
-                        'bottleneck>=1.2.1',
-                        'numpy>=1.11.3',
-                        'numexpr>=2.6.4',
-                        'matplotlib>=1.5.1, <=1.5.3',
-                        'scipy>=1.0.0',
-                        'scikit-learn>=0.19.1',
-                        'seaborn>=0.8.1',
-                        'traits>=4.6.0',
-                        'pyface>=5.1.0',
-                        'traitsui>=5.1.0',
-                        'nbformat>=4.2.0',
-                        'python-dateutil>=2.6.0',
-                        'statsmodels>=0.8.0',
-                        'envisage>=4.6.0',
-                        'camel>=0.1.2',
-                        'yapf>=0.20',
-                        'fcsparser>=0.1.3'] 
+    install_requires = ['pandas==0.21.1',  
+                        'bottleneck==1.2.1',
+                        'numpy==1.11.3',
+                        'numexpr==2.6.4',
+                        'matplotlib==1.5.1',
+                        'scipy==1.0.0',
+                        'scikit-learn==0.19.1',
+                        'seaborn==0.8.1',
+                        'traits==4.6.0',
+                        'pyface==5.1.0',
+                        'traitsui==5.1.0',
+                        'nbformat==4.2.0',
+                        'python-dateutil==2.6.0',
+                        'statsmodels==0.8.0',
+                        'envisage==4.6.0',
+                        'camel==0.1.2',
+                        'yapf==0.20',
+                        'fcsparser==0.1.3'] 
                 if not on_rtd else None,
                         
-                        # ALSO requires PyQt4 >= 4.11.4, but it's not available
-                        # via pypi and distutils.  Install it locally!
+    # GUI also requires PyQt4 >= 4.11.4, but it's not available via pypi and 
+    # distutils.  Install it locally!
                         
     # try to build the Logicle extension
     ext_modules = [Extension("cytoflow.utility.logicle_ext._Logicle",
