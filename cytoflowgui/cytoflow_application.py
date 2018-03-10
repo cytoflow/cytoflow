@@ -124,14 +124,19 @@ class CytoflowApplication(TasksApplication):
                     "Afterwards, may need to restart Cytoflow to continue working.\n\n" 
                     + error_string)
         
-    def exit(self, force=False):
-
-        ret = TasksApplication.exit(self, force=force)
-        
-        if ret:
-            self.model.shutdown_remote_process()
-            
-        return ret
+    def stop(self):
+        super().stop()
+        self.model.shutdown_remote_process()
+#         
+#         
+#     def exit(self, force=False):
+# 
+#         ret = TasksApplication.exit(self, force=force)
+#         
+#         if ret:
+#             self.model.shutdown_remote_process()
+#             
+#         return ret
         
 
     preferences_helper = Instance(CytoflowPreferences)
