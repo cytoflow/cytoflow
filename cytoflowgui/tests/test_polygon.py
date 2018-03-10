@@ -21,7 +21,7 @@ class TestPolygon(ImportedDataTest):
         ImportedDataTest.setUp(self)
 
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        self.wi = wi = self.workflow.workflow[0]
+        self.wi = self.workflow.workflow[0]
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
 
         plugin = PolygonPlugin()
@@ -31,12 +31,12 @@ class TestPolygon(ImportedDataTest):
         op.xscale = "logicle"
         op.ychannel = "V2-A"
         op.yscale = "logicle"
-#         op.vertices = [(23.411982294776319, 5158.7027015021222), 
-#                        (102.22182270573683, 23124.058843387455), 
-#                        (510.94519955277201, 23124.058843387455), 
-#                        (1089.5215641232173, 3800.3424832180476), 
-#                        (340.56382570202402, 801.98947404942271), 
-#                        (65.42597937575897, 1119.3133482602157)]
+        op.vertices = [(23.411982294776319, 5158.7027015021222), 
+                       (102.22182270573683, 23124.058843387455), 
+                       (510.94519955277201, 23124.058843387455), 
+                       (1089.5215641232173, 3800.3424832180476), 
+                       (340.56382570202402, 801.98947404942271), 
+                       (65.42597937575897, 1119.3133482602157)]
         
         self.wi = wi = WorkflowItem(operation = op)
 

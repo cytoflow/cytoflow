@@ -90,8 +90,7 @@ from traitsui.api import (View, Item, EnumEditor, Controller, VGroup,
                           ButtonEditor, HGroup, InstanceEditor, TextEditor)
 from envisage.api import Plugin, contributes_to
 from traits.api import (provides, Callable, List, Str, HasTraits, File, Event, 
-                        on_trait_change, Property, Dict, CInt, CFloat, Instance,
-                        Float)
+                        on_trait_change, Property, Dict, CInt, CFloat, Float)
 from pyface.api import ImageResource
 
 import cytoflow.utility as util
@@ -99,8 +98,7 @@ import cytoflow.utility as util
 from cytoflow.operations.bead_calibration import BeadCalibrationOp, BeadCalibrationDiagnostic
 from cytoflow.views.i_selectionview import IView
 
-from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin,\
-    EmptyPlotParams
+from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin

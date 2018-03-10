@@ -144,5 +144,5 @@ class TestBeadCalibration(TasbeTest):
         
 
 if __name__ == "__main__":
-#     import sys;sys.argv = ['', 'TestBeadCalibration.testSerialize']
+    import sys;sys.argv = ['', 'TestBeadCalibration.testSerialize']
     unittest.main()

@@ -94,7 +94,7 @@ from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
     import (IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, 
-            PluginHelpMixin, BasePlotParams)
+            PluginHelpMixin, Data2DPlotParams)
 from cytoflowgui.serialization import camel_registry, traits_repr, traits_str, dedent
 from cytoflowgui.util import IterWrapper
 
@@ -152,7 +152,7 @@ class Kde2DHandler(ViewHandlerMixin, Controller):
                          editor = ColorTextEditor(foreground_color = "#000000",
                                                   background_color = "#ff9191"))))
         
-class Kde2DPlotParams(BasePlotParams):
+class Kde2DPlotParams(Data2DPlotParams):
     
     shade = Bool(False)
     min_alpha = util.PositiveCFloat(0.2, allow_zero = False)
@@ -163,7 +163,7 @@ class Kde2DPlotParams(BasePlotParams):
     gridsize = util.PositiveCInt(50, allow_zero = False)
     
     def default_traits_view(self):
-        base_view = BasePlotParams.default_traits_view(self)
+        base_view = Data2DPlotParams.default_traits_view(self)
         
         return View(Item('shade'),
                     Item('min_alpha',

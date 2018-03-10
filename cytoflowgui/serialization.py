@@ -44,7 +44,7 @@ def _dump_int(i):
 def _dump_bool(b):
     return repr(bool(b)).lower()
 
-from traits.trait_handlers import TraitListObject, TraitDictObject, TraitTuple
+from traits.trait_handlers import TraitListObject, TraitDictObject
 from traits.api import Undefined
 
 @standard_types_registry.dumper(TraitListObject, 'seq', version = None)

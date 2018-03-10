@@ -96,35 +96,31 @@ class TestViolin(ImportedDataTest):
 
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
-
         self.view.scale = "log"
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
 
 
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
-
         self.view.scale = "logicle"
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
 
 
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
-
         self.view.xfacet = "Dox"
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
 
         
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
-
+        self.view.xfacet = ""
         self.view.yfacet = "Dox"
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
 
 
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
-
         self.view.yfacet = ""
         self.view.huefacet = "Dox"
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
@@ -132,7 +128,6 @@ class TestViolin(ImportedDataTest):
 
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
-
         self.view.huefacet = "Dox"
         self.view.huescale = "log"
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
@@ -141,7 +136,6 @@ class TestViolin(ImportedDataTest):
         from cytoflowgui.subset import CategorySubset
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
-
         self.view.xfacet = ""
         self.view.yfacet = ""
         self.view.subset_list.append(CategorySubset(name = "Well",
@@ -252,7 +246,7 @@ class TestViolin(ImportedDataTest):
             self.view.plot_params.bw = bw
             self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
             
-        for sp in ['area', 'count', 'width']:    
+        for sp in ['count', 'area', 'width']:    
             self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
             self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
             self.view.plot_params.scale_plot = sp

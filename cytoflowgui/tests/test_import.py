@@ -10,20 +10,18 @@ matplotlib.use('Agg')
 
 from cytoflowgui.tests.test_base import ImportedDataTest, wait_for
 from cytoflowgui.serialization import save_yaml, load_yaml
-from cytoflowgui.tests.deep_eq import deep_eq
 
-class Test(ImportedDataTest):
+class TestImport(ImportedDataTest):
 
     def testCoarse(self):
         wi = self.workflow.workflow[0]
         op = wi.operation
         
-        op.coarse = True
-        op.coarse_events = 1000
+        op.events = 1000
         self.assertTrue(wait_for(wi, 'status', lambda v: v != 'valid', 5))
         self.assertTrue(wait_for(wi, 'status', lambda v: v == 'valid', 5))
-        self.assertTrue(self.workflow.remote_eval('len(self.workflow[0].result) == 4000'))
-        self.assertEqual(op.ret_events, 4000)
+        self.assertTrue(self.workflow.remote_eval('len(self.workflow[0].result) == 6000'))
+        self.assertEqual(op.ret_events, 6000)
         
 
     def testSerialize(self):
@@ -40,6 +38,7 @@ class Test(ImportedDataTest):
             os.unlink(filename)
             
         self.maxDiff = None
+        new_op.ret_events = op.ret_events
         self.assertDictEqual(op.trait_get(op.copyable_trait_names()),
                              new_op.trait_get(op.copyable_trait_names()))
          

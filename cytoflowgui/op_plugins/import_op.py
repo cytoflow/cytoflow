@@ -95,8 +95,7 @@ Import FCS files and associate them with experimental conditions (metadata.)
 from textwrap import dedent
 
 from traitsui.api import View, Item, Controller, TextEditor
-from traits.api import Button, Property, cached_property, provides, Callable, \
-                       Bool, on_trait_change
+from traits.api import Button, Property, cached_property, provides, Callable
 from pyface.api import OK as PyfaceOK
 from envisage.api import Plugin, contributes_to
 
@@ -107,7 +106,6 @@ from cytoflow.operations.i_operation import IOperation
 from cytoflowgui.serialization import camel_registry, traits_repr
 from cytoflowgui.import_dialog import ExperimentDialog
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
-from cytoflowgui.toggle_button import ToggleButtonEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin
 
 ImportOp.__repr__ = Tube.__repr__ = traits_repr

@@ -317,8 +317,8 @@ class TasbePluginOp(PluginOpMixin):
     beads_unit = Str(estimate = True)
     
     bead_peak_quantile = CInt(80, estimate = True)
-    bead_brightness_threshold = CFloat(100, estimate = True)
-    bead_brightness_cutoff = util.CFloatOrNone("", estimate = True)
+    bead_brightness_threshold = CFloat(100.0, estimate = True)
+    bead_brightness_cutoff = util.CFloatOrNone(None, estimate = True)
     
     to_channel = Str(estimate = True)
     translation_list = List(_TranslationControl, estimate = True)

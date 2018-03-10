@@ -285,7 +285,7 @@ class TestKde1D(ImportedDataTest):
             self.view.plot_params.bw = bw
             self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
 
-        for linestyle in ['solid', 'dashed', 'dashdot', 'dotted', 'none']:
+        for linestyle in ['dashed', 'solid', 'dashdot', 'dotted', 'none']:
             self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
             self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
             self.view.plot_params.linestyle = linestyle
@@ -328,5 +328,5 @@ class TestKde1D(ImportedDataTest):
         
            
 if __name__ == "__main__":
-#     import sys;sys.argv = ['', 'TestKde1D.testPlotArgs']
+    import sys;sys.argv = ['', 'TestKde1D.testPlotArgs']
     unittest.main()
