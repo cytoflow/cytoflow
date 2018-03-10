@@ -25,14 +25,14 @@ Import FCS files and associate them with experimental conditions (metadata.)
 
     Open the sample editor dialog box.
 
-.. object:: Random subsample
+.. object:: Events per sample
 
     For very large data sets, *Cytoflow*'s interactive operation may be too slow.
-    By clicking **Random subsample**, you can tell *Cytoflow* to import a
+    By setting **Events per sample**, you can tell *Cytoflow* to import a
     smaller number of events from each FCS file, which will make interactive
     data exploration much faster.  When you're done setting up your workflow,
-    toggle **Random subsample** off to automatically re-run the workflow with
-    the full data set.
+    set **Events per sample** to empty or 0 and *Cytoflow* will re-run your
+    workflow with the entire data set.
     
 
 ..  object:: The import dialog

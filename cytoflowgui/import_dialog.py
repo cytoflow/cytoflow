@@ -217,6 +217,8 @@ class ExperimentDialogModel(HasStrictTraits):
                           "int" : Int}
         
         new_tubes = []
+        self.dummy_experiment = None
+        
         for op_tube in op.tubes:
             tube = Tube(file = op_tube.file,
                         parent = self)
@@ -237,7 +239,7 @@ class ExperimentDialogModel(HasStrictTraits):
             if not self.dummy_experiment:
                 self.dummy_experiment = ImportOp(tubes = [op_tube],
                                                  conditions = op.conditions,
-                                                 coarse_events = 1).apply()
+                                                 events = 1).apply()
                 
             if '$SRC' in tube_meta:    
                 self.tube_traits["$SRC"] = Str(condition = False)
@@ -336,27 +338,6 @@ class ExperimentDialogModel(HasStrictTraits):
     
     def _get_valid(self):
         return len(set(self.counter)) == len(self.tubes) and all([x.all_conditions_set for x in self.tubes])
-   
-
-class PlateDirectoryDialog(QtDirectoryDialog):
-    """
-    A custom open file dialog for opening plates, so we can specify different
-    file name --> plate position mappings.
-    """
-    
-    def _create_control(self, parent):
-        self.dlg = QtGui.QFileDialog(parent, self.title, self.default_path)
-    
-        self.dlg.setViewMode(QtGui.QFileDialog.Detail | QtGui.QFileDialog.ShowDirsOnly)
-        self.dlg.setFileMode(QtGui.QFileDialog.Directory)
-    
-        self.dlg.setNameFilters(["one", "two"])
-        self.dlg.setReadOnly(True)
-    
-        return self.dlg
-    
-    def selectedNameFilter(self):
-        return self.dlg.selectedNameFilter()
 
 class ExperimentDialogHandler(Controller):
 
@@ -502,7 +483,7 @@ class ExperimentDialogHandler(Controller):
             # if we're the first tube loaded, create a dummy experiment
             if not self.model.dummy_experiment:
                 self.model.dummy_experiment = ImportOp(tubes = [CytoflowTube(file = path)],
-                                                       coarse_events = 1).apply()
+                                                       events = 1).apply()
                                                        
             # check the next tube against the dummy experiment
             try:
@@ -579,20 +560,6 @@ class ExperimentDialogHandler(Controller):
                 self.btn_remove_cond.setEnabled(True)
                 self.btn_remove_tubes.setEnabled(True)
 
-    
-
-        
-#     def _on_remove_tubes(self, info, selection):
-#         for (tube, _) in info.ui.context['object'].selected:
-#             self.model.tubes.remove(tube)
-#                 
-#                 
-#     def _on_remove_column(self, info, selection):         
-#         col = info.ui.context['object'].selected[0][1]
-#         if self.model.tubes[0].trait(col).condition == True:
-#             self._remove_metadata(col)
-#         else:
-#             error(None, "Can't remove column {}".format(col), "Error")
             
     def _try_multiedit(self, obj, name, old, new):
         """
