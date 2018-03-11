@@ -84,7 +84,7 @@ setup(
                         'statsmodels==0.8.0',
                         'envisage==4.6.0',
                         'camel==0.1.2',
-                        'yapf==0.20',
+                        'yapf==0.20.2',
                         'fcsparser==0.2.0'] 
                 if not on_rtd else None,
                         

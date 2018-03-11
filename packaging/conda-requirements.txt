@@ -1,3 +1,4 @@
+# from the official anaconda channel
 pandas==0.21.1
 bottleneck==1.2.1
 numpy==1.11.3
@@ -14,3 +15,9 @@ python-dateutil==2.6.1
 statsmodels==0.8.0
 pyqt==4.11.4
 python==3.5.4
+seaborn==0.8.1
+
+# in the channel 'bpteague'
+fcsparser==0.2.0
+camel==0.1.2
+yapf==0.20.2
