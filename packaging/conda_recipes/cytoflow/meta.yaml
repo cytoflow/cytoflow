@@ -1,0 +1,105 @@
+package:
+  name: cytoflow
+  version: "0.9.0"
+  #version: {{ GIT_DESCRIBE_TAG }}
+  #version: {{ environ['GIT_DESCRIBE_TAG'] }}.post{{ environ['GIT_DESCRIBE_NUMBER'] }}
+
+
+source:
+  path: ../../..
+
+#  patches:
+   # List any patch files here
+   # - fix.patch
+
+#build:
+    #string: {{ environ.get('GIT_BUILD_STR', '') }}_py{{ py }}
+  # preserve_egg_dir: True
+  # entry_points:
+    # Put any entry points (scripts to be generated automatically) here. The
+    # syntax is module:function.  For example
+    #
+    # - cycler = cycler:main
+    #
+    # Would create an entry point called cycler that calls cycler.main()
+
+
+  # If this is a new build for the same version, increment the build
+  # number. If you do not include this key, it defaults to 0.
+  # number: 1
+
+requirements:
+  build:
+    - python==3.5.4
+    - sphinx==1.6.3
+    - numpy==1.11.3
+    - pandas==0.21.1
+    - bottleneck==1.2.1
+    - numexpr==2.6.4
+    - matplotlib==1.5.1
+    - scipy==1.0.0
+    - scikit-learn==0.19.1
+    - traits==4.6.0
+    - traitsui==5.1.0
+    - pyface==5.1.0
+    - envisage==4.6.0
+    - nbformat==4.4.0
+    - python-dateutil==2.6.1
+    - statsmodels==0.8.0
+    - pyqt==4.11.4
+    - fcsparser==0.2.0
+    - camel==0.1.2
+    - yapf==0.20.2
+    - seaborn==0.8.1
+
+  run:
+    - python==3.5.4
+    - numpy==1.11.3
+    - pandas==0.21.1
+    - bottleneck==1.2.1
+    - numexpr==2.6.4
+    - matplotlib==1.5.1
+    - scipy==1.0.0
+    - scikit-learn==0.19.1
+    - traits==4.6.0
+    - traitsui==5.1.0
+    - pyface==5.1.0
+    - envisage==4.6.0
+    - nbformat==4.4.0
+    - python-dateutil==2.6.1
+    - statsmodels==0.8.0
+    - pyqt==4.11.4
+    - fcsparser==0.2.0
+    - camel==0.1.2
+    - yapf==0.20.2
+    - seaborn==0.8.1
+
+
+test:
+  # Python imports
+  imports:
+    - cytoflow
+
+  # commands:
+    # You can put test commands to be run here.  Use this to test that the
+    # entry points work.
+
+
+  # You can also put a file called run_test.py in the recipe that will be run
+  # at test time.
+
+  # requires:
+    # Put any additional test requirements here.  For example
+    # - nose
+
+about:
+  home: https://github.com/bpteague/cytoflow
+  license: GPLv2
+  summary: 'Quantitative analyses for flow cytometry'
+
+app:
+    own_environment: True
+
+# See
+# https://conda.io/docs/building/build.html for
+# more information about meta.yaml

@@ -1,0 +1,51 @@
+{% set name = "camel" %}
+{% set version = "0.1.2" %}
+{% set file_ext = "tar.gz" %}
+{% set hash_type = "sha256" %}
+{% set hash_value = "f61080abbdd68ad40bfe4ecaee9ea34ff07344ad98d1f2041f0ccccbcf42f271" %}
+
+package:
+  name: '{{ name|lower }}'
+  version: '{{ version }}'
+
+source:
+  fn: '{{ name }}-{{ version }}.{{ file_ext }}'
+  url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.{{ file_ext }}
+  '{{ hash_type }}': '{{ hash_value }}'
+
+build:
+  number: 0
+  script: python setup.py install --single-version-externally-managed --record=record.txt
+
+requirements:
+  host:
+    - python=3.5.4
+    - setuptools
+    - pyyaml
+  run:
+    - python=3.5.4
+    - pyyaml
+
+test:
+  imports:
+    - camel
+    - camel.tests
+  requires:
+    - pytest
+
+about:
+  home: https://github.com/eevee/camel
+  license: ISC License (ISCL)
+  license_family: OTHER
+  license_file: ''
+  summary: Python serialization for adults
+  description: "Camel\n=====\n\nCamel is a library that lets you describe how to serialize your objects to\nYAML \u2014 and refuses to serialize them if you don't.\n\nQuick example:\n\n.. code-block:: python\n\
+    \n    from camel import Camel, CamelRegistry\n\n    class DieRoll(tuple):\n        def __new__(cls, a, b):\n            return tuple.__new__(cls, [a, b])\n\n        def __repr__(self):\n           \
+    \ return \"DieRoll(%s,%s)\" % self\n\n    reg = CamelRegistry()\n\n    @reg.dumper(DieRoll, u'roll', version=None)\n    def _dump_dice(data):\n        return u\"{}d{}\".format(*data)\n\n    @reg.loader(u'roll',\
+    \ version=None)\n    def _load_dice(data, version):\n        a, _, b = data.partition(u'd')\n        return DieRoll(int(a), int(b))\n\n    value = DieRoll(3, 6)\n    camel = Camel([reg])\n    print(camel.dump(value))\n\
+    \n    # !roll 3d6\n    # ...\n\nDocs: http://camel.readthedocs.org/en/latest/\n\nGitHub: https://github.com/eevee/camel"
+  doc_url: ''
+  dev_url: ''
+
+extra:
+  recipe-maintainers: ''

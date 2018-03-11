@@ -1,0 +1,62 @@
+{% set name = "fcsparser" %}
+{% set version = "0.2.0" %}
+{% set file_ext = "tar.gz" %}
+{% set hash_type = "sha256" %}
+{% set hash_value = "c23772922f10db0ba0ba7545da9eae7fdba850fd8e184ab018f14ec1d3f6bf58" %}
+
+package:
+  name: '{{ name|lower }}'
+  version: '{{ version }}'
+
+source:
+  fn: '{{ name }}-{{ version }}.{{ file_ext }}'
+  url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.{{ file_ext }}
+  '{{ hash_type }}': '{{ hash_value }}'
+
+build:
+  number: 0
+  script: python setup.py install --single-version-externally-managed --record=record.txt
+
+requirements:
+  host:
+    - python=3.5
+    - setuptools
+    - six
+    - numpy
+    - pandas
+  run:
+    - python=3.5
+    - setuptools
+    - six
+    - numpy
+    - pandas
+
+test:
+  imports:
+    - fcsparser
+    - fcsparser.tests
+
+about:
+  home: https://github.com/eyurtsev/fcsparser
+  license: MIT
+  license_family: MIT
+  license_file: ''
+  summary: A python package for reading raw fcs files
+  description: "FCSParser\n=================\n\nfcsparser is a python package for reading fcs files. \n\n.. image:: https://travis-ci.org/eyurtsev/fcsparser.svg?branch=master\n   :target: http://travis-ci.org/eyurtsev/fcsparser\n\
+    \   :alt: Build Status\n\n\nInstall\n==================\n\n    $ pip install fcsparser\n    \nor\n    \n    $ conda install -c bioconda fcsparser\n\nUsing\n==================\n\n    >>> import fcsparser\n\
+    \    >>> path = fcsparser.test_sample_path\n    >>> meta, data = fcsparser.parse(path, reformat_meta=True)\n\nA more detailed example can be found here: http://nbviewer.ipython.org/github/eyurtsev/fcsparser/blob/master/doc/fcsparser_example.ipynb\n\
+    \n\nFeatures\n===================\n\n- **python**: 2.7, 3.3, 3.4\n- **FCS Formats**: Supports FCS 2.0, 3.0, and 3.1\n- **FCS Machines**: BD FACSCalibur, BD LSRFortessa, BD LSR-II, MiltenyiBiotec MACSQuant\
+    \ VYB, Sony SH800\n\nContributing\n=================\n\nPull requests are greatly appreciated. Missing features include:\n\n1. the ability to apply compensation.\n2. a set of transformations (hlog,\
+    \ logicle, etc.) that can be applied.\n\nAlso fcs files from more devices and more formats are greatly appreciated, especially if the parser fails for them!\n\nResources\n==================\n\n- **Documentation:**\
+    \ https://github.com/eyurtsev/fcsparser\n- **Source Repository:** https://github.com/eyurtsev/fcsparser\n- **Comments or questions:** https://github.com/eyurtsev/fcsparser/issues\n\nLICENSE\n===================\n\
+    \nThe MIT License (MIT)\n\nCopyright (c) 2013-2015 Eugene Yurtsev\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files\
+    \ (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the\
+    \ Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall\
+    \ copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n\
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT\
+    \ OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n"
+  doc_url: ''
+  dev_url: ''
+
+extra:
+  recipe-maintainers: ''
