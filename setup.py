@@ -85,7 +85,7 @@ setup(
                         'envisage==4.6.0',
                         'camel==0.1.2',
                         'yapf==0.20',
-                        'fcsparser==0.1.3'] 
+                        'fcsparser==0.2.0'] 
                 if not on_rtd else None,
                         
     # GUI also requires PyQt4 >= 4.11.4, but it's not available via pypi and 
