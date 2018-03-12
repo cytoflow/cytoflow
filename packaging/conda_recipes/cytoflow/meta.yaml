@@ -1,6 +1,7 @@
 package:
   name: cytoflow
-  version: {% if TRAVIS_TAG is defined %} {{ TRAVIS_TAG }} {% else %} {{ TRAVIS_COMMIT }} {% endif %}
+  #version: {% if TRAVIS_TAG is defined %} {{ TRAVIS_TAG }} {% else %} {{ TRAVIS_COMMIT }} {% endif %}
+  version: {{ environ.get('TRAVIS_COMMIT', 'no_commit') }}
 
 
 source:
@@ -8,7 +9,7 @@ source:
 
 
 build:
-  number: {{ TRAVIS_BUILD_NUMBER }}
+  number: 0
   # string: {{ GIT_BUILD_STR }}
 
   # entry_points:
