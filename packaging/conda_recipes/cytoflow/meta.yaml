@@ -1,18 +1,16 @@
 package:
   name: cytoflow
-  version: {{ environ['GIT_DESCRIBE_TAG'] }}.post{{ environ['GIT_DESCRIBE_NUMBER'] }}
+  version: {{ GIT_DESCRIBE_TAG }}
 
 
 source:
   path: ../../..
 
-#  patches:
-   # List any patch files here
-   # - fix.patch
 
-#build:
-    #string: {{ environ.get('GIT_BUILD_STR', '') }}_py{{ py }}
-  # preserve_egg_dir: True
+build:
+  number: {{ GIT_DESCRIBE_NUMBER }}
+  string: {{ GIT_BUILD_STR }}
+
   # entry_points:
     # Put any entry points (scripts to be generated automatically) here. The
     # syntax is module:function.  For example
@@ -21,10 +19,6 @@ source:
     #
     # Would create an entry point called cycler that calls cycler.main()
 
-
-  # If this is a new build for the same version, increment the build
-  # number. If you do not include this key, it defaults to 0.
-  # number: 1
 
 requirements:
   build:
