@@ -48,6 +48,7 @@ install:
   - conda create --yes --quiet --name=cytoflow python=3.5 nomkl
   - source activate cytoflow
   - python --version
+  - conda config --add channels bpteague
   - conda install --yes --quiet --file=packaging/conda-requirements.txt
   - conda install --yes --quiet pip mock anaconda-client conda-build
   - pip install nose2 
