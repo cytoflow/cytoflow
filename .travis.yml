@@ -2,6 +2,7 @@ language: generic
 
 env:
   - MPLBACKEND=Agg
+  - secure: "HHIsabll+2l19zlWlnPQhp5XP1LuCaokgBg2378ZilVqANv2XplCSgtquaR8cER3w5kRmpAtHPPMdy2eYRHxORePqpGV5p4ZR5gDhFs63QhSbiWeQClqf9UpdZUmd6Lt2qlQJ7IAZ82EIXrHOvJ4QQeFUDBQSFyK79lpngem/biI/Dz6pKqUsygCSnbuz3tQ3Om0D6u8Nu6Tv9PfQU+mHE/hktENCI98auczf3cV/2rWLzBDTdkcL7pq2MSfadKPUHMe6zDtD42hmG6GolZz85E1YqMX+vaYwbE7yPQXkBz5lbaxlxYCz/IEjc8zqoEMexwdhTNsEUgE/41MFWmnVmhgcNFOHscP9XkSiuBc9qdzEGi+oxxQzf6u8KsHyTlKNCKlOtFk9MbBECYrqm5W4fOCfJzhk4tmfjaNkxaa9GQUSMhvtkAmYvW8Cn/le2hmpGo1y9NevPYb6J5FPegYEd+h7SuiSjd/Jw4hs4arx7whwPw14PaE7KjEYCuMflvL/ZSsHsiIRG3FTP3kcE3peX72mRcA93TI9iSTRb+dHT1oV2sXdB1xqo24UhUtHmSK1orSIGCLJcjb+YNuIX8GYEC3apu8Go4QCi4TIwaWjWFb+9RrKxd5XT47Vt/isatutE3NHR/o1O+a48BRy1L1wuqHc3jlrSZoYVKU7erjxEY="
 
 matrix:
   include:
@@ -44,11 +45,11 @@ before_install:
 
 install:
 
-  - conda create --yes --quiet --name=py35 python=3.5 nomkl
-  - source activate py35
+  - conda create --yes --quiet --name=cytoflow python=3.5 nomkl
+  - source activate cytoflow
   - python --version
   - conda install --yes --quiet --file=packaging/conda-requirements.txt
-  - conda install --yes --quiet pip mock
+  - conda install --yes --quiet pip mock anaconda-client conda-build
   - pip install nose2 
   - pip install "sphinx==1.6.7"
   - pip install "pyinstaller==3.3.1"
@@ -56,7 +57,9 @@ install:
   # the PyYAML wheels are busted.  install from source instead.
   - pip install --no-use-wheel pyyaml
 
-  - python setup.py develop 
+  # - python setup.py develop 
+  - conda build packaging/conda_recipes/cytoflow
+  - conda install --use-local cytoflow
 
 before_script:
   - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then export DISPLAY=:99.0; sh -e /etc/init.d/xvfb start; sleep 3; fi
@@ -65,7 +68,7 @@ script: nose2 -c packaging/nose2.cfg -s cytoflow/tests
 
 after_success:
 
-  - python setup.py build_sphinx 
+  # - python setup.py build_sphinx 
   - python setup.py bdist_wheel
   - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then python setup.py sdist; fi
   - python setup.py build_sphinx -b embedded_help
@@ -129,3 +132,7 @@ deploy:
     server: https://pypi.python.org/pypi
     skip_cleanup: true
     distributions: "sdist bdist_wheel"
+    
+  - provider: script
+  	script: ./packaging/deploy_anaconda.sh
+  	skip_cleanup: true
