@@ -29,9 +29,6 @@ addons:
 
 before_install:
 
-  # re-fetch the entire repo
-  - git fetch -t
-
   # make sure distutils can find swig
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ln -s `which swig3.0` ./swig; export PATH=`pwd`:$PATH; fi
 
