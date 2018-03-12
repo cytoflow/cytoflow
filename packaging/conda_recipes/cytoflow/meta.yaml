@@ -1,6 +1,6 @@
 package:
   name: cytoflow
-  version: {{ GIT_DESCRIBE_TAG }}
+  version: {% if TRAVIS_TAG is defined %} {{ TRAVIS_TAG }} {% else %} {{ TRAVIS_COMMIT }} {% endif %}
 
 
 source:
@@ -8,8 +8,8 @@ source:
 
 
 build:
-  number: {{ GIT_DESCRIBE_NUMBER }}
-  string: {{ GIT_BUILD_STR }}
+  number: {{ TRAVIS_BUILD_NUMBER }}
+  # string: {{ GIT_BUILD_STR }}
 
   # entry_points:
     # Put any entry points (scripts to be generated automatically) here. The
