@@ -8,7 +8,7 @@ set -e
 set -x
 
 echo "Deploying to Anaconda.org..."
-anaconda -t $ANACONDA_TOKEN upload $HOME/miniconda3/conda-bld/**/PACKAGENAME-*.tar.bz2
+anaconda -t $ANACONDA_TOKEN upload $HOME/miniconda3/conda-bld/**/cytoflow-*.tar.bz2
 
 echo "Successfully deployed to Anaconda.org."
 exit 0
