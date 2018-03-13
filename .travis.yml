@@ -52,7 +52,7 @@ install:
   - conda build packaging/conda_recipes/cytoflow
   - conda create --yes --quiet --name=cytoflow python=3.5 nomkl
   - source activate cytoflow
-  - conda install --use-local cytoflow
+  - conda install --yes --quiet --use-local cytoflow
 
 before_script:
   - conda install --yes --quiet pip mock 
