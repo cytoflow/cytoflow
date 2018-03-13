@@ -45,11 +45,11 @@ before_install:
   - conda update --yes conda
   - conda config --add channels bpteague
   - conda install --yes --quiet anaconda-client conda-build
+  - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then export DISPLAY=:99.0; sh -e /etc/init.d/xvfb start; sleep 3; fi
 
 install:
 
   - conda build packaging/conda_recipes/cytoflow
-  
   - conda create --yes --quiet --name=cytoflow python=3.5 nomkl
   - source activate cytoflow
   - conda install --use-local cytoflow
@@ -57,7 +57,6 @@ install:
 before_script:
   - conda install --yes --quiet pip mock 
   - pip install nose2 
-  - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then export DISPLAY=:99.0; sh -e /etc/init.d/xvfb start; sleep 3; fi
 
 script: nose2 -c packaging/nose2.cfg -s cytoflow/tests -N 2
 
