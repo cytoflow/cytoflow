@@ -68,7 +68,7 @@ install:
 build: off
 
 test_script:
-  - "nose2 -c packaging\\nose2.cfg -s cytoflow\\tests"
+  - "nose2 -c packaging\\nose2.cfg -s cytoflow\\tests -N 2"
 
 after_test:
   # Install packaging requirements
