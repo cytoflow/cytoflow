@@ -89,10 +89,13 @@ test:
 about:
   home: https://github.com/bpteague/cytoflow
   license: GPLv2
+  license_file: GPL.txt
   summary: 'Quantitative analyses for flow cytometry'
 
 app:
     own_environment: True
+    entry: cytoflow
+    icon: icon.png
 
 # See
 # https://conda.io/docs/building/build.html for
