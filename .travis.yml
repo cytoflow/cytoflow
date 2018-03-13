@@ -91,27 +91,17 @@ deploy:
     file: packaging/bintray.json
     user: bpteague
     key:
-      secure: "ign6ESQuyEYnp1LJ0i/S+h2ZXtEP5P89EbmW7nRmFK1vvBAgD72sVI2y6tji+sErEErIke/ERZHRtLh4q8LvZT4J7LhJradRGYXa6Y1S56wb/bn2xRS1lKXJz3HUD+WxqYD3ZZ+q7AEcD51TkDv6Bmo5hXlkyHEzATBRwZl7kC2GPIatCva+KWd1YB1kUBPvrhCvgn1fCE0Xzcdzf5EKu7/uN2KkKLghUJKhOsXkWyREvfSlsMDSn/NWDp2KBIh1sv9JzRXmZhFAAaiVT74LfSPTwJKEAIV1RgAmSbEX60iS/5gCs2ntwoG8D6q5va+gSXwGjpk97kf9qhsocbf8w0L6vEq1Iw5CJwxY9P3gISGPmOGN6l3geksnpQgewNXMgIeZ0HvtxFJWc4HpiEZZZc0ZpVrGJY+WZZ5Bi3njNIbnW8A8g5+llJf+g2U7xnsqEs/oqzAKhbCnZvpXUH3TQjs58FmDegGCOI1hhZtxu4Vf0fE1yOu9nDW1nqxke7a8et3wLPGLXODR/zP+jz2opJe/UY87EstSSR6e7JMnGmgKbkImGrkvY0s4ul2ITeGTWoaZVKrWW7CKXS/MexVjDpKBdwUHhKeYcEszMOhyK1t3K75WTla3YIQW6Xmf5Nhxte6qCq1SDaamic6hjW9vCRSrlhcAqMuauja0MiKNxKc="
+      secure: "Y08eHWEJSqk6x4hucGucZ9PHPB4xb7gVTsNe9aoMxf1Ax/ePDClLaiEpsULy8YbYU0Dz05kprkdvyj01s+TBA54H39xhdUFWTJhww7WAk2vLVvdvH75KbFuj2S6LH9KQLAcXKjrWV14GDbCgoQoEEtHATvFhkHPw38GqqkgPV0pIOx0BkraDlyy+hOUwZvoinD/FtAVu4hQIJv9NnDtjxBYgxAmiWKolyx6nAa1SGipa1JFE8/PO4TX8PlwmW9H/2ojTv4NGBURroe0ZMC5Q7jXHkFcyREihN6L2Ry3ZEEEXdnEDkGjce4BO8OnrpZWWuukRlFgXsS0fDOxo8FF4jY0U3N1YJ/GYSbPvawBCJ/CKvP9zphdIwLezQbLpLzg/o/MM8laan/tTGj8d2p0taaNq7EXc8xH3paL+3GO+F83xLEPfhmwPR8fBWbZtz1JDCFWu6DXlUf9X+fZr7F7nlZwps/nkl63Rpdve06HyP2Dr0McvacV1cLA0umzzMch1govfCvkYWDlXuEWLUgjYrMklYi/9wo/5w/fyiRyuwyaXSGvKFPIP1nO0ObipPNiwSEEhN7JP5HSo7WViCpvY4c9guenG0va/xTCQLVO3iYuqq2MKQANc82fNn9kd8vcKD1hWiXXMoZUVSw2CEhQuzeHBuxX4i+RHKrC46JxUaRU="
     dry-run: false
     skip_cleanup: true
     on:
       branch: packaging
-
-  - provider: bintray
-    file: packaging/bintray.json
-    user: bpteague
-    key:
-      secure: "ign6ESQuyEYnp1LJ0i/S+h2ZXtEP5P89EbmW7nRmFK1vvBAgD72sVI2y6tji+sErEErIke/ERZHRtLh4q8LvZT4J7LhJradRGYXa6Y1S56wb/bn2xRS1lKXJz3HUD+WxqYD3ZZ+q7AEcD51TkDv6Bmo5hXlkyHEzATBRwZl7kC2GPIatCva+KWd1YB1kUBPvrhCvgn1fCE0Xzcdzf5EKu7/uN2KkKLghUJKhOsXkWyREvfSlsMDSn/NWDp2KBIh1sv9JzRXmZhFAAaiVT74LfSPTwJKEAIV1RgAmSbEX60iS/5gCs2ntwoG8D6q5va+gSXwGjpk97kf9qhsocbf8w0L6vEq1Iw5CJwxY9P3gISGPmOGN6l3geksnpQgewNXMgIeZ0HvtxFJWc4HpiEZZZc0ZpVrGJY+WZZ5Bi3njNIbnW8A8g5+llJf+g2U7xnsqEs/oqzAKhbCnZvpXUH3TQjs58FmDegGCOI1hhZtxu4Vf0fE1yOu9nDW1nqxke7a8et3wLPGLXODR/zP+jz2opJe/UY87EstSSR6e7JMnGmgKbkImGrkvY0s4ul2ITeGTWoaZVKrWW7CKXS/MexVjDpKBdwUHhKeYcEszMOhyK1t3K75WTla3YIQW6Xmf5Nhxte6qCq1SDaamic6hjW9vCRSrlhcAqMuauja0MiKNxKc="
-    dry-run: false
-    skip_cleanup: true
-    on:
-      branch: python3
       
   - provider: bintray
     file: packaging/bintray.json
     user: bpteague
     key:
-      secure: "ign6ESQuyEYnp1LJ0i/S+h2ZXtEP5P89EbmW7nRmFK1vvBAgD72sVI2y6tji+sErEErIke/ERZHRtLh4q8LvZT4J7LhJradRGYXa6Y1S56wb/bn2xRS1lKXJz3HUD+WxqYD3ZZ+q7AEcD51TkDv6Bmo5hXlkyHEzATBRwZl7kC2GPIatCva+KWd1YB1kUBPvrhCvgn1fCE0Xzcdzf5EKu7/uN2KkKLghUJKhOsXkWyREvfSlsMDSn/NWDp2KBIh1sv9JzRXmZhFAAaiVT74LfSPTwJKEAIV1RgAmSbEX60iS/5gCs2ntwoG8D6q5va+gSXwGjpk97kf9qhsocbf8w0L6vEq1Iw5CJwxY9P3gISGPmOGN6l3geksnpQgewNXMgIeZ0HvtxFJWc4HpiEZZZc0ZpVrGJY+WZZ5Bi3njNIbnW8A8g5+llJf+g2U7xnsqEs/oqzAKhbCnZvpXUH3TQjs58FmDegGCOI1hhZtxu4Vf0fE1yOu9nDW1nqxke7a8et3wLPGLXODR/zP+jz2opJe/UY87EstSSR6e7JMnGmgKbkImGrkvY0s4ul2ITeGTWoaZVKrWW7CKXS/MexVjDpKBdwUHhKeYcEszMOhyK1t3K75WTla3YIQW6Xmf5Nhxte6qCq1SDaamic6hjW9vCRSrlhcAqMuauja0MiKNxKc="
+      secure: "Y08eHWEJSqk6x4hucGucZ9PHPB4xb7gVTsNe9aoMxf1Ax/ePDClLaiEpsULy8YbYU0Dz05kprkdvyj01s+TBA54H39xhdUFWTJhww7WAk2vLVvdvH75KbFuj2S6LH9KQLAcXKjrWV14GDbCgoQoEEtHATvFhkHPw38GqqkgPV0pIOx0BkraDlyy+hOUwZvoinD/FtAVu4hQIJv9NnDtjxBYgxAmiWKolyx6nAa1SGipa1JFE8/PO4TX8PlwmW9H/2ojTv4NGBURroe0ZMC5Q7jXHkFcyREihN6L2Ry3ZEEEXdnEDkGjce4BO8OnrpZWWuukRlFgXsS0fDOxo8FF4jY0U3N1YJ/GYSbPvawBCJ/CKvP9zphdIwLezQbLpLzg/o/MM8laan/tTGj8d2p0taaNq7EXc8xH3paL+3GO+F83xLEPfhmwPR8fBWbZtz1JDCFWu6DXlUf9X+fZr7F7nlZwps/nkl63Rpdve06HyP2Dr0McvacV1cLA0umzzMch1govfCvkYWDlXuEWLUgjYrMklYi/9wo/5w/fyiRyuwyaXSGvKFPIP1nO0ObipPNiwSEEhN7JP5HSo7WViCpvY4c9guenG0va/xTCQLVO3iYuqq2MKQANc82fNn9kd8vcKD1hWiXXMoZUVSw2CEhQuzeHBuxX4i+RHKrC46JxUaRU="
     dry-run: false
     skip_cleanup: true
     on:
@@ -131,3 +121,5 @@ deploy:
   - provider: script
     script: ./packaging/deploy_anaconda.sh
     skip_cleanup: true
+    on:
+      branch: packaging
