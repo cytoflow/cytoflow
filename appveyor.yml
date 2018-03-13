@@ -44,24 +44,27 @@ install:
 
   # Install the build and runtime dependencies of the project.
   - conda update --yes conda
-  - conda create --yes --quiet --name=py35 python=3.5
-  - activate py35
+  - conda config --add channels bpteague
+  - conda install --yes --quiet anaconda-client conda-build
+  
+  # Build the conda package
+  - "%WITH_COMPILER conda build packaging\\conda_recipes\\cytoflow"
+  
+  # Install the new package locally
+  - conda create --yes --quiet --name=cytoflow python=3.5.4
+  - activate cytoflow
+  - conda install --yes --quiet --use-local cytoflow
   
   # Check again for the expected version and architecture for Python
-  - "python --version"
-  - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
+#  - "python --version"
+#  - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
   
   # - conda install --yes --quiet mkl=2017.0.3-0  # new version of mkl has bad interaction with numpy
-  - conda install --yes --quiet --file=packaging\conda-requirements.txt
-  - conda install --yes --quiet msvc_runtime pip mock
-  - pip.exe install nose2 
-  - pip.exe install "sphinx==1.6.7"
-  - pip.exe install "pyinstaller==3.3.1"
-  
-  # the PyYAML wheels are busted.  install from source instead
-  - pip.exe install --no-use-wheel pyyaml
+#  - conda install --yes --quiet --file=packaging\conda-requirements.txt
+#  - conda install --yes --quiet msvc_runtime pip mock
 
-  - "%WITH_COMPILER% python setup.py develop"
+  # Install test requirements
+  - pip.exe install nose2 
 
 build: off
 
@@ -69,11 +72,22 @@ test_script:
   - "nose2 -c packaging\\nose2.cfg -s cytoflow\\tests"
 
 after_test:
-  - "python setup.py bdist_wheel bdist_wininst"
+  # Install packaging requirements
+  - pip.exe install "sphinx==1.6.7"
+  - pip.exe install "pyinstaller==3.3.1"
+  
+  # Build PyPI packages
   - "python setup.py build_sphinx -b embedded_help"
+  - "python setup.py bdist_wheel bdist_wininst"
+  
+  # Build one-click
   - "pyinstaller packaging/pyinstaller.spec"
   - "pyi-archive_viewer -l dist\\cytoflow.exe"
   - "move dist\\cytoflow.exe dist\\cytoflow-%PYTHON_ARCH%.exe"
+  
+  # Move conda package to dist folder
+  - python packaging\move_conda_package.py packaging\conda_recipes\cytoflow
+  
   # - "IF %PYTHON_ARCH% EQU 32 move build\\lib.win32-3.5\\cytoflow\\utility\\logicle_ext\\_Logicle.pyd dist\\_Logicle-32.pyd"
   # - "IF %PYTHON_ARCH% EQU 64 move build\\lib.win-amd64-3.5\\cytoflow\\utility\\logicle_ext\\_Logicle.pyd dist\\_Logicle-64.pyd"
 
@@ -120,16 +134,4 @@ deploy:
     on:
         branch: packaging
         
-  - provider: BinTray
-    username: bpteague
-    api_key:
-      secure: BLgrF3vno40XZMvXZ+DGzxeO8xzQJP1Y/ndUVPEycNlNB2puWDGdPDJ8d4DxDTEj
-    subject: bpteague
-    repo: cytoflow
-    package: cytoflow
-    version: latest
-    publish: true
-    override: true
-    explode: false
-    on:
-        branch: python3
+
