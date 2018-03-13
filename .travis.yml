@@ -100,8 +100,7 @@ deploy:
   - provider: bintray
     file: packaging/bintray.json
     user: bpteague
-    key:
-      secure: "d88Bpab7ZSa4v7/RRtnADZKWqjRFc17S5/F1tTyyxqsFkuDfohc7KjLv5xcBZn/4dL0G00G47eFUY0caZ3pydKBtgoKZ8MymxioNjpKd2PiPHOcY04MGQJ1lApB/VqjKuZIruHdt+3TDTcgtJYhyTmaVkVy77YXM1ep6P4EHT/Ns/n0qZgsK6h4orRX9mY9FFYHRlnp/Mt2iJN7PCng/2DaOQ0F6yMXI3/RYHlfAPPKPBYL1eTmrvBuVViNDCGDkd19A6eWZnkT1SWF1KGa6BN9fW3pcNfL0PPBY43S2fekZmHstcbBsskzqG+VhIcfPNdB1RRZteBRwuzBpf+NylbCC8y01PbwZ4gGDVuho+2sqdWteV741XX25HqhV8WiET9c4rzbMvIAFb5qDDlZBzwikg/Dhlqu1ik+yiAeYEuq7NvCpGD4IMdVMR7B457Qe/7NvrAD8R9TCvWaHAxA9zTUlTL7lV0UGJDrdtbfpZsDMP8/uJh5a4CWjxvc4+h158NOLO6aRCqb/NRjeyhBlUdUJ1JWXb7Z9/mDZHKvZOvl+fzk0O7pGDFG6kKwXcq3VZmitFP6n3ZgE1Q3/TcF08N9JNqKkwXvAg/wlNlABucMi84bMyk9c6CI9MSXdM57Anf70zGCbNOClGsPbgWIHnZEwAIgR5xiIC6xS+oEsELo="
+    key: e0359255d942d34241c41801f78983b6c22f5b23
     dry-run: false
     skip_cleanup: true
     on:
