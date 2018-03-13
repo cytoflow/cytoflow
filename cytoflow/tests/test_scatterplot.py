@@ -28,7 +28,8 @@ import matplotlib
 matplotlib.use('Agg')
 
 import cytoflow as flow
-from cytoflow.tests.test_base import ImportedDataTest
+
+from test_base import ImportedDataTest  # @UnresolvedImport
 
 class TestHistogram2D(ImportedDataTest):
 

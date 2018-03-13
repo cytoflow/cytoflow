@@ -30,7 +30,8 @@ matplotlib.use('Agg')
 
 import cytoflow as flow
 import cytoflow.utility as util
-from cytoflow.tests.test_base import ImportedDataTest
+
+from test_base import ImportedDataTest
 
 class TestBarChart(ImportedDataTest):
 

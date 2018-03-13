@@ -22,14 +22,14 @@ Created on Mar 5, 2018
 @author: brian
 '''
 
-import os
 import unittest
 
 import matplotlib
 matplotlib.use('Agg')
 
 import cytoflow as flow
-from cytoflow.tests.test_base import ImportedDataTest
+
+from test_base import ImportedDataTest  # @UnresolvedImport
 
 class TestHistogram(ImportedDataTest):
 

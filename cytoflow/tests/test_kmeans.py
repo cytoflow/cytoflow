@@ -28,7 +28,6 @@ import matplotlib
 matplotlib.use('Agg')
 
 import cytoflow as flow
-import cytoflow.utility as util
 
 class TestKMeans(unittest.TestCase):
 
