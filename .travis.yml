@@ -43,44 +43,38 @@ before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export PATH=/Users/travis/miniconda3/bin:$PATH; fi
   - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then export PATH=/home/travis/miniconda3/bin:$PATH; export LD_LIBRARY_PATH=/home/travis/miniconda3/envs/py35/lib; fi
   - conda update --yes conda
+  - conda config --add channels bpteague
+  - conda install --yes --quiet anaconda-client conda-build
 
 install:
 
+  - conda build packaging/conda_recipes/cytoflow
+  
   - conda create --yes --quiet --name=cytoflow python=3.5 nomkl
   - source activate cytoflow
-  - python --version
-  - conda config --add channels bpteague
-  - conda install --yes --quiet --file=packaging/conda-requirements.txt
-  - conda install --yes --quiet pip mock anaconda-client conda-build
-  - pip install nose2 
-  - pip install "sphinx==1.6.7"
-  - pip install "pyinstaller==3.3.1"
-  
-  # the PyYAML wheels are busted.  install from source instead.
-  - pip install --no-use-wheel pyyaml
-
-  # - python setup.py develop 
-  - conda build packaging/conda_recipes/cytoflow
   - conda install --use-local cytoflow
 
 before_script:
+  - conda install --yes --quiet pip mock 
+  - pip install nose2 
   - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then export DISPLAY=:99.0; sh -e /etc/init.d/xvfb start; sleep 3; fi
 
-script: nose2 -c packaging/nose2.cfg -s cytoflow/tests
+script: nose2 -c packaging/nose2.cfg -s cytoflow/tests -N 2
 
 after_success:
 
-  # - python setup.py build_sphinx 
-  - python setup.py bdist_wheel
-  - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then python setup.py sdist; fi
+  - pip install "sphinx==1.6.7"
+  - pip install "pyinstaller==3.3.1"
   - python setup.py build_sphinx -b embedded_help
+
+  - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then python setup.py sdist; fi
+  - python setup.py bdist_wheel
 
   - pyinstaller --log-level=DEBUG packaging/pyinstaller.spec
   - pyi-archive_viewer -l dist/cytoflow
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then cd dist/; zip -r cytoflow.macos.zip Cytoflow.app/; rm -rf Cytoflow.app cytoflow; cd ..; fi
   - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then mv dist/cytoflow dist/cytoflow-linux.x86_64; fi
   - ls -al dist/*
-  - python3 -c 'import sys, packaging; print(sys.modules["packaging"])'
 
 
 deploy:

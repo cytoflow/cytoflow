@@ -1,9 +1,7 @@
 include README.*
 include *.txt
 include docs/*.rst
-include docs/*.py
 recursive-include docs/examples-basic *.ipynb *.fcs
 include docs/examples-advanced/README.md
-prune cytoflow/tests
 include cytoflow/utility/logicle_ext/LICENSE.txt
 include cytoflow/utility/logicle_ext/logicle.h
