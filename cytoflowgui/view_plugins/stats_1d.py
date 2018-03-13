@@ -85,8 +85,8 @@ operation's **Group By**) must be set as **Variable** or as a facet.
     
     flow.Stats1DView(variable = 'Dox',
                      statistic = ('MeanByDox', 'geom_mean'),
-                     xscale = 'log',
-                     yscale = 'log').plot(ex2)
+                     scale = 'log',
+                     variable_scale = 'log').plot(ex2)
 """
 
 from traits.api import provides, Callable, Property, Enum, Instance, Tuple
