@@ -690,7 +690,8 @@ class GaussianMixture1DView(By1DView, AnnotatingView, HistogramView):
                 patch_area += poly_area([scale(p[1]) for p in xy], [p[0] for p in xy])
             
             plt_min, plt_max = plt.gca().get_ylim()
-            y = scale.inverse(np.linspace(scale(plt_min), scale(plt_max), 500))   
+            y = scale.inverse(np.linspace(scale(scale.clip(plt_min)), 
+                                          scale(scale.clip(plt_max)), 500))   
             pdf_scale = patch_area * gmm.weights_[idx]
             mean = gmm.means_[idx][0]
             stdev = np.sqrt(gmm.covariances_[idx][0])
@@ -706,7 +707,8 @@ class GaussianMixture1DView(By1DView, AnnotatingView, HistogramView):
                 patch_area += poly_area([scale(p[0]) for p in xy], [p[1] for p in xy])
             
             plt_min, plt_max = plt.gca().get_xlim()
-            x = scale.inverse(np.linspace(scale(plt_min), scale(plt_max), 500))   
+            x = scale.inverse(np.linspace(scale(scale.clip(plt_min)), 
+                                          scale(scale.clip(plt_max)), 500))   
             pdf_scale = patch_area * gmm.weights_[idx]
             mean = gmm.means_[idx][0]
             stdev = np.sqrt(gmm.covariances_[idx][0])
