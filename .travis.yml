@@ -75,7 +75,6 @@ after_success:
   - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then mv dist/cytoflow dist/cytoflow-linux.x86_64; fi
   - ls -al dist/*
 
-
 deploy:
   - provider: releases
     api_key: 
@@ -91,7 +90,7 @@ deploy:
     file: packaging/bintray.json
     user: bpteague
     key:
-      secure: "d88Bpab7ZSa4v7/RRtnADZKWqjRFc17S5/F1tTyyxqsFkuDfohc7KjLv5xcBZn/4dL0G00G47eFUY0caZ3pydKBtgoKZ8MymxioNjpKd2PiPHOcY04MGQJ1lApB/VqjKuZIruHdt+3TDTcgtJYhyTmaVkVy77YXM1ep6P4EHT/Ns/n0qZgsK6h4orRX9mY9FFYHRlnp/Mt2iJN7PCng/2DaOQ0F6yMXI3/RYHlfAPPKPBYL1eTmrvBuVViNDCGDkd19A6eWZnkT1SWF1KGa6BN9fW3pcNfL0PPBY43S2fekZmHstcbBsskzqG+VhIcfPNdB1RRZteBRwuzBpf+NylbCC8y01PbwZ4gGDVuho+2sqdWteV741XX25HqhV8WiET9c4rzbMvIAFb5qDDlZBzwikg/Dhlqu1ik+yiAeYEuq7NvCpGD4IMdVMR7B457Qe/7NvrAD8R9TCvWaHAxA9zTUlTL7lV0UGJDrdtbfpZsDMP8/uJh5a4CWjxvc4+h158NOLO6aRCqb/NRjeyhBlUdUJ1JWXb7Z9/mDZHKvZOvl+fzk0O7pGDFG6kKwXcq3VZmitFP6n3ZgE1Q3/TcF08N9JNqKkwXvAg/wlNlABucMi84bMyk9c6CI9MSXdM57Anf70zGCbNOClGsPbgWIHnZEwAIgR5xiIC6xS+oEsELo="
+      secure: "lo8WXeYxoJ02Ddwi2Lmz7ig0JGRIUe7QUZ4JYvzkgLGqFdVdf1RfSDItgfjpxj//lLAIBxVi7KjpEKWeFddLjv1BL7awgCkCDqdrRI5lkr5r/MjDWueAASDa8kAnOwLesGz7wP9Kvx+ymcOLUrmOKEWwu1vDbSxo12FdKgiIOPW/IA97fJlKO5NdaNYf04crKkWB8L5VL5ml/v3989QFIuuaWcJscHIeOX1crhSKNFgl/eokB4GysxYXZr2wG0C3G/3q1s1PLjbFTfN13vrlUT1AbEN48QB88vvn8IEggf4jRfK8Vo4zvXyO4rimoTmpTIQUW+XPX5jbw7KM4ZmLin/xbl7j9LiyPrEItfwklJRrivyYpvIPC5zuC3bO4zinHA/YIRYQh1/aGkaX8QDrs6UXNAawIpFICEYJl1AsBgBZyaItECOoV5/CK9P4uwxLQ5TnI+DLdoQ7yGQTwusniykS9vliKkw2kU/WeN9GOdakSSTgCsr8KeSFWOHqprf0tZ9iByThouBZu1snEz1+o0TY8cAw7RGZg376U1DCfJJtk/5PrYBGNGHsvO4FZ8+ElyNPVp7igtJ6qjA6T8TCgeaDJYF0UCjM0wEEgg8JKfNViHDrhTF9IyMcwaDqbuAEs8ejighY1L8ooAKGZbMN2s90gTbdNWV0LHp75yHDQ2Q="
     dry-run: false
     skip_cleanup: true
     on:
@@ -100,7 +99,8 @@ deploy:
   - provider: bintray
     file: packaging/bintray.json
     user: bpteague
-    key: e0359255d942d34241c41801f78983b6c22f5b23
+    key:
+      secure: "lo8WXeYxoJ02Ddwi2Lmz7ig0JGRIUe7QUZ4JYvzkgLGqFdVdf1RfSDItgfjpxj//lLAIBxVi7KjpEKWeFddLjv1BL7awgCkCDqdrRI5lkr5r/MjDWueAASDa8kAnOwLesGz7wP9Kvx+ymcOLUrmOKEWwu1vDbSxo12FdKgiIOPW/IA97fJlKO5NdaNYf04crKkWB8L5VL5ml/v3989QFIuuaWcJscHIeOX1crhSKNFgl/eokB4GysxYXZr2wG0C3G/3q1s1PLjbFTfN13vrlUT1AbEN48QB88vvn8IEggf4jRfK8Vo4zvXyO4rimoTmpTIQUW+XPX5jbw7KM4ZmLin/xbl7j9LiyPrEItfwklJRrivyYpvIPC5zuC3bO4zinHA/YIRYQh1/aGkaX8QDrs6UXNAawIpFICEYJl1AsBgBZyaItECOoV5/CK9P4uwxLQ5TnI+DLdoQ7yGQTwusniykS9vliKkw2kU/WeN9GOdakSSTgCsr8KeSFWOHqprf0tZ9iByThouBZu1snEz1+o0TY8cAw7RGZg376U1DCfJJtk/5PrYBGNGHsvO4FZ8+ElyNPVp7igtJ6qjA6T8TCgeaDJYF0UCjM0wEEgg8JKfNViHDrhTF9IyMcwaDqbuAEs8ejighY1L8ooAKGZbMN2s90gTbdNWV0LHp75yHDQ2Q="
     dry-run: false
     skip_cleanup: true
     on:
@@ -118,7 +118,7 @@ deploy:
     distributions: "sdist bdist_wheel"
     
   - provider: script
-    script: ./packaging/deploy_anaconda.sh
+    script: bash packaging/deploy_anaconda.sh
     skip_cleanup: true
     on:
       branch: packaging
