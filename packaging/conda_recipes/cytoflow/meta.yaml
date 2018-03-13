@@ -1,8 +1,6 @@
 package:
   name: cytoflow
-  #version: {% if TRAVIS_TAG is defined %} {{ TRAVIS_TAG }} {% else %} {{ TRAVIS_COMMIT }} {% endif %}
-  version: {{ environ.get('TRAVIS_TAG', environ.get('TRAVIS_COMMIT', 'nocommit')) }}
-
+  version: "0.8.0"
 
 source:
   path: ../../..
@@ -10,16 +8,9 @@ source:
 
 build:
   number: {{ environ.get('TRAVIS_BUILD_NUMBER', 'nobuild') }}
-  # string: {{ GIT_BUILD_STR }}
-
-  # entry_points:
-    # Put any entry points (scripts to be generated automatically) here. The
-    # syntax is module:function.  For example
-    #
-    # - cycler = cycler:main
-    #
-    # Would create an entry point called cycler that calls cycler.main()
-
+  entry_points:
+    - cytoflow = cytoflowgui.run:run_gui
+    - cf-channel_voltages = cytoflow.scripts.channel_voltages:main
 
 requirements:
   build:
