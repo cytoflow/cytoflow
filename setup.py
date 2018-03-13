@@ -26,7 +26,6 @@ try:
 except ImportError:
     has_sphinx = False
     
-
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 no_logicle = os.environ.get('NO_LOGICLE', None) == 'True'
 
@@ -63,7 +62,7 @@ long_description = read_rst('README.rst')
 setup(
     name = "cytoflow",
     version = find_version("cytoflow", "__init__.py"),
-    packages = find_packages(),
+    packages = find_packages(exclude = ["packaging", "packaging.qt"]),
     cmdclass = {'build_sphinx': BuildDoc} if has_sphinx else {},
     
     # Project uses reStructuredText, so ensure that the docutils get
@@ -106,7 +105,10 @@ setup(
     package_data = { 'cytoflowgui' : ['preferences.ini',
                                       'images/*.png',
                                       'op_plugins/images/*.png',
-                                      'view_plugins/images/*.png']},
+                                      'view_plugins/images/*.png',
+                                      'help/*.html',
+                                      'help/_images/*.png',
+                                      'help/_static/*']},
 
     # metadata for upload to PyPI
     author = "Brian Teague",
@@ -135,6 +137,5 @@ setup(
                  'Topic :: Software Development :: Libraries :: Python Modules'],
     
     entry_points={'console_scripts' : ['cf-channel_voltages = cytoflow.scripts.channel_voltages:main'],
-                  'gui_scripts' : ['cytoflow = cytoflowgui:run_gui'],
-                  'nose.plugins.0.10' : ['mplplugin = nose_plugins:MplPlugin']}
+                  'gui_scripts' : ['cytoflow = cytoflowgui.run:run_gui']}
 )
