@@ -87,6 +87,8 @@ deploy:
       tags: true
       
   - provider: bintray
+    edge:
+      branch: v1.8.47
     file: packaging/bintray.json
     user: bpteague
     key:
@@ -97,6 +99,8 @@ deploy:
       branch: packaging
       
   - provider: bintray
+    edge:
+      branch: v1.8.47
     file: packaging/bintray.json
     user: bpteague
     key:
