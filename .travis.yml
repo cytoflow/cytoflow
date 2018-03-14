@@ -54,6 +54,7 @@ install:
   - export CONDA_BUILD_NUMBER=$TRAVIS_BUILD_NUMBER
 
   # build and install conda recipe
+  - conda render packaging/conda_recipes/cytoflow
   - conda build packaging/conda_recipes/cytoflow
   - conda create --yes --quiet --name=cytoflow python=3.5.4 nomkl
   - source activate cytoflow

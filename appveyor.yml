@@ -52,6 +52,7 @@ install:
   - setx CONDA_BUILD_NUMBER %APPVEYOR_BUILD_NUMBER%
   
   # Build the conda package
+  - conda render packaging\conda_recipes\cytoflow
   - "%WITH_COMPILER% conda build packaging\\conda_recipes\\cytoflow"
   
   # Install the new package locally
