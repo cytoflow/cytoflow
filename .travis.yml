@@ -77,6 +77,8 @@ after_success:
 
 deploy:
   - provider: releases
+    edge:
+      branch: v1.8.47
     api_key: 
       secure: "EiLTgjYPi2qgQWhxZzljvi8rLpJg7Seu6LQXAxqeQFCthkonsyzr+Wg44jLQfVKo5Y4KjiPN/QXbpmfvjT2wlTE1qhEwu8q9hDWhXtaHoQ8nDMEABVosvNWbCZc5xT8qSydglmtK2gkUfW7wICkgFEw7Tp7eOXN0XQOMph5LXDdnR0vrk7qR9TU3Ld3pbbCEliA02SZi0a2Es9+S72dwIJhjkhNlrVc0mqwZ5q3SAFGD+Txol/ZydWijN2iuvhDGzemOCAPi+3lyZvc7kcUSkdTNWjO8pwVn7MiYx+JDMsKxEL0yHLX0425TJMT+ptpNio6k+xk1Zmn2PmHLyWC+JcBfXG0qnvOjaVQ61hssSgb+ku3oDxO5UJpEmPOOP6A/f6x+PZPo9nm4s+2vU6dHH4YU/5CjZPF0/GuNBTYL5jJengATNVq2TQ368FPu+lUuYkUyrH2+jFLTprvE7iaEJAebb7KMiz5wBqn12uoybhKshV8v6PjXXHjDlIu7iDEnhZlY9pdhmFCNEmMLkvjzaUGjLBPG/WbeIiUuDyEt9xk7qP99fij8olJYxCDTa7JglZXytNj/VSo2BR+kY/cPPJimR4VX+U/82UVs/D3i3vmBf3/yf/vhRXGkozo616Vt2O8TS3xpj6LUNdOydiOPfIj+zAAu1NYeedZjkKpiy1M="
     file_glob: true
@@ -111,6 +113,8 @@ deploy:
       branch: master
 
   - provider: pypi
+    edge:
+      branch: v1.8.47
     user: Brian.Teague
     password:
       secure: P2kebBOVixLdfWV0UYKPa8Y87YIqWc4I1TAr6myTiTL1OGdHvAsoBL3hxP+84F8ZL52hnqUWL/GuRO+IIf4R4IJbIF8Nj8DQG28dN/jBNK/EgBd0ut6myv4yFht5aL5o7qsCpTZxxwDori0+7y8wkvAd/Dz5T+UNb5TzOT2W/aYBz2LRwJaJ2lmGPktCJfopVUxGD9iWCJV1imaw9IqBZof8v1bbkFGf06Lpgb8TKeGZGikiFiiDhDjXuVmsH8FysJV5KmiWUxNOvzZ6xNU+gqOLkVP3bZwM764ZKlU5GEkKP4Yfdru/ixicwm2bAENSQ4B9OZKnhrx8oycJLyrIMlEctWByva8Yj+zBvxPsSjwc+DvIjmbfJVnhAY0aWpMVfbfASlTny+dMjPesuGb/kieSD7rF4S82Zfs4mcNXF25QFteyjcTswp/WSdZMg7jmU23fi8XVMZxNHeYuZFciJW4DSpMM8nSWUXb5tT9NPUQmRKLGYGY4mFh+F2P6/exZwISzWkDIVZNAmOhGec8D00YmceVHe1dk4nX+i6BWojsP6KGmbAgIrZxmDJ8T/mWVWu0yAnU2QpyJMsbrPIaM7otNQaVoHwSk4c5IFcON2ZEdz/gs6KRd99M+fQBJzOEYS8WqNlOS+TpQhkmOhyU4xFuKv4ieyWLXu7PofQR9nAQ=
@@ -122,6 +126,8 @@ deploy:
     distributions: "sdist bdist_wheel"
     
   - provider: script
+    edge:
+      branch: v1.8.47
     script: bash packaging/deploy_anaconda.sh
     skip_cleanup: true
     on:
