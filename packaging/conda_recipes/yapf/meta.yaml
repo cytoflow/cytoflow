@@ -18,6 +18,7 @@ build:
   entry_points:
     - yapf = yapf:run_main
   script: python setup.py install --single-version-externally-managed --record=record.txt
+  noarch: python
 
 requirements:
   host:
