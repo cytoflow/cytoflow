@@ -49,6 +49,11 @@ before_install:
 
 install:
 
+  # set up conda build variables
+  - if [[ -z $TRAVIS_TAG ]]; then export CONDA_TAG="untagged"; else export CONDA_TAG=$TRAVIS_TAG; fi
+  - export CONDA_BUILD_NUMBER=$TRAVIS_BUILD_NUMBER
+
+  # build and install conda recipe
   - conda build packaging/conda_recipes/cytoflow
   - conda create --yes --quiet --name=cytoflow python=3.5.4 nomkl
   - source activate cytoflow

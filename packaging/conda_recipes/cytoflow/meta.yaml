@@ -1,13 +1,13 @@
 package:
   name: cytoflow
-  version: "0.8.0"
+  version: {{ environ.get('CONDA_TAG', 'notag') }}
 
 source:
   path: ../../..
 
 
 build:
-  number: {{ environ.get('TRAVIS_BUILD_NUMBER', 'nobuild') }}
+  number: {{ environ.get('CONDA_BUILD_NUMBER', '0') }}
   entry_points:
     - cytoflow = cytoflowgui.run:run_gui
     - cf-channel_voltages = cytoflow.scripts.channel_voltages:main

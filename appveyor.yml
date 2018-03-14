@@ -47,6 +47,10 @@ install:
   - conda config --add channels bpteague
   - conda install --yes --quiet anaconda-client conda-build
   
+  # Set up conda recipe variables
+  - IF "%APPVEYOR_REPO_TAG_NAME%"=="" ( SET CONDA_TAG=%APPVEYOR_REPO_TAG_NAME% ) ELSE ( SET CONDA_TAG=untagged )
+  - SET CONDA_BUILD_NUMBER=%APPVEYOR_BUILD_NUMBER%
+  
   # Build the conda package
   - "%WITH_COMPILER% conda build packaging\\conda_recipes\\cytoflow"
   
