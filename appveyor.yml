@@ -60,7 +60,7 @@ install:
 #  - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
   
   # - conda install --yes --quiet mkl=2017.0.3-0  # new version of mkl has bad interaction with numpy
-  - conda install --yes --quiet msvc_runtime pip mock anaconda-client conda-build
+  - conda install --yes --quiet msvc_runtime pip mock
 
   # Install test requirements
   - pip.exe install nose2 
@@ -85,6 +85,7 @@ after_test:
   - "move dist\\cytoflow.exe dist\\cytoflow-%PYTHON_ARCH%.exe"
   
   # Move conda package to dist folder
+  - deactivate
   - python packaging\move_conda_package.py packaging\conda_recipes\cytoflow
   
   # - "IF %PYTHON_ARCH% EQU 32 move build\\lib.win32-3.5\\cytoflow\\utility\\logicle_ext\\_Logicle.pyd dist\\_Logicle-32.pyd"
