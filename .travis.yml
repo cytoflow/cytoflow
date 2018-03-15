@@ -79,7 +79,7 @@ after_success:
   - pyi-archive_viewer -l dist/cytoflow
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then cd dist/; zip -r cytoflow.macos.zip Cytoflow.app/; rm -rf Cytoflow.app cytoflow; cd ..; fi
   - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then mv dist/cytoflow dist/cytoflow-linux.x86_64; fi
-  - cp cytoflow/utility/logicle_ext/*.so dist/
+  - cp `find build | grep "\.so$"`
   - ls -al dist/*
 
 deploy:
