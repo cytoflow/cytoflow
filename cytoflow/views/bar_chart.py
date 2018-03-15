@@ -255,17 +255,6 @@ def _barplot(*args, view, stat_name, error_name, orientation, grid, **kwargs):
                            errwidth = errwidth,
                            capsize = capsize)
 
-    # do axes
-#     if view.orientation == "vertical":
-#         xlabel, ylabel = view.variable, stat_name
-#     else:
-#         xlabel, ylabel = stat_name, view.variable
-# 
-#     if xlabel is not None:
-#         ax.set_xlabel(xlabel)
-#     if ylabel is not None:
-#         ax.set_ylabel(ylabel)
-
     if orientation == "vertical":
         ax.set_xticks(np.arange(len(categories)))
         ax.set_xticklabels(categories)
@@ -302,7 +291,7 @@ def _draw_confints(ax, at_group, stat, confints, colors,
                                  ci_lo,
                                  ci_hi,
                                  colors):
-        if orient == "v":
+        if orient == "vertical":
             ax.plot([at, at], [lo, hi], color=color, **kws)
             if capsize is not None:
                 ax.plot([at - capsize / 2, at + capsize / 2],
