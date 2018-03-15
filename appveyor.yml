@@ -93,16 +93,21 @@ after_test:
   - deactivate
   - python packaging\move_conda_package.py packaging\conda_recipes\cytoflow
   
-  - "IF %PYTHON_ARCH% EQU 32 move build\\lib.win32-3.5\\cytoflow\\utility\\logicle_ext\\_Logicle*.pyd ."
-  - "IF %PYTHON_ARCH% EQU 64 move build\\lib.win-amd64-3.5\\cytoflow\\utility\\logicle_ext\\_Logicle*.pyd ."
+  - "IF %PYTHON_ARCH% EQU 32 move build\\lib.win32-3.5\\cytoflow\\utility\\logicle_ext\\_Logicle*.pyd dist\\"
+  - "IF %PYTHON_ARCH% EQU 64 move build\\lib.win-amd64-3.5\\cytoflow\\utility\\logicle_ext\\_Logicle*.pyd dist\\"
 
 on_success:
 # from https://github.com/theochem/python-cython-ci-example/blob/master/.appveyor.yml
-
+# Upload to anaconda, with the correct label derived from the version tag.
+# This is virtually impossible with a normal dos batch script...
+# It also contains an incredibly clunky way to avoid build failure when anaconda writes
+# something harmless to stderr. The normal way does not work!
+# & anaconda $parameters 2>&1
+# Powershell should be called Powerhell!
   - ps:
 #      if (($Env:APPVEYOR_REPO_TAG -eq "true") -and
 #          ($Env:APPVEYOR_REPO_NAME -eq ${Env:GITHUB_REPO_NAME})) {
-        $tar_glob = ".\cytoflow-*.tar.bz2";
+        $tar_glob = ".\dist\cytoflow-*.tar.bz2";
         Write-Host "tar_glob $tar_glob";
         if ($Env:APPVEYOR_REPO_TAG_NAME -like "*a*") {
           $anaconda_label = "alpha"
