@@ -91,7 +91,7 @@ after_test:
   
   # Move conda package to dist folder
   - deactivate
-  - python packaging\move_conda_package.py packaging\conda_recipes\cytoflow
+  - python packaging\move_conda_package.py
   
   - "IF %PYTHON_ARCH% EQU 32 move build\\lib.win32-3.5\\cytoflow\\utility\\logicle_ext\\_Logicle*.pyd dist\\"
   - "IF %PYTHON_ARCH% EQU 64 move build\\lib.win-amd64-3.5\\cytoflow\\utility\\logicle_ext\\_Logicle*.pyd dist\\"
@@ -142,7 +142,6 @@ deploy:
     username: bpteague
     api_key:
       secure: J1xtgBNfGlyHwokEnESgGsM01Oe/ZBYZF/DzWDutMYtOTCd4bJdmT1kZsirim/Gp
-
     subject: bpteague
     repo: cytoflow
     package: cytoflow
@@ -157,7 +156,6 @@ deploy:
     username: bpteague
     api_key:
       secure: J1xtgBNfGlyHwokEnESgGsM01Oe/ZBYZF/DzWDutMYtOTCd4bJdmT1kZsirim/Gp
-
     subject: bpteague
     repo: cytoflow
     package: cytoflow
