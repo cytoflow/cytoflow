@@ -3,304 +3,170 @@
 Installation notes
 ==================
 
-To use the Cytoflow modules in an IPython notebook or your own code
+To use the Cytoflow modules in a Jupyter notebook or your own code
 -------------------------------------------------------------------
 
-.. _ubuntu-mod:
+.. _modules:
 
-Ubuntu
-^^^^^^
+Cytoflow is available as a package for the Anaconda scientific Python
+distribution.  You can install *cytoflow* through the Anaconda Navigator,
+or by using the command line.
 
-On a fresh Ubuntu 14.04 install::
+**This is not the only way to get Cytoflow up and running, but it is by far
+the most straightforward.**
 
-	# main cytoflow dependencies
-	brian@vm:~$ apt-get install python-pip python-qt4 build-essential swig python-dev
-	
-	# we require a relatively recent version of numpy, and numpy in turn
-	# requires a significant number of dependencies (cython, fortran, blas, 
-	# lapack).  the easiest way to make sure you get them all is to just install
-	# the build dependencies of the Ubuntu package:
-	brian@vm:~$ sudo apt-get build-dep numpy 
-	
-	# pandas wants numpy installed separately.  i'm sure this is an upstream bug
-	brian@vm:~$ pip install --upgrade --user numpy
-	
-	# cytoflow requires a very recent version of matplotlib.  if pip tries to 
-	# install matplotlib and fails with "The following required packages can not be
-	# built: freetype, png", then you have two options.  You can either install
-	# just those packages...
-	
-	brian@vm:~$ sudo apt-get install libpng12-dev libfreetype6-dev
-	
-	# .... or you can install the entire set of matplotlib build dependencies
-	# (gets you LaTeX support, among other niceties, but the packages sum to
-	# 500 Mb!)
-	
-	brian@vm:~$ sudo apt-get build-dep matplotlib
-	
-	# install matplotlib
-	brian@vm:~$ pip install --upgrade --user matplotlib
-	
-	# finally, install cytoflow:
-	brian@vm:~$ pip install --upgrade --user cytoflow
-	
-	# if you want to use the IPython/Jupyter notebook (and you should!), do
-	brian@vm:~$ pip install --upgrade jupyter
-	
-.. _windows-mod:
-	
-Windows
-^^^^^^^
-
-**This is not the only way to get CytoFlow up and running, but it is by far
-the fastest.**
+Installing from the ``Anaconda Navigator``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Start by installing the Anaconda Python distribution. **Make sure to install
   version 3.6.** 
 
   `Download Anaconda here <https://www.continuum.io/downloads>`_
 
-* From the Start menu, in the Anaconda folder, run ``Anaconda Command Prompt``
-
-* Install the conda package dependencies.  At the command prompt, type::
-
-    conda install pandas bottleneck numpy numexpr matplotlib scipy scikit-learn seaborn traits traitsui pyface nbformat python-dateutil statsmodels qt pip
-
-* Install the package with pip::
-
-   pip install cytoflow
-   
-* To verify installation, start an Jupyter notebook.  From the Start menu, in 
-  the Anaconda folder, run ``Jupyter (Py 3.6) Notebook``.  In the first cell,
-  type ``import cytoflow`` and press ``Shift+Enter``.  If Python doesn't complain,
-  you're good to go.  (If it does, please submit a bug report!)
+* Either from the Start Menu (Windows) or the Finder (Mac), run the 
+  ``Anaconda Navigator``
   
-MacOS
-^^^^^
-
-** As with Windows, this is not the only way to install CytoFlow but it is the fastest.
-
-* Start by installing the Anaconda Python distribution. **Make sure to install
-  version 3.6.**
-
-  `Download Anaconda here <https://www.continuum.io/downloads>`_
- 
-* Start the Terminal.
- 
-* Install the conda package dependencies.  At the Terminal prompt, type::
-     
-     conda install pandas bottleneck numpy numexpr matplotlib scipy scikit-learn seaborn traits traitsui pyface nbformat python-dateutil statsmodels qt pip
+* Add the channel ``bpteague``:
   
-* Install the `cytoflow` package with `pip`.  At the Terminal prompt, type::
-     
-     pip install cytoflow
-     
-* To verify the installation, start a Jupyter notebook from the Anaconda Navigator.  A
-  browser window will open.  Create a new Python 3 notebook, and in the first cell type
-  ``import cytoflow`` and press ``Shift+Enter``.  If Python doesn't complain,
-  you're good to go.  (If it does, please submit a bug report!)
+  * Click the ``Channels`` button.
+  * Click ``Add...`` and type ``bpteague``.
+  
+* The application ``cytoflow`` should appear in the launcher.  
+  Click the ``Install`` button. 
+  
+* ``Navigator`` asks if you'd like to install in a new environment.  
+  Say ``Yes``..
+
+* To verify installation, start a Jupyter notebook.
+
+  * First, *make sure you have the ``cytoflow`` environment selected.*
+  * From the ``Anaconda Navigator``, install and then launch ``Jupyter notebook``.
+  * Create a new *Python 3* notebook.
+  * In the first cell, type ``import cytoflow`` and press ``Shift+Enter``.  
+    If Python doesn't complain, you're good to go.  (If it does, please submit 
+    a bug report!)
+  
+* **Note: When you install ``cytoflow`` this way, the point-and-click 
+  application is installed as well.**  Launching it from the 
+  ``Anaconda Navigator`` will be significantly faster than downloading the
+  pre-packaged binary.
+
+Installing from the command line
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Start ``Anaconda Prompt`` from the Start Menu (Windows) or Finder (Mac).
+
+* Add the ``bpteague`` channel::
+
+    conda config --add channels bpteague
+
+* Create a new environment and install ``cytoflow`` and the Jupyter notebook.  
+  In this example, the new environment will be called ``cf`` -- feel free to
+  choose a different name::
+  
+    conda create --name cf cytoflow notebook
+    
+* Activate the new environment::
+
+    conda activate cf
+    
+* Launch the Jupyter notebook::
+
+    jupyter notebook
+    
+* Create a new *Python 3* notebook.  In the first cell, type ``import cytoflow``
+  and press ``Shift+Enter``.  If Python doesn't complain, you're good to go.  
+  (If it does, please submit a bug report!)
+  
 
 .. _hacking:
 
 To hack on the code
--------------------------------
+-------------------
 
-Ubuntu
-^^^^^^
+Cytoflow depends on a huge number of libraries from the Scientific Python 
+ecosystem, and a change in any one of their APIs will break the ``cytoflow``
+library.  So, I have pinned the versions of all of ``cytoflow``'s dependencies,
+which all but guarantees that you'll need to install into a virtual environment.
+This will ensure that the rest of your Python installation doesn't break.
 
-On a fresh Ubuntu 14.04 install::
+I strongly recommend using Anaconda to install the proper dependencies.  
+A PyPI package (installable using ``pip``) is also available.  The following
+instructions assume that you have installed Anaconda (as above) and launched
+an Anaconda prompt.
 
-	# much of this looks like above.
+Finally, ``cytoflow`` relies on one C++ extension.  On Linux, installing the
+requirements for building it is straightforward.  On MacOS it is harder, and
+on Windows it is extremely difficult.  Instead, as part of rolling a new
+release, the appropriate files are made available on the GitHub releases
+page.  The procedure below includes instructions for downloading and installing
+the appropriate file.
 
-	# main cytoflow dependencies
-	brian@vm:~$ apt-get install python-pip python-qt4 swig python-dev
-	
-	# we require a relatively recent version of numpy, and numpy in turn
-	# requires a significant number of dependencies (cython, fortran, blas, 
-	# lapack).  the easiest way to make sure you get them all is to just install
-	# the build dependencies of the Ubuntu package:
-	brian@vm:~$ sudo apt-get build-dep numpy 
-	
-	# pandas wants numpy installed separately.  i'm sure this is an upstream bug
-	brian@vm:~$ pip install --upgrade --user numpy
-	
-	# cytoflow requires a very recent version of matplotlib.  if pip tries to 
-	# install matplotlib and fails with "The following required packages can not be
-	# built: freetype, png", then you have two options.  You can either install
-	# just those packages...
-	
-	brian@vm:~$ sudo apt-get install libpng12-dev libfreetype6-dev
-	
-	# .... or you can install the entire set of matplotlib build dependencies
-	# (gets you LaTeX support, among other niceties, but the packages sum to
-	# 500 Mb!)
-	
-	brian@vm:~$ sudo apt-get build-dep matplotlib
-	
-	# install matplotlib
-	brian@vm:~$ pip install --upgrade --user matplotlib
-	
-	# here's where things diverge.  clone the repo from github
-	brian@vm:~$ sudo apt-get install git
-	brian@vm:~$ git clone https://github.com/bpteague/cytoflow.git
-	
-	# and install the requirements from requirements.txt, but don't install
-	# the cytoflow package itself!
-	brian@vm:~$ cd cytoflow
-	brian@vm:~/cytoflow$ pip install --user -r requirements.txt
-	
-	# now, install cytoflow in developer mode so you can hack on it in the
-	# source directory and run it from python to test
-	brian@vm:~/cytoflow$ python setup.py develop --user
-	
-Now you can use whatever development environment floats your boat.  I'm a fan
-of Eclipse and PyDev.
+* Install the development dependencies
 
+  * On Ubuntu: ``apt-get git swig python-dev``
+  * On Windows: Install a copy of ``git``.  I use `git-for-windows <http://git-for-windows.github.io>`_
+  * On MacOS: Install a copy of ``git`` from `the Git website <http://www.git-scm.com>`_.
 
-Windows
-^^^^^^^
+* If you haven't, add the ``bpteague`` channel to conda::
 
-``cytoflow`` has one C++ module, compiled with ``swig``.  Unfortunately, compiling
-modules on Windows requires Microsoft Visual C++ and the Windows Development Kit,
-which are huge dependencies and a huge pain in the ass.  And once you get it 
-installed, setting up Python to talk with it?  Forget about it.
+    conda config --add channels bpteague
 
-The instructions below assume that you do not want to fight that fight. Instead,
-the ``cytoflow`` continuous integration servers build the compiled extension, and
-when I roll a release they get posted on the GitHub release page.
+* Create a new environment.  In this example, I have called it ``cf_dev``::
 
-* Install a copy of ``git``.  I use `git-for-windows <http://git-for-windows.github.io>`_
+    conda create --name cf_dev
+  
+* Activate the new environment
 
-* Clone the git repo.  **From git-bash**, say::
+  * On Windows: ``conda activate cf_dev``
+  * On Mac, Linux or Windows running bash: ``source activate cf_dev``
+  
+* Install ``cytoflow``'s dependencies::
+
+    conda install --only-deps cytoflow
+    
+* Clone the repository::
 
     git clone https://github.com/bpteague/cytoflow.git
-
-* Install the Anaconda Python distribution. **Make sure to install
-  version 3.6.**
-
-  `Download Anaconda here <https://www.continuum.io/downloads>`_
-
-* From the Start menu, in the Anaconda folder, run ``Anaconda Command Prompt``
-
-* Install the conda package dependencies.  From the cytoflow source directory, say::
-
-    conda install --file=packaging/conda-requirements.txt
-    conda install pip
     
-* Now, install it in developers' mode.  From the cytoflow source dirctory, say::
+* **On Windows and MacOS only,** do the following to prevent ``cytoflow``
+  from trying to build the C++ extension.
   
-    pip install --user -r requirements.txt
+  * **On Windows**::
+  
     set NO_LOGICLE=True
+ 
+  * **On MacOS**::
+  
+    export NO_LOGICLE=True
+    
+* Install ``cytoflow`` in developer's mode::
+
     python setup.py develop
     
-  This should complete successfully.  If it dies with 
-  ``command 'swig.exe' failed``, make sure you set NO_LOGICLE, try it again,
-  then please file a bug report.
+* From the `GitHub releases page <https://github.com/bpteague/cytoflow/releases>`_ 
+  download the appropriate extension file.
   
-* Download the appropriate extension from the `cytoflow releases page
-  <https://github.com/bpteague/cytoflow/releases>`_ -- either
-  ``_Logicle-amd64.pyd`` if you're running a 64-bit version of Windows,
-  or ``_Logicle-win32.pyd`` if you're running a 32-bit version of Windows.
+  * **On Windows (32-bit)**: ``_Logicle.cp35-win32.pyd``
+  * **On Windows (64-bit)**: ``_Logicle.cp35-win_amd64.pyd``
+  * **On MacOS**: ``_Logicle.cpython-35m-darwin.so``
   
-* Copy the file into your source directory; put it in the 
-  `cytoflow/utility/logicle_ext` subdirectory.
+* Copy the file you just download into the `cytoflow/utility/logicle_ext/` folder
+  in your source tree.
   
-* **Rename the file _Logicle.pyd**
+* Test that everything works.  Start a ``python`` interpreter and say::
 
-* Start an IPython notebook.  Say ``import cytoflow`` to make sure that everything
-  is installed properly.  If you get an error, make sure you've followed the
-  instructions above carefully then file a bug report!
-
-  
-MacOS
-^^^^^
-
-``cytoflow`` has one C++ module, compiled with ``swig``.  On MacOS, you have two options
-to get this file:  you can download `XCode <http://developer.apple.com/xcode/download>`_, 
-with which you should be able to build the C++ extension using the usual ``python setup.py build``.
-
-The other alternative is to suck the compiled extension out of one of the
-pre-built MacOS Python packages.  That's the approach outlined below.
-
-* Install a copy of ``git`` from `the Git website <http://www.git-scm.com>`_.
-
-* Clone the git repo.  In your working folder, say::
-
-    git clone https://github.com/bpteague/cytoflow.git
-
-* Install the Anaconda Python distribution. **Make sure to install
-  version 3.6.**
-
-  `Download Anaconda here <https://www.continuum.io/downloads>`_
-
-* Install the conda package dependencies.  In a Mac Terminal, type::
-
-    conda install --file=packaging/conda-requirements.txt
-    conda install pip
+    import cytoflow
     
-* Now, install it in developers' mode::
-    
-    pip install --user -r requirements.txt
-    NO_LOGICLE=True python setup.py develop
-    
-  This should complete successfully.  If it dies with 
-  ``SystemError: Cannot locate working compiler``, make sure you set NO_LOGICLE, try it again,
-  then please file a bug report.
-  
-  
-  
-* **TODO - fix this with a new py3k wheel**  Download the ``cytoflow`` wheel from the Github release page or the PyPI release.  These 
-  commands get version 0.4.1 from PyPI; but the Logicle extension hasn't changed in many 
-  releases, and hopefully won't be changing any time soon, so they are likely still valid
-  for the master Git branch::
-  
-    mkdir build
-    cd build
-    curl https://pypi.python.org/packages/86/dc/287ba2a15660511b3c3cd0f4b77692b073eabcc9c58bb55824c00c59d0ea/cytoflow-0.4.1-cp27-cp27m-macosx_10_6_x86_64.whl -o cytoflow.zip
-    unzip cytoflow.zip
-    cp cytoflow/utility/logicle_ext/_Logicle.so ../cytoflow/utility/logicle_ext/
-
-* Start a Jupyter notebook.  Say ``import cytoflow`` to make sure that everything
-  is installed properly.  If you get an error, make sure you've followed the
-  instructions above carefully then file a bug report!
-  
+  If you don't get any errors, you're good to go.
+   
 
 Running the point-and-click GUI program
------------------------------------------------
+---------------------------------------
 
-**If you just want to run a pre-built program, there are one-click bundles 
-available at** 
+There are one-click bundles available at
 `http://bpteague.github.io/cytoflow <http://bpteague.github.io/cytoflow>`_.
 
-Ubuntu
-^^^^^^
+Alternately, you can follow the instructions above for installing the 
+Anaconda package, then run ``cytoflow`` through the Anaconda Navigator.
 
-What, you were expecting a ``.deb`` package?
-
-* To install, follow the :ref:`instructions for installing the 
-  modules<ubuntu-mod>`. 
-  
-* Set the ``QT_API`` environment variable.  From a shell, say::
-
-    export QT_API=pyqt
-
-* As long as the path that ``pip`` installs to is in your ``PATH`` variable,
-  you should just be able to run ``cytoflow`` from the same shell.  If not,
-  try::
-  
-    ~/.local/bin/cytoflow
-
-
-Windows
-^^^^^^^
-
-* Start by following all the :ref:`instructions above for installing the 
-  modules<windows-mod>`.
-
-* Set the QT_API environment variable globally.  In the Anaconda command
-  prompt, type::
-  
-    setx QT_API "pyqt"
-    
-* Use the Windows Search tool to find ``cytoflow.exe``.  Hold down ``Alt``
-  and drag a shortcut to the desktop.  Double-click to run ``cytoflow``
