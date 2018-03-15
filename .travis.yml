@@ -75,12 +75,18 @@ after_success:
   - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then python setup.py sdist; fi
   - python setup.py bdist_wheel
 
+  # Build the one-click executables
   - pyinstaller --log-level=DEBUG packaging/pyinstaller.spec
   - pyi-archive_viewer -l dist/cytoflow
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then cd dist/; zip -r cytoflow.macos.zip Cytoflow.app/; rm -rf Cytoflow.app cytoflow; cd ..; fi
   - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then mv dist/cytoflow dist/cytoflow-linux.x86_64; fi
+  
+  # Zip up the examples
+  - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then cd docs; zip -r cytoflow-${CONDA_TAG}-examples-basic.zip examples-basic; zip -r cytoflow-${CONDA_TAG}-examples-advanced.zip examples-advanced; mv cytoflow-${CONDA_TAG}-examples-*.zip ../dist; cd ..; fi
+  
+  # move the C++ extensions into the dist folder
   - cp `find build | grep "\.so$"` dist/
-  - python packaging\move_conda_package.py
+  - python packaging/move_conda_package.py
   - ls -al dist/*
 
 deploy:
