@@ -141,6 +141,15 @@ class TransformStatisticOp(HasStrictTraits):
         if not self.function:
             raise util.CytoflowOpError('function',
                                        "Must specify a function")
+            
+        stat_name = (self.name, self.statistic_name) \
+                     if self.statistic_name \
+                     else (self.name, self.function.__name__)
+                     
+        if stat_name in experiment.statistics:
+            raise util.CytoflowOpError('name',
+                                       "{} is already in the experiment's statistics"
+                                       .format(stat_name))
 
         for b in self.by:
             if b not in stat.index.names:
@@ -190,6 +199,8 @@ class TransformStatisticOp(HasStrictTraits):
                                            "Transform function {} does not return a Series; "
                                            "in this case, you must set 'by'"
                                            .format(self.function))
+                
+        new_stat.name = "{} : {}".format(stat_name[0], stat_name[1])
                                                     
         matched_series = True
         for group in data[self.by].itertuples(index = False, name = None):
