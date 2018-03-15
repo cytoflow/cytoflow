@@ -85,6 +85,7 @@ after_success:
   - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then cd docs; zip -r cytoflow-${CONDA_TAG}-examples-basic.zip examples-basic; zip -r cytoflow-${CONDA_TAG}-examples-advanced.zip examples-advanced; mv cytoflow-${CONDA_TAG}-examples-*.zip ../dist; cd ..; fi
   
   # move the C++ extensions into the dist folder
+  - source deactivate
   - cp `find build | grep "\.so$"` dist/
   - python packaging/move_conda_package.py
   - ls -al dist/*
