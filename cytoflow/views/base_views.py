@@ -255,11 +255,7 @@ class BaseView(HasStrictTraits):
         if title:
             plt.title(title)
             
-        if xlabel:
-            plt.xlabel(xlabel)
-            
-        if ylabel:
-            plt.ylabel(ylabel)
+        g.set_axis_labels(xlabel, ylabel)
  
         sns.despine(top = despine, 
                     right = despine,
