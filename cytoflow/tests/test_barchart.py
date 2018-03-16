@@ -37,16 +37,13 @@ class TestBarChart(ImportedDataTest):
 
     def setUp(self):
         ImportedDataTest.setUp(self)
-        self.ex = flow.ThresholdOp(name = "T",
-                                   channel = "Y2-A",
-                                   threshold = 500).apply(self.ex)
                                    
         self.ex = flow.ChannelStatisticOp(name = "ByDox",
                                      by = ['Dox', 'Well'],
                                      channel = "Y2-A",
-                                     function = len).apply(self.ex)
+                                     function = flow.geom_mean).apply(self.ex)
                                      
-        self.view = flow.BarChartView(statistic = ("ByDox", "len"),
+        self.view = flow.BarChartView(statistic = ("ByDox", "geom_mean"),
                                       variable = "Well",
                                       huefacet = "Dox")
         
@@ -55,13 +52,13 @@ class TestBarChart(ImportedDataTest):
         
     def testXfacet(self):
         self.view.huefacet = ""
-        self.view.xfacet = "T"
+        self.view.xfacet = "Dox"
         self.view.plot(self.ex)
         
         
     def testYfacet(self):
         self.view.huefacet = ""
-        self.view.yfacet = "T"
+        self.view.yfacet = "Dox"
         self.view.plot(self.ex)
 
         
@@ -72,7 +69,7 @@ class TestBarChart(ImportedDataTest):
         
     def testSubset(self):
         self.view.huefacet = ""
-        self.view.subset = "T == True"
+        self.view.subset = "Dox == 10.0"
         self.view.plot(self.ex)
 
         
@@ -82,11 +79,11 @@ class TestBarChart(ImportedDataTest):
         
     def testErrorStat(self):
         self.ex = flow.ChannelStatisticOp(name = "ByDox",
-                                     by = ['Dox', 'T'],
+                                     by = ['Dox', 'Well'],
                                      channel = "Y2-A",
-                                     function = util.geom_mean).apply(self.ex)
+                                     function = util.geom_sd_range).apply(self.ex)
                                      
-        self.view.error_statistic = ("ByDox", "geom_mean")
+        self.view.error_statistic = ("ByDox", "geom_sd_range")
         self.view.plot(self.ex)
         
     # Base plot params
@@ -104,7 +101,6 @@ class TestBarChart(ImportedDataTest):
         self.view.plot(self.ex, huelabel = "hue lab")
     
     def testColWrap(self):
-        self.view.variable = "T"
         self.view.huefacet = ""
         self.view.xfacet = "Dox"
         self.view.plot(self.ex, col_wrap = 2)
@@ -167,5 +163,5 @@ class TestBarChart(ImportedDataTest):
 
 
 if __name__ == "__main__":
-    import sys;sys.argv = ['', 'TestBarChart.testSubset2']
+#     import sys;sys.argv = ['', 'TestBarChart.testSubset2']
     unittest.main()

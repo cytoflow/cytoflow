@@ -25,6 +25,7 @@ from traits.api import provides, Constant
 import matplotlib.pyplot as plt
 
 import numpy as np
+import matplotlib as mpl
 
 import cytoflow.utility as util
 
@@ -155,6 +156,8 @@ class Stats2DView(Base2DStatisticsView):
         xscale = kwargs.pop('xscale')
         yscale = kwargs.pop('yscale')
         
+        capsize = kwargs.pop('capsize', None)
+        
         xlim = kwargs.pop("xlim", None)
         if xlim is None:
             xlim = (xscale.clip(data[xname].min() * 0.9),
@@ -183,10 +186,10 @@ class Stats2DView(Base2DStatisticsView):
         
         # plot the error bars first so the axis labels don't get overwritten
         if x_error_stat is not None:
-            grid.map(_x_error_bars, xname, yname, x_error_name)
+            grid.map(_x_error_bars, xname, yname, x_error_name, capsize = capsize)
             
         if y_error_stat is not None:
-            grid.map(_y_error_bars, xname, yname, y_error_name)
+            grid.map(_y_error_bars, xname, yname, y_error_name, capsize = capsize)
 
         grid.map(plt.plot, xname, yname, **kwargs)
         
@@ -196,28 +199,51 @@ class Stats2DView(Base2DStatisticsView):
                     ylim = ylim)
 
 
-def _x_error_bars(x, y, xerr, ax = None, color = None, **kwargs):
+def _y_error_bars(x, y, yerr, ax = None, color = None, errwidth = None, capsize = None, **kwargs):
     
-    if isinstance(xerr.iloc[0], tuple):
-        x_lo = [xe[0] for xe in xerr]
-        x_hi = [xe[1] for xe in xerr]
+    if errwidth is not None:
+        kwargs.setdefault("lw", errwidth)
     else:
-        x_lo = [x.iloc[i] - xe for i, xe in xerr.reset_index(drop = True).items()]
-        x_hi = [x.iloc[i] + xe for i, xe in xerr.reset_index(drop = True).items()]
-        
-    plt.hlines(y, x_lo, x_hi, color = color, **kwargs)
-    
-    
-def _y_error_bars(x, y, yerr, ax = None, color = None, **kwargs):
+        kwargs.setdefault("lw", mpl.rcParams["lines.linewidth"] * 1.8)
     
     if isinstance(yerr.iloc[0], tuple):
-        y_lo = [ye[0] for ye in yerr]
-        y_hi = [ye[1] for ye in yerr]
+        lo = [ye[0] for ye in yerr]
+        hi = [ye[1] for ye in yerr]
     else:
-        y_lo = [y.iloc[i] - ye for i, ye in yerr.reset_index(drop = True).items()]
-        y_hi = [y.iloc[i] + ye for i, ye in yerr.reset_index(drop = True).items()]
+        lo = [y.iloc[i] - ye for i, ye in yerr.reset_index(drop = True).items()]
+        hi = [y.iloc[i] + ye for i, ye in yerr.reset_index(drop = True).items()]
         
-    plt.vlines(x, y_lo, y_hi, color = color, **kwargs)
+    if capsize is not None:
+        kwargs['marker'] = '_'
+        kwargs['markersize'] = capsize * 2
+        kwargs['markeredgewidth'] = kwargs['lw']
+        
+    for x_i, lo_i, hi_i in zip(x, lo, hi):
+        plt.plot((x_i, x_i), (lo_i, hi_i), color = color, **kwargs)
+    
+def _x_error_bars(x, y, xerr, ax = None, color = None, errwidth = None, capsize = None, **kwargs):
+
+    
+    if errwidth is not None:
+        kwargs.setdefault("lw", errwidth)
+    else:
+        kwargs.setdefault("lw", mpl.rcParams["lines.linewidth"] * 1.8)
+    
+    if isinstance(xerr.iloc[0], tuple):
+        lo = [xe[0] for xe in xerr]
+        hi = [xe[1] for xe in xerr]
+    else:
+        lo = [x.iloc[i] - xe for i, xe in xerr.reset_index(drop = True).items()]
+        hi = [x.iloc[i] + xe for i, xe in xerr.reset_index(drop = True).items()]
+
+    if capsize is not None:
+        kwargs['marker'] = '|'
+        kwargs['markersize'] = capsize * 2
+        kwargs['markeredgewidth'] = kwargs['lw']
+
+        
+    for y_i, lo_i, hi_i in zip(y, lo, hi):
+        plt.plot((lo_i, hi_i), (y_i, y_i), color = color, **kwargs)
     
 util.expand_class_attributes(Stats2DView)
 util.expand_method_parameters(Stats2DView, Stats2DView.plot)
