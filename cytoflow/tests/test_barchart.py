@@ -42,13 +42,13 @@ class TestBarChart(ImportedDataTest):
                                    threshold = 500).apply(self.ex)
                                    
         self.ex = flow.ChannelStatisticOp(name = "ByDox",
-                                     by = ['Dox', 'T'],
+                                     by = ['Dox', 'Well'],
                                      channel = "Y2-A",
                                      function = len).apply(self.ex)
                                      
         self.view = flow.BarChartView(statistic = ("ByDox", "len"),
-                                      variable = "Dox",
-                                      huefacet = "T")
+                                      variable = "Well",
+                                      huefacet = "Dox")
         
     def testPlot(self):
         self.view.plot(self.ex)
@@ -73,6 +73,11 @@ class TestBarChart(ImportedDataTest):
     def testSubset(self):
         self.view.huefacet = ""
         self.view.subset = "T == True"
+        self.view.plot(self.ex)
+
+        
+    def testSubset2(self):
+        self.view.subset = "Well != 'A'"
         self.view.plot(self.ex)
         
     def testErrorStat(self):
@@ -162,5 +167,5 @@ class TestBarChart(ImportedDataTest):
 
 
 if __name__ == "__main__":
-#     import sys;sys.argv = ['', 'TestBarChart.testScale']
+    import sys;sys.argv = ['', 'TestBarChart.testSubset2']
     unittest.main()
