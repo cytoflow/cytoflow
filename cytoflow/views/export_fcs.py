@@ -188,6 +188,9 @@ class ExportFCS(HasStrictTraits):
             The :class:`.Experiment` to export
         """
         
+        if experiment is None:
+            raise util.CytoflowViewError('experiment', "No experiment specified")
+        
         if not self.path:
             raise util.CytoflowOpError('path',
                                        'Must specify an output directory')

@@ -446,6 +446,9 @@ class KMeans1DView(By1DView, AnnotatingView, HistogramView):
         Parameters
         ----------
         """
+        
+        if experiment is None:
+            raise util.CytoflowViewError('experiment', "No experiment specified")
                 
         view, trait_name = self._strip_trait(self.op.name)
         
@@ -510,6 +513,9 @@ class KMeans2DView(By2DView, AnnotatingView, ScatterplotView):
         Parameters
         ----------
         """
+
+        if experiment is None:
+            raise util.CytoflowViewError('experiment', "No experiment specified")
                 
         view, trait_name = self._strip_trait(self.op.name)
         

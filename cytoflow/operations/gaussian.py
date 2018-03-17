@@ -631,6 +631,9 @@ class GaussianMixture1DView(By1DView, AnnotatingView, HistogramView):
         Parameters
         ----------
         """
+
+        if experiment is None:
+            raise util.CytoflowViewError('experiment', "No experiment specified")
         
         if self.op.num_components == 1:
             annotation_facet = self.op.name + "_1"
@@ -751,6 +754,9 @@ class GaussianMixture2DView(By2DView, AnnotatingView, ScatterplotView):
         Parameters
         ----------
         """
+
+        if experiment is None:
+            raise util.CytoflowViewError('experiment', "No experiment specified")
         
         if self.op.num_components == 1:
             annotation_facet = self.op.name + "_1"

@@ -840,6 +840,9 @@ class FlowPeaks1DView(By1DView, AnnotatingView, HistogramView):
         ----------
         
         """
+
+        if experiment is None:
+            raise util.CytoflowViewError('experiment', "No experiment specified")
                 
         view, trait_name = self._strip_trait(self.op.name)
         
@@ -901,6 +904,9 @@ class FlowPeaks2DView(By2DView, AnnotatingView, ScatterplotView):
         ----------
         
         """
+        
+        if experiment is None:
+            raise util.CytoflowViewError('experiment', "No experiment specified")
 
         annotations = {}
         for k in self.op._kmeans:
@@ -992,6 +998,9 @@ class FlowPeaks2DDensityView(By2DView, AnnotatingView, NullView):
         Parameters
         ----------
         """
+
+        if experiment is None:
+            raise util.CytoflowViewError('experiment', "No experiment specified")
 
         annotations = {}
         for k in self.op._kmeans:
