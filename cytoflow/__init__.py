@@ -26,6 +26,10 @@ import warnings
 warnings.filterwarnings('ignore', '.*IPython widgets are experimental.*')
 warnings.filterwarnings('ignore', 'axes.color_cycle is deprecated and replaced with axes.prop_cycle')
 
+# set seaborn defaults
+import seaborn
+seaborn.set()
+
 # basics
 from .experiment import Experiment
 from .operations.import_op import ImportOp, Tube
