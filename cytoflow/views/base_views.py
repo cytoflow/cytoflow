@@ -216,6 +216,7 @@ class BaseView(HasStrictTraits):
 
         cmap = kwargs.pop('cmap', None)
         norm = kwargs.pop('norm', None)
+        legend_data = kwargs.pop('legend_data', None)
         
         if legend:
             if cmap and norm:
@@ -246,7 +247,7 @@ class BaseView(HasStrictTraits):
                                               label = huelabel)
                     plt.sca(plot_ax)
                 else:
-                    g.add_legend(title = huelabel)
+                    g.add_legend(title = huelabel, legend_data = legend_data)
                     ax = g.axes.flat[0]
                     legend = ax.legend_
                     for lh in legend.legendHandles:

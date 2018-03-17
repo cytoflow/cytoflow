@@ -8,7 +8,7 @@ import unittest, tempfile, os
 import matplotlib
 matplotlib.use("Agg")
 
-from cytoflowgui.tests.test_base import ImportedDataTest, wait_for
+from test_base import ImportedDataTest, wait_for  # @UnresolvedImport
 from cytoflowgui.view_plugins.kde_1d import Kde1DPlugin, Kde1DPlotParams
 from cytoflowgui.serialization import save_yaml, load_yaml, traits_eq, traits_hash
 
@@ -273,13 +273,13 @@ class TestKde1D(ImportedDataTest):
         self.view.plot_params.alpha = 0.5
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
  
-        for k in ["biw", "cos", "epa", "tri", "triw", "uni", "gau"]:
+        for k in ['tophat', 'gaussian','epanechnikov','exponential','linear','cosine']:
             self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
             self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
             self.view.plot_params.kernel = k
             self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
 
-        for bw in ["silverman", "scott", "normal_reference"]:
+        for bw in ["silverman", "scott"]:
             self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
             self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
             self.view.plot_params.bw = bw
@@ -328,5 +328,5 @@ class TestKde1D(ImportedDataTest):
         
            
 if __name__ == "__main__":
-    import sys;sys.argv = ['', 'TestKde1D.testPlotArgs']
+#     import sys;sys.argv = ['', 'TestKde1D.testPlotArgs']
     unittest.main()

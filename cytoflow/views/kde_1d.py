@@ -25,7 +25,8 @@ from traits.api import provides, Constant
 import matplotlib.pyplot as plt
 
 import numpy as np
-import statsmodels.nonparametric.api as smnp
+from sklearn.neighbors.kde import KernelDensity
+from statsmodels.nonparametric.bandwidths import bw_scott, bw_silverman
 
 import cytoflow.utility as util
 
@@ -87,24 +88,20 @@ class Kde1DView(Base1DView):
             
         kernel : str
             The kernel to use for the kernel density estimate. Choices are:
-                - ``gau`` for Gaussian (the default)
-                - ``biw`` for biweight
-                - ``cos`` for cosine
-                - ``epa`` for Epanechnikov
-                - ``tri`` for triangular
-                - ``triw`` for triweight
-                - ``uni`` for uniform
+                - ``gaussian`` (the default)
+                - ``tophat``
+                - ``epanechnikov``
+                - ``exponential``
+                - ``linear``
+                - ``cosine``
                 
         bw : str or float
             The bandwidth for the kernel, controls how lumpy or smooth the
             kernel estimate is.  Choices are:
                 - ``scott`` (the default) - ``1.059 * A * nobs ** (-1/5.)``, where ``A`` is ``min(std(X),IQR/1.34)``
                 - ``silverman`` - ``.9 * A * nobs ** (-1/5.)``, where ``A`` is ``min(std(X),IQR/1.34)``
-                - ``normal_reference`` - ``C * A * nobs ** (-1/5.)``, where ``C`` 
-                    is calculated from the kernel. Equivalent (up to 2 dp) to 
-                    the ``scott`` bandwidth for gaussian kernels. 
-                    See ``bandwidths.py``
-            If a float is given, it is the bandwidth.
+            If a float is given, it is the bandwidth.   Note, this is in 
+            scaled units, not data units.
             
         gridsize : int (default = 100)
             How many times to compute the kernel? 
@@ -141,7 +138,7 @@ class Kde1DView(Base1DView):
 
 # yoinked from seaborn/distributions.py, with modifications for scaling.
 
-def _univariate_kdeplot(data, scale=None, shade=False, kernel="gau",
+def _univariate_kdeplot(data, scale=None, shade=False, kernel="gaussian",
         bw="scott", gridsize=100, cut=3, clip=None, legend=True,
         ax=None, orientation = "vertical", **kwargs):
     
@@ -156,15 +153,25 @@ def _univariate_kdeplot(data, scale=None, shade=False, kernel="gau",
     # mask out the data that's not in the scale domain
     scaled_data = scaled_data[~np.isnan(scaled_data)]  
     
-    # Calculate the KDE
-    fft = (kernel == "gau")
-    kde = smnp.KDEUnivariate(scaled_data)
-    kde.fit(kernel, bw, fft, gridsize=gridsize, cut=cut, clip=clip)
+    if kernel not in ['gaussian','tophat','epanechnikov','exponential','linear','cosine']:
+        raise util.CytoflowOpError(None,
+                                   "kernel must be one of ['gaussian'|'tophat'|'epanechnikov'|'exponential'|'linear'|'cosine']")
+    
+    if bw == 'scott':
+        bw = bw_scott(scaled_data)
+    elif bw == 'silverman':
+        bw = bw_silverman(scaled_data)
+    elif not isinstance(bw, float):
+        raise util.CytoflowViewError(None,
+                                     "Bandwith must be 'scott', 'silverman' or a float")
+    
+    support = _kde_support(scaled_data, bw, gridsize, cut, clip)[:, np.newaxis]
 
-    x, y = scale.inverse(kde.support), kde.density
+    kde = KernelDensity(kernel = kernel, bandwidth = bw).fit(scaled_data[:, np.newaxis])
+    log_density = kde.score_samples(support)
 
-    # Make sure the density is nonnegative
-    y = np.amax(np.c_[np.zeros_like(y), y], axis=1)
+    x = scale.inverse(support[:, 0])
+    y = np.exp(log_density)
 
     # Check if a label was specified in the call
     label = kwargs.pop("label", None)
@@ -182,6 +189,12 @@ def _univariate_kdeplot(data, scale=None, shade=False, kernel="gau",
             ax.fill_between(y, 1e-12, x, facecolor=color, alpha=alpha)
 
     return ax
+
+def _kde_support(data, bw, gridsize, cut, clip):
+    """Establish support for a kernel density estimate."""
+    support_min = max(data.min() - bw * cut, clip[0])
+    support_max = min(data.max() + bw * cut, clip[1])
+    return np.linspace(support_min, support_max, gridsize)
 
 util.expand_class_attributes(Kde1DView)
 util.expand_method_parameters(Kde1DView, Kde1DView.plot)

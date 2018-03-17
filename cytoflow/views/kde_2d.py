@@ -25,7 +25,8 @@ from traits.api import provides, Constant
 
 import matplotlib.pyplot as plt
 import numpy as np
-import statsmodels.nonparametric.api as smnp
+from sklearn.neighbors.kde import KernelDensity
+from statsmodels.nonparametric.bandwidths import bw_scott, bw_silverman
 
 import cytoflow.utility as util
 
@@ -90,24 +91,14 @@ class Kde2DView(Base2DView):
             
         n_levels : int
             How many isolines to draw? (default = 10)
-            
-        kernel : str
-            The kernel to use for the kernel density estimate. Choices are:
-                - ``gau`` for Gaussian (the default)
-                - ``biw`` for biweight
-                - ``cos`` for cosine
-                - ``epa`` for Epanechnikov
-                - ``tri`` for triangular
-                - ``triw`` for triweight
-                - ``uni`` for uniform
-            
+                
         bw : str or float
-            The bandwidth for the kernel, controls how lumpy or smooth the
+            The bandwidth for the gaussian kernel, controls how lumpy or smooth the
             kernel estimate is.  Choices are:
-                - ``scott`` (the default) - ``1.059 * A * nobs ** (-1/5.)``, where ``A`` is ``min(std(X),IQR/1.34)``                
+                - ``scott`` (the default) - ``1.059 * A * nobs ** (-1/5.)``, where ``A`` is ``min(std(X),IQR/1.34)``
                 - ``silverman`` - ``.9 * A * nobs ** (-1/5.)``, where ``A`` is ``min(std(X),IQR/1.34)``
-                - ``normal_reference`` - ``C * A * nobs ** (-1/5.)``, where ``C`` is calculated from the kernel. Equivalent (up to 2 dp) to the ``scott`` bandwidth for gaussian kernels. See bandwidths.py
-            If a float is given, it is used as the bandwidth.
+            If a float is given, it is the bandwidth.   Note, this is in 
+            scaled units, not data units.
             
         gridsize : int
             How many times to compute the kernel on each axis?  (default: 100)
@@ -136,21 +127,26 @@ class Kde2DView(Base2DView):
         xscale = scale[self.xchannel]
         yscale = scale[self.ychannel]
 
+        legend_data = {}
+
         grid.map(_bivariate_kdeplot, 
                  self.xchannel, 
                  self.ychannel, 
                  xscale = xscale, 
                  yscale = yscale, 
+                 legend_data = legend_data,
                  **kwargs)
-        
+                
         return dict(xlim = xlim,
                     xscale = xscale,
                     ylim = ylim,
-                    yscale = yscale)
+                    yscale = yscale,
+                    legend_data = legend_data)
         
 # yoinked from seaborn/distributions.py, with modifications for scaling.
-def _bivariate_kdeplot(x, y, xscale=None, yscale=None, shade=False, kernel="gau",
-                       bw="scott", gridsize=50, cut=3, clip=None, legend=True, **kwargs):
+def _bivariate_kdeplot(x, y, xscale=None, yscale=None, shade=False,
+                       bw="scott", gridsize=50, cut=3, clip=None, legend=True, 
+                       legend_data = None, **kwargs):
     
     ax = plt.gca()
     
@@ -165,22 +161,30 @@ def _bivariate_kdeplot(x, y, xscale=None, yscale=None, shade=False, kernel="gau"
     
     x = x[~(x_nan | y_nan)]
     y = y[~(x_nan | y_nan)]
+    
+    if bw == 'scott':
+        bw_x = bw_scott(x)
+        bw_y = bw_scott(y)
+        bw = (bw_x + bw_y) / 2
+    elif bw == 'silverman':
+        bw_x = bw_silverman(x)
+        bw_y = bw_silverman(y)
+        bw = (bw_x + bw_y) / 2
+    elif isinstance(bw, float):
+        bw_x = bw_y = bw
+    else:
+        raise util.CytoflowViewError(None,
+                                     "Bandwith must be 'scott', 'silverman' or a float")
 
-    # Compute a bivariate kde using statsmodels.
-    if isinstance(bw, str):
-        bw_func = getattr(smnp.bandwidths, "bw_" + bw)
-        x_bw = bw_func(x)
-        y_bw = bw_func(y)
-        bw = [x_bw, y_bw]
-    elif np.isscalar(bw):
-        bw = [bw, bw]
-
-    kde = smnp.KDEMultivariate([x, y], "cc", bw)
-    x_support = _kde_support(x, kde.bw[0], gridsize, cut, clip[0])
-    y_support = _kde_support(y, kde.bw[1], gridsize, cut, clip[1])
+    kde = KernelDensity(bandwidth = bw, kernel = 'gaussian').fit(np.column_stack((x, y)))
+    
+    x_support = _kde_support(x, bw_x, gridsize, cut, clip[0])
+    y_support = _kde_support(y, bw_y, gridsize, cut, clip[1])
+    
     xx, yy = np.meshgrid(x_support, y_support)
-    z = kde.pdf([xx.ravel(), yy.ravel()])
+    z = kde.score_samples(np.column_stack((xx.ravel(), yy.ravel())))
     z = z.reshape(xx.shape)
+    z = np.exp(z)
 
     n_levels = kwargs.pop("n_levels", 10)
     color = kwargs.pop("color")
@@ -191,7 +195,12 @@ def _bivariate_kdeplot(x, y, xscale=None, yscale=None, shade=False, kernel="gau"
     xx, yy = np.meshgrid(x_support, y_support)    
     
     contour_func = ax.contourf if shade else ax.contour
-    cset = contour_func(xx, yy, z, n_levels, **kwargs)
+    try:
+        cset = contour_func(xx, yy, z, n_levels, **kwargs)
+    except ValueError as e:
+        raise util.CytoflowViewError(None,
+                                     "Something went wrong in {}, bandwidth = {}.  "
+                                     .format(contour_func.__name__, bw)) from e
     num_collections = len(cset.collections)
     
     min_alpha = kwargs.pop("min_alpha", 0.2)
@@ -209,6 +218,10 @@ def _bivariate_kdeplot(x, y, xscale=None, yscale=None, shade=False, kernel="gau"
         ax.set_xlabel(x.name)
     if hasattr(y, "name") and legend:
         ax.set_ylabel(y.name)
+        
+    # Add legend data
+    if 'label' in kwargs:
+        legend_data[kwargs['label']] = plt.Rectangle((0, 0), 1, 1, fc = color)
 
     return ax        
 

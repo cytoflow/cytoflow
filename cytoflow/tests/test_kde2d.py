@@ -136,16 +136,12 @@ class TestKde2D(ImportedDataTest):
         
     def testGridsize(self):
         self.view.plot(self.ex, gridsize = 50)
-        
-    def testKernel(self):
-        for k in ['gau', 'biw', 'cos', 'epa', 'tri', 'triw', 'uni']:
-            self.view.plot(self.ex, kernel = k)
-            
+
     def testBandwidth(self):
         for bw in ['scott', 'silverman']:
             self.view.plot(self.ex, bw = bw)
         
         
 if __name__ == "__main__":
-#     import sys;sys.argv = ['', 'TestKde2D.testBandwidth']
+#     import sys;sys.argv = ['', 'TestKde2D.testKernel']
     unittest.main()

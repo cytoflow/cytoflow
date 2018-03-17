@@ -23,8 +23,6 @@
 Plots a 2-d kernel-density estimate.  Sort of like a smoothed histogram.
 The density is visualized with a set of isolines.
 
-.. warning:: :class:`Kde2DView` is currently **VERY SLOW.**  It is currently disabled in the GUI.  
-
 .. object:: X Channel, Y Channel
 
     The channels to plot on the X and Y axes.
@@ -78,7 +76,7 @@ The density is visualized with a set of isolines.
 '''
 
 from traits.api import provides, Callable, Str, Bool, Instance, Enum
-from traitsui.api import View, Item, Controller, EnumEditor, VGroup, Heading, TextEditor
+from traitsui.api import View, Item, Controller, EnumEditor, VGroup, TextEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
@@ -103,54 +101,54 @@ Kde2DView.__repr__ = traits_repr
 class Kde2DHandler(ViewHandlerMixin, Controller):
 
     def default_traits_view(self):
-        return View(VGroup(
-                    VGroup(Heading("WARNING: Very slow!"),
-                           Item('xchannel',
-                                editor=EnumEditor(name='context.channels'),
-                                label = "X Channel"),
-                           Item('xscale',
-                                label = "X Scale"),
-                           Item('ychannel',
-                                editor=EnumEditor(name='context.channels'),
-                                label = "Y Channel"),
-                           Item('yscale',
-                                label = "Y Scale"),
-                           Item('xfacet',
-                                editor=ExtendableEnumEditor(name='handler.conditions_names',
-                                                            extra_items = {"None" : ""}),
-                                label = "Horizontal\nFacet"),
-                           Item('yfacet',
-                                editor=ExtendableEnumEditor(name='handler.conditions_names',
-                                                            extra_items = {"None" : ""}),
-                                label = "Vertical\nFacet"),
-                           Item('huefacet',
-                                editor=ExtendableEnumEditor(name='handler.conditions_names',
-                                                            extra_items = {"None" : ""}),
-                                label="Color\nFacet"),
-                           Item('huescale',
-                                label = "Color\nScale"),
-                           Item('plotfacet',
-                                editor=ExtendableEnumEditor(name='handler.conditions_names',
-                                                            extra_items = {"None" : ""}),
-                                label = "Tab\nFacet"),
-                           label = "2D Kernel Density Estimate",
-                           show_border = False),
-                    VGroup(Item('subset_list',
-                                show_label = False,
-                                editor = SubsetListEditor(conditions = "context.conditions")),
-                           label = "Subset",
-                           show_border = False,
-                           show_labels = False),
-                    Item('context.view_warning',
-                         resizable = True,
-                         visible_when = 'context.view_warning',
-                         editor = ColorTextEditor(foreground_color = "#000000",
-                                                 background_color = "#ffff99")),
-                    Item('context.view_error',
-                         resizable = True,
-                         visible_when = 'context.view_error',
-                         editor = ColorTextEditor(foreground_color = "#000000",
-                                                  background_color = "#ff9191"))))
+        return View(
+                  VGroup(
+                     Item('xchannel',
+                          editor=EnumEditor(name='context.channels'),
+                          label = "X Channel"),
+                     Item('xscale',
+                          label = "X Scale"),
+                     Item('ychannel',
+                          editor=EnumEditor(name='context.channels'),
+                          label = "Y Channel"),
+                     Item('yscale',
+                          label = "Y Scale"),
+                     Item('xfacet',
+                          editor=ExtendableEnumEditor(name='handler.conditions_names',
+                                                      extra_items = {"None" : ""}),
+                          label = "Horizontal\nFacet"),
+                     Item('yfacet',
+                          editor=ExtendableEnumEditor(name='handler.conditions_names',
+                                                      extra_items = {"None" : ""}),
+                          label = "Vertical\nFacet"),
+                     Item('huefacet',
+                          editor=ExtendableEnumEditor(name='handler.conditions_names',
+                                                      extra_items = {"None" : ""}),
+                          label="Color\nFacet"),
+                     Item('huescale',
+                          label = "Color\nScale"),
+                     Item('plotfacet',
+                          editor=ExtendableEnumEditor(name='handler.conditions_names',
+                                                      extra_items = {"None" : ""}),
+                          label = "Tab\nFacet"),
+                     label = "2D Kernel Density Estimate",
+                     show_border = False),
+                  VGroup(Item('subset_list',
+                              show_label = False,
+                              editor = SubsetListEditor(conditions = "context.conditions")),
+                         label = "Subset",
+                         show_border = False,
+                         show_labels = False),
+                  Item('context.view_warning',
+                       resizable = True,
+                       visible_when = 'context.view_warning',
+                       editor = ColorTextEditor(foreground_color = "#000000",
+                                               background_color = "#ffff99")),
+                  Item('context.view_error',
+                       resizable = True,
+                       visible_when = 'context.view_error',
+                       editor = ColorTextEditor(foreground_color = "#000000",
+                                                background_color = "#ff9191")))
         
 class Kde2DPlotParams(Data2DPlotParams):
     
@@ -158,7 +156,6 @@ class Kde2DPlotParams(Data2DPlotParams):
     min_alpha = util.PositiveCFloat(0.2, allow_zero = False)
     max_alpha = util.PositiveCFloat(0.9, allow_zero = False)
     n_levels = util.PositiveCInt(10, allow_zero = False)
-    kernel = Enum(['gau', 'biw', 'cos', 'epa', 'tri', 'triw', 'uni'])
     bw = Enum(['scott', 'silverman'])
     gridsize = util.PositiveCInt(50, allow_zero = False)
     
@@ -173,7 +170,6 @@ class Kde2DPlotParams(Data2DPlotParams):
                     Item('n_levels',
                          editor = TextEditor(auto_set = False),
                          label = "Num\nlevels"),
-                    Item('kernel'),
                     Item('bw', label = "Bandwidth"),
                     Item('gridsize',
                          editor = TextEditor(auto_set = False),
@@ -283,7 +279,6 @@ def _dump_params(params):
                 min_alpha = params.min_alpha,
                 max_alpha = params.max_alpha,
                 n_levels = params.n_levels,
-                kernel = params.kernel,
                 bw = params.bw,
                 gridsize = params.gridsize)
     

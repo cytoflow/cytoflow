@@ -147,12 +147,11 @@ class Kde1DPlotParams(Data1DPlotParams):
 
     shade = Bool(True)
     alpha = util.PositiveCFloat(0.25)
-    kernel = Enum(['gau', 'biw', 'cos', 'epa', 'tri', 'triw', 'uni'])
-    bw = Enum(['scott', 'silverman', 'normal_reference'])
+    kernel = Enum(['gaussian','tophat','epanechnikov','exponential','linear','cosine'])
+    bw = Enum(['scott', 'silverman'])
     gridsize = util.PositiveCInt(100, allow_zero = False)
     linestyle = Enum(LINE_STYLES)
     linewidth = util.PositiveCFloat(2, allow_zero = True)
-
 
     def default_traits_view(self):
         base_view = Data1DPlotParams.default_traits_view(self)

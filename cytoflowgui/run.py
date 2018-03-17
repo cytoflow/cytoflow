@@ -151,7 +151,7 @@ def run_gui():
                     Stats1DPlugin(),
                     BarChartPlugin(),
                     ViolinPlotPlugin(),
-#                     Kde2DPlugin(),    # disabled until we can make it faster
+                    Kde2DPlugin(),
                     RadvizPlugin(),
                     ParallelCoordinatesPlugin(),
                     Kde1DPlugin(),
