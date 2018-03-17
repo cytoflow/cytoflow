@@ -167,8 +167,6 @@ elif sys.platform == 'darwin':
 # Platform support for Unix
 else:
 
-    import subprocess
-
     class KfmClient(Controller):
         '''Controller for the KDE kfmclient program.'''
 

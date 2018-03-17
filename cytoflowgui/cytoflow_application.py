@@ -89,6 +89,7 @@ class CytoflowApplication(TasksApplication):
         try:
             console_handler = logging.StreamHandler()
             console_handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s:%(name)s:%(message)s"))
+            console_handler.setLevel(logging.DEBUG if self.debug else logging.ERROR)
             logging.getLogger().addHandler(console_handler)
         except:
             # if there's no console, this fails
@@ -97,6 +98,7 @@ class CytoflowApplication(TasksApplication):
         ## capture log in memory
         mem_handler = logging.StreamHandler(self.application_log)
         mem_handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s:%(name)s:%(message)s"))
+        mem_handler.setLevel(logging.DEBUG)
         logging.getLogger().addHandler(mem_handler)
          
         ## and display gui messages for exceprions

@@ -61,7 +61,7 @@ def log_excepthook(typ, val, tb):
 def run_gui():
     debug = ("--debug" in sys.argv)
 
-    remote_process, remote_connection = start_remote_process(debug)
+    remote_process, remote_connection = start_remote_process()
     
     # We want matplotlib to use our backend .... in both the GUI and the
     # remote process
@@ -135,11 +135,9 @@ def run_gui():
         from pyface.resource_manager import resource_manager
         resource_manager.extra_paths.append(sys._MEIPASS)    # @UndefinedVariable
 
-
-        
     # install a global (gui) error handler for traits notifications
     push_exception_handler(handler = log_notification_handler,
-                           reraise_exceptions = debug, 
+                           reraise_exceptions = False, 
                            main = True)
     
     sys.excepthook = log_excepthook
@@ -203,7 +201,7 @@ def run_gui():
     remote_process.join()
     logging.shutdown()
     
-def start_remote_process(debug):
+def start_remote_process():
 
         # communications channels
         parent_workflow_conn, child_workflow_conn = multiprocessing.Pipe()  
@@ -216,8 +214,7 @@ def start_remote_process(debug):
                                                  args = [parent_workflow_conn,
                                                          parent_mpl_conn,
                                                          log_q,
-                                                         running_event,
-                                                         debug])
+                                                         running_event])
         
         remote_process.daemon = True
         remote_process.start() 
@@ -231,7 +228,7 @@ def start_remote_process(debug):
         
         return (remote_process, (child_workflow_conn, child_matplotlib_conn, log_q))
     
-def remote_main(parent_workflow_conn, parent_mpl_conn, log_q, running_event, debug):
+def remote_main(parent_workflow_conn, parent_mpl_conn, log_q, running_event):
     # We want matplotlib to use our backend .... in both the GUI and the
     # remote process.  Must be called BEFORE cytoflow is imported
     
@@ -243,18 +240,19 @@ def remote_main(parent_workflow_conn, parent_mpl_conn, log_q, running_event, deb
     
     # install a global (gui) error handler for traits notifications
     push_exception_handler(handler = log_notification_handler,
-                           reraise_exceptions = debug, 
+                           reraise_exceptions = False,
                            main = True)
     
     sys.excepthook = log_excepthook
     
     running_event.set()
-    RemoteWorkflow(debug_level = logging.DEBUG).run(parent_workflow_conn, parent_mpl_conn, log_q)
+    RemoteWorkflow().run(parent_workflow_conn, parent_mpl_conn, log_q)
     
         
 def monitor_remote_process(proc):
     proc.join()
-    logging.error("Remote process exited with {}".format(proc.exitcode))
+    if proc.exitcode:
+        logging.error("Remote process exited with {}".format(proc.exitcode))
 
 if __name__ == '__main__':
     multiprocessing.freeze_support()
