@@ -137,6 +137,7 @@ class TestViolin(ImportedDataTest):
         
     def testSplit(self):
         self.view.huefacet = 'Well'
+        self.view.subset = 'Well != "C"'
         self.view.plot(self.ex, split = True)
 
         
