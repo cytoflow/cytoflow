@@ -250,10 +250,16 @@ class BaseView(HasStrictTraits):
                     ax = g.axes.flat[0]
                     legend = ax.legend_
                     for lh in legend.legendHandles:
-                        lh.set_alpha(0.5)
+                        lh.set_alpha(1.0)
                         
         if title:
             plt.title(title)
+            
+        if xlabel == "":
+            xlabel = None
+            
+        if ylabel == "":
+            ylabel = None
             
         g.set_axis_labels(xlabel, ylabel)
  
@@ -602,6 +608,10 @@ class BaseStatisticsView(BaseView):
         Enumerate the named plots we can make from this set of statistics.
         """
         
+        if experiment is None:
+            raise util.CytoflowViewError('experiment',
+                                         "No experiment specified")
+        
         if not self.variable:
             raise util.CytoflowViewError('variable',
                                          "variable not set")
@@ -648,6 +658,10 @@ class BaseStatisticsView(BaseView):
         subsetting, then passes the dataframe to `BaseView.plot`
 
         """
+        
+        if experiment is None:
+            raise util.CytoflowViewError('experiment',
+                                         "No experiment specified")
         
         if not self.variable:
             raise util.CytoflowViewError('variable',
