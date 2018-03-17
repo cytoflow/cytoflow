@@ -135,6 +135,15 @@ class Stats1DView(Base1DStatisticsView):
         
         capsize : scalar
             The size of the error bar caps, in points
+            
+        shade_error : bool
+            If `False` (the default), plot the error statistic as traditional 
+            "error bars."  If `True`, plot error statistic as a filled, shaded
+            region.
+            
+        shade_alpha : float
+            The transparency of the shaded error region, from 0.0 (transparent)
+            to 1.0 (opaque.)  Default is 0.2.
         
         Notes
         -----
@@ -142,6 +151,9 @@ class Stats1DView(Base1DStatisticsView):
         Other `kwargs` are passed to `matplotlib.pyplot.plot <https://matplotlib.org/devdocs/api/_as_gen/matplotlib.pyplot.plot.html>`_
         
         """
+
+        if experiment is None:
+            raise util.CytoflowViewError('experiment', "No experiment specified")
         
         if self.variable not in experiment.conditions:
             raise util.CytoflowError('variable',
@@ -197,11 +209,16 @@ class Stats1DView(Base1DStatisticsView):
 
         orientation = kwargs.pop('orientation', 'vertical')
         capsize = kwargs.pop('capsize', None)
+        shade_error = kwargs.pop('shade_error', False)
+        shade_alpha = kwargs.pop('shade_alpha', 0.2)
         
         if orientation == 'vertical':
             # plot the error bars first so the axis labels don't get overwritten
             if err_stat is not None:
-                grid.map(_v_error_bars, self.variable, stat_name, err_stat_name, capsize = capsize)
+                if shade_error:
+                    grid.map(_v_error_shade, self.variable, stat_name, err_stat_name, alpha = shade_alpha)
+                else:
+                    grid.map(_v_error_bars, self.variable, stat_name, err_stat_name, capsize = capsize)
             
             grid.map(plt.plot, self.variable, stat_name, **kwargs)
             
@@ -212,7 +229,10 @@ class Stats1DView(Base1DStatisticsView):
         else:
             # plot the error bars first so the axis labels don't get overwritten
             if err_stat is not None:
-                grid.map(_h_error_bars, stat_name, self.variable, err_stat_name, capsize = capsize)
+                if shade_error:
+                    grid.map(_h_error_shade, stat_name, self.variable, err_stat_name, alpha = shade_alpha)
+                else:
+                    grid.map(_h_error_bars, stat_name, self.variable, err_stat_name, capsize = capsize)
             
             grid.map(plt.plot, stat_name, self.variable, **kwargs)
             
@@ -243,7 +263,20 @@ def _v_error_bars(x, y, yerr, ax = None, color = None, errwidth = None, capsize 
         
     for x_i, lo_i, hi_i in zip(x, lo, hi):
         plt.plot((x_i, x_i), (lo_i, hi_i), color = color, **kwargs)
-    
+
+
+def _v_error_shade(x, y, yerr, ax = None, color = None, alpha = None, **kwargs):
+        
+    if isinstance(yerr.iloc[0], tuple):
+        lo = [ye[0] for ye in yerr]
+        hi = [ye[1] for ye in yerr]
+    else:
+        lo = [y.iloc[i] - ye for i, ye in yerr.reset_index(drop = True).items()]
+        hi = [y.iloc[i] + ye for i, ye in yerr.reset_index(drop = True).items()]
+        
+    plt.fill_between(x, lo, hi, color = color, alpha = alpha, **kwargs)
+
+
 def _h_error_bars(x, y, xerr, ax = None, color = None, errwidth = None, capsize = None, **kwargs):
 
     
@@ -267,6 +300,19 @@ def _h_error_bars(x, y, xerr, ax = None, color = None, errwidth = None, capsize 
         
     for y_i, lo_i, hi_i in zip(y, lo, hi):
         plt.plot((lo_i, hi_i), (y_i, y_i), color = color, **kwargs)
+        
+    
+def _h_error_shade(x, y, xerr, ax = None, color = None, alpha = None, **kwargs):
+    
+    if isinstance(xerr.iloc[0], tuple):
+        lo = [xe[0] for xe in xerr]
+        hi = [xe[1] for xe in xerr]
+    else:
+        lo = [x.iloc[i] - xe for i, xe in xerr.reset_index(drop = True).items()]
+        hi = [x.iloc[i] + xe for i, xe in xerr.reset_index(drop = True).items()]
+        
+
+    plt.fill_betweenx(y, lo, hi, color = color, alpha = alpha)
     
 util.expand_class_attributes(Stats1DView)
 util.expand_method_parameters(Stats1DView, Stats1DView.plot)

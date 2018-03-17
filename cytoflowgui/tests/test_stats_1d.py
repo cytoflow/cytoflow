@@ -10,12 +10,13 @@ import matplotlib
 matplotlib.use("Agg")
 
 from cytoflowgui.workflow_item import WorkflowItem
-from cytoflowgui.tests.test_base import ImportedDataTest, wait_for
 from cytoflowgui.op_plugins import ChannelStatisticPlugin
 from cytoflowgui.view_plugins.stats_1d import Stats1DPlugin, Stats1DPlotParams, LINE_STYLES
 from cytoflowgui.view_plugins.scatterplot import SCATTERPLOT_MARKERS
 from cytoflowgui.subset import CategorySubset
 from cytoflowgui.serialization import load_yaml, save_yaml, traits_eq, traits_hash
+
+from test_base import ImportedDataTest, wait_for  # @UnresolvedImport
 
 class TestStats1D(ImportedDataTest):
     
@@ -212,6 +213,16 @@ class TestStats1D(ImportedDataTest):
             self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
             self.view.plot_params.linestyle = el
             self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+ 
+        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.shade_error = True
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+        
+        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.orientation = "vertical"
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
  
     def testSerialize(self):
         Stats1DPlotParams.__eq__ = traits_eq

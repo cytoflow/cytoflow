@@ -89,7 +89,7 @@ operation's **Group By**) must be set as **Variable** or as a facet.
                      variable_scale = 'log').plot(ex2)
 """
 
-from traits.api import provides, Callable, Property, Enum, Instance, Tuple
+from traits.api import provides, Callable, Property, Enum, Instance, Tuple, Bool
 from traitsui.api import View, Item, Controller, EnumEditor, VGroup, TextEditor, TupleEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
@@ -244,6 +244,8 @@ class Stats1DPluginPlotParams(Stats1DPlotParams):
     marker = Enum(SCATTERPLOT_MARKERS)
     markersize = util.PositiveCFloat(6, allow_zero = False)
     alpha = util.PositiveCFloat(1.0)
+    shade_error = Bool(False)
+    shade_alpha = util.PositiveCFloat(0.2)
     
     def default_traits_view(self):
         base_view = Stats1DPlotParams.default_traits_view(self)
@@ -264,6 +266,8 @@ class Stats1DPluginPlotParams(Stats1DPlotParams):
                          editor = TextEditor(auto_set = False),
                          format_func = lambda x: "" if x == None else str(x)),
                     Item('alpha'),
+                    Item('shade_error'),
+                    Item('shade_alpha'),
                     base_view.content)
 
 class Stats1DPluginView(PluginViewMixin, Stats1DView):
@@ -356,7 +360,9 @@ def _dump_params(params):
                 linestyle = params.linestyle,
                 marker = params.marker,
                 markersize = params.markersize,
-                alpha = params.alpha)
+                alpha = params.alpha,
+                shade_error = params.shade_error,
+                shade_alpha = params.shade_alpha)
 
 @camel_registry.loader('stats-1d-params', version = any)
 def _load_params(data, version):

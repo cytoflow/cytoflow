@@ -130,7 +130,6 @@ class Test1DStats(ImportedDataTest):
     def testVariableLim(self):
         self.view.plot(self.ex, variable_lim = (2, 5))
         
-        
     def testLineStyle(self):
         self.view.plot(self.ex, linestyle = 'solid')
         self.view.plot(self.ex, linestyle = 'dashed')
@@ -151,6 +150,12 @@ class Test1DStats(ImportedDataTest):
         
     def testAlpha(self):
         self.view.plot(self.ex, alpha = 0.33)
+        
+    def testShadeX(self):
+        self.view.plot(self.ex, shade_error = True, orientation = 'horizontal')
+        
+    def testShadeY(self):
+        self.view.plot(self.ex, shade_error = True)
         
 
 if __name__ == "__main__":
