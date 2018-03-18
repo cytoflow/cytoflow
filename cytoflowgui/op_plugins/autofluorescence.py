@@ -136,6 +136,7 @@ class AutofluorescencePluginOp(PluginOpMixin, AutofluorescenceOp):
     def clear_estimate(self):
         self._af_median.clear()
         self._af_stdev.clear()
+        self._af_histogram.clear()
         self.changed = (Changed.ESTIMATE_RESULT, self)
         
     

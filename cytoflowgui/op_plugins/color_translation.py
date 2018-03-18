@@ -204,6 +204,8 @@ class ColorTranslationPluginOp(PluginOpMixin, ColorTranslationOp):
         
     def clear_estimate(self):
         self._coefficients.clear()        
+        self._trans_fn.clear()
+        self._sample.clear()
         self.changed = (Changed.ESTIMATE_RESULT, self)
         
         

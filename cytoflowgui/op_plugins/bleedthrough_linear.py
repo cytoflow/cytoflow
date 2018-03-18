@@ -206,6 +206,7 @@ class BleedthroughLinearPluginOp(PluginOpMixin, BleedthroughLinearOp):
         
     def clear_estimate(self):
         self.spillover.clear()
+        self._sample.clear()
         self.changed = (Changed.ESTIMATE_RESULT, self)
         
     def get_notebook_code(self, idx):

@@ -207,6 +207,7 @@ class BeadCalibrationOp(HasStrictTraits):
     
     beads = Dict(Str, List(Float))
 
+    _histograms = Dict(Str, Any, transient = True)
     _calibration_functions = Dict(Str, Callable, transient = True)
     _peaks = Dict(Str, Any, transient = True)
     _mefs = Dict(Str, Any, transient = True)
@@ -235,6 +236,11 @@ class BeadCalibrationOp(HasStrictTraits):
         if not set(self.units.values()) <= set(self.beads.keys()):
             raise util.CytoflowOpError('units',
                                        "Units don't match beads.")
+            
+        self._histograms.clear()
+        self._calibration_functions.clear()
+        self._peaks.clear()
+        self._mefs.clear()
                         
         # make a little Experiment
         check_tube(self.beads_file, experiment)
@@ -266,6 +272,8 @@ class BeadCalibrationOp(HasStrictTraits):
             
             # smooth it with a Savitzky-Golay filter
             hist_smooth = scipy.signal.savgol_filter(hist[0], 5, 1)
+            
+            self._histograms[channel] = (hist_bins, hist_smooth)
             
             # find peaks
             peak_bins = scipy.signal.find_peaks_cwt(hist_smooth, 
@@ -561,33 +569,14 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
         if not channels:
             raise util.CytoflowViewError(None, "No channels to plot")
 
-        # make a little Experiment
-        try:
-            check_tube(self.op.beads_file, experiment)
-            beads_exp = ImportOp(tubes = [Tube(file = self.op.beads_file)],
-                                 channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels},
-                                 name_metadata = experiment.metadata['name_metadata']).apply()
-        except util.CytoflowOpError as e:
-            raise util.CytoflowViewError('op', e.__str__()) from e
+        if set(channels) != set(self.op._histograms.keys()):
+            raise util.CytoflowViewError(None, "You must estimate the parameters "
+                                               "before plotting")
 
         plt.figure()
         
-        for idx, channel in enumerate(channels):
-            if channel not in beads_exp.channels:
-                raise util.CytoflowViewError(None, "Channel {} not in the beads!"
-                                             .format(channel))
-            data = beads_exp.data[channel]
-            data_range = experiment.metadata[channel]['range']
-                
-            # bin the data on a log scale            
-            hist_bins = np.logspace(1, math.log(data_range, 2), num = self.op.bead_histogram_bins, base = 2)
-            hist = np.histogram(data, bins = hist_bins)
-            
-            # mask off-scale values
-            hist[0][0] = 0
-            hist[0][-1] = 0
-            
-            hist_smooth = scipy.signal.savgol_filter(hist[0], 5, 1)
+        for idx, channel in enumerate(channels):            
+            hist_bins, hist_smooth = self.op._histograms[channel]
                 
             plt.subplot(len(channels), 2, 2 * idx + 1)
             plt.xscale('log')

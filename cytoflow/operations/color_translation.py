@@ -137,6 +137,7 @@ class ColorTranslationOp(HasStrictTraits):
     # TODO - why can't i make the value List(Float)?
     _coefficients = Dict(Tuple(Str, Str), Any, transient = True)
     _trans_fn = Dict(Tuple(Str, Str), Callable, transient = True)
+    _sample = Dict(Tuple(Str, Str), Any, transient = True)
 
     def estimate(self, experiment, subset = None): 
         """
@@ -161,6 +162,10 @@ class ColorTranslationOp(HasStrictTraits):
         if not self.controls:
             raise util.CytoflowOpError('controls',
                                        "No controls specified")
+            
+        self._coefficients.clear()
+        self._trans_fn.clear()
+        self._sample.clear()
 
         tubes = {}
         
@@ -211,7 +216,7 @@ class ColorTranslationOp(HasStrictTraits):
                                                    "Subset string '{0}' returned no events"
                                               .format(subset))
                 
-                tube_data = tube_exp.data                
+                tube_data = tube_exp.data    
 
                 tubes[tube_file] = tube_data
 
@@ -221,6 +226,8 @@ class ColorTranslationOp(HasStrictTraits):
             data = data[data[to_channel] > 0]
             
             _ = data.reset_index(drop = True, inplace = True)
+            
+            self._sample[(from_channel, to_channel)] = data.sample(n = 5000)
             
             data[from_channel] = np.log10(data[from_channel])
             data[to_channel] = np.log10(data[to_channel])
@@ -386,8 +393,6 @@ class ColorTranslationDiagnostic(HasStrictTraits):
             raise util.CytoflowViewError('op',
                                          "Transfer functions aren't set. "
                                          "Did you forget to call estimate()?")
-
-        tubes = {}
         
         translation = {x[0] : x[1] for x in list(self.op.controls.keys())}
         
@@ -396,53 +401,10 @@ class ColorTranslationDiagnostic(HasStrictTraits):
         plt_idx = 0
         
         for from_channel, to_channel in translation.items():
-            
-            if (from_channel, to_channel) not in self.op.controls:
-                raise util.CytoflowViewError('op',
-                                             "Control file for {0} --> {1} not specified"
-                                             .format(from_channel, to_channel))
-            tube_file = self.op.controls[(from_channel, to_channel)]
-            
-            if tube_file not in tubes: 
-                # make a little Experiment
-                try:
-                    check_tube(tube_file, experiment)
-                    tube_exp = ImportOp(tubes = [Tube(file = tube_file)],
-                                        channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels},
-                                        name_metadata = experiment.metadata['name_metadata']).apply()
-                except util.CytoflowOpError as e:
-                    raise util.CytoflowViewError('translation', e.__str__()) from e
-                
-                # apply previous operations
-                for op in experiment.history:
-                    tube_exp = op.apply(tube_exp)
                     
-                tube_data = tube_exp.data
-
-                # subset the events
-                if self.subset:
-                    try:
-                        tube_exp = tube_exp.query(self.subset)
-                    except Exception as e:
-                        raise util.CytoflowViewError('subset',
-                                                     "Subset string '{0}' isn't valid"
-                                                     .format(self.subset)) from e
-                                    
-                    if len(tube_exp.data) == 0:
-                        raise util.CytoflowViewError('subset',
-                                                     "Subset string '{0}' returned no events"
-                                                     .format(self.subset))
-                
-                tube_data = tube_exp.data                
-
-                tubes[tube_file] = tube_data               
-                
             from_range = experiment.metadata[from_channel]['range']
             to_range = experiment.metadata[to_channel]['range']
-            data = tubes[tube_file][[from_channel, to_channel]]
-            data = data[data[from_channel] > 0]
-            data = data[data[to_channel] > 0]
-            _ = data.reset_index(drop = True, inplace = True)
+            data = self.op._sample[(from_channel, to_channel)]
 
             if self.op.mixture_model:    
                 plt.subplot(num_plots, 2, plt_idx * 2 + 2)

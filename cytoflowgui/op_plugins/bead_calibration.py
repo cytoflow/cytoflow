@@ -254,6 +254,7 @@ class BeadCalibrationPluginOp(PluginOpMixin, BeadCalibrationOp):
         self._calibration_functions.clear()
         self._peaks.clear()
         self._mefs.clear()
+        self._histograms.clear()
         self.changed = (Changed.ESTIMATE_RESULT, self)
         
     def get_notebook_code(self, idx):
