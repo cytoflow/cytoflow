@@ -13,7 +13,7 @@
    height="500"
    id="svg2"
    version="1.1"
-   inkscape:version="0.48.4 r9939"
+   inkscape:version="0.92.2 (unknown)"
    inkscape:export-filename="/home/brian/src/cytoflow/cytoflowgui/op_plugins/images/range.png"
    inkscape:export-xdpi="5.8299999"
    inkscape:export-ydpi="5.8299999"
@@ -33,11 +33,11 @@
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
-     inkscape:window-width="1217"
-     inkscape:window-height="848"
-     inkscape:window-x="1772"
-     inkscape:window-y="32"
-     inkscape:window-maximized="0"
+     inkscape:window-width="2507"
+     inkscape:window-height="1416"
+     inkscape:window-x="1653"
+     inkscape:window-y="24"
+     inkscape:window-maximized="1"
      showguides="true"
      inkscape:guide-bbox="true" />
   <metadata
@@ -63,12 +63,20 @@
        id="path3166"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="czzzzcc" />
-    <rect
-       style="fill:#0000ff;fill-opacity:1;stroke:none;opacity:0.2"
-       id="rect2992"
-       width="224.28571"
-       height="502.85718"
-       x="82.85714"
-       y="552.36218" />
+    <path
+       style="fill:none;stroke:#0000ff;stroke-width:37.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="M 425.14285,551.14124 V 1055.2194"
+       id="path3936"
+       inkscape:connector-curvature="0" />
+    <path
+       style="fill:none;stroke:#0000ff;stroke-width:37.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="M 200.85714,552.36218 V 1056.4403"
+       id="path3936-3"
+       inkscape:connector-curvature="0" />
+    <path
+       inkscape:connector-curvature="0"
+       id="path1618"
+       d="M 428.61049,804.40123 H 203.10379"
+       style="fill:none;stroke:#0000ff;stroke-width:37.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
   </g>
 </svg>

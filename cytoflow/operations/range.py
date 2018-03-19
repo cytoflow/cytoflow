@@ -24,7 +24,6 @@ cytoflow.operations.range
 from traits.api import (HasStrictTraits, Float, Str, Instance, Bool, 
                         provides, on_trait_change, Any, Constant)
 
-from matplotlib.widgets import SpanSelector, Cursor
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D    
 
@@ -218,8 +217,7 @@ class RangeSelection(Op1DView, HistogramView):
 
     # internal state.
     _ax = Any(transient = True)
-    _span = Instance(SpanSelector, transient = True)
-    _cursor = Instance(Cursor, transient = True)
+    _span = Instance(util.SpanSelector, transient = True)
     _low_line = Instance(Line2D, transient = True)
     _high_line = Instance(Line2D, transient = True)
     _hline = Instance(Line2D, transient = True)
@@ -271,21 +269,11 @@ class RangeSelection(Op1DView, HistogramView):
     @on_trait_change('interactive', post_init = True)
     def _interactive(self):
         if self._ax and self.interactive:
-            self._cursor = Cursor(self._ax, 
-                                  horizOn=False, 
-                                  vertOn=True, 
-                                  color='blue', 
-                                  useblit = True)
-            
-            self._span = SpanSelector(self._ax, 
-                                      onselect=self._onselect, 
-                                      direction='horizontal',
-                                      rectprops={'alpha':0.3,
-                                                 'color':'grey'},
-                                      span_stays=False,
-                                      useblit = True)
+            self._span = util.SpanSelector(self._ax, 
+                                           onselect=self._onselect, 
+                                           span_stays=False,
+                                           useblit = True)
         else:
-            self._cursor = None
             self._span = None
         
     

@@ -29,7 +29,7 @@ from .custom_traits import (PositiveInt, PositiveCInt, PositiveFloat,
                             PositiveCFloat, ScaleEnum, Deprecated, Removed, 
                             FloatOrNone, CFloatOrNone, IntOrNone, CIntOrNone)
 
-from .matplotlib_widgets import PolygonSelector
+from .matplotlib_widgets import PolygonSelector, SpanSelector
 
 from .docstring import expand_class_attributes, expand_method_parameters
 

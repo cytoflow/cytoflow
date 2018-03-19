@@ -291,8 +291,9 @@ class RangeSelection2D(Op2DView, ScatterplotView):
             self._box = Rectangle((self.op.xlow, self.op.ylow), 
                                   (self.op.xhigh - self.op.xlow), 
                                   (self.op.yhigh - self.op.ylow), 
-                                  facecolor="grey",
-                                  alpha = 0.2)
+                                  facecolor="none",
+                                  edgecolor = 'blue',
+                                  linewidth = 2)
             self._ax.add_patch(self._box)
             plt.draw()
     
@@ -302,8 +303,9 @@ class RangeSelection2D(Op2DView, ScatterplotView):
             self._selector = RectangleSelector(
                                 self._ax, 
                                 onselect=self._onselect, 
-                                rectprops={'alpha':0.2,
-                                           'color':'grey'},
+                                rectprops=dict(facecolor = 'none',
+                                               edgecolor = 'blue',
+                                               linewidth = 2),
                                 useblit = True)
         else:
             self._selector = None
