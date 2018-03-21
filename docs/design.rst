@@ -5,43 +5,47 @@ Project Structure
 
 The source is organized into two main components.
 
-* The ``cytoflow`` package.  This package contains the actual tools for 
-  operating on cytometry data.  
-  Key modules and subpackages:
+* The :mod:`cytoflow` package.  This package contains the actual tools for 
+  operating on cytometry data.  Key modules and subpackages:
 
-  * The ``Experiment`` class is the primary container for cytometry data. See
+  * The :class:`~cytoflow.experiment.Experiment` class is the primary container for cytometry data. See
     the module docstrings for its use.  Modify this class's API only with care,
     please!  
     
-  * The ``operations`` subpackage.  This is where operations on data go, like
-    transformations and gates.  
+  * The :mod:`cytoflow.operations` subpackage.  This is where operations on data go, like
+    transformations and gates.  Adding a new operation is quite straightforward:
+    see the documentation for :ref:`adding a new operation <new_operation>`.
     
-  * The ``views`` subpackage.  This is where visualizations go.  These can be
+  * The :mod:`cytoflow.views` subpackage.  This is where visualizations go.  These can be
     traditional visualizations (dotplots, histograms); or statistical summary
-    views (bar plots of population means).  
+    views (bar plots of population means).  There is a significant amount of 
+    class hierarchy here -- see the documentation for :ref:`adding a new view <new_view>`.
     
-  * A ``utility`` subpackage.  Useful functions and classes, like
-    ``geom_mean``.
+  * The :mod:`cytoflow.utility` subpackage.  Useful functions and classes, like
+    :meth:`~cytoflow.utility.util_functions.geom_mean`.
 
-* The ``cytoflowgui`` package.  Implements the GUI. 
+* The :mod:`cytoflowgui` package.  Implements the GUI. 
 
-  * The ``op_plugins`` subpackage.  Contains ``envisage`` plugins to wrap
-    the operations.
+  * The :mod:`cytoflowgui.op_plugins` subpackage.  Contains instances of 
+    :class:`envisage.Plugin` that wrap the operations.  See the documentation 
+    for :ref:`adding a new operation GUI plugin <new_operation_plugin>`.
     
-  * The ``op_views`` subpackage.  Contains ``envisage`` plugins to wrap the
-    views.
+  * The :mod:`cytoflowgui.op_views` subpackage.  Contains instances of 
+    :class:`envisage.Plugin` that wrap the views.  See the documentation if you 
+    want to :ref:`add a new view GUI plugin <new_view_plugin>`.
 
 
 Design decisions & justifications
 ---------------------------------
 
-* Cytometry analysis as a workflow.  I think this is kind of obvious; it just
+* Cytometry analysis as a workflow -- an analysis is a set of operations
+  applied sequentially to a dataset.  I think this is kind of obvious; it just
   formalizes the way of doing things that everyone else pretty much already
   uses.
 
 * Instead of keeping "tubes" or "wells" as first-class objects, represent all
-  the events from all the samples as a big long ``DataFrame``, distinguishing
-  events from different tubes via their varying experimental conditions.  Most
+  the events from all the samples as a big long :class:`pandas.DataFrame`, 
+  distinguishing events from different tubes via their varying experimental conditions.  Most
   of my flow analysis experience is with the R Bioconductor package's flowCore,
   which treats tubes as first-class objects akin to separate microarrays.
   That's fine if you've got just a few tubes (or a few microarrays), but it
@@ -53,14 +57,14 @@ Design decisions & justifications
   with the concept of tubes or wells (after you get your data imported, of
   course.)  This hews much more closely to Hadley Wickham's concept of `Tidy
   Data <http://vita.had.co.nz/papers/tidy-data.pdf>`_, and is also (!) much
-  easier to vectorize computations on using ``pandas`` and ``numpy`` and
-  ``numexpr``. Multicore FTW.  Now, you can access all the events that are, say
+  easier to vectorize computations on using :mod:`pandas` and :mod:`numpy` and
+  :mod:`numexpr`. Now, you can access all the events that are, say
   Dox-induced, by just saying ``experiment['Dox']`` without having to keep
   track of which tubes are induced and which weren't.
 
-  (Note: if you have tubes that are replicates, just add another experimental
-  condition, perhaps called "replicate".  You can specify that condition to the
-  statistics views to get a standard error.)
+  .. note:: If you have tubes that are replicates, just add another experimental
+     condition, perhaps called "replicate".  You can specify that condition to the
+     statistics views to get a standard error.
 
 * Gates don't actually subset data (delete or copy it); they just add metadata.
   I struggled for a long time with the question of how to store and manipulate
@@ -76,29 +80,28 @@ Design decisions & justifications
   it in-place?  Or copy the output of one operation for the input of the next,
   with the space penalties that implies?
 
-  I finally realized I didn't have to choose; when you copy a pandas.DataFrame,
-  you get a "shallow" copy, with the actual data just linked to by reference.
-  This was perfect; if I needed to transform the data from one copy to another,
-  I could just replace the transformed channels; and "gating" events didn't
-  have to create new subsets or containers, it could just add another column
-  specifying the gate membership of each event.
+  I finally realized I didn't have to choose; when you copy a 
+  :class:`pandas.DataFrame`, you get a "shallow" copy, with the actual data just 
+  linked to by reference.  This was perfect; if I needed to transform the data 
+  from one copy to another, I could just replace the transformed channels; and 
+  "gating" events didn't have to create new subsets or containers, it could 
+  just add another column specifying the gate membership of each event.
   
-* ``cytoflow`` discourages wholesale transformation of the underlying data, ie.
-  taking the log of the data set.  (Modules for doing so are included, but the
-  throw a deprecation warning and are likely to be removed soon.)  This is of a
-  part with ``cytoflow`` enabling *quantitative* analysis -- if you want a
-  measure of center of data that is log-normal, you should use the geometric
-  mean.  It is frequently useful to transform data before viewing it, or gating
-  it, etc -- those transformations can be passed as parameters to the view
-  modules.
+* :mod:`cytoflow` discourages wholesale transformation of the underlying data, ie.
+  taking the log of the data set.  This is of a part with :mod:`cytoflow` 
+  enabling *quantitative* analysis -- if you want a measure of center of data 
+  that is log-normal, you should use the geometric mean instead of log-transforming
+  and taking the arithmetic mean.  It is frequently useful to transform data 
+  before viewing it, or gating it, etc -- those transformations can be passed 
+  as parameters to the view modules.
 
   The obvious exceptions here, of course, are things like bleedthrough
-  correction and standards using beads. These operations transform the data,
+  correction and calibration using beads. These operations transform the data,
   but they don't cause the same sorts of shift in data *structure* you see with
   a log transform.  Data that is distributed log-normally before bleedthrough
   correction, will be distributed log-normally after.
 
-* As is made pretty clear in the example IPython notebook, the semantics for
+* As is made pretty clear in the example Jupyter notebooks, the semantics for
   views and operations are
 
   1. Instantiate a new operation or view 
@@ -106,8 +109,8 @@ Design decisions & justifications
   2. Parameterize the operation or view (possibly by estimating parameters from
        a provided data set). 
 
-  3. Apply the operation or view to an ``Experiment``. If applying an
-       operation, ``apply()`` returns a new Experiment. 
+  3. Apply the operation or view to an :class:`~cytoflow.experiment.Experiment`. 
+     If applying an operation, :meth`apply` returns a new Experiment. 
 
   The justification for these semantics is that it makes the *state* of the
   interacting objects really obvious.  An operation or view's state doesn't
@@ -115,7 +118,7 @@ Design decisions & justifications
   those parameters' estimation is a separate operation.  
 
   It also allows for ready separation of the workflow from the data it's
-  applied to, allowing for easy sharing of workflows. (Maybe.  I think.)
+  applied to, allowing for easy sharing of workflows.
 
 * The module attributes have been replaced by Traits.  See the `Traits
   documentation <http://docs.enthought.com/traits/>`_ for a good overview, but
@@ -133,7 +136,7 @@ Design decisions & justifications
   (ie gate membership or bin).  Then, you plot the dataset broken down in
   various ways by its facets: for example, each timepoint might be put on its
   own subplot, while each Dox level might be represented by a different color.
-  (Check out `the example IPython notebook
-  <http://nbviewer.ipython.org/github/bpteague/cytoflow/blob/master/doc/examples/Basic%20Cytometry.ipynb>`_
+  (Check out `the example Jupyter notebook
+  <https://github.com/bpteague/cytoflow/blob/master/docs/examples-basic/Basic%20Cytometry.ipynb>`_
   if this is confusing.
 
