@@ -28,6 +28,7 @@ import matplotlib.pyplot as plt
 from matplotlib.table import Table
 
 import pandas as pd
+import numpy as np
 
 from .i_view import IView
 import cytoflow.utility as util
@@ -299,13 +300,12 @@ class TableView(HasStrictTraits):
                                 agg_idx.append(cc)
                         
                         agg_idx = tuple(agg_idx)
-                        if len(agg_idx) == 1:
-                            agg_idx = agg_idx[0]
-                            
+
                         try:
-                            text = "{:g}".format(data.loc[agg_idx][stat.name])
-                        except ValueError:
-                            text = data.loc[agg_idx][stat.name]
+                            text = "{:g}".format(data.loc[agg_idx, stat.name])
+                        except (TypeError, ValueError):
+                            text = data.loc[agg_idx, stat.name]
+                            
                         t.add_cell(row_idx, 
                                    col_idx,
                                    width = width[col_idx],
@@ -372,3 +372,207 @@ class TableView(HasStrictTraits):
                                text = text)                
                         
         ax.add_table(t)
+        
+    def export(self, experiment, filename):
+        """
+        Export the table to a file.
+        """
+        
+        if experiment is None:
+            raise util.CytoflowViewError('experiment', "No experiment specified")   
+        
+        if self.statistic not in experiment.statistics:
+            raise util.CytoflowViewError('statistic', 
+                                         "Can't find the statistic {} in the experiment"
+                                         .format(self.statistic))
+        else:
+            stat = experiment.statistics[self.statistic]    
+            
+            
+        if self.row_facet and self.row_facet not in experiment.conditions:
+            raise util.CytoflowViewError('row_facet',
+                                         "Row facet {} not in the experiment, "
+                                         "must be one of {}"
+                                         .format(self.row_facet, experiment.conditions))       
+            
+        if self.subrow_facet and self.subrow_facet not in experiment.conditions:
+            raise util.CytoflowViewError('subrow_facet',
+                                         "Subrow facet {} not in the experiment, "
+                                         "must be one of {}"
+                                         .format(self.subrow_facet, experiment.conditions))  
+            
+        if self.column_facet and self.column_facet not in experiment.conditions:
+            raise util.CytoflowViewError('column_facet',
+                                         "Column facet {} not in the experiment, "
+                                         "must be one of {}"
+                                         .format(self.column_facet, experiment.conditions))
+            
+        if self.subcolumn_facet and self.subcolumn_facet not in experiment.conditions:
+            raise util.CytoflowViewError('subcolumn_facet',
+                                         "Subcolumn facet {} not in the experiment, "
+                                         "must be one of {}"
+                                         .format(self.subcolumn_facet, experiment.conditions)) 
+            
+        data = pd.DataFrame(index = stat.index)
+        data[stat.name] = stat   
+        
+        self._export_data(data, filename)
+    
+    def _export_data(self, data, filename):
+        
+        if self.subset:
+            try:
+                data = data.query(self.subset)
+            except Exception as e:
+                raise util.CytoflowViewError('subset',
+                                             "Subset string '{0}' isn't valid"
+                                             .format(self.subset)) from e
+                
+            if len(data) == 0:
+                raise util.CytoflowViewError('subset',
+                                             "Subset string '{0}' returned no values"
+                                             .format(self.subset))
+            
+        names = list(data.index.names)
+        for name in names:
+            unique_values = data.index.get_level_values(name).unique()
+            if len(unique_values) == 1:
+                warn("Only one value for level {}; dropping it.".format(name),
+                     util.CytoflowViewWarning)
+                try:
+                    data.index = data.index.droplevel(name)
+                except AttributeError as e:
+                    raise util.CytoflowViewError(None,
+                                                 "Must have more than one "
+                                                 "value to plot.") from e
+        
+        if not (self.row_facet or self.column_facet):
+            raise util.CytoflowViewError('row_facet',
+                                         "Must set at least one of row_facet "
+                                         "or column_facet")
+            
+        if self.subrow_facet and not self.row_facet:
+            raise util.CytoflowViewError('subrow_facet',
+                                         "Must set row_facet before using "
+                                         "subrow_facet")
+            
+        if self.subcolumn_facet and not self.column_facet:
+            raise util.CytoflowViewError('subcolumn_facet',
+                                         "Must set column_facet before using "
+                                         "subcolumn_facet")  
+
+        if self.row_facet and self.row_facet not in data.index.names:
+            raise util.CytoflowViewError('row_facet',
+                                         "Row facet {} not a statistic index; "
+                                         "must be one of {}"
+                                         .format(self.row_facet, data.index.names))  
+ 
+            
+        if self.subrow_facet and self.subrow_facet not in data.index.names:
+            raise util.CytoflowViewError('subrow_facet',
+                                         "Subrow facet {} not a statistic index; "
+                                         "must be one of {}"
+                                         .format(self.subrow_facet, data.index.names))  
+ 
+            
+        if self.column_facet and self.column_facet not in data.index.names:
+            raise util.CytoflowViewError('column_facet',
+                                         "Column facet {} not a statistic index; "
+                                         "must be one of {}"
+                                         .format(self.column_facet, data.index.names)) 
+            
+
+            
+        if self.subcolumn_facet and self.subcolumn_facet not in data.index.names:
+            raise util.CytoflowViewError('subcolumn_facet',
+                                         "Subcolumn facet {} not a statistic index; "
+                                         "must be one of {}"
+                                         .format(self.subcolumn_facet, data.index.names))  
+
+        facets = [x for x in [self.row_facet, self.subrow_facet, 
+                                      self.column_facet, self.subcolumn_facet] if x]
+        if len(facets) != len(set(facets)):
+            raise util.CytoflowViewError(None, 
+                                         "Can't reuse facets")
+        
+        if set(facets) != set(data.index.names):
+            raise util.CytoflowViewError(None,
+                                         "Must use all the statistic indices as variables or facets: {}"
+                                         .format(data.index.names))
+            
+        row_groups = data.index.get_level_values(self.row_facet).unique() \
+                     if self.row_facet else [None]
+                     
+        subrow_groups = data.index.get_level_values(self.subrow_facet).unique() \
+                        if self.subrow_facet else [None] 
+        
+        col_groups = data.index.get_level_values(self.column_facet).unique() \
+                     if self.column_facet else [None]
+                     
+        subcol_groups = data.index.get_level_values(self.subcolumn_facet).unique() \
+                        if self.subcolumn_facet else [None]
+
+        row_offset = (self.column_facet != "") + (self.subcolumn_facet != "")        
+        col_offset = (self.row_facet != "") + (self.subrow_facet != "")
+        
+        num_rows = len(row_groups) * len(subrow_groups) + row_offset
+        num_cols = len(col_groups) * len(subcol_groups) + col_offset
+        
+        t = np.empty((num_rows, num_cols), dtype = np.object_)
+        
+        # make the main table       
+        for (ri, r) in enumerate(row_groups):
+            for (rri, rr) in enumerate(subrow_groups):
+                for (ci, c) in enumerate(col_groups):
+                    for (cci, cc) in enumerate(subcol_groups):
+                        row_idx = ri * len(subrow_groups) + rri + row_offset
+                        col_idx = ci * len(subcol_groups) + cci + col_offset
+                        
+                        # this is not pythonic, but i'm tired
+                        agg_idx = []
+                        for data_idx in data.index.names:
+                            if data_idx == self.row_facet:
+                                agg_idx.append(r)
+                            elif data_idx == self.subrow_facet:
+                                agg_idx.append(rr)
+                            elif data_idx == self.column_facet:
+                                agg_idx.append(c)
+                            elif data_idx == self.subcolumn_facet:
+                                agg_idx.append(cc)
+                        
+                        agg_idx = tuple(agg_idx)                            
+                        t[row_idx, col_idx] = data.get(agg_idx) 
+                        
+        # row headers
+        if self.row_facet:
+            for (ri, r) in enumerate(row_groups):
+                row_idx = ri * len(subrow_groups) + row_offset
+                text = "{0} = {1}".format(self.row_facet, r)
+                t[row_idx, 0] = text
+                
+        # subrow headers
+        if self.subrow_facet:
+            for (ri, r) in enumerate(row_groups):
+                for (rri, rr) in enumerate(subrow_groups):
+                    row_idx = ri * len(subrow_groups) + rri + row_offset
+                    text = "{0} = {1}".format(self.subrow_facet, rr)
+                    t[row_idx, 1] = text
+                    
+        # column headers
+        if self.column_facet:
+            for (ci, c) in enumerate(col_groups):
+                col_idx = ci * len(subcol_groups) + col_offset
+                text = "{0} = {1}".format(self.column_facet, c)
+                t[0, col_idx] = text
+
+        # column headers
+        if self.subcolumn_facet:
+            for (ci, c) in enumerate(col_groups):
+                for (cci, cc) in enumerate(subcol_groups):
+                    col_idx = ci * len(subcol_groups) + cci + col_offset
+                    text = "{0} = {1}".format(self.subcolumn_facet, c)
+                    t[1, col_idx] = text        
+                    
+        np.savetxt(filename, t, delimiter = ",", fmt = "%s")
+        
+        

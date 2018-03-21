@@ -210,11 +210,10 @@ class TablePluginView(PluginViewMixin, TableView):
         view.copy_traits(self, view.copyable_trait_names())
 
         return dedent("""
-        {repr}.plot(ex_{idx}{plot})
+        {repr}.plot(ex_{idx})
         """
         .format(repr = repr(view),
-                idx = idx,
-                plot = ", plot_name = " + repr(self.current_plot) if self.plot_names else ""))
+                idx = idx))
 
     @on_trait_change('export')
     def _on_export(self):
@@ -231,111 +230,7 @@ class TablePluginView(PluginViewMixin, TableView):
         data = pd.DataFrame(index = self.result.index)
         data[self.result.name] = self.result   
         
-        if self.subset:
-            data = data.query(self.subset)
-        
-        names = list(data.index.names)
-        for name in names:
-            unique_values = data.index.get_level_values(name).unique()
-            if len(unique_values) == 1:
-                data.index = data.index.droplevel(name) 
-                
-        facets = [x for x in [self.row_facet, self.subrow_facet, 
-                                      self.column_facet, self.subcolumn_facet] if x]
-        
-        if set(facets) != set(data.index.names):
-            raise util.CytoflowViewError("Must use all the statistic indices as variables or facets: {}"
-                                         .format(data.index.names))
-            
-        row_groups = data.index.get_level_values(self.row_facet).unique() \
-                     if self.row_facet else [None]
-                     
-        subrow_groups = data.index.get_level_values(self.subrow_facet).unique() \
-                        if self.subrow_facet else [None] 
-        
-        col_groups = data.index.get_level_values(self.column_facet).unique() \
-                     if self.column_facet else [None]
-                     
-        subcol_groups = data.index.get_level_values(self.subcolumn_facet).unique() \
-                        if self.subcolumn_facet else [None]
-
-        row_offset = (self.column_facet != "") + (self.subcolumn_facet != "")        
-        col_offset = (self.row_facet != "") + (self.subrow_facet != "")
-        
-        num_rows = len(row_groups) * len(subrow_groups) + row_offset
-        num_cols = len(col_groups) * len(subcol_groups) + col_offset
-
-        t = np.empty((num_rows, num_cols), dtype = np.object_)
- 
-        # make the main table       
-        for (ri, r) in enumerate(row_groups):
-            for (rri, rr) in enumerate(subrow_groups):
-                for (ci, c) in enumerate(col_groups):
-                    for (cci, cc) in enumerate(subcol_groups):
-                        row_idx = ri * len(subrow_groups) + rri + row_offset
-                        col_idx = ci * len(subcol_groups) + cci + col_offset
-#                         agg_idx = [x for x in (r, rr, c, cc) if x is not None]
-#                         agg_idx = tuple(agg_idx)
-#                         if len(agg_idx) == 1:
-#                             agg_idx = agg_idx[0]
-#                         t[row_idx, col_idx] = self.result.get(agg_idx) 
-
-
-                        # this is not pythonic, but i'm tired
-                        agg_idx = []
-                        for data_idx in data.index.names:
-                            if data_idx == self.row_facet:
-                                agg_idx.append(r)
-                            elif data_idx == self.subrow_facet:
-                                agg_idx.append(rr)
-                            elif data_idx == self.column_facet:
-                                agg_idx.append(c)
-                            elif data_idx == self.subcolumn_facet:
-                                agg_idx.append(cc)
-                        
-                        agg_idx = tuple(agg_idx)
-                        if len(agg_idx) == 1:
-                            agg_idx = agg_idx[0]
-                            
-                        try:
-                            text = "{:g}".format(data.loc[agg_idx][self.result.name])
-                        except ValueError:
-                            text = data.loc[agg_idx][self.result.name]
-
-                        t[row_idx, col_idx] = self.result.get(agg_idx) 
-                        
-        # row headers
-        if self.row_facet:
-            for (ri, r) in enumerate(row_groups):
-                row_idx = ri * len(subrow_groups) + row_offset
-                text = "{0} = {1}".format(self.row_facet, r)
-                t[row_idx, 0] = text
-                
-        # subrow headers
-        if self.subrow_facet:
-            for (ri, r) in enumerate(row_groups):
-                for (rri, rr) in enumerate(subrow_groups):
-                    row_idx = ri * len(subrow_groups) + rri + row_offset
-                    text = "{0} = {1}".format(self.subrow_facet, rr)
-                    t[row_idx, 1] = text
-                    
-        # column headers
-        if self.column_facet:
-            for (ci, c) in enumerate(col_groups):
-                col_idx = ci * len(subcol_groups) + col_offset
-                text = "{0} = {1}".format(self.column_facet, c)
-                t[0, col_idx] = text
-
-        # column headers
-        if self.subcolumn_facet:
-            for (ci, c) in enumerate(col_groups):
-                for (cci, cc) in enumerate(subcol_groups):
-                    col_idx = ci * len(subcol_groups) + cci + col_offset
-                    text = "{0} = {1}".format(self.subcolumn_facet, c)
-                    t[1, col_idx] = text        
-                    
-        np.savetxt(dialog.path, t, delimiter = ",", fmt = "%s")
-                    
+        self._export_data(data, dialog.path)
            
 
 @provides(IViewPlugin)
@@ -343,7 +238,7 @@ class TablePlugin(Plugin, PluginHelpMixin):
 
     id = 'edu.mit.synbio.cytoflowgui.view.table'
     view_id = 'edu.mit.synbio.cytoflow.view.table'
-    short_name = "1D Statistics View"
+    short_name = "Table View"
     
     def get_view(self):
         return TablePluginView()
@@ -368,5 +263,5 @@ def _dump(view):
     
 @camel_registry.loader('table-view', version = 1)
 def _load(data, version):
-    data['statistic'] = tuple(data['statistic'])
     return TablePluginView(**data)
+

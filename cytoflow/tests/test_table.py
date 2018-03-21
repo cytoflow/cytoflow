@@ -22,7 +22,7 @@ Created on Dec 1, 2015
 @author: brian
 '''
 
-import unittest
+import unittest, tempfile, os
 
 import matplotlib
 matplotlib.use('Agg')
@@ -58,7 +58,22 @@ class TestTable(ImportedDataTest):
                              channel = "Y2-A",
                              by = ['Dox', 'Well'],
                              function = flow.geom_sd_range).apply(self.ex)
+                             
+    def tearDown(self):
+        fh, filename = tempfile.mkstemp()
+        
+        try:
+            os.close(fh)
+            self.view.export(self.ex, filename)
+        finally:
+            os.unlink(filename)
 
+        
+    def testPlotRowSubset(self):
+        self.view = flow.TableView(statistic = ("ByDox", "geom_mean"),
+                                   row_facet = "Dox",
+                                   subset = "Dox > 1")
+        self.view.plot(self.ex)
         
     def testPlotRow(self):
         self.view = flow.TableView(statistic = ("ByDox", "geom_mean"),
@@ -88,7 +103,35 @@ class TestTable(ImportedDataTest):
                                    column_facet = 'Well')
         self.view.plot(self.ex)        
         
+    def testPlotRowRange(self):
+        self.view = flow.TableView(statistic = ("ByDox", "geom_sd_range"),
+                                   row_facet = "Dox")
+        self.view.plot(self.ex)
+        
+    def testPlotSubrowRange(self):
+        self.view = flow.TableView(statistic = ("ByDoxWell", "geom_sd_range"),
+                                   row_facet = 'Dox',
+                                   subrow_facet = 'Well')
+        self.view.plot(self.ex)
+        
+    def testPlotColumnRange(self):
+        self.view = flow.TableView(statistic = ("ByDox", "geom_sd_range"),
+                                   column_facet = "Dox")
+        self.view.plot(self.ex)
+        
+    def testPlotSubcolumnRange(self):
+        self.view = flow.TableView(statistic = ("ByDoxWell", "geom_sd_range"),
+                                   column_facet = 'Dox',
+                                   subcolumn_facet = 'Well')
+        self.view.plot(self.ex)
+
+    def testPlotRowAndColumnRange(self):
+        self.view = flow.TableView(statistic = ("ByDoxWell", "geom_sd_range"),
+                                   row_facet = 'Dox',
+                                   column_facet = 'Well')
+        self.view.plot(self.ex) 
+        
 
 if __name__ == "__main__":
-#     import sys;sys.argv = ['', 'Test1DStats.testColWrap']
+#     import sys;sys.argv = ['', 'TestTable.testPlotColumnRange']
     unittest.main()
