@@ -416,9 +416,9 @@ class TableView(HasStrictTraits):
         data = pd.DataFrame(index = stat.index)
         data[stat.name] = stat   
         
-        self._export_data(data, filename)
+        self._export_data(data, stat.name, filename)
     
-    def _export_data(self, data, filename):
+    def _export_data(self, data, column_name, filename):
         
         if self.subset:
             try:
@@ -541,7 +541,7 @@ class TableView(HasStrictTraits):
                                 agg_idx.append(cc)
                         
                         agg_idx = tuple(agg_idx)                            
-                        t[row_idx, col_idx] = data.get(agg_idx) 
+                        t[row_idx, col_idx] = data.loc[agg_idx, column_name]
                         
         # row headers
         if self.row_facet:

@@ -88,7 +88,7 @@ class TestTable(ImportedDataTest):
             data = pd.DataFrame(index = self.view.result.index)
             data[self.view.result.name] = self.view.result   
         
-            self.view._export_data(data, filename)
+            self.view._export_data(data, self.view.result.name, filename)
         finally:
             os.unlink(filename)
 

@@ -73,8 +73,6 @@ Make a table out of a statistic.  The table can then be exported.
                    column_facet = "Threshold").plot(ex3)    
 
 """
-
-import numpy as np
 import pandas as pd
 
 from traits.api import provides, Callable, Event, on_trait_change, Instance, Property
@@ -83,7 +81,6 @@ from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource, FileDialog, OK
 
 from cytoflow import TableView
-import cytoflow.utility as util
 
 from cytoflowgui.subset import SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
@@ -230,7 +227,7 @@ class TablePluginView(PluginViewMixin, TableView):
         data = pd.DataFrame(index = self.result.index)
         data[self.result.name] = self.result   
         
-        self._export_data(data, dialog.path)
+        self._export_data(data, self.result.name, dialog.path)
            
 
 @provides(IViewPlugin)
