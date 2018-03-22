@@ -38,9 +38,7 @@ class Kde2DView(Base2DView):
     """
     Plots a 2-d kernel-density estimate.  Sort of like a smoothed histogram.
     The density is visualized with a set of isolines.
-    
-    .. warning:: :class:`Kde2DView` is currently **VERY SLOW.**  
-    
+        
     Attributes
     ----------
 

@@ -117,10 +117,10 @@ Design decisions & justifications
   1. Instantiate a new operation or view 
 
   2. Parameterize the operation or view (possibly by estimating parameters from
-       a provided data set). 
+     a provided data set). 
 
   3. Apply the operation or view to an :class:`~cytoflow.experiment.Experiment`. 
-     If applying an operation, :meth`apply` returns a new Experiment. 
+     If applying an operation, :meth:`apply` returns a new Experiment. 
 
   The justification for these semantics is that it makes the *state* of the
   interacting objects really obvious.  An operation or view's state doesn't

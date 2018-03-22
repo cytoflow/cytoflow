@@ -86,7 +86,19 @@ class ThresholdOp(HasStrictTraits):
     .. plot::
         :context: close-figs
         
-        >>> thresh_op.default_view(scale = 'log').plot(ex)
+        >>> tv = thresh_op.default_view(scale = 'log')
+        >>> tv.plot(ex)
+        
+        
+    .. note::
+       If you want to use the interactive default view in a Jupyter notebook,
+       make sure you say ``%matplotlib notebook`` in the first cell 
+       (instead of ``%matplotlib inline`` or similar).  Then call 
+       ``default_view()`` with ``interactive = True``::
+       
+           tv = thresh_op.default_view(scale = 'log',
+                                       interactive = True)
+           tv.plot(ex)
         
     Apply the gate, and show the result
     

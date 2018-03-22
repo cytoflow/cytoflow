@@ -69,7 +69,7 @@ before computing and applying the gate.
                                     xscale = 'log',
                                     ychannel = 'SSC-A',
                                     yscale = 'log',
-                                    keep = 0.7)
+                                    keep = 0.5)
     density_op.estimate(ex)   
     density_op.default_view().plot(ex)
     ex2 = density_op.apply(ex)

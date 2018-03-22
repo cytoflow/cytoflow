@@ -4,8 +4,8 @@
 Writing new ``cytoflow`` modules
 ********************************
 
-Creating a new module in ``cytoflow`` ranges from easy (for simple things)
-to quite involved.  I like to think that ``cytoflow`` follows the Perl 
+Creating a new module in :mod:`cytoflow` ranges from easy (for simple things)
+to quite involved.  I like to think that :mod:`cytoflow` follows the Perl 
 philosophy of making the easy jobs easy and the hard jobs possible.
 
 With that in mind, let's look at the process of creating a new module,
@@ -27,7 +27,7 @@ Finally, there are some principles that I expect new modules contributed to this
 codebase to follow:
 
 * **Check for pathological errors and fail early**.  I really dislike the 
-  tendency of a number of libraries to fail with cryptic errors (I'm looking at
+  tendency of a number of libraries to fail with cryptic errors.  (I'm looking at
   you, :mod:`pandas`.)  Check for obvious errors and raise a :class:`.CytoflowOpError`
   or :class:`.CytoflowViewError`).  If the problem is non-fatal, warn with
   :class:`.CytoflowOpWarning` or :class:`.CytoflowViewWarning`.  The GUI will
@@ -151,7 +151,7 @@ Wrapping an operation for the GUI sometimes feels like it requires more work
 than writing the operation in the first place.  A new operation requires at
 least five things:
 
-* A plugin class implementing either :class:`.IOperationPlugin`.  It should 
+* A plugin class implementing :class:`.IOperationPlugin`.  It should 
   also derive from :class:`.PluginHelpMixin`, which adds support for online help.
   
 * A class derived from the underlying :mod:`cytoflow` operation.  The derived
