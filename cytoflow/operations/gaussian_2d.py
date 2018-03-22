@@ -604,15 +604,32 @@ class GaussianMixture2DView(By2DView, AnnotatingView, ScatterplotView):
         ----------
         
         """
+        if experiment is None:
+            raise util.CytoflowViewError('experiment', "No experiment specified")
+        
+        if self.op.num_components == 1:
+            annotation_facet = self.op.name + "_1"
+        else:
+            annotation_facet = self.op.name
         
         view, trait_name = self._strip_trait(self.op.name)
+        
+        if self.xscale:
+            xscale = self.op._xscale
+        else:
+            xscale = util.scale_factory(self.xscale, experiment, channel = self.xchannel)
+
+        if self.yscale:
+            yscale = self.op._yscale
+        else:
+            yscale = util.scale_factory(self.yscale, experiment, channel = self.ychannel)
     
         super(GaussianMixture2DView, view).plot(experiment,
-                                                annotation_facet = self.op.name,
+                                                annotation_facet = annotation_facet,
                                                 annotation_trait = trait_name,
                                                 annotations = self.op._gmms,
-                                                xscale = self.op._xscale,
-                                                yscale = self.op._yscale,
+                                                xscale = xscale,
+                                                yscale = yscale,
                                                 **kwargs)
 
     def _annotation_plot(self, axes, annotation, annotation_facet, 
@@ -632,9 +649,17 @@ class GaussianMixture2DView(By2DView, AnnotatingView, ScatterplotView):
                 idx = idx_re.match(annotation_value).group(1)
                 idx = int(idx) - 1   
             except:
-                return          
+                return      
+        elif isinstance(annotation_value, np.bool_):
+            if annotation_value:
+                idx = 0
+            else:
+                return    
         else:
             idx = annotation_value
+            
+        xscale = kwargs['xscale']
+        yscale = kwargs['yscale']
         
         mean = gmm.means_[idx]
         covar = gmm.covariances_[idx]
@@ -651,6 +676,8 @@ class GaussianMixture2DView(By2DView, AnnotatingView, ScatterplotView):
         # is the same as matplotlib.patches.Ellipse
         
         self._plot_ellipse(axes,
+                           xscale,
+                           yscale,
                            mean,
                            np.sqrt(v[0]),
                            np.sqrt(v[1]),
@@ -660,6 +687,8 @@ class GaussianMixture2DView(By2DView, AnnotatingView, ScatterplotView):
                            linewidth = 2)
 
         self._plot_ellipse(axes, 
+                           xscale,
+                           yscale,
                            mean,
                            np.sqrt(v[0]) * 2,
                            np.sqrt(v[1]) * 2,
@@ -670,6 +699,8 @@ class GaussianMixture2DView(By2DView, AnnotatingView, ScatterplotView):
                            alpha = 0.66)
         
         self._plot_ellipse(axes, 
+                           xscale,
+                           yscale,
                            mean,
                            np.sqrt(v[0]) * 3,
                            np.sqrt(v[1]) * 3,
@@ -679,7 +710,7 @@ class GaussianMixture2DView(By2DView, AnnotatingView, ScatterplotView):
                            linewidth = 2,
                            alpha = 0.33)
                     
-    def _plot_ellipse(self, ax, center, width, height, angle, **kwargs):
+    def _plot_ellipse(self, ax, xscale, yscale, center, width, height, angle, **kwargs):
         tf = transforms.Affine2D() \
              .scale(width, height) \
              .rotate_deg(angle) \
@@ -687,8 +718,8 @@ class GaussianMixture2DView(By2DView, AnnotatingView, ScatterplotView):
              
         tf_path = tf.transform_path(path.Path.unit_circle())
         v = tf_path.vertices
-        v = np.vstack((self.op._xscale.inverse(v[:, 0]),
-                       self.op._yscale.inverse(v[:, 1]))).T
+        v = np.vstack((xscale.inverse(v[:, 0]),
+                       yscale.inverse(v[:, 1]))).T
 
         scaled_path = path.Path(v, tf_path.codes)
         scaled_patch = patches.PathPatch(scaled_path, **kwargs)

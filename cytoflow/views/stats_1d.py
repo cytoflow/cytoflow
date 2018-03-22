@@ -79,8 +79,8 @@ class Stats1DView(Base1DStatisticsView):
         
         >>> flow.Stats1DView(variable = 'Dox',
         ...                  statistic = ('MeanByDox', 'geom_mean'),
-        ...                  xscale = 'log',
-        ...                  yscale = 'log').plot(ex2)
+        ...                  variable_scale = 'log',
+        ...                  scale = 'log').plot(ex2)
     """
     
     # traits   

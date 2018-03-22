@@ -95,8 +95,10 @@ class Kde2DView(Base2DView):
         bw : str or float
             The bandwidth for the gaussian kernel, controls how lumpy or smooth the
             kernel estimate is.  Choices are:
+            
                 - ``scott`` (the default) - ``1.059 * A * nobs ** (-1/5.)``, where ``A`` is ``min(std(X),IQR/1.34)``
                 - ``silverman`` - ``.9 * A * nobs ** (-1/5.)``, where ``A`` is ``min(std(X),IQR/1.34)``
+                
             If a float is given, it is the bandwidth.   Note, this is in 
             scaled units, not data units.
             

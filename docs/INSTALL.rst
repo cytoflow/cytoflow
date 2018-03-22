@@ -134,11 +134,11 @@ the appropriate file.
   
   * **On Windows**::
   
-    set NO_LOGICLE=True
+       set NO_LOGICLE=True
  
   * **On MacOS**::
   
-    export NO_LOGICLE=True
+       export NO_LOGICLE=True
     
 * Install ``cytoflow`` in developer's mode::
 

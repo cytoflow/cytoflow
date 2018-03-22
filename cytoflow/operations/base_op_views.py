@@ -305,7 +305,7 @@ class NullView(BaseDataView):
 class AnnotatingView(BaseDataView):
     """
     A :class:`IView` that plots an underlying data plot, then plots some
-    annotations on top of it.  See :class:`~.GaussianMixture1DView` for an
+    annotations on top of it.  See :class:`~.gaussian.GaussianMixture1DView` for an
     example.  By default, it assumes that the annotations are to be plotted
     in the same color as the view's :attr:`huefacet`, and sets :attr:`huefacet`
     accordingly if the annotation isn't already set to a different facet.
