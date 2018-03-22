@@ -117,6 +117,9 @@ class PluginHelpMixin(HasTraits):
         return self._cached_help
                         
 
+def unimplemented(*args, **kwargs):
+    raise NotImplementedError("A plugin op must have a handler_factory trait")
+
 class PluginOpMixin(HasTraits):
     """
     A mixin class that adds GUI support to an underlying :mod:`cytoflow`
@@ -158,7 +161,7 @@ class PluginOpMixin(HasTraits):
 
     """
     
-    handler_factory = Callable(lambda *_, **_: exec('raise NotImplementedError("A plugin op must have a handler_factory trait")'))
+    handler_factory = Callable(unimplemented)
     
     # causes this operation's estimate() function to be called
     do_estimate = Event
