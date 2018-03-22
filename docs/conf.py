@@ -59,6 +59,7 @@ extensions = [
 
 if tags.has("embedded_help"):  # @UndefinedVariable
     extensions.remove('sphinx.ext.viewcode')
+    extensions.remove('sphinxcontrib.fulltoc')
 
 # Generate the API documentation when building
 autosummary_generate = True
