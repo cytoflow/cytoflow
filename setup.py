@@ -85,8 +85,7 @@ setup(
                         'camel==0.1.2',
                         'yapf==0.20.2',
                         'fcsparser==0.2.0'] 
-                if not on_rtd else ['sphinx==1.6.3',
-                                    'sphinxcontrib-fulltoc'],
+                if not on_rtd else ['sphinx==1.6.3'],
                         
     # GUI also requires PyQt4 >= 4.11.4, but it's not available via pypi and 
     # distutils.  Install it locally!

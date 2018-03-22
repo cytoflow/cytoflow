@@ -52,14 +52,13 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.mathjax',
     'sphinx.ext.intersphinx',
-    'sphinxcontrib.fulltoc',
     'plot_directive',
-    'embedded_builder'
+    'embedded_builder',
+    'fulltoc'
 ]
 
 if tags.has("embedded_help"):  # @UndefinedVariable
     extensions.remove('sphinx.ext.viewcode')
-    extensions.remove('sphinxcontrib.fulltoc')
 
 # Generate the API documentation when building
 autosummary_generate = True
