@@ -145,7 +145,7 @@ the appropriate file.
     python setup.py develop
     
 * From the `GitHub releases page <https://github.com/bpteague/cytoflow/releases>`_ 
-  download the appropriate extension file.
+  download the appropriate extension file for the version you're installing.
   
   * **On Windows (32-bit)**: ``_Logicle.cp35-win32.pyd``
   * **On Windows (64-bit)**: ``_Logicle.cp35-win_amd64.pyd``

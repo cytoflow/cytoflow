@@ -13,3 +13,4 @@ python-dateutil
 statsmodels
 fcsparser
 fcswrite
+sphinxcontrib-fulltoc

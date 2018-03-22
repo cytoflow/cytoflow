@@ -100,6 +100,16 @@ Design decisions & justifications
   but they don't cause the same sorts of shift in data *structure* you see with
   a log transform.  Data that is distributed log-normally before bleedthrough
   correction, will be distributed log-normally after.
+  
+* Easy computation and plotting of summary statistics.  The 
+  :class:`.ChannelStatisticOp` and :class:`.FrameStatisticOp` operations create
+  new statistics and add them to the :attr:`.Experiment.statistics`; and 
+  :class:`.BarChartView`, :class:`.Stats1DView` and :class:`.Stats2DView` make 
+  it easy to plot them.  (A statistic is just a :class:`pandas.Series` with a 
+  hierarchical index that encodes data subsets and the value of a summary 
+  statistic for each group.)  This may be more useful in the GUI, because 
+  :meth:`pandas.DataFrame.groupby` provides similar functionality in a
+  notebook setting.
 
 * As is made pretty clear in the example Jupyter notebooks, the semantics for
   views and operations are

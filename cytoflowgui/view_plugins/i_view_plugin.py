@@ -28,7 +28,7 @@ from pyface.qt import QtGui
 
 from traits.api import (Interface, Str, HasTraits, Instance, Event,
                         List, Property, on_trait_change, HTML, Any, Bool,
-                        Tuple, Enum)
+                        Tuple, Enum, Constant)
 from traitsui.api import View, Item, Handler, HGroup, TextEditor, InstanceEditor, TupleEditor
 
 import cytoflow.utility as util
@@ -37,7 +37,7 @@ from cytoflowgui.subset import ISubset
 from cytoflowgui.workflow import Changed
 from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.flow_task_pane import TabListEditor
-from cytoflowgui.serialization import traits_repr, traits_eq, traits_hash
+from cytoflowgui.serialization import traits_repr
 
 VIEW_PLUGIN_EXT = 'edu.mit.synbio.cytoflow.view_plugins'
 
@@ -58,22 +58,58 @@ class IViewPlugin(Interface):
         The view's "short" name - for menus, toolbar tips, etc.
     """
     
-    view_id = Str
-    short_name = Str
+    id = Constant("FIXME")
+    view_id = Constant("FIXME")
+    short_name = Constant("FIXME")
 
     def get_view(self):
-        """Return an IView instance that this plugin wraps"""
+        """
+        Gets the IView instance that this plugin wraps.
         
-    
+        Returns
+        -------
+        :class:`IView`
+            An instance of the view that this plugin wraps
+        """
+        
     def get_icon(self):
         """
         Returns an icon for this plugin
+        
+        Returns
+        -------
+        :class:`pyface.ImageResource`
+            The icon, 32x32        
         """
+        
+    def get_plugin(self):
+        """
+        Returns an instance of :class:`envisage.Plugin` implementing
+        :class:`.IViewPlugin`.  Usually returns ``self``.
+        
+        Returns
+        -------
+        :class:`envisage.Plugin`
+        """
+        
 class PluginHelpMixin(HasTraits):
+    """
+    A mixin to get online HTML help for a class.  It determines the HTML
+    path name from the class name.
+    """
     
     _cached_help = HTML
     
     def get_help(self):
+        """
+        Gets the HTML help for this class.
+        
+        Returns
+        -------
+        string
+            The HTML help in a single string.
+        """
+        
         if self._cached_help == "":
             current_dir = os.path.abspath(__file__)
             help_dir = os.path.split(current_dir)[0]

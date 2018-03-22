@@ -17,13 +17,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
-from textwrap import dedent
 
 from pyface.qt import QtGui
 
-from traits.api import (Interface, Str, HasTraits, Event, Instance, Property, 
-                        on_trait_change, HTML)
+from traits.api import (Interface, Constant, HasTraits, Event, Instance, Property, 
+                        on_trait_change, HTML, Callable)
 from traitsui.api import Group, Item
+from envisage.api import contributes_to
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.workflow_item import WorkflowItem
 
@@ -35,33 +35,48 @@ class IOperationPlugin(Interface):
     Attributes
     ----------
     
-    id : Str
+    id : Constant
         The Envisage ID used to refer to this plugin
         
-    operation_id : Str
+    operation_id : Constant
         Same as the "id" attribute of the IOperation this plugin wraps.
         
-    short_name : Str
+    short_name : Constant
         The operation's "short" name - for menus and toolbar tool tips
-        
-    menu_group : Str
-        If we were to put this op in a menu, what submenu to use?
-        Not currently used.
     """
 
-    operation_id = Str
-    short_name = Str
-    menu_group = Str
+    operation_id = Constant("FIXME")
+    short_name = Constant("FIXME")
 
     def get_operation(self):
         """
-        Return an instance of the IOperation that this plugin wraps, along
-        with the factory for the handler
+        Makes an instance of the IOperation that this plugin wraps.
+        
+        Returns
+        -------
+        :class:`.IOperation`
         """
 
     def get_icon(self):
         """
+        Gets the icon for this operation.
         
+        Returns
+        -------
+        :class:`pyface.ImageResource`
+            The icon, 32x32.
+        """
+        pass
+        
+    @contributes_to(OP_PLUGIN_EXT)
+    def get_plugin(self):
+        """
+        Gets the :mod:`envisage` plugin for this operation (usually `self`).
+        
+        Returns
+        -------
+        :class:`envisage.Plugin`
+            the plugin instance
         """
         
 class PluginHelpMixin(HasTraits):
@@ -69,6 +84,16 @@ class PluginHelpMixin(HasTraits):
     _cached_help = HTML
     
     def get_help(self):
+        """
+        Gets the HTML help for this module, deriving the filename from
+        the class name.
+        
+        Returns
+        -------
+        string
+            The HTML help, in a single string.
+        """
+        
         if self._cached_help == "":
             current_dir = os.path.abspath(__file__)
             help_dir = os.path.split(current_dir)[0]
@@ -93,15 +118,47 @@ class PluginHelpMixin(HasTraits):
                         
 
 class PluginOpMixin(HasTraits):
-    # there are a few pieces of metadata that determine which traits get
-    # copied between processes and when.  if a trait has "status = True",
-    # it is only copied from the remote process to the local one.
-    # this is for traits that report an operation's status.  if a trait
-    # has "estimate = True", it is copied local --> remote but the workflow
-    # item IS NOT UPDATED in real-time.  these are for traits that are used
-    # for estimating other parameters, which is assumed to be a very slow 
-    # process.  if a trait has "fixed = True", then it is assigned when the
-    # operation is first copied over AND NEVER SUBSEQUENTLY CHANGED.
+    """
+    A mixin class that adds GUI support to an underlying :mod:`cytoflow`
+    operation.
+    
+    Another common thing to do in the derived class is to override traits
+    of the underlying class in order to add metadata that controls their
+    handling by the workflow.  Currently, relevant metadata include:
+    
+      * **transient** - don't copy the trait between the local (GUI) process 
+      and the remote (computation) process (in either direction).
+        
+      * **status** - only copy from the remote process to the local process,
+      not the other way 'round.
+      
+      * **estimate** - copy from the local process to the remote process,
+      but don't call :meth:`apply`.  (used for traits that are involved in
+      estimating the operation's parameters.)
+      
+      * **fixed** - assigned when the operation is first created in the
+      remote process *and never subsequently changed.*
+    
+    Attributes
+    ----------
+    
+    handler_factory : Callable
+        A callable that returns a GUI handler for the operation.  **MUST**
+        be overridden in the derived class.
+        
+    do_estimate : Event
+        Firing this event causes the operation's :meth:`estimate` method 
+        to be called.
+        
+    changed : Event
+        Used to transmit status information back from the operation to the
+        workflow.  Set its value to a tuple (message, payload).  See 
+        :class:`.workflow.Changed` for possible values of the message
+        and their corresponding payloads.
+
+    """
+    
+    handler_factory = Callable(lambda *_, **_: exec('raise NotImplementedError("A plugin op must have a handler_factory trait")'))
     
     # causes this operation's estimate() function to be called
     do_estimate = Event
@@ -114,8 +171,11 @@ class PluginOpMixin(HasTraits):
         """
         Should the owning WorkflowItem apply this operation when certain things
         change?  `changed` can be:
+        
          - Changed.OPERATION -- the operation's parameters changed
+         
          - Changed.PREV_RESULT -- the previous WorkflowItem's result changed
+         
          - Changed.ESTIMATE_RESULT -- the results of calling "estimate" changed
         """
         return True
@@ -125,11 +185,30 @@ class PluginOpMixin(HasTraits):
         """
         Should the owning WorkflowItem clear the estimated model by calling
         op.clear_estimate()?  `changed` can be:
-         - Changed.ESTIMATE -- the parameters required to call 'estimate()' (ie
-            traits with estimate = True metadata) have changed
-         - Changed.PREV_RESULT -- the previous WorkflowItem's result changed
+        
+         - Changed.ESTIMATE -- the parameters required to call :meth:`estimate` 
+         (ie traits with ``estimate = True`` metadata) have changed
+            
+         - Changed.PREV_RESULT -- the previous :class:`.WorkflowItem`'s result changed
          """
         return True
+    
+    def get_notebook_code(self, idx):
+        """
+        Return Python code suitable for a Jupyter notebook cell that runs this
+        operation.
+        
+        Parameters
+        ----------
+        idx : integer
+            The index of the :class:`.WorkflowItem` that holds this operation.
+            
+        Returns
+        -------
+        string
+            The Python code that calls this module.
+        """
+        raise NotImplementedError("GUI plugins must override get_notebook_code()")
 
           
 shared_op_traits = Group(Item('context.estimate_warning',
@@ -169,6 +248,19 @@ class OpHandlerMixin(HasTraits):
     previous_conditions_names = Property(depends_on = "context.previous_wi.conditions")
     statistics_names = Property(depends_on = "context.statistics")
     previous_statistics_names = Property(depends_on = "context.previous_wi.statistics")
+    
+    # the default traits view
+    def default_traits_view(self):
+        """
+        Gets the default :class:`traits.View` for an operation.
+        
+        Returns
+        -------
+        traits.View
+            The view for an operation.
+        """
+        
+        raise NotImplementedError("Op handlers must override 'default_traits_view")
     
     # MAGIC: gets value for property "conditions_names"
     def _get_conditions_names(self):

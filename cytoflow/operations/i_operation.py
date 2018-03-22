@@ -21,7 +21,7 @@ cytoflow.operations.i_operation
 -------------------------------
 '''
 
-from traits.api import Interface, Str
+from traits.api import Interface, Constant
 
 class IOperation(Interface):
     """
@@ -30,7 +30,7 @@ class IOperation(Interface):
     Attributes
     ----------
     id : Str
-        a unique identifier for this class. prefix: edu.mit.synbio.cytoflow.operations
+        a unique identifier for this class. prefix: ``edu.mit.synbio.cytoflow.operations``
         
     friendly_id : Str
         The operation's human-readable id (like ``Threshold`` or ``K-means``).  
@@ -42,9 +42,8 @@ class IOperation(Interface):
     """
     
     # interface traits
-    id = Str
-    friendly_id = Str
-    name = Str
+    id = Constant('FIXME')
+    friendly_id = Constant('FIXME')
         
     def estimate(self, experiment, subset = None):
         """
