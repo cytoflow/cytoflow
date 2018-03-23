@@ -50,8 +50,7 @@ before_install:
 install:
 
   # set up conda build variables
-  - if [[ -z $TRAVIS_TAG ]]; then export CONDA_TAG="untagged"; else export CONDA_TAG=$TRAVIS_TAG; fi
-  - export CONDA_BUILD_NUMBER=$TRAVIS_BUILD_NUMBER
+  - if [[ -z $TRAVIS_TAG ]]; then export CONDA_TAG="dev"; export CONDA_BUILD_NUMBER=$TRAVIS_BUILD_NUMBER; else export CONDA_TAG=$TRAVIS_TAG; export CONDA_BUILD_NUMBER=0; fi
   - export CONDA_BUILD_STRING=py35_${TRAVIS_OS_NAME}_${TRAVIS_BUILD_NUMBER}
 
   # build and install conda recipe
@@ -79,8 +78,8 @@ after_success:
   # Build the one-click executables
   - pyinstaller --log-level=DEBUG packaging/pyinstaller.spec
   - pyi-archive_viewer -l dist/cytoflow
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then cd dist/; zip -r cytoflow.macos.zip Cytoflow.app/; rm -rf Cytoflow.app cytoflow; cd ..; fi
-  - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then mv dist/cytoflow dist/cytoflow-linux.x86_64; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then cd dist/; mv Cytoflow.app Cytoflow-${CONDA_TAG}.app; zip -r cytoflow-${CONDA_TAG}.macos.zip Cytoflow-${CONDA_TAG}.app/; rm -rf Cytoflow-${CONDA_TAG}.app cytoflow; cd ..; fi
+  - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then mv dist/cytoflow dist/cytoflow-${CONDA_TAG}-linux.x86_64; fi
   
   # Zip up the examples
   - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then cd docs; zip -r cytoflow-${CONDA_TAG}-examples-basic.zip examples-basic; zip -r cytoflow-${CONDA_TAG}-examples-advanced.zip examples-advanced; mv cytoflow-${CONDA_TAG}-examples-*.zip ../dist; cd ..; fi
@@ -148,3 +147,4 @@ deploy:
     skip_cleanup: true
     on:
       branch: packaging
+      tags: true
