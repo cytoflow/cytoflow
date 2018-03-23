@@ -511,7 +511,9 @@ class GaussianMixture1DOp(HasStrictTraits):
         warn("GaussianMixture1DOp is DEPRECATED.  Please use GaussianMixtureOp.",
              util.CytoflowOpWarning)
         
-        return GaussianMixture1DView(op = self, **kwargs)
+        v = GaussianMixture1DView(op = self)
+        v.trait_set(**kwargs)
+        return v
     
 @provides(IView)
 class GaussianMixture1DView(By1DView, AnnotatingView, HistogramView):

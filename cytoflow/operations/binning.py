@@ -236,7 +236,9 @@ class BinningOp(HasStrictTraits):
         IView
             An view instance, call :meth:`plot()` to plot the bins.
         """
-        return BinningView(op = self, **kwargs)
+        v = BinningView(op = self)
+        v.trait_set(**kwargs)
+        return v
     
 @provides(IView)
 class BinningView(Op1DView, AnnotatingView, HistogramView):

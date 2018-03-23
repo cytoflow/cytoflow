@@ -391,7 +391,9 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
             raise util.CytoflowOpError('controls',
                                        "Must have both the controls and bleedthrough to plot")
 
-        return BleedthroughPiecewiseDiagnostic(op = self, **kwargs)
+        v = BleedthroughPiecewiseDiagnostic(op = self, **kwargs)
+        v.trait_set(**kwargs)
+        return v
     
 # module-level "static" function (doesn't require a class instance)
 def _correct_bleedthrough(row, channels, splines):

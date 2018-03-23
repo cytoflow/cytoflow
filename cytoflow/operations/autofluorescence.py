@@ -258,8 +258,9 @@ class AutofluorescenceOp(HasStrictTraits):
             An diagnostic view, call :meth:`~AutofluorescenceDiagnosticView.plot` 
             to see the diagnostic plots
         """
-        return AutofluorescenceDiagnosticView(op = self, **kwargs)
-    
+        v = AutofluorescenceDiagnosticView(op = self)
+        v.trait_set(**kwargs)
+        return v
     
 @provides(cytoflow.views.IView)
 class AutofluorescenceDiagnosticView(HasStrictTraits):

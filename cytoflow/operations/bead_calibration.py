@@ -460,7 +460,9 @@ class BeadCalibrationOp(HasStrictTraits):
             see the diagnostic plots
         """
 
-        return BeadCalibrationDiagnostic(op = self, **kwargs)
+        v = BeadCalibrationDiagnostic(op = self)
+        v.trait_set(**kwargs)
+        return v
     
     # this silliness is necessary to squash the repr() call in sphinx.autodoc
     class _Beads(dict):

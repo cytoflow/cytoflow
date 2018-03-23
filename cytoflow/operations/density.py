@@ -420,7 +420,9 @@ class DensityGateOp(HasStrictTraits):
             a diagnostic view, call :meth:`~DensityGateView.plot` to see the 
             diagnostic plot.
         """
-        return DensityGateView(op = self, **kwargs)
+        v = DensityGateView(op = self)
+        v.trait_set(**kwargs)
+        return v
           
 @provides(IView)
 class DensityGateView(By2DView, AnnotatingView, DensityView):

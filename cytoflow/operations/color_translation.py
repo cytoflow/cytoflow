@@ -344,7 +344,9 @@ class ColorTranslationOp(HasStrictTraits):
             see the diagnostic plots
         """
 
-        return ColorTranslationDiagnostic(op = self, **kwargs)
+        v = ColorTranslationDiagnostic(op = self)
+        v.trait_set(**kwargs)
+        return v
     
 @provides(cytoflow.views.IView)
 class ColorTranslationDiagnostic(HasStrictTraits):

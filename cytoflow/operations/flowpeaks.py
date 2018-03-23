@@ -791,25 +791,30 @@ class FlowPeaksOp(HasStrictTraits):
             raise util.CytoflowViewError('channels',
                                          "Must specify at least one channel for a default view")
         elif len(channels) == 1:
-            return FlowPeaks1DView(op = self, 
-                                   channel = channels[0], 
-                                   scale = scale[channels[0]], 
-                                   **kwargs)
+            v = FlowPeaks1DView(op = self)
+            v.trait_set(channel = channels[0], 
+                        scale = scale[channels[0]], 
+                        **kwargs)
+            return v
+        
         elif len(channels) == 2:
             if density:
-                return FlowPeaks2DDensityView(op = self, 
-                                              xchannel = channels[0], 
-                                              ychannel = channels[1],
-                                              xscale = scale[channels[0]],
-                                              yscale = scale[channels[1]], 
-                                              **kwargs)
+                v = FlowPeaks2DDensityView(op = self)
+                v.trait_set(xchannel = channels[0], 
+                            ychannel = channels[1],
+                            xscale = scale[channels[0]],
+                            yscale = scale[channels[1]], 
+                            **kwargs)
+                return v
+            
             else:
-                return FlowPeaks2DView(op = self, 
-                                       xchannel = channels[0], 
-                                       ychannel = channels[1],
-                                       xscale = scale[channels[0]],
-                                       yscale = scale[channels[1]], 
-                                       **kwargs)
+                v = FlowPeaks2DView(op = self)
+                v.trait_set(xchannel = channels[0], 
+                            ychannel = channels[1],
+                            xscale = scale[channels[0]],
+                            yscale = scale[channels[1]], 
+                            **kwargs)
+                return v
         else:
             raise util.CytoflowViewError(None,
                                          "Can't specify more than two channels for a default view")

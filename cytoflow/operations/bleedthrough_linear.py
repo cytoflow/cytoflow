@@ -330,7 +330,9 @@ class BleedthroughLinearOp(HasStrictTraits):
             raise util.CytoflowOpError('controls',
                                        "Must have both the controls and bleedthrough to plot")
 
-        return BleedthroughLinearDiagnostic(op = self, **kwargs)
+        v = BleedthroughLinearDiagnostic(op = self)
+        v.trait_set(**kwargs)
+        return v
     
 @provides(cytoflow.views.IView)
 class BleedthroughLinearDiagnostic(HasStrictTraits):

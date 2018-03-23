@@ -574,7 +574,9 @@ class GaussianMixture2DOp(HasStrictTraits):
         warn("GaussianMixture1DOp is DEPRECATED.  Please use GaussianMixtureOp.",
              util.CytoflowOpWarning)
         
-        return GaussianMixture2DView(op = self, **kwargs)
+        v = GaussianMixture2DView(op = self)
+        v.trait_set(**kwargs)
+        return v
     
     
 # a few more imports for drawing scaled ellipses
