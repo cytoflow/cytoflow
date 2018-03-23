@@ -323,3 +323,102 @@ class SpanSelector(_SelectorWidget):
         self.low_line.set_xdata([minv, minv])
         self.high_line.set_xdata([maxv, maxv])
         self.hline.set_xdata([minv, maxv])
+
+class Cursor(AxesWidget):
+    """
+    A horizontal and vertical line that spans the axes and moves with
+    the pointer.  You can turn off the hline or vline respectively with
+    the following attributes:
+
+      *horizOn*
+        Controls the visibility of the horizontal line
+
+      *vertOn*
+        Controls the visibility of the horizontal line
+
+    and the visibility of the cursor itself with the *visible* attribute.
+
+    For the cursor to remain responsive you must keep a reference to
+    it.
+    
+    Adapted from https://github.com/matplotlib/matplotlib/blob/master/lib/matplotlib/widgets.py
+    """
+    def __init__(self, ax, horizOn=True, vertOn=True, useblit=False,
+                 **lineprops):
+        """
+        Add a cursor to *ax*.  If ``useblit=True``, use the backend-
+        dependent blitting features for faster updates (GTKAgg
+        only for now).  *lineprops* is a dictionary of line properties.
+
+        .. plot :: mpl_examples/widgets/cursor.py
+        """
+        # TODO: Is the GTKAgg limitation still true?
+        AxesWidget.__init__(self, ax)
+
+        self.connect_event('motion_notify_event', self.onmove)
+        self.connect_event('draw_event', self.clear)
+
+        self.visible = True
+        self.horizOn = horizOn
+        self.vertOn = vertOn
+        self.useblit = useblit and self.canvas.supports_blit
+        self.moved = False
+
+        if self.useblit:
+            lineprops['animated'] = True
+        self.lineh = ax.axhline(ax.get_ybound()[0], visible=False, **lineprops)
+        self.linev = ax.axvline(ax.get_xbound()[0], visible=False, **lineprops)
+
+        self.background = None
+        self.needclear = False
+
+    def clear(self, event):
+        """clear the cursor"""
+        
+        if self.ignore(event) or not self.moved:
+            return
+        if self.useblit:
+            self.background = self.canvas.copy_from_bbox(self.ax.bbox)
+        self.linev.set_visible(False)
+        self.lineh.set_visible(False)
+        self.moved = False
+
+    def onmove(self, event):
+        """on mouse motion draw the cursor if visible"""
+        
+        if self.ignore(event):
+            return
+        if not self.canvas.widgetlock.available(self):
+            return
+        if event.inaxes != self.ax:
+            self.linev.set_visible(False)
+            self.lineh.set_visible(False)
+
+            if self.needclear:
+                self.canvas.draw()
+                self.needclear = False
+            return
+        self.needclear = True
+        if not self.visible:
+            return
+        self.linev.set_xdata((event.xdata, event.xdata))
+
+        self.lineh.set_ydata((event.ydata, event.ydata))
+        self.linev.set_visible(self.visible and self.vertOn)
+        self.lineh.set_visible(self.visible and self.horizOn)
+
+        self._update()
+
+    def _update(self):
+        
+        if self.useblit:
+            if self.background is not None:
+                self.canvas.restore_region(self.background)
+            self.ax.draw_artist(self.linev)
+            self.ax.draw_artist(self.lineh)
+            self.canvas.blit(self.ax.bbox)
+        else:
+            self.canvas.draw_idle()
+
+        self.moved = True
+        return False
