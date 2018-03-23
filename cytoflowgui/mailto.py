@@ -16,7 +16,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-'''Utilities for opening files or URLs in the registered default application
+'''
+Utilities for opening files or URLs in the registered default application
 and for sending e-mail using the user's preferred composer.
 
 From http://code.activestate.com/recipes/511443-cross-platform-startfile-and-mailto-functions/
@@ -303,7 +304,8 @@ def mailto_format(**kwargs):
 
 def mailto(address, to=None, cc=None, bcc=None, subject=None, body=None,
            attach=None):
-    '''Send an e-mail using the user's preferred composer.
+    '''
+    Send an e-mail using the user's preferred composer.
 
     Open the user's preferred e-mail composer in order to send a mail to
     address(es) that must follow the syntax of RFC822. Multiple addresses
@@ -314,16 +316,30 @@ def mailto(address, to=None, cc=None, bcc=None, subject=None, body=None,
     the user's e-mail composer. The user will have the opportunity to
     change any of this information before actually sending the e-mail.
 
-    address - specify the destination recipient
-    cc      - specify a recipient to be copied on the e-mail
-    bcc     - specify a recipient to be blindly copied on the e-mail
-    subject - specify a subject for the e-mail
-    body    - specify a body for the e-mail. Since the user will be able
-              to make changes before actually sending the e-mail, this
-              can be used to provide the user with a template for the
-              e-mail text may contain linebreaks
-    attach  - specify an attachment for the e-mail. file must point to
-              an existing file
+
+    Parameters
+    ----------
+    
+    address : string
+        specify the destination recipient
+        
+    cc : string
+        specify a recipient to be copied on the e-mail
+        
+    bcc : string
+        specify a recipient to be blindly copied on the e-mail
+        
+    subject : string
+        specify a subject for the e-mail
+        
+    body : string
+        specify a body for the e-mail. Since the user will be able
+        to make changes before actually sending the e-mail, this
+        can be used to provide the user with a template for the
+        e-mail text may contain linebreaks
+        
+    attach : filename
+        specify an attachment for the e-mail. file must point to an existing file
 
     '''
 

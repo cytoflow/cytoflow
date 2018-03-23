@@ -98,8 +98,9 @@ an Anaconda prompt.
 Finally, ``cytoflow`` relies on one C++ extension.  On Linux, installing the
 requirements for building it is straightforward.  On MacOS it is harder, and
 on Windows it is extremely difficult.  Instead, as part of rolling a new
-release, the appropriate files are made available on the GitHub releases
-page.  The procedure below includes instructions for downloading and installing
+release, the appropriate files are made available on 
+`the GitHub releases page <https://github.com/bpteague/cytoflow/releases>`_.  
+The procedure below includes instructions for downloading and installing
 the appropriate file.
 
 * Install the development dependencies
@@ -168,5 +169,6 @@ There are one-click bundles available at
 `http://bpteague.github.io/cytoflow <http://bpteague.github.io/cytoflow>`_.
 
 Alternately, you can follow the instructions above for installing the 
-Anaconda package, then run ``cytoflow`` through the Anaconda Navigator.
+Anaconda package, then run ``cytoflow`` through the Anaconda Navigator or
+via the command line.
 

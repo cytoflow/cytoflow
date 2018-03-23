@@ -135,7 +135,7 @@ class DensityGateOp(HasStrictTraits):
         ...                              xscale = 'log',
         ...                              ychannel = 'SSC-A',
         ...                              yscale = 'log',
-        ...                              keep = 0.7)
+        ...                              keep = 0.5)
         
     Find the bins to keep
     

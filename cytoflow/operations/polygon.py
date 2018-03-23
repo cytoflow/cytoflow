@@ -63,6 +63,7 @@ class PolygonOp(HasStrictTraits):
     
     You can set the verticies by hand, I suppose, but it's much easier to use
     the interactive view you get from :meth:`default_view` to do so.
+
     
     Examples
     --------
@@ -102,9 +103,24 @@ class PolygonOp(HasStrictTraits):
     .. plot::
         :context: close-figs
             
-        >>> p.default_view(huefacet = "Dox",
-        ...                xscale = 'log',
-        ...                yscale = 'log').plot(ex)
+        >>> df = p.default_view(huefacet = "Dox",
+        ...                    xscale = 'log',
+        ...                    yscale = 'log')
+        
+        >>> df.plot(ex)
+        
+    
+    .. note::
+       If you want to use the interactive default view in a Jupyter notebook,
+       make sure you say ``%matplotlib notebook`` in the first cell 
+       (instead of ``%matplotlib inline`` or similar).  Then call 
+       ``default_view()`` with ``interactive = True``::
+       
+           df = p.default_view(huefacet = "Dox",
+                               xscale = 'log',
+                               yscale = 'log',
+                               interactive = True)
+           df.plot(ex)
         
     Apply the gate, and show the result
     

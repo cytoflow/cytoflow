@@ -97,8 +97,24 @@ class QuadOp(HasStrictTraits):
     .. plot::
         :context: close-figs
     
-        >>> qv = quad.default_view(xscale = 'log', yscale = 'log')
+        >>> qv = quad.default_view(huefacet = "Dox",
+        ...                        xscale = 'log', 
+        ...                        yscale = 'log')
+        ...
+                                   
         >>> qv.plot(ex)
+        
+    .. note::
+       If you want to use the interactive default view in a Jupyter notebook,
+       make sure you say ``%matplotlib notebook`` in the first cell 
+       (instead of ``%matplotlib inline`` or similar).  Then call 
+       ``default_view()`` with ``interactive = True``::
+       
+           qv = quad.default_view(huefacet = "Dox",
+                                  xscale = 'log',
+                                  yscale = 'log',
+                                  interactive = True)
+           qv.plot(ex)
 
     Apply the gate and show the result
     

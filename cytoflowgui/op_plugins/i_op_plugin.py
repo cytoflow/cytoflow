@@ -130,17 +130,17 @@ class PluginOpMixin(HasTraits):
     handling by the workflow.  Currently, relevant metadata include:
     
       * **transient** - don't copy the trait between the local (GUI) process 
-      and the remote (computation) process (in either direction).
-        
+        and the remote (computation) process (in either direction).
+     
       * **status** - only copy from the remote process to the local process,
-      not the other way 'round.
-      
+        not the other way 'round.
+       
       * **estimate** - copy from the local process to the remote process,
-      but don't call :meth:`apply`.  (used for traits that are involved in
-      estimating the operation's parameters.)
+        but don't call :meth:`apply`.  (used for traits that are involved in
+        estimating the operation's parameters.)
       
       * **fixed** - assigned when the operation is first created in the
-      remote process *and never subsequently changed.*
+        remote process *and never subsequently changed.*
     
     Attributes
     ----------

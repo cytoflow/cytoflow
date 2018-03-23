@@ -56,7 +56,7 @@ are the same across each subset, though.
     fit the model separately to each subset of the data with a unique 
     combination of ``Time`` and ``Dox``.
         
-..object:: Whiten
+.. object:: Whiten
 
     Scale each component to unit variance?  May be useful if you will
     be using unsupervized clustering (such as K-means).

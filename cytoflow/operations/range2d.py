@@ -102,9 +102,23 @@ class Range2DOp(HasStrictTraits):
     .. plot::
         :context: close-figs
             
-        >>> r.default_view(huefacet = "Dox",
-        ...                xscale = 'log',
-        ...                yscale = 'log').plot(ex)
+        >>> rv = r.default_view(huefacet = "Dox",
+        ...                     xscale = 'log',
+        ...                     yscale = 'log')
+        
+        >>> rv.plot(ex)
+        
+    .. note::
+       If you want to use the interactive default view in a Jupyter notebook,
+       make sure you say ``%matplotlib notebook`` in the first cell 
+       (instead of ``%matplotlib inline`` or similar).  Then call 
+       ``default_view()`` with ``interactive = True``::
+       
+           rv = r.default_view(huefacet = "Dox",
+                               xscale = 'log',
+                               yscale = 'log',
+                               interactive = True)
+           rv.plot(ex)
         
     Apply the gate, and show the result
     

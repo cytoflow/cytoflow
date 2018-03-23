@@ -178,9 +178,6 @@ class ThresholdPluginOp(PluginOpMixin, ThresholdOp):
 
 @provides(IOperationPlugin)
 class ThresholdPlugin(Plugin, PluginHelpMixin):
-    """
-    class docs
-    """
     
     id = 'edu.mit.synbio.cytoflowgui.op_plugins.threshold'
     operation_id = 'edu.mit.synbio.cytoflow.operations.threshold'

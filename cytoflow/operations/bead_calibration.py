@@ -49,7 +49,7 @@ class BeadCalibrationOp(HasStrictTraits):
     
     To use, set :attr:`beads_file` to an FCS file containing events collected *using
     the same cytometer settings as the data you're calibrating*.  Specify which 
-    beads you ran by setting :attr:`beads_type` to match one of the  values of 
+    beads you ran by setting :attr:`beads` to match one of the  values of 
     :data:`BeadCalibrationOp.BEADS`; and set :attr:`units` to which channels you 
     want calibrated and in which units.  Then, call :meth:`estimate()` and check the 
     peak-finding with :meth:`default_view().plot()`.  If the peak-finding is wacky, 

@@ -119,6 +119,10 @@ class BleedthroughLinearOp(HasStrictTraits):
     
     Plot the diagnostic plot
     
+    .. note::
+       The diagnostic plots look really bad in the online documentation.
+       They're better in a real-world example, I promise!
+    
     .. plot::
         :context: close-figs
 

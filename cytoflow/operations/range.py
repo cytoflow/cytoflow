@@ -86,7 +86,19 @@ class RangeOp(HasStrictTraits):
     .. plot::
         :context: close-figs
         
-        >>> range_op.default_view(scale = 'log').plot(ex)
+        >>> rv = range_op.default_view(scale = 'log')
+        >>> rv.plot(ex)
+        
+        
+    .. note::
+       If you want to use the interactive default view in a Jupyter notebook,
+       make sure you say ``%matplotlib notebook`` in the first cell 
+       (instead of ``%matplotlib inline`` or similar).  Then call 
+       ``default_view()`` with ``interactive = True``::
+       
+           rv = range_op.default_view(scale = 'log',
+                                      interactive = True)
+           rv.plot(ex)
         
     Apply the gate, and show the result
     
