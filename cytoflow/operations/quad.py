@@ -24,7 +24,6 @@ cytoflow.operations.quad
 from traits.api import (HasStrictTraits, Float, Str, Bool, Instance,
                         provides, on_trait_change, Any, Constant)
 
-from matplotlib.widgets import Cursor
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 
@@ -282,7 +281,7 @@ class QuadSelection(Op2DView, ScatterplotView):
     _ax = Any(transient = True)
     _hline = Instance(Line2D, transient = True)
     _vline = Instance(Line2D, transient = True)
-    _cursor = Instance(Cursor, transient = True)
+    _cursor = Instance(util.Cursor, transient = True)
         
     def plot(self, experiment, **kwargs):
         """
@@ -326,11 +325,11 @@ class QuadSelection(Op2DView, ScatterplotView):
     @on_trait_change('interactive', post_init = True)
     def _interactive(self):
         if self._ax and self.interactive:
-            self._cursor = Cursor(self._ax,
-                                  horizOn = True,
-                                  vertOn = True,
-                                  color = 'blue',
-                                  useblit = True) 
+            self._cursor = util.Cursor(self._ax,
+                                       horizOn = True,
+                                       vertOn = True,
+                                       color = 'blue',
+                                       useblit = True) 
             self._cursor.connect_event('button_press_event', self._onclick)
         elif self._cursor:
             self._cursor.disconnect_events()
