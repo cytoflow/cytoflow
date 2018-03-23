@@ -147,6 +147,8 @@ class PolygonOp(HasStrictTraits):
     
     xscale = util.ScaleEnum()
     yscale = util.ScaleEnum()
+    
+    _selection_view = Instance('PolygonSelection', transient = True)
         
     def apply(self, experiment):
         """Applies the threshold to an experiment.
@@ -244,9 +246,8 @@ class PolygonOp(HasStrictTraits):
         return new_experiment
     
     def default_view(self, **kwargs):
-        p = PolygonSelection(op = self)
-        p.trait_set(**kwargs)
-        return p 
+        self._selection_view = PolygonSelection(op = self, **kwargs)
+        return self._selection_view
     
 @provides(ISelectionView)
 class PolygonSelection(Op2DView, ScatterplotView):

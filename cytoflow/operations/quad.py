@@ -142,6 +142,8 @@ class QuadOp(HasStrictTraits):
     
     ychannel = Str
     ythreshold = Float
+    
+    _selection_view = Instance('QuadSelection', transient = True)
 
     def apply(self, experiment):
         """Applies the quad gate to an experiment.
@@ -233,7 +235,8 @@ class QuadOp(HasStrictTraits):
         return new_experiment
     
     def default_view(self, **kwargs):
-        return QuadSelection(op = self, **kwargs)
+        self._selection_view = QuadSelection(op = self, **kwargs)
+        return self._selection_view
     
 @provides(ISelectionView)
 class QuadSelection(Op2DView, ScatterplotView):

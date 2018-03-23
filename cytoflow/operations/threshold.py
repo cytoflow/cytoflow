@@ -27,7 +27,6 @@ from traits.api import (HasStrictTraits, Float, Str, Instance,
     
 import pandas as pd
 
-from matplotlib.widgets import Cursor
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 
@@ -120,6 +119,8 @@ class ThresholdOp(HasStrictTraits):
     name = Str
     channel = Str
     threshold = Float
+    
+    _selection_view = Instance('ThresholdSelection', transient = True)
         
     def apply(self, experiment):
         """Applies the threshold to an experiment.
@@ -167,7 +168,8 @@ class ThresholdOp(HasStrictTraits):
         return new_experiment
     
     def default_view(self, **kwargs):
-        return ThresholdSelection(op = self, **kwargs)
+        self._selection_view = ThresholdSelection(op = self, **kwargs)
+        return self._selection_view
 
 
 @provides(ISelectionView)
@@ -212,7 +214,7 @@ class ThresholdSelection(Op1DView, HistogramView):
     # internal state
     _ax = Any(transient = True)
     _line = Instance(Line2D, transient = True)
-    _cursor = Instance(Cursor, transient = True)
+    _cursor = Instance(util.Cursor, transient = True)
     
     def plot(self, experiment, **kwargs):
         """
@@ -254,11 +256,11 @@ class ThresholdSelection(Op1DView, HistogramView):
     @on_trait_change('interactive', post_init = True)
     def _interactive(self):
         if self._ax and self.interactive:
-            self._cursor = Cursor(self._ax, 
-                                  horizOn=False,
-                                  vertOn=True,
-                                  color='blue',
-                                  useblit = True)
+            self._cursor = util.Cursor(self._ax, 
+                                       horizOn=False,
+                                       vertOn=True,
+                                       color='blue',
+                                       useblit = True)
             self._cursor.connect_event('button_press_event', self._onclick)
             
         elif self._cursor:

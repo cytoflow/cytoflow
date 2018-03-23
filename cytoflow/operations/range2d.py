@@ -147,6 +147,8 @@ class Range2DOp(HasStrictTraits):
     ychannel = Str
     ylow = Float
     yhigh = Float
+    
+    _selection_view = Instance('RangeSelection2D', transient = True)
 
     def apply(self, experiment):
         """Applies the threshold to an experiment.
@@ -228,7 +230,8 @@ class Range2DOp(HasStrictTraits):
         return new_experiment
     
     def default_view(self, **kwargs):
-        return RangeSelection2D(op = self, **kwargs)
+        self._selection_view = RangeSelection2D(op = self, **kwargs)
+        return self._selection_view
     
 @provides(ISelectionView)
 class RangeSelection2D(Op2DView, ScatterplotView):

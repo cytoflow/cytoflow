@@ -121,6 +121,8 @@ class RangeOp(HasStrictTraits):
     channel = Str
     low = Float
     high = Float
+    
+    _selection_view = Instance('RangeSelection', transient = True)
         
     def apply(self, experiment):
         """Applies the range gate to an experiment.
@@ -183,7 +185,8 @@ class RangeOp(HasStrictTraits):
         return new_experiment
     
     def default_view(self, **kwargs):
-        return RangeSelection(op = self, **kwargs)
+        self._selection_view = RangeSelection(op = self, **kwargs)
+        return self._selection_view
     
 @provides(ISelectionView)
 class RangeSelection(Op1DView, HistogramView):
@@ -233,7 +236,7 @@ class RangeSelection(Op1DView, HistogramView):
     _low_line = Instance(Line2D, transient = True)
     _high_line = Instance(Line2D, transient = True)
     _hline = Instance(Line2D, transient = True)
-        
+            
     def plot(self, experiment, **kwargs):
         """
         Plot the underlying histogram and then plot the selection on top of it.
