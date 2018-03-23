@@ -194,7 +194,7 @@ class GaussianMixtureOp(HasStrictTraits):
     name = CStr()
     channels = List(Str)
     scale = Dict(Str, util.ScaleEnum)
-    num_components = util.PositiveInt(allow_zero = False)
+    num_components = util.PositiveInt(1, allow_zero = False)
     sigma = util.PositiveFloat(allow_zero = True)
     by = List(Str)
     
@@ -442,17 +442,27 @@ class GaussianMixtureOp(HasStrictTraits):
          
         prop_idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by] + [components], 
                                          names = list(self.by) + ["Component"])
-        prop_stat = pd.Series(index = prop_idx, dtype = np.dtype(object)).sort_index()
+        prop_stat = pd.Series(name = "{} : {}".format(self.name, "proportion"),
+                              index = prop_idx, 
+                              dtype = np.dtype(object)).sort_index()
                   
         mean_idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by] + [components] + [self.channels], 
                                               names = list(self.by) + ["Component"] + ["Channel"])
-        mean_stat = pd.Series(index = mean_idx, dtype = np.dtype(object)).sort_index()
-        sigma_stat = pd.Series(index = mean_idx, dtype = np.dtype(object)).sort_index()
-        interval_stat = pd.Series(index = mean_idx, dtype = np.dtype(object)).sort_index()
+        mean_stat = pd.Series(name = "{} : {}".format(self.name, "mean"),
+                              index = mean_idx, 
+                              dtype = np.dtype(object)).sort_index()
+        sigma_stat = pd.Series(name = "{} : {}".format(self.name, "sigma"),
+                               index = mean_idx, index = mean_idx, 
+                               dtype = np.dtype(object)).sort_index()
+        interval_stat = pd.Series(name = "{} : {}".format(self.name, "interval"),
+                                  index = mean_idx, 
+                                  dtype = np.dtype(object)).sort_index()
 
         corr_idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by] + [components] + [self.channels] + [self.channels], 
                                               names = list(self.by) + ["Component"] + ["Channel_1"] + ["Channel_2"])
-        corr_stat = pd.Series(index = corr_idx, dtype = np.dtype(object)).sort_index()  
+        corr_stat = pd.Series(name = "{} : {}".format(self.name, "correlation"),
+                              index = corr_idx, 
+                              dtype = np.dtype(object)).sort_index()  
                  
         for group, data_subset in groupby:
             if group not in self._gmms:
