@@ -452,7 +452,7 @@ class GaussianMixtureOp(HasStrictTraits):
                               index = mean_idx, 
                               dtype = np.dtype(object)).sort_index()
         sigma_stat = pd.Series(name = "{} : {}".format(self.name, "sigma"),
-                               index = mean_idx, index = mean_idx, 
+                               index = mean_idx,
                                dtype = np.dtype(object)).sort_index()
         interval_stat = pd.Series(name = "{} : {}".format(self.name, "interval"),
                                   index = mean_idx, 
@@ -520,9 +520,12 @@ class GaussianMixtureOp(HasStrictTraits):
                     event_gate[c].iloc[group_idx] = np.less_equal(dist, thresh)
                     
             if self.posteriors:
-                p = gmm.predict(x)
+#                 import sys;sys.path.append(r'/home/brian/.p2/pool/plugins/org.python.pydev_6.2.0.201711281614/pysrc')
+#                 import pydevd;pydevd.settrace()
+                
+                p = gmm.predict_proba(x)
                 for c in range(self.num_components):
-                    event_posteriors[c].iloc[group_idx] = p[c]
+                    event_posteriors[c].iloc[group_idx] = p[:, c]
                     
             for c in range(self.num_components):
                 if len(self.by) == 0:
