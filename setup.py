@@ -19,6 +19,8 @@
 from setuptools import setup, find_packages, Extension
 import io, os, re
 
+import versioneer
+
 # sphinx is only required for building packages, not for end-users
 try:
     from sphinx.setup_command import BuildDoc
@@ -48,22 +50,18 @@ def read_file(*names, **kwargs):
         encoding=kwargs.get("encoding", "utf8")
     ) as fp:
         return fp.read()
-    
-def find_version(*file_paths):
-    version_file = read_file(*file_paths)
-    version_match = re.search(r"__version__ = ['\"]([^'\"]*)['\"]",
-                              version_file, re.M)
-    if version_match:
-        return version_match.group(1)
-    raise RuntimeError("Unable to find version string.")
 
 long_description = read_rst('README.rst')
 
+cmdclass = versioneer.get_cmdclass()  # @UndefinedVariable
+if has_sphinx:
+    cmdclass['build_sphinx'] = BuildDoc
+    
 setup(
     name = "cytoflow",
-    version = find_version("cytoflow", "__init__.py"),
+    version = versioneer.get_version(),  # @UndefinedVariable
     packages = find_packages(exclude = ["packaging", "packaging.qt"]),
-    cmdclass = {'build_sphinx': BuildDoc} if has_sphinx else {},
+    cmdclass = cmdclass,
     
     # Project uses reStructuredText, so ensure that the docutils get
     # installed or upgraded on the target machine

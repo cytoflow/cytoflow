@@ -5,3 +5,5 @@ recursive-include docs/examples-basic *.ipynb *.fcs
 include docs/examples-advanced/README.md
 include cytoflow/utility/logicle_ext/LICENSE.txt
 include cytoflow/utility/logicle_ext/logicle.h
+include versioneer.py
+include cytoflow/_version.py
