@@ -241,12 +241,13 @@ class PolygonOp(HasStrictTraits):
         new_experiment.add_condition(self.name, 
                                      "bool", 
                                      path.contains_points(xy_data))
-        new_experiment.history.append(self.clone_traits(transient = lambda t: True))
+        new_experiment.history.append(self.clone_traits(transient = lambda _: True))
             
         return new_experiment
     
     def default_view(self, **kwargs):
-        self._selection_view = PolygonSelection(op = self, **kwargs)
+        self._selection_view = PolygonSelection(op = self)
+        self._selection_view.trait_set(**kwargs)
         return self._selection_view
     
 @provides(ISelectionView)

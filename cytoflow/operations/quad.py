@@ -234,7 +234,8 @@ class QuadOp(HasStrictTraits):
         return new_experiment
     
     def default_view(self, **kwargs):
-        self._selection_view = QuadSelection(op = self, **kwargs)
+        self._selection_view = QuadSelection(op = self)
+        self._selection_view.trait_set(**kwargs)
         return self._selection_view
     
 @provides(ISelectionView)

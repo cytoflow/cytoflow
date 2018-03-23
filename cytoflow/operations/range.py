@@ -185,7 +185,8 @@ class RangeOp(HasStrictTraits):
         return new_experiment
     
     def default_view(self, **kwargs):
-        self._selection_view = RangeSelection(op = self, **kwargs)
+        self._selection_view = RangeSelection(op = self)
+        self._selection_view.trait_set(**kwargs)
         return self._selection_view
     
 @provides(ISelectionView)
