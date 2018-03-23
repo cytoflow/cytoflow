@@ -375,12 +375,18 @@ class Cursor(AxesWidget):
     def clear(self, event):
         """clear the cursor"""
         
-        if self.ignore(event) or not self.moved:
+        if self.ignore(event):
             return
+        
         if self.useblit:
             self.background = self.canvas.copy_from_bbox(self.ax.bbox)
+            
+        if not self.moved:
+            return
+        
         self.linev.set_visible(False)
         self.lineh.set_visible(False)
+        
         self.moved = False
 
     def onmove(self, event):
