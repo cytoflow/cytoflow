@@ -22,6 +22,7 @@ cytoflow.operations.gaussian
 '''
 
 import re
+from warnings import warn
 
 import matplotlib.pyplot as plt
 
@@ -406,15 +407,17 @@ class GaussianMixtureOp(HasStrictTraits):
                                            "Aggregation metadata {} not found, "
                                            "must be one of {}"
                                            .format(b, experiment.conditions))
-                            
-        if self.num_components == 1 and self.sigma == 0.0:
-            raise util.CytoflowOpError('sigma',
-                                       "if num_components is 1, sigma must be > 0.0")
+#                             
+#         if self.num_components == 1 and self.sigma == 0.0:
+#             raise util.CytoflowOpError('sigma',
+#                                        "if num_components is 1, sigma must be > 0.0")
         
                 
         if self.num_components == 1 and self.posteriors:
-            raise util.CytoflowOpError('posteriors',
-                                       "If num_components == 1, all posteriors will be 1.")
+            warn("If num_components == 1, all posteriors will be 1",
+                 util.CytoflowOpWarning)
+#             raise util.CytoflowOpError('posteriors',
+#                                        "If num_components == 1, all posteriors will be 1.")
          
         if self.num_components > 1:
             event_assignments = pd.Series(["{}_None".format(self.name)] * len(experiment), dtype = "object")
@@ -445,6 +448,7 @@ class GaussianMixtureOp(HasStrictTraits):
                                               names = list(self.by) + ["Component"] + ["Channel"])
         mean_stat = pd.Series(index = mean_idx, dtype = np.dtype(object)).sort_index()
         sigma_stat = pd.Series(index = mean_idx, dtype = np.dtype(object)).sort_index()
+        interval_stat = pd.Series(index = mean_idx, dtype = np.dtype(object)).sort_index()
 
         corr_idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by] + [components] + [self.channels] + [self.channels], 
                                               names = list(self.by) + ["Component"] + ["Channel_1"] + ["Channel_2"])
@@ -525,8 +529,9 @@ class GaussianMixtureOp(HasStrictTraits):
                     mean_stat.loc[g2] = self._scale[channel1].inverse(gmm.means_[c, cidx1])
                     
                     s, corr = util.cov2corr(gmm.covariances_[c])
-                    sigma_stat.loc[g2] = (self._scale[channel1].inverse(gmm.means_[c, cidx1] - s[cidx1]),
-                                          self._scale[channel1].inverse(gmm.means_[c, cidx1] + s[cidx1]))
+                    sigma_stat[g2] = (self._scale[channel1].inverse(s[cidx1]))
+                    interval_stat.loc[g2] = (self._scale[channel1].inverse(gmm.means_[c, cidx1] - s[cidx1]),
+                                             self._scale[channel1].inverse(gmm.means_[c, cidx1] + s[cidx1]))
             
                     for cidx2, channel2 in enumerate(self.channels):
                         g3 = tuple(list(g2) + [channel2])
@@ -551,6 +556,7 @@ class GaussianMixtureOp(HasStrictTraits):
                 
         new_experiment.statistics[(self.name, "mean")] = pd.to_numeric(mean_stat)
         new_experiment.statistics[(self.name, "sigma")] = sigma_stat
+        new_experiment.statistics[(self.name, "interval")] = interval_stat
         if len(corr_stat) > 0:
             new_experiment.statistics[(self.name, "correlation")] = pd.to_numeric(corr_stat)
         if self.num_components > 1:
