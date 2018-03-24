@@ -9,6 +9,10 @@
 
 .*.sw?
 
+*-checkpoint.ipynb
+*.so
+*.pyd
+
 /.settings/
 
 /build/
