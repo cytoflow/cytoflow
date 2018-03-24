@@ -41,7 +41,7 @@ before_install:
   - chmod +x miniconda.sh
   - ./miniconda.sh -b
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export PATH=/Users/travis/miniconda3/bin:$PATH; fi
-  - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then export PATH=/home/travis/miniconda3/bin:$PATH; export LD_LIBRARY_PATH=/home/travis/miniconda3/envs/py35/lib; fi
+  - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then export PATH=/home/travis/miniconda3/bin:$PATH; fi
   - conda update --yes conda
   - conda config --add channels bpteague
   - conda install --yes --quiet anaconda-client conda-build
@@ -51,7 +51,7 @@ install:
 
   # set up conda build variables
   - echo $TRAVIS_TAG
-  - if [[ -z $TRAVIS_TAG ]]; then export CONDA_TAG="dev"; export CONDA_BUILD_NUMBER=$TRAVIS_BUILD_NUMBER; else export CONDA_TAG=$TRAVIS_TAG; export CONDA_BUILD_NUMBER=0; fi
+  - if [[ -z $TRAVIS_TAG ]]; then export CONDA_TAG="dev"; export CONDA_BUILD_NUMBER=$TRAVIS_BUILD_NUMBER; else export CONDA_TAG=$TRAVIS_TAG; export CONDA_BUILD_NUMBER="0"; fi
   - export CONDA_BUILD_STRING=py35_${TRAVIS_OS_NAME}_${CONDA_BUILD_NUMBER}
   - echo $CONDA_TAG; echo $CONDA_BUILD_NUMBER; echo $CONDA_BUILD_STRING
 
