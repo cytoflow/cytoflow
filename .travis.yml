@@ -53,6 +53,7 @@ install:
   - echo $TRAVIS_TAG
   - if [[ -z $TRAVIS_TAG ]]; then export CONDA_TAG="dev"; export CONDA_BUILD_NUMBER=$TRAVIS_BUILD_NUMBER; else export CONDA_TAG=$TRAVIS_TAG; export CONDA_BUILD_NUMBER=0; fi
   - export CONDA_BUILD_STRING=py35_${TRAVIS_OS_NAME}_${CONDA_BUILD_NUMBER}
+  - echo $CONDA_TAG; echo $CONDA_BUILD_NUMBER; echo $CONDA_BUILD_STRING
 
   # build and install conda recipe
   - conda render packaging/conda_recipes/cytoflow
