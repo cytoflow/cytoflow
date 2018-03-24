@@ -51,7 +51,7 @@ install:
 
   # set up conda build variables
   - echo $TRAVIS_TAG
-  - if [[ -z $TRAVIS_TAG ]]; then export CONDA_TAG="dev"; export CONDA_BUILD_NUMBER=$TRAVIS_BUILD_NUMBER; else export CONDA_TAG=$TRAVIS_TAG; export CONDA_BUILD_NUMBER="0"; fi
+  - if [[ -z $TRAVIS_TAG ]]; then export CONDA_TAG="dev"; export CONDA_BUILD_NUMBER=0; else export CONDA_TAG=$TRAVIS_TAG; export CONDA_BUILD_NUMBER=$TRAVIS_BUILD_NUMBER; fi
   - export CONDA_BUILD_STRING=py35_${TRAVIS_OS_NAME}_${CONDA_BUILD_NUMBER}
   - echo $CONDA_TAG; echo $CONDA_BUILD_NUMBER; echo $CONDA_BUILD_STRING
 
