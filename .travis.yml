@@ -88,6 +88,10 @@ after_success:
   - source deactivate
   - cp `find build | grep "\.so$"` dist/
   - python packaging/move_conda_package.py
+  
+  # rename the wheels and source dist
+  - if [[ -z $TRAVIS_TAG ]]; then rename 's/cytoflow-.*-(cp35.*\.whl)/cytoflow-dev-$1/' dist/*.whl; fi
+  - if [[ -z $TRAVIS_TAG ]]; then rename 's/cytoflow-.*(\.tar\.gz)/cytoflow-dev.tar.gz/' dist/*.tar.gz; fi
   - ls -al dist/*
 
 deploy:

@@ -88,7 +88,10 @@ after_test:
   # Build one-click
   - "pyinstaller packaging/pyinstaller.spec"
   - "pyi-archive_viewer -l dist\\cytoflow.exe"
-  - "move dist\\cytoflow.exe dist\\cytoflow-%CONDA_TAG%-%PYTHON_ARCH%.exe"
+  - set CONDA_TAG
+  - set PYTHON_ARCH
+  - dir dist
+  - move dist\\cytoflow.exe dist\\cytoflow-%CONDA_TAG%-%PYTHON_ARCH%.exe
   
   # Move conda package to dist folder
   - deactivate
