@@ -91,7 +91,8 @@ after_test:
   - set CONDA_TAG
   - set PYTHON_ARCH
   - dir dist
-  - move dist\\cytoflow.exe dist\\cytoflow-%CONDA_TAG%-%PYTHON_ARCH%.exe
+  - "IF %PYTHON_ARCH% EQU 32 move dist\\cytoflow.exe dist\\cytoflow-%CONDA_TAG%-win32.exe"
+  - "IF %PYTHON_ARCH% EQU 64 move dist\\cytoflow.exe dist\\cytoflow-%CONDA_TAG%-win-amd64.exe"
   
   # Move conda package to dist folder
   - deactivate
