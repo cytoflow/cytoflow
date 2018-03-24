@@ -23,7 +23,7 @@ cytoflow.operations.color_translation
 import math
 
 from traits.api import (HasStrictTraits, Str, File, Dict, Any, Callable,
-                        Instance, Tuple, Bool, Constant, provides)
+                        Instance, Tuple, Bool, Constant, provides, Float)
 import numpy as np
 import matplotlib.pyplot as plt
 import sklearn.mixture
@@ -138,6 +138,7 @@ class ColorTranslationOp(HasStrictTraits):
     _coefficients = Dict(Tuple(Str, Str), Any, transient = True)
     _trans_fn = Dict(Tuple(Str, Str), Callable, transient = True)
     _sample = Dict(Tuple(Str, Str), Any, transient = True)
+    _means = Dict(Tuple(Str, Str), Tuple(Float, Float), transient = True)
 
     def estimate(self, experiment, subset = None): 
         """
@@ -166,6 +167,7 @@ class ColorTranslationOp(HasStrictTraits):
         self._coefficients.clear()
         self._trans_fn.clear()
         self._sample.clear()
+        self._means.clear()
 
         tubes = {}
         
@@ -236,6 +238,9 @@ class ColorTranslationOp(HasStrictTraits):
                 gmm = sklearn.mixture.BayesianGaussianMixture(n_components=2,
                                                               random_state = 1)
                 fit = gmm.fit(data)
+                
+                self._means[(from_channel), (to_channel)] = \
+                    (10 ** fit.means_[0][0], 10 ** fit.means_[1][0])
 
                 # pick the component with the maximum mean
                 idx = 0 if fit.means_[0][0] > fit.means_[1][0] else 1
@@ -403,26 +408,27 @@ class ColorTranslationDiagnostic(HasStrictTraits):
         plt_idx = 0
         
         for from_channel, to_channel in translation.items():
-                    
-            from_range = experiment.metadata[from_channel]['range']
-            to_range = experiment.metadata[to_channel]['range']
+#                     
+#             from_range = experiment.metadata[from_channel]['range']
+#             to_range = experiment.metadata[to_channel]['range']
             data = self.op._sample[(from_channel, to_channel)]
+            from_min = data[from_channel].quantile(0.01)
+            from_max = data[from_channel].quantile(0.99)
+            to_min = data[to_channel].quantile(0.01)
+            to_max = data[to_channel].quantile(0.99)
 
             if self.op.mixture_model:    
                 plt.subplot(num_plots, 2, plt_idx * 2 + 2)
                 plt.xscale('log', nonposx='mask')
-                hist_bins = np.logspace(1, math.log(from_range, 2), num = 128, base = 2)
+                hist_bins = np.logspace(1, math.log(data[from_channel].max(), 2), num = 128, base = 2)
                 _ = plt.hist(data[from_channel],
                              bins = hist_bins,
                              histtype = 'stepfilled',
                              antialiased = True)
                 plt.xlabel(from_channel)
-                
-                gmm = sklearn.mixture.GaussianMixture(n_components=2)
-                fit = gmm.fit(np.log10(data[from_channel][:, np.newaxis]))
                     
-                plt.axvline(10 ** fit.means_[0][0], color = 'r')
-                plt.axvline(10 ** fit.means_[1][0], color = 'r')
+                plt.axvline(self.op._means[(from_channel, to_channel)][0], color = 'r')
+                plt.axvline(self.op._means[(from_channel, to_channel)][1], color = 'r')
 
             
             num_cols = 2 if self.op.mixture_model else 1
@@ -431,8 +437,8 @@ class ColorTranslationDiagnostic(HasStrictTraits):
             plt.yscale('log', nonposy = 'mask')
             plt.xlabel(from_channel)
             plt.ylabel(to_channel)
-            plt.xlim(1, from_range)
-            plt.ylim(1, to_range)
+            plt.xlim(from_min, from_max)
+            plt.ylim(to_min, to_max)
             
             kwargs.setdefault('alpha', 0.2)
             kwargs.setdefault('s', 1)
@@ -442,7 +448,7 @@ class ColorTranslationDiagnostic(HasStrictTraits):
                         data[to_channel],
                         **kwargs)          
 
-            xs = np.logspace(1, math.log(from_range, 2), num = 256, base = 2)
+            xs = np.logspace(1, math.log(data[from_channel].max(), 2), num = 256, base = 2)
             trans_fn = self.op._trans_fn[(from_channel, to_channel)]
             plt.plot(xs, trans_fn(xs), "--g")
             
