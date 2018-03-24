@@ -19,6 +19,7 @@
 import matplotlib as mpl
 import seaborn as sns
 
+# the default marker scales are tiny!  make them less tiny
 mpl.rc('legend', markerscale = 5)
 
 from .i_view import IView
