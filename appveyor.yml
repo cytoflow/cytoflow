@@ -48,8 +48,8 @@ install:
   - conda install --yes --quiet anaconda-client conda-build
   
   # Set up conda recipe variables
-  - IF "%APPVEYOR_REPO_TAG%"=="true" ( set CONDA_TAG=%APPVEYOR_REPO_TAG_NAME% ) ELSE ( set CONDA_TAG=dev )
-  - IF "%APPVEYOR_REPO_TAG%"=="true" ( set CONDA_BUILD_NUMBER=%APPVEYOR_BUILD_NUMBER% ) ELSE ( set CONDA_BUILD_NUMBER=0 )
+  - IF "%APPVEYOR_REPO_TAG%"=="true" (set CONDA_TAG=%APPVEYOR_REPO_TAG_NAME%) ELSE (set CONDA_TAG="dev")
+  - IF "%APPVEYOR_REPO_TAG%"=="true" (set CONDA_BUILD_NUMBER=%APPVEYOR_BUILD_NUMBER%) ELSE (set CONDA_BUILD_NUMBER="0")
   - set CONDA_BUILD_STRING=py35_win%PYTHON_ARCH%_%APPVEYOR_BUILD_NUMBER%
   
   # Build the conda package
