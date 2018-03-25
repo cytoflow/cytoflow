@@ -50,7 +50,7 @@ install:
   # Set up conda recipe variables
   - IF "%APPVEYOR_REPO_TAG%"=="true" (set CONDA_TAG=%APPVEYOR_REPO_TAG_NAME%) ELSE (set CONDA_TAG="dev")
   - IF "%APPVEYOR_REPO_TAG%"=="true" (set CONDA_BUILD_NUMBER=%APPVEYOR_BUILD_NUMBER%) ELSE (set CONDA_BUILD_NUMBER="0")
-  - set CONDA_BUILD_STRING=py35_win%PYTHON_ARCH%_%APPVEYOR_BUILD_NUMBER%
+  - set CONDA_BUILD_STRING=py35_win%PYTHON_ARCH%_%CONDA_BUILD_NUMBER%
   
   # Build the conda package
   - conda render packaging\conda_recipes\cytoflow
@@ -93,6 +93,7 @@ after_test:
   - dir dist
   - "IF %PYTHON_ARCH% EQU 32 move dist\\cytoflow.exe dist\\cytoflow-%CONDA_TAG%-win32.exe"
   - "IF %PYTHON_ARCH% EQU 64 move dist\\cytoflow.exe dist\\cytoflow-%CONDA_TAG%-win-amd64.exe"
+  - python packaging\rename.py 'cytoflow-.*?(cp35.*whl)' 'cytoflow-dev-\1' dist\*.whl
   
   # Move conda package to dist folder
   - deactivate
