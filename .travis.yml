@@ -60,7 +60,7 @@ install:
   - conda render packaging/conda_recipes/cytoflow
   - conda build packaging/conda_recipes/cytoflow
   - conda create --yes --quiet --name=cytoflow python=3.5.4 nomkl
-  - conda activate cytoflow
+  - source activate cytoflow
   - conda install --yes --quiet --use-local --only-deps cytoflow
   - python setup.py develop
 
