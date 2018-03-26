@@ -112,8 +112,8 @@ on_success:
 # & anaconda $parameters 2>&1
 # Powershell should be called Powerhell!
   - ps:
-#      if (($Env:APPVEYOR_REPO_TAG -eq "true") -and
-#          ($Env:APPVEYOR_REPO_NAME -eq ${Env:GITHUB_REPO_NAME})) {
+      if (($Env:APPVEYOR_REPO_TAG -eq "true") -and
+          ($Env:APPVEYOR_REPO_NAME -eq ${Env:GITHUB_REPO_NAME})) {
         $tar_glob = ".\dist\cytoflow-*.tar.bz2";
         Write-Host "tar_glob $tar_glob";
         if ($Env:APPVEYOR_REPO_TAG_NAME -like "*a*") {
@@ -128,7 +128,7 @@ on_success:
                       "$anaconda_label", '--force', '--no-progress';
         & cmd /c 'anaconda 2>&1' $parameters;
         
-#      }
+      }
 
 artifacts:
   - path: dist\*.*
