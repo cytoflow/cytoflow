@@ -60,8 +60,9 @@ install:
   - conda render packaging/conda_recipes/cytoflow
   - conda build packaging/conda_recipes/cytoflow
   - conda create --yes --quiet --name=cytoflow python=3.5.4 nomkl
-  - source activate cytoflow
-  - conda install --yes --quiet --use-local cytoflow
+  - conda activate cytoflow
+  - conda install --yes --quiet --use-local --only-deps cytoflow
+  - python setup.py develop
 
 before_script:
   - conda install --yes --quiet pip mock 
@@ -71,8 +72,7 @@ script: nose2 -c packaging/nose2.cfg -s cytoflow/tests -N 2
 
 after_success:
 
-  - pip install "sphinx==1.6.7"
-  - pip install "pyinstaller==3.3.1"
+  - pip install "sphinx==1.6.7" "pyinstaller==3.3.1"
   - python setup.py build_sphinx -b embedded_help
 
   - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then python setup.py sdist; fi
