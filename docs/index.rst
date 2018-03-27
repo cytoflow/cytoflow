@@ -12,8 +12,9 @@ Cytoflow's more advanced features.
 
 * `Basic flow cytometry analysis <https://github.com/bpteague/cytoflow/blob/master/docs/examples-basic/Basic%20Cytometry.ipynb>`_
 * `An small-molecule induction curve with yeast <https://github.com/bpteague/cytoflow/blob/master/docs/examples-basic/Yeast%20Dose%20Response.ipynb>`_
-* `Data-driven gating with gaussian mixture models <https://github.com/bpteague/cytoflow/blob/master/docs/examples-basic/Machine%20Learning.ipynb>`_
-* `Reproduced some analysis from a published paper <https://github.com/bpteague/cytoflow-examples/blob/master/kiani/Kiani%20Nature%20Methods%202014.ipynb>`_
+* `Machine learning methods applied to flow cytometry <https://github.com/bpteague/cytoflow/blob/master/docs/examples-basic/Machine%20Learning.ipynb>`_
+* `Reproduced an analysis from a published paper <https://github.com/bpteague/cytoflow-examples/blob/master/kiani/Kiani%20Nature%20Methods%202014.ipynb>`_
+* `A multidimensional induction in yeast <https://github.com/bpteague/cytoflow-examples/blob/master/yeast/Induction%20Timecourse.ipynb>`_
 * `Calibrated flow cytometry in MEFLs <https://github.com/bpteague/cytoflow-examples/blob/master/tasbe/TASBE%20Workflow.ipynb>`_
 
 If you decide you want to have a go, see the :ref:`installation notes <install>`.

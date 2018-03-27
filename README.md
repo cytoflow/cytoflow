@@ -1,13 +1,17 @@
-#CytoFlow
+#Cytoflow
+
 ##Python tools for quantitative, reproducible flow cytometry analysis
 
 Welcome to a different style of flow cytometry analysis.  Take a look at some example [Jupyter](http://jupyter.org/) notebooks:
 
 * [Basic flow cytometry analysis](https://github.com/bpteague/cytoflow/blob/master/docs/examples-basic/Basic%20Cytometry.ipynb)
 * [An small-molecule induction curve with yeast](https://github.com/bpteague/cytoflow/blob/master/docs/examples-basic/Yeast%20Dose%20Reponse.ipynb)
-* [Data-driven gating with gaussian mixture models](https://github.com/bpteague/cytoflow/blob/master/docs/examples-basic/Machine%20Learning.ipynb)
-* [Reproduced some analysis from a published paper](https://github.com/bpteague/cytoflow-examples/blob/master/kiani/Kiani%20Nature%20Methods%202014.ipynb)
-* [Calibrated flow cytometry in MEFLs](https://github.com/bpteague/cytoflow-examples/blob/master/tasbe/TASBE%20Workflow.ipynb)
+* [Machine learning applied to flow cytometry data](https://github.com/bpteague/cytoflow/blob/master/docs/examples-basic/Machine%20Learning.ipynb)
+* [Reproduced analysis from a published paper](https://github.com/bpteague/cytoflow-examples/blob/master/kiani/Kiani%20Nature%20Methods%202014.ipynb)
+* [A multi-dimensional induction in yeast](https://github.com/bpteague/cytoflow-examples/blob/master/yeast/Induction%20Timecourse.ipynb)
+* [Calibrated flow cytometry](https://github.com/bpteague/cytoflow-examples/blob/master/tasbe/TASBE%20Workflow.ipynb)
+
+or some [screenshots from the GUI](http://bpteague.github.io/cytoflow/screenshots.html)
 
 ### What's wrong with other packages?  
 
@@ -25,7 +29,7 @@ sum fluorescence of a population of cells, the cytometer shows you the
 and how those distributions change as you vary an experimental variable, is
 something existing packages don't handle gracefully.
 
-### What's different about CytoFlow?
+### What's different about Cytoflow?
 
 A few things.
 
@@ -33,10 +37,13 @@ A few things.
   suit your own needs, then contribute your changes back so the rest of the
   community can benefit from them.
 
-* Provides both **Python modules** (relatively complete) and a 
-  **point-and-click interface** (still in development) 
+* A [**point-and-click interface**](http://bpteague.github.io/cytoflow) for
+  easy analysis.
 
-* An emphasis on **metadata**.  CytoFlow assumes that you are measuring
+* **Python modules** to integrate into larger apps, automation, or for use in
+  a [Jupyter notebook](http://jupyter.org/)
+
+* An emphasis on **metadata**.  Cytoflow assumes that you are measuring
   fluorescence on several samples that were treated differently: either
   they were collected at different times, treated with varying levels
   of inducers, etc.  You specify the conditions for each sample up front,
@@ -46,7 +53,7 @@ A few things.
   is usually not terribly useful: you may gate out cellular debris and 
   aggregates (using FSC and SSC channels), then compensate for channel
   bleed-through, and finally select only transfected cells before actually
-  looking at the parameters you're interested in experimentally.  CytoFlow
+  looking at the parameters you're interested in experimentally.  Cytoflow
   implements a workflow paradigm, where operations are applied sequentially;
   a workflow can be saved and re-used, or shared with your coworkers.
 
@@ -56,68 +63,38 @@ A few things.
 * **Good visualization.**  I don't know about you, but I'm getting really
   tired of FACSDiva plots.
 
-* **Versatile.**  Built on Python, with a well-defined
-  library of operations and visualizations that are well separated from
-  the user interface.  Need an analysis that CytoFlow doesn't have?  Export 
-  your workflow to an IPython notebook and use any Python module you want to 
-  complete your analysis.  Data is stored in a pandas.DataFrame, which is 
-  rapidly becoming the standard for Python data management (and will make R
-  users feel right at home.)
+* **Versatile.**  Built on Python, with a well-defined library of operations 
+  and visualizations that are well separated from the user interface.  Need an 
+  analysis that Cytoflow doesn't have?  Export your workflow to a Jupyter 
+  notebook and use any Python module you want to complete your analysis.  Data 
+  is stored in a `pandas.DataFrame`, which is rapidly becoming the standard for 
+  Python data analysis (and will make R users feel right at home.)
   
-* **Extensible.**  Adding a new analysis module is simple; the interface to
-  implement is only two or three functions.
+* **Extensible.**  (Adding a new analysis or visualization module)[http://cytoflow.readthedocs.io/en/latest/new_modules.html) 
+  is simple; the interface to implement is only two or three functions.  
 
 * **Quantitative and statistically sound.** Ready access to useful data-driven tools for
   analysis, such as fitting 2-dimensional Gaussians for automated gating
   and mixture modeling.
 
-#### Note: this is still beta software!  Caveat emptor!
+#### Note: this software is still considered beta software.
+#### It is quite stable, functional and useful, but you may still encounter the occasional bug!
   
 ### Installation
 
-**If you just want the point-and-click version (not the Python modules), you can install it from http://bpteague.github.io/cytoflow/
+**If you just want the point-and-click version (not the Python modules), you 
+  can install it from http://bpteague.github.io/cytoflow/**
 
-See the [installation notes](http://cytoflow.readthedocs.org/en/latest/INSTALL.html) on [ReadTheDocs](http://cytoflow.readthedocs.org/).  Installation has been tested
-on Linux (Ubuntu Trusty), Windows (x86_64) and Mac.
+See the [installation notes](http://cytoflow.readthedocs.org/en/latest/INSTALL.html) 
+on [ReadTheDocs](http://cytoflow.readthedocs.org/).  Installation has been tested
+on Linux, Windows (x86_64) and Mac.  Cytoflow is distributed as an [Anaconda](https://www.anaconda.com/)
+package **(recommended)** as well as a [traditional Python package](https://pypi.org/project/cytoflow/).
 
 ### Documentation
 
-There is some basic documentation at [ReadTheDocs](http://cytoflow.readthedocs.org/).
+Cytoflow's documentation lives at [ReadTheDocs](http://cytoflow.readthedocs.org/).
 Perhaps of most use is the [module index](http://cytoflow.readthedocs.org/en/latest/py-modindex.html).
 The example [Jupyter](http://jupyter.org/) notebooks, above, demonstrate how the package
 is intended to be used interactively.
 
-### Required packages
-
-These are all in the `setuptools` spec.
-
-For the core `cytoflow` library, you need the following Python packages:
-```
-python >= 3.4
-pandas >= 0.21.1
-numpy >= 1.11.3
-numexpr >= 2.6.4
-matplotlib >= 1.5.1, <= 1.5.3
-scipy >= 1.0.0
-scikit-learn >= 0.19.1
-seaborn >= 0.8.1
-traits >= 4.6.0
-nbformat >= 4.2.0
-python-dateutil >= 2.6.0
-statsmodels >= 0.8.0
-fcsparser >= 0.1.3
-```
-
-For the GUI, you additionally need:
-```
-faulthandler >= 2.4
-pyface == 5.1.0
-envisage >= 4.6
-pyqt >= 4.10 -- this must be installed separately!  it's not available through PyPI!
-```
-
-Note that many of these packages have additional dependencies, including
-but not limited to `traitsui`, `decorator`, etc.
-Everything except PyQT should be a well well-behaved PyPI package; you should be
-able to install all the above with `pip install` or the Canopy package manager.
 

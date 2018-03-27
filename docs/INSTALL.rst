@@ -26,16 +26,24 @@ Installing from the ``Anaconda Navigator``
 * Either from the Start Menu (Windows) or the Finder (Mac), run the 
   ``Anaconda Navigator``
   
-* Add the channel ``bpteague``:
   
-  * Click the ``Channels`` button.
-  * Click ``Add...`` and type ``bpteague``.
+* Click the ``Channels`` button.
+  
+  .. image:: images/channels.PNG
+  
+* Click ``Add...`` and type ``bpteague``.  Select "Update channels."
+  
+  .. image:: images/add-channels.PNG
   
 * The application ``cytoflow`` should appear in the launcher.  
   Click the ``Install`` button. 
   
+  .. image:: images/new-app.PNG
+  
 * ``Navigator`` asks if you'd like to install in a new environment.  
   Say ``Yes``..
+  
+  .. image:: images/new-env.PNG
 
 * To verify installation, start a Jupyter notebook.
 
