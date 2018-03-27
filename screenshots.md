@@ -11,7 +11,13 @@ The experiment editor.
 
 ![Experiment editor]({{ site.baseurl }}/assets/experiment-editor.png)
 
-One-dimensional gaussian mixture models.
+The plot editor.
+
+![Plot editor]({{ site.baseurl }}/assets/plot-editor.png)
+
+Convert FCS files to calibrated units.
+
+![TASBE]({{ site.baseurl }}/assets/tasbe.png)
 
 One-dimensional gaussian mixture models.
 
@@ -35,5 +41,9 @@ Bin your data to analyze subsets.
 
 Summarize your data with statistics plots.
 
-![Bins]({{ site.baseurl }}/assets/dox-vs-ifp.png)
+![Statistics plots]({{ site.baseurl }}/assets/dox-vs-ifp.png)
+
+Export straight to a Jupyter notebook!
+
+![Jupyter notebook]({{ site.baseurl }}/assets/notebook.png)
 

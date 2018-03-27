@@ -18,15 +18,15 @@ packages don't handle this gracefully!
 
 # How is Cytoflow different?
 
-* An emphasis on **metadata**.  CytoFlow assumes that you are measuring
+* An emphasis on **metadata**.  Cytoflow assumes that you are measuring
   fluorescence on several samples that were treated differently: either
   they were collected at different times, treated with varying levels
   of inducers, etc.  You specify the conditions for each sample up front,
   then use those conditions to control the analysis.
 
 * Cytometry analysis represented as a **workflow**. Operations such as
-    gating and compensation are applied sequentially; a workflow can be 
-    saved and re-used, or shared with your coworkers.
+  gating and compensation are applied sequentially; a workflow can be 
+  saved and re-used, or shared with your coworkers.
 
 * **Easy to use.**  Sane defaults; good documentation; focused on doing one
   thing and doing it well.
@@ -38,7 +38,7 @@ packages don't handle this gracefully!
   analyze data with Python?  If so, head over to the 
   [developer documentation](https://cytoflow.readthedocs.io/) to use these 
   modules in your own workflow.  They have been designed to work well in a 
-  [Jupyter notebook](http://jupyter.org/); in fact, the GUI will soon export 
+  [Jupyter notebook](http://jupyter.org/); in fact, the GUI will even export 
   a workflow directly to a notebook!
 
 * **Free and open-source.**  Download the source code from 
@@ -46,7 +46,8 @@ packages don't handle this gracefully!
   to suit your own needs, then contribute your changes back so the rest of 
   the community can benefit from them.
 
-## Note: this is still beta software!  Caveat emptor!
+## Note: this is still beta software!  
+## It is stable and full-featured, but you may still encounter bugs!
   
 # Installation
 
@@ -57,11 +58,10 @@ before it runs, though, so be patient.
 
 # Documentation
 
-The [developer documentation](https://cytoflow.readthedocs.io/) is quite
-complete, but the GUI documentation is lagging.  A good introduction is
-[the screencast on Youtube.](https://youtu.be/rl1c4SlAfvU)  **NOTE**: This
-screencast is for an older version.  Several new screencasts will be along 
-shortly.
+You can find the [developer documentation at ReadTheDocs.](https://cytoflow.readthedocs.io/).  GUI documentation for the currently selected operation or
+view appears in the "Help" panel in the GUI.  If you don't see a "Help" 
+panel, make sure it's activated by going to the "View" menu and selecting
+"Help".
 
 # Help!  I found a bug!
 
@@ -93,5 +93,5 @@ and we'll send you an email when a new version is released.
 
 # Are there screenshots?
 
-[There are (slightly out of date) screenshots.]({{ site.baseurl }}/screenshots.html)
+[There are screenshots.]({{ site.baseurl }}/screenshots.html)
 
