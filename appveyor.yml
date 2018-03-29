@@ -97,7 +97,7 @@ after_test:
   - dir dist
   - "IF %PYTHON_ARCH% EQU 32 move dist\\cytoflow.exe dist\\cytoflow-%CONDA_TAG%-win32.exe"
   - "IF %PYTHON_ARCH% EQU 64 move dist\\cytoflow.exe dist\\cytoflow-%CONDA_TAG%-win-amd64.exe"
-  - python packaging\rename.py cytoflow-.*?(cp35.*whl) cytoflow-dev-\1 dist\*.whl
+  - IF "%APPVEYOR_REPO_TAG%"=="false" python packaging\rename.py cytoflow-.*?(cp35.*whl) cytoflow-dev-\1 dist\*.whl
   
   # Move conda package to dist folder
   - deactivate
