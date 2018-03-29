@@ -63,6 +63,14 @@ view appears in the "Help" panel in the GUI.  If you don't see a "Help"
 panel, make sure it's activated by going to the "View" menu and selecting
 "Help".
 
+# Example Data
+
+The Jupyter notebooks and screencasts use two example data sets.  
+If you'd like to play with them yourself, you can download them here:
+
+* [Basic examples](https://github.com/bpteague/cytoflow/releases/download/{{ site.version }}/cytoflow-{{ site.version }}-examples-basic.zip)
+* [Advanced examples](https://github.com/bpteague/cytoflow/releases/download/{{ site.version }}/cytoflow-{{ site.version }}-examples-advanced.zip)
+
 # Help!  I found a bug!
 
 First, are you using the current version?  To check, which version 
