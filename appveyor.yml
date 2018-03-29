@@ -62,6 +62,9 @@ install:
   - conda install --yes --quiet --use-local --only-deps cytoflow
   - "%WITH_COMPILER% python setup.py develop"
   
+  # have to (re)overwrite the SWIG-generated extension
+  - git reset --hard
+  
   # Check again for the expected version and architecture for Python
 #  - "python --version"
 #  - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
@@ -142,8 +145,21 @@ deploy:
     prerelease: false
     force_update: true
     on:
-      appveyor_repo_tag: true        # deploy on tag push only   
+      appveyor_repo_tag: true        # deploy on tag   
 
+  - provider: BinTray
+    username: bpteague
+    api_key:
+      secure: J1xtgBNfGlyHwokEnESgGsM01Oe/ZBYZF/DzWDutMYtOTCd4bJdmT1kZsirim/Gp
+    subject: bpteague
+    repo: cytoflow
+    package: cytoflow
+    version: latest
+    publish: true
+    override: true
+    explode: false
+    on:
+       appveyor_repo_tag: true        # deploy on tag   
 
   - provider: BinTray
     username: bpteague
