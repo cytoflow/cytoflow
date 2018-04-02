@@ -17,31 +17,31 @@ class ImportedDataTest(unittest.TestCase):
         self.cwd = os.path.dirname(os.path.abspath(__file__)) + "/data/Plate01/"
      
         tube1 = Tube(file = self.cwd + "CFP_Well_A4.fcs",
-                     conditions = {"Dox" : 0.0, "Well" : 'A'})
+                     conditions = {"Dox" : 0.0, "Well" : 'Aa'})
      
         tube2 = Tube(file = self.cwd + "RFP_Well_A3.fcs",
-                     conditions = {"Dox" : 10.0, "Well" : 'A'})
+                     conditions = {"Dox" : 10.0, "Well" : 'Aa'})
 
         tube3 = Tube(file = self.cwd + "YFP_Well_A7.fcs",
-                     conditions = {"Dox" : 100.0, "Well" : 'A'})
+                     conditions = {"Dox" : 100.0, "Well" : 'Aa'})
          
         tube4 = Tube(file = self.cwd + "CFP_Well_B4.fcs",
-                     conditions = {"Dox" : 0.0, "Well" : 'B'})
+                     conditions = {"Dox" : 0.0, "Well" : 'Bb'})
      
         tube5 = Tube(file = self.cwd + "RFP_Well_A6.fcs",
-                     conditions = {"Dox" : 10.0, "Well" : 'B'})
+                     conditions = {"Dox" : 10.0, "Well" : 'Bb'})
 
         tube6 = Tube(file = self.cwd + "YFP_Well_C7.fcs",
-                     conditions = {"Dox" : 100.0, "Well" : 'B'})
+                     conditions = {"Dox" : 100.0, "Well" : 'Bb'})
 
         tube7 = Tube(file = self.cwd + "CFP_Well_B4.fcs",
-                     conditions = {"Dox" : 0.0, "Well" : 'C'})
+                     conditions = {"Dox" : 0.0, "Well" : 'Cc'})
      
         tube8 = Tube(file = self.cwd + "RFP_Well_A6.fcs",
-                     conditions = {"Dox" : 10.0, "Well" : 'C'})
+                     conditions = {"Dox" : 10.0, "Well" : 'Cc'})
 
         tube9 = Tube(file = self.cwd + "YFP_Well_C7.fcs",
-                     conditions = {"Dox" : 100.0, "Well" : 'C'})
+                     conditions = {"Dox" : 100.0, "Well" : 'Cc'})
         
         self.ex = flow.ImportOp(conditions = {"Dox" : "float", "Well" : "category"},
                                 tubes = [tube1, tube2, tube3, 

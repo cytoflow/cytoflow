@@ -530,7 +530,7 @@ class GaussianMixtureOp(HasStrictTraits):
             for c in range(self.num_components):
                 if len(self.by) == 0:
                     g = [c + 1]
-                elif hasattr(group, '__iter__'):
+                elif hasattr(group, '__iter__') and not isinstance(group, (str, bytes)):
                     g = tuple(list(group) + [c + 1])
                 else:
                     g = tuple([group] + [c + 1])
