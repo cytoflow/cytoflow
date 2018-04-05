@@ -147,8 +147,9 @@ class FlowTask(Task):
         # else, set up a new workflow
         
         # add the import op
-        self.add_operation(ImportPlugin().id) 
-        self.model.selected = self.model.workflow[0]
+        if not self.model.workflow:
+            self.add_operation(ImportPlugin().id) 
+            self.model.selected = self.model.workflow[0]
         
         # if we're debugging, add a few data bits
         if self.model.debug:

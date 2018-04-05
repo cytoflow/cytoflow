@@ -101,7 +101,8 @@ class ExportPane(TraitsDockPane):
                          show_label = False),
                     Item('do_exit',
                          editor = ButtonEditor(value = True,
-                                               label = "Return to Cytoflow")))
+                                               label = "Return to Cytoflow"),
+                         show_label = False))
     
 
 class ExportTask(Task):
