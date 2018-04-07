@@ -2,7 +2,7 @@
 layout: default
 title: {{ site.name }}
 ---
-# Welcome!  New to Cytoflow?  Start with a (slightly out of date) [screencast.](https://youtu.be/rl1c4SlAfvU)
+# Welcome!  New to Cytoflow?  Start with a [screencast.](https://www.youtube.com/watch?v=vfEfeFGVtro)
 
 # What's wrong with other packages?  
 
