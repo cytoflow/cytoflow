@@ -127,8 +127,13 @@ the appropriate file.
   
 * Activate the new environment
 
-  * On Windows: ``conda activate cf_dev``
-  * On Mac, Linux or Windows running bash: ``source activate cf_dev``
+  * On Windows::
+    
+    conda activate cf_dev
+    
+  * On Mac, Linux or Windows running bash:: 
+    
+    source activate cf_dev
   
 * Install ``cytoflow``'s dependencies::
 
