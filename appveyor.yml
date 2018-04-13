@@ -158,6 +158,7 @@ deploy:
     publish: true
     override: true
     explode: false
+    artifact: /(.*\.whl|.*\.bz2|.*\.pyd)/
     on:
        appveyor_repo_tag: true        # deploy on tag   
 
@@ -172,6 +173,7 @@ deploy:
     publish: true
     override: true
     explode: false
+    artifact: /(.*\.whl|.*\.bz2|.*\.pyd)/
     on:
         branch: master
 
@@ -186,6 +188,7 @@ deploy:
     publish: true
     override: true
     explode: false
+    artifact: /(.*\.whl|.*\.bz2|.*\.pyd)/
     on:
         branch: packaging
         
