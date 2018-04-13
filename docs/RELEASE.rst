@@ -43,12 +43,15 @@ Documentation
 Versioning and dependencies
 ---------------------------
 
+- We're using ``versioneer`` to manage versions.  No manual versions required.
+
 - If there are dependencies that don't have packages on Anaconda, add recipes
   to ``packaging/conda_recipes`` (using ``conda skeleton``) and upload them to
   the Anaconda Cloud.  Unless there's a really (really!) good reason, please
   make them no-arch.
-- Update the version in ``cytoflow/__init__.py``
+  
 - Make sure ``install_requires`` in ``setup.py`` matches ``requirements.txt``
+
 - Update the README.rst from the README.md.  From the project root, say::
 
   	pandoc --from=markdown --to=rst --output=README.rst README.md
@@ -56,8 +59,7 @@ Versioning and dependencies
 - Push the updated docs to GitHub.  Give the CI builders ~30 minutes, then 
   check the build status on Travis_, Appveyor_, ReadTheDocs_ and Anaconda Cloud_.
 
-- Create a new tag on the master branch matching the new version in 
-  ``cytoflow/__init__.py``.  This will re-build everything on the CI
+- Create a new tag on the master branch.  This will re-build everything on the CI
   builders, create a new release on GitHub, and upload new source and wheels to 
   PyPI and packages to Anaconda Cloud.
 
@@ -65,5 +67,5 @@ Versioning and dependencies
   changes to update the main download links on 
   http://bpteague.github.io/cytoflow
 
-- Add the Windows wheels and installers to PyPI.  TODO - make AppVeyor use
-  ``twine`` to release to PyPI too.
+- Add the wheels to PyPI.  TODO - use ``twine`` to release to PyPI from CI
+  builders.
