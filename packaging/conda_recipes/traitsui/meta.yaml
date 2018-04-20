@@ -1,0 +1,63 @@
+{% set name = "traitsui" %}
+{% set version = "6.0.0" %}
+{% set file_ext = "tar.gz" %}
+{% set hash_type = "sha256" %}
+{% set hash_value = "a75f159f001b71213e17b373461d8df619cd2ae30222a3a78c5e61d4a87dfdea" %}
+
+package:
+  name: '{{ name|lower }}'
+  version: '{{ version }}'
+
+source:
+  fn: '{{ name }}-{{ version }}.{{ file_ext }}'
+  url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.{{ file_ext }}
+  '{{ hash_type }}': '{{ hash_value }}'
+
+build:
+  number: 0
+  script: python setup.py install --single-version-externally-managed --record=record.txt
+
+requirements:
+  host:
+    - python
+    - setuptools
+    - traits
+    - pyface >=6.0.0
+  run:
+    - python
+    - setuptools
+    - traits
+    - pyface >=6.0.0
+
+test:
+  imports:
+    - traitsui
+
+about:
+  home: https://docs.enthought.com/traitsui
+  license: BSD License
+  license_family: BSD
+  license_file: ''
+  summary: 'traitsui: traits-capable user interfaces'
+  description: "============================================\nTraitsUI: Traits-capable windowing framework\n============================================\n\n.. image:: https://travis-ci.org/enthought/traitsui.svg?branch=master\n\
+    \   :target: https://travis-ci.org/enthought/traitsui\n\n.. image:: https://ci.appveyor.com/api/projects/status/n2qy8kcwh8ibi9g3/branch/master?svg=true\n   :target: https://ci.appveyor.com/project/EnthoughtOSS/traitsui/branch/master\n\
+    \n.. image:: https://codecov.io/github/enthought/traitsui/coverage.svg?branch=master\n   :target: https://codecov.io/github/enthought/traitsui?branch=master\n\nThe TraitsUI project contains a toolkit-independent\
+    \ GUI abstraction layer,\nwhich is used to support the \"visualization\" features of the\n`Traits <http://github.com/enthought/traits>`__ package.\nThus, you can write model in terms of the Traits API\
+    \ and specify a GUI\nin terms of the primitives supplied by TraitsUI (views, items, editors,\netc.), and let TraitsUI and your selected toolkit and back-end take care of\nthe details of displaying them.\n\
+    \nExample\n-------\n\nGiven a Traits model like the following::\n\n    from traits.api import HasTraits, Str, Range, Enum\n\n    class Person(HasTraits):\n        name = Str('Jane Doe')\n        age\
+    \ = Range(low=0)\n        gender = Enum('female', 'male')\n\n    person = Person(age=30)\n\nwe can use TraitsUI to specify a and display a GUI view::\n\n    from traitsui.api import Item, RangeEditor,\
+    \ View\n\n    person_view = View(\n        Item('name'),\n        Item('gender'),\n        Item('age', editor=RangeEditor(mode='spinner')),\n        buttons=['OK', 'Cancel'],\n        resizable=True,\n\
+    \    )\n\n    person.configure_traits(view=person_view)\n\nwhich creates a GUI which looks like this:\n\n.. image:: https://raw.github.com/enthought/traitsui/master/README_example.png\n\nImportant Links\n\
+    ---------------\n\n- Website and Documentation: `<http://docs.enthought.com/traitsui>`__\n\n  * User Manual `<http://docs.enthought.com/traitsui/traitsui_user_maunal>`__\n  * Tutorial `<http://docs.enthought.com/traitsui/tutorial>`__\n\
+    \  * API Documentation `<http://docs.enthought.com/traitsui/api>`__\n\n- Source code repository: `<https://github.com/enthought/traitsui>`__\n\n  * Issue tracker: `<https://github.com/enthought/traitsui/issues>`__\n\
+    \n- Download releases: `<https://pypi.python.org/pypi/traitsui>`__\n\n- Mailing list: `<https://groups.google.com/forum/#!forum/ets-users>`__\n\nInstallation\n------------\n\nIf you want to run traitsui,\
+    \ you must also install:\n\n- Traits `<https://github.com/enthought/traits>`__\n- Pyface `<https://github.com/enthought/pyface>`__\n\nYou will also need one of the following backends:\n\n- PyQt\n- wxPython\n\
+      - PySide\n- PyQt5\n\nBackends have additional dependencies and there are optional dependencies on\nNumPy and Pandas for some editors.\n\nTraitsUI along with all dependencies can be installed in a straightforward\
+    \ way\nusing the `Enthought Deployment Manager <http://docs.enthought.com/edm/>`__,\n``pip`` or other .\n\nRunning the Test Suite\n----------------------\n\nTo run the test suite, you will need to install\
+    \ Git and\n`EDM <http://docs.enthought.com/edm/>`__ as well as have a Python environment\nwhich has install `Click <http://click.pocoo.org/>`__ available. You can then\nfollow the instructions in ``etstool.py``.\
+    \  In particular::\n\n    > python test_all\n\nwill run tests in all supported environments automatically."
+  doc_url: ''
+  dev_url: ''
+
+extra:
+  recipe-maintainers: ''

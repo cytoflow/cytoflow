@@ -45,10 +45,8 @@ from traitsui.qt4.table_editor import TableEditor as TableEditorQt
 from pyface.i_dialog import IDialog
 from pyface.api import Dialog, FileDialog, error, OK, confirm, YES
 
-from pyface.qt import QtCore, QtGui
+from pyface.qt import QtGui
 from pyface.constant import OK as PyfaceOK
-
-from pyface.ui.qt4.directory_dialog import DirectoryDialog as QtDirectoryDialog
 
 from traitsui.table_column import ObjectColumn
 
@@ -703,13 +701,15 @@ class ExperimentDialog(Dialog):
         
         btn_add_tube = QtGui.QPushButton("Add tubes...")
         layout.addWidget(btn_add_tube, 0, 0)
-        QtCore.QObject.connect(btn_add_tube, QtCore.SIGNAL('clicked()'),
-                               self.handler._on_add_tubes)
+#         QtCore.QObject.connect(btn_add_tube, QtCore.SIGNAL('clicked()'),
+#                                self.handler._on_add_tubes)
+        btn_add_tube.clicked.connect(self.handler._on_add_tubes)
         
         btn_remove_tubes = QtGui.QPushButton("Remove tubes")
         layout.addWidget(btn_remove_tubes, 1, 0)
-        QtCore.QObject.connect(btn_remove_tubes, QtCore.SIGNAL('clicked()'),
-                               self.handler._on_remove_tubes)
+#         QtCore.QObject.connect(btn_remove_tubes, QtCore.SIGNAL('clicked()'),
+#                                self.handler._on_remove_tubes)
+        btn_remove_tubes.clicked.connect(self.handler._on_remove_tubes)
         btn_remove_tubes.setEnabled(len(self.model.tubes) > 0)
         self.handler.btn_remove_tubes = btn_remove_tubes
 
@@ -717,15 +717,17 @@ class ExperimentDialog(Dialog):
         # start disabled if there aren't any tubes in the model
         btn_add_cond = QtGui.QPushButton("Add condition...")
         layout.addWidget(btn_add_cond, 0, 1)
-        QtCore.QObject.connect(btn_add_cond, QtCore.SIGNAL('clicked()'),
-                               self.handler._on_add_condition)
+#         QtCore.QObject.connect(btn_add_cond, QtCore.SIGNAL('clicked()'),
+#                                self.handler._on_add_condition)
+        btn_add_cond.clicked.connect(self.handler._on_add_condition)
         btn_add_cond.setEnabled(len(self.model.tubes) > 0)
         self.handler.btn_add_cond = btn_add_cond
         
         btn_remove_cond = QtGui.QPushButton("Remove condition")
         layout.addWidget(btn_remove_cond, 1, 1)
-        QtCore.QObject.connect(btn_remove_cond, QtCore.SIGNAL('clicked()'),
-                               self.handler._on_remove_condition)
+#         QtCore.QObject.connect(btn_remove_cond, QtCore.SIGNAL('clicked()'),
+#                                self.handler._on_remove_condition)
+        btn_remove_cond.clicked.connect(self.handler._on_remove_condition)
         btn_remove_cond.setEnabled(len(self.model.tubes) > 0)
         self.handler.btn_remove_cond = btn_remove_cond
         
@@ -738,14 +740,16 @@ class ExperimentDialog(Dialog):
         btn_ok = QtGui.QPushButton("OK")
         btn_ok.setDefault(True)
         layout.addWidget(btn_ok, 0, 3)
-        QtCore.QObject.connect(btn_ok, QtCore.SIGNAL('clicked()'),
-                               self.control, QtCore.SLOT('accept()'))
+#         QtCore.QObject.connect(btn_ok, QtCore.SIGNAL('clicked()'),
+#                                self.control, QtCore.SLOT('accept()'))
+        btn_ok.clicked.connect(self.control.accept)
         
         # 'Cancel' button.
         btn_cancel = QtGui.QPushButton("Cancel")
         layout.addWidget(btn_cancel, 0, 4)
-        QtCore.QObject.connect(btn_cancel, QtCore.SIGNAL('clicked()'),
-                               self.control, QtCore.SLOT('reject()'))   
+#         QtCore.QObject.connect(btn_cancel, QtCore.SIGNAL('clicked()'),
+#                                self.control, QtCore.SLOT('reject()'))   
+        btn_cancel.clicked.connect(self.control.reject)
         
         # add the button container to the widget     
         buttons.setLayout(layout)

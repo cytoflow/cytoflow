@@ -19,22 +19,17 @@
 # for local debugging
 
 if __name__ == '__main__':
-    from traits.etsconfig.api import ETSConfig
-    ETSConfig.toolkit = 'qt4'
-
     import os
     os.environ['TRAITS_DEBUG'] = "1"
 
 from pyface.qt import QtGui, QtCore
 
-from traits.api import Any, Str, Trait, List, Bool
+from traits.api import Any, Str, List, Bool
 from traitsui.editors.api import RangeEditor
 from traitsui.editor_factory import EditorWithListFactory
 from traitsui.qt4.editor import EditorWithList
 
-from .range_slider import RangeSlider
-
-
+from cytoflowgui.range_slider import RangeSlider
 
 class _ValueBoundsEditor(EditorWithList):
     """
@@ -89,8 +84,8 @@ class _ValueBoundsEditor(EditorWithList):
         panel.setContentsMargins(0, 0, 0, 0)
 
         self._label_lo = QtGui.QLineEdit(self.format % self.low)
-        QtCore.QObject.connect(self._label_lo, QtCore.SIGNAL('editingFinished()'),
-                self.update_low_on_enter)
+        self._label_lo.editingFinished.connect(self.update_low_on_enter)
+
         panel.addWidget(self._label_lo)
 
         # The default size is a bit too big and probably doesn't need to grow.
@@ -105,16 +100,14 @@ class _ValueBoundsEditor(EditorWithList):
         slider.setPageStep(1000)
         slider.setSingleStep(100)
 
-        QtCore.QObject.connect(slider, QtCore.SIGNAL('sliderMoved(int)'),
-                self._slider_moved)
-        QtCore.QObject.connect(slider, QtCore.SIGNAL('sliderReleased()'),
-                self._slider_released)
+        slider.sliderMoved.connect(self._slider_moved)
+        slider.sliderReleased.connect(self._slider_released)
         
         panel.addWidget(slider)
 
         self._label_hi = QtGui.QLineEdit(self.format % self.high)
-        QtCore.QObject.connect(self._label_hi, QtCore.SIGNAL('editingFinished()'),
-                self.update_high_on_enter)
+        self._label_hi.editingFinished.connect(self.update_high_on_enter)
+
         panel.addWidget(self._label_hi)
 
         # The default size is a bit too big and probably doesn't need to grow.

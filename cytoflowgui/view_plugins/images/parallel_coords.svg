@@ -13,7 +13,7 @@
    height="360"
    id="svg2"
    version="1.1"
-   inkscape:version="0.92.2 (unknown)"
+   inkscape:version="0.92.3 (unknown)"
    sodipodi:docname="parallel_coords.svg"
    inkscape:export-filename="/home/brian/src/cytoflow/cytoflowgui/view_plugins/images/parallel_coords.png"
    inkscape:export-xdpi="8.5299997"
@@ -26,7 +26,7 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="1.3055556"
-     inkscape:cx="50.147746"
+     inkscape:cx="149.72221"
      inkscape:cy="216.78411"
      inkscape:document-units="px"
      inkscape:current-layer="g3370"
@@ -98,7 +98,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -148,8 +148,8 @@
           <path
              inkscape:connector-curvature="0"
              id="path4560"
-             d="M 500.1716,742.61321 352.18896,656.02245"
-             style="opacity:0.75;fill:none;fill-rule:evenodd;stroke:#55a868;stroke-width:27.14489577;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+             d="M 500.25567,742.58561 340.46214,658.4298"
+             style="opacity:0.75;fill:none;fill-rule:evenodd;stroke:#55a868;stroke-width:27.80792999;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
           <path
              inkscape:connector-curvature="0"
              id="path4562"
@@ -164,14 +164,14 @@
              inkscape:connector-curvature="0"
              id="path4542"
              d="M 507.17134,646.10998 V 866.67941"
-             style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:50.78532531;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+             style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:25.39266266;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
           <path
-             style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:50.78532531;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+             style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:25.39266266;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
              d="M 340.98179,646.10998 V 866.67941"
              id="path4544"
              inkscape:connector-curvature="0" />
           <path
-             style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:50.78532531;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+             style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:25.39266266;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
              d="M 174.79222,646.10998 V 866.67941"
              id="path4521"
              inkscape:connector-curvature="0" />

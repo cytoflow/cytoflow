@@ -31,9 +31,6 @@ except:
 
 import sys, multiprocessing, logging, traceback, threading
 
-from traits.etsconfig.api import ETSConfig
-ETSConfig.toolkit = 'qt4'
-
 def log_notification_handler(_, trait_name, old, new):
     
     (exc_type, exc_value, tb) = sys.exc_info()
@@ -72,6 +69,10 @@ def run_gui():
     # getting real tired of the matplotlib deprecation warnings
     import warnings
     warnings.filterwarnings('ignore', '.*is deprecated and replaced with.*')
+
+    # monkey patch the resource manager to use SVGs for icons
+    import pyface.resource.resource_manager
+    pyface.resource.resource_manager.ResourceManager.IMAGE_EXTENSIONS.append('.svg')
     
     from traits.api import push_exception_handler
                              
@@ -119,16 +120,16 @@ def run_gui():
         print(" - Make sure PyQT is installed.")
         print(" - If both are installed, and you don't need both, uninstall PySide.")
         print(" - If you must have both installed, select PyQT by setting the")
-        print("   environment variable QT_API to \"pyqt\"")
+        print("   environment variable QT_API to \"pyqt5\"")
         print("   * eg, on Linux, type on the command line:")
-        print("     QT_API=\"pyqt\" " + cmd_line)
+        print("     QT_API=\"pyqt5\" " + cmd_line)
         print("   * on Windows, try: ")
-        print("     setx QT_API \"pyqt\"")
+        print("     setx QT_API \"pyqt5\"")
 
         sys.exit(1)
         
-    from pyface.qt.QtCore import qInstallMsgHandler  # @UnresolvedImport
-    qInstallMsgHandler(QtMsgHandler)
+    #from pyface.qt.QtCore import qInstallMsgHandler  # @UnresolvedImport
+    #qInstallMsgHandler(QtMsgHandler)
     
     # if we're frozen, add _MEIPASS to the pyface search path for icons etc
     if getattr(sys, 'frozen', False):
@@ -145,45 +146,44 @@ def run_gui():
     plugins = [CorePlugin(), TasksPlugin(), FlowTaskPlugin(), TASBETaskPlugin(),
                ExportFigurePlugin()]    
     
-    # reverse of the order on the toolbar
-    view_plugins = [TablePlugin(),
-                    Stats2DPlugin(),
-                    Stats1DPlugin(),
-                    BarChartPlugin(),
-                    ViolinPlotPlugin(),
+    # plugin order here is the order they show up in the toolbars
+    view_plugins = [HistogramPlugin(),
+                    ScatterplotPlugin(),
+                    Histogram2DPlugin(),
+                    DensityPlugin(),
+                    Kde1DPlugin(),
                     Kde2DPlugin(),
                     RadvizPlugin(),
                     ParallelCoordinatesPlugin(),
-                    Kde1DPlugin(),
-                    DensityPlugin(),
-                    Histogram2DPlugin(),
-                    ScatterplotPlugin(),
-                    HistogramPlugin()]
+                    ViolinPlotPlugin(),
+                    BarChartPlugin(),
+                    Stats1DPlugin(),
+                    Stats2DPlugin(),
+                    TablePlugin()]
     
     plugins.extend(view_plugins)
     
-    op_plugins = [RatioPlugin(),
-                  PCAPlugin(),
-                  KMeansPlugin(),
-                  FlowPeaksPlugin(),
-                  DensityGatePlugin(),
-                  TransformStatisticPlugin(),
-                  ChannelStatisticPlugin(),
-                  TasbePlugin(),
-                  ColorTranslationPlugin(),
-                  AutofluorescencePlugin(),
-                  BeadCalibrationPlugin(),
-#                   BleedthroughPiecewisePlugin(),
-                  BleedthroughLinearPlugin(),
-                  GaussianMixture2DPlugin(),
-                  GaussianMixture1DPlugin(),
-                  BinningPlugin(),
-                  PolygonPlugin(),
+    op_plugins = [ImportPlugin(),
+                  ThresholdPlugin(),
+                  RangePlugin(),
                   QuadPlugin(),
                   Range2DPlugin(),
-                  RangePlugin(),
-                  ThresholdPlugin(),
-                  ImportPlugin()]
+                  PolygonPlugin(),
+                  RatioPlugin(),
+                  ChannelStatisticPlugin(),
+                  TransformStatisticPlugin(),
+                  BinningPlugin(),
+                  GaussianMixture1DPlugin(),
+                  GaussianMixture2DPlugin(),
+                  DensityGatePlugin(),
+                  KMeansPlugin(),
+                  FlowPeaksPlugin(),
+                  PCAPlugin(),
+                  AutofluorescencePlugin(),
+                  BleedthroughLinearPlugin(),
+                  BeadCalibrationPlugin(),
+                  ColorTranslationPlugin(),
+                  TasbePlugin()]
 
     plugins.extend(op_plugins)
     

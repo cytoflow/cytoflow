@@ -20,13 +20,13 @@ build:
 
 requirements:
   host:
-    - python=3.5
+    - python>=3.4
     - setuptools
     - six
     - numpy
     - pandas
   run:
-    - python=3.5
+    - python>=3.4
     - setuptools
     - six
     - numpy

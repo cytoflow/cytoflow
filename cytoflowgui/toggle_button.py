@@ -24,20 +24,15 @@ Created on Nov 23, 2015
 
 # for local debugging
 if __name__ == '__main__':
-    from traits.etsconfig.api import ETSConfig
-    ETSConfig.toolkit = 'qt4'
-
     import os
     os.environ['TRAITS_DEBUG'] = "1"
 
-from traits.api import Str, Range, Enum, Property, Trait, Unicode, List, \
-                       on_trait_change
+from traits.api import Str, Property, Unicode
 from traitsui.view import View
-from traitsui.ui_traits import AView, Image
 from traitsui.basic_editor_factory import BasicEditorFactory
 from traitsui.qt4.editor import Editor
 
-from pyface.qt import QtCore, QtGui
+from pyface.qt import QtGui
 
         
 class _ToggleButton(Editor):
@@ -106,7 +101,7 @@ class ToggleButtonEditor(BasicEditorFactory):
 if __name__ == '__main__':
 
     from traits.api import HasTraits, Bool, String
-    from traitsui.api import View, Group, Item
+    from traitsui.api import Item
     
     class TestClass(HasTraits):
         b = Bool(True)

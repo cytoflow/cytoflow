@@ -1,0 +1,112 @@
+{% set name = "pyface" %}
+{% set version = "6.0.0" %}
+{% set file_ext = "tar.gz" %}
+{% set hash_type = "sha256" %}
+{% set hash_value = "bf0552597a587452fcfa212f956c3a59931ba301cca6eeb144227466da456276" %}
+
+package:
+  name: '{{ name|lower }}'
+  version: '{{ version }}'
+
+source:
+  fn: '{{ name }}-{{ version }}.{{ file_ext }}'
+  url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.{{ file_ext }}
+  '{{ hash_type }}': '{{ hash_value }}'
+
+build:
+  number: 0
+  script: python setup.py install --single-version-externally-managed --record=record.txt
+
+requirements:
+  host:
+    - python
+    - setuptools
+    - traits
+  run:
+    - python
+    - setuptools
+    - traits
+
+test:
+  imports:
+    - pyface
+    - pyface.action
+    - pyface.action.tests
+    - pyface.dock
+    - pyface.grid
+    - pyface.image
+    - pyface.preference
+    - pyface.qt
+    - pyface.resource
+    - pyface.sizers
+    - pyface.tasks
+    - pyface.tasks.action
+    - pyface.tasks.contrib
+    - pyface.tasks.tests
+    - pyface.tests
+    - pyface.tests.test_new_toolkit
+    - pyface.timer
+    - pyface.tree
+    - pyface.ui
+    - pyface.ui.null
+    - pyface.ui.null.action
+    - pyface.ui.null.tests
+    - pyface.ui.qt4
+    - pyface.ui.qt4.action
+    - pyface.ui.qt4.code_editor
+    - pyface.ui.qt4.code_editor.tests
+    - pyface.ui.qt4.console
+    - pyface.ui.qt4.tasks
+    - pyface.ui.qt4.tasks.tests
+    - pyface.ui.qt4.tests
+    - pyface.ui.qt4.timer
+    - pyface.ui.qt4.util
+    - pyface.ui.qt4.util.tests
+    - pyface.ui.qt4.wizard
+    - pyface.ui.qt4.workbench
+    - pyface.ui.qt4.workbench.tests
+    - pyface.ui.wx
+    - pyface.ui.wx.action
+    - pyface.ui.wx.grid
+    - pyface.ui.wx.grid.tests
+    - pyface.ui.wx.preference
+    - pyface.ui.wx.tasks
+    - pyface.ui.wx.tests
+    - pyface.ui.wx.timer
+    - pyface.ui.wx.tree
+    - pyface.ui.wx.viewer
+    - pyface.ui.wx.wizard
+    - pyface.ui.wx.workbench
+    - pyface.util
+    - pyface.util.grid
+    - pyface.util.tests
+    - pyface.viewer
+    - pyface.wizard
+    - pyface.workbench
+    - pyface.workbench.action
+    - pyface.workbench.debug
+    - pyface.workbench.tests
+    - pyface.wx
+    - pyface.wx.grid
+    - pyface.wx.spreadsheet
+    - pyface.wx.util
+
+about:
+  home: https://docs.enthought.com/pyface
+  license: BSD License
+  license_family: BSD
+  license_file: ''
+  summary: traits-capable windowing framework
+  description: "==========================================\npyface: traits-capable windowing framework\n==========================================\n\n.. image:: https://travis-ci.org/enthought/pyface.svg?branch=master\n\
+    \    :target: https://travis-ci.org/enthought/pyface\n\n.. image:: https://ci.appveyor.com/api/projects/status/68nfb049cdq9wqd1/branch/master?svg=true\n    :target: https://ci.appveyor.com/project/EnthoughtOSS/pyface/branch/master\n\
+    \n.. image:: https://codecov.io/github/enthought/pyface/coverage.svg?branch=master\n    :target: https://codecov.io/github/enthought/pyface?branch=master\n\n\nThe pyface project contains a toolkit-independent\
+    \ GUI abstraction layer,\nwhich is used to support the \"visualization\" features of the Traits package.\nThus, you can write code in terms of the Traits API (views, items, editors,\netc.), and let\
+    \ pyface and your selected toolkit and back-end take care of\nthe details of displaying them.\n\nThe following GUI backends are supported:\n\n- wxPython\n- PyQt\n- PySide\n\n**Warning:** The default\
+    \ toolkit if none is supplied is ``qt4``.\n   This changed from ``wx`` in Pyface 5.0..\n\nDocumentation\n-------------\n\n* `Online Documentation <http://docs.enthought.com/pyface/>`_.\n\n* `API Documentation\
+    \ <http://docs.enthought.com/pyface/api/pyface.html>`_.\n\nPrerequisites\n-------------\n\nPyface depends on:\n\n* a GUI toolkit: one of PySide, PyQt or WxPython\n\n* `Traits <https://github.com/enthought/traits>`_\n\
+    \n* Pygments for syntax highlighting in the Qt code editor widget.\n\n* some widgets may have additional optional dependencies."
+  doc_url: ''
+  dev_url: ''
+
+extra:
+  recipe-maintainers: ''

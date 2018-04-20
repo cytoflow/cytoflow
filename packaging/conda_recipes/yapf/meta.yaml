@@ -20,10 +20,10 @@ build:
 
 requirements:
   host:
-    - python=3.5.4
+    - python>=3.4
     - setuptools
   run:
-    - python=3.5.4
+    - python>=3.4
 
 test:
   imports:

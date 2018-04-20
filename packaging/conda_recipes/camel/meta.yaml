@@ -20,11 +20,11 @@ build:
 
 requirements:
   host:
-    - python=3.5.4
+    - python>=3.4
     - setuptools
     - pyyaml
   run:
-    - python=3.5.4
+    - python>=3.4
     - pyyaml
 
 test:
