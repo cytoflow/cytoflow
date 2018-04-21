@@ -35,13 +35,8 @@ from envisage.api import Plugin, contributes_to
 from envisage.ui.tasks.api import TaskFactory
 from pyface.api import FileDialog, OK
 
-from cytoflow.operations import IOperation
-
 # from cytoflowgui.flow_task_pane import FlowTaskPane, getFlowTaskPane
 from cytoflowgui.workflow import Workflow
-from cytoflowgui.workflow_item import WorkflowItem
-
-from cytoflowgui.tasbe_calibration import TasbeCalibrationOp
 
 class PlotParamsPane(TraitsDockPane):
     

@@ -44,6 +44,7 @@ matplotlib event handlers.
 
 import time, threading, logging, sys, traceback
 
+import matplotlib
 import matplotlib.pyplot
 from matplotlib.figure import Figure
 
@@ -81,6 +82,8 @@ class Msg(object):
     MOUSE_DOUBLE_CLICK_EVENT = "MOUSE_DOUBLE_CLICK"
     
     PRINT = "PRINT"
+    
+    DPI = "DPI"
     
 def log_exception():
     (exc_type, exc_value, tb) = sys.exc_info()
@@ -139,6 +142,11 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
                              args = ())
         t.daemon = True
         t.start()
+        
+        dpi = self.physicalDpiX()
+        matplotlib.rcParams['figure.dpi'] = dpi
+        self.child_conn.send((Msg.DPI, self.physicalDpiX()))
+        
         
     def listen_for_remote(self):
         while self.child_conn.poll(None):
@@ -247,7 +255,7 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         logging.debug("FigureCanvasQTAggLocal.resizeEvent : {}" 
                       .format((w, h)))            
         
-        dpival = self.figure.dpi
+        dpival = self.physicalDpiX()
         winch = w / dpival
         hinch = h / dpival
         
@@ -376,8 +384,11 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
                 logging.debug("FigureCanvasAggRemote.listen_for_remote :: {}"
                               .format(msg, payload))
                 
-            try:              
-                if msg == Msg.RESIZE_EVENT:
+            try:        
+                if msg == Msg.DPI:
+                    dpi = payload
+                    matplotlib.rcParams['figure.dpi'] = dpi      
+                elif msg == Msg.RESIZE_EVENT:
                     with self.plot_lock:
                         (winch, hinch) = payload
                         self.figure.set_size_inches(winch, hinch)
