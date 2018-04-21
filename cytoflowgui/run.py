@@ -56,6 +56,15 @@ def log_excepthook(typ, val, tb):
                   .format(typ, val, tb_str))
                          
 def run_gui():
+    
+    # this is ridiculous, but here's the situation.  Qt5 now uses Chromium
+    # as their web renderer.  Chromium needs OpenGL.  if you don't
+    # initialize OpoenGL here, things crash on some platforms.
+    
+    # so now i guess we depend on opengl too. 
+    
+    from OpenGL import GL
+    
     debug = ("--debug" in sys.argv)
 
     remote_process, remote_connection = start_remote_process()
@@ -257,4 +266,5 @@ def monitor_remote_process(proc):
 if __name__ == '__main__':
     multiprocessing.freeze_support()
     multiprocessing.set_start_method('spawn')
+
     run_gui()
