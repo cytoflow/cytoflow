@@ -45,8 +45,6 @@ class LinearScale(ScaleMixin):
     error_statistic = Tuple(Str, Str)
     data = Array
 
-    mpl_params = Dict()
-
     def __call__(self, data):
         return data
     
@@ -90,6 +88,9 @@ class LinearScale(ScaleMixin):
                                 "or 'statistic'.")
 
         return matplotlib.colors.Normalize(vmin = vmin, vmax = vmax)
+    
+    def get_mpl_params(self, ax):
+        return dict()
         
             
 

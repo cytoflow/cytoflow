@@ -153,7 +153,8 @@ class RadvizView(BaseNDView):
         for c in self.channels:
             vmin = lim[c][0]
             vmax = lim[c][1]
-            c_scaled = pd.Series(data = scale[c].norm(vmin = vmin, vmax = vmax)(grid.data[c]),
+
+            c_scaled = pd.Series(data = scale[c].norm(vmin = vmin, vmax = vmax)(grid.data[c].values),
                                  index = grid.data[c].index,
                                  name = c)
     
@@ -217,7 +218,7 @@ def _radviz_plot(*channels, ax_annotations, scale, lim, order, **kwargs):
     for c in channels:
         vmin = lim[c.name][0]
         vmax = lim[c.name][1]
-        c_scaled = pd.Series(data = scale[c.name].norm(vmin = vmin, vmax = vmax)(c),
+        c_scaled = pd.Series(data = scale[c.name].norm(vmin = vmin, vmax = vmax)(c.values),
                              index = c.index,
                              name = c.name)
 
@@ -272,7 +273,7 @@ def _radviz_plot(*channels, ax_annotations, scale, lim, order, **kwargs):
             ax.text(xy[0] + 0.025, xy[1] + 0.025, name,
                     ha='left', va='bottom', size='small')
 
-    ax.axis('equal')
+    ax.axis('scaled')
     
 def _get_necklaces(L):
     import itertools as it

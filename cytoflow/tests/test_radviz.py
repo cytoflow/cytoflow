@@ -35,7 +35,7 @@ class TestRadviz(ImportedDataTest):
 
     def setUp(self):
         ImportedDataTest.setUp(self)
-        self.view = flow.ParallelCoordinatesView(channels = ["B1-A", 'V2-A', 'Y2-A'])
+        self.view = flow.RadvizView(channels = ["B1-A", 'V2-A', 'Y2-A'])
         
     def testPlot(self):
         self.view.plot(self.ex)
@@ -126,5 +126,5 @@ class TestRadviz(ImportedDataTest):
 
         
 if __name__ == "__main__":
-#     import sys;sys.argv = ['', 'Test.testName']
+#     import sys;sys.argv = ['', 'TestRadviz.testXFacet']
     unittest.main()

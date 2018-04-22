@@ -148,7 +148,7 @@ def _parallel_coords_plot(*channels, ax_annotations, scale, lim, **kwargs):
     for c in channels:
         vmin = lim[c.name][0]
         vmax = lim[c.name][1]
-        c_scaled = pd.Series(data = scale[c.name].norm(vmin = vmin, vmax = vmax)(c),
+        c_scaled = pd.Series(data = scale[c.name].norm(vmin = vmin, vmax = vmax)(c.values),
                              index = c.index,
                              name = c.name)
 

@@ -58,10 +58,6 @@ class IScale(Interface):
         
     data : array_like
         What raw data to scale.
-        
-    mpl_params : Dict
-        A dictionary of named parameters to pass to plt.xscale() and 
-        plt.yscale().  Sometimes estimated from data.
     """
 
     id = Str           
@@ -76,9 +72,7 @@ class IScale(Interface):
     statistic = Tuple(Str, Str)
     error_statistic = Tuple(Str, Str)
     data = Array
-
-    mpl_params = Dict()
-
+    
     def __call__(self, data):
         """
         Transforms `data` using this scale.  Must know how to handle int, float,
@@ -106,6 +100,12 @@ class IScale(Interface):
         Return an instance of matplotlib.colors.Normalize, which normalizes
         this scale to [0, 1].  Among other things, this is used to correctly
         scale a color bar.
+        """
+        
+    def get_mpl_params(self, axis):
+        """
+        Return the kwargs to pass to the matplotlib scale constructor.
+        Sometimes these are estimated from data.
         """
         
         

@@ -80,8 +80,6 @@ class HlogScale(ScaleMixin):
     range = Property(Float)
     b = Float(200, desc = "location of the log transition")
     
-    mpl_params = Property(Dict, depends_on = "[b, range, scale_min, scale_max]")
-
     def __call__(self, data):
         """
         Transforms `data` using this scale.
@@ -182,8 +180,7 @@ class HlogScale(ScaleMixin):
         else:
             return Undefined
 
-    @cached_property
-    def _get_mpl_params(self):
+    def get_mpl_params(self, ax):
         return {"b" : self.b,
                 "range" : self.range}
     
