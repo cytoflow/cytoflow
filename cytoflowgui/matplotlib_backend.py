@@ -53,20 +53,9 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg
 from pyface.qt import QtCore, QtGui
 
 # needed for pylab_setup
-backend_version = "0.0.2"
+backend_version = "0.0.3"
 
 from matplotlib.backend_bases import FigureManagerBase
-
-# module-level pipe connections for communicating between canvases.
-# these are initialized in cytoflow_application, which starts the remote
-# process.
-
-# http://stackoverflow.com/questions/1977362/how-to-create-module-wide-variables-in-python
-#this = sys.modules[__name__]
-#this.parent_conn = None
-#self.child_conn = None
-#this.remote_canvas = None
-#this.process_events = threading.Event()
 
 DEBUG = 0
 
@@ -80,6 +69,7 @@ class Msg(object):
     MOUSE_RELEASE_EVENT = "MOUSE_RELEASE"
     MOUSE_DOUBLE_CLICK_EVENT = "MOUSE_DOUBLE_CLICK"
     
+    DPI = "DPI"
     PRINT = "PRINT"
     
 def log_exception():
@@ -140,6 +130,10 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
                              args = ())
         t.daemon = True
         t.start()
+        
+        dpi = self.physicalDpiX()
+        matplotlib.rcParams['figure.dpi'] = dpi
+        self.child_conn.send((Msg.DPI, self.physicalDpiX()))
         
     def listen_for_remote(self):
         while self.child_conn.poll(None):
@@ -248,7 +242,7 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         logging.debug("FigureCanvasQTAggLocal.resizeEvent : {}" 
                       .format((w, h)))            
         
-        dpival = self.figure.dpi
+        dpival = self.physicalDpiX()
         winch = w / dpival
         hinch = h / dpival
         
@@ -378,7 +372,11 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
                               .format(msg, payload))
                 
             try:              
-                if msg == Msg.RESIZE_EVENT:
+                if msg == Msg.DPI:
+                    dpi = payload
+                    matplotlib.rcParams['figure.dpi'] = dpi
+                    matplotlib.pyplot.clf()
+                elif msg == Msg.RESIZE_EVENT:
                     with self.plot_lock:
                         (winch, hinch) = payload
                         self.figure.set_size_inches(winch, hinch)

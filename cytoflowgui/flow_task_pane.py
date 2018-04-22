@@ -20,7 +20,6 @@
 Created on Feb 11, 2015
 @author: brian
 """
-import sys
 
 from traits.api import Instance, provides
 from traitsui.editor_factory import EditorWithListFactory
@@ -65,10 +64,6 @@ class FlowTaskPane(TaskPane):
         self.canvas.setSizePolicy(QtGui.QSizePolicy.Expanding,  # @UndefinedVariable
                                   QtGui.QSizePolicy.Expanding)  # @UndefinedVariable
         layout.addWidget(self.canvas)
-
-    def destroy(self):
-        pass
-#         self.layout = self.control = None 
                   
     def export(self, filename, **kwargs):      
         self.canvas.print_figure(filename, bbox_inches = 'tight', **kwargs)
