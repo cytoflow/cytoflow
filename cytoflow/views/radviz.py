@@ -272,7 +272,7 @@ def _radviz_plot(*channels, ax_annotations, scale, lim, order, **kwargs):
             ax.text(xy[0] + 0.025, xy[1] + 0.025, name,
                     ha='left', va='bottom', size='small')
 
-    ax.axis('equal')
+    ax.axis('scaled')
     
 def _get_necklaces(L):
     import itertools as it
