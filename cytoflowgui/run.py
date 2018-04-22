@@ -73,6 +73,10 @@ def run_gui():
     import warnings
     warnings.filterwarnings('ignore', '.*is deprecated and replaced with.*')
     
+    # monkey patch the resource manager to use SVGs for icons
+    import pyface.resource.resource_manager
+    pyface.resource.resource_manager.ResourceManager.IMAGE_EXTENSIONS.append('.svg')
+    
     from traits.api import push_exception_handler
                              
     def QtMsgHandler(msg_type, msg_string):
