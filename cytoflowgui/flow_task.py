@@ -124,12 +124,11 @@ class FlowTask(Task):
                            TaskAction(method = 'on_problem',
                                       name = "Report a bug...",
                                       tooltib = "Report a bug",
-                                      image = ImageResource('bug')),
+                                      image = ImageResource('bug')))]
 #                            TaskAction(method='on_prefs',
 #                                       name = "Prefs",
 #                                       tooltip='Preferences',
 #                                       image=ImageResource('prefs')),
-                           image_size = (32, 32))]
     
     # the file to save to if the user clicks "save" and has already clicked
     # "open" or "save as".
@@ -194,7 +193,14 @@ class FlowTask(Task):
                           top_right_corner = 'right',
                           bottom_right_corner = 'right')
      
-    def create_central_pane(self):       
+    def create_central_pane(self):   
+        # set the toolbar image size
+        # this isn't really the right place for this, but it's the only
+        # place control passes back to user code before the toolbar
+        # is created.
+        
+        dpi = self.window.control.physicalDpiX()
+        self.tool_bars[0].image_size = (int(0.5 * dpi), int(0.5 * dpi))
         return self.application.plot_pane
      
     def create_dock_panes(self):
