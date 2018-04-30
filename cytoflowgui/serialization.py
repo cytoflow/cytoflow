@@ -6,7 +6,8 @@ Created on Dec 2, 2017
 '''
 
 from textwrap import dedent
-import pandas
+import pandas, numpy
+from pandas.api.types import CategoricalDtype
 
 from pyface.api import error
 from traits.api import DelegationError
@@ -77,17 +78,49 @@ def _dump_undef(ud):
 def _load_undef(data, version):
     return Undefined
 
-@camel_registry.dumper(pandas.Series, 'pandas-series', version = 1)
+@camel_registry.dumper(numpy.dtype, 'numpy-dtype', version = 1)
+def _dump_dtype(d):
+    return str(d)
+
+@camel_registry.loader('numpy-dtype', version = 1)
+def _load_dtype(data, version):
+    return numpy.dtype(data)
+
+@camel_registry.dumper(CategoricalDtype, 'pandas-categorical-dtype', version = 1)
+def _dump_categorical_dtype(d):
+    return dict(categories = list(d.categories),
+                ordered = d.ordered)
+    
+@camel_registry.loader('pandas-categorical-dtype', version = 1)
+def _load_categorical_dtype(data, version):
+    return CategoricalDtype(categories = data['categories'],
+                            ordered = data['ordered'])
+
+@camel_registry.dumper(pandas.Series, 'pandas-series', version = 2)
 def _dump_series(s):
     return dict(index = list(s.index),
-                data = list(s.values))
+                data = list(s.values),
+                dtype = s.dtype)
     
 # this is quite simplistic.  i don't know if it works for hierarchical
 # indices.
 @camel_registry.loader('pandas-series', version = 1)
 def _load_series(data, version):
+    ret = pandas.Series(data = data['data'],
+                        index = data['index'])
+
+    if str(ret.dtype) == 'object':
+        ret = pandas.Series(data = data['data'],
+                            index = data['index'],
+                            dtype = "category")
+        
+    return ret
+    
+@camel_registry.loader('pandas-series', version = 2)
+def _load_series_v2(data, version):
     return pandas.Series(data = data['data'],
-                         index = data['index'])
+                         index = data['index'],
+                         dtype = data['dtype'])
     
 # a few bits for testing serialization
 def traits_eq(self, other):
