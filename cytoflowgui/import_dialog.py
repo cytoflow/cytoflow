@@ -43,7 +43,7 @@ from traitsui.api import UI, Group, View, Item, TableEditor, OKCancelButtons, \
 from traitsui.qt4.table_editor import TableEditor as TableEditorQt
 
 from pyface.i_dialog import IDialog
-from pyface.api import Dialog, FileDialog, error, OK, confirm, YES
+from pyface.api import Dialog, FileDialog, error, warning, OK, confirm, YES
 
 from pyface.qt import QtCore, QtGui
 from pyface.constant import OK as PyfaceOK
@@ -209,15 +209,27 @@ class ExperimentDialogModel(HasStrictTraits):
             resizable = True
         )
     
-    def init_model(self, op):
+    def init_model(self, op, conditions, metadata):
         
         dtype_to_trait = {"category" : Str,
                           "float" : Float,
                           "bool" : Bool,
                           "int" : Int}
         
+        for name, condition in conditions.items():
+            if str(condition.dtype).startswith("category") or str(condition.dtype).startswith('object'):
+                self.tube_traits[name] = Str(condition = True)
+            elif str(condition.dtype).startswith("int"):
+                self.tube_traits[name] = Int(condition = True)
+            elif str(condition.dtype).startswith("float"):
+                self.tube_traits[name] = Float(condition = True)
+            elif str(condition.dtype) == "bool":
+                self.tube_traits[name] = Bool(condition = True)
+                
         new_tubes = []
         self.dummy_experiment = None
+        
+        shown_error = False
         
         for op_tube in op.tubes:
             tube = Tube(file = op_tube.file,
@@ -228,12 +240,13 @@ class ExperimentDialogModel(HasStrictTraits):
                 tube_meta = fcsparser.parse(op_tube.file, 
                                             meta_data_only = True, 
                                             reformat_meta = True)
-                #tube_channels = tube_meta["_channels_"].set_index("$PnN")
             except Exception as e:
-                error(None, "FCS reader threw an error on tube {0}: {1}"\
-                            .format(op_tube.file, e.value),
-                      "Error reading FCS file")
-                return
+                if not shown_error:
+                    warning(None,
+                            "Had trouble loading some of the experiment's FCS "
+                            "files.  You will need to re-add them.")
+                    shown_error = True
+                continue
             
             # if we're the first tube loaded, create a dummy experiment
             if not self.dummy_experiment:
@@ -279,8 +292,7 @@ class ExperimentDialogModel(HasStrictTraits):
                     dtype_to_trait[condition_dtype](condition = True)
                 tube.add_trait(condition, condition_trait)
                 tube.conditions[condition] = op_tube.conditions[condition]
-                if not condition in self.tube_traits:
-                    self.tube_traits[condition] = condition_trait
+                self.tube_traits[condition] = condition_trait
             tube.trait_set(**op_tube.conditions)
             
             new_tubes.append(tube)

@@ -22,19 +22,15 @@ Created on Feb 11, 2015
 @author: brian
 """
 
-# from traits.etsconfig.api import ETSConfig
-# ETSConfig.toolkit = 'qt4'
-
-import os.path, webbrowser
+import os, os.path, webbrowser, pathlib
 
 from traits.api import Instance, List, on_trait_change, Unicode
 from pyface.tasks.api import Task, TaskLayout, PaneItem, VSplitter
 from pyface.tasks.action.api import SMenu, SMenuBar, SToolBar, TaskAction, TaskToggleGroup
-from pyface.api import FileDialog, ImageResource, AboutDialog, information, confirm, OK, YES, NO, ConfirmationDialog
+from pyface.api import FileDialog, ImageResource, AboutDialog, information, confirm, OK, YES, NO, ConfirmationDialog, warning
 from envisage.api import Plugin, ExtensionPoint, contributes_to
 from envisage.ui.tasks.api import TaskFactory
 
-# from cytoflowgui.flow_task_pane import FlowTaskPane
 from cytoflowgui.workflow_pane import WorkflowDockPane
 from cytoflowgui.view_pane import ViewDockPane, PlotParamsPane
 from cytoflowgui.help_pane import HelpDockPane
@@ -288,6 +284,46 @@ class FlowTask(Task):
             if wi_idx < len(new_workflow) - 1:
                 wi.next_wi = new_workflow[wi_idx + 1]
 
+        # check that the FCS files are all there
+        
+        wi = new_workflow[0]
+        assert(wi.operation.id == "edu.mit.synbio.cytoflow.operations.import")
+        missing_tubes = 0
+        for tube in wi.operation.tubes:
+            file = pathlib.Path(tube.file)
+            if not file.exists():
+                missing_tubes += 1
+                
+        if missing_tubes == len(wi.operation.tubes):
+            warning(self.window.control,
+                    "Cytoflow couldn't find any of the FCS files from that "
+                    "workflow.  If they've been moved, please open one FCS "
+                    "file to show Cytoflow where they've been moved to.")
+            
+            dialog = FileDialog(parent = self.window.control, 
+                                action = 'open',
+                                wildcard = (FileDialog.create_wildcard("FCS files", "*.fcs")))
+            
+            if dialog.open() == OK:
+                # find the "best" file match -- ie, the one with the longest
+                # tail match
+                fcs_path = pathlib.Path(dialog.path).parts
+                best_path = None
+                best_path_len = -1
+                                
+                for tube in wi.operation.tubes:
+                    tube_path = pathlib.Path(tube.file).parts
+                    
+                    for i in range(len(fcs_path)):
+                        if list(reversed(fcs_path))[:i] == list(reversed(tube_path))[:i] and i > best_path_len:
+                            best_path = tube_path
+                            best_path_len = i
+                            
+                if best_path_len >= 0:
+                    for tube in wi.operation.tubes:
+                        tube_path = pathlib.Path(tube.file).parts
+                        new_path = fcs_path[:-1 * best_path_len] + tube_path[-1 * best_path_len :]
+                        tube.file = str(pathlib.Path(*new_path))
 
         # replace the current workflow with the one we just loaded
         
