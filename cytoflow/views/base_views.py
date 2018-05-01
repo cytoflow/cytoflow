@@ -868,6 +868,11 @@ class Base1DStatisticsView(BaseStatisticsView):
          
         if error_stat is not None:
 
+            if set(stat.index.names) != set(error_stat.index.names):
+                raise util.CytoflowViewError('error_statistic',
+                                             "Data statistic and error statistic "
+                                             "don't have the same index.")
+                
             try:
                 error_stat.index = error_stat.index.reorder_levels(stat.index.names)
                 error_stat.sort_index(inplace = True)
@@ -997,6 +1002,11 @@ class Base2DStatisticsView(BaseStatisticsView):
             x_error_stat = None
             
         if x_error_stat is not None:
+            
+            if set(xstat.index.names) != set(x_error_stat.index.names):
+                raise util.CytoflowViewError('x_error_statistic',
+                                             "X data statistic and error statistic "
+                                             "don't have the same index.")
                
             try:
                 x_error_stat.index = x_error_stat.index.reorder_levels(xstat.index.names)
@@ -1006,12 +1016,12 @@ class Base2DStatisticsView(BaseStatisticsView):
             
             if not xstat.index.equals(x_error_stat.index):
                 raise util.CytoflowViewError('x_error_statistic',
-                                             "Data statistic and error statistic "
+                                             "X data statistic and error statistic "
                                              " don't have the same index.")
                
             if xstat.name == x_error_stat.name:
                 raise util.CytoflowViewError('x_error_statistic',
-                                             "Data statistic and error statistic can "
+                                             "X data statistic and error statistic can "
                                              "not have the same name.")
             
         if not self.ystatistic:
@@ -1040,6 +1050,11 @@ class Base2DStatisticsView(BaseStatisticsView):
          
         if y_error_stat is not None:
             
+            if set(ystat.index.names) != set(y_error_stat.index.names):
+                raise util.CytoflowViewError('y_error_statistic',
+                                             "Y data statistic and error statistic "
+                                             "don't have the same index.")
+            
             try:
                 y_error_stat.index = y_error_stat.index.reorder_levels(ystat.index.names)
                 y_error_stat.sort_index(inplace = True)
@@ -1048,7 +1063,7 @@ class Base2DStatisticsView(BaseStatisticsView):
             
             if not ystat.index.equals(y_error_stat.index):
                 raise util.CytoflowViewError('y_error_statistic',
-                                             "Data statistic and error statistic "
+                                             "Y data statistic and error statistic "
                                              " don't have the same index.")
                
             if ystat.name == y_error_stat.name:
@@ -1061,6 +1076,11 @@ class Base2DStatisticsView(BaseStatisticsView):
                                          "X and Y statistics can "
                                          "not have the same name.")
                
+        if set(xstat.index.names) != set(ystat.index.names):
+            raise util.CytoflowViewError('ystatistic',
+                                         "X and Y data statistics "
+                                         "don't have the same index.")
+               
         try:
             ystat.index = ystat.index.reorder_levels(xstat.index.names)
             ystat.sort_index(inplace = True)
@@ -1072,62 +1092,6 @@ class Base2DStatisticsView(BaseStatisticsView):
         xstat.sort_index(inplace = True)
         ystat = ystat.reindex(intersect_idx)
         ystat.sort_index(inplace = True)
-             
-        if self.x_error_statistic[0]:
-            if self.x_error_statistic not in experiment.statistics:
-                raise util.CytoflowViewError('x_error_statistic',
-                                             "X error statistic not in experiment")
-            else:
-                x_error_stat = experiment.statistics[self.x_error_statistic]
-                
-            if set(x_error_stat.index.names) != set(xstat.index.names):
-                raise util.CytoflowViewError('x_error_statistic',
-                                             "X error statistic doesn't have the "
-                                             "same indices as the X statistic")
-            
-            try:
-                x_error_stat.index = x_error_stat.index.reorder_levels(xstat.index.names)
-                x_error_stat.sort_index(inplace = True)
-            except AttributeError:
-                pass
-            
-            x_error_stat = x_error_stat.reindex(intersect_idx)
-            x_error_stat.sort_index(inplace = True)
-            
-            if not x_error_stat.index.equals(xstat.index):
-                raise util.CytoflowViewError('x_error_statistic',
-                                             "X error statistic doesn't have the "
-                                             "same indices as the X statistic")                
-        else:
-            x_error_stat = None
-            
-        if self.y_error_statistic[0]:
-            if self.y_error_statistic not in experiment.statistics:
-                raise util.CytoflowViewError('y_error_statistic',
-                                             "Y error statistic not in experiment")
-            else:
-                y_error_stat = experiment.statistics[self.y_error_statistic]
-                
-            if set(y_error_stat.index.names) != set(ystat.index.names):
-                raise util.CytoflowViewError('y_error_statistic',
-                                             "Y error statistic doesn't have the "
-                                             "same indices as the Y statistic")
-                
-            try:
-                y_error_stat.index = y_error_stat.index.reorder_levels(ystat.index.names)
-                y_error_stat.sort_index(inplace = True)
-            except AttributeError:
-                pass
-            
-            y_error_stat = y_error_stat.reindex(intersect_idx)
-            y_error_stat.sort_index(inplace = True)
-            
-            if not y_error_stat.index.equals(ystat.index):
-                raise util.CytoflowViewError('y_error_statistic',
-                                             "Y error statistic doesn't have the "
-                                             "same values as the Y statistic")   
-        else:
-            y_error_stat = None
             
         data = pd.DataFrame(index = xstat.index)
         data[xstat.name] = xstat
