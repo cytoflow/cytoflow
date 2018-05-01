@@ -21,7 +21,7 @@ Created on Mar 15, 2015
 @author: brian
 '''
 
-import warnings, logging, sys, threading
+import warnings, logging, sys, threading, copy
 
 from traits.api import HasStrictTraits, Instance, List, DelegatesTo, Enum, \
                        Property, cached_property, Bool, \
@@ -187,8 +187,12 @@ class WorkflowItem(HasStrictTraits):
     def __repr__(self):
         return "<{}: {}>".format(self.__class__.__name__, self.operation.__class__.__name__)
     
-@camel_registry.dumper(WorkflowItem, 'workflow-item', version = 1)
+@camel_registry.dumper(WorkflowItem, 'workflow-item', version = 2)
 def _dump_wi(wi):
+                          
+    # we really don't need to keep copying around the fcs metadata
+    if 'fcs_metadata' in wi.metadata:
+        del wi.metadata['fcs_metadata']
                             
     return dict(deletable = wi.deletable,
                 operation = wi.operation,
@@ -196,13 +200,13 @@ def _dump_wi(wi):
                 channels = wi.channels,
                 conditions = wi.conditions,
                 metadata = wi.metadata,
-                statistics = list(wi.statistics.keys()),
+                statistics = wi.statistics,
                 current_view = wi.current_view,
                 default_view = wi.default_view)
 
 
 @camel_registry.loader('workflow-item', version = 1)
-def _load_wi(data, version):
+def _load_wi_v1(data, version):
     
     data['statistics'] = {tuple(k) : pd.Series() for k in data['statistics']}
     
@@ -210,6 +214,9 @@ def _load_wi(data, version):
         
     return ret
 
+@camel_registry.loader('workflow-item', version = 2)
+def _load_wi(data, version):
+    return WorkflowItem(**data)
     
 class RemoteWorkflowItem(WorkflowItem):
     
