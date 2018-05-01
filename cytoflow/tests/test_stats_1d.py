@@ -28,6 +28,7 @@ import matplotlib
 matplotlib.use('Agg')
 
 import cytoflow as flow
+import cytoflow.utility as util
 
 from test_base import ImportedDataTest  # @UnresolvedImport
 
@@ -56,6 +57,19 @@ class Test1DStats(ImportedDataTest):
         
     def testPlot(self):
         self.view.plot(self.ex)
+        
+    def testBadErrorStat(self):
+        self.ex = flow.ChannelStatisticOp(name = "ByDox_BAD",
+                                          channel = "Y2-A",
+                                          by = ['Dox'],
+                                          function = flow.geom_sd_range).apply(self.ex)
+                                     
+        self.view = flow.Stats1DView(statistic = ("ByDox", "geom_mean"),
+                                     error_statistic = ("ByDox_BAD", "geom_sd_range"),
+                                     variable = "Dox",
+                                     huefacet = "T")
+        
+        self.assertRaises(util.CytoflowViewError, self.view.plot, self.ex)
         
     def testXfacet(self):
         self.view.huefacet = ""
@@ -159,5 +173,5 @@ class Test1DStats(ImportedDataTest):
         
 
 if __name__ == "__main__":
-#     import sys;sys.argv = ['', 'Test1DStats.testColWrap']
+    import sys;sys.argv = ['', 'Test1DStats.testBadErrorStat']
     unittest.main()

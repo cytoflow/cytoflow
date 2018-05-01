@@ -28,6 +28,7 @@ import matplotlib
 matplotlib.use('Agg')
 
 import cytoflow as flow
+import cytoflow.utility as util
 
 from test_base import ImportedDataTest  # @UnresolvedImport
 
@@ -66,6 +67,38 @@ class Test2DStats(ImportedDataTest):
         
     def testPlot(self):
         self.view.plot(self.ex)
+        
+    def testBadXErrorStatistic(self):
+        self.ex = flow.ChannelStatisticOp(name = "Y_bad",
+                             channel = "Y2-A",
+                             by = ['Well'],
+                             function = flow.geom_sd_range).apply(self.ex)
+                             
+        self.view = flow.Stats2DView(xstatistic = ("Y", "geom_mean"),
+                                     x_error_statistic = ("Y_bad", "geom_sd_range"),
+                                     ystatistic = ("V", "geom_mean"),
+                                     y_error_statistic = ("V", "geom_sd_range"),
+                                     variable = "Dox",
+                                     huefacet = "Well")
+        
+        self.assertRaises(util.CytoflowViewError, self.view.plot, self.ex)
+
+        
+    def testBadYErrorStatistic(self):
+        self.ex = flow.ChannelStatisticOp(name = "V_bad",
+                             channel = "V2-A",
+                             by = ['Well'],
+                             function = flow.geom_sd_range).apply(self.ex)
+                                     
+        self.view = flow.Stats2DView(xstatistic = ("Y", "geom_mean"),
+                                     x_error_statistic = ("Y", "geom_sd_range"),
+                                     ystatistic = ("V", "geom_mean"),
+                                     y_error_statistic = ("V_bad", "geom_sd_range"),
+                                     variable = "Dox",
+                                     huefacet = "Well")
+        
+        self.assertRaises(util.CytoflowViewError, self.view.plot, self.ex)
+
         
     def testXfacet(self):
         self.view.huefacet = ""
@@ -164,5 +197,5 @@ class Test2DStats(ImportedDataTest):
         
 
 if __name__ == "__main__":
-#     import sys;sys.argv = ['', 'Test2DStats.testSubset']
+    import sys;sys.argv = ['', 'Test2DStats.testBadYErrorStatistic']
     unittest.main()
