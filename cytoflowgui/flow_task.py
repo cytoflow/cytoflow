@@ -148,24 +148,25 @@ class FlowTask(Task):
         
         # if we're debugging, add a few data bits
         if self.model.debug:
-            from cytoflow import Tube
-                        
-            import_op = self.model.workflow[0].operation
-            import_op.conditions = {"Dox" : "float", "Well" : "category"}
-         
-            tube1 = Tube(file = "../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs",
-                         conditions = {"Dox" : 0.0, "Well" : 'A'})
-         
-            tube2 = Tube(file = "../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs",
-                         conditions = {"Dox" : 10.0, "Well" : 'A'})
-             
-            tube3 = Tube(file = "../cytoflow/tests/data/Plate01/CFP_Well_B4.fcs",
-                         conditions = {"Dox" : 0.0, "Well" : 'B'})
-         
-            tube4 = Tube(file = "../cytoflow/tests/data/Plate01/RFP_Well_A6.fcs",
-                         conditions = {"Dox" : 10.0, "Well" : 'B'})
-         
-            import_op.tubes = [tube1, tube2, tube3, tube4]
+            pass
+#             from cytoflow import Tube
+#                         
+#             import_op = self.model.workflow[0].operation
+#             import_op.conditions = {"Dox" : "float", "Well" : "category"}
+#          
+#             tube1 = Tube(file = "../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs",
+#                          conditions = {"Dox" : 0.0, "Well" : 'A'})
+#          
+#             tube2 = Tube(file = "../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs",
+#                          conditions = {"Dox" : 10.0, "Well" : 'A'})
+#              
+#             tube3 = Tube(file = "../cytoflow/tests/data/Plate01/CFP_Well_B4.fcs",
+#                          conditions = {"Dox" : 0.0, "Well" : 'B'})
+#          
+#             tube4 = Tube(file = "../cytoflow/tests/data/Plate01/RFP_Well_A6.fcs",
+#                          conditions = {"Dox" : 10.0, "Well" : 'B'})
+#          
+#             import_op.tubes = [tube1, tube2, tube3, tube4]
             
 #             from cytoflowgui.op_plugins import ChannelStatisticPlugin
 
@@ -324,6 +325,12 @@ class FlowTask(Task):
                         tube_path = pathlib.Path(tube.file).parts
                         new_path = fcs_path[:-1 * best_path_len] + tube_path[-1 * best_path_len :]
                         tube.file = str(pathlib.Path(*new_path))
+                        
+        elif missing_tubes > 0:
+            warning(self.window.control,
+                    "Cytoflow couldn't find some of the FCS files from that "
+                    "workflow.  You'll need to re-load them from the Import "
+                    "operation.")
 
         # replace the current workflow with the one we just loaded
         
