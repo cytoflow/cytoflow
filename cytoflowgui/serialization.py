@@ -96,16 +96,60 @@ def _load_categorical_dtype(data, version):
     return CategoricalDtype(categories = data['categories'],
                             ordered = data['ordered'])
 
+@camel_registry.dumper(pandas.MultiIndex, 'pandas-multiindex', version = 1)
+def _dump_multiindex(d):
+    return dict(levels = list(d.levels),
+                labels = [x.tolist() for x in d.labels],
+                names = list(d.names))
+
+@camel_registry.loader('pandas-multiindex', version = 1)
+def _load_multiindex(data, version):
+    return pandas.MultiIndex(levels = data['levels'],
+                             labels = data['labels'],
+                             names = data['names'])
+
+@camel_registry.dumper(pandas.Int64Index, 'pandas-int64index', version = 1)
+def _dump_int64index(d):
+    return dict(name = d.name,
+                values = d.values.tolist())
+
+@camel_registry.loader('pandas-int64index', version = 1)
+def _load_int64index(data, version):
+    return pandas.Int64Index(name = data['name'],
+                             data = data['values'])
+
+@camel_registry.dumper(pandas.Float64Index, 'pandas-float64index', version = 1)
+def _dump_float64index(d):
+    return dict(name = d.name,
+                values = d.values.tolist())
+
+@camel_registry.loader('pandas-float64index', version = 1)
+def _load_float64index(data, version):
+    return pandas.Float64Index(name = data['name'],
+                               data = data['values'])
+
+@camel_registry.dumper(pandas.CategoricalIndex, 'pandas-categoricalindex', version = 1)
+def _dump_categoricalindex(d):
+    return dict(name = d.name,
+                values = d.get_values().tolist(),
+                categories = d.categories.values.tolist(),
+                ordered = d.ordered)
+
+@camel_registry.loader('pandas-categoricalindex', version = 1)
+def _load_categoricalindex(data, version):
+    return pandas.CategoricalIndex(name = data['name'],
+                                   data = data['values'],
+                                   categories = data['categories'],
+                                   ordered = data['ordered'])
+
 @camel_registry.dumper(pandas.Series, 'pandas-series', version = 2)
 def _dump_series(s):
-    return dict(index = list(s.index),
-                data = list(s.values),
+    return dict(index = s.index,
+                data = s.values.tolist(),
                 dtype = s.dtype)
     
-# this is quite simplistic.  i don't know if it works for hierarchical
-# indices.
 @camel_registry.loader('pandas-series', version = 1)
-def _load_series(data, version):
+def _load_series_v1(data, version):
     ret = pandas.Series(data = data['data'],
                         index = data['index'])
 
