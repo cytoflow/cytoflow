@@ -134,6 +134,7 @@ setup(
                  'Topic :: Scientific/Engineering :: Bio-Informatics',
                  'Topic :: Software Development :: Libraries :: Python Modules'],
     
-    entry_points={'console_scripts' : ['cf-channel_voltages = cytoflow.scripts.channel_voltages:main'],
+    entry_points={'console_scripts' : ['cf-channel_voltages = cytoflow.scripts.channel_voltages:main',
+                                       'cf-fcs_metadata = cytoflow.scripts.fcs_metadata:main'],
                   'gui_scripts' : ['cytoflow = cytoflowgui.run:run_gui']}
 )
