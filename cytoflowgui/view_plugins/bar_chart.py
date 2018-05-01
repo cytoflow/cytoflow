@@ -297,6 +297,9 @@ def _dump_params(params):
 @camel_registry.loader('bar-chart', version = 1)
 def _load_v1(data, version):
     data['scale'] = data.pop('yscale')
+    data['statistic'] = tuple(data['statistic'])
+    data['error_statistic'] = tuple(data['error_statistic'])
+
     return BarChartPluginView(**data)
 
 @camel_registry.loader('bar-chart', version = 2)

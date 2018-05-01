@@ -260,5 +260,6 @@ def _dump(view):
     
 @camel_registry.loader('table-view', version = 1)
 def _load(data, version):
+    data['statistic'] = tuple(data['statistic'])
     return TablePluginView(**data)
 

@@ -326,6 +326,9 @@ def _load_v1(data, version):
 
     xscale = data.pop('xscale')
     yscale = data.pop('yscale')
+    
+    data['statistic'] = tuple(data['statistic'])
+    data['error_statistic'] = tuple(data['error_statistic'])
 
     return Stats1DPluginView(scale = yscale,
                              variable_scale = xscale,

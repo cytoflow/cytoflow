@@ -355,7 +355,12 @@ def _dump(view):
 
 
 @camel_registry.loader('stats-2d', version = any)
-def _load_v2(data, version):
+def _load(data, version):
+    data['xstatistic'] = tuple(data['xstatistic'])
+    data['ystatistic'] = tuple(data['ystatistic'])
+    data['x_error_statistic'] = tuple(data['x_error_statistic'])
+    data['y_error_statistic'] = tuple(data['y_error_statistic'])
+
     return Stats2DPluginView(**data)
 
 @camel_registry.dumper(Stats2DPluginPlotParams, 'stats-2d-params', version = 1)
