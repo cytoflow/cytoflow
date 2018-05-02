@@ -148,28 +148,27 @@ class FlowTask(Task):
         
         # if we're debugging, add a few data bits
         if self.model.debug:
-            pass
-#             from cytoflow import Tube
-#                         
-#             import_op = self.model.workflow[0].operation
-#             import_op.conditions = {"Dox" : "float", "Well" : "category"}
-#          
-#             tube1 = Tube(file = "../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs",
-#                          conditions = {"Dox" : 0.0, "Well" : 'A'})
-#          
-#             tube2 = Tube(file = "../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs",
-#                          conditions = {"Dox" : 10.0, "Well" : 'A'})
-#              
-#             tube3 = Tube(file = "../cytoflow/tests/data/Plate01/CFP_Well_B4.fcs",
-#                          conditions = {"Dox" : 0.0, "Well" : 'B'})
-#          
-#             tube4 = Tube(file = "../cytoflow/tests/data/Plate01/RFP_Well_A6.fcs",
-#                          conditions = {"Dox" : 10.0, "Well" : 'B'})
-#          
-#             import_op.tubes = [tube1, tube2, tube3, tube4]
-            
+            from cytoflow import Tube
+                         
+            import_op = self.model.workflow[0].operation
+            import_op.conditions = {"Dox" : "float", "Well" : "category"}
+          
+            tube1 = Tube(file = "../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs",
+                         conditions = {"Dox" : 0.0, "Well" : 'A'})
+         
+            tube2 = Tube(file = "../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs",
+                         conditions = {"Dox" : 10.0, "Well" : 'A'})
+             
+            tube3 = Tube(file = "../cytoflow/tests/data/Plate01/CFP_Well_B4.fcs",
+                         conditions = {"Dox" : 0.0, "Well" : 'B'})
+         
+            tube4 = Tube(file = "../cytoflow/tests/data/Plate01/RFP_Well_A6.fcs",
+                         conditions = {"Dox" : 10.0, "Well" : 'B'})
+         
+            import_op.tubes = [tube1, tube2, tube3, tube4]
+             
 #             from cytoflowgui.op_plugins import ChannelStatisticPlugin
-
+ 
 #             self.add_operation(ChannelStatisticPlugin().id)
 #             stat_op = self.model.workflow[1].operation
 #             stat_op.name = "Test"

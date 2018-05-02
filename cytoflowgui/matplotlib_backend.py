@@ -326,8 +326,10 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
     The canvas the figure renders into in the remote process (ie, the one
     where someone is calling pyplot.plot()
    """
-
+   
     def __init__(self, parent_conn, process_events, plot_lock, figure):
+#         traceback.print_stack()
+        
         FigureCanvasAgg.__init__(self, figure)
         
         self.parent_conn = parent_conn
@@ -489,6 +491,7 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
         self.update_remote.set()
         
 remote_canvas = None
+singleton_lock = threading.Lock()
 
 def new_figure_manager(num, *args, **kwargs):
     """
@@ -496,7 +499,8 @@ def new_figure_manager(num, *args, **kwargs):
     """
     
     global remote_canvas
-    
+    global singleton_lock
+        
     logging.debug("mpl_multiprocess_backend.new_figure_manager()")
     
     # get the pipe connection
@@ -512,14 +516,17 @@ def new_figure_manager(num, *args, **kwargs):
     FigureClass = kwargs.pop('FigureClass', Figure)
     new_fig = FigureClass(*args, **kwargs)
  
-    # the canvas is a singleton.
-    if not remote_canvas:
-        remote_canvas = FigureCanvasAggRemote(parent_conn, process_events, plot_lock, new_fig)
-    else:         
-        old_fig = remote_canvas.figure
-        new_fig.set_size_inches(old_fig.get_figwidth(), 
-                                old_fig.get_figheight())
-        remote_canvas.figure = new_fig
+    with singleton_lock:
+     
+        # the canvas is a singleton.
+        if not remote_canvas:
+            remote_canvas = FigureCanvasAggRemote(parent_conn, process_events, plot_lock, new_fig)
+            
+        else:         
+            old_fig = remote_canvas.figure
+            new_fig.set_size_inches(old_fig.get_figwidth(), 
+                                    old_fig.get_figheight())
+            remote_canvas.figure = new_fig
         
     new_fig.set_canvas(remote_canvas)
 

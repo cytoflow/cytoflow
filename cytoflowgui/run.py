@@ -131,8 +131,8 @@ def run_gui():
 
         sys.exit(1)
         
-    from pyface.qt.QtCore import qInstallMsgHandler  # @UnresolvedImport
-    qInstallMsgHandler(QtMsgHandler)
+    #from pyface.qt.QtCore import qInstallMsgHandler  # @UnresolvedImport
+    #qInstallMsgHandler(QtMsgHandler)
     
     # if we're frozen, add _MEIPASS to the pyface search path for icons etc
     if getattr(sys, 'frozen', False):
