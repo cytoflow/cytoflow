@@ -244,6 +244,12 @@ class TestStats2D(ImportedDataTest):
             self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
             self.view.plot_params.linestyle = el
             self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+            
+        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.capsize = 5
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+
  
     def testSerialize(self):
         Stats2DPlotParams.__eq__ = traits_eq

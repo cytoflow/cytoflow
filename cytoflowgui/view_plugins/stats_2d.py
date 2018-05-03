@@ -287,6 +287,7 @@ class Stats2DPluginPlotParams(Stats2DPlotParams):
     linestyle = Enum(LINE_STYLES)
     marker = Enum(SCATTERPLOT_MARKERS)
     markersize = util.PositiveCFloat(6, allow_zero = False)
+    capsize = util.PositiveCFloat(0, allow_zero = False)
     alpha = util.PositiveCFloat(1.0)
     
     def default_traits_view(self):
@@ -295,6 +296,9 @@ class Stats2DPluginPlotParams(Stats2DPlotParams):
         return View(Item('linestyle'),
                     Item('marker'),
                     Item('markersize',
+                         editor = TextEditor(auto_set = False),
+                         format_func = lambda x: "" if x == None else str(x)),
+                    Item('capsize',
                          editor = TextEditor(auto_set = False),
                          format_func = lambda x: "" if x == None else str(x)),
                     Item('alpha'),
@@ -387,6 +391,7 @@ def _dump_params(params):
                 linestyle = params.linestyle,
                 marker = params.marker,
                 markersize = params.markersize,
+                capsize = params.capsize,
                 alpha = params.alpha)
 
 @camel_registry.loader('stats-2d-params', version = any)

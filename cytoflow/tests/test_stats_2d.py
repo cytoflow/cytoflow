@@ -191,6 +191,9 @@ class Test2DStats(ImportedDataTest):
             
     def testMarkerSize(self):
         self.view.plot(self.ex, markersize = 10)
+
+    def testCapSize(self):
+        self.view.plot(self.ex, capsize = 10)
         
     def testAlpha(self):
         self.view.plot(self.ex, alpha = 0.33)

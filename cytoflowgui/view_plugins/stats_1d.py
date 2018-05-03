@@ -243,6 +243,7 @@ class Stats1DPluginPlotParams(Stats1DPlotParams):
     linestyle = Enum(LINE_STYLES)
     marker = Enum(SCATTERPLOT_MARKERS)
     markersize = util.PositiveCFloat(6, allow_zero = False)
+    capsize = util.PositiveCFloat(0, allow_zero = True)
     alpha = util.PositiveCFloat(1.0)
     shade_error = Bool(False)
     shade_alpha = util.PositiveCFloat(0.2)
@@ -263,6 +264,9 @@ class Stats1DPluginPlotParams(Stats1DPlotParams):
                     Item('linestyle'),
                     Item('marker'),
                     Item('markersize',
+                         editor = TextEditor(auto_set = False),
+                         format_func = lambda x: "" if x == None else str(x)),
+                    Item('capsize',
                          editor = TextEditor(auto_set = False),
                          format_func = lambda x: "" if x == None else str(x)),
                     Item('alpha'),
@@ -363,6 +367,7 @@ def _dump_params(params):
                 linestyle = params.linestyle,
                 marker = params.marker,
                 markersize = params.markersize,
+                capsize = params.capsize,
                 alpha = params.alpha,
                 shade_error = params.shade_error,
                 shade_alpha = params.shade_alpha)
