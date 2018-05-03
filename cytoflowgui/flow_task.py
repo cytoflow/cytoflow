@@ -22,7 +22,7 @@ Created on Feb 11, 2015
 @author: brian
 """
 
-import os, os.path, webbrowser, pathlib
+import os.path, webbrowser, pathlib
 
 from traits.api import Instance, List, on_trait_change, Unicode
 from pyface.tasks.api import Task, TaskLayout, PaneItem, VSplitter
@@ -167,15 +167,15 @@ class FlowTask(Task):
          
             import_op.tubes = [tube1, tube2, tube3, tube4]
              
-#             from cytoflowgui.op_plugins import ChannelStatisticPlugin
+            from cytoflowgui.op_plugins import ChannelStatisticPlugin
  
-#             self.add_operation(ChannelStatisticPlugin().id)
-#             stat_op = self.model.workflow[1].operation
-#             stat_op.name = "Test"
-#             stat_op.channel = "Y2-A"
-#             stat_op.statistic_name = "Geom.Mean"
-#             stat_op.by = ["Dox", "Well"]
-#             self.model.selected = self.model.workflow[1]
+            self.add_operation(ChannelStatisticPlugin().id)
+            stat_op = self.model.workflow[1].operation
+            stat_op.name = "Test"
+            stat_op.channel = "Y2-A"
+            stat_op.statistic_name = "Geom.Mean"
+            stat_op.by = ["Dox", "Well"]
+            self.model.selected = self.model.workflow[1]
                     
         self.model.modified = False
     
@@ -302,7 +302,7 @@ class FlowTask(Task):
             
             dialog = FileDialog(parent = self.window.control, 
                                 action = 'open',
-                                wildcard = (FileDialog.create_wildcard("FCS files", "*.fcs")))
+                                wildcard = (FileDialog.create_wildcard("FCS files", "*.fcs")))  # @UndefinedVariable
             
             if dialog.open() == OK:
                 # find the "best" file match -- ie, the one with the longest
@@ -394,11 +394,11 @@ class FlowTask(Task):
         Shows a dialog to export the workflow to an Jupyter notebook
         """
 
-        dialog = FileDialog(parent = self.window.control,
-                            action = 'save as',
-                            default_suffix = "ipynb",
-                            wildcard = (FileDialog.create_wildcard("Jupyter notebook", "*.ipynb") + ';' + #@UndefinedVariable  
-                                        FileDialog.create_wildcard("All files", "*")))  # @UndefinedVariable
+        dialog = DefaultFileDialog(parent = self.window.control,
+                                   action = 'save as',
+                                   default_suffix = "ipynb",
+                                   wildcard = (FileDialog.create_wildcard("Jupyter notebook", "*.ipynb") + ';' + #@UndefinedVariable  
+                                               FileDialog.create_wildcard("All files", "*")))  # @UndefinedVariable
         if dialog.open() == OK:
             save_notebook(self.model.workflow, dialog.path)
 
