@@ -194,7 +194,7 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
                       .format(event.button()))
         x = event.pos().x()
         # flip y so y=0 is bottom of canvas
-        y = self.figure.bbox.height - event.pos().y()
+        y = self.height() - event.pos().y()
         button = self.buttond.get(event.button())
         if button is not None:
             msg = (Msg.MOUSE_PRESS_EVENT, (x, y, button))
@@ -206,7 +206,7 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
                       .format(event.button()))
         x = event.pos().x()
         # flipy so y=0 is bottom of canvas
-        y = self.figure.bbox.height - event.pos().y()
+        y = self.height() - event.pos().y()
         button = self.buttond.get(event.button())
         if button is not None:
             msg = (Msg.MOUSE_DOUBLE_CLICK_EVENT, (x, y, button))
@@ -218,7 +218,7 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
 #             print('FigureCanvasQTAggLocal.mouseMoveEvent: {}', (event.x(), event.y()))
         self.move_x = event.x()
         # flip y so y=0 is bottom of canvas
-        self.move_y = int(self.figure.bbox.height) - event.y()
+        self.move_y = self.height() - event.y()
         self.send_event.set()
 
 
@@ -228,7 +228,7 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         
         x = event.x()
         # flip y so y=0 is bottom of canvas
-        y = self.figure.bbox.height - event.y()
+        y = self.height() - event.y()
         button = self.buttond.get(event.button())
         if button is not None:
             msg = (Msg.MOUSE_RELEASE_EVENT, (x, y, button))
