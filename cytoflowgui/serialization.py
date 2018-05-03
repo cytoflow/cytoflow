@@ -188,10 +188,8 @@ def save_notebook(workflow, path):
     nb['cells'].append(nbf.v4.new_code_cell(header))
         
     for i, wi in enumerate(workflow):
-
-        code = wi.operation.get_notebook_code(i)
-
         try:
+            code = wi.operation.get_notebook_code(i)
             code = FormatCode(code, style_config = 'pep8')[0]
         except:
             error(parent = None,
@@ -201,10 +199,8 @@ def save_notebook(workflow, path):
         nb['cells'].append(nbf.v4.new_code_cell(code))
                     
         for view in wi.views:
-
-            code = view.get_notebook_code(i)
-
             try:
+                code = view.get_notebook_code(i)
                 code = FormatCode(code, style_config = 'pep8')[0]
             except:
                 error(parent = None,
