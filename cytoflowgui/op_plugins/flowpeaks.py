@@ -81,10 +81,10 @@ an unsupervized manner.
 '''
 
 from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor, \
-                         CheckListEditor, ButtonEditor
+                         CheckListEditor, ButtonEditor, InstanceEditor
 from envisage.api import Plugin, contributes_to
 from traits.api import (provides, Callable, List, Str, Bool, Instance, Constant,
-                        DelegatesTo, Property, on_trait_change)
+                        DelegatesTo, Property, on_trait_change, Undefined)
 from pyface.api import ImageResource
 
 import cytoflow.utility as util
@@ -94,6 +94,8 @@ from cytoflow.operations.flowpeaks import FlowPeaksOp, FlowPeaks2DView, FlowPeak
 from cytoflow.views.i_selectionview import IView
 
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
+from cytoflowgui.view_plugins.density import DensityPlotParams
+from cytoflowgui.view_plugins.scatterplot import ScatterplotPlotParams
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
 from cytoflowgui.subset import ISubset, SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
@@ -269,6 +271,17 @@ class FlowPeaksViewHandler(ViewHandlerMixin, Controller):
                          visible_when = 'context.view_error',
                          editor = ColorTextEditor(foreground_color = "#000000",
                                                   background_color = "#ff9191")))
+        
+    plot_params_traits = View(Item('scatterplot_plot_params',
+                                   editor = InstanceEditor(),
+                                   style = 'custom',
+                                   show_label = False,
+                                   visible_when = 'not object.show_density'),
+                              Item('density_plot_params',
+                                   editor = InstanceEditor(),
+                                   style = 'custom',
+                                   show_label = False,
+                                   visible_when = 'object.show_density'))
 
 @provides(IView)
 class FlowPeaksPluginView(PluginViewMixin):
@@ -280,14 +293,23 @@ class FlowPeaksPluginView(PluginViewMixin):
     xscale = DelegatesTo('op', 'xscale', transient = True)
     ychannel = DelegatesTo('op', 'ychannel', transient = True)
     yscale = DelegatesTo('op', 'yscale', transient = True)
+    scatterplot_plot_params = Instance(ScatterplotPlotParams, ())
+    density_plot_params = Instance(DensityPlotParams, ())
     
     show_density = Bool(False)
-
     
     id = "edu.mit.synbio.cytoflowgui.op_plugins.flowpeaks"
     friendly_id = "FlowPeaks" 
     
     name = Constant("FlowPeaks")
+    
+    @on_trait_change('scatterplot_plot_params.+', post_init = True)
+    def _scatterplot_plot_params_changed(self, obj, name, old, new):
+        self.changed = (Changed.VIEW, (self, 'scatterplot_plot_params', self.scatterplot_plot_params))
+        
+    @on_trait_change('density_plot_params.+', post_init = True)
+    def _density_plot_params_changed(self, obj, name, old, new):
+        self.changed = (Changed.VIEW, (self, 'density_plot_params', self.density_plot_params))
     
     def plot(self, experiment, **kwargs):
         if self.show_density:
@@ -295,7 +317,8 @@ class FlowPeaksPluginView(PluginViewMixin):
                                    xchannel = self.xchannel,
                                    ychannel = self.ychannel,
                                    xscale = self.xscale,
-                                   yscale = self.yscale).plot(experiment, 
+                                   yscale = self.yscale).plot(experiment,
+                                                              **self.density_plot_params.trait_get(), 
                                                               **kwargs)
         else:
             FlowPeaks2DView(op = self.op,
@@ -303,18 +326,27 @@ class FlowPeaksPluginView(PluginViewMixin):
                             ychannel = self.ychannel,
                             xscale = self.xscale,
                             yscale = self.yscale).plot(experiment, 
+                                                       **self.scatterplot_plot_params.trait_get(),
                                                        **kwargs)
             
         
     def plot_wi(self, wi):
+        if self.plot_params is None or self.plot_params is Undefined:
+            if self.show_density:
+                self.plot_params = self.density_plot_params
+            else:
+                self.plot_params = self.scatterplot_plot_params
+                
         if wi.result:
             if self.plot_names:
-                self.plot(wi.result, plot_name = self.current_plot)
+                self.plot(wi.result, 
+                          plot_name = self.current_plot)
             else:
                 self.plot(wi.result)
         else:
             if self.plot_names:
-                self.plot(wi.previous_wi.result, plot_name = self.current_plot)
+                self.plot(wi.previous_wi.result, 
+                          plot_name = self.current_plot)
             else:
                 self.plot(wi.previous_wi.result)
         
@@ -334,12 +366,20 @@ class FlowPeaksPluginView(PluginViewMixin):
         view = FlowPeaks2DView()
         view.copy_traits(self, view.copyable_trait_names())
         view.subset = self.subset
+
+        if self.show_density:        
+            plot_params_str = traits_str(self.density_plot_params)
+        else:
+            plot_params_str = traits_str(self.scatterplot_plot_params)
+
+
         
         return dedent("""
-        op_{idx}.default_view({traits}).plot(ex_{idx})
+        op_{idx}.default_view({traits}).plot(ex_{idx}{plot_params})
         """
         .format(traits = traits_str(view),
-                idx = idx))
+                idx = idx,
+                plot_params = ", " + plot_params_str if plot_params_str else ""))
     
 
 @provides(IOperationPlugin)
@@ -378,11 +418,14 @@ def _dump(op):
 def _load(data, version):
     return FlowPeaksPluginOp(**data)
 
-@camel_registry.dumper(FlowPeaksPluginView, 'flowpeaks-view', version = 1)
+@camel_registry.dumper(FlowPeaksPluginView, 'flowpeaks-view', version = 2)
 def _dump_view(view):
     return dict(op = view.op,
-                show_density = view.show_density)
+                show_density = view.show_density,
+                plot_params = view.plot_params,
+                scatterplot_plot_params = view.scatterplot_plot_params,
+                density_plot_params = view.density_plot_params)
 
-@camel_registry.loader('flowpeaks-view', version = 1)
+@camel_registry.loader('flowpeaks-view', version = any)
 def _load_view(data, ver):
     return FlowPeaksPluginView(**data)

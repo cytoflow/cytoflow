@@ -82,6 +82,7 @@ from cytoflow.operations.range import RangeOp, RangeSelection
 
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
+from cytoflowgui.view_plugins.histogram import HistogramPlotParams
 from cytoflowgui.subset import SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
@@ -141,6 +142,7 @@ class RangeSelectionView(PluginViewMixin, RangeSelection):
     op = Instance(IOperation, fixed = True)
     low = DelegatesTo('op', status = True)
     high = DelegatesTo('op', status = True)
+    plot_params = Instance(HistogramPlotParams, ())
     name = Str
     
     def should_plot(self, changed, payload):
@@ -150,18 +152,20 @@ class RangeSelectionView(PluginViewMixin, RangeSelection):
             return False
     
     def plot_wi(self, wi):
-        self.plot(wi.previous_wi.result)
+        self.plot(wi.previous_wi.result, **self.plot_params.trait_get())
         
     def get_notebook_code(self, idx):
         view = RangeSelection()
         view.copy_traits(self, view.copyable_trait_names())
+        plot_params_str = traits_str(self.plot_params)
         
         return dedent("""
-        op_{idx}.default_view({traits}).plot(ex_{prev_idx})
+        op_{idx}.default_view({traits}).plot(ex_{prev_idx}{plot_params})
         """
         .format(idx = idx, 
                 traits = traits_str(view),
-                prev_idx = idx - 1))
+                prev_idx = idx - 1,
+                plot_params = ", " + plot_params_str if plot_params_str else ""))
     
     
 @provides(IOperation)
@@ -217,13 +221,14 @@ def _dump(op):
 def _load(data, version):
     return RangePluginOp(**data)
 
-@camel_registry.dumper(RangeSelectionView, 'range-view', version = 1)
+@camel_registry.dumper(RangeSelectionView, 'range-view', version = 2)
 def _dump_view(view):
     return dict(op = view.op,
                 scale = view.scale,
                 huefacet = view.huefacet,
-                subset_list = view.subset_list)
+                subset_list = view.subset_list,
+                plot_params = view.plot_params)
     
-@camel_registry.loader('range-view', version = 1)
+@camel_registry.loader('range-view', version = any)
 def _load_view(data, version):
     return RangeSelectionView(**data)

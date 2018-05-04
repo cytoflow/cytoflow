@@ -310,14 +310,20 @@ class GaussianMixture2DPluginView(PluginViewMixin, GaussianMixture2DView):
     def plot_wi(self, wi):
         if wi.result:
             if self.plot_names:
-                self.plot(wi.result, plot_name = self.current_plot)
+                self.plot(wi.result, 
+                          plot_name = self.current_plot, 
+                          **self.plot_params.trait_get())
             else:
-                self.plot(wi.result)
+                self.plot(wi.result, 
+                          **self.plot_params.trait_get())
         else:
             if self.plot_names:
-                self.plot(wi.previous_wi.result, plot_name = self.current_plot)
+                self.plot(wi.previous_wi.result, 
+                          plot_name = self.current_plot, 
+                          **self.plot_params.trait_get())
             else:
-                self.plot(wi.previous_wi.result)
+                self.plot(wi.previous_wi.result, 
+                          **self.plot_params.trait_get())
         
     def enum_plots_wi(self, wi):
         if wi.result:
@@ -335,12 +341,14 @@ class GaussianMixture2DPluginView(PluginViewMixin, GaussianMixture2DView):
         view = GaussianMixture2DView()
         view.copy_traits(self, view.copyable_trait_names())
         view.subset = self.subset
+        plot_params_str = traits_str(self.plot_params)
         
         return dedent("""
-        op_{idx}.default_view({traits}).plot(ex_{idx})
+        op_{idx}.default_view({traits}).plot(ex_{idx}{plot_params})
         """
         .format(traits = traits_str(view),
-                idx = idx))
+                idx = idx,
+                plot_params = ", " + plot_params_str if plot_params_str else ""))
     
 
 @provides(IOperationPlugin)

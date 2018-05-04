@@ -196,7 +196,7 @@ class FlowTask(Task):
         # is created.
         
         dpi = self.window.control.physicalDpiX()
-        self.tool_bars[0].image_size = (int(0.5 * dpi), int(0.5 * dpi))
+        self.tool_bars[0].image_size = (int(0.4 * dpi), int(0.4 * dpi))
         return self.application.plot_pane
      
     def create_dock_panes(self):

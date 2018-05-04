@@ -96,6 +96,7 @@ from cytoflowgui.subset import SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
 from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin
+from cytoflowgui.view_plugins.scatterplot import ScatterplotPlotParams
 from cytoflowgui.workflow import Changed
 from cytoflowgui.serialization import camel_registry, traits_repr, traits_str
 
@@ -153,7 +154,8 @@ class PolygonViewHandler(ViewHandlerMixin, Controller):
 class PolygonSelectionView(PluginViewMixin, PolygonSelection):
     handler_factory = Callable(PolygonViewHandler)
     op = Instance(IOperation, fixed = True)
-    vertices = DelegatesTo('op', status = True)    
+    vertices = DelegatesTo('op', status = True)   
+    plot_params = Instance(ScatterplotPlotParams, ()) 
     
     def should_plot(self, changed, payload):
         if changed == Changed.PREV_RESULT or changed == Changed.VIEW:
@@ -162,18 +164,20 @@ class PolygonSelectionView(PluginViewMixin, PolygonSelection):
             return False
     
     def plot_wi(self, wi):
-        self.plot(wi.previous_wi.result)
+        self.plot(wi.previous_wi.result, **self.plot_params.trait_get())
         
     def get_notebook_code(self, idx):
         view = PolygonSelection()
         view.copy_traits(self, view.copyable_trait_names())
+        plot_params_str = traits_str(self.plot_params)
         
         return dedent("""
-        op_{idx}.default_view({traits}).plot(ex_{prev_idx})
+        op_{idx}.default_view({traits}).plot(ex_{prev_idx}{plot_params})
         """
         .format(idx = idx,
                 traits = traits_str(view), 
-                prev_idx = idx - 1))
+                prev_idx = idx - 1,
+                plot_params = ", " + plot_params_str if plot_params_str else ""))
     
 class PolygonPluginOp(PluginOpMixin, PolygonOp):
     handler_factory = Callable(PolygonHandler)
@@ -233,12 +237,13 @@ def _load(data, version):
     data['vertices'] = [(v[0], v[1]) for v in data['vertices']]
     return PolygonPluginOp(**data)
 
-@camel_registry.dumper(PolygonSelectionView, 'polygon-view', version = 1)
+@camel_registry.dumper(PolygonSelectionView, 'polygon-view', version = 2)
 def _dump_view(view):
     return dict(op = view.op,
                 huefacet = view.huefacet,
-                subset_list = view.subset_list)
+                subset_list = view.subset_list,
+                plot_params = view.plot_params)
 
-@camel_registry.loader('polygon-view', version = 1)
+@camel_registry.loader('polygon-view', version = any)
 def _load_view(data, version):
     return PolygonSelectionView(**data)

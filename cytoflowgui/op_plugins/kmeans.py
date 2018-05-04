@@ -84,6 +84,8 @@ from cytoflow.operations.kmeans import KMeansOp, KMeans2DView
 from cytoflow.views.i_selectionview import IView
 
 from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
+from cytoflowgui.view_plugins.histogram import HistogramPlotParams
+from cytoflowgui.view_plugins.scatterplot import ScatterplotPlotParams
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
 from cytoflowgui.subset import ISubset, SubsetListEditor
 from cytoflowgui.color_text_editor import ColorTextEditor
@@ -249,6 +251,7 @@ class KMeansPluginView(PluginViewMixin):
     xscale = DelegatesTo('op', 'xscale', transient = True)
     ychannel = DelegatesTo('op', 'ychannel', transient = True)
     yscale = DelegatesTo('op', 'yscale', transient = True)
+    plot_params = Instance(ScatterplotPlotParams, ())
     
     id = "edu.mit.synbio.cytoflowgui.op_plugins.kmeans"
     friendly_id = "KMeans" 
@@ -267,14 +270,20 @@ class KMeansPluginView(PluginViewMixin):
     def plot_wi(self, wi):
         if wi.result:
             if self.plot_names:
-                self.plot(wi.result, plot_name = self.current_plot)
+                self.plot(wi.result, 
+                          plot_name = self.current_plot
+                          **self.plot_params.trait_get())
             else:
-                self.plot(wi.result)
+                self.plot(wi.result,
+                          **self.plot_params.trait_get())
         else:
             if self.plot_names:
-                self.plot(wi.previous_wi.result, plot_name = self.current_plot)
+                self.plot(wi.previous_wi.result, 
+                          plot_name = self.current_plot,
+                          **self.plot_params.trait_get())
             else:
-                self.plot(wi.previous_wi.result)
+                self.plot(wi.previous_wi.result,
+                          **self.plot_params.trait_get())
         
     def enum_plots_wi(self, wi):
         if wi.result:
@@ -292,12 +301,14 @@ class KMeansPluginView(PluginViewMixin):
         view = KMeans2DView()
         view.copy_traits(self, view.copyable_trait_names())
         view.subset = self.subset
+        plot_params_str = traits_str(self.plot_params)
         
         return dedent("""
-        op_{idx}.default_view({traits}).plot(ex_{idx})
+        op_{idx}.default_view({traits}).plot(ex_{idx}{plot_params})
         """
         .format(traits = traits_str(view),
-                idx = idx))
+                idx = idx,
+                plot_params = ", " + plot_params_str if plot_params_str else ""))
     
 
 @provides(IOperationPlugin)
@@ -333,10 +344,11 @@ def _dump(op):
 def _load(data, version):
     return KMeansPluginOp(**data)
 
-@camel_registry.dumper(KMeansPluginView, 'kmeans-view', version = 1)
+@camel_registry.dumper(KMeansPluginView, 'kmeans-view', version = 2)
 def _dump_view(view):
-    return dict(op = view.op)
+    return dict(op = view.op,
+                plot_params = view.plot_params)
 
-@camel_registry.loader('kmeans-view', version = 1)
+@camel_registry.loader('kmeans-view', version = any)
 def _load_view(data, ver):
     return KMeansPluginView(**data)
