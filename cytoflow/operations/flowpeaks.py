@@ -31,6 +31,7 @@ import numpy as np
 import sklearn.cluster
 import scipy.stats
 import scipy.optimize
+import scipy.ndimage
 
 import pandas as pd
 
@@ -1104,9 +1105,14 @@ class FlowPeaks2DDensityView(By2DView, AnnotatingView, NullView):
         
         kwargs.pop('scale')
         kwargs.pop('lim')
+        
+        smoothed = kwargs.pop('smoothed', False)
+        smoothed_sigma = kwargs.pop('smoothed_sigma', 1)
 
         h = density(util.cartesian([xscale(xbins), yscale(ybins)]))
         h = np.reshape(h, (len(xbins), len(ybins)))
+        if smoothed:
+            h = scipy.ndimage.filters.gaussian_filter(h, sigma = smoothed_sigma)
         axes.pcolormesh(xbins, ybins, h.T, **kwargs)
 
         ix = self.op.channels.index(self.xchannel)
