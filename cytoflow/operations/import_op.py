@@ -327,6 +327,16 @@ class ImportOp(HasStrictTraits):
                                   util.CytoflowWarning)
 
             experiment.add_events(tube_data[channels], tube.conditions)
+            
+            del tube_meta['__header__']
+            
+            # extract the row and column from wells collected on a 
+            # BD HTS
+            if 'WELL ID' in tube_meta:               
+                pos = tube_meta['WELL ID']
+                tube_meta['CF_Row'] = pos[0]
+                tube_meta['CF_Col'] = int(pos[1:3])
+                             
             experiment.metadata['fcs_metadata'][tube.file] = tube_meta
                         
         for channel in channels:

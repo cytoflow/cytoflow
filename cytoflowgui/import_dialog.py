@@ -31,14 +31,14 @@ if __name__ == '__main__':
     os.environ['TRAITS_DEBUG'] = "1"
     
 from collections import OrderedDict
-from pathlib import Path
     
 from traits.api import (HasTraits, HasStrictTraits, provides, Instance, Str, 
                         Int, List, Bool, Enum, Float, DelegatesTo,
                         Property, BaseCStr, on_trait_change, Dict, cached_property)
                        
 from traitsui.api import UI, Group, View, Item, TableEditor, OKCancelButtons, \
-                         Controller
+                         Controller, CheckListEditor
+from traitsui.menu import OKButton
 
 from traitsui.qt4.table_editor import TableEditor as TableEditorQt
 
@@ -47,8 +47,6 @@ from pyface.api import Dialog, FileDialog, error, warning, OK, confirm, YES
 
 from pyface.qt import QtCore, QtGui
 from pyface.constant import OK as PyfaceOK
-
-from pyface.ui.qt4.directory_dialog import DirectoryDialog as QtDirectoryDialog
 
 from traitsui.table_column import ObjectColumn
 
@@ -104,6 +102,9 @@ class Tube(HasTraits):
     
     # the file name.
     file = Str(transient = True)
+    
+    # FCS metadata
+    meta = Dict(transient = True)
     
     # need a link to the model; needed for row coloring
     parent = Instance("ExperimentDialogModel", transient = True)
@@ -182,14 +183,20 @@ class ExperimentDialogModel(HasStrictTraits):
     dummy_experiment = Instance(Experiment)
     
     # a dict of the dynamic TraitTypes added to the tube instances
-    tube_traits = Instance(OrderedDict, ())    
+    tube_traits = Instance(OrderedDict, ())
+    
+    # the metadata that's present in the FCS files
+    fcs_metadata = List(Str)    
+    
+    # the FCS metadata to show
+    show_fcs_metadata = List(Str)
 
     # traits to communicate with the TabularEditor
     update = Bool
     refresh = Bool
     selected = List()
     
-    view = View(
+    default_view = View(
             Group(
                 Item(name = 'tubes', 
                      id = 'table', 
@@ -208,6 +215,14 @@ class ExperimentDialogModel(HasStrictTraits):
             height    = 0.75,
             resizable = True
         )
+    
+    choose_metadata_view = View(
+        Item(name = 'show_fcs_metadata',
+             editor = CheckListEditor(name = 'fcs_metadata',
+                                      cols = 3),
+             style = 'custom'),
+        title = "Select FCS metadata",
+        buttons = [OKButton])
     
     def init_model(self, op, conditions, metadata):
         
@@ -231,16 +246,33 @@ class ExperimentDialogModel(HasStrictTraits):
         
         shown_error = False
         
+        tube_meta = list(metadata['fcs_metadata'].values())[0]
+        self.fcs_metadata = sorted(list(tube_meta.keys()))
+        
+        if '$SRC' in tube_meta:
+            self.show_fcs_metadata.append('$SRC')
+            
+        if 'TUBE NAME' in tube_meta:
+            self.show_fcs_metadata.append('TUBE NAME')
+            
+        if '$SMNO' in tube_meta:
+            self.show_fcs_metadata.append('$SMNO')
+            
+        if 'CF_Row' in tube_meta:
+            self.show_fcs_metadata.append('CF_Row')
+            
+        if 'CF_Col' in tube_meta:
+            self.show_fcs_metadata.append('CF_Col')
+        
         for op_tube in op.tubes:
             tube = Tube(file = op_tube.file,
-                        parent = self)
+                        parent = self,
+                        meta = metadata['fcs_metadata'][op_tube.file])
             
-            # first load the tube's metadata and set special columns
             try:
-                tube_meta = fcsparser.parse(op_tube.file, 
-                                            meta_data_only = True, 
-                                            reformat_meta = True)
-            except Exception as e:
+                fcsparser.parse(op_tube.file, 
+                                meta_data_only = True)
+            except Exception:
                 if not shown_error:
                     warning(None,
                             "Had trouble loading some of the experiment's FCS "
@@ -249,36 +281,43 @@ class ExperimentDialogModel(HasStrictTraits):
                 continue
             
             # if we're the first tube loaded, create a dummy experiment
+            # and setup default metadata columns
             if not self.dummy_experiment:
                 self.dummy_experiment = ImportOp(tubes = [op_tube],
                                                  conditions = op.conditions,
                                                  events = 1).apply()
-                
-            if '$SRC' in tube_meta:    
-                self.tube_traits["$SRC"] = Str(condition = False)
-                tube.add_trait("$SRC", Str(condition = False))
-                tube.trait_set(**{"$SRC" : tube_meta['$SRC']})
-                
-            if 'TUBE NAME' in tube_meta:
-                self.tube_traits["TUBE NAME"] = Str(condition = False)
-                tube.add_trait("TUBE NAME", Str(condition = False))
-                tube.trait_set(**{"TUBE NAME" : tube_meta['TUBE NAME']})
-                
-            if '$SMNO' in tube_meta:
-                self.tube_traits["$SMNO"] = Str(condition = False)
-                tube.add_trait("$SMNO", Str(condition = False))
-                tube.trait_set(**{"$SMNO" : tube_meta['$SMNO']})
-                
-            if 'WELL ID' in tube_meta:                
-                pos = tube_meta['WELL ID']
-                row = pos[0]
-                col = int(pos[1:3])
-                
-                self.tube_traits["Row"] = Str(condition = False)
-                self.tube_traits["Col"] = Int(condition = False)
-                tube.add_trait("Row", Str(condition = False))
-                tube.add_trait("Col", Int(condition = False))
-                tube.trait_set(**{"Row" : row, "Col" : col})
+                    
+            # set up metadata for tube
+#             for meta in self.show_fcs_metadata:
+#                 if meta not in self.tube_traits:
+# #                     self.tube_traits[meta] = Str(condition = False)
+#                     tube.add_trait(meta, Str(condition = False))
+#                     tube.trait_set(**{meta : tube_meta[meta]})
+                    
+#                 self.tube_traits["$SRC"] = Str(condition = False)
+#                 tube.add_trait("$SRC", Str(condition = False))
+#                 tube.trait_set(**{"$SRC" : tube_meta['$SRC']})
+#                 
+#             if 'TUBE NAME' in tube_meta:
+#                 self.tube_traits["TUBE NAME"] = Str(condition = False)
+#                 tube.add_trait("TUBE NAME", Str(condition = False))
+#                 tube.trait_set(**{"TUBE NAME" : tube_meta['TUBE NAME']})
+#                 
+#             if '$SMNO' in tube_meta:
+#                 self.tube_traits["$SMNO"] = Str(condition = False)
+#                 tube.add_trait("$SMNO", Str(condition = False))
+#                 tube.trait_set(**{"$SMNO" : tube_meta['$SMNO']})
+#                 
+#             if 'WELL ID' in tube_meta:                
+#                 pos = tube_meta['WELL ID']
+#                 row = pos[0]
+#                 col = int(pos[1:3])
+#                 
+#                 self.tube_traits["Row"] = Str(condition = False)
+#                 self.tube_traits["Col"] = Int(condition = False)
+#                 tube.add_trait("Row", Str(condition = False))
+#                 tube.add_trait("Col", Int(condition = False))
+#                 tube.trait_set(**{"Row" : row, "Col" : col})
 
             # next set conditions
             try:
@@ -314,6 +353,7 @@ class ExperimentDialogModel(HasStrictTraits):
                 del self.counter[tube_hash]
             else:
                 self.counter[tube_hash] -= 1
+
 
     
     def update_import_op(self, op):
@@ -360,6 +400,8 @@ class ExperimentDialogHandler(Controller):
     btn_add_cond = Instance(QtGui.QPushButton)
     btn_remove_cond = Instance(QtGui.QPushButton)
     btn_remove_tubes = Instance(QtGui.QPushButton)
+    btn_fcs_metadata = Instance(QtGui.QPushButton)
+    btn_import_metadata = Instance(QtGui.QPushButton)
     
     updating = Bool(False)
     
@@ -453,7 +495,6 @@ class ExperimentDialogHandler(Controller):
             self._add_metadata(name, name + " (T/F)", Bool(condition = True))       
         
     def _on_remove_condition(self):
-        pass
         col = self.model.selected[0][1]
         if self.model.tubes[0].trait(col).condition == True:
             conf = confirm(None,
@@ -465,6 +506,13 @@ class ExperimentDialogHandler(Controller):
             error(None, 
                   "Can't remove column {}".format(col),
                   "Error")
+            
+    def _on_fcs_metadata(self):
+        self.model.edit_traits('choose_metadata_view', 
+                               kind = 'livemodal')
+    
+    def _on_import_metadata(self):
+        pass
 
         
     def _on_add_tubes(self):
@@ -483,19 +531,38 @@ class ExperimentDialogHandler(Controller):
         new_tubes = []
         for path in file_dialog.paths:
             try:
-                tube_meta = fcsparser.parse(path, 
-                                            meta_data_only = True, 
-                                            reformat_meta = True)
-                #tube_channels = tube_meta["_channels_"].set_index("$PnN")
+                fcsparser.parse(path, 
+                                meta_data_only = True)
             except Exception as e:
                 raise RuntimeError("FCS reader threw an error on tube {0}: {1}"\
                                    .format(path, e.value))
                 
                 
             # if we're the first tube loaded, create a dummy experiment
+            # and setup default metadata columns
             if not self.model.dummy_experiment:
                 self.model.dummy_experiment = ImportOp(tubes = [CytoflowTube(file = path)],
                                                        events = 1).apply()
+                                                       
+                tube_meta = self.dummy_experiment.metadata['fcs_metadata'][path]
+                self.fcs_metadata = sorted(list(tube_meta.keys()))
+                                                       
+                self.fcs_metadata = sorted(list(tube_meta.keys()))
+                
+                if '$SRC' in tube_meta and '$SRC' not in self.show_fcs_metadata:
+                    self.show_fcs_metadata.append('$SRC')
+                    
+                if 'TUBE NAME' in tube_meta and 'TUBE NAME' not in self.show_fcs_metadata:
+                    self.show_fcs_metadata.append('TUBE NAME')
+                    
+                if '$SMNO' in tube_meta and '$SMNO' not in self.show_fcs_metadata:
+                    self.show_fcs_metadata.append('$SMNO')
+                    
+                if 'CF_Row' in tube_meta and 'CF_Row' not in self.show_fcs_metadata:
+                    self.show_fcs_metadata.append('CF_Row')
+                    
+                if 'CF_Col' in tube_meta and 'CF_Col' not in self.show_fcs_metadata:
+                    self.show_fcs_metadata.append('CF_Col')
                                                        
             # check the next tube against the dummy experiment
             try:
@@ -517,31 +584,31 @@ class ExperimentDialogHandler(Controller):
             
             tube.trait_set(file = path, parent = self.model)
             
-            if '$SRC' in tube_meta:    
-                self._add_metadata("$SRC", "$SRC", Str(condition = False))
-                tube.trait_set(**{"$SRC" : tube_meta['$SRC']})
-                
-            if 'TUBE NAME' in tube_meta:
-                self._add_metadata("TUBE NAME", "TUBE NAME", Str(condition = False))
-                tube.trait_set(**{"TUBE NAME" : tube_meta['TUBE NAME']})
-                
-            if '$SMNO' in tube_meta:
-                self._add_metadata("$SMNO", "$SMNO", Str(condition = False))
-                tube.trait_set(**{"$SMNO" : tube_meta['$SMNO']})
-                
-            if 'WELL ID' in tube_meta:
-                self._add_metadata("Row", "Row", Str(condition = False))
-                self._add_metadata("Col", "Col", Int(condition = False))
-                
-                pos = tube_meta['WELL ID']
-                row = pos[0]
-                col = int(pos[1:3])
-                
-                tube.trait_set(**{"Row" : row, "Col" : col})
-                
-            if not '$SRC' in tube_meta and not 'TUBE NAME' in tube_meta:
-                self._add_metadata('Tube', 'Tube', Str(condition = False))
-                tube.trait_set(**{"Tube" : Path(path).stem})
+#             if '$SRC' in tube_meta:    
+#                 self._add_metadata("$SRC", "$SRC", Str(condition = False))
+#                 tube.trait_set(**{"$SRC" : tube_meta['$SRC']})
+#                 
+#             if 'TUBE NAME' in tube_meta:
+#                 self._add_metadata("TUBE NAME", "TUBE NAME", Str(condition = False))
+#                 tube.trait_set(**{"TUBE NAME" : tube_meta['TUBE NAME']})
+#                 
+#             if '$SMNO' in tube_meta:
+#                 self._add_metadata("$SMNO", "$SMNO", Str(condition = False))
+#                 tube.trait_set(**{"$SMNO" : tube_meta['$SMNO']})
+#                 
+#             if 'WELL ID' in tube_meta:
+#                 self._add_metadata("Row", "Row", Str(condition = False))
+#                 self._add_metadata("Col", "Col", Int(condition = False))
+#                 
+#                 pos = tube_meta['WELL ID']
+#                 row = pos[0]
+#                 col = int(pos[1:3])
+#                 
+#                 tube.trait_set(**{"Row" : row, "Col" : col})
+#                 
+#             if not '$SRC' in tube_meta and not 'TUBE NAME' in tube_meta:
+#                 self._add_metadata('Tube', 'Tube', Str(condition = False))
+#                 tube.trait_set(**{"Tube" : Path(path).stem})
                 
                 
             new_tubes.append(tube)
@@ -571,6 +638,15 @@ class ExperimentDialogHandler(Controller):
                 self.btn_add_cond.setEnabled(True)
                 self.btn_remove_cond.setEnabled(True)
                 self.btn_remove_tubes.setEnabled(True)
+                
+                
+    @on_trait_change('model.show_fcs_metadata_items', post_init = True)
+    def _fcs_metadata_items(self, event):
+        for meta_name in event.added:
+            self._add_metadata(meta_name, meta_name, Str(condition = False))
+            
+        for meta_name in event.removed:
+            self._remove_metadata(meta_name)
 
             
     def _try_multiedit(self, obj, name, old, new):
@@ -623,12 +699,13 @@ class ExperimentDialogHandler(Controller):
             
             for tube in self.model.tubes:
                 tube.add_trait(name, trait)
-                
-                # this magic makes sure the trait is actually defined
-                # in tube.__dict__, so it shows up in trait_names etc.
-                tube.trait_set(**{name : trait.default_value})
-                tube.conditions[name] = trait.default_value
+
                 if trait.condition:
+                    # this magic makes sure the trait is actually defined
+                    # in tube.__dict__, so it shows up in trait_names etc.
+                    tube.trait_set(**{name : trait.default_value})
+                    
+                    tube.conditions[name] = trait.default_value
                     tube.on_trait_change(self._try_multiedit, name)
                     
                     tube_hash = tube.conditions_hash()
@@ -636,7 +713,8 @@ class ExperimentDialogHandler(Controller):
                         self.model.counter[tube_hash] += 1
                     else:
                         self.model.counter[tube_hash] = 1
-                
+                else:
+                    tube.trait_set(**{name : tube.meta[name]})
 
             self.table_editor.columns.append(ExperimentColumn(name = name,
                                                               label = label,
@@ -649,22 +727,21 @@ class ExperimentDialogHandler(Controller):
             del self.model.tube_traits[name]
              
             for tube in self.model.tubes:
+                tube.remove_trait(name)
+
                 if tube.trait(name).condition:
                     tube.on_trait_change(self._try_multiedit, name, remove = True)
-                    
-                tube.remove_trait(name)
-                del tube.conditions[name]
-                
-                tube_hash = tube.conditions_hash()
-                if tube_hash in self.model.counter:
-                    self.model.counter[tube_hash] += 1
-                else:
-                    self.model.counter[tube_hash] = 1   
+                    del tube.conditions[name]
+    
+                    tube_hash = tube.conditions_hash()
+                    if tube_hash in self.model.counter:
+                        self.model.counter[tube_hash] += 1
+                    else:
+                        self.model.counter[tube_hash] = 1   
                 
         table_column = next((x for x in self.table_editor.columns if x.name == name))
         self.table_editor.columns.remove(table_column)
         
-
         
 @provides(IDialog)
 class ExperimentDialog(Dialog):
@@ -741,21 +818,35 @@ class ExperimentDialog(Dialog):
         btn_remove_cond.setEnabled(len(self.model.tubes) > 0)
         self.handler.btn_remove_cond = btn_remove_cond
         
-        layout.addItem(QtGui.QSpacerItem(0, 0, QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Maximum), 0, 2)
-        layout.addItem(QtGui.QSpacerItem(0, 0, QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Maximum), 1, 2)
+        btn_fcs_metadata = QtGui.QPushButton("FCS metadata...")
+        layout.addWidget(btn_fcs_metadata, 0, 2)
+        QtCore.QObject.connect(btn_fcs_metadata, QtCore.SIGNAL('clicked()'),
+                               self.handler._on_fcs_metadata)
+        btn_fcs_metadata.setEnabled(len(self.model.tubes) > 0)
+        self.handler.btn_fcs_metadata = btn_fcs_metadata
+        
+        btn_import_metadata = QtGui.QPushButton("Import...")
+        layout.addWidget(btn_import_metadata, 1, 2)
+        QtCore.QObject.connect(btn_import_metadata, QtCore.SIGNAL('clicked()'),
+                               self.handler._on_import_metadata)
+        btn_import_metadata.setEnabled(len(self.model.tubes) > 0)
+        self.handler.btn_import_metadata = btn_import_metadata
+        
+        layout.addItem(QtGui.QSpacerItem(0, 0, QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Maximum), 0, 3)
+        layout.addItem(QtGui.QSpacerItem(0, 0, QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Maximum), 1, 3)
         
         #layout.addStretch()
 
         # 'OK' button.
         btn_ok = QtGui.QPushButton("OK")
         btn_ok.setDefault(True)
-        layout.addWidget(btn_ok, 0, 3)
+        layout.addWidget(btn_ok, 0, 4)
         QtCore.QObject.connect(btn_ok, QtCore.SIGNAL('clicked()'),
                                self.control, QtCore.SLOT('accept()'))
         
         # 'Cancel' button.
         btn_cancel = QtGui.QPushButton("Cancel")
-        layout.addWidget(btn_cancel, 0, 4)
+        layout.addWidget(btn_cancel, 1, 4)
         QtCore.QObject.connect(btn_cancel, QtCore.SIGNAL('clicked()'),
                                self.control, QtCore.SLOT('reject()'))   
         
@@ -765,7 +856,8 @@ class ExperimentDialog(Dialog):
     
     def _create_dialog_area(self, parent):
          
-        self.ui = self.model.edit_traits(kind='subpanel', 
+        self.ui = self.model.edit_traits(view = 'default_view',
+                                         kind='subpanel', 
                                          parent=parent, 
                                          handler=self.handler)   
        
