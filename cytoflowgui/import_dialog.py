@@ -246,23 +246,28 @@ class ExperimentDialogModel(HasStrictTraits):
         
         shown_error = False
         
-        tube_meta = list(metadata['fcs_metadata'].values())[0]
+        tube_meta = list(metadata['fcs_metadata'].values())[0] \
+                    if 'fcs_metadata' in metadata else {}
         self.fcs_metadata = sorted(list(tube_meta.keys()))
-        
-        if '$SRC' in tube_meta:
-            self.show_fcs_metadata.append('$SRC')
-            
-        if 'TUBE NAME' in tube_meta:
-            self.show_fcs_metadata.append('TUBE NAME')
-            
-        if '$SMNO' in tube_meta:
-            self.show_fcs_metadata.append('$SMNO')
-            
-        if 'CF_Row' in tube_meta:
-            self.show_fcs_metadata.append('CF_Row')
-            
-        if 'CF_Col' in tube_meta:
-            self.show_fcs_metadata.append('CF_Col')
+#         
+#         if '$SRC' in tube_meta:
+#             self.show_fcs_metadata.append('$SRC')
+#             
+#         if 'TUBE NAME' in tube_meta:
+#             self.show_fcs_metadata.append('TUBE NAME')
+#             
+#         if '$SMNO' in tube_meta:
+#             self.show_fcs_metadata.append('$SMNO')
+#             
+#         if 'CF_Row' in tube_meta:
+#             self.show_fcs_metadata.append('CF_Row')
+#             
+#         if 'CF_Col' in tube_meta:
+#             self.show_fcs_metadata.append('CF_Col')
+
+        for meta in tube_meta.keys():
+            if meta.startswith('CF_'):
+                self.show_fcs_metadata.append(meta)
         
         for op_tube in op.tubes:
             tube = Tube(file = op_tube.file,
@@ -544,25 +549,21 @@ class ExperimentDialogHandler(Controller):
                 self.model.dummy_experiment = ImportOp(tubes = [CytoflowTube(file = path)],
                                                        events = 1).apply()
                                                        
-                tube_meta = self.dummy_experiment.metadata['fcs_metadata'][path]
-                self.fcs_metadata = sorted(list(tube_meta.keys()))
-                                                       
-                self.fcs_metadata = sorted(list(tube_meta.keys()))
-                
-                if '$SRC' in tube_meta and '$SRC' not in self.show_fcs_metadata:
-                    self.show_fcs_metadata.append('$SRC')
+                tube_meta = self.model.dummy_experiment.metadata['fcs_metadata'][path]
+                self.model.fcs_metadata = sorted(list(tube_meta.keys()))
+#                                                                        
+#                 if '$SRC' in tube_meta and '$SRC' not in self.model.show_fcs_metadata:
+#                     self.model.show_fcs_metadata.append('$SRC')
+#                     
+#                 if 'TUBE NAME' in tube_meta and 'TUBE NAME' not in self.model.show_fcs_metadata:
+#                     self.model.show_fcs_metadata.append('TUBE NAME')
+#                     
+#                 if '$SMNO' in tube_meta and '$SMNO' not in self.model.show_fcs_metadata:
+#                     self.model.show_fcs_metadata.append('$SMNO')
                     
-                if 'TUBE NAME' in tube_meta and 'TUBE NAME' not in self.show_fcs_metadata:
-                    self.show_fcs_metadata.append('TUBE NAME')
-                    
-                if '$SMNO' in tube_meta and '$SMNO' not in self.show_fcs_metadata:
-                    self.show_fcs_metadata.append('$SMNO')
-                    
-                if 'CF_Row' in tube_meta and 'CF_Row' not in self.show_fcs_metadata:
-                    self.show_fcs_metadata.append('CF_Row')
-                    
-                if 'CF_Col' in tube_meta and 'CF_Col' not in self.show_fcs_metadata:
-                    self.show_fcs_metadata.append('CF_Col')
+                for meta in tube_meta.keys():
+                    if meta.startswith('CF_') and meta not in self.model.show_fcs_metadata:
+                        self.model.show_fcs_metadata.append(meta)
                                                        
             # check the next tube against the dummy experiment
             try:
@@ -627,7 +628,7 @@ class ExperimentDialogHandler(Controller):
             self.model.dummy_experiment = None
 
     
-    @on_trait_change('model.tubes_items', post_init = True)
+    @on_trait_change('model:tubes_items', post_init = True)
     def _tubes_count(self):
         if self.btn_add_cond:
             if len(self.model.tubes) == 0:
@@ -640,7 +641,7 @@ class ExperimentDialogHandler(Controller):
                 self.btn_remove_tubes.setEnabled(True)
                 
                 
-    @on_trait_change('model.show_fcs_metadata_items', post_init = True)
+    @on_trait_change('model:show_fcs_metadata_items', post_init = True)
     def _fcs_metadata_items(self, event):
         for meta_name in event.added:
             self._add_metadata(meta_name, meta_name, Str(condition = False))

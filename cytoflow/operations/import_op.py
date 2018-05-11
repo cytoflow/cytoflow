@@ -27,6 +27,7 @@ from traits.api import (HasTraits, HasStrictTraits, provides, Str, List, Any,
 
 import fcsparser
 import numpy as np
+from pathlib import Path
 
 import cytoflow.utility as util
 
@@ -336,6 +337,8 @@ class ImportOp(HasStrictTraits):
                 pos = tube_meta['WELL ID']
                 tube_meta['CF_Row'] = pos[0]
                 tube_meta['CF_Col'] = int(pos[1:3])
+                
+            tube_meta['CF_File'] = Path(tube.file).stem
                              
             experiment.metadata['fcs_metadata'][tube.file] = tube_meta
                         
