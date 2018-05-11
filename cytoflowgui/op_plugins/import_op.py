@@ -164,10 +164,8 @@ class ImportPluginOp(PluginOpMixin, ImportOp):
     def apply(self, experiment = None):
         ret = super().apply(experiment = experiment)
         self.ret_events = len(ret.data)
-        del ret.metadata['fcs_metadata']
-
+        
         return ret
-    
     
     def get_notebook_code(self, idx):
         op = ImportOp()
