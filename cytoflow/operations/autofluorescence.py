@@ -59,6 +59,11 @@ class AutofluorescenceOp(HasStrictTraits):
         The filename of a file with "blank" cells (not fluorescent).  Used
         to :meth:`estimate` the autofluorescence.
         
+    blank_file_conditions : Dict
+        Occasionally, you'll need to specify the experimental conditions that
+        the blank tube was collected under (to apply the operations in the 
+        history.)  Specify them here.
+        
     Examples
     --------
     Create a small experiment:
@@ -110,6 +115,7 @@ class AutofluorescenceOp(HasStrictTraits):
     name = Constant("Autofluorescence")
     channels = List(Str)
     blank_file = File(exists = True)
+    blank_file_conditions = Dict({})
 
     _af_median = Dict(Str, Float, transient = True)
     _af_stdev = Dict(Str, Float, transient = True)
@@ -153,12 +159,22 @@ class AutofluorescenceOp(HasStrictTraits):
         
         # make a little Experiment
         check_tube(self.blank_file, experiment)
-        blank_exp = ImportOp(tubes = [Tube(file = self.blank_file)], 
+        
+        conditions = {k: experiment.data[k].dtype.name for k in self.blank_file_conditions.keys()}
+        
+        blank_exp = ImportOp(tubes = [Tube(file = self.blank_file,
+                                           conditions = self.blank_file_conditions)], 
+                             conditions = conditions,
                              channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels},
                              name_metadata = experiment.metadata['name_metadata']).apply()
-        
+                                     
         # apply previous operations
         for op in experiment.history:
+            try:
+                op.estimate(blank_exp)
+            except Exception:
+                pass
+            
             blank_exp = op.apply(blank_exp)
             
         # subset it
