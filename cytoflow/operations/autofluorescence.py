@@ -319,6 +319,8 @@ class AutofluorescenceDiagnosticView(HasStrictTraits):
         import matplotlib.pyplot as plt
         import seaborn as sns  # @UnusedImport
         
+        plt.figure()
+        
         for idx, channel in enumerate(self.op.channels):
             hist, bin_edges = self.op._af_histogram[channel]
             hist = hist[1:-1]
