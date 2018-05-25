@@ -103,7 +103,7 @@ class Tube(HasTraits):
     file = Str(transient = True)
     
     # FCS metadata
-    meta = Dict(transient = True)
+#     meta = Dict(transient = True)
     
     # need a link to the model; needed for row coloring
     parent = Instance("ExperimentDialogModel", transient = True)
@@ -124,7 +124,7 @@ class Tube(HasTraits):
                 
         return ret
     
-    def _anytrait_changed(self, name, old, new):        
+    def _anytrait_changed(self, name, old, new):
         if self.trait(name).condition:
             old_hash = self.conditions_hash()
             self.conditions[name] = new
@@ -159,10 +159,7 @@ class ExperimentColumn(ObjectColumn):
 #         return Menu(Action(name = "Remove Tubes",
 #                            action = "_on_remove_tubes"),
 #                     Action(name = "Remove Column",
-#                            action = "_on_remove_column"))
-
-class TraitMetadataColumn(:
-                
+#                            action = "_on_remove_column"))                
     
 class ExperimentDialogModel(HasStrictTraits):
     """
@@ -182,11 +179,11 @@ class ExperimentDialogModel(HasStrictTraits):
     # subsequent tubes for voltage etc. and fail early.
     dummy_experiment = Instance(Experiment)
     
-    # a dict of the dynamic TraitTypes added to the tube instances
+    # a list of the dynamic TraitTypes added to the tube instances
     tube_traits = List(TraitType)
     
     # the metadata that's present in the FCS files
-    fcs_metadata = List(Str)
+#     fcs_metadata = List(Str)
 
     # traits to communicate with the TabularEditor
     update = Bool
@@ -213,16 +210,16 @@ class ExperimentDialogModel(HasStrictTraits):
             resizable = True
         )
     
-    traits_view = View(
-        Item(name = 'tube_traits',
-             editor = TableEditor(columns = [
-                 TraitMetadataColumn(name = 'name',
-                                     editor = TextEditor()),
-                 TraitMetadataColumn(name = 'condition',
-                                     editor = BooleanEditor())])),
-
-        title = "Edit tube metadata",
-        buttons = [OKButton])
+#     traits_view = View(
+#         Item(name = 'tube_traits',
+#              editor = TableEditor(columns = [
+#                  TraitMetadataColumn(name = 'name',
+#                                      editor = TextEditor()),
+#                  TraitMetadataColumn(name = 'condition',
+#                                      editor = BooleanEditor())])),
+# 
+#         title = "Edit tube metadata",
+#         buttons = [OKButton])
     
     def init_model(self, op, conditions, metadata):
         
@@ -245,10 +242,10 @@ class ExperimentDialogModel(HasStrictTraits):
         self.dummy_experiment = None
         
         shown_error = False
-        
-        tube_meta = list(metadata['fcs_metadata'].values())[0] \
-                    if 'fcs_metadata' in metadata else {}
-        self.fcs_metadata = sorted(list(tube_meta.keys()))
+#         
+#         tube_meta = list(metadata['fcs_metadata'].values())[0] \
+#                     if 'fcs_metadata' in metadata else {}
+#         self.fcs_metadata = sorted(list(tube_meta.keys()))
 #         
 #         if '$SRC' in tube_meta:
 #             self.show_fcs_metadata.append('$SRC')
@@ -271,8 +268,8 @@ class ExperimentDialogModel(HasStrictTraits):
         
         for op_tube in op.tubes:
             tube = Tube(file = op_tube.file,
-                        parent = self,
-                        meta = metadata['fcs_metadata'][op_tube.file])
+                        parent = self) 
+#                         meta = metadata['fcs_metadata'][op_tube.file])
             
             try:
                 fcsparser.parse(op_tube.file, 
@@ -546,9 +543,9 @@ class ExperimentDialogHandler(Controller):
             if not self.model.dummy_experiment:
                 self.model.dummy_experiment = ImportOp(tubes = [CytoflowTube(file = path)],
                                                        events = 1).apply()
-                                                       
-                tube_meta = self.model.dummy_experiment.metadata['fcs_metadata'][path]
-                self.model.fcs_metadata = sorted(list(tube_meta.keys()))
+#                                                        
+#                 tube_meta = self.model.dummy_experiment.metadata['fcs_metadata'][path]
+#                 self.model.fcs_metadata = sorted(list(tube_meta.keys()))
 #                                                                        
 #                 if '$SRC' in tube_meta and '$SRC' not in self.model.show_fcs_metadata:
 #                     self.model.show_fcs_metadata.append('$SRC')
@@ -710,8 +707,8 @@ class ExperimentDialogHandler(Controller):
                         self.model.counter[tube_hash] += 1
                     else:
                         self.model.counter[tube_hash] = 1
-                else:
-                    tube.trait_set(**{name : tube.meta[name]})
+#                 else:
+#                     tube.trait_set(**{name : tube.meta[name]})
 
             self.table_editor.columns.append(ExperimentColumn(name = name,
                                                               label = label,

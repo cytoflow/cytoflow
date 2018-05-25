@@ -112,7 +112,7 @@ ImportOp.__repr__ = Tube.__repr__ = traits_repr
 
 class ImportHandler(OpHandlerMixin, Controller):
     
-    import_event = Button(label="Edit samples...")
+    import_event = Button(label="Set up experiment...")
     samples = Property(depends_on = 'model.tubes', status = True)
     
     def default_traits_view(self):
