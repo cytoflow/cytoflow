@@ -401,14 +401,22 @@ def check_tube(filename, experiment):
             
 
 # module-level, so we can reuse it in other modules
-def parse_tube(filename, experiment):   
+def parse_tube(filename, experiment, metadata_only = False):   
         
     check_tube(filename, experiment)
          
     try:
-        tube_meta, tube_data = fcsparser.parse(
-                                  filename, 
-                                  channel_naming = experiment.metadata["name_metadata"])
+        if metadata_only:
+            tube_data = None
+            tube_meta = fcsparser.parse(
+                            filename, 
+                            meta_data_only = True,
+                            channel_naming = experiment.metadata["name_metadata"])
+        else:
+            tube_meta, tube_data = fcsparser.parse(
+                                    filename, 
+                                    meta_data_only = metadata_only,
+                                    channel_naming = experiment.metadata["name_metadata"])
     except Exception as e:
         raise util.CytoflowError("FCS reader threw an error reading data for tube {}"
                                  .format(filename)) from e
