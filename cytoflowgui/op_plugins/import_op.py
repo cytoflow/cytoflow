@@ -136,9 +136,14 @@ class ImportHandler(OpHandlerMixin, Controller):
         """
 
         d = ExperimentDialog()
+        
+        # defer model init until after the dialog is initialized
+        d.model.init_op = self.model
+        d.model.init_conditions = self.context.conditions
+        d.model.init_metadata = self.context.metadata
 
         # self.model is an instance of ImportPluginOp
-        d.model.init_model(self.model, self.context.conditions, self.context.metadata)
+        #d.model.init_model(self.model, self.context.conditions, self.context.metadata)
             
         d.size = (550, 500)
         d.open()

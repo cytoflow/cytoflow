@@ -35,11 +35,12 @@ from pathlib import Path
 from traits.api import (HasTraits, HasStrictTraits, provides, Instance, Str, 
                         Int, List, Bool, Enum, Float, DelegatesTo, TraitType,
                         Property, BaseCStr, CStr, on_trait_change, Dict, Event,
-                        cached_property)
+                        cached_property, Any)
                        
 from traitsui.api import (UI, Group, View, Item, TableEditor, OKCancelButtons,
                           Controller, CheckListEditor, TextEditor, BooleanEditor,
-                          InstanceEditor, ListStrEditor, HGroup, ButtonEditor)
+                          InstanceEditor, ListStrEditor, HGroup, ButtonEditor,
+                          EnumEditor, TextEditor, BooleanEditor, ListEditor)
 
 from traitsui.menu import OKButton
 
@@ -68,7 +69,7 @@ def not_true ( value ):
 def not_false ( value ):
     return (value is not False)
 
-class Tube(HasTraits):
+class Tube(HasStrictTraits):
     """
     The model for a tube in an experiment.
     
@@ -116,7 +117,7 @@ class Tube(HasTraits):
     conditions = Dict
     
     # metadata from the FCS file
-    meta = Dict
+    metadata = Dict
     
     all_conditions_set = Property(Bool, depends_on = "conditions")
             
@@ -132,7 +133,7 @@ class Tube(HasTraits):
         return ret
     
     def _anytrait_changed(self, name, old, new):
-        if self.parent is not None and name in self.parent.tube_traits_dict and self.parent.tube_traits_dict[name].trait_type != "Read Only":
+        if self.parent is not None and name in self.parent.tube_traits_dict and self.parent.tube_traits_dict[name].condition:
             old_hash = self.conditions_hash()
             self.conditions[name] = new
             new_hash = self.conditions_hash()
@@ -180,40 +181,79 @@ class ExperimentColumn(ObjectColumn):
 #         self.error(obj, name, value)
     
 class TubeTrait(HasStrictTraits):
-    model = Instance('ExperimentDialogModel')
+#     model = Instance('ExperimentDialogModel')
+
     trait = Property
     name = CStr
-    trait_type = Enum(['Read Only', 'Category', 'Number', 'True/False'])
-    remove_trait = Event
+    type = Enum(['metadata', 'category', 'float', 'bool'])
+    condition = Property(Bool, depends_on = 'type')
+    
+    _condition = Bool(False)
+        
+#     dtype = Property
+#     remove_trait = Event
     editable = Property
     
-    default_view = View(HGroup(Item('name'), 
-                               Item('trait_type'), 
-                               Item('remove_trait',
-                                    editor = ButtonEditor(label = 'X'))))
+    default_view = View(HGroup(Item('type',
+                                    editor = EnumEditor(values = {'metadata' : "FCS Metadata",
+                                                                  'category' : "Category",
+                                                                  'float' : "Number",
+                                                                  'bool' : "True/False"})),
+                               Item('name',
+                                    editor = TextEditor(),
+                                    visible_when = 'type != "metadata"'),
+                               Item('name',
+                                    editor = EnumEditor(name = 'context.fcs_metadata'),
+                                    visible_when = 'type == "metadata"'),
+                               Item('condition',
+                                    enabled_when = 'type == "metadata"'))) 
+#                                Item('remove_trait',
+#                                     editor = ButtonEditor(label = 'X'),
+#                                     show_label = False)))
+
+    # magic - get the value for the "condition" property
+    def _get_condition(self):
+        if self.type == 'metadata':
+            return self._condition
+        else:
+            return True
+        
+    # magic - set the value for the "condition" property
+    def _set_condition(self, value):
+        self._condition = value
     
     # magic - gets values for the `trait` property
     def _get_trait(self):
-        if self.trait_type == 'Read Only' or self.trait_type == 'Category':
+        if self.type == 'metadata' or self.type == 'category':
             return Str()
-        elif self.trait_type == 'Number':
+        elif self.type == 'float':
             return Float()
-        elif self.trait_type == 'True/False':
+        elif self.type == 'bool':
             return Bool()
     
+    # magic - get the value of the "editable" property
     def _get_editable(self):
-        return self.trait_type != 'Read Only' and self.name not in self.model.fcs_metadata
+        return self.type != 'metadata'
     
-    @on_trait_change('remove_trait')
-    def _remove_trait(self):
-        self.model.tube_traits.remove(self)
+#     def _get_editable(self):
+#         return self.trait_type != 'Read Only' and self.name not in self.model.fcs_metadata
+#     
+#     @on_trait_change('remove_trait')
+#     def _remove_trait(self):
+#         self.model.tube_traits.remove(self)
     
 class ExperimentDialogModel(HasStrictTraits):
     """
     The model for the Experiment setup dialog.
     """
+    
+    # these bits are needed to defer model init until after
+    # the handler has been initialized
+    init_op = Any
+    init_conditions = Any
+    init_metadata = Any
         
-    # t list of Tubes (rows in the table)
+    # the list of Tubes (rows in the table)
     tubes = List(Tube)
 
     # a list of the traits that have been added to Tube instances
@@ -232,17 +272,20 @@ class ExperimentDialogModel(HasStrictTraits):
     dummy_experiment = Instance(Experiment)
 
     # traits to communicate with the TabularEditor
-    update = Bool
-    refresh = Bool
-    selected = List()
+#     update = Bool
+#     refresh = Bool
+    selected_tubes = List
     
     # traits to communicate with the traits_view
-    fcs_metadata = Property
-    selected_fcs_metadata = Str
-    add_fcs_metadata = Event    
+    fcs_metadata = Property(List, depends_on = 'tubes_items')
     
     default_view = View(
-            Group(
+            HGroup(
+                Item('tube_traits',
+                     editor = ListEditor(editor = InstanceEditor(),
+                                         style = 'custom',
+                                         mutable = True,
+                                         factory = TubeTrait)),
                 Item(name = 'tubes', 
                      id = 'table', 
                      editor = TableEditor(editable = True,
@@ -250,7 +293,7 @@ class ExperimentDialogModel(HasStrictTraits):
                                           auto_size = True,
                                           configurable = False,
                                           selection_mode = 'cells',
-                                          selected = 'selected'),
+                                          selected = 'selected_tubes'),
                      enabled_when = "object.tubes"),
                 show_labels = False
             ),
@@ -260,19 +303,19 @@ class ExperimentDialogModel(HasStrictTraits):
             height    = 0.75,
             resizable = True
         )
-    
-    traits_view = View(HGroup(
-        Item('fcs_metadata',
-             editor = ListStrEditor(selected = 'selected_fcs_metadata',
-                                    editable = False)),
-        Item('add_fcs_metadata',
-             editor = ButtonEditor(label = '->')),
-        Item('tube_traits',
-             editor = VerticalListEditor(
-                 editor = InstanceEditor(),
-                 style = 'custom',
-                 mutable = False))),
-        buttons = [OKButton])
+#     
+#     traits_view = View(HGroup(
+#         Item('fcs_metadata',
+#              editor = ListStrEditor(selected = 'selected_fcs_metadata',
+#                                     editable = False)),
+#         Item('add_fcs_metadata',
+#              editor = ButtonEditor(label = '->')),
+#         Item('tube_traits',
+#              editor = VerticalListEditor(
+#                  editor = InstanceEditor(),
+#                  style = 'custom',
+#                  mutable = False))),
+#         buttons = [OKButton])
     
 #     def control_traits_view(self):
 #         return View(HGroup(Item('channel',
@@ -294,21 +337,18 @@ class ExperimentDialogModel(HasStrictTraits):
 #         
         
         if 'CF_File' not in conditions:
-            self.tube_traits.append(TubeTrait(model = self,
-                                              name = 'CF_File',
-                                              trait_type = 'Read Only'))
+            self.tube_traits.append(TubeTrait(name = 'CF_File',
+                                              type = 'metadata',
+                                              condition = False))
             
         for name, condition in conditions.items():
             if str(condition.dtype).startswith("category") or str(condition.dtype).startswith('object'):
-                trait_type = 'Category'
+                self.tube_traits.append(TubeTrait(name = name, type = 'category'))
             elif str(condition.dtype).startswith("int") or str(condition.dtype).startswith("float"):
-                trait_type = 'Number'
+                self.tube_traits.append(TubeTrait(name = name, type = 'float'))
             elif str(condition.dtype) == "bool":
-                trait_type = 'True/False'
-                
-            self.tube_traits.append(TubeTrait(model = self,
-                                              name = name,
-                                              trait_type = trait_type))
+                self.tube_traits.append(TubeTrait(name = name, type = 'bool'))
+
             
 #             self.tube_traits.append(Str(name = 'CF_File', condition = False))
 # 
@@ -349,7 +389,7 @@ class ExperimentDialogModel(HasStrictTraits):
         for op_tube in op.tubes:
             tube = Tube(file = op_tube.file,
                         parent = self,
-                        meta = metadata['fcs_metadata'][op_tube.file])
+                        metadata = metadata['fcs_metadata'][op_tube.file])
             
             try:
                 fcsparser.parse(op_tube.file, meta_data_only = True)
@@ -371,6 +411,10 @@ class ExperimentDialogModel(HasStrictTraits):
             self.tubes.append(tube)  # adds the dynamic traits to the tube
             
             tube.trait_set(**op_tube.conditions)
+            
+            for tube_trait in self.tube_traits:
+                if tube_trait.type == 'metadata':
+                    tube.trait_set(**{tube_trait.name : tube.metadata[tube_trait.name]})
 
                     
             # set up metadata for tube
@@ -435,6 +479,14 @@ class ExperimentDialogModel(HasStrictTraits):
     @on_trait_change('tubes_items')
     def _tubes_items(self, event):
         for tube in event.added:
+            for trait in self.tube_traits:
+                tube.add_trait(trait.name, trait.trait)
+                
+                if trait.name in tube.metadata:
+                    tube.trait_set(**{trait.name : tube.metadata[trait.name]})
+                else:
+                    tube.trait_set(**{trait.name : trait.trait.default_value})
+            
             tube_hash = tube.conditions_hash()
             if tube_hash in self.counter:
                 self.counter[tube_hash] += 1
@@ -447,38 +499,72 @@ class ExperimentDialogModel(HasStrictTraits):
                 del self.counter[tube_hash]
             else:
                 self.counter[tube_hash] -= 1
-                
+                 
     @on_trait_change('tube_traits_items')
-    def _tube_traits_items(self, event):
+    def _tube_traits_changed(self, event):
         for trait in event.added:
+            if trait.condition:
+                self.counter.clear()
+                
+            for tube in self.tubes:
+                tube.add_trait(trait.name, trait.trait)
+                
+                if trait.type == 'metadata':
+                    tube.trait_set(**{trait.name : tube.metadata[trait.name]})
+                else:
+                    tube.trait_set(**{trait.name : trait.trait.default_value})
+
+                    
+                    tube.conditions[trait.name] = tube.trait_get()[trait.name]
+                    tube_hash = tube.conditions_hash()
+                    if tube_hash in self.counter:
+                        self.counter[tube_hash] += 1
+                    else:
+                        self.counter[tube_hash] = 1
+    
             self.tube_traits_dict[trait.name] = trait
-            
+             
         for trait in event.removed:
+            self.counter.clear()
+            
+            for tube in self.tubes:
+                tube.remove_trait(trait.name)
+
+                if trait.condition:
+                    del tube.conditions[trait.name]
+                    
+                    tube_hash = tube.conditions_hash()
+                    if tube_hash in self.model.counter:
+                        self.model.counter[tube_hash] += 1
+                    else:
+                        self.model.counter[tube_hash] = 1
+            
             del self.tube_traits_dict[trait.name]
                 
     
     def update_import_op(self, op):
-        trait_to_dtype = {"Str" : "category",
-                          "Float" : "float",
-                          "Bool" : "bool",
-                          "Int" : "int"}
-        
-        conditions = {}
-        for trait_name, trait in self.tube_traits:
-            if not trait.condition:
-                continue
-
-            trait_type = trait.__class__.__name__
-            conditions[trait_name] = trait_to_dtype[trait_type]
-            
-        tubes = []
-        for tube in self.tubes:
-            op_tube = CytoflowTube(file = tube.file,
-                                   conditions = tube.trait_get(condition = True))
-            tubes.append(op_tube)
-            
-        op.conditions = conditions
-        op.tubes = tubes
+        pass
+#         trait_to_dtype = {"Str" : "category",
+#                           "Float" : "float",
+#                           "Bool" : "bool",
+#                           "Int" : "int"}
+#         
+#         conditions = {}
+#         for trait_name, trait in self.tube_traits:
+#             if not trait.condition:
+#                 continue
+# 
+#             trait_type = trait.__class__.__name__
+#             conditions[trait_name] = trait_to_dtype[trait_type]
+#             
+#         tubes = []
+#         for tube in self.tubes:
+#             op_tube = CytoflowTube(file = tube.file,
+#                                    conditions = tube.trait_get(condition = True))
+#             tubes.append(op_tube)
+#             
+#         op.conditions = conditions
+#         op.tubes = tubes
             
     def is_tube_unique(self, tube):
         tube_hash = tube.conditions_hash()
@@ -491,10 +577,19 @@ class ExperimentDialogModel(HasStrictTraits):
     def _get_valid(self):
         return len(set(self.counter)) == len(self.tubes) and all([x.all_conditions_set for x in self.tubes])
     
+    
     # magic: gets the list of FCS metadata for the trait list editor
     def _get_fcs_metadata(self):
-        return ['$BTIM', '$DATE', '$FIL']
-
+        meta = {}
+        for tube in self.tubes:
+            for name, val in tube.metadata.items():
+                if name not in meta:
+                    meta[name] = set()
+                    
+                meta[name].add(val)
+                
+        return [x for x in meta.keys() if len(meta[x]) > 1]
+                    
 class ExperimentDialogHandler(Controller):
 
     # keep a ref to the table editor so we can add columns dynamically
@@ -515,6 +610,11 @@ class ExperimentDialogHandler(Controller):
         for trait in self.model.tube_traits:
             self.table_editor.columns.append(ExperimentColumn(name = trait.name,
                                                               editable = trait.editable))
+            
+        # init the model
+        self.model.init_model(self.model.init_op, 
+                              self.model.init_conditions,
+                              self.model.init_metadata)
 #         
 #         if self.model.tube_traits:
 #             trait_to_col = {"Str" : " (Category)",
@@ -534,13 +634,14 @@ class ExperimentDialogHandler(Controller):
         return True
     
     def closed(self, info, is_ok):
-        for trait in self.model.tube_traits:
-            if not trait.condition:
-                continue
-            for tube in self.model.tubes:
-                tube.on_trait_change(self._try_multiedit, 
-                                     trait.name, 
-                                     remove = True)
+        pass
+#         for trait in self.model.tube_traits:
+#             if not trait.condition:
+#                 continue
+#             for tube in self.model.tubes:
+#                 tube.on_trait_change(self._try_multiedit, 
+#                                      trait.name, 
+#                                      remove = True)
         
 #     def _on_add_condition(self):
 #         """
@@ -613,8 +714,8 @@ class ExperimentDialogHandler(Controller):
 #                   "Error")
             
     def _on_edit_metadata(self):
-#         pass
-        self.model.edit_traits('traits_view', kind = 'livemodal')
+        pass
+#         self.model.edit_traits('traits_view', kind = 'modal')
     
     def _on_import(self):
         """
@@ -676,9 +777,9 @@ class ExperimentDialogHandler(Controller):
                 error(None, e.__str__(), "Error importing tube")
                 return
             
-            meta = parse_tube(path, self.model.dummy_experiment, metadata_only = True)
+            metadata = parse_tube(path, self.model.dummy_experiment, metadata_only = True)
                 
-            tube = Tube(file = path, parent = self.model, meta = meta)
+            tube = Tube(file = path, parent = self.model, metadata = metadata)
             
             self.model.tubes.append(tube)
             
@@ -733,7 +834,7 @@ class ExperimentDialogHandler(Controller):
                        "Are you sure you want to remove the selected tube(s)?",
                        "Remove tubes?")
         if conf == YES:
-            for (tube, _) in self.model.selected:
+            for (tube, _) in self.model.selected_tubes:
                 self.model.tubes.remove(tube)
                 
         if not self.model.tubes:
@@ -742,17 +843,7 @@ class ExperimentDialogHandler(Controller):
     
     @on_trait_change('model:tubes_items', post_init = True)
     def _tubes_changed(self, event):
-        for tube in event.added:
-            for trait in self.model.tube_traits:
-                tube.add_trait(trait.name, trait.trait)
-                
-                if trait.name in tube.meta:
-                    tube.trait_set(**{trait.name : tube.meta[trait.name]})
-                else:
-                    tube.trait_set(**{trait.name : trait.trait.default_value})
-        
-#         for tube in event.removed:
-#             pass
+        pass
 #         if self.btn_remove_tubes:
 #             if len(self.model.tubes) == 0:
 #                 self.btn_remove_tubes.setEnabled(False)
@@ -764,51 +855,24 @@ class ExperimentDialogHandler(Controller):
     @on_trait_change('model:tube_traits_items', post_init = True)
     def _tube_traits_changed(self, event):
         for trait in event.added:
-            if trait.trait_type != 'Read Only':
-                self.model.counter.clear()
-                
-            for tube in self.model.tubes:
-                tube.add_trait(trait.name, trait.trait)
-                
-                if trait.name in tube.meta:
-                    tube.trait_set(**{trait.name : tube.meta[trait.name]})
-                else:
-                    tube.trait_set(**{trait.name : trait.trait.default_value})
-                    
-                if trait.editable:
-                    tube.on_trait_change(self._try_multiedit, trait.name)
-                    
-                    tube.conditions[trait.name] = tube.trait_get()[trait.name]
-                    tube_hash = tube.conditions_hash()
-                    if tube_hash in self.model.counter:
-                        self.model.counter[tube_hash] += 1
-                    else:
-                        self.model.counter[tube_hash] = 1
                         
             if self.table_editor:
                 self.table_editor.columns.append(ExperimentColumn(name = trait.name,
-                                                                  editable = trait.editable))
+                                                                  editable = trait.editable))                 
+            for tube in self.model.tubes:   
+                if trait.editable:
+                        tube.on_trait_change(self._try_multiedit, trait.name)
+
         
         for trait in event.removed:
-            self.model.counter.clear()
-            
-            for tube in self.model.tubes:
-                tube.remove_trait(trait.name)
-                
-                if trait.trait_type != 'Read Only' and trait.name not in tube.meta:
-                    tube.on_trait_change(self.try_multiedit, trait.name, remove = True)
-                    
-                if trait.trait_type != 'Read Only':
-                    del tube.conditions[trait.name]
-                    
-                    tube_hash = tube.conditions_hash()
-                    if tube_hash in self.model.counter:
-                        self.model.counter[tube_hash] += 1
-                    else:
-                        self.model.counter[tube_hash] = 1
-                        
+
             table_column = next((x for x in self.table_editor.columns if x.name == trait.name))
             self.table_editor.columns.remove(table_column)
+            
+            for tube in self.model.tubes:
+                if trait.editable:
+                    tube.on_trait_change(self.try_multiedit, trait.name, remove = True)
+                    
                     
                 
                 
@@ -834,19 +898,19 @@ class ExperimentDialogHandler(Controller):
         
         self.updating = True
 
-        for tube, trait_name in self.model.selected:
+        for tube, trait_name in self.model.selected_tubes:
             if tube != obj:
-
                 old_hash = tube.conditions_hash()
                 self.model.counter[old_hash] -= 1
                 if self.model.counter[old_hash] == 0:
                     del self.model.counter[old_hash]            
     
                 # update the underlying traits without notifying the editor
+                # we do this all here for performance reasons
                 tube.trait_setq(**{trait_name: new})
                 tube.conditions[trait_name] = new
                 
-                new_hash = tube.conditions_hash()
+                new_hash = tube._conditions_hash()
                 if new_hash not in self.model.counter:
                     self.model.counter[new_hash] = 1
                 else:
@@ -918,66 +982,66 @@ class ExperimentDialogHandler(Controller):
 #         table_column = next((x for x in self.table_editor.columns if x.name == name))
 #         self.table_editor.columns.remove(table_column)
         
-        
+         
 @provides(IDialog)
 class ExperimentDialog(Dialog):
     """
     A dialog for setting up an experiment: loading FCS files and specifying 
     metadata.  Centered around a table editor.
     """
-
+ 
     id = 'edu.mit.synbio.experiment_setup_dialog'
     name = 'Cytometry Experiment Setup'
-    
+     
     style = 'modal'
     title = 'Experiment setup'
-
+ 
     handler = Instance(ExperimentDialogHandler)
     model = DelegatesTo('handler')
-
+ 
     ui = Instance(UI)
-    
+     
     def __init__(self, **kwargs):
         super(ExperimentDialog, self).__init__(**kwargs)
         self.handler = ExperimentDialogHandler()
         self.model = ExperimentDialogModel()
-        
+         
     def open(self):
         super(ExperimentDialog, self).open()
-        
+         
         if self.return_code == OK and not self.model.valid:
             error(None, "Invalid experiment setup.\n"
                         "Was each tube's metadata unique?",
                         "Invalid experiment!")
             self.open()
-            
+             
         return self.return_code
-        
-
+         
+ 
     def _create_buttons(self, parent):
         """ 
         Create the buttons at the bottom of the dialog box.
-        
+         
         We're overriding (and stealing code from) pyface.qt._create_buttons in
         order to add "Add tube.... " and "Add plate..." buttons.
         """
-         
+          
         buttons = QtGui.QWidget()
         #layout = QtGui.QHBoxLayout()
         layout = QtGui.QGridLayout()
-        
+         
         btn_add_tubes = QtGui.QPushButton("Add tubes...")
         layout.addWidget(btn_add_tubes, 0, 0)
         QtCore.QObject.connect(btn_add_tubes, QtCore.SIGNAL('clicked()'),
                                self.handler._on_add_tubes)
-        
+         
         btn_remove_tubes = QtGui.QPushButton("Remove tubes")
         layout.addWidget(btn_remove_tubes, 1, 0)
         QtCore.QObject.connect(btn_remove_tubes, QtCore.SIGNAL('clicked()'),
                                self.handler._on_remove_tubes)
         btn_remove_tubes.setEnabled(len(self.model.tubes) > 0)
         self.handler.btn_remove_tubes = btn_remove_tubes
-
+ 
         # start disabled if there aren't any tubes in the model
         btn_metadata = QtGui.QPushButton("Edit metadata...")
         layout.addWidget(btn_metadata, 0, 1)
@@ -985,46 +1049,46 @@ class ExperimentDialog(Dialog):
                                self.handler._on_edit_metadata)
         btn_metadata.setEnabled(len(self.model.tubes) > 0)
         self.handler.btn_metadata = btn_metadata
-        
+         
         btn_import = QtGui.QPushButton("Import from CSV...")
         layout.addWidget(btn_import, 1, 1)
         QtCore.QObject.connect(btn_import, QtCore.SIGNAL('clicked()'),
                                self.handler._on_import)
 #         btn_import.setEnabled(True)
-        
+         
         layout.addItem(QtGui.QSpacerItem(0, 0, QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Maximum), 0, 2)
         layout.addItem(QtGui.QSpacerItem(0, 0, QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Maximum), 1, 2)
-        
+         
         # 'OK' button.
         btn_ok = QtGui.QPushButton("OK")
         btn_ok.setDefault(True)
         layout.addWidget(btn_ok, 0, 3)
         QtCore.QObject.connect(btn_ok, QtCore.SIGNAL('clicked()'),
                                self.control, QtCore.SLOT('accept()'))
-        
+         
         # 'Cancel' button.
         btn_cancel = QtGui.QPushButton("Cancel")
         layout.addWidget(btn_cancel, 1, 3)
         QtCore.QObject.connect(btn_cancel, QtCore.SIGNAL('clicked()'),
                                self.control, QtCore.SLOT('reject()'))   
-        
+         
         # add the button container to the widget     
         buttons.setLayout(layout)
         return buttons
-    
+     
     def _create_dialog_area(self, parent):
-         
+          
         self.ui = self.model.edit_traits(view = 'default_view',
                                          kind='subpanel', 
                                          parent=parent, 
                                          handler=self.handler)   
-       
+        
         return self.ui.control
-    
+     
     def destroy(self):
         self.ui.dispose()
         self.ui = None
-        
+         
         super(Dialog, self).destroy()
         
     
