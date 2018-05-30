@@ -104,7 +104,7 @@ from cytoflow import Tube, ImportOp
 from cytoflow.operations.i_operation import IOperation
                        
 from cytoflowgui.serialization import camel_registry, traits_repr
-from cytoflowgui.import_dialog import ExperimentDialog
+from cytoflowgui.import_dialog import ExperimentDialogModel, ExperimentDialogHandler
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin
 
@@ -135,25 +135,28 @@ class ImportHandler(OpHandlerMixin, Controller):
         Import data; save as self.result
         """
 
-        d = ExperimentDialog()
+        model = ExperimentDialogModel(init_op = self.model,
+                                      init_conditions = self.context.conditions,
+                                      init_metadata = self.context.metadata)
+
+        handler = ExperimentDialogHandler(model = model)
+        handler.edit_traits(kind = 'livemodal')
         
         # defer model init until after the dialog is initialized
-        d.model.init_op = self.model
-        d.model.init_conditions = self.context.conditions
-        d.model.init_metadata = self.context.metadata
+
 
         # self.model is an instance of ImportPluginOp
         #d.model.init_model(self.model, self.context.conditions, self.context.metadata)
             
-        d.size = (550, 500)
-        d.open()
+#         d.size = (550, 500)
+#         d.open()
         
-        if d.return_code is not PyfaceOK:
-            return
+#         if d.return_code is not PyfaceOK:
+#             return
         
-        d.model.update_import_op(self.model)
+#         d.model.update_import_op(self.model)
         
-        d = None
+#         d = None
         
     @cached_property
     def _get_samples(self):

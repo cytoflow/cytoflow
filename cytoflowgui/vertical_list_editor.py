@@ -31,6 +31,12 @@ from traitsui.qt4.helper import IconButton
 from traitsui.editors.list_editor import ListItemProxy
 
 class _VerticalListEditor(_ListEditor):
+    """
+    The difference between this class and the underying ListEditor is that 
+    this class doesn't use a scroll area.  Instead, as items are added, it
+    expands.
+    """
+    
     def init(self, parent):
         """ Finishes initializing the editor by creating the underlying toolkit
             widget.
