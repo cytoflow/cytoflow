@@ -48,7 +48,7 @@ from traitsui.menu import OKButton
 from traitsui.qt4.table_editor import TableEditor as TableEditorQt
 
 from pyface.i_dialog import IDialog
-from pyface.api import Dialog, FileDialog, error, warning, OK, confirm, YES
+from pyface.api import Dialog, FileDialog, error, warning, OK, confirm, YES, ImageResource
 
 from pyface.qt import QtCore, QtGui
 from pyface.constant import OK as PyfaceOK
@@ -188,7 +188,7 @@ class TubeTrait(HasStrictTraits):
     editable = Property
     
     default_view = View(HGroup(Item('remove_trait',
-                                     editor = ButtonEditor(label = 'X'),
+                                     editor = ButtonEditor(label = "Remove"),
                                      show_label = False),
                                Item('type',
                                     editor = EnumEditor(values = {'metadata' : "FCS Metadata",
@@ -199,11 +199,10 @@ class TubeTrait(HasStrictTraits):
                                     editor = TextEditor(auto_set = False),
                                     visible_when = 'type != "metadata"'),
                                Item('name',
-                                    editor = EnumEditor(name = 'context.fcs_metadata'),
+                                    editor = EnumEditor(name = 'object.model.fcs_metadata'),
                                     visible_when = 'type == "metadata"'),
                                Item('condition',
-                                    enabled_when = 'type == "metadata"'),
-                               ))
+                                    enabled_when = 'type == "metadata"')))
 
 
     # magic - get the value for the "condition" property
@@ -268,7 +267,7 @@ class ExperimentDialogModel(HasStrictTraits):
     dummy_experiment = Instance(Experiment)
     
     # traits to communicate with the traits_view
-    fcs_metadata = Property(List, depends_on = 'tubes_items')
+    fcs_metadata = Property(List, depends_on = 'tubes')
     
     def init_model(self, op, conditions, metadata):      
         if 'CF_File' not in conditions:
@@ -408,7 +407,9 @@ class ExperimentDialogModel(HasStrictTraits):
                 # remove the old trait from the 
                 tube.remove_trait(old_name)
                 
-            if trait_value is None:
+            if new_name in tube.metadata:
+                trait_value = tube.metadata[new_name]
+            elif trait_value is None:
                 trait_value = trait.trait.default_value
             
             tube.add_trait(new_name, trait.trait)
@@ -484,6 +485,7 @@ class ExperimentDialogModel(HasStrictTraits):
     
     
     # magic: gets the list of FCS metadata for the trait list editor
+    @cached_property
     def _get_fcs_metadata(self):
         meta = {}
         for tube in self.tubes:
@@ -628,11 +630,12 @@ class ExperimentDialogHandler(Controller):
                 error(None, e.__str__(), "Error importing tube")
                 return
             
-            metadata = parse_tube(path, self.model.dummy_experiment, metadata_only = True)
+            metadata, _ = parse_tube(path, self.model.dummy_experiment, metadata_only = True)
                 
             tube = Tube(file = path, parent = self.model, metadata = metadata)
             
             self.model.tubes.append(tube)
+            
             
     @on_trait_change('remove_tubes')
     def _on_remove_tubes(self):
@@ -645,11 +648,6 @@ class ExperimentDialogHandler(Controller):
                 
         if not self.model.tubes:
             self.model.dummy_experiment = None
-
-    
-#     @on_trait_change('model:tubes_items', post_init = True)
-#     def _tubes_changed(self, event):
-#         pass
 
                 
     @on_trait_change('model:tube_traits_items', post_init = True)

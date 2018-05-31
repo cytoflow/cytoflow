@@ -328,9 +328,7 @@ class ImportOp(HasStrictTraits):
                                   util.CytoflowWarning)
 
             experiment.add_events(tube_data[channels], tube.conditions)
-            
-            del tube_meta['__header__']
-            
+                        
             # extract the row and column from wells collected on a 
             # BD HTS
             if 'WELL ID' in tube_meta:               
@@ -420,6 +418,8 @@ def parse_tube(filename, experiment, metadata_only = False):
     except Exception as e:
         raise util.CytoflowError("FCS reader threw an error reading data for tube {}"
                                  .format(filename)) from e
+            
+    del tube_meta['__header__']
             
     return tube_meta, tube_data
 
