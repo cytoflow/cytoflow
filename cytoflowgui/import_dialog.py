@@ -60,6 +60,8 @@ from cytoflow import Experiment, ImportOp
 from cytoflow.operations.import_op import check_tube, parse_tube
 import cytoflow.utility as util
 
+from cytoflowgui.vertical_list_editor import VerticalListEditor
+
 import fcsparser
 
 def not_true ( value ):
@@ -187,10 +189,7 @@ class TubeTrait(HasStrictTraits):
     remove_trait = Event
     editable = Property
     
-    default_view = View(HGroup(Item('remove_trait',
-                                     editor = ButtonEditor(label = "Remove"),
-                                     show_label = False),
-                               Item('type',
+    default_view = View(HGroup(Item('type',
                                     editor = EnumEditor(values = {'metadata' : "FCS Metadata",
                                                                   'category' : "Category",
                                                                   'float' : "Number",
@@ -512,9 +511,10 @@ class ExperimentDialogHandler(Controller):
                 VGroup(
                     Heading("First, define experimental variables"),
                     Item('tube_traits',
-                         editor = ListEditor(editor = InstanceEditor(),
-                                             style = 'custom',
-                                             mutable = False),
+                         editor = VerticalListEditor(editor = InstanceEditor(),
+                                                     style = 'custom',
+                                                     mutable = False,
+                                                     deletable = True),
                          show_label = False),
                     HGroup(
                         Item('handler.add_variable',
