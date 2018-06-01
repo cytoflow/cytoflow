@@ -148,7 +148,7 @@ class ImportHandler(OpHandlerMixin, Controller):
                                                label = "Import!")),
                     shared_op_traits)
         
-    def _import_event_fired(self):
+    def _setup_event_fired(self):
         """
         Import data; save as self.result
         """
@@ -160,21 +160,8 @@ class ImportHandler(OpHandlerMixin, Controller):
         handler = ExperimentDialogHandler(model = model)
         handler.edit_traits(kind = 'livemodal')
         
-        # defer model init until after the dialog is initialized
-
-
-        # self.model is an instance of ImportPluginOp
-        #d.model.init_model(self.model, self.context.conditions, self.context.metadata)
-            
-#         d.size = (550, 500)
-#         d.open()
+        model.update_import_op(self.model)
         
-#         if d.return_code is not PyfaceOK:
-#             return
-        
-#         d.model.update_import_op(self.model)
-        
-#         d = None
         
     @cached_property
     def _get_samples(self):
