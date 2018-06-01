@@ -94,8 +94,9 @@ Import FCS files and associate them with experimental conditions (metadata.)
 """
 from textwrap import dedent
 
-from traitsui.api import View, Item, Controller, TextEditor
-from traits.api import Button, Property, cached_property, provides, Callable
+from traitsui.api import (View, Item, Controller, TextEditor, ButtonEditor, InstanceEditor)
+from traits.api import (Button, Property, cached_property, provides, Callable, 
+                        HasTraits, String, List)
 from pyface.api import OK as PyfaceOK
 from envisage.api import Plugin, contributes_to
 
@@ -103,6 +104,7 @@ import cytoflow.utility as util
 from cytoflow import Tube, ImportOp
 from cytoflow.operations.i_operation import IOperation
                        
+from cytoflowgui.vertical_list_editor import VerticalListEditor
 from cytoflowgui.serialization import camel_registry, traits_repr
 from cytoflowgui.import_dialog import ExperimentDialogModel, ExperimentDialogHandler
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
@@ -110,14 +112,27 @@ from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin
 
 ImportOp.__repr__ = Tube.__repr__ = traits_repr
 
+class Channel(HasTraits):
+    channel = String
+    name = String
+    
+    default_view = View(Item('channel', style = 'readonly'),
+                        Item('name'))
+
 class ImportHandler(OpHandlerMixin, Controller):
     
-    import_event = Button(label="Set up experiment...")
+    setup_event = Button(label="Set up experiment...")
     samples = Property(depends_on = 'model.tubes', status = True)
-    
+        
     def default_traits_view(self):
-        return View(Item('handler.import_event',
+        return View(Item('handler.setup_event',
                          show_label=False),
+                    Item('object.channels_list',
+                         editor = VerticalListEditor(editor = InstanceEditor(),
+                                                     style = 'custom',
+                                                     mutable = False,
+                                                     deletable = True),
+                         show_label = False),
                     Item('object.events',
                          editor = TextEditor(auto_set = False,
                                              format_func = lambda x: "" if x == None else str(x)),
@@ -128,6 +143,9 @@ class ImportHandler(OpHandlerMixin, Controller):
                     Item('ret_events',
                          label='Events',
                          style='readonly'),
+                    Item('do_estimate',
+                         editor = ButtonEditor(value = True,
+                                               label = "Import!")),
                     shared_op_traits)
         
     def _import_event_fired(self):
@@ -166,6 +184,7 @@ class ImportHandler(OpHandlerMixin, Controller):
 @provides(IOperation)
 class ImportPluginOp(PluginOpMixin, ImportOp):
     handler_factory = Callable(ImportHandler, transient = True)
+    channels_list = List(Channel)
     ret_events = util.PositiveInt(0, allow_zero = True, status = True)
     events = util.PositiveCInt(None, allow_zero = True, allow_none = True)
     

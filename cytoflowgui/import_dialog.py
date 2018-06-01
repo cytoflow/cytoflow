@@ -448,7 +448,24 @@ class ExperimentDialogModel(HasStrictTraits):
                             
     
     def update_import_op(self, op):
-        pass
+        conditions = {}
+        for trait in self.tube_traits:
+            if not trait.condition:
+                continue
+            
+            conditions[trait.name] = trait.type
+            if conditions[trait.name] == 'metadata':
+                conditions[trait.name] = 'category'
+            
+        tubes = []
+        for tube in self.tubes:
+            op_tube = CytoflowTube(file = tube.file,
+                                   conditions = tube.trait_get(conditions.keys()))
+            tubes.append(op_tube)
+            
+        op.conditions = conditions
+        op.tubes = tubes         
+           
 #         trait_to_dtype = {"Str" : "category",
 #                           "Float" : "float",
 #                           "Bool" : "bool",
@@ -571,14 +588,13 @@ class ExperimentDialogHandler(Controller):
         return True
     
     def closed(self, info, is_ok):
-        pass
-#         for trait in self.model.tube_traits:
-#             if not trait.condition:
-#                 continue
-#             for tube in self.model.tubes:
-#                 tube.on_trait_change(self._try_multiedit, 
-#                                      trait.name, 
-#                                      remove = True)
+        for trait in self.model.tube_traits:
+            if not trait.editable:
+                continue
+            for tube in self.model.tubes:
+                tube.on_trait_change(self._try_multiedit, 
+                                     trait.name, 
+                                     remove = True)
         
             
     @on_trait_change('add_variable')
