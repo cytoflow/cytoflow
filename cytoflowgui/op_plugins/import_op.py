@@ -94,10 +94,12 @@ Import FCS files and associate them with experimental conditions (metadata.)
 """
 from textwrap import dedent
 
-from traitsui.api import (View, Item, Controller, TextEditor, ButtonEditor, InstanceEditor)
+from traitsui.api import (View, Item, Controller, TextEditor, ButtonEditor, 
+                          InstanceEditor, HGroup, VGroup)
 from traits.api import (Button, Property, cached_property, provides, Callable, 
-                        HasTraits, String, List)
-from pyface.api import OK as PyfaceOK
+                        HasTraits, String, List, on_trait_change, Instance,
+                        Bool, Dict, Str, Enum)
+
 from envisage.api import Plugin, contributes_to
 
 import cytoflow.utility as util
@@ -116,23 +118,24 @@ class Channel(HasTraits):
     channel = String
     name = String
     
-    default_view = View(Item('channel', style = 'readonly'),
-                        Item('name'))
+    default_view = View(HGroup(Item('channel', style = 'readonly'),
+                               Item('name')))
 
 class ImportHandler(OpHandlerMixin, Controller):
     
     setup_event = Button(label="Set up experiment...")
     samples = Property(depends_on = 'model.tubes', status = True)
+    dialog_model = Instance(ExperimentDialogModel)
         
     def default_traits_view(self):
-        return View(Item('handler.setup_event',
-                         show_label=False),
-                    Item('object.channels_list',
-                         editor = VerticalListEditor(editor = InstanceEditor(),
-                                                     style = 'custom',
-                                                     mutable = False,
-                                                     deletable = True),
-                         show_label = False),
+        return View(VGroup(Item('handler.setup_event',
+                                show_label=False),
+                           Item('object.channels_list',
+                                editor = VerticalListEditor(editor = InstanceEditor(),
+                                                            style = 'custom',
+                                                            mutable = False,
+                                                            deletable = True),
+                                show_label = False)),
                     Item('object.events',
                          editor = TextEditor(auto_set = False,
                                              format_func = lambda x: "" if x == None else str(x)),
@@ -145,7 +148,8 @@ class ImportHandler(OpHandlerMixin, Controller):
                          style='readonly'),
                     Item('do_estimate',
                          editor = ButtonEditor(value = True,
-                                               label = "Import!")),
+                                               label = "Import!"),
+                         show_label = False),
                     shared_op_traits)
         
     def _setup_event_fired(self):
@@ -153,33 +157,72 @@ class ImportHandler(OpHandlerMixin, Controller):
         Import data; save as self.result
         """
 
-        model = ExperimentDialogModel(init_op = self.model,
-                                      init_conditions = self.context.conditions,
-                                      init_metadata = self.context.metadata)
+        self.dialog_model = ExperimentDialogModel(import_op = self.model,
+                                                  conditions = self.context.conditions,
+                                                  metadata = self.context.metadata)
 
-        handler = ExperimentDialogHandler(model = model)
-        handler.edit_traits(kind = 'livemodal')
-        
-        model.update_import_op(self.model)
+        handler = ExperimentDialogHandler(model = self.dialog_model)
+        handler.edit_traits(kind = 'livemodal')        
         
         
     @cached_property
     def _get_samples(self):
         return len(self.model.tubes)
+    
+    
+    @on_trait_change('model.events', post_init = True)
+    def _events_changed(self):
+        if not self.dialog_model:
+            return
+        
+        ret_events = 0
+        for tube in self.dialog_model.tubes:
+            if self.model.events:
+                ret_events += min(tube.metadata['$TOT'], self.model.events)
+            else:
+                ret_events += tube.metadata['$TOT']
+        
+        self.model.ret_events = ret_events
         
 
 @provides(IOperation)
 class ImportPluginOp(PluginOpMixin, ImportOp):
     handler_factory = Callable(ImportHandler, transient = True)
-    channels_list = List(Channel)
-    ret_events = util.PositiveInt(0, allow_zero = True, status = True)
-    events = util.PositiveCInt(None, allow_zero = True, allow_none = True)
     
-    def apply(self, experiment = None):
-        ret = super().apply(experiment = experiment)
-        self.ret_events = len(ret.data)
+    channels_list = List(Channel, estimate = True)
+    events = util.CIntOrNone(None, estimate = True)
+    tubes = List(Tube, estimate = True)
+    channels = Dict(Str, Str, estimate = True)
+    name_metadata =  Enum(None, "$PnN", "$PnS", estimate = True)
+    
+    ret_events = util.PositiveInt(0, allow_zero = True, transient = True)
+    do_import = Bool(False)
+    
+    @on_trait_change('channels, channels_items')
+    def _channels_changed(self):
+        new_channels = []
+        for channel, name in self.channels.items():
+            new_channels.append(Channel(channel = channel, name = name))
+            
+        self.channels_list = new_channels
+
+    def estimate(self, _):
+        self.do_import = True
         
-        return ret
+        
+    def apply(self, experiment = None):
+        if self.do_import:
+            return super().apply(experiment = experiment)
+        else:
+            if not self.tubes:
+                raise util.CytoflowOpError(None, 'Must specify some tubes by '
+                                                 'pressing "Experimental Setup"')
+            raise util.CytoflowOpError(None, "Press 'Import!'")
+        
+        
+    def clear_estimate(self):
+        self.do_import = False
+
     
     def get_notebook_code(self, idx):
         op = ImportOp()
@@ -191,6 +234,7 @@ class ImportPluginOp(PluginOpMixin, ImportOp):
             ex_{idx} = op_{idx}.apply()"""
             .format(repr = repr(op),
                     idx = idx))
+        
 
 @provides(IOperationPlugin)
 class ImportPlugin(Plugin, PluginHelpMixin):

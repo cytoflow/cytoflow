@@ -114,8 +114,8 @@ class ImportOp(HasStrictTraits):
         all characters must be letters, numbers or ``_``.  If :attr:`channels` is
         empty, load all channels in the FCS files.
         
-    events : Int (default = 0)
-        If ``> 0``, import only a random subset of events of size :attr:`events`. 
+    events : Int
+        If not None, import only a random subset of events of size :attr:`events`. 
         Presumably the analysis will go faster but less precisely; good for
         interactive data exploration.  Then, unset :attr:`events` and re-run
         the analysis non-interactively.
@@ -166,7 +166,7 @@ class ImportOp(HasStrictTraits):
     name_metadata = Enum(None, "$PnN", "$PnS")
 
     # are we subsetting?
-    events = util.PositiveInt(0, allow_zero = True)
+    events = util.CIntOrNone(None)
     coarse_events = util.Deprecated(new = 'events')
         
     # DON'T DO THIS
