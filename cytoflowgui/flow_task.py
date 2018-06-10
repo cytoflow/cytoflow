@@ -308,7 +308,6 @@ class FlowTask(Task):
                 # find the "best" file match -- ie, the one with the longest
                 # tail match
                 fcs_path = pathlib.Path(dialog.path).parts
-                best_path = None
                 best_path_len = -1
                                 
                 for tube in wi.operation.tubes:
@@ -316,7 +315,6 @@ class FlowTask(Task):
                     
                     for i in range(len(fcs_path)):
                         if list(reversed(fcs_path))[:i] == list(reversed(tube_path))[:i] and i > best_path_len:
-                            best_path = tube_path
                             best_path_len = i
                             
                 if best_path_len >= 0:
@@ -346,6 +344,13 @@ class FlowTask(Task):
             
         for wi in self.model.workflow:
             wi.lock.release()
+            
+        ret = confirm(parent = None,
+                      message = "Do you want to execute the workflow now?",
+                      title = "Run workflow?")
+        
+        if ret == YES:
+            self.model.run_all()
 
         
     def on_save(self):

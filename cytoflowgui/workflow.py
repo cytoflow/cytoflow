@@ -103,6 +103,9 @@ class Msg(object):
     # statement execution
     EXEC = "EXEC"
     
+    # apply & execute all
+    RUN_ALL = "RUN_ALL"
+    
     SHUTDOWN = "SHUTDOWN"
     
 class Changed(object):
@@ -347,6 +350,9 @@ class Workflow(HasStrictTraits):
                 
     def shutdown_remote_process(self):
         self.message_q.put((Msg.SHUTDOWN, None))
+        
+    def run_all(self):
+        self.message_q.put((Msg.RUN_ALL, None))
 
     @on_trait_change('workflow')
     def _on_new_workflow(self, obj, name, old, new):
@@ -593,15 +599,24 @@ class RemoteWorkflow(HasStrictTraits):
                         wi.plot_lock = self.plot_lock
                         wi.copy_traits(new_item,
                                        status = lambda t: t is not True)
-                        self.workflow.append(wi)
-                        
-                        if hasattr(wi.operation, "estimate"):
-                            self.exec_q.put((idx - 0.5, (wi, wi.estimate)))
-
-                        self.exec_q.put((idx, (wi, wi.apply)))                            
+                        self.workflow.append(wi)                          
 
                     for wi in self.workflow:
                         wi.lock.release()
+                        
+                elif msg == Msg.RUN_ALL:
+                    for wi in self.workflow:
+                        wi.lock.acquire()
+                        
+                    for wi in self.workflow:
+                        if hasattr(wi.operation, "estimate"):
+                            self.exec_q.put((idx - 0.5, (wi, wi.estimate)))
+
+                        self.exec_q.put((idx, (wi, wi.apply)))  
+                        
+                    for wi in self.workflow:
+                        wi.lock.release()
+                        
     
                 elif msg == Msg.ADD_ITEMS:
                     (idx, new_item) = payload
