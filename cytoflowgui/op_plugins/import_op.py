@@ -111,6 +111,7 @@ from cytoflowgui.serialization import camel_registry, traits_repr
 from cytoflowgui.import_dialog import ExperimentDialogModel, ExperimentDialogHandler
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin
+from cytoflowgui.workflow import Changed
 
 ImportOp.__repr__ = Tube.__repr__ = traits_repr
 
@@ -124,6 +125,7 @@ class Channel(HasTraits):
 class ImportHandler(OpHandlerMixin, Controller):
     
     setup_event = Button(label="Set up experiment...")
+    reset_channels = Button(label = "Reset channel names")
     samples = Property(depends_on = 'model.tubes', status = True)
     dialog_model = Instance(ExperimentDialogModel)
         
@@ -146,6 +148,8 @@ class ImportHandler(OpHandlerMixin, Controller):
                     Item('ret_events',
                          label='Events',
                          style='readonly'),
+                    Item('handler.reset_channels',
+                         show_label = False),
                     Item('do_estimate',
                          editor = ButtonEditor(value = True,
                                                label = "Import!"),
@@ -157,12 +161,14 @@ class ImportHandler(OpHandlerMixin, Controller):
         Import data; save as self.result
         """
 
-        self.dialog_model = ExperimentDialogModel(import_op = self.model,
-                                                  conditions = self.context.conditions,
-                                                  metadata = self.context.metadata)
-
-        handler = ExperimentDialogHandler(model = self.dialog_model)
+        handler = ExperimentDialogHandler(model = ExperimentDialogModel(),
+                                          import_op = self.model,
+                                          conditions = self.context.conditions,
+                                          metadata = self.context.metadata)
         handler.edit_traits(kind = 'livemodal')        
+        
+    def _reset_channels_fired(self):
+        self.model.reset_channels()
         
         
     @cached_property
@@ -189,29 +195,33 @@ class ImportHandler(OpHandlerMixin, Controller):
 class ImportPluginOp(PluginOpMixin, ImportOp):
     handler_factory = Callable(ImportHandler, transient = True)
     
+    original_channels = List(Str, estimate = True)
     channels_list = List(Channel, estimate = True)
     events = util.CIntOrNone(None, estimate = True)
     tubes = List(Tube, estimate = True)
-    channels = Dict(Str, Str, estimate = True)
+    channels = Dict(Str, Str, transient = True)
     name_metadata =  Enum(None, "$PnN", "$PnS", estimate = True)
     
     ret_events = util.PositiveInt(0, allow_zero = True, transient = True)
     do_import = Bool(False)
     
-    @on_trait_change('channels, channels_items')
+    def reset_channels(self):
+        self.channels_list = [Channel(name = x, channel = x) for x in self.original_channels]
+    
+
+    @on_trait_change('channels_list_items, channels_list:+', post_init = True)
     def _channels_changed(self):
-        new_channels = []
-        for channel, name in self.channels.items():
-            new_channels.append(Channel(channel = channel, name = name))
-            
-        self.channels_list = new_channels
+        self.changed = (Changed.ESTIMATE, ('channels_list', self.channels_list))
+        
 
     def estimate(self, _):
+        self.do_import = False
         self.do_import = True
         
         
     def apply(self, experiment = None):
         if self.do_import:
+            self.channels = {c.channel : c.name for c in self.channels_list}
             return super().apply(experiment = experiment)
         else:
             if not self.tubes:
@@ -257,25 +267,47 @@ class ImportPlugin(Plugin, PluginHelpMixin):
     
 ### Serialization
     
-@camel_registry.dumper(ImportPluginOp, 'import', version = 2)
+@camel_registry.dumper(ImportPluginOp, 'import', version = 3)
 def _dump_op(op):
     return dict(tubes = op.tubes,
                 conditions = op.conditions,
-                channels = op.channels,
+                channels_list = op.channels_list,
                 events = op.events,
                 name_metadata = op.name_metadata)
+    
 
-@camel_registry.loader('import', version = any)
+@camel_registry.loader('import', version = 1)
+@camel_registry.loader('import', version = 2)
 def _load_op(data, version):
     data.pop('ret_events', None)
+    channels = data.pop('channels', [])
+    data['channels_list'] = [Channel(channel = k, name = v )
+                             for k, v in channels.items()]
     return ImportPluginOp(**data)
+
+@camel_registry.loader('import', version = 3)
+def _load_op_v3(data, version):
+    return ImportPluginOp(**data)
+
 
 @camel_registry.dumper(Tube, 'tube', version = 1)
 def _dump_tube(tube):
     return dict(file = tube.file,
                 conditions = tube.conditions)
 
+
 @camel_registry.loader('tube', version = 1)
 def _load_tube(data, version):
     return Tube(**data)
-            
+
+
+@camel_registry.dumper(Channel, 'import-channel', version = 1)
+def _dump_channel(channel):
+    return dict(channel = channel.channel,
+                name = channel.name)
+     
+     
+@camel_registry.loader('import-channel', version = 1)
+def _load_channel(data, version):
+    return Channel(**data)
+

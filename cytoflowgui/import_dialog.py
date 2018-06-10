@@ -63,13 +63,21 @@ import cytoflow.utility as util
 
 from cytoflowgui.vertical_list_editor import VerticalListEditor
 
-import fcsparser
-
 def not_true ( value ):
     return (value is not True)
 
 def not_false ( value ):
     return (value is not False)
+
+def sanitize_metadata(meta):
+    ret = {}
+    for k, v in meta.items():
+        if k[0] == '$':
+            k = k[1:]
+        k = util.sanitize_identifier(k)
+        ret[k] = v
+        
+    return ret
 
 class Tube(HasStrictTraits):
     """
@@ -102,6 +110,9 @@ class Tube(HasStrictTraits):
     
     # these are the traits that every tube has.  every other trait is
     # dynamically created. 
+    
+    # the tube index
+    index = Property(Int)
     
     # the file name.
     file = Str(transient = True)
@@ -150,17 +161,30 @@ class Tube(HasStrictTraits):
     def _get_all_conditions_set(self):
         return len([x for x in list(self.conditions.values()) if x is None or x == ""]) == 0
     
+    # magic - gets the value of the 'index' property
+    def _get_index(self):
+        return self.parent.tubes.index(self)
+    
     
 class ExperimentColumn(ObjectColumn):
+        
     # override ObjectColumn.get_cell_color
     def get_cell_color(self, obj):
-        if self.name in obj.parent.tube_traits_dict and obj.parent.tube_traits_dict[self.name].type == 'metadata':
-            return QtGui.QColor('lightgray')
-        elif obj.parent.is_tube_unique(obj) and obj.all_conditions_set:
+        if not self.is_editable(obj):
+            return 'lightgrey'
+        
+        if obj.parent.is_tube_unique(obj) and obj.all_conditions_set:
             return super(ObjectColumn, self).get_cell_color(object)
         else:
-            return QtGui.QColor('lightpink')
+            return 'lightpink'
         
+    def _get_label(self):
+        """ Gets the label of the column.
+        """
+        if self._label is not None:
+            return self._label
+        return self.name
+    
 
 class ValidPythonIdentifier(BaseCStr):
 
@@ -172,12 +196,13 @@ class ValidPythonIdentifier(BaseCStr):
             return value 
          
         self.error(obj, name, value)
+
     
 class TubeTrait(HasStrictTraits):
     model = Instance('ExperimentDialogModel')
 
     trait = Property
-    name = CStr
+    name = ValidPythonIdentifier
     type = Enum(['metadata', 'category', 'float', 'bool'])
         
     remove_trait = Event
@@ -209,13 +234,7 @@ class ExperimentDialogModel(HasStrictTraits):
     """
     The model for the Experiment setup dialog.
     """
-    
-    # these bits are needed to defer model init until after
-    # the handler has been initialized
-    import_op = Any
-    conditions = Any
-    metadata = Any
-        
+
     # the list of Tubes (rows in the table)
     tubes = List(Tube)
 
@@ -237,13 +256,9 @@ class ExperimentDialogModel(HasStrictTraits):
     # traits to communicate with the traits_view
     fcs_metadata = Property(List, depends_on = 'tubes')
     
-    def init_model(self):      
-        if 'CF_File' not in self.conditions:
-            self.tube_traits.append(TubeTrait(model = self,
-                                              name = 'CF_File',
-                                              type = 'metadata'))
+    def init(self, import_op, conditions, metadata):     
             
-        for name, condition in self.conditions.items():
+        for name, condition in conditions.items():
             if str(condition.dtype).startswith("category") or str(condition.dtype).startswith('object'):
                 self.tube_traits.append(TubeTrait(model = self, name = name, type = 'category'))
             elif str(condition.dtype).startswith("int") or str(condition.dtype).startswith("float"):
@@ -255,13 +270,9 @@ class ExperimentDialogModel(HasStrictTraits):
         
         shown_error = False
         
-        for op_tube in self.import_op.tubes:
-            tube = Tube(file = op_tube.file,
-                        parent = self,
-                        metadata = self.metadata['fcs_metadata'][op_tube.file])
-            
+        for op_tube in import_op.tubes:
             try:
-                fcsparser.parse(op_tube.file, meta_data_only = True)
+                metadata = fcsparser.parse(op_tube.file, meta_data_only = True)
             except Exception:
                 if not shown_error:
                     warning(None,
@@ -269,12 +280,16 @@ class ExperimentDialogModel(HasStrictTraits):
                             "files.  You will need to re-add them.")
                     shown_error = True
                 continue
+
+            del metadata['__header__']
+            metadata['CF_File'] = Path(op_tube.file).stem
+            tube = Tube(file = op_tube.file, parent = self, metadata = sanitize_metadata(metadata))
             
             # if we're the first tube loaded, create a dummy experiment
             # and setup default metadata columns
             if not self.dummy_experiment:
                 self.dummy_experiment = ImportOp(tubes = [op_tube],
-                                                 conditions = self.import_op.conditions,
+                                                 conditions = import_op.conditions,
                                                  events = 1).apply()
                                                  
             self.tubes.append(tube)  # adds the dynamic traits to the tube
@@ -286,10 +301,6 @@ class ExperimentDialogModel(HasStrictTraits):
                     tube.trait_set(**{trait.name : tube.metadata[trait.name]})
                 else:
                     tube.conditions[trait.name] = tube.trait_get()[trait.name]
-            
-
-                    
-        
     
     
     @on_trait_change('tubes_items')
@@ -363,6 +374,7 @@ class ExperimentDialogModel(HasStrictTraits):
             trait.name = old_name
             return
         
+        
         for tube in self.tubes:
             trait_value = None
             
@@ -426,7 +438,7 @@ class ExperimentDialogModel(HasStrictTraits):
                 self.counter[tube_hash] = 1
                 
     
-    def update_import_op(self):
+    def update_import_op(self, import_op):
         if not self.tubes:
             return
         
@@ -441,10 +453,10 @@ class ExperimentDialogModel(HasStrictTraits):
             tubes.append(op_tube)
             events += tube.metadata['$TOT']
             
-        self.import_op.ret_events = events
+        import_op.ret_events = events
             
-        self.import_op.conditions = conditions
-        self.import_op.tubes = tubes   
+        import_op.conditions = conditions
+        import_op.tubes = tubes   
         
         # update the channels too.  most of this is adapted from 
         # cytoflow.operations.import_op.ImportOp.apply()
@@ -461,7 +473,7 @@ class ExperimentDialogModel(HasStrictTraits):
         
         meta_channels = tube0_meta["_channels_"]
         
-        if self.import_op.name_metadata:
+        if import_op.name_metadata:
             name_metadata = self.name_metadata
         else:
             # try to autodetect the metadata
@@ -491,19 +503,22 @@ class ExperimentDialogModel(HasStrictTraits):
                                      reformat_meta = True,
                                      channel_naming = name_metadata)
                     
-        channels = list(tube0_meta["_channel_names_"])
+        import_op.original_channels = channels = list(tube0_meta["_channel_names_"])
         
-        new_channels = {}
-        if self.import_op.channels:
-            for channel, name in self.import_op.channels.items():
-                if channel in channels:
-                    new_channels[channel] = name
+        all_present = len(import_op.channels_list) > 0
+        if len(import_op.channels_list) > 0:
+            for c in import_op.channels_list:
+                if c.channel not in channels:
+                    all_present = False
                     
-        if not new_channels:
-            for channel in channels:
-                new_channels[channel] = channel
-                
-        self.import_op.channels = new_channels            
+            if not all_present:
+                warning(None,
+                        "Some of the operation's channels weren't found in "
+                        "these FCS files.  Resetting all channel names.",
+                        "Resetting channel names")
+        
+        if not all_present:
+            import_op.reset_channels()        
         
             
     def is_tube_unique(self, tube):
@@ -515,7 +530,9 @@ class ExperimentDialogModel(HasStrictTraits):
     
     
     def _get_valid(self):
-        return len(set(self.counter)) == len(self.tubes) and all([x.all_conditions_set for x in self.tubes])
+        return len(self.tubes) > 0 and \
+               len(set(self.counter)) == len(self.tubes) and \
+               all([x.all_conditions_set for x in self.tubes])
     
     
     # magic: gets the list of FCS metadata for the trait list editor
@@ -536,7 +553,14 @@ class ExperimentDialogModel(HasStrictTraits):
         return ret
                     
 class ExperimentDialogHandler(Controller):
-
+    
+    
+    # bits for model initialization
+    import_op = Any
+    conditions = Any
+    metadata = Any
+        
+    # events
     add_tubes = Event
     remove_tubes = Event
     add_variable = Event
@@ -568,7 +592,10 @@ class ExperimentDialogHandler(Controller):
                                               auto_size = True,
                                               configurable = False,
                                               selection_mode = 'rows',
-                                              selected = 'handler.selected_tubes'),
+                                              selected = 'handler.selected_tubes',
+                                              columns = [ObjectColumn(name = 'index',
+                                                                      read_only_cell_color = 'lightgrey',
+                                                                      editable = False)]),
                          enabled_when = "object.tubes",
                          show_label = False),
                     HGroup(
@@ -596,12 +623,50 @@ class ExperimentDialogHandler(Controller):
                        
         # save a reference to the table editor
         self.table_editor = info.ui.get_editors('tubes')[0]
-
-        # init the model.  we have to defer this so we don't end up with
-        # a bunch of "default" columns
-        self.model.init_model()
+        
+        # init the model
+        self.model.init(self.import_op, self.conditions, self.metadata)
                 
         return True
+    
+    def close(self, info, is_ok):
+        """ Handles the user attempting to close a dialog-based user interface.
+
+        This method is called when the user attempts to close a window, by
+        clicking an **OK** or **Cancel** button, or clicking a Close control
+        on the window). It is called before the window is actually destroyed.
+        Override this method to perform any checks before closing a window.
+
+        While Traits UI handles "OK" and "Cancel" events automatically, you
+        can use the value of the *is_ok* parameter to implement additional
+        behavior.
+
+        Parameters
+        ----------
+        info : UIInfo object
+            The UIInfo object associated with the view
+        is_ok : Boolean
+            Indicates whether the user confirmed the changes (such as by
+            clicking **OK**.)
+
+        Returns
+        -------
+        allow_close : bool
+            A Boolean, indicating whether the window should be allowed to close.
+        """
+        if is_ok:
+            if not self.model.valid:
+                error(None, 
+                      "Each tube must have a unique set of experimental conditions",
+                      "Invalid experiment!")
+                return False
+
+        if not is_ok:
+            # we don't need to "undo" anything, we're throwing this model away
+            info.ui.history = None
+
+        return True
+    
     
     def closed(self, info, is_ok):
         for trait in self.model.tube_traits:
@@ -610,9 +675,8 @@ class ExperimentDialogHandler(Controller):
                     tube.on_trait_change(self._try_multiedit, 
                                          trait.name, 
                                          remove = True)
-                    
         if is_ok:
-            self.model.update_import_op()
+            self.model.update_import_op(self.import_op)
         
             
     @on_trait_change('add_variable')
@@ -645,8 +709,7 @@ class ExperimentDialogHandler(Controller):
         
         for path in file_dialog.paths:
             try:
-                fcsparser.parse(path, 
-                                meta_data_only = True)
+                metadata = fcsparser.parse(path, meta_data_only = True)
             except Exception as e:
                 raise RuntimeError("FCS reader threw an error on tube {0}: {1}"\
                                    .format(path, e.value))
@@ -664,9 +727,9 @@ class ExperimentDialogHandler(Controller):
                 error(None, e.__str__(), "Error importing tube")
                 return
             
-            metadata, _ = parse_tube(path, self.model.dummy_experiment, metadata_only = True)
+            del metadata['__header__']
             metadata['CF_File'] = Path(path).stem    
-            tube = Tube(file = path, parent = self.model, metadata = metadata)
+            tube = Tube(file = path, parent = self.model, metadata = sanitize_metadata(metadata))
             
             self.model.tubes.append(tube)
             
@@ -727,6 +790,21 @@ class ExperimentDialogHandler(Controller):
                 
             if old_name:
                 tube.remove_trait(old_name)
+                
+    @on_trait_change('model:tube_traits:type')
+    def _tube_trait_type_changed(self, trait, _, old_type, new_type):
+        table_column = next((x for x in self.table_editor.columns if x.name == trait.name))
+        
+        table_column.editable = (new_type != 'metadata')  
+        
+        for tube in self.model.tubes:
+            if trait.name:
+                if old_type != 'metadata':
+                    tube.on_trait_change(self._try_multiedit, trait.name, remove = True)
+                    
+                if new_type != 'metadata':
+                    tube.on_trait_change(self._try_multiedit, trait.name)
+                  
                     
             
     def _try_multiedit(self, obj, name, old, new):
