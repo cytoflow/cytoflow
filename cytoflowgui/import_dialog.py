@@ -36,7 +36,7 @@ import warnings, fcsparser
 from traits.api import (HasTraits, HasStrictTraits, provides, Instance, Str, 
                         Int, List, Bool, Enum, Float, DelegatesTo, TraitType,
                         Property, BaseCStr, CStr, on_trait_change, Dict, Event,
-                        cached_property, Any, CFloat, CBool)
+                        cached_property, Any, CFloat, CBool, BaseCBool)
                        
 from traitsui.api import (UI, Group, View, Item, TableEditor, OKCancelButtons,
                           Controller, CheckListEditor, TextEditor, BooleanEditor,
@@ -196,7 +196,27 @@ class ValidPythonIdentifier(BaseCStr):
             return value 
          
         self.error(obj, name, value)
-
+        
+def eval_bool(x):
+    try:
+        xc = x.casefold()
+        if xc == 'f' or xc == 'false' or xc == 'n' or xc == 'no':
+            return False
+        elif xc == 't' or xc == 'true' or xc == 'y' or xc == 'yes':
+            return True
+        else:
+            return bool(x)
+    except:
+        return bool(x)
+    
+class ConvertingBool(BaseCBool):
+    evaluate = eval_bool
+    
+    def validate ( self, object, name, value ):
+        try:
+            return eval_bool( value )
+        except:
+            self.error( object, name, value )
     
 class TubeTrait(HasStrictTraits):
     model = Instance('ExperimentDialogModel')
@@ -227,7 +247,7 @@ class TubeTrait(HasStrictTraits):
         elif self.type == 'float':
             return CFloat()
         elif self.type == 'bool':
-            return CBool()
+            return ConvertingBool()
 
     
 class ExperimentDialogModel(HasStrictTraits):
