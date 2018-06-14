@@ -95,7 +95,7 @@ Import FCS files and associate them with experimental conditions (metadata.)
 from textwrap import dedent
 
 from traitsui.api import (View, Item, Controller, TextEditor, ButtonEditor, 
-                          InstanceEditor, HGroup, VGroup)
+                          InstanceEditor, HGroup, VGroup, Label)
 from traits.api import (Button, Property, cached_property, provides, Callable, 
                         HasTraits, String, List, on_trait_change, Instance,
                         Bool, Dict, Str, Enum)
@@ -108,7 +108,7 @@ from cytoflow.operations.i_operation import IOperation
                        
 from cytoflowgui.vertical_list_editor import VerticalListEditor
 from cytoflowgui.serialization import camel_registry, traits_repr
-from cytoflowgui.import_dialog import ExperimentDialogModel, ExperimentDialogHandler
+from cytoflowgui.import_dialog import ExperimentDialogModel, ExperimentDialogHandler, ValidPythonIdentifier
 from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin
 from cytoflowgui.workflow import Changed
@@ -117,10 +117,11 @@ ImportOp.__repr__ = Tube.__repr__ = traits_repr
 
 class Channel(HasTraits):
     channel = String
-    name = String
+    name = ValidPythonIdentifier
     
-    default_view = View(HGroup(Item('channel', style = 'readonly'),
-                               Item('name')))
+    default_view = View(HGroup(Item('channel', style = 'readonly', show_label = False),
+                               Item(label = '-->'),
+                               Item('name', show_label = False)))
 
 class ImportHandler(OpHandlerMixin, Controller):
     
@@ -130,26 +131,24 @@ class ImportHandler(OpHandlerMixin, Controller):
     dialog_model = Instance(ExperimentDialogModel)
         
     def default_traits_view(self):
-        return View(VGroup(Item('handler.setup_event',
-                                show_label=False),
+        return View(VGroup(Label(label = "Channels",
+                                   visible_when = 'model.tubes' ),
                            Item('object.channels_list',
                                 editor = VerticalListEditor(editor = InstanceEditor(),
                                                             style = 'custom',
                                                             mutable = False,
                                                             deletable = True),
-                                show_label = False)),
+                                show_label = False),
+                    Item('handler.reset_channels',
+                         show_label = False),
+                           visible_when = 'object.tubes'),
                     Item('object.events',
                          editor = TextEditor(auto_set = False,
                                              format_func = lambda x: "" if x == None else str(x)),
                          label="Events per\nsample"),
-                    Item('handler.samples',
-                         label='Samples',
-                         style='readonly'),
-                    Item('ret_events',
-                         label='Events',
-                         style='readonly'),
-                    Item('handler.reset_channels',
-                         show_label = False),
+                    Item('handler.samples', label='Samples', style='readonly'),
+                    Item('ret_events', label='Events', style='readonly'),
+                    Item('handler.setup_event', show_label=False),
                     Item('do_estimate',
                          editor = ButtonEditor(value = True,
                                                label = "Import!"),
@@ -206,13 +205,18 @@ class ImportPluginOp(PluginOpMixin, ImportOp):
     do_import = Bool(False)
     
     def reset_channels(self):
-        self.channels_list = [Channel(name = x, channel = x) for x in self.original_channels]
+        self.channels_list = [Channel(channel = x, name = util.sanitize_identifier(x)) for x in self.original_channels]
     
 
     @on_trait_change('channels_list_items, channels_list:+', post_init = True)
     def _channels_changed(self):
         self.changed = (Changed.ESTIMATE, ('channels_list', self.channels_list))
-        
+
+
+    @on_trait_change('tubes_items, tubes:+', post_init = True)
+    def _tubes_changed(self):
+        self.changed = (Changed.ESTIMATE, ('channels_list', self.channels_list))        
+
 
     def estimate(self, _):
         self.do_import = False
@@ -225,8 +229,8 @@ class ImportPluginOp(PluginOpMixin, ImportOp):
             return super().apply(experiment = experiment)
         else:
             if not self.tubes:
-                raise util.CytoflowOpError(None, 'Must specify some tubes by '
-                                                 'pressing "Experimental Setup"')
+                raise util.CytoflowOpError(None, 'Click "Set up experiment", '
+                                                 'then "Import!"')
             raise util.CytoflowOpError(None, "Press 'Import!'")
         
         

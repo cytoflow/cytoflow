@@ -36,7 +36,7 @@ import warnings, fcsparser
 from traits.api import (HasTraits, HasStrictTraits, provides, Instance, Str, 
                         Int, List, Bool, Enum, Float, DelegatesTo, TraitType,
                         Property, BaseCStr, CStr, on_trait_change, Dict, Event,
-                        cached_property, Any, CFloat, CBool, BaseCBool)
+                        cached_property, Any, CFloat, CBool, BaseCBool, TraitError)
                        
 from traitsui.api import (UI, Group, View, Item, TableEditor, OKCancelButtons,
                           Controller, CheckListEditor, TextEditor, BooleanEditor,
@@ -196,7 +196,8 @@ class ValidPythonIdentifier(BaseCStr):
             return value 
          
         self.error(obj, name, value)
-        
+
+                 
 def eval_bool(x):
     try:
         xc = x.casefold()
@@ -336,20 +337,15 @@ class ExperimentDialogModel(HasStrictTraits):
                     tube.trait_set(**{trait.name : tube.metadata[trait.name]})
                 else:
                     tube.trait_set(**{trait.name : trait.trait.default_value})
-                    tube.conditions[trait.name] = tube.trait_get()[trait.name]
+                    tube.conditions[trait.name] = tube.trait_get()[trait.name]  
             
+        self.counter.clear()
+        for tube in self.tubes:
             tube_hash = tube.conditions_hash()
             if tube_hash in self.counter:
                 self.counter[tube_hash] += 1
             else:
                 self.counter[tube_hash] = 1
-                
-        for tube in event.removed:
-            tube_hash = tube.conditions_hash()
-            if self.counter[tube_hash] == 1:
-                del self.counter[tube_hash]
-            else:
-                self.counter[tube_hash] -= 1
                  
     @on_trait_change('tube_traits_items')
     def _tube_traits_changed(self, event):
@@ -390,11 +386,6 @@ class ExperimentDialogModel(HasStrictTraits):
             
     @on_trait_change('tube_traits:name')
     def _on_trait_name_change(self, trait, _, old_name, new_name):
-        if not new_name:
-            trait.name = old_name
-            return
-        
-        
         for tube in self.tubes:
             trait_value = None
             
@@ -408,21 +399,23 @@ class ExperimentDialogModel(HasStrictTraits):
                 # defer removing the old trait until the handler
                 # tube.remove_trait(old_name)
                 
-            if new_name in tube.metadata:
-                trait_value = tube.metadata[new_name]
-            elif trait_value is None:
-                trait_value = trait.trait.default_value
-            
-            tube.add_trait(new_name, trait.trait)
-            tube.trait_set(**{new_name : trait_value})
-            
-            if trait.type != 'metadata':
-                tube.conditions[new_name] = trait_value
+            if new_name:
+                if new_name in tube.metadata:
+                    trait_value = tube.metadata[new_name]
+                elif trait_value is None:
+                    trait_value = trait.trait.default_value
+                
+                tube.add_trait(new_name, trait.trait)
+                tube.trait_set(**{new_name : trait_value})
+                
+                if trait.type != 'metadata':
+                    tube.conditions[new_name] = trait_value
                 
         if old_name:
             del self.tube_traits_dict[old_name]
             
-        self.tube_traits_dict[new_name] = trait
+        if new_name:
+            self.tube_traits_dict[new_name] = trait
 
         self.counter.clear()
         for tube in self.tubes:
@@ -445,7 +438,11 @@ class ExperimentDialogModel(HasStrictTraits):
                 del tube.conditions[trait.name]
                 
             tube.add_trait(trait.name, trait.trait)
-            tube.trait_set(**{trait.name : trait_value})
+            
+            try:
+                tube.trait_set(**{trait.name : trait_value})
+            except TraitError:
+                tube.trait_set(**{trait.name : trait.trait.default_value})
             if new_type != 'metadata':
                 tube.conditions[trait.name] = tube.trait_get()[trait.name]
             
@@ -471,7 +468,7 @@ class ExperimentDialogModel(HasStrictTraits):
             op_tube = CytoflowTube(file = tube.file,
                                    conditions = tube.trait_get(list(conditions.keys())))
             tubes.append(op_tube)
-            events += tube.metadata['$TOT']
+            events += tube.metadata['TOT']
             
         import_op.ret_events = events
             
@@ -567,10 +564,8 @@ class ExperimentDialogModel(HasStrictTraits):
                 meta[name].add(val)
                 
         ret = [x for x in meta.keys() if len(meta[x]) > 1]
-        if 'CF_File' not in ret:
-            ret.append('CF_File')
             
-        return ret
+        return sorted(ret)
                     
 class ExperimentDialogHandler(Controller):
     
@@ -774,6 +769,9 @@ class ExperimentDialogHandler(Controller):
     @on_trait_change('model:tube_traits_items', post_init = True)
     def _tube_traits_changed(self, event):
         for trait in event.added:
+            if not trait.name:
+                continue
+            
             if self.table_editor:
                 self.table_editor.columns.append(ExperimentColumn(name = trait.name,
                                                                   editable = (trait.type != 'metadata')))                 
@@ -782,6 +780,9 @@ class ExperimentDialogHandler(Controller):
                     tube.on_trait_change(self._try_multiedit, trait.name)
 
         for trait in event.removed:
+            if not trait.name:
+                continue
+            
             table_column = next((x for x in self.table_editor.columns if x.name == trait.name))
             self.table_editor.columns.remove(table_column)
             
@@ -792,13 +793,19 @@ class ExperimentDialogHandler(Controller):
                     
     @on_trait_change('model:tube_traits:name')
     def _tube_trait_name_changed(self, trait, _, old_name, new_name):
-        old_table_column = next((x for x in self.table_editor.columns if x.name == old_name))
-        column_idx = self.table_editor.columns.index(old_table_column)
+        if old_name:
+            old_table_column = next((x for x in self.table_editor.columns if x.name == old_name))
+            column_idx = self.table_editor.columns.index(old_table_column)
+        else:
+            column_idx = len(self.table_editor.columns)
                 
-        self.table_editor.columns.insert(column_idx,
-                                         ExperimentColumn(name = new_name,
-                                                          editable = (trait.type != 'metadata')))          
-        self.table_editor.columns.remove(old_table_column)
+        if new_name:
+            self.table_editor.columns.insert(column_idx,
+                                             ExperimentColumn(name = new_name,
+                                                              editable = (trait.type != 'metadata')))
+            
+        if old_name:          
+            self.table_editor.columns.remove(old_table_column)
                
         for tube in self.model.tubes:   
             if trait.type != 'metadata':
@@ -811,8 +818,20 @@ class ExperimentDialogHandler(Controller):
             if old_name:
                 tube.remove_trait(old_name)
                 
+            
+        self.model.counter.clear()
+        for tube in self.model.tubes:
+            tube_hash = tube.conditions_hash()
+            if tube_hash in self.model.counter:
+                self.model.counter[tube_hash] += 1
+            else:
+                self.model.counter[tube_hash] = 1
+                
     @on_trait_change('model:tube_traits:type')
     def _tube_trait_type_changed(self, trait, _, old_type, new_type):
+        if not trait.name:
+            return
+        
         table_column = next((x for x in self.table_editor.columns if x.name == trait.name))
         
         table_column.editable = (new_type != 'metadata')  
@@ -842,6 +861,8 @@ class ExperimentDialogHandler(Controller):
         for tube in self.selected_tubes:
             if tube != obj:
                 old_hash = tube.conditions_hash()
+                if old_hash not in self.model.counter:
+                    assert()
                 self.model.counter[old_hash] -= 1
                 if self.model.counter[old_hash] == 0:
                     del self.model.counter[old_hash]            

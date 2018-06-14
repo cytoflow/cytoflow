@@ -70,7 +70,7 @@ class Tube(HasTraits):
     def __hash__(self):
         return hash((self.file, 
                      (frozenset(self.conditions.keys()),
-                      frozenset(self.conditions.itervalues()))))
+                      frozenset(self.conditions.values()))))
 
 @provides(IOperation)
 class ImportOp(HasStrictTraits):
