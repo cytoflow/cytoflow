@@ -139,9 +139,9 @@ class ImportHandler(OpHandlerMixin, Controller):
                                                             mutable = False,
                                                             deletable = True),
                                 show_label = False),
-                    Item('handler.reset_channels',
-                         show_label = False),
-                           visible_when = 'object.tubes'),
+                           Item('handler.reset_channels',
+                           show_label = False),
+                    visible_when = 'object.channels_list'),
                     Item('object.events',
                          editor = TextEditor(auto_set = False,
                                              format_func = lambda x: "" if x == None else str(x)),
@@ -201,7 +201,7 @@ class ImportPluginOp(PluginOpMixin, ImportOp):
     channels = Dict(Str, Str, transient = True)
     name_metadata =  Enum(None, "$PnN", "$PnS", estimate = True)
     
-    ret_events = util.PositiveInt(0, allow_zero = True, transient = True)
+    ret_events = util.PositiveInt(0, allow_zero = True, status = True)
     do_import = Bool(False)
     
     def reset_channels(self):
@@ -226,7 +226,10 @@ class ImportPluginOp(PluginOpMixin, ImportOp):
     def apply(self, experiment = None):
         if self.do_import:
             self.channels = {c.channel : c.name for c in self.channels_list}
-            return super().apply(experiment = experiment)
+            ret = super().apply(experiment = experiment)
+            
+            self.ret_events = len(ret.data)
+            return ret
         else:
             if not self.tubes:
                 raise util.CytoflowOpError(None, 'Click "Set up experiment", '
@@ -288,6 +291,7 @@ def _load_op(data, version):
     data['channels_list'] = [Channel(channel = k, name = v )
                              for k, v in channels.items()]
     return ImportPluginOp(**data)
+
 
 @camel_registry.loader('import', version = 3)
 def _load_op_v3(data, version):

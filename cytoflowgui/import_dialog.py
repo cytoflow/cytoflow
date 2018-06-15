@@ -30,35 +30,31 @@ if __name__ == '__main__':
     import os
     os.environ['TRAITS_DEBUG'] = "1"
     
-from pathlib import Path
-import warnings, fcsparser
-        
-from traits.api import (HasTraits, HasStrictTraits, provides, Instance, Str, 
-                        Int, List, Bool, Enum, Float, DelegatesTo, TraitType,
-                        Property, BaseCStr, CStr, on_trait_change, Dict, Event,
-                        cached_property, Any, CFloat, CBool, BaseCBool, TraitError)
-                       
-from traitsui.api import (UI, Group, View, Item, TableEditor, OKCancelButtons,
-                          Controller, CheckListEditor, TextEditor, BooleanEditor,
-                          InstanceEditor, ListStrEditor, HGroup, ButtonEditor,
-                          EnumEditor, TextEditor, BooleanEditor, ListEditor,
-                          VGroup, Heading)
 
-from traitsui.menu import OKButton, OKCancelButtons
+from pathlib import Path
+import warnings, fcsparser, pandas
+        
+from traits.api import (HasStrictTraits, Instance, Str, Int, List, Bool, Enum, 
+                        Property, BaseCStr, CStr, on_trait_change, Dict, Event,
+                        cached_property, Any, CFloat, BaseCBool, TraitError)
+                       
+from traitsui.api import (View, Item, TableEditor, Controller, InstanceEditor, 
+                          HGroup, ButtonEditor, EnumEditor, TextEditor, VGroup, 
+                          Label)
+
+from traitsui.menu import OKCancelButtons
 
 from traitsui.qt4.table_editor import TableEditor as TableEditorQt
 
-from pyface.i_dialog import IDialog
-from pyface.api import Dialog, FileDialog, error, warning, OK, confirm, YES, ImageResource
+from pyface.api import FileDialog, error, warning, confirm, YES
 
-from pyface.qt import QtCore, QtGui
 from pyface.constant import OK as PyfaceOK
 
-from traitsui.table_column import ObjectColumn, TableColumn
+from traitsui.table_column import ObjectColumn
 
 from cytoflow import Tube as CytoflowTube
 from cytoflow import Experiment, ImportOp
-from cytoflow.operations.import_op import check_tube, parse_tube
+from cytoflow.operations.import_op import check_tube
 import cytoflow.utility as util
 
 from cytoflowgui.vertical_list_editor import VerticalListEditor
@@ -213,7 +209,7 @@ def eval_bool(x):
 class ConvertingBool(BaseCBool):
     evaluate = eval_bool
     
-    def validate ( self, object, name, value ):
+    def validate ( self, _, name, value ):
         try:
             return eval_bool( value )
         except:
@@ -587,7 +583,7 @@ class ExperimentDialogHandler(Controller):
     default_view = View(
             HGroup(
                 VGroup(
-                    Heading("First, define experimental variables"),
+                    Label("Variables"),
                     Item('tube_traits',
                          editor = VerticalListEditor(editor = InstanceEditor(),
                                                      style = 'custom',
@@ -599,7 +595,7 @@ class ExperimentDialogHandler(Controller):
                              editor = ButtonEditor(label = "Add a variable"),
                              show_label = False))),
                 VGroup(
-                    Heading("Then, map experimental variables to FCS files"),
+                    Label("Tubes"),
                     Item(name = 'tubes', 
                          id = 'table', 
                          editor = TableEditor(editable = True,
@@ -699,14 +695,56 @@ class ExperimentDialogHandler(Controller):
         self.model.tube_traits.append(TubeTrait(model = self.model))
         
             
+    @on_trait_change('import_csv')
     def _on_import(self):
         """
         Import format: CSV, first column is filename, path relative to CSV.
         others are conditions, type is autodetected.  first row is header
         with names.
         """
-        pass
+        file_dialog = FileDialog()
+        file_dialog.wildcard = "CSV files (*.csv)|*.csv|"
+        file_dialog.action = 'open'
+        file_dialog.open()
+        
+        if file_dialog.return_code != PyfaceOK:
+            return
+        
+        csv = pandas.read_csv(file_dialog.path)
+        csv_folder = Path(file_dialog.path).parent
+        
+        if self.model.tubes or self.model.tube_traits:
+            if confirm(parent = None,
+                       message = "This will clear the current conditions and tubes! "
+                                 "Are you sure you want to continue?",
+                       title = "Clear tubes and conditions?") != YES:
+                return
+        
+        
+        for col in csv.columns[1:]:
+            self.model.tube_traits.append(TubeTrait(model = self.model,
+                                                    name = util.sanitize_identifier(col),
+                                                    type = 'category'))
+            
+            
+        for _, row in csv.iterrows():
+            filename = csv_folder / row[0]
+            
+            try:
+                metadata = fcsparser.parse(str(filename), meta_data_only = True)
+            except Exception as e:
+                warning(None, "Had trouble loading file {}: {}".format(filename, str(e)))
+                continue
 
+            del metadata['__header__']
+            metadata['CF_File'] = Path(filename).stem
+            new_tube = Tube(file = str(filename), parent = self.model, metadata = sanitize_metadata(metadata))
+            self.model.tubes.append(new_tube)
+
+            for col in csv.columns[1:]:
+                new_tube.trait_set(**{util.sanitize_identifier(col) : row[col]})
+            
+        
         
     @on_trait_change('add_tubes')
     def _on_add_tubes(self):
@@ -861,8 +899,6 @@ class ExperimentDialogHandler(Controller):
         for tube in self.selected_tubes:
             if tube != obj:
                 old_hash = tube.conditions_hash()
-                if old_hash not in self.model.counter:
-                    assert()
                 self.model.counter[old_hash] -= 1
                 if self.model.counter[old_hash] == 0:
                     del self.model.counter[old_hash]            
