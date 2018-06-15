@@ -30,7 +30,6 @@ def main():
     args = parser.parse_args()
 
     tube_meta = fcsparser.parse(args.fcs_file, meta_data_only = True)
-    del tube_meta['__header__']
     tube_meta = [(k, v) for k, v in tube_meta.items()]
     tube_meta = sorted(tube_meta)
     for k, v in tube_meta:

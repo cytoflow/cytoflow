@@ -26,9 +26,8 @@ if __name__ == '__main__':
 
 from pyface.qt import QtGui
 
-from traits.api \
-    import HasTraits, HasPrivateTraits, Instance, List, Str, Bool, Property, \
-    Any, cached_property, Int
+from traits.api import (HasTraits, HasPrivateTraits, Instance, List, Str, Bool, 
+                        Property, Any, cached_property, Int, on_trait_change)
 
 from traitsui.api import UI, Editor
 
@@ -115,19 +114,19 @@ class VerticalNotebookPage(HasPrivateTraits):
 
     #-- Public Methods -------------------------------------------------------
 
-    def __init__(self, **kwargs):
-        super(VerticalNotebookPage, self).__init__(**kwargs)
-
-        # usually i'd make these static notifiers, but because these traits can
-        # changed from the worker thread, they need to be re-dispatched on the
-        # UI thread, and you can only specify UI dispatch with a dynamic
-        # notifier
-        
-        self.on_trait_change(self._on_is_open_changed, 'is_open', dispatch = 'ui')
-        self.on_trait_change(self._on_name_changed, 'name', dispatch = 'ui')
-        self.on_trait_change(self._on_description_changed, 'description', dispatch = 'ui')
-        self.on_trait_change(self._on_icon_changed, 'icon', dispatch = 'ui')
-        self.on_trait_change(self._on_deletable_changed, 'deletable', dispatch = 'ui')
+#     def __init__(self, **kwargs):
+#         super(VerticalNotebookPage, self).__init__(**kwargs)
+# 
+#         # usually i'd make these static notifiers, but because these traits can
+#         # changed from the worker thread, they need to be re-dispatched on the
+#         # UI thread, and you can only specify UI dispatch with a dynamic
+#         # notifier
+#         
+#         self.on_trait_change(self._on_is_open_changed, 'is_open', dispatch = 'ui')
+#         self.on_trait_change(self._on_name_changed, 'name', dispatch = 'ui')
+#         self.on_trait_change(self._on_description_changed, 'description', dispatch = 'ui')
+#         self.on_trait_change(self._on_icon_changed, 'icon', dispatch = 'ui')
+#         self.on_trait_change(self._on_deletable_changed, 'deletable', dispatch = 'ui')
 
     def dispose(self):
         """ Removes this notebook page. """
@@ -148,27 +147,27 @@ class VerticalNotebookPage(HasPrivateTraits):
                                              self.icon_object_trait,
                                              remove = True)
         
-        self.on_trait_change(self._on_is_open_changed, 
-                             'is_open', 
-                             dispatch = 'ui',
-                             remove = True)
-        self.on_trait_change(self._on_name_changed, 
-                             'name', 
-                             dispatch = 'ui',
-                             remove = True)
-        self.on_trait_change(self._on_description_changed, 
-                             'description', 
-                             dispatch = 'ui',
-                             remove = True)
-        self.on_trait_change(self._on_icon_changed, 
-                             'icon', 
-                             dispatch = 'ui',
-                             remove = True)
-
-        self.on_trait_change(self._on_deletable_changed, 
-                             'deletable', 
-                             dispatch = 'ui',
-                             remove = True)
+#         self.on_trait_change(self._on_is_open_changed, 
+#                              'is_open', 
+#                              dispatch = 'ui',
+#                              remove = True)
+#         self.on_trait_change(self._on_name_changed, 
+#                              'name', 
+#                              dispatch = 'ui',
+#                              remove = True)
+#         self.on_trait_change(self._on_description_changed, 
+#                              'description', 
+#                              dispatch = 'ui',
+#                              remove = True)
+#         self.on_trait_change(self._on_icon_changed, 
+#                              'icon', 
+#                              dispatch = 'ui',
+#                              remove = True)
+# 
+#         self.on_trait_change(self._on_deletable_changed, 
+#                              'deletable', 
+#                              dispatch = 'ui',
+#                              remove = True)
 
         # make sure we dispose of the child ui properly
         if self.ui is not None:
@@ -306,6 +305,7 @@ class VerticalNotebookPage(HasPrivateTraits):
         """
         return self.notebook.control
 
+    @on_trait_change('is_open', dispatch = 'ui')
     def _on_is_open_changed(self, is_open):
         """ 
         Handles the 'is_open' state of the page being changed.
@@ -320,6 +320,7 @@ class VerticalNotebookPage(HasPrivateTraits):
             else:
                 self.icon = QtGui.QStyle.SP_ArrowRight
                 
+    @on_trait_change('name', dispatch = 'ui')
     def _on_name_changed(self, name):
         """ 
         Handles the name trait being changed.
@@ -327,14 +328,17 @@ class VerticalNotebookPage(HasPrivateTraits):
         if self.cmd_button:
             self.cmd_button.setText(name)
 
+    @on_trait_change('description', dispatch = 'ui')
     def _on_description_changed(self, description):
         if self.cmd_button:
             self.cmd_button.setDescription(description)
 
+    @on_trait_change('icon', dispatch = 'ui')
     def _on_icon_changed(self, icon):
         if self.cmd_button:
             self.cmd_button.setIcon(self.cmd_button.style().standardIcon(icon))
         
+    @on_trait_change('deletable', dispatch = 'ui')
     def _on_deletable_changed(self, deletable):
         if self.del_button:
             self.del_button.setEnabled(deletable)

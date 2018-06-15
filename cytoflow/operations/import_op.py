@@ -27,6 +27,7 @@ from traits.api import (HasTraits, HasStrictTraits, provides, Str, List, Any,
 
 import fcsparser
 import numpy as np
+from pathlib import Path
 
 import cytoflow.utility as util
 
@@ -69,7 +70,7 @@ class Tube(HasTraits):
     def __hash__(self):
         return hash((self.file, 
                      (frozenset(self.conditions.keys()),
-                      frozenset(self.conditions.itervalues()))))
+                      frozenset(self.conditions.values()))))
 
 @provides(IOperation)
 class ImportOp(HasStrictTraits):
@@ -113,8 +114,8 @@ class ImportOp(HasStrictTraits):
         all characters must be letters, numbers or ``_``.  If :attr:`channels` is
         empty, load all channels in the FCS files.
         
-    events : Int (default = 0)
-        If ``> 0``, import only a random subset of events of size :attr:`events`. 
+    events : Int
+        If not None, import only a random subset of events of size :attr:`events`. 
         Presumably the analysis will go faster but less precisely; good for
         interactive data exploration.  Then, unset :attr:`events` and re-run
         the analysis non-interactively.
@@ -165,7 +166,7 @@ class ImportOp(HasStrictTraits):
     name_metadata = Enum(None, "$PnN", "$PnS")
 
     # are we subsetting?
-    events = util.PositiveInt(0, allow_zero = True)
+    events = util.CIntOrNone(None)
     coarse_events = util.Deprecated(new = 'events')
         
     # DON'T DO THIS
@@ -327,6 +328,16 @@ class ImportOp(HasStrictTraits):
                                   util.CytoflowWarning)
 
             experiment.add_events(tube_data[channels], tube.conditions)
+                        
+            # extract the row and column from wells collected on a 
+            # BD HTS
+            if 'WELL ID' in tube_meta:               
+                pos = tube_meta['WELL ID']
+                tube_meta['CF_Row'] = pos[0]
+                tube_meta['CF_Col'] = int(pos[1:3])
+                
+            tube_meta['CF_File'] = Path(tube.file).stem
+                             
             experiment.metadata['fcs_metadata'][tube.file] = tube_meta
                         
         for channel in channels:
@@ -388,17 +399,28 @@ def check_tube(filename, experiment):
             
 
 # module-level, so we can reuse it in other modules
-def parse_tube(filename, experiment):   
+def parse_tube(filename, experiment, metadata_only = False):   
         
     check_tube(filename, experiment)
          
     try:
-        tube_meta, tube_data = fcsparser.parse(
-                                  filename, 
-                                  channel_naming = experiment.metadata["name_metadata"])
+        if metadata_only:
+            tube_data = None
+            tube_meta = fcsparser.parse(
+                            filename, 
+                            meta_data_only = True,
+                            channel_naming = experiment.metadata["name_metadata"])
+        else:
+            tube_meta, tube_data = fcsparser.parse(
+                                    filename, 
+                                    meta_data_only = metadata_only,
+                                    channel_naming = experiment.metadata["name_metadata"])
     except Exception as e:
         raise util.CytoflowError("FCS reader threw an error reading data for tube {}"
                                  .format(filename)) from e
             
+    del tube_meta['__header__']
+            
     return tube_meta, tube_data
+
 

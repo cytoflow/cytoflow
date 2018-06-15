@@ -650,8 +650,6 @@ class TasbeCalibrationOp(PluginOpMixin):
                                          meta_data_only = True,
                                          reformat_meta = False)
             
-            del tube_meta['__header__']
-            
             tube_meta = {k:v for (k,v) in tube_meta.items() if not k.startswith("flowCore_")}
             tube_meta = {k:v for (k,v) in tube_meta.items() if not (k.startswith("$P") and k[2].isdigit())}
             

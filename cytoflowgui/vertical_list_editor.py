@@ -24,6 +24,8 @@ Created on Feb 11, 2017
 
 from pyface.qt import QtCore, QtGui
 
+from traits.api import Instance
+
 from traitsui.api import ListEditor
 from traitsui.qt4.list_editor import CustomEditor as _ListEditor
 from traitsui.qt4.helper import IconButton
@@ -31,6 +33,14 @@ from traitsui.qt4.helper import IconButton
 from traitsui.editors.list_editor import ListItemProxy
 
 class _VerticalListEditor(_ListEditor):
+    """
+    The difference between this class and the underying ListEditor is that 
+    this class doesn't use a scroll area.  Instead, as items are added, it
+    expands.
+    """
+    
+    delete_mapper = Instance(QtCore.QSignalMapper)
+    
     def init(self, parent):
         """ Finishes initializing the editor by creating the underlying toolkit
             widget.
@@ -43,6 +53,7 @@ class _VerticalListEditor(_ListEditor):
 
         #Create a mapper to identify which icon button requested a contextmenu
         self.mapper = QtCore.QSignalMapper(self.control)
+        self.delete_mapper = QtCore.QSignalMapper(self.control)
 
         # Create a widget with a grid layout as the container.
         self.control = QtGui.QWidget()
@@ -80,6 +91,8 @@ class _VerticalListEditor(_ListEditor):
             editor.
         """
         self.mapper = QtCore.QSignalMapper(self.control)
+        self.delete_mapper = QtCore.QSignalMapper(self.control)
+
         # Disconnect the editor from any control about to be destroyed:
         self._dispose_items()
 
@@ -96,7 +109,9 @@ class _VerticalListEditor(_ListEditor):
             self.empty_list()
         else:
             # Asking the mapper to send the sender to the callback method
-            self.mapper.mapped[QtCore.QObject].connect(self.popup_menu)
+            self.mapper.mapped.connect(self.popup_menu)
+            
+        self.delete_mapper.mapped.connect(self._delete_item)
 
         editor = self._editor
         for index, value in enumerate(self.value):
@@ -108,12 +123,18 @@ class _VerticalListEditor(_ListEditor):
 
             if resizable:
                 # Connecting the new button to the mapper
-                control = IconButton('list_editor.png', self.mapper.map)
-                # Setting the mapping and asking it to send the index of the
-                # sender to the callback method
-                self.mapper.setMapping(control, control)
+                control = IconButton('list_editor.png', self.popup_mapper.map)
+                self.mapper.setMapping(control, index)
 
                 layout.addWidget(control, row, column)
+                
+            if self.factory.deletable:
+                # Connecting the new button to the mapper
+                control = IconButton(QtGui.QStyle.SP_TitleBarCloseButton, self.delete_mapper.map)
+                self.delete_mapper.setMapping(control, index)
+
+                layout.addWidget(control, row, column)
+                
 
             proxy = ListItemProxy(self.object, self.name, index, item_trait,
                                   value)
@@ -142,12 +163,15 @@ class _VerticalListEditor(_ListEditor):
                 if editor is not None:
                     editor.dispose()
                     editor.control = None
+                control.setParent(None)
                 control.deleteLater()
             child = layout.takeAt(0)
         del child
+        
+    def _delete_item(self, index):
+        del self.value[index]
 
 class VerticalListEditor(ListEditor):
     
-    # use the custom editor above
-    def _get_custom_editor_class(self):
+    def _get_simple_editor_class(self):
         return _VerticalListEditor
