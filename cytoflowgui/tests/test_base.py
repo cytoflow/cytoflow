@@ -88,6 +88,7 @@ class ImportedDataTest(WorkflowTest):
         wi = WorkflowItem(operation = op,
                           view_error = "Not yet plotted") 
         self.workflow.workflow.append(wi)
+        op.do_estimate = True
         self.assertTrue(wait_for(wi, 'status', lambda v: v == 'valid', 5))
         self.assertTrue(self.workflow.remote_eval("self.workflow[0].result is not None"))
 

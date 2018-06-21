@@ -279,6 +279,14 @@ def _dump_view(view):
                 subset_list = view.subset_list,
                 plot_params = view.plot_params)
     
+@camel_registry.dumper(Range2DSelectionView, 'range2d-view', version = 1)
+def _dump_view_v1(view):
+    return dict(op = view.op,
+                xscale = view.xscale,
+                yscale = view.yscale,
+                huefacet = view.huefacet,
+                subset_list = view.subset_list)
+    
 @camel_registry.loader('range2d-view', version = any)
 def _load_view(data, version):
     return Range2DSelectionView(**data)

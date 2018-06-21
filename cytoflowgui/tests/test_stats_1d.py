@@ -6,7 +6,7 @@ Created on Jan 5, 2018
 
 import os, unittest, tempfile
 
-import matplotlib
+import matplotlib, pandas
 matplotlib.use("Agg")
 
 from cytoflowgui.workflow_item import WorkflowItem
@@ -247,6 +247,26 @@ class TestStats1D(ImportedDataTest):
                         
         self.assertDictEqual(self.view.trait_get(self.view.copyable_trait_names()),
                              new_view.trait_get(self.view.copyable_trait_names()))
+
+    def testSerializeWorkflowItemV1(self):
+        Stats1DPlotParams.__eq__ = traits_eq
+        Stats1DPlotParams.__hash__ = traits_hash
+        
+        fh, filename = tempfile.mkstemp()
+        try:
+            os.close(fh)
+               
+            save_yaml(self.view, filename, lock_versions = {WorkflowItem: 1,
+                                                            pandas.Series : 1})
+            new_view = load_yaml(filename)
+               
+        finally:
+            os.unlink(filename)
+               
+        self.maxDiff = None
+                        
+        self.assertDictEqual(self.view.trait_get(self.view.copyable_trait_names()),
+                             new_view.trait_get(self.view.copyable_trait_names()))
            
            
     def testNotebook(self):
@@ -258,5 +278,6 @@ class TestStats1D(ImportedDataTest):
 
 
 if __name__ == "__main__":
-#     import sys;sys.argv = ['', 'TestStats1D.testPlotArgs']
+#     import sys;sys.argv = ['', 'TestStats1D.testSerialize']
+#     import sys;sys.argv = ['', 'TestStats1D.testSerializeWorkflowItemV1']
     unittest.main()

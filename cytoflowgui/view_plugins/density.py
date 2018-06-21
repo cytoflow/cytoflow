@@ -233,6 +233,18 @@ def _dump(view):
                 subset_list = view.subset_list,
                 plot_params = view.plot_params)
     
+@camel_registry.dumper(DensityPluginView, 'density-view', version = 1)
+def _dump_v1(view):
+    return dict(xchannel = view.xchannel,
+                xscale = view.xscale,
+                ychannel = view.ychannel,
+                yscale = view.yscale,
+                xfacet = view.xfacet,
+                yfacet = view.yfacet,
+                huescale = view.huescale,
+                plotfacet = view.plotfacet,
+                subset_list = view.subset_list)
+    
 @camel_registry.dumper(DensityPlotParams, 'density-view-params', version = 1)
 def _dump_params(params):
     return dict(

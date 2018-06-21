@@ -247,6 +247,18 @@ def _dump(view):
                 subset_list = view.subset_list,
                 plot_params = view.plot_params)
     
+@camel_registry.dumper(ViolinPlotPluginView, 'violin-plot', version = 1)
+def _dump_v1(view):
+    return dict(variable = view.variable,
+                channel = view.channel,
+                scale = view.scale,
+                xfacet = view.xfacet,
+                yfacet = view.yfacet,
+                huefacet = view.huefacet,
+                huescale = view.huescale,
+                plotfacet = view.plotfacet,
+                subset_list = view.subset_list)
+    
 @camel_registry.loader('violin-plot', version = any)
 def _load(data, version):
     return ViolinPlotPluginView(**data)

@@ -243,6 +243,12 @@ def _dump_view(view):
                 huefacet = view.huefacet,
                 subset_list = view.subset_list,
                 plot_params = view.plot_params)
+    
+@camel_registry.dumper(PolygonSelectionView, 'polygon-view', version = 1)
+def _dump_view_v1(view):
+    return dict(op = view.op,
+                huefacet = view.huefacet,
+                subset_list = view.subset_list)
 
 @camel_registry.loader('polygon-view', version = any)
 def _load_view(data, version):

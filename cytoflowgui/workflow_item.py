@@ -191,6 +191,7 @@ class WorkflowItem(HasStrictTraits):
 def _dump_wi(wi):
                           
     # we really don't need to keep copying around the fcs metadata
+    # it will still get saved out in the import op
     if 'fcs_metadata' in wi.metadata:
         del wi.metadata['fcs_metadata']
                             
@@ -201,6 +202,19 @@ def _dump_wi(wi):
                 conditions = wi.conditions,
                 metadata = wi.metadata,
                 statistics = wi.statistics,
+                current_view = wi.current_view,
+                default_view = wi.default_view)
+    
+@camel_registry.dumper(WorkflowItem, 'workflow-item', version = 1)
+def _dump_wi_v1(wi):
+                            
+    return dict(deletable = wi.deletable,
+                operation = wi.operation,
+                views = wi.views,
+                channels = wi.channels,
+                conditions = wi.conditions,
+                metadata = wi.metadata,
+                statistics = list(wi.statistics.keys()),
                 current_view = wi.current_view,
                 default_view = wi.default_view)
 

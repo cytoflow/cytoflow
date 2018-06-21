@@ -10,6 +10,7 @@ matplotlib.use('Agg')
 
 from cytoflowgui.tests.test_base import ImportedDataTest, wait_for
 from cytoflowgui.serialization import save_yaml, load_yaml
+from cytoflowgui.op_plugins.import_op import ImportPluginOp
 
 class TestImport(ImportedDataTest):
 
@@ -42,6 +43,41 @@ class TestImport(ImportedDataTest):
         self.assertDictEqual(op.trait_get(op.copyable_trait_names()),
                              new_op.trait_get(op.copyable_trait_names()))
          
+    def testSerializeV1(self):
+        wi = self.workflow.workflow[0]
+        op = wi.operation
+        fh, filename = tempfile.mkstemp()
+        try:
+            os.close(fh)
+            
+            save_yaml(op, filename, lock_versions = {ImportPluginOp : 1})
+            new_op = load_yaml(filename)
+            
+        finally:
+            os.unlink(filename)
+            
+        self.maxDiff = None
+        new_op.ret_events = op.ret_events
+        self.assertDictEqual(op.trait_get(op.copyable_trait_names()),
+                             new_op.trait_get(op.copyable_trait_names()))
+
+    def testSerializeV2(self):
+        wi = self.workflow.workflow[0]
+        op = wi.operation
+        fh, filename = tempfile.mkstemp()
+        try:
+            os.close(fh)
+            
+            save_yaml(op, filename, lock_versions = {ImportPluginOp : 2})
+            new_op = load_yaml(filename)
+            
+        finally:
+            os.unlink(filename)
+            
+        self.maxDiff = None
+        new_op.ret_events = op.ret_events
+        self.assertDictEqual(op.trait_get(op.copyable_trait_names()),
+                             new_op.trait_get(op.copyable_trait_names()))
         
     def testNotebook(self):
         code = "from cytoflow import *\n"
@@ -55,5 +91,5 @@ class TestImport(ImportedDataTest):
 
 
 if __name__ == "__main__":
-    #import sys;sys.argv = ['', 'Test.testName']
+#     import sys;sys.argv = ['', 'TestImport.testSerializeV2']
     unittest.main()

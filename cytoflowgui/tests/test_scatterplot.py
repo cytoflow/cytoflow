@@ -8,7 +8,7 @@ import unittest, os, tempfile
 import matplotlib
 matplotlib.use("Agg")
 
-from cytoflowgui.tests.test_base import ImportedDataTest, wait_for
+from cytoflowgui.tests.test_base import ImportedDataTest, wait_for  # @UnresolvedImport
 from cytoflowgui.view_plugins.scatterplot import SCATTERPLOT_MARKERS, ScatterplotPlugin, ScatterplotPlotParams
 from cytoflowgui.serialization import load_yaml, save_yaml, traits_eq, traits_hash
 

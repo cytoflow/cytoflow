@@ -316,6 +316,10 @@ def _load(data, version):
 def _dump_view(view):
     return dict(op = view.op,
                 plot_params = view.plot_params)
+    
+@camel_registry.dumper(DensityGatePluginView, 'density-gate-view', version = 1)
+def _dump_view_v1(view):
+    return dict(op = view.op)
 
 @camel_registry.loader('density-gate-view', version = any)
 def _load_view(data, ver):

@@ -357,6 +357,10 @@ def _dump_view(view):
                 yfacet = view.yfacet,
                 huefacet = view.huefacet,
                 plot_params = view.plot_params)
+    
+@camel_registry.dumper(GaussianMixture1DPluginView, 'gaussian-1d-view', version = 1)
+def _dump_view_v1(view):
+    return dict(op = view.op)
 
 @camel_registry.loader('gaussian-1d-view', version = any)
 def _load_view(data, version):

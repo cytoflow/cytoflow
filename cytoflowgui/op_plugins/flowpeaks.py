@@ -426,6 +426,11 @@ def _dump_view(view):
                 scatterplot_plot_params = view.scatterplot_plot_params,
                 density_plot_params = view.density_plot_params)
 
+@camel_registry.dumper(FlowPeaksPluginView, 'flowpeaks-view', version = 1)
+def _dump_view_v1(view):
+    return dict(op = view.op,
+                show_density = view.show_density)
+
 @camel_registry.loader('flowpeaks-view', version = any)
 def _load_view(data, ver):
     return FlowPeaksPluginView(**data)

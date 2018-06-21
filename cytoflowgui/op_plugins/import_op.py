@@ -283,6 +283,25 @@ def _dump_op(op):
                 name_metadata = op.name_metadata)
     
 
+
+@camel_registry.dumper(ImportPluginOp, 'import', version = 2)
+def _dump_op_v2(op):
+    return dict(tubes = op.tubes,
+                conditions = op.conditions,
+                channels = op.channels,
+                events = op.events,
+                name_metadata = op.name_metadata)
+
+@camel_registry.dumper(ImportPluginOp, 'import', version = 1)
+def _dump_op_v1(op):
+    return dict(tubes = op.tubes,
+                conditions = op.conditions,
+                channels = op.channels,
+                events = op.events,
+                name_metadata = op.name_metadata,
+                ret_events = op.ret_events)
+    
+
 @camel_registry.loader('import', version = 1)
 @camel_registry.loader('import', version = 2)
 def _load_op(data, version):

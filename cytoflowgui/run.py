@@ -152,46 +152,45 @@ def run_gui():
 
     plugins = [CorePlugin(), TasksPlugin(), FlowTaskPlugin(), TASBETaskPlugin(),
                ExportFigurePlugin()]    
-    
-    # reverse of the order on the toolbar
-    view_plugins = [TablePlugin(),
-                    Stats2DPlugin(),
-                    Stats1DPlugin(),
-                    BarChartPlugin(),
-                    ViolinPlotPlugin(),
+
+    # ordered as we want them to show up in the toolbar    
+    view_plugins = [HistogramPlugin(),
+                    ScatterplotPlugin(),
+                    Histogram2DPlugin(),
+                    DensityPlugin(),
+                    Kde1DPlugin(),
                     Kde2DPlugin(),
                     RadvizPlugin(),
                     ParallelCoordinatesPlugin(),
-                    Kde1DPlugin(),
-                    DensityPlugin(),
-                    Histogram2DPlugin(),
-                    ScatterplotPlugin(),
-                    HistogramPlugin()]
+                    ViolinPlotPlugin(),
+                    BarChartPlugin(),
+                    Stats1DPlugin(),
+                    Stats2DPlugin(),
+                    TablePlugin()]
     
     plugins.extend(view_plugins)
     
-    op_plugins = [RatioPlugin(),
-                  PCAPlugin(),
-                  KMeansPlugin(),
-                  FlowPeaksPlugin(),
-                  DensityGatePlugin(),
-                  TransformStatisticPlugin(),
-                  ChannelStatisticPlugin(),
-                  TasbePlugin(),
-                  ColorTranslationPlugin(),
-                  AutofluorescencePlugin(),
-                  BeadCalibrationPlugin(),
-#                   BleedthroughPiecewisePlugin(),
-                  BleedthroughLinearPlugin(),
-                  GaussianMixture2DPlugin(),
-                  GaussianMixture1DPlugin(),
-                  BinningPlugin(),
-                  PolygonPlugin(),
+    op_plugins = [ImportPlugin(),
+                  ThresholdPlugin(),
+                  RangePlugin(),
                   QuadPlugin(),
                   Range2DPlugin(),
-                  RangePlugin(),
-                  ThresholdPlugin(),
-                  ImportPlugin()]
+                  PolygonPlugin(),
+                  RatioPlugin(),
+                  ChannelStatisticPlugin(),
+                  TransformStatisticPlugin(),
+                  BinningPlugin(),
+                  GaussianMixture1DPlugin(),
+                  GaussianMixture2DPlugin(),
+                  DensityGatePlugin(),
+                  KMeansPlugin(),
+                  FlowPeaksPlugin(),
+                  PCAPlugin(),
+                  AutofluorescencePlugin(),
+                  BleedthroughLinearPlugin(),
+                  BeadCalibrationPlugin(),
+                  ColorTranslationPlugin(),
+                  TasbePlugin()]
 
     plugins.extend(op_plugins)
     

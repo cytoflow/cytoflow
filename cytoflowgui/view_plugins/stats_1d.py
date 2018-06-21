@@ -325,6 +325,20 @@ def _dump(view):
                 subset_list = view.subset_list,
                 plot_params = view.plot_params)
     
+
+@camel_registry.dumper(Stats1DPluginView, 'stats-1d', version = 1)
+def _dump_v1(view):
+    return dict(statistic = view.statistic,
+                variable = view.variable,
+                xscale = view.xscale,
+                yscale = view.yscale,
+                xfacet = view.xfacet,
+                yfacet = view.yfacet,
+                huefacet = view.huefacet,
+                huescale = view.huescale,
+                error_statistic = view.error_statistic,
+                subset_list = view.subset_list)
+    
 @camel_registry.loader('stats-1d', version = 1)
 def _load_v1(data, version):
 

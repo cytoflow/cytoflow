@@ -26,10 +26,12 @@ def load_yaml(path):
         
     return data
 
-def save_yaml(data, path):
+def save_yaml(data, path, lock_versions = {}):
     with open(path, 'w') as f:
-        f.write(Camel([standard_types_registry,
-                       camel_registry]).dump(data))
+        c = Camel([standard_types_registry, camel_registry])
+        for klass, version in lock_versions.items():
+            c.lock_version(klass, version)
+        f.write(c.dump(data))
 
 # camel adapters for traits lists and dicts, numpy types
 from numpy import float64, int64, bool_
@@ -147,6 +149,11 @@ def _dump_series(s):
     return dict(index = s.index,
                 data = s.values.tolist(),
                 dtype = s.dtype)
+    
+@camel_registry.dumper(pandas.Series, 'pandas-series', version = 1)
+def _dump_series_v1(s):
+    return dict(index = list(s.index),
+                data = list(s.values))
     
 @camel_registry.loader('pandas-series', version = 1)
 def _load_series_v1(data, version):

@@ -218,6 +218,13 @@ def _dump_view(view):
                 subset_list = view.subset_list,
                 plot_params = view.plot_params)
     
+@camel_registry.dumper(ThresholdSelectionView, 'threshold-view', version = 1)
+def _dump_view_v1(view):
+    return dict(op = view.op,
+                scale = view.scale,
+                huefacet = view.huefacet,
+                subset_list = view.subset_list)
+    
 @camel_registry.loader('threshold-view', version = any)
 def _load_view(data, version):
     return ThresholdSelectionView(**data)
