@@ -21,6 +21,7 @@ cytoflow.views.export_fcs
 -------------------------
 """
 
+import re
 from pathlib import Path
 from copy import copy
 
@@ -38,7 +39,8 @@ class ExportFCS(HasStrictTraits):
     from a particular experiment, and :meth:`export` to export the FCS files.
     
     The Cytoflow attributes will be encoded in keywords in the FCS TEXT
-    segment, starting with the characters ``CF_``.
+    segment, starting with the characters ``CF_``.  Any FCS keywords that 
+    are the same across all the input files will also be included.
     
     Attributes
     ----------
@@ -53,7 +55,6 @@ class ExportFCS(HasStrictTraits):
         combination of conditions will be exported to an FCS file.
         
     keywords : Dict(Str, Str)
-        The FCS files are exported with only the minimum of required keywords.
         If you want to add more keywords to the FCS files' TEXT segment, 
         specify them here.
         
@@ -191,6 +192,9 @@ class ExportFCS(HasStrictTraits):
         if experiment is None:
             raise util.CytoflowViewError('experiment', "No experiment specified")
         
+        if len(experiment) == 0:
+            raise util.CytoflowViewError('experiment', "No events in experiment")
+        
         if not self.path:
             raise util.CytoflowOpError('path',
                                        'Must specify an output directory')
@@ -223,7 +227,29 @@ class ExportFCS(HasStrictTraits):
                 raise util.CytoflowViewError('subset',
                                              "Subset string '{0}' returned no events"
                                              .format(self.subset))
+            
+        tube0, common_metadata = list(experiment.metadata['fcs_metadata'].items())[0]
+        common_metadata = copy(common_metadata)
+        
+        exclude_keywords = ['$BEGINSTEXT', '$ENDSTEXT', '$BEGINANALYSIS', 
+                            '$ENDANALYSIS', '$BEGINDATA', '$ENDDATA',
+                            '$BYTEORD', '$DATATYPE', '$MODE', '$NEXTDATA', 
+                            '$TOT', '$PAR']
+        common_metadata = {k : v for k, v in common_metadata.items()
+                           if re.search('^\$P\d+[BENRDSG]$', k) is None
+                           and k not in exclude_keywords}
+        
+        for filename, metadata in experiment.metadata['fcs_metadata'].items():
+            if filename == tube0:
+                continue
+            for name, value in metadata.items():
+                if name not in common_metadata:
+                    continue
                 
+                if name not in common_metadata or value != common_metadata[name]:
+                    del common_metadata[name]
+            
+        
         for group, data_subset in experiment.data.groupby(self.by):
             data_subset = data_subset[experiment.channels]
             
@@ -232,6 +258,9 @@ class ExportFCS(HasStrictTraits):
             
             parts = []
             kws = copy(self.keywords)
+            kws.update(common_metadata)
+            kws = {k : str(v) for k, v in kws.items()}
+            
             for i, name in enumerate(self.by):
                 if self._include_by:
                     parts.append(name + '_' + str(group[i]))
