@@ -23,7 +23,7 @@ cytoflow.operations.import_op
 
 import warnings
 from traits.api import (HasTraits, HasStrictTraits, provides, Str, List, Any,
-                        Dict, File, Constant, Enum)
+                        Dict, File, Constant, Enum, Int)
 
 import fcsparser
 import numpy as np
@@ -124,6 +124,15 @@ class ImportOp(HasStrictTraits):
         Which FCS metadata is the channel name?  If ``None``, attempt to  
         autodetect.
         
+    data_set : Int (default = 0)
+        The FCS standard allows you to encode multiple data sets in a single
+        FCS file.  Some software (such as the Beckman-Coulter software)
+        also encode the same data in two different formats -- for example,
+        FCS2.0 and FCS3.0.  To access a data set other than the first one,
+        set :attr:`data_set` to the 0-based index of the data set you
+        would like to use.  This will be used for *all FCS files imported by
+        this operation.*
+            
     ignore_v : List(Str)
         :class:`cytoflow` is designed to operate on an :class:`.Experiment` containing
         tubes that were all collected under the same instrument settings.
@@ -164,6 +173,9 @@ class ImportOp(HasStrictTraits):
     
     # which FCS metadata has the channel names in it?
     name_metadata = Enum(None, "$PnN", "$PnS")
+    
+    # which data set to get out of the FCS files?
+    data_set = Int(0)
 
     # are we subsetting?
     events = util.CIntOrNone(None)
@@ -172,9 +184,18 @@ class ImportOp(HasStrictTraits):
     # DON'T DO THIS
     ignore_v = List(Str)
       
-    def apply(self, experiment = None):
+    def apply(self, experiment = None, metadata_only = False):
         """
         Load a new :class:`.Experiment`.  
+        
+        Parameters
+        ----------
+        experiment : Experiment
+            Ignored
+            
+        metadata_only : bool (default = False)
+            Only "import" the metadata, creating an Experiment with all the
+            expected metadata and structure but 0 events.
         
         Returns
         -------
@@ -247,6 +268,7 @@ class ImportOp(HasStrictTraits):
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 tube0_meta = fcsparser.parse(self.tubes[0].file,
+                                             data_set = self.data_set,
                                              meta_data_only = True,
                                              reformat_meta = True)
         except Exception as e:
@@ -260,27 +282,7 @@ class ImportOp(HasStrictTraits):
         if self.name_metadata:
             experiment.metadata["name_metadata"] = self.name_metadata
         else:
-            # try to autodetect the metadata
-            if "$PnN" in meta_channels and not "$PnS" in meta_channels:
-                experiment.metadata["name_metadata"] = "$PnN"
-            elif "$PnN" not in meta_channels and "$PnS" in meta_channels:
-                experiment.metadata["name_metadata"] = "$PnS"
-            else:
-                PnN = meta_channels["$PnN"]
-                PnS = meta_channels["$PnS"]
-                
-                # sometimes one is unique and the other isn't
-                if (len(set(PnN)) == len(PnN) and 
-                    len(set(PnS)) != len(PnS)):
-                    experiment.metadata["name_metadata"] = "$PnN"
-                elif (len(set(PnN)) != len(PnN) and 
-                      len(set(PnS)) == len(PnS)):
-                    experiment.metadata["name_metadata"] = "$PnS"
-                else:
-                    # as per fcsparser.api, $PnN is the "short name" (like FL-1)
-                    # and $PnS is the "actual name" (like "FSC-H").  so let's
-                    # use $PnS.
-                    experiment.metadata["name_metadata"] = "$PnS"
+            experiment.metadata["name_metadata"] = autodetect_name_metadata(self.tubes[0].file)
 
         meta_channels.set_index(experiment.metadata["name_metadata"], 
                                 inplace = True)
@@ -315,19 +317,26 @@ class ImportOp(HasStrictTraits):
         
         experiment.metadata['fcs_metadata'] = {}
         for tube in self.tubes:
-            tube_meta, tube_data = parse_tube(tube.file, experiment)
-
-            if self.events:
-                if self.events <= len(tube_data):
-                    tube_data = tube_data.loc[np.random.choice(tube_data.index,
-                                                               self.events,
-                                                               replace = False)]
-                else:
-                    warnings.warn("Only {0} events in tube {1}"
-                                  .format(len(tube_data), tube.file),
-                                  util.CytoflowWarning)
-
-            experiment.add_events(tube_data[channels], tube.conditions)
+            if metadata_only:
+                tube_meta, tube_data = parse_tube(tube.file,
+                                                  experiment,
+                                                  data_set = self.data_set)
+            else:
+                tube_meta, tube_data = parse_tube(tube.file, 
+                                                  experiment, 
+                                                  data_set = self.data_set)
+    
+                if self.events:
+                    if self.events <= len(tube_data):
+                        tube_data = tube_data.loc[np.random.choice(tube_data.index,
+                                                                   self.events,
+                                                                   replace = False)]
+                    else:
+                        warnings.warn("Only {0} events in tube {1}"
+                                      .format(len(tube_data), tube.file),
+                                      util.CytoflowWarning)
+    
+                experiment.add_events(tube_data[channels], tube.conditions)
                         
             # extract the row and column from wells collected on a 
             # BD HTS
@@ -353,7 +362,7 @@ class ImportOp(HasStrictTraits):
         return experiment
 
 
-def check_tube(filename, experiment):
+def check_tube(filename, experiment, data_set = 0):
     
     if experiment is None:
         raise util.CytoflowError("No experiment specified")
@@ -363,6 +372,7 @@ def check_tube(filename, experiment):
     try:
         tube_meta = fcsparser.parse( filename, 
                                      channel_naming = experiment.metadata["name_metadata"],
+                                     data_set = data_set,
                                      meta_data_only = True,
                                      reformat_meta = True)
     except Exception as e:
@@ -396,25 +406,73 @@ def check_tube(filename, experiment):
                                     .format(filename))
 
         # TODO check the delay -- and any other params?
+        
+def autodetect_name_metadata(filename):
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            metadata = fcsparser.parse(filename,
+                                       meta_data_only = True,
+                                       reformat_meta = True)
+    except Exception as e:
+        warnings.warn("Trouble getting metadata from {}: {}".format(filename, str(e)),
+                      util.CytoflowWarning)
+        return '$PnS'
+    
+    meta_channels = metadata["_channels_"]
+    
+    if "$PnN" in meta_channels and not "$PnS" in meta_channels:
+        name_metadata = "$PnN"
+    elif "$PnN" not in meta_channels and "$PnS" in meta_channels:
+        name_metadata = "$PnS"
+    else:
+        PnN = meta_channels["$PnN"]
+        PnS = meta_channels["$PnS"]
+        
+        # sometimes one is unique and the other isn't
+        if (len(set(PnN)) == len(PnN) and 
+            len(set(PnS)) != len(PnS)):
+            name_metadata = "$PnN"
+        elif (len(set(PnN)) != len(PnN) and 
+              len(set(PnS)) == len(PnS)):
+            name_metadata = "$PnS"
+        else:
+            # as per fcsparser.api, $PnN is the "short name" (like FL-1)
+            # and $PnS is the "actual name" (like "FSC-H").  so let's
+            # use $PnS.
+            name_metadata = "$PnS"
             
+    return name_metadata
+    
 
 # module-level, so we can reuse it in other modules
-def parse_tube(filename, experiment, metadata_only = False):   
+def parse_tube(filename, experiment = None, data_set = 0, metadata_only = False):   
         
-    check_tube(filename, experiment)
+    if experiment:
+        check_tube(filename, experiment)
+        name_metadata = experiment.metadata["name_metadata"]
+    else:
+        name_metadata = '$PnS'
+        
          
     try:
         if metadata_only:
             tube_data = None
-            tube_meta = fcsparser.parse(
-                            filename, 
-                            meta_data_only = True,
-                            channel_naming = experiment.metadata["name_metadata"])
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                tube_meta = fcsparser.parse(
+                                filename, 
+                                meta_data_only = True,
+                                data_set = data_set,
+                                channel_naming = name_metadata)
         else:
-            tube_meta, tube_data = fcsparser.parse(
-                                    filename, 
-                                    meta_data_only = metadata_only,
-                                    channel_naming = experiment.metadata["name_metadata"])
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                tube_meta, tube_data = fcsparser.parse(
+                                        filename, 
+                                        meta_data_only = metadata_only,
+                                        data_set = data_set,
+                                        channel_naming = name_metadata)
     except Exception as e:
         raise util.CytoflowError("FCS reader threw an error reading data for tube {}"
                                  .format(filename)) from e

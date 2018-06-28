@@ -32,7 +32,7 @@ if __name__ == '__main__':
     
 
 from pathlib import Path
-import warnings, fcsparser, pandas
+import warnings, pandas
         
 from traits.api import (HasStrictTraits, Instance, Str, Int, List, Bool, Enum, 
                         Property, BaseCStr, CStr, on_trait_change, Dict, Event,
@@ -54,7 +54,7 @@ from traitsui.table_column import ObjectColumn
 
 from cytoflow import Tube as CytoflowTube
 from cytoflow import Experiment, ImportOp
-from cytoflow.operations.import_op import check_tube
+from cytoflow.operations.import_op import check_tube, parse_tube, autodetect_name_metadata
 import cytoflow.utility as util
 
 from cytoflowgui.vertical_list_editor import VerticalListEditor
@@ -285,39 +285,30 @@ class ExperimentDialogModel(HasStrictTraits):
 
         self.dummy_experiment = None
         
-        shown_error = False
-        
-        for op_tube in import_op.tubes:
+        if import_op.tubes:
             try:
-                metadata = fcsparser.parse(op_tube.file, meta_data_only = True)
+                self.dummy_experiment = import_op.apply(metadata_only = True)
             except Exception:
-                if not shown_error:
-                    warning(None,
-                            "Had trouble loading some of the experiment's FCS "
-                            "files.  You will need to re-add them.")
-                    shown_error = True
-                continue
-
-            del metadata['__header__']
-            metadata['CF_File'] = Path(op_tube.file).stem
-            tube = Tube(file = op_tube.file, parent = self, metadata = sanitize_metadata(metadata))
-            
-            # if we're the first tube loaded, create a dummy experiment
-            # and setup default metadata columns
-            if not self.dummy_experiment:
-                self.dummy_experiment = ImportOp(tubes = [op_tube],
-                                                 conditions = import_op.conditions,
-                                                 events = 1).apply()
-                                                 
-            self.tubes.append(tube)  # adds the dynamic traits to the tube
-            
-            tube.trait_set(**op_tube.conditions)
-            
-            for trait in self.tube_traits:
-                if trait.type == 'metadata':
-                    tube.trait_set(**{trait.name : tube.metadata[trait.name]})
-                else:
-                    tube.conditions[trait.name] = tube.trait_get()[trait.name]
+                warning(None,
+                        "Had trouble loading some of the experiment's FCS "
+                        "files.  You will need to re-add them.")
+                return        
+        
+            for op_tube in import_op.tubes:    
+                metadata = self.dummy_experiment.metadata['fcs_metadata'][op_tube.file]
+                tube = Tube(file = op_tube.file, 
+                            parent = self, 
+                            metadata = sanitize_metadata(metadata))
+                                                     
+                self.tubes.append(tube)  # adds the dynamic traits to the tube
+                
+                tube.trait_set(**op_tube.conditions)
+                
+                for trait in self.tube_traits:
+                    if trait.type == 'metadata':
+                        tube.trait_set(**{trait.name : tube.metadata[trait.name]})
+                    else:
+                        tube.conditions[trait.name] = tube.trait_get()[trait.name]
     
     
     @on_trait_change('tubes_items')
@@ -455,6 +446,8 @@ class ExperimentDialogModel(HasStrictTraits):
         if not self.tubes:
             return
         
+        assert self.dummy_experiment is not None
+        
         conditions = {trait.name : trait.type for trait in self.tube_traits
                       if trait.type != 'metadata'}
             
@@ -470,53 +463,54 @@ class ExperimentDialogModel(HasStrictTraits):
             
         import_op.conditions = conditions
         import_op.tubes = tubes   
+        import_op.original_channels = channels = self.dummy_experiment.channels
         
-        # update the channels too.  most of this is adapted from 
-        # cytoflow.operations.import_op.ImportOp.apply()
-        try:
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                tube0_meta = fcsparser.parse(self.tubes[0].file,
-                                             meta_data_only = True,
-                                             reformat_meta = True)
-        except Exception as e:
-            warnings.warn("Trouble getting metadata from {}: {}".format(self.tubes[0].file, str(e)),
-                          util.CytoflowWarning)
-            return
-        
-        meta_channels = tube0_meta["_channels_"]
-        
-        if import_op.name_metadata:
-            name_metadata = self.name_metadata
-        else:
-            # try to autodetect the metadata
-            if "$PnN" in meta_channels and not "$PnS" in meta_channels:
-                name_metadata = "$PnN"
-            elif "$PnN" not in meta_channels and "$PnS" in meta_channels:
-                name_metadata = "$PnS"
-            else:
-                PnN = meta_channels["$PnN"]
-                PnS = meta_channels["$PnS"]
-                
-                # sometimes one is unique and the other isn't
-                if (len(set(PnN)) == len(PnN) and 
-                    len(set(PnS)) != len(PnS)):
-                    name_metadata = "$PnN"
-                elif (len(set(PnN)) != len(PnN) and 
-                      len(set(PnS)) == len(PnS)):
-                    name_metadata = "$PnS"
-                else:
-                    # as per fcsparser.api, $PnN is the "short name" (like FL-1)
-                    # and $PnS is the "actual name" (like "FSC-H").  so let's
-                    # use $PnS.
-                    name_metadata = "$PnS"
-                    
-        tube0_meta = fcsparser.parse(self.tubes[0].file,
-                                     meta_data_only = True,
-                                     reformat_meta = True,
-                                     channel_naming = name_metadata)
-                    
-        import_op.original_channels = channels = list(tube0_meta["_channel_names_"])
+#         # update the channels too.  most of this is adapted from 
+#         # cytoflow.operations.import_op.ImportOp.apply()
+#         try:
+#             with warnings.catch_warnings():
+#                 warnings.simplefilter("ignore")
+#                 tube0_meta = fcsparser.parse(self.tubes[0].file,
+#                                              meta_data_only = True,
+#                                              reformat_meta = True)
+#         except Exception as e:
+#             warnings.warn("Trouble getting metadata from {}: {}".format(self.tubes[0].file, str(e)),
+#                           util.CytoflowWarning)
+#             return
+#         
+#         meta_channels = tube0_meta["_channels_"]
+#         
+#         if import_op.name_metadata:
+#             name_metadata = self.name_metadata
+#         else:
+#             # try to autodetect the metadata
+#             if "$PnN" in meta_channels and not "$PnS" in meta_channels:
+#                 name_metadata = "$PnN"
+#             elif "$PnN" not in meta_channels and "$PnS" in meta_channels:
+#                 name_metadata = "$PnS"
+#             else:
+#                 PnN = meta_channels["$PnN"]
+#                 PnS = meta_channels["$PnS"]
+#                 
+#                 # sometimes one is unique and the other isn't
+#                 if (len(set(PnN)) == len(PnN) and 
+#                     len(set(PnS)) != len(PnS)):
+#                     name_metadata = "$PnN"
+#                 elif (len(set(PnN)) != len(PnN) and 
+#                       len(set(PnS)) == len(PnS)):
+#                     name_metadata = "$PnS"
+#                 else:
+#                     # as per fcsparser.api, $PnN is the "short name" (like FL-1)
+#                     # and $PnS is the "actual name" (like "FSC-H").  so let's
+#                     # use $PnS.
+#                     name_metadata = "$PnS"
+#                     
+#         tube0_meta = fcsparser.parse(self.tubes[0].file,
+#                                      meta_data_only = True,
+#                                      reformat_meta = True,
+#                                      channel_naming = name_metadata)
+#                     
+#         import_op.original_channels = channels = list(tube0_meta["_channel_names_"])
         
         all_present = len(import_op.channels_list) > 0
         if len(import_op.channels_list) > 0:
@@ -731,12 +725,11 @@ class ExperimentDialogHandler(Controller):
             filename = csv_folder / row[0]
             
             try:
-                metadata = fcsparser.parse(str(filename), meta_data_only = True)
+                metadata, _ = parse_tube(str(filename), metadata_only = True)
             except Exception as e:
                 warning(None, "Had trouble loading file {}: {}".format(filename, str(e)))
                 continue
 
-            del metadata['__header__']
             metadata['CF_File'] = Path(filename).stem
             new_tube = Tube(file = str(filename), parent = self.model, metadata = sanitize_metadata(metadata))
             self.model.tubes.append(new_tube)
@@ -753,7 +746,7 @@ class ExperimentDialogHandler(Controller):
         """
         
         file_dialog = FileDialog()
-        file_dialog.wildcard = "Flow cytometry files (*.fcs)|*.fcs|"
+        file_dialog.wildcard = "Flow cytometry files (*.fcs *.lmd)|*.fcs *.lmd|"
         file_dialog.action = 'open files'
         file_dialog.open()
         
@@ -762,7 +755,7 @@ class ExperimentDialogHandler(Controller):
         
         for path in file_dialog.paths:
             try:
-                metadata = fcsparser.parse(path, meta_data_only = True)
+                metadata, _ = parse_tube(path, metadata_only = True)
             except Exception as e:
                 raise RuntimeError("FCS reader threw an error on tube {0}: {1}"\
                                    .format(path, e.value))
@@ -770,8 +763,8 @@ class ExperimentDialogHandler(Controller):
             # if we're the first tube loaded, create a dummy experiment
             # and setup default metadata columns
             if not self.model.dummy_experiment:
-                self.model.dummy_experiment = ImportOp(tubes = [CytoflowTube(file = path)],
-                                                       events = 1).apply()
+                self.model.dummy_experiment = \
+                    ImportOp(tubes = [CytoflowTube(file = path)]).apply(metadata_only = True)
                                                        
             # check the next tube against the dummy experiment
             try:
@@ -780,7 +773,6 @@ class ExperimentDialogHandler(Controller):
                 error(None, e.__str__(), "Error importing tube")
                 return
             
-            del metadata['__header__']
             metadata['CF_File'] = Path(path).stem    
             tube = Tube(file = path, parent = self.model, metadata = sanitize_metadata(metadata))
             

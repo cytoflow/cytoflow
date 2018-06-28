@@ -302,7 +302,7 @@ class FlowTask(Task):
             
             dialog = FileDialog(parent = self.window.control, 
                                 action = 'open',
-                                wildcard = (FileDialog.create_wildcard("FCS files", "*.fcs")))  # @UndefinedVariable
+                                wildcard = (FileDialog.create_wildcard("FCS files", "*.fcs *.lmd")))  # @UndefinedVariable
             
             if dialog.open() == OK:
                 # find the "best" file match -- ie, the one with the longest
