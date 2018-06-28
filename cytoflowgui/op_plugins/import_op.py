@@ -121,7 +121,10 @@ class Channel(HasTraits):
     
     default_view = View(HGroup(Item('channel', style = 'readonly', show_label = False),
                                Item(label = '-->'),
-                               Item('name', show_label = False)))
+                               Item('name',
+                                    editor = TextEditor(auto_set = False), 
+                                    show_label = False)))
+
 
 class ImportHandler(OpHandlerMixin, Controller):
     
@@ -208,14 +211,14 @@ class ImportPluginOp(PluginOpMixin, ImportOp):
         self.channels_list = [Channel(channel = x, name = util.sanitize_identifier(x)) for x in self.original_channels]
     
 
-    @on_trait_change('channels_list_items, channels_list:+', post_init = True)
-    def _channels_changed(self):
+    @on_trait_change('channels_list_items, channels_list.+')
+    def _channels_changed(self, obj, name, old, new):
         self.changed = (Changed.ESTIMATE, ('channels_list', self.channels_list))
 
 
-    @on_trait_change('tubes_items, tubes:+', post_init = True)
-    def _tubes_changed(self):
-        self.changed = (Changed.ESTIMATE, ('channels_list', self.channels_list))        
+    @on_trait_change('tubes_items, tubes:+')
+    def _tubes_changed(self, obj, name, old, new):
+        self.changed = (Changed.ESTIMATE, ('tubes', self.tubes))        
 
 
     def estimate(self, _):
@@ -223,10 +226,10 @@ class ImportPluginOp(PluginOpMixin, ImportOp):
         self.do_import = True
         
         
-    def apply(self, experiment = None):
-        if self.do_import:
+    def apply(self, experiment = None, metadata_only = False, force = False):
+        if self.do_import or force:
             self.channels = {c.channel : c.name for c in self.channels_list}
-            ret = super().apply(experiment = experiment)
+            ret = super().apply(experiment = experiment, metadata_only = metadata_only)
             
             self.ret_events = len(ret.data)
             return ret

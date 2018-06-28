@@ -32,7 +32,7 @@ if __name__ == '__main__':
     
 
 from pathlib import Path
-import warnings, pandas
+import pandas
         
 from traits.api import (HasStrictTraits, Instance, Str, Int, List, Bool, Enum, 
                         Property, BaseCStr, CStr, on_trait_change, Dict, Event,
@@ -54,7 +54,7 @@ from traitsui.table_column import ObjectColumn
 
 from cytoflow import Tube as CytoflowTube
 from cytoflow import Experiment, ImportOp
-from cytoflow.operations.import_op import check_tube, parse_tube, autodetect_name_metadata
+from cytoflow.operations.import_op import check_tube, parse_tube
 import cytoflow.utility as util
 
 from cytoflowgui.vertical_list_editor import VerticalListEditor
@@ -287,11 +287,11 @@ class ExperimentDialogModel(HasStrictTraits):
         
         if import_op.tubes:
             try:
-                self.dummy_experiment = import_op.apply(metadata_only = True)
-            except Exception:
+                self.dummy_experiment = import_op.apply(metadata_only = True, force = True)
+            except Exception as e:
                 warning(None,
                         "Had trouble loading some of the experiment's FCS "
-                        "files.  You will need to re-add them.")
+                        "files.  You will need to re-add them.\n\n{}".format(str(e)))
                 return        
         
             for op_tube in import_op.tubes:    
@@ -465,57 +465,10 @@ class ExperimentDialogModel(HasStrictTraits):
         import_op.tubes = tubes   
         import_op.original_channels = channels = self.dummy_experiment.channels
         
-#         # update the channels too.  most of this is adapted from 
-#         # cytoflow.operations.import_op.ImportOp.apply()
-#         try:
-#             with warnings.catch_warnings():
-#                 warnings.simplefilter("ignore")
-#                 tube0_meta = fcsparser.parse(self.tubes[0].file,
-#                                              meta_data_only = True,
-#                                              reformat_meta = True)
-#         except Exception as e:
-#             warnings.warn("Trouble getting metadata from {}: {}".format(self.tubes[0].file, str(e)),
-#                           util.CytoflowWarning)
-#             return
-#         
-#         meta_channels = tube0_meta["_channels_"]
-#         
-#         if import_op.name_metadata:
-#             name_metadata = self.name_metadata
-#         else:
-#             # try to autodetect the metadata
-#             if "$PnN" in meta_channels and not "$PnS" in meta_channels:
-#                 name_metadata = "$PnN"
-#             elif "$PnN" not in meta_channels and "$PnS" in meta_channels:
-#                 name_metadata = "$PnS"
-#             else:
-#                 PnN = meta_channels["$PnN"]
-#                 PnS = meta_channels["$PnS"]
-#                 
-#                 # sometimes one is unique and the other isn't
-#                 if (len(set(PnN)) == len(PnN) and 
-#                     len(set(PnS)) != len(PnS)):
-#                     name_metadata = "$PnN"
-#                 elif (len(set(PnN)) != len(PnN) and 
-#                       len(set(PnS)) == len(PnS)):
-#                     name_metadata = "$PnS"
-#                 else:
-#                     # as per fcsparser.api, $PnN is the "short name" (like FL-1)
-#                     # and $PnS is the "actual name" (like "FSC-H").  so let's
-#                     # use $PnS.
-#                     name_metadata = "$PnS"
-#                     
-#         tube0_meta = fcsparser.parse(self.tubes[0].file,
-#                                      meta_data_only = True,
-#                                      reformat_meta = True,
-#                                      channel_naming = name_metadata)
-#                     
-#         import_op.original_channels = channels = list(tube0_meta["_channel_names_"])
-        
         all_present = len(import_op.channels_list) > 0
         if len(import_op.channels_list) > 0:
             for c in import_op.channels_list:
-                if c.channel not in channels:
+                if c.name not in channels:
                     all_present = False
                     
             if not all_present:
