@@ -364,14 +364,6 @@ class ImportOp(HasStrictTraits):
             data_range = meta_channels.loc[channel]['$PnR']
             data_range = float(data_range)
             experiment.metadata[channel]['range'] = data_range
-
-                
-            
-#             data_bits = meta_channels.loc[channel]['$PnB']
-#             data_bytes = data_bits / 8
-#             if data_bytes not in [1, 2, 4, 8, 16]:
-#                 raise util.CytoflowOpError("Can't read files where the data is "
-#                                            "aligned on a power-of-2")
                 
                                 
         experiment.metadata['fcs_metadata'] = {}
