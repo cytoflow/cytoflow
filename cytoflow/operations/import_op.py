@@ -34,6 +34,56 @@ import cytoflow.utility as util
 from ..experiment import Experiment
 from .i_operation import IOperation
 
+# override fcsparser's broken fromfile
+import numpy
+def _fromfile(file, dtype, count, *args, **kwargs):
+    dtypes = dtype.split(',')
+    
+    read_dtypes = []
+    for dt in dtypes:
+        dtype_type = dt[1]
+        dtype_endian = dt[0]
+        num_bytes = int(dt[2:])
+        if num_bytes not in [1, 2, 4, 8]:
+            read_dtypes.append( 'V' + str(num_bytes))
+        else:
+            read_dtypes.append(dt)
+
+    read_dtype = ",".join(read_dtypes)
+        
+    try:
+        ret = numpy.fromfile(file, 
+                             dtype=",".join(read_dtypes), 
+                             count=count, 
+                             *args, 
+                             **kwargs)
+    except (TypeError, IOError):
+        ret = numpy.frombuffer(file.read(count * numpy.dtype(",".join(read_dtypes)).itemsize),
+                               dtype=dtype, 
+                               count=count, 
+                               *args, 
+                               **kwargs)    
+        
+    if not 'V' in read_dtype:
+        return ret
+    else:
+        as_dtypes = []
+        view_dtypes = []
+        for dt in dtypes:
+            dtype_type = dt[1]
+            dtype_endian = dt[0]
+            num_bytes = int(dt[2:])
+            while num_bytes & (num_bytes - 1) != 0:
+                num_bytes = num_bytes + 1
+            as_dtypes.append('V' + str(num_bytes))
+            view_dtypes.append(dtype_endian + dtype_type + str(num_bytes))
+
+        return ret.astype(','.join(as_dtypes)).view(','.join(view_dtypes))
+    
+import fcsparser.api
+fcsparser.api.fromfile = _fromfile
+
+
 class Tube(HasTraits):
     """
     Represents a tube or plate well we want to import.
@@ -314,6 +364,15 @@ class ImportOp(HasStrictTraits):
             data_range = meta_channels.loc[channel]['$PnR']
             data_range = float(data_range)
             experiment.metadata[channel]['range'] = data_range
+
+                
+            
+#             data_bits = meta_channels.loc[channel]['$PnB']
+#             data_bytes = data_bits / 8
+#             if data_bytes not in [1, 2, 4, 8, 16]:
+#                 raise util.CytoflowOpError("Can't read files where the data is "
+#                                            "aligned on a power-of-2")
+                
                                 
         experiment.metadata['fcs_metadata'] = {}
         for tube in self.tubes:
@@ -361,7 +420,7 @@ class ImportOp(HasStrictTraits):
                 experiment.metadata[new_name] = experiment.metadata[channel]
                 experiment.metadata[new_name]["fcs_name"] = channel
                 del experiment.metadata[channel]
-                
+              
             # this catches an odd corner case where some instruments store
             # instrument-specific info in the "extra" bits.  we have to
             # clear them out.
@@ -376,6 +435,25 @@ class ImportOp(HasStrictTraits):
                         mask = mask << 1 | 1
 
                     experiment.data[channel] = experiment.data[channel].values.astype('int') & mask
+                
+            # re-scale the data to linear if if's recorded as log-scaled with
+            # integer channels
+            data_range = float(meta_channels.loc[channel]['$PnR'])
+            f1 = float(meta_channels.loc[channel]['$PnE'][0])
+            f2 = float(meta_channels.loc[channel]['$PnE'][1])
+            
+            if f1 > 0.0 and f2 == 0.0:
+                warnings.warn('Invalid $PnE = {},{} for channel {}, changing it to {},1.0'
+                              .format(f1, f2, channel, f1),
+                              util.CytoflowWarning)
+                f2 = 1.0
+                
+            if f1 > 0.0 and f2 > 0.0 and tube0_meta['$DATATYPE'] == 'I':
+                warnings.warn('Converting channel {} from logarithmic to linear'
+                              .format(channel),
+                              util.CytoflowWarning)
+                experiment.data[channel] = 10 ** (f1 * experiment.data[channel] / data_range) * f2
+
 
         return experiment
 
