@@ -21,7 +21,7 @@ cytoflow.operations.import_op
 -----------------------------
 '''
 
-import warnings
+import warnings, math
 from traits.api import (HasTraits, HasStrictTraits, provides, Str, List, Any,
                         Dict, File, Constant, Enum, Int)
 
@@ -274,24 +274,24 @@ class ImportOp(HasStrictTraits):
         except Exception as e:
             raise util.CytoflowOpError('tubes',
                                        "FCS reader threw an error reading metadata "
-                                       "for tube {}"
-                                       .format(self.tubes[0].file)) from e
+                                       "for tube {}: {}"
+                                       .format(self.tubes[0].file, str(e))) from e
               
         meta_channels = tube0_meta["_channels_"]
         
         if self.name_metadata:
             experiment.metadata["name_metadata"] = self.name_metadata
         else:
-            experiment.metadata["name_metadata"] = autodetect_name_metadata(self.tubes[0].file)
+            experiment.metadata["name_metadata"] = autodetect_name_metadata(self.tubes[0].file,
+                                                                            data_set = self.data_set)
 
         meta_channels.set_index(experiment.metadata["name_metadata"], 
                                 inplace = True)
-        
+                
         channels = list(self.channels.keys()) if self.channels \
-                   else list(tube0_meta["_channel_names_"])
+                   else list(meta_channels.index.values)
 
         # make sure everything in self.channels is in the tube channels
-        
         for channel in channels:
             if channel not in meta_channels.index:
                 raise util.CytoflowOpError('channels',
@@ -314,7 +314,7 @@ class ImportOp(HasStrictTraits):
             data_range = meta_channels.loc[channel]['$PnR']
             data_range = float(data_range)
             experiment.metadata[channel]['range'] = data_range
-        
+                                
         experiment.metadata['fcs_metadata'] = {}
         for tube in self.tubes:
             if metadata_only:
@@ -348,6 +348,9 @@ class ImportOp(HasStrictTraits):
             tube_meta['CF_File'] = Path(tube.file).stem
                              
             experiment.metadata['fcs_metadata'][tube.file] = tube_meta
+                 
+#         import sys;sys.path.append(r'/home/brian/.p2/pool/plugins/org.python.pydev_6.1.0.201711051306/pysrc')
+#         import pydevd;pydevd.settrace()
                         
         for channel in channels:
             if self.channels and channel in self.channels:
@@ -358,7 +361,22 @@ class ImportOp(HasStrictTraits):
                 experiment.metadata[new_name] = experiment.metadata[channel]
                 experiment.metadata[new_name]["fcs_name"] = channel
                 del experiment.metadata[channel]
-            
+                
+            # this catches an odd corner case where some instruments store
+            # instrument-specific info in the "extra" bits.  we have to
+            # clear them out.
+            if tube0_meta['$DATATYPE'] == 'I':
+                data_bits  = int(meta_channels.loc[channel]['$PnB'])
+                data_range = float(meta_channels.loc[channel]['$PnR'])
+                range_bits = int(math.log(data_range, 2))
+                
+                if range_bits < data_bits:
+                    mask = 1
+                    for _ in range(1, range_bits):
+                        mask = mask << 1 | 1
+
+                    experiment.data[channel] = experiment.data[channel].values.astype('int') & mask
+
         return experiment
 
 
@@ -407,11 +425,13 @@ def check_tube(filename, experiment, data_set = 0):
 
         # TODO check the delay -- and any other params?
         
-def autodetect_name_metadata(filename):
+def autodetect_name_metadata(filename, data_set = 0):
+
     try:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             metadata = fcsparser.parse(filename,
+                                       data_set = data_set,
                                        meta_data_only = True,
                                        reformat_meta = True)
     except Exception as e:
@@ -428,6 +448,11 @@ def autodetect_name_metadata(filename):
     else:
         PnN = meta_channels["$PnN"]
         PnS = meta_channels["$PnS"]
+        
+        # sometimes not all of the channels have a $PnS.  all the channels must 
+        # have a $PnN to be compliant with the spec
+        if None in PnS:
+            name_metadata = "$PnN"
         
         # sometimes one is unique and the other isn't
         if (len(set(PnN)) == len(PnN) and 

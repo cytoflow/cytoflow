@@ -26,7 +26,7 @@ import unittest
 import os
 import cytoflow as flow
 
-class Test(unittest.TestCase):
+class TestImport(unittest.TestCase):
     
     def setUp(self):
         self.cwd = os.path.dirname(os.path.abspath(__file__))
@@ -73,7 +73,31 @@ class Test(unittest.TestCase):
             flow.ImportOp(conditions = {"Dox" : "float"},
                           tubes = [tube1],
                           channels = {'Y2-B' : "Blue"}).apply()
+                          
+    def testManufacturers(self):
+        files = [
+               'Accuri - C6.fcs',
+               'Applied Biosystems - Attune.fcs',
+               'BD - FACS Aria II.fcs',
+               'Beckman Coulter - Cyan.fcs',
+               'Beckman Coulter - Cytomics FC500.LMD',
+               'Beckman Coulter - Gallios.LMD',
+               'Beckman Coulter - MoFlo Astrios - linear settings.fcs',
+               'Beckman Coulter - MoFlo Astrios - log settings.fcs',
+               'Beckman Coulter - MoFlo XDP.fcs',
+               'Cytek DxP10.fcs',
+#          'Cytek xP5.fcs' : {'channel' : 'FL-1'},
+#          'iCyt - Eclipse.lmd' : {'channel' : 'FL-1'},
+               'Miltenyi Biotec - MACSQuant Analyzer.fcs',
+               'Partec - PAS.FCS',
+               'Stratedigm - S1400.fcs',
+               'System II listmode with extra info in bits D10-D15.LMD']
+        
+        for file in files:
+            path = self.cwd + '/data/instruments/' + file
+            import_op = flow.ImportOp(tubes = [flow.Tube(file = path)])
+            import_op.apply()
     
 if __name__ == "__main__":
-    #import sys;sys.argv = ['', 'Test.testName']
+    import sys;sys.argv = ['', 'TestImport.testManufacturers']
     unittest.main()
