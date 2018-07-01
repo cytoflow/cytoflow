@@ -354,7 +354,7 @@ def run_apidoc(app):
     if app.builder.name == 'embedded_help':  # @UndefinedVariable
         os.environ['SPHINX_APIDOC_OPTIONS'] = 'members'
 
-    from sphinx.apidoc import main
+    from sphinx.ext.apidoc import main
     sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
     cur_dir = os.path.abspath(os.path.dirname(__file__))
     
@@ -366,11 +366,11 @@ def run_apidoc(app):
         pass
      
     if app.builder.name == 'embedded_help':  # @UndefinedVariable
-        module = os.path.join(cur_dir,"..","cytoflowgui")
-        main([None, '-T', '-e', '-E', '-f', '-o', cur_dir, module, module + "/tests/*"])    
+        module = os.path.join(cur_dir,"..","cytoflowgui")        
+        main(['-T', '-e', '-E', '-f', '-o', cur_dir, module, module + "/tests/*"])    
     else:
         module = os.path.join(cur_dir,"..","cytoflow")    
-        main([None, '-T', '-e', '-E', '-f', '-o', cur_dir, module, module + "/tests/*"])
+        main(['-T', '-e', '-E', '-f', '-o', cur_dir, module, module + "/tests/*"])
         
 def cleanup_apidoc(app, exc):  # @UnusedVariable
     cur_dir = os.path.abspath(os.path.dirname(__file__))

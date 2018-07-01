@@ -31,8 +31,6 @@ except:
 
 import sys, multiprocessing, logging, traceback, threading
 
-from traits.etsconfig.api import ETSConfig
-ETSConfig.toolkit = 'qt4'
 
 def log_notification_handler(_, trait_name, old, new):
     
@@ -59,6 +57,15 @@ def log_excepthook(typ, val, tb):
                   .format(typ, val, tb_str))
                          
 def run_gui():
+    
+    # this is ridiculous, but here's the situation.  Qt5 now uses Chromium
+    # as their web renderer.  Chromium needs OpenGL.  if you don't
+    # initialize OpoenGL here, things crash on some platforms.
+    
+    # so now i guess we depend on opengl too. 
+    
+    from OpenGL import GL  # @UnresolvedImport
+    
     debug = ("--debug" in sys.argv)
 
     remote_process, remote_connection = start_remote_process()
@@ -127,16 +134,16 @@ def run_gui():
         print(" - Make sure PyQT is installed.")
         print(" - If both are installed, and you don't need both, uninstall PySide.")
         print(" - If you must have both installed, select PyQT by setting the")
-        print("   environment variable QT_API to \"pyqt\"")
+        print("   environment variable QT_API to \"pyqt5\"")
         print("   * eg, on Linux, type on the command line:")
-        print("     QT_API=\"pyqt\" " + cmd_line)
+        print("     QT_API=\"pyqt5\" " + cmd_line)
         print("   * on Windows, try: ")
-        print("     setx QT_API \"pyqt\"")
+        print("     setx QT_API \"pyqt5\"")
 
         sys.exit(1)
         
-    #from pyface.qt.QtCore import qInstallMsgHandler  # @UnresolvedImport
-    #qInstallMsgHandler(QtMsgHandler)
+    from pyface.qt.QtCore import qInstallMessageHandler  # @UnresolvedImport
+    qInstallMessageHandler(QtMsgHandler)
     
     # if we're frozen, add _MEIPASS to the pyface search path for icons etc
     if getattr(sys, 'frozen', False):

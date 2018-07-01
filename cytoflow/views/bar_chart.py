@@ -144,16 +144,7 @@ class BarChartView(Base1DStatisticsView):
             
         # limits
         lim = kwargs.pop('lim', None)
-                
-#         # set the scale for each set of axes; can't just call plt.xscale() 
-#         for ax in grid.axes.flatten():
-#             if orient == 'horizontal':
-#                 ax.set_xscale(yscale.name, **yscale.mpl_params)  
-#             elif orient == 'vertical':
-#                 ax.set_yscale(yscale.name, **yscale.mpl_params)
-#             else:
-#                 raise util.CytoflowViewError('orient', "'orient' param must be 'horizontal' or 'vertical'")  
-#                 
+                      
         stat = experiment.statistics[self.statistic]
         map_args = [self.variable, stat.name]
         

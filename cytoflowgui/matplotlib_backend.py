@@ -47,7 +47,7 @@ import time, threading, logging, sys, traceback
 import matplotlib.pyplot
 from matplotlib.figure import Figure
 
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 
 from pyface.qt import QtCore, QtGui
@@ -96,7 +96,6 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
     def __init__(self, figure, child_conn):
         FigureCanvasQTAgg.__init__(self, figure)
         self._drawRect = None
-        self.blitbox = None
         self.child_conn = child_conn
         
         self.buffer = None

@@ -129,16 +129,6 @@ class CytoflowApplication(TasksApplication):
     def stop(self):
         super().stop()
         self.model.shutdown_remote_process()
-#         
-#         
-#     def exit(self, force=False):
-# 
-#         ret = TasksApplication.exit(self, force=force)
-#         
-#         if ret:
-#             self.model.shutdown_remote_process()
-#             
-#         return ret
         
 
     preferences_helper = Instance(CytoflowPreferences)
@@ -163,6 +153,9 @@ class CytoflowApplication(TasksApplication):
                     restored_state = pickle.load(f)
                 if state.version == restored_state.version:
                     state = restored_state
+                    
+                    # make sure the active task is the main window
+                    state.previous_window_layouts[0].active_task = 'edu.mit.synbio.cytoflowgui.flow_task'
                 else:
                     logger.warn('Discarding outdated application layout')
             except:
@@ -200,7 +193,7 @@ class CytoflowApplication(TasksApplication):
         tasks = [ factory.id for factory in self.task_factories ]
         return [ TaskWindowLayout(*tasks,
                                   active_task = active_task,
-                                  size = (800, 600)) ]
+                                  size = (1280, 800)) ]
 
     def _preferences_helper_default(self):
         return CytoflowPreferences(preferences = self.preferences)

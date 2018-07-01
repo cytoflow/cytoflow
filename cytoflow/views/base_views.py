@@ -174,9 +174,9 @@ class BaseView(HasStrictTraits):
         
         for ax in g.axes.flatten():
             if xscale:
-                ax.set_xscale(xscale.name, **xscale.mpl_params) 
+                ax.set_xscale(xscale.name, **xscale.get_mpl_params(ax.get_xaxis())) 
             if yscale:
-                ax.set_yscale(yscale.name, **yscale.mpl_params)
+                ax.set_yscale(yscale.name, **yscale.get_mpl_params(ax.get_yaxis()))
             if xlim:
                 ax.set_xlim(xlim)
             if ylim:

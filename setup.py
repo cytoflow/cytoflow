@@ -65,27 +65,28 @@ setup(
     
     # Project uses reStructuredText, so ensure that the docutils get
     # installed or upgraded on the target machine
-    install_requires = ['numpy==1.11.3',
-                        'pandas==0.21.1',
-                        'matplotlib==1.5.1',  
+    install_requires = ['numpy==1.13.3',
+                        'pandas==0.23.1',
+                        'matplotlib==2.2.2',  
                         'bottleneck==1.2.1',
-                        'numexpr==2.6.4',
-                        'scipy==1.0.0',
+                        'numexpr==2.6.5',
+                        'scipy==1.1.0',
                         'scikit-learn==0.19.1',
                         'seaborn==0.8.1',
                         'traits==4.6.0',
                         'pyface==6.0.0',
                         'traitsui==6.0.0',
                         'nbformat==4.4.0',
-                        'python-dateutil==2.6.1',
-                        'statsmodels==0.8.0',
+                        'python-dateutil==2.7.3',
+                        'statsmodels==0.9.0',
                         'envisage==4.6.0',
                         'camel==0.1.2',
                         'yapf==0.20.2',
-                        'fcsparser==0.2.0'] 
-                if not on_rtd else ['sphinx==1.6.3'],
+                        'fcsparser==0.2.0',
+                        'pyopengl==3.1.1a1'] 
+                if not on_rtd else ['sphinx==1.7.5'],
                         
-    # GUI also requires PyQt4 >= 4.11.4, but it's not available via pypi and 
+    # GUI also requires PyQt4 >= 5.9.2, but it's not available via pypi and 
     # distutils.  Install it locally!
                         
     # try to build the Logicle extension

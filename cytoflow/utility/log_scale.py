@@ -50,11 +50,11 @@ class LogScale(ScaleMixin):
     threshold = Property(Float, depends_on = "[experiment, condition, channel, statistic, error_statistic]")
     _channel_threshold = Float(0.1)
 
-    mpl_params = Property(Dict)
-
-    def _get_mpl_params(self):
-        return {"nonposx" : self.mode, 
-                "nonposy" : self.mode}
+    def get_mpl_params(self, ax):
+        if ax.axis_name == 'x':
+            return {"nonposx" : self.mode}
+        else: 
+            return {"nonposy" : self.mode}
         
     def _set_threshold(self, threshold):
         self._channel_threshold = threshold

@@ -134,8 +134,6 @@ class LogicleScale(HasStrictTraits):
     _W = Float(Undefined)
     _T = Property(Float, depends_on = "[experiment, condition, channel]")
     _logicle = Property(Instance(FastLogicle), depends_on = "[_T, W, M, A]")
-
-    mpl_params = Property(Dict, depends_on = "_logicle")
     
     def __call__(self, data):
         """
@@ -337,8 +335,7 @@ class LogicleScale(HasStrictTraits):
          
         return FastLogicle(self._T, self.W, self.M, self.A)
     
-    @cached_property
-    def _get_mpl_params(self):
+    def get_mpl_params(self, ax):
         return {"logicle" : self._logicle} 
     
 register_scale(LogicleScale)

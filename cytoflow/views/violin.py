@@ -140,9 +140,9 @@ class ViolinPlotView(Base1DView):
         # set the scale for each set of axes; can't just call plt.xscale() 
         for ax in grid.axes.flatten():
             if kwargs['orientation'] == 'horizontal':
-                ax.set_xscale(scale.name, **scale.mpl_params)  
+                ax.set_xscale(scale.name, **scale.get_mpl_params(ax.get_xaxis()))  
             else:
-                ax.set_yscale(scale.name, **scale.mpl_params)  
+                ax.set_yscale(scale.name, **scale.get_mpl_params(ax.get_yaxis()))  
             
         # this order-dependent thing weirds me out.      
         if kwargs['orientation'] == 'horizontal':

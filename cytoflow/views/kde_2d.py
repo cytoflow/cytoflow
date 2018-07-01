@@ -190,6 +190,12 @@ def _bivariate_kdeplot(x, y, xscale=None, yscale=None, shade=False,
     color = kwargs.pop("color")
     kwargs['colors'] = (color, )
     
+    min_alpha = kwargs.pop("min_alpha", 0.2)
+    if shade:
+        min_alpha = 0
+        
+    max_alpha = kwargs.pop("max_alpha", 0.9)
+    
     x_support = xscale.inverse(x_support)
     y_support = yscale.inverse(y_support)
     xx, yy = np.meshgrid(x_support, y_support)    
@@ -202,12 +208,6 @@ def _bivariate_kdeplot(x, y, xscale=None, yscale=None, shade=False,
                                      "Something went wrong in {}, bandwidth = {}.  "
                                      .format(contour_func.__name__, bw)) from e
     num_collections = len(cset.collections)
-    
-    min_alpha = kwargs.pop("min_alpha", 0.2)
-    if shade:
-        min_alpha = 0
-        
-    max_alpha = kwargs.pop("max_alpha", 0.9)
     
     alpha = np.linspace(min_alpha, max_alpha, num = num_collections)
     for el in range(num_collections):

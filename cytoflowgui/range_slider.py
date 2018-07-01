@@ -178,13 +178,14 @@ class RangeSlider(QtGui.QSlider):
 
         self.click_offset = new_pos
 
-        self.update()
+        self.update()        
+        self.sliderMoved.emit(new_pos)
 
-        self.emit(QtCore.SIGNAL('sliderMoved(int)'), new_pos)
         
     def mouseReleaseEvent(self, event):
         event.accept()
-        self.emit(QtCore.SIGNAL('sliderReleased()'))
+        self.sliderReleased.emit()
+
 
     def __pick(self, pt):
         if self.orientation() == QtCore.Qt.Horizontal:
@@ -225,6 +226,6 @@ if __name__ == "__main__":
     slider.setMaximum(10000)
     slider.setLow(0)
     slider.setHigh(10000)
-    QtCore.QObject.connect(slider, QtCore.SIGNAL('sliderMoved(int)'), echo)
+    slider.sliderMoved.connect(echo)
     slider.show()
     app.exec_()
