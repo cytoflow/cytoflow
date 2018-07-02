@@ -114,19 +114,6 @@ class VerticalNotebookPage(HasPrivateTraits):
 
     #-- Public Methods -------------------------------------------------------
 
-#     def __init__(self, **kwargs):
-#         super(VerticalNotebookPage, self).__init__(**kwargs)
-# 
-#         # usually i'd make these static notifiers, but because these traits can
-#         # changed from the worker thread, they need to be re-dispatched on the
-#         # UI thread, and you can only specify UI dispatch with a dynamic
-#         # notifier
-#         
-#         self.on_trait_change(self._on_is_open_changed, 'is_open', dispatch = 'ui')
-#         self.on_trait_change(self._on_name_changed, 'name', dispatch = 'ui')
-#         self.on_trait_change(self._on_description_changed, 'description', dispatch = 'ui')
-#         self.on_trait_change(self._on_icon_changed, 'icon', dispatch = 'ui')
-#         self.on_trait_change(self._on_deletable_changed, 'deletable', dispatch = 'ui')
 
     def dispose(self):
         """ Removes this notebook page. """
@@ -146,28 +133,7 @@ class VerticalNotebookPage(HasPrivateTraits):
             self.icon_object.on_trait_change(self._icon_updated,
                                              self.icon_object_trait,
                                              remove = True)
-        
-#         self.on_trait_change(self._on_is_open_changed, 
-#                              'is_open', 
-#                              dispatch = 'ui',
-#                              remove = True)
-#         self.on_trait_change(self._on_name_changed, 
-#                              'name', 
-#                              dispatch = 'ui',
-#                              remove = True)
-#         self.on_trait_change(self._on_description_changed, 
-#                              'description', 
-#                              dispatch = 'ui',
-#                              remove = True)
-#         self.on_trait_change(self._on_icon_changed, 
-#                              'icon', 
-#                              dispatch = 'ui',
-#                              remove = True)
-# 
-#         self.on_trait_change(self._on_deletable_changed, 
-#                              'deletable', 
-#                              dispatch = 'ui',
-#                              remove = True)
+
 
         # make sure we dispose of the child ui properly
         if self.ui is not None:
