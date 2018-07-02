@@ -24,6 +24,7 @@ from pyface.action.api import ToolBarManager
 from pyface.tasks.action.api import TaskAction
 
 from cytoflowgui.op_plugins import IOperationPlugin
+from cytoflowgui.view_pane import HintedMainWindow
 
 @provides(IDockPane)
 class WorkflowDockPane(TraitsDockPane):
@@ -65,7 +66,9 @@ class WorkflowDockPane(TraitsDockPane):
                                      image = plugin.get_icon())
             self.toolbar.append(task_action)
              
-        window = QtGui.QMainWindow()                    # @UndefinedVariable
+        # see the comment in cytoflowgui.view_pane for an explanation of this
+        # HintedMainWindow business.
+        window = HintedMainWindow()                    
         window.addToolBar(QtCore.Qt.LeftToolBarArea,    # @UndefinedVariable
                           self.toolbar.create_tool_bar(window))
          

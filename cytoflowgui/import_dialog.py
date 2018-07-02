@@ -569,7 +569,9 @@ class ExperimentDialogHandler(Controller):
                              show_label = False)))),
             title     = 'Experiment Setup',
             buttons = OKCancelButtons,
-            resizable = True
+            resizable = True,
+            width = 0.3,
+            height = 0.3
         )
 
     # keep a ref to the table editor so we can add columns dynamically
