@@ -23,10 +23,6 @@ Created on Mar 5, 2018
 '''
 
 import unittest
-
-import matplotlib
-matplotlib.use('Agg')
-
 import cytoflow as flow
 
 from test_base import ImportedDataTest  # @UnresolvedImport
@@ -136,7 +132,7 @@ class TestHistogram(ImportedDataTest):
         
     def testNormed(self):
         self.view.huefacet = "Dox"
-        self.view.plot(self.ex, histtype = 'step', normed = True)
+        self.view.plot(self.ex, histtype = 'step', density = True)
 
         
 if __name__ == "__main__":

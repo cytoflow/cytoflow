@@ -26,7 +26,7 @@ import os
 
 import numpy as np
 import pandas as pd
-from numpy.testing import assert_almost_equal
+from numpy.testing import assert_almost_equal  # @UnresolvedImport
 
 import cytoflow as flow
 import cytoflow.utility as util

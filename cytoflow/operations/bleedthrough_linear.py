@@ -408,8 +408,8 @@ class BleedthroughLinearDiagnostic(HasStrictTraits):
                 plt.subplot(num_channels, 
                             num_channels, 
                             from_idx + (to_idx * num_channels) + 1)
-                plt.xscale(scale_name, **xscale.mpl_params)
-                plt.yscale(scale_name, **yscale.mpl_params)
+                plt.xscale(scale_name, **xscale.get_mpl_params(plt.gca().get_xaxis()))
+                plt.yscale(scale_name, **yscale.get_mpl_params(plt.gca().get_yaxis()))
                 plt.xlabel(from_channel)
                 plt.ylabel(to_channel)
                 plt.scatter(tube_data[from_channel],

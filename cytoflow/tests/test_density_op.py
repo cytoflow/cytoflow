@@ -23,10 +23,6 @@ Created on Dec 1, 2015
 '''
 import unittest
 import os
-
-import matplotlib
-matplotlib.use('Agg')
-
 import cytoflow as flow
 import cytoflow.utility as util
 

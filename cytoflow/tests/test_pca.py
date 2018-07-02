@@ -23,10 +23,6 @@ Created on Feb 4, 2018
 '''
 import unittest
 import os
-
-import matplotlib
-matplotlib.use('Agg')
-
 import cytoflow as flow
 
 class TestPCA(unittest.TestCase):

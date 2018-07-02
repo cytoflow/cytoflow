@@ -22,11 +22,6 @@ Created on Feb 4, 2018
 @author: brian
 '''
 import unittest
-import os
-
-import matplotlib
-matplotlib.use('Agg')
-
 import cytoflow as flow
 from test_base import ImportedDataTest  # @UnresolvedImport
 

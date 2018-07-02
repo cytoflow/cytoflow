@@ -235,7 +235,7 @@ class PolygonOp(HasStrictTraits):
             
         # use a matplotlib Path because testing for membership is a fast C fn.
         path = mpl.path.Path(np.array(vertices))
-        xy_data = data.as_matrix(columns = [self.xchannel, self.ychannel])
+        xy_data = data[[self.xchannel, self.ychannel]].values
         
         new_experiment = experiment.clone()        
         new_experiment.add_condition(self.name, 

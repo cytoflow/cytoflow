@@ -23,10 +23,6 @@ Created on Mar 5, 2018
 '''
 
 import unittest
-
-import matplotlib
-matplotlib.use('Agg')
-
 import cytoflow as flow
 
 from test_base import ImportedDataTest  # @UnresolvedImport
@@ -116,7 +112,7 @@ class TestKde2D(ImportedDataTest):
 
     # Kde 2d params
     def testShade(self):
-        self.view.plot(self.ex, shade = False)
+        self.view.plot(self.ex, shade = True)
         
     def testAlpha(self):
         self.view.plot(self.ex, min_alpha = 0.5, max_alpha = 0.7) 
@@ -125,14 +121,13 @@ class TestKde2D(ImportedDataTest):
         self.view.plot(self.ex, n_levels = 5)
         
     def testLineStyle(self):
-        self.view.plot(self.ex, linestyle = 'solid')
-        self.view.plot(self.ex, linestyle = 'dashed')
-        self.view.plot(self.ex, linestyle = 'dashdot')
-        self.view.plot(self.ex, linestyle = 'dotted')
-        self.view.plot(self.ex, linestyle = 'none')
+        self.view.plot(self.ex, linestyles = 'solid')
+        self.view.plot(self.ex, linestyles = 'dashed')
+        self.view.plot(self.ex, linestyles = 'dashdot')
+        self.view.plot(self.ex, linestyles = 'dotted')
 
     def testLineWidth(self):
-        self.view.plot(self.ex, linestyle = 'solid', linewidth = 5)
+        self.view.plot(self.ex, linestyles = 'solid', linewidths = 5)
         
     def testGridsize(self):
         self.view.plot(self.ex, gridsize = 50)

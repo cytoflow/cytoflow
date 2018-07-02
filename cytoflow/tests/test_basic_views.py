@@ -26,9 +26,6 @@ import os
 import warnings
 import unittest
 
-import matplotlib
-matplotlib.use('Agg')
-
 import cytoflow as flow
 
 class Test(unittest.TestCase):
@@ -126,6 +123,4 @@ class Test(unittest.TestCase):
 
 if __name__ == "__main__":
 #     import sys;sys.argv = ['', 'Test.testBarChart']
-    with warnings.catch_warnings():
-        warnings.filterwarnings('error')
-        unittest.main()
+    unittest.main()

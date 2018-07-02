@@ -290,7 +290,7 @@ class TestHistogram(ImportedDataTest):
             
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
-        self.view.plot_params.normed = True
+        self.view.plot_params.density = True
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))                    
 
         
@@ -304,6 +304,25 @@ class TestHistogram(ImportedDataTest):
             os.close(fh)
             
             save_yaml(self.view, filename)
+            new_view = load_yaml(filename)
+            
+        finally:
+            os.unlink(filename)
+            
+        self.maxDiff = None
+                     
+        self.assertDictEqual(self.view.trait_get(self.view.copyable_trait_names()),
+                             new_view.trait_get(self.view.copyable_trait_names()))
+        
+    def testSerializeV1(self):
+        HistogramPlotParams.__eq__ = traits_eq
+        HistogramPlotParams.__hash__ = traits_hash
+        
+        fh, filename = tempfile.mkstemp()
+        try:
+            os.close(fh)
+            
+            save_yaml(self.view, filename, lock_versions = {HistogramPlotParams : 1})
             new_view = load_yaml(filename)
             
         finally:

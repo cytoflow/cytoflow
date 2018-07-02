@@ -84,7 +84,7 @@ class HistogramView(Base1DView):
             The type of histogram to draw.  `stepfilled` is the default, which
             is a line plot with a color filled under the curve.
             
-        normed : bool
+        density: bool
             If `True`, re-scale the histogram to form a probability density
             function, so the area under the histogram is 1.
             

@@ -149,6 +149,7 @@ def _bivariate_kdeplot(x, y, xscale=None, yscale=None, shade=False,
                        legend_data = None, **kwargs):
     
     ax = plt.gca()
+    label = kwargs.pop('label', None)
     
     # Determine the clipping
     clip = [(-np.inf, np.inf), (-np.inf, np.inf)]
@@ -218,6 +219,9 @@ def _bivariate_kdeplot(x, y, xscale=None, yscale=None, shade=False,
         ax.set_xlabel(x.name)
     if hasattr(y, "name") and legend:
         ax.set_ylabel(y.name)
+        
+    if label is not None:
+        ax.set_title(label)
         
     # Add legend data
     if 'label' in kwargs:

@@ -22,10 +22,6 @@ Created on Dec 1, 2015
 @author: brian
 '''
 import unittest, os, tempfile, shutil
-
-import matplotlib
-matplotlib.use('Agg')
-
 import cytoflow as flow
 
 class Test(unittest.TestCase):
