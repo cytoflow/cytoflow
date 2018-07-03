@@ -254,7 +254,12 @@ class BaseView(HasStrictTraits):
                         lh.set_alpha(1.0)
                         
         if title:
-            plt.title(title)
+            if self.xfacet or self.yfacet:
+                plt.subplots_adjust(top=0.9)
+            else:
+                plt.subplots_adjust(top=0.94)
+                
+            plt.suptitle(title)
             
         if xlabel == "":
             xlabel = None
