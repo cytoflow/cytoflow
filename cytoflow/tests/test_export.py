@@ -54,6 +54,29 @@ class Test(unittest.TestCase):
         self.assertTrue((self.ex.data == ex_rt.data).all().all())
 
 
+    def testRoundtripWithBeadCalibration(self):
+        self.cwd = os.path.dirname(os.path.abspath(__file__))
+        self.ex = flow.ImportOp(conditions = {'Dox' : 'float'},
+                                tubes = [flow.Tube(file = self.cwd + '/data/tasbe/rby.fcs',
+                                                   conditions = {'Dox' : 1.0})]).apply()        
+        
+        op = flow.BeadCalibrationOp(
+                    units = {"PE-Tx-Red-YG-A" : "MEPTR"},
+                    beads_file = self.cwd + '/data/tasbe/beads.fcs',
+                    beads = flow.BeadCalibrationOp.BEADS["Spherotech RCP-30-5A Lot AA01-AA04, AB01, AB02, AC01, GAA01-R"])
+        op.estimate(self.ex)
+        
+        ex2 = op.apply(self.ex)
+        
+        flow.ExportFCS(path = self.directory, by = ['Dox']).export(ex2)   
+        
+        tube1 = flow.Tube(file = self.directory + '/Dox_1.0.fcs', 
+                          conditions = {"Dox" : 1.0})
+        ex_rt = flow.ImportOp(conditions = {'Dox' : 'float'},
+                              tubes = [tube1]).apply()
+                              
+        self.assertNotIn('voltage', ex_rt.metadata['PE-Tx-Red-YG-A'])             
+
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']
     unittest.main()
