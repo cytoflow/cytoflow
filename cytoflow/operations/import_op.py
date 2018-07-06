@@ -27,6 +27,7 @@ from traits.api import (HasTraits, HasStrictTraits, provides, Str, List, Any,
 
 import fcsparser
 import numpy as np
+import pandas as pd
 from pathlib import Path
 
 import cytoflow.utility as util
@@ -335,6 +336,7 @@ class ImportOp(HasStrictTraits):
             experiment.metadata["name_metadata"] = autodetect_name_metadata(self.tubes[0].file,
                                                                             data_set = self.data_set)
 
+        meta_channels['Index'] = meta_channels.index
         meta_channels.set_index(experiment.metadata["name_metadata"], 
                                 inplace = True)
                 
@@ -359,7 +361,7 @@ class ImportOp(HasStrictTraits):
             if("$PnV" in meta_channels.loc[channel]):
                 v = meta_channels.loc[channel]['$PnV']
                 if v: experiment.metadata[channel]["voltage"] = v
-            
+                            
             # add the maximum possible value for this channel.
             data_range = meta_channels.loc[channel]['$PnR']
             data_range = float(data_range)
@@ -371,7 +373,8 @@ class ImportOp(HasStrictTraits):
             if metadata_only:
                 tube_meta, tube_data = parse_tube(tube.file,
                                                   experiment,
-                                                  data_set = self.data_set)
+                                                  data_set = self.data_set,
+                                                  metadata_only = True)
             else:
                 tube_meta, tube_data = parse_tube(tube.file, 
                                                   experiment, 
@@ -395,6 +398,11 @@ class ImportOp(HasStrictTraits):
                 pos = tube_meta['WELL ID']
                 tube_meta['CF_Row'] = pos[0]
                 tube_meta['CF_Col'] = int(pos[1:3])
+                
+            # remove the PnV tube metadata
+            for i, channel in enumerate(channels):
+                if '$P{}V'.format(i+1) in tube_meta:
+                    del tube_meta['$P{}V'.format(i+1)]
                 
             tube_meta['CF_File'] = Path(tube.file).stem
                              

@@ -643,28 +643,11 @@ class TasbeCalibrationOp(PluginOpMixin):
             experiment = self._bead_calibration_op.apply(experiment)
             
             if self.do_color_translation:
-                experiment = self._color_translation_op.apply(experiment)
-                
-            tube_meta = fcsparser.parse( tube.file, 
-                                         channel_naming = experiment.metadata["name_metadata"],
-                                         meta_data_only = True,
-                                         reformat_meta = False)
-            
-            tube_meta = {k:v for (k,v) in tube_meta.items() if not k.startswith("flowCore_")}
-            tube_meta = {k:v for (k,v) in tube_meta.items() if not (k.startswith("$P") and k[2].isdigit())}
-            
-            drop_kws = ["$BEGINANALYSIS", "$ENDANALYSIS", 
-                        "$BEGINSTEXT", "$ENDSTEXT",
-                        "$BEGINDATA", "$ENDDATA",
-                        "$BYTEORD", "$DATATYPE",
-                        "$MODE", "$NEXTDATA", "$TOT", "$PAR"]
-            
-            tube_meta = {k:v for (k,v) in tube_meta.items() if not k in drop_kws}                                                     
+                experiment = self._color_translation_op.apply(experiment)                                                
                     
             ExportFCS(path = self.output_directory,
                       by = ['filename'],
-                      _include_by = False,
-                      keywords = tube_meta).export(experiment)
+                      _include_by = False).export(experiment)
                       
         self.input_files = []
         self.status = "Done converting!"

@@ -248,6 +248,11 @@ class ExportFCS(HasStrictTraits):
                 
                 if name not in common_metadata or value != common_metadata[name]:
                     del common_metadata[name]
+                    
+                    
+        for i, channel in enumerate(experiment.channels):
+            if 'voltage' in experiment.metadata[channel]:
+                common_metadata['$P{}V'.format(i + 1)] = experiment.metadata[channel]['voltage']
             
         
         for group, data_subset in experiment.data.groupby(self.by):
@@ -266,8 +271,7 @@ class ExportFCS(HasStrictTraits):
                     parts.append(name + '_' + str(group[i]))
                 else:
                     parts.append(str(group[i]))
-                    
-                kws["CF_" + name] = str(group[i])
+                    kws["CF_" + name] = str(group[i])
                 
             if self.base:
                 filename = self.base + '_' + '_'.join(parts) + '.fcs'
