@@ -72,6 +72,7 @@ geomean_95ci = lambda x: util.ci(x, util.geom_mean, boots = 100)
 
 summary_functions = {"Mean" : np.mean,
                      "Geom.Mean" : util.geom_mean,
+                     "Median" : np.median,
                      "Count" : len,
                      "Std.Dev" : np.std,
                      "Geom.SD" : util.geom_sd_range,
@@ -83,6 +84,7 @@ summary_functions = {"Mean" : np.mean,
 
 fill = {"Mean" : 0,
         "Geom.Mean" : 0,
+        "Median" : 0,
         "Count" : 0,
         "Std.Dev" : 0,
         "Geom.SD" : (0,0),

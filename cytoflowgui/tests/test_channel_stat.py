@@ -66,6 +66,14 @@ class TestChannelStat(ImportedDataTest):
         self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 5))
         self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
 
+        self.op.statistic_name = "Geom.Mean"
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
+
+        self.op.statistic_name = "Median"
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
+
         self.op.statistic_name = "Count"
         self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 5))
         self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))

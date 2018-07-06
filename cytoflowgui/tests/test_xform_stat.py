@@ -64,11 +64,15 @@ class TestXformStat(ImportedDataTest):
 
 
     def testAllFunctions(self):
-        self.op.statistic_name = "Proportion"
+        self.op.statistic_name = "Mean"
         self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 5))
         self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 5))
 
         self.op.statistic_name = "Geom.Mean"
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 5))
+
+        self.op.statistic_name = "Median"
         self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 5))
         self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 5))
 
@@ -103,6 +107,10 @@ class TestXformStat(ImportedDataTest):
         self.op.statistic_name = "Sum"
         self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 5))
         self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 5))   
+
+        self.op.statistic_name = "Proportion"
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 5))
   
         self.op.statistic_name = "Percentage"
         self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 5))
