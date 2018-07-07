@@ -80,3 +80,59 @@ class IterWrapper(object):
         
     def __next__(self):
         return next(self.iterator)
+    
+# when pyface makes a new dock pane, it sets the width and height as fixed
+# (from the new layout or from the default).  then, after it's finished
+# setting up, it resets the minimum and maximum widget sizes.  in Qt5, this
+# triggers a re-layout according to the widgets' hinted sizes.  so, here
+# we keep track of "fixed" sizes, then return those sizes as the size hint
+# to the layout engine.
+
+from pyface.qt import QtGui
+
+class HintedMainWindow(QtGui.QMainWindow):
+    
+    hint_width = None
+    hint_height = None
+    
+    def setFixedWidth(self, *args, **kwargs):
+        self.hint_width = args[0]
+        return QtGui.QMainWindow.setFixedWidth(self, *args, **kwargs)
+    
+    def setFixedHeight(self, *args, **kwargs):
+        self.hint_height = args[0]
+        return QtGui.QMainWindow.setFixedHeight(self, *args, **kwargs)
+    
+    def sizeHint(self, *args, **kwargs):
+        hint = QtGui.QMainWindow.sizeHint(self, *args, **kwargs)
+        if self.hint_width is not None:
+            hint.setWidth(self.hint_width)
+            
+        if self.hint_height is not None:
+            hint.setHeight(self.hint_height)
+            
+        return hint
+    
+class HintedWidget(QtGui.QWidget):
+    
+    hint_width = None
+    hint_height = None
+    
+    def setFixedWidth(self, *args, **kwargs):
+        self.hint_width = args[0]
+        return QtGui.QMainWindow.setFixedWidth(self, *args, **kwargs)
+    
+    def setFixedHeight(self, *args, **kwargs):
+        self.hint_height = args[0]
+        return QtGui.QMainWindow.setFixedHeight(self, *args, **kwargs)
+    
+    def sizeHint(self, *args, **kwargs):
+        hint = QtGui.QMainWindow.sizeHint(self, *args, **kwargs)
+        if self.hint_width is not None:
+            hint.setWidth(self.hint_width)
+            
+        if self.hint_height is not None:
+            hint.setHeight(self.hint_height)
+            
+        return hint
+

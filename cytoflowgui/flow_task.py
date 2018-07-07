@@ -85,7 +85,6 @@ class FlowTask(Task):
 #                                          accelerator='Ctrl+P'),
                               id='File', name='&File'),
                         SMenu(TaskToggleGroup(),
-#                               TaskWindowToggleGroup(),
                               id = 'View', name = '&View'),
                         SMenu(TaskAction(name = 'Report a problem....',
                                          method = 'on_problem'),
@@ -146,7 +145,7 @@ class FlowTask(Task):
             self.add_operation(ImportPlugin().id) 
             self.model.selected = self.model.workflow[0]
         
-#         # if we're debugging, add a few data bits
+        # if we're debugging, add a few data bits
         if self.model.debug:
             from cytoflow import Tube
                           
@@ -182,10 +181,10 @@ class FlowTask(Task):
         self.model.modified = False
     
     def _default_layout_default(self):
-        return TaskLayout(left = VSplitter(PaneItem("edu.mit.synbio.cytoflowgui.workflow_pane"),
-                                           PaneItem("edu.mit.synbio.cytoflowgui.help_pane")),
-                          right = VSplitter(PaneItem("edu.mit.synbio.cytoflowgui.view_traits_pane"),
-                                            PaneItem("edu.mit.synbio.cytoflowgui.params_pane")),
+        return TaskLayout(left = VSplitter(PaneItem("edu.mit.synbio.cytoflowgui.workflow_pane", width = 350),
+                                           PaneItem("edu.mit.synbio.cytoflowgui.help_pane", width = 350, height = 350)),
+                          right = VSplitter(PaneItem("edu.mit.synbio.cytoflowgui.view_traits_pane", width = 350),
+                                            PaneItem("edu.mit.synbio.cytoflowgui.params_pane", width = 350, height = 350)),
                           top_left_corner = 'left',
                           bottom_left_corner = 'left',
                           top_right_corner = 'right',

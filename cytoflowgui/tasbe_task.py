@@ -29,8 +29,10 @@ import os.path
 
 from traits.api import Instance, Bool, Any, on_trait_change, HTML
 from pyface.tasks.api import Task, TaskLayout, PaneItem, TraitsDockPane
+from pyface.tasks.action.api import SMenuBar, SMenu, TaskToggleGroup
 from envisage.api import Plugin, contributes_to
 from envisage.ui.tasks.api import TaskFactory
+from pyface.qt import QtGui
 
 from cytoflow.operations import IOperation
 
@@ -38,14 +40,13 @@ from cytoflow.operations import IOperation
 from cytoflowgui.workflow import Workflow
 from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.help_pane import HelpDockPane
-from cytoflowgui.op_plugins import IOperationPlugin
-from cytoflowgui.view_plugins import IViewPlugin
 
 from cytoflowgui.tasbe_calibration import TasbeCalibrationOp
+from cytoflowgui.util import HintedWidget
 
 class CalibrationPane(TraitsDockPane):
     
-    id = 'edu.mit.synbio.calibration_pane'
+    id = 'edu.mit.synbio.cytoflowgui.calibration_pane'
     name = "TASBE Calibration"
 
     # the task serving as the dock pane's controller
@@ -64,7 +65,14 @@ class CalibrationPane(TraitsDockPane):
                                          kind='subpanel', 
                                          parent=parent,
                                          scrollable = True)
-        return self.ui.control
+        layout = QtGui.QHBoxLayout()
+        control = HintedWidget()
+        
+        layout.addWidget(self.ui.control)
+        control.setLayout(layout)
+        control.setParent(parent)
+        parent.setWidget(control)
+        return control
 
 class TASBETask(Task):
     """
@@ -73,6 +81,9 @@ class TASBETask(Task):
     
     id = "edu.mit.synbio.cytoflowgui.tasbe_task"
     name = "TASBE calibration"
+    
+    menu_bar = SMenuBar(SMenu(TaskToggleGroup(),
+                              id = 'View', name = '&View'))
     
     # the main workflow instance.
     model = Instance(Workflow)
@@ -107,8 +118,8 @@ class TASBETask(Task):
         self.help_pane.html = self.op.get_help()
     
     def _default_layout_default(self):
-        return TaskLayout(left = PaneItem("edu.mit.synbio.cytoflowgui.calibration_pane"),
-                          right = PaneItem("edu.mit.synbio.cytoflowgui.help_pane"))
+        return TaskLayout(left = PaneItem("edu.mit.synbio.cytoflowgui.calibration_pane", width = 350),
+                          right = PaneItem("edu.mit.synbio.cytoflowgui.help_pane", width = 350))
      
     def create_central_pane(self):
         return self.application.plot_pane

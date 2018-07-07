@@ -142,7 +142,7 @@ class CytoflowApplication(TasksApplication):
         Loads saved application state, if possible.  Overload the envisage-
         defined one to fix a py3k bug and increment the TasksApplicationState
         version.
-        
+         
         """
         state = TasksApplicationState(version = 2)
         filename = os.path.join(self.state_location, 'application_memento')
@@ -153,7 +153,7 @@ class CytoflowApplication(TasksApplication):
                     restored_state = pickle.load(f)
                 if state.version == restored_state.version:
                     state = restored_state
-                    
+                     
                     # make sure the active task is the main window
                     state.previous_window_layouts[0].active_task = 'edu.mit.synbio.cytoflowgui.flow_task'
                 else:
@@ -162,18 +162,14 @@ class CytoflowApplication(TasksApplication):
                 # If anything goes wrong, log the error and continue.
                 logger.exception('Had a problem restoring application layout from %s',
                                  filename)
-                 
+                  
         self._state = state
      
     def _save_state(self):
         """
-        Saves the application state -- ONLY IF THE CYTOFLOW TASK IS ACTIVE
-        
+        Saves the application window size, position, panel locations, etc
         """
-        if self.active_window.active_task.id != "edu.mit.synbio.cytoflowgui.flow_task":
-            logger.info("Not saving application layout from TASBE task")
-            return
-        
+
         # Grab the current window layouts.
         window_layouts = [w.get_window_layout() for w in self.windows]
         self._state.previous_window_layouts = window_layouts
@@ -183,9 +179,9 @@ class CytoflowApplication(TasksApplication):
         try:
             with open(filename, 'wb') as f:
                 pickle.dump(self._state, f)
-        except:
+        except Exception as e:
             # If anything goes wrong, log the error and continue.
-            logger.exception('Had a problem saving application layout')
+            logger.exception('Had a problem saving application layout: {}'.format(str(e)))
     #### Trait initializers ###################################################
 
     def _default_layout_default(self):

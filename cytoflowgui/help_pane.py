@@ -25,6 +25,7 @@ from pyface.qt import QtGui
 
 from cytoflowgui.view_plugins import IViewPlugin
 from cytoflowgui.op_plugins import IOperationPlugin
+from cytoflowgui.util import HintedWidget
 
 class HelpDockPane(TraitsDockPane):
     """
@@ -51,11 +52,17 @@ class HelpDockPane(TraitsDockPane):
                             show_label = False))
     
     def create_contents(self, parent):
-        control = TraitsDockPane.create_contents(self, parent)
+        
+        self.ui = self.edit_traits(kind='subpanel', parent=parent)
+        
+        layout = QtGui.QHBoxLayout()
+        control = HintedWidget()
+        
+        layout.addWidget(self.ui.control)
+        control.setLayout(layout)
+        control.setParent(parent)
+        parent.setWidget(control)
 
-        # prevent the help window from expanding the dock 
-        control.setSizePolicy(QtGui.QSizePolicy.Ignored,
-                              QtGui.QSizePolicy.Ignored)
         return control
 
     

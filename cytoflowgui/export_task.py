@@ -31,17 +31,13 @@ from traits.api import Instance, Bool, Any, Event, CFloat, CInt, on_trait_change
 from traitsui.api import ButtonEditor, View, TextEditor, Item
 
 from pyface.tasks.api import Task, TaskLayout, PaneItem, TraitsDockPane, VSplitter
+from pyface.tasks.action.api import SMenuBar, SMenu, TaskToggleGroup
 from envisage.api import Plugin, contributes_to
 from envisage.ui.tasks.api import TaskFactory
 from pyface.api import FileDialog, OK, error
 
-from cytoflow.operations import IOperation
-
-# from cytoflowgui.flow_task_pane import FlowTaskPane, getFlowTaskPane
 from cytoflowgui.workflow import Workflow
-from cytoflowgui.workflow_item import WorkflowItem
 
-from cytoflowgui.tasbe_calibration import TasbeCalibrationOp
 
 class PlotParamsPane(TraitsDockPane):
     
@@ -113,6 +109,9 @@ class ExportTask(Task):
     id = "edu.mit.synbio.cytoflowgui.export_task"
     name = "Export figure"
     
+    menu_bar = SMenuBar(SMenu(TaskToggleGroup(),
+                              id = 'View', name = '&View'))
+    
     # the main workflow instance.
     model = Instance(Workflow)
            
@@ -120,8 +119,8 @@ class ExportTask(Task):
     export_pane = Instance(TraitsDockPane)
     
     def _default_layout_default(self):
-        return TaskLayout(right = VSplitter(PaneItem("edu.mit.synbio.cytoflowgui.plot_params_pane"),
-                                            PaneItem("edu.mit.synbio.cytoflowgui.export_pane")))
+        return TaskLayout(right = VSplitter(PaneItem("edu.mit.synbio.cytoflowgui.plot_params_pane", width = 350),
+                                            PaneItem("edu.mit.synbio.cytoflowgui.export_pane", width = 350)))
      
     def create_central_pane(self):
         return self.application.plot_pane
