@@ -33,7 +33,7 @@ import cytoflow.views
 import cytoflow.utility as util
 
 from .i_operation import IOperation
-from .import_op import Tube, ImportOp, check_tube
+from .import_op import Tube, ImportOp, check_fcs
 
 @provides(IOperation)
 class ColorTranslationOp(HasStrictTraits):
@@ -195,7 +195,7 @@ class ColorTranslationOp(HasStrictTraits):
             
             if tube_file not in tubes: 
                 # make a little Experiment
-                check_tube(tube_file, experiment)
+                check_fcs(tube_file, experiment)
                 tube_exp = ImportOp(tubes = [Tube(file = tube_file)],
                                     channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels},
                                     name_metadata = experiment.metadata['name_metadata']).apply()

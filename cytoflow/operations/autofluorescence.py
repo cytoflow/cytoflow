@@ -55,14 +55,11 @@ class AutofluorescenceOp(HasStrictTraits):
     channels : List(Str)
         The channels to correct.
         
-    blank_file : File
-        The filename of a file with "blank" cells (not fluorescent).  Used
+    blank_tube : Instance(cytoflow.operations.import_op.Tube)
+        A Tube representing an FCS file with "blank" cells (not fluorescent),
+        and the experimental conditions they were collected under.  Used
         to :meth:`estimate` the autofluorescence.
-        
-    blank_file_conditions : Dict
-        Occasionally, you'll need to specify the experimental conditions that
-        the blank tube was collected under (to apply the operations in the 
-        history.)  Specify them here.
+
         
     Examples
     --------
@@ -83,7 +80,7 @@ class AutofluorescenceOp(HasStrictTraits):
 
         >>> af_op = flow.AutofluorescenceOp()
         >>> af_op.channels = ["Pacific Blue-A", "FITC-A", "PE-Tx-Red-YG-A"]
-        >>> af_op.blank_file = "tasbe/blank.fcs"
+        >>> af_op.blank_tube = flow.Tube(file = "tasbe/blank.fcs")
     
     Estimate the model parameters
     
@@ -114,9 +111,10 @@ class AutofluorescenceOp(HasStrictTraits):
     
     name = Constant("Autofluorescence")
     channels = List(Str)
-    blank_file = File(exists = True)
-    blank_file_conditions = Dict({})
+    blank_file = util.Removed(err_string = "'blank_file' was removed in 1.0; please use 'blank_tube'")
+    blank_tube = Instance('cytoflow.operations.import_op.Tube')
 
+    _blank_experiment = Instance('cytoflow.experiment.Experiment', transient = True)
     _af_median = Dict(Str, Float, transient = True)
     _af_stdev = Dict(Str, Float, transient = True)
     _af_histogram = Dict(Str, Tuple(Array, Array), transient = True)
@@ -148,9 +146,6 @@ class AutofluorescenceOp(HasStrictTraits):
             raise util.CytoflowOpError('channels', 
                                        "Specified channels that weren't found "
                                        "in the experiment.")
-
-        # don't have to validate that blank_file exists; should crap out on 
-        # trying to set a bad value
         
         # clear the current values
         self._af_median.clear()
@@ -158,23 +153,15 @@ class AutofluorescenceOp(HasStrictTraits):
         self._af_histogram.clear()
         
         # make a little Experiment
-        check_tube(self.blank_file, experiment)
-        
-        conditions = {k: experiment.data[k].dtype.name for k in self.blank_file_conditions.keys()}
-        
-        blank_exp = ImportOp(tubes = [Tube(file = self.blank_file,
-                                           conditions = self.blank_file_conditions)], 
-                             conditions = conditions,
+        check_tube(self.blank_tube, experiment, all_conditions = False)
+                
+        blank_exp = ImportOp(tubes = [self.blank_tube],
+                             conditions = {k: experiment.data[k].dtype.name for k in self.blank_tube.conditions},
                              channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels},
                              name_metadata = experiment.metadata['name_metadata']).apply()
                                      
         # apply previous operations
         for op in experiment.history:
-            try:
-                op.estimate(blank_exp)
-            except Exception:
-                pass
-            
             blank_exp = op.apply(blank_exp)
             
         # subset it

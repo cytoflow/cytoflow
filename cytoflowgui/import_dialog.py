@@ -54,7 +54,7 @@ from traitsui.table_column import ObjectColumn
 
 from cytoflow import Tube as CytoflowTube
 from cytoflow import Experiment, ImportOp
-from cytoflow.operations.import_op import check_tube, parse_tube
+from cytoflow.operations.import_op import check_fcs, parse_fcs
 import cytoflow.utility as util
 
 from cytoflowgui.vertical_list_editor import VerticalListEditor
@@ -680,7 +680,7 @@ class ExperimentDialogHandler(Controller):
             filename = csv_folder / row[0]
             
             try:
-                metadata, _ = parse_tube(str(filename), metadata_only = True)
+                metadata, _ = parse_fcs(str(filename), metadata_only = True)
             except Exception as e:
                 warning(None, "Had trouble loading file {}: {}".format(filename, str(e)))
                 continue
@@ -710,7 +710,7 @@ class ExperimentDialogHandler(Controller):
         
         for path in file_dialog.paths:
             try:
-                metadata, _ = parse_tube(path, metadata_only = True)
+                metadata, _ = parse_fcs(path, metadata_only = True)
             except Exception as e:
                 raise RuntimeError("FCS reader threw an error on tube {0}: {1}"\
                                    .format(path, e.value))
@@ -723,7 +723,7 @@ class ExperimentDialogHandler(Controller):
                                                        
             # check the next tube against the dummy experiment
             try:
-                check_tube(path, self.model.dummy_experiment)
+                check_fcs(path, self.model.dummy_experiment)
             except util.CytoflowError as e:
                 error(None, e.__str__(), "Error importing tube")
                 return

@@ -36,7 +36,7 @@ import cytoflow.views
 import cytoflow.utility as util
 
 from .i_operation import IOperation
-from .import_op import Tube, ImportOp, check_tube
+from .import_op import Tube, ImportOp, check_fcs
 
 @provides(IOperation)
 class BleedthroughPiecewiseOp(HasStrictTraits):
@@ -199,7 +199,7 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
             self._splines[channel] = {}
             
             # make a little Experiment
-            check_tube(self.controls[channel], experiment)
+            check_fcs(self.controls[channel], experiment)
             tube_exp = ImportOp(tubes = [Tube(file = self.controls[channel])],
                                 channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels},
                                 name_metadata = experiment.metadata['name_metadata']).apply()
@@ -475,7 +475,7 @@ class BleedthroughPiecewiseDiagnostic(HasStrictTraits):
                     continue                
             
                 # make a little Experiment
-                check_tube(self.op.controls[from_channel], experiment)
+                check_fcs(self.op.controls[from_channel], experiment)
                 tube_exp = ImportOp(tubes = [Tube(file = self.op.controls[from_channel])],
                                     channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels},
                                     name_metadata = experiment.metadata['name_metadata'],

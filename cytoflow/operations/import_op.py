@@ -371,12 +371,12 @@ class ImportOp(HasStrictTraits):
         experiment.metadata['fcs_metadata'] = {}
         for tube in self.tubes:
             if metadata_only:
-                tube_meta, tube_data = parse_tube(tube.file,
+                tube_meta, tube_data = parse_fcs(tube.file,
                                                   experiment,
                                                   data_set = self.data_set,
                                                   metadata_only = True)
             else:
-                tube_meta, tube_data = parse_tube(tube.file, 
+                tube_meta, tube_data = parse_fcs(tube.file, 
                                                   experiment, 
                                                   data_set = self.data_set)
     
@@ -458,7 +458,7 @@ class ImportOp(HasStrictTraits):
         return experiment
 
 
-def check_tube(filename, experiment, data_set = 0):
+def check_fcs(filename, experiment, data_set = 0):
     
     if experiment is None:
         raise util.CytoflowError("No experiment specified")
@@ -502,6 +502,23 @@ def check_tube(filename, experiment, data_set = 0):
                                     .format(filename))
 
         # TODO check the delay -- and any other params?
+        
+def check_tube(tube, experiment, all_conditions = True):
+    check_fcs(tube.file, experiment)
+    
+    if all_conditions:
+        if not set(tube.conditions) == set(experiment.conditions):
+            raise util.CytoflowError("Tube {} must have all of the following conditions: {}"
+                                     .format(tube.file, list(experiment.conditions.keys())))
+    else:
+        if not set(tube.conditions) <= set(experiment.conditions):
+            raise util.CytoflowError("Tube {} must have conditions from the following: {}"
+                                     .format(tube.file, list(experiment.conditions.keys())))
+            
+    for name, value in tube.conditions.items():
+        if value not in experiment[name].unique():
+            raise util.CytoflowError('Tube {}: condition {} must be one of {}'
+                                     .format(tube.file, name, list(experiment.conditions[name])))
         
 def autodetect_name_metadata(filename, data_set = 0):
 
@@ -549,10 +566,10 @@ def autodetect_name_metadata(filename, data_set = 0):
     
 
 # module-level, so we can reuse it in other modules
-def parse_tube(filename, experiment = None, data_set = 0, metadata_only = False):   
+def parse_fcs(filename, experiment = None, data_set = 0, metadata_only = False):   
         
     if experiment:
-        check_tube(filename, experiment)
+        check_fcs(filename, experiment)
         name_metadata = experiment.metadata["name_metadata"]
     else:
         name_metadata = '$PnS'

@@ -34,7 +34,7 @@ import cytoflow.views
 import cytoflow.utility as util
 
 from .i_operation import IOperation
-from .import_op import Tube, ImportOp, check_tube
+from .import_op import Tube, ImportOp, check_fcs
 
 @provides(IOperation)
 class BleedthroughLinearOp(HasStrictTraits):
@@ -174,7 +174,7 @@ class BleedthroughLinearOp(HasStrictTraits):
         for channel in channels:
             
             # make a little Experiment
-            check_tube(self.controls[channel], experiment)
+            check_fcs(self.controls[channel], experiment)
             tube_exp = ImportOp(tubes = [Tube(file = self.controls[channel])],
                                 channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels},
                                 name_metadata = experiment.metadata['name_metadata']).apply()

@@ -21,7 +21,7 @@ cytoflow.operations.bead_calibration
 ------------------------------------
 """
 
-from traits.api import (HasStrictTraits, Str, File, Dict, Bool, Int, List, 
+from traits.api import (HasStrictTraits, Str, Dict, Bool, Int, List, 
                         Float, Constant, provides, Callable, Any,
                         Instance)
 import numpy as np
@@ -36,7 +36,7 @@ import cytoflow.views
 import cytoflow.utility as util
 
 from .i_operation import IOperation
-from .import_op import check_tube, Tube, ImportOp
+from .import_op import ImportOp, check_tube
 
 @provides(IOperation)
 class BeadCalibrationOp(HasStrictTraits):
@@ -75,8 +75,8 @@ class BeadCalibrationOp(HasStrictTraits):
         the units you want them calibrated in (values).  The units must be
         keys of the :attr:`beads` attribute.       
         
-    beads_file : File
-        A file containing the FCS events from the beads.
+    beads_tube : Instance(cytoflow.operations.import_op.Tube)
+        A Tube representing an FCS file containing bead measurements.
 
     beads : Dict(Str, List(Float))
         The beads' characteristics.  Keys are calibrated units (ie, MEFL or
@@ -161,7 +161,7 @@ class BeadCalibrationOp(HasStrictTraits):
         ...                  "FITC-A" : "MEFL",
         ...                  "PE-Tx-Red-YG-A" : "MEPTR"}
         >>>
-        >>> bead_op.beads_file = "tasbe/beads.fcs"
+        >>> bead_op.beads_tube = flow.Tube(file = "tasbe/beads.fcs")
     
     Estimate the model parameters
     
@@ -193,7 +193,9 @@ class BeadCalibrationOp(HasStrictTraits):
     name = Constant("Beads")
     units = Dict(Str, Str)
     
-    beads_file = File(exists = True)
+    beads_file = util.Removed(err_string = "'blank_file' was removed in 1.0; please use 'beads_tube'")
+    beads_tube = Instance('cytoflow.operations.import_op.Tube')
+
     bead_peak_quantile = Int(80)
 
     bead_brightness_threshold = Float(100.0)
@@ -243,8 +245,8 @@ class BeadCalibrationOp(HasStrictTraits):
         self._mefs.clear()
                         
         # make a little Experiment
-        check_tube(self.beads_file, experiment)
-        beads_exp = ImportOp(tubes = [Tube(file = self.beads_file)],
+        check_tube(self.beads_tube, experiment, all_conditions = False)
+        beads_exp = ImportOp(tubes = self.beads_tube,
                              channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels},
                              name_metadata = experiment.metadata['name_metadata']).apply()
         

@@ -82,9 +82,11 @@ class Experiment(HasStrictTraits):
             There may also be experiment-wide entries in :attr:`metadata` that
             are *not* columns in :attr:`data`!
     
-    history : List(IOperation)
-        The :class:`.IOperation` operations that have been applied to the raw 
-        data to result in this :class:`Experiment`.
+    history : List(Callable)
+        The parameterized :class:`.IOperation` operations that have been 
+        applied to the raw data to result in this :class:`Experiment`.  It's
+        important that the operations are *parameterized* -- ie, they are
+        instances that have already had :meth:`estimate` called.
         
     statistics : Dict((Str, Str) : pandas.Series)
         The statistics and parameters computed by models that were fit to the 
