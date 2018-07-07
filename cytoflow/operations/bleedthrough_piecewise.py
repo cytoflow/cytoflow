@@ -36,7 +36,7 @@ import cytoflow.views
 import cytoflow.utility as util
 
 from .i_operation import IOperation
-from .import_op import Tube, ImportOp, check_fcs
+from .import_op import Tube, ImportOp, check_tube
 
 @provides(IOperation)
 class BleedthroughPiecewiseOp(HasStrictTraits):
@@ -69,7 +69,7 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
     
     Attributes
     ----------
-    controls : Dict(Str, File)
+    controls : Dict(Str, Instance(cytoflow.operations.import_op.Tube)
         The channel names to correct, and corresponding single-color control
         FCS files to estimate the correction splines with.  Must be set to
         use `estimate()`.
@@ -121,9 +121,9 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
     Create and parameterize the operation
         
         >>> bl_op = flow.BleedthroughPiecewiseOp()
-        >>> bl_op.controls = {'Pacific Blue-A' : 'tasbe/ebfp.fcs',
-        ...                   'FITC-A' : 'tasbe/eyfp.fcs',
-        ...                   'PE-Tx-Red-YG-A' : 'tasbe/mkate.fcs'}
+        >>> bl_op.controls = {'Pacific Blue-A' : flow.Tube(file = 'tasbe/ebfp.fcs'),
+        ...                   'FITC-A' : flow.Tube(file = 'tasbe/eyfp.fcs'),
+        ...                   'PE-Tx-Red-YG-A' : flow.Tube(file = 'tasbe/mkate.fcs')}
         >>> bl_op.ignore_deprecated = True
     
     Estimate the model parameters
@@ -146,7 +146,7 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
     
     name = Constant("Bleedthrough")
 
-    controls = Dict(Str, File)
+    controls = Dict(Str, Instance(Tube))
     num_knots = Int(12)
     mesh_size = Int(32)
     
@@ -199,8 +199,9 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
             self._splines[channel] = {}
             
             # make a little Experiment
-            check_fcs(self.controls[channel], experiment)
-            tube_exp = ImportOp(tubes = [Tube(file = self.controls[channel])],
+            check_tube(self.controls[channel], experiment, all_conditions = False)
+            tube_exp = ImportOp(tubes = [self.controls[channel]],
+                                conditions = {k: experiment.data[k].dtype.name for k in self.controls[channel].conditions},
                                 channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels},
                                 name_metadata = experiment.metadata['name_metadata']).apply()
             
@@ -475,8 +476,9 @@ class BleedthroughPiecewiseDiagnostic(HasStrictTraits):
                     continue                
             
                 # make a little Experiment
-                check_fcs(self.op.controls[from_channel], experiment)
+                check_tube(self.op.controls[from_channel], experiment, all_conditions = False)
                 tube_exp = ImportOp(tubes = [Tube(file = self.op.controls[from_channel])],
+                                    conditions = {k: experiment.data[k].dtype.name for k in self.blank_tube.conditions},
                                     channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels},
                                     name_metadata = experiment.metadata['name_metadata'],
                                     events = 10000).apply()

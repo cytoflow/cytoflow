@@ -193,7 +193,7 @@ class BeadCalibrationOp(HasStrictTraits):
     name = Constant("Beads")
     units = Dict(Str, Str)
     
-    beads_file = util.Removed(err_string = "'blank_file' was removed in 1.0; please use 'beads_tube'")
+    beads_file = util.Removed(err_string = "'beads_file' was removed in 1.0; please use 'beads_tube'")
     beads_tube = Instance('cytoflow.operations.import_op.Tube')
 
     bead_peak_quantile = Int(80)
@@ -227,8 +227,8 @@ class BeadCalibrationOp(HasStrictTraits):
         if experiment is None:
             raise util.CytoflowOpError('experiment', "No experiment specified")
         
-        if not self.beads_file:
-            raise util.CytoflowOpError('beads_file', "No beads file specified")
+        if not self.beads_tube:
+            raise util.CytoflowOpError('beads_tube', "No beads file specified")
 
         if not set(self.units.keys()) <= set(experiment.channels):
             raise util.CytoflowOpError('units',
@@ -246,7 +246,7 @@ class BeadCalibrationOp(HasStrictTraits):
                         
         # make a little Experiment
         check_tube(self.beads_tube, experiment, all_conditions = False)
-        beads_exp = ImportOp(tubes = self.beads_tube,
+        beads_exp = ImportOp(tubes = [self.beads_tube],
                              channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels},
                              name_metadata = experiment.metadata['name_metadata']).apply()
         

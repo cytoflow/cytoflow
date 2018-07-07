@@ -34,7 +34,7 @@ import cytoflow.views
 import cytoflow.utility as util
 
 from .i_operation import IOperation
-from .import_op import Tube, ImportOp, check_fcs
+from .import_op import Tube, ImportOp, check_tube
 
 @provides(IOperation)
 class BleedthroughLinearOp(HasStrictTraits):
@@ -61,7 +61,7 @@ class BleedthroughLinearOp(HasStrictTraits):
     
     Attributes
     ----------
-    controls : Dict(Str, File)
+    controls : Dict(Str, Instance(cytoflow.operations.import_op.Tube)
         The channel names to correct, and corresponding single-color control
         FCS files to estimate the correction splines with.  Must be set to
         use :meth:`estimate`.
@@ -93,7 +93,7 @@ class BleedthroughLinearOp(HasStrictTraits):
         
         >>> af_op = flow.AutofluorescenceOp()
         >>> af_op.channels = ["Pacific Blue-A", "FITC-A", "PE-Tx-Red-YG-A"]
-        >>> af_op.blank_file = "tasbe/blank.fcs"
+        >>> af_op.blank_tube = flow.Tube(file = "tasbe/blank.fcs")
         
         >>> af_op.estimate(ex)
         >>> af_op.default_view().plot(ex)  
@@ -106,9 +106,9 @@ class BleedthroughLinearOp(HasStrictTraits):
         :context: close-figs
         
         >>> bl_op = flow.BleedthroughLinearOp()
-        >>> bl_op.controls = {'Pacific Blue-A' : 'tasbe/ebfp.fcs',
-        ...                   'FITC-A' : 'tasbe/eyfp.fcs',
-        ...                   'PE-Tx-Red-YG-A' : 'tasbe/mkate.fcs'}
+        >>> bl_op.controls = {'Pacific Blue-A' : flow.Tube(file = 'tasbe/ebfp.fcs'),
+        ...                   'FITC-A' : flow.Tube(file = 'tasbe/eyfp.fcs'),
+        ...                   'PE-Tx-Red-YG-A' : flow.Tube(file = 'tasbe/mkate.fcs')}
     
     Estimate the model parameters
     
@@ -143,7 +143,7 @@ class BleedthroughLinearOp(HasStrictTraits):
     
     name = Constant("Bleedthrough")
 
-    controls = Dict(Str, File)
+    controls = Dict(Str, Instance('cytoflow.operations.import_op.Tube'))
     spillover = Dict(Tuple(Str, Str), Float)
     
     _sample = Dict(Str, Any, transient = True)
@@ -163,7 +163,7 @@ class BleedthroughLinearOp(HasStrictTraits):
 
         # make sure the control files exist
         for channel in channels:
-            if not os.path.isfile(self.controls[channel]):
+            if not os.path.isfile(self.controls[channel].file):
                 raise util.CytoflowOpError('channels',
                                            "Can't find file {0} for channel {1}."
                                            .format(self.controls[channel], channel))
@@ -174,8 +174,9 @@ class BleedthroughLinearOp(HasStrictTraits):
         for channel in channels:
             
             # make a little Experiment
-            check_fcs(self.controls[channel], experiment)
-            tube_exp = ImportOp(tubes = [Tube(file = self.controls[channel])],
+            check_tube(self.controls[channel], experiment, all_conditions = False)
+            tube_exp = ImportOp(tubes = [self.controls[channel]],
+                                conditions = {k: experiment.data[k].dtype.name for k in self.controls[channel].conditions},
                                 channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels},
                                 name_metadata = experiment.metadata['name_metadata']).apply()
             

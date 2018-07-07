@@ -141,6 +141,9 @@ class AutofluorescenceOp(HasStrictTraits):
         
         if not self.channels:
             raise util.CytoflowOpError('channels', "No channels specified")
+        
+        if not self.blank_tube:
+            raise util.CytoflowOpError('blank_tube', "No blank tube specified")
 
         if not set(self.channels) <= set(experiment.channels):
             raise util.CytoflowOpError('channels', 
@@ -153,8 +156,7 @@ class AutofluorescenceOp(HasStrictTraits):
         self._af_histogram.clear()
         
         # make a little Experiment
-        check_tube(self.blank_tube, experiment, all_conditions = False)
-                
+        check_tube(self.blank_tube, experiment, all_conditions = False)         
         blank_exp = ImportOp(tubes = [self.blank_tube],
                              conditions = {k: experiment.data[k].dtype.name for k in self.blank_tube.conditions},
                              channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels},

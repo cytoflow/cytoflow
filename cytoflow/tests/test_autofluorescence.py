@@ -37,7 +37,7 @@ class TestExperiment(unittest.TestCase):
                                                    conditions = {})]).apply()
 
         self.op = flow.AutofluorescenceOp(
-                    blank_file = self.cwd + '/data/tasbe/blank.fcs',
+                    blank_tube = flow.Tube(file = self.cwd + '/data/tasbe/blank.fcs'),
                     channels = ["Pacific Blue-A", "FITC-A", "PE-Tx-Red-YG-A"])
         self.op.estimate(self.ex)
 

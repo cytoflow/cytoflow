@@ -35,9 +35,9 @@ class TestBleedthroughLinear(unittest.TestCase):
                                                    conditions = {})]).apply()        
         
         self.op = flow.BleedthroughLinearOp(
-                        controls = {"FITC-A" : self.cwd + '/data/tasbe/eyfp.fcs',
-                                    "PE-Tx-Red-YG-A" : self.cwd + '/data/tasbe/mkate.fcs',
-                                    "Pacific Blue-A" : self.cwd + '/data/tasbe/ebfp.fcs'})
+                        controls = {"FITC-A" : flow.Tube(file = self.cwd + '/data/tasbe/eyfp.fcs'),
+                                    "PE-Tx-Red-YG-A" : flow.Tube(file = self.cwd + '/data/tasbe/mkate.fcs'),
+                                    "Pacific Blue-A" : flow.Tube(file = self.cwd + '/data/tasbe/ebfp.fcs')})
             
         self.op.estimate(self.ex)
         

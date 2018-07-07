@@ -33,7 +33,7 @@ import cytoflow.views
 import cytoflow.utility as util
 
 from .i_operation import IOperation
-from .import_op import Tube, ImportOp, check_fcs
+from .import_op import Tube, ImportOp, check_tube
 
 @provides(IOperation)
 class ColorTranslationOp(HasStrictTraits):
@@ -50,11 +50,11 @@ class ColorTranslationOp(HasStrictTraits):
     
     Attributes
     ----------
-    controls : Dict((Str, Str), File)
+    controls : Dict((Str, Str), Instance('cytoflow.operations.import_op.Tube'))
         Two-color controls used to determine the mapping.  They keys are 
-        tuples of **from-channel** and **to-channel**.  The values are FCS files 
-        containing two-color constitutive fluorescent expression data 
-        for the mapping.
+        tuples of **from-channel** and **to-channel**.  The values are 
+        :class:`Tube` instances containing two-color constitutive fluorescent 
+        expression data for the mapping.
         
     mixture_model : Bool (default = False)
         If ``True``, try to model the **from** channel as a mixture of expressing
@@ -92,8 +92,8 @@ class ColorTranslationOp(HasStrictTraits):
         :context: close-figs
 
         >>> color_op = flow.ColorTranslationOp()
-        >>> color_op.controls = {("Pacific Blue-A", "FITC-A") : "tasbe/rby.fcs",
-        ...                      ("PE-Tx-Red-YG-A", "FITC-A") : "tasbe/rby.fcs"}
+        >>> color_op.controls = {("Pacific Blue-A", "FITC-A") : flow.Tube(file = "tasbe/rby.fcs"),
+        ...                      ("PE-Tx-Red-YG-A", "FITC-A") : flow.Tube(file = "tasbe/rby.fcs")}
         >>> color_op.mixture_model = True
     
     Estimate the model parameters
@@ -125,7 +125,7 @@ class ColorTranslationOp(HasStrictTraits):
     name = Constant("Color Translation")
 
     translation = util.Removed(err_string = "'translation' is removed; the same info is found in 'controls'", warning = True)
-    controls = Dict(Tuple(Str, Str), File)
+    controls = Dict(Tuple(Str, Str), Instance('cytoflow.operations.import_op.Tube'))
     mixture_model = Bool(False)
     linear_model = Bool(False)
 
@@ -169,7 +169,7 @@ class ColorTranslationOp(HasStrictTraits):
         self._sample.clear()
         self._means.clear()
 
-        tubes = {}
+        tube_data = {}
         
         translation = {x[0] : x[1] for x in list(self.controls.keys())}
         
@@ -191,12 +191,13 @@ class ColorTranslationOp(HasStrictTraits):
                                            "not specified"
                                            .format(from_channel, to_channel))
                 
-            tube_file = self.controls[(from_channel, to_channel)]
+            tube = self.controls[(from_channel, to_channel)]
             
-            if tube_file not in tubes: 
+            if tube not in tube_data: 
                 # make a little Experiment
-                check_fcs(tube_file, experiment)
-                tube_exp = ImportOp(tubes = [Tube(file = tube_file)],
+                check_tube(tube, experiment, all_conditions = False)
+                tube_exp = ImportOp(tubes = [tube],
+                                    conditions = {k: experiment.data[k].dtype.name for k in tube.conditions},
                                     channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels},
                                     name_metadata = experiment.metadata['name_metadata']).apply()
                 
@@ -218,12 +219,10 @@ class ColorTranslationOp(HasStrictTraits):
                                                    "Subset string '{0}' returned no events"
                                               .format(subset))
                 
-                tube_data = tube_exp.data    
-
-                tubes[tube_file] = tube_data
+                tube_data[tube] = tube_exp.data
 
                 
-            data = tubes[tube_file][[from_channel, to_channel]].copy()
+            data = tube_data[tube][[from_channel, to_channel]].copy()
             data = data[data[from_channel] > 0]
             data = data[data[to_channel] > 0]
             

@@ -36,9 +36,9 @@ class Test(unittest.TestCase):
         
         self.op = flow.ColorTranslationOp(
                         controls = {("PE-Tx-Red-YG-A", "FITC-A") :
-                                    self.cwd + '/data/tasbe/rby.fcs',
+                                    flow.Tube(file = self.cwd + '/data/tasbe/rby.fcs'),
                                     ("Pacific Blue-A", "FITC-A") :
-                                    self.cwd + '/data/tasbe/rby.fcs'},
+                                    flow.Tube(file = self.cwd + '/data/tasbe/rby.fcs')},
                         mixture_model = True)
             
         self.op.estimate(self.ex)

@@ -62,7 +62,7 @@ class Test(unittest.TestCase):
         
         op = flow.BeadCalibrationOp(
                     units = {"PE-Tx-Red-YG-A" : "MEPTR"},
-                    beads_file = self.cwd + '/data/tasbe/beads.fcs',
+                    beads_tube = flow.Tube(file = self.cwd + '/data/tasbe/beads.fcs'),
                     beads = flow.BeadCalibrationOp.BEADS["Spherotech RCP-30-5A Lot AA01-AA04, AB01, AB02, AC01, GAA01-R"])
         op.estimate(self.ex)
         
