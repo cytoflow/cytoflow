@@ -27,7 +27,6 @@ from traits.api import (HasTraits, HasStrictTraits, provides, Str, List, Any,
 
 import fcsparser
 import numpy as np
-import pandas as pd
 from pathlib import Path
 
 import cytoflow.utility as util
@@ -81,7 +80,6 @@ def _fromfile(file, dtype, count, *args, **kwargs):
 
         return ret.astype(','.join(as_dtypes)).view(','.join(view_dtypes))
     
-import fcsparser.api
 fcsparser.api.fromfile = _fromfile
 
 

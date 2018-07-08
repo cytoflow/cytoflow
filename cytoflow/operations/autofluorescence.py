@@ -58,11 +58,7 @@ class AutofluorescenceOp(HasStrictTraits):
     blank_file : File
         The filename of a file with "blank" cells (not fluorescent).  Used
         to :meth:`estimate` the autofluorescence.
-        
-    blank_file_conditions : Dict
-        Occasionally, you'll need to specify the experimental conditions that
-        the blank tube was collected under (to apply the operations in the 
-        history.)  Specify them here.
+
         
     Examples
     --------
@@ -158,23 +154,21 @@ class AutofluorescenceOp(HasStrictTraits):
         self._af_histogram.clear()
         
         # make a little Experiment
-        check_tube(self.blank_file, experiment)
-        
-        conditions = {k: experiment.data[k].dtype.name for k in self.blank_file_conditions.keys()}
-        
-        blank_exp = ImportOp(tubes = [Tube(file = self.blank_file,
-                                           conditions = self.blank_file_conditions)], 
-                             conditions = conditions,
+        check_tube(self.blank_file, experiment)        
+        blank_exp = ImportOp(tubes = [Tube(file = self.blank_file)], 
                              channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels},
                              name_metadata = experiment.metadata['name_metadata']).apply()
                                      
         # apply previous operations
         for op in experiment.history:
-            try:
-                op.estimate(blank_exp)
-            except Exception:
-                pass
-            
+            if hasattr(op, 'by'):
+                for by in op.by:
+                    if 'experiment' in experiment.metadata[by]:
+                        raise util.CytoflowOpError('experiment',
+                                                   "Prior to applying this operation, "
+                                                   "you must not apply any operation with 'by' "
+                                                   "set to an experimental condition.")
+                    
             blank_exp = op.apply(blank_exp)
             
         # subset it

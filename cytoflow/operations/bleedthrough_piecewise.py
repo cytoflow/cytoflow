@@ -206,6 +206,13 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
             
             # apply previous operations
             for op in experiment.history:
+                if hasattr(op, 'by'):
+                    for by in op.by:
+                        if 'experiment' in experiment.metadata[by]:
+                            raise util.CytoflowOpError('experiment',
+                                                       "Prior to applying this operation, "
+                                                       "you must not apply any operation with 'by' "
+                                                       "set to an experimental condition.")
                 tube_exp = op.apply(tube_exp)
                 
             # subset it
