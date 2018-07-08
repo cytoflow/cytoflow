@@ -22,12 +22,13 @@ cytoflow.operations.color_translation
 '''
 import math
 
-from traits.api import (HasStrictTraits, Str, File, Dict, Any, Callable,
+from traits.api import (HasStrictTraits, Str, Dict, Any, Callable,
                         Instance, Tuple, Bool, Constant, provides, Float)
 import numpy as np
 import matplotlib.pyplot as plt
 import sklearn.mixture
 import scipy.optimize
+from warnings import warn
 
 import cytoflow.views
 import cytoflow.utility as util
@@ -50,10 +51,10 @@ class ColorTranslationOp(HasStrictTraits):
     
     Attributes
     ----------
-    controls : Dict((Str, Str), Instance('cytoflow.operations.import_op.Tube'))
+    controls : Dict((Str, Str), Instance(Tube))
         Two-color controls used to determine the mapping.  They keys are 
         tuples of **from-channel** and **to-channel**.  The values are 
-        :class:`Tube` instances containing two-color constitutive fluorescent 
+        :class:`~.Tube` instances containing two-color constitutive fluorescent 
         expression data for the mapping.
         
     mixture_model : Bool (default = False)
@@ -125,7 +126,7 @@ class ColorTranslationOp(HasStrictTraits):
     name = Constant("Color Translation")
 
     translation = util.Removed(err_string = "'translation' is removed; the same info is found in 'controls'", warning = True)
-    controls = Dict(Tuple(Str, Str), Instance('cytoflow.operations.import_op.Tube'))
+    controls = Dict(Tuple(Str, Str), Instance(Tube))
     mixture_model = Bool(False)
     linear_model = Bool(False)
 
@@ -203,6 +204,11 @@ class ColorTranslationOp(HasStrictTraits):
                 
                 # apply previous operations
                 for op in experiment.history:
+                    if hasattr(op, 'by') and op.by:
+                        warn("Operation {} was parameterized differently for different subsets; "
+                             "you may need to specify some conditions for 'blank_tube'"
+                             .format(op.name),
+                             util.CytoflowOpWarning )
                     tube_exp = op.apply(tube_exp) 
 
                 # subset the events

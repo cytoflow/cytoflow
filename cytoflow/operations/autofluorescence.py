@@ -25,6 +25,7 @@ from traits.api import (HasStrictTraits, Str, Float, File, Dict,
                         Instance, List, Constant, Tuple, Array, provides)
                        
 import numpy as np
+from warnings import warn
 
 import cytoflow.views
 import cytoflow.utility as util
@@ -55,8 +56,8 @@ class AutofluorescenceOp(HasStrictTraits):
     channels : List(Str)
         The channels to correct.
         
-    blank_tube : Instance(cytoflow.operations.import_op.Tube)
-        A Tube representing an FCS file with "blank" cells (not fluorescent),
+    blank_tube : Instance(Tube)
+        A :class:`~.Tube` representing an FCS file with "blank" cells (not fluorescent),
         and the experimental conditions they were collected under.  Used
         to :meth:`estimate` the autofluorescence.
 
@@ -112,7 +113,7 @@ class AutofluorescenceOp(HasStrictTraits):
     name = Constant("Autofluorescence")
     channels = List(Str)
     blank_file = util.Removed(err_string = "'blank_file' was removed in 1.0; please use 'blank_tube'")
-    blank_tube = Instance('cytoflow.operations.import_op.Tube')
+    blank_tube = Instance(Tube)
 
     _blank_experiment = Instance('cytoflow.experiment.Experiment', transient = True)
     _af_median = Dict(Str, Float, transient = True)
@@ -164,6 +165,11 @@ class AutofluorescenceOp(HasStrictTraits):
                                      
         # apply previous operations
         for op in experiment.history:
+            if hasattr(op, 'by') and op.by:
+                warn("Operation {} was parameterized differently for different subsets; "
+                     "you may need to specify some conditions for 'blank_tube'"
+                     .format(op.name),
+                     util.CytoflowOpWarning )
             blank_exp = op.apply(blank_exp)
             
         # subset it

@@ -29,6 +29,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import scipy.optimize
+from warnings import warn
 
 import cytoflow.views
 import cytoflow.utility as util
@@ -61,10 +62,10 @@ class BleedthroughLinearOp(HasStrictTraits):
     
     Attributes
     ----------
-    controls : Dict(Str, Instance(cytoflow.operations.import_op.Tube)
-        The channel names to correct, and corresponding single-color control
-        FCS files to estimate the correction splines with.  Must be set to
-        use :meth:`estimate`.
+    controls : Dict(Str, Instance(Tube))
+        The channel names to correct, and corresponding instances of 
+        :class:`~.Tube` referring to the single-color control FCS files to 
+        estimate the bleedthrough matrix.  Must be set to use :meth:`estimate`.
         
     spillover : Dict(Tuple(Str, Str), Float)
         The spillover "matrix" to use to correct the data.  The keys are pairs
@@ -182,6 +183,11 @@ class BleedthroughLinearOp(HasStrictTraits):
             
             # apply previous operations
             for op in experiment.history:
+                if hasattr(op, 'by') and op.by:
+                    warn("Operation {} was parameterized differently for different subsets; "
+                         "you may need to specify some conditions for 'blank_tube'"
+                         .format(op.name),
+                         util.CytoflowOpWarning )
                 tube_exp = op.apply(tube_exp)
                 
             # subset it

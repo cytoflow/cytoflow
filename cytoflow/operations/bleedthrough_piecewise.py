@@ -23,12 +23,13 @@ cytoflow.operations.bleedthrough_piecewise
 import math
 from warnings import warn
 
-from traits.api import (HasStrictTraits, Str, File, Dict, Python,
+from traits.api import (HasStrictTraits, Str, Dict, Python,
                         Instance, Int, List, Constant, provides, Bool)
 import numpy as np
 import scipy.interpolate
 import scipy.optimize
 import pandas as pd
+from warnings import warn
 
 import matplotlib.pyplot as plt
 
@@ -69,10 +70,10 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
     
     Attributes
     ----------
-    controls : Dict(Str, Instance(cytoflow.operations.import_op.Tube)
-        The channel names to correct, and corresponding single-color control
-        FCS files to estimate the correction splines with.  Must be set to
-        use `estimate()`.
+    controls : Dict(Str, Instance(Tube))
+        The channel names to correct, and corresponding instances of 
+        :class:`~.Tube` pointing to FCS files to estimate the correction 
+        splines with.  Must be set to use `estimate()`.
         
     num_knots : Int (default = 12)
         The number of internal control points to estimate, spaced log-evenly
@@ -207,6 +208,11 @@ class BleedthroughPiecewiseOp(HasStrictTraits):
             
             # apply previous operations
             for op in experiment.history:
+                if hasattr(op, 'by') and op.by:
+                    warn("Operation {} was parameterized differently for different subsets; "
+                         "you may need to specify some conditions for 'blank_tube'"
+                         .format(op.name),
+                         util.CytoflowOpWarning )
                 tube_exp = op.apply(tube_exp)
                 
             # subset it
