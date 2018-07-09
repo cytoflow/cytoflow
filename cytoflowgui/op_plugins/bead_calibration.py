@@ -240,8 +240,12 @@ class BeadCalibrationPluginOp(PluginOpMixin, BeadCalibrationOp):
             self.units[unit.channel] = unit.unit
                     
         self.beads = self.BEADS[self.beads_name]
-        BeadCalibrationOp.estimate(self, experiment)
-        self.changed = (Changed.ESTIMATE_RESULT, self)
+        try:
+            BeadCalibrationOp.estimate(self, experiment)
+        except:
+            raise
+        finally:
+            self.changed = (Changed.ESTIMATE_RESULT, self)
 
     
     def should_clear_estimate(self, changed, payload):
