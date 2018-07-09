@@ -32,7 +32,7 @@ from envisage.ui.tasks.api import TasksApplication
 from envisage.ui.tasks.tasks_application import TasksApplicationState
 from pyface.api import error
 from pyface.tasks.api import TaskWindowLayout
-from traits.api import Bool, Instance, List, Property, Str, Any
+from traits.api import Bool, Instance, List, Property, Str, Any, File
 
 logger = logging.getLogger(__name__)
 
@@ -62,6 +62,9 @@ class CytoflowApplication(TasksApplication):
 
     # are we debugging? at the moment, just for sending logs to the console
     debug = Bool
+
+    # did we get a filename on the command line?
+    filename = File
 
     # if there's an ERROR-level log message, drop it here     
     application_error = Str
@@ -108,9 +111,7 @@ class CytoflowApplication(TasksApplication):
          
         # must redirect to the gui thread
         self.on_trait_change(self.show_error, 'application_error', dispatch = 'ui')
-        
-        # monkey-patch traitsui.qt4.text_editor.SimpleEditor._
-        
+                
         # set up the model
         self.model = Workflow(remote_connection = self.remote_connection,
                               debug = self.debug)

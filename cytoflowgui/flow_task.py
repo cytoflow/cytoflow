@@ -24,10 +24,14 @@ Created on Feb 11, 2015
 
 import os.path, webbrowser, pathlib
 
+import yaml.parser
+
 from traits.api import Instance, List, on_trait_change, Unicode
 from pyface.tasks.api import Task, TaskLayout, PaneItem, VSplitter
 from pyface.tasks.action.api import SMenu, SMenuBar, SToolBar, TaskAction, TaskToggleGroup
-from pyface.api import FileDialog, ImageResource, AboutDialog, information, confirm, OK, YES, NO, ConfirmationDialog, warning
+from pyface.api import (FileDialog, ImageResource, AboutDialog, information, 
+                        confirm, OK, YES, NO, ConfirmationDialog, warning,
+                        error)
 from envisage.api import Plugin, ExtensionPoint, contributes_to
 from envisage.ui.tasks.api import TaskFactory
 
@@ -129,6 +133,11 @@ class FlowTask(Task):
     # "open" or "save as".
     filename = Unicode
         
+    def initialized(self):
+        if self.filename:
+            self.open_file(self.filename)
+
+        
     def activated(self):
         
         # if we're coming back from the TASBE task, re-load the saved
@@ -139,44 +148,10 @@ class FlowTask(Task):
             return
         
         # else, set up a new workflow
-        
         # add the import op
         if not self.model.workflow:
             self.add_operation(ImportPlugin().id) 
             self.model.selected = self.model.workflow[0]
-        
-        # if we're debugging, add a few data bits
-        if self.model.debug:
-            from cytoflow import Tube
-                          
-            import_op = self.model.workflow[0].operation
-            import_op.conditions = {"Dox" : "float", "Well" : "category"}
-           
-            tube1 = Tube(file = "../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs",
-                         conditions = {"Dox" : 0.0, "Well" : 'A'})
-          
-            tube2 = Tube(file = "../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs",
-                         conditions = {"Dox" : 10.0, "Well" : 'A'})
-              
-            tube3 = Tube(file = "../cytoflow/tests/data/Plate01/CFP_Well_B4.fcs",
-                         conditions = {"Dox" : 0.0, "Well" : 'B'})
-          
-            tube4 = Tube(file = "../cytoflow/tests/data/Plate01/RFP_Well_A6.fcs",
-                         conditions = {"Dox" : 10.0, "Well" : 'B'})
-          
-            import_op.tubes = [tube1, tube2, tube3, tube4]
-            self.model.selected = self.model.workflow[0]
-
-#              
-#             from cytoflowgui.op_plugins import ChannelStatisticPlugin
-#  
-#             self.add_operation(ChannelStatisticPlugin().id)
-#             stat_op = self.model.workflow[1].operation
-#             stat_op.name = "Test"
-#             stat_op.channel = "Y2-A"
-#             stat_op.statistic_name = "Geom.Mean"
-#             stat_op.by = ["Dox", "Well"]
-#             self.model.selected = self.model.workflow[1]
                     
         self.model.modified = False
     
@@ -267,7 +242,18 @@ class FlowTask(Task):
 
     def open_file(self, path):
         
-        new_workflow = load_yaml(path)
+        try:
+            new_workflow = load_yaml(path)
+        except yaml.parser.ParserError as e:
+            error(None,
+                  "Parser error loading {} -- is it a Cytoflow file?\n\n{}"
+                  .format(path, str(e)))
+            return
+        except Exception as e:
+            error(None,
+                  "{} loading {}: {}"
+                  .format(e.__class__.__name__, path, str(e)))
+            return
         
         # a few things to take care of when reloading
         for wi_idx, wi in enumerate(new_workflow):
@@ -643,4 +629,5 @@ class FlowTaskPlugin(Plugin):
                                                            op_plugins = self.op_plugins,
                                                            view_plugins = self.view_plugins,
                                                            model = self.application.model,
+                                                           filename = self.application.filename,
                                                            **x))]
