@@ -198,9 +198,13 @@ class KMeansPluginOp(PluginOpMixin, KMeansOp):
         if not self.ychannel:
             raise util.CytoflowOpError('ychannel',
                                        "Must set Y channel")
-            
-        super().estimate(experiment, subset = self.subset)
-        self.changed = (Changed.ESTIMATE_RESULT, self)
+        
+        try:
+            super().estimate(experiment, subset = self.subset)
+        except:
+            raise
+        finally:
+            self.changed = (Changed.ESTIMATE_RESULT, self)
     
     def clear_estimate(self):
         self._kmeans.clear()        

@@ -224,9 +224,11 @@ class FlowPeaksOp(HasStrictTraits):
     
     
     _kmeans = Dict(Any, Instance(sklearn.cluster.MiniBatchKMeans), transient = True)
+    _means = Dict(Any, List, transient = True)
     _normals = Dict(Any, List(Function), transient = True)
     _density = Dict(Any, Function, transient = True)
     _peaks = Dict(Any, List(Array), transient = True)  
+    _peak_clusters = Dict(Any, List(Array), transient = True)
     _cluster_peak = Dict(Any, List, transient = True)  # kmeans cluster idx --> peak idx
     _cluster_group = Dict(Any, List, transient = True) # kmeans cluster idx --> group idx
     _scale = Dict(Str, Instance(util.IScale), transient = True)
@@ -333,7 +335,6 @@ class FlowPeaksOp(HasStrictTraits):
             #### use the kmeans centroids to parameterize a finite gaussian
             #### mixture model which estimates the density function
                         
-            d = len(self.channels)
             s0 = np.zeros([d, d])
             for j in range(d):
                 r = x[d].max() - x[d].min()
@@ -358,11 +359,17 @@ class FlowPeaksOp(HasStrictTraits):
                 weights.append(weight_k)
                 normals.append(lambda x, n = n: n.pdf(x))
                        
+            self._means[data_group] = means
             self._normals[data_group] = normals         
             self._density[data_group] = density = lambda x, weights = weights, normals = normals: np.sum([w * n(x) for w, n in zip(weights, normals)], axis = 0)
             
-            ### use optimization on the finite gmm to find the local peak for 
-            ### each kmeans cluster
+        ### use optimization on the finite gmm to find the local peak for 
+        ### each kmeans cluster
+        for data_group, data_subset in groupby:
+            kmeans = self._kmeans[data_group]
+            num_clusters = kmeans.n_clusters
+            means = self._means[data_group]
+            density = self._density[data_group]
             peaks = []
             peak_clusters = []  # peak idx --> list of clusters
                         
@@ -442,8 +449,17 @@ class FlowPeaksOp(HasStrictTraits):
                     peaks.append(res.x)                    
             
             self._peaks[data_group] = peaks
+            self._peak_clusters[data_group] = peak_clusters
 
             ### merge peaks that are sufficiently close
+            
+        for data_group, data_subset in groupby:
+            kmeans = self._kmeans[data_group]
+            num_clusters = kmeans.n_clusters
+            means = self._means[data_group]
+            density = self._density[data_group]
+            peaks = self._peaks[data_group]
+            peak_clusters = self._peak_clusters[data_group]
 
             groups = [[x] for x in range(len(peaks))]
             peak_groups = [x for x in range(len(peaks))]  # peak idx --> group idx

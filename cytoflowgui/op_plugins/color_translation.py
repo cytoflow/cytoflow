@@ -191,9 +191,12 @@ class ColorTranslationPluginOp(PluginOpMixin, ColorTranslationOp):
                           "used to estimate the model?",
                           util.CytoflowOpWarning)
                     
-        ColorTranslationOp.estimate(self, experiment, subset = self.subset)
-        
-        self.changed = (Changed.ESTIMATE_RESULT, self)
+        try:
+            ColorTranslationOp.estimate(self, experiment, subset = self.subset)
+        except:
+            raise
+        finally:
+            self.changed = (Changed.ESTIMATE_RESULT, self)
         
     
     def should_clear_estimate(self, changed, payload):

@@ -196,7 +196,6 @@ class AutofluorescenceOp(HasStrictTraits):
             
             self._af_median[channel] = np.median(blank_exp[channel])
             self._af_stdev[channel] = np.std(blank_exp[channel])    
-            self._af_histogram[channel] = np.histogram(blank_exp[channel], bins = 250)
                 
     def apply(self, experiment):
         """

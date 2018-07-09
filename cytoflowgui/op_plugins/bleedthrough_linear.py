@@ -194,9 +194,12 @@ class BleedthroughLinearPluginOp(PluginOpMixin, BleedthroughLinearOp):
                           "used to estimate the model?",
                           util.CytoflowOpWarning)
                     
-        BleedthroughLinearOp.estimate(self, experiment, subset = self.subset)
-        
-        self.changed = (Changed.ESTIMATE_RESULT, self)
+        try:
+            BleedthroughLinearOp.estimate(self, experiment, subset = self.subset)
+        except:
+            raise
+        finally:
+            self.changed = (Changed.ESTIMATE_RESULT, self)
         
     def should_clear_estimate(self, changed, payload):
         if changed == Changed.ESTIMATE:

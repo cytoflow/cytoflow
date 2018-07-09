@@ -203,8 +203,12 @@ class GaussianMixture1DPluginOp(PluginOpMixin, GaussianMixtureOp):
         self.changed = (Changed.ESTIMATE, ('scale', self.scale))
     
     def estimate(self, experiment):
-        super().estimate(experiment, subset = self.subset)
-        self.changed = (Changed.ESTIMATE_RESULT, self)
+        try:
+            super().estimate(experiment, subset = self.subset)
+        except:
+            raise
+        finally:
+            self.changed = (Changed.ESTIMATE_RESULT, self)
     
     def default_view(self, **kwargs):
         return GaussianMixture1DPluginView(op = self, 

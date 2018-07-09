@@ -430,16 +430,26 @@ class TasbePluginOp(PluginOpMixin):
         self._af_op.channels = self.channels
         self._af_op.blank_file = self.blank_file
         
-        self._af_op.estimate(experiment, subset = self.subset)
-        self.changed = (Changed.ESTIMATE_RESULT, self)
+        try:
+            self._af_op.estimate(experiment, subset = self.subset)
+        except:
+            raise
+        finally:
+            self.changed = (Changed.ESTIMATE_RESULT, self)
+            
         experiment = self._af_op.apply(experiment)
         
         self._bleedthrough_op.controls.clear()
         for control in self.bleedthrough_list:
             self._bleedthrough_op.controls[control.channel] = control.file
 
-        self._bleedthrough_op.estimate(experiment, subset = self.subset) 
-        self.changed = (Changed.ESTIMATE_RESULT, self)
+        try:
+            self._bleedthrough_op.estimate(experiment, subset = self.subset)
+        except:
+            raise
+        finally:
+            self.changed = (Changed.ESTIMATE_RESULT, self)
+            
         experiment = self._bleedthrough_op.apply(experiment)
         
         self._bead_calibration_op.beads = BeadCalibrationOp.BEADS[self.beads_name]
@@ -457,8 +467,13 @@ class TasbePluginOp(PluginOpMixin):
         # this way matches TASBE better
         self._bead_calibration_op.units[self.to_channel] = self.beads_unit
             
-        self._bead_calibration_op.estimate(experiment)
-        self.changed = (Changed.ESTIMATE_RESULT, self)
+        try:
+            self._bead_calibration_op.estimate(experiment)
+        except:
+            raise
+        finally:
+            self.changed = (Changed.ESTIMATE_RESULT, self)
+            
         experiment = self._bead_calibration_op.apply(experiment)
         
         self._color_translation_op.mixture_model = self.mixture_model
@@ -467,10 +482,13 @@ class TasbePluginOp(PluginOpMixin):
         for control in self.translation_list:
             self._color_translation_op.controls[(control.from_channel,
                                                  control.to_channel)] = control.file
-                                                 
-        self._color_translation_op.estimate(experiment, subset = self.subset)                                         
-        
-        self.changed = (Changed.ESTIMATE_RESULT, self)
+            
+        try:                                     
+            self._color_translation_op.estimate(experiment, subset = self.subset)
+        except:
+            raise
+        finally:                                         
+            self.changed = (Changed.ESTIMATE_RESULT, self)
         
         
     def should_clear_estimate(self, changed, payload):

@@ -127,9 +127,13 @@ class AutofluorescencePluginOp(PluginOpMixin, AutofluorescenceOp):
             warnings.warn("Are you sure you don't want to specify a subset "
                           "used to estimate the model?",
                           util.CytoflowOpWarning)
-            
-        super().estimate(experiment, subset = self.subset)
-        self.changed = (Changed.ESTIMATE_RESULT, self)
+        
+        try:
+            super().estimate(experiment, subset = self.subset)
+        except:
+            raise
+        finally:
+            self.changed = (Changed.ESTIMATE_RESULT, self)
         
         
     def clear_estimate(self):
