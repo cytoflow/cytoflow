@@ -37,15 +37,19 @@ from .i_operation import IOperation
 # override fcsparser's broken fromfile
 import numpy
 def _fromfile(file, dtype, count, *args, **kwargs):
+
+    
     dtypes = dtype.split(',')
+    field_width = []
     
     read_dtypes = []
     for dt in dtypes:
         dtype_type = dt[1]
         dtype_endian = dt[0]
         num_bytes = int(dt[2:])
+        field_width.append(num_bytes)
         if num_bytes not in [1, 2, 4, 8]:
-            read_dtypes.append( 'V' + str(num_bytes))
+            read_dtypes.append( ','.join(['u1'] * num_bytes))
         else:
             read_dtypes.append(dt)
 
@@ -58,27 +62,28 @@ def _fromfile(file, dtype, count, *args, **kwargs):
                              *args, 
                              **kwargs)
     except (TypeError, IOError):
-        ret = numpy.frombuffer(file.read(count * numpy.dtype(",".join(read_dtypes)).itemsize),
+        ret = numpy.frombuffer(file.read(count * sum(field_width)),
                                dtype=dtype, 
                                count=count, 
                                *args, 
-                               **kwargs)    
+                               **kwargs)
         
-    if not 'V' in read_dtype:
+    # homogeneous data (ie, not mixed)
+    if len(read_dtype) == 1 and ',' not in read_dtype[0]:
         return ret
     else:
-        as_dtypes = []
-        view_dtypes = []
-        for dt in dtypes:
+        ret = ret.view('u1').reshape((count, sum(field_width)))
+        ret_dtypes = []
+        for field, dt in enumerate(dtypes):
             dtype_type = dt[1]
             dtype_endian = dt[0]
             num_bytes = int(dt[2:])
             while num_bytes & (num_bytes - 1) != 0:
+                ret = np.insert(ret, sum(field_width[0:field]), np.zeros(count), axis = 1)
                 num_bytes = num_bytes + 1
-            as_dtypes.append('V' + str(num_bytes))
-            view_dtypes.append(dtype_endian + dtype_type + str(num_bytes))
+            ret_dtypes.append(dtype_endian + dtype_type + str(num_bytes))
 
-        return ret.astype(','.join(as_dtypes)).view(','.join(view_dtypes))
+        return ret.view(','.join(ret_dtypes))
     
 fcsparser.api.fromfile = _fromfile
 
@@ -450,7 +455,7 @@ class ImportOp(HasStrictTraits):
                 warnings.warn('Converting channel {} from logarithmic to linear'
                               .format(channel),
                               util.CytoflowWarning)
-                experiment.data[channel] = 10 ** (f1 * experiment.data[channel] / data_range) * f2
+#                 experiment.data[channel] = 10 ** (f1 * experiment.data[channel] / data_range) * f2
 
 
         return experiment
