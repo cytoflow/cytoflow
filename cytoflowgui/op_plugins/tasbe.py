@@ -353,12 +353,6 @@ class TasbePluginOp(PluginOpMixin):
                 
         for control in to_remove:
             self.bleedthrough_list.remove(control)
-            
-#         if self.to_channel:
-#             for c in self.channels:
-#                 if c == self.to_channel:
-#                     continue
-#                 self.translation_list.append()
              
         for c in self.channels:
             if c == self.to_channel:
@@ -377,23 +371,6 @@ class TasbePluginOp(PluginOpMixin):
             
         self.changed = (Changed.ESTIMATE, ('translation_list', self.translation_list))
         self.changed = (Changed.ESTIMATE, ('bleedthrough_list', self.bleedthrough_list))            
-#         self.changed = (Changed.ESTIMATE, ('units_list', self.units_list))
-        
-        
-#         self.bleedthrough_list = []
-#         for c in self.channels:
-#             self.bleedthrough_list.append(_BleedthroughControl(channel = c))
-#             
-#         self.changed = (Changed.ESTIMATE, ('bleedthrough_list', self.bleedthrough_list))
-#             
-#         self.translation_list = []
-#         if self.to_channel:
-#             for c in self.channels:
-#                 if c == self.to_channel:
-#                     continue
-#                 self.translation_list.append(_TranslationControl(from_channel = c,
-#                                                                  to_channel = self.to_channel))
-#         self.changed = (Changed.ESTIMATE, ('translation_list', self.translation_list))
 
 
     @on_trait_change('to_channel', post_init = True)
