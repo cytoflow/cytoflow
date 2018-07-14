@@ -21,7 +21,7 @@ Created on Mar 15, 2015
 @author: brian
 '''
 
-import warnings, logging, sys, threading, copy
+import warnings, logging, sys, threading
 
 from traits.api import HasStrictTraits, Instance, List, DelegatesTo, Enum, \
                        Property, cached_property, Bool, \
