@@ -41,26 +41,19 @@ def _fromfile(file, dtype, count, *args, **kwargs):
     dtypes = dtype.split(',')
     field_width = []
     
-    read_dtypes = []
     for dt in dtypes:
-        dtype_type = dt[1]
-        dtype_endian = dt[0]
         num_bytes = int(dt[2:])
         field_width.append(num_bytes)
-        if num_bytes not in [1, 2, 4, 8]:
-            read_dtypes.append( ','.join(['u1'] * num_bytes))
-        else:
-            read_dtypes.append(dt)
         
     try:
         ret = numpy.fromfile(file, 
-                             dtype=",".join(read_dtypes), 
+                             dtype=",".join(['u1'] * sum(field_width)), 
                              count=count, 
                              *args, 
                              **kwargs)
     except (TypeError, IOError):
         ret = numpy.frombuffer(file.read(count * sum(field_width)),
-                               dtype=dtype, 
+                               dtype=",".join(['u1'] * sum(field_width)), 
                                count=count, 
                                *args, 
                                **kwargs)
