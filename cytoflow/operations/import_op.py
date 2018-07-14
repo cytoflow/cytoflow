@@ -38,7 +38,6 @@ from .i_operation import IOperation
 import numpy
 def _fromfile(file, dtype, count, *args, **kwargs):
 
-    
     dtypes = dtype.split(',')
     field_width = []
     
@@ -52,8 +51,6 @@ def _fromfile(file, dtype, count, *args, **kwargs):
             read_dtypes.append( ','.join(['u1'] * num_bytes))
         else:
             read_dtypes.append(dt)
-
-    read_dtype = ",".join(read_dtypes)
         
     try:
         ret = numpy.fromfile(file, 
@@ -67,23 +64,19 @@ def _fromfile(file, dtype, count, *args, **kwargs):
                                count=count, 
                                *args, 
                                **kwargs)
-        
-    # homogeneous data (ie, not mixed)
-    if len(read_dtype) == 1 and ',' not in read_dtype[0]:
-        return ret
-    else:
-        ret = ret.view('u1').reshape((count, sum(field_width)))
-        ret_dtypes = []
-        for field, dt in enumerate(dtypes):
-            dtype_type = dt[1]
-            dtype_endian = dt[0]
-            num_bytes = int(dt[2:])
-            while num_bytes & (num_bytes - 1) != 0:
-                ret = np.insert(ret, sum(field_width[0:field]), np.zeros(count), axis = 1)
-                num_bytes = num_bytes + 1
-            ret_dtypes.append(dtype_endian + dtype_type + str(num_bytes))
 
-        return ret.view(','.join(ret_dtypes))
+    ret = ret.view('u1').reshape((count, sum(field_width)))
+    ret_dtypes = []
+    for field, dt in enumerate(dtypes):
+        dtype_type = dt[1]
+        dtype_endian = dt[0]
+        num_bytes = int(dt[2:])
+        while num_bytes & (num_bytes - 1) != 0:
+            ret = np.insert(ret, sum(field_width[0:field]), np.zeros(count), axis = 1)
+            num_bytes = num_bytes + 1
+        ret_dtypes.append(dtype_endian + dtype_type + str(num_bytes))
+
+    return ret.view(','.join(ret_dtypes)).ravel()
     
 fcsparser.api.fromfile = _fromfile
 
