@@ -36,7 +36,7 @@ import pandas
         
 from traits.api import (HasStrictTraits, Instance, Str, Int, List, Bool, Enum, 
                         Property, BaseCStr, CStr, on_trait_change, Dict, Event,
-                        cached_property, Any, CFloat, BaseCBool, TraitError)
+                        cached_property, CFloat, BaseCBool, TraitError)
                        
 from traitsui.api import (View, Item, TableEditor, Controller, InstanceEditor, 
                           HGroup, ButtonEditor, EnumEditor, TextEditor, VGroup, 
@@ -273,14 +273,17 @@ class ExperimentDialogModel(HasStrictTraits):
     # traits to communicate with the traits_view
     fcs_metadata = Property(List, depends_on = 'tubes')
     
-    def init(self, import_op, conditions, metadata):     
+    def init(self, import_op):    
+        
+        self.tube_traits.append(
+            TubeTrait(model = self, type = 'metadata', name = 'CF_File'))    
             
-        for name, condition in conditions.items():
-            if str(condition.dtype).startswith("category") or str(condition.dtype).startswith('object'):
+        for name, condition in import_op.conditions.items():
+            if condition == "category" or condition == "object":
                 self.tube_traits.append(TubeTrait(model = self, name = name, type = 'category'))
-            elif str(condition.dtype).startswith("int") or str(condition.dtype).startswith("float"):
+            elif condition == "int" or condition == "float":
                 self.tube_traits.append(TubeTrait(model = self, name = name, type = 'float'))
-            elif str(condition.dtype) == "bool":
+            elif condition == "bool":
                 self.tube_traits.append(TubeTrait(model = self, name = name, type = 'bool'))
 
         self.dummy_experiment = None
@@ -514,9 +517,7 @@ class ExperimentDialogHandler(Controller):
     
     
     # bits for model initialization
-    import_op = Any
-    conditions = Any
-    metadata = Any
+    import_op = Instance('cytoflowgui.op_plugins.import_op.ImportPluginOp')
         
     # events
     add_tubes = Event
@@ -585,7 +586,7 @@ class ExperimentDialogHandler(Controller):
         self.table_editor = info.ui.get_editors('tubes')[0]
         
         # init the model
-        self.model.init(self.import_op, self.conditions, self.metadata)
+        self.model.init(self.import_op)
                 
         return True
     
@@ -736,7 +737,7 @@ class ExperimentDialogHandler(Controller):
             for trait in self.model.tube_traits:
                 if trait.type != 'metadata' and trait.name:
                     tube.on_trait_change(self._try_multiedit, trait.name)
-            
+         
             
     @on_trait_change('remove_tubes')
     def _on_remove_tubes(self):

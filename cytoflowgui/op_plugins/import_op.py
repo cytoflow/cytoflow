@@ -21,9 +21,16 @@ Import Files
 
 Import FCS files and associate them with experimental conditions (metadata.)
 
-.. object:: Edit samples
+.. object:: Channels
 
-    Open the sample editor dialog box.
+    Here, you can rename channels to use names that are more informative,
+    or remove channels you don't need.  Names must be valid Python identifiers
+    (must contain only letters, numbers and underscores and must start with
+    a letter or underscore.)
+    
+.. object:: Reset channel names
+
+    Reset the channels and channel names.
 
 .. object:: Events per sample
 
@@ -34,8 +41,11 @@ Import FCS files and associate them with experimental conditions (metadata.)
     set **Events per sample** to empty or 0 and *Cytoflow* will re-run your
     workflow with the entire data set.
     
+.. object:: Set up experiment....
 
-..  object:: The import dialog
+    Open the sample editor dialog box.
+
+..  object:: The sample editor dialog
 
     .. image:: _images/import.png
 
@@ -67,29 +77,21 @@ Import FCS files and associate them with experimental conditions (metadata.)
     
         Removes the currently selected tubes (rows) in the table.
         
-    .. object: Add condition
+    .. object: Add variable
     
-        Opens a dialog (see below) to add a new experimental condition.
+        Adds a new experimental condition.  You can change the condition's
+        type by changing the drop-down box.  You can remove a variable by 
+        clicking the "X" next to its row.
         
-    .. object: Remove condition
+    .. object: Import from CSV....
     
-        Removes the currently selected condition (column) in the table.
-
-    .. object:: The new condition dialog box
-
-    
-        .. image:: _images/condition.png
+        Lets you import a set of tubes and experimental conditions from a CSV
+        file.  The first row of the CSV must have variable names.  The first
+        column of the CSV must be paths to FCS files (relative to the location
+        of the CSV.)
         
-            
-        .. object:: Condition name
-        
-            The name of the new condition.  The name must be a valid Python identifier:
-            it must start with a letter or _, and contain only letters, numbers and _.
-            
-        .. object: Condition type
-        
-            The type of the new condition.  Allowed types are **Category**, **Number**
-            and **True/False**.
+        The variables are read in as "Categories", but you can change them 
+        to other types and Cytoflow will attempt to convert them.
 
 """
 from textwrap import dedent
@@ -164,11 +166,10 @@ class ImportHandler(OpHandlerMixin, Controller):
         """
 
         handler = ExperimentDialogHandler(model = ExperimentDialogModel(),
-                                          import_op = self.model,
-                                          conditions = self.context.conditions,
-                                          metadata = self.context.metadata)
-        handler.edit_traits(kind = 'livemodal')        
+                                          import_op = self.model)
         
+        handler.edit_traits(kind = 'livemodal') 
+                
     def _reset_channels_fired(self):
         self.model.reset_channels()
         
