@@ -261,7 +261,7 @@ class Stats2DHandler(ViewHandlerMixin, Controller):
         if not (self.context and self.context.statistics 
                 and self.model.xstatistic in self.context.statistics
                 and self.model.ystatistic in self.context.statistics):
-            return []
+            return {}
         
         xstat = self.context.statistics[self.model.xstatistic]
         ystat = self.context.statistics[self.model.ystatistic]
