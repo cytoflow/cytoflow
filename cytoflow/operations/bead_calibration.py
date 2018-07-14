@@ -274,11 +274,14 @@ class BeadCalibrationOp(HasStrictTraits):
             # smooth it with a Savitzky-Golay filter
             hist_smooth = scipy.signal.savgol_filter(hist[0], 5, 1)
             
-            self._histograms[channel] = (hist_bins, hist_smooth)
+            self._histograms[channel] = (hist, hist_bins, hist_smooth)
 
             
         # find peaks
         for channel in channels:
+            hist = self._histograms[channel][0]
+            hist_bins = self._histograms[channel][1]
+            hist_smooth = self._histograms[channel][2]
 
             peak_bins = scipy.signal.find_peaks_cwt(hist_smooth, 
                                                     widths = np.arange(3, 20),
@@ -609,7 +612,7 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
         plt.figure()
         
         for idx, channel in enumerate(channels):            
-            hist_bins, hist_smooth = self.op._histograms[channel]
+            _, hist_bins, hist_smooth = self.op._histograms[channel]
                 
             plt.subplot(len(channels), 2, 2 * idx + 1)
             plt.xscale('log')
