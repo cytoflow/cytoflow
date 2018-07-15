@@ -30,9 +30,9 @@ class Test(unittest.TestCase):
     def setUp(self):
         import os
         self.cwd = os.path.dirname(os.path.abspath(__file__))
-        self.ex = flow.ImportOp(conditions = {},
+        self.ex = flow.ImportOp(conditions = {'Dox' : 'int'},
                                 tubes = [flow.Tube(file = self.cwd + '/data/tasbe/mkate.fcs',
-                                                   conditions = {})]).apply()        
+                                                   conditions = {'Dox' : 3})]).apply()        
         
         self.op = flow.ColorTranslationOp(
                         controls = {("PE-Tx-Red-YG-A", "FITC-A") :
@@ -51,6 +51,11 @@ class Test(unittest.TestCase):
     
     def test_plot(self):
         self.op.default_view().plot(self.ex)
+        
+    def test_conditions(self):
+        self.op.control_conditions = {("PE-Tx-Red-YG-A", "FITC-A") : {'Dox' : 1},
+                                      ("Pacific Blue-A", "FITC-A") : {'Dox' : 1}}
+        self.op.estimate(self.ex)
         
         
 

@@ -72,6 +72,13 @@ class BleedthroughLinearOp(HasStrictTraits):
         ``("channel1", "channel2")`` is present as a key, 
         ``("channel2", "channel1")`` must also be present.  The module does not
         assume that the matrix is symmetric.
+        
+    control_conditions : Dict(Str, Dict(Str, Any))
+        Occasionally, you'll need to specify the experimental conditions that
+        the bleedthrough tubes were collected under (to apply the operations in the 
+        history.)  Specify them here.  The key is the channel name; they value
+        is a dictionary of the conditions (same as you would specify for a
+        :class:`~.Tube` )
 
     Examples
     --------
@@ -145,6 +152,7 @@ class BleedthroughLinearOp(HasStrictTraits):
 
     controls = Dict(Str, File)
     spillover = Dict(Tuple(Str, Str), Float)
+    control_conditions = Dict(Str, Dict(Str, Any), {})
     
     _sample = Dict(Str, Any, transient = True)
     
@@ -175,7 +183,12 @@ class BleedthroughLinearOp(HasStrictTraits):
             
             # make a little Experiment
             check_tube(self.controls[channel], experiment)
-            tube_exp = ImportOp(tubes = [Tube(file = self.controls[channel])],
+            tube_conditions = self.control_conditions[channel] if channel in self.control_conditions else {}
+            exp_conditions = {k: experiment.data[k].dtype.name for k in tube_conditions.keys()}
+
+            tube_exp = ImportOp(tubes = [Tube(file = self.controls[channel],
+                                              conditions = tube_conditions)],
+                                conditions = exp_conditions,
                                 channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels},
                                 name_metadata = experiment.metadata['name_metadata']).apply()
             

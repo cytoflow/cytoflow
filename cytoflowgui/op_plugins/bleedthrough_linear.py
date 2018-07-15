@@ -46,6 +46,14 @@ the estimation looks good.  There must be at least two channels corrected.
     channels, that gate can be specified here to restrict the estimation to
     only events that are in that gate.
     
+.. note::
+
+    You cannot have any operations before this one which estimate model
+    parameters based on experimental conditions.  (Eg, you can't use a
+    **Density Gate** to choose morphological parameters and set *by* to an
+    experimental condition.)  If you need this functionality, you can access it 
+    using the Python module interface.
+    
 .. plot:: 
 
     import cytoflow as flow
@@ -184,6 +192,17 @@ class BleedthroughLinearPluginOp(PluginOpMixin, BleedthroughLinearOp):
                 if control_i.channel == control_j.channel and i != j:
                     raise util.CytoflowOpError("Channel {0} is included more than once"
                                                .format(control_i.channel))
+                    
+        # check for experiment metadata used to estimate operations in the
+        # history, and bail if we find any
+        for op in experiment.history:
+            if hasattr(op, 'by'):
+                for by in op.by:
+                    if 'experiment' in experiment.metadata[by]:
+                        raise util.CytoflowOpError('experiment',
+                                                   "Prior to applying this operation, "
+                                                   "you must not apply any operation with 'by' "
+                                                   "set to an experimental condition.")
                                                
         self.controls = {}
         for control in self.controls_list:

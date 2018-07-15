@@ -32,9 +32,9 @@ class TestExperiment(unittest.TestCase):
     def setUp(self):
         import os
         self.cwd = os.path.dirname(os.path.abspath(__file__))
-        self.ex = flow.ImportOp(conditions = {},
+        self.ex = flow.ImportOp(conditions = {'Dox' : 'int'},
                                 tubes = [flow.Tube(file = self.cwd + '/data/tasbe/blank.fcs',
-                                                   conditions = {})]).apply()
+                                                   conditions = {'Dox' : 10})]).apply()
 
         self.op = flow.AutofluorescenceOp(
                     blank_file = self.cwd + '/data/tasbe/blank.fcs',
@@ -65,6 +65,10 @@ class TestExperiment(unittest.TestCase):
         
     def test_plot(self):
         self.op.default_view().plot(self.ex)
+        
+    def test_conditions(self):
+        self.op.blank_file_conditions = {'Dox' : '3'}
+        self.op.estimate(self.ex)
         
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']

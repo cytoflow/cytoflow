@@ -62,6 +62,13 @@ class ColorTranslationOp(HasStrictTraits):
         transfection), then weight the regression by the probability that the
         the cell is from the top (transfected) distribution.  Make sure you 
         check the diagnostic plots to see that this worked!
+        
+    control_conditions : Dict((Str, Str), Dict(Str, Any))
+        Occasionally, you'll need to specify the experimental conditions that
+        the bleedthrough tubes were collected under (to apply the operations in the 
+        history.)  Specify them here.  The key is a tuple of channel names; the 
+        value is a dictionary of the conditions (same as you would specify for a
+        :class:`~.Tube` )
 
         
     Notes
@@ -128,6 +135,8 @@ class ColorTranslationOp(HasStrictTraits):
     controls = Dict(Tuple(Str, Str), File)
     mixture_model = Bool(False)
     linear_model = Bool(False)
+    
+    control_conditions = Dict(Tuple(Str, Str), Dict(Str, Any), {})
 
     # The regression coefficients determined by `estimate()`, used to map 
     # colors between channels.  The keys are tuples of (*from-channel*,
@@ -192,11 +201,18 @@ class ColorTranslationOp(HasStrictTraits):
                                            .format(from_channel, to_channel))
                 
             tube_file = self.controls[(from_channel, to_channel)]
+            tube_conditions = self.control_conditions[(from_channel, to_channel)] \
+                                    if (from_channel, to_channel) in self.control_conditions \
+                                    else {}
+            conditions = {k: experiment.data[k].dtype.name for k in tube_conditions.keys()}
             
             if tube_file not in tubes: 
                 # make a little Experiment
                 check_tube(tube_file, experiment)
-                tube_exp = ImportOp(tubes = [Tube(file = tube_file)],
+
+                tube_exp = ImportOp(tubes = [Tube(file = tube_file,
+                                                  conditions = tube_conditions)],
+                                    conditions = conditions,
                                     channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels},
                                     name_metadata = experiment.metadata['name_metadata']).apply()
                 

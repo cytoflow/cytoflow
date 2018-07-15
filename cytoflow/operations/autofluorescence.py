@@ -21,6 +21,7 @@ cytoflow.operations.autofluorescence
 ------------------------------------
 """
 
+from warnings import warn
 from traits.api import (HasStrictTraits, Str, Float, File, Dict,
                         Instance, List, Constant, Tuple, Array, provides)
                        
@@ -58,6 +59,11 @@ class AutofluorescenceOp(HasStrictTraits):
     blank_file : File
         The filename of a file with "blank" cells (not fluorescent).  Used
         to :meth:`estimate` the autofluorescence.
+        
+    blank_file_conditions : Dict
+        Occasionally, you'll need to specify the experimental conditions that
+        the blank tube was collected under (to apply the operations in the 
+        history.)  Specify them here.
 
         
     Examples
@@ -154,8 +160,12 @@ class AutofluorescenceOp(HasStrictTraits):
         self._af_histogram.clear()
         
         # make a little Experiment
-        check_tube(self.blank_file, experiment)        
-        blank_exp = ImportOp(tubes = [Tube(file = self.blank_file)], 
+        check_tube(self.blank_file, experiment)  
+        exp_conditions = {k: experiment.data[k].dtype.name for k in self.blank_file_conditions.keys()}
+
+        blank_exp = ImportOp(tubes = [Tube(file = self.blank_file,
+                                           conditions = self.blank_file_conditions)],
+                             conditions = exp_conditions, 
                              channels = {experiment.metadata[c]["fcs_name"] : c for c in experiment.channels},
                              name_metadata = experiment.metadata['name_metadata']).apply()
                                      
@@ -164,10 +174,11 @@ class AutofluorescenceOp(HasStrictTraits):
             if hasattr(op, 'by'):
                 for by in op.by:
                     if 'experiment' in experiment.metadata[by]:
-                        raise util.CytoflowOpError('experiment',
-                                                   "Prior to applying this operation, "
-                                                   "you must not apply any operation with 'by' "
-                                                   "set to an experimental condition.")
+                        warn("Found experimental metadata {} in experiment history; "
+                             "make sure it's specified in blank_file_conditions."
+                             .format(by),
+                             util.CytoflowOpWarning)
+
                     
             blank_exp = op.apply(blank_exp)
             
