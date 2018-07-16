@@ -75,7 +75,7 @@ script: nose2 -c packaging/nose2.cfg -s cytoflow/tests -N 2
 
 after_success:
 
-  - pip install "sphinx==1.6.7" "pyinstaller==3.3.1"
+  - pip install "sphinx==1.7.5" "sphinxcontrib==1.0" "pyinstaller==3.3.1"
   - python setup.py build_sphinx -b embedded_help
 
   - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then python setup.py sdist; fi

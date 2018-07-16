@@ -82,7 +82,8 @@ test_script:
 
 after_test:
   # Install packaging requirements
-  - pip.exe install "sphinx==1.6.7"
+  - pip.exe install "sphinx==1.7.5"
+  - pip.exe install "sphinxcontrib==1.0"
   - pip.exe install "pyinstaller==3.3.1"
   
   # Build PyPI packages
