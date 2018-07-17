@@ -1,3 +1,3 @@
 from PyInstaller.utils.hooks import copy_metadata
-datas = copy_metadata('pyface')
+datas = copy_metadata('traits') 
 

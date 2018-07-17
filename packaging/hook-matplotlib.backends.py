@@ -1,7 +1,7 @@
 # This apes hook-matplotlib.backends.py, but REMOVES backends, all but
 # the ones in the list below.
 
-KEEP = ["Qt4Agg", "pdf", "svg", "agg"]
+KEEP = ["Qt5Agg", "pdf", "svg", "agg"]
 
 from PyInstaller.compat import is_darwin
 from PyInstaller.utils.hooks import (
