@@ -1,0 +1,28 @@
+name: cf_dev_qt5
+channels:
+ - bpteague
+ 
+dependencies:
+  - python==3.5.4
+  - sphinx==1.7.5
+  - numpy==1.13.3
+  - pandas==0.23.1
+  - bottleneck==1.2.1
+  - numexpr==2.6.5
+  - matplotlib==2.2.2
+  - scipy==1.1.0
+  - scikit-learn==0.19.1
+  - traits==4.6.0
+  - traitsui==6.0.0
+  - pyface==6.0.0
+  - envisage==4.6.0
+  - nbformat==4.4.0
+  - python-dateutil==2.7.3
+  - statsmodels==0.9.0
+  - pyqt==5.9.2
+  - fcsparser==0.2.0
+  - camel==0.1.2
+  - yapf==0.20.2
+  - seaborn==0.8.1
+  - pyopengl==3.1.1a1
+  - mock==2.0.0
