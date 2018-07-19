@@ -30,6 +30,7 @@ from traitsui.qt4.constants import ErrorColor
 
 from pyface.qt import QtCore, QtGui
 from pyface.tasks.api import TaskPane, ITaskPane
+from pyface.api import ImageResource
 
 from cytoflowgui.matplotlib_backend import FigureCanvasQTAggLocal
 from matplotlib.figure import Figure
@@ -46,6 +47,7 @@ class FlowTaskPane(TaskPane):
     
     layout = Instance(QtGui.QVBoxLayout)                    # @UndefinedVariable
     canvas = Instance(FigureCanvasQTAggLocal)
+    waiting_image = ImageResource('gear')
         
     def create(self, parent):
         if self.canvas is not None:
@@ -62,9 +64,12 @@ class FlowTaskPane(TaskPane):
         self.layout.addWidget(tabs_ui.control) 
         
         # add the main plot
-        self.canvas = FigureCanvasQTAggLocal(Figure(), self.model.child_matplotlib_conn)
+        self.canvas = FigureCanvasQTAggLocal(Figure(), 
+                                             self.model.child_matplotlib_conn, 
+                                             self.waiting_image.create_image(size = (1000, 1000)))
         self.canvas.setSizePolicy(QtGui.QSizePolicy.Expanding,  # @UndefinedVariable
                                   QtGui.QSizePolicy.Expanding)  # @UndefinedVariable
+        
         layout.addWidget(self.canvas)
                   
     def export(self, filename, **kwargs):      

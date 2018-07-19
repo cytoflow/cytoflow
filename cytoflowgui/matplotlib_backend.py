@@ -62,6 +62,7 @@ DEBUG = 0
 class Msg(object):
     DRAW = "DRAW"
     BLIT = "BLIT"
+    WORKING = "WORKING"
     
     RESIZE_EVENT = "RESIZE"
     MOUSE_PRESS_EVENT = "MOUSE_PRESS"
@@ -93,10 +94,22 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
       figure - A Figure instance
    """
 
-    def __init__(self, figure, child_conn):
+    def __init__(self, figure, child_conn, working_pixmap):
         FigureCanvasQTAgg.__init__(self, figure)
         self._drawRect = None
         self.child_conn = child_conn
+        
+        # set up the "working" pixmap
+        self.working = False
+        self.working_pixmap = QtGui.QLabel(self)
+        self.working_pixmap.setVisible(False)
+        self.working_pixmap.setPixmap(working_pixmap)
+        self.working_pixmap.setScaledContents(True)
+        wp_size = min([self.width(), self.height()]) / 5
+        self.working_pixmap.resize(wp_size, wp_size)
+        self.working_pixmap.move(self.width() - wp_size,
+                                 self.height() - wp_size)
+        
         
         self.buffer = None
         self.buffer_width = None
@@ -144,7 +157,10 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
             logging.debug("FigureCanvasQTAggLocal.listen_for_remote :: {}".format(msg))
             
             try:
-                if msg == Msg.DRAW:
+                if msg == Msg.WORKING:
+                    self.working = payload
+                    self.working_pixmap.setVisible(self.working)
+                elif msg == Msg.DRAW:
                     (self.buffer, 
                      self.buffer_width, 
                      self.buffer_height) = payload 
@@ -249,6 +265,11 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         FigureCanvasAgg.resize_event(self)
         QtGui.QWidget.resizeEvent(self, event)
         
+        wp_size = min([self.width(), self.height()]) / 5
+        self.working_pixmap.resize(wp_size, wp_size)
+        self.working_pixmap.move(self.width() - wp_size,
+                                 self.height() - wp_size)
+        
         # redrawing the plot window is a heavyweight operation, and we really
         # don't want to do it for every resize event.  so, upon a resize event,
         # start a 0.2 second timer. if there's another resize event before
@@ -284,7 +305,7 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
 
         logging.debug('FigureCanvasQtAggLocal.paintEvent: '
                       .format(self, self.get_width_height()))
-
+    
         if self.blit_buffer is None:
             
             # convert the Agg rendered image -> qImage
@@ -347,6 +368,8 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
         self.blit_top = None
         self.blit_left = None
         
+        self.working = False
+        
         self.update_remote = threading.Event()
                 
         t = threading.Thread(target = self.listen_for_remote, 
@@ -381,6 +404,7 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
                     with self.plot_lock:
                         (winch, hinch) = payload
                         self.figure.set_size_inches(winch, hinch)
+                        self.figure.tight_layout()
                         FigureCanvasAgg.resize_event(self)
                         self.draw()
                 elif msg == Msg.MOUSE_PRESS_EVENT:
@@ -427,13 +451,7 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
                 
             self.update_remote.clear()
             
-            if self.blit_buffer is None:
-                with self.buffer_lock:
-                    msg = (Msg.DRAW, (self.buffer,
-                                      self.buffer_width, 
-                                      self.buffer_height))
-                self.parent_conn.send(msg)
-            else:
+            if self.blit_buffer is not None:
                 with self.blit_lock:
                     msg = (Msg.BLIT, (self.blit_buffer,
                                       self.blit_width,
@@ -442,6 +460,17 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
                                       self.blit_left))
                 self.parent_conn.send(msg)
                 self.blit_buffer = None
+            elif self.buffer is not None:
+                with self.buffer_lock:
+                    msg = (Msg.DRAW, (self.buffer,
+                                      self.buffer_width, 
+                                      self.buffer_height))
+                self.parent_conn.send(msg)
+                self.buffer = None
+            
+            msg = (Msg.WORKING, self.working)
+            self.parent_conn.send(msg)
+
         
     def draw(self, *args, **kwargs):
         logging.debug("FigureCanvasAggRemote.draw()")
@@ -488,6 +517,12 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
             self.blit_left = l
             
         self.update_remote.set()
+        
+        
+    def set_working(self, working):
+        self.working = working
+        self.update_remote.set()
+        
         
 remote_canvas = None
 singleton_lock = threading.Lock()

@@ -270,6 +270,7 @@ class RemoteWorkflowItem(WorkflowItem):
         with warnings.catch_warnings(record = True) as w:
             try:    
                 self.status = "applying"
+                plt.gcf().canvas.set_working(True)
                 r = self.operation.apply(prev_result)
                 self.result = r
 
@@ -282,7 +283,6 @@ class RemoteWorkflowItem(WorkflowItem):
                     self.op_warning_trait = ""
                     
                 self.status = "valid"
-                return
             
             except CytoflowOpError as e:                
                 self.result = None
@@ -290,13 +290,14 @@ class RemoteWorkflowItem(WorkflowItem):
                     self.op_error_trait = e.args[0]
                 self.op_error = e.args[-1]    
                 self.status = "invalid"
-                return
                 
             except CytoflowError as e:
                 self.result = None
                 self.op_error = e.args[-1]    
                 self.status = "invalid"
-                return
+            
+            finally:
+                plt.gcf().canvas.set_working(False)
 
         
     def plot(self):              
@@ -327,7 +328,7 @@ class RemoteWorkflowItem(WorkflowItem):
                 self.plot_lock.acquire()                
                 self.matplotlib_events.clear()
                 
-                plt.clf()
+                plt.gcf().canvas.set_working(True)
                 
                 self.current_view.plot_wi(self)
                 self.view_error = ""
@@ -358,7 +359,8 @@ class RemoteWorkflowItem(WorkflowItem):
                 plt.clf()
                 plt.show() 
             finally:
-                self.matplotlib_events.set() 
+                self.matplotlib_events.set()
+                plt.gcf().canvas.set_working(False) 
                 self.plot_lock.release()
 
                 if w:
