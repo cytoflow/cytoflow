@@ -277,7 +277,7 @@ class TestHistogram(ImportedDataTest):
         self.view.plot_params.histtype = "bar"
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
 
-        for linestyle in ['solid', 'dashed', 'dashdot', 'dotted', 'none']:
+        for linestyle in ['solid', 'dashed', 'dashdot', 'dotted']:
             self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
             self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
             self.view.plot_params.linestyle = linestyle
