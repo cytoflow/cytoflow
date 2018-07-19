@@ -22,10 +22,6 @@ addons:
       - g++
       - gfortran
       - swig3.0
-      - python3-pyqt4
-      - libblas-dev
-      - liblapack-dev
-      - libatlas-dev
 
 before_install:
 
@@ -83,7 +79,6 @@ after_success:
 
   # Build the one-click executables
   - LD_LIBRARY_PATH=${CONDA_PREFIX}/lib pyinstaller --log-level=DEBUG packaging/pyinstaller.spec
-  - pyi-archive_viewer -l dist/cytoflow
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then cd dist/; mv Cytoflow.app Cytoflow-${CONDA_TAG}.app; zip -r cytoflow-${CONDA_TAG}.macos.zip Cytoflow-${CONDA_TAG}.app/; rm -rf Cytoflow-${CONDA_TAG}.app cytoflow; cd ..; fi
   - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then mv dist/cytoflow dist/cytoflow-${CONDA_TAG}-linux.x86_64; fi
   
