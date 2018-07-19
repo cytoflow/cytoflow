@@ -275,8 +275,9 @@ class ExperimentDialogModel(HasStrictTraits):
     
     def init(self, import_op):    
         
-        self.tube_traits.append(
-            TubeTrait(model = self, type = 'metadata', name = 'CF_File'))    
+        if 'CF_File' not in import_op.conditions:
+            self.tube_traits.append(
+                TubeTrait(model = self, type = 'metadata', name = 'CF_File'))    
             
         for name, condition in import_op.conditions.items():
             if condition == "category" or condition == "object":
