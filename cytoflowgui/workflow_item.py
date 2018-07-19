@@ -242,6 +242,8 @@ class RemoteWorkflowItem(WorkflowItem):
         with warnings.catch_warnings(record = True) as w:
             try:    
                 self.status = "estimating"
+                plt.gcf().canvas.set_working(True)
+
                 self.operation.estimate(prev_result)
 
                 self.estimate_error = ""
@@ -256,6 +258,10 @@ class RemoteWorkflowItem(WorkflowItem):
                 self.estimate_error = e.__str__()    
                 self.status = "invalid"
                 return False 
+            
+            finally:
+                plt.gcf().canvas.set_working(False)
+                
             
             
     def apply(self):
