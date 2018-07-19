@@ -63,6 +63,11 @@ class ColorTranslationOp(HasStrictTraits):
         the cell is from the top (transfected) distribution.  Make sure you 
         check the diagnostic plots to see that this worked!
         
+    linear_model : Bool (default = False)
+        Set this to ``True`` to get a scaling that is strictly multiplicative,
+        mirroring the TASBE approach.  Do check the diagnostic plot, though,
+        to see how well (or poorly) your model fits the data.
+        
     control_conditions : Dict((Str, Str), Dict(Str, Any))
         Occasionally, you'll need to specify the experimental conditions that
         the bleedthrough tubes were collected under (to apply the operations in the 
