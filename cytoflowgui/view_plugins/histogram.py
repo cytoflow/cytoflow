@@ -90,7 +90,6 @@ from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
 from cytoflowgui.view_plugins.i_view_plugin \
     import (IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, 
             PluginHelpMixin, Data1DPlotParams)
-from cytoflowgui.view_plugins.stats_1d import LINE_STYLES
 from cytoflowgui.serialization import camel_registry, traits_repr, traits_str, dedent
 from cytoflowgui.util import IterWrapper
 
@@ -141,6 +140,8 @@ class HistogramHandler(ViewHandlerMixin, Controller):
                          visible_when = 'context.view_error',
                          editor = ColorTextEditor(foreground_color = "#000000",
                                                   background_color = "#ff9191"))))
+        
+LINE_STYLES = ["solid", "dashed", "dashdot", "dotted"]
         
 class HistogramPlotParams(Data1DPlotParams):
     
