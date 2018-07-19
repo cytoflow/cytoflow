@@ -250,8 +250,11 @@ class BaseView(HasStrictTraits):
                     g.add_legend(title = huelabel, legend_data = legend_data)
                     ax = g.axes.flat[0]
                     legend = ax.legend_
-                    for lh in legend.legendHandles:
-                        lh.set_alpha(1.0)
+                    self._update_legend(legend)
+#                     for lh in legend.legendHandles:
+#                         lh.set_facecolor(lh.get_facecolor())  # i don't know why
+#                         lh.set_edgecolor(lh.get_edgecolor())  # these are needed
+#                         lh.set_alpha(1.0)
                         
         if title:
             if self.xfacet or self.yfacet:
@@ -277,6 +280,9 @@ class BaseView(HasStrictTraits):
                     
     def _grid_plot(self, experiment, grid, xlim, ylim, xscale, yscale, **kwargs):
         raise NotImplementedError("You must override _grid_plot in a derived class")
+    
+    def _update_legend(self, legend):
+        pass  # no-op
         
 class BaseDataView(BaseView):
     """

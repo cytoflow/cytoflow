@@ -149,6 +149,7 @@ class HistogramPlotParams(Data1DPlotParams):
     linestyle = Enum(LINE_STYLES)
     linewidth = util.PositiveCFloat(None, allow_none = True, allow_zero = True)
     density = Bool(False)
+    alpha = util.PositiveCFloat(0.5, allow_zero = True)
     
     def default_traits_view(self):
         base_view = Data1DPlotParams.default_traits_view(self)
@@ -162,6 +163,8 @@ class HistogramPlotParams(Data1DPlotParams):
                          editor = TextEditor(auto_set = False,
                                              format_func = lambda x: "" if x == None else str(x))),
                     Item('density'),
+                    Item('alpha',
+                         editor = TextEditor(auto_set = False)),
                     base_view.content)
     
 class HistogramPluginView(PluginViewMixin, HistogramView):
@@ -274,7 +277,7 @@ def _dump_params_v1(params):
                 normed = params.density)
     
 @camel_registry.dumper(HistogramPlotParams, 'histogram-params', version = 2)
-def _dump_params(params):
+def _dump_params_v2(params):
     return dict(
                 # BasePlotParams
                 title = params.title,
@@ -304,17 +307,52 @@ def _dump_params(params):
                 linewidth = params.linewidth,
                 density = params.density)
     
+@camel_registry.dumper(HistogramPlotParams, 'histogram-params', version = 3)
+def _dump_params(params):
+    return dict(
+                # BasePlotParams
+                title = params.title,
+                xlabel = params.xlabel,
+                ylabel = params.ylabel,
+                huelabel = params.huelabel,
+                col_wrap = params.col_wrap,
+                sns_style = params.sns_style,
+                sns_context = params.sns_context,
+                legend = params.legend,
+                sharex = params.sharex,
+                sharey = params.sharey,
+                despine = params.despine,
+
+                # DataplotParams
+                min_quantile = params.min_quantile,
+                max_quantile = params.max_quantile,
+                
+                # Data1DPlotParams
+                lim = params.lim,
+                orientation = params.orientation,
+                
+                # Histogram
+                num_bins = params.num_bins,
+                histtype = params.histtype,
+                linestyle = params.linestyle,
+                linewidth = params.linewidth,
+                density = params.density,
+                alpha = params.alpha)
+    
 @camel_registry.loader('histogram', version = any)
 def _load(data, version):
     return HistogramPluginView(**data)
 
 @camel_registry.loader('histogram-params', version = 1)
-def _load_params(data, version):
+def _load_params_v1(data, version):
     data['density'] = data['normed']
     del data['normed']
     return HistogramPlotParams(**data)
 
 @camel_registry.loader('histogram-params', version = 2)
-def _load_params(data, version):
+def _load_params_v2(data, version):
     return HistogramPlotParams(**data)
 
+@camel_registry.loader('histogram-params', version = 3)
+def _load_params(data, version):
+    return HistogramPlotParams(**data)

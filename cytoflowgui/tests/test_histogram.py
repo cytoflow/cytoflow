@@ -293,6 +293,10 @@ class TestHistogram(ImportedDataTest):
         self.view.plot_params.density = True
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))                    
 
+        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.view.plot_params.alpha = 0.1
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30)) 
         
     def testSerialize(self):
         

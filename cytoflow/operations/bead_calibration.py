@@ -618,6 +618,12 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
             plt.xscale('log')
             plt.xlabel(channel)
             plt.plot(hist_bins[1:], hist_smooth)
+            
+            plt.axvline(self.op.bead_brightness_threshold, color = 'blue', linestyle = '--' )
+            if self.op.bead_brightness_cutoff:
+                plt.axvline(self.op.bead_brightness_cutoff, color = 'blue', linestyle = '--' )
+            else:
+                plt.axvline(experiment.metadata[channel]['range'] * 0.7, color = 'blue', linestyle = '--')                
 
             if channel in self.op._peaks:
                 for peak in self.op._peaks[channel]:

@@ -86,7 +86,8 @@ class HistogramView(Base1DView):
             
         density: bool
             If `True`, re-scale the histogram to form a probability density
-            function, so the area under the histogram is 1.
+            function, so the area under the histogram is 1.  Only seems to 
+            work if `scale` is `linear`.
             
         orientation : {'horizontal', 'vertical'}
             The orientation of the histogram.  `horizontal` gives a histogram
@@ -98,6 +99,9 @@ class HistogramView(Base1DView):
                     
         linestyle : ['-' | '--' | '-.' | ':' | "None"]
             The style of the line to plot
+            
+        alpha : float (default = 0.5)
+            The alpha blending value, between 0 (transparent) and 1 (opaque).
     
             
         Notes
