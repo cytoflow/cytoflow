@@ -30,7 +30,7 @@ class TestBleedthroughLinear(TasbeTest):
 
         wi = WorkflowItem(operation = op)
         self.workflow.workflow.append(wi)        
-        self.assertTrue(wait_for(wi, 'status', lambda v: v == 'valid', 5))
+        self.assertTrue(wait_for(wi, 'status', lambda v: v == 'valid', 30))
  
         plugin = BleedthroughLinearPlugin()
         self.op = op = plugin.get_operation()
@@ -63,7 +63,7 @@ class TestBleedthroughLinear(TasbeTest):
 
     def testChangeControls(self):
         self.op.controls_list.pop()
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 30))
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
         
         self.op.do_estimate = True
@@ -72,7 +72,7 @@ class TestBleedthroughLinear(TasbeTest):
   
     def testChangeControlsValue(self):
         self.op.controls_list[2].channel = "AmCyan-A"
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 30))
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
         
         self.op.do_estimate = True
@@ -80,11 +80,11 @@ class TestBleedthroughLinear(TasbeTest):
   
     def testChangeSubset(self):
         self.op.subset_list[0].selected_t = False
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 30))
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
         
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
          
     def testPlot(self):
         self.wi.current_view = self.wi.default_view

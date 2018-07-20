@@ -47,7 +47,7 @@ class TestGaussian1D(ImportedDataTest):
    
     def testChangeChannels(self):
         self.op.channel = "Y2-A"
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 30))
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
          
         self.op.do_estimate = True
@@ -56,7 +56,7 @@ class TestGaussian1D(ImportedDataTest):
 
     def testChangeScale(self):
         self.op.channel_scale = "log"
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 30))
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
          
         self.op.do_estimate = True
@@ -65,7 +65,7 @@ class TestGaussian1D(ImportedDataTest):
 
     def testChangeBy(self):
         self.op.by = ["Dox"]
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 30))
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
          
         self.op.do_estimate = True
@@ -73,7 +73,7 @@ class TestGaussian1D(ImportedDataTest):
         
     def testChangeComponents(self):
         self.op.num_components = 3
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 30))
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
 
         self.op.do_estimate = True
@@ -81,7 +81,7 @@ class TestGaussian1D(ImportedDataTest):
 
     def testChangeSigma(self):
         self.op.sigma = 1
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 30))
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
 
         self.op.do_estimate = True
@@ -90,7 +90,7 @@ class TestGaussian1D(ImportedDataTest):
    
     def testChangeSubset(self):
         self.op.subset_list[0].selected = ["A"]
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 30))
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
          
         self.op.do_estimate = True
@@ -103,7 +103,7 @@ class TestGaussian1D(ImportedDataTest):
         
     def testPlotFacets(self):
         self.op.by = ["Dox", "Well"]
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 30))
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
          
         self.op.do_estimate = True
@@ -113,20 +113,20 @@ class TestGaussian1D(ImportedDataTest):
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
         
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
         self.view.xfacet = "Dox"
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
 
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
         self.view.yfacet = "Well"
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
 
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
         self.view.yfacet = ""
         self.view.huefacet = "Well"
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
    
  
     def testSerialize(self):
@@ -157,5 +157,5 @@ class TestGaussian1D(ImportedDataTest):
         self.assertTrue((nb_data == remote_data).all().all())
 
 if __name__ == "__main__":
-#     import sys;sys.argv = ['', 'TestGaussian1D.testPlotFacets']
+#     import sys;sys.argv = ['', 'TestGaussian1D.testPlot']
     unittest.main()

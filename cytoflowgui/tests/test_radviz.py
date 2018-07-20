@@ -20,6 +20,7 @@ class TestRadviz(ImportedDataTest):
 
         self.wi = wi = self.workflow.workflow[0]
         self.wi.operation.events = 500
+        self.wi.operation.do_estimate = True
         
         plugin = RadvizPlugin()
         self.view = view = plugin.get_view()
@@ -39,7 +40,7 @@ class TestRadviz(ImportedDataTest):
 
     def testChangeScale(self):
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
 
         self.view.channels_list[1].scale = "linear"
         
@@ -47,7 +48,7 @@ class TestRadviz(ImportedDataTest):
 
     def testChangeChannel(self):
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
 
         self.view.channels_list[1].channel = "FSC-A"
         
@@ -56,7 +57,7 @@ class TestRadviz(ImportedDataTest):
     def testAddChannel(self):
 
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
 
         self.view.channels_list.append(_Channel(channel = "FSC-A", scale = "log"))
         
@@ -65,14 +66,14 @@ class TestRadviz(ImportedDataTest):
     def testRemoveChannel(self):
 
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
 
         self.view.channels_list.append(_Channel(channel = "FSC-A", scale = "log"))
         
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
 
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
 
         self.view.channels_list.pop()
         
@@ -80,7 +81,7 @@ class TestRadviz(ImportedDataTest):
 
     def testXfacet(self):
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
 
         self.view.xfacet = "Dox"
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
@@ -88,7 +89,7 @@ class TestRadviz(ImportedDataTest):
         
     def testYfacet(self):
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
 
         self.view.yfacet = "Well"
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
@@ -96,7 +97,7 @@ class TestRadviz(ImportedDataTest):
 
     def testXandYfacet(self):
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
 
         self.view.xfacet = "Dox"
         self.view.yfacet = "Well"
@@ -104,7 +105,7 @@ class TestRadviz(ImportedDataTest):
 
     def testHueScale(self):
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
 
         self.view.huescale = "log"
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
@@ -113,7 +114,7 @@ class TestRadviz(ImportedDataTest):
     def testSubset(self):
         from cytoflowgui.subset import CategorySubset
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
 
         self.view.subset_list.append(CategorySubset(name = "Well",
                                                     values = ['A', 'B']))
@@ -125,84 +126,84 @@ class TestRadviz(ImportedDataTest):
 
         # Common params
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
         self.view.xfacet = "Dox"
         self.view.yfacet = "Well"
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
  
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
         self.view.plot_params.title = "Title"
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
  
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
         self.view.plot_params.xlabel = "X label"
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
  
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
         self.view.plot_params.ylabel = "Y label"
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
  
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
         self.view.plot_params.sharex = False
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
  
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
         self.view.plot_params.sharey = False
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
  
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
         self.view.plot_params.despine = False
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
  
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
         self.view.xfacet = ""
         self.view.huefacet = "Dox"
         self.view.plot_params.huelabel = "Hue label"
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
  
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
         self.view.plot_params.legend = False
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
  
         ## Scatterplot-specific params
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
         self.view.plot_params.min_quantile = 0.01
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
  
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
         self.view.plot_params.max_quantile = 0.90
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
  
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
         self.view.plot_params.alpha = 0.5
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
  
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
         self.view.plot_params.s = 5
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
                                     
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
         self.view.plot_params.marker = '+'
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
                                     
         for m in SCATTERPLOT_MARKERS:
             self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-            self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+            self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
             self.view.plot_params.marker = m
-            self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+            self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
     
     def testNotebook(self):
         # smoke test
@@ -240,5 +241,5 @@ class TestRadviz(ImportedDataTest):
                              new_view.trait_get(self.view.copyable_trait_names()))
            
 if __name__ == "__main__":
-#     import sys;sys.argv = ['', 'TestRadviz.testPlotArgs']
+#     import sys;sys.argv = ['', 'TestRadviz.testBase']
     unittest.main()

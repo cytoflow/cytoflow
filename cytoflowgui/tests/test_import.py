@@ -19,8 +19,9 @@ class TestImport(ImportedDataTest):
         op = wi.operation
         
         op.events = 1000
-        self.assertTrue(wait_for(wi, 'status', lambda v: v != 'valid', 5))
-        self.assertTrue(wait_for(wi, 'status', lambda v: v == 'valid', 5))
+        self.assertTrue(wait_for(wi, 'status', lambda v: v != 'valid', 30))
+        op.do_estimate = True
+        self.assertTrue(wait_for(wi, 'status', lambda v: v == 'valid', 30))
         self.assertTrue(self.workflow.remote_eval('len(self.workflow[0].result) == 6000'))
         self.assertEqual(op.ret_events, 6000)
         
@@ -91,5 +92,5 @@ class TestImport(ImportedDataTest):
 
 
 if __name__ == "__main__":
-#     import sys;sys.argv = ['', 'TestImport.testSerializeV2']
+#     import sys;sys.argv = ['', 'TestImport.testCoarse']
     unittest.main()

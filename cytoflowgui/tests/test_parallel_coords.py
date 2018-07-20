@@ -19,6 +19,7 @@ class TestParallelCoords(ImportedDataTest):
 
         self.wi = wi = self.workflow.workflow[0]
         self.wi.operation.events = 500
+        self.wi.operation.do_estimate = True
         
         plugin = ParallelCoordinatesPlugin()
         self.view = view = plugin.get_view()
@@ -38,7 +39,7 @@ class TestParallelCoords(ImportedDataTest):
 
     def testChangeScale(self):
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
 
         self.view.channels_list[1].scale = "linear"
         
@@ -46,7 +47,7 @@ class TestParallelCoords(ImportedDataTest):
 
     def testChangeChannel(self):
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
 
         self.view.channels_list[1].channel = "FSC-A"
         
@@ -55,7 +56,7 @@ class TestParallelCoords(ImportedDataTest):
     def testAddChannel(self):
 
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
 
         self.view.channels_list.append(_Channel(channel = "FSC-A", scale = "log"))
         
@@ -64,14 +65,14 @@ class TestParallelCoords(ImportedDataTest):
     def testRemoveChannel(self):
 
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
 
         self.view.channels_list.append(_Channel(channel = "FSC-A", scale = "log"))
         
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
 
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
 
         self.view.channels_list.pop()
         
@@ -79,7 +80,7 @@ class TestParallelCoords(ImportedDataTest):
 
     def testXfacet(self):
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
 
         self.view.xfacet = "Dox"
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
@@ -87,7 +88,7 @@ class TestParallelCoords(ImportedDataTest):
         
     def testYfacet(self):
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
 
         self.view.yfacet = "Well"
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
@@ -95,7 +96,7 @@ class TestParallelCoords(ImportedDataTest):
 
     def testXandYfacet(self):
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
 
         self.view.xfacet = "Dox"
         self.view.yfacet = "Well"
@@ -103,7 +104,7 @@ class TestParallelCoords(ImportedDataTest):
 
     def testHueScale(self):
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
 
         self.view.huescale = "log"
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
@@ -112,7 +113,7 @@ class TestParallelCoords(ImportedDataTest):
     def testSubset(self):
         from cytoflowgui.subset import CategorySubset
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
 
         self.view.subset_list.append(CategorySubset(name = "Well",
                                                     values = ['A', 'B']))
@@ -123,35 +124,35 @@ class TestParallelCoords(ImportedDataTest):
     def testPlotArgs(self):
         # BasePlotParams
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
         self.view.xfacet = "Dox"
         self.view.yfacet = "Well"
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
 
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
         self.view.plot_params.title = "Title"
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
 
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
         self.view.plot_params.xlabel = "X label"
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
 
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
         self.view.plot_params.ylabel = "Y label"
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
         
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
         self.view.xfacet = ""
         self.view.huefacet = "Dox"
         self.view.plot_params.huelabel = "Hue label"
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
         
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
         self.view.xfacet = "Dox"
         self.view.yfacet = ""
         self.view.huefacet = ""
@@ -160,50 +161,50 @@ class TestParallelCoords(ImportedDataTest):
          
         for style in ['darkgrid', 'whitegrid', 'white', 'dark', 'ticks']:
             self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-            self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+            self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
             self.view.plot_params.sns_style = style
             self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
             
         for context in ['poster', 'talk', 'poster', 'notebook', 'paper']:
             self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-            self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+            self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
             self.view.plot_params.sns_context = context
             self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
         
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
         self.view.plot_params.legend = False
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
 
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
         self.view.plot_params.sharex = False
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
 
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
         self.view.plot_params.sharey = False
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
 
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
         self.view.plot_params.despine = False
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
 
         # DataPlotParams
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
         self.view.plot_params.min_quantile = 0.01
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
 
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
         self.view.plot_params.max_quantile = 0.90
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
 
         ## PC-specific params
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
         self.view.plot_params.alpha = 0.5
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
 
@@ -244,5 +245,5 @@ class TestParallelCoords(ImportedDataTest):
                              new_view.trait_get(self.view.copyable_trait_names()))
            
 if __name__ == "__main__":
-#     import sys;sys.argv = ['', 'TestParallelCoords.testSerialize']
+#     import sys;sys.argv = ['', 'TestParallelCoords.testPlotArgs']
     unittest.main()

@@ -70,7 +70,7 @@ class TestTASBECalibrationMode(WorkflowTest):
         
     def tearDown(self):
         self.op.input_files = [self.cwd + "/../../cytoflow/tests/data/tasbe/rby.fcs"]
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
 
         shutil.rmtree(self.op.output_directory)
 
@@ -82,7 +82,7 @@ class TestTASBECalibrationMode(WorkflowTest):
   
     def testChangeChannels(self):
         self.op.channels = ["FITC-A", "Pacific Blue-A"]
-        self.assertTrue(wait_for(self.op, 'valid_model', lambda v: not v, 5))
+        self.assertTrue(wait_for(self.op, 'valid_model', lambda v: not v, 30))
         self.assertTrue(len(self.op.units_list) == 2)
         self.assertTrue(len(self.op.bleedthrough_list) == 2)
 
@@ -108,22 +108,22 @@ class TestTASBECalibrationMode(WorkflowTest):
 
     def testPlot(self):
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
         self.wi.current_view = self.wi.default_view
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 10))
 
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
         self.wi.default_view.current_plot = "Autofluorescence"
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 10))
 
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
         self.wi.default_view.current_plot = "Bleedthrough"
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 10))  
 
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
         self.wi.default_view.current_plot = "Bead Calibration"
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 10)) 
         
@@ -139,7 +139,7 @@ class TestTASBECalibrationMode(WorkflowTest):
         self.assertTrue(wait_for(self.op, 'valid_model', lambda v: v, 30))
         
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
         self.wi.default_view.current_plot = "Color Translation"
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 10)) 
 

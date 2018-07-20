@@ -36,20 +36,20 @@ class TestBinning(ImportedDataTest):
         self.workflow.workflow.append(wi)
         self.workflow.selected = wi
 
-        self.assertTrue(wait_for(wi, 'status', lambda v: v == 'valid', 10))
+        self.assertTrue(wait_for(wi, 'status', lambda v: v == 'valid', 30))
 
     def testApply(self):
         self.assertIsNotNone(self.workflow.remote_eval("self.workflow[-1].result"))
    
     def testChangeChannels(self):
         self.op.channel = "Y2-A"
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 30))
         self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
         
 
     def testChangeScale(self):
         self.op.scale = "linear"
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 30))
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
         
         self.op.bin_width = 1000
@@ -59,13 +59,13 @@ class TestBinning(ImportedDataTest):
         
     def testChangeBinWidth(self):
         self.op.bin_width = 0.1
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 5))         
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 30))         
         self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
 
         
     def testChangeBinWidthText(self):
         self.op.bin_width = "0.1"
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 5))         
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 30))         
         self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
 
 
@@ -75,10 +75,10 @@ class TestBinning(ImportedDataTest):
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
         
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
         
         self.op.channel = "Y2-A"
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 30))
         self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
         
    
@@ -111,5 +111,5 @@ class TestBinning(ImportedDataTest):
         self.assertTrue((nb_data == remote_data).all().all())
 
 if __name__ == "__main__":
-#     import sys;sys.argv = ['', 'TestBinning.testChangeBinWidth']
+#     import sys;sys.argv = ['', 'TestBinning.testPlot']
     unittest.main()

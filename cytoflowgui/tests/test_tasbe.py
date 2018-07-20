@@ -30,7 +30,7 @@ class TestTASBE(TasbeTest):
 
         wi = WorkflowItem(operation = op)
         self.workflow.workflow.append(wi)        
-        self.assertTrue(wait_for(wi, 'status', lambda v: v == 'valid', 5))
+        self.assertTrue(wait_for(wi, 'status', lambda v: v == 'valid', 30))
         
         plugin = TasbePlugin()
         self.op = op = plugin.get_operation()        
@@ -76,7 +76,7 @@ class TestTASBE(TasbeTest):
   
     def testChangeChannels(self):
         self.op.channels = ["FITC-A", "Pacific Blue-A"]
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 30))
         self.assertTrue(len(self.op.translation_list) == 1)
         self.assertTrue(len(self.op.bleedthrough_list) == 2)
 
@@ -86,23 +86,23 @@ class TestTASBE(TasbeTest):
 
     def testPlot(self):
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
         self.wi.current_view = self.wi.default_view
         self.wi.default_view.current_plot = "Autofluorescence"
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
 
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
         self.wi.default_view.current_plot = "Bleedthrough"
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))  
 
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
         self.wi.default_view.current_plot = "Bead Calibration"
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30)) 
-        
+         
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
         self.wi.default_view.current_plot = "Color Translation"
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30)) 
 
@@ -144,5 +144,5 @@ class TestTASBE(TasbeTest):
         self.assertTrue((nb_data == remote_data).all().all())
         
 if __name__ == "__main__":
-#     import sys;sys.argv = ['', 'TestTASBE.testSerialize']
+#     import sys;sys.argv = ['', 'TestTASBE.testPlot']
     unittest.main()

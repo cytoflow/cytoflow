@@ -44,7 +44,7 @@ class TestRange2D(ImportedDataTest):
         self.workflow.selected = wi
         
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))        
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 15))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 130))
 
     def testApply(self):
         self.assertIsNotNone(self.workflow.remote_eval("self.workflow[-1].result"))
@@ -52,64 +52,64 @@ class TestRange2D(ImportedDataTest):
         
     def testChangeThreshold(self):
         self.op.xlow = 0
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 15))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 130))
         self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
 
         self.op.xhigh = 200
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 15))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 130))
         self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
 
         self.op.ylow = 900
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 15))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 130))
         self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
 
         self.op.yhigh = 11000
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 15))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 130))
         self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
                 
         
    
     def testChangeChannels(self):
         self.op.xchannel = "B1-A"
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 15))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 130))
         self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
 
         self.op.ychannel = "Y2-A"
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 15))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 130))
         self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
 
     def testChangeScale(self):
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
 
         self.view.xscale = "log"
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
 
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
 
         self.view.yscale = "log"
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
  
     def testChangeName(self):
         self.op.name = "Dange2D"
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 15))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 130))
         self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
         
     def testHueFacet(self):
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
 
         self.view.huefacet = "Dox"
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
 
         
     def testSubset(self):
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
 
         self.view.subset_list[0].selected = ["A"]
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
  
     def testSerialize(self):
         fh, filename = tempfile.mkstemp()

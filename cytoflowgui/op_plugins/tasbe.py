@@ -603,42 +603,25 @@ class TasbePluginView(PluginViewMixin):
         return True
         
     def plot(self, experiment, plot_name = None, **kwargs):
-        
-        if plot_name not in ["Autofluorescence", "Bleedthrough", "Bead Calibration", "Color Translation"]:
+
+        if experiment is None:
+            raise util.CytoflowViewError("No experiment to plot")
+                    
+        if plot_name == "Autofluorescence":
+            self.op._af_op.default_view().plot(experiment, **kwargs)
+        elif plot_name == "Bleedthrough":
+            self.op._bleedthrough_op.default_view().plot(experiment, **kwargs)
+            return
+        elif plot_name == "Bead Calibration":
+            self.op._bead_calibration_op.default_view().plot(experiment, **kwargs)
+        elif plot_name == "Color Translation":
+            self.op._color_translation_op.default_view().plot(experiment, **kwargs)
+        else:
             raise util.CytoflowViewError("Which plot do you want?  Must be one "
                                          "of \"Autofluorescence\", "
                                          "\"Bleedthrough\", \"Bead Calibration\", "
                                          "or \"Color Translation\"")
-                    
-        if experiment is None:
-            raise util.CytoflowViewError("No experiment to plot")
-        
-        new_ex = experiment.clone()
-        
-        # we don't need to actually apply any ops to data
-        new_ex.data = pd.DataFrame(data = {x : pd.Series() for x in new_ex.data})
-                    
-        if plot_name == "Autofluorescence":
-            self.op._af_op.default_view().plot(new_ex, **kwargs)
-            return
-        else:
-            new_ex = self.op._af_op.apply(new_ex)
-
-        if plot_name == "Bleedthrough":
-            self.op._bleedthrough_op.default_view().plot(new_ex, **kwargs)
-            return
-        else:
-            new_ex = self.op._bleedthrough_op.apply(new_ex)
             
-        if plot_name == "Bead Calibration":
-            self.op._bead_calibration_op.default_view().plot(new_ex, **kwargs)
-            return
-        else:
-            new_ex = self.op._bead_calibration_op.apply(new_ex)
-            
-        if plot_name == "Color Translation":
-            self.op._color_translation_op.default_view().plot(new_ex, **kwargs)
-            return
             
     def get_notebook_code(self, idx):
         

@@ -287,7 +287,7 @@ class Stats2DPluginPlotParams(Stats2DPlotParams):
     linestyle = Enum(LINE_STYLES)
     marker = Enum(SCATTERPLOT_MARKERS)
     markersize = util.PositiveCFloat(6, allow_zero = False)
-    capsize = util.PositiveCFloat(0, allow_zero = False)
+    capsize = util.PositiveCFloat(None, allow_none = True, allow_zero = False)
     alpha = util.PositiveCFloat(1.0)
     
     def default_traits_view(self):

@@ -242,7 +242,11 @@ class RemoteWorkflowItem(WorkflowItem):
         with warnings.catch_warnings(record = True) as w:
             try:    
                 self.status = "estimating"
-                plt.gcf().canvas.set_working(True)
+                
+                try:
+                    plt.gcf().canvas.set_working(True)
+                except AttributeError:
+                    pass
 
                 self.operation.estimate(prev_result)
 
@@ -260,7 +264,10 @@ class RemoteWorkflowItem(WorkflowItem):
                 return False 
             
             finally:
-                plt.gcf().canvas.set_working(False)
+                try:
+                    plt.gcf().canvas.set_working(False)
+                except AttributeError:
+                    pass
                 
             
             
@@ -276,7 +283,12 @@ class RemoteWorkflowItem(WorkflowItem):
         with warnings.catch_warnings(record = True) as w:
             try:    
                 self.status = "applying"
-                plt.gcf().canvas.set_working(True)
+                
+                try:
+                    plt.gcf().canvas.set_working(True)
+                except AttributeError:
+                    pass
+                
                 r = self.operation.apply(prev_result)
                 self.result = r
 
@@ -303,7 +315,10 @@ class RemoteWorkflowItem(WorkflowItem):
                 self.status = "invalid"
             
             finally:
-                plt.gcf().canvas.set_working(False)
+                try:
+                    plt.gcf().canvas.set_working(False)
+                except AttributeError:
+                    pass
 
         
     def plot(self):              
@@ -334,7 +349,10 @@ class RemoteWorkflowItem(WorkflowItem):
                 self.plot_lock.acquire()                
                 self.matplotlib_events.clear()
                 
-                plt.gcf().canvas.set_working(True)
+                try:
+                    plt.gcf().canvas.set_working(True)
+                except AttributeError:
+                    pass
                 
                 self.current_view.plot_wi(self)
                 self.view_error = ""
@@ -366,7 +384,11 @@ class RemoteWorkflowItem(WorkflowItem):
                 plt.show() 
             finally:
                 self.matplotlib_events.set()
-                plt.gcf().canvas.set_working(False) 
+                try:
+                    plt.gcf().canvas.set_working(False)
+                except AttributeError:
+                    pass
+                 
                 self.plot_lock.release()
 
                 if w:

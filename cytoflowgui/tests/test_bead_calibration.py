@@ -40,7 +40,7 @@ class TestBeadCalibration(TasbeTest):
           
         # run the estimate
         op.do_estimate = True
-        self.assertTrue(wait_for(wi, 'status', lambda v: v == 'valid', 5))
+        self.assertTrue(wait_for(wi, 'status', lambda v: v == 'valid', 30))
 
     def testEstimate(self):
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
@@ -50,60 +50,60 @@ class TestBeadCalibration(TasbeTest):
         self.op.bead_brightness_threshold = "95.0"
         self.op.bead_brightness_cutoff = "262000"
         
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 30))
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
 
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
 
         
     def testRemoveChannel(self):
         self.op.units_list.pop()
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 30))
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
 
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
         
     def testAddChannel(self):
         self.op.units_list.append(_Unit(channel = "PE-Tx-Red-YG-A", unit = "MEPTR"))
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 30))
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
 
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
         
     def testBeadQuantile(self):
         self.op.bead_peak_quantile = 75
         
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 30))
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
 
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
 
     def testBeadThreshold(self):
         self.op.bead_brightness_threshold = 95.0
         
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 30))
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
 
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
       
     def testBeadCutoff(self):
         self.op.bead_brightness_cutoff = 262000
         
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 30))
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
 
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
                               
     def testPlot(self):

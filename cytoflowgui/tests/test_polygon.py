@@ -22,7 +22,7 @@ class TestPolygon(ImportedDataTest):
 
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
         self.wi = self.workflow.workflow[0]
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
 
         plugin = PolygonPlugin()
         self.op = op = plugin.get_operation()
@@ -32,8 +32,8 @@ class TestPolygon(ImportedDataTest):
         op.ychannel = "V2-A"
         op.yscale = "logicle"
         op.vertices = [(23.411982294776319, 5158.7027015021222), 
-                       (102.22182270573683, 23124.058843387455), 
-                       (510.94519955277201, 23124.058843387455), 
+                       (102.22182270573683, 23124.0588433874530), 
+                       (510.94519955277201, 23124.0588433874530), 
                        (1089.5215641232173, 3800.3424832180476), 
                        (340.56382570202402, 801.98947404942271), 
                        (65.42597937575897, 1119.3133482602157)]
@@ -51,9 +51,9 @@ class TestPolygon(ImportedDataTest):
         
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
         
-        self.workflow.remote_exec("self.workflow[-1].default_view.vertices = [(23.411982294776319, 5158.7027015021222), (102.22182270573683, 23124.058843387455), (510.94519955277201, 23124.058843387455), (1089.5215641232173, 3800.3424832180476), (340.56382570202402, 801.98947404942271), (65.42597937575897, 1119.3133482602157)]")
+        self.workflow.remote_exec("self.workflow[-1].default_view.vertices = [(23.411982294776319, 5158.7027015021222), (102.22182270573683, 23124.0588433874530), (510.94519955277201, 23124.0588433874530), (1089.5215641232173, 3800.3424832180476), (340.56382570202402, 801.98947404942271), (65.42597937575897, 1119.3133482602157)]")
         
-        self.assertTrue(wait_for(wi, 'status', lambda v: v == 'valid', 15))
+        self.assertTrue(wait_for(wi, 'status', lambda v: v == 'valid', 130))
 
     def testApply(self):
         self.assertIsNotNone(self.workflow.remote_eval("self.workflow[-1].result"))
@@ -61,53 +61,53 @@ class TestPolygon(ImportedDataTest):
    
     def testChangeChannels(self):
         self.op.xchannel = "B1-A"
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 15))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 130))
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
 
-        self.workflow.remote_exec("self.workflow[-1].default_view.vertices = [(23.411982294776319, 5158.7027015021222), (102.22182270573683, 23124.058843387455), (510.94519955277201, 23124.058843387455), (1089.5215641232173, 3800.3424832180476), (340.56382570202402, 801.98947404942271), (65.42597937575897, 1119.3133482602157)]")
+        self.workflow.remote_exec("self.workflow[-1].default_view.vertices = [(23.411982294776319, 5158.7027015021222), (102.22182270573683, 23124.0588433874530), (510.94519955277201, 23124.0588433874530), (1089.5215641232173, 3800.3424832180476), (340.56382570202402, 801.98947404942271), (65.42597937575897, 1119.3133482602157)]")
         self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
 
         self.op.ychannel = "Y2-A"
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 15))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 130))
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
 
-        self.workflow.remote_exec("self.workflow[-1].default_view.vertices = [(23.411982294776319, 5158.7027015021222), (102.22182270573683, 23124.058843387455), (510.94519955277201, 23124.058843387455), (1089.5215641232173, 3800.3424832180476), (340.56382570202402, 801.98947404942271), (65.42597937575897, 1119.3133482602157)]")
+        self.workflow.remote_exec("self.workflow[-1].default_view.vertices = [(23.411982294776319, 5158.7027015021222), (102.22182270573683, 23124.0588433874530), (510.94519955277201, 23124.0588433874530), (1089.5215641232173, 3800.3424832180476), (340.56382570202402, 801.98947404942271), (65.42597937575897, 1119.3133482602157)]")
         self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
 
     def testChangeScale(self):
         self.op.xscale = "log"
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 15))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 130))
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
 
-        self.workflow.remote_exec("self.workflow[-1].default_view.vertices = [(23.411982294776319, 5158.7027015021222), (102.22182270573683, 23124.058843387455), (510.94519955277201, 23124.058843387455), (1089.5215641232173, 3800.3424832180476), (340.56382570202402, 801.98947404942271), (65.42597937575897, 1119.3133482602157)]")
+        self.workflow.remote_exec("self.workflow[-1].default_view.vertices = [(23.411982294776319, 5158.7027015021222), (102.22182270573683, 23124.0588433874530), (510.94519955277201, 23124.0588433874530), (1089.5215641232173, 3800.3424832180476), (340.56382570202402, 801.98947404942271), (65.42597937575897, 1119.3133482602157)]")
         self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
 
         self.op.yscale = "log"
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 15))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 130))
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
 
-        self.workflow.remote_exec("self.workflow[-1].default_view.vertices = [(23.411982294776319, 5158.7027015021222), (102.22182270573683, 23124.058843387455), (510.94519955277201, 23124.058843387455), (1089.5215641232173, 3800.3424832180476), (340.56382570202402, 801.98947404942271), (65.42597937575897, 1119.3133482602157)]")
+        self.workflow.remote_exec("self.workflow[-1].default_view.vertices = [(23.411982294776319, 5158.7027015021222), (102.22182270573683, 23124.0588433874530), (510.94519955277201, 23124.0588433874530), (1089.5215641232173, 3800.3424832180476), (340.56382570202402, 801.98947404942271), (65.42597937575897, 1119.3133482602157)]")
         self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
  
     def testChangeName(self):
         self.op.name = "Dolly"
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 15))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 130))
         self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
         
     def testHueFacet(self):
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
 
         self.view.huefacet = "Dox"
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
 
         
     def testSubset(self):
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
 
         self.view.subset_list[0].selected = ["A"]
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
  
     def testSerialize(self):
         fh, filename = tempfile.mkstemp()

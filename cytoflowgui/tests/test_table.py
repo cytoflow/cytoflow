@@ -71,13 +71,13 @@ class TestTable(ImportedDataTest):
         view.row_facet = "Dox"
         
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
   
         wi.views.append(view)
         wi.current_view = view
         self.workflow.selected = wi
         
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
         
     def tearDown(self):
         fh, filename = tempfile.mkstemp()
@@ -98,72 +98,72 @@ class TestTable(ImportedDataTest):
     
     def testColumn(self):
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
    
         self.view.row_facet = ""
         self.view.column_facet = "Dox"
            
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
         
     def testSubRow(self):
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
    
         self.view.statistic = ("MeanByDoxAndWell", "Geom.Mean")
         self.view.row_facet = "Dox"
         self.view.subrow_facet = "Well"
            
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))    
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))    
         
     def testSubColumn(self):
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
    
         self.view.statistic = ("MeanByDoxAndWell", "Geom.Mean")
         self.view.row_facet = ""
         self.view.column_facet = "Dox"
         self.view.subcolumn_facet = "Well"
            
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
         
     def testRowRange(self):
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
    
         self.view.statistic = ("MeanByDox", "Geom.SD")
            
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
     
     def testColumnRange(self):
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
    
         self.view.statistic = ("MeanByDox", "Geom.SD")
         self.view.row_facet = ""
         self.view.column_facet = "Dox"
            
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
         
     def testSubRowRange(self):
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
    
         self.view.statistic = ("MeanByDoxAndWell", "Geom.SD")
         self.view.row_facet = "Dox"
         self.view.subrow_facet = "Well"
            
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))    
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))    
         
     def testSubColumnRange(self):
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
    
         self.view.statistic = ("MeanByDoxAndWell", "Geom.SD")
         self.view.row_facet = ""
         self.view.column_facet = "Dox"
         self.view.subcolumn_facet = "Well"
            
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 5))
+        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
 
  
     def testSerialize(self):

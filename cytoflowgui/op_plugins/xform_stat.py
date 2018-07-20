@@ -68,7 +68,7 @@ from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_E
 from cytoflowgui.subset import SubsetListEditor, ISubset
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin
 from cytoflowgui.workflow import Changed
-from cytoflowgui.serialization import camel_registry, traits_repr, dedent
+from cytoflowgui.serialization import camel_registry, traits_repr
 
 TransformStatisticOp.__repr__ = traits_repr
 
@@ -213,51 +213,51 @@ class TransformStatisticPluginOp(PluginOpMixin, TransformStatisticOp):
         op.copy_traits(self, op.copyable_trait_names())
         
         fn_import = {"Mean" : "from numpy import mean",
+                     "Median" : "from numpy import median",
                      "Geom.Mean" : None,
                      "Count" : None,
                      "Std.Dev" : "from numpy import std",
                      "Geom.SD" : None,
                      "SEM" : "from scipy.stats import sem",
                      "Geom.SEM" : None,
-                     "Mean 95% CI" : "from numpy import mean\nmean_ci = lambda x: ci(x, mean, boots = 100)",
-                     "Geom.Mean 95% CI" : "geom_mean_ci = lambda x: ci(x, geom_mean, boots = 100)",
+                     "Mean 95% CI" : None,
+                     "Geom.Mean 95% CI" : None,
                      "Sum" : "from numpy import sum",
-                     "Proportion" : "from pandas import Series; proportion = lambda a: Series(a / a.sum())",
-                     "Percentage" : "from pandas import Series; percentage = lambda a: Series(a / a.sum()) * 100.0",
-                     "Fold" : "from pandas import Series; fold = lambda a: Series(a / a.min())"
+                     "Proportion" : "from pandas import Series",
+                     "Percentage" : "from pandas import Series",
+                     "Fold" : "from pandas import Series"
                   }
         
         fn_name = {"Mean" : "mean",
+                   "Median" : "median",
                    "Geom.Mean" : "geom_mean",
                    "Count" : "len",
                    "Std.Dev" : "std",
                    "Geom.SD" : "geom_sd_range",
                    "SEM" : "sem",
                    "Geom.SEM" : "geom_sem_range",
-                   "Mean 95% CI" : "mean_ci",
-                   "Geom.Mean 95% CI" : "geom_mean_ci",
+                   "Mean 95% CI" : "lambda x: ci(x, mean, boots = 100)",
+                   "Geom.Mean 95% CI" : "lambda x: ci(x, geom_mean, boots = 100)",
                    "Sum" : "sum",
-                   "Proportion" : "proportion",
-                   "Percentage" : "percentage",
-                   "Fold" : "fold"
+                   "Proportion" : "lambda a: Series(a / a.sum())",
+                   "Percentage" : "lambda a: Series(a / a.sum()) * 100.0",
+                   "Fold" : "lambda a: Series(a / a.min())"
                    }
         
         op.function = transform_functions[self.statistic_name]
-        op.function.__name__ = fn_name[self.statistic_name]
+        try:
+            op.function.__name__ = fn_name[self.statistic_name]
+        except AttributeError:
+            # can't reassign the name of "len", for example
+            pass
         
-        return dedent("""
-        {import_statement}
-        op_{idx} = {repr}
-                
-        ex_{idx} = op_{idx}.apply(ex_{prev_idx})
-        """
-        .format(import_statement = (fn_import[self.statistic_name] + "\n" 
-                                    if fn_import[self.statistic_name] is not None
-                                    else ""),
+        return "\n{import_statement}\nop_{idx} = {repr}\n\nex_{idx} = op_{idx}.apply(ex_{prev_idx})" \
+            .format(import_statement = (fn_import[self.statistic_name]
+                                        if fn_import[self.statistic_name] is not None
+                                        else ""),
                 repr = repr(op),
                 idx = idx,
-                prev_idx = idx - 1))
-        pass
+                prev_idx = idx - 1)
 
 
 @provides(IOperationPlugin)

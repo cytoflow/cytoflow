@@ -238,42 +238,42 @@ class LogicleScale(HasStrictTraits):
     @cached_property
     def _get__T(self):
         "The range of possible data values"
-        if self.experiment:
-            if self.channel and self.channel in self.experiment.channels:
-                if "range" in self.experiment.metadata[self.channel]:
-                    return float(self.experiment.metadata[self.channel]["range"])
-                else:
-                    return float(self.experiment.data[self.channel].max())
-            elif self.condition and self.condition in self.experiment.conditions:
-                return float(self.experiment.data[self.condition].max())
-            elif self.statistic in self.experiment.statistics \
-                 and not self.error_statistic in self.experiment.statistics:
-                stat = self.experiment.statistics[self.statistic]
-                assert is_numeric(stat)
-                return float(stat.max())
-            elif self.statistic in self.experiment.statistics and \
-                 self.error_statistic in self.experiment.statistics:
-                stat = self.experiment.statistics[self.statistic]
-                err_stat = self.experiment.statistics[self.error_statistic]
-                
-                try:
-                    err_max = max([max(x) for x in err_stat])
-                    return float(err_max)
-                except (TypeError, IndexError):
-                    err_max = err_stat.max()
-                    stat_max = stat.max()
-
-                    return float(stat_max + err_max)
-            elif self.data.size > 0:
-                return float(self.data.max())
+        if self.experiment is None:
+            return Undefined
+        
+        if self.channel and self.channel in self.experiment.channels:
+            if "range" in self.experiment.metadata[self.channel]:
+                return float(self.experiment.metadata[self.channel]["range"])
             else:
-                return Undefined
+                return float(self.experiment.data[self.channel].max())
+        elif self.condition and self.condition in self.experiment.conditions:
+            return float(self.experiment.data[self.condition].max())
+        elif self.statistic in self.experiment.statistics \
+             and not self.error_statistic in self.experiment.statistics:
+            stat = self.experiment.statistics[self.statistic]
+            assert is_numeric(stat)
+            return float(stat.max())
+        elif self.statistic in self.experiment.statistics and \
+             self.error_statistic in self.experiment.statistics:
+            stat = self.experiment.statistics[self.statistic]
+            err_stat = self.experiment.statistics[self.error_statistic]
+            
+            try:
+                err_max = max([max(x) for x in err_stat])
+                return float(err_max)
+            except (TypeError, IndexError):
+                err_max = err_stat.max()
+                stat_max = stat.max()
+
+                return float(stat_max + err_max)
+        elif self.data.size > 0:
+            return float(self.data.max())
         else:
             return Undefined
         
     @cached_property
     def _get_W(self):
-        if not self.experiment:
+        if self.experiment is None:
             return Undefined
         
         if self._W is not Undefined:

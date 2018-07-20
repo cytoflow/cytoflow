@@ -49,14 +49,14 @@ class TestDensityGate(ImportedDataTest):
    
     def testChangeChannels(self):
         self.op.xchannel = "B1-A"
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 30))
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
          
         self.op.do_estimate = True
         self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
         
         self.op.ychannel = "V2-A"
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 30))
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
          
         self.op.do_estimate = True
@@ -65,14 +65,14 @@ class TestDensityGate(ImportedDataTest):
 
     def testChangeScale(self):
         self.op.xscale = "log"
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 30))
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
          
         self.op.do_estimate = True
         self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
 
         self.op.yscale = "log"
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 30))
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
          
         self.op.do_estimate = True
@@ -80,7 +80,7 @@ class TestDensityGate(ImportedDataTest):
         
     def testChangeBy(self):
         self.op.by = ["Dox"]
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 30))
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
          
         self.op.do_estimate = True
@@ -88,12 +88,12 @@ class TestDensityGate(ImportedDataTest):
         
     def testChangeParams(self):
         self.op.keep = 0.5
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 30))
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
    
     def testChangeSubset(self):
         self.op.subset_list[0].selected = ["A"]
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 30))
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
          
         self.op.do_estimate = True

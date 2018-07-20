@@ -30,7 +30,7 @@ class TestColorTranslation(TasbeTest):
 
         wi = WorkflowItem(operation = op)
         self.workflow.workflow.append(wi)        
-        self.assertTrue(wait_for(wi, 'status', lambda v: v == 'valid', 5))
+        self.assertTrue(wait_for(wi, 'status', lambda v: v == 'valid', 30))
  
         plugin = ColorTranslationPlugin()
         self.op = op = plugin.get_operation()
@@ -63,7 +63,7 @@ class TestColorTranslation(TasbeTest):
         self.op.controls_list.append(_Control(from_channel = "PE-Tx-Red-YG-A",
                                               to_channel = "FITC-A",
                                               file = self.rby_file))
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 30))
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
         
         self.op.do_estimate = True
@@ -71,7 +71,7 @@ class TestColorTranslation(TasbeTest):
   
     def testChangeMixtureModel(self):
         self.op.mixture_model = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 30))
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
         
         self.op.do_estimate = True
@@ -79,7 +79,7 @@ class TestColorTranslation(TasbeTest):
   
     def testChangeSubset(self):
         self.op.subset_list[0].selected_t = False
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 30))
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
         
         self.op.do_estimate = True
@@ -91,7 +91,7 @@ class TestColorTranslation(TasbeTest):
 
     def testPlotMixtureModel(self):
         self.op.mixture_model = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 30))
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
         
         self.op.do_estimate = True

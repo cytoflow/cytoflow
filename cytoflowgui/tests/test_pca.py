@@ -49,35 +49,35 @@ class TestPCA(ImportedDataTest):
         
     def testRemoveChannel(self):
         self.op.channels_list.pop()
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 30))
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
 
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
         
     def testAddChannel(self):
         self.op.channels_list.append(_Channel(channel = "B1-A", scale = "log"))
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 30))
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
 
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
    
     def testComponents(self):
         self.op.num_components = 3
         
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 30))
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
 
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
 
     def testChangeScale(self):
         self.op.channels_list[0].scale = "logicle"
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 30))
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
          
         self.op.do_estimate = True
@@ -85,7 +85,7 @@ class TestPCA(ImportedDataTest):
         
     def testChangeWhiten(self):
         self.op.whiten = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 30))
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
          
         self.op.do_estimate = True
@@ -93,7 +93,7 @@ class TestPCA(ImportedDataTest):
         
     def testChangeBy(self):
         self.op.by = ["Dox"]
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 30))
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
          
         self.op.do_estimate = True
@@ -101,7 +101,7 @@ class TestPCA(ImportedDataTest):
 
     def testChangeSubset(self):
         self.op.subset_list[0].selected = ["A"]
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 5))
+        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 30))
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
          
         self.op.do_estimate = True

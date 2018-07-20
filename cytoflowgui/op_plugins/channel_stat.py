@@ -63,7 +63,7 @@ from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_E
 from cytoflowgui.subset import ISubset, SubsetListEditor
 from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin
 from cytoflowgui.workflow import Changed
-from cytoflowgui.serialization import camel_registry, traits_repr, dedent
+from cytoflowgui.serialization import camel_registry, traits_repr
 
 ChannelStatisticOp.__repr__ = traits_repr
 
@@ -161,25 +161,27 @@ class ChannelStatisticPluginOp(PluginOpMixin, ChannelStatisticOp):
         op.copy_traits(self, op.copyable_trait_names())
         
         fn_import = {"Mean" : "from numpy import mean",
-                  "Geom.Mean" : None,
-                  "Count" : None,
-                  "Std.Dev" : "from numpy import std",
-                  "Geom.SD" : None,
-                  "SEM" : "from scipy.stats import sem",
-                  "Geom.SEM" : None,
-                  "Mean 95% CI" : "from numpy import mean\nmean_ci = lambda x: ci(x, mean, boots = 100)",
-                  "Geom.Mean 95% CI" : "geom_mean_ci = lambda x: ci(x, geom_mean, boots = 100)"
+                     "Median" : "from numpy import median",
+                     "Geom.Mean" : None,
+                     "Count" : None,
+                     "Std.Dev" : "from numpy import std",
+                     "Geom.SD" : None,
+                     "SEM" : "from scipy.stats import sem",
+                     "Geom.SEM" : None,
+                     "Mean 95% CI" : "from numpy import mean",
+                     "Geom.Mean 95% CI" : None
                   }
         
         fn_name = {"Mean" : "mean",
+                   "Median" : "median",
                    "Geom.Mean" : "geom_mean",
                    "Count" : "len",
                    "Std.Dev" : "std",
                    "Geom.SD" : "geom_sd_range",
                    "SEM" : "sem",
                    "Geom.SEM" : "geom_sem_range",
-                   "Mean 95% CI" : "mean_ci",
-                   "Geom.Mean 95% CI" : "geom_mean_ci"
+                   "Mean 95% CI" : "lambda x: ci(x, mean, boots = 100)",
+                   "Geom.Mean 95% CI" : "lambda x: ci(x, geom_mean, boots = 100)"
                    }
         
         op.function = summary_functions[self.statistic_name]
@@ -187,21 +189,16 @@ class ChannelStatisticPluginOp(PluginOpMixin, ChannelStatisticOp):
         try:
             # this doesn't work for builtins like "len"
             op.function.__name__ = fn_name[self.statistic_name]
-        except:
+        except AttributeError:
             pass
         
-        return dedent("""
-        {import_statement}
-        op_{idx} = {repr}
-                
-        ex_{idx} = op_{idx}.apply(ex_{prev_idx})
-        """
-        .format(import_statement = (fn_import[self.statistic_name] + "\n" 
-                                    if fn_import[self.statistic_name] is not None
-                                    else ""),
-                repr = repr(op),
-                idx = idx,
-                prev_idx = idx - 1))
+        return "\n{import_statement}\nop_{idx} = {repr}\n\nex_{idx} = op_{idx}.apply(ex_{prev_idx})"\
+            .format(import_statement = (fn_import[self.statistic_name]
+                                        if fn_import[self.statistic_name] is not None
+                                        else ""),
+                    repr = repr(op),
+                    idx = idx,
+                    prev_idx = idx - 1)
 
 @provides(IOperationPlugin)
 class ChannelStatisticPlugin(Plugin, PluginHelpMixin):
