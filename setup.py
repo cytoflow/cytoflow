@@ -81,7 +81,7 @@ setup(
                         'statsmodels==0.9.0',
                         'envisage==4.6.0',
                         'camel==0.1.2',
-                        'yapf==0.20.2',
+                        'yapf==0.22.0',
                         'fcsparser==0.2.0',
                         'pyopengl==3.1.1a1'] 
                 if not on_rtd else ['sphinx==1.7.7'],

@@ -1,8 +1,8 @@
 {% set name = "yapf" %}
-{% set version = "0.20.2" %}
+{% set version = "0.22.0" %}
 {% set file_ext = "tar.gz" %}
 {% set hash_type = "sha256" %}
-{% set hash_value = "7f5efdb7edf0318b91e53721d934580a77153e24a222f52f6e1c3b7629aead43" %}
+{% set hash_value = "a98a6eacca64d2b920558f4a2f78150db9474de821227e60deaa29f186121c63" %}
 
 package:
   name: '{{ name|lower }}'
@@ -20,10 +20,10 @@ build:
 
 requirements:
   host:
-    - python=3.5.4
+    - python
     - setuptools
   run:
-    - python=3.5.4
+    - python
 
 test:
   imports:
