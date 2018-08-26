@@ -150,7 +150,7 @@ class BaseView(HasStrictTraits):
         sns.set_context(sns_context)
             
         g = sns.FacetGrid(data, 
-                          size = 6 / cols,
+                          height = 6 / cols,
                           aspect = 1.5,
                           col = (self.xfacet if self.xfacet else None),
                           row = (self.yfacet if self.yfacet else None),
