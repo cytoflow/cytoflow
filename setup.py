@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from setuptools import setup, find_packages, Extension
-import io, os, re
+import io, os
 
 import versioneer
 
@@ -65,14 +65,14 @@ setup(
     
     # Project uses reStructuredText, so ensure that the docutils get
     # installed or upgraded on the target machine
-    install_requires = ['numpy==1.13.3',
-                        'pandas==0.23.1',
-                        'matplotlib==2.2.2',  
+    install_requires = ['numpy==1.15.0',
+                        'pandas==0.23.4',
+                        'matplotlib==2.2.3',  
                         'bottleneck==1.2.1',
-                        'numexpr==2.6.5',
+                        'numexpr==2.6.7',
                         'scipy==1.1.0',
                         'scikit-learn==0.19.1',
-                        'seaborn==0.8.1',
+                        'seaborn==0.9.0',
                         'traits==4.6.0',
                         'pyface==6.0.0',
                         'traitsui==6.0.0',
@@ -84,7 +84,7 @@ setup(
                         'yapf==0.20.2',
                         'fcsparser==0.2.0',
                         'pyopengl==3.1.1a1'] 
-                if not on_rtd else ['sphinx==1.7.5'],
+                if not on_rtd else ['sphinx==1.7.7'],
                         
     # GUI also requires PyQt4 >= 5.9.2, but it's not available via pypi and 
     # distutils.  Install it locally!
