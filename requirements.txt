@@ -13,6 +13,7 @@ envisage==4.6.0
 nbformat==4.4.0
 python-dateutil==2.7.3
 statsmodels==0.9.0
+pyopengl==3.1.1a1
 
 # not in conda
 fcsparser==0.2.0
