@@ -36,7 +36,6 @@ requirements:
     - camel==0.1.2
     - yapf==0.22.0
     - seaborn==0.9.0
-    - pyopengl==3.1.1a1
     - mock==2.0.0
 
   run:
@@ -60,7 +59,6 @@ requirements:
     - camel==0.1.2
     - yapf==0.22.0
     - seaborn==0.9.0
-    - pyopengl==3.1.1a1
 
 
 test:

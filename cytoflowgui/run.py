@@ -64,7 +64,7 @@ def run_gui():
     
     # so now i guess we depend on opengl too. 
     
-    from OpenGL import GL  # @UnresolvedImport @UnusedImport
+#     from OpenGL import GL  # @UnresolvedImport @UnusedImport
     
     # check that we're using the right Qt API
     from pyface.qt import qt_api
