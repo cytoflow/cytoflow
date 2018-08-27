@@ -138,7 +138,7 @@ def run_gui():
                      logging.WARN,
                      logging.ERROR,
                      logging.FATAL] [ int(msg_type) ]
-        logging.log(log_level, 'Qt message: ' + msg_string.decode('utf-8'))
+        logging.log(log_level, 'Qt message: ' + msg_string)
         
     from pyface.qt.QtCore import qInstallMessageHandler  # @UnresolvedImport
     qInstallMessageHandler(QtMsgHandler)
