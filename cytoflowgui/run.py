@@ -132,7 +132,7 @@ def run_gui():
     # define and install a message handler for Qt errors
     from traits.api import push_exception_handler
                              
-    def QtMsgHandler(msg_type, msg_string):
+    def QtMsgHandler(msg_type, msg_context, msg_string):
         # Convert Qt msg type to logging level
         log_level = [logging.DEBUG,
                      logging.WARN,
