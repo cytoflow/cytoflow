@@ -67,7 +67,7 @@ setup(
     # installed or upgraded on the target machine
     install_requires = ['numpy==1.15.0',
                         'pandas==0.23.4',
-                        'matplotlib==2.2.3',  
+                        'matplotlib==2.2.2',  
                         'bottleneck==1.2.1',
                         'numexpr==2.6.7',
                         'scipy==1.1.0',
