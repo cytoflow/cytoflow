@@ -311,7 +311,7 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
             # convert the Agg rendered image -> qImage
             qImage = QtGui.QImage(self.buffer, self.buffer_width,
                                   self.buffer_height,
-                                  QtGui.QImage.Format_ARGB32)
+                                  QtGui.QImage.Format_RGBA8888)
             # get the rectangle for the image
             rect = qImage.rect()
             p = QtGui.QPainter(self)
@@ -477,11 +477,8 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
             
         with self.buffer_lock:
             FigureCanvasAgg.draw(self)
-                
-            if QtCore.QSysInfo.ByteOrder == QtCore.QSysInfo.LittleEndian:
-                self.buffer = self.renderer._renderer.tostring_bgra()
-            else:
-                self.buffer = self.renderer._renderer.tostring_argb()    
+            
+            self.buffer = self.renderer.buffer_rgba()  
                 
             self.buffer_width = self.renderer.width
             self.buffer_height = self.renderer.height
