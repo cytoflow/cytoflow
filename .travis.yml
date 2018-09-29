@@ -12,7 +12,7 @@ matrix:
       dist: trusty
       
     - os: osx
-      osx_image: xcode6.4
+#      osx_image: xcode6.4
 
 addons:
   apt:
@@ -55,7 +55,7 @@ install:
   # build and install conda recipe
   - conda render packaging/conda_recipes/cytoflow
   - conda build packaging/conda_recipes/cytoflow
-  - conda create --yes --quiet --name=cytoflow python==3.6.6 nomkl
+  - conda create --yes --quiet --name=cytoflow python==3.7.0 nomkl
   - source activate cytoflow
   - conda install --yes --quiet --use-local --only-deps cytoflow
   - python setup.py develop
@@ -71,8 +71,8 @@ script: nose2 -c packaging/nose2.cfg -s cytoflow/tests -N 2
 
 after_success:
 
-  - conda install --yes --quiet "sphinx==1.7.7" 
-  - pip install "pyinstaller==3.3.1"
+  - conda install --yes --quiet "sphinx==1.8.1" 
+  - pip install "pyinstaller==3.4.0"
   - python setup.py build_sphinx -b embedded_help
 
   - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then python setup.py sdist; fi
