@@ -82,7 +82,7 @@ test_script:
 
 after_test:
   # Install packaging requirements
-  - conda install "sphinx==1.8.1"
+  - conda install --yes --quiet "sphinx==1.8.1"
   - pip.exe install "pyinstaller==3.4.0"
   
   # Build PyPI packages
