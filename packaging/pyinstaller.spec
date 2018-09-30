@@ -16,6 +16,7 @@ a = Analysis(['../cytoflowgui/run.py'],
              ],
              hookspath=['packaging'],
              runtime_hooks=['packaging/rthook_qtapi.py',
+                            'packaging/rthook_qt5webengine.py',
                             'packaging/rthook_seaborn.py'
                             ],
              excludes=['gi.repository.Gio', 'gi.repository.GModule',
