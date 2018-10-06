@@ -8,7 +8,7 @@ source:
 
 build:
   number: {{ environ.get('CONDA_BUILD_NUMBER', '0') }}
-  string: {{ environ.get('CONDA_BUILD_STRING', 'py35_none') }}
+  string: {{ environ.get('CONDA_BUILD_STRING', 'py36_none') }}
   entry_points:
     - cytoflow = cytoflowgui.run:run_gui
     - cf-channel_voltages = cytoflow.scripts.channel_voltages:main
