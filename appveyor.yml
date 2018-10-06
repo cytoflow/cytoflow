@@ -88,6 +88,8 @@ after_test:
   # version from PyPI.  In the meantime, we're going to use a submodule
   # that has a version that works.
   # - pip.exe install "pyinstaller==3.4.0"
+  - git submodule init
+  - git submodule update
   - cd packaging\pyinstaller
   - python setup.py install
   - cd ..\..
