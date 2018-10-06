@@ -83,7 +83,14 @@ test_script:
 after_test:
   # Install packaging requirements
   - conda install --yes --quiet "sphinx==1.8.1"
-  - pip.exe install "pyinstaller==3.4.0"
+
+  # when PyInstaller supports Conda's qt5, we'll go back to using the 
+  # version from PyPI.  In the meantime, we're going to use a submodule
+  # that has a version that works.
+  # - pip.exe install "pyinstaller==3.4.0"
+  - cd packaging\pyinstaller
+  - python setup.py install
+  - cd ..\..
   
   # Build PyPI packages
   - "python setup.py build_sphinx -b embedded_help"
