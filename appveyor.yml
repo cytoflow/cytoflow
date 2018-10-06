@@ -112,8 +112,8 @@ after_test:
   - deactivate
   - python packaging\move_conda_package.py
   
-  - "IF %PYTHON_ARCH% EQU 32 move build\\lib.win32-3.6\cytoflow\\utility\\logicle_ext\\_Logicle*.pyd dist\\"
-  - "IF %PYTHON_ARCH% EQU 64 move build\\lib.win-amd64-3.666666\\cytoflow\\utility\\logicle_ext\\_Logicle*.pyd dist\\"
+  - "IF %PYTHON_ARCH% EQU 32 move build\\lib.win32-3.6\\cytoflow\\utility\\logicle_ext\\_Logicle*.pyd dist\\"
+  - "IF %PYTHON_ARCH% EQU 64 move build\\lib.win-amd64-3.6\\cytoflow\\utility\\logicle_ext\\_Logicle*.pyd dist\\"
 
 on_success:
 # from https://github.com/theochem/python-cython-ci-example/blob/master/.appveyor.yml
