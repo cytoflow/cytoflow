@@ -16,9 +16,9 @@ a = Analysis(['../cytoflowgui/run.py'],
              ],
              hookspath=['packaging'],
              runtime_hooks=['packaging/rthook_qtapi.py',
+                            'packaging/rthook_seaborn.py',
                             'packaging/rthook_qt5webengine.py',
-                            'packaging/rthook_seaborn.py'
-                            ],
+                            'packaging/rthook_qtconf.py'],
              excludes=['gi.repository.Gio', 'gi.repository.GModule',
                        'gi.repository.GObject', 'gi.repository.Gtk',
                        'gi.repository.Gdk', 'gi.repository.Atk',
@@ -69,22 +69,22 @@ exe = EXE(pyz,
           icon='cytoflowgui/images/icon.ico')
 
 # one-dirctory
-# exe = EXE(pyz,
-#           a.scripts,
-#           exclude_binaries=True,
-#           name='cytoflow',
-#           debug=False,
-#           strip=False,
-#           upx=False,
-#           console=False)
-# 
-# coll = COLLECT(exe,
-#                a.binaries,
-#                a.zipfiles,
-#                a.datas,
-#                strip=False,
-#                upx=False,
-#                name = 'cytoflow')
+#exe = EXE(pyz,
+#          a.scripts,
+#          exclude_binaries=True,
+#          name='cytoflow',
+#          debug=False,
+#          strip=False,
+#          upx=False,
+#          console=False)
+
+#coll = COLLECT(exe,
+#               a.binaries,
+#               a.zipfiles,
+#               a.datas,
+#               strip=False,
+#               upx=False,
+#               name = 'cytoflow')
 
 
 
