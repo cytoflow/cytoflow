@@ -11,9 +11,10 @@ environment:
     # Pre-installed Python versions, which Appveyor may upgrade to
     # a later point release.
 
-    - PYTHON: "C:\\Miniconda36"
-      PYTHON_VERSION: "3.6.x"   # currently 3.5.2
-      PYTHON_ARCH: "32"
+    # disable 32-bit build
+    #- PYTHON: "C:\\Miniconda36"
+    #  PYTHON_VERSION: "3.6.x"   # currently 3.5.2
+    #  PYTHON_ARCH: "32"
 
     - PYTHON: "C:\\Miniconda36-x64"
       PYTHON_VERSION: "3.6.x"       # currently 3.5.2
