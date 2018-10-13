@@ -99,14 +99,14 @@ after_test:
   - "python setup.py bdist_wheel"
   
   # Build one-click
-  #- "pyinstaller packaging/pyinstaller.spec"
-  #- "pyi-archive_viewer -l dist\\cytoflow.exe"
-  #- set CONDA_TAG
-  #- set PYTHON_ARCH
-  #- dir dist
-  #- "IF %PYTHON_ARCH% EQU 32 move dist\\cytoflow.exe dist\\cytoflow-%CONDA_TAG%-win32.exe"
-  #- "IF %PYTHON_ARCH% EQU 64 move dist\\cytoflow.exe dist\\cytoflow-%CONDA_TAG%-win-amd64.exe"
-  - IF "%APPVEYOR_REPO_TAG%"=="false" python packaging\rename.py cytoflow-.*?(cp36.*whl) cytoflow-dev-\1 dist\*.whl
+  - "pyinstaller packaging/pyinstaller.spec"
+  - "pyi-archive_viewer -l dist\\cytoflow.exe"
+  - set CONDA_TAG
+  - set PYTHON_ARCH
+  - dir dist
+  - "IF %PYTHON_ARCH% EQU 32 move dist\\cytoflow.exe dist\\cytoflow-%CONDA_TAG%-win32.exe"
+  - "IF %PYTHON_ARCH% EQU 64 move dist\\cytoflow.exe dist\\cytoflow-%CONDA_TAG%-win-amd64.exe"
+  - IF "%APPVEYOR_REPO_TAG%"=="false" python packaging\rename.py cytoflow-.*?(cp35.*whl) cytoflow-dev-\1 dist\*.whl
   
   # Move conda package to dist folder
   - deactivate
