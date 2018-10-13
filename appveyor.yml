@@ -87,12 +87,12 @@ after_test:
   # when PyInstaller supports Conda's qt5, we'll go back to using the 
   # version from PyPI.  In the meantime, we're going to use a submodule
   # that has a version that works.
-  # - pip.exe install "pyinstaller==3.4.0"
-  - git submodule init
-  - git submodule update
-  - cd packaging\pyinstaller
-  - python setup.py install
-  - cd ..\..
+  - pip.exe install "pyinstaller==3.4.0"
+#   - git submodule init
+#   - git submodule update
+#   - cd packaging\pyinstaller
+#   - python setup.py install
+#   - cd ..\..
   
   # Build PyPI packages
   - "python setup.py build_sphinx -b embedded_help"
