@@ -13,7 +13,13 @@ import sys
 qrc_path = os.path.join(sys._MEIPASS, 'qt_conf.qrc')
 qrc_py_path = os.path.join(sys._MEIPASS, 'qt_conf.py')
 qt_conf_path = os.path.join(sys._MEIPASS, 'qt.conf')
+
 qt_path = os.path.join(sys._MEIPASS, 'PyQt5', 'Qt')
+
+# QT's init file format requires front-slashes even on windows
+if sys.platform.startswith('win'):
+   qt_path = qt_path.replace("\\", '/')
+    
 
 with open(qt_conf_path, 'w') as qt_conf:
     qt_conf.write('[Paths]\nPrefix = {}\n'.format(qt_path))
