@@ -137,7 +137,52 @@ class CytoflowApplication(TasksApplication):
     ###########################################################################
     # Private interface.
     ###########################################################################
+     
+    def _load_state(self):
+        """ 
+        Loads saved application state, if possible.  Overload the envisage-
+        defined one to fix a py3k bug and increment the TasksApplicationState
+        version.
+         
+        """
+        state = TasksApplicationState(version = 2)
+        filename = os.path.join(self.state_location, 'application_memento')
+        if os.path.exists(filename):
+            # Attempt to unpickle the saved application state.
+            try:
+                with open(filename, 'rb') as f:
+                    restored_state = pickle.load(f)
+                if state.version == restored_state.version:
+                    state = restored_state
+                     
+                    # make sure the active task is the main window
+                    state.previous_window_layouts[0].active_task = 'edu.mit.synbio.cytoflowgui.flow_task'
+                else:
+                    logger.warn('Discarding outdated application layout')
+            except:
+                # If anything goes wrong, log the error and continue.
+                logger.exception('Had a problem restoring application layout from %s',
+                                 filename)
+                  
+        self._state = state
+     
+    def _save_state(self):
+        """
+        Saves the application window size, position, panel locations, etc
+        """
 
+        # Grab the current window layouts.
+        window_layouts = [w.get_window_layout() for w in self.windows]
+        self._state.previous_window_layouts = window_layouts
+     
+        # Attempt to pickle the application state.
+        filename = os.path.join(self.state_location, 'application_memento')
+        try:
+            with open(filename, 'wb') as f:
+                pickle.dump(self._state, f)
+        except Exception as e:
+            # If anything goes wrong, log the error and continue.
+            logger.exception('Had a problem saving application layout: {}'.format(str(e)))
     #### Trait initializers ###################################################
 
     def _default_layout_default(self):
