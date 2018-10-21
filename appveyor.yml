@@ -40,13 +40,13 @@ install:
   - "python --version"
   - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
   
-  # install swig and nsis
+  # install swig
   - choco install swig --version 3.0.2 --yes --limit-output
-  - choco install nsis --version 3.03 --yes --limit-output
 
   # Install the build and runtime dependencies of the project.
   - conda update --yes conda
   - conda config --add channels bpteague
+  - conda config --add channels nsis
   - conda install --yes --quiet anaconda-client conda-build
 
   # Set up conda recipe variables
@@ -84,7 +84,7 @@ test_script:
 
 after_test:
   # Install packaging requirements
-  - conda install --yes --quiet "sphinx==1.8.1"
+  - conda install --yes --quiet "sphinx==1.8.1" "nsis=3.*"
 
   # when PyInstaller supports Conda's qt5, we'll go back to using the 
   # version from PyPI.  In the meantime, we're going to use a submodule
