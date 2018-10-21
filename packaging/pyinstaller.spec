@@ -55,36 +55,38 @@ a.datas -= remove_items
 pyz = PYZ(a.pure, a.zipped_data, cipher=None)
 
 # one-file
-exe = EXE(pyz,
-          a.scripts,
-          a.binaries,
-          a.zipfiles,
-          a.datas,
-#          [ ('v', None, 'OPTION') ],  # enable for more verbosity on starup
-          name='cytoflow',
-          debug=False,
-          strip=False,
-          upx=True,
-          console=True,
-          icon='cytoflowgui/images/icon.ico')
-
-# one-dirctory
 #exe = EXE(pyz,
 #          a.scripts,
-#          exclude_binaries=True,
+#          a.binaries,
+#          a.zipfiles,
+#          a.datas,
+##          [ ('v', None, 'OPTION') ],  # enable for more verbosity on starup
 #          name='cytoflow',
 #          debug=False,
 #          strip=False,
-#          upx=False,
-#          console=False)
+#          upx=True,
+#          console=True,
+#          icon='cytoflowgui/images/icon.ico')
 
-#coll = COLLECT(exe,
-#               a.binaries,
-#               a.zipfiles,
-#               a.datas,
-#               strip=False,
-#               upx=False,
-#               name = 'cytoflow')
+# one-dirctory
+exe = EXE(pyz,
+          a.scripts,
+          exclude_binaries=True,
+          name='cytoflow',
+          debug=False,
+          strip=False,
+          upx=False,
+          console=False,
+          icon='cytoflowgui/images/icon.ico')
+
+coll = COLLECT(exe,
+               a.binaries,
+               a.zipfiles,
+               a.datas,
+               strip=False,
+               upx=False,
+               name = 'cytoflow',
+               icon='cytoflowgui/images/icon.ico')
 
 
 

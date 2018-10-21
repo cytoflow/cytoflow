@@ -79,9 +79,9 @@ after_success:
   - python setup.py bdist_wheel
 
   # Build the one-click executables
-  - LD_LIBRARY_PATH=${CONDA_PREFIX}/lib pyinstaller --log-level=DEBUG packaging/pyinstaller.spec
+  - pyinstaller --log-level=DEBUG packaging/pyinstaller.spec
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then cd dist/; mv Cytoflow.app Cytoflow-${CONDA_TAG}.app; zip -r cytoflow-${CONDA_TAG}.macos.zip Cytoflow-${CONDA_TAG}.app/; rm -rf Cytoflow-${CONDA_TAG}.app cytoflow; cd ..; fi
-  - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then mv dist/cytoflow dist/cytoflow-${CONDA_TAG}-linux.x86_64; fi
+  - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then cd dist; mv cytoflow cytoflow-${CONDA_TAG}; tar cjf cytoflow-${CONDA_TAG}-tar.bz2 cytoflow-${CONDA_TAG}; cd ..; fi
   
   # Zip up the examples
   - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then cd docs; zip -r cytoflow-${CONDA_TAG}-examples-basic.zip examples-basic; zip -r cytoflow-${CONDA_TAG}-examples-advanced.zip examples-advanced; mv cytoflow-${CONDA_TAG}-examples-*.zip ../dist; cd ..; fi
@@ -92,7 +92,7 @@ after_success:
   - python packaging/move_conda_package.py
   
   # rename the wheels and source dist
-  - if [[ -z $TRAVIS_TAG ]]; then rename 's/cytoflow-.*-(cp35.*\.whl)/cytoflow-dev-$1/' dist/*.whl; fi
+  - if [[ -z $TRAVIS_TAG ]]; then rename 's/cytoflow-.*-(cp36.*\.whl)/cytoflow-dev-$1/' dist/*.whl; fi
   - if [[ -z $TRAVIS_TAG ]]; then rename 's/cytoflow-.*(\.tar\.gz)/cytoflow-dev.tar.gz/' dist/*.tar.gz; fi
   - ls -al dist/*
 
