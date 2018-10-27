@@ -80,7 +80,7 @@ after_success:
 
   # Build the one-click executables
   - LD_LIBRARY_PATH=${CONDA_PREFIX}/lib pyinstaller --log-level=DEBUG packaging/pyinstaller.spec
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then cd dist/; mv Cytoflow.app Cytoflow-${CONDA_TAG}.app; zip -r cytoflow-${CONDA_TAG}.macos.zip Cytoflow-${CONDA_TAG}.app/; rm -rf Cytoflow-${CONDA_TAG}.app cytoflow; cd ..; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then cd dist/; rm -rf Cytoflow.app/Contents/MacOS; mv cytoflow Cytoflow.app/Contents/MacOS; mv Cytoflow.app Cytoflow-${CONDA_TAG}.app; zip -r cytoflow-${CONDA_TAG}.macos.zip Cytoflow-${CONDA_TAG}.app/; rm -rf Cytoflow-${CONDA_TAG}.app cytoflow; cd ..; fi
   - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then cd dist; mv cytoflow cytoflow-${CONDA_TAG}; tar cjf cytoflow-${CONDA_TAG}.linux_x86-64.tar.bz2 cytoflow-${CONDA_TAG}; rm -rf cytoflow-${CONDA_TAG}; cd ..; fi
   
   # Zip up the examples
