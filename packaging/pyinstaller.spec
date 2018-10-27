@@ -53,29 +53,16 @@ a.datas -= remove_items
 
 pyz = PYZ(a.pure, a.zipped_data, cipher=None)
 
-# one-file
-#exe = EXE(pyz,
-#          a.scripts,
-#          a.binaries,
-#          a.zipfiles,
-#          a.datas,
-##          [ ('v', None, 'OPTION') ],  # enable for more verbosity on starup
-#          name='cytoflow',
-#          debug=False,
-#          strip=False,
-#          upx=True,
-#          console=True,
-#          icon='cytoflowgui/images/icon.ico')
-
-# one-dirctory
 exe = EXE(pyz,
           a.scripts,
+          [],
           exclude_binaries=True,
           name='cytoflow',
           debug=False,
           strip=False,
-          upx=False,
+          upx=True,
           console=False,
+          bootloader_ignore_signals=False,
           icon='cytoflowgui/images/icon.ico')
 
 coll = COLLECT(exe,
@@ -83,15 +70,14 @@ coll = COLLECT(exe,
                a.zipfiles,
                a.datas,
                strip=False,
-               upx=False,
-               name = 'cytoflow',
+               upx=True,
+               name='cytoflow',
                icon='cytoflowgui/images/icon.ico')
 
-
-
 if sys.platform == 'darwin':
-   app = BUNDLE(exe,
+   app = BUNDLE(coll,
                 name = "Cytoflow.app",
-                icon = "cytoflowgui/images/icon.icns")
+                icon = "cytoflowgui/images/icon.icns",
+                bundle_identifier=None)
 
 
