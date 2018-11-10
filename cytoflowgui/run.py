@@ -57,6 +57,8 @@ def log_excepthook(typ, val, tb):
                   .format(typ, val, tb_str))
                          
 def run_gui():
+    import os, sys
+    os.chdir(sys._MEIPASS)
     
     # this is ridiculous, but here's the situation.  Qt5 now uses Chromium
     # as their web renderer.  Chromium needs OpenGL.  if you don't
