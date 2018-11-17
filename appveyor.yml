@@ -101,13 +101,12 @@ after_test:
   
   # Build one-click
   - "pyinstaller packaging/pyinstaller.spec"
-  - dir dist
-  - "pyi-archive_viewer -l dist\\cytoflow.exe"
+  - "C:\Program Files (x86)\NSIS\makensis.exe" /NOCD packaging\installer.nsis
   - set CONDA_TAG
   - set PYTHON_ARCH
   - dir dist
-  - "IF %PYTHON_ARCH% EQU 32 move dist\\cytoflow.exe dist\\cytoflow-%CONDA_TAG%-win32.exe"
-  - "IF %PYTHON_ARCH% EQU 64 move dist\\cytoflow.exe dist\\cytoflow-%CONDA_TAG%-win-amd64.exe"
+  - "IF %PYTHON_ARCH% EQU 32 move dist\\cytoflow-installer.exe dist\\cytoflow-installer-%CONDA_TAG%-win32.exe"
+  - "IF %PYTHON_ARCH% EQU 64 move dist\\cytoflow.exe dist\\cytoflow-installer-%CONDA_TAG%-win-amd64.exe"
   - IF "%APPVEYOR_REPO_TAG%"=="false" python packaging\rename.py cytoflow-.*?(cp35.*whl) cytoflow-dev-\1 dist\*.whl
   
   # Move conda package to dist folder
@@ -116,6 +115,9 @@ after_test:
   
   - "IF %PYTHON_ARCH% EQU 32 move build\\lib.win32-3.6\\cytoflow\\utility\\logicle_ext\\_Logicle*.pyd dist\\"
   - "IF %PYTHON_ARCH% EQU 64 move build\\lib.win-amd64-3.6\\cytoflow\\utility\\logicle_ext\\_Logicle*.pyd dist\\"
+  
+  # remove the dist exe directory
+  - rmdir /S /Q dist\cytoflow
 
 on_success:
 # from https://github.com/theochem/python-cython-ci-example/blob/master/.appveyor.yml
