@@ -46,7 +46,6 @@ install:
   # Install the build and runtime dependencies of the project.
   - conda update --yes conda
   - conda config --add channels bpteague
-  - conda config --add channels nsis
   - conda install --yes --quiet anaconda-client conda-build
 
   # Set up conda recipe variables
@@ -84,7 +83,7 @@ test_script:
 
 after_test:
   # Install packaging requirements
-  - conda install --yes --quiet "sphinx==1.8.1" "nsis=3.*"
+  - conda install --yes --quiet "sphinx==1.8.1" 
 
   # when PyInstaller supports Conda's qt5, we'll go back to using the 
   # version from PyPI.  In the meantime, we're going to use a submodule
@@ -102,6 +101,7 @@ after_test:
   
   # Build one-click
   - "pyinstaller packaging/pyinstaller.spec"
+  - dir dist
   - "pyi-archive_viewer -l dist\\cytoflow.exe"
   - set CONDA_TAG
   - set PYTHON_ARCH
