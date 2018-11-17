@@ -1,0 +1,218 @@
+!define APPNAME "Cytoflow"
+!define DESCRIPTION "Better quantitative flow cytometry"
+# These three must be integers
+!define VERSIONMAJOR 1
+!define VERSIONMINOR 0
+!define VERSIONBUILD 0
+# These will be displayed by the "Click here for support information" link in "Add/Remove Programs"
+# It is possible to use "mailto:" links in here to open the email client
+!define HELPURL "https://github.com/bpteague/cytoflow/issues" # "Support Information" link
+!define UPDATEURL "http://bpteague.github.io/" # "Product Updates" link
+!define ABOUTURL "http://genepattern.uwstout.edu" # "Publisher" link
+# This is the size (in kB) of all the files copied into "Program Files"
+!define INSTALLSIZE 367000
+ 
+RequestExecutionLevel admin ;Require admin rights on NT6+ (When UAC is turned on)
+ 
+InstallDir "$PROGRAMFILES\${APPNAME}"
+ 
+# rtf or txt file - remember if it is txt, it must be in the DOS text format (\r\n)
+LicenseData "LICENSE.txt"
+# This will be in the installer/uninstaller's title bar
+Name "${APPNAME}"
+Icon "cytoflowgui\images\icon.ico"
+outFile "dist\cytoflow-installer.exe"
+ 
+!include LogicLib.nsh
+!include "packaging\UninstallLog.nsh"
+ 
+# Just three pages - license agreement, install location, and installation
+page license
+page directory
+Page instfiles
+ 
+!macro VerifyUserIsAdmin
+UserInfo::GetAccountType
+pop $0
+${If} $0 != "admin" ;Require admin rights on NT4+
+        messageBox mb_iconstop "Administrator rights required!"
+        setErrorLevel 740 ;ERROR_ELEVATION_REQUIRED
+        quit
+${EndIf}
+!macroend
+ 
+function .onInit
+	setShellVarContext all
+	!insertmacro VerifyUserIsAdmin
+functionEnd
+
+;--------------------------------
+; Configure UnInstall log to only remove what is installed
+;-------------------------------- 
+  ;Set the name of the uninstall log
+    !define UninstLog "uninstall.log"
+    Var UninstLog
+  ;The root registry to write to
+    !define REG_ROOT "HKLM"
+  ;The registry path to write to
+    !define REG_APP_PATH "Software\Cytoflow"
+  ;The registry path to write the uninstaller stuff
+    !define UNINSTALL_PATH "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}" 
+ 
+  ;Uninstall log file missing.
+    LangString UninstLogMissing 0 "${UninstLog} not found!$\r$\nUninstallation cannot proceed!"
+ 
+  ;AddItem macro
+    !define AddItem "!insertmacro AddItem"
+ 
+  ;BackupFile macro
+    !define BackupFile "!insertmacro BackupFile" 
+ 
+  ;BackupFiles macro
+    !define BackupFiles "!insertmacro BackupFiles" 
+ 
+  ;Copy files macro
+    !define CopyFiles "!insertmacro CopyFiles"
+ 
+  ;CreateDirectory macro
+    !define CreateDirectory "!insertmacro CreateDirectory"
+ 
+  ;CreateShortcut macro
+    !define CreateShortcut "!insertmacro CreateShortcut"
+ 
+  ;File macro
+    !define File "!insertmacro File"
+ 
+  ;Rename macro
+    !define Rename "!insertmacro Rename"
+ 
+  ;RestoreFile macro
+    !define RestoreFile "!insertmacro RestoreFile"    
+ 
+  ;RestoreFiles macro
+    !define RestoreFiles "!insertmacro RestoreFiles"
+ 
+  ;SetOutPath macro
+    !define SetOutPath "!insertmacro SetOutPath"
+ 
+  ;WriteRegDWORD macro
+    !define WriteRegDWORD "!insertmacro WriteRegDWORD" 
+ 
+  ;WriteRegStr macro
+    !define WriteRegStr "!insertmacro WriteRegStr"
+ 
+  ;WriteUninstaller macro
+    !define WriteUninstaller "!insertmacro WriteUninstaller"
+ 
+  Section -openlogfile
+    CreateDirectory "$INSTDIR"
+    IfFileExists "$INSTDIR\${UninstLog}" +3
+      FileOpen $UninstLog "$INSTDIR\${UninstLog}" w
+    Goto +4
+      SetFileAttributes "$INSTDIR\${UninstLog}" NORMAL
+      FileOpen $UninstLog "$INSTDIR\${UninstLog}" a
+      FileSeek $UninstLog 0 END
+  SectionEnd
+
+section "install"
+	# Files for the install directory - to build the installer, these should be in the same directory as the install script (this file)
+	${SetOutPath} $INSTDIR
+	# Files added here should be removed by the uninstaller (see section "uninstall")
+	${File} "dist\cytoflow\*.*"
+	# The uninstall log macro doesn't strip the relative paths, even though the File command does.
+	${AddItem} "$INSTDIR\*.*"
+ 
+	# Uninstaller - See function un.onInit and section "uninstall" for configuration
+	${WriteUninstaller} "$INSTDIR\uninstall.exe"
+ 
+	# Start Menu
+	${CreateShortcut} "$SMPROGRAMS\${APPNAME}.lnk" "$INSTDIR\cytoflow.exe" "" "$INSTDIR\icon.ico" ""
+ 
+	# Registry information for add/remove programs
+	${WriteRegStr} HKLM "${UNINSTALL_PATH}" "DisplayName" "${APPNAME} - ${DESCRIPTION}"
+	${WriteRegStr} HKLM "${UNINSTALL_PATH}" "UninstallString" "$\"$INSTDIR\uninstall.exe$\""
+	${WriteRegStr} HKLM "${UNINSTALL_PATH}" "QuietUninstallString" "$\"$INSTDIR\uninstall.exe$\" /S"
+	${WriteRegStr} HKLM "${UNINSTALL_PATH}" "InstallLocation" "$\"$INSTDIR$\""
+	${WriteRegStr} HKLM "${UNINSTALL_PATH}" "DisplayIcon" "$\"$INSTDIR\logo.ico$\""
+	${WriteRegStr} HKLM "${UNINSTALL_PATH}" "Publisher" "$\"${APPNAME}$\""
+	${WriteRegStr} HKLM "${UNINSTALL_PATH}" "HelpLink" "$\"${HELPURL}$\""
+	${WriteRegStr} HKLM "${UNINSTALL_PATH}" "URLUpdateInfo" "$\"${UPDATEURL}$\""
+	${WriteRegStr} HKLM "${UNINSTALL_PATH}" "URLInfoAbout" "$\"${ABOUTURL}$\""
+	${WriteRegStr} HKLM "${UNINSTALL_PATH}" "DisplayVersion" "$\"${VERSIONMAJOR}.${VERSIONMINOR}.${VERSIONBUILD}$\""
+	${WriteRegDWORD} HKLM "${UNINSTALL_PATH}" "VersionMajor" ${VERSIONMAJOR}
+	${WriteRegDWORD} HKLM "${UNINSTALL_PATH}" "VersionMinor" ${VERSIONMINOR}
+	# There is no option for modifying or repairing the install
+	${WriteRegDWORD} HKLM "${UNINSTALL_PATH}" "NoModify" 1
+	${WriteRegDWORD} HKLM "${UNINSTALL_PATH}" "NoRepair" 1
+	# Set the INSTALLSIZE constant (!defined at the top of this script) so Add/Remove Programs can accurately report the size
+	${WriteRegDWORD} HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}" "EstimatedSize" ${INSTALLSIZE}
+sectionEnd
+ 
+# Uninstaller
+ 
+function un.onInit
+	SetShellVarContext all
+ 
+	#Verify the uninstaller - last chance to back out
+	MessageBox MB_OKCANCEL "Uninstall ${APPNAME}?" IDOK next
+		Abort
+	next:
+	!insertmacro VerifyUserIsAdmin
+functionEnd
+ 
+;--------------------------------
+; Uninstaller
+;--------------------------------
+Section Uninstall
+  ;Can't uninstall if uninstall log is missing!
+  IfFileExists "$INSTDIR\${UninstLog}" +3
+    MessageBox MB_OK|MB_ICONSTOP "$(UninstLogMissing)"
+      Abort
+ 
+  Push $R0
+  Push $R1
+  Push $R2
+  SetFileAttributes "$INSTDIR\${UninstLog}" NORMAL
+  FileOpen $UninstLog "$INSTDIR\${UninstLog}" r
+  StrCpy $R1 -1
+ 
+  GetLineCount:
+    ClearErrors
+    FileRead $UninstLog $R0
+    IntOp $R1 $R1 + 1
+    StrCpy $R0 $R0 -2
+    Push $R0   
+    IfErrors 0 GetLineCount
+ 
+  Pop $R0
+ 
+  LoopRead:
+    StrCmp $R1 0 LoopDone
+    Pop $R0
+ 
+    IfFileExists "$R0\*.*" 0 +3
+      RMDir $R0  #is dir
+    Goto +9
+    IfFileExists $R0 0 +3
+      Delete $R0 #is file
+    Goto +6
+    StrCmp $R0 "${REG_ROOT} ${REG_APP_PATH}" 0 +3
+      DeleteRegKey ${REG_ROOT} "${REG_APP_PATH}" #is Reg Element
+    Goto +3
+    StrCmp $R0 "${REG_ROOT} ${UNINSTALL_PATH}" 0 +2
+      DeleteRegKey ${REG_ROOT} "${UNINSTALL_PATH}" #is Reg Element
+ 
+    IntOp $R1 $R1 - 1
+    Goto LoopRead
+  LoopDone:
+  FileClose $UninstLog
+  Delete "$INSTDIR\${UninstLog}"
+  RMDir "$INSTDIR"
+  Pop $R2
+  Pop $R1
+  Pop $R0
+ 
+  ;Remove registry keys
+  ; DeleteRegKey ${REG_ROOT} "${REG_APP_PATH}"
+  DeleteRegKey ${REG_ROOT} "${UNINSTALL_PATH}"
+SectionEnd
