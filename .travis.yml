@@ -77,9 +77,9 @@ after_success:
   # when PyInstaller supports Conda's qt5, we'll go back to using the 
   # version from PyPI.  In the meantime, we're going to use a submodule
   # that has a version that works.
-  - cd packaging\pyinstaller
+  - cd packaging/pyinstaller
   - python setup.py install
-  - cd ..\..
+  - cd ../..
   
   
   - python setup.py build_sphinx -b embedded_help
@@ -102,6 +102,7 @@ after_success:
   
   # rename the wheels and source dist
   - if [[ -z $TRAVIS_TAG ]]; then rename 's/cytoflow-.*-(cp36.*\.whl)/cytoflow-dev-$1/' dist/*.whl; fi
+  - if [[ -z $TRAVIS_TAG ]]; then rename 's/cytoflow-.*-(py3\.6.*\.egg)/cytoflow-dev-$1/' dist/*.egg; fi
   - if [[ -z $TRAVIS_TAG ]]; then rename 's/cytoflow-.*(\.tar\.gz)/cytoflow-dev.tar.gz/' dist/*.tar.gz; fi
   - ls -al dist/*
 
