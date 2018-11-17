@@ -58,7 +58,13 @@ def log_excepthook(typ, val, tb):
                          
 def run_gui():
     import os, sys
-    os.chdir(sys._MEIPASS)
+    try:
+       # if we're running as a one-click from a MacOS app,
+       # we need to reset the working directory
+       os.chdir(sys._MEIPASS)
+    except:
+       # if we're not running as a one-click, fail gracefully
+       pass
     
     # this is ridiculous, but here's the situation.  Qt5 now uses Chromium
     # as their web renderer.  Chromium needs OpenGL.  if you don't
@@ -228,6 +234,10 @@ def run_gui():
                               remote_connection = remote_connection,
                               filename = args.filename,
                               debug = args.debug)
+
+    from pyface.qt import QtGui
+    QtGui.QApplication.instance().setStyle(QtGui.QStyleFactory.create('Fusion'))
+
     app.run()
     remote_process.join()
     logging.shutdown()
