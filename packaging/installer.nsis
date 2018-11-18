@@ -10,7 +10,7 @@
 !define UPDATEURL "http://bpteague.github.io/" # "Product Updates" link
 !define ABOUTURL "http://genepattern.uwstout.edu" # "Publisher" link
 # This is the size (in kB) of all the files copied into "Program Files"
-!define INSTALLSIZE 367000
+!define INSTALLSIZE 811000
  
 RequestExecutionLevel admin ;Require admin rights on NT6+ (When UAC is turned on)
  
