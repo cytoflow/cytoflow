@@ -100,8 +100,8 @@ after_test:
   - "python setup.py bdist_wheel"
   
   # Build one-click
-  - "pyinstaller packaging/pyinstaller.spec"
-  - "C:\Program Files (x86)\NSIS\makensis.exe" /NOCD packaging\installer.nsis
+  - "pyinstaller packaging\\pyinstaller.spec"
+  - '"C:\Program Files (x86)\NSIS\makensis.exe" /NOCD packaging\installer.nsis'
   - set CONDA_TAG
   - set PYTHON_ARCH
   - dir dist
