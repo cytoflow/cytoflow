@@ -259,7 +259,7 @@ def start_remote_process():
         
         remote_process.daemon = True
         remote_process.start() 
-        running_event.wait()
+        #running_event.wait()
         
         remote_process_thread = threading.Thread(target = monitor_remote_process,
                                                  name = "monitor remote process",
