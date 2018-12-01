@@ -61,8 +61,7 @@ def run_gui():
     try:
        # if we're running as a one-click from a MacOS app,
        # we need to reset the working directory
-       # os.chdir(sys._MEIPASS)
-       pass
+       os.chdir(sys._MEIPASS)
     except:
        # if we're not running as a one-click, fail gracefully
        pass
