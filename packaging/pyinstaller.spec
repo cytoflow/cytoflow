@@ -55,13 +55,13 @@ pyz = PYZ(a.pure, a.zipped_data, cipher=None)
 
 exe = EXE(pyz,
           a.scripts,
-          [],
+          [('u', None, 'OPTION'), ('v', None, 'OPTION')],
           exclude_binaries=True,
           name='cytoflow',
-          debug=False,
+          debug=True,
           strip=False,
-          upx=True,
-          console=False,
+          upx=False,
+          console=True,
           bootloader_ignore_signals=False,
           icon='cytoflowgui/images/icon.ico')
 
