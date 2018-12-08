@@ -1,7 +1,7 @@
 # script defs
 
 !define APP_NAME "Cytoflow"
-!define INSTDIR_REG_ROOT "HKLM"
+!define INSTDIR_REG_ROOT "HKCU"
 !define INSTDIR_REG_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_NAME}"
 !define DESCRIPTION "Better quantitative flow cytometry"
 # These three must be integers
@@ -15,8 +15,17 @@
 !define ABOUTURL "http://genepattern.uwstout.edu" # "Publisher" link
 # This is the size (in kB) of all the files copied into "Program Files"
 !define INSTALLSIZE 1003520
+
+# install for current user only
+!define MULTIUSER_INSTALLMODE_INSTDIR "${APP_NAME}"
+
+!define MULTIUSER_EXECUTIONLEVEL Standard
+!define MULTIUSER_MUI 1
+#!define MULTIUSER_INSTALLMODE_COMMANDLINE 1
+
+!include MultiUser.nsh
  
-!include MUI.nsh
+!include MUI2.nsh
  
 !include "packaging\AdvUninstLog.nsh"
  
@@ -25,14 +34,15 @@ Icon "cytoflowgui\images\icon.ico"
 OutFile "dist\cytoflow-installer.exe"
 ShowInstDetails show
 ShowUninstDetails show
-InstallDir "$PROGRAMFILES\${APP_NAME}"
+#InstallDir "$PROGRAMFILES\${APP_NAME}"
 InstallDirRegKey ${INSTDIR_REG_ROOT} "${INSTDIR_REG_KEY}" "InstallDir"
  
 !insertmacro UNATTENDED_UNINSTALL
  
 !insertmacro MUI_PAGE_WELCOME
 !insertmacro MUI_PAGE_LICENSE "LICENSE.txt"
-!insertmacro MUI_PAGE_COMPONENTS
+#!insertmacro MULTIUSER_PAGE_INSTALLMODE
+#!insertmacro MUI_PAGE_COMPONENTS
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES
 !insertmacro MUI_PAGE_FINISH
@@ -83,6 +93,7 @@ Section "Main Application" sec01
 SectionEnd
  
 Function .onInit
+	!insertmacro MULTIUSER_INIT
 	!insertmacro UNINSTALL.LOG_PREPARE_INSTALL
 FunctionEnd
  
@@ -99,5 +110,6 @@ Section UnInstall
 SectionEnd
  
 Function UN.onInit
+        !insertmacro MULTIUSER_UNINIT
 	!insertmacro UNINSTALL.LOG_BEGIN_UNINSTALL
 FunctionEnd
