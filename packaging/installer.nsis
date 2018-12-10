@@ -105,6 +105,11 @@ Section UnInstall
 	!insertmacro UNINSTALL.LOG_UNINSTALL "$INSTDIR"
 	!insertmacro UNINSTALL.LOG_UNINSTALL "$APPDATA\${APP_NAME}"
 	!insertmacro UNINSTALL.LOG_END_UNINSTALL
+
+
+        Delete "$SMPROGRAMS\${APP_NAME}\Cytoflow.lnk"
+        Delete "$SMPROGRAMS\${APP_NAME}\Uninstall.lnk"
+        RmDir "$SMPROGRAMS\${APP_NAME}"
  
 	DeleteRegKey /ifempty ${INSTDIR_REG_ROOT} "${INSTDIR_REG_KEY}"
 SectionEnd
