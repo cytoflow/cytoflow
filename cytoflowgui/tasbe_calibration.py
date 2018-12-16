@@ -568,9 +568,10 @@ class TasbeCalibrationOp(PluginOpMixin):
         """
         Should the owning WorkflowItem clear the estimated model by calling
         op.clear_estimate()?  `changed` can be:
-         - Changed.ESTIMATE -- the parameters required to call 'estimate()' (ie
-            traits with estimate = True metadata) have changed
-         - Changed.PREV_RESULT -- the previous WorkflowItem's result changed
+        - Changed.ESTIMATE -- the parameters required to call 'estimate()' (ie
+          traits with estimate = True metadata) have changed
+        - Changed.PREV_RESULT -- the previous WorkflowItem's result changed
+
          """
         if changed == Changed.ESTIMATE:
             name, val = payload
@@ -593,9 +594,10 @@ class TasbeCalibrationOp(PluginOpMixin):
         """
         Should the owning WorkflowItem apply this operation when certain things
         change?  `changed` can be:
-         - Changed.OPERATION -- the operation's parameters changed
-         - Changed.PREV_RESULT -- the previous WorkflowItem's result changed
-         - Changed.ESTIMATE_RESULT -- the results of calling "estimate" changed
+        - Changed.OPERATION -- the operation's parameters changed
+        - Changed.PREV_RESULT -- the previous WorkflowItem's result changed
+        - Changed.ESTIMATE_RESULT -- the results of calling "estimate" changed
+
         """
         if changed == Changed.ESTIMATE_RESULT and \
             self.blank_file != self._blank_exp_file:
@@ -736,10 +738,11 @@ class TasbeCalibrationView(PluginViewMixin):
         """
         Should the owning WorkflowItem refresh the plot when certain things
         change?  `changed` can be:
-         - Changed.VIEW -- the view's parameters changed
-         - Changed.RESULT -- this WorkflowItem's result changed
-         - Changed.PREV_RESULT -- the previous WorkflowItem's result changed
-         - Changed.ESTIMATE_RESULT -- the results of calling "estimate" changed
+        - Changed.VIEW -- the view's parameters changed
+        - Changed.RESULT -- this WorkflowItem's result changed
+        - Changed.PREV_RESULT -- the previous WorkflowItem's result changed
+        - Changed.ESTIMATE_RESULT -- the results of calling "estimate" changed
+
         """
         if changed == Changed.VIEW:
             _, name, _ = payload

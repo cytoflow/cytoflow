@@ -9,6 +9,7 @@ Tests
   `Travis <https://travis-ci.org/bpteague/cytoflow>`_, 
   `Appveyor <https://ci.appveyor.com/project/bpteague/cytoflow>`_, and
   `ReadTheDocs <https://readthedocs.org/projects/cytoflow/>`_.
+  We also publish to `Anaconda Cloud <https://anaconda.org/>`_.
 
 - Make sure that the :mod:`cytoflow` tests pass, both locally and on Travis and Appveyor::
 
@@ -57,7 +58,7 @@ Versioning and dependencies
   	pandoc --from=markdown --to=rst --output=README.rst README.md
   
 - Push the updated docs to GitHub.  Give the CI builders ~30 minutes, then 
-  check the build status on Travis_, Appveyor_, ReadTheDocs_ and Anaconda Cloud_.
+  check the build status on Travis_, Appveyor_, ReadTheDocs_ and `Anaconda Cloud`_.
 
 - Create a new tag on the master branch.  This will re-build everything on the CI
   builders, create a new release on GitHub, and upload new source and wheels to 

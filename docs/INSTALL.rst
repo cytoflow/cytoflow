@@ -129,11 +129,11 @@ the appropriate file.
 
   * On Windows::
     
-    conda activate cf_dev
+      conda activate cf_dev
     
   * On Mac, Linux or Windows running bash:: 
     
-    source activate cf_dev
+      source activate cf_dev
   
 * Install ``cytoflow``'s dependencies::
 

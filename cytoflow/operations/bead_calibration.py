@@ -475,14 +475,7 @@ class BeadCalibrationOp(HasStrictTraits):
         v.trait_set(**kwargs)
         return v
     
-    # this silliness is necessary to squash the repr() call in sphinx.autodoc
-    class _Beads(dict):
-        def __repr__(self):
-            if hasattr(sys.modules['sys'], 'IN_SPHINX'):
-                return None
-            return super().__repr__()
-    
-    BEADS = _Beads(
+    BEADS = \
     {
      # from http://www.spherotech.com/RCP-30-5a%20%20rev%20H%20ML%20071712.xls
      "Spherotech RCP-30-5A Lot AG01, AF02, AD04 and AAE01" :
@@ -516,7 +509,7 @@ class BeadCalibrationOp(HasStrictTraits):
           "MEAP" :    [369,  749,   3426,  10413,  50013,  177490,  500257,  1252120],
           "MEAPCY7" : [1363, 2656,  9791,  25120,  96513,  328967,  864905,  2268931],
           "MECSB" :   [989,  2959,  8277,  25524,  71603,  173069,  491388,  1171641],
-          "MEBFP" :   [1957, 5579,  16005, 53621,  168302, 459809,  1581762, 4999251]}})
+          "MEBFP" :   [1957, 5579,  16005, 53621,  168302, 459809,  1581762, 4999251]}}
     """
     A dictionary containing the calibrated beads that Cytoflow currently knows
     about.  The available bead sets, the fluorophores and the laser / filter 
@@ -546,7 +539,7 @@ class BeadCalibrationOp(HasStrictTraits):
       - **MEAP** (APC, 633 --> 665/20)
       - **MEAPCY7** (APC-Cy7, 635 --> 750 LP)      
       
-    - **Spherotech URCP-100-2H (9 peaks)
+    - **Spherotech URCP-100-2H (9 peaks)**
     
       - **MECSB** (Cascade Blue, 405 --> 450/50)
       - **MEBFP** (BFP, 405 --> 530/40)

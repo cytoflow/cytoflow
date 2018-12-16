@@ -352,7 +352,7 @@ def set_builder_config(app):
 
 def run_apidoc(app):
     if app.builder.name == 'embedded_help':  # @UndefinedVariable
-        os.environ['SPHINX_APIDOC_OPTIONS'] = 'members'
+        os.environ['SPHINX_APIDOC_OPTIONS'] = 'no-members'
 
     from sphinx.ext.apidoc import main
     sys.path.append(os.path.join(os.path.dirname(__file__), '..'))

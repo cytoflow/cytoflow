@@ -337,10 +337,11 @@ class PluginViewMixin(HasTraits):
         """
         Should the owning WorkflowItem refresh the plot when certain things
         change?  `changed` can be:
-         - Changed.VIEW -- the view's parameters changed
-         - Changed.RESULT -- this WorkflowItem's result changed
-         - Changed.PREV_RESULT -- the previous WorkflowItem's result changed
-         - Changed.ESTIMATE_RESULT -- the results of calling "estimate" changed
+        - Changed.VIEW -- the view's parameters changed
+        - Changed.RESULT -- this WorkflowItem's result changed
+        - Changed.PREV_RESULT -- the previous WorkflowItem's result changed
+        - Changed.ESTIMATE_RESULT -- the results of calling "estimate" changed
+
         """
         return True
     

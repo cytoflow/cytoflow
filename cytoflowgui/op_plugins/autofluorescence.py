@@ -57,6 +57,7 @@ non-fluorescent, and that the module found the population median.
 
     af_op.estimate(ex)
     af_op.default_view().plot(ex) 
+
 '''
 import warnings
 
@@ -267,3 +268,4 @@ def _dump_view(view):
 @camel_registry.loader('autofluorescence-view', version = 1)
 def _load_view(data, version):
     return AutofluorescencePluginView(**data)
+
