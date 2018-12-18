@@ -57,7 +57,7 @@ print("\n".join([str(x) for x in a.binaries]))
 # (also get rid of all the timezone files; pytz is included because it's
 # a pandas dependency, but we don't do any timezone manipulation)
 
-remove_first = [ "cytoflow", "build", "dist", "doc", ".git", "pytz/zoneinfo"]
+remove_first = [ "cytoflow", "build", "dist", "doc", ".git", "pytz"]
 lol = [ [x for x in a.datas if x[0].startswith(y)] for y in remove_first]
 remove_items = [item for sublist in lol for item in sublist]
 a.datas -= remove_items
