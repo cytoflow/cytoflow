@@ -39,7 +39,7 @@ requirements:
     - pyopengl==3.1.1a1
 
     - mock==2.0.0
-    - sphinx==1.8.1
+    - sphinx==1.8.2
 
   run:
     - python==3.6.7
