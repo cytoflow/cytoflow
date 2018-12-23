@@ -67,8 +67,9 @@ def not_false ( value ):
 
 def sanitize_metadata(meta):
     ret = {}
+    print(meta)
     for k, v in meta.items():
-        if k[0] == '$':
+        if len(k) > 0 and k[0] == '$':
             k = k[1:]
         k = util.sanitize_identifier(k)
         ret[k] = v
