@@ -244,6 +244,26 @@ class FlowTask(Task):
         
         try:
             new_workflow = load_yaml(path)
+
+            # a few things to take care of when reloading.
+            # we do this in the try block to catch people who
+            # load valid YAML files that aren't from cytoflow.
+            
+            for wi_idx, wi in enumerate(new_workflow):
+                
+                # get wi lock
+                wi.lock.acquire()
+                
+                # clear the wi status
+                wi.status = "loading"
+    
+                # re-link the linked list.
+                if wi_idx > 0:
+                    wi.previous_wi = new_workflow[wi_idx - 1]
+                
+                if wi_idx < len(new_workflow) - 1:
+                    wi.next_wi = new_workflow[wi_idx + 1]
+
         except yaml.parser.ParserError as e:
             error(None,
                   "Parser error loading {} -- is it a Cytoflow file?\n\n{}"
@@ -251,26 +271,10 @@ class FlowTask(Task):
             return
         except Exception as e:
             error(None,
-                  "{} loading {}: {}"
+                  "{} loading {} -- is it a Cytoflow file?\n\n{}"
                   .format(e.__class__.__name__, path, str(e)))
             return
         
-        # a few things to take care of when reloading
-        for wi_idx, wi in enumerate(new_workflow):
-            
-            # get wi lock
-            wi.lock.acquire()
-            
-            # clear the wi status
-            wi.status = "loading"
-
-            # re-link the linked list.
-            if wi_idx > 0:
-                wi.previous_wi = new_workflow[wi_idx - 1]
-            
-            if wi_idx < len(new_workflow) - 1:
-                wi.next_wi = new_workflow[wi_idx + 1]
-
         # check that the FCS files are all there
         
         wi = new_workflow[0]
