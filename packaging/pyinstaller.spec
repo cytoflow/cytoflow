@@ -23,6 +23,7 @@ a = Analysis(['../cytoflowgui/run.py'],
                        'gobject', 'Tkinter', 'FixTk', '_tkinter',
                        'PySide', 'PySide.QtCore', 'PySide.QtGui',
                        'PySide.QtNetwork', 'PySide.QtSvg',
+		       'PyQt4',
                        'PyQt5.QtBluetooth', 'PyQt5.QtDesigner',
                        'PyQt5.QtHelp', 'PyQt5.QtLocation',
                        'PyQt5.QtMultimediaWidgets', 'PyQt5.QtNfc', 
@@ -49,7 +50,7 @@ lol = [ [x for x in a.binaries if x[0].find(y) >= 0] for y in remove_strs]
 remove_items = [item for sublist in lol for item in sublist]
 a.binaries -= remove_items
 
-print("\n".join([str(x) for x in a.binaries]))
+#print("\n".join([str(x) for x in a.binaries]))
              
 # for some reason, on a Mac, PyInstaller tries to include the entire
 # source directory, including docs, examples, and build files!
@@ -62,7 +63,7 @@ lol = [ [x for x in a.datas if x[0].startswith(y)] for y in remove_first]
 remove_items = [item for sublist in lol for item in sublist]
 a.datas -= remove_items
 
-print("\n".join([str(x) for x in a.datas]))
+#print("\n".join([str(x) for x in a.datas]))
 
 pyz = PYZ(a.pure, a.zipped_data, cipher=None)
 
