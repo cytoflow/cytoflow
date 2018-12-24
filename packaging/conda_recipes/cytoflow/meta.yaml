@@ -31,7 +31,7 @@ requirements:
     - python-dateutil==2.7.5
     - statsmodels==0.9.0
     - pyqt==5.9.2
-    - qt==5.9.6
+    - qt==5.9.7
     - fcsparser==0.2.0
     - camel==0.1.2
     - yapf==0.22.0
@@ -58,7 +58,7 @@ requirements:
     - python-dateutil==2.7.5
     - statsmodels==0.9.0
     - pyqt==5.9.2
-    - qt==5.9.6
+    - qt==5.9.7
     - fcsparser==0.2.0
     - camel==0.1.2
     - yapf==0.22.0
