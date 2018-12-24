@@ -403,7 +403,7 @@ class FlowTask(Task):
         log = str(self._get_package_versions()) + "\n" + self.application.application_log.getvalue()
         
         msg = "The best way to report a problem is send an application log to " \
-              "the developers.  You can do so by either sending us an email " \
+              "the developer.  You can do so by either sending me an email " \
               "with the log in it, or saving the log to a file and filing a " \
               "new issue on GitHub at " \
               "https://github.com/bpteague/cytoflow/issues/new" 
@@ -456,7 +456,7 @@ PACKAGE VERSIONS: {0}
 DEBUG LOG: {1}
 """.format(versions, log)
 
-        mailto("teague@mit.edu", 
+        mailto("bpteague@gmail.com", 
                subject = "Cytoflow bug report",
                body = body)
     
