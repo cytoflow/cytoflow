@@ -404,12 +404,26 @@ class BleedthroughLinearDiagnostic(HasStrictTraits):
          
         plt.figure()
         
+        fig, axes2d = plt.subplots(nrows=3, ncols=3)    
+        
         # the completely arbitrary ordering of the channels
         channels = list(set([x for (x, _) in list(self.op.spillover.keys())]))
         num_channels = len(channels)
         
-        for from_idx, from_channel in enumerate(channels):
-            for to_idx, to_channel in enumerate(channels):
+        for to_idx, row in enumerate(axes2d):
+            for from_idx, ax in enumerate(row):
+                
+                plt.sca(ax)
+                
+                from_channel = channels[from_idx]
+                to_channel = channels[to_idx]
+                
+                
+                if to_idx == len(axes2d) - 1:
+                    plt.xlabel(from_channel)
+                if from_idx == 0:
+                    plt.ylabel(to_channel)
+        
                 if from_idx == to_idx:
                     continue
                 
@@ -425,13 +439,13 @@ class BleedthroughLinearDiagnostic(HasStrictTraits):
                 xscale = util.scale_factory(scale_name, experiment, channel = from_channel)
                 yscale = util.scale_factory(scale_name, experiment, channel = to_channel)
 
-                plt.subplot(num_channels, 
-                            num_channels, 
-                            from_idx + (to_idx * num_channels) + 1)
-                plt.xscale(scale_name, **xscale.get_mpl_params(plt.gca().get_xaxis()))
-                plt.yscale(scale_name, **yscale.get_mpl_params(plt.gca().get_yaxis()))
-                plt.xlabel(from_channel)
-                plt.ylabel(to_channel)
+#                 plt.subplot(num_channels, 
+#                             num_channels, 
+#                             from_idx + (to_idx * num_channels) + 1)
+                plt.xscale(scale_name, **xscale.get_mpl_params(ax.get_xaxis()))
+                plt.yscale(scale_name, **yscale.get_mpl_params(ax.get_yaxis()))
+#                 plt.xlabel(from_channel)
+#                 plt.ylabel(to_channel)
                 plt.scatter(tube_data[from_channel],
                             tube_data[to_channel],
                             alpha = 1,
@@ -442,5 +456,6 @@ class BleedthroughLinearDiagnostic(HasStrictTraits):
                 ys = xs * self.op.spillover[(from_channel, to_channel)]
           
                 plt.plot(xs, ys, 'g-', lw=3)
+
                 
-        plt.tight_layout(pad = 0.8)
+        _ = plt.tight_layout(pad = 0.8)
