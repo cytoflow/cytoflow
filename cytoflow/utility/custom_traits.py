@@ -30,6 +30,8 @@ from traits.api import (BaseInt, BaseCInt, BaseFloat, BaseCFloat, BaseEnum, Trai
 from . import scale
 from . import CytoflowError, CytoflowWarning
 
+import cytoflow
+
 
 class PositiveInt(BaseInt):
     """
@@ -180,16 +182,14 @@ class Removed(TraitType):
             Otherwise, raise an exception.
         
     """
-    
-    gui = False
-    
+        
     def __init__(self, **metadata):
         metadata.setdefault('err_string', 'Trait {} has been removed')
         metadata.setdefault('transient', True)
         super().__init__(**metadata)
     
     def get(self, obj, name):
-        if not self.gui:
+        if not cytoflow.RUNNING_IN_GUI:
             # TODO - this is quite slow.  come up with a better way.
             curframe = inspect.currentframe()
             calframe = inspect.getouterframes(curframe)
@@ -202,7 +202,7 @@ class Removed(TraitType):
                 raise CytoflowError(self.err_string.format(name))
     
     def set(self, obj, name, value):
-        if not self.gui:
+        if not cytoflow.RUNNING_IN_GUI:
             curframe = inspect.currentframe()
             calframe = inspect.getouterframes(curframe, 2)
             if calframe[1][3] == "copy_traits":
@@ -227,7 +227,6 @@ class Deprecated(TraitType):
         - **gui** : if ``True``, don't return a backtrace (because it's very slow)
 
     """
-    gui = False
     
     def __init__(self, **metadata):
         metadata.setdefault('err_string', 'Trait {} is deprecated; please use {}')
@@ -235,7 +234,7 @@ class Deprecated(TraitType):
         super().__init__(**metadata)
       
     def get(self, obj, name):
-        if not self.gui:
+        if not cytoflow.RUNNING_IN_GUI:
             curframe = inspect.currentframe()
             calframe = inspect.getouterframes(curframe)
             if calframe[1][3] != "copy_traits" and calframe[1][3] != 'trait_get':
@@ -244,7 +243,7 @@ class Deprecated(TraitType):
         return getattr(obj, self.new)
     
     def set(self, obj, name, value):
-        if not self.gui:
+        if not cytoflow.RUNNING_IN_GUI:
             curframe = inspect.currentframe()
             calframe = inspect.getouterframes(curframe)
             if calframe[1][3] != "copy_traits":

@@ -65,6 +65,10 @@ def run_gui():
     except:
        # if we're not running as a one-click, fail gracefully
        pass
+   
+    # take care of the 3 places in the cytoflow module that
+    # need different behavior in a GUI
+    cytoflow.RUNNING_IN_GUI = True
     
     # this is ridiculous, but here's the situation.  Qt5 now uses Chromium
     # as their web renderer.  Chromium needs OpenGL.  if you don't
@@ -130,12 +134,6 @@ def run_gui():
     # monkey patch checklist editor to stop lowercasing
     import traitsui.qt4.check_list_editor  # @UnusedImport
     traitsui.qt4.check_list_editor.capitalize = lambda s: s
-
-    # for some reason, the stack-checking code in Removed and Deprecated
-    # is really, really slow.  disable it.
-    from cytoflow.utility.custom_traits import Removed, Deprecated
-    Removed.gui = True
-    Deprecated.gui = True
     
     # define and install a message handler for Qt errors
     from traits.api import push_exception_handler
