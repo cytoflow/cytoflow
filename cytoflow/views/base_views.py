@@ -31,6 +31,7 @@ import pandas as pd
 
 from warnings import warn
 
+import cytoflow
 import cytoflow.utility as util
 from .i_view import IView
 
@@ -138,16 +139,28 @@ class BaseView(HasStrictTraits):
         sharey = kwargs.pop("sharey", True)
         
         legend = kwargs.pop('legend', True)
-        
-        sns_style = kwargs.pop('sns_style', 'whitegrid')
-        sns_context = kwargs.pop('sns_context', 'talk')
+
         despine = kwargs.pop('despine', False)
         
         cols = col_wrap if col_wrap else \
                len(data[self.xfacet].unique()) if self.xfacet else 1
                
-        sns.set_style(sns_style)
-        sns.set_context(sns_context)
+        if cytoflow.RUNNING_IN_GUI:
+            sns_style = kwargs.pop('sns_style', 'whitegrid')
+            sns_context = kwargs.pop('sns_context', 'talk')
+            sns.set_style(sns_style)
+            sns.set_context(sns_context)
+        else:
+            if 'sns_style' in kwargs:
+                kwargs.pop('sns_style')
+                warn("'sns_style' is ignored when not running in the GUI",
+                     util.CytoflowViewWarning)
+                
+            if 'sns_context' in kwargs:
+                kwargs.pop('sns_context')
+                warn("'sns_context' is ignored when not running in the GUI",
+                     util.CytoflowViewWarning)
+                
             
         g = sns.FacetGrid(data, 
                           height = 6 / cols,
