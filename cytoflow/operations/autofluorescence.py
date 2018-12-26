@@ -337,7 +337,6 @@ class AutofluorescenceDiagnosticView(HasStrictTraits):
                                "parameter.  Did you forget to (re)run estimate()?")
         
         import matplotlib.pyplot as plt
-        import seaborn as sns  # @UnusedImport
         
         plt.figure()
         
