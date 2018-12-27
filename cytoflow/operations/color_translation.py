@@ -452,6 +452,7 @@ class ColorTranslationDiagnostic(HasStrictTraits):
                 _ = plt.hist(data[from_channel],
                              bins = hist_bins,
                              histtype = 'stepfilled',
+                             linewidth = 0,
                              antialiased = True)
                 plt.xlabel(from_channel)
                     
@@ -478,7 +479,7 @@ class ColorTranslationDiagnostic(HasStrictTraits):
 
             xs = np.logspace(1, math.log(data[from_channel].max(), 2), num = 256, base = 2)
             trans_fn = self.op._trans_fn[(from_channel, to_channel)]
-            plt.plot(xs, trans_fn(xs), "--g")
+            plt.plot(xs, trans_fn(xs), "--r")
             
             
             plt_idx = plt_idx + 1

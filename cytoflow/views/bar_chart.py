@@ -194,7 +194,7 @@ def _barplot(*args, view, stat_name, error_name, orientation, grid, **kwargs):
     if errwidth:
         err_kws['lw'] = errwidth
     else:
-        err_kws['lw'] = mpl.rcParams["lines.linewidth"] * 1.8
+        err_kws['lw'] = mpl.rcParams["lines.linewidth"]
          
     errcolor = kwargs.pop('errcolor', '0.2')
     capsize = kwargs.pop('capsize', None)

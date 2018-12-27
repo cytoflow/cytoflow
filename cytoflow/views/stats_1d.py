@@ -247,7 +247,7 @@ def _v_error_bars(x, y, yerr, ax = None, color = None, errwidth = None, capsize 
     if errwidth is not None:
         kwargs.setdefault("lw", errwidth)
     else:
-        kwargs.setdefault("lw", mpl.rcParams["lines.linewidth"] * 1.8)
+        kwargs.setdefault("lw", mpl.rcParams["lines.linewidth"])
     
     if isinstance(yerr.iloc[0], tuple):
         lo = [ye[0] for ye in yerr]
@@ -283,7 +283,7 @@ def _h_error_bars(x, y, xerr, ax = None, color = None, errwidth = None, capsize 
     if errwidth is not None:
         kwargs.setdefault("lw", errwidth)
     else:
-        kwargs.setdefault("lw", mpl.rcParams["lines.linewidth"] * 1.8)
+        kwargs.setdefault("lw", mpl.rcParams["lines.linewidth"])
     
     if isinstance(xerr.iloc[0], tuple):
         lo = [xe[0] for xe in xerr]

@@ -167,6 +167,7 @@ class HistogramView(Base1DView):
                     
         kwargs.setdefault('bins', bins) 
         kwargs.setdefault('orientation', 'vertical')
+        kwargs.setdefault('linewidth', 0)
         
         # if we have a hue facet, the y scaling is frequently wrong.  this
         # will capture the maximum bin count of each call to plt.hist, so 

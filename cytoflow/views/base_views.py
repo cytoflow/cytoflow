@@ -84,6 +84,12 @@ class BaseView(HasStrictTraits):
         sharex, sharey : bool
             If there are multiple subplots, should they share axes?  Defaults
             to `True`.
+            
+        height : float
+            The height of *each row* in inches.  Default = 3.0
+            
+        aspect : float
+            The aspect ratio *of each subplot*.  Default = 1.5
 
         col_wrap : int
             If `xfacet` is set and `yfacet` is not set, you can "wrap" the
@@ -138,6 +144,9 @@ class BaseView(HasStrictTraits):
         sharex = kwargs.pop("sharex", True)
         sharey = kwargs.pop("sharey", True)
         
+        height = kwargs.pop("height", 3)
+        aspect = kwargs.pop("aspect", 1.5)
+        
         legend = kwargs.pop('legend', True)
 
         despine = kwargs.pop('despine', False)
@@ -163,8 +172,8 @@ class BaseView(HasStrictTraits):
                 
             
         g = sns.FacetGrid(data, 
-                          height = 6 / cols,
-                          aspect = 1.5,
+                          height = height,
+                          aspect = aspect,
                           col = (self.xfacet if self.xfacet else None),
                           row = (self.yfacet if self.yfacet else None),
                           hue = (self.huefacet if self.huefacet else None),
@@ -270,12 +279,7 @@ class BaseView(HasStrictTraits):
 #                         lh.set_alpha(1.0)
                         
         if title:
-            if self.xfacet or self.yfacet:
-                plt.subplots_adjust(top=0.9)
-            else:
-                plt.subplots_adjust(top=0.94)
-                
-            plt.suptitle(title)
+            plt.title(title)
             
         if xlabel == "":
             xlabel = None
