@@ -75,8 +75,7 @@ class TestImport(unittest.TestCase):
                           channels = {'Y2-B' : "Blue"}).apply()
                           
     def testManufacturers(self):
-        files = ['Guava.fcs',
-                 'Accuri - C6.fcs',
+        files = ['Accuri - C6.fcs',
                  'Applied Biosystems - Attune.fcs',
                  'BD - FACS Aria II.fcs',
                  'Beckman Coulter - Cyan.fcs',
@@ -88,6 +87,7 @@ class TestImport(unittest.TestCase):
                  'Cytek DxP10.fcs',
                  'Cytek xP5.fcs',
                  'iCyt - Eclipse.lmd',
+                 'Millipore - Guava.fcs',
                  'Miltenyi Biotec - MACSQuant Analyzer.fcs',
                  'Partec - PAS.FCS',
                  'Stratedigm - S1400.fcs',
