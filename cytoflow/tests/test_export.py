@@ -53,6 +53,10 @@ class Test(unittest.TestCase):
 
         self.assertTrue((self.ex.data == ex_rt.data).all().all())
 
+        for channel in self.ex.channels:
+            self.assertEqual(self.ex.metadata[channel]['range'],
+                             ex_rt.metadata[channel]['range'])
+
 
     def testRoundtripWithBeadCalibration(self):
         self.cwd = os.path.dirname(os.path.abspath(__file__))
