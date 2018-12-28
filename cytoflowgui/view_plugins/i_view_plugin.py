@@ -147,7 +147,7 @@ class BasePlotParams(HasTraits):
     col_wrap = util.PositiveCInt(None, allow_zero = False, allow_none = True)
 
     sns_style = Enum(['whitegrid', 'darkgrid', 'white', 'dark', 'ticks'])
-    sns_context = Enum(['talk', 'poster', 'notebook', 'paper'])
+    sns_context = Enum(['paper', 'notebook', 'poster', 'talk'])
 
     legend = Bool(True)
     sharex = Bool(True)
