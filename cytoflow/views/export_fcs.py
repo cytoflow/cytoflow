@@ -282,6 +282,7 @@ class ExportFCS(HasStrictTraits):
             full_path = d / filename
             util.write_fcs(str(full_path), 
                            experiment.channels, 
+                           {c: experiment.metadata[c]['range'] for c in experiment.channels},
                            data_subset.values,
                            compat_chn_names = False,
                            compat_negative = False,

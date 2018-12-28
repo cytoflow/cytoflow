@@ -15,7 +15,7 @@ from __future__ import print_function, unicode_literals, division
 import numpy as np
 import struct
 
-def write_fcs(filename, chn_names, data,
+def write_fcs(filename, chn_names, chn_ranges, data,
               compat_chn_names=True,
               compat_percent=True,
               compat_negative=True,
@@ -31,8 +31,11 @@ def write_fcs(filename, chn_names, data,
     filename: str
         Path to the output .fcs file
         
-    ch_names: list of str, length C
+    chn_names: list of str, length C
         Names of the output channels
+        
+    chn_ranges: dictionary
+        Keys: channel names.  Values: ranges
         
     data: 2d ndarray of shape (N,C)
         The numpy array data to store as .fcs file format. 
@@ -136,7 +139,7 @@ def write_fcs(filename, chn_names, data,
     TEXT+='/$PAR/{0}'.format(data.shape[1])
 
     for i in range(data.shape[1]):
-        pnrange = int(abs(max(data[:,i])))
+        pnrange = chn_ranges[chn_names[i]]
         # TODO:
         # - Set log/lin 
         TEXT+='/$P{0}B/32/$P{0}E/0,0/$P{0}N/{1}/$P{0}R/{2}/$P{0}D/Linear'.format(i+1, chn_names[i], pnrange)
