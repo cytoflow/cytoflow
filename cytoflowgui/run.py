@@ -68,6 +68,7 @@ def run_gui():
    
     # take care of the 3 places in the cytoflow module that
     # need different behavior in a GUI
+    import cytoflow
     cytoflow.RUNNING_IN_GUI = True
     
     # this is ridiculous, but here's the situation.  Qt5 now uses Chromium
@@ -283,6 +284,11 @@ def remote_main(parent_workflow_conn, parent_mpl_conn, log_q, running_event):
                            main = True)
     
     sys.excepthook = log_excepthook
+    
+    # take care of the 3 places in the cytoflow module that
+    # need different behavior in a GUI
+    import cytoflow
+    cytoflow.RUNNING_IN_GUI = True
     
     running_event.set()
     RemoteWorkflow().run(parent_workflow_conn, parent_mpl_conn, log_q)
