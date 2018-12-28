@@ -151,7 +151,7 @@ class RadvizHandler(ViewHandlerMixin, Controller):
                                 editor=ExtendableEnumEditor(name='handler.conditions_names',
                                                             extra_items = {"None" : ""}),
                                 label = "Tab\nFacet"),
-                           label = "2D Histogram",
+                           label = "Radviz plot",
                            show_border = False),
                     VGroup(Item('subset_list',
                                 show_label = False,
