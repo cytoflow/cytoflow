@@ -167,7 +167,9 @@ class HistogramView(Base1DView):
                     
         kwargs.setdefault('bins', bins) 
         kwargs.setdefault('orientation', 'vertical')
-        kwargs.setdefault('linewidth', 0)
+        
+        if ('linewidth' not in kwargs) or ('linewidth' in kwargs and kwargs['linewidth'] is None):
+            kwargs['linewidth'] = 0 if kwargs['histtype'] == "stepfilled" else 2
         
         # if we have a hue facet, the y scaling is frequently wrong.  this
         # will capture the maximum bin count of each call to plt.hist, so 
