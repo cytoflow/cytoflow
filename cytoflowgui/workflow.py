@@ -608,7 +608,7 @@ class RemoteWorkflow(HasStrictTraits):
                     for wi in self.workflow:
                         wi.lock.acquire()
                         
-                    for wi in self.workflow:
+                    for idx, wi in enumerate(self.workflow):
                         if hasattr(wi.operation, "estimate"):
                             self.exec_q.put((idx - 0.5, (wi, wi.estimate)))
 
