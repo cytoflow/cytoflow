@@ -105,6 +105,11 @@ class FrameStatisticOp(HasStrictTraits):
         if not self.name:
             raise util.CytoflowOpError('name',
                                        "Must specify a name")
+            
+        if self.name != util.sanitize_identifier(self.name):
+            raise util.CytoflowOpError('name',
+                                       "Name can only contain letters, numbers and underscores."
+                                       .format(self.name))  
 
         if not self.function:
             raise util.CytoflowOpError('function',

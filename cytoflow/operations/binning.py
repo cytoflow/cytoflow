@@ -135,6 +135,11 @@ class BinningOp(HasStrictTraits):
         if not self.name:
             raise util.CytoflowOpError('name', "Name is not set")
         
+        if self.name != util.sanitize_identifier(self.name):
+            raise util.CytoflowOpError('name',
+                                       "Name can only contain letters, numbers and underscores."
+                                       .format(self.name))  
+        
         if self.name in experiment.data.columns:
             raise util.CytoflowOpError('name',
                                        "Name {} is in the experiment already"

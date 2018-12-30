@@ -181,6 +181,11 @@ class PolygonOp(HasStrictTraits):
             raise util.CytoflowOpError('name',
                                        "{} is in the experiment already!"
                                        .format(self.name))
+            
+        if self.name != util.sanitize_identifier(self.name):
+            raise util.CytoflowOpError('name',
+                                       "Name can only contain letters, numbers and underscores."
+                                       .format(self.name)) 
         
         if not self.xchannel:
             raise util.CytoflowOpError('xchannel',

@@ -365,6 +365,11 @@ class GaussianMixtureOp(HasStrictTraits):
             raise util.CytoflowOpError('name',
                                        "You have to set the gate's name "
                                        "before applying it!")
+            
+        if self.name != util.sanitize_identifier(self.name):
+            raise util.CytoflowOpError('name',
+                                       "Name can only contain letters, numbers and underscores."
+                                       .format(self.name)) 
         
         if self.num_components > 1 and self.name in experiment.data.columns:
             raise util.CytoflowOpError('name',

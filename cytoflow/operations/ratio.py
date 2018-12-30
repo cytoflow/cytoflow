@@ -99,7 +99,7 @@ class RatioOp(HasStrictTraits):
             
         if self.name != util.sanitize_identifier(self.name):
             raise util.CytoflowOpError('name',
-                                       "New channel {0} must be a valid Python identifier"
+                                       "Name can only contain letters, numbers and underscores."
                                        .format(self.name))            
             
         if self.name in experiment.channels:
