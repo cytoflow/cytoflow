@@ -316,6 +316,9 @@ class GaussianMixtureOp(HasStrictTraits):
             gmm.means_ = gmm.means_[sort_idx]
             gmm.weights_ = gmm.weights_[sort_idx]
             gmm.covariances_ = gmm.covariances_[sort_idx]
+            gmm.precisions_ = gmm.precisions_[sort_idx]
+            gmm.precisions_cholesky_ = gmm.precisions_cholesky_[sort_idx]
+
             
             gmms[group] = gmm
             
@@ -519,11 +522,9 @@ class GaussianMixtureOp(HasStrictTraits):
                     
                     event_gate[c].iloc[group_idx] = np.less_equal(dist, thresh)
                     
-            if self.posteriors:
-#                 import sys;sys.path.append(r'/home/brian/.p2/pool/plugins/org.python.pydev_6.2.0.201711281614/pysrc')
-#                 import pydevd;pydevd.settrace()
-                
-                p = gmm.predict_proba(x)
+            if self.posteriors:  
+                p = np.full((len(x), self.num_components), 0.0)
+                p[~x_na] = gmm.predict_proba(x[~x_na])
                 for c in range(self.num_components):
                     event_posteriors[c].iloc[group_idx] = p[:, c]
                     
