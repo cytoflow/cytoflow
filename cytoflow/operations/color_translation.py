@@ -257,7 +257,7 @@ class ColorTranslationOp(HasStrictTraits):
             
             _ = data.reset_index(drop = True, inplace = True)
             
-            self._sample[(from_channel, to_channel)] = data.sample(n = 5000)
+            self._sample[(from_channel, to_channel)] = data.sample(n = min(len(data), 5000))
             
             data[from_channel] = np.log10(data[from_channel])
             data[to_channel] = np.log10(data[to_channel])
