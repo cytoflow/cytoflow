@@ -404,7 +404,6 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
                     with self.plot_lock:
                         (winch, hinch) = payload
                         self.figure.set_size_inches(winch, hinch)
-                        self.figure.tight_layout()
                         FigureCanvasAgg.resize_event(self)
                         self.draw()
                 elif msg == Msg.MOUSE_PRESS_EVENT:
