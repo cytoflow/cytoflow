@@ -248,6 +248,7 @@ class ImportPluginOp(PluginOpMixin, ImportOp):
     def get_notebook_code(self, idx):
         op = ImportOp()
         op.copy_traits(self, op.copyable_trait_names())
+        op.channels = {c.channel : c.name for c in self.channels_list}
         
         return dedent("""
             op_{idx} = {repr}
