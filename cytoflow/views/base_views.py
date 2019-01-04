@@ -150,14 +150,11 @@ class BaseView(HasStrictTraits):
         legend = kwargs.pop('legend', True)
 
         despine = kwargs.pop('despine', False)
-        
-        cols = col_wrap if col_wrap else \
-               len(data[self.xfacet].unique()) if self.xfacet else 1
                
         if cytoflow.RUNNING_IN_GUI:
             sns_style = kwargs.pop('sns_style', 'whitegrid')
             sns_context = kwargs.pop('sns_context', 'talk')
-            sns.set_style(sns_style)
+            sns.set_style(sns_style, rc = {"xtick.bottom": True, "ytick.left": True})
             sns.set_context(sns_context)
         else:
             if 'sns_style' in kwargs:

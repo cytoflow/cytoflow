@@ -484,53 +484,22 @@ class LogicleMajorLocator(Locator):
         logicle = self.axis._scale.logicle
         
         max_decade = np.ceil(np.log10(vmax * 1.1))
-        min_positive_decade = np.floor(np.log10(logicle.T()) - logicle.M())
-        
+        min_positive_decade = np.ceil(np.log10(logicle.T()) - logicle.M()) + 1
+                
         if vmin < 0:
             max_negative_decade = np.floor(np.log10(-1.0 * vmin))
-            ticks = [-1.0 * 10 ** x for x in np.arange(max_negative_decade, 1, -1)]
-            ticks.append(0.0)
+            major_ticks = [-1.0 * 10 ** x for x in np.arange(max_negative_decade, 1, -1)]
+            major_ticks.append(0.0)
         else:
             max_negative_decade = "N/A"
-            ticks = [0.0] if vmin == 0.0 else []
+            major_ticks = [0.0] if vmin == 0.0 else []
             
-        ticks.extend([10 ** x for x in np.arange(min_positive_decade, max_decade, 1)])
-        
-#         print((vmin, vmax))
-#         print((max_negative_decade, min_positive_decade, max_decade))
-#         print(ticks)
-#         print(logicle.W())
-#         ticks = [-1.0 * 10 ** x for x in np.arange(np.log10(-1.0 * min_decade), 1, -1)]
-#         ticks.append(0.0)
-#         ticks.extend( [10 ** x for x in np.arange(2, np.log10(max_decade), 1)])
-#         print(ticks)
+        major_ticks.extend([10 ** x for x in np.arange(min_positive_decade, max_decade, 1)])
 
-        return self.raise_if_exceeds(np.asarray(ticks))
-        
-# 
-#         vmin, vmax = self.view_limits(vmin, vmax)
-#         max_decade = 10 ** np.ceil(np.log10(vmax))
-#               
-#         if vmin < 0:
-#             min_decade = -1.0 * 10 ** np.floor(np.log10(-1.0 * vmin))
-#             ticks = [-1.0 * 10 ** x for x in np.arange(np.log10(-1.0 * min_decade), 1, -1)]
-#             ticks.append(0.0)
-#             ticks.extend( [10 ** x for x in np.arange(2, np.log10(max_decade), 1)])
-#         else:
-#             ticks = [0.0] if vmin == 0.0 else []
-#             ticks.extend( [10 ** x for x in np.arange(1, np.log10(max_decade), 1)])
-# 
-#         return self.raise_if_exceeds(np.asarray(ticks))
+        return self.raise_if_exceeds(np.asarray(major_ticks))
 
     def view_limits(self, data_min, data_max):
         'Try to choose the view limits intelligently'
-        
-#         logicle = self.axis._scale.logicle
-#         
-#         logicle_min = logicle.inverse(0.0)
-#         logicle_max = logicle.inverse(1.0 - sys.float_info.epsilon)
-#         
-#         return transforms.nonsingular(logicle_min, logicle_max)
 
         if data_max < data_min:
             data_min, data_max = data_max, data_min
@@ -568,60 +537,50 @@ class LogicleMinorLocator(Locator):
 
     def tick_values(self, vmin, vmax):
         'Every tenth decade, including 0 and negative'
-        
+
+        vmin, vmax = self.view_limits(vmin, vmax)
         logicle = self.axis._scale.logicle
         
-        max_decade = np.ceil(np.log10(vmax * 1.1))
-        min_positive_decade = np.floor(np.log10(logicle.T()) - logicle.M())
-        
+        max_decade = np.ceil(np.log10(vmax * 1.1)) + 1
+        min_positive_decade = np.ceil(np.log10(logicle.T()) - logicle.M()) + 1
+                
         if vmin < 0:
-            max_negative_decade = np.floor(np.log10(-1.0 * vmin))
-            ticks = [-1.0 * 10 ** x for x in np.arange(max_negative_decade, 1, -0.1)]
-            ticks.append(0.0)
+            max_negative_decade = np.floor(np.log10(-1.0 * vmin)) + 1
+            major_ticks = [-1.0 * 10 ** x for x in np.arange(max_negative_decade, 1, -1)]
+            major_ticks.append(0.0)
         else:
             max_negative_decade = "N/A"
-            ticks = [0.0] if vmin == 0.0 else []
+            major_ticks = [0.0] if vmin == 0.0 else []
             
-        ticks.extend([10 ** x for x in np.arange(min_positive_decade, max_decade, 0.1)])
-        
-        vmin, vmax = self.view_limits(vmin, vmax)
+        major_ticks.extend([10 ** x for x in np.arange(min_positive_decade, max_decade, 1)])
+                
+        major_tick_pairs = [(major_ticks[x], major_ticks[x+1]) for x in range(len(major_ticks) - 1)]
+        minor_ticks_lol = [np.arange(x, y, max(np.abs([x, y]) / 10)) for x, y in major_tick_pairs]
+        minor_ticks = [item for sublist in minor_ticks_lol for item in sublist]
 
-        return self.raise_if_exceeds(np.asarray(ticks))
-                      
-#         if vmin < 0:
-#             lt = [np.arange(10 ** x, 10 ** (x - 1), -1.0 * (10 ** (x-1)))
-#                   for x in np.arange(np.ceil(np.log10(-1.0 * vmin)), 1, -1)]
-#             
-#             # flatten and take the negative
-#             lt = [-1.0 * item for sublist in lt for item in sublist]
-#             
-#             # whoops! missed an endpoint
-#             lt.extend([-10.0])
-# 
-#             gt = [np.arange(10 ** x, 10 ** (x + 1), 10 ** x)
-#                   for x in np.arange(1, np.log10(vmax))]
-#             
-#             # flatten
-#             gt = [item for sublist in gt for item in sublist]
-#                         
-#             ticks = lt
-#             ticks.extend(gt)
-#         else:
-#             vmin = max((vmin, 1))
-#             ticks = [np.arange(10 ** x, 10 ** (x + 1), 10 ** x)
-#                      for x in np.arange(np.log10(vmin), np.log10(vmax))]
-#             ticks = [item for sublist in ticks for item in sublist]
-# 
-#         return self.raise_if_exceeds(np.asarray(ticks))
+        return(minor_ticks)
     
-#     def view_limits(self, data_min, data_max):
-#         'Try to choose the view limits intelligently'
-#         
-#         logicle = self.axis._scale.logicle
-#         
-#         logicle_min = logicle.inverse(0.0)
-#         logicle_max = logicle.inverse(1.0 - sys.float_info.epsilon)
-#         
-#         return transforms.nonsingular(logicle_min, logicle_max)
+    def view_limits(self, data_min, data_max):
+        'Try to choose the view limits intelligently'
+
+        if data_max < data_min:
+            data_min, data_max = data_max, data_min
+ 
+        # get the nearest tenth-decade that contains the data
+         
+        if data_max > 0:
+            logs = np.ceil(np.log10(data_max))
+            vmax = np.ceil(data_max / (10 ** (logs - 1))) * (10 ** (logs - 1))             
+        else: 
+            vmax = 100  
+ 
+        if data_min >= 0:
+            vmin = 0
+        else: 
+            logs = np.ceil(np.log10(-1.0 * data_min))
+            vmin = np.floor(data_min / (10 ** (logs - 1))) * (10 ** (logs - 1))
+ 
+        return transforms.nonsingular(vmin, vmax)
+
     
 matplotlib.scale.register_scale(MatplotlibLogicleScale)
