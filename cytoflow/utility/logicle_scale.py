@@ -533,9 +533,7 @@ class LogicleMinorLocator(Locator):
 
     def tick_values(self, vmin, vmax):
         'Every tenth decade, including 0 and negative'
-        
-        vmin, vmax = self.view_limits(vmin, vmax)
-                      
+                              
         if vmin < 0:
             lt = [np.arange(10 ** x, 10 ** (x - 1), -1.0 * (10 ** (x-1)))
                   for x in np.arange(np.ceil(np.log10(-1.0 * vmin)), 1, -1)]

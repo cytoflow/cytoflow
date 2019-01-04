@@ -22,12 +22,8 @@ import seaborn as sns
 
 # set seaborn defaults.  this is mostly for the Jupyter notebook;
 # these settings can be overridden in the GUI
-sns.set(context = "paper", style = "whitegrid")
-
-# figure.figsize interacts strangely with the jupyter notebook.
-# which is to say, i'm not sure why this does what it does, but
-# it fixes axis label font sizes.
-# mpl.rc('figure', figsize = [8.0, 5.5])
+sns.set(context = "paper", style = "whitegrid", 
+        rc = {"xtick.bottom": True, "ytick.left": True})
 
 # the default marker scales are tiny!  make them less tiny
 mpl.rc('legend', markerscale = 4)
