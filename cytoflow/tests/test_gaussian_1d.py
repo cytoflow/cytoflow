@@ -77,7 +77,7 @@ class TestGaussian1D(unittest.TestCase):
         ex2 = self.gate.apply(self.ex)
         
         #print(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_1"])
-        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_1", 1.0], 10000)
+        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_1", 1.0], 9950)
         self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_1", 10.0], 5610)
 
         self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_2", 10.0], 4390)
