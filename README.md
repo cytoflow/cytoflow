@@ -1,11 +1,11 @@
-#Cytoflow
+# Cytoflow
 
-##Python tools for quantitative, reproducible flow cytometry analysis
+## Python tools for quantitative, reproducible flow cytometry analysis
 
 Welcome to a different style of flow cytometry analysis.  Take a look at some example [Jupyter](http://jupyter.org/) notebooks:
 
 * [Basic flow cytometry analysis](https://github.com/bpteague/cytoflow/blob/master/docs/examples-basic/Basic%20Cytometry.ipynb)
-* [An small-molecule induction curve with yeast](https://github.com/bpteague/cytoflow/blob/master/docs/examples-basic/Yeast%20Dose%20Reponse.ipynb)
+* [An small-molecule induction curve with yeast](https://github.com/bpteague/cytoflow/blob/master/docs/examples-basic/Yeast%20Dose%20Response.ipynb)
 * [Machine learning applied to flow cytometry data](https://github.com/bpteague/cytoflow/blob/master/docs/examples-basic/Machine%20Learning.ipynb)
 * [Reproduced analysis from a published paper](https://github.com/bpteague/cytoflow-examples/blob/master/kiani/Kiani%20Nature%20Methods%202014.ipynb)
 * [A multi-dimensional induction in yeast](https://github.com/bpteague/cytoflow-examples/blob/master/yeast/Induction%20Timecourse.ipynb)
@@ -77,9 +77,6 @@ A few things.
   analysis, such as fitting 2-dimensional Gaussians for automated gating
   and mixture modeling.
 
-#### Note: this software is still considered beta software.
-#### It is quite stable, functional and useful, but you may still encounter the occasional bug!
-  
 ### Installation
 
 **If you just want the point-and-click version (not the Python modules), you 
