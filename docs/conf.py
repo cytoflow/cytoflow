@@ -50,11 +50,10 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.autosummary',
     'sphinx.ext.napoleon',
-    'sphinx.ext.mathjax',
     'sphinx.ext.intersphinx',
     'plot_directive',
     'embedded_builder',
-    'fulltoc'
+    # 'fulltoc'
 ]
 
 if tags.has("embedded_help"):  # @UndefinedVariable
