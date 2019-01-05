@@ -5,3 +5,5 @@ gets
    the op on (channel names, subset editor, etc.)
  - a class derived from envisage.Plugin:
    a Envisage service plugin wrapping the op
+   
+ For more details, see docs/new_modules.rst.

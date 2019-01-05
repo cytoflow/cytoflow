@@ -101,7 +101,7 @@ master_doc = 'index'
 # General information about the project.
 project = u'Cytoflow'
 import time
-copyright = u'Massachusetts Institute of Technology 2015-{}'.format(time.strftime("%Y"))
+copyright = u'Massachusetts Institute of Technology 2015-2018, Brian Teague 2018-{}'.format(time.strftime("%Y"))
 
 # Configure the sidebar
 
