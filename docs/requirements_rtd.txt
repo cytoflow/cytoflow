@@ -13,4 +13,3 @@ fcsparser
 seaborn
 
 mock
-sphinxcontrib-fulltoc
