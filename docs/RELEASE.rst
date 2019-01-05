@@ -10,6 +10,7 @@ Tests
   `Appveyor <https://ci.appveyor.com/project/bpteague/cytoflow>`_, and
   `ReadTheDocs <https://readthedocs.org/projects/cytoflow/>`_.
   We also publish to `Anaconda Cloud <https://anaconda.org/>`_.
+  Temporary build artifacts get published to `Bintray <https://bintray.com/bpteague/cytoflow/cytoflow#files>`_.
 
 - Make sure that the :mod:`cytoflow` tests pass, both locally and on Travis and Appveyor::
 
@@ -23,12 +24,18 @@ Tests
 - Make sure that the ReadTheDocs build is working.
   
 - Make sure that the :mod:`pyinstaller` distribution will build on your local 
-  machine.  We are currently building with PyInstaller v3.1.1 ::
+  machine.  We are currently building with a custom version of PyIntaller that's
+  included as a submodule in `packaging/pyinstaller` ::
 
   	  pyinstaller packaging/pyinstaller.spec
+
+- Make sure that the expected files (installers, conda packages, wheels, built extensions)
+  are getting published to Bintray.  Remember -- a failed deployment doesn't show
+  up on the CI platforms as a broken build!
   
 - Make sure that :mod:`pyinstaller` built the executables on all three supported
   platforms.  Download and test that all three start and can run a basic workflow.
+
     
 Documentation
 -------------
@@ -63,10 +70,12 @@ Versioning and dependencies
 - Create a new tag on the master branch.  This will re-build everything on the CI
   builders, create a new release on GitHub, and upload new source and wheels to 
   PyPI and packages to Anaconda Cloud.
+ 
+- Double-check that the required files ended up on Bintray_.
 
 - On branch ``gh-pages``, update the version in ``_config.yml``.  Push these
   changes to update the main download links on 
   http://bpteague.github.io/cytoflow
 
-- Add the wheels to PyPI.  TODO - use ``twine`` to release to PyPI from CI
-  builders.
+- Download the wheels from Bintray or Github and add them to PyPI.  
+  TODO - use ``twine`` to release to PyPI from CI builders.

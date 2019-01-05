@@ -526,6 +526,18 @@ class BeadCalibrationOp(HasStrictTraits):
     A dictionary containing the calibrated beads that Cytoflow currently knows
     about.  The available bead sets, the fluorophores and the laser / filter 
     sets with which they were characterized are below:
+
+    - **Spherotech RCP-30-5A Lot AK02, AK03, AK04**
+      
+      - **MECSB** (Cascade Blue, 405 --> 450/50)
+      - **MEBFP** (BFP, 405 --> 530/40)
+      - **MEFL** (Fluroscein, 488 --> 530/40)
+      - **MEPE** (Phycoerythrin, 488 --> 575/25)
+      - **MEPTR** (PE-Texas Red, 488 --> 613/20)
+      - **MECY** (Cy5, 488 --> 680/30)
+      - **MEPCY7** (PE-Cy7, 488 --> 750 LP)
+      - **MEAP** (APC, 633 --> 665/20)
+      - **MEAPCY7** (APC-Cy7, 635 --> 750 LP)
     
     - **Spherotech RCP-30-5A Lot AG01, AF02, AD04 and AAE01**
       

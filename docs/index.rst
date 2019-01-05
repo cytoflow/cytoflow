@@ -35,8 +35,8 @@ I want to help develop Cytoflow.
 Hooray!  Have a look at the :ref:`install documentation <hacking>` for how to
 get the source code installed.  Then, have a look at the  
 :ref:`design docs <design>` and the :ref:`new modules <new_modules>` documentation.
-Finally, subscribe to 
-`the cytoflow-dev mailing list <https://groups.google.com/forum/#!forum/cytoflow-dev>`_ for updates, discussion, etc.
+Finally, join us over at 
+`the cytoflow GitHub repo <https://github.com/bpteague/cytoflow>`_ to file bugs, submit PRs, etc.
 
 *********
 Contents:
