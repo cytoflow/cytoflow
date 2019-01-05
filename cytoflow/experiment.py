@@ -188,7 +188,7 @@ class Experiment(HasStrictTraits):
     
     def _get_conditions(self):
         """Getter for the `conditions` property"""
-        return {x : pd.Series(self.data[x].unique()).sort_values() for x in self.data
+        return {x : pd.Series(self.data[x].unique().copy()).sort_values() for x in self.data
                 if self.metadata[x]['type'] == "condition"}
         
     def subset(self, conditions, values):
