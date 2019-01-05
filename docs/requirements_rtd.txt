@@ -2,7 +2,7 @@ numpy
 pandas>=0.22
 bottleneck
 numexpr
-matplotlib
+matplotlib>=3.0
 scipy
 scikit-learn
 traits
