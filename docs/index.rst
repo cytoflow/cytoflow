@@ -21,9 +21,10 @@ If you decide you want to have a go, see the :ref:`installation notes <install>`
 Quick hint: if you have Anaconda installed, say::
 
   conda config --add channels bpteague
-  conda create --name cytoflow cytoflow notebook
+  conda create --name cytoflow cytoflow 
   
-to install the latest package from the Anaconda Cloud.
+This creates a new Anaconda environment named ``cytoflow`` and installs the 
+latest package from the Anaconda Cloud.
 
 For more details of these modules, you're likely to want to see the 
 :ref:`module documents <modindex>`

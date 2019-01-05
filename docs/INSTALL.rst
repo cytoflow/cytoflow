@@ -121,9 +121,14 @@ the appropriate file.
 
     conda config --add channels bpteague
 
-* Create a new environment.  In this example, I have called it ``cf_dev``::
+* Clone the repository::
 
-    conda create --name cf_dev
+    git clone https://github.com/bpteague/cytoflow.git
+
+* Create a new environment.  In this example, I have called it ``cf_dev``.
+  In the new repository you just cloned, say::
+
+    conda env create --name cf_dev --file environment.yml
   
 * Activate the new environment
 
@@ -135,14 +140,6 @@ the appropriate file.
     
       source activate cf_dev
   
-* Install ``cytoflow``'s dependencies::
-
-    conda install --only-deps cytoflow
-    
-* Clone the repository::
-
-    git clone https://github.com/bpteague/cytoflow.git
-    
 * **On Windows and MacOS only,** do the following to prevent ``cytoflow``
   from trying to build the C++ extension.
   
