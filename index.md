@@ -2,7 +2,7 @@
 layout: default
 title: {{ site.name }}
 ---
-# Welcome!  New to Cytoflow?  Start with a [screencast.](https://www.youtube.com/watch?v=vfEfeFGVtro)
+# Welcome!  New to Cytoflow?  Start with a [tutorial.](https://cytoflow.readthedocs.io/en/stable/manual/01_quickstart.html)
 
 # What's wrong with other packages?  
 
@@ -45,16 +45,17 @@ packages don't handle this gracefully!
   [the GitHub project page](https://github.com/bpteague/cytoflow) and modify it 
   to suit your own needs, then contribute your changes back so the rest of 
   the community can benefit from them.
-
-## Note: this is still beta software!  
-## It is stable and full-featured, but you may still encounter bugs!
   
 # Installation
 
-**There isn't any!**  The binaries at the top of the page are all you need.
-On a Mac, you'll have to extract the ZIP archive -- then, just double-click
-to start the program!  It takes a minute to decompress the one-click archive
-before it runs, though, so be patient.
+* **Windows** - download the installer by clicking the "Windows" button at the top of the page.  Run the installer.
+
+* **Mac** - download the ZIP file by clicking the "Mac" button at the top of the page.  Unzip the file.  Double-click
+  to run the program.  Depending on your security settings, you may have to specifically enable this program
+  (it's not signed.)
+  
+* **Linux** - download the tarball by clicking the "Linux" button at the top of the page.  Extract it.  Run the "cytoflow" 
+  binary that it contains.
 
 # Documentation
 
@@ -80,26 +81,16 @@ and choose "About Cytoflow...".
 You can also try to reproduce the bug in the latest build from git HEAD. 
 Those binaries are [on BinTray](https://bintray.com/bpteague/cytoflow/cytoflow#files).
 
-If you have found a bug in the most recent version, there are three ways to 
-report it.  First, you can navigate to the Help menu and choose "Report a 
-problem...".  This will open an email to the developers, including some 
-information about the version of cytoflow you're using and some logs.
-
-Second, you can join the 
-[cytoflow-dev](https://groups.google.com/forum/#!forum/cytoflow-dev) 
-mailing list and communicate your bug to the developers directly.
-
-Finally, you can submit your bug report to the 
+If you have found a bug in the most recent version, you can submit your bug report to the 
 [Github issues tracker](https://github.com/bpteague/cytoflow/issues).
 
 # I want to keep up with new Cytoflow releases!
 
-Great!  Subscribe to 
-[cytoflow-announce](https://groups.google.com/forum/#!forum/cytoflow-announce) 
-and we'll send you an email when a new version is released.
+Great! At the [Github page](https://github.com/bpteague/cytoflow/), pull down the "Watch" 
+menu and select "Releases only."
 
 
 # Are there screenshots?
 
-[There are screenshots.]({{ site.baseurl }}/screenshots.html)
+[There are (slightly outdated) screenshots.]({{ site.baseurl }}/screenshots.html)
 
