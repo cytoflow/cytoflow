@@ -102,9 +102,9 @@ setup(
                 if not (on_rtd or no_logicle) else None,
     
     package_data = { 'cytoflowgui' : ['preferences.ini',
-                                      'images/*.png',
-                                      'op_plugins/images/*.png',
-                                      'view_plugins/images/*.png',
+                                      'images/*',
+                                      'op_plugins/images/*',
+                                      'view_plugins/images/*',
                                       'help/*.html',
                                       'help/_images/*.png',
                                       'help/_static/*']},
