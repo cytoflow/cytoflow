@@ -1,6 +1,14 @@
-==============================================
-Welcome to Cytoflow's developer documentation!
-==============================================
+=======================================================
+Welcome to Cytoflow's user and developer documentation!
+=======================================================
+
+*********************************************************
+I want to see the point-and-click program's documentation
+*********************************************************
+
+Here's the :ref:`manual <manual>`.  At the moment it's pretty sparse,
+but there's a :ref:`tutorial <01_quickstart>` that should help you get started.
+Also, check out the online help in the "Help" pane.
 
 *************************************************************
 I want to use Cytoflow's modules in my own cytometry analysis
@@ -45,6 +53,8 @@ Contents:
 
 .. toctree::
    :maxdepth: 1
+
+   manual
    
    INSTALL
    design
