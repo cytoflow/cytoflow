@@ -270,10 +270,6 @@ def start_remote_process():
         return (remote_process, (child_workflow_conn, child_matplotlib_conn, log_q))
     
 def remote_main(parent_workflow_conn, parent_mpl_conn, log_q, running_event):
-    # we don't want the remote process futzing around with toolkits
-    from traits.etsconfig.api import ETSConfig
-    ETSConfig.toolkit = 'null'
-
     # We want matplotlib to use our backend .... in both the GUI and the
     # remote process.  Must be called BEFORE cytoflow is imported
     
