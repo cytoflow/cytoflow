@@ -91,7 +91,9 @@ class FlowTask(Task):
                               id='File', name='&File'),
                         SMenu(TaskToggleGroup(),
                               id = 'View', name = '&View'),
-                        SMenu(TaskAction(name = 'Report a problem....',
+                        SMenu(TaskAction(name = 'Online documentation...',
+                                         method = 'on_docs'),
+                                         TaskAction(name = 'Report a problem....',
                                          method = 'on_problem'),
                               TaskAction(name='About...',
                                          method='on_about'),
@@ -402,6 +404,10 @@ class FlowTask(Task):
     
     def on_prefs(self):
         pass
+    
+    def on_docs(self):
+        webbrowser.open_new_tab("https://cytoflow.readthedocs.io/en/stable/manual.html")
+
     
     def on_problem(self):
 
