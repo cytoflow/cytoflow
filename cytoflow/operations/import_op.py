@@ -410,6 +410,8 @@ class ImportOp(HasStrictTraits):
 #         import pydevd;pydevd.settrace()
                         
         for channel in channels:
+            # Storing it for later on, in the extra bits section
+            new_name = channel
             if self.channels and channel in self.channels:
                 new_name = self.channels[channel]
                 if channel == new_name:
@@ -432,7 +434,9 @@ class ImportOp(HasStrictTraits):
                     for _ in range(1, range_bits):
                         mask = mask << 1 | 1
 
-                    experiment.data[channel] = experiment.data[channel].values.astype('int') & mask
+                    # Using the index "channel" creates a bug if the channel
+                    # has been renamed already
+                    experiment.data[new_name] = experiment.data[new_name].values.astype('int') & mask
                 
             # re-scale the data to linear if if's recorded as log-scaled with
             # integer channels
