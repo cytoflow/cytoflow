@@ -87,17 +87,17 @@ class TestGaussian2D(unittest.TestCase):
         
         self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_1", 1.0], 5367)
         self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_1", 10.0], 5599)
-        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_2", 1.0], 4632)
+        self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_2", 1.0], 4633)
         self.assertAlmostEqual(ex2.data.groupby(["Gauss", "Dox"]).size().loc["Gauss_2", 10.0], 4401)
         
-        self.assertAlmostEqual(ex2.data.groupby(["Gauss_1", "Dox"]).size().loc[False, 1.0], 8126)
+        self.assertAlmostEqual(ex2.data.groupby(["Gauss_1", "Dox"]).size().loc[False, 1.0], 8128)
         self.assertAlmostEqual(ex2.data.groupby(["Gauss_1", "Dox"]).size().loc[False, 10.0], 8006)
-        self.assertAlmostEqual(ex2.data.groupby(["Gauss_1", "Dox"]).size().loc[True, 1.0], 1874)
+        self.assertAlmostEqual(ex2.data.groupby(["Gauss_1", "Dox"]).size().loc[True, 1.0], 1872)
         self.assertAlmostEqual(ex2.data.groupby(["Gauss_1", "Dox"]).size().loc[True, 10.0], 1994)
         
-        self.assertAlmostEqual(ex2.data.groupby(["Gauss_2", "Dox"]).size().loc[False, 1.0], 7814)
+        self.assertAlmostEqual(ex2.data.groupby(["Gauss_2", "Dox"]).size().loc[False, 1.0], 7815)
         self.assertAlmostEqual(ex2.data.groupby(["Gauss_2", "Dox"]).size().loc[False, 10.0], 7987)
-        self.assertAlmostEqual(ex2.data.groupby(["Gauss_2", "Dox"]).size().loc[True, 1.0], 2186)
+        self.assertAlmostEqual(ex2.data.groupby(["Gauss_2", "Dox"]).size().loc[True, 1.0], 2185)
         self.assertAlmostEqual(ex2.data.groupby(["Gauss_2", "Dox"]).size().loc[True, 10.0], 2013)
 
         

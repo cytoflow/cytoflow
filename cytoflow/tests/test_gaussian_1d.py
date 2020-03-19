@@ -85,12 +85,12 @@ class TestGaussian1D(unittest.TestCase):
         
         self.assertAlmostEqual(ex2.data.groupby(["Gauss_1", "Dox"]).size().loc[False, 1.0], 6619)        
         self.assertAlmostEqual(ex2.data.groupby(["Gauss_1", "Dox"]).size().loc[False, 10.0], 7952)      
-        self.assertAlmostEqual(ex2.data.groupby(["Gauss_1", "Dox"]).size().loc[True, 1.0], 3382)        
+        self.assertAlmostEqual(ex2.data.groupby(["Gauss_1", "Dox"]).size().loc[True, 1.0], 3381)        
         self.assertAlmostEqual(ex2.data.groupby(["Gauss_1", "Dox"]).size().loc[True, 10.0], 2048)     
         
-        self.assertAlmostEqual(ex2.data.groupby(["Gauss_2", "Dox"]).size().loc[False, 1.0], 9979)        
+        self.assertAlmostEqual(ex2.data.groupby(["Gauss_2", "Dox"]).size().loc[False, 1.0], 9980)        
         self.assertAlmostEqual(ex2.data.groupby(["Gauss_2", "Dox"]).size().loc[False, 10.0], 7826)      
-        self.assertAlmostEqual(ex2.data.groupby(["Gauss_2", "Dox"]).size().loc[True, 1.0], 21)        
+        self.assertAlmostEqual(ex2.data.groupby(["Gauss_2", "Dox"]).size().loc[True, 1.0], 20)        
         self.assertAlmostEqual(ex2.data.groupby(["Gauss_2", "Dox"]).size().loc[True, 10.0], 2174) 
         
     def testStatistics(self): 
