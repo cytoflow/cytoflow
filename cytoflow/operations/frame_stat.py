@@ -185,7 +185,7 @@ class FrameStatisticOp(HasStrictTraits):
                                            .format(group)) from e    
                             
             # check for, and warn about, NaNs.
-            if np.any(np.isnan(stat.loc[group])):
+            if pd.Series(stat.loc[group]).isna().any():
                 warn("Category {} returned {}".format(group, stat.loc[group]), 
                      util.CytoflowOpWarning)
                     

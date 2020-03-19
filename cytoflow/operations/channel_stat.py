@@ -248,7 +248,7 @@ class ChannelStatisticOp(HasStrictTraits):
                                            .format(group)) from e
             
             # check for, and warn about, NaNs.
-            if stat.loc[list(group)].isna().any():
+            if pd.Series(stat.loc[group]).isna().any():
                 warn("Found NaN in category {} returned {}"
                      .format(group, stat.loc[group]), 
                      util.CytoflowOpWarning)
