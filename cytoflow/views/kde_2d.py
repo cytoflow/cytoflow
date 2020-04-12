@@ -26,7 +26,7 @@ from traits.api import provides, Constant
 
 import matplotlib.pyplot as plt
 import numpy as np
-from sklearn.neighbors.kde import KernelDensity
+from sklearn.neighbors import KernelDensity
 from statsmodels.nonparametric.bandwidths import bw_scott, bw_silverman
 
 import cytoflow.utility as util
