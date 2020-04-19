@@ -83,6 +83,7 @@ test_script:
 
 after_test:
   # Install packaging requirements
+  - conda remove --yes pip
   - conda install --yes --quiet sphinx=2.4.4 openssl=1.0.2 pywin32 
 
   # when PyInstaller supports Conda's qt5, we'll go back to using the 
