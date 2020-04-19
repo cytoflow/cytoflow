@@ -71,7 +71,7 @@ script: nose2 -c packaging/nose2.cfg -s cytoflow/tests -N 2
 
 after_success:
 
-  - conda install --yes --quiet "sphinx==1.8.2" 
+  - conda install --yes --quiet "sphinx==2.4.4" 
   
 #  - pip install "pyinstaller==3.4.0"
   # when PyInstaller supports Conda's qt5, we'll go back to using the 

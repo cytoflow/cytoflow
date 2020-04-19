@@ -58,7 +58,7 @@ install:
   - "%WITH_COMPILER% conda build packaging\\conda_recipes\\cytoflow"
   
   # Install the new package locally
-  - conda create --yes --quiet --name=cytoflow python=3.6.7
+  - conda create --yes --quiet --name=cytoflow python=3.6.10
   - activate cytoflow
   - conda install --yes --quiet --use-local --only-deps cytoflow
   - "%WITH_COMPILER% python setup.py develop"
@@ -83,7 +83,7 @@ test_script:
 
 after_test:
   # Install packaging requirements
-  - conda install --yes --quiet sphinx=1.8.2 openssl=1.0.2 pywin32 
+  - conda install --yes --quiet sphinx=2.4.4 openssl=1.0.2 pywin32 
 
   # when PyInstaller supports Conda's qt5, we'll go back to using the 
   # version from PyPI.  In the meantime, we're going to use a submodule
