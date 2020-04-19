@@ -53,6 +53,8 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg
 
 from pyface.qt import QtCore, QtGui
 
+import numpy as np
+
 # needed for pylab_setup
 backend_version = "0.0.3"
 
@@ -478,7 +480,7 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
         with self.buffer_lock:
             FigureCanvasAgg.draw(self)
             
-            self.buffer = self.renderer.buffer_rgba()  
+            self.buffer = np.array(self.renderer.buffer_rgba())
                 
             self.buffer_width = self.renderer.width
             self.buffer_height = self.renderer.height
