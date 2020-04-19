@@ -66,24 +66,30 @@ setup(
     # Project uses reStructuredText, so ensure that the docutils get
     # installed or upgraded on the target machine
     install_requires = ['numpy==1.18.1',
-                        'pandas==1.0.2',
+                        'pandas==1.0.3',
                         'matplotlib==3.1.3',  
                         'bottleneck==1.3.2',
                         'numexpr==2.7.1',
                         'scipy==1.4.1',
                         'scikit-learn==0.22.1',
                         'seaborn==0.10.0',
-                        'traits==5.2.0',
-                        'pyface==6.1.2',
+                        'statsmodels==0.11.0',
+                        
+                        'traits==6.0.0',
                         'traitsui==6.1.3',
+                        'pyface==6.1.2',
+                        'envisage==4.8.0',
                         'nbformat==5.0.4',
                         'python-dateutil==2.8.1',
-                        'statsmodels==0.11.0',
-                        'envisage==4.8.0',
+                        
+                        # pyqt, qt are not in pip
+                        # need to install through your package manager
+                        'pyopengl==3.1.1a1', 
+
                         'camel==0.1.2',
                         'yapf==0.22.0',
-                        'fcsparser==0.2.0',
-                        'pyopengl==3.1.1a1'] 
+                        'fcsparser==0.2.0']
+    
                 if not on_rtd else ['sphinx==1.8.2'],
                         
     # GUI also requires PyQt4 >= 5.9.2, but it's not available via pypi and 
