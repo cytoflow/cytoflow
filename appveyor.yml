@@ -71,7 +71,7 @@ install:
 #  - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
   
   # - conda install --yes --quiet mkl=2017.0.3-0  # new version of mkl has bad interaction with numpy
-  - conda install --yes --quiet pip mock
+  - conda install --yes --quiet pip
 
   # Install test requirements
   - pip.exe install nose2 

@@ -64,7 +64,7 @@ install:
   - git reset --hard
 
 before_script:
-  - conda install --yes --quiet pip mock 
+  - conda install --yes --quiet pip 
   - pip install nose2 
 
 script: nose2 -c packaging/nose2.cfg -s cytoflow/tests -N 2
