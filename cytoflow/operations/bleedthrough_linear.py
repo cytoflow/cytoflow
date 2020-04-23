@@ -430,10 +430,10 @@ class BleedthroughLinearDiagnostic(HasStrictTraits):
                 
                 # for ReadTheDocs, which doesn't have swig
                 import sys
-                if sys.modules['cytoflow.utility.logicle_ext.Logicle'].__name__ != 'cytoflow.utility.logicle_ext.Logicle':
-                    scale_name = 'log'
-                else:
+                if 'cytoflow.utility.logicle_ext.Logicle' in sys.modules:
                     scale_name = 'logicle'
+                else:
+                    scale_name = 'log'
                 
                 xscale = util.scale_factory(scale_name, experiment, channel = from_channel)
                 yscale = util.scale_factory(scale_name, experiment, channel = to_channel)

@@ -42,15 +42,6 @@ def read_rst(*filenames, **kwargs):
             buf.append(f.read())
     return sep.join(buf)
 
-# cf https://packaging.python.org/en/latest/single_source_version.html
-
-def read_file(*names, **kwargs):
-    with io.open(
-        os.path.join(os.path.dirname(__file__), *names),
-        encoding=kwargs.get("encoding", "utf8")
-    ) as fp:
-        return fp.read()
-
 long_description = read_rst('README.rst')
 
 cmdclass = versioneer.get_cmdclass()  # @UndefinedVariable
@@ -90,7 +81,7 @@ setup(
                         'yapf==0.22.0',
                         'fcsparser==0.2.0']
     
-                if not on_rtd else ['sphinx==1.8.2'],
+                if not on_rtd else ['sphinx==2.4.4'],
                         
     # GUI also requires PyQt4 >= 5.9.2, but it's not available via pypi and 
     # distutils.  Install it locally!
