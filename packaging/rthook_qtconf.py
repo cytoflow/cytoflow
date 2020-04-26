@@ -20,7 +20,7 @@ qt_path = os.path.join(sys._MEIPASS, 'PyQt5', 'Qt')
 
 # QT's init file format requires front-slashes even on windows
 if sys.platform.startswith('win'):
-   qt_path = qt_path.replace("\\", '/')
+    qt_path = qt_path.replace("\\", '/')
     
 qt_conf_handle, qt_conf_filename = tempfile.mkstemp(dir = sys._MEIPASS, 
                                                     text = True)
