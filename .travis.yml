@@ -73,13 +73,13 @@ after_success:
 
   - conda install --yes --quiet "sphinx==2.4.4" 
   
-#  - pip install "pyinstaller==3.4.0"
+  - pip install "pyinstaller==3.6"
   # when PyInstaller supports Conda's qt5, we'll go back to using the 
   # version from PyPI.  In the meantime, we're going to use a submodule
   # that has a version that works.
-  - cd packaging/pyinstaller
-  - python setup.py install
-  - cd ../..
+  # - cd packaging/pyinstaller
+  # - python setup.py install
+  # - cd ../..
   
   
   - python setup.py build_sphinx -b embedded_help

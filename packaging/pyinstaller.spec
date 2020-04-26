@@ -11,6 +11,7 @@ a = Analysis(['../cytoflowgui/run.py'],
              hiddenimports = [
                  'matplotlib.backends.backend_qt5agg',
                  'matplotlib_backend',
+                 'pkg_resources.py2_warn',  # fix for setuptools >= 45.0
              ],
              hookspath=['packaging'],
              runtime_hooks=['packaging/rthook_qtapi.py',
@@ -22,12 +23,10 @@ a = Analysis(['../cytoflowgui/run.py'],
                        'gi.repository.cairo', 'gi.repository.GLib',
                        'gobject', 'Tkinter', 'FixTk', '_tkinter',
                        'PySide', 'PySide.QtCore', 'PySide.QtGui',
-                       'PySide.QtNetwork', 'PySide.QtSvg',
-		       'PyQt4',
+                       'PySide.QtNetwork', 'PySide.QtSvg', 'PyQt4',
                        'PyQt5.QtBluetooth', 'PyQt5.QtDesigner',
                        'PyQt5.QtHelp', 'PyQt5.QtLocation',
                        'PyQt5.QtMultimediaWidgets', 'PyQt5.QtNfc', 
-#                       'PyQt5.QtPrintSupport',  # necessary
                        'PyQt5.QtQml', 'PyQt5.QtQuick', 'PyQt5.QtQuickWidgets',
                        'PyQt5.QtSensors', 'PyQt5.QtSerialPort', 'PyQt5.QtSql',
                        'PyQt5.QtTest', 'PyQt5.QtWebSockets', 'PyQt5.QtXml',
@@ -58,12 +57,11 @@ a.binaries -= remove_items
 # (also get rid of all the timezone files; pytz is included because it's
 # a pandas dependency, but we don't do any timezone manipulation)
 
-remove_first = [ "cytoflow", "build", "dist", "doc", ".git", "pytz"]
-lol = [ [x for x in a.datas if x[0].startswith(y)] for y in remove_first]
-remove_items = [item for sublist in lol for item in sublist]
-a.datas -= remove_items
+#remove_first = [ "cytoflow", "build", "dist", "doc", ".git", "pytz"]
+#lol = [ [x for x in a.datas if x[0].startswith(y)] for y in remove_first]
+#remove_items = [item for sublist in lol for item in sublist]
 
-#print("\n".join([str(x) for x in a.datas]))
+#a.datas -= remove_items
 
 pyz = PYZ(a.pure, a.zipped_data, cipher=None)
 
