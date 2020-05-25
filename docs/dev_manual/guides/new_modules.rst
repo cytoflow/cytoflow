@@ -1,4 +1,4 @@
-.. _new_modules:
+.. _dev_new_modules:
 
 ********************************
 Writing new ``cytoflow`` modules
