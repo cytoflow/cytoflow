@@ -104,8 +104,8 @@ plot_pre_code = "import matplotlib.pyplot as plt; plt.switch_backend('agg')"
 
 # intersphinx config
 intersphinx_mapping = {'pandas' : ('http://pandas.pydata.org/pandas-docs/stable/', None),
-                       'envisage' : ('http://docs.enthought.com/envisage/', None),
-                       'traits' : ('http://docs.enthought.com/traits/', None)} 
+                       'envisage' : ('https://docs.enthought.com/envisage/', None),
+                       'traits' : ('https://docs.enthought.com/traits/', None)} 
 
 
 # Add any paths that contain templates here, relative to this directory.
@@ -354,9 +354,9 @@ texinfo_documents = [
 #texinfo_no_detailmenu = False
 
 def setup(app):
-    app.connect('builder-inited', run_apidoc)
+    # app.connect('builder-inited', run_apidoc)
     app.connect('builder-inited', set_builder_config)
-    app.connect('build-finished', cleanup_apidoc)
+    # app.connect('build-finished', cleanup_apidoc)
     app.connect('build-finished', copy_embedded_help)
 
     sys.modules['sys'].IN_SPHINX = True
@@ -384,35 +384,52 @@ def run_apidoc(app):
 
     from sphinx.ext.apidoc import main
     sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-    cur_dir = os.path.abspath(os.path.dirname(__file__))
-    
-    try:
-        filelist = glob.glob(os.path.join(cur_dir, "cytoflow*.rst"))
-        for f in filelist:
-            os.unlink(f)
-    except FileNotFoundError:
-        pass
+    curr_dir = pathlib.Path(os.path.abspath(os.path.dirname(__file__)))
      
-    if app.builder.name == 'embedded_help':  # @UndefinedVariable
-        module = os.path.join(cur_dir,"..","cytoflowgui")        
-        main(['-T', '-e', '-E', '-f', '-o', cur_dir, module, module + "/tests/*"])    
-    else:
-        module = os.path.join(cur_dir,"..","cytoflow")    
-        main(['-T', '-e', '-E', '-f', '-o', cur_dir, module, module + "/tests/*"])
+    # only build the API docs if we're NOT building the embedded help
+    if app.builder.name != 'embedded_help':  # @UndefinedVariable
+        output_dir = curr_dir / "dev_manual" / "reference"
         
-def cleanup_apidoc(app, exc):  # @UnusedVariable
-    cur_dir = os.path.abspath(os.path.dirname(__file__))
+        # remove stale API docs
+        try:
+            filelist = glob.glob(str(output_dir / "cytoflow*.rst"))
+            for f in filelist:
+                os.unlink(f)
+        except FileNotFoundError:
+            pass
+        
+        module = curr_dir / ".." / "cytoflow"    
+        main(['-T', '-e', '-E', '-f', '-o', str(output_dir), str(module), str(module / "tests" / "*")])
     
+    # always build the GUI docs
+    output_dir = curr_dir / "user_manual" / "reference"
+    module = curr_dir / ".." / "cytoflowgui"        
+    
+    # remove stale GUI docs
     try:
-        filelist = glob.glob(os.path.join(cur_dir, "cytoflow*.rst"))
+        filelist = glob.glob(str(output_dir / "cytoflow*.rst"))
         for f in filelist:
             os.unlink(f)
     except FileNotFoundError:
         pass
+    
+    main(['-T', '-e', '-E', '-f', '-o', str(output_dir), str(module), str(module / "tests" / "*")])    
+
+def cleanup_apidoc(app, exc):  # @UnusedVariable
+    dirs = [pathlib.Path(os.path.abspath(os.path.dirname(__file__))) / d / "reference"
+            for d in ["user_manual", "dev_manual"]]
+    
+    for d in dirs:
+        try:
+            filelist = glob.glob(str(d / "cytoflow*.rst"))
+            for f in filelist:
+                os.unlink(f)
+        except FileNotFoundError:
+            pass
 
 def copy_embedded_help(app, exc):  # @UnusedVariable
     if app.builder.name == 'embedded_help':
-        dest_dir = pathlib.Path(__file__).parents[1].joinpath('cytoflowgui', 'help').as_posix()
+        dest_dir = pathlib.Path(__file__).parents[1].joinpath('cytoflowgui', 'help')
         print("Copying {} to {}".format(app.outdir, dest_dir))
         shutil.rmtree(dest_dir, ignore_errors = True)
         shutil.copytree(app.outdir, dest_dir)
