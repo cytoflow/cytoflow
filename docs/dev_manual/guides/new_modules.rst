@@ -1,8 +1,7 @@
 .. _dev_new_modules:
 
-********************************
 Writing new ``cytoflow`` modules
-********************************
+================================
 
 Creating a new module in :mod:`cytoflow` ranges from easy (for simple things)
 to quite involved.  I like to think that :mod:`cytoflow` follows the Perl 
@@ -12,7 +11,7 @@ With that in mind, let's look at the process of creating a new module,
 progressing from easy to involved.
 
 Basics
-======
+------
 
 All the APIs (both public and internal) are built using
 `Traits <http://docs.enthought.com/traits/>`_.  For operations and views in 
@@ -48,7 +47,7 @@ codebase to follow:
 .. _new_operation:
 
 New operations
-==============
+--------------
 
 The base operation API is fairly simple:
 
@@ -92,7 +91,7 @@ The base operation API is fairly simple:
 .. _new_view:
  
 New views
-=========
+---------
 
 The base view API is very simple:
 
@@ -145,7 +144,7 @@ The view base classes are:
 
 
 New GUI operations
-==================
+------------------
  
 Wrapping an operation for the GUI sometimes feels like it requires more work
 than writing the operation in the first place.  A new operation requires at
@@ -201,12 +200,12 @@ least five things:
 .. _new_view_plugin:
 
 New GUI views
-=============
+-------------
 
 A new view operation requires at least five things:
 
 
-* A plugin class implementing either :class:`.IViewPlugin`.  It should 
+* A plugin class implementing :class:`.IViewPlugin`.  It should 
   also derive from :class:`.PluginHelpMixin`, which adds support for online help.
   
 * A class derived from the underlying :mod:`cytoflow` view.  The derived
