@@ -44,7 +44,7 @@ a = Analysis(['../cytoflowgui/run.py'],
 # versions
 
 remove_strs = ["glib", "gobject", "gthread", "libX", "libICE", "libdrm", 
-               "fontconfig", "__pycache__"]
+               "fontconfig", "libuuid", "__pycache__"]
 
 lol = [ [x for x in a.binaries if x[0].find(y) >= 0] for y in remove_strs]
 remove_items = [item for sublist in lol for item in sublist]

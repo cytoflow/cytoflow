@@ -71,24 +71,17 @@ script: nose2 -c packaging/nose2.cfg -s cytoflow/tests -N 2
 
 after_success:
 
-  - conda install --yes --quiet "sphinx==2.4.4" 
+  - conda install --yes --quiet "sphinx==3.0.3" 
   
   - pip install "pyinstaller==3.6"
-  # when PyInstaller supports Conda's qt5, we'll go back to using the 
-  # version from PyPI.  In the meantime, we're going to use a submodule
-  # that has a version that works.
-  # - cd packaging/pyinstaller
-  # - python setup.py install
-  # - cd ../..
-  
-  
+
   - python setup.py build_sphinx -b embedded_help
 
   - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then python setup.py sdist; fi
   - python setup.py bdist_wheel
 
   # Build the one-click executables
-  - LD_LIBRARY_PATH=${CONDA_PREFIX}/lib pyinstaller --log-level=DEBUG packaging/pyinstaller.spec
+  - LD_LIBRARY_PATH=${CONDA_PREFIX}/lib python packaging/pyinstaller-local.py --log-level=DEBUG packaging/pyinstaller.spec
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then cd dist/; mv Cytoflow.app Cytoflow-${CONDA_TAG}.app; zip -r cytoflow-${CONDA_TAG}.macos.zip Cytoflow-${CONDA_TAG}.app/; rm -rf Cytoflow-${CONDA_TAG}.app cytoflow; cd ..; fi
   - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then cd dist; mv cytoflow cytoflow-${CONDA_TAG}; tar czf cytoflow-${CONDA_TAG}.linux_x86-64.tar.gz cytoflow-${CONDA_TAG}; rm -rf cytoflow-${CONDA_TAG}; cd ..; fi
   
