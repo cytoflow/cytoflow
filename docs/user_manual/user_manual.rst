@@ -1,7 +1,8 @@
 .. _user_manual:
 
-Cytoflow program manual
-=======================
+############################
+Cytoflow program user manual
+############################
 
 .. note:: **The user manual is currently under construction.**  You can get
    help for each operation and view by looking at the *Help* pane in the
@@ -12,5 +13,13 @@ Cytoflow program manual
 .. toctree::
    :maxdepth: 2
    
-   tutorials/*
+   tutorials/tutorials
+   
+   howto/howto   
+   
+   guides/guides
+   
+   reference/reference
+   
+   
    
