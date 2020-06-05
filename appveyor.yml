@@ -85,22 +85,14 @@ after_test:
   # Install packaging requirements
   - conda install --yes --quiet sphinx openssl pywin32
 
-  # when PyInstaller supports Conda's qt5, we'll go back to using the 
-  # version from PyPI.  In the meantime, we're going to use a submodule
-  # that has a version that works.
   - pip.exe install "pyinstaller==3.6"
-  # - git submodule init
-  # - git submodule update
-  # - cd packaging\pyinstaller
-  # - python setup.py install
-  # - cd ..\..
   
   # Build PyPI packages
   - "python setup.py build_sphinx -b embedded_help"
   - "python setup.py bdist_wheel"
   
   # Build one-click
-  - "pyinstaller packaging\\pyinstaller.spec"
+  - "python packaging\\pyinstaller-local.py packaging\\pyinstaller.spec"
   - '"C:\Program Files (x86)\NSIS\makensis.exe" /NOCD packaging\installer.nsis'
   - set CONDA_TAG
   - set PYTHON_ARCH

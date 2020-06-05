@@ -79,7 +79,7 @@ exe = EXE(pyz,
           console=False,
           #console=True,
           bootloader_ignore_signals=False,
-          icon='cytoflowgui/images/icon.ico')
+          icon='icon.ico')
 
 coll = COLLECT(exe,
                a.binaries,
@@ -88,12 +88,12 @@ coll = COLLECT(exe,
                strip=False,
                upx=True,
                name='cytoflow',
-               icon='cytoflowgui/images/icon.ico')
+               icon='icon.ico')
 
 if sys.platform == 'darwin':
    app = BUNDLE(coll,
                 name = "Cytoflow.app",
-                icon = "cytoflowgui/images/icon.icns",
+                icon = "icon.icns",
                 bundle_identifier=None)
 
 
