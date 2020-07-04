@@ -61,7 +61,7 @@ from cytoflowgui.vertical_notebook_editor import VerticalNotebookEditor
 from cytoflowgui.workflow_item import WorkflowItem, RemoteWorkflowItem
 from cytoflowgui.util import UniquePriorityQueue, filter_unpicklable
 from cytoflowgui.multiprocess_logging import QueueHandler
-import cytoflowgui.matplotlib_backend
+import cytoflowgui.matplotlib_backend_remote
 
 class Msg(object):
     NEW_WORKFLOW = "NEW_WORKFLOW"
@@ -545,7 +545,7 @@ class RemoteWorkflow(HasStrictTraits):
         
         # configure matplotlib backend to use the pipe
         plt.new_figure_manager = lambda num, parent_conn = parent_mpl_conn, process_events = self.matplotlib_events, plot_lock = self.plot_lock, *args, **kwargs: \
-                                    cytoflowgui.matplotlib_backend.new_figure_manager(num, 
+                                    cytoflowgui.matplotlib_backend_remote.new_figure_manager(num, 
                                                                                       parent_conn = parent_conn, 
                                                                                       process_events = process_events,
                                                                                       plot_lock = plot_lock, 

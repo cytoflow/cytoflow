@@ -111,8 +111,8 @@ def run_gui():
     
     # Make matplotlib to use our backend
     
-    import matplotlib
-    matplotlib.use('module://cytoflowgui.matplotlib_backend')
+    #import matplotlib
+    #matplotlib.use('module://cytoflowgui.matplotlib_backend_local')
     
     # getting real tired of the matplotlib deprecation warnings
     import warnings
@@ -274,7 +274,7 @@ def remote_main(parent_workflow_conn, parent_mpl_conn, log_q, running_event):
     # remote process.  Must be called BEFORE cytoflow is imported
     
     import matplotlib
-    matplotlib.use('module://cytoflowgui.matplotlib_backend')
+    matplotlib.use('module://cytoflowgui.matplotlib_backend_remote')
     
     from traits.api import push_exception_handler    
     from cytoflowgui.workflow import RemoteWorkflow
