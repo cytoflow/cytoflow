@@ -51,7 +51,7 @@ if has_sphinx:
 setup(
     name = "cytoflow",
     version = versioneer.get_version(),  # @UndefinedVariable
-    packages = find_packages(exclude = ["packaging", "packaging.qt"]),
+    packages = find_packages(exclude = ["package", "package.qt"]),
     cmdclass = cmdclass,
     
     # Project uses reStructuredText, so ensure that the docutils get
