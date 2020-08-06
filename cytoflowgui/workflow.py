@@ -228,6 +228,7 @@ class Workflow(HasStrictTraits):
     log_thread = Instance(threading.Thread)
     remote_process_thread = Instance(threading.Thread)
     message_q = Instance(Queue, ())
+    log_q = Any
     
     # the Pipe connection object to pass to the matplotlib canvas
     child_matplotlib_conn = Any
@@ -248,7 +249,7 @@ class Workflow(HasStrictTraits):
     def __init__(self, remote_connection, **kwargs):
         super(Workflow, self).__init__(**kwargs)  
         
-        child_workflow_conn, self.child_matplotlib_conn, log_q = remote_connection
+        child_workflow_conn, self.child_matplotlib_conn, self.log_q = remote_connection
         
         self.recv_thread = threading.Thread(target = self.recv_main, 
                                             name = "local workflow recv",
@@ -264,7 +265,7 @@ class Workflow(HasStrictTraits):
         
         self.log_thread = threading.Thread(target = self.log_main,
                                            name = "log listener thread",
-                                           args = [log_q])
+                                           args = [self.log_q])
         self.log_thread.daemon = True
         self.log_thread.start()
 
@@ -319,6 +320,12 @@ class Workflow(HasStrictTraits):
                     self.eval_result = payload
                     self.eval_event.set()
                     
+                elif msg == Msg.SHUTDOWN:
+                    self.message_q.put(None)                    
+                    self.log_q.put(None)
+
+                    return
+                    
                 else:
                     raise RuntimeError("Bad message from remote")
             
@@ -329,6 +336,10 @@ class Workflow(HasStrictTraits):
         try:
             while True:
                 msg = self.message_q.get()
+                
+                if msg == None:
+                    return
+                
                 child_conn.send(msg)
         except Exception:
             log_exception()
@@ -340,7 +351,7 @@ class Workflow(HasStrictTraits):
             try:
                 record = log_q.get()
                 if record is None: # We send this as a sentinel to tell the listener to quit.
-                    break
+                    return
                 logger = logging.getLogger(record.name)
                 logger.handle(record) # No level or filter logic applied - just do it!
             except (KeyboardInterrupt, SystemExit):
@@ -350,7 +361,10 @@ class Workflow(HasStrictTraits):
                 traceback.print_exc(file=sys.stderr)
                 
     def shutdown_remote_process(self):
+        # this also results in the orderly shutdown of all the IPC threads
         self.message_q.put((Msg.SHUTDOWN, None))
+        self.send_thread.join()
+        self.log_thread.join()
         
     def run_all(self):
         self.message_q.put((Msg.RUN_ALL, None))
@@ -572,7 +586,8 @@ class RemoteWorkflow(HasStrictTraits):
                 
                 if wi is None:
                     # shutdown the child process
-                    break
+                    self.recv_thread.join()
+                    return
                 
                 with wi.lock:
                     fn()
@@ -698,7 +713,17 @@ class RemoteWorkflow(HasStrictTraits):
                     self.exec_q.put((idx - 0.5, (wi, wi.estimate)))
                     
                 elif msg == Msg.SHUTDOWN:
+                    # shut down the sending thread.
+                    # this also sends Msg.SHUTDOWN back to the local Workflow
+                    
+                    self.message_q.put((Msg.SHUTDOWN, 0))
+                    self.send_thread.join()
+                    
+                    # tell the parent process to shut down
                     self.exec_q.put((0, (None, None)))
+                    
+                    # exit this thread
+                    return
                     
                 elif msg == Msg.EVAL:
                     expr = payload
@@ -720,6 +745,10 @@ class RemoteWorkflow(HasStrictTraits):
             while True:
                 msg = self.message_q.get()
                 parent_conn.send(msg)
+                
+                if msg[0] == Msg.SHUTDOWN:
+                    return
+                    
         except Exception:
             log_exception()
             
