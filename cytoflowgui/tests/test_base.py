@@ -23,7 +23,9 @@ Created on Jan 4, 2018
 @author: brian
 '''
 
-import unittest, threading, multiprocessing, os, logging
+import unittest, threading, multiprocessing, os
+
+from traits.util.async_trait_wait import wait_for_condition
 
 from cytoflowgui.workflow import Workflow, RemoteWorkflow
 from cytoflowgui.workflow_item import WorkflowItem
@@ -108,7 +110,7 @@ class ImportedDataTest(WorkflowTest):
                           view_error = "Not yet plotted") 
         self.workflow.workflow.append(wi)
         op.do_estimate = True
-        self.assertTrue(wait_for(wi, 'status', lambda v: v == 'valid', 30))
+        wait_for_condition(lambda v: v.status == 'valid', wi, 'status', 30)
         self.assertTrue(self.workflow.remote_eval("self.workflow[0].result is not None"))
 
 
@@ -132,6 +134,6 @@ class TasbeTest(WorkflowTest):
                           view_error = "Not yet plotted") 
         self.workflow.workflow.append(wi)
         op.do_estimate = True
-        self.assertTrue(wait_for(wi, 'status', lambda v: v == 'valid', 30))
+        wait_for_condition(lambda v: v.status == 'valid', wi, 'status', 30)
         self.assertTrue(self.workflow.remote_eval("self.workflow[0].result is not None"))
 

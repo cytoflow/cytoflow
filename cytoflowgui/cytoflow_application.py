@@ -105,7 +105,7 @@ class CytoflowApplication(TasksApplication):
         mem_handler.setLevel(logging.DEBUG)
         logging.getLogger().addHandler(mem_handler)
          
-        ## and display gui messages for exceprions
+        ## and display gui messages for exceptions
         gui_handler = multiprocess_logging.CallbackHandler( lambda msg, app = self: gui_handler_callback(msg, app))
         gui_handler.setLevel(logging.ERROR)
         logging.getLogger().addHandler(gui_handler)
