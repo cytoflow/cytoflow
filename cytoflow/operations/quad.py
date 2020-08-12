@@ -22,7 +22,7 @@ cytoflow.operations.quad
 ------------------------
 '''
 
-from traits.api import (HasStrictTraits, Float, Str, Bool, Instance,
+from traits.api import (HasStrictTraits, Float, Str, Bool, Instance, Either,
                         provides, on_trait_change, Any, Constant)
 
 import matplotlib.pyplot as plt
@@ -32,10 +32,10 @@ import numpy as np
 import pandas as pd
 
 import cytoflow.utility as util
-from cytoflow.views import ISelectionView, ScatterplotView
+from cytoflow.views import ISelectionView, ScatterplotView, DensityView
 
-from .i_operation import IOperation
-from .base_op_views import Op2DView
+from cytoflow.operations.i_operation import IOperation
+from cytoflow.operations.base_op_views import Op2DView
 
 
 @provides(IOperation)
@@ -143,7 +143,10 @@ class QuadOp(HasStrictTraits):
     ychannel = Str
     ythreshold = Float
     
-    _selection_view = Instance('QuadSelection', transient = True)
+    _selection_view = Either(
+        Instance('QuadSelection', transient = True),
+        Instance('QuadDensitySelection', transient = True),
+    )
 
     def apply(self, experiment):
         """Applies the quad gate to an experiment.
@@ -243,9 +246,14 @@ class QuadOp(HasStrictTraits):
         self._selection_view = QuadSelection(op = self)
         self._selection_view.trait_set(**kwargs)
         return self._selection_view
+
+    def density_view(self, **kwargs):
+        self._selection_view = QuadDensitySelection(op = self)
+        self._selection_view.trait_set(**kwargs)
+        return self._selection_view
     
 @provides(ISelectionView)
-class QuadSelection(Op2DView, ScatterplotView):
+class QuadSelectionBase(Op2DView):
     """Plots, and lets the user interact with, a quadrant gate.
     
     Attributes
@@ -253,6 +261,9 @@ class QuadSelection(Op2DView, ScatterplotView):
     interactive : Bool
         is this view interactive?  Ie, can the user set the threshold with a 
         mouse click?
+
+    color : Str
+        what color should the quad gate lines be drawn with?
         
     Notes
     -----
@@ -283,7 +294,9 @@ class QuadSelection(Op2DView, ScatterplotView):
     yscale = util.ScaleEnum
 
     interactive = Bool(False, transient = True)
-    
+
+    color = Str("black")
+
     # internal state.
     _ax = Any(transient = True)
     _hline = Instance(Line2D, transient = True)
@@ -322,10 +335,10 @@ class QuadSelection(Op2DView, ScatterplotView):
         if self.op.xthreshold and self.op.ythreshold:
             self._hline = plt.axhline(self.op.ythreshold, 
                                       linewidth = 3, 
-                                      color = 'blue')
+                                      color = self.color)
             self._vline = plt.axvline(self.op.xthreshold,
                                       linewidth = 3,
-                                      color = 'blue')
+                                      color = self.color)
 
             plt.draw()
 
@@ -335,7 +348,7 @@ class QuadSelection(Op2DView, ScatterplotView):
             self._cursor = util.Cursor(self._ax,
                                        horizOn = True,
                                        vertOn = True,
-                                       color = 'blue',
+                                       color = self.color,
                                        useblit = True) 
             self._cursor.connect_event('button_press_event', self._onclick)
         elif self._cursor:
@@ -346,32 +359,64 @@ class QuadSelection(Op2DView, ScatterplotView):
         """Update the threshold location"""
         self.op.xthreshold = event.xdata
         self.op.ythreshold = event.ydata  
-        
+
+
+class QuadSelection(QuadSelectionBase, ScatterplotView):
+    pass
+
+
 util.expand_class_attributes(QuadSelection)
-util.expand_method_parameters(QuadSelection, QuadSelection.plot)  
-    
+util.expand_method_parameters(QuadSelection, QuadSelection.plot)
+
+
+class QuadDensitySelection(QuadSelectionBase, DensityView):
+    color = Str("gray")
+
+
+util.expand_class_attributes(QuadDensitySelection)
+util.expand_method_parameters(QuadDensitySelection, QuadDensitySelection.plot)
+
+
 if __name__ == '__main__':
     import cytoflow as flow
     tube1 = flow.Tube(file = '../../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs',
                       conditions = {"Dox" : 10.0})
-    
+
     tube2 = flow.Tube(file = '../../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs',
-                      conditions = {"Dox" : 1.0})                      
+                      conditions = {"Dox" : 1.0})
 
-    ex = flow.ImportOp(conditions = {"Dox" : "float"}, tubes = [tube1, tube2])
+    ex = flow.ImportOp(conditions = {"Dox" : "float"}, tubes = [tube1, tube2]).apply()
 
+    # default_view
     r = flow.QuadOp(name = "Quad",
                     xchannel = "V2-A",
                     ychannel = "Y2-A")
     rv = r.default_view(xscale = "logicle", yscale = "logicle")
-    
+
     plt.ioff()
     rv.plot(ex)
     rv.interactive = True
     plt.show()
     print("x:{0}  y:{1}".format(r.xthreshold, r.ythreshold))
     ex2 = r.apply(ex)
-    
+
+    flow.ScatterplotView(xchannel = "V2-A",
+                         ychannel = "Y2-A",
+                         xscale = "logicle",
+                         yscale = "logicle",
+                         huefacet = "Quad").plot(ex2)
+    plt.show()
+
+    # density_view
+    r = flow.QuadOp(name = "Quad",
+                    xchannel = "V2-A",
+                    ychannel = "Y2-A")
+    rv = r.density_view(interactive = True, xscale = "logicle", yscale = "logicle")
+    plt.ioff()
+    rv.plot(ex, gridsize=100)
+    plt.show()
+    print("x:{0}  y:{1}".format(r.xthreshold, r.ythreshold))
+    ex2 = r.apply(ex)
     flow.ScatterplotView(xchannel = "V2-A",
                          ychannel = "Y2-A",
                          xscale = "logicle",

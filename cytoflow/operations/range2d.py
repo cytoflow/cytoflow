@@ -25,17 +25,17 @@ cytoflow.operations.range2d
 import pandas as pd
 
 from traits.api import HasStrictTraits, Float, Str, Bool, Instance, \
-    provides, on_trait_change, Any, Constant
+    provides, on_trait_change, Any, Constant, Either
 
 from matplotlib.widgets import RectangleSelector
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 
 import cytoflow.utility as util
-from cytoflow.views import ScatterplotView, ISelectionView
+from cytoflow.views import ScatterplotView, ISelectionView, DensityView
 
-from .i_operation import IOperation
-from .base_op_views import Op2DView
+from cytoflow.operations.i_operation import IOperation
+from cytoflow.operations.base_op_views import Op2DView
 
 @provides(IOperation)
 class Range2DOp(HasStrictTraits):
@@ -149,7 +149,10 @@ class Range2DOp(HasStrictTraits):
     ylow = Float
     yhigh = Float
     
-    _selection_view = Instance('RangeSelection2D', transient = True)
+    _selection_view = Either(
+        Instance('RangeSelection2D', transient = True),
+        Instance('RangeDensitySelection2D', transient = True)
+    )
 
     def apply(self, experiment):
         """Applies the threshold to an experiment.
@@ -239,9 +242,14 @@ class Range2DOp(HasStrictTraits):
         self._selection_view = RangeSelection2D(op = self)
         self._selection_view.trait_set(**kwargs)
         return self._selection_view
+
+    def density_view(self, **kwargs):
+        self._selection_view = RangeDensitySelection2D(op = self)
+        self._selection_view.trait_set(**kwargs)
+        return self._selection_view
     
 @provides(ISelectionView)
-class RangeSelection2D(Op2DView, ScatterplotView):
+class RangeSelection2DBase(Op2DView):
     """
     Plots, and lets the user interact with, a 2D selection.
     
@@ -250,6 +258,9 @@ class RangeSelection2D(Op2DView, ScatterplotView):
     interactive : Bool
         is this view interactive?  Ie, can the user set min and max
         with a mouse drag?
+
+    color : Str
+        what color should the range box be drawn with?
         
     Notes
     -----
@@ -279,6 +290,8 @@ class RangeSelection2D(Op2DView, ScatterplotView):
     yscale = util.ScaleEnum
     
     interactive = Bool(False, transient = True)
+
+    color = Str("black")
     
     # internal state.
     _ax = Any(transient = True)
@@ -298,7 +311,7 @@ class RangeSelection2D(Op2DView, ScatterplotView):
             raise util.CytoflowViewError('experiment',
                                          "No experiment specified")
         
-        super(RangeSelection2D, self).plot(experiment, **kwargs)
+        super(RangeSelection2DBase, self).plot(experiment, **kwargs)
         self._ax = plt.gca()
         self._draw_rect()
         self._interactive()
@@ -316,7 +329,7 @@ class RangeSelection2D(Op2DView, ScatterplotView):
                                   (self.op.xhigh - self.op.xlow), 
                                   (self.op.yhigh - self.op.ylow), 
                                   facecolor="none",
-                                  edgecolor = 'blue',
+                                  edgecolor = self.color,
                                   linewidth = 2)
             self._ax.add_patch(self._box)
             plt.draw()
@@ -328,7 +341,7 @@ class RangeSelection2D(Op2DView, ScatterplotView):
                                 self._ax, 
                                 onselect=self._onselect, 
                                 rectprops=dict(facecolor = 'none',
-                                               edgecolor = 'blue',
+                                               edgecolor = self.color,
                                                linewidth = 2),
                                 useblit = True)
         else:
@@ -341,10 +354,24 @@ class RangeSelection2D(Op2DView, ScatterplotView):
         self.op.xhigh = max(pos1.xdata, pos2.xdata)
         self.op.ylow = min(pos1.ydata, pos2.ydata)
         self.op.yhigh = max(pos1.ydata, pos2.ydata)
-        
+
+
+class RangeSelection2D(RangeSelection2DBase, ScatterplotView):
+    pass
+
+
 util.expand_class_attributes(RangeSelection2D)
-util.expand_method_parameters(RangeSelection2D, RangeSelection2D.plot) 
-    
+util.expand_method_parameters(RangeSelection2D, RangeSelection2D.plot)
+
+
+class RangeDensitySelection2D(RangeSelection2DBase, DensityView):
+    color = Str("gray")
+
+
+util.expand_class_attributes(RangeDensitySelection2D)
+util.expand_method_parameters(RangeDensitySelection2D, RangeDensitySelection2D.plot)
+
+
 if __name__ == '__main__':
     import cytoflow as flow
     
@@ -354,14 +381,20 @@ if __name__ == '__main__':
     tube2 = flow.Tube(file = '../../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs',
                       conditions = {"Dox" : 1.0})                      
 
-    ex = flow.ImportOp(conditions = {"Dox" : "float"}, tubes = [tube1, tube2])
+    ex = flow.ImportOp(conditions = {"Dox" : "float"}, tubes = [tube1, tube2]).apply()
     
     r = flow.Range2DOp(xchannel = "V2-A",
                        ychannel = "Y2-A")
-    rv = r.default_view()
+    rv = r.default_view(interactive=True, xscale="logicle", yscale="logicle")
     
     plt.ioff()
     rv.plot(ex)
     rv.interactive = True
+    plt.show()
+    print("x:({0}, {1})  y:({2}, {3})".format(r.xlow, r.xhigh, r.ylow, r.yhigh))
+
+    rv = r.density_view(interactive=True, xscale="logicle", yscale="logicle", huescale="log")
+    plt.ioff()
+    rv.plot(ex, gridsize=200)
     plt.show()
     print("x:({0}, {1})  y:({2}, {3})".format(r.xlow, r.xhigh, r.ylow, r.yhigh))
