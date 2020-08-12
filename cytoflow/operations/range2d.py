@@ -389,7 +389,6 @@ if __name__ == '__main__':
     
     plt.ioff()
     rv.plot(ex)
-    rv.interactive = True
     plt.show()
     print("x:({0}, {1})  y:({2}, {3})".format(r.xlow, r.xhigh, r.ylow, r.yhigh))
 
