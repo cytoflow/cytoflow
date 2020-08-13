@@ -161,7 +161,6 @@ class TestBarchart(ImportedDataTest):
         for style in ['darkgrid', 'whitegrid', 'white', 'dark', 'ticks']:
             self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
             self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
-            print(style)
             self.view.plot_params.sns_style = style
             self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
              

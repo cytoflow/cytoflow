@@ -276,7 +276,7 @@ class Workflow(HasStrictTraits):
             except EOFError:
                 return
             
-            logging.debug("LocalWorkflow.recv_main :: {}".format(msg))
+            logging.debug("LocalWorkflow.recv_main :: {}".format((msg, payload)))
             
             try: 
                 if msg == Msg.UPDATE_WI:
@@ -602,7 +602,7 @@ class RemoteWorkflow(HasStrictTraits):
             except EOFError:
                 return
             
-            logging.debug("RemoteWorkflow.recv_main :: {}".format(msg))
+            logging.debug("RemoteWorkflow.recv_main :: {}".format((msg, payload)))
             
             try:
                 if msg == Msg.NEW_WORKFLOW:

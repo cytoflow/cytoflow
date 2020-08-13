@@ -23,7 +23,11 @@ Created on Jan 4, 2018
 @author: brian
 '''
 
-import unittest, threading, multiprocessing, os
+import unittest, threading, multiprocessing, os, logging
+
+# do this at import time so we get lots of output when running 
+# in PyDev, etc.
+logging.getLogger().setLevel(logging.DEBUG)
 
 from traits.util.async_trait_wait import wait_for_condition
 
