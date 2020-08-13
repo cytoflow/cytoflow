@@ -90,6 +90,13 @@ class QueueHandler(logging.Handler):
         except Exception:
             self.handleError(record)
             
+    def close(self):
+        
+        self.queue.close()
+        self.queue.join_thread()
+        
+        super().close()
+            
         
 class CallbackHandler(logging.Handler):
     def __init__(self, callback):

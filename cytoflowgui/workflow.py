@@ -321,9 +321,7 @@ class Workflow(HasStrictTraits):
                     self.eval_event.set()
                     
                 elif msg == Msg.SHUTDOWN:
-                    self.message_q.put(None)                    
-                    self.log_q.put(None)
-
+                    self.message_q.put(None)
                     return
                     
                 else:
@@ -350,8 +348,12 @@ class Workflow(HasStrictTraits):
         while True:
             try:
                 record = log_q.get()
+                
                 if record is None: # We send this as a sentinel to tell the listener to quit.
+                    log_q.close()
+                    log_q.join_thread()
                     return
+                
                 logger = logging.getLogger(record.name)
                 logger.handle(record) # No level or filter logic applied - just do it!
             except (KeyboardInterrupt, SystemExit):
@@ -360,10 +362,21 @@ class Workflow(HasStrictTraits):
                 print('Whoops! Problem:', file=sys.stderr)
                 traceback.print_exc(file=sys.stderr)
                 
-    def shutdown_remote_process(self):
-        # this also results in the orderly shutdown of all the IPC threads
+    def shutdown_remote_process(self, remote_process):
+        # tell the remote process to shut down
         self.message_q.put((Msg.SHUTDOWN, None))
+        
+        # the SHUTDOWN message stops the sending thread
         self.send_thread.join()
+        
+        # the reply from the remote process stops the receiving thread
+        self.recv_thread.join()
+        
+        # make sure the remote process has shut down entirely
+        remote_process.join()
+        
+        # shut down the logging thread
+        self.log_q.put(None)
         self.log_thread.join()
         
     def run_all(self):
@@ -539,7 +552,7 @@ class RemoteWorkflow(HasStrictTraits):
     apply_calls = Int(0)
     plot_calls = Int(0)
     
-    def run(self, parent_workflow_conn, parent_mpl_conn, log_q):
+    def run(self, parent_workflow_conn, parent_mpl_conn, log_q, headless = False):
         
         # if we're on MacOS or Linux, we inherit a root logger config from the 
         # parent process.  clear it.
@@ -558,13 +571,16 @@ class RemoteWorkflow(HasStrictTraits):
         self.plot_lock = threading.Lock()
         
         # configure matplotlib backend to use the pipe
-        plt.new_figure_manager = lambda num, parent_conn = parent_mpl_conn, process_events = self.matplotlib_events, plot_lock = self.plot_lock, *args, **kwargs: \
-                                    cytoflowgui.matplotlib_backend_remote.new_figure_manager(num, 
-                                                                                      parent_conn = parent_conn, 
-                                                                                      process_events = process_events,
-                                                                                      plot_lock = plot_lock, 
-                                                                                      *args, 
-                                                                                      **kwargs)
+        if headless:
+            pass
+        else:
+            plt.new_figure_manager = lambda num, parent_conn = parent_mpl_conn, process_events = self.matplotlib_events, plot_lock = self.plot_lock, *args, **kwargs: \
+                                        cytoflowgui.matplotlib_backend_remote.new_figure_manager(num, 
+                                                                                          parent_conn = parent_conn, 
+                                                                                          process_events = process_events,
+                                                                                          plot_lock = plot_lock, 
+                                                                                          *args, 
+                                                                                          **kwargs)
         
         # start threads
         self.recv_thread = threading.Thread(target = self.recv_main, 
@@ -713,14 +729,16 @@ class RemoteWorkflow(HasStrictTraits):
                     self.exec_q.put((idx - 0.5, (wi, wi.estimate)))
                     
                 elif msg == Msg.SHUTDOWN:
-                    # shut down the sending thread.
-                    # this also sends Msg.SHUTDOWN back to the local Workflow
+                    # tell the parent process to shut down
+                    self.exec_q.put((0, (None, None)))
                     
+                    # shut down the sending thread.
                     self.message_q.put((Msg.SHUTDOWN, 0))
                     self.send_thread.join()
                     
-                    # tell the parent process to shut down
-                    self.exec_q.put((0, (None, None)))
+                    # shut down the logging queue and its thread
+                    logging.getLogger().handlers[0].flush()
+                    logging.getLogger().handlers[0].close()
                     
                     # exit this thread
                     return

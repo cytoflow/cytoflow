@@ -50,7 +50,7 @@ class WorkflowTest(unittest.TestCase):
         
         def remote_main(parent_workflow_conn, parent_mpl_conn, log_q, running_event):
             running_event.set()
-            RemoteWorkflow().run(parent_workflow_conn, parent_mpl_conn, log_q)
+            RemoteWorkflow().run(parent_workflow_conn, parent_mpl_conn, log_q, headless = True)
         
         # communications channels
         parent_workflow_conn, child_workflow_conn = multiprocessing.Pipe()  
@@ -73,8 +73,7 @@ class WorkflowTest(unittest.TestCase):
         self.remote_process = remote_process
 
     def tearDown(self):
-        self.workflow.shutdown_remote_process()
-        self.remote_process.join()
+        self.workflow.shutdown_remote_process(self.remote_process)
         
 class ImportedDataTest(WorkflowTest):
     
