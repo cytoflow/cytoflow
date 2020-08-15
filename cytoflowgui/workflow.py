@@ -737,8 +737,11 @@ class RemoteWorkflow(HasStrictTraits):
                     self.send_thread.join()
                     
                     # shut down the logging queue and its thread
-                    logging.getLogger().handlers[0].flush()
-                    logging.getLogger().handlers[0].close()
+                    rootLogger = logging.getLogger()
+                    rootLogger.handlers[0].flush()
+                    rootLogger.handlers[0].close()
+                    list(map(rootLogger.removeHandler, rootLogger.handlers[:]))
+                    list(map(rootLogger.removeFilter, rootLogger.filters[:]))
                     
                     # exit this thread
                     return
