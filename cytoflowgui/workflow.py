@@ -373,6 +373,7 @@ class Workflow(HasStrictTraits):
         self.recv_thread.join()
         
         # make sure the remote process has shut down entirely
+        # this needs to happen before we can shut down the logging thread
         remote_process.join()
         
         # shut down the logging thread

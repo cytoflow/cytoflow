@@ -231,6 +231,7 @@ def run_gui():
     app = CytoflowApplication(id = 'edu.mit.synbio.cytoflow',
                               plugins = plugins,
                               icon = icon,
+                              remote_process = remote_process,
                               remote_connection = remote_connection,
                               filename = args.filename,
                               debug = args.debug)

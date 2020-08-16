@@ -74,6 +74,7 @@ class CytoflowApplication(TasksApplication):
     application_log = Instance(io.StringIO, ())
     
     # local process's central model
+    remote_process = Any
     remote_connection = Any
     model = Instance(Workflow)
     
@@ -130,7 +131,7 @@ class CytoflowApplication(TasksApplication):
         
     def stop(self):
         super().stop()
-        self.model.shutdown_remote_process()
+        self.model.shutdown_remote_process(self.remote_process)
         
 
     preferences_helper = Instance(CytoflowPreferences)
