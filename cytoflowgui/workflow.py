@@ -362,24 +362,7 @@ class Workflow(HasStrictTraits):
                 print('Whoops! Problem:', file=sys.stderr)
                 traceback.print_exc(file=sys.stderr)
                 
-    def shutdown_remote_process(self, remote_process):
-        # tell the remote process to shut down
-        self.message_q.put((Msg.SHUTDOWN, None))
-        
-        # the SHUTDOWN message stops the sending thread
-        self.send_thread.join()
-        
-        # the reply from the remote process stops the receiving thread
-        self.recv_thread.join()
-        
-        # make sure the remote process has shut down entirely
-        # this needs to happen before we can shut down the logging thread
-        remote_process.join()
-        
-        # shut down the logging thread
-        self.log_q.put(None)
-        self.log_thread.join()
-        
+
     def run_all(self):
         self.message_q.put((Msg.RUN_ALL, None))
 
@@ -531,6 +514,25 @@ class Workflow(HasStrictTraits):
     def remote_exec(self, expr):
         self.message_q.put((Msg.EXEC, expr))
         
+    def shutdown_remote_process(self, remote_process):
+        # tell the remote process to shut down
+        self.message_q.put((Msg.SHUTDOWN, None))
+        
+        # the SHUTDOWN message stops the sending thread
+        self.send_thread.join()
+        
+        # the reply from the remote process stops the receiving thread
+        self.recv_thread.join()
+        
+        # make sure the remote process has shut down entirely
+        # this needs to happen before we can shut down the logging thread
+        remote_process.join()
+        
+        # shut down the logging thread
+        self.log_q.put(None)
+        self.log_thread.join()
+        
+        
         
 class RemoteWorkflow(HasStrictTraits):
     workflow = List(RemoteWorkflowItem)
@@ -601,13 +603,17 @@ class RemoteWorkflow(HasStrictTraits):
             try:
                 _, (wi, fn) = self.exec_q.get()
                 
-                if wi is None:
-                    # shutdown the child process
-                    self.recv_thread.join()
-                    return
-                
-                with wi.lock:
-                    fn()
+                if wi:
+                    with wi.lock:
+                        fn()
+                else:
+                    if fn is None:
+                        # shutdown the child process
+                        self.recv_thread.join()
+                        return
+                    else:
+                        fn()
+
 
             except Exception:
                 log_exception()
@@ -731,7 +737,7 @@ class RemoteWorkflow(HasStrictTraits):
                     
                 elif msg == Msg.SHUTDOWN:
                     # tell the parent process to shut down
-                    self.exec_q.put((0, (None, None)))
+                    self.exec_q.put((sys.maxsize, (None, None)))
                     
                     # shut down the sending thread.
                     self.message_q.put((Msg.SHUTDOWN, 0))
@@ -748,13 +754,10 @@ class RemoteWorkflow(HasStrictTraits):
                     return
                     
                 elif msg == Msg.EVAL:
-                    expr = payload
-                    ret = eval(expr)
-                    self.message_q.put((Msg.EVAL, ret))
+                    self.exec_q.put((sys.maxsize, (None, lambda self = self, q = self.message_q, expr = payload: q.put((Msg.EVAL, expr)))))
                     
                 elif msg == Msg.EXEC:
-                    expr = payload
-                    exec(expr)
+                    self.exec_q.put((sys.maxsize, (None, lambda self = self, expr = payload: exec(expr))))
                                                  
                 else:
                     raise RuntimeError("Bad command in the remote workflow")
@@ -970,11 +973,14 @@ class RemoteWorkflow(HasStrictTraits):
             
     @on_trait_change('selected', post_init = True)
     def _selected_changed(self, obj, name, new):
+        logging.debug("RemoteWorkflow._selected_changed :: {}"
+                      .format((self, obj, name, new)))
+        
         if new:
             idx = self.workflow.index(new)
             if new.current_view:
                 new.current_view.update_plot_names(new)
-            self.exec_q.put((idx + 0.1, (new, new.plot)))
+                self.exec_q.put((idx + 0.1, (new, new.plot)))
             
     @on_trait_change('workflow:apply_called')
     def _apply_called(self):
