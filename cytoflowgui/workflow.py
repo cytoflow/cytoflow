@@ -589,13 +589,11 @@ class RemoteWorkflow(HasStrictTraits):
         self.recv_thread = threading.Thread(target = self.recv_main, 
                              name = "remote recv thread",
                              args = [parent_workflow_conn])
-        self.recv_thread.daemon = True
         self.recv_thread.start()
         
         self.send_thread = threading.Thread(target = self.send_main,
                                             name = "remote send thread",
                                             args = [parent_workflow_conn])
-        self.send_thread.daemon = True
         self.send_thread.start()
         
         # loop and process updates
@@ -607,13 +605,14 @@ class RemoteWorkflow(HasStrictTraits):
                     with wi.lock:
                         fn()
                 else:
+
                     if fn is None:
-                        # shutdown the child process
-                        self.recv_thread.join()
+                        self.shutdown()
                         return
                     else:
                         fn()
-
+                
+                self.exec_q.task_done()
 
             except Exception:
                 log_exception()
@@ -737,27 +736,16 @@ class RemoteWorkflow(HasStrictTraits):
                     
                 elif msg == Msg.SHUTDOWN:
                     # tell the parent process to shut down
-                    self.exec_q.put((sys.maxsize, (None, None)))
+                    self.exec_q.put((len(self.workflow) + 1, (None, None)))
                     
-                    # shut down the sending thread.
-                    self.message_q.put((Msg.SHUTDOWN, 0))
-                    self.send_thread.join()
-                    
-                    # shut down the logging queue and its thread
-                    rootLogger = logging.getLogger()
-                    rootLogger.handlers[0].flush()
-                    rootLogger.handlers[0].close()
-                    list(map(rootLogger.removeHandler, rootLogger.handlers[:]))
-                    list(map(rootLogger.removeFilter, rootLogger.filters[:]))
-                    
-                    # exit this thread
+                    # exit the receiving thread
                     return
                     
                 elif msg == Msg.EVAL:
-                    self.exec_q.put((sys.maxsize, (None, lambda self = self, q = self.message_q, expr = payload: q.put((Msg.EVAL, expr)))))
+                    self.exec_q.put((len(self.workflow) + 1, (None, lambda self = self, q = self.message_q, expr = payload: q.put((Msg.EVAL, eval(expr))))))
                     
                 elif msg == Msg.EXEC:
-                    self.exec_q.put((sys.maxsize, (None, lambda self = self, expr = payload: exec(expr))))
+                    self.exec_q.put((len(self.workflow) + 1, (None, lambda self = self, expr = payload: exec(expr))))
                                                  
                 else:
                     raise RuntimeError("Bad command in the remote workflow")
@@ -776,6 +764,26 @@ class RemoteWorkflow(HasStrictTraits):
                     
         except Exception:
             log_exception()
+            
+            
+    def shutdown(self):
+        # make sure the receiving thread is shut down
+        self.recv_thread.join()
+        
+        # shut down the sending thread
+        self.message_q.put((Msg.SHUTDOWN, 0))
+        self.send_thread.join()
+        
+        # shut down the logging queue and its thread
+        rootLogger = logging.getLogger()
+        handler = rootLogger.handlers[0]
+
+        list(map(rootLogger.removeHandler, rootLogger.handlers[:]))
+        list(map(rootLogger.removeFilter, rootLogger.filters[:]))
+        
+        handler.flush()
+        handler.close()
+        
             
             
     @on_trait_change('workflow_items', post_init = True)

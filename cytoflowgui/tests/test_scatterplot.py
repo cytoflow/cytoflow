@@ -285,7 +285,7 @@ class TestScatterplot(ImportedDataTest):
         self.view.plot_params.marker = '+'
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
                                     
-        for m in SCATTERPLOT_MARKERS:
+        for m in SCATTERPLOT_MARKERS[::-1]:
             self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
             self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
             self.view.plot_params.marker = m

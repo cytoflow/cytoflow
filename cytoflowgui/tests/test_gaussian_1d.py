@@ -299,7 +299,7 @@ class TestGaussian1D(ImportedDataTest):
         self.view.plot_params.histtype = "bar"
         wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
 
-        for linestyle in ['solid', 'dashed', 'dashdot', 'dotted']:
+        for linestyle in ['dashed', 'solid', 'dashed', 'dashdot', 'dotted']:
             self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
             wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
             self.view.plot_params.linestyle = linestyle
