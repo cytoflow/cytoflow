@@ -27,7 +27,9 @@ import unittest, tempfile, os
 import matplotlib
 matplotlib.use('Agg')
 
-from cytoflowgui.tests.test_base import ImportedDataTest, TasbeTest, wait_for
+from traits.util.async_trait_wait import wait_for_condition
+
+from cytoflowgui.tests.test_base import ImportedDataTest, TasbeTest
 from cytoflowgui.serialization import save_yaml, load_yaml
 from cytoflowgui.op_plugins.import_op import ImportPluginOp, Channel
 from cytoflowgui.op_plugins import ImportPlugin
@@ -40,9 +42,13 @@ class TestImport(ImportedDataTest):
         op = wi.operation
         
         op.events = 1000
-        self.assertTrue(wait_for(wi, 'status', lambda v: v != 'valid', 30))
+        wait_for_condition(lambda v: v.status == 'applying', wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'invalid', wi, 'status', 30)
         op.do_estimate = True
-        self.assertTrue(wait_for(wi, 'status', lambda v: v == 'valid', 30))
+        wait_for_condition(lambda v: v.status == 'estimating', wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'applying', wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'valid', wi, 'status', 30)
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
         self.assertTrue(self.workflow.remote_eval('len(self.workflow[0].result) == 6000'))
         self.assertEqual(op.ret_events, 6000)
          
@@ -51,9 +57,13 @@ class TestImport(ImportedDataTest):
         op = wi.operation
          
         op.channels_list = [Channel(channel = 'SSC-A', name = 'SSC_A')]
-        self.assertTrue(wait_for(wi, 'status', lambda v: v != 'valid', 30))
+        wait_for_condition(lambda v: v.status == 'applying', wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'invalid', wi, 'status', 30)
         op.do_estimate = True
-        self.assertTrue(wait_for(wi, 'status', lambda v: v == 'valid', 30))
+        wait_for_condition(lambda v: v.status == 'estimating', wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'applying', wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'valid', wi, 'status', 30)
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
        
  
     def testSerialize(self):
