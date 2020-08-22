@@ -78,6 +78,10 @@ class BaseView(HasStrictTraits):
             
         huelabel : str
             Set the label for the hue facet (in the legend)
+
+        palette : str, list, dict, or None
+            Should be something that can be interpreted by seaborn.color_palette(),
+            or a dictionary mapping hue levels to matplotlib colors. See seaborn documentation.
             
         legend : bool
             Plot a legend for the color or hue facet?  Defaults to `True`.
@@ -141,6 +145,7 @@ class BaseView(HasStrictTraits):
         xlabel = kwargs.pop("xlabel", None)
         ylabel = kwargs.pop("ylabel", None)
         huelabel = kwargs.pop("huelabel", self.huefacet)
+        palette = kwargs.pop("palette", None)
         
         sharex = kwargs.pop("sharex", True)
         sharey = kwargs.pop("sharey", True)
@@ -178,6 +183,7 @@ class BaseView(HasStrictTraits):
                           col_order = (np.sort(data[self.xfacet].unique()) if self.xfacet else None),
                           row_order = (np.sort(data[self.yfacet].unique()) if self.yfacet else None),
                           hue_order = (np.sort(data[self.huefacet].unique()) if self.huefacet else None),
+                          palette = palette,
                           col_wrap = col_wrap,
                           legend_out = False,
                           sharex = sharex,
