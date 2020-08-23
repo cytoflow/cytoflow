@@ -30,8 +30,8 @@ before_install:
 
   # setup anaconda 
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install swig@3.04; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export PATH="/usr/local/opt/swig@3.04/bin:$PATH"; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install swig@3; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export PATH="/usr/local/opt/swig@3/bin:$PATH"; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install rename; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then wget https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O miniconda.sh; else wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh; fi
 
@@ -55,7 +55,7 @@ install:
   # build and install conda recipe
   - conda render packaging/conda_recipes/cytoflow
   - conda build packaging/conda_recipes/cytoflow
-  - conda create --yes --quiet --name=cytoflow python==3.6.7 nomkl
+  - conda create --yes --quiet --name=cytoflow python==3.6.10 nomkl
   - source activate cytoflow
   - conda install --yes --quiet --use-local --only-deps cytoflow
   - python setup.py develop
@@ -64,31 +64,24 @@ install:
   - git reset --hard
 
 before_script:
-  - conda install --yes --quiet pip mock 
+  - conda install --yes --quiet pip 
   - pip install nose2 
 
 script: nose2 -c packaging/nose2.cfg -s cytoflow/tests -N 2
 
 after_success:
 
-  - conda install --yes --quiet "sphinx==1.8.2" 
+  - conda install --yes --quiet "sphinx==3.0.3" 
   
-#  - pip install "pyinstaller==3.4.0"
-  # when PyInstaller supports Conda's qt5, we'll go back to using the 
-  # version from PyPI.  In the meantime, we're going to use a submodule
-  # that has a version that works.
-  - cd packaging/pyinstaller
-  - python setup.py install
-  - cd ../..
-  
-  
+  - pip install "pyinstaller==3.6"
+
   - python setup.py build_sphinx -b embedded_help
 
   - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then python setup.py sdist; fi
   - python setup.py bdist_wheel
 
   # Build the one-click executables
-  - LD_LIBRARY_PATH=${CONDA_PREFIX}/lib pyinstaller --log-level=DEBUG packaging/pyinstaller.spec
+  - LD_LIBRARY_PATH=${CONDA_PREFIX}/lib python packaging/pyinstaller-local.py --log-level=DEBUG packaging/pyinstaller.spec
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then cd dist/; mv Cytoflow.app Cytoflow-${CONDA_TAG}.app; zip -r cytoflow-${CONDA_TAG}.macos.zip Cytoflow-${CONDA_TAG}.app/; rm -rf Cytoflow-${CONDA_TAG}.app cytoflow; cd ..; fi
   - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then cd dist; mv cytoflow cytoflow-${CONDA_TAG}; tar czf cytoflow-${CONDA_TAG}.linux_x86-64.tar.gz cytoflow-${CONDA_TAG}; rm -rf cytoflow-${CONDA_TAG}; cd ..; fi
   

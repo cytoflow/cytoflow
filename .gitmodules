@@ -1,8 +1,5 @@
 [submodule "docs/examples-advanced"]
 	path = docs/examples-advanced
 	url = https://github.com/bpteague/cytoflow-examples.git
-[submodule "packaging/pyinstaller"]
-	path = packaging/pyinstaller
-	url = https://github.com/bpteague/pyinstaller.git
-	branch = cytoflow
+
 

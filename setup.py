@@ -42,15 +42,6 @@ def read_rst(*filenames, **kwargs):
             buf.append(f.read())
     return sep.join(buf)
 
-# cf https://packaging.python.org/en/latest/single_source_version.html
-
-def read_file(*names, **kwargs):
-    with io.open(
-        os.path.join(os.path.dirname(__file__), *names),
-        encoding=kwargs.get("encoding", "utf8")
-    ) as fp:
-        return fp.read()
-
 long_description = read_rst('README.rst')
 
 cmdclass = versioneer.get_cmdclass()  # @UndefinedVariable
@@ -65,26 +56,32 @@ setup(
     
     # Project uses reStructuredText, so ensure that the docutils get
     # installed or upgraded on the target machine
-    install_requires = ['numpy==1.15.4',
-                        'pandas==0.23.4',
-                        'matplotlib==3.0.2',  
-                        'bottleneck==1.2.1',
-                        'numexpr==2.6.8',
-                        'scipy==1.1.0',
-                        'scikit-learn==0.20.1',
-                        'seaborn==0.9.0',
-                        'traits==4.6.0',
-                        'pyface==6.0.0',
-                        'traitsui==6.0.0',
-                        'nbformat==4.4.0',
-                        'python-dateutil==2.7.5',
-                        'statsmodels==0.9.0',
-                        'envisage==4.7.0',
+    install_requires = ['numpy==1.18.1',
+                        'pandas==1.0.3',
+                        'matplotlib==3.1.3',  
+                        'bottleneck==1.3.2',
+                        'numexpr==2.7.1',
+                        'scipy==1.4.1',
+                        'scikit-learn==0.22.1',
+                        'seaborn==0.10.0',
+                        'statsmodels==0.11.0',
+                        
+                        'traits==6.0.0',
+                        'traitsui==6.1.3',
+                        'pyface==6.1.2',
+                        'envisage==4.8.0',
+                        'nbformat==5.0.4',
+                        'python-dateutil==2.8.1',
+                        
+                        # pyqt, qt are not in pip
+                        # need to install through your package manager
+                        'pyopengl==3.1.1a1', 
+
                         'camel==0.1.2',
                         'yapf==0.22.0',
-                        'fcsparser==0.2.0',
-                        'pyopengl==3.1.1a1'] 
-                if not on_rtd else ['sphinx==1.8.2'],
+                        'fcsparser==0.2.0']
+    
+                if not on_rtd else ['sphinx==2.4.4'],
                         
     # GUI also requires PyQt4 >= 5.9.2, but it's not available via pypi and 
     # distutils.  Install it locally!
@@ -118,7 +115,7 @@ setup(
     keywords = "flow cytometry scipy",
     url = "https://github.com/bpteague/cytoflow", 
     classifiers=[
-                 'Development Status :: 4 - Beta',
+                 'Development Status :: 5 - Production/Stable',
                  'Environment :: Console',
                  'Environment :: MacOS X',
                  'Environment :: Win32 (MS Windows)',
@@ -132,6 +129,7 @@ setup(
                  'Programming Language :: Python :: 3.4',
                  'Programming Language :: Python :: 3.5',
                  'Programming Language :: Python :: 3.6',
+                 'Programming Language :: Python :: 3.7',
                  'Programming Language :: Python :: Implementation :: CPython',
                  'Topic :: Scientific/Engineering :: Bio-Informatics',
                  'Topic :: Software Development :: Libraries :: Python Modules'],

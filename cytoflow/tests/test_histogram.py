@@ -137,5 +137,5 @@ class TestHistogram(ImportedDataTest):
 
         
 if __name__ == "__main__":
-#     import sys;sys.argv = ['', 'Test.testName']
+    import sys;sys.argv = ['', 'TestHistogram.testLogicleScale']
     unittest.main()

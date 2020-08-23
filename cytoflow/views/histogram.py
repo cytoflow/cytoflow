@@ -164,7 +164,7 @@ class HistogramView(Base1DView):
         else:
             xmin = bottleneck.nanmin(scaled_data)
             xmax = bottleneck.nanmax(scaled_data)
-            bins = scale.inverse(np.linspace(xmin, xmax, num=num_bins, endpoint = True))
+            bins = scale.inverse(np.linspace(xmin, xmax, num=int(num_bins), endpoint = True))
                     
         kwargs.setdefault('bins', bins) 
         kwargs.setdefault('orientation', 'vertical')

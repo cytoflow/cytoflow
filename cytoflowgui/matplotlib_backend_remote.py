@@ -18,7 +18,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-A matplotlib backend that renders across a process boundary.
+A matplotlib backend that renders across a process boundary.  This file has
+the "remote" canvas -- the Agg renderer into which pyplot.plot() renders.
 
 By default, matplotlib only works in one thread.  For a GUI application, this
 is a problem because when matplotlib is working (ie, scaling a bunch of data
@@ -48,10 +49,12 @@ import time, threading, logging, sys, traceback
 import matplotlib.pyplot
 from matplotlib.figure import Figure
 
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
+#from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 
-from pyface.qt import QtCore, QtGui
+#from pyface.qt import QtCore, QtGui
+
+import numpy as np
 
 # needed for pylab_setup
 backend_version = "0.0.3"
@@ -88,260 +91,6 @@ def log_exception():
     logging.error("Error: {0}\nLocation: {1}Thread: {2}" \
                   .format(err_string, err_loc, err_ctx) )
     
-
-class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
-    """
-    The local canvas; ie, the one in the GUI.
-      figure - A Figure instance
-   """
-
-    def __init__(self, figure, child_conn, working_pixmap):
-        FigureCanvasQTAgg.__init__(self, figure)
-        self._drawRect = None
-        self.child_conn = child_conn
-        
-        # set up the "working" pixmap
-        self.working = False
-        self.working_pixmap = QtGui.QLabel(self)
-        self.working_pixmap.setVisible(False)
-        self.working_pixmap.setPixmap(working_pixmap)
-        self.working_pixmap.setScaledContents(True)
-        wp_size = min([self.width(), self.height()]) / 5
-        self.working_pixmap.resize(wp_size, wp_size)
-        self.working_pixmap.move(self.width() - wp_size,
-                                 self.height() - wp_size)
-        
-        
-        self.buffer = None
-        self.buffer_width = None
-        self.buffer_height = None
-        
-        self.blit_buffer = None
-        self.blit_width = None
-        self.blit_height = None
-        self.blit_top = None
-        self.blit_left = None
-
-        # positions to send
-        self.move_x = None
-        self.move_y = None
-        self.resize_width = None
-        self.resize_height = None
-        self._resize_timer = None
-        self.send_event = threading.Event()
-        
-        self.setAttribute(QtCore.Qt.WA_OpaquePaintEvent)    
-        
-        t = threading.Thread(target = self.listen_for_remote, 
-                             name = "canvas listen",
-                             args = ())
-        t.daemon = True
-        t.start()
-         
-        t = threading.Thread(target = self.send_to_remote, 
-                             name = "canvas send",
-                             args = ())
-        t.daemon = True
-        t.start()
-        
-        dpi = self.physicalDpiX()
-        matplotlib.rcParams['figure.dpi'] = dpi
-        self.child_conn.send((Msg.DPI, self.physicalDpiX()))
-        
-    def listen_for_remote(self):
-        while self.child_conn.poll(None):
-            try:
-                (msg, payload) = self.child_conn.recv()
-            except EOFError:
-                return
-            
-            logging.debug("FigureCanvasQTAggLocal.listen_for_remote :: {}".format(msg))
-            
-            try:
-                if msg == Msg.WORKING:
-                    self.working = payload
-                    self.working_pixmap.setVisible(self.working)
-                elif msg == Msg.DRAW:
-                    (self.buffer, 
-                     self.buffer_width, 
-                     self.buffer_height) = payload 
-                    self.update()
-                elif msg == Msg.BLIT:
-                    (self.blit_buffer, 
-                     self.blit_width, 
-                     self.blit_height,
-                     self.blit_top, 
-                     self.blit_left) = payload
-                    self.update()
-                else:
-                    raise RuntimeError("FigureCanvasQTAggLocal received bad message {}".format(msg))
-            except Exception:
-                log_exception()
-            
-            
-    def send_to_remote(self):
-        while True:
-            self.send_event.wait()
-            self.send_event.clear()
-            
-            if self.move_x is not None:
-                msg = (Msg.MOUSE_MOVE_EVENT, (self.move_x, self.move_y))
-                self.child_conn.send(msg)
-                self.move_x = self.move_y = None
-                
-            if self.resize_width is not None:
-                logging.debug('FigureCanvasQTAggLocal.send_to_remote: {}'
-                              .format((Msg.RESIZE_EVENT, self.resize_width, self.resize_height)))
-                msg = (Msg.RESIZE_EVENT, (self.resize_width, self.resize_height))
-                self.child_conn.send(msg)
-                self.resize_width = self.resize_height = None
-
-            # for performance reasons, make sure there are no more than
-            # 10 updates per second
-            time.sleep(0.1)
-            
-
-    def leaveEvent(self, event):
-        QtGui.QApplication.restoreOverrideCursor()
-
-
-    def mousePressEvent(self, event):
-        logging.debug('FigureCanvasQTAggLocal.mousePressEvent: {}'
-                      .format(event.button()))
-        x = event.pos().x()
-        # flip y so y=0 is bottom of canvas
-        y = self.height() - event.pos().y()
-        button = self.buttond.get(event.button())
-        if button is not None:
-            msg = (Msg.MOUSE_PRESS_EVENT, (x, y, button))
-            self.child_conn.send(msg)
-            
-            
-    def mouseDoubleClickEvent(self, event):
-        logging.debug('FigureCanvasQTAggLocal.mouseDoubleClickEvent: {}'
-                      .format(event.button()))
-        x = event.pos().x()
-        # flipy so y=0 is bottom of canvas
-        y = self.height() - event.pos().y()
-        button = self.buttond.get(event.button())
-        if button is not None:
-            msg = (Msg.MOUSE_DOUBLE_CLICK_EVENT, (x, y, button))
-            self.child_conn.send(msg)
-
-
-    def mouseMoveEvent(self, event):
-#         if DEBUG:
-#             print('FigureCanvasQTAggLocal.mouseMoveEvent: {}', (event.x(), event.y()))
-        self.move_x = event.x()
-        # flip y so y=0 is bottom of canvas
-        self.move_y = self.height() - event.y()
-        self.send_event.set()
-
-
-    def mouseReleaseEvent(self, event):
-        logging.debug('FigureCanvasQTAggLocal.mouseReleaseEvent: {}'
-                      .format(event.button()))
-        
-        x = event.x()
-        # flip y so y=0 is bottom of canvas
-        y = self.height() - event.y()
-        button = self.buttond.get(event.button())
-        if button is not None:
-            msg = (Msg.MOUSE_RELEASE_EVENT, (x, y, button))
-            self.child_conn.send(msg)
-
-
-    def resizeEvent(self, event):
-        w = event.size().width()
-        h = event.size().height()
-                
-        logging.debug("FigureCanvasQTAggLocal.resizeEvent : {}" 
-                      .format((w, h)))            
-        
-        dpival = self.physicalDpiX()
-        winch = w / dpival
-        hinch = h / dpival
-        
-        self.figure.set_size_inches(winch, hinch)
-        FigureCanvasAgg.resize_event(self)
-        QtGui.QWidget.resizeEvent(self, event)
-        
-        wp_size = min([self.width(), self.height()]) / 5
-        self.working_pixmap.resize(wp_size, wp_size)
-        self.working_pixmap.move(self.width() - wp_size,
-                                 self.height() - wp_size)
-        
-        # redrawing the plot window is a heavyweight operation, and we really
-        # don't want to do it for every resize event.  so, upon a resize event,
-        # start a 0.2 second timer. if there's another resize event before
-        # it fires, cancel the timer and restart it.  otherwise, after 0.2
-        # seconds, make the window redraw.  this minimizes redrawing and
-        # makes the user experience much better, even though it's a stupid
-        # hack because i can't (easily) stop the widget from recieveing
-        # resize events during a resize.
-        
-        if self._resize_timer is not None:
-            self._resize_timer.cancel()
-            self._resize_timer = None
-            
-        def fire(self, width, height):
-            self.resize_width = width
-            self.resize_height = height
-            self.send_event.set()
-            self._resize_timer = None
-            
-        self._resize_timer = threading.Timer(0.2, fire, (self, winch, hinch))
-        self._resize_timer.start()
-
-        
-    def paintEvent(self, e):
-        """
-        Copy the image from the buffer to the qt.drawable.
-        In Qt, all drawing should be done inside of here when a widget is
-        shown onscreen.
-        """
-        
-        if self.buffer is None:
-            return
-
-        logging.debug('FigureCanvasQtAggLocal.paintEvent: '
-                      .format(self, self.get_width_height()))
-    
-        if self.blit_buffer is None:
-            
-            # convert the Agg rendered image -> qImage
-            qImage = QtGui.QImage(self.buffer, self.buffer_width,
-                                  self.buffer_height,
-                                  QtGui.QImage.Format_RGBA8888)
-            # get the rectangle for the image
-            rect = qImage.rect()
-            p = QtGui.QPainter(self)
-            # reset the image area of the canvas to be the back-ground color
-            p.eraseRect(rect)
-            # draw the rendered image on to the canvas
-            p.drawPixmap(QtCore.QPoint(0, 0), QtGui.QPixmap.fromImage(qImage))
-
-            p.end()
-            
-        else:
-            qImage = QtGui.QImage(self.blit_buffer, 
-                                  self.blit_width,
-                                  self.blit_height,
-                                  QtGui.QImage.Format_ARGB32)
- 
-            pixmap = QtGui.QPixmap.fromImage(qImage)
-            p = QtGui.QPainter(self)
-            p.drawPixmap(QtCore.QPoint(self.blit_left, 
-                                       self.buffer_height - self.blit_top), 
-                         pixmap)
-
-            p.end()
-            self.blit_buffer = None
-            
-    def print_figure(self, *args, **kwargs):
-        self.child_conn.send((Msg.PRINT, (args, kwargs)))
-
-
 class FigureCanvasAggRemote(FigureCanvasAgg):
     """
     The canvas the figure renders into in the remote process (ie, the one
@@ -478,7 +227,7 @@ class FigureCanvasAggRemote(FigureCanvasAgg):
         with self.buffer_lock:
             FigureCanvasAgg.draw(self)
             
-            self.buffer = self.renderer.buffer_rgba()  
+            self.buffer = np.array(self.renderer.buffer_rgba())
                 
             self.buffer_width = self.renderer.width
             self.buffer_height = self.renderer.height

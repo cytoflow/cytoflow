@@ -30,7 +30,7 @@
 !include "packaging\AdvUninstLog.nsh"
  
 Name "${APP_NAME}"
-Icon "cytoflowgui\images\icon.ico"
+Icon "packaging\icon.ico"
 OutFile "dist\cytoflow-installer.exe"
 ShowInstDetails show
 ShowUninstDetails show

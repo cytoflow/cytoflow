@@ -11,23 +11,23 @@ a = Analysis(['../cytoflowgui/run.py'],
              hiddenimports = [
                  'matplotlib.backends.backend_qt5agg',
                  'matplotlib_backend',
+                 'pkg_resources.py2_warn',  # fix for setuptools >= 45.0
              ],
              hookspath=['packaging'],
              runtime_hooks=['packaging/rthook_qtapi.py',
                             'packaging/rthook_seaborn.py',
-                            'packaging/rthook_qtconf.py'],
+                            'packaging/rthook_qtconf.py',
+                            'packaging/rthook_qt5webengine.py'],
              excludes=['gi.repository.Gio', 'gi.repository.GModule',
                        'gi.repository.GObject', 'gi.repository.Gtk',
                        'gi.repository.Gdk', 'gi.repository.Atk',
                        'gi.repository.cairo', 'gi.repository.GLib',
                        'gobject', 'Tkinter', 'FixTk', '_tkinter',
                        'PySide', 'PySide.QtCore', 'PySide.QtGui',
-                       'PySide.QtNetwork', 'PySide.QtSvg',
-		       'PyQt4',
+                       'PySide.QtNetwork', 'PySide.QtSvg', 'PyQt4',
                        'PyQt5.QtBluetooth', 'PyQt5.QtDesigner',
                        'PyQt5.QtHelp', 'PyQt5.QtLocation',
                        'PyQt5.QtMultimediaWidgets', 'PyQt5.QtNfc', 
-#                       'PyQt5.QtPrintSupport',  # necessary
                        'PyQt5.QtQml', 'PyQt5.QtQuick', 'PyQt5.QtQuickWidgets',
                        'PyQt5.QtSensors', 'PyQt5.QtSerialPort', 'PyQt5.QtSql',
                        'PyQt5.QtTest', 'PyQt5.QtWebSockets', 'PyQt5.QtXml',
@@ -44,7 +44,7 @@ a = Analysis(['../cytoflowgui/run.py'],
 # versions
 
 remove_strs = ["glib", "gobject", "gthread", "libX", "libICE", "libdrm", 
-               "fontconfig", "__pycache__"]
+               "fontconfig", "libuuid", "__pycache__"]
 
 lol = [ [x for x in a.binaries if x[0].find(y) >= 0] for y in remove_strs]
 remove_items = [item for sublist in lol for item in sublist]
@@ -58,12 +58,11 @@ a.binaries -= remove_items
 # (also get rid of all the timezone files; pytz is included because it's
 # a pandas dependency, but we don't do any timezone manipulation)
 
-remove_first = [ "cytoflow", "build", "dist", "doc", ".git", "pytz"]
-lol = [ [x for x in a.datas if x[0].startswith(y)] for y in remove_first]
-remove_items = [item for sublist in lol for item in sublist]
-a.datas -= remove_items
+#remove_first = [ "cytoflow", "build", "dist", "doc", ".git", "pytz"]
+#lol = [ [x for x in a.datas if x[0].startswith(y)] for y in remove_first]
+#remove_items = [item for sublist in lol for item in sublist]
 
-#print("\n".join([str(x) for x in a.datas]))
+#a.datas -= remove_items
 
 pyz = PYZ(a.pure, a.zipped_data, cipher=None)
 
@@ -80,7 +79,7 @@ exe = EXE(pyz,
           console=False,
           #console=True,
           bootloader_ignore_signals=False,
-          icon='cytoflowgui/images/icon.ico')
+          icon='icon.ico')
 
 coll = COLLECT(exe,
                a.binaries,
@@ -89,12 +88,12 @@ coll = COLLECT(exe,
                strip=False,
                upx=True,
                name='cytoflow',
-               icon='cytoflowgui/images/icon.ico')
+               icon='icon.ico')
 
 if sys.platform == 'darwin':
    app = BUNDLE(coll,
                 name = "Cytoflow.app",
-                icon = "cytoflowgui/images/icon.icns",
+                icon = "icon.icns",
                 bundle_identifier=None)
 
 

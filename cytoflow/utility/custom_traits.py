@@ -27,7 +27,7 @@ Custom traits for :class:`~cytoflow`
 from warnings import warn
 import inspect
 
-from traits.api import (BaseInt, BaseCInt, BaseFloat, BaseCFloat, BaseEnum, TraitType)
+from traits.api import (BaseInt, BaseCInt, BaseFloat, BaseCFloat, BaseEnum, TraitType, ValidateTrait)
 from . import scale
 from . import CytoflowError, CytoflowWarning
 
@@ -156,15 +156,15 @@ class ScaleEnum(BaseEnum):
         """
         self.name = ''
         self.values = list(scale._scale_mapping.keys())
-        self.init_fast_validator( 5, self.values )
+        #self.init_fast_validate(ValidateTrait.enum, self.values )
         super(BaseEnum, self).__init__(scale._scale_default, **metadata )
         
-    def get_default_value(self):
-        # this is so silly.  get_default_value is ... called once?  as traits
-        # sets up?  idunno.  anyways, instead of returning _scale_default, we
-        # need to return a reference to a function that returns _scale_Default.
-        
-        return (7, (self._get_default_value, (), None))
+    #def get_default_value(self):
+    #    # this is so silly.  get_default_value is ... called once?  as traits
+    #    # sets up?  idunno.  anyways, instead of returning _scale_default, we
+    #    # need to return a reference to a function that returns _scale_Default.
+    #    
+    #    return (7, (self._get_default_value, (), None))
     
     def _get_default_value(self):
         return scale._scale_default

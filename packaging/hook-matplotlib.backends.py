@@ -1,17 +1,27 @@
-# This apes hook-matplotlib.backends.py, but REMOVES backends, all but
-# the ones in the list below.
+#-----------------------------------------------------------------------------
+# Copyright (c) 2013-2020, PyInstaller Development Team.
+#
+# Distributed under the terms of the GNU General Public License (version 2
+# or later) with exception for distributing the bootloader.
+#
+# The full license is in the file COPYING.txt, distributed with this software.
+#
+# SPDX-License-Identifier: (GPL-2.0-or-later WITH Bootloader-exception)
+#-----------------------------------------------------------------------------
 
-KEEP = ["Qt5Agg", "pdf", "svg", "agg"]
 
 from PyInstaller.compat import is_darwin
 from PyInstaller.utils.hooks import (
     eval_statement, exec_statement, logger)
+
+KEEP = ["Qt5Agg", "pdf", "svg", "agg", "CocoaAgg"]
 
 
 def get_matplotlib_backend_module_names():
     """
     List the names of all matplotlib backend modules importable under the
     current Python installation.
+
     Returns
     ----------
     list
@@ -20,8 +30,10 @@ def get_matplotlib_backend_module_names():
     # Statement safely importing a single backend module.
     import_statement = """
 import os, sys
+
 # Preserve stdout.
 sys_stdout = sys.stdout
+
 try:
     # Redirect output printed by this importation to "/dev/null", preventing
     # such output from being erroneously interpreted as an error.
@@ -57,19 +69,21 @@ except Exception:
 
     # For safety, attempt to import each backend in a unique subprocess.
     for backend_name in backend_names:
-        if backend_name in KEEP:
+        if backend_name not in KEEP:
             continue
-
+        
         module_name = 'matplotlib.backends.backend_%s' % backend_name.lower()
         stdout = exec_statement(import_statement % module_name)
 
         # If no output was printed, this backend is importable.
         if not stdout:
             module_names.append(module_name)
-            logger.info('  Matplotlib backend "%s": removed' % backend_name)
+            logger.info('  Matplotlib backend "%s": added' % backend_name)
+        else:
+            logger.info('  Matplotlib backend "%s": ignored\n    %s' % (backend_name, stdout))
 
     return module_names
 
 # Freeze all importable backends, as PyInstaller is unable to determine exactly
 # which backends are required by the current program.
-excludedimports = get_matplotlib_backend_module_names()
+hiddenimports = get_matplotlib_backend_module_names()

@@ -33,7 +33,7 @@ from pyface.qt import QtCore, QtGui
 from pyface.tasks.api import TaskPane, ITaskPane
 from pyface.api import ImageResource
 
-from cytoflowgui.matplotlib_backend import FigureCanvasQTAggLocal
+from cytoflowgui.matplotlib_backend_local import FigureCanvasQTAggLocal
 from matplotlib.figure import Figure
 
 @provides(ITaskPane)
