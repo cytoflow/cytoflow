@@ -152,6 +152,8 @@ def scale_factory(scale, experiment, **scale_params):
     **scale_params : kwargs
         Other parameters to pass to the scale constructor
     """
+    if scale is None:
+        scale = get_default_scale()
     
     scale = scale.lower()
         

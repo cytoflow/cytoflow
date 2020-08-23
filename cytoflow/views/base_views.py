@@ -257,7 +257,7 @@ class BaseView(HasStrictTraits):
                 if util.is_numeric(data[self.huefacet]) and \
                    len(g.hue_names) > len(current_palette):
     
-                    cmap = mpl.colors.ListedColormap(sns.color_palette("husl", 
+                    cmap = mpl.colors.ListedColormap(sns.color_palette("husl" if palette is None else palette, 
                                                                        n_colors = len(g.hue_names)))                
                     hue_scale = util.scale_factory(self.huescale, 
                                                    experiment,
@@ -464,7 +464,7 @@ class Base1DView(BaseDataView):
         # get the scale
         scale = kwargs.pop('scale', None)
         if scale is None:
-            scale = util.scale_factory(self.scale, experiment, channel = self.channel)
+            scale = util.scale_factory(None, experiment, channel = self.channel)
 
         lim = kwargs.pop("lim", None)
 
@@ -528,11 +528,11 @@ class Base2DView(BaseDataView):
         # get the scale
         xscale = kwargs.pop('xscale', None)
         if xscale is None:
-            xscale = util.scale_factory(self.xscale, experiment, channel = self.xchannel)
+            xscale = util.scale_factory(None, experiment, channel = self.xchannel)
 
         yscale = kwargs.pop('yscale', None)
         if yscale is None:
-            yscale = util.scale_factory(self.yscale, experiment, channel = self.ychannel)
+            yscale = util.scale_factory(None, experiment, channel = self.ychannel)
             
         xlim = kwargs.pop('xlim', None)
         ylim = kwargs.pop('ylim', None)
