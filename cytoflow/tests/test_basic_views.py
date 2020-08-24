@@ -66,21 +66,68 @@ class Test(ImportedDataSmallTest):
                            scale = "logicle").plot(self.ex)
                            
     def testScatterplot(self):
+        import numpy as np
+        import matplotlib.pyplot as plt
+
         flow.ScatterplotView(xchannel = "V2-A",
                              ychannel = "Y2-A",
                              huefacet = "Dox").plot(self.ex)
+        ax = plt.gca()
+        np.testing.assert_array_equal(
+            ax.get_xticks(),
+            np.array([-500., 0., 500., 1000., 1500., 2000., 2500., 3000.]),
+        )
+        np.testing.assert_array_equal(
+            ax.get_yticks(),
+            np.array([-10000., 0., 10000., 20000., 30000., 40000., 50000., 60000., 70000.]),
+        )
                              
         flow.ScatterplotView(xchannel = "V2-A",
                              ychannel = "Y2-A",
                              xscale = "log",
                              yscale = "log",
                              huefacet = "Dox").plot(self.ex)
+        ax = plt.gca()
+        np.testing.assert_array_equal(
+            ax.get_xticks(),
+            np.array([1.e-2, 1.e-1, 1., 1.e1, 1.e2, 1.e3, 1.e4, 1.e5]),
+        )
+        np.testing.assert_array_equal(
+            ax.get_yticks(),
+            np.array([1.e-2, 1.e-1, 1., 1.e1, 1.e2, 1.e3, 1.e4, 1.e+05, 1.e6]),
+        )
                              
         flow.ScatterplotView(xchannel = "V2-A",
                              ychannel = "Y2-A",
                              xscale = "logicle",
                              yscale = "logicle",
                              huefacet = "Dox").plot(self.ex)
+        ax = plt.gca()
+        np.testing.assert_array_equal(
+            ax.get_xticks(),
+            np.array([-100., 0., 100., 1000.]),
+        )
+        np.testing.assert_array_equal(
+            ax.get_yticks(),
+            np.array([ -100., 0., 100., 1000., 10000.]),
+        )
+
+        # try setting default scale and _not_ setting xscale, yscale
+        flow.set_default_scale("log")
+        assert flow.get_default_scale() == "log"
+        flow.ScatterplotView(xchannel = "V2-A",
+                             ychannel = "Y2-A",
+                             huefacet = "Dox").plot(self.ex)
+        ax = plt.gca()
+        np.testing.assert_array_equal(
+            ax.get_xticks(),
+            np.array([1.e-2, 1.e-1, 1., 1.e1, 1.e2, 1.e3, 1.e4, 1.e5]),
+        )
+        np.testing.assert_array_equal(
+            ax.get_yticks(),
+            np.array([1.e-2, 1.e-1, 1., 1.e1, 1.e2, 1.e3, 1.e4, 1.e+05, 1.e6]),
+        )
+        flow.set_default_scale("linear")  # reset the default scale
                              
     def testStats1D(self):
         import numpy as np
