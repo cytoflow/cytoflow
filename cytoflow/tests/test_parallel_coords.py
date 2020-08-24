@@ -31,7 +31,8 @@ from test_base import ImportedDataTest  # @UnresolvedImport
 class TestParallelCoords(ImportedDataTest):
 
     def setUp(self):
-        ImportedDataTest.setUp(self)
+        import numpy as np
+        ImportedDataTest.setUp(self, thin=100)
         self.view = flow.ParallelCoordinatesView(channels = ["B1-A", 'V2-A', 'Y2-A'])
         
     def testPlot(self):

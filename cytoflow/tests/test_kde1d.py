@@ -31,7 +31,7 @@ from test_base import ImportedDataTest  # @UnresolvedImport
 class TestKde1D(ImportedDataTest):
 
     def setUp(self):
-        ImportedDataTest.setUp(self)
+        ImportedDataTest.setUp(self, thin=100)
         self.view = flow.Kde1DView(channel = "B1-A")
         
     def testPlot(self):

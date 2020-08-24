@@ -31,7 +31,8 @@ from test_base import ImportedDataTest  # @UnresolvedImport
 class TestKde2D(ImportedDataTest):
 
     def setUp(self):
-        ImportedDataTest.setUp(self)
+        import numpy as np
+        ImportedDataTest.setUp(self, thin=100)
         self.view = flow.Kde2DView(xchannel = "B1-A",
                                    ychannel = "Y2-A")
         

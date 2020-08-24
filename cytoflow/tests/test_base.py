@@ -27,74 +27,75 @@ Created on Mar 7, 2018
 import unittest, os
 
 import cytoflow as flow
-        
-class ImportedDataTest(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        """Run once per class of tests"""
+
+
+class ClosePlotsWhenDoneTestCase(unittest.TestCase):
+    def tearDown(self):
+        """Run once after each test"""
+        import matplotlib.pyplot
+        matplotlib.pyplot.close('all')
+
+
+class ImportedDataTest(ClosePlotsWhenDoneTestCase):
+    def setUp(self, thin=100):
+        """Run once per test at the beginning"""
         from cytoflow import Tube
         
-        cls.cwd = os.path.dirname(os.path.abspath(__file__)) + "/data/Plate01/"
+        self.cwd = os.path.dirname(os.path.abspath(__file__)) + "/data/Plate01/"
      
-        tube1 = Tube(file = cls.cwd + "CFP_Well_A4.fcs",
+        tube1 = Tube(file = self.cwd + "CFP_Well_A4.fcs",
                      conditions = {"Dox" : 0.0, "Well" : 'Aa'})
      
-        tube2 = Tube(file = cls.cwd + "RFP_Well_A3.fcs",
+        tube2 = Tube(file = self.cwd + "RFP_Well_A3.fcs",
                      conditions = {"Dox" : 10.0, "Well" : 'Aa'})
 
-        tube3 = Tube(file = cls.cwd + "YFP_Well_A7.fcs",
+        tube3 = Tube(file = self.cwd + "YFP_Well_A7.fcs",
                      conditions = {"Dox" : 100.0, "Well" : 'Aa'})
          
-        tube4 = Tube(file = cls.cwd + "CFP_Well_B4.fcs",
+        tube4 = Tube(file = self.cwd + "CFP_Well_B4.fcs",
                      conditions = {"Dox" : 0.0, "Well" : 'Bb'})
      
-        tube5 = Tube(file = cls.cwd + "RFP_Well_A6.fcs",
+        tube5 = Tube(file = self.cwd + "RFP_Well_A6.fcs",
                      conditions = {"Dox" : 10.0, "Well" : 'Bb'})
 
-        tube6 = Tube(file = cls.cwd + "YFP_Well_C7.fcs",
+        tube6 = Tube(file = self.cwd + "YFP_Well_C7.fcs",
                      conditions = {"Dox" : 100.0, "Well" : 'Bb'})
 
-        tube7 = Tube(file = cls.cwd + "CFP_Well_B4.fcs",
+        tube7 = Tube(file = self.cwd + "CFP_Well_B4.fcs",
                      conditions = {"Dox" : 0.0, "Well" : 'Cc'})
      
-        tube8 = Tube(file = cls.cwd + "RFP_Well_A6.fcs",
+        tube8 = Tube(file = self.cwd + "RFP_Well_A6.fcs",
                      conditions = {"Dox" : 10.0, "Well" : 'Cc'})
 
-        tube9 = Tube(file = cls.cwd + "YFP_Well_C7.fcs",
+        tube9 = Tube(file = self.cwd + "YFP_Well_C7.fcs",
                      conditions = {"Dox" : 100.0, "Well" : 'Cc'})
         
-        cls.ex = flow.ImportOp(conditions = {"Dox" : "float", "Well" : "category"},
-                               tubes = [tube1, tube2, tube3,
-                                        tube4, tube5, tube6,
-                                        tube7, tube8, tube9]).apply()
-                                
-    def tearDown(self):
-        """Run once after each test"""
-        import matplotlib.pyplot
-        matplotlib.pyplot.close('all')
+        self.ex = flow.ImportOp(conditions = {"Dox" : "float", "Well" : "category"},
+                                tubes = [tube1, tube2, tube3,
+                                         tube4, tube5, tube6,
+                                         tube7, tube8, tube9]).apply()
+        if thin:
+            import numpy as np
+            # thin the dataset 100-fold from 90k to 900 rows for thin=100
+            self.ex.add_condition("bucket", "int", np.arange(self.ex.data.shape[0]) % thin)
+            self.ex = self.ex.query("bucket == 0")
 
 
-class ImportedDataSmallTest(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        """Run once per class of tests"""
+class ImportedDataSmallTest(ClosePlotsWhenDoneTestCase):
+    def setUp(self):
+        """Run once per test at the beginning"""
         from cytoflow import Tube
 
-        cls.cwd = os.path.dirname(os.path.abspath(__file__)) + "/data/Plate01/"
-        tube1 = flow.Tube(file=cls.cwd + 'RFP_Well_A3.fcs', conditions={"Dox": 10.0})
-        tube2 = flow.Tube(file=cls.cwd + 'CFP_Well_A4.fcs', conditions={"Dox": 1.0})
+        self.cwd = os.path.dirname(os.path.abspath(__file__)) + "/data/Plate01/"
+        tube1 = flow.Tube(file=self.cwd + 'RFP_Well_A3.fcs', conditions={"Dox": 10.0})
+        tube2 = flow.Tube(file=self.cwd + 'CFP_Well_A4.fcs', conditions={"Dox": 1.0})
         import_op = flow.ImportOp(conditions={"Dox": "float"},
                                   tubes=[tube1, tube2])
-        cls.ex = import_op.apply()
+        self.ex = import_op.apply()
         print("loaded data")
 
-    def tearDown(self):
-        """Run once after each test"""
-        import matplotlib.pyplot
-        matplotlib.pyplot.close('all')
 
-
-class TasbeTest(unittest.TestCase):
+class TasbeTest(ClosePlotsWhenDoneTestCase):
     
     def setUp(self):
         """Run once at the beginning of each test"""
@@ -106,10 +107,3 @@ class TasbeTest(unittest.TestCase):
         tube = Tube(file = self.cwd + "rby.fcs")
         
         self.ex = flow.ImportOp(tubes = [tube])
-        
-        
-    def tearDown(self):
-        """Run once after each test"""
-        import matplotlib.pyplot
-        matplotlib.pyplot.close('all')
-        

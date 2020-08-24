@@ -24,8 +24,10 @@ Created on Nov 16, 2015
 '''
 import unittest
 import cytoflow as flow
+from test_base import ClosePlotsWhenDoneTestCase
 
-class Test(unittest.TestCase):
+
+class Test(ClosePlotsWhenDoneTestCase):
 
 
     def setUp(self):
