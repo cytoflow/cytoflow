@@ -251,13 +251,27 @@ class View2DTestBase(View1DTestBase):
         self.view.xscale = "log"
         self.view.yscale = "log"
         self.view.plot(self.ex)
-        # TODO assert
+        np.testing.assert_array_equal(
+            plt.gca().get_xticks(),
+            np.array([1.e-2, 1.e-1, 1., 1.e+1, 1.e+2, 1.e+3, 1.e+4, 1.e+5, 1.e+6, 1.e+7])
+        )
+        np.testing.assert_array_equal(
+            plt.gca().get_yticks(),
+            np.array([1.e-2, 1.e-1, 1., 1.e+1, 1.e+2, 1.e+3, 1.e+4, 1.e+5, 1.e+6, 1.e+7])
+        )
 
     def testLogicleScale(self):
         self.view.xscale = "logicle"
         self.view.yscale = "logicle"
         self.view.plot(self.ex)
-        # TODO assert
+        np.testing.assert_array_equal(
+            plt.gca().get_xticks(),
+            np.array([-100., 0., 100., 1000., 10000., 100000.])
+        )
+        np.testing.assert_array_equal(
+            plt.gca().get_yticks(),
+            np.array([-100., 0., 100., 1000., 10000., 100000.])
+        )
 
     def testOrientation(self):
         pass  # not applicable
