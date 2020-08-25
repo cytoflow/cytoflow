@@ -109,6 +109,13 @@ class TestViolin(View1DTestBase, unittest.TestCase):
         assert ax.get_xlabel() == "B1-A"
         assert ax.get_ylabel() == "Dox"
 
+    def testLimits(self):
+        self.view.plot(self.ex, lim = (0, 1000))
+        assert plt.gca().get_ylim() == (0, 1000)
+
+        self.view.plot(self.ex, lim = (0, 1000), orientation = "horizontal")
+        assert plt.gca().get_xlim() == (0, 1000)
+
     # Violin params
         
     def testBw(self):

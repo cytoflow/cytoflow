@@ -217,7 +217,10 @@ class View1DTestBase(ImportedData):
 
     def testLimits(self):
         self.view.plot(self.ex, lim = (0, 1000))
-        # TODO assert
+        assert plt.gca().get_xlim() == (0, 1000)
+
+        self.view.plot(self.ex, lim = (0, 1000), orientation = "horizontal")
+        assert plt.gca().get_ylim() == (0, 1000), plt.gca().get_xlim()
 
     def testOrientation(self):
         self.view.plot(self.ex, orientation = "vertical")  # the default
@@ -261,7 +264,9 @@ class View2DTestBase(View1DTestBase):
 
     # 2D data plot params
     def testLimits(self):
-        self.view.plot(self.ex, xlim = (0, 1000), ylim = (0, 1000))
+        self.view.plot(self.ex, xlim = (0, 1000), ylim = (1, 1001))
+        assert plt.gca().get_xlim() == (0, 1000)
+        assert plt.gca().get_ylim() == (1, 1001)
 
 
 def get_legend_entries(ax):
