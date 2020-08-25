@@ -28,7 +28,7 @@ import cytoflow as flow
 import matplotlib.pyplot as plt
 import numpy as np
 
-from test_base import View1DTestBase, get_legend_entries  # @UnresolvedImport
+from test_base import View1DTestBase, get_legend_entries, check_titles  # @UnresolvedImport
 
 
 class TestViolin(View1DTestBase, unittest.TestCase):
@@ -40,9 +40,8 @@ class TestViolin(View1DTestBase, unittest.TestCase):
 
     def testPlot(self):
         self.view.plot(self.ex)
-        # plt.gcf().savefig("test.png")
         ax = plt.gca()
-        assert ax.get_ylabel() == "B1-A"
+        assert ax.get_ylabel() == "B1-A"  # this is different from other 1D views
         assert ax.get_xlabel() == "Dox"
         np.testing.assert_array_equal(
             ax.get_yticks(),
@@ -52,22 +51,16 @@ class TestViolin(View1DTestBase, unittest.TestCase):
         )
         assert [l.get_text() for l in ax.get_xticklabels()] == ["0.0", "10.0", "100.0"]
 
-    def testSubset(self):
-        self.view.subset = "Dox == 10.0"
-        self.view.plot(self.ex)
-        assert ['10.0'] == get_legend_entries(plt.gca())
-
     def testXFacet(self):
         self.view.xfacet = "Well"
         self.view.plot(self.ex)
-        axs = plt.gcf().get_axes()
-        assert ["Well = Aa", "Well = Bb", "Well = Cc"] == [ax.get_title() for ax in axs]
-        
+        check_titles(["Well = Aa", "Well = Bb", "Well = Cc"])
+        assert plt.gcf().get_axes()[2].rowNum == 0  # third subplot is on the first (only) row
+
     def testYFacet(self):
         self.view.yfacet = "Well"
         self.view.plot(self.ex)
-        axs = plt.gcf().get_axes()
-        assert ["Well = Aa", "Well = Bb", "Well = Cc"] == [ax.get_title() for ax in axs]
+        check_titles(["Well = Aa", "Well = Bb", "Well = Cc"])
 
     def testHueFacet(self):
         self.view.huefacet = "Well"
@@ -78,23 +71,19 @@ class TestViolin(View1DTestBase, unittest.TestCase):
         self.view.subset = "Dox == 10.0"
         self.view.plot(self.ex)
         assert [l.get_text() for l in plt.gca().get_xticklabels()] == ["10.0"]
-        
-    def testHueLabel(self):
-        # TODO this is different
-        self.view.huefacet = "Well"
-        self.view.plot(self.ex, huelabel = "hue lab")
-    
+
     def testColWrap(self):
-        # TODO this is different
         self.view.variable = "Well"
         self.view.xfacet = "Dox"
         self.view.plot(self.ex, col_wrap = 2)
+        assert plt.gcf().get_axes()[2].rowNum == 1  # third subplot is on the second row
 
     # Violin params
         
     def testBw(self):
         self.view.plot(self.ex, bw = 'scott')
         self.view.plot(self.ex, bw = 'silverman')
+        self.view.plot(self.ex, bw = 0.1)
         
     def testScalePlot(self):
         self.view.plot(self.ex, scale_plot = 'area')

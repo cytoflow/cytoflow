@@ -136,6 +136,7 @@ class View1DTestBase(ImportedData):
         self.view.xfacet = "Dox"
         self.view.plot(self.ex)
         check_titles(["Dox = 0.0", "Dox = 10.0", "Dox = 100.0"], has_colorbar)
+        assert plt.gcf().get_axes()[2].rowNum == 0  # third subplot is on the first (only) row
 
     def testYFacet(self, has_colorbar=False):
         self.view.yfacet = "Dox"
@@ -171,14 +172,14 @@ class View1DTestBase(ImportedData):
         assert plt.gca().get_ylabel() == "Y lab"
 
     def testHueLabel(self):
-        self.view.huefacet = "Dox"
+        self.view.huefacet = "Well"
         self.view.plot(self.ex, huelabel = "hue lab")
         # TODO assert
 
     def testColWrap(self):
         self.view.xfacet = "Dox"
         self.view.plot(self.ex, col_wrap = 2)
-        # TODO assert
+        assert plt.gcf().get_axes()[2].rowNum == 1  # third subplot is on the second row
 
     def testShareAxes(self):
         self.view.plot(self.ex, sharex = False, sharey = False)
@@ -257,7 +258,7 @@ def get_legend_entries(ax):
     return [t.get_text() for t in ax.get_legend().get_texts()]
 
 
-def check_titles(correct_titles, has_colorbar):
+def check_titles(correct_titles, has_colorbar=False):
     titles = [ax.get_title() for ax in plt.gcf().get_axes()]
     if has_colorbar:
         correct_titles = correct_titles + [""]
