@@ -125,12 +125,18 @@ class View1DTestBase(ImportedData):
     def testLogScale(self):
         self.view.scale = "log"
         self.view.plot(self.ex)
-        # TODO assert
+        np.testing.assert_array_equal(
+            plt.gca().get_xticks(),
+            np.array([1.e-2, 1.e-1, 1., 1.e+1, 1.e+2, 1.e+3, 1.e+4, 1.e+5, 1.e+6, 1.e+7])
+        )
 
     def testLogicleScale(self):
         self.view.scale = "logicle"
         self.view.plot(self.ex)
-        # TODO assert
+        np.testing.assert_array_equal(
+            plt.gca().get_xticks(),
+            np.array([-100., 0., 100., 1000., 10000., 100000.])
+        )
 
     def testXFacet(self, has_colorbar=False):
         self.view.xfacet = "Dox"
@@ -153,9 +159,6 @@ class View1DTestBase(ImportedData):
         self.view.xfacet = "Dox"
         self.view.plot(self.ex)
         check_titles(["Dox = 10.0"], has_colorbar)
-        # TODO:
-        # self.view.huefacet = "Dox"
-        # assert ['10.0'] == get_legend_entries(plt.gca())
 
     # Base plot params
 
@@ -217,8 +220,15 @@ class View1DTestBase(ImportedData):
         # TODO assert
 
     def testOrientation(self):
+        self.view.plot(self.ex, orientation = "vertical")  # the default
+        ax = plt.gca()
+        assert ax.get_xlabel() == "B1-A"
+        assert ax.get_ylabel() == ""
+
         self.view.plot(self.ex, orientation = "horizontal")
-        # TODO assert
+        ax = plt.gca()
+        assert ax.get_xlabel() == ""
+        assert ax.get_ylabel() == "B1-A"
 
 
 class View2DTestBase(View1DTestBase):

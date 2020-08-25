@@ -51,6 +51,26 @@ class TestViolin(View1DTestBase, unittest.TestCase):
         )
         assert [l.get_text() for l in ax.get_xticklabels()] == ["0.0", "10.0", "100.0"]
 
+    def testLogScale(self):
+        self.view.scale = "log"
+        self.view.plot(self.ex)
+        ax = plt.gca()
+        assert ax.get_ylabel() == "B1-A"  # this is different from other 1D views
+        assert ax.get_xlabel() == "Dox"
+        np.testing.assert_array_equal(
+            ax.get_yticks(),
+            np.array([1.e-2, 1.e-1, 1., 1.e+1, 1.e+2, 1.e+3, 1.e+4, 1.e+5, 1.e+6, 1.e+7])
+        )
+        assert [l.get_text() for l in ax.get_xticklabels()] == ["0.0", "10.0", "100.0"]
+
+    def testLogicleScale(self):
+        self.view.scale = "logicle"
+        self.view.plot(self.ex)
+        np.testing.assert_array_equal(
+            plt.gca().get_yticks(),
+            np.array([-100., 0., 100., 1000., 10000., 100000.])
+        )
+
     def testXFacet(self):
         self.view.xfacet = "Well"
         self.view.plot(self.ex)
@@ -77,6 +97,17 @@ class TestViolin(View1DTestBase, unittest.TestCase):
         self.view.xfacet = "Dox"
         self.view.plot(self.ex, col_wrap = 2)
         assert plt.gcf().get_axes()[2].rowNum == 1  # third subplot is on the second row
+
+    def testOrientation(self):
+        self.view.plot(self.ex, orientation = "vertical")  # the default
+        ax = plt.gca()
+        assert ax.get_xlabel() == "Dox"
+        assert ax.get_ylabel() == "B1-A"
+
+        self.view.plot(self.ex, orientation = "horizontal")
+        ax = plt.gca()
+        assert ax.get_xlabel() == "B1-A"
+        assert ax.get_ylabel() == "Dox"
 
     # Violin params
         
