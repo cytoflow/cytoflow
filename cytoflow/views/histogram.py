@@ -111,7 +111,13 @@ class HistogramView(Base1DView):
 
         
         """
-        
+        ylabel = 'Density' if kwargs.get('density', False) else 'Count'
+        if kwargs.get('orientation', 'vertical') == 'vertical':
+            kwargs.setdefault('xlabel', self.channel)
+            kwargs.setdefault('ylabel', ylabel)
+        else:  # flip axis labels
+            kwargs.setdefault('xlabel', ylabel)
+            kwargs.setdefault('ylabel', self.channel)
         super().plot(experiment, **kwargs)
 
     def _grid_plot(self, experiment, grid, **kwargs):

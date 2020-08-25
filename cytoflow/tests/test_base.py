@@ -115,7 +115,7 @@ class View1DTestBase(ImportedData):
     def testPlot(self):
         self.view.plot(self.ex)
         ax = plt.gca()
-        assert ax.get_xlabel() == "B1-A"
+        self.assertEqual(ax.get_xlabel(), "B1-A")
         np.testing.assert_array_equal(
             ax.get_xticks(),
             np.array([-25000., 0., 25000., 50000., 75000., 100000., 125000.,
@@ -141,38 +141,39 @@ class View1DTestBase(ImportedData):
     def testXFacet(self, has_colorbar=False):
         self.view.xfacet = "Dox"
         self.view.plot(self.ex)
-        check_titles(["Dox = 0.0", "Dox = 10.0", "Dox = 100.0"], has_colorbar)
-        assert plt.gcf().get_axes()[2].rowNum == 0  # third subplot is on the first (only) row
+        self.check_titles(["Dox = 0.0", "Dox = 10.0", "Dox = 100.0"], has_colorbar)
+        # third subplot is on the first (only) row:
+        self.assertEqual(plt.gcf().get_axes()[2].rowNum, 0)
 
     def testYFacet(self, has_colorbar=False):
         self.view.yfacet = "Dox"
         self.view.plot(self.ex)
-        check_titles(["Dox = 0.0", "Dox = 10.0", "Dox = 100.0"], has_colorbar)
+        self.check_titles(["Dox = 0.0", "Dox = 10.0", "Dox = 100.0"], has_colorbar)
 
     def testHueFacet(self):
         self.view.huefacet = "Dox"
         self.view.plot(self.ex)
-        assert ['0.0', '10.0', '100.0'] == get_legend_entries(plt.gca())
+        self.assertEqual(['0.0', '10.0', '100.0'], get_legend_entries(plt.gca()))
 
     def testSubset(self, has_colorbar=False):
         self.view.subset = "Dox == 10.0"
         self.view.xfacet = "Dox"
         self.view.plot(self.ex)
-        check_titles(["Dox = 10.0"], has_colorbar)
+        self.check_titles(["Dox = 10.0"], has_colorbar)
 
     # Base plot params
 
     def testTitle(self):
         self.view.plot(self.ex, title = "Title")
-        assert plt.gca().get_title() == "Title"
+        self.assertEqual(plt.gca().get_title(), "Title")
 
     def testXlabel(self):
         self.view.plot(self.ex, xlabel = "X lab")
-        assert plt.gca().get_xlabel() == "X lab"
+        self.assertEqual(plt.gca().get_xlabel(), "X lab")
 
     def testYlabel(self):
         self.view.plot(self.ex, ylabel = "Y lab")
-        assert plt.gca().get_ylabel() == "Y lab"
+        self.assertEqual(plt.gca().get_ylabel(), "Y lab")
 
     def testHueLabel(self):
         self.view.huefacet = "Well"
@@ -182,7 +183,8 @@ class View1DTestBase(ImportedData):
     def testColWrap(self):
         self.view.xfacet = "Dox"
         self.view.plot(self.ex, col_wrap = 2)
-        assert plt.gcf().get_axes()[2].rowNum == 1  # third subplot is on the second row
+        # third subplot is on the second row:
+        self.assertEqual(plt.gcf().get_axes()[2].rowNum, 1)
 
     def testShareAxes(self):
         self.view.plot(self.ex, sharex = False, sharey = False)
@@ -217,21 +219,29 @@ class View1DTestBase(ImportedData):
 
     def testLimits(self):
         self.view.plot(self.ex, lim = (0, 1000))
-        assert plt.gca().get_xlim() == (0, 1000)
+        self.assertEqual(plt.gca().get_xlim(), (0, 1000))
 
         self.view.plot(self.ex, lim = (0, 1000), orientation = "horizontal")
-        assert plt.gca().get_ylim() == (0, 1000), plt.gca().get_xlim()
+        self.assertEqual(plt.gca().get_ylim(), (0, 1000))
 
-    def testOrientation(self):
+    def testOrientation(self, default_xlabel="B1-A", default_ylabel="Count"):
         self.view.plot(self.ex, orientation = "vertical")  # the default
         ax = plt.gca()
-        assert ax.get_xlabel() == "B1-A"
-        assert ax.get_ylabel() == ""
+        self.assertEqual(ax.get_xlabel(), default_xlabel)
+        self.assertEqual(ax.get_ylabel(), default_ylabel)
 
         self.view.plot(self.ex, orientation = "horizontal")
         ax = plt.gca()
-        assert ax.get_xlabel() == ""
-        assert ax.get_ylabel() == "B1-A"
+        self.assertEqual(ax.get_xlabel(), default_ylabel)
+        self.assertEqual(ax.get_ylabel(), default_xlabel)
+
+    # helpers
+
+    def check_titles(self, correct_titles, has_colorbar=False):
+        titles = [ax.get_title() for ax in plt.gcf().get_axes()]
+        if has_colorbar:
+            correct_titles = correct_titles + [""]
+        self.assertEqual(correct_titles, titles)
 
 
 class View2DTestBase(View1DTestBase):
@@ -242,8 +252,8 @@ class View2DTestBase(View1DTestBase):
     ):
         self.view.plot(self.ex)
         ax = plt.gca()
-        assert ax.get_xlabel() == "B1-A"
-        assert ax.get_ylabel() == "Y2-A"
+        self.assertEqual(ax.get_xlabel(), "B1-A")
+        self.assertEqual(ax.get_ylabel(), "Y2-A")
         np.testing.assert_array_equal(ax.get_xticks(), np.array(true_x))
         np.testing.assert_array_equal(ax.get_yticks(), np.array(true_y))
 
@@ -279,16 +289,9 @@ class View2DTestBase(View1DTestBase):
     # 2D data plot params
     def testLimits(self):
         self.view.plot(self.ex, xlim = (0, 1000), ylim = (1, 1001))
-        assert plt.gca().get_xlim() == (0, 1000)
-        assert plt.gca().get_ylim() == (1, 1001)
+        self.assertEqual(plt.gca().get_xlim(), (0, 1000))
+        self.assertEqual(plt.gca().get_ylim(), (1, 1001))
 
 
 def get_legend_entries(ax):
     return [t.get_text() for t in ax.get_legend().get_texts()]
-
-
-def check_titles(correct_titles, has_colorbar=False):
-    titles = [ax.get_title() for ax in plt.gcf().get_axes()]
-    if has_colorbar:
-        correct_titles = correct_titles + [""]
-    assert correct_titles == titles, titles

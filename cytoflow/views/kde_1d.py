@@ -116,7 +116,12 @@ class Kde1DView(Base1DView):
   
         
         """
-        
+        if kwargs.get('orientation', 'vertical') == 'vertical':
+            kwargs.setdefault('xlabel', self.channel)
+            kwargs.setdefault('ylabel', 'Density')
+        else:  # flip axis labels
+            kwargs.setdefault('xlabel', 'Density')
+            kwargs.setdefault('ylabel', self.channel)
         super().plot(experiment, **kwargs)
                 
     def _grid_plot(self, experiment, grid, **kwargs):

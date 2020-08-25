@@ -35,6 +35,9 @@ class TestKde1D(View1DTestBase, unittest.TestCase):
         super().setUp()
         self.view = flow.Kde1DView(channel = "B1-A")
 
+    def testOrientation(self):
+        super().testOrientation(default_xlabel="B1-A", default_ylabel="Density")
+
     # KDE params
         
     def testShade(self):

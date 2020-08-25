@@ -114,7 +114,7 @@ class Test(ImportedDataSmallTest):
 
         # try setting default scale and _not_ setting xscale, yscale
         flow.set_default_scale("log")
-        assert flow.get_default_scale() == "log"
+        self.assertEqual(flow.get_default_scale(), "log")
         flow.ScatterplotView(xchannel = "V2-A",
                              ychannel = "Y2-A",
                              huefacet = "Dox").plot(self.ex)
