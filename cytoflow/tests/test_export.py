@@ -41,11 +41,11 @@ class Test(ImportedDataSmallTest):
                        by = ['Dox']).export(self.ex)
                        
         tube1 = flow.Tube(file = self.directory + '/Dox_10.0.fcs', 
-                          conditions = {"Dox" : 10.0})
+                          conditions = {"Dox" : 10.0, "Well": "A"})
         tube2 = flow.Tube(file = self.directory + '/Dox_1.0.fcs',
-                          conditions = {"Dox" : 1.0})
+                          conditions = {"Dox" : 1.0, "Well": "B"})
         
-        ex_rt = flow.ImportOp(conditions = {"Dox" : "float"},
+        ex_rt = flow.ImportOp(conditions = {"Dox" : "float", "Well": "category"},
                               tubes = [tube1, tube2]).apply()
 
         self.assertTrue((self.ex.data == ex_rt.data).all().all())

@@ -24,10 +24,10 @@ Created on Oct 30, 2015
 '''
 import unittest
 import cytoflow as flow
-from test_base import ClosePlotsWhenDoneTestCase
+from test_base import ClosePlotsWhenDoneTest
 
 
-class TestExperiment(ClosePlotsWhenDoneTestCase):
+class TestExperiment(ClosePlotsWhenDoneTest):
     """
     Unit tests for Experiment
     """

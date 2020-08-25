@@ -26,91 +26,15 @@ Created on Mar 5, 2018
 import unittest
 import cytoflow as flow
 
-from test_base import ImportedDataTest  # @UnresolvedImport
+from test_base import View1DTestBase  # @UnresolvedImport
 
-class TestKde1D(ImportedDataTest):
+
+class TestKde1D(View1DTestBase, unittest.TestCase):
 
     def setUp(self):
-        ImportedDataTest.setUp(self, thin=100)
+        super().setUp()
         self.view = flow.Kde1DView(channel = "B1-A")
-        
-    def testPlot(self):
-        self.view.plot(self.ex)
-        
-    def testLogScale(self):
-        self.view.scale = "log"
-        self.view.plot(self.ex)
-        
-    def testLogicleScale(self):
-        self.view.scale = "logicle"
-        self.view.plot(self.ex)
-        
-    def testXFacet(self):
-        self.view.xfacet = "Dox"
-        self.view.plot(self.ex)
-        
-    def testYFacet(self):
-        self.view.yfacet = "Dox"
-        self.view.plot(self.ex)
-        
-    def testHueFacet(self):
-        self.view.huefacet = "Dox"
-        self.view.plot(self.ex)
-        
-    def testSubset(self):
-        self.view.subset = "Dox == 10.0"
-        self.view.plot(self.ex)
-        
-    # Base plot params
-    
-    def testTitle(self):
-        self.view.plot(self.ex, title = "Title")
-        
-    def testXlabel(self):
-        self.view.plot(self.ex, xlabel = "X lab")
-        
-    def testYlabel(self):
-        self.view.plot(self.ex, ylabel = "Y lab")
-        
-    def testHueLabel(self):
-        self.view.huefacet = "Dox"
-        self.view.plot(self.ex, huelabel = "hue lab")
-    
-    def testColWrap(self):
-        self.view.xfacet = "Dox"
-        self.view.plot(self.ex, col_wrap = 2)
-        
-    def testShareAxes(self):
-        self.view.plot(self.ex, sharex = False, sharey = False)
-        
-    def testStyle(self):
-        self.view.plot(self.ex, sns_style = "darkgrid")
-        self.view.plot(self.ex, sns_style = "whitegrid")
-        self.view.plot(self.ex, sns_style = "dark")
-        self.view.plot(self.ex, sns_style = "white")
-        self.view.plot(self.ex, sns_style = "ticks")
-        
-    def testContext(self):
-        self.view.plot(self.ex, sns_context = "paper")
-        self.view.plot(self.ex, sns_context = "notebook")
-        self.view.plot(self.ex, sns_context = "talk")
-        self.view.plot(self.ex, sns_context = "poster")
 
-    def testDespine(self):
-        self.view.plot(self.ex, despine = False)
-
-    # Data plot params
-    
-    def testQuantiles(self):
-        self.view.plot(self.ex, min_quantile = 0.01, max_quantile = 0.90)
-        
-    # 1D data plot params
-    def testLimits(self):
-        self.view.plot(self.ex, lim = (0, 1000))
-        
-    def testOrientation(self):
-        self.view.plot(self.ex, orientation = "horizontal")
-        
     # KDE params
         
     def testShade(self):

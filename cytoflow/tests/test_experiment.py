@@ -34,9 +34,11 @@ class Test(ImportedDataSmallTest):
         self.assertEqual(len(self.ex['Well'].unique()), 2)
         
     def testAddChannel(self):
+        # TODO
         pass
         
     def testAddCondition(self):
+        # TODO
         pass
 
 

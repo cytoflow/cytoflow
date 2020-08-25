@@ -31,8 +31,7 @@ from test_base import ImportedDataTest  # @UnresolvedImport
 class TestRadviz(ImportedDataTest):
 
     def setUp(self):
-        import numpy as np
-        ImportedDataTest.setUp(self, thin=100)
+        super().setUp()
         self.view = flow.RadvizView(channels = ["B1-A", 'V2-A', 'Y2-A'])
         
     def testPlot(self):
