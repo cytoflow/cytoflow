@@ -29,14 +29,13 @@ from test_base import ImportedDataSmallTest
 
 
 class Test(ImportedDataSmallTest):
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        cls.gate = flow.Range2DOp(name = "Range2D",
-                                  xchannel = "V2-A",
-                                  ychannel = "Y2-A",
-                                  xlow = -200, xhigh = 800,
-                                  ylow = 800, yhigh = 30000)
+    def setUp(self):
+        super().setUp()
+        self.gate = flow.Range2DOp(name = "Range2D",
+                                   xchannel = "V2-A",
+                                   ychannel = "Y2-A",
+                                   xlow = -200, xhigh = 800,
+                                   ylow = 800, yhigh = 30000)
         
     def testGate(self):
         ex2 = self.gate.apply(self.ex)

@@ -29,13 +29,12 @@ from test_base import ImportedDataSmallTest
 
 
 class Test(ImportedDataSmallTest):
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        cls.gate = flow.RangeOp(name = "Range",
-                                channel = "Y2-A",
-                                low = 1000,
-                                high = 10000)
+    def setUp(self):
+        super().setUp()
+        self.gate = flow.RangeOp(name = "Range",
+                                 channel = "Y2-A",
+                                 low = 1000,
+                                 high = 10000)
         
     def testGate(self):
         ex2 = self.gate.apply(self.ex)

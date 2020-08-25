@@ -74,7 +74,7 @@ class ImportedDataTest(ClosePlotsWhenDoneTestCase):
                                 tubes = [tube1, tube2, tube3,
                                          tube4, tube5, tube6,
                                          tube7, tube8, tube9]).apply()
-        if thin:
+        if thin > 1:
             import numpy as np
             # thin the dataset 100-fold from 90k to 900 rows for thin=100
             self.ex.add_condition("bucket", "int", np.arange(self.ex.data.shape[0]) % thin)
@@ -92,7 +92,6 @@ class ImportedDataSmallTest(ClosePlotsWhenDoneTestCase):
         import_op = flow.ImportOp(conditions={"Dox": "float"},
                                   tubes=[tube1, tube2])
         self.ex = import_op.apply()
-        print("loaded data")
 
 
 class TasbeTest(ClosePlotsWhenDoneTestCase):

@@ -29,14 +29,13 @@ from test_base import ImportedDataSmallTest
 
 
 class Test(ImportedDataSmallTest):
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        cls.gate = flow.QuadOp(name = "Quad",
-                               xchannel = "V2-A",
-                               ychannel = "Y2-A",
-                               xthreshold = 216,
-                               ythreshold = 2144)
+    def setUp(self):
+        super().setUp()
+        self.gate = flow.QuadOp(name = "Quad",
+                                xchannel = "V2-A",
+                                ychannel = "Y2-A",
+                                xthreshold = 216,
+                                ythreshold = 2144)
 
     def testGate(self):
         ex2 = self.gate.apply(self.ex)

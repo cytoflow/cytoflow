@@ -25,8 +25,10 @@ Created on Nov 15, 2015
 
 import unittest
 import cytoflow as flow
+from test_base import ClosePlotsWhenDoneTestCase
 
-class TestBeads(unittest.TestCase):
+
+class TestBeads(ClosePlotsWhenDoneTestCase):
 
     def setUp(self):
         import os

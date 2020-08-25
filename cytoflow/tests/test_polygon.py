@@ -29,10 +29,9 @@ from test_base import ImportedDataSmallTest
 
 
 class Test(ImportedDataSmallTest):
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        cls.gate = flow.PolygonOp(name = "Polygon",
+    def setUp(self):
+        super().setUp()
+        self.gate = flow.PolygonOp(name = "Polygon",
                                   xchannel = "V2-A",
                                   ychannel = "Y2-A",
                                   vertices = [(-95.86, 12436.45),

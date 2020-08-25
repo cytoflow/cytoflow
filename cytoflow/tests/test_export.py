@@ -24,17 +24,13 @@ Created on Dec 1, 2015
 '''
 import unittest, os, tempfile, shutil
 import cytoflow as flow
+from test_base import ImportedDataSmallTest
 
-class Test(unittest.TestCase):
+
+class Test(ImportedDataSmallTest):
 
     def setUp(self):
-        self.cwd = os.path.dirname(os.path.abspath(__file__)) + "/data/Plate01/"
-        tube1 = flow.Tube(file = self.cwd + 'RFP_Well_A3.fcs', conditions = {"Dox" : 10.0})
-        tube2 = flow.Tube(file= self.cwd + 'CFP_Well_A4.fcs', conditions = {"Dox" : 1.0})
-        import_op = flow.ImportOp(conditions = {"Dox" : "float"},
-                                  tubes = [tube1, tube2])
-        self.ex = import_op.apply()
-        
+        super().setUp()
         self.directory = tempfile.mkdtemp()
         
     def tearDown(self):
