@@ -29,6 +29,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 import pandas as pd
+from natsort import natsorted
 
 from warnings import warn
 
@@ -169,15 +170,16 @@ class BaseView(HasStrictTraits):
                      util.CytoflowViewWarning)
                 
             
+        sorter = natsorted
         g = sns.FacetGrid(data, 
                           height = height,
                           aspect = aspect,
                           col = (self.xfacet if self.xfacet else None),
                           row = (self.yfacet if self.yfacet else None),
                           hue = (self.huefacet if self.huefacet else None),
-                          col_order = (np.sort(data[self.xfacet].unique()) if self.xfacet else None),
-                          row_order = (np.sort(data[self.yfacet].unique()) if self.yfacet else None),
-                          hue_order = (np.sort(data[self.huefacet].unique()) if self.huefacet else None),
+                          col_order = (sorter(data[self.xfacet].unique()) if self.xfacet else None),
+                          row_order = (sorter(data[self.yfacet].unique()) if self.yfacet else None),
+                          hue_order = (sorter(data[self.huefacet].unique()) if self.huefacet else None),
                           col_wrap = col_wrap,
                           legend_out = False,
                           sharex = sharex,

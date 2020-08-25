@@ -65,6 +65,7 @@ setup(
                         'scikit-learn==0.22.1',
                         'seaborn==0.10.0',
                         'statsmodels==0.11.0',
+                        'natsort==7.0.1',
                         
                         'traits==6.0.0',
                         'traitsui==6.1.3',
