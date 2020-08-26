@@ -27,9 +27,9 @@ import unittest, tempfile, os
 import matplotlib
 matplotlib.use("Agg")
 
-from test_base import ImportedDataTest, wait_for  # @UnresolvedImport
+from test_base import ImportedDataTest, wait_for, params_traits_comparator  # @UnresolvedImport
 from cytoflowgui.view_plugins.kde_2d import Kde2DPlugin, Kde2DPlotParams
-from cytoflowgui.serialization import save_yaml, load_yaml, traits_eq, traits_hash
+from cytoflowgui.serialization import save_yaml, load_yaml
 
 class TestKde2D(ImportedDataTest):
 
@@ -311,27 +311,22 @@ class TestKde2D(ImportedDataTest):
         self.view.plot_params.gridsize = 55
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))   
 
-        
     def testSerialize(self):
-        Kde2DPlotParams.__eq__ = traits_eq
-        Kde2DPlotParams.__hash__ = traits_hash
-        
-        fh, filename = tempfile.mkstemp()
-        try:
-            os.close(fh)
-            
-            save_yaml(self.view, filename)
-            new_view = load_yaml(filename)
-            
-        finally:
-            os.unlink(filename)
-            
-        self.maxDiff = None
-                     
-        self.assertDictEqual(self.view.trait_get(self.view.copyable_trait_names()),
-                             new_view.trait_get(self.view.copyable_trait_names()))
-        
-        
+        with params_traits_comparator(Kde2DPlotParams):
+            fh, filename = tempfile.mkstemp()
+            try:
+                os.close(fh)
+
+                save_yaml(self.view, filename)
+                new_view = load_yaml(filename)
+            finally:
+                os.unlink(filename)
+
+            self.maxDiff = None
+
+            self.assertDictEqual(self.view.trait_get(self.view.copyable_trait_names()),
+                                 new_view.trait_get(self.view.copyable_trait_names()))
+
     def testNotebook(self):
         code = "from cytoflow import *\n"
         for i, wi in enumerate(self.workflow.workflow):

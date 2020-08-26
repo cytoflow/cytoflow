@@ -27,9 +27,9 @@ import unittest, tempfile, os
 import matplotlib
 matplotlib.use("Agg")
 
-from cytoflowgui.tests.test_base import ImportedDataTest, wait_for
+from cytoflowgui.tests.test_base import ImportedDataTest, wait_for, params_traits_comparator
 from cytoflowgui.view_plugins.density import DensityPlugin, DensityPlotParams
-from cytoflowgui.serialization import save_yaml, load_yaml, traits_eq, traits_hash
+from cytoflowgui.serialization import save_yaml, load_yaml
 
 class TestDensityPlot(ImportedDataTest):
 
@@ -269,27 +269,23 @@ class TestDensityPlot(ImportedDataTest):
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
         self.view.plot_params.smoothed_sigma = 2
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
-                            
-        
+
     def testSerialize(self):
-        DensityPlotParams.__eq__ = traits_eq
-        DensityPlotParams.__hash__ = traits_hash
-        
-        fh, filename = tempfile.mkstemp()
-        try:
-            os.close(fh)
-            
-            save_yaml(self.view, filename)
-            new_view = load_yaml(filename)
-            
-        finally:
-            os.unlink(filename)
-            
-        self.maxDiff = None
-                     
-        self.assertDictEqual(self.view.trait_get(self.view.copyable_trait_names()),
-                             new_view.trait_get(self.view.copyable_trait_names()))
-        
+        with params_traits_comparator(DensityPlotParams):
+            fh, filename = tempfile.mkstemp()
+            try:
+                os.close(fh)
+
+                save_yaml(self.view, filename)
+                new_view = load_yaml(filename)
+            finally:
+                os.unlink(filename)
+
+            self.maxDiff = None
+
+            self.assertDictEqual(self.view.trait_get(self.view.copyable_trait_names()),
+                                 new_view.trait_get(self.view.copyable_trait_names()))
+
     def testNotebook(self):
         code = "from cytoflow import *\n"
         for i, wi in enumerate(self.workflow.workflow):

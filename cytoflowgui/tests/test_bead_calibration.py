@@ -29,10 +29,10 @@ import matplotlib
 matplotlib.use("Agg")
 
 from cytoflowgui.workflow_item import WorkflowItem
-from cytoflowgui.tests.test_base import TasbeTest, wait_for
+from cytoflowgui.tests.test_base import TasbeTest, wait_for, params_traits_comparator
 from cytoflowgui.op_plugins import BeadCalibrationPlugin
 from cytoflowgui.op_plugins.bead_calibration import _Unit
-from cytoflowgui.serialization import save_yaml, load_yaml, traits_eq, traits_hash
+from cytoflowgui.serialization import save_yaml, load_yaml
 import cytoflowgui.op_plugins.bead_calibration  # @UnusedImport
 
 class TestBeadCalibration(TasbeTest):
@@ -128,29 +128,23 @@ class TestBeadCalibration(TasbeTest):
     def testPlot(self):
         self.wi.current_view = self.wi.default_view
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
-           
 
     def testSerialize(self):
+        with params_traits_comparator(_Unit):
+            fh, filename = tempfile.mkstemp()
+            try:
+                os.close(fh)
 
-        _Unit.__eq__ = traits_eq
-        _Unit.__hash__ = traits_hash
-        
-        fh, filename = tempfile.mkstemp()
-        try:
-            os.close(fh)
-            
-            save_yaml(self.op, filename)
-            new_op = load_yaml(filename)
-            
-        finally:
-            os.unlink(filename)
-            
-        self.maxDiff = None
-                     
-        self.assertDictEqual(self.op.trait_get(self.op.copyable_trait_names()),
-                             new_op.trait_get(self.op.copyable_trait_names()))
-        
-        
+                save_yaml(self.op, filename)
+                new_op = load_yaml(filename)
+            finally:
+                os.unlink(filename)
+
+            self.maxDiff = None
+
+            self.assertDictEqual(self.op.trait_get(self.op.copyable_trait_names()),
+                                 new_op.trait_get(self.op.copyable_trait_names()))
+
     def testNotebook(self):
         code = "from cytoflow import *\n"
         for i, wi in enumerate(self.workflow.workflow):

@@ -29,11 +29,11 @@ import matplotlib
 matplotlib.use("Agg")
 
 from cytoflowgui.workflow_item import WorkflowItem
-from cytoflowgui.tests.test_base import TasbeTest, wait_for
+from cytoflowgui.tests.test_base import TasbeTest, wait_for, params_traits_comparator
 from cytoflowgui.op_plugins import ThresholdPlugin, TasbePlugin
 from cytoflowgui.op_plugins.tasbe import _BleedthroughControl, _TranslationControl
 from cytoflowgui.subset import BoolSubset
-from cytoflowgui.serialization import load_yaml, save_yaml, traits_eq, traits_hash
+from cytoflowgui.serialization import load_yaml, save_yaml
 
 class TestTASBE(TasbeTest):
     
@@ -125,31 +125,23 @@ class TestTASBE(TasbeTest):
         self.wi.default_view.current_plot = "Color Translation"
         self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30)) 
 
-  
     def testSerialize(self):
-      
-        _BleedthroughControl.__eq__ = traits_eq
-        _BleedthroughControl.__hash__ = traits_hash
-             
-        _TranslationControl.__eq__ = traits_eq
-        _TranslationControl.__hash__ = traits_hash
-        
-        fh, filename = tempfile.mkstemp()
-        try:
-            os.close(fh)
-            
-            save_yaml(self.op, filename)
-            new_op = load_yaml(filename)
-            
-        finally:
-            os.unlink(filename)
-            
-        self.maxDiff = None
-                     
-        self.assertDictEqual(self.op.trait_get(self.op.copyable_trait_names()),
-                             new_op.trait_get(self.op.copyable_trait_names()))
-        
-        
+        with params_traits_comparator(_BleedthroughControl), \
+                params_traits_comparator(_TranslationControl):
+            fh, filename = tempfile.mkstemp()
+            try:
+                os.close(fh)
+
+                save_yaml(self.op, filename)
+                new_op = load_yaml(filename)
+            finally:
+                os.unlink(filename)
+
+            self.maxDiff = None
+
+            self.assertDictEqual(self.op.trait_get(self.op.copyable_trait_names()),
+                                 new_op.trait_get(self.op.copyable_trait_names()))
+
     def testNotebook(self):
         code = "from cytoflow import *\n"
         for i, wi in enumerate(self.workflow.workflow):
