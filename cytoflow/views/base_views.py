@@ -257,7 +257,7 @@ class BaseView(HasStrictTraits):
                 if util.is_numeric(data[self.huefacet]) and \
                    len(g.hue_names) > len(current_palette):
     
-                    cmap = mpl.colors.ListedColormap(sns.color_palette("husl" if palette is None else palette, 
+                    cmap = mpl.colors.ListedColormap(sns.color_palette(palette or "husl",
                                                                        n_colors = len(g.hue_names)))                
                     hue_scale = util.scale_factory(self.huescale, 
                                                    experiment,
