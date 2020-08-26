@@ -146,9 +146,7 @@ class params_traits_comparator(object):
     def __enter__(self):
         self.cls.__eq__ = traits_eq
         self.cls.__hash__ = traits_hash
-        print("EERIK: set comparator")
 
     def __exit__(self, *args):
         self.cls.__eq__ = self._eq
         self.cls.__hash__ = self._hash
-        print("EERIK: unset comparator")
