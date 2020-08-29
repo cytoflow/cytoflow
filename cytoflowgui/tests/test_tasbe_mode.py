@@ -25,15 +25,14 @@ Created on Jan 5, 2018
 
 import os, unittest, tempfile, shutil
 
+from traits.util.async_trait_wait import wait_for_condition
+
 import matplotlib
 matplotlib.use("Agg")
 
 from cytoflowgui.workflow_item import WorkflowItem
-from cytoflowgui.tests.test_base import WorkflowTest, wait_for
-from cytoflowgui.tasbe_calibration import (TasbeCalibrationOp, 
-    TasbeCalibrationView, _BleedthroughControl, _TranslationControl, _Unit)
-from cytoflowgui.subset import BoolSubset
-from cytoflowgui.serialization import load_yaml, save_yaml
+from cytoflowgui.tests.test_base import WorkflowTest
+from cytoflowgui.tasbe_calibration import (TasbeCalibrationOp, _BleedthroughControl, _Unit)
 
 class TestTASBECalibrationMode(WorkflowTest):
     
@@ -84,12 +83,14 @@ class TestTASBECalibrationMode(WorkflowTest):
           
         # run the estimate
         op.do_estimate = True
-        self.assertTrue(wait_for(op, 'valid_model', lambda v: v, 30))
+        wait_for_condition(lambda v: v, self.op, 'valid_model', 30)
 
         
     def tearDown(self):
+        
+        # setting the output files 
         self.op.input_files = [self.cwd + "/../../cytoflow/tests/data/tasbe/rby.fcs"]
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
+        wait_for_condition(lambda v: v.status == 'Done converting!', self.op, 'status', 30)
 
         shutil.rmtree(self.op.output_directory)
 
@@ -101,18 +102,18 @@ class TestTASBECalibrationMode(WorkflowTest):
   
     def testChangeChannels(self):
         self.op.channels = ["FITC-A", "Pacific Blue-A"]
-        self.assertTrue(wait_for(self.op, 'valid_model', lambda v: not v, 30))
+        wait_for_condition(lambda v: v == False, self.op, 'valid_model', 30)
         self.assertTrue(len(self.op.units_list) == 2)
         self.assertTrue(len(self.op.bleedthrough_list) == 2)
 
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.op, 'valid_model', lambda v: v, 30))
+        wait_for_condition(lambda v: v == True, self.op, 'valid_model', 30)
         
     def testDoTranslation(self):
         self.op.to_channel = "FITC-A"
         self.op.do_color_translation = True
         
-        self.assertTrue(wait_for(self.op, 'valid_model', lambda v: not v, 30))
+        wait_for_condition(lambda v: v == False, self.op, 'valid_model', 30)
         self.assertEqual(len(self.op.units_list), 1)
         self.assertEqual(self.op.units_list[0].channel, "FITC-A")
         self.assertEqual(self.op.units_list[0].unit, "MEFL")
@@ -122,46 +123,46 @@ class TestTASBECalibrationMode(WorkflowTest):
         self.op.translation_list[1].file = self.cwd + "/../../cytoflow/tests/data/tasbe/rby.fcs"
 
         self.op.do_estimate = 1
-        self.assertTrue(wait_for(self.op, 'valid_model', lambda v: v, 30))
+        wait_for_condition(lambda v: v == True, self.op, 'valid_model', 30)
         
 
     def testPlot(self):
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
+        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
         self.wi.current_view = self.wi.default_view
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 10))
+        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
 
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
+        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
         self.wi.default_view.current_plot = "Autofluorescence"
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 10))
+        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
 
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
+        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
         self.wi.default_view.current_plot = "Bleedthrough"
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 10))  
+        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
 
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
+        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
         self.wi.default_view.current_plot = "Bead Calibration"
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 10)) 
+        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
         
         self.op.to_channel = "FITC-A"
         self.op.do_color_translation = True
         
-        self.assertTrue(wait_for(self.op, 'valid_model', lambda v: not v, 30))
+        wait_for_condition(lambda v: v == False, self.op, 'valid_model', 30)
         
         self.op.translation_list[0].file = self.cwd + "/../../cytoflow/tests/data/tasbe/rby.fcs"
         self.op.translation_list[1].file = self.cwd + "/../../cytoflow/tests/data/tasbe/rby.fcs"
 
         self.op.do_estimate = 1
-        self.assertTrue(wait_for(self.op, 'valid_model', lambda v: v, 30))
+        wait_for_condition(lambda v: v == True, self.op, 'valid_model', 30)
         
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
+        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
         self.wi.default_view.current_plot = "Color Translation"
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 10)) 
+        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
 
 if __name__ == "__main__":
-#     import sys;sys.argv = ['', 'TestTASBECalibrationMode.testPlot']
+    import sys;sys.argv = ['', 'TestTASBECalibrationMode.testEstimate']
     unittest.main()

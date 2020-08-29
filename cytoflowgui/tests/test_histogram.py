@@ -38,7 +38,7 @@ class TestHistogram(ImportedDataTest):
     def setUp(self):
         ImportedDataTest.setUp(self)
 
-        self.wi = wi = self.workflow.workflow[0]
+        self.wi = wi = self.workflow.workflow[0]        
         plugin = HistogramPlugin()
         self.view = view = plugin.get_view()
         view.channel = "Y2-A"
