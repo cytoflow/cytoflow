@@ -53,8 +53,8 @@ install:
   - echo $CONDA_TAG; echo $CONDA_BUILD_NUMBER; echo $CONDA_BUILD_STRING
 
   # build and install conda recipe
-  - conda render packaging/conda_recipes/cytoflow
-  - conda build packaging/conda_recipes/cytoflow
+  - conda render package/conda_recipes/cytoflow
+  - conda build package/conda_recipes/cytoflow
   - conda create --yes --quiet --name=cytoflow python==3.6.10 nomkl
   - source activate cytoflow
   - conda install --yes --quiet --use-local --only-deps cytoflow
@@ -67,7 +67,7 @@ before_script:
   - conda install --yes --quiet pip 
   - pip install nose2 
 
-script: nose2 -c packaging/nose2.cfg -s cytoflow/tests -N 2
+script: nose2 -c package/nose2.cfg -s cytoflow/tests -N 2
 
 after_success:
 
@@ -81,7 +81,7 @@ after_success:
   - python setup.py bdist_wheel
 
   # Build the one-click executables
-  - LD_LIBRARY_PATH=${CONDA_PREFIX}/lib python packaging/pyinstaller-local.py --log-level=DEBUG packaging/pyinstaller.spec
+  - LD_LIBRARY_PATH=${CONDA_PREFIX}/lib python package/pyinstaller-local.py --log-level=DEBUG package/pyinstaller.spec
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then cd dist/; mv Cytoflow.app Cytoflow-${CONDA_TAG}.app; zip -r cytoflow-${CONDA_TAG}.macos.zip Cytoflow-${CONDA_TAG}.app/; rm -rf Cytoflow-${CONDA_TAG}.app cytoflow; cd ..; fi
   - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then cd dist; mv cytoflow cytoflow-${CONDA_TAG}; tar czf cytoflow-${CONDA_TAG}.linux_x86-64.tar.gz cytoflow-${CONDA_TAG}; rm -rf cytoflow-${CONDA_TAG}; cd ..; fi
   
@@ -91,7 +91,7 @@ after_success:
   # move the C++ extensions into the dist folder
   - source deactivate
   - cp `find build | grep "\.so$"` dist/
-  - python packaging/move_conda_package.py
+  - python package/move_conda_package.py
   
   # rename the wheels and source dist
   - if [[ -z $TRAVIS_TAG ]]; then rename 's/cytoflow-.*-(cp36.*\.whl)/cytoflow-dev-$1/' dist/*.whl; fi
@@ -104,7 +104,7 @@ deploy:
   - provider: bintray
 #     edge:
 #       branch: v1.8.47
-    file: packaging/bintray.json
+    file: package/bintray.json
     user: bpteague
     key:
       secure: "hLQQ+za4pnBc0m3caWEW7KaK40DlR97JBuTPil4HMrr/hsG8HQOnRM6ofVd0+jGI4UxEitfPFXiIu1ECQ9ikakmMKDbOKjTXwdQKxFuvjvGLGJmA3nK8SfrZJkrM2iUEj8/0Yqj5knS+gyW4dn9mCxa4oEOehXpMPnq3sh3U3gzZba6sZ/3Dn/NZQpqbg5SJ0yGVrme5LWx+nmZvaodmcy7wRxliXMggJkPH+OVcFB39xAdPJIkQCzN/0r50c4mKp+lUo8beQqvbdJt/dXwqsByVgPZtXxiglzkyJdELgoePGGt26xnXRgcySrOC6548JRyv5848I+x5q0ncID4qYuFHqJjnpT87Pz3kZSC9aAvfIJA8iFGpM38oMsCEjMykPXr5XHOS8A5mSY+Zcy/adrtp7N/M14gEMVE4jpkRWb9QKjXXQa06Z65IARbINuauJcYyX5gXJ2jpMN0Jd4oov2thWPLZFIaRy9Ps3ISOSbvEKNgAY9vzHHFhSsPRdFydIMPbkVVqkgN+HyB+C9mo/BMIz8/uviEKxPPGxaT+iAKBtr5riS6GNvpUgkEforVwHkztjjUtyP7PzMcA2FfigIyArcFkICmMeGG9CY+wMAoL2DRhe1FTuonHrielhVwYFrlUMTAiFZeJcZzlwNS4kVl5zjnChLbSUnxXP2izj/k="
@@ -116,7 +116,7 @@ deploy:
   - provider: bintray
 #     edge:
 #       branch: v1.8.47
-    file: packaging/bintray.json
+    file: package/bintray.json
     user: bpteague
     key:
       secure: "hLQQ+za4pnBc0m3caWEW7KaK40DlR97JBuTPil4HMrr/hsG8HQOnRM6ofVd0+jGI4UxEitfPFXiIu1ECQ9ikakmMKDbOKjTXwdQKxFuvjvGLGJmA3nK8SfrZJkrM2iUEj8/0Yqj5knS+gyW4dn9mCxa4oEOehXpMPnq3sh3U3gzZba6sZ/3Dn/NZQpqbg5SJ0yGVrme5LWx+nmZvaodmcy7wRxliXMggJkPH+OVcFB39xAdPJIkQCzN/0r50c4mKp+lUo8beQqvbdJt/dXwqsByVgPZtXxiglzkyJdELgoePGGt26xnXRgcySrOC6548JRyv5848I+x5q0ncID4qYuFHqJjnpT87Pz3kZSC9aAvfIJA8iFGpM38oMsCEjMykPXr5XHOS8A5mSY+Zcy/adrtp7N/M14gEMVE4jpkRWb9QKjXXQa06Z65IARbINuauJcYyX5gXJ2jpMN0Jd4oov2thWPLZFIaRy9Ps3ISOSbvEKNgAY9vzHHFhSsPRdFydIMPbkVVqkgN+HyB+C9mo/BMIz8/uviEKxPPGxaT+iAKBtr5riS6GNvpUgkEforVwHkztjjUtyP7PzMcA2FfigIyArcFkICmMeGG9CY+wMAoL2DRhe1FTuonHrielhVwYFrlUMTAiFZeJcZzlwNS4kVl5zjnChLbSUnxXP2izj/k="
