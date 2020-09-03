@@ -121,5 +121,5 @@ class TestGaussian1D(unittest.TestCase):
         
 
 if __name__ == "__main__":
-#     import sys;sys.argv = ['', 'TestGaussian1D.testApplyBy']
+    import sys;sys.argv = ['', 'TestGaussian1D.testApply']
     unittest.main()

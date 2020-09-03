@@ -177,7 +177,7 @@ class FrameStatisticOp(HasStrictTraits):
                 continue
             
             try:
-                stat.loc[group] = self.function(data_subset)
+                stat.at[group] = self.function(data_subset)
 
             except Exception as e:
                 raise util.CytoflowOpError('function',

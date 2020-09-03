@@ -241,7 +241,7 @@ class ChannelStatisticOp(HasStrictTraits):
                 group = (group,)
             
             try:
-                stat.loc[group] = self.function(data_subset[self.channel])
+                stat.at[group] = self.function(data_subset[self.channel])
             except Exception as e:
                 raise util.CytoflowOpError(None,
                                            "Your function threw an error in group {}"

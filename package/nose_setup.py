@@ -8,6 +8,7 @@ import os, logging, multiprocessing
 from nose2.events import Plugin
 from nose2.plugins.mp import MultiProcess, procserver
 
+import matplotlib
 import matplotlib.backends
 
 log = logging.getLogger('package.nose_setup')
@@ -18,7 +19,7 @@ def _startProcs(self, test_count):
     procs = []
     count = min(test_count, self.procs)
     log.debug("Creating %i worker processes", count)
-    for i in range(0, count):
+    for _ in range(0, count):
         parent_conn, child_conn = self._prepConns()
         proc = multiprocessing.Process(
             target=procserver, args=(session_export, child_conn))
@@ -35,6 +36,13 @@ class NoseSetup(Plugin):
 
     def startTestRun(self, event):
         log.warning('Loading customized nose2 configuration')
+        
+        # tell cytoflow that we are in a GUI, to test GUI-specific things!
+        import cytoflow
+        cytoflow.RUNNING_IN_GUI = True
+        
+        # squash the matplotlib max figures warning
+        matplotlib.rcParams.update({'figure.max_open_warning': 0})
         
         # run the mp plugin without making subprocesses daemons
         MultiProcess._startProcs = _startProcs
