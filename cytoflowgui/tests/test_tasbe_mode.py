@@ -82,8 +82,9 @@ class TestTASBECalibrationMode(WorkflowTest):
         op.output_directory = tempfile.mkdtemp()
           
         # run the estimate
+        op.valid_model = False
         op.do_estimate = True
-        wait_for_condition(lambda v: v, self.op, 'valid_model', 30)
+        wait_for_condition(lambda v: v.valid_model == True, self.op, 'valid_model', 30)
 
         
     def tearDown(self):
@@ -102,18 +103,18 @@ class TestTASBECalibrationMode(WorkflowTest):
   
     def testChangeChannels(self):
         self.op.channels = ["FITC-A", "Pacific Blue-A"]
-        wait_for_condition(lambda v: v == False, self.op, 'valid_model', 30)
+        wait_for_condition(lambda v: v.valid_model == False, self.op, 'valid_model', 60)
         self.assertTrue(len(self.op.units_list) == 2)
         self.assertTrue(len(self.op.bleedthrough_list) == 2)
 
         self.op.do_estimate = True
-        wait_for_condition(lambda v: v == True, self.op, 'valid_model', 30)
+        wait_for_condition(lambda v: v.valid_model == True, self.op, 'valid_model', 60)
         
     def testDoTranslation(self):
         self.op.to_channel = "FITC-A"
         self.op.do_color_translation = True
         
-        wait_for_condition(lambda v: v == False, self.op, 'valid_model', 30)
+        wait_for_condition(lambda v: v.valid_model == False, self.op, 'valid_model', 30)
         self.assertEqual(len(self.op.units_list), 1)
         self.assertEqual(self.op.units_list[0].channel, "FITC-A")
         self.assertEqual(self.op.units_list[0].unit, "MEFL")
@@ -122,8 +123,8 @@ class TestTASBECalibrationMode(WorkflowTest):
         self.op.translation_list[0].file = self.cwd + "/../../cytoflow/tests/data/tasbe/rby.fcs"
         self.op.translation_list[1].file = self.cwd + "/../../cytoflow/tests/data/tasbe/rby.fcs"
 
-        self.op.do_estimate = 1
-        wait_for_condition(lambda v: v == True, self.op, 'valid_model', 30)
+        self.op.do_estimate = True
+        wait_for_condition(lambda v: v.valid_model == True, self.op, 'valid_model', 30)
         
 
     def testPlot(self):
@@ -150,13 +151,13 @@ class TestTASBECalibrationMode(WorkflowTest):
         self.op.to_channel = "FITC-A"
         self.op.do_color_translation = True
         
-        wait_for_condition(lambda v: v == False, self.op, 'valid_model', 30)
+        wait_for_condition(lambda v: v.valid_model == False, self.op, 'valid_model', 30)
         
         self.op.translation_list[0].file = self.cwd + "/../../cytoflow/tests/data/tasbe/rby.fcs"
         self.op.translation_list[1].file = self.cwd + "/../../cytoflow/tests/data/tasbe/rby.fcs"
 
         self.op.do_estimate = 1
-        wait_for_condition(lambda v: v == True, self.op, 'valid_model', 30)
+        wait_for_condition(lambda v: v.valid_model == True, self.op, 'valid_model', 30)
         
         self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
         wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
@@ -164,5 +165,5 @@ class TestTASBECalibrationMode(WorkflowTest):
         wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
 
 if __name__ == "__main__":
-    import sys;sys.argv = ['', 'TestTASBECalibrationMode.testEstimate']
+    import sys;sys.argv = ['', 'TestTASBECalibrationMode.testChangeChannels']
     unittest.main()

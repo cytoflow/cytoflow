@@ -188,6 +188,8 @@ class TestGaussian1D(ImportedDataTest):
         wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
         wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
         
+        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
+        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
         self.view = self.wi.current_view = self.wi.default_view
         wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
 
