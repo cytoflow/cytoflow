@@ -177,7 +177,13 @@ class FrameStatisticOp(HasStrictTraits):
                 continue
             
             try:
-                stat.at[group] = self.function(data_subset)
+                v = self.function(data_subset)
+                
+                # this is some serious do-what-i-mean BS.
+                if isinstance(v, ((int, float, complex, bool))):
+                    stat.at[group] = v
+                else:  
+                    stat.at[group] = [v]
 
             except Exception as e:
                 raise util.CytoflowOpError('function',
