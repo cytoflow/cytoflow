@@ -496,8 +496,8 @@ def check_tube(filename, experiment, data_set = 0):
             new_v = tube_channels.loc[fcs_name]['$PnV']
             
             if old_v != new_v and not channel in ignore_v:
-                raise util.CytoflowError("Tube {0} doesn't have the same voltages"
-                                    .format(filename))
+                raise util.CytoflowError("Tube {0} doesn't have the same voltages for channel "
+                                    .format(filename) + str(channel))
 
         # TODO check the delay -- and any other params?
         
