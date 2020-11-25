@@ -56,9 +56,9 @@ setup(
     
     # Project uses reStructuredText, so ensure that the docutils get
     # installed or upgraded on the target machine
-    install_requires = ['numpy==1.19.1',
-                        'pandas==1.1.2',
-                        'matplotlib==3.3.1',
+    install_requires = ['numpy==1.19.2',
+                        'pandas==1.1.3',
+                        'matplotlib==3.3.2',
                         'bottleneck==1.3.2',
                         'numexpr==2.7.1',
                         'scipy==1.5.0',
@@ -67,8 +67,8 @@ setup(
                         'statsmodels==0.11.1',
                         
                         'traits==6.1.1',
-                        'traitsui==7.0.1',
-                        'pyface==7.0.1',
+                        'traitsui==7.1.0',
+                        'pyface==7.1.0',
                         'envisage==4.9.2',
                         'nbformat==5.0.7',
                         'python-dateutil==2.8.1',
