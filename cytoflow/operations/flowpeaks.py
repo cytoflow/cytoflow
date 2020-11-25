@@ -1072,6 +1072,7 @@ class FlowPeaks2DDensityView(By2DView, AnnotatingView, NullView):
         kwargs.setdefault('antialiased', False)
         kwargs.setdefault('linewidth', 0)
         kwargs.setdefault('edgecolors', 'face')
+        kwargs.setdefault('shading', 'auto')
         kwargs.setdefault('cmap', plt.get_cmap('viridis'))
         
         xscale = kwargs['scale'][self.xchannel]
