@@ -225,6 +225,7 @@ class ChannelStatisticOp(HasStrictTraits):
                      .format(group), 
                      util.CytoflowOpWarning)
                 
+        # this shouldn't be necessary, but see pandas bug #38053
         if len(self.by) == 1:
             idx = pd.Index(experiment[self.by[0]].unique(), name = self.by[0])
         else:
