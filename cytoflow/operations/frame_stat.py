@@ -164,8 +164,11 @@ class FrameStatisticOp(HasStrictTraits):
                      .format(group), 
                      util.CytoflowOpWarning)
         
-        idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by], 
-                                         names = self.by)
+        if len(self.by) == 1:
+            idx = pd.Index(experiment[self.by[0]].unique(), name = self.by[0])
+        else:
+            idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by], 
+                                             names = self.by)
 
         stat = pd.Series(data = self.fill,
                          index = idx, 
@@ -179,11 +182,7 @@ class FrameStatisticOp(HasStrictTraits):
             try:
                 v = self.function(data_subset)
                 
-                # this is some serious do-what-i-mean BS.
-                if isinstance(v, ((int, float, complex, bool))):
-                    stat.at[group] = v
-                else:  
-                    stat.at[group] = [v]
+                stat.at[group] = v
 
             except Exception as e:
                 raise util.CytoflowOpError('function',

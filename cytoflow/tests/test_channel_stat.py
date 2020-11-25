@@ -23,7 +23,6 @@ Created on Dec 1, 2015
 @author: brian
 '''
 
-import os
 import unittest
 
 import cytoflow as flow
@@ -52,6 +51,22 @@ class TestChannelStats(unittest.TestCase):
         self.assertIn("Dox", stat.index.names)
         self.assertIn("T", stat.index.names)
         
+        
+    def testTuple(self):
+        ex1 = flow.ChannelStatisticOp(name = "ByDox",
+                             channel = "Y2-A",
+                             by = ['T'],
+                             function = flow.geom_sd_range).apply(self.ex)
+                             
+        ex2 = flow.ChannelStatisticOp(name = "ByDox",
+                             channel = "Y2-A",
+                             by = ['T', 'Dox'],
+                             function = flow.geom_sd_range).apply(self.ex)
+                             
+        self.assertEqual(type(ex1.statistics[('ByDox', 'geom_sd_range')].iloc[0]),
+                         type(ex2.statistics[('ByDox', 'geom_sd_range')].iloc[0]))
+                             
+        
     def testSubset(self):
         ex = flow.ChannelStatisticOp(name = "ByDox",
                                      by = ['T'],
@@ -60,8 +75,8 @@ class TestChannelStats(unittest.TestCase):
                                      function = len).apply(self.ex)
         stat = ex.statistics[("ByDox", "len")]
        
-        self.assertEqual(stat.loc[False].values[0], 24801)
-        self.assertEqual(stat.loc[True].values[0], 5199)
+        self.assertEqual(stat.loc[False], 24801)
+        self.assertEqual(stat.loc[True], 5199)
         
     def testBadFunction(self):
         
@@ -84,5 +99,5 @@ class TestChannelStats(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    import sys;sys.argv = ['', 'TestChannelStats.testBadSet']
+    import sys;sys.argv = ['', 'TestChannelStats.testTuple']
     unittest.main()
