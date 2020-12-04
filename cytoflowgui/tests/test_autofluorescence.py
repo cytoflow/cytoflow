@@ -31,7 +31,7 @@ import matplotlib
 matplotlib.use("Agg")
 
 from cytoflowgui.workflow_item import WorkflowItem
-from cytoflowgui.tests.test_base import TasbeTest, wait_for
+from cytoflowgui.tests.test_base import TasbeTest
 from cytoflowgui.op_plugins import AutofluorescencePlugin, ThresholdPlugin
 from cytoflowgui.subset import BoolSubset
 from cytoflowgui.serialization import load_yaml, save_yaml
@@ -49,8 +49,9 @@ class TestAutofluorescence(TasbeTest):
         op.threshold = 100000
 
         wi = WorkflowItem(operation = op)
-        self.workflow.workflow.append(wi)        
-        self.assertTrue(wait_for(wi, 'status', lambda v: v == 'valid', 30))
+        self.workflow.workflow.append(wi)      
+        wait_for_condition(lambda v: v.status == 'valid', wi, 'status', 30)  
+        #self.assertTrue(wait_for(wi, 'status', lambda v: v == 'valid', 30))
  
         plugin = AutofluorescencePlugin()
         self.op = op = plugin.get_operation()
