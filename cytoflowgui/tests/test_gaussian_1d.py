@@ -175,6 +175,28 @@ class TestGaussian1D(ImportedDataTest):
         self.view.yfacet = ""
         self.view.huefacet = "Well"
         wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
+
+    def testBar(self):
+        
+        self.op.by = ["Dox", "Well"]
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'invalid', self.wi, 'status', 30)
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
+         
+        self.op.do_estimate = True
+        wait_for_condition(lambda v: v.status == 'estimating', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+        
+        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
+        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
+        self.view = self.wi.current_view = self.wi.default_view
+        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 300)
+  
+        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
+        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 300)
+        self.view.plot_params.histtype = "bar"
+        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 300)
         
     def testPlotArgs(self):
         
@@ -290,38 +312,38 @@ class TestGaussian1D(ImportedDataTest):
         wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
         self.view.plot_params.num_bins = 500
         wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
-
+   
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
         wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
         self.view.plot_params.histtype = "step"
         wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
-
+  
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
         wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
         self.view.plot_params.histtype = "bar"
         wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
-
+ 
         for linestyle in ['dashed', 'solid', 'dashed', 'dashdot', 'dotted']:
             self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
             wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
             self.view.plot_params.linestyle = linestyle
             wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
-            
+              
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
         wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
         self.view.plot_params.linewidth = "5"
         wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
-            
+              
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
         wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
         self.view.plot_params.density = True
         wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
-
+  
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
         wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
         self.view.plot_params.alpha = 0.1
         wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
- 
+  
     def testSerialize(self):
         fh, filename = tempfile.mkstemp()
         try:
@@ -350,5 +372,5 @@ class TestGaussian1D(ImportedDataTest):
         self.assertTrue((nb_data == remote_data).all().all())
 
 if __name__ == "__main__":
-    import sys;sys.argv = ['', 'TestGaussian1D.testPlotArgs']
+    import sys;sys.argv = ['', 'TestGaussian1D.testBar']
     unittest.main()
