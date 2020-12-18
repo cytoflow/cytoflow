@@ -33,7 +33,7 @@ matplotlib.use("Agg")
 from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.tests.test_base import ImportedDataTest
 from cytoflowgui.op_plugins import GaussianMixture1DPlugin
-from cytoflowgui.subset import CategorySubset
+from cytoflowgui.subset import CategorySubset, RangeSubset
 from cytoflowgui.serialization import load_yaml, save_yaml
 
 class TestGaussian1D(ImportedDataTest):
@@ -50,6 +50,7 @@ class TestGaussian1D(ImportedDataTest):
         op.num_components = 2
         
         op.subset_list.append(CategorySubset(name = "Well", values = ["A", "B"]))
+        op.subset_list.append(RangeSubset(name = "Dox", values = [0, 10, 100]))
         
         self.wi = wi = WorkflowItem(operation = op)
         wi.default_view = op.default_view()
@@ -163,7 +164,8 @@ class TestGaussian1D(ImportedDataTest):
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
         wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
         self.view.xfacet = "Dox"
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
+        self.view.current_plot = "A"
+        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 300)
 
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
         wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
@@ -372,5 +374,5 @@ class TestGaussian1D(ImportedDataTest):
         self.assertTrue((nb_data == remote_data).all().all())
 
 if __name__ == "__main__":
-    import sys;sys.argv = ['', 'TestGaussian1D.testBar']
+    import sys;sys.argv = ['', 'TestGaussian1D.testEstimate']
     unittest.main()
