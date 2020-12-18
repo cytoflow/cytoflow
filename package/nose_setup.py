@@ -37,6 +37,10 @@ class NoseSetup(Plugin):
     def startTestRun(self, event):
         log.warning('Loading customized nose2 configuration')
         
+        # set multiprocessing to use spawn (defaults to fork on UNIX)
+        # keeps (GNU) OpenMP from crashing 
+        multiprocessing.set_start_method('spawn', force = True)
+        
         # tell cytoflow that we are in a GUI, to test GUI-specific things!
         import cytoflow
         cytoflow.RUNNING_IN_GUI = True
@@ -48,7 +52,7 @@ class NoseSetup(Plugin):
         MultiProcess._startProcs = _startProcs
         
         # set the OpenMP thread pool to 1
-        os.environ['OMP_NUM_THREADS'] = '1'
+        # os.environ['OMP_NUM_THREADS'] = '1'
         
         # make matplotlib stop complaining about running headless
         matplotlib.backends._get_running_interactive_framework = _get_running_interactive_framework

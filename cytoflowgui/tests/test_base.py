@@ -23,11 +23,11 @@ Created on Jan 4, 2018
 @author: brian
 '''
 
-import unittest, multiprocessing, os, logging
+import unittest, multiprocessing, os
 
 # do this at import time so we get lots of output when running 
 # in PyDev, etc.
-logging.getLogger().setLevel(logging.DEBUG)
+# logging.getLogger().setLevel(logging.DEBUG)
 
 from traits.util.async_trait_wait import wait_for_condition
 
@@ -35,14 +35,16 @@ from cytoflowgui.workflow import Workflow, RemoteWorkflow
 from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.op_plugins import ImportPlugin
 
+def remote_main(parent_workflow_conn, parent_mpl_conn, log_q, running_event):
+    import matplotlib
+    matplotlib.use('agg')
+
+    running_event.set()
+    RemoteWorkflow().run(parent_workflow_conn, parent_mpl_conn, log_q, headless = True)
 
 class WorkflowTest(unittest.TestCase):
     
     def setUp(self):
-        
-        def remote_main(parent_workflow_conn, parent_mpl_conn, log_q, running_event):
-            running_event.set()
-            RemoteWorkflow().run(parent_workflow_conn, parent_mpl_conn, log_q, headless = True)
         
         # communications channels
         parent_workflow_conn, child_workflow_conn = multiprocessing.Pipe()  
