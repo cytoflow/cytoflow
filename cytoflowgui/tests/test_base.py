@@ -72,9 +72,6 @@ class WorkflowTest(unittest.TestCase):
         handler = CallbackHandler(handle)
         self.queue_listener = QueueListener(log_q, handler)
         self.queue_listener.start()
-        
-#         import sys;sys.path.append(r'/home/brian/.p2/pool/plugins/org.python.pydev.core_7.6.0.202006041357/pysrc')
-#         import pydevd;pydevd.settrace()
 
         remote_process = multiprocessing.Process(target = remote_main,
                                                  name = "remote process",
