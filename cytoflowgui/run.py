@@ -32,11 +32,12 @@ except:
 
 import sys, multiprocessing, logging, traceback, threading, argparse
 
+logger = logging.getLogger(__name__)
 
 def log_notification_handler(_, trait_name, old, new):
     
     (exc_type, exc_value, tb) = sys.exc_info()
-    logging.debug('Exception occurred in traits notification '
+    logger.debug('Exception occurred in traits notification '
                   'handler for object: %s, trait: %s, old value: %s, '
                   'new value: %s.\n%s\n' % ( object, trait_name, old, new,
                   ''.join( traceback.format_exception(exc_type, exc_value, tb) ) ) )
@@ -50,8 +51,7 @@ def log_notification_handler(_, trait_name, old, new):
     
 def log_excepthook(typ, val, tb):
     tb_str = "".join(traceback.format_tb(tb))
-    logging.debug("Global exception: {0}\n{1}: {2}"
-                  .format(tb_str, typ, val))
+    logger.debug("Global exception: {0}\n{1}: {2}".format(tb_str, typ, val))
     
     tb_str = traceback.format_tb(tb)[-1]
     logging.error("Error: {0}: {1}\nLocation: {2}Thread: Main"
@@ -107,7 +107,7 @@ def run_gui():
     
     # start the remote process
 
-    remote_process, remote_connection = start_remote_process()
+    remote_process, remote_connection, queue_listener = start_remote_process()
     
     # Make matplotlib to use our backend
     
@@ -241,6 +241,7 @@ def run_gui():
 
     app.run()
     remote_process.join()
+    queue_listener.stop()
     logging.shutdown()
     
 def start_remote_process():
@@ -248,9 +249,21 @@ def start_remote_process():
         # communications channels
         parent_workflow_conn, child_workflow_conn = multiprocessing.Pipe()  
         parent_mpl_conn, child_matplotlib_conn = multiprocessing.Pipe()
-        log_q = multiprocessing.Queue()
         running_event = multiprocessing.Event()
+
+        # logging
+        from logging.handlers import QueueListener
+        from cytoflowgui.util import CallbackHandler
+        log_q = multiprocessing.Queue()
+        def handle(record):
+            logger = logging.getLogger(record.name)
+            if logger.isEnabledFor(record.levelno):
+                logger.handle(record)
                 
+        handler = CallbackHandler(handle)
+        queue_listener = QueueListener(log_q, handler)
+        queue_listener.start()
+   
         remote_process = multiprocessing.Process(target = remote_main,
                                                  name = "remote process",
                                                  args = [parent_workflow_conn,
@@ -268,9 +281,17 @@ def start_remote_process():
         remote_process_thread.daemon = True
         remote_process_thread.start()
         
-        return (remote_process, (child_workflow_conn, child_matplotlib_conn, log_q))
+        return (remote_process, (child_workflow_conn, child_matplotlib_conn), queue_listener)
     
 def remote_main(parent_workflow_conn, parent_mpl_conn, log_q, running_event):
+    # this should only ever be main method after a spawn() call 
+    # (not fork). So we should have a fresh logger to set up.
+        
+    # messages that end up at the root logger to go log_q
+    from logging.handlers import QueueHandler
+    h = QueueHandler(log_q) 
+    logging.getLogger().addHandler(h)
+    
     # We want matplotlib to use our backend .... in both the GUI and the
     # remote process.  Must be called BEFORE cytoflow is imported
     
@@ -293,7 +314,7 @@ def remote_main(parent_workflow_conn, parent_mpl_conn, log_q, running_event):
     cytoflow.RUNNING_IN_GUI = True
     
     running_event.set()
-    RemoteWorkflow().run(parent_workflow_conn, parent_mpl_conn, log_q)
+    RemoteWorkflow().run(parent_workflow_conn, parent_mpl_conn)
     
         
 def monitor_remote_process(proc):

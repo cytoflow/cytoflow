@@ -25,9 +25,9 @@ Created on Mar 15, 2015
 
 import logging, io, os, pickle
 
-from cytoflowgui import multiprocess_logging
 from cytoflowgui.workflow import Workflow
 from cytoflowgui.flow_task_pane import FlowTaskPane
+from cytoflowgui.util import CallbackHandler
 
 from envisage.ui.tasks.api import TasksApplication
 from envisage.ui.tasks.tasks_application import TasksApplicationState
@@ -82,12 +82,9 @@ class CytoflowApplication(TasksApplication):
     plot_pane = Instance(FlowTaskPane)
             
     def run(self):
- 
-        # Clear the default logging so we can use our own format
-        rootLogger = logging.getLogger()
-        list(map(rootLogger.removeHandler, rootLogger.handlers[:]))
-        list(map(rootLogger.removeFilter, rootLogger.filters[:]))
-        
+
+        # set the root logger level to DEBUG; decide what to do with each 
+        # message on a handler-by-handler basis
         logging.getLogger().setLevel(logging.DEBUG)
         
         ## send the log to STDERR
@@ -107,7 +104,7 @@ class CytoflowApplication(TasksApplication):
         logging.getLogger().addHandler(mem_handler)
          
         ## and display gui messages for exceptions
-        gui_handler = multiprocess_logging.CallbackHandler( lambda msg, app = self: gui_handler_callback(msg, app))
+        gui_handler = CallbackHandler(lambda rec, app = self: gui_handler_callback(rec.getMessage(), app))
         gui_handler.setLevel(logging.ERROR)
         logging.getLogger().addHandler(gui_handler)
          

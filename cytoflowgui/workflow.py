@@ -60,8 +60,9 @@ from cytoflow.views import IView
 from cytoflowgui.vertical_notebook_editor import VerticalNotebookEditor
 from cytoflowgui.workflow_item import WorkflowItem, RemoteWorkflowItem
 from cytoflowgui.util import UniquePriorityQueue, filter_unpicklable
-from cytoflowgui.multiprocess_logging import QueueHandler
 import cytoflowgui.matplotlib_backend_remote
+
+logger = logging.getLogger(__name__)
 
 class Msg(object):
     NEW_WORKFLOW = "NEW_WORKFLOW"
@@ -162,11 +163,11 @@ def log_exception():
     err_loc = traceback.format_tb(tb)[-1]
     err_ctx = threading.current_thread().name
     
-    logging.debug("Exception in {0}: {1}"
+    logger.debug("Exception in {0}: {1}"
                   .format(err_ctx,
                           "".join( traceback.format_exception(exc_type, exc_value, tb) )))
     
-    logging.error("Error: {0}\nLocation: {1}Thread: {2}" \
+    logger.error("Error: {0}\nLocation: {1}Thread: {2}" \
                   .format(err_string, err_loc, err_ctx) )
     
 
@@ -228,7 +229,6 @@ class Workflow(HasStrictTraits):
     log_thread = Instance(threading.Thread)
     remote_process_thread = Instance(threading.Thread)
     message_q = Instance(Queue, ())
-    log_q = Any
     
     # the Pipe connection object to pass to the matplotlib canvas
     child_matplotlib_conn = Any
@@ -249,7 +249,7 @@ class Workflow(HasStrictTraits):
     def __init__(self, remote_connection, **kwargs):
         super(Workflow, self).__init__(**kwargs)  
         
-        child_workflow_conn, self.child_matplotlib_conn, self.log_q = remote_connection
+        child_workflow_conn, self.child_matplotlib_conn = remote_connection
         
         self.recv_thread = threading.Thread(target = self.recv_main, 
                                             name = "local workflow recv",
@@ -262,12 +262,12 @@ class Workflow(HasStrictTraits):
                                             args = [child_workflow_conn])
         self.send_thread.daemon = True
         self.send_thread.start()
-        
-        self.log_thread = threading.Thread(target = self.log_main,
-                                           name = "log listener thread",
-                                           args = [self.log_q])
-        self.log_thread.daemon = True
-        self.log_thread.start()
+#         
+#         self.log_thread = threading.Thread(target = self.log_main,
+#                                            name = "log listener thread",
+#                                            args = [self.log_q])
+#         self.log_thread.daemon = True
+#         self.log_thread.start()
 
     def recv_main(self, child_conn):
         while child_conn.poll(None):
@@ -276,7 +276,7 @@ class Workflow(HasStrictTraits):
             except EOFError:
                 return
             
-            logging.debug("LocalWorkflow.recv_main :: {}".format((msg, payload)))
+            logger.debug("LocalWorkflow.recv_main :: {}".format((msg, payload)))
             
             try: 
                 if msg == Msg.UPDATE_WI:
@@ -342,25 +342,26 @@ class Workflow(HasStrictTraits):
         except Exception:
             log_exception()
             
-    def log_main(self, log_q):
-        # from http://plumberjack.blogspot.com/2010/09/using-logging-with-multiprocessing.html
-        
-        while True:
-            try:
-                record = log_q.get()
-                
-                if record is None: # We send this as a sentinel to tell the listener to quit.
-                    log_q.close()
-                    log_q.join_thread()
-                    return
-                
-                logger = logging.getLogger(record.name)
-                logger.handle(record) # No level or filter logic applied - just do it!
-            except (KeyboardInterrupt, SystemExit):
-                raise
-            except:
-                print('Whoops! Problem:', file=sys.stderr)
-                traceback.print_exc(file=sys.stderr)
+#     def log_main(self, log_q):
+#         # from http://plumberjack.blogspot.com/2010/09/using-logging-with-multiprocessing.html
+#         
+#         while True:
+#             try:
+#                 record = log_q.get()
+#                 
+#                 if record is None: # We send this as a sentinel to tell the listener to quit.
+#                     log_q.close()
+#                     log_q.join_thread()
+#                     return
+#                 
+#                 # No level or filter logic applied - just handle it!
+#                 logging.getLogger(record.name).handle(record)
+#                 
+#             except (KeyboardInterrupt, SystemExit):
+#                 raise
+#             except:
+#                 print('Whoops! Problem:', file=sys.stderr)
+#                 traceback.print_exc(file=sys.stderr)
                 
 
     def run_all(self):
@@ -368,7 +369,7 @@ class Workflow(HasStrictTraits):
 
     @on_trait_change('workflow')
     def _on_new_workflow(self, obj, name, old, new):
-        logging.debug("LocalWorkflow._on_new_workflow")
+        logger.debug("LocalWorkflow._on_new_workflow")
             
         self.selected = None
         
@@ -377,7 +378,7 @@ class Workflow(HasStrictTraits):
         
     @on_trait_change('workflow_items')
     def _on_workflow_add_remove_items(self, event):
-        logging.debug("LocalWorkflow._on_workflow_add_remove_items :: {}"
+        logger.debug("LocalWorkflow._on_workflow_add_remove_items :: {}"
                       .format((event.index, event.removed, event.added)))
 
         idx = event.index
@@ -420,7 +421,7 @@ class Workflow(HasStrictTraits):
  
     @on_trait_change('selected')
     def _on_selected_changed(self, obj, name, old, new):
-        logging.debug("LocalWorkflow._on_selected_changed :: {}"
+        logger.debug("LocalWorkflow._on_selected_changed :: {}"
                       .format((obj, name, old, new)))
             
         if new is None:
@@ -432,7 +433,7 @@ class Workflow(HasStrictTraits):
         
     @on_trait_change('workflow:operation:+')
     def _operation_changed(self, obj, name, old, new):
-        logging.debug("LocalWorkflow._operation_changed :: {}"
+        logger.debug("LocalWorkflow._operation_changed :: {}"
                       .format((obj, name, old, new)))
         
         if not obj.trait(name).transient and not obj.trait(name).status:         
@@ -443,7 +444,7 @@ class Workflow(HasStrictTraits):
 
     @on_trait_change('workflow:operation:changed')
     def _operation_changed_event(self, obj, _, new):
-        logging.debug("LocalWorkflow._operation_changed_event:: {}"
+        logger.debug("LocalWorkflow._operation_changed_event:: {}"
                       .format((obj, new)))
         
         (_, (name, new)) = new
@@ -456,7 +457,7 @@ class Workflow(HasStrictTraits):
 
     @on_trait_change('workflow:views:+')
     def _view_changed(self, obj, name, old, new):
-        logging.debug("LocalWorkflow._view_changed :: {}"
+        logger.debug("LocalWorkflow._view_changed :: {}"
                       .format((obj, name, old, new)))
 
         if not obj.trait(name).transient and not obj.trait(name).status:
@@ -467,7 +468,7 @@ class Workflow(HasStrictTraits):
 
     @on_trait_change('workflow:views:changed')
     def _view_changed_event(self, obj, _, new):
-        logging.debug("LocalWorkflow._view_changed_event:: {}"
+        logger.debug("LocalWorkflow._view_changed_event:: {}"
                       .format((obj, new)))
         
         (_, (_, name, new)) = new
@@ -479,7 +480,7 @@ class Workflow(HasStrictTraits):
         
     @on_trait_change('workflow:current_view')
     def _on_current_view_changed(self, obj, name, old, new):
-        logging.debug("LocalWorkflow._on_current_view_changed :: {}"
+        logger.debug("LocalWorkflow._on_current_view_changed :: {}"
                       .format((obj, name, old, new)))                  
                   
         idx = self.workflow.index(obj)
@@ -488,7 +489,7 @@ class Workflow(HasStrictTraits):
 
     @on_trait_change('workflow:current_plot')
     def _on_current_plot_changed(self, obj, name, old, new):
-        logging.debug("LocalWorkflow._on_current_plot_changed :: {}"
+        logger.debug("LocalWorkflow._on_current_plot_changed :: {}"
                       .format((obj, name, old, new)))                  
                   
         idx = self.workflow.index(obj)
@@ -497,7 +498,7 @@ class Workflow(HasStrictTraits):
         
     @on_trait_change('workflow:operation:do_estimate')
     def _on_estimate(self, obj, name, old, new):
-        logging.debug("LocalWorkflow._on_estimate :: {}"
+        logger.debug("LocalWorkflow._on_estimate :: {}"
                       .format((obj, name, old, new)))
         
         wi = next((x for x in self.workflow if x.operation == obj))
@@ -529,8 +530,8 @@ class Workflow(HasStrictTraits):
         remote_process.join()
         
         # shut down the logging thread
-        self.log_q.put(None)
-        self.log_thread.join()
+#         self.log_q.put(None)
+#         self.log_thread.join()
         
         
         
@@ -555,19 +556,7 @@ class RemoteWorkflow(HasStrictTraits):
     apply_calls = Int(0)
     plot_calls = Int(0)
     
-    def run(self, parent_workflow_conn, parent_mpl_conn, log_q, headless = False):
-        
-        # if we're on MacOS or Linux, we inherit a root logger config from the 
-        # parent process.  clear it.
-        
-        rootLogger = logging.getLogger()
-        list(map(rootLogger.removeHandler, rootLogger.handlers[:]))
-        list(map(rootLogger.removeFilter, rootLogger.filters[:]))
-        
-        # make log messages go to log_q
-        h = QueueHandler(log_q) 
-        rootLogger.addHandler(h)
-        rootLogger.setLevel(logging.DEBUG)
+    def run(self, parent_workflow_conn, parent_mpl_conn, headless = False):
         
         # set up the plotting synchronization primitives
         self.matplotlib_events = threading.Event()
@@ -624,7 +613,7 @@ class RemoteWorkflow(HasStrictTraits):
             except EOFError:
                 return
             
-            logging.debug("RemoteWorkflow.recv_main :: {}".format((msg, payload)))
+            logger.debug("RemoteWorkflow.recv_main :: {}".format((msg, payload)))
             
             try:
                 if msg == Msg.NEW_WORKFLOW:
@@ -700,7 +689,7 @@ class RemoteWorkflow(HasStrictTraits):
                     try:
                         view = next((x for x in wi.views if x.id == view_id))
                     except StopIteration:
-                        logging.warn("RemoteWorkflow: Couldn't find view {}".format(view_id))
+                        logger.warn("RemoteWorkflow: Couldn't find view {}".format(view_id))
                         continue
                     
                     with wi.lock:
@@ -775,20 +764,22 @@ class RemoteWorkflow(HasStrictTraits):
         self.send_thread.join()
         
         # shut down the logging queue and its thread
-        rootLogger = logging.getLogger()
-        handler = rootLogger.handlers[0]
-
-        list(map(rootLogger.removeHandler, rootLogger.handlers[:]))
-        list(map(rootLogger.removeFilter, rootLogger.filters[:]))
         
-        handler.flush()
-        handler.close()
+        # TODO FIXME
+#         rootLogger = logging.getLogger()
+#         handler = rootLogger.handlers[0]
+# 
+#         list(map(rootLogger.removeHandler, rootLogger.handlers[:]))
+#         list(map(rootLogger.removeFilter, rootLogger.filters[:]))
+#         
+#         handler.flush()
+#         handler.close()
         
             
             
     @on_trait_change('workflow_items', post_init = True)
     def _on_workflow_add_remove_items(self, event):
-        logging.debug("RemoteWorkflow._on_workflow_add_remove_items :: {}"
+        logger.debug("RemoteWorkflow._on_workflow_add_remove_items :: {}"
                       .format((event.index, event.removed, event.added)))
             
         idx = event.index
@@ -823,7 +814,7 @@ class RemoteWorkflow(HasStrictTraits):
     @on_trait_change('workflow:operation:+', post_init = True)
     def _operation_changed(self, obj, name, old, new):
         """Translate changes in op traits to wi change events"""
-        logging.debug("RemoteWorkflow._operation_changed :: {}"
+        logger.debug("RemoteWorkflow._operation_changed :: {}"
                       .format((obj, name, old, new)))
         
         wi = next((x for x in self.workflow if obj == x.operation))
@@ -843,7 +834,7 @@ class RemoteWorkflow(HasStrictTraits):
             
     @on_trait_change('workflow:operation:changed', post_init = True)
     def _operation_change_event(self, obj, _, new):
-        logging.debug("RemoteWorkflow._operation_change_event :: {}"
+        logger.debug("RemoteWorkflow._operation_change_event :: {}"
                       .format((obj, new)))
         
         wi = next((x for x in self.workflow if obj == x.operation))
@@ -853,7 +844,7 @@ class RemoteWorkflow(HasStrictTraits):
     @on_trait_change('workflow:views:+', post_init = True)
     def _view_changed(self, obj, name, new):
         """Translate changes in view traits to wi change events"""
-        logging.debug("RemoteWorkflow._view_changed :: {}"
+        logger.debug("RemoteWorkflow._view_changed :: {}"
                       .format((obj, name, new)))
         
         wi = next((x for x in self.workflow if obj in x.views))
@@ -869,7 +860,7 @@ class RemoteWorkflow(HasStrictTraits):
             
     @on_trait_change('workflow:changed')
     def _changed_event(self, obj, name, new):
-        logging.debug("RemoteWorkflow._changed_event:: {}"
+        logger.debug("RemoteWorkflow._changed_event:: {}"
                       .format((obj, name, new)))
         
         wi = obj
@@ -942,7 +933,7 @@ class RemoteWorkflow(HasStrictTraits):
 
     @on_trait_change('workflow:+', post_init = True)
     def _workflow_item_changed(self, obj, name, old, new):
-        logging.debug("RemoteWorkflow._workflow_item_changed :: {}"
+        logger.debug("RemoteWorkflow._workflow_item_changed :: {}"
                       .format((obj, name, old, new)))
              
         idx = self.workflow.index(obj)
@@ -952,7 +943,7 @@ class RemoteWorkflow(HasStrictTraits):
             
     @on_trait_change('workflow:result', post_init = True)
     def _result_changed(self, obj, name, old, new):
-        logging.debug("RemoteWorkflow._result_changed :: {}"
+        logger.debug("RemoteWorkflow._result_changed :: {}"
                       .format((self, obj, name, old, new)))   
              
         if obj.result:
@@ -971,7 +962,7 @@ class RemoteWorkflow(HasStrictTraits):
              
     @on_trait_change('workflow:current_view, workflow:current_view:current_plot', post_init = True)
     def _current_view_changed(self, obj, name, old, new):
-        logging.debug("RemoteWorkflow._current_view_changed :: {}"
+        logger.debug("RemoteWorkflow._current_view_changed :: {}"
                       .format((self, obj, name, old, new)))
         
         if obj == self.selected:
@@ -981,7 +972,7 @@ class RemoteWorkflow(HasStrictTraits):
             
     @on_trait_change('selected', post_init = True)
     def _selected_changed(self, obj, name, new):
-        logging.debug("RemoteWorkflow._selected_changed :: {}"
+        logger.debug("RemoteWorkflow._selected_changed :: {}"
                       .format((self, obj, name, new)))
         
         if new:
