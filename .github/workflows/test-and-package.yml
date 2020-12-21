@@ -19,9 +19,25 @@ jobs:
         # $CONDA is an environment variable pointing to the root of the miniconda directory
         echo $CONDA/bin >> $GITHUB_PATH
         
-    - name: Install dependencies
+        
+    - name: Build conda package
       run: |
-        conda env update --file environment.yml --name cytoflow     
+        conda build packaging/conda_recipes-cytoflow
+        
+    - name: Create test/packaging environment
+      run: |
+        conda create --yes --quiet --name=cytoflow python=3.6.12 nomkl
+        conda activate cytoflow
+        conda install --yes --quiet --use-local --only-deps cytoflow
+    
+    - name: Install package locally
+      run: |
+        python setup.py develop
+        
+    - name: Install nose2
+      run: |
+        conda install --yes --quiet pip
+        pip install nose2
         
     - name: Conda info
       shell: bash -l {0}
