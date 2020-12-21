@@ -1,14 +1,15 @@
 package:
   name: cytoflow
-  version: {{ environ.get('CONDA_TAG', 'notag') }}
+  # https://www.python.org/dev/peps/pep-0440/
+  version: {{ GIT_DESCRIBE_TAG if GIT_DESCRIBE_NUMBER == 0 else GIT_DESCRIBE_TAG ~ '.dev' ~ GIT_DESCRIBE_NUMBER ~ '+' ~ GIT_DESCRIBE_HASH }}
 
 source:
   path: ../../..
 
 
 build:
-  number: {{ environ.get('CONDA_BUILD_NUMBER', '0') }}
-  string: {{ environ.get('CONDA_BUILD_STRING', 'py36_none') }}
+  number: {{ GIT_DESCRIBE_NUMBER }}
+  string: {{ "py36" }}
   entry_points:
     - cytoflow = cytoflowgui.run:run_gui
     - cf-channel_voltages = cytoflow.scripts.channel_voltages:main

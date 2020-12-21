@@ -4,7 +4,7 @@ environment:
     # SDK v7.0 MSVC Express 2008's SetEnv.cmd script will fail if the
     # /E:ON and /V:ON options are not enabled in the batch script intepreter
     # See: http://stackoverflow.com/a/13751649/163740
-    WITH_COMPILER: "cmd /E:ON /V:ON /C .\\package/\\appveyor\\run_with_compiler.cmd"
+    WITH_COMPILER: "cmd /E:ON /V:ON /C .\\packaging\\appveyor\\run_with_compiler.cmd"
 
   matrix:
 
@@ -54,8 +54,8 @@ install:
   - set CONDA_BUILD_STRING=py36_win%PYTHON_ARCH%_%CONDA_BUILD_NUMBER%
   
   # Build the conda package
-  - conda render package\conda_recipes\cytoflow
-  - "%WITH_COMPILER% conda build package\\conda_recipes\\cytoflow"
+  - conda render packaging\conda_recipes\cytoflow
+  - "%WITH_COMPILER% conda build packaging\\conda_recipes\\cytoflow"
   
   # Install the new package locally
   - conda create --yes --quiet --name=cytoflow python=3.6.10
@@ -79,7 +79,7 @@ install:
 build: off
 
 test_script:
-  - "nose2 -c package\\nose2.cfg -s cytoflow\\tests -N 2"
+  - "nose2 -c packaging\\nose2.cfg -s cytoflow\\tests -N 2"
 
 after_test:
   # Install packaging requirements
@@ -92,18 +92,18 @@ after_test:
   - "python setup.py bdist_wheel"
   
   # Build one-click
-  - "python package\\pyinstaller-local.py package\\pyinstaller.spec"
-  - '"C:\Program Files (x86)\NSIS\makensis.exe" /NOCD package\installer.nsis'
+  - "python packaging\\pyinstaller-local.py packaging\\pyinstaller.spec"
+  - '"C:\Program Files (x86)\NSIS\makensis.exe" /NOCD packaging\installer.nsis'
   - set CONDA_TAG
   - set PYTHON_ARCH
   - dir dist
   - "IF %PYTHON_ARCH% EQU 32 move dist\\cytoflow-installer.exe dist\\cytoflow-installer-%CONDA_TAG%-win32.exe"
   - "IF %PYTHON_ARCH% EQU 64 move dist\\cytoflow-installer.exe dist\\cytoflow-installer-%CONDA_TAG%-win-amd64.exe"
-  - IF "%APPVEYOR_REPO_TAG%"=="false" python package\rename.py cytoflow-.*?(cp36.*whl) cytoflow-dev-\1 dist\*.whl
+  - IF "%APPVEYOR_REPO_TAG%"=="false" python packaging\rename.py cytoflow-.*?(cp36.*whl) cytoflow-dev-\1 dist\*.whl
   
   # Move conda package to dist folder
   - deactivate
-  - python package\move_conda_package.py
+  - python packaging\move_conda_package.py
   
   - "IF %PYTHON_ARCH% EQU 32 move build\\lib.win32-3.6\\cytoflow\\utility\\logicle_ext\\_Logicle*.pyd dist\\"
   - "IF %PYTHON_ARCH% EQU 64 move build\\lib.win-amd64-3.6\\cytoflow\\utility\\logicle_ext\\_Logicle*.pyd dist\\"
