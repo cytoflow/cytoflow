@@ -119,14 +119,14 @@ class TestDensityGate(ImportedDataTest):
         
     def testChangeBy(self):
         self.op.by = ["Dox"]
-        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'invalid', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 60)
+        wait_for_condition(lambda v: v.status == 'invalid', self.wi, 'status', 60)
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
          
         self.op.do_estimate = True
-        wait_for_condition(lambda v: v.status == 'estimating', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'estimating', self.wi, 'status', 60)
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 60)
+        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 60)
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
         
     def testChangeParams(self):
