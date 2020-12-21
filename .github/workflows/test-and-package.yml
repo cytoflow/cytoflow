@@ -1,19 +1,32 @@
 name: test-and-package
 on: [push]
 jobs:
-  test-and-package:
+  build-and-test-linux:
+    name: Run cytoflow unit tests on linux
     runs-on: ubuntu-latest
     steps:
-      - uses: conda-incubator/setup-miniconda@v2
-        with: 
-          audo-update-conda: true
-          environment-file: environment.yml
-          channels: bpteague
-      
-      - name: Conda info
-        shell: bash -l {0}
-        run: |
-          conda info
-          conda list
+    - name: Check out repo
+      uses: actions/checkout@v2
           
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.6' # Version range or exact version of a Python version to use, using SemVer's version range syntax
+        architecture: 'x64' # optional x64 or x86. Defaults to x64 if not specified
+      
+    - name: Add conda to system path
+      run: |
+        # $CONDA is an environment variable pointing to the root of the miniconda directory
+        echo $CONDA/bin >> $GITHUB_PATH
+        
+    - name: Install dependencies
+      run: |
+        conda env update --file environment.yml --name cytoflow     
+        
+    - name: Conda info
+      shell: bash -l {0}
+      run: |
+        conda info
+        conda list
+
         
