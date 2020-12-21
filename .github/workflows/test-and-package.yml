@@ -27,7 +27,8 @@ jobs:
         
     - name: Build conda package
       run: |
-        conda build packaging/conda_recipes-cytoflow
+        conda render packaging/conda_recipes/cytoflow
+        conda build packaging/conda_recipes/cytoflow
         
     - name: Create test/packaging environment
       run: |
