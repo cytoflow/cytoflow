@@ -1,0 +1,19 @@
+name: test-and-package
+on: [push]
+jobs:
+  test-and-package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: conda-incubator/setup-miniconda@v2
+        with: 
+          audo-update-conda: true
+          environment-file: environment.yml
+          channels: bpteague
+      
+      - name: Conda info
+        shell: bash -l {0}
+        run: |
+          conda info
+          conda list
+          
+        
