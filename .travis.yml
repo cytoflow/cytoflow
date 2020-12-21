@@ -55,7 +55,7 @@ install:
   # build and install conda recipe
   - conda render package/conda_recipes/cytoflow
   - conda build package/conda_recipes/cytoflow
-  - conda create --yes --quiet --name=cytoflow python==3.6.10 nomkl
+  - conda create --yes --quiet --name=cytoflow python==3.6.12 nomkl
   - source activate cytoflow
   - conda install --yes --quiet --use-local --only-deps cytoflow
   - python setup.py develop
