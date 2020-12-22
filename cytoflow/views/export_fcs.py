@@ -236,7 +236,7 @@ class ExportFCS(HasStrictTraits):
                             '$ENDANALYSIS', '$BEGINDATA', '$ENDDATA',
                             '$BYTEORD', '$DATATYPE', '$MODE', '$NEXTDATA', 
                             '$TOT', '$PAR']
-        common_metadata = {k : v for k, v in common_metadata.items()
+        common_metadata = {str(k) : str(v) for k, v in common_metadata.items()
                            if re.search('^\$P\d+[BENRDSG]$', k) is None
                            and k not in exclude_keywords}
         

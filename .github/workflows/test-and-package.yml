@@ -1,0 +1,69 @@
+name: test-and-package
+on: [push]
+jobs:
+  build-and-test-linux:
+    name: Run cytoflow unit tests on linux
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out repo
+      uses: actions/checkout@v2
+      
+    - name: Get branch, tag names
+      id: branch_name
+      run: |
+        git fetch --prune --unshallow --tags
+        echo ::set-output name=SOURCE_NAME::${GITHUB_REF#refs/*/}
+        echo ::set-output name=SOURCE_BRANCH::${GITHUB_REF#refs/heads/}
+        echo ::set-output name=SOURCE_TAG::${GITHUB_REF#refs/tags/}
+      
+    - name: Git describe
+      run: git describe --tags
+          
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.6' # Version range or exact version of a Python version to use, using SemVer's version range syntax
+        architecture: 'x64' # optional x64 or x86. Defaults to x64 if not specified
+      
+    - name: Add conda to system path
+      run: |
+        # $CONDA is an environment variable pointing to the root of the miniconda directory
+        echo $CONDA/bin >> $GITHUB_PATH
+        
+    - name: Configure conda
+      run: |
+        conda update --yes conda
+        conda config --add channels bpteague
+        conda install --yes --quiet anaconda-client conda-build
+        
+    - name: Build conda package
+      env:
+        SOURCE_NAME: ${{ steps.branch_name.outputs.SOURCE_NAME }}
+        SOURCE_BRANCH: ${{ steps.branch_name.outputs.SOURCE_BRANCH }}
+        SOURCE_TAG: ${{ steps.branch_name.outputs.SOURCE_TAG }}
+      run: |
+        conda render packaging/conda_recipes/cytoflow
+        conda build packaging/conda_recipes/cytoflow
+        
+    - name: Create test/packaging environment
+      run: |
+        conda create --yes --quiet --name=cytoflow python=3.6.12 nomkl
+        conda activate cytoflow
+        conda install --yes --quiet --use-local --only-deps cytoflow
+    
+    - name: Install package locally
+      run: |
+        python setup.py develop
+        
+    - name: Install nose2
+      run: |
+        conda install --yes --quiet pip
+        pip install nose2
+        
+    - name: Conda info
+      shell: bash -l {0}
+      run: |
+        conda info
+        conda list
+
+        

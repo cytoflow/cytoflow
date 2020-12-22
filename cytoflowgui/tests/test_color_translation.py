@@ -25,11 +25,13 @@ Created on Jan 5, 2018
 
 import os, unittest, tempfile
 
+from traits.util.async_trait_wait import wait_for_condition
+
 import matplotlib
 matplotlib.use("Agg")
 
 from cytoflowgui.workflow_item import WorkflowItem
-from cytoflowgui.tests.test_base import TasbeTest, wait_for, params_traits_comparator
+from cytoflowgui.tests.test_base import TasbeTest, params_traits_comparator
 from cytoflowgui.op_plugins import ColorTranslationPlugin, ThresholdPlugin
 from cytoflowgui.op_plugins.color_translation import _Control
 from cytoflowgui.subset import BoolSubset
@@ -49,8 +51,9 @@ class TestColorTranslation(TasbeTest):
 
         wi = WorkflowItem(operation = op)
         self.workflow.workflow.append(wi)        
-        self.assertTrue(wait_for(wi, 'status', lambda v: v == 'valid', 30))
- 
+        wait_for_condition(lambda v: v.status == 'applying', wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'valid', wi, 'status', 30)
+         
         plugin = ColorTranslationPlugin()
         self.op = op = plugin.get_operation()
         
@@ -73,8 +76,10 @@ class TestColorTranslation(TasbeTest):
           
         # run the estimate
         op.do_estimate = True
-        self.assertTrue(wait_for(wi, 'status', lambda v: v == 'valid', 30))
-
+        wait_for_condition(lambda v: v.status == 'estimating', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+        
     def testEstimate(self):
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
   
@@ -82,41 +87,58 @@ class TestColorTranslation(TasbeTest):
         self.op.controls_list.append(_Control(from_channel = "PE-Tx-Red-YG-A",
                                               to_channel = "FITC-A",
                                               file = self.rby_file))
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 30))
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'invalid', self.wi, 'status', 30)
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
         
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
-  
+        wait_for_condition(lambda v: v.status == 'estimating', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
+          
     def testChangeMixtureModel(self):
         self.op.mixture_model = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 30))
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'invalid', self.wi, 'status', 30)
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
         
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
+        wait_for_condition(lambda v: v.status == 'estimating', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
   
     def testChangeSubset(self):
         self.op.subset_list[0].selected_t = False
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 30))
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'invalid', self.wi, 'status', 30)
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
         
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
+        wait_for_condition(lambda v: v.status == 'estimating', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
          
     def testPlot(self):
         self.wi.current_view = self.wi.default_view
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
+        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
 
     def testPlotMixtureModel(self):
         self.op.mixture_model = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 30))
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'invalid', self.wi, 'status', 30)
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
         
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
+        wait_for_condition(lambda v: v.status == 'estimating', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
+        
         self.wi.current_view = self.wi.default_view
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))  
+        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
 
     def testSerialize(self):
         with params_traits_comparator(_Control):

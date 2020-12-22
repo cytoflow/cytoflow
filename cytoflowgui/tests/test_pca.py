@@ -25,11 +25,13 @@ Created on Jan 5, 2018
 
 import os, unittest, tempfile
 
+from traits.util.async_trait_wait import wait_for_condition
+
 import matplotlib
 matplotlib.use("Agg")
 
 from cytoflowgui.workflow_item import WorkflowItem
-from cytoflowgui.tests.test_base import ImportedDataTest, wait_for, params_traits_comparator
+from cytoflowgui.tests.test_base import ImportedDataTest, params_traits_comparator
 from cytoflowgui.op_plugins import PCAPlugin
 from cytoflowgui.op_plugins.pca import _Channel
 from cytoflowgui.subset import CategorySubset
@@ -59,7 +61,9 @@ class TestPCA(ImportedDataTest):
         
         # run estimate
         op.do_estimate = True
-        self.assertTrue(wait_for(wi, 'status', lambda v: v == 'valid', 30))
+        wait_for_condition(lambda v: v.status == 'estimating', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
 
     def testEstimate(self):
         self.assertIsNotNone(self.workflow.remote_eval("self.workflow[-1].result"))
@@ -68,64 +72,88 @@ class TestPCA(ImportedDataTest):
         
     def testRemoveChannel(self):
         self.op.channels_list.pop()
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 30))
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'invalid', self.wi, 'status', 30)
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
 
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
+        wait_for_condition(lambda v: v.status == 'estimating', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
         
     def testAddChannel(self):
         self.op.channels_list.append(_Channel(channel = "B1-A", scale = "log"))
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 30))
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'invalid', self.wi, 'status', 30)
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
 
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
+        wait_for_condition(lambda v: v.status == 'estimating', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
    
     def testComponents(self):
         self.op.num_components = 3
-        
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 30))
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'invalid', self.wi, 'status', 30)
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
 
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
+        wait_for_condition(lambda v: v.status == 'estimating', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
 
     def testChangeScale(self):
         self.op.channels_list[0].scale = "logicle"
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 30))
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'invalid', self.wi, 'status', 30)
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
          
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
+        wait_for_condition(lambda v: v.status == 'estimating', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
         
     def testChangeWhiten(self):
         self.op.whiten = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 30))
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'invalid', self.wi, 'status', 30)
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
          
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
+        wait_for_condition(lambda v: v.status == 'estimating', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
         
     def testChangeBy(self):
         self.op.by = ["Dox"]
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 30))
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'invalid', self.wi, 'status', 30)
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
          
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
+        wait_for_condition(lambda v: v.status == 'estimating', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
 
     def testChangeSubset(self):
         self.op.subset_list[0].selected = ["A"]
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 30))
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'invalid', self.wi, 'status', 30)
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
          
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
-
+        wait_for_condition(lambda v: v.status == 'estimating', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
+   
     def testSerializeOp(self):
         with params_traits_comparator(_Channel):
             fh, filename = tempfile.mkstemp()

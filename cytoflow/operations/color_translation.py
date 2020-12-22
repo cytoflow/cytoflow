@@ -191,7 +191,7 @@ class ColorTranslationOp(HasStrictTraits):
         for from_channel, to_channel in translation.items():
             
             if from_channel not in experiment.channels:
-                raise util.CytoflowOpError('translatin',
+                raise util.CytoflowOpError('translation',
                                            "Channel {0} not in the experiment"
                                            .format(from_channel))
                 
@@ -448,7 +448,7 @@ class ColorTranslationDiagnostic(HasStrictTraits):
 
             if self.op.mixture_model:    
                 plt.subplot(num_plots, 2, plt_idx * 2 + 2)
-                plt.xscale('log', nonposx='mask')
+                plt.xscale('log', nonpositive='mask')
                 hist_bins = np.logspace(1, math.log(data[from_channel].max(), 2), num = 128, base = 2)
                 _ = plt.hist(data[from_channel],
                              bins = hist_bins,
@@ -463,8 +463,8 @@ class ColorTranslationDiagnostic(HasStrictTraits):
             
             num_cols = 2 if self.op.mixture_model else 1
             plt.subplot(num_plots, num_cols, plt_idx * num_cols + 1)
-            plt.xscale('log', nonposx = 'mask')
-            plt.yscale('log', nonposy = 'mask')
+            plt.xscale('log', nonpositive = 'mask')
+            plt.yscale('log', nonpositive = 'mask')
             plt.xlabel(from_channel)
             plt.ylabel(to_channel)
             plt.xlim(from_min, from_max)

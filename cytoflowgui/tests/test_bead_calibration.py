@@ -25,11 +25,13 @@ Created on Jan 5, 2018
 
 import os, unittest, tempfile
 
+from traits.util.async_trait_wait import wait_for_condition
+
 import matplotlib
 matplotlib.use("Agg")
 
 from cytoflowgui.workflow_item import WorkflowItem
-from cytoflowgui.tests.test_base import TasbeTest, wait_for, params_traits_comparator
+from cytoflowgui.tests.test_base import TasbeTest, params_traits_comparator
 from cytoflowgui.op_plugins import BeadCalibrationPlugin
 from cytoflowgui.op_plugins.bead_calibration import _Unit
 from cytoflowgui.serialization import save_yaml, load_yaml
@@ -59,8 +61,10 @@ class TestBeadCalibration(TasbeTest):
           
         # run the estimate
         op.do_estimate = True
-        self.assertTrue(wait_for(wi, 'status', lambda v: v == 'valid', 30))
-
+        wait_for_condition(lambda v: v.status == 'estimating', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+        
     def testEstimate(self):
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
         
@@ -69,65 +73,83 @@ class TestBeadCalibration(TasbeTest):
         self.op.bead_brightness_threshold = "95.0"
         self.op.bead_brightness_cutoff = "262000"
         
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 30))
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'invalid', self.wi, 'status', 30)
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
 
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
+        wait_for_condition(lambda v: v.status == 'estimating', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
 
         
     def testRemoveChannel(self):
         self.op.units_list.pop()
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 30))
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'invalid', self.wi, 'status', 30)
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
 
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
+        wait_for_condition(lambda v: v.status == 'estimating', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
         
     def testAddChannel(self):
         self.op.units_list.append(_Unit(channel = "PE-Tx-Red-YG-A", unit = "MEPTR"))
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 30))
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'invalid', self.wi, 'status', 30)
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
 
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
+        wait_for_condition(lambda v: v.status == 'estimating', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
         
     def testBeadQuantile(self):
         self.op.bead_peak_quantile = 75
         
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 30))
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'invalid', self.wi, 'status', 30)
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
 
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
+        wait_for_condition(lambda v: v.status == 'estimating', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
 
     def testBeadThreshold(self):
         self.op.bead_brightness_threshold = 95.0
         
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 30))
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'invalid', self.wi, 'status', 30)
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
 
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
+        wait_for_condition(lambda v: v.status == 'estimating', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
       
     def testBeadCutoff(self):
         self.op.bead_brightness_cutoff = 262000
         
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 30))
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'invalid', self.wi, 'status', 30)
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
 
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
+        wait_for_condition(lambda v: v.status == 'estimating', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
                               
     def testPlot(self):
         self.wi.current_view = self.wi.default_view
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
+        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)           
 
     def testSerialize(self):
         with params_traits_comparator(_Unit):
