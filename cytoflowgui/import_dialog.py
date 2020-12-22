@@ -168,12 +168,12 @@ class ExperimentColumn(ObjectColumn):
     # override ObjectColumn.get_cell_color
     def get_cell_color(self, obj):
         if not self.is_editable(obj):
-            return 'lightgrey'
+            return 'light grey'
         
         if obj.parent.is_tube_unique(obj) and obj.all_conditions_set:
             return super(ObjectColumn, self).get_cell_color(object)
         else:
-            return 'lightpink'
+            return 'pink'
         
     def _get_label(self):
         """ Gets the label of the column.
@@ -555,7 +555,7 @@ class ExperimentDialogHandler(Controller):
                                               selection_mode = 'rows',
                                               selected = 'handler.selected_tubes',
                                               columns = [ObjectColumn(name = 'index',
-                                                                      read_only_cell_color = 'lightgrey',
+                                                                      read_only_cell_color = 'light grey',
                                                                       editable = False)]),
                          enabled_when = "object.tubes",
                          show_label = False),

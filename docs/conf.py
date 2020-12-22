@@ -17,6 +17,13 @@ import sys, os, glob, pathlib, shutil
 # are we running on RTD?
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 
+# select the 'null' pyface toolkit. an exception is raised if the qt toolkit
+# is subsequently imported, but that's better than trying to actually create
+# a Qt app if PyQt is accidentally imported.
+
+from traits.etsconfig.api import ETSConfig
+ETSConfig.toolkit = 'null'
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
@@ -56,9 +63,13 @@ autosummary_generate = True
 
 # autodoc options
 autodoc_member_order = 'bysource'
-if on_rtd:
-    autodoc_mock_imports = ['cytoflow.utility.logicle_ext.Logicle']
+#autodoc_mock_imports = ['pyface.qt', 'pyface.ui.qt4', 'traitsui.qt4']
+autodoc_mock_imports = ['traitsui.qt4']
 
+
+if on_rtd:
+    autodoc_mock_imports.append('cytoflow.utility.logicle_ext.Logicle')
+    
 # napoleon options
 napoleon_use_param = False
 
@@ -331,8 +342,8 @@ def setup(app):
     app.connect('build-finished', cleanup_apidoc)
     app.connect('build-finished', copy_embedded_help)
 
-
     sys.modules['sys'].IN_SPHINX = True
+    
         
 def set_builder_config(app):
     if app.builder.name == 'embedded_help':  # @UndefinedVariable
