@@ -23,7 +23,6 @@ Created on Dec 1, 2015
 @author: brian
 '''
 
-import os
 import unittest
 
 import cytoflow as flow
@@ -31,7 +30,7 @@ import cytoflow.utility as util
 from test_base import ImportedDataSmallTest
 
 
-class Test(ImportedDataSmallTest):
+class TestChannelStats(ImportedDataSmallTest):
 
     def setUp(self):
         super().setUp()
@@ -51,6 +50,22 @@ class Test(ImportedDataSmallTest):
         self.assertIn("Dox", stat.index.names)
         self.assertIn("T", stat.index.names)
         
+        
+    def testTuple(self):
+        ex1 = flow.ChannelStatisticOp(name = "ByDox",
+                             channel = "Y2-A",
+                             by = ['T'],
+                             function = flow.geom_sd_range).apply(self.ex)
+                             
+        ex2 = flow.ChannelStatisticOp(name = "ByDox",
+                             channel = "Y2-A",
+                             by = ['T', 'Dox'],
+                             function = flow.geom_sd_range).apply(self.ex)
+                             
+        self.assertEqual(type(ex1.statistics[('ByDox', 'geom_sd_range')].iloc[0]),
+                         type(ex2.statistics[('ByDox', 'geom_sd_range')].iloc[0]))
+                             
+        
     def testSubset(self):
         ex = flow.ChannelStatisticOp(name = "ByDox",
                                      by = ['T'],
@@ -59,8 +74,8 @@ class Test(ImportedDataSmallTest):
                                      function = len).apply(self.ex)
         stat = ex.statistics[("ByDox", "len")]
        
-        self.assertEqual(stat.loc[False].values[0], 5601)
-        self.assertEqual(stat.loc[True].values[0], 4399)
+        self.assertEqual(stat.loc[False], 24801)
+        self.assertEqual(stat.loc[True], 5199)
         
     def testBadFunction(self):
         
@@ -73,7 +88,15 @@ class Test(ImportedDataSmallTest):
         with self.assertRaises(util.CytoflowOpError):
             op.apply(self.ex)
 
+    def testBadSet(self):
+                             
+        self.ex = flow.ChannelStatisticOp(name = "Y_bad",
+                             channel = "Y2-A",
+                             by = ['Well'],
+                             function = flow.geom_sd_range).apply(self.ex)
+                             
+
 
 if __name__ == "__main__":
-#     import sys;sys.argv = ['', 'Test.testApply']
+    import sys;sys.argv = ['', 'TestChannelStats.testTuple']
     unittest.main()

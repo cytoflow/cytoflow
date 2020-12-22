@@ -36,6 +36,8 @@ import scipy.ndimage
 
 import pandas as pd
 
+import copy
+
 from cytoflow.views import IView, HistogramView, ScatterplotView
 import cytoflow.utility as util
 
@@ -1070,6 +1072,7 @@ class FlowPeaks2DDensityView(By2DView, AnnotatingView, NullView):
         kwargs.setdefault('antialiased', False)
         kwargs.setdefault('linewidth', 0)
         kwargs.setdefault('edgecolors', 'face')
+        kwargs.setdefault('shading', 'auto')
         kwargs.setdefault('cmap', plt.get_cmap('viridis'))
         
         xscale = kwargs['scale'][self.xchannel]
@@ -1077,15 +1080,18 @@ class FlowPeaks2DDensityView(By2DView, AnnotatingView, NullView):
         yscale = kwargs['scale'][self.ychannel]
         ylim = kwargs['lim'][self.ychannel]
         
+        # can't modify colormaps in place
+        cmap = copy.copy(kwargs['cmap'])
+        
         under_color = kwargs.pop('under_color', None)
         if under_color is not None:
-            kwargs['cmap'].set_under(color = under_color)
+            cmap.set_under(color = under_color)
         else:
-            kwargs['cmap'].set_under(color = kwargs['cmap'](0.0))
+            cmap.set_under(color = cmap(0.0))
 
         bad_color = kwargs.pop('bad_color', None)
         if bad_color is not None:
-            kwargs['cmap'].set_bad(color = kwargs['cmap'](0.0))
+            cmap.set_bad(color = cmap(0.0))
         
         gridsize = kwargs.pop('gridsize', 50)
         xbins = xscale.inverse(np.linspace(xscale(xlim[0]), xscale(xlim[1]), gridsize))

@@ -60,5 +60,5 @@ class TestFlowpeaks(ImportedDataSmallTest):
         self.op.default_view(density = True).plot(self.ex)
 
 if __name__ == "__main__":
-#     import sys;sys.argv = ['', 'Test.testName']
+    import sys;sys.argv = ['', 'TestFlowpeaks.testPlotDensity']
     unittest.main()

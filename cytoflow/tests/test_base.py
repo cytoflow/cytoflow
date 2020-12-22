@@ -49,31 +49,31 @@ class ImportedData(ClosePlotsWhenDone):
         self.cwd = os.path.dirname(os.path.abspath(__file__)) + "/data/Plate01/"
      
         tube1 = Tube(file = self.cwd + "CFP_Well_A4.fcs",
-                     conditions = {"Dox" : 0.0, "Well" : 'Aa'})
+                     conditions = {"Dox" : 0.0, "Well" : 'A'})
      
         tube2 = Tube(file = self.cwd + "RFP_Well_A3.fcs",
-                     conditions = {"Dox" : 10.0, "Well" : 'Aa'})
+                     conditions = {"Dox" : 10.0, "Well" : 'A'})
 
         tube3 = Tube(file = self.cwd + "YFP_Well_A7.fcs",
-                     conditions = {"Dox" : 100.0, "Well" : 'Aa'})
+                     conditions = {"Dox" : 100.0, "Well" : 'A'})
          
         tube4 = Tube(file = self.cwd + "CFP_Well_B4.fcs",
-                     conditions = {"Dox" : 0.0, "Well" : 'Bb'})
+                     conditions = {"Dox" : 0.0, "Well" : 'B'})
      
         tube5 = Tube(file = self.cwd + "RFP_Well_A6.fcs",
-                     conditions = {"Dox" : 10.0, "Well" : 'Bb'})
+                     conditions = {"Dox" : 10.0, "Well" : 'B'})
 
         tube6 = Tube(file = self.cwd + "YFP_Well_C7.fcs",
-                     conditions = {"Dox" : 100.0, "Well" : 'Bb'})
+                     conditions = {"Dox" : 100.0, "Well" : 'B'})
 
         tube7 = Tube(file = self.cwd + "CFP_Well_B4.fcs",
-                     conditions = {"Dox" : 0.0, "Well" : 'Cc'})
+                     conditions = {"Dox" : 0.0, "Well" : 'C'})
      
         tube8 = Tube(file = self.cwd + "RFP_Well_A6.fcs",
-                     conditions = {"Dox" : 10.0, "Well" : 'Cc'})
+                     conditions = {"Dox" : 10.0, "Well" : 'C'})
 
         tube9 = Tube(file = self.cwd + "YFP_Well_C7.fcs",
-                     conditions = {"Dox" : 100.0, "Well" : 'Cc'})
+                     conditions = {"Dox" : 100.0, "Well" : 'C'})
         
         self.ex = flow.ImportOp(conditions = {"Dox" : "float", "Well" : "category"},
                                 tubes = [tube1, tube2, tube3,

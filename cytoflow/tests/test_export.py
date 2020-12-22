@@ -22,7 +22,7 @@ Created on Dec 1, 2015
 
 @author: brian
 '''
-import unittest, os, tempfile, shutil
+import unittest, os, tempfile, shutil, pathlib
 import cytoflow as flow
 from test_base import ImportedDataSmallTest
 
@@ -31,7 +31,7 @@ class Test(ImportedDataSmallTest):
 
     def setUp(self):
         super().setUp()
-        self.directory = tempfile.mkdtemp()
+        self.directory = pathlib.Path(tempfile.mkdtemp())
         
     def tearDown(self):
         shutil.rmtree(self.directory)
@@ -71,7 +71,7 @@ class Test(ImportedDataSmallTest):
         
         flow.ExportFCS(path = self.directory, by = ['Dox']).export(ex2)   
         
-        tube1 = flow.Tube(file = self.directory + '/Dox_1.0.fcs', 
+        tube1 = flow.Tube(file = self.directory / 'Dox_1.0.fcs', 
                           conditions = {"Dox" : 1.0})
         ex_rt = flow.ImportOp(conditions = {'Dox' : 'float'},
                               tubes = [tube1]).apply()

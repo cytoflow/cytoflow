@@ -52,10 +52,7 @@ class LogScale(ScaleMixin):
     _channel_threshold = Float(0.1)
 
     def get_mpl_params(self, ax):
-        if ax.axis_name == 'x':
-            return {"nonposx" : self.mode}
-        else: 
-            return {"nonposy" : self.mode}
+        return {"nonpositive" : self.mode}
         
     def _set_threshold(self, threshold):
         self._channel_threshold = threshold

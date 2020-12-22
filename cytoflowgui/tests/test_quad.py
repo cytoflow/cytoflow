@@ -24,11 +24,13 @@ Created on Jan 4, 2018
 '''
 import os, unittest, tempfile
 
+from traits.util.async_trait_wait import wait_for_condition
+
 import matplotlib
 matplotlib.use("Agg")
 
 from cytoflowgui.workflow_item import WorkflowItem
-from cytoflowgui.tests.test_base import ImportedDataTest, wait_for
+from cytoflowgui.tests.test_base import ImportedDataTest
 from cytoflowgui.op_plugins import QuadPlugin
 from cytoflowgui.serialization import load_yaml, save_yaml
 from cytoflowgui.subset import CategorySubset
@@ -60,8 +62,8 @@ class TestQuad(ImportedDataTest):
         self.workflow.workflow.append(wi)
         self.workflow.selected = wi
         
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))        
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 130))
+        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
+        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
 
     def testApply(self):
         self.assertIsNotNone(self.workflow.remote_eval("self.workflow[-1].result"))
@@ -69,45 +71,45 @@ class TestQuad(ImportedDataTest):
    
     def testChangeChannels(self):
         self.op.xchannel = "B1-A"
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 130))
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
 
         self.op.ychannel = "Y2-A"
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 130))
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
 
     def testChangeScale(self):
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
+        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
 
         self.view.xscale = "log"
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
+        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
 
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
+        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
 
         self.view.yscale = "log"
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
+        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
  
     def testChangeName(self):
         self.op.name = "Dolly"
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 130))
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
         
     def testHueFacet(self):
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
+        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
 
         self.view.huefacet = "Dox"
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
+        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
 
         
     def testSubset(self):
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
+        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
 
         self.view.subset_list[0].selected = ["A"]
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
+        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
  
     def testSerialize(self):
         fh, filename = tempfile.mkstemp()

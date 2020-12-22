@@ -23,7 +23,7 @@ Created on Apr 18, 2015
 @author: brian
 '''
 
-from traits.api import Unicode
+from traits.api import Str
 from pyface.ui.qt4.file_dialog import FileDialog
 
 from queue import PriorityQueue
@@ -63,7 +63,7 @@ def filter_unpicklable(obj):
             return obj
         
 class DefaultFileDialog(FileDialog):
-    default_suffix = Unicode
+    default_suffix = Str
     
     def _create_control(self, parent):
         dlg = FileDialog._create_control(self, parent)
@@ -136,3 +136,15 @@ class HintedWidget(QtGui.QWidget):
             
         return hint
 
+# logging helper
+import logging 
+
+class CallbackHandler(logging.Handler):
+    def __init__(self, callback, **kwargs):
+        super().__init__(**kwargs)
+        self._callback = callback
+        
+    def emit(self, record):
+        self._callback(record)
+        
+    
