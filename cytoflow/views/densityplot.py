@@ -27,6 +27,7 @@ from traits.api import provides, Constant
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.ndimage.filters
+import copy
 
 import cytoflow.utility as util
 from .i_view import IView
@@ -137,17 +138,20 @@ class DensityView(Base2DView):
         xscale = scale[self.xchannel]
         yscale = scale[self.ychannel]
         
+        # can't modify color maps in place!
+        cmap = copy.copy(kwargs['cmap'])
+        
         under_color = kwargs.pop('under_color', None)
         if under_color is not None:
-            kwargs['cmap'].set_under(color = under_color)
+            cmap.set_under(color = under_color)
         else:
-            kwargs['cmap'].set_under(color = kwargs['cmap'](0.0))
+            cmap.set_under(cmap(0.0))
 
         bad_color = kwargs.pop('bad_color', None)
         if bad_color is not None:
-            kwargs['cmap'].set_bad(color = bad_color)
+            cmap.set_bad(color = bad_color)
         else:
-            kwargs['cmap'].set_bad(color = kwargs['cmap'](0.0))
+            cmap.set_bad(color = cmap(0.0))
             
         gridsize = kwargs.pop('gridsize', 50)
 

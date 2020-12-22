@@ -25,11 +25,13 @@ Created on Jan 5, 2018
 
 import os, unittest, tempfile
 
+from traits.util.async_trait_wait import wait_for_condition
+
 import matplotlib
 matplotlib.use("Agg")
 
 from cytoflowgui.workflow_item import WorkflowItem
-from cytoflowgui.tests.test_base import ImportedDataTest, wait_for
+from cytoflowgui.tests.test_base import ImportedDataTest
 from cytoflowgui.op_plugins import FlowPeaksPlugin
 from cytoflowgui.subset import CategorySubset
 from cytoflowgui.serialization import load_yaml, save_yaml
@@ -61,95 +63,127 @@ class TestFlowPeaks(ImportedDataTest):
         
         # run estimate
         op.do_estimate = True
-        self.assertTrue(wait_for(wi, 'status', lambda v: v == 'valid', 120))
-
+        wait_for_condition(lambda v: v.status == 'estimating', self.wi, 'status', 120)
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 120)
+        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 120)
+        
     def testEstimate(self):
         self.assertIsNotNone(self.workflow.remote_eval("self.workflow[-1].result"))
         self.assertEqual(self.workflow.remote_eval("len(self.workflow[-1].operation._peaks[True])"), 2)
    
     def testChangeChannels(self):
         self.op.xchannel = "B1-A"
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 30))
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 120)
+        wait_for_condition(lambda v: v.status == 'invalid', self.wi, 'status', 120)
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
          
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 120))
-
+        wait_for_condition(lambda v: v.status == 'estimating', self.wi, 'status', 120)
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 120)
+        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 120)
+        
         self.op.ychannel = "V2-A"
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 30))
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 120)
+        wait_for_condition(lambda v: v.status == 'invalid', self.wi, 'status', 120)
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
          
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 120))
-
+        wait_for_condition(lambda v: v.status == 'estimating', self.wi, 'status', 120)
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 120)
+        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 120)
+        
     def testChangeScale(self):
         self.op.xscale = "log"
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 30))
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 120)
+        wait_for_condition(lambda v: v.status == 'invalid', self.wi, 'status', 120)
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
          
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 120))
-
-        self.op.yscale = "log"
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 30))
-        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
-         
-        self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 120))
+        wait_for_condition(lambda v: v.status == 'estimating', self.wi, 'status', 120)
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 120)
+        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 120)
         
+        self.op.yscale = "log"
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 120)
+        wait_for_condition(lambda v: v.status == 'invalid', self.wi, 'status', 120)
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
+         
+        self.op.do_estimate = True
+        wait_for_condition(lambda v: v.status == 'estimating', self.wi, 'status', 120)
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 120)
+        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 120)
+                
     def testChangeBy(self):
         self.op.by = ["Dox"]
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 30))
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 120)
+        wait_for_condition(lambda v: v.status == 'invalid', self.wi, 'status', 120)
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
          
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 120))
-        
+        wait_for_condition(lambda v: v.status == 'estimating', self.wi, 'status', 120)
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 120)
+        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 120)
+                
     def testChangeParams(self):
         self.op.h = 3
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 30))
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 120)
+        wait_for_condition(lambda v: v.status == 'invalid', self.wi, 'status', 120)
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
          
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 120))
-
-        self.op.h0 = 2
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 30))
-        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
-         
-        self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 120))
+        wait_for_condition(lambda v: v.status == 'estimating', self.wi, 'status', 120)
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 120)
+        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 120)
         
-        self.op.tol = 0.3
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 30))
+        self.op.h0 = 2
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 120)
+        wait_for_condition(lambda v: v.status == 'invalid', self.wi, 'status', 120)
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
          
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 120))
+        wait_for_condition(lambda v: v.status == 'estimating', self.wi, 'status', 120)
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 120)
+        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 120)
+                
+        self.op.tol = 0.3
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 120)
+        wait_for_condition(lambda v: v.status == 'invalid', self.wi, 'status', 120)
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
+         
+        self.op.do_estimate = True
+        wait_for_condition(lambda v: v.status == 'estimating', self.wi, 'status', 120)
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 120)
+        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 120)
         
         self.op.merge_dist = 3
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 30))
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 120)
+        wait_for_condition(lambda v: v.status == 'invalid', self.wi, 'status', 120)
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
          
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 120))
-   
+        wait_for_condition(lambda v: v.status == 'estimating', self.wi, 'status', 120)
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 120)
+        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 120)
+           
     def testChangeSubset(self):
         self.op.subset_list[0].selected = ["A"]
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 30))
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 120)
+        wait_for_condition(lambda v: v.status == 'invalid', self.wi, 'status', 120)
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
          
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 120))
-          
+        wait_for_condition(lambda v: v.status == 'estimating', self.wi, 'status', 120)
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 120)
+        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 120)
+                  
     def testPlot(self):
         self.wi.current_view = self.wi.default_view
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 120))
+        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
 
     def testDensityPlot(self):
         self.wi.default_view.show_density = True
         self.wi.current_view = self.wi.default_view
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 120))
+        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
    
     def testSerializeOp(self):
         fh, filename = tempfile.mkstemp()

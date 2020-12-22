@@ -14,20 +14,19 @@ Tests
 
 - Make sure that the :mod:`cytoflow` tests pass, both locally and on Travis and Appveyor::
 
-  	  nose2 -c packaging/nose2.cfg -s cytoflow/tests
+  	  nose2 -c package/nose2.cfg -s cytoflow/tests
   
 - Make sure the :mod:`cytoflowgui` tests pass.  
   **You must do this locally; it runs too long for the free CI platforms.** ::
 
-  	  nose2 -c packaging/nose2.cfg -s cytoflowgui/tests
+  	  nose2 -c package/nose2.cfg -s cytoflowgui/tests
 
 - Make sure that the ReadTheDocs build is working.
   
 - Make sure that the :mod:`pyinstaller` distribution will build on your local 
-  machine.  We are currently building with a custom version of PyIntaller that's
-  included as a submodule in `packaging/pyinstaller` ::
+  machine.  ::
 
-  	  pyinstaller packaging/pyinstaller.spec
+  	  pyinstaller package/pyinstaller.spec
 
 - Make sure that the expected files (installers, conda packages, wheels, built extensions)
   are getting published to Bintray.  Remember -- a failed deployment doesn't show
@@ -54,7 +53,7 @@ Versioning and dependencies
 - We're using ``versioneer`` to manage versions.  No manual versions required.
 
 - If there are dependencies that don't have packages on Anaconda, add recipes
-  to ``packaging/conda_recipes`` (using ``conda skeleton``) and upload them to
+  to ``package/conda_recipes`` (using ``conda skeleton``) and upload them to
   the Anaconda Cloud.  Unless there's a really (really!) good reason, please
   make them no-arch.
   

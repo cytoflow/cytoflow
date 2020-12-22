@@ -28,7 +28,19 @@ warnings.filterwarnings('ignore', '.*IPython widgets are experimental.*')
 warnings.filterwarnings('ignore', 'axes.color_cycle is deprecated and replaced with axes.prop_cycle')
 
 # ... and from SciPy (fixed in scipy HEAD, remove when ver > 1.1.1)
-warnings.filterwarnings('ignore', 'Using a non-tuple sequence for multidimensional indexing is deprecated.*')
+# warnings.filterwarnings('ignore', 'Using a non-tuple sequence for multidimensional indexing is deprecated.*')
+
+# and from matplotlib 3.1.1 -- there's some weird interaction with seaborn here.
+import matplotlib.text
+import logging
+class MplFilter(logging.Filter):
+    def filter(self, record):
+        if record.msg == "posx and posy should be finite values":
+            return 0
+        else:
+            return 1
+        
+matplotlib.text._log.addFilter(MplFilter())
 
 # keep track of whether we're running in the GUI.
 # there is the occasional place where we differ in behavior

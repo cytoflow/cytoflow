@@ -23,13 +23,15 @@ Created on Jan 5, 2018
 @author: brian
 '''
 
-import os, unittest, tempfile, shutil
+import os, unittest, tempfile
+
+from traits.util.async_trait_wait import wait_for_condition
 
 import matplotlib
 matplotlib.use("Agg")
 
 from cytoflowgui.workflow_item import WorkflowItem
-from cytoflowgui.tests.test_base import TasbeTest, wait_for
+from cytoflowgui.tests.test_base import TasbeTest
 from cytoflowgui.op_plugins import ThresholdPlugin, TasbePlugin
 from cytoflowgui.op_plugins.tasbe import _BleedthroughControl, _TranslationControl
 from cytoflowgui.subset import BoolSubset
@@ -49,7 +51,7 @@ class TestTASBE(TasbeTest):
 
         wi = WorkflowItem(operation = op)
         self.workflow.workflow.append(wi)        
-        self.assertTrue(wait_for(wi, 'status', lambda v: v == 'valid', 30))
+        wait_for_condition(lambda v: v.status == 'valid', wi, 'status', 30)
         
         plugin = TasbePlugin()
         self.op = op = plugin.get_operation()        
@@ -88,42 +90,48 @@ class TestTASBE(TasbeTest):
           
         # run the estimate
         op.do_estimate = True
-        self.assertTrue(wait_for(wi, 'status', lambda v: v == 'valid', 30))
-
+        wait_for_condition(lambda v: v.status == 'estimating', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+        
     def testEstimate(self):
         pass
   
     def testChangeChannels(self):
         self.op.channels = ["FITC-A", "Pacific Blue-A"]
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 30))
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'invalid', self.wi, 'status', 30)
         self.assertTrue(len(self.op.translation_list) == 1)
         self.assertTrue(len(self.op.bleedthrough_list) == 2)
 
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
+        wait_for_condition(lambda v: v.status == 'estimating', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
         
 
     def testPlot(self):
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
+        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
         self.wi.current_view = self.wi.default_view
         self.wi.default_view.current_plot = "Autofluorescence"
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
+        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
 
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
+        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
         self.wi.default_view.current_plot = "Bleedthrough"
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))  
+        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
 
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
+        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
         self.wi.default_view.current_plot = "Bead Calibration"
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30)) 
+        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
          
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
+        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
         self.wi.default_view.current_plot = "Color Translation"
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30)) 
+        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
 
   
     def testSerialize(self):

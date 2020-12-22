@@ -25,13 +25,14 @@ Created on Jan 5, 2018
 
 import os, unittest, tempfile
 
+from traits.util.async_trait_wait import wait_for_condition
+
 import matplotlib
 matplotlib.use("Agg")
 
 from cytoflowgui.workflow_item import WorkflowItem
-from cytoflowgui.tests.test_base import ImportedDataTest, wait_for
+from cytoflowgui.tests.test_base import ImportedDataTest
 from cytoflowgui.op_plugins import BinningPlugin
-from cytoflowgui.subset import BoolSubset, CategorySubset
 from cytoflowgui.serialization import load_yaml, save_yaml
 
 class TestBinning(ImportedDataTest):
@@ -55,50 +56,59 @@ class TestBinning(ImportedDataTest):
         self.workflow.workflow.append(wi)
         self.workflow.selected = wi
 
-        self.assertTrue(wait_for(wi, 'status', lambda v: v == 'valid', 30))
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
 
     def testApply(self):
-        self.assertIsNotNone(self.workflow.remote_eval("self.workflow[-1].result"))
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
    
     def testChangeChannels(self):
         self.op.channel = "Y2-A"
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 30))
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
+        
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
         
 
     def testChangeScale(self):
         self.op.scale = "linear"
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 30))
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'invalid', self.wi, 'status', 30)
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
         
         self.op.bin_width = 1000
          
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
-
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
         
     def testChangeBinWidth(self):
         self.op.bin_width = 0.1
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 30))         
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
+        
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
 
         
     def testChangeBinWidthText(self):
         self.op.bin_width = "0.1"
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 30))         
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
-
-
+        
+        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
+        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
           
     def testPlot(self):
+        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
+        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
         self.wi.current_view = self.wi.default_view
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
+        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
         
         self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
+        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
         
         self.op.channel = "Y2-A"
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 30))
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
+        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
+        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
         
    
  

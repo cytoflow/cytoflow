@@ -23,22 +23,17 @@ Created on Dec 1, 2015
 @author: brian
 '''
 
-import os
 import unittest
 
 import cytoflow as flow
 import cytoflow.utility as util
 
-class Test(unittest.TestCase):
+from test_base import ImportedDataTest  # @UnresolvedImport
 
+class TestChannelStats(unittest.TestCase):
+    
     def setUp(self):
-        self.cwd = os.path.dirname(os.path.abspath(__file__)) + "/data/Plate01/"
-
-        tube1 = flow.Tube(file = self.cwd + 'RFP_Well_A3.fcs', conditions = {"Dox" : 10.0})
-        tube2 = flow.Tube(file= self.cwd + 'CFP_Well_A4.fcs', conditions = {"Dox" : 1.0})
-        import_op = flow.ImportOp(conditions = {"Dox" : "float"},
-                                  tubes = [tube1, tube2])
-        self.ex = import_op.apply()
+        ImportedDataTest.setUp(self)
         
         self.ex = flow.ThresholdOp(name = "T",
                                    channel = "Y2-A",
@@ -56,6 +51,22 @@ class Test(unittest.TestCase):
         self.assertIn("Dox", stat.index.names)
         self.assertIn("T", stat.index.names)
         
+        
+    def testTuple(self):
+        ex1 = flow.ChannelStatisticOp(name = "ByDox",
+                             channel = "Y2-A",
+                             by = ['T'],
+                             function = flow.geom_sd_range).apply(self.ex)
+                             
+        ex2 = flow.ChannelStatisticOp(name = "ByDox",
+                             channel = "Y2-A",
+                             by = ['T', 'Dox'],
+                             function = flow.geom_sd_range).apply(self.ex)
+                             
+        self.assertEqual(type(ex1.statistics[('ByDox', 'geom_sd_range')].iloc[0]),
+                         type(ex2.statistics[('ByDox', 'geom_sd_range')].iloc[0]))
+                             
+        
     def testSubset(self):
         ex = flow.ChannelStatisticOp(name = "ByDox",
                                      by = ['T'],
@@ -64,8 +75,8 @@ class Test(unittest.TestCase):
                                      function = len).apply(self.ex)
         stat = ex.statistics[("ByDox", "len")]
        
-        self.assertEqual(stat.loc[False].values[0], 5601)
-        self.assertEqual(stat.loc[True].values[0], 4399)
+        self.assertEqual(stat.loc[False], 24801)
+        self.assertEqual(stat.loc[True], 5199)
         
     def testBadFunction(self):
         
@@ -78,7 +89,15 @@ class Test(unittest.TestCase):
         with self.assertRaises(util.CytoflowOpError):
             op.apply(self.ex)
 
+    def testBadSet(self):
+                             
+        self.ex = flow.ChannelStatisticOp(name = "Y_bad",
+                             channel = "Y2-A",
+                             by = ['Well'],
+                             function = flow.geom_sd_range).apply(self.ex)
+                             
+
 
 if __name__ == "__main__":
-#     import sys;sys.argv = ['', 'Test.testApply']
+    import sys;sys.argv = ['', 'TestChannelStats.testTuple']
     unittest.main()

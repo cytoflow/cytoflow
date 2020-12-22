@@ -21,9 +21,8 @@
 TASBE Calibrated Flow Cytometry
 -------------------------------
 
-This module combines all of the other calibrated flow cytometry modules
-(autofluorescence, bleedthrough compensation, bead calibration, and channel
-translation) into one easy-use-interface.
+This mode lets you apply the TASBE calibration to a set of FCS files, then write them out to
+a directory for further analysis in other flow cytometry softwares.
 
 .. object:: Files
 
@@ -186,8 +185,6 @@ translation) into one easy-use-interface.
 
 import os
 from pathlib import Path
-
-import fcsparser
 
 from traitsui.api import (View, Item, EnumEditor, Controller, VGroup, 
                           CheckListEditor, ButtonEditor, 
@@ -405,7 +402,6 @@ class TasbeCalibrationOp(PluginOpMixin):
     input_files = List(File)
     output_directory = Directory
         
-    _blank_exp_file = File(transient = True)
     _blank_exp = Instance(Experiment, transient = True)
     _blank_exp_file = File(transient = True)
     _blank_exp_channels = List(Str, status = True)
@@ -575,7 +571,7 @@ class TasbeCalibrationOp(PluginOpMixin):
 
          """
         if changed == Changed.ESTIMATE:
-            name, val = payload
+            name, _ = payload
             if name == 'fsc_channel' or name == 'ssc_channel':
                 return False
                     
@@ -617,6 +613,9 @@ class TasbeCalibrationOp(PluginOpMixin):
         
     def apply(self, experiment):
 
+        # this "apply" function is a little odd -- it does not return an Experiment because
+        # it always the only WI/operation in the workflow.
+        
         if self.blank_file != self._blank_exp_file:
             self._blank_exp = ImportOp(tubes = [Tube(file = self.blank_file)] ).apply()
             self._blank_exp_file = self.blank_file

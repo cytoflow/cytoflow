@@ -553,9 +553,9 @@ class GaussianMixture2DOp(HasStrictTraits):
                     else:
                         g = group
                                                                              
-                    xmean_stat.loc[g] = self._xscale.inverse(gmm.means_[c][0])
-                    ymean_stat.loc[g] = self._yscale.inverse(gmm.means_[c][0])
-                    prop_stat.loc[g] = gmm.weights_[c]
+                    xmean_stat.at[g] = self._xscale.inverse(gmm.means_[c][0])
+                    ymean_stat.at[g] = self._yscale.inverse(gmm.means_[c][0])
+                    prop_stat.at[g] = gmm.weights_[c]
                      
             new_experiment.statistics[(self.name, "xmean")] = pd.to_numeric(xmean_stat)
             new_experiment.statistics[(self.name, "ymean")] = pd.to_numeric(ymean_stat)

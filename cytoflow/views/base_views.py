@@ -242,7 +242,9 @@ class BaseView(HasStrictTraits):
             if cmap and norm:
                 plot_ax = plt.gca()
                 cax, _ = mpl.colorbar.make_axes(plt.gcf().get_axes())
-                mpl.colorbar.ColorbarBase(cax, cmap, norm)
+                mpl.colorbar.ColorbarBase(cax, 
+                                          cmap = cmap, 
+                                          norm = norm)
                 plt.sca(plot_ax)
             elif self.huefacet:
         
