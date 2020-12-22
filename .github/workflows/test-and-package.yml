@@ -42,8 +42,8 @@ jobs:
         SOURCE_BRANCH: ${{ steps.branch_name.outputs.SOURCE_BRANCH }}
         SOURCE_TAG: ${{ steps.branch_name.outputs.SOURCE_TAG }}
       run: |
-        conda render packaging/conda_recipes/cytoflow
-        conda build packaging/conda_recipes/cytoflow
+        conda render package/conda_recipes/cytoflow
+        conda build package/conda_recipes/cytoflow
         
     - name: Create test/packaging environment
       run: |
