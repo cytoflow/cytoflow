@@ -71,6 +71,8 @@ class Test(ImportedDataSmallTest):
 
         flow.ScatterplotView(xchannel = "V2-A",
                              ychannel = "Y2-A",
+                             xscale = "linear",
+                             yscale = "linear",
                              huefacet = "Dox").plot(self.ex)
         ax = plt.gca()
         np.testing.assert_array_equal(

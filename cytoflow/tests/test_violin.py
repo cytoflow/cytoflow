@@ -74,19 +74,19 @@ class TestViolin(View1DTestBase, unittest.TestCase):
     def testXFacet(self):
         self.view.xfacet = "Well"
         self.view.plot(self.ex)
-        self.check_titles(["Well = Aa", "Well = Bb", "Well = Cc"])
+        self.check_titles(["Well = A", "Well = B", "Well = C"])
         # third subplot is on the first (only) row:
         self.assertEqual(plt.gcf().get_axes()[2].rowNum, 0)
 
     def testYFacet(self):
         self.view.yfacet = "Well"
         self.view.plot(self.ex)
-        self.check_titles(["Well = Aa", "Well = Bb", "Well = Cc"])
+        self.check_titles(["Well = A", "Well = B", "Well = C"])
 
     def testHueFacet(self):
         self.view.huefacet = "Well"
         self.view.plot(self.ex)
-        self.assertEqual(["Aa", "Bb", "Cc"], get_legend_entries(plt.gca()))
+        self.assertEqual(["A", "B", "C"], get_legend_entries(plt.gca()))
 
     def testSubset(self):
         self.view.subset = "Dox == 10.0"
@@ -132,7 +132,7 @@ class TestViolin(View1DTestBase, unittest.TestCase):
         
     def testSplit(self):
         self.view.huefacet = 'Well'
-        self.view.subset = 'Well != "Cc"'
+        self.view.subset = 'Well != "C"'
         self.view.plot(self.ex, split = True)
 
         

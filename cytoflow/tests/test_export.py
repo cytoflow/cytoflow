@@ -40,9 +40,9 @@ class Test(ImportedDataSmallTest):
         flow.ExportFCS(path = self.directory,
                        by = ['Dox']).export(self.ex)
                        
-        tube1 = flow.Tube(file = self.directory + '/Dox_10.0.fcs', 
+        tube1 = flow.Tube(file = self.directory / 'Dox_10.0.fcs', 
                           conditions = {"Dox" : 10.0, "Well": "A"})
-        tube2 = flow.Tube(file = self.directory + '/Dox_1.0.fcs',
+        tube2 = flow.Tube(file = self.directory / 'Dox_1.0.fcs',
                           conditions = {"Dox" : 1.0, "Well": "B"})
         
         ex_rt = flow.ImportOp(conditions = {"Dox" : "float", "Well": "category"},
