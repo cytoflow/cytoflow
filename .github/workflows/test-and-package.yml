@@ -65,7 +65,7 @@ jobs:
     - name: Run nose2
       run: |
         source activate cytoflow
-        nose2 -c package/nose2.cfg -s cytoflow/tests -N 2
+        nose2 -c package/nose2.cfg -s cytoflow/tests
         
     - name: Install packaging deps
       run: |
