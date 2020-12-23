@@ -31,7 +31,7 @@ from test_base import ImportedDataTest  # @UnresolvedImport
 class TestRadviz(ImportedDataTest):
 
     def setUp(self):
-        ImportedDataTest.setUp(self)
+        super().setUp()
         self.view = flow.RadvizView(channels = ["B1-A", 'V2-A', 'Y2-A'])
         
     def testPlot(self):
@@ -117,9 +117,11 @@ class TestRadviz(ImportedDataTest):
         self.view.plot(self.ex, s = 5)
         
     def testMarker(self):
+        import matplotlib.pyplot
         for mk in ["o", ",", "v", "^", "<", ">", "1", "2", "3", "4", "8",
                        "s", "p", "*", "h", "H", "+", "x", "D", "d", ""]:
             self.view.plot(self.ex, marker = mk)
+            matplotlib.pyplot.close('all')
 
         
 if __name__ == "__main__":
