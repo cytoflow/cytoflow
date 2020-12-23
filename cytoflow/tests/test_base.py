@@ -142,8 +142,11 @@ class View1DTestBase(ImportedData):
         self.view.xfacet = "Dox"
         self.view.plot(self.ex)
         self.check_titles(["Dox = 0.0", "Dox = 10.0", "Dox = 100.0"], has_colorbar)
-        # third subplot is on the first (only) row:
-        self.assertEqual(plt.gcf().get_axes()[2].rowNum, 0)
+        # make sure that we have only one row
+        self.assertEqual(plt.gca().get_subplotspec().rowspan.start, 0)
+        # and three columns
+        self.assertEqual(plt.gca().get_subplotspec().colspan.start, 2)
+
 
     def testYFacet(self, has_colorbar=False):
         self.view.yfacet = "Dox"
@@ -183,8 +186,10 @@ class View1DTestBase(ImportedData):
     def testColWrap(self):
         self.view.xfacet = "Dox"
         self.view.plot(self.ex, col_wrap = 2)
-        # third subplot is on the second row:
-        self.assertEqual(plt.gcf().get_axes()[2].rowNum, 1)
+        # make sure that we have two rows
+        self.assertEqual(plt.gca().get_subplotspec().rowspan.start, 1)
+        # and two columns
+        self.assertEqual(plt.gca().get_subplotspec().colspan.start, 1)
 
     def testShareAxes(self):
         self.view.plot(self.ex, sharex = False, sharey = False)
