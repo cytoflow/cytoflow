@@ -142,9 +142,9 @@ class View1DTestBase(ImportedData):
         self.view.xfacet = "Dox"
         self.view.plot(self.ex)
         self.check_titles(["Dox = 0.0", "Dox = 10.0", "Dox = 100.0"], has_colorbar)
-        # make sure that we have only one row
+        # make sure the last plot is on the first row
         self.assertEqual(plt.gca().get_subplotspec().rowspan.start, 0)
-        # and three columns
+        # and the third column
         self.assertEqual(plt.gca().get_subplotspec().colspan.start, 2)
 
 
@@ -186,10 +186,10 @@ class View1DTestBase(ImportedData):
     def testColWrap(self):
         self.view.xfacet = "Dox"
         self.view.plot(self.ex, col_wrap = 2)
-        # make sure that we have two rows
+        # make sure this plot is in the second row
         self.assertEqual(plt.gca().get_subplotspec().rowspan.start, 1)
-        # and two columns
-        self.assertEqual(plt.gca().get_subplotspec().colspan.start, 1)
+        # and the first column
+        self.assertEqual(plt.gca().get_subplotspec().colspan.start, 0)
 
     def testShareAxes(self):
         self.view.plot(self.ex, sharex = False, sharey = False)

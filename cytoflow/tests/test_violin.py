@@ -75,8 +75,10 @@ class TestViolin(View1DTestBase, unittest.TestCase):
         self.view.xfacet = "Well"
         self.view.plot(self.ex)
         self.check_titles(["Well = A", "Well = B", "Well = C"])
-        # third subplot is on the first (only) row:
-        self.assertEqual(plt.gcf().get_axes()[2].rowNum, 0)
+        # make sure the last plot is on the first row
+        self.assertEqual(plt.gca().get_subplotspec().rowspan.start, 0)
+        # and the third column
+        self.assertEqual(plt.gca().get_subplotspec().colspan.start, 2)
 
     def testYFacet(self):
         self.view.yfacet = "Well"
@@ -97,9 +99,11 @@ class TestViolin(View1DTestBase, unittest.TestCase):
         self.view.variable = "Well"
         self.view.xfacet = "Dox"
         self.view.plot(self.ex, col_wrap = 2)
-        # third subplot is on the second row:
-        self.assertEqual(plt.gcf().get_axes()[2].rowNum, 1)
-
+        # make sure this plot is in the second row
+        self.assertEqual(plt.gca().get_subplotspec().rowspan.start, 1)
+        # and the first column
+        self.assertEqual(plt.gca().get_subplotspec().colspan.start, 0)
+        
     def testOrientation(self):
         super().testOrientation(default_xlabel="Dox", default_ylabel="B1-A")
 
