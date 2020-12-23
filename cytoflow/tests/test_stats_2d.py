@@ -121,7 +121,7 @@ class Test2DStats(ImportedDataTest):
         
     def testSubset(self):
         self.view.huefacet = ""
-        self.view.subset = "Well == 'Aa'"
+        self.view.subset = "Well == 'A'"
         self.view.plot(self.ex)
         
     # Base plot params

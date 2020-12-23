@@ -31,6 +31,7 @@ from traits.util.async_trait_wait import wait_for_condition
 from cytoflowgui.workflow import Workflow, RemoteWorkflow
 from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.op_plugins import ImportPlugin
+from cytoflowgui.serialization import traits_eq, traits_hash
 from cytoflowgui.util import CallbackHandler
 
 def remote_main(parent_workflow_conn, parent_mpl_conn, log_q, running_event):
@@ -157,3 +158,17 @@ class TasbeTest(WorkflowTest):
         wait_for_condition(lambda v: v.status == 'valid', wi, 'status', 30)
         self.assertTrue(self.workflow.remote_eval("self.workflow[0].result is not None"))
 
+
+class params_traits_comparator(object):
+    def __init__(self, cls):
+        self.cls = cls
+        self._eq = cls.__eq__
+        self._hash = cls.__hash__
+
+    def __enter__(self):
+        self.cls.__eq__ = traits_eq
+        self.cls.__hash__ = traits_hash
+
+    def __exit__(self, *args):
+        self.cls.__eq__ = self._eq
+        self.cls.__hash__ = self._hash

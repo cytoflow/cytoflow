@@ -29,10 +29,10 @@ from traits.util.async_trait_wait import wait_for_condition
 import matplotlib
 matplotlib.use("Agg")
 
-from cytoflowgui.tests.test_base import ImportedDataTest
+from cytoflowgui.tests.test_base import ImportedDataTest, params_traits_comparator
 from cytoflowgui.view_plugins.radviz import RadvizPlugin, _Channel, RadvizPlotParams
 from cytoflowgui.view_plugins.scatterplot import SCATTERPLOT_MARKERS
-from cytoflowgui.serialization import save_yaml, load_yaml, traits_eq, traits_hash
+from cytoflowgui.serialization import save_yaml, load_yaml
 
 class TestRadviz(ImportedDataTest):
 
@@ -237,30 +237,24 @@ class TestRadviz(ImportedDataTest):
                 code = code + view.get_notebook_code(i)
          
         exec(code)
-        
-    def testSerialize(self):
 
-        _Channel.__eq__ = traits_eq
-        _Channel.__hash__ = traits_hash
-        
-        RadvizPlotParams.__eq__ = traits_eq
-        RadvizPlotParams.__hash__ = traits_hash
-        
-        fh, filename = tempfile.mkstemp()
-        try:
-            os.close(fh)
-            
-            save_yaml(self.view, filename)
-            new_view = load_yaml(filename)
-            
-        finally:
-            os.unlink(filename)
-            
-        self.maxDiff = None
-                     
-        self.assertDictEqual(self.view.trait_get(self.view.copyable_trait_names()),
-                             new_view.trait_get(self.view.copyable_trait_names()))
-           
+    def testSerialize(self):
+        with params_traits_comparator(_Channel), params_traits_comparator(RadvizPlotParams):
+            fh, filename = tempfile.mkstemp()
+            try:
+                os.close(fh)
+
+                save_yaml(self.view, filename)
+                new_view = load_yaml(filename)
+            finally:
+                os.unlink(filename)
+
+            self.maxDiff = None
+
+            self.assertDictEqual(self.view.trait_get(self.view.copyable_trait_names()),
+                                 new_view.trait_get(self.view.copyable_trait_names()))
+
+
 if __name__ == "__main__":
 #     import sys;sys.argv = ['', 'TestRadviz.testBase']
     unittest.main()

@@ -27,14 +27,13 @@ import unittest
 
 import cytoflow as flow
 import cytoflow.utility as util
+from test_base import ImportedDataSmallTest
 
-from test_base import ImportedDataTest  # @UnresolvedImport
 
-class TestChannelStats(unittest.TestCase):
-    
+class TestChannelStats(ImportedDataSmallTest):
+
     def setUp(self):
-        ImportedDataTest.setUp(self)
-        
+        super().setUp()
         self.ex = flow.ThresholdOp(name = "T",
                                    channel = "Y2-A",
                                    threshold = 500).apply(self.ex)
@@ -74,9 +73,11 @@ class TestChannelStats(unittest.TestCase):
                                      subset = "Dox == 10.0",
                                      function = len).apply(self.ex)
         stat = ex.statistics[("ByDox", "len")]
-       
-        self.assertEqual(stat.loc[False], 24801)
-        self.assertEqual(stat.loc[True], 5199)
+        from_df = ex.data.groupby(["T", "Dox"]).size()
+        self.assertEqual(stat.loc[False], from_df.loc[False, 10.0])
+        self.assertEqual(stat.loc[True], from_df.loc[True, 10.0])
+        self.assertEqual(stat.loc[False], 5601)
+        self.assertEqual(stat.loc[True], 4399)
         
     def testBadFunction(self):
         
