@@ -29,6 +29,7 @@ from traits.util.async_trait_wait import wait_for_condition
 
 import matplotlib
 matplotlib.use("Agg")
+import pandas as pd
 
 from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.tests.test_base import TasbeTest, params_traits_comparator
@@ -159,8 +160,7 @@ class TestTASBE(TasbeTest):
 
         nb_data = locals()['ex_2'].data
         remote_data = self.workflow.remote_eval("self.workflow[-1].result.data")
-        
-        self.assertTrue((nb_data == remote_data).all().all())
+        pd.testing.assert_frame_equal(nb_data, remote_data)
         
 if __name__ == "__main__":
 #     import sys;sys.argv = ['', 'TestTASBE.testPlot']
