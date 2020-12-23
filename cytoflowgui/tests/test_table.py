@@ -34,10 +34,10 @@ matplotlib.use("Agg")
 from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.op_plugins import ChannelStatisticPlugin
 from cytoflowgui.view_plugins.table import TablePlugin
-from cytoflowgui.serialization import load_yaml, save_yaml, traits_eq, traits_hash
+from cytoflowgui.serialization import load_yaml, save_yaml
 from cytoflowgui.view_plugins.i_view_plugin import EmptyPlotParams
 
-from test_base import ImportedDataTest  # @UnresolvedImport
+from cytoflowgui.tests.test_base import ImportedDataTest, params_traits_comparator
 
 class TestTable(ImportedDataTest):
     
@@ -186,33 +186,27 @@ class TestTable(ImportedDataTest):
            
         wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
 
- 
     def testSerialize(self):
-        
-        EmptyPlotParams.__eq__ = traits_eq
-        EmptyPlotParams.__hash__ = traits_hash
-        
-        fh, filename = tempfile.mkstemp()
-        try:
-            os.close(fh)
-               
-            save_yaml(self.view, filename)
-            new_view = load_yaml(filename)
-               
-        finally:
-            os.unlink(filename)
-               
-        self.maxDiff = None
-        
-        old_traits = self.view.trait_get(self.view.copyable_trait_names())
-        new_traits = new_view.trait_get(self.view.copyable_trait_names())
-        
-        # we don't serialize the result
-        old_traits['result'] = None
-                        
-        self.assertDictEqual(old_traits, new_traits)
-           
-           
+        with params_traits_comparator(EmptyPlotParams):
+            fh, filename = tempfile.mkstemp()
+            try:
+                os.close(fh)
+
+                save_yaml(self.view, filename)
+                new_view = load_yaml(filename)
+            finally:
+                os.unlink(filename)
+
+            self.maxDiff = None
+
+            old_traits = self.view.trait_get(self.view.copyable_trait_names())
+            new_traits = new_view.trait_get(self.view.copyable_trait_names())
+
+            # we don't serialize the result
+            old_traits['result'] = None
+
+            self.assertDictEqual(old_traits, new_traits)
+
     def testNotebook(self):
         code = "from cytoflow import *\n"
         for i, wi in enumerate(self.workflow.workflow):

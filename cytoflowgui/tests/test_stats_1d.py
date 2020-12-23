@@ -35,9 +35,9 @@ from cytoflowgui.op_plugins import ChannelStatisticPlugin
 from cytoflowgui.view_plugins.stats_1d import Stats1DPlugin, Stats1DPlotParams, LINE_STYLES
 from cytoflowgui.view_plugins.scatterplot import SCATTERPLOT_MARKERS
 from cytoflowgui.subset import CategorySubset
-from cytoflowgui.serialization import load_yaml, save_yaml, traits_eq, traits_hash
+from cytoflowgui.serialization import load_yaml, save_yaml
 
-from test_base import ImportedDataTest  # @UnresolvedImport
+from cytoflowgui.tests.test_base import ImportedDataTest, params_traits_comparator
 
 class TestStats1D(ImportedDataTest):
     
@@ -251,45 +251,38 @@ class TestStats1D(ImportedDataTest):
         wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
  
     def testSerialize(self):
-        Stats1DPlotParams.__eq__ = traits_eq
-        Stats1DPlotParams.__hash__ = traits_hash
-        
-        fh, filename = tempfile.mkstemp()
-        try:
-            os.close(fh)
-               
-            save_yaml(self.view, filename)
-            new_view = load_yaml(filename)
-               
-        finally:
-            os.unlink(filename)
-               
-        self.maxDiff = None
-                        
-        self.assertDictEqual(self.view.trait_get(self.view.copyable_trait_names()),
-                             new_view.trait_get(self.view.copyable_trait_names()))
+        with params_traits_comparator(Stats1DPlotParams):
+            fh, filename = tempfile.mkstemp()
+            try:
+                os.close(fh)
+
+                save_yaml(self.view, filename)
+                new_view = load_yaml(filename)
+            finally:
+                os.unlink(filename)
+
+            self.maxDiff = None
+
+            self.assertDictEqual(self.view.trait_get(self.view.copyable_trait_names()),
+                                 new_view.trait_get(self.view.copyable_trait_names()))
 
     def testSerializeWorkflowItemV1(self):
-        Stats1DPlotParams.__eq__ = traits_eq
-        Stats1DPlotParams.__hash__ = traits_hash
-        
-        fh, filename = tempfile.mkstemp()
-        try:
-            os.close(fh)
-               
-            save_yaml(self.view, filename, lock_versions = {WorkflowItem: 1,
-                                                            pandas.Series : 1})
-            new_view = load_yaml(filename)
-               
-        finally:
-            os.unlink(filename)
-               
-        self.maxDiff = None
-                        
-        self.assertDictEqual(self.view.trait_get(self.view.copyable_trait_names()),
-                             new_view.trait_get(self.view.copyable_trait_names()))
-           
-           
+        with params_traits_comparator(Stats1DPlotParams):
+            fh, filename = tempfile.mkstemp()
+            try:
+                os.close(fh)
+
+                save_yaml(self.view, filename, lock_versions = {WorkflowItem: 1,
+                                                                pandas.Series : 1})
+                new_view = load_yaml(filename)
+            finally:
+                os.unlink(filename)
+
+            self.maxDiff = None
+
+            self.assertDictEqual(self.view.trait_get(self.view.copyable_trait_names()),
+                                 new_view.trait_get(self.view.copyable_trait_names()))
+
     def testNotebook(self):
         code = "from cytoflow import *\n"
         for i, wi in enumerate(self.workflow.workflow):

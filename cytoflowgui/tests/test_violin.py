@@ -29,9 +29,9 @@ from traits.util.async_trait_wait import wait_for_condition
 import matplotlib
 matplotlib.use("Agg")
 
-from cytoflowgui.tests.test_base import ImportedDataTest
+from cytoflowgui.tests.test_base import ImportedDataTest, params_traits_comparator
 from cytoflowgui.view_plugins.violin import ViolinPlotPlugin, ViolinPlotParams
-from cytoflowgui.serialization import save_yaml, load_yaml, traits_eq, traits_hash
+from cytoflowgui.serialization import save_yaml, load_yaml
 
 class TestViolin(ImportedDataTest):
 
@@ -289,28 +289,22 @@ class TestViolin(ImportedDataTest):
         self.view.plot_params.split = True
         wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
 
-        
     def testSerialize(self):
-        
-        ViolinPlotParams.__eq__ = traits_eq
-        ViolinPlotParams.__hash__ = traits_hash
-        
-        fh, filename = tempfile.mkstemp()
-        try:
-            os.close(fh)
-            
-            save_yaml(self.view, filename)
-            new_view = load_yaml(filename)
-            
-        finally:
-            os.unlink(filename)
-            
-        self.maxDiff = None
-                     
-        self.assertDictEqual(self.view.trait_get(self.view.copyable_trait_names()),
-                             new_view.trait_get(self.view.copyable_trait_names()))
-        
-        
+        with params_traits_comparator(ViolinPlotParams):
+            fh, filename = tempfile.mkstemp()
+            try:
+                os.close(fh)
+
+                save_yaml(self.view, filename)
+                new_view = load_yaml(filename)
+            finally:
+                os.unlink(filename)
+
+            self.maxDiff = None
+
+            self.assertDictEqual(self.view.trait_get(self.view.copyable_trait_names()),
+                                 new_view.trait_get(self.view.copyable_trait_names()))
+
     def testNotebook(self):
         code = "from cytoflow import *\n"
         for i, wi in enumerate(self.workflow.workflow):
