@@ -171,15 +171,18 @@ class BaseView(HasStrictTraits):
                 
             
         sorter = natsorted
+        col_order = kwargs.pop("col_order", (sorter(data[self.xfacet].unique()) if self.xfacet else None))
+        row_order = kwargs.pop("row_order", (sorter(data[self.yfacet].unique()) if self.yfacet else None))
+        hue_order = kwargs.pop("hue_order", (sorter(data[self.huefacet].unique()) if self.huefacet else None))
         g = sns.FacetGrid(data, 
                           height = height,
                           aspect = aspect,
                           col = (self.xfacet if self.xfacet else None),
                           row = (self.yfacet if self.yfacet else None),
                           hue = (self.huefacet if self.huefacet else None),
-                          col_order = (sorter(data[self.xfacet].unique()) if self.xfacet else None),
-                          row_order = (sorter(data[self.yfacet].unique()) if self.yfacet else None),
-                          hue_order = (sorter(data[self.huefacet].unique()) if self.huefacet else None),
+                          col_order = col_order,
+                          row_order = row_order,
+                          hue_order = hue_order,
                           col_wrap = col_wrap,
                           legend_out = False,
                           sharex = sharex,
