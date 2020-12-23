@@ -27,7 +27,7 @@ import os.path, webbrowser, pathlib
 
 import yaml.parser
 
-from traits.api import Instance, List, on_trait_change, Unicode
+from traits.api import Instance, List, Str, on_trait_change
 from pyface.tasks.api import Task, TaskLayout, PaneItem, VSplitter
 from pyface.tasks.action.api import SMenu, SMenuBar, SToolBar, TaskAction, TaskToggleGroup
 from pyface.api import (FileDialog, ImageResource, AboutDialog, information, 
@@ -134,7 +134,7 @@ class FlowTask(Task):
     
     # the file to save to if the user clicks "save" and has already clicked
     # "open" or "save as".
-    filename = Unicode
+    filename = Str
         
     def initialized(self):
         if self.filename:

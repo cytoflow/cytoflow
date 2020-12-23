@@ -62,8 +62,8 @@ class Test(unittest.TestCase):
                                    function = len).apply(self.ex)
         stat = ex.statistics[("ByDox", "len")]
            
-        self.assertEqual(stat.loc[False].values[0], 5601)
-        self.assertEqual(stat.loc[True].values[0], 4399)
+        self.assertEqual(stat.loc[False], 5601)
+        self.assertEqual(stat.loc[True], 4399)
         
     def testBadFunction(self):
         

@@ -19,7 +19,7 @@
 
 from envisage.ui.tasks.api import PreferencesPane
 from apptools.preferences.api import PreferencesHelper
-from traits.api import Bool, Dict, Str, Unicode
+from traits.api import Bool, Dict, Str
 from traitsui.api import EnumEditor, HGroup, VGroup, Item, Label, View
 
 class CytoflowPreferences(PreferencesHelper):
@@ -54,7 +54,7 @@ class CytoflowPreferencesPane(PreferencesPane):
 
     #### 'AttractorsPreferencesPane' interface ################################
 
-    task_map = Dict(Str, Unicode)
+    task_map = Dict(Str, Str)
 
     view = View(
         VGroup(HGroup(Item('always_use_default_layout'),

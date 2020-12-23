@@ -225,8 +225,12 @@ class ChannelStatisticOp(HasStrictTraits):
                      .format(group), 
                      util.CytoflowOpWarning)
                 
-        idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by], 
-                                         names = self.by)
+        # this shouldn't be necessary, but see pandas bug #38053
+        if len(self.by) == 1:
+            idx = pd.Index(experiment[self.by[0]].unique(), name = self.by[0])
+        else:
+            idx = pd.MultiIndex.from_product([experiment[x].unique() for x in self.by], 
+                                             names = self.by)
 
         stat = pd.Series(data = [self.fill] * len(idx),
                          index = idx, 
@@ -241,7 +245,10 @@ class ChannelStatisticOp(HasStrictTraits):
                 group = (group,)
             
             try:
-                stat.loc[group] = self.function(data_subset[self.channel])
+                v = self.function(data_subset[self.channel])
+                
+                stat.at[group] = v
+
             except Exception as e:
                 raise util.CytoflowOpError(None,
                                            "Your function threw an error in group {}"

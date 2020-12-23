@@ -51,27 +51,27 @@ if has_sphinx:
 setup(
     name = "cytoflow",
     version = versioneer.get_version(),  # @UndefinedVariable
-    packages = find_packages(exclude = ["packaging", "packaging.qt"]),
+    packages = find_packages(exclude = ["package", "package.qt"]),
     cmdclass = cmdclass,
     
     # Project uses reStructuredText, so ensure that the docutils get
     # installed or upgraded on the target machine
-    install_requires = ['numpy==1.18.1',
-                        'pandas==1.0.3',
-                        'matplotlib==3.1.3',  
+    install_requires = ['numpy==1.19.2',
+                        'pandas==1.1.3',
+                        'matplotlib==3.3.2',
                         'bottleneck==1.3.2',
                         'numexpr==2.7.1',
-                        'scipy==1.4.1',
-                        'scikit-learn==0.22.1',
-                        'seaborn==0.10.0',
-                        'statsmodels==0.11.0',
-                        'natsort==7.0.1',
+                        'scipy==1.5.2',
+                        'scikit-learn==0.23.2',
+                        'seaborn==0.11.0',
+                        'statsmodels==0.12.0',
+                        'natsort==7.1.0',
                         
-                        'traits==6.0.0',
-                        'traitsui==6.1.3',
-                        'pyface==6.1.2',
-                        'envisage==4.8.0',
-                        'nbformat==5.0.4',
+                        'traits==6.1.1',
+                        'traitsui==7.1.0',
+                        'pyface==7.1.0',
+                        'envisage==4.9.2',
+                        'nbformat==5.0.8',
                         'python-dateutil==2.8.1',
                         
                         # pyqt, qt are not in pip
