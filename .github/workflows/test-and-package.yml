@@ -3,7 +3,7 @@ on: [push]
 jobs:
   build-and-test-linux:
     name: Run cytoflow unit tests on linux
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     steps:
     - name: Check out repo
       uses: actions/checkout@v2
@@ -63,6 +63,8 @@ jobs:
         pip install nose2
         
     - name: Run nose2
+      env:
+        OMP_NUM_THREADS: 1
       run: |
         source activate cytoflow
         nose2 -v -c package/nose2.cfg -s cytoflow/tests
