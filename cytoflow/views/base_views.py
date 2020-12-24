@@ -86,6 +86,11 @@ class BaseView(HasStrictTraits):
         sharex, sharey : bool
             If there are multiple subplots, should they share axes?  Defaults
             to `True`.
+
+        row_order, col_order, hue_order : list
+            Override the row/column/hue facet value order with the given list.
+            If a value is not given in the ordering, it is not plotted.
+            Defaults to a "natural ordering" of all the values.
             
         height : float
             The height of *each row* in inches.  Default = 3.0
@@ -170,10 +175,9 @@ class BaseView(HasStrictTraits):
                      util.CytoflowViewWarning)
                 
             
-        sorter = natsorted
-        col_order = kwargs.pop("col_order", (sorter(data[self.xfacet].unique()) if self.xfacet else None))
-        row_order = kwargs.pop("row_order", (sorter(data[self.yfacet].unique()) if self.yfacet else None))
-        hue_order = kwargs.pop("hue_order", (sorter(data[self.huefacet].unique()) if self.huefacet else None))
+        col_order = kwargs.pop("col_order", (natsorted(data[self.xfacet].unique()) if self.xfacet else None))
+        row_order = kwargs.pop("row_order", (natsorted(data[self.yfacet].unique()) if self.yfacet else None))
+        hue_order = kwargs.pop("hue_order", (natsorted(data[self.huefacet].unique()) if self.huefacet else None))
         g = sns.FacetGrid(data, 
                           height = height,
                           aspect = aspect,
