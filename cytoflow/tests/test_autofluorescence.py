@@ -24,8 +24,10 @@ Created on Oct 30, 2015
 '''
 import unittest
 import cytoflow as flow
+from test_base import ClosePlotsWhenDoneTest
 
-class TestAutofluorescence(unittest.TestCase):
+
+class TestAutofluorescence(ClosePlotsWhenDoneTest):
     """
     Unit tests for Autofluorescence
     """

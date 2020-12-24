@@ -31,11 +31,11 @@ import matplotlib
 matplotlib.use("Agg")
 
 from cytoflowgui.workflow_item import WorkflowItem
-from cytoflowgui.tests.test_base import ImportedDataTest
+from cytoflowgui.tests.test_base import ImportedDataTest, params_traits_comparator
 from cytoflowgui.op_plugins import PCAPlugin
 from cytoflowgui.op_plugins.pca import _Channel
 from cytoflowgui.subset import CategorySubset
-from cytoflowgui.serialization import load_yaml, save_yaml, traits_eq, traits_hash
+from cytoflowgui.serialization import load_yaml, save_yaml
 
 class TestPCA(ImportedDataTest):
     
@@ -155,26 +155,21 @@ class TestPCA(ImportedDataTest):
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
    
     def testSerializeOp(self):
+        with params_traits_comparator(_Channel):
+            fh, filename = tempfile.mkstemp()
+            try:
+                os.close(fh)
 
-        _Channel.__eq__ = traits_eq
-        _Channel.__hash__ = traits_hash
-         
-        fh, filename = tempfile.mkstemp()
-        try:
-            os.close(fh)
-             
-            save_yaml(self.op, filename)
-            new_op = load_yaml(filename)
-             
-        finally:
-            os.unlink(filename)
-             
-        self.maxDiff = None
-                      
-        self.assertDictEqual(self.op.trait_get(self.op.copyable_trait_names()),
-                             new_op.trait_get(self.op.copyable_trait_names()))
-         
-         
+                save_yaml(self.op, filename)
+                new_op = load_yaml(filename)
+            finally:
+                os.unlink(filename)
+
+            self.maxDiff = None
+
+            self.assertDictEqual(self.op.trait_get(self.op.copyable_trait_names()),
+                                 new_op.trait_get(self.op.copyable_trait_names()))
+
     def testNotebook(self):
         code = "from cytoflow import *\n"
         for i, wi in enumerate(self.workflow.workflow):

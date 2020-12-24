@@ -3,7 +3,7 @@ on: [push]
 jobs:
   build-and-test-linux:
     name: Run cytoflow unit tests on linux
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     steps:
     - name: Check out repo
       uses: actions/checkout@v2
@@ -42,24 +42,74 @@ jobs:
         SOURCE_BRANCH: ${{ steps.branch_name.outputs.SOURCE_BRANCH }}
         SOURCE_TAG: ${{ steps.branch_name.outputs.SOURCE_TAG }}
       run: |
-        conda render packaging/conda_recipes/cytoflow
-        conda build packaging/conda_recipes/cytoflow
+        conda render package/conda_recipes/cytoflow
+        conda build package/conda_recipes/cytoflow
         
     - name: Create test/packaging environment
       run: |
         conda create --yes --quiet --name=cytoflow python=3.6.12 nomkl
-        conda activate cytoflow
+        source activate cytoflow
         conda install --yes --quiet --use-local --only-deps cytoflow
     
     - name: Install package locally
       run: |
+        source activate cytoflow
         python setup.py develop
         
     - name: Install nose2
       run: |
+        source activate cytoflow
         conda install --yes --quiet pip
         pip install nose2
         
+    - name: Run nose2
+      env:
+        OMP_NUM_THREADS: 1
+      run: |
+        source activate cytoflow
+        nose2 -v -c package/nose2.cfg -s cytoflow/tests
+        
+    - name: Install packaging deps
+      run: |
+        source activate cytoflow
+        conda install --yes --quiet 'sphinx==3.2.1'
+        pip install "pyinstaller==3.6"
+        
+    - name: Build embedded help docs
+      run: |
+        source activate cytoflow
+        python setup.py build_sphinx -b embedded_help
+        
+    - name: Build source dist
+      run: |
+        source activate cytoflow
+        python setup.py sdist
+        
+    - name: Build wheel
+      run: |
+        source activate cytoflow
+        python setup.py bdist_wheel
+        
+    - name: Build GUI binary
+      run: |
+        source activate cytoflow
+        python package/pyinstaller-local.py package/pyinstaller.spec
+        
+    - name: Zip up examples
+      run: |
+        cd docs
+        zip -r cytoflow-{{ steps.branch_name.outputs.SOURCE_NAME }}-examples-basic.zip examples-basic
+        zip -r cytoflow-{{ steps.branch_name.outputs.SOURCE_NAME }}-examples-advanced.zip examples-advanced
+        mv cytoflow-{{ steps.branch_name.outputs.SOURCE_NAME }}-examples-*.zip ../dist
+        
+    - name: Move C++ extensions into the dist folder
+      run: |
+        cp `find build | grep "\.so$"` dist/
+        python package/move_conda_package.py
+        
+    - name: List dist
+      run: ls dist/
+      
     - name: Conda info
       shell: bash -l {0}
       run: |

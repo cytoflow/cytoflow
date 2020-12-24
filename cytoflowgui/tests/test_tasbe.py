@@ -29,13 +29,14 @@ from traits.util.async_trait_wait import wait_for_condition
 
 import matplotlib
 matplotlib.use("Agg")
+import pandas as pd
 
 from cytoflowgui.workflow_item import WorkflowItem
-from cytoflowgui.tests.test_base import TasbeTest
+from cytoflowgui.tests.test_base import TasbeTest, params_traits_comparator
 from cytoflowgui.op_plugins import ThresholdPlugin, TasbePlugin
 from cytoflowgui.op_plugins.tasbe import _BleedthroughControl, _TranslationControl
 from cytoflowgui.subset import BoolSubset
-from cytoflowgui.serialization import load_yaml, save_yaml, traits_eq, traits_hash
+from cytoflowgui.serialization import load_yaml, save_yaml
 
 class TestTASBE(TasbeTest):
     
@@ -133,31 +134,23 @@ class TestTASBE(TasbeTest):
         self.wi.default_view.current_plot = "Color Translation"
         wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
 
-  
     def testSerialize(self):
-      
-        _BleedthroughControl.__eq__ = traits_eq
-        _BleedthroughControl.__hash__ = traits_hash
-             
-        _TranslationControl.__eq__ = traits_eq
-        _TranslationControl.__hash__ = traits_hash
-        
-        fh, filename = tempfile.mkstemp()
-        try:
-            os.close(fh)
-            
-            save_yaml(self.op, filename)
-            new_op = load_yaml(filename)
-            
-        finally:
-            os.unlink(filename)
-            
-        self.maxDiff = None
-                     
-        self.assertDictEqual(self.op.trait_get(self.op.copyable_trait_names()),
-                             new_op.trait_get(self.op.copyable_trait_names()))
-        
-        
+        with params_traits_comparator(_BleedthroughControl), \
+                params_traits_comparator(_TranslationControl):
+            fh, filename = tempfile.mkstemp()
+            try:
+                os.close(fh)
+
+                save_yaml(self.op, filename)
+                new_op = load_yaml(filename)
+            finally:
+                os.unlink(filename)
+
+            self.maxDiff = None
+
+            self.assertDictEqual(self.op.trait_get(self.op.copyable_trait_names()),
+                                 new_op.trait_get(self.op.copyable_trait_names()))
+
     def testNotebook(self):
         code = "from cytoflow import *\n"
         for i, wi in enumerate(self.workflow.workflow):
@@ -167,8 +160,7 @@ class TestTASBE(TasbeTest):
 
         nb_data = locals()['ex_2'].data
         remote_data = self.workflow.remote_eval("self.workflow[-1].result.data")
-        
-        self.assertTrue((nb_data == remote_data).all().all())
+        pd.testing.assert_frame_equal(nb_data, remote_data)
         
 if __name__ == "__main__":
 #     import sys;sys.argv = ['', 'TestTASBE.testPlot']
