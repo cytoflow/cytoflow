@@ -33,6 +33,9 @@ def _get_running_interactive_framework():
 
 class NoseSetup(Plugin):
     configSection = 'nose_setup'
+    
+    def __init__(self):
+        self.addOption(self.setGui, 'GUI', 'runInGUI', 'Running in GUI?', 0)
 
     def startTestRun(self, event):
         log.warning('Loading customized nose2 configuration')
@@ -40,10 +43,6 @@ class NoseSetup(Plugin):
         # set multiprocessing to use spawn (defaults to fork on UNIX)
         # keeps (GNU) OpenMP from crashing 
         multiprocessing.set_start_method('spawn', force = True)
-        
-        # tell cytoflow that we are in a GUI, to test GUI-specific things!
-        import cytoflow
-        cytoflow.RUNNING_IN_GUI = True
         
         # squash the matplotlib max figures warning
         matplotlib.rcParams.update({'figure.max_open_warning': 0})
@@ -54,8 +53,10 @@ class NoseSetup(Plugin):
         # make matplotlib stop complaining about running headless
         matplotlib.backends._get_running_interactive_framework = _get_running_interactive_framework
 
-
-        
+    def setGui(self, val):
+        # tell cytoflow that we are in a GUI, to test GUI-specific things!
+        import cytoflow
+        cytoflow.RUNNING_IN_GUI = True        
         
 
         
