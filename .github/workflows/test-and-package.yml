@@ -7,18 +7,23 @@ jobs:
     steps:
     - name: Check out repo
       uses: actions/checkout@v2
-      
-    - name: Get branch, tag names
-      id: branch_name
-      run: |
-        git fetch --prune --unshallow --tags
-        echo ::set-output name=SOURCE_NAME::${GITHUB_REF#refs/*/}
-        echo ::set-output name=SOURCE_BRANCH::${GITHUB_REF#refs/heads/}
-        echo ::set-output name=SOURCE_TAG::${GITHUB_REF#refs/tags/}
+      with:
+        fetch-depth: 0
       
     - name: Git describe
       run: git describe --tags
-          
+      
+    - name: Query git tag
+      id: tag
+      uses: jimschubert/query-tag-action@v2
+      with:
+        skip-unshallow: true
+        
+    - name: Show Tag
+      id: display
+      run: |
+        echo 'Output from Find Tag: ${{steps.tag.outputs.tag}}'
+      
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
