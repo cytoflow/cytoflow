@@ -194,7 +194,7 @@ class HistogramView(Base1DView):
                 x = x[x < bins[-1]]
                 new_args.append(x)
                 
-            if scale.name == "log" and kwargs.get("density"):
+            if scale.name != "linear" and kwargs.get("density"):
                 kwargs["density"] = False
                 counts, _ = np.histogram(new_args, bins=kwargs["bins"])
                 kwargs["weights"] = counts / np.sum(counts)
