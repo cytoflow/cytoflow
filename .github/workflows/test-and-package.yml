@@ -9,9 +9,7 @@ jobs:
       uses: actions/checkout@v2
       with:
         fetch-depth: 0
-      
-    - name: Git describe
-      run: git describe --tags
+        submodules: true
       
     - name: Query git tag
       id: tag
@@ -102,15 +100,11 @@ jobs:
         python package/pyinstaller-local.py package/pyinstaller.spec
         
     - name: Zip up examples
-      env:
-        SOURCE_NAME: ${{ steps.branch_name.outputs.SOURCE_NAME }}
-        SOURCE_BRANCH: ${{ steps.branch_name.outputs.SOURCE_BRANCH }}
-        SOURCE_TAG: ${{ steps.branch_name.outputs.SOURCE_TAG }}
       run: |
         cd docs
-        zip -r cytoflow-${SOURCE_NAME}-examples-basic.zip examples-basic
-        zip -r cytoflow-${SOURCE_NAME}-examples-advanced.zip examples-advanced
-        mv cytoflow-${SOURCE_NAME}-examples-*.zip ../dist
+        zip -r cytoflow--examples-basic.zip examples-basic
+        zip -r cytoflow-${{steps.tag.outputs.tag}}-examples-advanced.zip examples-advanced
+        mv cytoflow-${{steps.tag.outputs.tag}}-examples-*.zip ../dist
         
     - name: Move C++ extensions into the dist folder
       run: |
@@ -119,6 +113,13 @@ jobs:
         
     - name: List dist
       run: ls dist/
+      
+    - name: Save the contents of the dist/ folder as artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: linux-artifacts
+        retention-days: 5
+        path: dist/*
       
     - name: Conda info
       shell: bash -l {0}
