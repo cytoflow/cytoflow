@@ -7,6 +7,7 @@ scipy==1.5.2
 scikit-learn==0.23.2
 seaborn==0.11.0
 statsmodels==0.12.0
+natsort==7.1.0
 
 traits==6.1.1
 traitsui==7.0.1

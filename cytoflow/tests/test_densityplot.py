@@ -49,10 +49,22 @@ class TestDensityPlot(View2DTestBase, unittest.TestCase):
     def testSubset(self):
         super().testSubset(has_colorbar=True)
 
+    def testXFacetOrder(self):
+        super().testXFacetOrder(has_colorbar=True)
+
+    def testYFacetOrder(self):
+        super().testYFacetOrder(has_colorbar=True)
+
+    def testSubset(self):
+        super().testSubset(has_colorbar=True)
+
     def testHueFacet(self):
         pass  # not applicable
 
     def testHueLabel(self):
+        pass  # not applicable
+
+    def testHueFacetOrder(self):
         pass  # not applicable
 
     # Density params

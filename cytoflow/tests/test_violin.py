@@ -90,6 +90,21 @@ class TestViolin(View1DTestBase, unittest.TestCase):
         self.view.plot(self.ex)
         self.assertEqual(["A", "B", "C"], get_legend_entries(plt.gca()))
 
+    def testXFacetOrder(self, has_colorbar=False):
+        self.view.xfacet = "Well"
+        self.view.plot(self.ex, col_order=("C", "A", "B"))
+        self.check_titles(["Well = C", "Well = A", "Well = B"], has_colorbar)
+
+    def testYFacetOrder(self, has_colorbar=False):
+        self.view.yfacet = "Well"
+        self.view.plot(self.ex, row_order=("C", "A", "B"))
+        self.check_titles(["Well = C", "Well = A", "Well = B"], has_colorbar)
+
+    def testHueFacetOrder(self):
+        self.view.huefacet = "Well"
+        self.view.plot(self.ex, hue_order=("C", "A", "B"))
+        self.assertEqual(["C", "A", "B"], get_legend_entries(plt.gca()))
+
     def testSubset(self):
         self.view.subset = "Dox == 10.0"
         self.view.plot(self.ex)

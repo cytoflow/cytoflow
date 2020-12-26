@@ -147,7 +147,6 @@ class View1DTestBase(ImportedData):
         # and the third column
         self.assertEqual(plt.gca().get_subplotspec().colspan.start, 2)
 
-
     def testYFacet(self, has_colorbar=False):
         self.view.yfacet = "Dox"
         self.view.plot(self.ex)
@@ -194,6 +193,21 @@ class View1DTestBase(ImportedData):
     def testShareAxes(self):
         self.view.plot(self.ex, sharex = False, sharey = False)
         # TODO assert
+
+    def testXFacetOrder(self, has_colorbar=False):
+        self.view.xfacet = "Dox"
+        self.view.plot(self.ex, col_order=(100., 0., 10.))
+        self.check_titles(["Dox = 100.0", "Dox = 0.0", "Dox = 10.0"], has_colorbar)
+
+    def testYFacetOrder(self, has_colorbar=False):
+        self.view.yfacet = "Dox"
+        self.view.plot(self.ex, row_order=(100., 0., 10.))
+        self.check_titles(["Dox = 100.0", "Dox = 0.0", "Dox = 10.0"], has_colorbar)
+
+    def testHueFacetOrder(self):
+        self.view.huefacet = "Dox"
+        self.view.plot(self.ex, hue_order=(100., 0., 10.))
+        self.assertEqual(['100.0', '0.0', '10.0'], get_legend_entries(plt.gca()))
 
     def testStyle(self):
         self.view.plot(self.ex, sns_style = "darkgrid")
