@@ -228,7 +228,8 @@ def _dump_view(view):
                 scale = view.scale,
                 huefacet = view.huefacet,
                 subset_list = view.subset_list,
-                plot_params = view.plot_params)
+                plot_params = view.plot_params,
+                current_plot = view.current_plot)
     
 @camel_registry.dumper(RangeSelectionView, 'range-view', version = 1)
 def _dump_view_v1(view):

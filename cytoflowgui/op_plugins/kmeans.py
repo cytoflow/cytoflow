@@ -352,7 +352,8 @@ def _load(data, version):
 @camel_registry.dumper(KMeansPluginView, 'kmeans-view', version = 2)
 def _dump_view(view):
     return dict(op = view.op,
-                plot_params = view.plot_params)
+                plot_params = view.plot_params,
+                current_plot = view.current_plot)
     
 @camel_registry.dumper(KMeansPluginView, 'kmeans-view', version = 1)
 def _dump_view_v1(view):

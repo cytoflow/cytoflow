@@ -397,7 +397,8 @@ def _dump_view(view):
                 xfacet = view.xfacet,
                 yfacet = view.yfacet,
                 huefacet = view.huefacet,
-                plot_params = view.plot_params)
+                plot_params = view.plot_params,
+                current_plot = view.current_plot)
     
 
 @camel_registry.dumper(GaussianMixture2DPluginView, 'gaussian-2d-view', version = 1)
