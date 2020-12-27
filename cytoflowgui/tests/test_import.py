@@ -23,6 +23,7 @@ Created on Jan 4, 2018
 @author: brian
 '''
 import unittest, tempfile, os
+import pandas as pd
 
 import matplotlib
 matplotlib.use('Agg')
@@ -139,7 +140,8 @@ class TestImportTasbe(TasbeTest):
         exec(code)
         nb_data = locals()['ex_0'].data
         remote_data = self.workflow.remote_eval("self.workflow[-1].result.data")
-        self.assertTrue((nb_data == remote_data).all().all())
+        
+        pd.testing.assert_frame_equal(nb_data, remote_data)
 
 
 if __name__ == "__main__":

@@ -25,10 +25,11 @@ Created on Dec 1, 2015
 import unittest
 import os
 import cytoflow as flow
+import pandas as pd
 from test_base import ImportedDataSmallTest
 
 
-class Test(ImportedDataSmallTest):
+class TestExperiment(ImportedDataSmallTest):
     def testConditions(self):
         self.assertEqual(len(self.ex['Dox'].unique()), 2)
         self.assertEqual(len(self.ex['Well'].unique()), 2)
@@ -40,7 +41,35 @@ class Test(ImportedDataSmallTest):
     def testAddCondition(self):
         # TODO
         pass
-
+    
+#     def testCloneIsShallow(self):
+#         ex2 = self.ex.clone()
+#         self.assertNotEqual(self.ex['B1-A'].at[100], 100.0)
+#         ex2['B1-A'].at[100] = 100.0
+#         self.assertEqual(self.ex['B1-A'].at[100], 100.0)
+#         
+#     def testReplaceColumn(self):
+#         # clone self.ex; replace column B1-A with [100.0] * len(self.ex) in clone;
+#         # check that self.ex hasn't changed; check that B1-H is still shallow.
+#         
+#         ex2 = self.ex.clone()
+#         self.assertNotEqual(self.ex['B1-A'].at[100], 100.0)
+#         s = pd.Series([100.0] * len(self.ex))
+#         
+#         # ex2.data['B1-A'] = s
+#         # nope, updates self.ex    
+#     
+#         # ex2.data = self.ex.data.assign(**{'B1-A': s})
+#         # nope, gives a deep copy
+#         
+#         self.assertEqual(ex2['B1-A'].at[100], 100.0)
+#         self.assertNotEqual(self.ex['B1-A'].at[100], 100.0)
+#         
+#         self.assertNotEqual(self.ex['B1-H'].at[100], 100.0)
+#         ex2.data['B1-H'].at[100] = 100.0
+#         self.assertEqual(self.ex['B1-H'].at[100], 100.0)
+#         
+        
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']

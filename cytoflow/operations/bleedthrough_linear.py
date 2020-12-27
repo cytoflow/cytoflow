@@ -308,21 +308,24 @@ class BleedthroughLinearOp(HasStrictTraits):
         
         # the completely arbitrary ordering of the channels
         channels = list(set([x for (x, _) in list(self.spillover.keys())]))
-        
+         
         # build the spillover matrix from the spillover dictionary
         a = [  [self.spillover[(y, x)] if x != y else 1.0 for x in channels]
                for y in channels]
-        
+         
         # invert it.  use the pseudoinverse in case a is singular
         a_inv = np.linalg.pinv(a)
-        
+         
         # compute the corrected channels
         new_channels = np.dot(experiment.data[channels], a_inv)
-        
+         
         # and assign to the new experiment
         for i, c in enumerate(channels):
             new_experiment[c] = pd.Series(new_channels[:, i])
-        
+            
+        # make sure the new experiment has the same column order as the old one
+        new_experiment.data = new_experiment.data[list(experiment.data.columns)]
+         
         for channel in channels:
             # add the spillover values to the channel's metadata
             new_experiment.metadata[channel]['linear_bleedthrough'] = \
@@ -330,7 +333,7 @@ class BleedthroughLinearOp(HasStrictTraits):
                      for x in channels if x != channel}
             new_experiment.metadata[channel]['bleedthrough_channels'] = list(channels)
             new_experiment.metadata[channel]['bleedthrough_fn'] = lambda x, a_inv = a_inv: np.dot(x, a_inv)
-     
+      
         new_experiment.history.append(self.clone_traits(transient = lambda _: True))   
         return new_experiment
     

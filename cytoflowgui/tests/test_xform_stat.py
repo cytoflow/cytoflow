@@ -24,6 +24,7 @@ Created on Jan 5, 2018
 '''
 
 import os, unittest, tempfile
+import pandas as pd
 
 from traits.util.async_trait_wait import wait_for_condition
 
@@ -127,7 +128,8 @@ class TestXformStat(ImportedDataTest):
             exec(code)
             nb_data = locals()['ex_1'].data
             remote_data = self.workflow.remote_eval("self.workflow[-1].result.data")
-            self.assertTrue((nb_data == remote_data).all().all())
+        
+            pd.testing.assert_frame_equal(nb_data, remote_data)
 
 if __name__ == "__main__":
 #     import sys;sys.argv = ['', 'TestXformStat.testNotebook']

@@ -30,6 +30,9 @@ import numpy as np
 
 import cytoflow as flow
 
+if not flow.RUNNING_IN_GUI:
+    import warnings
+    warnings.filterwarnings('ignore', '.*is ignored when not running in the GUI.*')
 
 class ClosePlotsWhenDone(object):
     def tearDown(self):
@@ -42,6 +45,7 @@ class ClosePlotsWhenDoneTest(ClosePlotsWhenDone, unittest.TestCase):
 
 
 class ImportedData(ClosePlotsWhenDone):
+
     def setUp(self, thin=100):
         """Run once per test at the beginning"""
         from cytoflow import Tube
