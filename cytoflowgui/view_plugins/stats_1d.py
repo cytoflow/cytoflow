@@ -324,7 +324,8 @@ def _dump(view):
                 huescale = view.huescale,
                 error_statistic = view.error_statistic,
                 subset_list = view.subset_list,
-                plot_params = view.plot_params)
+                plot_params = view.plot_params,
+                current_plot = view.current_plot)
     
 
 @camel_registry.dumper(Stats1DPluginView, 'stats-1d', version = 1)
