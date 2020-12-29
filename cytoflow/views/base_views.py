@@ -26,7 +26,6 @@ from traits.api import HasStrictTraits, Str, Tuple, List, Dict, provides
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
-import numpy as np
 import seaborn as sns
 import pandas as pd
 from natsort import natsorted

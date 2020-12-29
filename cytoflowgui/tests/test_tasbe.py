@@ -25,15 +25,13 @@ Created on Jan 5, 2018
 
 import os, unittest, tempfile
 
-from traits.util.async_trait_wait import wait_for_condition
-
 import matplotlib
 matplotlib.use("Agg")
 import pandas as pd
 
 from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.tests.test_base import TasbeTest, params_traits_comparator
-from cytoflowgui.op_plugins import ThresholdPlugin, TasbePlugin
+from cytoflowgui.op_plugins import TasbePlugin
 from cytoflowgui.op_plugins.tasbe import _BleedthroughControl, _TranslationControl
 from cytoflowgui.subset import BoolSubset
 from cytoflowgui.serialization import load_yaml, save_yaml
@@ -41,26 +39,16 @@ from cytoflowgui.serialization import load_yaml, save_yaml
 class TestTASBE(TasbeTest):
     
     def setUp(self):
-        TasbeTest.setUp(self)
-        
-        plugin = ThresholdPlugin()
-        op = plugin.get_operation()
-                
-        op.name = "Morpho"
-        op.channel = "FSC-A"
-        op.threshold = 100000
-
-        wi = WorkflowItem(operation = op)
-        self.workflow.workflow.append(wi)        
-        wait_for_condition(lambda v: v.status == 'valid', wi, 'status', 30)
+        super().setUp()      
         
         plugin = TasbePlugin()
         self.op = op = plugin.get_operation()        
         self.cwd = os.path.dirname(os.path.abspath(__file__))
         
-        self.wi = wi = WorkflowItem(operation = op)
+        self.wi = wi = WorkflowItem(operation = op,
+                                    status = 'waiting',
+                                    view_error = "Not yet plotted")
         wi.default_view = self.op.default_view()
-        wi.view_error = "Not yet plotted"
         wi.views.append(self.wi.default_view)
         
         self.workflow.workflow.append(wi)
@@ -91,48 +79,41 @@ class TestTASBE(TasbeTest):
           
         # run the estimate
         op.do_estimate = True
-        wait_for_condition(lambda v: v.status == 'estimating', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
         
     def testEstimate(self):
         pass
   
     def testChangeChannels(self):
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.channels = ["FITC-A", "Pacific Blue-A"]
-        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'invalid', self.wi, 'status', 30)
+        self.workflow.wi_waitfor(self.wi, 'status', 'invalid')
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
         self.assertTrue(len(self.op.translation_list) == 1)
         self.assertTrue(len(self.op.bleedthrough_list) == 2)
 
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.do_estimate = True
-        wait_for_condition(lambda v: v.status == 'estimating', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
-        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
-        
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))     
 
     def testPlot(self):
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.wi.current_view = self.wi.default_view
         self.wi.default_view.current_plot = "Autofluorescence"
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
 
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.wi.default_view.current_plot = "Bleedthrough"
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
 
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.wi.default_view.current_plot = "Bead Calibration"
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
          
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.wi.default_view.current_plot = "Color Translation"
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
 
     def testSerialize(self):
         with params_traits_comparator(_BleedthroughControl), \

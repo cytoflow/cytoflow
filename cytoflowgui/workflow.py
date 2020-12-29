@@ -242,9 +242,8 @@ class Workflow(HasStrictTraits):
     eval_event = Instance(threading.Event, ())
     eval_result = Any
     
-    # evaluate an expression in the remote process.  useful for debugging.
-    eval_event = Instance(threading.Event, ())
-    eval_result = Any
+    # execute an expression in the remote process.  useful for debugging.
+    exec_event = Instance(threading.Event, ())
     
     def __init__(self, remote_connection, **kwargs):
         super(Workflow, self).__init__(**kwargs)  
@@ -320,6 +319,9 @@ class Workflow(HasStrictTraits):
                     self.eval_result = payload
                     self.eval_event.set()
                     
+                elif msg == Msg.EXEC:
+                    self.exec_event.set()
+                    
                 elif msg == Msg.SHUTDOWN:
                     self.message_q.put(None)
                     return
@@ -341,27 +343,6 @@ class Workflow(HasStrictTraits):
                 child_conn.send(msg)
         except Exception:
             log_exception()
-            
-#     def log_main(self, log_q):
-#         # from http://plumberjack.blogspot.com/2010/09/using-logging-with-multiprocessing.html
-#         
-#         while True:
-#             try:
-#                 record = log_q.get()
-#                 
-#                 if record is None: # We send this as a sentinel to tell the listener to quit.
-#                     log_q.close()
-#                     log_q.join_thread()
-#                     return
-#                 
-#                 # No level or filter logic applied - just handle it!
-#                 logging.getLogger(record.name).handle(record)
-#                 
-#             except (KeyboardInterrupt, SystemExit):
-#                 raise
-#             except:
-#                 print('Whoops! Problem:', file=sys.stderr)
-#                 traceback.print_exc(file=sys.stderr)
                 
 
     def run_all(self):
@@ -513,7 +494,41 @@ class Workflow(HasStrictTraits):
         return self.eval_result
 
     def remote_exec(self, expr):
+        self.exec_event.clear()
         self.message_q.put((Msg.EXEC, expr))
+        
+        self.exec_event.wait()
+        return
+    
+    def wi_sync(self, wi, variable, value, timeout = 30):
+        """Set WorkflowItem.status on the remote workflow, then wait for it to propogate here."""
+        
+        assert(wi.trait_get([variable])[variable] != value)
+        idx = self.workflow.index(wi)
+        self.remote_exec("self.workflow[{0}].trait_set({1} = '{2}')".format(idx, variable, value))
+        
+        self.wi_waitfor(wi, variable, value, timeout)
+        
+    def wi_waitfor(self, wi, variable, value, timeout = 30):
+        """Waits a configurable amount of time for wi's status to change to status"""
+
+        from traits.util.async_trait_wait import wait_for_condition  
+        try:      
+            wait_for_condition(lambda v: v.trait_get([variable])[variable] == value, wi, variable, timeout)
+        except RuntimeError:
+            logger.error("Timed out after {} seconds waiting for {} to become {}.\n"
+                         "Current value: {}\n"
+                         "WorkflowItem.op_error: {}\n"
+                         "WorkflowItem.estimate_error: {}\n"
+                         "WorkflowItem.view_error: {}"
+                        .format(timeout, variable, value, 
+                                wi.trait_get([variable])[variable],
+                                wi.op_error,
+                                wi.estimate_error,
+                                wi.view_error))
+            
+            raise
+
         
     def shutdown_remote_process(self, remote_process):
         # tell the remote process to shut down
@@ -730,12 +745,12 @@ class RemoteWorkflow(HasStrictTraits):
                     # exit the receiving thread
                     return
                     
-                elif msg == Msg.EVAL:
-                    self.exec_q.put((len(self.workflow) + 1, (None, lambda self = self, q = self.message_q, expr = payload: q.put((Msg.EVAL, eval(expr))))))
-                    
                 elif msg == Msg.EXEC:
-                    self.exec_q.put((len(self.workflow) + 1, (None, lambda self = self, expr = payload: exec(expr))))
-                                                 
+                    self.exec_q.put((sys.maxsize - 1, (None, lambda self = self, q = self.message_q, expr = payload: q.put((Msg.EXEC, exec(expr))))))
+                                             
+                elif msg == Msg.EVAL:
+                    self.exec_q.put((sys.maxsize, (None, lambda self = self, q = self.message_q, expr = payload: q.put((Msg.EVAL, eval(expr))))))
+                        
                 else:
                     raise RuntimeError("Bad command in the remote workflow")
             

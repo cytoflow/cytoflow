@@ -25,8 +25,6 @@ Created on Jan 4, 2018
 import os, unittest, tempfile
 import pandas as pd
 
-from traits.util.async_trait_wait import wait_for_condition
-
 import matplotlib
 matplotlib.use("Agg")
 
@@ -34,14 +32,11 @@ from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.tests.test_base import ImportedDataTest
 from cytoflowgui.op_plugins import Range2DPlugin
 from cytoflowgui.serialization import load_yaml, save_yaml
-from cytoflowgui.subset import CategorySubset
-
 
 class TestRange2D(ImportedDataTest):
 
     def setUp(self):
-        ImportedDataTest.setUp(self)
-
+        super().setUp()
 
         plugin = Range2DPlugin()
         self.op = op = plugin.get_operation()
@@ -52,86 +47,86 @@ class TestRange2D(ImportedDataTest):
         op.ychannel = "V2-A"
         op.ylow = 1000
         op.yhigh = 10000
+              
+        self.wi = wi = WorkflowItem(operation = op,
+                                    status = 'waiting',
+                                    view_error = "Not yet plotted")
         
-        self.wi = wi = WorkflowItem(operation = op)
-
-        self.view = view = wi.default_view = op.default_view()
-        view.subset_list.append(CategorySubset(name = "Well", values = ["A", "B"]))
-
-        wi.view_error = "Not yet plotted"
-        wi.views.append(self.wi.default_view)
+        self.view = wi.default_view = op.default_view()
+        wi.views.append(self.wi.default_view)        
         self.wi.current_view = self.wi.default_view
-        
+
         self.workflow.workflow.append(wi)
         self.workflow.selected = wi
         
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
-        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
+
 
     def testApply(self):
         self.assertIsNotNone(self.workflow.remote_eval("self.workflow[-1].result"))
         
-        
     def testChangeThreshold(self):
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.xlow = 0
-        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
 
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.xhigh = 200
-        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
 
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.ylow = 900
-        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
 
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.yhigh = 11000
-        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
-                
-        
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
    
     def testChangeChannels(self):
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.xchannel = "B1-A"
-        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
 
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.ychannel = "Y2-A"
-        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
 
     def testChangeScale(self):
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
-
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.view.xscale = "log"
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
 
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
-
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.view.yscale = "log"
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
  
     def testChangeName(self):
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.name = "Dange2D"
-        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
         
     def testHueFacet(self):
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
-
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.view.huefacet = "Dox"
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
 
         
     def testSubset(self):
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
-
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
+        from cytoflowgui.subset import CategorySubset, RangeSubset
+        self.view.subset_list.append(CategorySubset(name = "Well",
+                                                    values = ['A', 'B']))
+        self.view.subset_list.append(RangeSubset(name = "Dox",
+                                                 values = [0.0, 10.0, 100.0]))
         self.view.subset_list[0].selected = ["A"]
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
  
     def testSerialize(self):
         fh, filename = tempfile.mkstemp()
@@ -156,7 +151,7 @@ class TestRange2D(ImportedDataTest):
             code = code + wi.operation.get_notebook_code(i)
          
         exec(code)
-        nb_data = locals()['ex_1'].data
+        nb_data = locals()['ex_3'].data
         remote_data = self.workflow.remote_eval("self.workflow[-1].result.data")
         
         pd.testing.assert_frame_equal(nb_data, remote_data)

@@ -26,16 +26,11 @@ Created on Jan 5, 2018
 import os, unittest, tempfile
 import pandas as pd
 
-from traits.util.async_trait_wait import wait_for_condition
-
 import matplotlib
 matplotlib.use("Agg")
 
-from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.tests.test_base import ImportedDataTest
-from cytoflowgui.op_plugins import ChannelStatisticPlugin
 from cytoflowgui.op_plugins.channel_stat import summary_functions
-from cytoflowgui.subset import CategorySubset
 from cytoflowgui.serialization import load_yaml, save_yaml
 
 # we need these to exec() code in testNotebook
@@ -47,63 +42,40 @@ from pandas import Series
 class TestChannelStat(ImportedDataTest):
     
     def setUp(self):
-        ImportedDataTest.setUp(self)
+        super().setUp()
 
-        plugin = ChannelStatisticPlugin()
-        self.op = op = plugin.get_operation()
-        
-        op.name = "MeanByDox"
-        op.channel = "Y2-A"
-        op.statistic_name = "Geom.Mean"
-        op.by = ['Dox']
-        op.subset_list.append(CategorySubset(name = "Well", values = ["A", "B"]))
-                
-        self.wi = wi = WorkflowItem(operation = op)        
-        self.workflow.workflow.append(wi)
+        # the last operation in ImportedDataTest.setUp is a ChannelStatistic op
+        self.wi = wi = self.workflow.workflow[-1]
+        self.op = self.wi.operation
         self.workflow.selected = wi
-
-        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
 
     def testApply(self):
         self.assertIsNotNone(self.workflow.remote_eval("self.workflow[-1].result"))
    
-   
     def testChangeChannels(self):
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.channel = "V2-A"
-        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
         
     def testChangeBy(self):
-        self.op.by = ["Dox", "Well"]
-
-        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
+        self.op.by = ["Dox"]
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
 
     def testChangeSubset(self):
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.subset_list[0].selected = ["A"]
-        
-        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
-
-    def testGeomSD(self):        
-        self.op.statistic_name = "Geom.SD"
-        
-        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
-        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
-
 
     def testAllFunctions(self):
         for fn in summary_functions:
+            self.workflow.wi_sync(self.wi, 'status', 'waiting')
             self.op.statistic_name = fn
-            
-            wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-            wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+            self.workflow.wi_waitfor(self.wi, 'status', 'valid')
             self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
-
    
  
     def testSerialize(self):
@@ -125,11 +97,9 @@ class TestChannelStat(ImportedDataTest):
          
     def testNotebook(self):
         for fn in summary_functions:
-            
+            self.workflow.wi_sync(self.wi, 'status', 'waiting')
             self.op.statistic_name = fn
-            
-            wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-            wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+            self.workflow.wi_waitfor(self.wi, 'status', 'valid')
             self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
 
             code = "from cytoflow import *\n"
@@ -137,7 +107,7 @@ class TestChannelStat(ImportedDataTest):
                 code = code + wi.operation.get_notebook_code(i)
              
             exec(code)
-            nb_data = locals()['ex_1'].data
+            nb_data = locals()['ex_2'].data
             remote_data = self.workflow.remote_eval("self.workflow[-1].result.data")
             
             pd.testing.assert_frame_equal(nb_data, remote_data)

@@ -37,16 +37,16 @@ from cytoflowgui.tasbe_calibration import (TasbeCalibrationOp, _BleedthroughCont
 class TestTASBECalibrationMode(WorkflowTest):
     
     def setUp(self):
-        WorkflowTest.setUp(self)
+        super().setUp()
         
         self.op = op = TasbeCalibrationOp()        
         self.cwd = os.path.dirname(os.path.abspath(__file__))
         
-        self.wi = wi = WorkflowItem(operation = op)
+        self.wi = wi = WorkflowItem(operation = op,
+                                    status = 'waiting',
+                                    view_error = "Not yet plotted")
         wi.default_view = self.op.default_view()
-        wi.view_error = "Not yet plotted"
         wi.views.append(self.wi.default_view)
-        
         self.workflow.workflow.append(wi)
         self.workflow.selected = self.wi
         
@@ -82,6 +82,7 @@ class TestTASBECalibrationMode(WorkflowTest):
         op.output_directory = tempfile.mkdtemp()
           
         # run the estimate
+        self.workflow.remote_exec("pass")
         op.valid_model = False
         op.do_estimate = True
         wait_for_condition(lambda v: v.valid_model == True, self.op, 'valid_model', 30)
@@ -102,15 +103,18 @@ class TestTASBECalibrationMode(WorkflowTest):
         pass
   
     def testChangeChannels(self):
+        self.workflow.remote_exec("pass")
         self.op.channels = ["FITC-A", "Pacific Blue-A"]
         wait_for_condition(lambda v: v.valid_model == False, self.op, 'valid_model', 60)
         self.assertTrue(len(self.op.units_list) == 2)
         self.assertTrue(len(self.op.bleedthrough_list) == 2)
 
+        self.workflow.remote_exec("pass")
         self.op.do_estimate = True
         wait_for_condition(lambda v: v.valid_model == True, self.op, 'valid_model', 60)
         
     def testDoTranslation(self):
+        self.workflow.remote_exec("pass")
         self.op.to_channel = "FITC-A"
         self.op.do_color_translation = True
         
@@ -123,31 +127,29 @@ class TestTASBECalibrationMode(WorkflowTest):
         self.op.translation_list[0].file = self.cwd + "/../../cytoflow/tests/data/tasbe/rby.fcs"
         self.op.translation_list[1].file = self.cwd + "/../../cytoflow/tests/data/tasbe/rby.fcs"
 
+        self.workflow.remote_exec("pass")
         self.op.do_estimate = True
         wait_for_condition(lambda v: v.valid_model == True, self.op, 'valid_model', 30)
         
 
     def testPlot(self):
-        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.wi.current_view = self.wi.default_view
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
 
-        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.wi.default_view.current_plot = "Autofluorescence"
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
 
-        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.wi.default_view.current_plot = "Bleedthrough"
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
 
-        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.wi.default_view.current_plot = "Bead Calibration"
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
         
+        self.workflow.remote_exec("pass")
         self.op.to_channel = "FITC-A"
         self.op.do_color_translation = True
         
@@ -156,13 +158,13 @@ class TestTASBECalibrationMode(WorkflowTest):
         self.op.translation_list[0].file = self.cwd + "/../../cytoflow/tests/data/tasbe/rby.fcs"
         self.op.translation_list[1].file = self.cwd + "/../../cytoflow/tests/data/tasbe/rby.fcs"
 
+        self.workflow.remote_exec("pass")
         self.op.do_estimate = 1
         wait_for_condition(lambda v: v.valid_model == True, self.op, 'valid_model', 30)
         
-        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.wi.default_view.current_plot = "Color Translation"
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
 
 if __name__ == "__main__":
     import sys;sys.argv = ['', 'TestTASBECalibrationMode.testChangeChannels']

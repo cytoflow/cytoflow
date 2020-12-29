@@ -133,7 +133,7 @@ class WorkflowItem(HasStrictTraits):
     
     # is the wi valid?
     # MAGIC: first value is the default
-    status = Enum("invalid", "estimating", "applying", "valid", "loading", status = True)
+    status = Enum("invalid", "waiting", "estimating", "applying", "valid", "loading", status = True)
     
     # report the errors and warnings
     op_error = Str(status = True)

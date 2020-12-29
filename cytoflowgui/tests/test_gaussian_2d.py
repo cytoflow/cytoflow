@@ -26,22 +26,19 @@ Created on Jan 5, 2018
 import os, unittest, tempfile
 import pandas as pd
 
-from traits.util.async_trait_wait import wait_for_condition
-
 import matplotlib
 matplotlib.use("Agg")
 
 from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.tests.test_base import ImportedDataTest
 from cytoflowgui.op_plugins import GaussianMixture2DPlugin
-from cytoflowgui.subset import CategorySubset
-from cytoflowgui.view_plugins.scatterplot import SCATTERPLOT_MARKERS
+from cytoflowgui.subset import CategorySubset, RangeSubset
 from cytoflowgui.serialization import load_yaml, save_yaml
 
 class TestGaussian2D(ImportedDataTest):
     
     def setUp(self):
-        ImportedDataTest.setUp(self)
+        super().setUp()
 
         plugin = GaussianMixture2DPlugin()
         self.op = op = plugin.get_operation()
@@ -53,11 +50,15 @@ class TestGaussian2D(ImportedDataTest):
         op.yscale = "logicle"
         op.num_components = 2
         
-        op.subset_list.append(CategorySubset(name = "Well", values = ["A", "B"]))
+        op.subset_list.append(CategorySubset(name = "Well",
+                                             values = ['A', 'B']))
+        op.subset_list.append(RangeSubset(name = "Dox",
+                                          values = [0.0, 10.0, 100.0]))
         
-        self.wi = wi = WorkflowItem(operation = op)
+        self.wi = wi = WorkflowItem(operation = op,
+                                    status = 'waiting',
+                                    view_error = "Not yet plotted")
         wi.default_view = op.default_view()
-        wi.view_error = "Not yet plotted"
         wi.views.append(self.wi.default_view)
         
         self.workflow.workflow.append(wi)
@@ -65,266 +66,130 @@ class TestGaussian2D(ImportedDataTest):
         
         # run estimate
         op.do_estimate = True
-        wait_for_condition(lambda v: v.status == 'estimating', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
         
     def testEstimate(self):
         self.assertIsNotNone(self.workflow.remote_eval("self.workflow[-1].result"))
    
     def testChangeChannels(self):
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.xchannel = "B1-A"
-        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'invalid', self.wi, 'status', 30)
+        self.workflow.wi_waitfor(self.wi, 'status', 'invalid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
          
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.do_estimate = True
-        wait_for_condition(lambda v: v.status == 'estimating', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
         
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.ychannel = "V2-A"
-        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'invalid', self.wi, 'status', 30)
+        self.workflow.wi_waitfor(self.wi, 'status', 'invalid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
          
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.do_estimate = True
-        wait_for_condition(lambda v: v.status == 'estimating', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
         
 
     def testChangeScale(self):
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.xscale = "log"
-        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'invalid', self.wi, 'status', 30)
+        self.workflow.wi_waitfor(self.wi, 'status', 'invalid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
          
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.do_estimate = True
-        wait_for_condition(lambda v: v.status == 'estimating', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
 
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.yscale = "log"
-        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'invalid', self.wi, 'status', 30)
+        self.workflow.wi_waitfor(self.wi, 'status', 'invalid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
          
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.do_estimate = True
-        wait_for_condition(lambda v: v.status == 'estimating', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
         
     def testChangeBy(self):
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.by = ["Dox"]
-        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'invalid', self.wi, 'status', 30)
+        self.workflow.wi_waitfor(self.wi, 'status', 'invalid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
          
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.do_estimate = True
-        wait_for_condition(lambda v: v.status == 'estimating', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
         
     def testChangeComponents(self):
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.num_components = 3
-        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'invalid', self.wi, 'status', 30)
+        self.workflow.wi_waitfor(self.wi, 'status', 'invalid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
 
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.do_estimate = True
-        wait_for_condition(lambda v: v.status == 'estimating', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
 
     def testChangeSigma(self):
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.sigma = 1
-        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'invalid', self.wi, 'status', 30)
+        self.workflow.wi_waitfor(self.wi, 'status', 'invalid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
 
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.do_estimate = True
-        wait_for_condition(lambda v: v.status == 'estimating', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))   
          
    
     def testChangeSubset(self):
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.subset_list[0].selected = ["A"]
-        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'invalid', self.wi, 'status', 30)
+        self.workflow.wi_waitfor(self.wi, 'status', 'invalid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
          
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.do_estimate = True
-        wait_for_condition(lambda v: v.status == 'estimating', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
           
           
     def testPlot(self):
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.wi.current_view = self.wi.default_view
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
-        
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
         
     def testPlotFacets(self):
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.by = ["Dox", "Well"]
-        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'invalid', self.wi, 'status', 30)
+        self.workflow.wi_waitfor(self.wi, 'status', 'invalid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
          
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.do_estimate = True
-        wait_for_condition(lambda v: v.status == 'estimating', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
         
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.view = self.wi.current_view = self.wi.default_view
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
         
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.view.xfacet = "Dox"
         self.view.yfacet = "Well"
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
 
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.view.yfacet = ""
-        self.view.huefacet = "Well"
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
         
-        
-    def testPlotArgs(self):
-        self.op.by = ["Dox", "Well"]
-        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'invalid', self.wi, 'status', 30)
-        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
-         
-        self.op.do_estimate = True
-        wait_for_condition(lambda v: v.status == 'estimating', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
-        
-        self.view = self.wi.current_view = self.wi.default_view
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
-
-        # BasePlotParams
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
-        self.view.xfacet = "Dox"
-        self.view.yfacet = "Well"
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
-
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
-        self.view.plot_params.title = "Title"
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
-
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
-        self.view.plot_params.xlabel = "X label"
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
-
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
-        self.view.plot_params.ylabel = "Y label"
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
-        
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
-        self.view.xfacet = ""
-        self.view.huefacet = "Dox"
-        self.view.plot_params.huelabel = "Hue label"
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
-        
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
-        self.view.xfacet = "Dox"
-        self.view.yfacet = ""
-        self.view.huefacet = ""
-        self.view.plot_params.col_wrap = 2
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
-         
-        for style in ['darkgrid', 'whitegrid', 'white', 'dark', 'ticks']:
-            self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-            wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
-            self.view.plot_params.sns_style = style
-            wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
-            
-        for context in ['poster', 'talk', 'poster', 'notebook', 'paper']:
-            self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-            wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
-            self.view.plot_params.sns_context = context
-            wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
-        
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
-        self.view.plot_params.legend = False
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
-
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
-        self.view.plot_params.sharex = False
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
-
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
-        self.view.plot_params.sharey = False
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
-
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
-        self.view.plot_params.despine = False
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
-
-
-        # DataPlotParams
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
-        self.view.plot_params.min_quantile = 0.01
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
-
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
-        self.view.plot_params.max_quantile = 0.90
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
-        
-        # Data2DPlotParams
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
-        self.view.plot_params.xlim = (0, 1000)
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
-        
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
-        self.view.plot_params.ylim = (0, 1000)
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
-
-        ## Scatterplot-specific params
-
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
-        self.view.plot_params.alpha = 0.5
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
-
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
-        self.view.plot_params.s = 5
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
-                                    
-        for m in SCATTERPLOT_MARKERS[::-1]:
-            self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-            wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
-            self.view.plot_params.marker = m
-            wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)            
-   
+    
  
     def testSerialize(self):
         fh, filename = tempfile.mkstemp()
@@ -349,7 +214,7 @@ class TestGaussian2D(ImportedDataTest):
             code = code + wi.operation.get_notebook_code(i)
          
         exec(code)
-        nb_data = locals()['ex_1'].data
+        nb_data = locals()['ex_3'].data
         remote_data = self.workflow.remote_eval("self.workflow[-1].result.data")
         
         pd.testing.assert_frame_equal(nb_data, remote_data)

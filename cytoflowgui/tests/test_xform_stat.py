@@ -26,8 +26,6 @@ Created on Jan 5, 2018
 import os, unittest, tempfile
 import pandas as pd
 
-from traits.util.async_trait_wait import wait_for_condition
-
 import matplotlib
 matplotlib.use("Agg")
 
@@ -47,7 +45,7 @@ from pandas import Series
 class TestXformStat(ImportedDataTest):
     
     def setUp(self):
-        ImportedDataTest.setUp(self)
+        super().setUp()
 
         plugin = ChannelStatisticPlugin()
         op = plugin.get_operation()
@@ -59,7 +57,6 @@ class TestXformStat(ImportedDataTest):
         
         wi = WorkflowItem(operation = op)
         self.workflow.workflow.append(wi)        
-        wait_for_condition(lambda v: v.status == 'valid', wi, 'status', 30)
         
         plugin = TransformStatisticPlugin()
         self.op = op = plugin.get_operation()
@@ -70,33 +67,33 @@ class TestXformStat(ImportedDataTest):
         op.by = ["Dox"]
         op.subset_list.append(CategorySubset(name = "Well", values = ["A", "B"]))
                 
-        self.wi = wi = WorkflowItem(operation = op)        
+        self.wi = wi = WorkflowItem(operation = op,
+                                    status = 'waiting',
+                                    view_error = "Not yet plotted")        
         self.workflow.workflow.append(wi)
         self.workflow.selected = wi
 
-        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+        self.workflow.wi_waitfor(wi, 'status', "valid")
 
     def testApply(self):
         self.assertIsNotNone(self.workflow.remote_eval("self.workflow[-1].result"))
    
 
     def testChangeBy(self):
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.by = ["Dox", "Well"]
-
-        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
 
     def testChangeSubset(self):
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.subset_list[0].selected = ["A"]
-        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
-
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
 
     def testAllFunctions(self):
         for fn in transform_functions:
+            self.workflow.wi_sync(self.wi, 'status', 'waiting')
             self.op.statistic_name = fn
-            wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-            wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+            self.workflow.wi_waitfor(self.wi, 'status', 'valid')
  
     def testSerialize(self):
         fh, filename = tempfile.mkstemp()
@@ -117,16 +114,16 @@ class TestXformStat(ImportedDataTest):
          
     def testNotebook(self):
         for fn in transform_functions:
+            self.workflow.wi_sync(self.wi, 'status', 'waiting')
             self.op.statistic_name = fn
-            wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-            wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+            self.workflow.wi_waitfor(self.wi, 'status', 'valid')
             
             code = "from cytoflow import *\n"
             for i, wi in enumerate(self.workflow.workflow):
                 code = code + wi.operation.get_notebook_code(i)
              
             exec(code)
-            nb_data = locals()['ex_1'].data
+            nb_data = locals()['ex_4'].data
             remote_data = self.workflow.remote_eval("self.workflow[-1].result.data")
         
             pd.testing.assert_frame_equal(nb_data, remote_data)

@@ -28,43 +28,44 @@ import pandas as pd
 import matplotlib
 matplotlib.use('Agg')
 
-from traits.util.async_trait_wait import wait_for_condition
-
 from cytoflowgui.tests.test_base import ImportedDataTest, TasbeTest
 from cytoflowgui.serialization import save_yaml, load_yaml
 from cytoflowgui.op_plugins.import_op import ImportPluginOp, Channel
-from cytoflowgui.op_plugins import ImportPlugin
 
 
 class TestImport(ImportedDataTest):
+    
+    def setUp(self):
+        super().setUp()
+        
+        self.wi = self.workflow.workflow[0]
+        self.op = self.wi.operation
 
     def testCoarse(self):
-        wi = self.workflow.workflow[0]
-        op = wi.operation
         
-        op.events = 1000
-        wait_for_condition(lambda v: v.status == 'applying', wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'invalid', wi, 'status', 30)
-        op.do_estimate = True
-        wait_for_condition(lambda v: v.status == 'estimating', wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'applying', wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'valid', wi, 'status', 30)
-        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
+        self.op.events = 1000
+        self.workflow.wi_waitfor(self.wi, 'status', 'invalid')
+        self.assertTrue(self.workflow.remote_eval("self.workflow[0].result is None"))
+
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
+        self.op.do_estimate = True
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
+        self.assertTrue(self.workflow.remote_eval("self.workflow[0].result is not None"))
         self.assertTrue(self.workflow.remote_eval('len(self.workflow[0].result) == 6000'))
-        self.assertEqual(op.ret_events, 6000)
+        self.assertEqual(self.op.ret_events, 6000)
          
     def testChannelRename(self):
-        wi = self.workflow.workflow[0]
-        op = wi.operation
          
-        op.channels_list = [Channel(channel = 'SSC-A', name = 'SSC_A')]
-        wait_for_condition(lambda v: v.status == 'applying', wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'invalid', wi, 'status', 30)
-        op.do_estimate = True
-        wait_for_condition(lambda v: v.status == 'estimating', wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'applying', wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'valid', wi, 'status', 30)
-        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
+        self.op.channels_list = [Channel(channel = 'SSC-A', name = 'SSC_A')]
+        self.workflow.wi_waitfor(self.wi, 'status', 'invalid')
+        self.assertTrue(self.workflow.remote_eval("self.workflow[0].result is None"))
+
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
+        self.op.do_estimate = True
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
+        self.assertTrue(self.workflow.remote_eval("self.workflow[0].result is not None"))
        
  
     def testSerialize(self):
@@ -128,7 +129,7 @@ class TestImport(ImportedDataTest):
          
         exec(code)
         nb_data = locals()['ex_0'].data
-        remote_data = self.workflow.remote_eval("self.workflow[-1].result.data")
+        remote_data = self.workflow.remote_eval("self.workflow[0].result.data")
         self.assertTrue((nb_data == remote_data).all().all())
          
 class TestImportTasbe(TasbeTest):
@@ -139,7 +140,7 @@ class TestImportTasbe(TasbeTest):
          
         exec(code)
         nb_data = locals()['ex_0'].data
-        remote_data = self.workflow.remote_eval("self.workflow[-1].result.data")
+        remote_data = self.workflow.remote_eval("self.workflow[0].result.data")
         
         pd.testing.assert_frame_equal(nb_data, remote_data)
 

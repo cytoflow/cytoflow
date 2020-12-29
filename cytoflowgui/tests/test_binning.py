@@ -26,8 +26,6 @@ Created on Jan 5, 2018
 import os, unittest, tempfile
 import pandas as pd
 
-from traits.util.async_trait_wait import wait_for_condition
-
 import matplotlib
 matplotlib.use("Agg")
 
@@ -39,79 +37,68 @@ from cytoflowgui.serialization import load_yaml, save_yaml
 class TestBinning(ImportedDataTest):
     
     def setUp(self):
-        ImportedDataTest.setUp(self)
+        super().setUp()
 
         plugin = BinningPlugin()
         self.op = op = plugin.get_operation()
-        
         op.name = "Bin"
         op.channel = "V2-A"
         op.scale = "log"
         op.bin_width = 0.2
                 
-        self.wi = wi = WorkflowItem(operation = op)
-        wi.default_view = op.default_view()
-        wi.view_error = "Not yet plotted"
+        self.wi = wi = WorkflowItem(operation = op,
+                                    status = 'waiting',
+                                    view_error = "Not yet plotted")
+        self.view = wi.default_view = op.default_view()
         wi.views.append(self.wi.default_view)
         
         self.workflow.workflow.append(wi)
         self.workflow.selected = wi
 
-        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
-
+        self.workflow.wi_waitfor(wi, 'status', "valid")
+        
     def testApply(self):
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
    
     def testChangeChannels(self):
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.channel = "Y2-A"
-        
-        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
         
 
     def testChangeScale(self):
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.scale = "linear"
-        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'invalid', self.wi, 'status', 30)
+        self.workflow.wi_waitfor(self.wi, 'status', 'invalid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
         
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.bin_width = 1000
-         
-        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
         
     def testChangeBinWidth(self):
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.bin_width = 0.1
-        
-        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
-
         
     def testChangeBinWidthText(self):
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.bin_width = "0.1"
-        
-        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
           
     def testPlot(self):
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.wi.current_view = self.wi.default_view
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
         
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
-        
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.op.channel = "Y2-A"
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
-        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
         
-   
  
     def testSerialize(self):
         fh, filename = tempfile.mkstemp()
@@ -136,7 +123,7 @@ class TestBinning(ImportedDataTest):
             code = code + wi.operation.get_notebook_code(i)
          
         exec(code)
-        nb_data = locals()['ex_1'].data
+        nb_data = locals()['ex_3'].data
         remote_data = self.workflow.remote_eval("self.workflow[-1].result.data")
         
         pd.testing.assert_frame_equal(nb_data, remote_data)

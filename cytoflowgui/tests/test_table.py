@@ -25,8 +25,6 @@ Created on Jan 5, 2018
 
 import os, unittest, tempfile
 
-from traits.util.async_trait_wait import wait_for_condition
-
 import matplotlib
 import pandas as pd
 matplotlib.use("Agg")
@@ -42,7 +40,7 @@ from cytoflowgui.tests.test_base import ImportedDataTest, params_traits_comparat
 class TestTable(ImportedDataTest):
     
     def setUp(self):
-        ImportedDataTest.setUp(self)
+        super().setUp()
 
         plugin = ChannelStatisticPlugin()
         
@@ -52,7 +50,9 @@ class TestTable(ImportedDataTest):
         op.statistic_name = "Geom.SD"
         op.by = ['Dox']
 
-        wi = WorkflowItem(operation = op)        
+        wi = WorkflowItem(operation = op,
+                          status = 'waiting',
+                          view_error = "Not yet plotted")        
         self.workflow.workflow.append(wi)
         
         op = plugin.get_operation()
@@ -61,7 +61,9 @@ class TestTable(ImportedDataTest):
         op.statistic_name = "Geom.SD"
         op.by = ['Dox', 'Well']
 
-        wi = WorkflowItem(operation = op)        
+        wi = WorkflowItem(operation = op,
+                          status = 'waiting',
+                          view_error = "Not yet plotted")        
         self.workflow.workflow.append(wi)
         
         op = plugin.get_operation()
@@ -70,7 +72,9 @@ class TestTable(ImportedDataTest):
         op.statistic_name = "Geom.Mean"
         op.by = ['Dox']
                 
-        self.wi = wi = WorkflowItem(operation = op)        
+        wi = WorkflowItem(operation = op,
+                          status = 'waiting',
+                          view_error = "Not yet plotted")        
         self.workflow.workflow.append(wi)
         
         op = plugin.get_operation()
@@ -79,26 +83,27 @@ class TestTable(ImportedDataTest):
         op.statistic_name = "Geom.Mean"
         op.by = ['Dox', 'Well']
                 
-        self.wi = wi = WorkflowItem(operation = op)        
+        self.wi = wi = WorkflowItem(operation = op,
+                                    status = 'waiting',
+                                    view_error = "Not yet plotted")        
         self.workflow.workflow.append(wi)
         
         self.workflow.selected = wi
 
-        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+        self.workflow.wi_waitfor(wi, 'status', "valid")
         
         plugin = TablePlugin()
         self.view = view = plugin.get_view()
         view.statistic = ("MeanByDox", "Geom.Mean")
         view.row_facet = "Dox"
         
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
   
         wi.views.append(view)
         wi.current_view = view
         self.workflow.selected = wi
         
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
         
     def tearDown(self):
         fh, filename = tempfile.mkstemp()
@@ -118,73 +123,52 @@ class TestTable(ImportedDataTest):
         pass
     
     def testColumn(self):
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
-   
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.view.row_facet = ""
         self.view.column_facet = "Dox"
-           
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
         
     def testSubRow(self):
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
-   
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.view.statistic = ("MeanByDoxAndWell", "Geom.Mean")
         self.view.row_facet = "Dox"
         self.view.subrow_facet = "Well"
-           
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
         
     def testSubColumn(self):
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
-   
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.view.statistic = ("MeanByDoxAndWell", "Geom.Mean")
         self.view.row_facet = ""
         self.view.column_facet = "Dox"
         self.view.subcolumn_facet = "Well"
-           
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
         
     def testRowRange(self):
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
-   
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.view.statistic = ("MeanByDox", "Geom.SD")
-           
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
     
     def testColumnRange(self):
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
-   
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.view.statistic = ("MeanByDox", "Geom.SD")
         self.view.row_facet = ""
         self.view.column_facet = "Dox"
-           
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
         
     def testSubRowRange(self):
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
-   
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.view.statistic = ("MeanByDoxAndWell", "Geom.SD")
         self.view.row_facet = "Dox"
         self.view.subrow_facet = "Well"
-           
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
         
     def testSubColumnRange(self):
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
-   
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.view.statistic = ("MeanByDoxAndWell", "Geom.SD")
         self.view.row_facet = ""
         self.view.column_facet = "Dox"
         self.view.subcolumn_facet = "Well"
-           
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
 
     def testSerialize(self):
         with params_traits_comparator(EmptyPlotParams):

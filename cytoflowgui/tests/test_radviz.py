@@ -24,20 +24,18 @@ Created on Jan 4, 2018
 '''
 import unittest, tempfile, os
 
-from traits.util.async_trait_wait import wait_for_condition
-
 import matplotlib
 matplotlib.use("Agg")
 
-from cytoflowgui.tests.test_base import ImportedDataTest, params_traits_comparator
+from cytoflowgui.tests.test_base import ImportedDataTest, BaseDataViewTest, params_traits_comparator
 from cytoflowgui.view_plugins.radviz import RadvizPlugin, _Channel, RadvizPlotParams
 from cytoflowgui.view_plugins.scatterplot import SCATTERPLOT_MARKERS
 from cytoflowgui.serialization import save_yaml, load_yaml
 
-class TestRadviz(ImportedDataTest):
+class TestRadviz(ImportedDataTest, BaseDataViewTest):
 
     def setUp(self):
-        ImportedDataTest.setUp(self)
+        super().setUp()
 
         self.wi = wi = self.workflow.workflow[0]
         self.wi.operation.events = 500
@@ -54,177 +52,57 @@ class TestRadviz(ImportedDataTest):
         wi.current_view = view
         self.workflow.selected = self.wi
         
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
+        super().setUpView()
         
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
+                
     def testBase(self):
         pass
 
     def testChangeScale(self):
-        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
-
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.view.channels_list[1].scale = "linear"
-        
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
 
     def testChangeChannel(self):
-        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
-
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.view.channels_list[1].channel = "FSC-A"
-        
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
         
     def testAddChannel(self):
-
-        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
-
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.view.channels_list.append(_Channel(channel = "FSC-A", scale = "log"))
-        
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
 
     def testRemoveChannel(self):
-
-        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
-
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.view.channels_list.append(_Channel(channel = "FSC-A", scale = "log"))
-        
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
 
-        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
-
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.view.channels_list.pop()
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
         
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
-
-    def testXfacet(self):
-        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
-
-        self.view.xfacet = "Dox"
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
-
-        
-    def testYfacet(self):
-        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
-
-        self.view.yfacet = "Well"
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
-
-
-    def testXandYfacet(self):
-        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
-
-        self.view.xfacet = "Dox"
-        self.view.yfacet = "Well"
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
-
-    def testHueScale(self):
-        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
-
-        self.view.huescale = "log"
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
-    
-        
-    def testSubset(self):
-        from cytoflowgui.subset import CategorySubset
-        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
-
-        self.view.subset_list.append(CategorySubset(name = "Well",
-                                                    values = ['A', 'B']))
-        self.view.subset_list[0].selected = ['A']
-
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
-        
-    def testPlotArgs(self):
-
-        # Common params
-        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
-        self.view.xfacet = "Dox"
-        self.view.yfacet = "Well"
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
+    def testPlotParams(self):
  
-        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
-        self.view.plot_params.title = "Title"
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
+        super().testPlotParams()
  
-        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
-        self.view.plot_params.xlabel = "X label"
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
- 
-        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
-        self.view.plot_params.ylabel = "Y label"
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
- 
-        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
-        self.view.plot_params.sharex = False
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
- 
-        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
-        self.view.plot_params.sharey = False
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
- 
-        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
-        self.view.plot_params.despine = False
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
- 
-        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
-        self.view.xfacet = ""
-        self.view.huefacet = "Dox"
-        self.view.plot_params.huelabel = "Hue label"
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
- 
-        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
-        self.view.plot_params.legend = False
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
- 
-        ## Scatterplot-specific params
-        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
-        self.view.plot_params.min_quantile = 0.01
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
- 
-        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
-        self.view.plot_params.max_quantile = 0.90
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
- 
-        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.view.plot_params.alpha = 0.5
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
  
-        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.view.plot_params.s = 5
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
                                     
-        self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-        wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.view.plot_params.marker = '+'
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
                                     
         for m in SCATTERPLOT_MARKERS[::-1]:
-            self.workflow.remote_exec("self.workflow[0].view_error = 'waiting'")
-            wait_for_condition(lambda v: v.view_error == "waiting", self.wi, 'view_error', 30)
+            self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
             self.view.plot_params.marker = m
-            wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
+            self.workflow.wi_waitfor(self.wi, 'view_error', '')
     
     def testNotebook(self):
         # smoke test

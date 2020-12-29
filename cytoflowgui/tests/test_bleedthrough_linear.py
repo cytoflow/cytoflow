@@ -26,14 +26,12 @@ Created on Jan 5, 2018
 import os, unittest, tempfile
 import pandas as pd
 
-from traits.util.async_trait_wait import wait_for_condition
-
 import matplotlib
 matplotlib.use("Agg")
 
 from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.tests.test_base import TasbeTest, params_traits_comparator
-from cytoflowgui.op_plugins import BleedthroughLinearPlugin, ThresholdPlugin
+from cytoflowgui.op_plugins import BleedthroughLinearPlugin
 from cytoflowgui.op_plugins.bleedthrough_linear import _Control
 from cytoflowgui.subset import BoolSubset
 from cytoflowgui.serialization import load_yaml, save_yaml
@@ -41,19 +39,7 @@ from cytoflowgui.serialization import load_yaml, save_yaml
 class TestBleedthroughLinear(TasbeTest):
     
     def setUp(self):
-        TasbeTest.setUp(self)
-        
-        plugin = ThresholdPlugin()
-        op = plugin.get_operation()
-                
-        op.name = "Morpho"
-        op.channel = "FSC-A"
-        op.threshold = 100000
-
-        wi = WorkflowItem(operation = op)
-        self.workflow.workflow.append(wi)        
-        wait_for_condition(lambda v: v.status == 'applying', wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'valid', wi, 'status', 30)
+        super().setUp()
          
         plugin = BleedthroughLinearPlugin()
         self.op = op = plugin.get_operation()
@@ -69,62 +55,59 @@ class TestBleedthroughLinear(TasbeTest):
         op.subset_list.append(BoolSubset(name = "Morpho"))
         op.subset_list[0].selected_t = True
         
-        self.wi = wi = WorkflowItem(operation = op)
+        self.wi = wi = WorkflowItem(operation = op,
+                                    status = 'waiting',
+                                    view_error = "Not yet plotted")
         wi.default_view = self.op.default_view()
-        wi.view_error = "Not yet plotted"
         wi.views.append(self.wi.default_view)
-        
         self.workflow.workflow.append(wi)
         self.workflow.selected = self.wi
           
         # run the estimate
         op.do_estimate = True
-        wait_for_condition(lambda v: v.status == 'estimating', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
+
 
     def testEstimate(self):
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
 
     def testChangeControls(self):
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.controls_list.pop()
-        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'invalid', self.wi, 'status', 30)
+        self.workflow.wi_waitfor(self.wi, 'status', 'invalid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))        
         
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.do_estimate = True
-        wait_for_condition(lambda v: v.status == 'estimating', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))  
   
     def testChangeControlsValue(self):
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.controls_list[2].channel = "AmCyan-A"
-        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'invalid', self.wi, 'status', 30)
+        self.workflow.wi_waitfor(self.wi, 'status', 'invalid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))   
         
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.do_estimate = True
-        wait_for_condition(lambda v: v.status == 'estimating', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))  
           
     def testChangeSubset(self):
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.subset_list[0].selected_t = False
-        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'invalid', self.wi, 'status', 30)
+        self.workflow.wi_waitfor(self.wi, 'status', 'invalid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None")) 
         
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.do_estimate = True
-        wait_for_condition(lambda v: v.status == 'estimating', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'applying', self.wi, 'status', 30)
-        wait_for_condition(lambda v: v.status == 'valid', self.wi, 'status', 30)
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None")) 
                  
     def testPlot(self):
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.wi.current_view = self.wi.default_view
-        wait_for_condition(lambda v: v.view_error == "", self.wi, 'view_error', 30)
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
   
 
     def testSerialize(self):
