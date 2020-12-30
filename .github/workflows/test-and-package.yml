@@ -1,27 +1,83 @@
 name: test-and-package
 on: [push]
 jobs:
-  build-and-test-linux:
-    name: Run cytoflow unit tests on linux
+  check-environment:
+    name: Make sure environment.yml and meta.yaml are the same
     runs-on: ubuntu-18.04
+    steps:
+    
+    - name: Check out repo
+      uses: actions/checkout@v2   
+      
+    - name: Compare meta.yaml and environment.yml
+      run: |
+        gawk -f package/make_environment.awk package/conda_recipes/cytoflow/meta.yaml | gawk -f package/parse_environment.awk > env_meta
+        gawk -f package/parse_environment.awk environment.yml > env_mine
+        diff -u env_meta env.mine
+      
+  test-on-linux:
+    name: Run nose2 on linux runner
+    needs: check-environment
+    runs-on: ubuntu-18.04
+    steps:
+    - name: Check out repo
+      uses: actions/checkout@v2  
+      
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.6' # Version range or exact version of a Python version to use, using SemVer's version range syntax
+        architecture: 'x64' # optional x64 or x86. Defaults to x64 if not specified
+      
+    - name: Add conda to system path
+      run: |
+        # $CONDA is an environment variable pointing to the root of the miniconda directory
+        echo $CONDA/bin >> $GITHUB_PATH
+        
+    - name: Configure conda
+      run: |
+        conda update --yes conda
+        conda config --add channels bpteague
+        
+    - name: Create test environment
+      run: |
+        conda create --yes --quiet -f environment.yml
+    
+    - name: Install package locally
+      run: |
+        source activate cytoflow
+        python setup.py develop
+        
+    - name: Install nose2
+      run: |
+        source activate cytoflow
+        conda install --yes --quiet pip
+        pip install nose2
+        
+    - name: Run cytoflow tests
+      env:
+        OMP_NUM_THREADS: 1
+      run: |
+        source activate cytoflow
+        nose2 -v -c package/nose2.cfg -s cytoflow/tests
+
+    - name: Run cytoflowgui tests
+      env:
+        OMP_NUM_THREADS: 1
+      run: |
+        source activate cytoflow
+        nose2 -v -c package/nose2.cfg -s cytoflowgui/tests -GUI        
+
+    
+  build-linux-conda-package:
+    name: Build linux conda package
+    runs-on: ubuntu-18.04
+    needs: test-on-linux
     steps:
     - name: Check out repo
       uses: actions/checkout@v2
       with:
         fetch-depth: 0
-        submodules: true
-      
-    - name: Query git tag
-      id: tag
-      uses: jimschubert/query-tag-action@v2
-      with:
-        skip-unshallow: true
-        abbrev: false
-        
-    - name: Show Tag
-      id: display
-      run: |
-        echo 'Output from Find Tag: ${{steps.tag.outputs.tag}}'
       
     - name: Set up Python
       uses: actions/setup-python@v2
@@ -41,37 +97,118 @@ jobs:
         conda install --yes --quiet anaconda-client conda-build
         
     - name: Build conda package
-      env:
-        SOURCE_NAME: ${{ steps.branch_name.outputs.SOURCE_NAME }}
-        SOURCE_BRANCH: ${{ steps.branch_name.outputs.SOURCE_BRANCH }}
-        SOURCE_TAG: ${{ steps.branch_name.outputs.SOURCE_TAG }}
       run: |
         conda render package/conda_recipes/cytoflow
         conda build package/conda_recipes/cytoflow
         
-    - name: Create test/packaging environment
+        
+    - name: Move conda package into the dist folder
       run: |
-        conda create --yes --quiet --name=cytoflow python=3.6.12 nomkl
-        source activate cytoflow
-        conda install --yes --quiet --use-local --only-deps cytoflow
+        python package/move_conda_package.py
+        
+    - name: List dist
+      run: ls dist/
+      
+    - name: Save the contents of the dist/ folder as artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: linux-conda-package
+        retention-days: 5
+        path: dist/*
+
+  build-linux-wheels:
+    name: Run nose2 on linux runner
+    needs: test-on-linux
+    runs-on: ubuntu-18.04
+    steps:
+    - name: Check out repo
+      uses: actions/checkout@v2  
+      with:
+        fetch-depth: 0
+      
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.6' # Version range or exact version of a Python version to use, using SemVer's version range syntax
+        architecture: 'x64' # optional x64 or x86. Defaults to x64 if not specified
+      
+    - name: Add conda to system path
+      run: |
+        # $CONDA is an environment variable pointing to the root of the miniconda directory
+        echo $CONDA/bin >> $GITHUB_PATH
+        
+    - name: Configure conda
+      run: |
+        conda update --yes conda
+        conda config --add channels bpteague
+        
+    - name: Create build environment
+      run: |
+        conda create --yes --quiet -f environment.yml
     
     - name: Install package locally
       run: |
         source activate cytoflow
         python setup.py develop
         
-    - name: Install nose2
+    - name: Build source dist
       run: |
         source activate cytoflow
-        conda install --yes --quiet pip
-        pip install nose2
+        python setup.py sdist
         
-    - name: Run nose2
-      env:
-        OMP_NUM_THREADS: 1
+    - name: Build wheel
       run: |
         source activate cytoflow
-        nose2 -v -c package/nose2.cfg -s cytoflow/tests
+        python setup.py bdist_wheel
+        
+    - name: Move C++ extensions into the dist folder
+      run: |
+        cp `find build | grep "\.so$"` dist/
+        
+    - name: List dist
+      run: ls dist/
+      
+    - name: Save the contents of the dist/ folder as artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: linux-wheels
+        retention-days: 5
+        path: dist/*   
+        
+  build-linux-oneclick:
+    name: Run nose2 on linux runner
+    needs: test-on-linux
+    runs-on: ubuntu-18.04
+    steps:
+    - name: Check out repo
+      uses: actions/checkout@v2  
+      with:
+        fetch-depth: 0
+      
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.6' # Version range or exact version of a Python version to use, using SemVer's version range syntax
+        architecture: 'x64' # optional x64 or x86. Defaults to x64 if not specified
+      
+    - name: Add conda to system path
+      run: |
+        # $CONDA is an environment variable pointing to the root of the miniconda directory
+        echo $CONDA/bin >> $GITHUB_PATH
+        
+    - name: Configure conda
+      run: |
+        conda update --yes conda
+        conda config --add channels bpteague
+        
+    - name: Create build environment
+      run: |
+        conda create --yes --quiet -f environment.yml
+    
+    - name: Install package locally
+      run: |
+        source activate cytoflow
+        python setup.py develop
         
     - name: Install packaging deps
       run: |
@@ -84,20 +221,45 @@ jobs:
         source activate cytoflow
         python setup.py build_sphinx -b embedded_help
         
-    - name: Build source dist
-      run: |
-        source activate cytoflow
-        python setup.py sdist
-        
-    - name: Build wheel
-      run: |
-        source activate cytoflow
-        python setup.py bdist_wheel
-        
     - name: Build GUI binary
       run: |
         source activate cytoflow
         python package/pyinstaller-local.py package/pyinstaller.spec
+        
+    - name: List dist
+      run: ls dist/
+      
+    - name: Save the contents of the dist/ folder as artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: linux-oneclick
+        retention-days: 5
+        path: dist/*
+        
+        
+        
+  build-examples:
+    name: Run nose2 on linux runner
+    needs: test-on-linux
+    runs-on: ubuntu-18.04
+    steps:
+    - name: Check out repo
+      uses: actions/checkout@v2  
+      with:
+        fetch-depth: 0
+        submodules: true
+
+    - name: Query git tag
+      id: tag
+      uses: jimschubert/query-tag-action@v2
+      with:
+        skip-unshallow: true
+        abbrev: false
+        
+    - name: Show Tag
+      id: display
+      run: |
+        echo 'Output from Find Tag: ${{steps.tag.outputs.tag}}'
         
     - name: Zip up examples
       run: |
@@ -106,25 +268,13 @@ jobs:
         zip -r cytoflow-${{steps.tag.outputs.tag}}-examples-advanced.zip examples-advanced
         mv cytoflow-${{steps.tag.outputs.tag}}-examples-*.zip ../dist
         
-    - name: Move C++ extensions into the dist folder
-      run: |
-        cp `find build | grep "\.so$"` dist/
-        python package/move_conda_package.py
-        
     - name: List dist
       run: ls dist/
       
     - name: Save the contents of the dist/ folder as artifacts
       uses: actions/upload-artifact@v2
       with:
-        name: linux-artifacts
+        name: examples
         retention-days: 5
         path: dist/*
-      
-    - name: Conda info
-      shell: bash -l {0}
-      run: |
-        conda info
-        conda list
-
         
