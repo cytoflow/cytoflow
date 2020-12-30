@@ -41,7 +41,7 @@ jobs:
         
     - name: Create test environment
       run: |
-        conda create --yes --quiet -f environment.yml
+        conda env create --yes --quiet -f environment.yml
     
     - name: Install package locally
       run: |
@@ -144,7 +144,7 @@ jobs:
         
     - name: Create build environment
       run: |
-        conda create --yes --quiet -f environment.yml
+        conda env create --yes --quiet -f environment.yml
     
     - name: Install package locally
       run: |
@@ -203,7 +203,7 @@ jobs:
         
     - name: Create build environment
       run: |
-        conda create --yes --quiet -f environment.yml
+        conda env create --yes --quiet -f environment.yml
     
     - name: Install package locally
       run: |
