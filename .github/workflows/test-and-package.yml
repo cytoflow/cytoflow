@@ -117,7 +117,7 @@ jobs:
         path: dist/*
 
   build-linux-wheels:
-    name: Run nose2 on linux runner
+    name: Build source dist, linux wheels
     needs: test-on-linux
     runs-on: ubuntu-18.04
     steps:
@@ -176,7 +176,7 @@ jobs:
         path: dist/*   
         
   build-linux-oneclick:
-    name: Run nose2 on linux runner
+    name: Build linux one-click
     needs: test-on-linux
     runs-on: ubuntu-18.04
     steps:
@@ -239,7 +239,7 @@ jobs:
         
         
   build-examples:
-    name: Run nose2 on linux runner
+    name: Zip up examples
     needs: test-on-linux
     runs-on: ubuntu-18.04
     steps:
