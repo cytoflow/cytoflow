@@ -23,12 +23,13 @@ Created on Jan 4, 2018
 @author: brian
 '''
 import os, unittest, tempfile
+import pandas as pd
 
 import matplotlib
 matplotlib.use("Agg")
 
 from cytoflowgui.workflow_item import WorkflowItem
-from cytoflowgui.tests.test_base import ImportedDataTest, wait_for
+from cytoflowgui.tests.test_base import ImportedDataTest
 from cytoflowgui.op_plugins import QuadPlugin
 from cytoflowgui.serialization import load_yaml, save_yaml
 from cytoflowgui.subset import CategorySubset
@@ -37,8 +38,7 @@ from cytoflowgui.subset import CategorySubset
 class TestQuad(ImportedDataTest):
 
     def setUp(self):
-        ImportedDataTest.setUp(self)
-
+        super().setUp()
 
         plugin = QuadPlugin()
         self.op = op = plugin.get_operation()
@@ -60,54 +60,45 @@ class TestQuad(ImportedDataTest):
         self.workflow.workflow.append(wi)
         self.workflow.selected = wi
         
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))        
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 130))
+        self.workflow.wi_waitfor(wi, 'view_error', "")
+        self.workflow.wi_waitfor(wi, 'status', "valid")
 
     def testApply(self):
         self.assertIsNotNone(self.workflow.remote_eval("self.workflow[-1].result"))
         
    
     def testChangeChannels(self):
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.xchannel = "B1-A"
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 130))
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
 
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.ychannel = "Y2-A"
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 130))
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
 
     def testChangeScale(self):
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
-
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.view.xscale = "log"
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
 
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
-
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.view.yscale = "log"
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
  
     def testChangeName(self):
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.name = "Dolly"
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 130))
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
         
     def testHueFacet(self):
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
-
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.view.huefacet = "Dox"
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
-
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
         
     def testSubset(self):
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
-
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.view.subset_list[0].selected = ["A"]
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
  
     def testSerialize(self):
         fh, filename = tempfile.mkstemp()
@@ -132,9 +123,11 @@ class TestQuad(ImportedDataTest):
             code = code + wi.operation.get_notebook_code(i)
          
         exec(code)
-        nb_data = locals()['ex_1'].data
+        nb_data = locals()['ex_3'].data
         remote_data = self.workflow.remote_eval("self.workflow[-1].result.data")
-        self.assertTrue((nb_data == remote_data).all().all())
+        
+        pd.testing.assert_frame_equal(nb_data, remote_data)          
+            
 
            
 if __name__ == "__main__":

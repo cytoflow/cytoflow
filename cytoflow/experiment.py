@@ -155,8 +155,11 @@ class Experiment(HasStrictTraits):
 
     """
 
-    # this doesn't play nice with copy.copy(); clone it ourselves.
-    data = Instance(pd.DataFrame, args=())
+    # this doesn't play nice with copy.copy() (used if, say, you copy
+    # an Experiment with HasTraits.clone_traits()) -- instead, copy
+    # a reference when clone_traits() is called, then replace it with
+    # using pandas.DataFrame.copy(deep = False)
+    data = Instance(pd.DataFrame, args=(), copy = "ref")
     
     # potentially mutable.  deep copy required
     metadata = Dict(Str, Any, copy = "deep")
@@ -164,7 +167,7 @@ class Experiment(HasStrictTraits):
     # statistics.  mutable, deep copy required
     statistics = Dict(Tuple(Str, Str), pd.Series, copy = "deep")
     
-    history = List(Any)
+    history = List(Any, copy = "shallow")
     
     channels = Property(List)
     conditions = Property(Dict)
@@ -285,14 +288,15 @@ class Experiment(HasStrictTraits):
     
     def clone(self):
         """
-        Create a copy of this :class:`Experiment`
+        Create a copy of this :class:`Experiment.` :attr:`metadata` and 
+        :attr:`statistics` are deep copies; :attr:`history` is a shallow copy; and
+        .....
+          
         """
         
         new_exp = self.clone_traits()
-        new_exp.data = self.data.copy(deep = False)
+        new_exp.data = self.data.copy(deep = True)
 
-        # shallow copy of the history
-        new_exp.history = self.history[:]
         return new_exp
             
     def add_condition(self, name, dtype, data = None):
@@ -520,6 +524,7 @@ class Experiment(HasStrictTraits):
             # if we're categorical, merge the categories
             if is_categorical_dtype(meta_type) and meta_name in self.data:
                 cats = set(self.data[meta_name].cat.categories) | set(new_data[meta_name].cat.categories)
+                cats = sorted(cats) 
                 self.data[meta_name] = self.data[meta_name].cat.set_categories(cats)
                 new_data[meta_name] = new_data[meta_name].cat.set_categories(cats)
         

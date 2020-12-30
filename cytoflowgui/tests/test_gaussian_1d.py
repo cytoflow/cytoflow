@@ -24,20 +24,21 @@ Created on Jan 5, 2018
 '''
 
 import os, unittest, tempfile
+import pandas as pd
 
 import matplotlib
 matplotlib.use("Agg")
 
 from cytoflowgui.workflow_item import WorkflowItem
-from cytoflowgui.tests.test_base import ImportedDataTest, wait_for
+from cytoflowgui.tests.test_base import ImportedDataTest
 from cytoflowgui.op_plugins import GaussianMixture1DPlugin
-from cytoflowgui.subset import BoolSubset, CategorySubset
+from cytoflowgui.subset import CategorySubset, RangeSubset
 from cytoflowgui.serialization import load_yaml, save_yaml
 
 class TestGaussian1D(ImportedDataTest):
     
     def setUp(self):
-        ImportedDataTest.setUp(self)
+        super().setUp()
 
         plugin = GaussianMixture1DPlugin()
         self.op = op = plugin.get_operation()
@@ -48,106 +49,146 @@ class TestGaussian1D(ImportedDataTest):
         op.num_components = 2
         
         op.subset_list.append(CategorySubset(name = "Well", values = ["A", "B"]))
+        op.subset_list.append(RangeSubset(name = "Dox", values = [0.0, 10.0, 100.0]))
         
-        self.wi = wi = WorkflowItem(operation = op)
+        self.wi = wi = WorkflowItem(operation = op,
+                                    status = 'waiting',
+                                    view_error = "Not yet plotted")
         wi.default_view = op.default_view()
-        wi.view_error = "Not yet plotted"
-        wi.views.append(self.wi.default_view)
-        
+        wi.views.append(self.wi.default_view)        
         self.workflow.workflow.append(wi)
         self.workflow.selected = wi
         
         # run estimate
         op.do_estimate = True
-        self.assertTrue(wait_for(wi, 'status', lambda v: v == 'valid', 30))
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
 
     def testEstimate(self):
         self.assertIsNotNone(self.workflow.remote_eval("self.workflow[-1].result"))
    
     def testChangeChannels(self):
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.channel = "Y2-A"
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 30))
+        self.workflow.wi_waitfor(self.wi, 'status', 'invalid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
          
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
-        
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
 
     def testChangeScale(self):
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.channel_scale = "log"
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 30))
+        self.workflow.wi_waitfor(self.wi, 'status', 'invalid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
          
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
 
 
     def testChangeBy(self):
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.by = ["Dox"]
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 30))
+        self.workflow.wi_waitfor(self.wi, 'status', 'invalid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
          
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
         
     def testChangeComponents(self):
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.num_components = 3
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 30))
+        self.workflow.wi_waitfor(self.wi, 'status', 'invalid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
 
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
 
     def testChangeSigma(self):
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.sigma = 1
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 30))
+        self.workflow.wi_waitfor(self.wi, 'status', 'invalid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
 
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))      
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
          
    
     def testChangeSubset(self):
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.subset_list[0].selected = ["A"]
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 30))
+        self.workflow.wi_waitfor(self.wi, 'status', 'invalid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
          
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
-          
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
           
     def testPlot(self):
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.wi.current_view = self.wi.default_view
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
         
     def testPlotFacets(self):
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.by = ["Dox", "Well"]
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 30))
+        self.workflow.wi_waitfor(self.wi, 'status', 'invalid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
          
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
         
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.view = self.wi.current_view = self.wi.default_view
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
         
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.view.xfacet = "Dox"
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
+        self.view.current_plot = "A"
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
 
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.view.yfacet = "Well"
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
 
-        self.workflow.remote_exec("self.workflow[-1].view_error = 'waiting'")
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "waiting", 30))
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.view.yfacet = ""
         self.view.huefacet = "Well"
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
-   
- 
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
+
+    def testBar(self):
+        
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
+        self.op.by = ["Dox", "Well"]
+        self.workflow.wi_waitfor(self.wi, 'status', 'invalid')
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
+         
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
+        self.op.do_estimate = True
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
+        
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
+        self.view = self.wi.current_view = self.wi.default_view
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
+  
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
+        self.view.plot_params.histtype = "bar"
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
+        
+  
     def testSerialize(self):
         fh, filename = tempfile.mkstemp()
         try:
@@ -171,10 +212,12 @@ class TestGaussian1D(ImportedDataTest):
             code = code + wi.operation.get_notebook_code(i)
          
         exec(code)
-        nb_data = locals()['ex_1'].data
+        nb_data = locals()['ex_3'].data
         remote_data = self.workflow.remote_eval("self.workflow[-1].result.data")
-        self.assertTrue((nb_data == remote_data).all().all())
+        
+        pd.testing.assert_frame_equal(nb_data, remote_data)
+
 
 if __name__ == "__main__":
-#     import sys;sys.argv = ['', 'TestGaussian1D.testPlot']
+    import sys;sys.argv = ['', 'TestGaussian1D.testEstimate']
     unittest.main()

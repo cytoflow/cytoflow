@@ -24,21 +24,22 @@ Created on Jan 5, 2018
 '''
 
 import os, unittest, tempfile
+import pandas as pd
 
 import matplotlib
 matplotlib.use("Agg")
 
 from cytoflowgui.workflow_item import WorkflowItem
-from cytoflowgui.tests.test_base import ImportedDataTest, wait_for
+from cytoflowgui.tests.test_base import ImportedDataTest, params_traits_comparator
 from cytoflowgui.op_plugins import PCAPlugin
 from cytoflowgui.op_plugins.pca import _Channel
-from cytoflowgui.subset import CategorySubset
-from cytoflowgui.serialization import load_yaml, save_yaml, traits_eq, traits_hash
+from cytoflowgui.subset import CategorySubset, RangeSubset
+from cytoflowgui.serialization import load_yaml, save_yaml
 
 class TestPCA(ImportedDataTest):
     
     def setUp(self):
-        ImportedDataTest.setUp(self)
+        super().setUp()
 
         plugin = PCAPlugin()
         self.op = op = plugin.get_operation()
@@ -49,17 +50,22 @@ class TestPCA(ImportedDataTest):
                             _Channel(channel = "Y2-A", scale = "log"),
                             _Channel(channel = "Y2-H", scale = "log")]
         op.num_components = 2
+                
+        op.subset_list.append(CategorySubset(name = "Well",
+                                             values = ['A', 'B']))
+        op.subset_list.append(RangeSubset(name = "Dox",
+                                          values = [0.0, 10.0, 100.0]))
         
-        op.subset_list.append(CategorySubset(name = "Well", values = ["A", "B"]))
-        
-        self.wi = wi = WorkflowItem(operation = op)
+        self.wi = wi = WorkflowItem(operation = op,
+                                    status = 'waiting',
+                                    view_error = "Not yet plotted")
         
         self.workflow.workflow.append(wi)
         self.workflow.selected = wi
         
         # run estimate
         op.do_estimate = True
-        self.assertTrue(wait_for(wi, 'status', lambda v: v == 'valid', 30))
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
 
     def testEstimate(self):
         self.assertIsNotNone(self.workflow.remote_eval("self.workflow[-1].result"))
@@ -67,95 +73,108 @@ class TestPCA(ImportedDataTest):
         self.assertTrue(self.workflow.remote_eval("'PCA_2' in self.workflow[-1].result.channels"))
         
     def testRemoveChannel(self):
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.channels_list.pop()
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 30))
+        self.workflow.wi_waitfor(self.wi, 'status', 'invalid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
 
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
         
     def testAddChannel(self):
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.channels_list.append(_Channel(channel = "B1-A", scale = "log"))
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 30))
+        self.workflow.wi_waitfor(self.wi, 'status', 'invalid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
 
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
    
     def testComponents(self):
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.num_components = 3
-        
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 30))
+        self.workflow.wi_waitfor(self.wi, 'status', 'invalid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
 
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
 
     def testChangeScale(self):
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.channels_list[0].scale = "logicle"
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 30))
+        self.workflow.wi_waitfor(self.wi, 'status', 'invalid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
          
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
         
     def testChangeWhiten(self):
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.whiten = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 30))
+        self.workflow.wi_waitfor(self.wi, 'status', 'invalid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
          
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
         
     def testChangeBy(self):
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.by = ["Dox"]
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 30))
+        self.workflow.wi_waitfor(self.wi, 'status', 'invalid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
          
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
 
     def testChangeSubset(self):
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.subset_list[0].selected = ["A"]
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'invalid', 30))
+        self.workflow.wi_waitfor(self.wi, 'status', 'invalid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
          
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
    
     def testSerializeOp(self):
+        with params_traits_comparator(_Channel):
+            fh, filename = tempfile.mkstemp()
+            try:
+                os.close(fh)
 
-        _Channel.__eq__ = traits_eq
-        _Channel.__hash__ = traits_hash
-         
-        fh, filename = tempfile.mkstemp()
-        try:
-            os.close(fh)
-             
-            save_yaml(self.op, filename)
-            new_op = load_yaml(filename)
-             
-        finally:
-            os.unlink(filename)
-             
-        self.maxDiff = None
-                      
-        self.assertDictEqual(self.op.trait_get(self.op.copyable_trait_names()),
-                             new_op.trait_get(self.op.copyable_trait_names()))
-         
-         
+                save_yaml(self.op, filename)
+                new_op = load_yaml(filename)
+            finally:
+                os.unlink(filename)
+
+            self.maxDiff = None
+
+            self.assertDictEqual(self.op.trait_get(self.op.copyable_trait_names()),
+                                 new_op.trait_get(self.op.copyable_trait_names()))
+
     def testNotebook(self):
         code = "from cytoflow import *\n"
         for i, wi in enumerate(self.workflow.workflow):
             code = code + wi.operation.get_notebook_code(i)
          
         exec(code)
-        nb_data = locals()['ex_1'].data
+        nb_data = locals()['ex_3'].data
         remote_data = self.workflow.remote_eval("self.workflow[-1].result.data")
-        self.assertTrue((nb_data == remote_data).all().all())
+        
+        pd.testing.assert_frame_equal(nb_data, remote_data)
 
 if __name__ == "__main__":
 #     import sys;sys.argv = ['', 'TestPCA.testSerializeOp']

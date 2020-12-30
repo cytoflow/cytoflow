@@ -25,99 +25,116 @@ Created on Mar 5, 2018
 
 import unittest
 import cytoflow as flow
+import matplotlib.pyplot as plt
+import numpy as np
 
-from test_base import ImportedDataTest  # @UnresolvedImport
+from test_base import View1DTestBase, get_legend_entries  # @UnresolvedImport
 
-class TestViolin(ImportedDataTest):
+
+class TestViolin(View1DTestBase, unittest.TestCase):
 
     def setUp(self):
-        ImportedDataTest.setUp(self)
+        super().setUp()
         self.view = flow.ViolinPlotView(channel = "B1-A",
                                         variable = "Dox")
-        
+
     def testPlot(self):
         self.view.plot(self.ex)
-        
+        ax = plt.gca()
+        self.assertEqual(ax.get_ylabel(), "B1-A")  # this is different from other 1D views
+        self.assertEqual(ax.get_xlabel(), "Dox")
+        np.testing.assert_array_equal(
+            ax.get_yticks(),
+            np.array([-25000., 0, 25000., 50000., 75000., 100000., 125000.,
+                      150000., 175000., 200000.])
+            # NOTE -25000 not seen on the plot
+        )
+        self.assertEqual([l.get_text() for l in ax.get_xticklabels()], ["0.0", "10.0", "100.0"])
+
     def testLogScale(self):
         self.view.scale = "log"
         self.view.plot(self.ex)
-        
+        ax = plt.gca()
+        self.assertEqual(ax.get_ylabel(), "B1-A")  # this is different from other 1D views
+        self.assertEqual(ax.get_xlabel(), "Dox")
+        np.testing.assert_array_equal(
+            ax.get_yticks(),
+            np.array([1.e-2, 1.e-1, 1., 1.e+1, 1.e+2, 1.e+3, 1.e+4, 1.e+5, 1.e+6, 1.e+7])
+        )
+        self.assertEqual([l.get_text() for l in ax.get_xticklabels()], ["0.0", "10.0", "100.0"])
+
     def testLogicleScale(self):
         self.view.scale = "logicle"
         self.view.plot(self.ex)
-        
+        np.testing.assert_array_equal(
+            plt.gca().get_yticks(),
+            np.array([-100., 0., 100., 1000., 10000., 100000.])
+        )
+
     def testXFacet(self):
         self.view.xfacet = "Well"
         self.view.plot(self.ex)
-        
+        self.check_titles(["Well = A", "Well = B", "Well = C"])
+        # make sure the last plot is on the first row
+        self.assertEqual(plt.gca().get_subplotspec().rowspan.start, 0)
+        # and the third column
+        self.assertEqual(plt.gca().get_subplotspec().colspan.start, 2)
+
     def testYFacet(self):
         self.view.yfacet = "Well"
         self.view.plot(self.ex)
-        
+        self.check_titles(["Well = A", "Well = B", "Well = C"])
+
     def testHueFacet(self):
         self.view.huefacet = "Well"
         self.view.plot(self.ex)
-        
+        self.assertEqual(["A", "B", "C"], get_legend_entries(plt.gca()))
+
+    def testXFacetOrder(self, has_colorbar=False):
+        self.view.xfacet = "Well"
+        self.view.plot(self.ex, col_order=("C", "A", "B"))
+        self.check_titles(["Well = C", "Well = A", "Well = B"], has_colorbar)
+
+    def testYFacetOrder(self, has_colorbar=False):
+        self.view.yfacet = "Well"
+        self.view.plot(self.ex, row_order=("C", "A", "B"))
+        self.check_titles(["Well = C", "Well = A", "Well = B"], has_colorbar)
+
+    def testHueFacetOrder(self):
+        self.view.huefacet = "Well"
+        self.view.plot(self.ex, hue_order=("C", "A", "B"))
+        self.assertEqual(["C", "A", "B"], get_legend_entries(plt.gca()))
+
     def testSubset(self):
         self.view.subset = "Dox == 10.0"
         self.view.plot(self.ex)
-        
-    # Base plot params
-    
-    def testTitle(self):
-        self.view.plot(self.ex, title = "Title")
-        
-    def testXlabel(self):
-        self.view.plot(self.ex, xlabel = "X lab")
-        
-    def testYlabel(self):
-        self.view.plot(self.ex, ylabel = "Y lab")
-        
-    def testHueLabel(self):
-        self.view.huefacet = "Well"
-        self.view.plot(self.ex, huelabel = "hue lab")
-    
+        self.assertEqual([l.get_text() for l in plt.gca().get_xticklabels()], ["10.0"])
+
     def testColWrap(self):
         self.view.variable = "Well"
         self.view.xfacet = "Dox"
         self.view.plot(self.ex, col_wrap = 2)
-        
-    def testShareAxes(self):
-        self.view.plot(self.ex, sharex = False, sharey = False)
-        
-    def testStyle(self):
-        self.view.plot(self.ex, sns_style = "darkgrid")
-        self.view.plot(self.ex, sns_style = "whitegrid")
-        self.view.plot(self.ex, sns_style = "dark")
-        self.view.plot(self.ex, sns_style = "white")
-        self.view.plot(self.ex, sns_style = "ticks")
-        
-    def testContext(self):
-        self.view.plot(self.ex, sns_context = "paper")
-        self.view.plot(self.ex, sns_context = "notebook")
-        self.view.plot(self.ex, sns_context = "talk")
-        self.view.plot(self.ex, sns_context = "poster")
-
-    def testDespine(self):
-        self.view.plot(self.ex, despine = False)
-
-    # Data plot params
-    
-    def testQuantiles(self):
-        self.view.plot(self.ex, min_quantile = 0.01, max_quantile = 0.90)
-        
-    # 1D data plot params
-    def testLimits(self):
-        self.view.plot(self.ex, lim = (0, 1000))
+        # make sure this plot is in the second row
+        self.assertEqual(plt.gca().get_subplotspec().rowspan.start, 1)
+        # and the first column
+        self.assertEqual(plt.gca().get_subplotspec().colspan.start, 0)
         
     def testOrientation(self):
-        self.view.plot(self.ex, orientation = "horizontal")
-        
+        super().testOrientation(default_xlabel="Dox", default_ylabel="B1-A")
+
+    def testLimits(self):
+        self.view.plot(self.ex, lim = (0, 1000))
+        self.assertEqual(plt.gca().get_ylim(), (0, 1000))
+
+        self.view.plot(self.ex, lim = (0, 1000), orientation = "horizontal")
+        self.assertEqual(plt.gca().get_xlim(), (0, 1000))
+
     # Violin params
         
     def testBw(self):
         self.view.plot(self.ex, bw = 'scott')
         self.view.plot(self.ex, bw = 'silverman')
+        self.view.plot(self.ex, bw = 0.1)
         
     def testScalePlot(self):
         self.view.plot(self.ex, scale_plot = 'area')
@@ -134,7 +151,7 @@ class TestViolin(ImportedDataTest):
         
     def testSplit(self):
         self.view.huefacet = 'Well'
-        self.view.subset = 'Well != "Cc"'
+        self.view.subset = 'Well != "C"'
         self.view.plot(self.ex, split = True)
 
         

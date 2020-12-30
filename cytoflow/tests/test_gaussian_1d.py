@@ -27,18 +27,13 @@ import unittest
 
 import cytoflow as flow
 import cytoflow.utility as util
+from test_base import ImportedDataSmallTest
 
-class TestGaussian1D(unittest.TestCase):
+
+class TestGaussian1D(ImportedDataSmallTest):
 
     def setUp(self):
-        self.cwd = os.path.dirname(os.path.abspath(__file__)) + "/data/Plate01/"
-
-        tube1 = flow.Tube(file = self.cwd + 'RFP_Well_A3.fcs', conditions = {"Dox" : 10.0})
-        tube2 = flow.Tube(file= self.cwd + 'CFP_Well_A4.fcs', conditions = {"Dox" : 1.0})
-        import_op = flow.ImportOp(conditions = {"Dox" : "float"},
-                                  tubes = [tube1, tube2])
-        self.ex = import_op.apply()
-        
+        super().setUp()
         self.gate = flow.GaussianMixtureOp(name = "Gauss",
                                            channels = ["Y2-A"],
                                            sigma = 0.5,
@@ -121,5 +116,5 @@ class TestGaussian1D(unittest.TestCase):
         
 
 if __name__ == "__main__":
-#     import sys;sys.argv = ['', 'TestGaussian1D.testApplyBy']
+    import sys;sys.argv = ['', 'TestGaussian1D.testApply']
     unittest.main()

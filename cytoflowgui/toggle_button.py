@@ -31,7 +31,7 @@ if __name__ == '__main__':
     import os
     os.environ['TRAITS_DEBUG'] = "1"
 
-from traits.api import Str, Property, Unicode
+from traits.api import Str, Property
 from traitsui.basic_editor_factory import BasicEditorFactory
 from traitsui.qt4.editor import Editor
 
@@ -45,7 +45,7 @@ class _ToggleButton(Editor):
     #---------------------------------------------------------------------------
 
     # The button label
-    label = Unicode
+    label = Str
 
     #---------------------------------------------------------------------------
     #  Finishes initializing the editor by creating the underlying toolkit

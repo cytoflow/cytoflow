@@ -23,9 +23,12 @@ Created on Nov 16, 2015
 @author: brian
 '''
 import unittest
+import pandas as pd
 import cytoflow as flow
+from test_base import ClosePlotsWhenDoneTest
 
-class TestBleedthroughLinear(unittest.TestCase):
+
+class TestBleedthroughLinear(ClosePlotsWhenDoneTest):
 
 
     def setUp(self):
@@ -53,8 +56,16 @@ class TestBleedthroughLinear(unittest.TestCase):
     def testApply(self):
         ex2 = self.op.apply(self.ex)
         
-        with self.assertRaises(ValueError):
-            self.assertFalse((self.ex.data == ex2.data).all().all())
+        # make sure that SOMETHING changed.
+        # TODO - check that the spillover was actually removed
+        with self.assertRaises(AssertionError):
+            pd.testing.assert_frame_equal(self.ex.data, ex2.data)
+            
+    def testApplyDoesntAlterOriginal(self):
+        ex_data_copy = self.ex.data.copy(deep = True)
+        self.op.apply(self.ex)
+        
+        pd.testing.assert_frame_equal(self.ex.data, ex_data_copy, check_like = True)
     
     def testPlot(self):
         self.op.default_view().plot(self.ex)

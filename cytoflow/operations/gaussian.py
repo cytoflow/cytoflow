@@ -26,6 +26,7 @@ import re
 from warnings import warn
 
 import matplotlib.pyplot as plt
+from matplotlib.patches import Polygon, Rectangle
 
 from traits.api import (HasStrictTraits, Str, CStr, Dict, Any, Instance, Bool, 
                         Constant, List, provides)
@@ -536,21 +537,21 @@ class GaussianMixtureOp(HasStrictTraits):
                     
             for c in range(self.num_components):
                 if len(self.by) == 0:
-                    g = [c + 1]
+                    g = tuple([c + 1])
                 elif hasattr(group, '__iter__') and not isinstance(group, (str, bytes)):
                     g = tuple(list(group) + [c + 1])
                 else:
                     g = tuple([group] + [c + 1])
 
-                prop_stat.loc[g] = gmm.weights_[c]
+                prop_stat.at[g] = gmm.weights_[c]
                 
                 for cidx1, channel1 in enumerate(self.channels):
                     g2 = tuple(list(g) + [channel1])
-                    mean_stat.loc[g2] = self._scale[channel1].inverse(gmm.means_[c, cidx1])
+                    mean_stat.at[g2] = self._scale[channel1].inverse(gmm.means_[c, cidx1])
                     
                     s, corr = util.cov2corr(gmm.covariances_[c])
                     sigma_stat[g2] = (self._scale[channel1].inverse(s[cidx1]))
-                    interval_stat.loc[g2] = (self._scale[channel1].inverse(gmm.means_[c, cidx1] - s[cidx1]),
+                    interval_stat.at[g2] = (self._scale[channel1].inverse(gmm.means_[c, cidx1] - s[cidx1]),
                                              self._scale[channel1].inverse(gmm.means_[c, cidx1] + s[cidx1]))
             
                     for cidx2, channel2 in enumerate(self.channels):
@@ -719,8 +720,12 @@ class GaussianMixture1DView(By1DView, AnnotatingView, HistogramView):
                                      
             for k in range(0, len(axes.patches)):
                 patch = axes.patches[k]
-                xy = patch.get_xy()
-                patch_area += poly_area([scale(p[1]) for p in xy], [p[0] for p in xy])
+                if isinstance(patch, Polygon):
+                    xy = patch.get_xy()
+                    patch_area += poly_area([scale(p[1]) for p in xy], [p[0] for p in xy])
+                elif isinstance(patch, Rectangle):
+                    for xy in patch.get_path().to_polygons():
+                        patch_area += poly_area([p[1] for p in xy], [p[0] for p in xy])
             
             plt_min, plt_max = plt.gca().get_ylim()
             y = scale.inverse(np.linspace(scale(scale.clip(plt_min)), 
@@ -736,8 +741,12 @@ class GaussianMixture1DView(By1DView, AnnotatingView, HistogramView):
                                      
             for k in range(0, len(axes.patches)):
                 patch = axes.patches[k]
-                xy = patch.get_xy()
-                patch_area += poly_area([scale(p[0]) for p in xy], [p[1] for p in xy])
+                if isinstance(patch, Polygon):
+                    xy = patch.get_xy()
+                    patch_area += poly_area([scale(p[0]) for p in xy], [p[1] for p in xy])
+                elif isinstance(patch, Rectangle):
+                    for xy in patch.get_path().to_polygons():
+                        patch_area += poly_area([p[0] for p in xy], [p[1] for p in xy])
             
             plt_min, plt_max = plt.gca().get_xlim()
             x = scale.inverse(np.linspace(scale(scale.clip(plt_min)), 

@@ -491,11 +491,11 @@ class GaussianMixture1DOp(HasStrictTraits):
                     else:
                         g = group
 
-                    mean_stat.loc[g] = self._scale.inverse(gmm.means_[c][0])
-                    stdev_stat.loc[g] = self._scale.inverse(np.sqrt(gmm.covariances_[c][0]))[0]
-                    interval_stat.loc[g] = (self._scale.inverse(gmm.means_[c][0] - np.sqrt(gmm.covariances_[c][0][0])),
+                    mean_stat.at[g] = self._scale.inverse(gmm.means_[c][0])
+                    stdev_stat.at[g] = self._scale.inverse(np.sqrt(gmm.covariances_[c][0]))[0]
+                    interval_stat.at[g] = (self._scale.inverse(gmm.means_[c][0] - np.sqrt(gmm.covariances_[c][0][0])),
                                             self._scale.inverse(gmm.means_[c][0] + np.sqrt(gmm.covariances_[c][0][0])))
-                    prop_stat.loc[g] = gmm.weights_[c]
+                    prop_stat.at[g] = gmm.weights_[c]
                      
             new_experiment.statistics[(self.name, "mean")] = pd.to_numeric(mean_stat)
             new_experiment.statistics[(self.name, "stdev")] = pd.to_numeric(stdev_stat)

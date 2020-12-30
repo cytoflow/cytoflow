@@ -356,7 +356,8 @@ def _dump(view):
                 x_error_statistic = view.x_error_statistic,
                 y_error_statistic = view.y_error_statistic,
                 subset_list = view.subset_list,
-                plot_params = view.plot_params)
+                plot_params = view.plot_params,
+                current_plot = view.current_plot)
     
 @camel_registry.dumper(Stats2DPluginView, 'stats-2d', version = 1)
 def _dump_v1(view):

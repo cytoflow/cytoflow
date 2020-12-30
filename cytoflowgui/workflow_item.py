@@ -46,6 +46,8 @@ from cytoflowgui.serialization import camel_registry
 this = sys.modules[__name__]
 this.last_view_plotted = None
 
+logger = logging.getLogger(__name__)
+
 class WorkflowItem(HasStrictTraits):
     """        
     The basic unit of a Workflow: wraps an operation and a list of views.
@@ -131,7 +133,7 @@ class WorkflowItem(HasStrictTraits):
     
     # is the wi valid?
     # MAGIC: first value is the default
-    status = Enum("invalid", "estimating", "applying", "valid", "loading", status = True)
+    status = Enum("invalid", "waiting", "estimating", "applying", "valid", "loading", status = True)
     
     # report the errors and warnings
     op_error = Str(status = True)
@@ -236,7 +238,7 @@ def _load_wi(data, version):
 class RemoteWorkflowItem(WorkflowItem):
     
     def estimate(self):
-        logging.debug("WorkflowItem.estimate :: {}".format((self)))
+        logger.debug("WorkflowItem.estimate :: {}".format((self)))
 
         prev_result = self.previous_wi.result if self.previous_wi else None
                  
@@ -276,7 +278,7 @@ class RemoteWorkflowItem(WorkflowItem):
         """
         Apply this wi's operation to the previous_wi wi's result
         """
-        logging.debug("WorkflowItem.apply :: {}".format((self)))
+        logger.debug("WorkflowItem.apply :: {}".format((self)))
         self.apply_called = True
          
         prev_result = self.previous_wi.result if self.previous_wi else None
@@ -323,7 +325,7 @@ class RemoteWorkflowItem(WorkflowItem):
 
         
     def plot(self):              
-        logging.debug("WorkflowItem.plot :: {}".format((self)))
+        logger.debug("WorkflowItem.plot :: {}".format((self)))
         self.plot_called = True
                      
         if not self.current_view:

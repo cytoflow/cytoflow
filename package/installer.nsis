@@ -27,10 +27,10 @@
  
 !include MUI2.nsh
  
-!include "packaging\AdvUninstLog.nsh"
+!include "package\AdvUninstLog.nsh"
  
 Name "${APP_NAME}"
-Icon "packaging\icon.ico"
+Icon "package\icon.ico"
 OutFile "dist\cytoflow-installer.exe"
 ShowInstDetails show
 ShowUninstDetails show

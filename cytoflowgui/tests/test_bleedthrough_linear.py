@@ -24,33 +24,23 @@ Created on Jan 5, 2018
 '''
 
 import os, unittest, tempfile
+import pandas as pd
 
 import matplotlib
 matplotlib.use("Agg")
 
 from cytoflowgui.workflow_item import WorkflowItem
-from cytoflowgui.tests.test_base import TasbeTest, wait_for
-from cytoflowgui.op_plugins import BleedthroughLinearPlugin, ThresholdPlugin
+from cytoflowgui.tests.test_base import TasbeTest, params_traits_comparator
+from cytoflowgui.op_plugins import BleedthroughLinearPlugin
 from cytoflowgui.op_plugins.bleedthrough_linear import _Control
 from cytoflowgui.subset import BoolSubset
-from cytoflowgui.serialization import load_yaml, save_yaml, traits_eq, traits_hash
+from cytoflowgui.serialization import load_yaml, save_yaml
 
 class TestBleedthroughLinear(TasbeTest):
     
     def setUp(self):
-        TasbeTest.setUp(self)
-        
-        plugin = ThresholdPlugin()
-        op = plugin.get_operation()
-                
-        op.name = "Morpho"
-        op.channel = "FSC-A"
-        op.threshold = 100000
-
-        wi = WorkflowItem(operation = op)
-        self.workflow.workflow.append(wi)        
-        self.assertTrue(wait_for(wi, 'status', lambda v: v == 'valid', 30))
- 
+        super().setUp()
+         
         plugin = BleedthroughLinearPlugin()
         self.op = op = plugin.get_operation()
         
@@ -65,71 +55,76 @@ class TestBleedthroughLinear(TasbeTest):
         op.subset_list.append(BoolSubset(name = "Morpho"))
         op.subset_list[0].selected_t = True
         
-        self.wi = wi = WorkflowItem(operation = op)
+        self.wi = wi = WorkflowItem(operation = op,
+                                    status = 'waiting',
+                                    view_error = "Not yet plotted")
         wi.default_view = self.op.default_view()
-        wi.view_error = "Not yet plotted"
         wi.views.append(self.wi.default_view)
-        
         self.workflow.workflow.append(wi)
         self.workflow.selected = self.wi
           
         # run the estimate
         op.do_estimate = True
-        self.assertTrue(wait_for(wi, 'status', lambda v: v == 'valid', 30))
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
+
 
     def testEstimate(self):
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
 
     def testChangeControls(self):
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.controls_list.pop()
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 30))
-        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
+        self.workflow.wi_waitfor(self.wi, 'status', 'invalid')
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))        
         
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
-  
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))  
   
     def testChangeControlsValue(self):
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.controls_list[2].channel = "AmCyan-A"
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 30))
-        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
+        self.workflow.wi_waitfor(self.wi, 'status', 'invalid')
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))   
         
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
-  
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))  
+          
     def testChangeSubset(self):
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.subset_list[0].selected_t = False
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v != 'valid', 30))
-        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
+        self.workflow.wi_waitfor(self.wi, 'status', 'invalid')
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None")) 
         
+        self.workflow.wi_sync(self.wi, 'status', 'waiting')
         self.op.do_estimate = True
-        self.assertTrue(wait_for(self.wi, 'status', lambda v: v == 'valid', 30))
-         
+        self.workflow.wi_waitfor(self.wi, 'status', 'valid')
+        self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None")) 
+                 
     def testPlot(self):
+        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.wi.current_view = self.wi.default_view
-        self.assertTrue(wait_for(self.wi, 'view_error', lambda v: v == "", 30))
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
   
 
     def testSerialize(self):
+        with params_traits_comparator(_Control):
+            fh, filename = tempfile.mkstemp()
+            try:
+                os.close(fh)
 
-        _Control.__eq__ = traits_eq
-        _Control.__hash__ = traits_hash
-        
-        fh, filename = tempfile.mkstemp()
-        try:
-            os.close(fh)
-            
-            save_yaml(self.op, filename)
-            new_op = load_yaml(filename)
-            
-        finally:
-            os.unlink(filename)
-            
-        self.maxDiff = None
-                     
-        self.assertDictEqual(self.op.trait_get(self.op.copyable_trait_names()),
-                             new_op.trait_get(self.op.copyable_trait_names()))
-        
+                save_yaml(self.op, filename)
+                new_op = load_yaml(filename)
+            finally:
+                os.unlink(filename)
+
+            self.maxDiff = None
+
+            self.assertDictEqual(self.op.trait_get(self.op.copyable_trait_names()),
+                                 new_op.trait_get(self.op.copyable_trait_names()))
         
     def testNotebook(self):
         code = "from cytoflow import *\n"
@@ -139,8 +134,9 @@ class TestBleedthroughLinear(TasbeTest):
         exec(code)
         nb_data = locals()['ex_2'].data
         remote_data = self.workflow.remote_eval("self.workflow[-1].result.data")
-        self.assertTrue((nb_data == remote_data).all().all())
+
+        pd.testing.assert_frame_equal(nb_data, remote_data)
 
 if __name__ == "__main__":
-#     import sys;sys.argv = ['', 'TestBleedthroughLinear.testSerialize']
+    import sys;sys.argv = ['', 'TestBleedthroughLinear.testPlot']
     unittest.main()

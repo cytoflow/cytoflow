@@ -257,7 +257,8 @@ def _dump(view):
                 subrow_facet = view.subrow_facet,
                 column_facet = view.column_facet,
                 subcolumn_facet = view.subcolumn_facet,
-                subset_list = view.subset_list)
+                subset_list = view.subset_list,
+                current_plot = view.current_plot)
     
 @camel_registry.loader('table-view', version = 1)
 def _load(data, version):

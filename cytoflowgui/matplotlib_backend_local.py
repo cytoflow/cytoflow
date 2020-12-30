@@ -53,6 +53,8 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg
 
 from pyface.qt import QtCore, QtGui
 
+logger = logging.getLogger(__name__)
+
 DEBUG = 0
 
 class Msg(object):
@@ -76,11 +78,11 @@ def log_exception():
     err_loc = traceback.format_tb(tb)[-1]
     err_ctx = threading.current_thread().name
     
-    logging.debug("Exception in {0}:\n{1}"
+    logger.debug("Exception in {0}:\n{1}"
                   .format(err_ctx, "".join( traceback.format_exception(exc_type, exc_value, tb) )))
     
     
-    logging.error("Error: {0}\nLocation: {1}Thread: {2}" \
+    logger.error("Error: {0}\nLocation: {1}Thread: {2}" \
                   .format(err_string, err_loc, err_ctx) )
     
 
@@ -150,7 +152,7 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
             except EOFError:
                 return
             
-            logging.debug("FigureCanvasQTAggLocal.listen_for_remote :: {}".format(msg))
+            logger.debug("FigureCanvasQTAggLocal.listen_for_remote :: {}".format(msg))
             
             try:
                 if msg == Msg.WORKING:
@@ -185,7 +187,7 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
                 self.move_x = self.move_y = None
                 
             if self.resize_width is not None:
-                logging.debug('FigureCanvasQTAggLocal.send_to_remote: {}'
+                logger.debug('FigureCanvasQTAggLocal.send_to_remote: {}'
                               .format((Msg.RESIZE_EVENT, self.resize_width, self.resize_height)))
                 msg = (Msg.RESIZE_EVENT, (self.resize_width, self.resize_height))
                 self.child_conn.send(msg)
@@ -201,7 +203,7 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
 
 
     def mousePressEvent(self, event):
-        logging.debug('FigureCanvasQTAggLocal.mousePressEvent: {}'
+        logger.debug('FigureCanvasQTAggLocal.mousePressEvent: {}'
                       .format(event.button()))
         x = event.pos().x()
         # flip y so y=0 is bottom of canvas
@@ -213,7 +215,7 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
             
             
     def mouseDoubleClickEvent(self, event):
-        logging.debug('FigureCanvasQTAggLocal.mouseDoubleClickEvent: {}'
+        logger.debug('FigureCanvasQTAggLocal.mouseDoubleClickEvent: {}'
                       .format(event.button()))
         x = event.pos().x()
         # flipy so y=0 is bottom of canvas
@@ -234,7 +236,7 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
 
 
     def mouseReleaseEvent(self, event):
-        logging.debug('FigureCanvasQTAggLocal.mouseReleaseEvent: {}'
+        logger.debug('FigureCanvasQTAggLocal.mouseReleaseEvent: {}'
                       .format(event.button()))
         
         x = event.x()
@@ -250,7 +252,7 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         w = event.size().width()
         h = event.size().height()
                 
-        logging.debug("FigureCanvasQTAggLocal.resizeEvent : {}" 
+        logger.debug("FigureCanvasQTAggLocal.resizeEvent : {}" 
                       .format((w, h)))            
         
         dpival = self.physicalDpiX()
@@ -299,7 +301,7 @@ class FigureCanvasQTAggLocal(FigureCanvasQTAgg):
         if self.buffer is None:
             return
 
-        logging.debug('FigureCanvasQtAggLocal.paintEvent: '
+        logger.debug('FigureCanvasQtAggLocal.paintEvent: '
                       .format(self, self.get_width_height()))
     
         if self.blit_buffer is None:

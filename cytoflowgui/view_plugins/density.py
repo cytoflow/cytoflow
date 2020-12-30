@@ -232,7 +232,8 @@ def _dump(view):
                 huescale = view.huescale,
                 plotfacet = view.plotfacet,
                 subset_list = view.subset_list,
-                plot_params = view.plot_params)
+                plot_params = view.plot_params,
+                current_plot = view.current_plot)
     
 @camel_registry.dumper(DensityPluginView, 'density-view', version = 1)
 def _dump_v1(view):
