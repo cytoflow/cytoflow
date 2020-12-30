@@ -13,7 +13,7 @@ jobs:
       run: |
         gawk -f package/make_environment.awk package/conda_recipes/cytoflow/meta.yaml | gawk -f package/parse_environment.awk > env_meta
         gawk -f package/parse_environment.awk environment.yml > env_mine
-        diff -u env_meta env.mine
+        diff -u env_meta env_mine
       
   test-on-linux:
     name: Run nose2 on linux runner
