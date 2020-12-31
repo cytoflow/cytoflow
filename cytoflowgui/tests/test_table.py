@@ -24,18 +24,15 @@ Created on Jan 5, 2018
 '''
 
 import os, unittest, tempfile
-
-import matplotlib
 import pandas as pd
-matplotlib.use("Agg")
 
+from cytoflowgui.tests.test_base import ImportedDataTest, params_traits_comparator
 from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.op_plugins import ChannelStatisticPlugin
 from cytoflowgui.view_plugins.table import TablePlugin
 from cytoflowgui.serialization import load_yaml, save_yaml
 from cytoflowgui.view_plugins.i_view_plugin import EmptyPlotParams
 
-from cytoflowgui.tests.test_base import ImportedDataTest, params_traits_comparator
 
 class TestTable(ImportedDataTest):
     

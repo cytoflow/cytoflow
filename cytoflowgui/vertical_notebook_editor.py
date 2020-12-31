@@ -23,14 +23,6 @@ Created on Mar 8, 2015
 @author: brian
 """
 
-# for local debugging
-if __name__ == '__main__':
-    from traits.etsconfig.api import ETSConfig
-    ETSConfig.toolkit = 'qt4'
-
-    import os
-    os.environ['TRAITS_DEBUG'] = "1"
-
 from traits.api import HasTraits
 
 from traitsui.basic_editor_factory import BasicEditorFactory

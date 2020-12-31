@@ -25,9 +25,6 @@ Created on Jan 5, 2018
 
 import os, unittest, tempfile
 
-import matplotlib
-matplotlib.use("Agg")
-
 from cytoflowgui.tests.test_base import ImportedDataTest, Base2DStatisticsViewTest, params_traits_comparator
 from cytoflowgui.view_plugins.stats_2d import Stats2DPlugin, Stats2DPlotParams, LINE_STYLES
 from cytoflowgui.view_plugins.scatterplot import SCATTERPLOT_MARKERS
@@ -85,10 +82,10 @@ class TestStats2D(ImportedDataTest, Base2DStatisticsViewTest):
         self.view = view = plugin.get_view()
         wi.views.append(view)
         wi.current_view = view
-        self.workflow.selected = wi
         
         super().setUpView()
 
+        self.workflow.selected = wi
 
     def testPlot(self):
         pass

@@ -26,9 +26,6 @@ Created on Jan 5, 2018
 import os, unittest, tempfile
 import pandas as pd
 
-import matplotlib
-matplotlib.use("Agg")
-
 from cytoflowgui.tests.test_base import ImportedDataTest
 from cytoflowgui.op_plugins.channel_stat import summary_functions
 from cytoflowgui.serialization import load_yaml, save_yaml

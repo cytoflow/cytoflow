@@ -43,7 +43,6 @@ requirements:
     - camel==0.1.2
     - yapf==0.22.0
 
-    - mock==4.0.2
     - sphinx==3.2.1
 
   run:

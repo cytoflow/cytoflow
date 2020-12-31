@@ -26,11 +26,8 @@ Created on Jan 5, 2018
 import os, unittest, tempfile
 import pandas as pd
 
-import matplotlib
-matplotlib.use("Agg")
-
-from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.tests.test_base import ImportedDataTest, params_traits_comparator
+from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.op_plugins import PCAPlugin
 from cytoflowgui.op_plugins.pca import _Channel
 from cytoflowgui.subset import CategorySubset, RangeSubset

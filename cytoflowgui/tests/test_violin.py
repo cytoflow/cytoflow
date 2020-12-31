@@ -24,11 +24,8 @@ Created on Jan 4, 2018
 '''
 import unittest, tempfile, os
 
-import matplotlib
-matplotlib.use("Agg")
-
-from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.tests.test_base import ImportedDataTest, Base1DViewTest, params_traits_comparator
+from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.op_plugins import RangePlugin
 from cytoflowgui.view_plugins.violin import ViolinPlotPlugin, ViolinPlotParams
 from cytoflowgui.serialization import save_yaml, load_yaml

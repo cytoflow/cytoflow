@@ -82,7 +82,7 @@ setup(
                         'yapf==0.22.0',
                         'fcsparser==0.2.0']
     
-                if not on_rtd else ['sphinx==2.4.4'],
+                if not on_rtd else ['sphinx==3.2.1'],
                         
     # GUI also requires PyQt4 >= 5.9.2, but it's not available via pypi and 
     # distutils.  Install it locally!

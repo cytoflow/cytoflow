@@ -23,6 +23,23 @@ Created on Jan 4, 2018
 @author: brian
 '''
 
+# select the 'null' pyface toolkit. an exception is raised if the qt toolkit
+# is subsequently imported, but that's better than trying to actually create
+# a Qt app if PyQt is accidentally imported.
+
+from traits.etsconfig.api import ETSConfig
+ETSConfig.toolkit = 'null'
+
+# use the sphinx autodoc module-mocker to mock out traitsui.qt4
+# because when it's imported, it starts a Qt Application
+
+from cytoflowgui.tests.sphinx_mock import MockFinder
+import sys; sys.meta_path.insert(0, MockFinder(['traitsui.qt4']))  
+
+# make sure that even if we're running locally, we're using the Agg output
+import matplotlib
+matplotlib.use("Agg")
+
 import unittest, multiprocessing, os, logging
 from logging.handlers import QueueHandler, QueueListener
 
@@ -34,9 +51,6 @@ from cytoflowgui.serialization import traits_eq, traits_hash
 from cytoflowgui.util import CallbackHandler
 
 def remote_main(parent_workflow_conn, parent_mpl_conn, log_q, running_event):
-    import matplotlib
-    matplotlib.use('agg')
-    
     # this should only ever be main method after a spawn() call 
     # (not fork). So we should have a fresh logger to set up.
         
@@ -47,7 +61,7 @@ def remote_main(parent_workflow_conn, parent_mpl_conn, log_q, running_event):
     # make sure that ALL messages get queued in the remote 
     # process -- we'll filter/handle then in the local
     # process
-    logging.getLogger().setLevel(logging.DEBUG) 
+    logging.getLogger().setLevel(logging.DEBUG)   
 
     running_event.set()
     RemoteWorkflow().run(parent_workflow_conn, parent_mpl_conn, headless = True)
@@ -556,10 +570,7 @@ class Base1DStatisticsViewTest(BaseStatisticsViewTest):
     
     def setUpView(self):
         super().setUpView()
-        
-        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.view.statistic = ("MeanByDoxIP", "Geom.Mean")
-        self.workflow.wi_waitfor(self.wi, 'view_error', '')
         
     # error_statistic
     def testErrorStatistic(self):
@@ -599,11 +610,8 @@ class Base2DStatisticsViewTest(BaseStatisticsViewTest):
     def setUpView(self):
         
         super().setUpView()
-        
-        self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
         self.view.xstatistic = ("MeanByDoxIP", "Geom.Mean")
         self.view.ystatistic = ("MeanByDoxIP2", "Geom.Mean")
-        self.workflow.wi_waitfor(self.wi, 'view_error', '')
 
     # both error bars
     def testErrorBars(self):

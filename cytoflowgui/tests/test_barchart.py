@@ -25,9 +25,6 @@ Created on Jan 5, 2018
 
 import os, unittest, tempfile
 
-import matplotlib
-matplotlib.use("Agg")
-
 from cytoflowgui.tests.test_base import ImportedDataTest, Base1DStatisticsViewTest, params_traits_comparator
 from cytoflowgui.view_plugins.bar_chart import BarChartPlugin, BarChartPlotParams
 from cytoflowgui.serialization import load_yaml, save_yaml

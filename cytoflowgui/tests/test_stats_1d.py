@@ -24,16 +24,14 @@ Created on Jan 5, 2018
 '''
 
 import os, unittest, tempfile
+import pandas as pd
 
-import matplotlib, pandas
-matplotlib.use("Agg")
-
+from cytoflowgui.tests.test_base import ImportedDataTest, Base1DStatisticsViewTest, params_traits_comparator
 from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.view_plugins.stats_1d import Stats1DPlugin, Stats1DPlotParams, LINE_STYLES
 from cytoflowgui.view_plugins.scatterplot import SCATTERPLOT_MARKERS
 from cytoflowgui.serialization import load_yaml, save_yaml
 
-from cytoflowgui.tests.test_base import ImportedDataTest, Base1DStatisticsViewTest, params_traits_comparator
 
 class TestStats1D(ImportedDataTest, Base1DStatisticsViewTest):
     
@@ -45,12 +43,13 @@ class TestStats1D(ImportedDataTest, Base1DStatisticsViewTest):
         self.view = view = plugin.get_view()
         wi.views.append(view)
         wi.current_view = view
-        self.workflow.selected = wi
         
         super().setUpView()
+        
+        self.workflow.selected = wi
 
     def testPlot(self):
-        pass
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
      
     def testPlotParams(self):
         super().testPlotParams()
@@ -116,7 +115,7 @@ class TestStats1D(ImportedDataTest, Base1DStatisticsViewTest):
                 os.close(fh)
 
                 save_yaml(self.view, filename, lock_versions = {WorkflowItem: 1,
-                                                                pandas.Series : 1})
+                                                                pd.Series : 1})
                 new_view = load_yaml(filename)
             finally:
                 os.unlink(filename)

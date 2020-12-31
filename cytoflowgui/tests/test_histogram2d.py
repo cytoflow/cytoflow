@@ -24,9 +24,6 @@ Created on Jan 4, 2018
 '''
 import unittest, tempfile, os
 
-import matplotlib
-matplotlib.use("Agg")
-
 from cytoflowgui.tests.test_base import ImportedDataTest, Base2DViewTest, params_traits_comparator
 from cytoflowgui.view_plugins.histogram_2d import Histogram2DPlugin, Histogram2DParams
 from cytoflowgui.serialization import save_yaml, load_yaml

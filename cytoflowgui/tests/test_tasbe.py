@@ -24,13 +24,10 @@ Created on Jan 5, 2018
 '''
 
 import os, unittest, tempfile
-
-import matplotlib
-matplotlib.use("Agg")
 import pandas as pd
 
-from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.tests.test_base import TasbeTest, params_traits_comparator
+from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.op_plugins import TasbePlugin
 from cytoflowgui.op_plugins.tasbe import _BleedthroughControl, _TranslationControl
 from cytoflowgui.subset import BoolSubset

@@ -27,11 +27,8 @@ import os, unittest, tempfile, shutil
 
 from traits.util.async_trait_wait import wait_for_condition
 
-import matplotlib
-matplotlib.use("Agg")
-
-from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.tests.test_base import WorkflowTest
+from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.tasbe_calibration import (TasbeCalibrationOp, _BleedthroughControl, _Unit)
 
 class TestTASBECalibrationMode(WorkflowTest):

@@ -24,9 +24,6 @@ Created on Jan 4, 2018
 '''
 import unittest, tempfile, os
 
-import matplotlib
-matplotlib.use("Agg")
-
 from cytoflowgui.tests.test_base import ImportedDataTest, BaseDataViewTest, params_traits_comparator
 from cytoflowgui.view_plugins.parallel_coords import ParallelCoordinatesPlugin, _Channel, ParallelCoordinatesPlotParams
 from cytoflowgui.serialization import save_yaml, load_yaml
