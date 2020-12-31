@@ -1,11 +1,5 @@
 """
-    sphinx.ext.autodoc.mock
-    ~~~~~~~~~~~~~~~~~~~~~~~
-
-    mock for autodoc
-
-    :copyright: Copyright 2007-2020 by the Sphinx team, see AUTHORS.
-    :license: BSD, see LICENSE for details.
+adapted from sphinx.ext.autodoc.mock
 """
 
 import contextlib
@@ -16,14 +10,11 @@ from importlib.machinery import ModuleSpec
 from types import FunctionType, MethodType, ModuleType
 from typing import Any, Generator, Iterator, List, Sequence, Tuple, Union
 
-from sphinx.util import logging
+import logging
 
 logger = logging.getLogger(__name__)
 
-
 class _MockObject:
-    """Used by autodoc_mock_imports."""
-
     __display_name__ = '_MockObject'
     __sphinx_mock__ = True
 
@@ -100,9 +91,7 @@ class MockLoader(Loader):
         self.finder = finder
 
     def create_module(self, spec: ModuleSpec) -> ModuleType:
-        logger.debug('[autodoc] adding a mock module as %s!', spec.name)
-#         import sys;sys.path.append(r'/home/brian/.p2/pool/plugins/org.python.pydev.core_8.1.0.202012051215/pysrc')
-#         import pydevd;pydevd.settrace()
+        logger.debug('adding a mock module as %s!', spec.name)
         self.finder.mocked_modules.append(spec.name)
         return _MockModule(spec.name)
 
