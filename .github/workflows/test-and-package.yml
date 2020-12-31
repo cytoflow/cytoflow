@@ -13,7 +13,7 @@ jobs:
       run: |
         gawk -f package/make_environment.awk package/conda_recipes/cytoflow/meta.yaml | gawk -f package/parse_environment.awk > env_meta
         gawk -f package/parse_environment.awk environment.yml > env_mine
-        diff -u env_meta env.mine
+        diff -u env_meta env_mine
       
   test-on-linux:
     name: Run nose2 on linux runner
@@ -41,7 +41,7 @@ jobs:
         
     - name: Create test environment
       run: |
-        conda create --yes --quiet -f environment.yml
+        conda env create --quiet -f environment.yml
     
     - name: Install package locally
       run: |
@@ -117,7 +117,7 @@ jobs:
         path: dist/*
 
   build-linux-wheels:
-    name: Run nose2 on linux runner
+    name: Build source dist, linux wheels
     needs: test-on-linux
     runs-on: ubuntu-18.04
     steps:
@@ -144,7 +144,7 @@ jobs:
         
     - name: Create build environment
       run: |
-        conda create --yes --quiet -f environment.yml
+        conda env create --quiet -f environment.yml
     
     - name: Install package locally
       run: |
@@ -176,7 +176,7 @@ jobs:
         path: dist/*   
         
   build-linux-oneclick:
-    name: Run nose2 on linux runner
+    name: Build linux one-click
     needs: test-on-linux
     runs-on: ubuntu-18.04
     steps:
@@ -203,7 +203,7 @@ jobs:
         
     - name: Create build environment
       run: |
-        conda create --yes --quiet -f environment.yml
+        conda env create --quiet -f environment.yml
     
     - name: Install package locally
       run: |
@@ -239,7 +239,7 @@ jobs:
         
         
   build-examples:
-    name: Run nose2 on linux runner
+    name: Zip up examples
     needs: test-on-linux
     runs-on: ubuntu-18.04
     steps:
