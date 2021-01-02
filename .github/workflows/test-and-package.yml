@@ -105,6 +105,7 @@ jobs:
         
     - name: Move conda package into the dist folder
       run: |
+        source activate base
         python package/move_conda_package.py
         
     - name: List dist
@@ -264,10 +265,12 @@ jobs:
         
     - name: Zip up examples
       run: |
+        mkdir dist
         cd docs
         zip -r cytoflow--examples-basic.zip examples-basic
         zip -r cytoflow-${{steps.tag.outputs.tag}}-examples-advanced.zip examples-advanced
         mv cytoflow-${{steps.tag.outputs.tag}}-examples-*.zip ../dist
+        cd ..
         
     - name: List dist
       run: ls dist/
