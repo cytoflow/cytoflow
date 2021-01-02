@@ -106,6 +106,7 @@ jobs:
     - name: Move conda package into the dist folder
       run: |
         source activate base
+        mkdir dist
         python package/move_conda_package.py
         
     - name: List dist
