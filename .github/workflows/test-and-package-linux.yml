@@ -1,5 +1,5 @@
-name: test-and-package
-on: [push]
+name: Test and package on Linux
+on: [workflow_dispatch]
 jobs:
   check-environment:
     name: Make sure environment.yml and meta.yaml are the same
@@ -59,7 +59,6 @@ jobs:
         OMP_NUM_THREADS: 1
       run: |
         source activate cytoflow
-        locate libgcc_s.so
         nose2 -v -c package/nose2.cfg -s cytoflow/tests
 
 #    - name: Run cytoflowgui tests

@@ -1,0 +1,241 @@
+name: Test and package on Windows
+on: [push]
+jobs:     
+  test-on-windows:
+    name: Run nose2 on Windows runner
+    runs-on: windows-2019
+    defaults:
+      run:
+        shell: bash
+        
+    steps:
+    - name: Check out repo
+      uses: actions/checkout@v2  
+      
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.6' # Version range or exact version of a Python version to use, using SemVer's version range syntax
+        architecture: 'x64' # optional x64 or x86. Defaults to x64 if not specified
+      
+    - name: Install SWIG
+      run: |
+        choco install swig --version 3.0.2 --yes --limit-output
+        
+    - name: Add conda to system path
+      run: |
+        # $CONDA is an environment variable pointing to the root of the miniconda directory
+        echo $CONDA/bin >> $GITHUB_PATH
+        
+    - name: Configure conda
+      run: |
+        conda update --yes conda
+        conda config --add channels bpteague
+        
+    - name: Create test environment
+      run: |
+        conda env create --quiet -f environment.yml
+    
+    - name: Install package locally
+      run: |
+        source activate cytoflow
+        python setup.py develop
+        
+    - name: Install nose2
+      run: |
+        source activate cytoflow
+        conda install --yes --quiet pip
+        pip install nose2
+        
+    - name: Run cytoflow tests
+      env:
+        OMP_NUM_THREADS: 1
+      run: |
+        source activate cytoflow
+        nose2 -v -c package/nose2.cfg -s cytoflow/tests
+
+#    - name: Run cytoflowgui tests
+#      env:
+#        OMP_NUM_THREADS: 1
+#      run: |
+#        source activate cytoflow
+#        nose2 -v -c package/nose2.cfg -s cytoflowgui/tests -GUI        
+
+    
+  build-windows-conda-package:
+    name: Build windows conda package
+    runs-on: windows-2019
+    defaults:
+      run:
+        shell: bash
+    needs: test-on-windows
+    steps:
+    - name: Check out repo
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+      
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.6' # Version range or exact version of a Python version to use, using SemVer's version range syntax
+        architecture: 'x64' # optional x64 or x86. Defaults to x64 if not specified
+      
+    - name: Add conda to system path
+      run: |
+        # $CONDA is an environment variable pointing to the root of the miniconda directory
+        echo $CONDA/bin >> $GITHUB_PATH
+        
+    - name: Configure conda
+      run: |
+        conda update --yes conda
+        conda config --add channels bpteague
+        conda install --yes --quiet anaconda-client conda-build
+        
+    - name: Build conda package
+      run: |
+        conda render package/conda_recipes/cytoflow
+        conda build package/conda_recipes/cytoflow
+        
+        
+    - name: Move conda package into the dist folder
+      run: |
+        source activate base
+        mkdir dist
+        python package/move_conda_package.py
+        
+    - name: List dist
+      run: ls dist/
+      
+    - name: Save the contents of the dist/ folder as artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: windows-conda-package
+        retention-days: 5
+        path: dist/*
+
+  build-windows-wheels:
+    name: Build source dist, linux wheels
+    needs: test-on-windows
+    runs-on: windows-2019
+    defaults:
+      run:
+        shell: bash
+    steps:
+    - name: Check out repo
+      uses: actions/checkout@v2  
+      with:
+        fetch-depth: 0
+      
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.6' # Version range or exact version of a Python version to use, using SemVer's version range syntax
+        architecture: 'x64' # optional x64 or x86. Defaults to x64 if not specified
+      
+    - name: Add conda to system path
+      run: |
+        # $CONDA is an environment variable pointing to the root of the miniconda directory
+        echo $CONDA/bin >> $GITHUB_PATH
+        
+    - name: Configure conda
+      run: |
+        conda update --yes conda
+        conda config --add channels bpteague
+        
+    - name: Create build environment
+      run: |
+        conda env create --quiet -f environment.yml
+    
+    - name: Install package locally
+      run: |
+        source activate cytoflow
+        python setup.py develop
+        
+    - name: Build wheel
+      run: |
+        source activate cytoflow
+        python setup.py bdist_wheel
+        
+    - name: Move C++ extensions into the dist folder
+      run: |
+        cp `find build | grep "\.pyd$"` dist/
+        
+    - name: List dist
+      run: ls dist/
+      
+    - name: Save the contents of the dist/ folder as artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: windows-wheels
+        retention-days: 5
+        path: dist/*   
+        
+  build-windows-oneclick:
+    name: Build Windows one-click
+    needs: test-on-windows
+    runs-on: windows-2019
+    defaults:
+      run:
+        shell: bash
+    steps:
+    - name: Check out repo
+      uses: actions/checkout@v2  
+      with:
+        fetch-depth: 0
+      
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.6' # Version range or exact version of a Python version to use, using SemVer's version range syntax
+        architecture: 'x64' # optional x64 or x86. Defaults to x64 if not specified
+      
+    - name: Add conda to system path
+      run: |
+        # $CONDA is an environment variable pointing to the root of the miniconda directory
+        echo $CONDA/bin >> $GITHUB_PATH
+        
+    - name: Configure conda
+      run: |
+        conda update --yes conda
+        conda config --add channels bpteague
+        
+    - name: Create build environment
+      run: |
+        conda env create --quiet -f environment.yml
+    
+    - name: Install package locally
+      run: |
+        source activate cytoflow
+        python setup.py develop
+        
+    - name: Install packaging deps
+      run: |
+        source activate cytoflow
+        conda install --yes --quiet 'sphinx==3.2.1'
+        pip install "pyinstaller==3.6"
+        
+    - name: Build embedded help docs
+      run: |
+        source activate cytoflow
+        python setup.py build_sphinx -b embedded_help
+        
+    - name: Build GUI binary
+      run: |
+        source activate cytoflow
+        python package/pyinstaller-local.py package/pyinstaller.spec
+        
+    - name: Build installer
+      run: |
+        "C:\Program Files (x86)\NSIS\makensis.exe" \/NOCD packaging/installer.nsis
+        
+    - name: List dist
+      run: ls dist/
+      
+    - name: Save the contents of the dist/ folder as artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: windows-oneclick
+        retention-days: 5
+        path: dist/*
+
