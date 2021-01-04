@@ -51,7 +51,7 @@ jobs:
   build-macos-conda-package:
     name: Build MacOS conda package
     runs-on: macos-10.15
-    needs: test-on-linux
+    needs: test-on-macos
     defaults:
       run:
         shell: bash -l {0}
@@ -100,8 +100,8 @@ jobs:
         path: dist/*
 
   build-macos-wheels:
-    name: Build source dist, linux wheels
-    needs: test-on-linux
+    name: Build MacOS wheels
+    needs: test-on-macos
     runs-on: macos-10.15
     defaults:
       run:
@@ -128,10 +128,6 @@ jobs:
     - name: Install package locally
       run: |
         python setup.py develop
-        
-    - name: Build source dist
-      run: |
-        python setup.py sdist
         
     - name: Build wheel
       run: |
