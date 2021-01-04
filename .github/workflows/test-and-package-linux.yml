@@ -34,7 +34,6 @@ jobs:
         auto-activate-base: false
         activate-environment: cytoflow
         environment-file: environment.yml
-        channels: bpteague
     
     - name: Install package locally
       run: |
