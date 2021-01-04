@@ -24,6 +24,7 @@ jobs:
     - name: Install SWIG
       run: |
         brew install swig@3
+        echo "/usr/local/opt/swig@3/bin" >> $GITHUB_PATH
     
     - name: Install package locally
       run: |
@@ -73,6 +74,7 @@ jobs:
     - name: Install SWIG
       run: |
         brew install swig@3
+        echo "/usr/local/opt/swig@3/bin" >> $GITHUB_PATH
                 
     - name: Configure conda
       run: |
@@ -124,6 +126,7 @@ jobs:
     - name: Install SWIG
       run: |
         brew install swig@3
+        echo "/usr/local/opt/swig@3/bin" >> $GITHUB_PATH
             
     - name: Install package locally
       run: |
@@ -172,6 +175,7 @@ jobs:
     - name: Install SWIG
       run: |
         brew install swig@3
+        echo "/usr/local/opt/swig@3/bin" >> $GITHUB_PATH
             
     - name: Install package locally
       run: |
