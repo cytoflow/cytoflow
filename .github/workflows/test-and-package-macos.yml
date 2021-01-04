@@ -24,7 +24,6 @@ jobs:
     - name: Install SWIG
       run: |
         brew install swig@3
-        brew install rename
     
     - name: Install package locally
       run: |
@@ -71,6 +70,10 @@ jobs:
         activate-environment: cytoflow
         environment-file: environment.yml
         
+    - name: Install SWIG
+      run: |
+        brew install swig@3
+                
     - name: Configure conda
       run: |
         conda install --yes --quiet anaconda-client conda-build
@@ -117,7 +120,11 @@ jobs:
         auto-activate-base: false
         activate-environment: cytoflow
         environment-file: environment.yml
-    
+        
+    - name: Install SWIG
+      run: |
+        brew install swig@3
+            
     - name: Install package locally
       run: |
         python setup.py develop
@@ -165,7 +172,11 @@ jobs:
         auto-activate-base: false
         activate-environment: cytoflow
         environment-file: environment.yml
-    
+        
+    - name: Install SWIG
+      run: |
+        brew install swig@3
+            
     - name: Install package locally
       run: |
         python setup.py develop
