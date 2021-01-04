@@ -1,5 +1,5 @@
 name: Test and package on Linux
-on: [workflow_dispatch]
+on: [push]
 jobs:
   check-environment:
     name: Make sure environment.yml and meta.yaml are the same
