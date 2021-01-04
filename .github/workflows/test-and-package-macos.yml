@@ -1,0 +1,194 @@
+name: Test and package on MacOS
+on: [push]
+jobs:
+      
+  test-on-macos:
+    name: Run nose2 on MacOS runner
+    runs-on: macos-10.15
+    defaults:
+      run:
+        shell: bash -l {0}
+    steps:
+    - name: Check out repo
+      uses: actions/checkout@v2  
+      
+    - name: Setup Miniconda
+      uses: conda-incubator/setup-miniconda@v2.0.1
+      with:
+        python-version: '3.6' # Version range or exact version of a Python version to use, using SemVer's version range syntax
+        auto-update-conda: true
+        auto-activate-base: false
+        activate-environment: cytoflow
+        environment-file: environment.yml
+        
+    - name: Install SWIG
+      run: |
+        brew install swig@3
+        brew install rename
+    
+    - name: Install package locally
+      run: |
+        python setup.py develop
+        
+    - name: Install nose2
+      run: |
+        conda install --yes --quiet pip
+        pip install nose2
+        
+    - name: Run cytoflow tests
+      env:
+        OMP_NUM_THREADS: 1
+      run: |
+        nose2 -v -c package/nose2.cfg -s cytoflow/tests
+
+#    - name: Run cytoflowgui tests
+#      env:
+#        OMP_NUM_THREADS: 1
+#      run: |
+#        source activate cytoflow
+#        nose2 -v -c package/nose2.cfg -s cytoflowgui/tests -GUI        
+
+    
+  build-macos-conda-package:
+    name: Build MacOS conda package
+    runs-on: macos-10.15
+    needs: test-on-linux
+    defaults:
+      run:
+        shell: bash -l {0}
+    steps:
+    - name: Check out repo
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+      
+    - name: Setup Miniconda
+      uses: conda-incubator/setup-miniconda@v2.0.1
+      with:
+        python-version: '3.6' # Version range or exact version of a Python version to use, using SemVer's version range syntax
+        auto-update-conda: true
+        auto-activate-base: false
+        activate-environment: cytoflow
+        environment-file: environment.yml
+        
+    - name: Configure conda
+      run: |
+        conda install --yes --quiet anaconda-client conda-build
+        
+    - name: Build conda package
+      run: |
+        conda render package/conda_recipes/cytoflow
+        conda build package/conda_recipes/cytoflow
+        
+        
+    - name: Move conda package into the dist folder
+      run: |
+        mkdir dist
+        python package/move_conda_package.py
+        
+    - name: List dist
+      run: ls dist/
+      
+    - name: Save the contents of the dist/ folder as artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: macos-conda-package
+        retention-days: 5
+        path: dist/*
+
+  build-macos-wheels:
+    name: Build source dist, linux wheels
+    needs: test-on-linux
+    runs-on: macos-10.15
+    defaults:
+      run:
+        shell: bash -l {0}
+    steps:
+    - name: Check out repo
+      uses: actions/checkout@v2  
+      with:
+        fetch-depth: 0
+      
+    - name: Setup Miniconda
+      uses: conda-incubator/setup-miniconda@v2.0.1
+      with:
+        python-version: '3.6' # Version range or exact version of a Python version to use, using SemVer's version range syntax
+        auto-update-conda: true
+        auto-activate-base: false
+        activate-environment: cytoflow
+        environment-file: environment.yml
+    
+    - name: Install package locally
+      run: |
+        python setup.py develop
+        
+    - name: Build source dist
+      run: |
+        python setup.py sdist
+        
+    - name: Build wheel
+      run: |
+        python setup.py bdist_wheel
+        
+    - name: Move C++ extensions into the dist folder
+      run: |
+        cp `find build | grep "\.so$"` dist/
+        
+    - name: List dist
+      run: ls dist/
+      
+    - name: Save the contents of the dist/ folder as artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: macos-wheels
+        retention-days: 5
+        path: dist/*   
+        
+  build-macos-oneclick:
+    name: Build macos one-click
+    needs: test-on-macos
+    runs-on: macos-10.15
+    defaults:
+      run:
+        shell: bash -l {0}
+    steps:
+    - name: Check out repo
+      uses: actions/checkout@v2  
+      with:
+        fetch-depth: 0
+      
+    - name: Setup Miniconda
+      uses: conda-incubator/setup-miniconda@v2.0.1
+      with:
+        python-version: '3.6' # Version range or exact version of a Python version to use, using SemVer's version range syntax
+        auto-update-conda: true
+        auto-activate-base: false
+        activate-environment: cytoflow
+        environment-file: environment.yml
+    
+    - name: Install package locally
+      run: |
+        python setup.py develop
+        
+    - name: Install packaging deps
+      run: |
+        conda install --yes --quiet 'sphinx==3.2.1'
+        pip install "pyinstaller==3.6"
+        
+    - name: Build embedded help docs
+      run: |
+        python setup.py build_sphinx -b embedded_help
+        
+    - name: Build GUI binary
+      run: |
+        python package/pyinstaller-local.py package/pyinstaller.spec
+        
+    - name: List dist
+      run: ls dist/
+      
+    - name: Save the contents of the dist/ folder as artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: macos-oneclick
+        retention-days: 5
+        path: dist/*
