@@ -19,6 +19,9 @@ jobs:
     name: Run nose2 on linux runner
     needs: check-environment
     runs-on: ubuntu-18.04
+    defaults:
+      run:
+        shell: bash -l {0}
     steps:
     - name: Check out repo
       uses: actions/checkout@v2  
@@ -28,16 +31,10 @@ jobs:
       with:
         python-version: '3.6' # Version range or exact version of a Python version to use, using SemVer's version range syntax
         auto-update-conda: true
+        auto-activate-base: false
         activate-environment: cytoflow
         environment-file: environment.yml
-        
-    - name: Configure conda
-      run: |
-        conda config --add channels bpteague
-        
-    - name: Create test environment
-      run: |
-        conda env create --quiet -f environment.yml
+        channels: bpteague
     
     - name: Install package locally
       run: |
