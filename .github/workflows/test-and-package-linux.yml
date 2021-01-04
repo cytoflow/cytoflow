@@ -62,27 +62,26 @@ jobs:
     name: Build linux conda package
     runs-on: ubuntu-18.04
     needs: test-on-linux
+    defaults:
+      run:
+        shell: bash -l {0}
     steps:
     - name: Check out repo
       uses: actions/checkout@v2
       with:
         fetch-depth: 0
       
-    - name: Set up Python
-      uses: actions/setup-python@v2
+    - name: Setup Miniconda
+      uses: conda-incubator/setup-miniconda@v2.0.1
       with:
         python-version: '3.6' # Version range or exact version of a Python version to use, using SemVer's version range syntax
-        architecture: 'x64' # optional x64 or x86. Defaults to x64 if not specified
-      
-    - name: Add conda to system path
-      run: |
-        # $CONDA is an environment variable pointing to the root of the miniconda directory
-        echo $CONDA/bin >> $GITHUB_PATH
+        auto-update-conda: true
+        auto-activate-base: false
+        activate-environment: cytoflow
+        environment-file: environment.yml
         
     - name: Configure conda
       run: |
-        conda update --yes conda
-        conda config --add channels bpteague
         conda install --yes --quiet anaconda-client conda-build
         
     - name: Build conda package
@@ -93,7 +92,6 @@ jobs:
         
     - name: Move conda package into the dist folder
       run: |
-        source activate base
         mkdir dist
         python package/move_conda_package.py
         
@@ -111,45 +109,34 @@ jobs:
     name: Build source dist, linux wheels
     needs: test-on-linux
     runs-on: ubuntu-18.04
+    defaults:
+      run:
+        shell: bash -l {0}
     steps:
     - name: Check out repo
       uses: actions/checkout@v2  
       with:
         fetch-depth: 0
       
-    - name: Set up Python
-      uses: actions/setup-python@v2
+    - name: Setup Miniconda
+      uses: conda-incubator/setup-miniconda@v2.0.1
       with:
         python-version: '3.6' # Version range or exact version of a Python version to use, using SemVer's version range syntax
-        architecture: 'x64' # optional x64 or x86. Defaults to x64 if not specified
-      
-    - name: Add conda to system path
-      run: |
-        # $CONDA is an environment variable pointing to the root of the miniconda directory
-        echo $CONDA/bin >> $GITHUB_PATH
-        
-    - name: Configure conda
-      run: |
-        conda update --yes conda
-        conda config --add channels bpteague
-        
-    - name: Create build environment
-      run: |
-        conda env create --quiet -f environment.yml
+        auto-update-conda: true
+        auto-activate-base: false
+        activate-environment: cytoflow
+        environment-file: environment.yml
     
     - name: Install package locally
       run: |
-        source activate cytoflow
         python setup.py develop
         
     - name: Build source dist
       run: |
-        source activate cytoflow
         python setup.py sdist
         
     - name: Build wheel
       run: |
-        source activate cytoflow
         python setup.py bdist_wheel
         
     - name: Move C++ extensions into the dist folder
@@ -170,51 +157,39 @@ jobs:
     name: Build linux one-click
     needs: test-on-linux
     runs-on: ubuntu-18.04
+    defaults:
+      run:
+        shell: bash -l {0}
     steps:
     - name: Check out repo
       uses: actions/checkout@v2  
       with:
         fetch-depth: 0
       
-    - name: Set up Python
-      uses: actions/setup-python@v2
+    - name: Setup Miniconda
+      uses: conda-incubator/setup-miniconda@v2.0.1
       with:
         python-version: '3.6' # Version range or exact version of a Python version to use, using SemVer's version range syntax
-        architecture: 'x64' # optional x64 or x86. Defaults to x64 if not specified
-      
-    - name: Add conda to system path
-      run: |
-        # $CONDA is an environment variable pointing to the root of the miniconda directory
-        echo $CONDA/bin >> $GITHUB_PATH
-        
-    - name: Configure conda
-      run: |
-        conda update --yes conda
-        conda config --add channels bpteague
-        
-    - name: Create build environment
-      run: |
-        conda env create --quiet -f environment.yml
+        auto-update-conda: true
+        auto-activate-base: false
+        activate-environment: cytoflow
+        environment-file: environment.yml
     
     - name: Install package locally
       run: |
-        source activate cytoflow
         python setup.py develop
         
     - name: Install packaging deps
       run: |
-        source activate cytoflow
         conda install --yes --quiet 'sphinx==3.2.1'
         pip install "pyinstaller==3.6"
         
     - name: Build embedded help docs
       run: |
-        source activate cytoflow
         python setup.py build_sphinx -b embedded_help
         
     - name: Build GUI binary
       run: |
-        source activate cytoflow
         python package/pyinstaller-local.py package/pyinstaller.spec
         
     - name: List dist
@@ -226,7 +201,6 @@ jobs:
         name: linux-oneclick
         retention-days: 5
         path: dist/*
-        
         
         
   build-examples:
