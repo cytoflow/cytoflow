@@ -43,7 +43,7 @@ requirements:
     - camel==0.1.2
     - yapf==0.22.0
 
-    - sphinx==3.2.1
+    - sphinx==3.4.1
 
   run:
     - python==3.6.12
