@@ -23,20 +23,16 @@ jobs:
     - name: Check out repo
       uses: actions/checkout@v2  
       
-    - name: Set up Python
-      uses: actions/setup-python@v2
+    - name: Setup Miniconda
+      uses: conda-incubator/setup-miniconda@v2.0.1
       with:
         python-version: '3.6' # Version range or exact version of a Python version to use, using SemVer's version range syntax
-        architecture: 'x64' # optional x64 or x86. Defaults to x64 if not specified
-      
-    - name: Add conda to system path
-      run: |
-        # $CONDA is an environment variable pointing to the root of the miniconda directory
-        echo $CONDA/bin >> $GITHUB_PATH
+        auto-update-conda: true
+        activate-environment: cytoflow
+        environment-file: environment.yml
         
     - name: Configure conda
       run: |
-        conda update --yes conda
         conda config --add channels bpteague
         
     - name: Create test environment
@@ -45,12 +41,10 @@ jobs:
     
     - name: Install package locally
       run: |
-        source activate cytoflow
         python setup.py develop
         
     - name: Install nose2
       run: |
-        source activate cytoflow
         conda install --yes --quiet pip
         pip install nose2
         
@@ -58,7 +52,6 @@ jobs:
       env:
         OMP_NUM_THREADS: 1
       run: |
-        source activate cytoflow
         nose2 -v -c package/nose2.cfg -s cytoflow/tests
 
 #    - name: Run cytoflowgui tests
