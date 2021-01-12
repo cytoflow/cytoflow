@@ -41,7 +41,6 @@ jobs:
         
     - name: Install nose2
       run: |
-        conda install --yes --quiet pip
         pip install nose2
         
     - name: Run cytoflow tests
@@ -55,7 +54,15 @@ jobs:
 #        OMP_NUM_THREADS: 1
 #      run: |
 #        source activate cytoflow
-#        nose2 -v -c package/nose2.cfg -s cytoflowgui/tests -GUI        
+#        nose2 -v -c package/nose2.cfg -s cytoflowgui/tests -GUI    
+
+    - name: GUI smoketest
+      env:
+        DISPLAY=:99.0
+      run: |
+        /etc/init.d/xvfb start
+        sleep 3    
+        python cytoflowgui/run.py cytoflowgui/tests/startup-test.flow
 
     
   build-linux-conda-package:
@@ -82,7 +89,7 @@ jobs:
         
     - name: Configure conda
       run: |
-        conda install --yes --quiet anaconda-client conda-build
+        conda install -n cytoflow --yes --quiet anaconda-client conda-build
         
     - name: Build conda package
       run: |
@@ -181,7 +188,7 @@ jobs:
         
     - name: Install packaging deps
       run: |
-        conda install --yes --quiet 'sphinx==3.4.3'
+        conda install -n cytoflow --yes --quiet 'sphinx==3.4.3'
         pip install "pyinstaller==4.1"
         
     - name: Build embedded help docs
@@ -190,7 +197,15 @@ jobs:
         
     - name: Build GUI binary
       run: |
-        python package/pyinstaller-local.py package/pyinstaller.spec
+        pyinstaller package/pyinstaller.spec
+        
+    - name: GUI binary smoketest
+      env:
+        DISPLAY=:99.0
+      run: |
+        /etc/init.d/xvfb start
+        sleep 3
+        dist/cytoflow/cytoflowgui ../../cytoflowgui/tests/startup-test.flow
         
     - name: List dist
       run: ls dist/
