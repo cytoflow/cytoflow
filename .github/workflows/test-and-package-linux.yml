@@ -58,7 +58,8 @@ jobs:
 
     - name: GUI smoketest
       run: |  
-        xvfb-run python cytoflowgui/run.py cytoflowgui/tests/startup-test.flow
+        python --version
+        timeout -k 10 60s xvfb-run python cytoflowgui/run.py cytoflowgui/tests/startup-test.flow
 
     
   build-linux-conda-package:
