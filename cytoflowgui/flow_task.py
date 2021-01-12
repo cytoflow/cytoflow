@@ -46,8 +46,6 @@ from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.util import DefaultFileDialog
 from cytoflowgui.serialization import save_yaml, load_yaml, save_notebook
 
-from cytoflowgui.mailto import mailto
-
 class FlowTask(Task):
     """
     classdocs
@@ -414,17 +412,15 @@ class FlowTask(Task):
         log = str(self._get_package_versions()) + "\n" + self.application.application_log.getvalue()
         
         msg = "The best way to report a problem is send an application log to " \
-              "the developer.  You can do so by either sending me an email " \
-              "with the log in it, or saving the log to a file and filing a " \
+              "the developers.  If you click 'Yes' below, you will be given then " \
+              "opportunity to save the log to a file and then file a " \
               "new issue on GitHub at " \
               "https://github.com/bpteague/cytoflow/issues/new" 
         
         dialog = ConfirmationDialog(message = msg,
-                                    informative = "Which would you like to do?",
-                                    yes_label = "Send an email...",
-                                    no_label = "Save to a file...")
+                                    informative = "Would you like to report an issue to the developers?")
                 
-        if dialog.open() == NO:
+        if dialog.open() == YES:
             dialog = DefaultFileDialog(parent = self.window.control,
                                        action = 'save as', 
                                        default_suffix = "log",
@@ -438,38 +434,6 @@ class FlowTask(Task):
                 webbrowser.open_new_tab("https://github.com/bpteague/cytoflow/issues/new")
                   
             return
-        
-        information(None, "I'll now try to open your email client and create a "
-                    "new message to the developer.  Debugging logs are "
-                    "attached.  Please fill out the template bug report and " 
-                    "send -- thank you for reporting a bug!")
-
-        log = self.application.application_log.getvalue()
-        
-        versions = ["{0} {1}".format(key, value) for key, value in self._get_package_versions().items()]
-
-        body = """
-Thank you for your bug report!  Please fill out the following template.
-
-PLATFORM (Mac, PC, Linux, other):
-
-OPERATING SYSTEM (eg OSX 10.7, Windows 8.1):
-
-SEVERITY (Critical? Major? Minor? Enhancement?):
-
-DESCRIPTION:
-  - What were you trying to do?
-  - What happened?
-  - What did you expect to happen?
-  
-PACKAGE VERSIONS: {0}
-
-DEBUG LOG: {1}
-""".format(versions, log)
-
-        mailto("bpteague@gmail.com", 
-               subject = "Cytoflow bug report",
-               body = body)
     
     def _get_package_versions(self):
     
