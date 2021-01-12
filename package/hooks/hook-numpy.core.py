@@ -46,10 +46,11 @@ if os.path.isdir(lib_dir):
         logger.info("MKL libraries found when importing numpy. Adding MKL to binaries")
         binaries += [(os.path.join(lib_dir, f), '.') for f in dlls_mkl]
 
+    #### BT update: also add OpenMP libraries. This should be fixed in the next
+    #### version of PyInstaller, which is much more conda-aware
     re_iomplib = re.compile(r'^(?:lib)?iomp\w+\.(?:dll|so|dylib)', re.IGNORECASE)
     dlls_mkl = [f for f in os.listdir(lib_dir) if re_iomplib.match(f)]
     if dlls_mkl:
         logger = logging.getLogger(__name__)
         logger.info("OpenMP libraries found when importing numpy. Adding OpenMP to binaries")
         binaries += [(os.path.join(lib_dir, f), '.') for f in dlls_mkl]
-

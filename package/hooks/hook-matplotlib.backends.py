@@ -70,6 +70,7 @@ except Exception:
     # For safety, attempt to import each backend in a unique subprocess.
     for backend_name in backend_names:
         if backend_name not in KEEP:
+            logger.info('  Matplotlib backend "%s": not tested' % backend_name)
             continue
         
         module_name = 'matplotlib.backends.backend_%s' % backend_name.lower()
