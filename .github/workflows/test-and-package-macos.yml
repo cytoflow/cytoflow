@@ -32,7 +32,6 @@ jobs:
         
     - name: Install nose2
       run: |
-        conda install --yes --quiet pip
         pip install nose2
         
     - name: Run cytoflow tests
@@ -78,7 +77,7 @@ jobs:
                 
     - name: Configure conda
       run: |
-        conda install --yes --quiet anaconda-client conda-build
+        conda install -n cytoflow --yes --quiet anaconda-client conda-build
         
     - name: Build conda package
       run: |
@@ -183,7 +182,7 @@ jobs:
         
     - name: Install packaging deps
       run: |
-        conda install --yes --quiet 'sphinx==3.4.3'
+        conda install -n cytoflow --yes --quiet 'sphinx==3.4.3'
         pip install "pyinstaller==4.1"
         
     - name: Build embedded help docs
