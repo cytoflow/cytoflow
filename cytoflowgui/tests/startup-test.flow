@@ -1,0 +1,16 @@
+- !workflow-item;2
+  channels: []
+  conditions: {}
+  current_view: null
+  default_view: null
+  deletable: false
+  metadata: 
+    startup_test: true
+  operation: !import;3
+    channels_list: []
+    conditions: {}
+    events: null
+    name_metadata: null
+    tubes: []
+  statistics: {}
+  views: []

@@ -23,7 +23,7 @@ Created on Feb 11, 2015
 @author: brian
 """
 
-import os.path, webbrowser, pathlib
+import os.path, webbrowser, pathlib, sys
 
 import yaml.parser
 
@@ -276,6 +276,15 @@ class FlowTask(Task):
                   .format(e.__class__.__name__, path, str(e)))
             return
         
+        # are we just running a smoke test?
+        if 'startup_test' in new_workflow[0].metadata:
+            def quit_app(app):
+                app.exit(force = True)
+                
+            from pyface.timer.api import do_after
+            do_after(5*1000, quit_app, self.application)
+            return
+            
         # check that the FCS files are all there
         
         wi = new_workflow[0]
@@ -337,12 +346,15 @@ class FlowTask(Task):
         for wi in self.model.workflow:
             wi.lock.release()
             
-        ret = confirm(parent = None,
-                      message = "Do you want to execute the workflow now?",
-                      title = "Run workflow?")
-        
-        if ret == YES:
+        if self.model.debug:
             self.model.run_all()
+        else:
+            ret = confirm(parent = None,
+                          message = "Do you want to execute the workflow now?",
+                          title = "Run workflow?")
+            
+            if ret == YES:
+                self.model.run_all()
 
         
     def on_save(self):
@@ -435,9 +447,7 @@ class FlowTask(Task):
                   
             return
     
-    def _get_package_versions(self):
-    
-        import sys
+    def _get_package_versions(self):    
         from cytoflow import __version__ as cf_version
         from fcsparser import __version__ as fcs_version
         from pandas import __version__ as pd_version
