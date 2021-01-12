@@ -57,12 +57,8 @@ jobs:
 #        nose2 -v -c package/nose2.cfg -s cytoflowgui/tests -GUI    
 
     - name: GUI smoketest
-      env:
-        DISPLAY: ':99.0'
-      run: |
-        /etc/init.d/xvfb start
-        sleep 3    
-        python cytoflowgui/run.py cytoflowgui/tests/startup-test.flow
+      run: |  
+        xvfb-run python cytoflowgui/run.py cytoflowgui/tests/startup-test.flow
 
     
   build-linux-conda-package:
@@ -200,12 +196,8 @@ jobs:
         pyinstaller package/pyinstaller.spec
         
     - name: GUI binary smoketest
-      env:
-        DISPLAY: ':99.0'
       run: |
-        /etc/init.d/xvfb start
-        sleep 3
-        dist/cytoflow/cytoflowgui ../../cytoflowgui/tests/startup-test.flow
+        xvfb-run dist/cytoflow/cytoflowgui ../../cytoflowgui/tests/startup-test.flow
         
     - name: List dist
       run: ls dist/
