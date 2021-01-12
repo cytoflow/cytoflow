@@ -109,11 +109,6 @@ def run_gui():
 
     remote_process, remote_connection, queue_listener = start_remote_process()
     
-    # Make matplotlib to use our backend
-    
-    #import matplotlib
-    #matplotlib.use('module://cytoflowgui.matplotlib_backend_local')
-    
     # getting real tired of the matplotlib deprecation warnings
     import warnings
     warnings.filterwarnings('ignore', '.*is deprecated and replaced with.*')
@@ -240,6 +235,7 @@ def run_gui():
     QtGui.QApplication.instance().setStyle(QtGui.QStyleFactory.create('Fusion'))
 
     app.run()
+
     remote_process.join()
     queue_listener.stop()
     logging.shutdown()
