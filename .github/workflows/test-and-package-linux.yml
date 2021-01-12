@@ -58,7 +58,7 @@ jobs:
 
     - name: GUI smoketest
       env:
-        DISPLAY=:99.0
+        DISPLAY: ':99.0'
       run: |
         /etc/init.d/xvfb start
         sleep 3    
@@ -201,7 +201,7 @@ jobs:
         
     - name: GUI binary smoketest
       env:
-        DISPLAY=:99.0
+        DISPLAY: ':99.0'
       run: |
         /etc/init.d/xvfb start
         sleep 3
