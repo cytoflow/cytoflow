@@ -37,16 +37,19 @@ jobs:
     
     - name: Install package locally
       run: |
+        source activate cytoflow
         python setup.py develop
         
     - name: Install nose2
       run: |
+        source activate cytoflow
         pip install nose2
         
     - name: Run cytoflow tests
       env:
         OMP_NUM_THREADS: 1
       run: |
+        source activate cytoflow
         nose2 -v -c package/nose2.cfg -s cytoflow/tests
 
 #    - name: Run cytoflowgui tests
@@ -56,10 +59,10 @@ jobs:
 #        source activate cytoflow
 #        nose2 -v -c package/nose2.cfg -s cytoflowgui/tests -GUI    
 
-    - name: GUI smoketest
-      run: |  
-        python --version
-        timeout -k 10 60s xvfb-run python cytoflowgui/run.py cytoflowgui/tests/startup-test.flow
+#    - name: GUI smoketest
+#      run: |  
+#        python --version
+#        timeout -k 10 60s xvfb-run python cytoflowgui/run.py cytoflowgui/tests/startup-test.flow
 
     
   build-linux-conda-package:
@@ -86,10 +89,12 @@ jobs:
         
     - name: Configure conda
       run: |
-        conda install -n cytoflow --yes --quiet anaconda-client conda-build
+        source activate cytoflow
+        conda install --yes --quiet anaconda-client conda-build
         
     - name: Build conda package
       run: |
+        source activate cytoflow
         conda render package/conda_recipes/cytoflow
         conda build package/conda_recipes/cytoflow
         
@@ -106,7 +111,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: linux-conda-package
-        retention-days: 5
+        retention-days: 1
         path: dist/*
 
   build-linux-wheels:
@@ -133,14 +138,17 @@ jobs:
     
     - name: Install package locally
       run: |
+        source activate cytoflow
         python setup.py develop
         
     - name: Build source dist
       run: |
+        source activate cytoflow
         python setup.py sdist
         
     - name: Build wheel
       run: |
+        source activate cytoflow
         python setup.py bdist_wheel
         
     - name: Move C++ extensions into the dist folder
@@ -154,7 +162,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: linux-wheels
-        retention-days: 5
+        retention-days: 1
         path: dist/*   
         
   build-linux-oneclick:
@@ -181,23 +189,28 @@ jobs:
     
     - name: Install package locally
       run: |
+        source activate cytoflow
         python setup.py develop
         
     - name: Install packaging deps
       run: |
-        conda install -n cytoflow --yes --quiet 'sphinx==3.4.3'
+        source activate cytoflow
+        conda install --yes --quiet 'sphinx==3.4.3'
         pip install "pyinstaller==4.1"
         
     - name: Build embedded help docs
       run: |
+        source activate cytoflow
         python setup.py build_sphinx -b embedded_help
         
     - name: Build GUI binary
       run: |
+        source activate cytoflow
         pyinstaller package/pyinstaller.spec
         
     - name: GUI binary smoketest
       run: |
+        source activate cytoflow
         xvfb-run dist/cytoflow/cytoflowgui ../../cytoflowgui/tests/startup-test.flow
         
     - name: List dist
@@ -207,7 +220,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: linux-oneclick
-        retention-days: 5
+        retention-days: 1
         path: dist/*
         
         
@@ -250,6 +263,6 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: examples
-        retention-days: 5
+        retention-days: 1
         path: dist/*
         
