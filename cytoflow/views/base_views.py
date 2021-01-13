@@ -879,8 +879,6 @@ class Base1DStatisticsView(BaseStatisticsView):
             raise util.CytoflowViewError('statistic', "Statistic not set")
         
         if self.statistic not in experiment.statistics:
-            import sys;sys.path.append(r'/home/brian/.p2/pool/plugins/org.python.pydev.core_8.1.0.202012051215/pysrc')
-            import pydevd;pydevd.settrace()
             raise util.CytoflowViewError('statistic',
                                          "Can't find the statistic {} in the experiment"
                                          .format(self.statistic))
