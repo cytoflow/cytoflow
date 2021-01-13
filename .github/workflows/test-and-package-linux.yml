@@ -83,7 +83,7 @@ jobs:
         
     - name: Build conda package
       run: |
-        conda deactivate cytoflow
+        conda deactivate
         conda render package/conda_recipes/cytoflow
         conda build package/conda_recipes/cytoflow
         
