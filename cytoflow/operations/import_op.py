@@ -405,9 +405,6 @@ class ImportOp(HasStrictTraits):
             tube_meta['CF_File'] = Path(tube.file).stem
                              
             experiment.metadata['fcs_metadata'][tube.file] = tube_meta
-                 
-#         import sys;sys.path.append(r'/home/brian/.p2/pool/plugins/org.python.pydev_6.1.0.201711051306/pysrc')
-#         import pydevd;pydevd.settrace()
                         
         for channel in channels:
             if self.channels and channel in self.channels:
