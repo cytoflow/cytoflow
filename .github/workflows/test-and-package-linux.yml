@@ -90,6 +90,8 @@ jobs:
     - name: Move conda package into the dist folder
       run: |
         mkdir dist
+        conda deactivate
+        conda activate base
         python package/move_conda_package.py
         
     - name: List dist
