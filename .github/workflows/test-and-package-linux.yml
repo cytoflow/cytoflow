@@ -79,10 +79,11 @@ jobs:
         
     - name: Configure conda
       run: |
-        conda install --name cytoflow --yes --quiet anaconda-client conda-build
+        conda install --name base --yes --quiet anaconda-client conda-build
         
     - name: Build conda package
       run: |
+        conda deactivate cytoflow
         conda render package/conda_recipes/cytoflow
         conda build package/conda_recipes/cytoflow
         
