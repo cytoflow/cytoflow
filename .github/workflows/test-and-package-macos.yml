@@ -15,9 +15,6 @@ jobs:
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v2.0.1
       with:
-        python-version: '3.6' # Version range or exact version of a Python version to use, using SemVer's version range syntax
-        auto-update-conda: true
-        auto-activate-base: false
         activate-environment: cytoflow
         environment-file: environment.yml
         
@@ -64,9 +61,6 @@ jobs:
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v2.0.1
       with:
-        python-version: '3.6' # Version range or exact version of a Python version to use, using SemVer's version range syntax
-        auto-update-conda: true
-        auto-activate-base: false
         activate-environment: cytoflow
         environment-file: environment.yml
         
@@ -77,13 +71,12 @@ jobs:
                 
     - name: Configure conda
       run: |
-        conda install -n cytoflow --yes --quiet anaconda-client conda-build
+        conda install --name cytoflow --yes --quiet anaconda-client conda-build
         
     - name: Build conda package
       run: |
         conda render package/conda_recipes/cytoflow
         conda build package/conda_recipes/cytoflow
-        
         
     - name: Move conda package into the dist folder
       run: |
@@ -97,7 +90,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: macos-conda-package
-        retention-days: 5
+        retention-days: 1
         path: dist/*
 
   build-macos-wheels:
@@ -116,9 +109,6 @@ jobs:
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v2.0.1
       with:
-        python-version: '3.6' # Version range or exact version of a Python version to use, using SemVer's version range syntax
-        auto-update-conda: true
-        auto-activate-base: false
         activate-environment: cytoflow
         environment-file: environment.yml
         
@@ -146,7 +136,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: macos-wheels
-        retention-days: 5
+        retention-days: 1
         path: dist/*   
         
   build-macos-oneclick:
@@ -165,9 +155,6 @@ jobs:
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v2.0.1
       with:
-        python-version: '3.6' # Version range or exact version of a Python version to use, using SemVer's version range syntax
-        auto-update-conda: true
-        auto-activate-base: false
         activate-environment: cytoflow
         environment-file: environment.yml
         
@@ -182,7 +169,7 @@ jobs:
         
     - name: Install packaging deps
       run: |
-        conda install -n cytoflow --yes --quiet 'sphinx==3.4.3'
+        conda install --name cytoflow --yes --quiet 'sphinx==3.4.3'
         pip install "pyinstaller==4.1"
         
     - name: Build embedded help docs
@@ -191,7 +178,15 @@ jobs:
         
     - name: Build GUI binary
       run: |
-        python package/pyinstaller-local.py package/pyinstaller.spec
+        pyinstaller package/pyinstaller.spec
+        
+    - name: Rename and zip Mac app
+      run: |
+        cd dist/
+        mv Cytoflow.app Cytoflow-${{steps.tag.outputs.tag}}.app
+        zip -r cytoflow-${{steps.tag.outputs.tag}}.macos.zip 
+        Cytoflow-${{steps.tag.outputs.tag}}.app/
+        rm -rf Cytoflow-${{steps.tag.outputs.tag}}.app cytoflow
         
     - name: List dist
       run: ls dist/
@@ -200,5 +195,5 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: macos-oneclick
-        retention-days: 5
+        retention-days: 1
         path: dist/*

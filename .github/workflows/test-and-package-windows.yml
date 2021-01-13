@@ -14,9 +14,6 @@ jobs:
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v2.0.1
       with:
-        python-version: '3.6' # Version range or exact version of a Python version to use, using SemVer's version range syntax
-        auto-update-conda: true
-        auto-activate-base: false
         activate-environment: cytoflow
         environment-file: environment.yml
               
@@ -62,15 +59,12 @@ jobs:
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v2.0.1
       with:
-        python-version: '3.6' # Version range or exact version of a Python version to use, using SemVer's version range syntax
-        auto-update-conda: true
-        auto-activate-base: false
         activate-environment: cytoflow
         environment-file: environment.yml
                 
     - name: Configure conda
       run: |
-        conda install -n cytoflow --yes --quiet anaconda-client conda-build
+        conda install --name cytoflow --yes --quiet anaconda-client conda-build
               
     - name: Install SWIG
       run: |
@@ -93,7 +87,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: windows-conda-package
-        retention-days: 5
+        retention-days: 1
         path: dist/*
 
   build-windows-wheels:
@@ -112,9 +106,6 @@ jobs:
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v2.0.1
       with:
-        python-version: '3.6' # Version range or exact version of a Python version to use, using SemVer's version range syntax
-        auto-update-conda: true
-        auto-activate-base: false
         activate-environment: cytoflow
         environment-file: environment.yml
     
@@ -141,7 +132,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: windows-wheels
-        retention-days: 5
+        retention-days: 1
         path: dist/*   
         
   build-windows-oneclick:
@@ -156,13 +147,22 @@ jobs:
       uses: actions/checkout@v2  
       with:
         fetch-depth: 0
+
+    - name: Query git tag
+      id: tag
+      uses: jimschubert/query-tag-action@v2
+      with:
+        skip-unshallow: true
+        abbrev: false
+        
+    - name: Show Tag
+      id: display
+      run: |
+        echo 'Output from Find Tag: ${{steps.tag.outputs.tag}}'
       
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v2.0.1
       with:
-        python-version: '3.6' # Version range or exact version of a Python version to use, using SemVer's version range syntax
-        auto-update-conda: true
-        auto-activate-base: false
         activate-environment: cytoflow
         environment-file: environment.yml
                       
@@ -176,7 +176,7 @@ jobs:
         
     - name: Install packaging deps
       run: |
-        conda install -n cytoflow --yes --quiet 'sphinx==3.4.3'
+        conda install --name cytoflow --yes --quiet 'sphinx==3.4.3'
         pip install "pyinstaller==4.1"
         
     - name: Build embedded help docs
@@ -185,11 +185,17 @@ jobs:
         
     - name: Build GUI binary
       run: |
-        python package/pyinstaller.spec
+        pyinstaller package/pyinstaller.spec
         
     - name: Build installer
       run: |
         "C:\Program Files (x86)\NSIS\makensis.exe" \/NOCD packaging/installer.nsis
+        
+    - name: Rename installer and remove remaining files
+      run: |
+        cd dist
+        mv cytoflow-installer.exe cytoflow-installer-${{steps.tag.outputs.tag}}-win-amd64.exe
+        rm -rf cytoflow
         
     - name: List dist
       run: ls dist/
@@ -198,6 +204,6 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: windows-oneclick
-        retention-days: 5
+        retention-days: 1
         path: dist/*
 
