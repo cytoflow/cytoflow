@@ -94,7 +94,7 @@ jobs:
         conda activate base
         python package/move_conda_package.py
         
-    - name: List dist
+    - name: List dist/
       run: ls dist/
       
     - name: Save the contents of the dist/ folder as artifacts
@@ -139,7 +139,7 @@ jobs:
       run: |
         cp `find build | grep "\.so$"` dist/
         
-    - name: Rename wheels
+    - name: List dist/
       run: ls dist/
       
     - name: Save the contents of the dist/ folder as artifacts
@@ -207,6 +207,9 @@ jobs:
         mv cytoflow cytoflow-${{steps.tag.outputs.tag}}
         tar -cjf cytoflow-${{steps.tag.outputs.tag}}.linux_x86-64.tar.bz2 cytoflow-${{steps.tag.outputs.tag}}
         rm -rf cytoflow-${{steps.tag.outputs.tag}}
+        
+    - name: List dist/
+      run: ls dist/
       
     - name: Save the contents of the dist/ folder as artifacts
       uses: actions/upload-artifact@v2
@@ -248,7 +251,7 @@ jobs:
         mv cytoflow-${{steps.tag.outputs.tag}}-examples-*.zip ../dist
         cd ..
         
-    - name: List dist
+    - name: List dist/
       run: ls dist/
       
     - name: Save the contents of the dist/ folder as artifacts
