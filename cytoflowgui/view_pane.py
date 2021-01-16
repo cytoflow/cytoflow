@@ -18,13 +18,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from traits.api import Instance, List, on_trait_change, Str, Dict, Bool, Tuple
+from traitsui.api import View, Item, Spring, InstanceEditor
 from pyface.tasks.api import TraitsDockPane, Task
 from pyface.action.api import ToolBarManager
 from pyface.tasks.action.api import TaskAction
 from pyface.api import ImageResource
 from pyface.qt import QtGui, QtCore
 
-from cytoflowgui.view_plugins import IViewPlugin
+from cytoflowgui.view_plugins.i_view_plugin import IViewPlugin
 from cytoflowgui.util import HintedMainWindow
     
 
@@ -57,6 +58,21 @@ class ViewDockPane(TraitsDockPane):
 
     # IN INCHES
     image_size = Tuple((0.33, 0.33))
+    
+    # a view showing the selected workflow item's current view
+    selected_view_traits = View(Item('selected',
+                                     editor = InstanceEditor(view = 'current_view_traits'),
+                                     style = 'custom',
+                                     show_label = False),
+                                Spring(),
+                                Item('apply_calls',
+                                     style = 'readonly',
+                                     visible_when = 'debug'),
+                                Item('plot_calls',
+                                     style = 'readonly',
+                                     visible_when = 'debug'),
+                                kind = 'panel',
+                                scrollable = True)
 
     # task actions associated with views
     _actions = Dict(Str, TaskAction)
@@ -100,7 +116,7 @@ class ViewDockPane(TraitsDockPane):
         window.addToolBar(QtCore.Qt.RightToolBarArea, 
                           self.toolbar.create_tool_bar(window))
         
-        self.ui = self.model.edit_traits(view = 'selected_view_traits',
+        self.ui = self.model.edit_traits(view = self.selected_view_traits,
                                          kind = 'subpanel', 
                                          parent = window)
         window.setCentralWidget(self.ui.control)
@@ -150,10 +166,15 @@ class PlotParamsPane(TraitsDockPane):
     movable = True
     visible = True
     
+    plot_params_traits = View(Item('selected',
+                                   editor = InstanceEditor(view = 'plot_params_traits'),
+                                   style = 'custom',
+                                   show_label = False))
+    
     def create_contents(self, parent):
         """ Create and return the toolkit-specific contents of the dock pane.
         """
-        self.ui = self.model.edit_traits(view = 'plot_params_traits',
+        self.ui = self.model.edit_traits(view = self.plot_params_traits,
                                          kind='subpanel', 
                                          parent=parent,
                                          scrollable = True)

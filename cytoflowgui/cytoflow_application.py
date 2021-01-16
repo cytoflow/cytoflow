@@ -25,12 +25,17 @@ Created on Mar 15, 2015
 
 import logging, io, os, pickle
 
-from cytoflowgui.workflow import Workflow
+from cytoflowgui.workflow import LocalWorkflow
 from cytoflowgui.flow_task_pane import FlowTaskPane
 from cytoflowgui.util import CallbackHandler
+from cytoflowgui.workflow_controller import WorkflowController
+from cytoflowgui.op_plugins.i_op_plugin import IOperationPlugin, OP_PLUGIN_EXT
+from cytoflowgui.view_plugins.i_view_plugin import IViewPlugin, VIEW_PLUGIN_EXT
 
 from envisage.ui.tasks.api import TasksApplication
 from envisage.ui.tasks.tasks_application import TasksApplicationState
+from envisage.api import Plugin, ExtensionPoint, contributes_to
+
 from pyface.api import error
 from pyface.tasks.api import TaskWindowLayout
 from traits.api import Bool, Instance, List, Property, Str, Any, File
@@ -76,10 +81,13 @@ class CytoflowApplication(TasksApplication):
     # local process's central model
     remote_process = Any
     remote_connection = Any
-    model = Instance(Workflow)
+    model = Instance(LocalWorkflow)
     
     # the shared task pane
     plot_pane = Instance(FlowTaskPane)
+    
+    op_plugins = ExtensionPoint(List(IOperationPlugin), OP_PLUGIN_EXT)
+    view_plugins = ExtensionPoint(List(IViewPlugin), VIEW_PLUGIN_EXT) 
             
     def run(self):
 
@@ -112,11 +120,14 @@ class CytoflowApplication(TasksApplication):
         self.on_trait_change(self.show_error, 'application_error', dispatch = 'ui')
                 
         # set up the model
-        self.model = Workflow(remote_connection = self.remote_connection,
-                              debug = self.debug)
+        self.model = LocalWorkflow(remote_connection = self.remote_connection)
+        self.handler = WorkflowController(model = self.model)
+        
+        print(self.op_plugins)
         
         # and the shared central pane
-        self.plot_pane = FlowTaskPane(model = self.model)
+        self.plot_pane = FlowTaskPane(model = self.model, 
+                                      handler = self.handler)
 
         # run the GUI
         super(CytoflowApplication, self).run()

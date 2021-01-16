@@ -18,32 +18,32 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from .i_op_plugin import (IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, 
-                         shared_op_traits)
+                          shared_op_traits)
 from .import_op import ImportPlugin
-
-# gates
-from .threshold import ThresholdPlugin
-from .range import RangePlugin
-from .range2d import Range2DPlugin
-from .polygon import PolygonPlugin
-from .quad import QuadPlugin
-
-# data-driven
-from .ratio import RatioPlugin
-from .binning import BinningPlugin
-from .gaussian_1d import GaussianMixture1DPlugin
-from .gaussian_2d import GaussianMixture2DPlugin
-from .channel_stat import ChannelStatisticPlugin
-from .xform_stat import TransformStatisticPlugin
-from .density import DensityGatePlugin
-from .flowpeaks import FlowPeaksPlugin
-from .kmeans import KMeansPlugin
-from .pca import PCAPlugin
-
-# tasbe
-from .bleedthrough_linear import BleedthroughLinearPlugin
-from .bleedthrough_piecewise import BleedthroughPiecewisePlugin
-from .bead_calibration import BeadCalibrationPlugin
-from .autofluorescence import AutofluorescencePlugin
-from .color_translation import ColorTranslationPlugin
-from .tasbe import TasbePlugin
+# 
+# # gates
+# from .threshold import ThresholdPlugin
+# from .range import RangePlugin
+# from .range2d import Range2DPlugin
+# from .polygon import PolygonPlugin
+# from .quad import QuadPlugin
+# 
+# # data-driven
+# from .ratio import RatioPlugin
+# from .binning import BinningPlugin
+# from .gaussian_1d import GaussianMixture1DPlugin
+# from .gaussian_2d import GaussianMixture2DPlugin
+# from .channel_stat import ChannelStatisticPlugin
+# from .xform_stat import TransformStatisticPlugin
+# from .density import DensityGatePlugin
+# from .flowpeaks import FlowPeaksPlugin
+# from .kmeans import KMeansPlugin
+# from .pca import PCAPlugin
+# 
+# # tasbe
+# from .bleedthrough_linear import BleedthroughLinearPlugin
+# from .bleedthrough_piecewise import BleedthroughPiecewisePlugin
+# from .bead_calibration import BeadCalibrationPlugin
+# from .autofluorescence import AutofluorescencePlugin
+# from .color_translation import ColorTranslationPlugin
+# from .tasbe import TasbePlugin

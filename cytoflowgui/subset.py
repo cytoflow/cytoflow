@@ -40,7 +40,7 @@ from traitsui.api import View, CheckListEditor, Item, HGroup
 
 from cytoflowgui.value_bounds_editor import ValuesBoundsEditor
 from cytoflowgui.vertical_list_editor import VerticalListEditor, _VerticalListEditor
-from cytoflowgui.serialization import camel_registry, traits_repr
+from cytoflowgui.workflow.serialization import camel_registry, traits_repr
 
 import cytoflow.utility as util
 

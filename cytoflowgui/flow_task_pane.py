@@ -22,18 +22,19 @@ Created on Feb 11, 2015
 @author: brian
 """
 
-import sys
-
 from traits.api import Instance, provides
+from traitsui.api import View, Item, InstanceEditor
 from traitsui.editor_factory import EditorWithListFactory
 from traitsui.qt4.enum_editor import BaseEditor as BaseEnumerationEditor
 from traitsui.qt4.constants import ErrorColor
 
-from pyface.qt import QtCore, QtGui
+from pyface.qt import QtGui
 from pyface.tasks.api import TaskPane, ITaskPane
 from pyface.api import ImageResource
 
 from cytoflowgui.matplotlib_backend_local import FigureCanvasQTAggLocal
+from cytoflowgui.workflow import LocalWorkflow
+from cytoflowgui.workflow_controller import WorkflowController
 from matplotlib.figure import Figure
 
 @provides(ITaskPane)
@@ -46,9 +47,17 @@ class FlowTaskPane(TaskPane):
     id = 'edu.mit.synbio.cytoflow.flow_task_pane'
     name = 'Cytometry Data Viewer'
     
+    model = Instance(LocalWorkflow)
+    handler = Instance(WorkflowController)
+    
     layout = Instance(QtGui.QVBoxLayout)                    # @UndefinedVariable
     canvas = Instance(FigureCanvasQTAggLocal)
     waiting_image = ImageResource('gear')
+    
+    plot_view = View(Item('selected',
+                          editor = InstanceEditor(view = 'current_plot_view'),
+                          style = 'custom',
+                          show_label = False))
         
     def create(self, parent):
         if self.canvas is not None:
@@ -59,7 +68,8 @@ class FlowTaskPane(TaskPane):
         self.control = QtGui.QWidget()                      # @UndefinedVariable
         self.control.setLayout(layout)
         
-        tabs_ui = self.model.edit_traits(view = 'plot_view',
+        tabs_ui = self.model.edit_traits(handler = self.handler,
+                                         view = 'controller.plot_view',
                                          kind = 'subpanel',
                                          parent = parent)
         self.layout.addWidget(tabs_ui.control) 

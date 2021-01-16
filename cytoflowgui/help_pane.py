@@ -24,8 +24,8 @@ from traitsui.api import View, Item, HTMLEditor
 from pyface.tasks.api import TraitsDockPane, Task
 from pyface.qt import QtGui
 
-from cytoflowgui.view_plugins import IViewPlugin
-from cytoflowgui.op_plugins import IOperationPlugin
+from cytoflowgui.view_plugins.i_view_plugin import IViewPlugin
+from cytoflowgui.op_plugins.i_op_plugin import IOperationPlugin
 from cytoflowgui.util import HintedWidget
 
 class HelpDockPane(TraitsDockPane):

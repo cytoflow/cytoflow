@@ -1,0 +1,196 @@
+- !workflow-item;2
+  channels:
+  - FITC_A
+  - FSC_A
+  - FSC_H
+  - FSC_W
+  - PerCP_Cy5_5_A
+  - SSC_A
+  - SSC_H
+  - SSC_W
+  - Time
+  conditions:
+    Dox: !pandas-series;2
+      data:
+      - 1.0
+      - 10.0
+      dtype: !numpy-dtype;1 float64
+      index: !pandas-int64index;1
+        name: null
+        values:
+        - 0
+        - 1
+    Well: !pandas-series;2
+      data:
+      - A
+      - B
+      dtype: !pandas-categorical-dtype;1
+        categories:
+        - A
+        - B
+        ordered: false
+      index: !pandas-int64index;1
+        name: null
+        values:
+        - 0
+        - 1
+  current_view: &id001 !histogram;2
+    channel: FITC_A
+    current_plot: null
+    huefacet: ''
+    huescale: linear
+    plot_params: !histogram-params;3
+      alpha: 0.5
+      col_wrap: null
+      density: false
+      despine: true
+      histtype: stepfilled
+      huelabel: ''
+      legend: true
+      lim: !!python/tuple
+      - null
+      - null
+      linestyle: solid
+      linewidth: null
+      max_quantile: 1.0
+      min_quantile: 0.001
+      num_bins: null
+      orientation: vertical
+      sharex: true
+      sharey: true
+      sns_context: paper
+      sns_style: whitegrid
+      title: ''
+      xlabel: ''
+      ylabel: ''
+    plotfacet: ''
+    scale: logicle
+    subset_list:
+    - !range-subset;1
+      high: 10.0
+      low: 1.0
+      name: Dox
+      values:
+      - 1.0
+      - 10.0
+    - !category-subset;1
+      name: Well
+      selected: []
+      values:
+      - A
+      - B
+    xfacet: ''
+    yfacet: ''
+  default_view: null
+  deletable: false
+  metadata:
+    Dox:
+      experiment: true
+      type: condition
+    FITC_A:
+      fcs_name: FITC-A
+      range: 262144.0
+      type: channel
+      voltage: '352'
+    FSC_A:
+      fcs_name: FSC-A
+      range: 262144.0
+      type: channel
+      voltage: '50'
+    FSC_H:
+      fcs_name: FSC-H
+      range: 262144.0
+      type: channel
+      voltage: '50'
+    FSC_W:
+      fcs_name: FSC-W
+      range: 262144.0
+      type: channel
+      voltage: '50'
+    PerCP_Cy5_5_A:
+      fcs_name: PerCP-Cy5-5-A
+      range: 262144.0
+      type: channel
+      voltage: '665'
+    SSC_A:
+      fcs_name: SSC-A
+      range: 262144.0
+      type: channel
+      voltage: '225'
+    SSC_H:
+      fcs_name: SSC-H
+      range: 262144.0
+      type: channel
+      voltage: '225'
+    SSC_W:
+      fcs_name: SSC-W
+      range: 262144.0
+      type: channel
+      voltage: '225'
+    Time:
+      fcs_name: Time
+      range: 262144.0
+      type: channel
+    Well:
+      experiment: true
+      type: condition
+    ignore_v: []
+    name_metadata: $PnN
+  operation: !import;3
+    channels_list:
+    - !import-channel;1
+      channel: FITC-A
+      name: FITC_A
+    - !import-channel;1
+      channel: FSC-A
+      name: FSC_A
+    - !import-channel;1
+      channel: FSC-H
+      name: FSC_H
+    - !import-channel;1
+      channel: FSC-W
+      name: FSC_W
+    - !import-channel;1
+      channel: PerCP-Cy5-5-A
+      name: PerCP_Cy5_5_A
+    - !import-channel;1
+      channel: SSC-A
+      name: SSC_A
+    - !import-channel;1
+      channel: SSC-H
+      name: SSC_H
+    - !import-channel;1
+      channel: SSC-W
+      name: SSC_W
+    - !import-channel;1
+      channel: Time
+      name: Time
+    conditions:
+      Dox: float
+      Well: category
+    events: null
+    name_metadata: null
+    tubes:
+    - !tube;1
+      conditions:
+        Dox: 1.0
+        Well: A
+      file: /home/brian/src/cytoflow/docs/examples-basic/data/Yeast_B1_B01.fcs
+    - !tube;1
+      conditions:
+        Dox: 10.0
+        Well: A
+      file: /home/brian/src/cytoflow/docs/examples-basic/data/Yeast_B6_B06.fcs
+    - !tube;1
+      conditions:
+        Dox: 1.0
+        Well: B
+      file: /home/brian/src/cytoflow/docs/examples-basic/data/Yeast_C1_C01.fcs
+    - !tube;1
+      conditions:
+        Dox: 10.0
+        Well: B
+      file: /home/brian/src/cytoflow/docs/examples-basic/data/Yeast_C6_C06.fcs
+  statistics: {}
+  views:
+  - *id001

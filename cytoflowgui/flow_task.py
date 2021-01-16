@@ -27,45 +27,44 @@ import os.path, webbrowser, pathlib, sys
 
 import yaml.parser
 
-from traits.api import Instance, List, Str, on_trait_change
+from traits.api import Instance, Str, on_trait_change
 from pyface.tasks.api import Task, TaskLayout, PaneItem, VSplitter
 from pyface.tasks.action.api import SMenu, SMenuBar, SToolBar, TaskAction, TaskToggleGroup
-from pyface.api import (FileDialog, ImageResource, AboutDialog, information, 
-                        confirm, OK, YES, NO, ConfirmationDialog, warning,
+from pyface.api import (FileDialog, ImageResource, AboutDialog, 
+                        confirm, OK, YES, ConfirmationDialog, warning,
                         error)
-from envisage.api import Plugin, ExtensionPoint, contributes_to
 from envisage.ui.tasks.api import TaskFactory
+from envisage.api import contributes_to, Plugin
 
 from cytoflowgui.workflow_pane import WorkflowDockPane
 from cytoflowgui.view_pane import ViewDockPane, PlotParamsPane
 from cytoflowgui.help_pane import HelpDockPane
-from cytoflowgui.workflow import Workflow
-from cytoflowgui.op_plugins import IOperationPlugin, ImportPlugin, OP_PLUGIN_EXT
-from cytoflowgui.view_plugins import IViewPlugin, VIEW_PLUGIN_EXT
-from cytoflowgui.workflow_item import WorkflowItem
+from cytoflowgui.workflow import LocalWorkflow
+from cytoflowgui.workflow_controller import WorkflowController
+from cytoflowgui.op_plugins import ImportPlugin
 from cytoflowgui.util import DefaultFileDialog
-from cytoflowgui.serialization import save_yaml, load_yaml, save_notebook
+from cytoflowgui.workflow.serialization import save_yaml, load_yaml, save_notebook
+
 
 class FlowTask(Task):
     """
-    classdocs
+    This class coordinates all the views and panels on the main model
     """
     
     id = "edu.mit.synbio.cytoflowgui.flow_task"
     name = "Cytometry analysis"
     
     # the main workflow instance.
-    model = Instance(Workflow)
+    model = Instance(LocalWorkflow)
+    
+    # the handler that connects it to various views
+    handler = Instance(WorkflowController)
         
     # the center pane
     workflow_pane = Instance(WorkflowDockPane)
     view_pane = Instance(ViewDockPane)
     help_pane = Instance(HelpDockPane)
     plot_params_pane = Instance(PlotParamsPane)
-    
-    # plugin lists, to setup the interface
-    op_plugins = List(IOperationPlugin)
-    view_plugins = List(IViewPlugin)
     
     menu_bar = SMenuBar(SMenu(TaskAction(name='Open...',
                                          method='on_open',
@@ -143,16 +142,16 @@ class FlowTask(Task):
         
         # if we're coming back from the TASBE task, re-load the saved
         # workflow
-        if self.model.backup_workflow:
-            self.model.workflow = self.model.backup_workflow
-            self.model.backup_workflow = []
-            return
+        # FIXME
+#         if self.model.backup_workflow:
+#             self.model.workflow = self.model.backup_workflow
+#             self.model.backup_workflow = []
+#             return
         
         # else, set up a new workflow
         # add the import op
         if not self.model.workflow:
-            self.add_operation(ImportPlugin().id) 
-            self.model.selected = self.model.workflow[0]
+            self.model.add_operation(ImportPlugin().get_operation()) 
                     
         self.model.modified = False
     
@@ -178,18 +177,23 @@ class FlowTask(Task):
      
     def create_dock_panes(self):
         self.workflow_pane = WorkflowDockPane(model = self.model, 
-                                              plugins = self.op_plugins,
+                                              handler = self.handler,
+                                              plugins = self.application.op_plugins,
                                               task = self)
         
         self.view_pane = ViewDockPane(model = self.model,
-                                      plugins = self.view_plugins,
+                                      handler = self.handler,
+                                      plugins = self.application.view_plugins,
                                       task = self)
         
-        self.help_pane = HelpDockPane(view_plugins = self.view_plugins,
-                                      op_plugins = self.op_plugins,
+        self.help_pane = HelpDockPane(model = self.model,
+                                      handler = self.handler, 
+                                      view_plugins = self.application.view_plugins,
+                                      op_plugins = self.application.op_plugins,
                                       task = self)
         
         self.plot_params_pane = PlotParamsPane(model = self.model,
+                                               handler = self.handler,
                                                task = self)
         
         return [self.workflow_pane, self.view_pane, self.help_pane, self.plot_params_pane]
@@ -210,10 +214,13 @@ class FlowTask(Task):
         self.model.workflow = []
         
         # add the import op
-        self.add_operation(ImportPlugin().id) 
-        
-        # and select the operation
-        self.model.selected = self.model.workflow[0]
+        import_op = ImportPlugin().get_operation()
+        import_handler = ImportPlugin().get_handler(import_op)
+        self.model.add_operation(import_op)
+        self.handler.add_handler(import_handler) 
+#         
+#         # and select the operation
+#         self.model.selected = self.model.workflow[0]
         
         self.model.modified = False
      
@@ -355,7 +362,6 @@ class FlowTask(Task):
             
             if ret == YES:
                 self.model.run_all()
-
         
     def on_save(self):
         """ Save the file to the previous filename  """
@@ -414,6 +420,7 @@ class FlowTask(Task):
     
     def on_prefs(self):
         pass
+    
     
     def on_docs(self):
         webbrowser.open_new_tab("https://cytoflow.readthedocs.io/en/stable/manual.html")
@@ -510,65 +517,34 @@ class FlowTask(Task):
                              additions = text)
         dialog.open()
         
-    @on_trait_change('model.selected', post_init = True)
-    def _on_select_op(self, selected):
-        if selected:
-            self.view_pane.enabled = (selected is not None)
-            self.view_pane.default_view = selected.default_view.id if selected.default_view else ""
-            self.view_pane.selected_view = selected.current_view.id if selected.current_view else ""
-            self.help_pane.help_id = selected.operation.id
-        else:
-            self.view_pane.enabled = False
+#     @on_trait_change('model.selected', post_init = True)
+#     def _on_select_op(self, selected):
+#         if selected:
+#             self.view_pane.enabled = (selected is not None)
+#             self.view_pane.default_view = selected.default_view.id if selected.default_view else ""
+#             self.view_pane.selected_view = selected.current_view.id if selected.current_view else ""
+#             self.help_pane.help_id = selected.operation.id
+#         else:
+#             self.view_pane.enabled = False
             
-    @on_trait_change('view_pane.selected_view', post_init = True)
-    def _on_select_view(self, view_id):
-        
-        if not view_id:
-            return
-        
-        # if we already have an instantiated view object, find it
-        try:
-            self.model.selected.current_view = next((x for x in self.model.selected.views if x.id == view_id))
-        except StopIteration:
-            # else make the new view
-            plugin = next((x for x in self.view_plugins if x.view_id == view_id))
-            view = plugin.get_view()
-            self.model.selected.views.append(view)
-            self.model.selected.current_view = view
-            
-        self.help_pane.help_id = view_id
-    
-    def add_operation(self, op_id):
-        # first, find the matching plugin
-        plugin = next((x for x in self.op_plugins if x.id == op_id))
-        
-        # next, get an operation
-        op = plugin.get_operation()
-        
-        # make a new workflow item
-        wi = WorkflowItem(operation = op,
-                          deletable = (op_id != 'edu.mit.synbio.cytoflowgui.op_plugins.import'))
-        
-        # if the op has a default view, add it to the wi
-        try:
-            wi.default_view = op.default_view()
-            wi.views.append(wi.default_view)
-            wi.current_view = wi.default_view
-        except AttributeError:
-            pass
-        
-        # figure out where to add it
-        if self.model.selected:
-            idx = self.model.workflow.index(self.model.selected) + 1
-        else:
-            idx = len(self.model.workflow)
-             
-        # the add_remove_items handler takes care of updating the linked list
-        self.model.workflow.insert(idx, wi)
-        
-        # and make sure to actually select the new wi
-        self.model.selected = wi
-        
+#     @on_trait_change('view_pane.selected_view', post_init = True)
+#     def _on_select_view(self, view_id):
+#         
+#         if not view_id:
+#             return
+#         
+#         # if we already have an instantiated view object, find it
+#         try:
+#             self.model.selected.current_view = next((x for x in self.model.selected.views if x.id == view_id))
+#         except StopIteration:
+#             # else make the new view
+#             plugin = next((x for x in self.view_plugins if x.view_id == view_id))
+#             view = plugin.get_view()
+#             self.model.selected.views.append(view)
+#             self.model.selected.current_view = view
+#             
+#         self.help_pane.help_id = view_id
+
         
 class FlowTaskPlugin(Plugin):
     """
@@ -578,12 +554,7 @@ class FlowTaskPlugin(Plugin):
     # Extension point IDs.
     PREFERENCES       = 'envisage.preferences'
     PREFERENCES_PANES = 'envisage.ui.tasks.preferences_panes'
-    TASKS             = 'envisage.ui.tasks.tasks'
-    
-    # these need to be declared in a Plugin instance; we pass them to
-    # the task instance thru its factory, below.
-    op_plugins = ExtensionPoint(List(IOperationPlugin), OP_PLUGIN_EXT)
-    view_plugins = ExtensionPoint(List(IViewPlugin), VIEW_PLUGIN_EXT)    
+    TASKS             = 'envisage.ui.tasks.tasks' 
 
     #### 'IPlugin' interface ##################################################
 
@@ -612,8 +583,7 @@ class FlowTaskPlugin(Plugin):
         return [TaskFactory(id = 'edu.mit.synbio.cytoflowgui.flow_task',
                             name = 'Cytometry analysis',
                             factory = lambda **x: FlowTask(application = self.application,
-                                                           op_plugins = self.op_plugins,
-                                                           view_plugins = self.view_plugins,
                                                            model = self.application.model,
+                                                           handler = self.application.handler,
                                                            filename = self.application.filename,
                                                            **x))]

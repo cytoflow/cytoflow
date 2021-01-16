@@ -29,6 +29,7 @@ Created on Feb 11, 2015
 import os.path
 
 from traits.api import Instance, Bool, Any, on_trait_change, HTML
+from traitsui.api import View, Item, InstanceEditor
 from pyface.tasks.api import Task, TaskLayout, PaneItem, TraitsDockPane
 from pyface.tasks.action.api import SMenuBar, SMenu, TaskToggleGroup
 from envisage.api import Plugin, contributes_to
@@ -38,8 +39,7 @@ from pyface.qt import QtGui
 from cytoflow.operations import IOperation
 
 # from cytoflowgui.flow_task_pane import FlowTaskPane, getFlowTaskPane
-from cytoflowgui.workflow import Workflow
-from cytoflowgui.workflow_item import WorkflowItem
+from cytoflowgui.workflow import LocalWorkflow, WorkflowItem
 from cytoflowgui.help_pane import HelpDockPane
 
 from cytoflowgui.tasbe_calibration import TasbeCalibrationOp
@@ -59,10 +59,15 @@ class CalibrationPane(TraitsDockPane):
     movable = False
     visible = True
     
+    single_operation = View(Item('selected',
+                                 editor = InstanceEditor(view = 'operation_traits'),
+                                 style = 'custom',
+                                 show_label = False))
+    
     def create_contents(self, parent):
         """ Create and return the toolkit-specific contents of the dock pane.
         """
-        self.ui = self.model.edit_traits(view = 'single_operation',
+        self.ui = self.model.edit_traits(view = self.single_operation,
                                          kind='subpanel', 
                                          parent=parent,
                                          scrollable = True)
@@ -87,7 +92,7 @@ class TASBETask(Task):
                               id = 'View', name = '&View'))
     
     # the main workflow instance.
-    model = Instance(Workflow)
+    model = Instance(LocalWorkflow)
     
     op = Instance(IOperation)
         
@@ -158,7 +163,7 @@ class TASBETaskPlugin(Plugin):
     id = 'edu.mit.synbio.cytoflow.tasbe'
     
     # the local process's model
-    model = Instance(Workflow)
+    model = Instance(LocalWorkflow)
 
     # The plugin's name (suitable for displaying to the user).
     name = 'TASBE Calibration'

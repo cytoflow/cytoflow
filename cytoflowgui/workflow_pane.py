@@ -19,13 +19,14 @@
 
 from traits.api import provides, Instance, List, Tuple
 
-from pyface.qt import QtGui, QtCore
+from pyface.qt import QtCore
 from pyface.tasks.api import TraitsDockPane, IDockPane, Task
 from pyface.action.api import ToolBarManager
 from pyface.tasks.action.api import TaskAction
 
-from cytoflowgui.op_plugins import IOperationPlugin
+from cytoflowgui.op_plugins.i_op_plugin import IOperationPlugin
 from cytoflowgui.view_pane import HintedMainWindow
+from cytoflowgui.workflow_controller import WorkflowController
 
 @provides(IDockPane)
 class WorkflowDockPane(TraitsDockPane):
@@ -39,13 +40,18 @@ class WorkflowDockPane(TraitsDockPane):
     # the task serving as the dock pane's controller
     task = Instance(Task)
     
-    # IN INCHES
+    # controller
+    controller = Instance(WorkflowController)
+    
+    # the size of the plugin toolbar images IN INCHES
     image_size = Tuple((0.33, 0.33))
 
     def create_contents(self, parent):
         """ 
         Create and return the toolkit-specific contents of the dock pane.
         """
+        
+#         self.controller = WorkflowController(model = self.model, plugins = self.plugins)
  
         dpi = self.control.physicalDpiX()
         image_size = (int(self.image_size[0] * dpi),
@@ -54,6 +60,12 @@ class WorkflowDockPane(TraitsDockPane):
         self.toolbar = ToolBarManager(orientation='vertical',
                                       show_tool_names = False,
                                       image_size = image_size)
+        
+        def add_operation(self, operation_factory, handler_factory):
+            operation = operation_factory()
+            handler = handler_factory(operation)
+            self.model.add_operation(operation)
+            self.controller.add_handler(handler)
                  
         for plugin in self.plugins:
             
@@ -62,8 +74,9 @@ class WorkflowDockPane(TraitsDockPane):
                 continue
             
             task_action = TaskAction(name=plugin.short_name,
-                                     on_perform = lambda pid=plugin.id: 
-                                                    self.task.add_operation(pid),
+                                     on_perform = add_operation(self, 
+                                                                plugin.get_operation, 
+                                                                plugin.get_handler),
                                      image = plugin.get_icon())
             self.toolbar.append(task_action)
              
@@ -73,7 +86,8 @@ class WorkflowDockPane(TraitsDockPane):
         window.addToolBar(QtCore.Qt.LeftToolBarArea,    # @UndefinedVariable
                           self.toolbar.create_tool_bar(window))
          
-        self.ui = self.model.edit_traits(view = 'operations_traits',
+        self.ui = self.model.edit_traits(controller = self.controller,
+                                         view = 'controller.workflow_view',
                                          kind = 'subpanel', 
                                          parent = window)
         window.setCentralWidget(self.ui.control)

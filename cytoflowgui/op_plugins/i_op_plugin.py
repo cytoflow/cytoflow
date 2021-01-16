@@ -21,12 +21,12 @@ import os
 
 from pyface.qt import QtGui
 
-from traits.api import (Interface, Constant, HasTraits, Event, Instance, Property, 
-                        on_trait_change, HTML, Callable)
+from traits.api import (Interface, Constant, HasTraits, Instance, Property, 
+                        on_trait_change, HTML)
 from traitsui.api import Group, Item
 from envisage.api import contributes_to
 from cytoflowgui.color_text_editor import ColorTextEditor
-from cytoflowgui.workflow_item import WorkflowItem
+from cytoflowgui.workflow.workflow_item import WorkflowItem
 
 OP_PLUGIN_EXT = 'edu.mit.synbio.cytoflow.op_plugins'
 
@@ -51,11 +51,25 @@ class IOperationPlugin(Interface):
 
     def get_operation(self):
         """
-        Makes an instance of the IOperation that this plugin wraps.
+        Makes an instance of the IWorkflowOperation that this plugin wraps.
         
         Returns
         -------
-        :class:`.IOperation`
+        :class:`.IWorkflowOperation`
+        """
+        
+    def get_handler(self, model):
+        """
+        Makes an instance of a Controller for the operation.  
+        
+        Parameters
+        ----------
+        model : IWorkflowOperation
+            The model that this handler handles.
+        
+        Returns
+        -------
+        :class:`traitsui.Controller`
         """
 
     def get_icon(self):
@@ -65,9 +79,8 @@ class IOperationPlugin(Interface):
         Returns
         -------
         :class:`pyface.ImageResource`
-            The icon, 32x32.
+            The SVG icon
         """
-        pass
         
     @contributes_to(OP_PLUGIN_EXT)
     def get_plugin(self):
@@ -118,101 +131,6 @@ class PluginHelpMixin(HasTraits):
         return self._cached_help
                         
 
-def unimplemented(*args, **kwargs):
-    raise NotImplementedError("A plugin op must have a handler_factory trait")
-
-class PluginOpMixin(HasTraits):
-    """
-    A mixin class that adds GUI support to an underlying :mod:`cytoflow`
-    operation.
-    
-    Another common thing to do in the derived class is to override traits
-    of the underlying class in order to add metadata that controls their
-    handling by the workflow.  Currently, relevant metadata include:
-    
-      * **transient** - don't copy the trait between the local (GUI) process 
-        and the remote (computation) process (in either direction).
-     
-      * **status** - only copy from the remote process to the local process,
-        not the other way 'round.
-       
-      * **estimate** - copy from the local process to the remote process,
-        but don't call :meth:`apply`.  (used for traits that are involved in
-        estimating the operation's parameters.)
-      
-      * **fixed** - assigned when the operation is first created in the
-        remote process *and never subsequently changed.*
-    
-    Attributes
-    ----------
-    
-    handler_factory : Callable
-        A callable that returns a GUI handler for the operation.  **MUST**
-        be overridden in the derived class.
-        
-    do_estimate : Event
-        Firing this event causes the operation's :meth:`estimate` method 
-        to be called.
-        
-    changed : Event
-        Used to transmit status information back from the operation to the
-        workflow.  Set its value to a tuple (message, payload).  See 
-        :class:`.workflow.Changed` for possible values of the message
-        and their corresponding payloads.
-
-    """
-    
-    handler_factory = Callable(unimplemented)
-    
-    # causes this operation's estimate() function to be called
-    do_estimate = Event
-    
-    # transmit some changing status back to the workflow
-    changed = Event
-    
-                
-    def should_apply(self, changed, payload):
-        """
-        Should the owning WorkflowItem apply this operation when certain things
-        change?  `changed` can be:
-        
-         - Changed.OPERATION -- the operation's parameters changed
-         
-         - Changed.PREV_RESULT -- the previous WorkflowItem's result changed
-         
-         - Changed.ESTIMATE_RESULT -- the results of calling "estimate" changed
-        """
-        return True
-
-    
-    def should_clear_estimate(self, changed, payload):
-        """
-        Should the owning WorkflowItem clear the estimated model by calling
-        op.clear_estimate()?  `changed` can be:
-        
-         - Changed.ESTIMATE -- the parameters required to call :meth:`estimate` 
-         (ie traits with ``estimate = True`` metadata) have changed
-            
-         - Changed.PREV_RESULT -- the previous :class:`.WorkflowItem`'s result changed
-         """
-        return True
-    
-    def get_notebook_code(self, idx):
-        """
-        Return Python code suitable for a Jupyter notebook cell that runs this
-        operation.
-        
-        Parameters
-        ----------
-        idx : integer
-            The index of the :class:`.WorkflowItem` that holds this operation.
-            
-        Returns
-        -------
-        string
-            The Python code that calls this module.
-        """
-        raise NotImplementedError("GUI plugins must override get_notebook_code()")
 
           
 shared_op_traits = Group(Item('context.estimate_warning',
