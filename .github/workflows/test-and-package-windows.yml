@@ -155,6 +155,7 @@ jobs:
       id: tag
       uses: jimschubert/query-tag-action@v2
       with:
+        skip-unshallow: true
         abbrev: false
         
     - name: Show Tag
