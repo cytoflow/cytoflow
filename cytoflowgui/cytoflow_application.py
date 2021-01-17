@@ -1,6 +1,7 @@
 #!/usr/bin/env python3.4
 # coding: latin-1
 
+
 # (c) Massachusetts Institute of Technology 2015-2018
 # (c) Brian Teague 2018-2021
 #
@@ -25,24 +26,22 @@ Created on Mar 15, 2015
 
 import logging, io, os, pickle
 
-from cytoflowgui.workflow import LocalWorkflow
-from cytoflowgui.flow_task_pane import FlowTaskPane
-from cytoflowgui.util import CallbackHandler
-from cytoflowgui.workflow_controller import WorkflowController
-from cytoflowgui.op_plugins.i_op_plugin import IOperationPlugin, OP_PLUGIN_EXT
-from cytoflowgui.view_plugins.i_view_plugin import IViewPlugin, VIEW_PLUGIN_EXT
+from traits.api import Bool, Instance, List, Property, Str, Any, File
 
 from envisage.ui.tasks.api import TasksApplication
 from envisage.ui.tasks.tasks_application import TasksApplicationState
-from envisage.api import Plugin, ExtensionPoint, contributes_to
 
-from pyface.api import error
+from pyface.api import error, ImageResource
 from pyface.tasks.api import TaskWindowLayout
-from traits.api import Bool, Instance, List, Property, Str, Any, File
+
+from matplotlib.figure import Figure
+
+from .workflow import LocalWorkflow
+from .utility import CallbackHandler
+from .preferences import CytoflowPreferences
+from .matplotlib_backend_local import FigureCanvasQTAggLocal
 
 logger = logging.getLogger(__name__)
-
-from .preferences import CytoflowPreferences
   
 def gui_handler_callback(msg, app):
     app.application_error = msg
@@ -81,13 +80,12 @@ class CytoflowApplication(TasksApplication):
     # local process's central model
     remote_process = Any
     remote_connection = Any
+   
+    # the model that's shared across all three tasks
     model = Instance(LocalWorkflow)
     
-    # the shared task pane
-    plot_pane = Instance(FlowTaskPane)
-    
-    op_plugins = ExtensionPoint(List(IOperationPlugin), OP_PLUGIN_EXT)
-    view_plugins = ExtensionPoint(List(IViewPlugin), VIEW_PLUGIN_EXT) 
+    # the matplotlib canvas that's shared across all three tasks
+    canvas = Instance(FigureCanvasQTAggLocal)
             
     def run(self):
 
@@ -121,13 +119,11 @@ class CytoflowApplication(TasksApplication):
                 
         # set up the model
         self.model = LocalWorkflow(remote_connection = self.remote_connection)
-        self.handler = WorkflowController(model = self.model)
         
-        print(self.op_plugins)
-        
-        # and the shared central pane
-        self.plot_pane = FlowTaskPane(model = self.model, 
-                                      handler = self.handler)
+        # and the local canvas
+        self.canvas = FigureCanvasQTAggLocal(Figure(), 
+                                             self.model.child_matplotlib_conn, 
+                                             ImageResource('gear').create_image(size = (1000, 1000)))
 
         # run the GUI
         super(CytoflowApplication, self).run()

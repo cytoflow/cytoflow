@@ -8,7 +8,8 @@ from traits.api import (provides, Interface, Str, List, Property, Bool,
                         HasStrictTraits, CFloat, Undefined, on_trait_change)
 
 from cytoflow import utility as util
-from cytoflowgui.workflow.serialization import camel_registry, traits_repr
+
+from .serialization import camel_registry, traits_repr
 
 class ISubset(Interface):
     name = Str

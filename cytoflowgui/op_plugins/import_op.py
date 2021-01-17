@@ -102,11 +102,11 @@ from traits.api import (Button, Property, cached_property, provides, on_trait_ch
 
 from envisage.api import Plugin, contributes_to
                        
-from cytoflowgui.vertical_list_editor import VerticalListEditor
+from cytoflowgui.editors import VerticalListEditor
 from cytoflowgui.import_dialog import ExperimentDialogModel, ExperimentDialogHandler
 from cytoflowgui.op_plugins.i_op_plugin import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
 from cytoflowgui.op_plugins.i_op_plugin import PluginHelpMixin
-from cytoflowgui.workflow.operations.import_op import ImportWorkflowOp, Channel
+from cytoflowgui.workflow.operations.import_op import ImportWorkflowOp
 
 class ChannelHandler(Controller):
 

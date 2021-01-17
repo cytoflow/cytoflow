@@ -44,7 +44,7 @@ the plots are ferried back to the GUI, see the module docstring for
 matplotlib_backend.py
 """
 
-import sys, threading, logging, traceback
+import sys, threading, logging
 
 from multiprocessing import Queue
 from queue import PriorityQueue
@@ -54,6 +54,8 @@ from traits.api import (HasStrictTraits, Int, Bool, Instance, Any, List,
 
 import matplotlib.pyplot as plt
 import cytoflowgui.matplotlib_backend_remote
+
+from cytoflowgui.utility import log_exception
 
 from .workflow_item import WorkflowItem
 from .views import IWorkflowView
@@ -151,20 +153,6 @@ class Changed(object):
     # payload: unused
     PREV_RESULT = "PREV_RESULT"  
     
-def log_exception():
-    (exc_type, exc_value, tb) = sys.exc_info()
-
-    err_string = traceback.format_exception_only(exc_type, exc_value)[0]
-    err_loc = traceback.format_tb(tb)[-1]
-    err_ctx = threading.current_thread().name
-    
-    logging.debug("Exception in {0}: {1}"
-                  .format(err_ctx,
-                          "".join( traceback.format_exception(exc_type, exc_value, tb) )))
-    
-    logging.error("Error: {0}\nLocation: {1}Thread: {2}" \
-                  .format(err_string, err_loc, err_ctx) )
-    
 
 class UniquePriorityQueue(PriorityQueue):
     """
@@ -200,9 +188,6 @@ def filter_unpicklable(obj):
             return "filtered: {}".format(type(obj))
         else:
             return obj
-        
-
-
     
 
 class LocalWorkflow(HasStrictTraits):

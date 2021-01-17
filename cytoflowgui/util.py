@@ -93,15 +93,4 @@ class HintedWidget(QtGui.QWidget):
             
         return hint
 
-# logging helper
-import logging 
-
-class CallbackHandler(logging.Handler):
-    def __init__(self, callback, **kwargs):
-        super().__init__(**kwargs)
-        self._callback = callback
-        
-    def emit(self, record):
-        self._callback(record)
-        
     

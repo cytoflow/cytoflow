@@ -25,7 +25,7 @@ from traits.api import (Interface, Constant, HasTraits, Instance, Property,
                         on_trait_change, HTML)
 from traitsui.api import Group, Item
 from envisage.api import contributes_to
-from cytoflowgui.color_text_editor import ColorTextEditor
+from cytoflowgui.editors import ColorTextEditor
 from cytoflowgui.workflow.workflow_item import WorkflowItem
 
 OP_PLUGIN_EXT = 'edu.mit.synbio.cytoflow.op_plugins'

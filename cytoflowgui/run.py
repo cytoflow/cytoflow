@@ -257,7 +257,7 @@ def start_remote_process():
 
         # logging
         from logging.handlers import QueueListener
-        from cytoflowgui.util import CallbackHandler
+        from cytoflowgui.utility import CallbackHandler
         log_q = multiprocessing.Queue()
         def handle(record):
             logger = logging.getLogger(record.name)

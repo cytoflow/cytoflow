@@ -47,6 +47,10 @@ class WorkflowItem(HasStrictTraits):
     
     # the IViews associated with this operation
     views = List(IWorkflowView, copy = "ref")
+    
+    # the currently selected view
+    current_view = Instance(IWorkflowView, copy = "ref")
+    
     #view_handlers = List(Instance("Controller"), transient = True)
     
     # the Experiment that is the result of applying *operation* to the

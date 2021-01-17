@@ -18,15 +18,17 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from traits.api import provides, Instance, List, Tuple
+from traitsui.api import View, Item
 
 from pyface.qt import QtCore
 from pyface.tasks.api import TraitsDockPane, IDockPane, Task
 from pyface.action.api import ToolBarManager
 from pyface.tasks.action.api import TaskAction
 
-from cytoflowgui.op_plugins.i_op_plugin import IOperationPlugin
-from cytoflowgui.view_pane import HintedMainWindow
-from cytoflowgui.workflow_controller import WorkflowController
+from .op_plugins import IOperationPlugin
+from .util import HintedMainWindow
+from .workflow_controller import WorkflowController
+from .editors import VerticalNotebookEditor
 
 @provides(IDockPane)
 class WorkflowDockPane(TraitsDockPane):
@@ -37,11 +39,8 @@ class WorkflowDockPane(TraitsDockPane):
     # the application instance from which to get plugin instances
     plugins = List(IOperationPlugin)
     
-    # the task serving as the dock pane's controller
-    task = Instance(Task)
-    
     # controller
-    controller = Instance(WorkflowController)
+    handler = Instance(WorkflowController)
     
     # the size of the plugin toolbar images IN INCHES
     image_size = Tuple((0.33, 0.33))
@@ -50,9 +49,7 @@ class WorkflowDockPane(TraitsDockPane):
         """ 
         Create and return the toolkit-specific contents of the dock pane.
         """
-        
-#         self.controller = WorkflowController(model = self.model, plugins = self.plugins)
- 
+         
         dpi = self.control.physicalDpiX()
         image_size = (int(self.image_size[0] * dpi),
                       int(self.image_size[1] * dpi))
@@ -60,12 +57,6 @@ class WorkflowDockPane(TraitsDockPane):
         self.toolbar = ToolBarManager(orientation='vertical',
                                       show_tool_names = False,
                                       image_size = image_size)
-        
-        def add_operation(self, operation_factory, handler_factory):
-            operation = operation_factory()
-            handler = handler_factory(operation)
-            self.model.add_operation(operation)
-            self.controller.add_handler(handler)
                  
         for plugin in self.plugins:
             
@@ -74,9 +65,7 @@ class WorkflowDockPane(TraitsDockPane):
                 continue
             
             task_action = TaskAction(name=plugin.short_name,
-                                     on_perform = add_operation(self, 
-                                                                plugin.get_operation, 
-                                                                plugin.get_handler),
+                                     on_perform = lambda factory=plugin.get_operation: self.model.add_operation(factory()),
                                      image = plugin.get_icon())
             self.toolbar.append(task_action)
              
@@ -85,11 +74,12 @@ class WorkflowDockPane(TraitsDockPane):
         window = HintedMainWindow()                    
         window.addToolBar(QtCore.Qt.LeftToolBarArea,    # @UndefinedVariable
                           self.toolbar.create_tool_bar(window))
-         
-        self.ui = self.model.edit_traits(controller = self.controller,
-                                         view = 'controller.workflow_view',
-                                         kind = 'subpanel', 
-                                         parent = window)
+        
+        # construct the view 
+        self.ui = self.handler.edit_traits(view = 'workflow_view', 
+                                           kind = 'subpanel', 
+                                           parent = window)
+        
         window.setCentralWidget(self.ui.control)
          
         window.setParent(parent)

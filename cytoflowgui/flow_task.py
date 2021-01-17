@@ -27,23 +27,71 @@ import os.path, webbrowser, pathlib, sys
 
 import yaml.parser
 
-from traits.api import Instance, Str, on_trait_change
-from pyface.tasks.api import Task, TaskLayout, PaneItem, VSplitter
+from traits.api import Instance, Str, List, on_trait_change, provides
+from traitsui.api import View, Item, InstanceEditor
+from pyface.tasks.api import ITaskPane, TaskPane, Task, TaskLayout, PaneItem, VSplitter
 from pyface.tasks.action.api import SMenu, SMenuBar, SToolBar, TaskAction, TaskToggleGroup
 from pyface.api import (FileDialog, ImageResource, AboutDialog, 
                         confirm, OK, YES, ConfirmationDialog, warning,
                         error)
-from envisage.ui.tasks.api import TaskFactory
-from envisage.api import contributes_to, Plugin
+from pyface.qt import QtGui
 
-from cytoflowgui.workflow_pane import WorkflowDockPane
-from cytoflowgui.view_pane import ViewDockPane, PlotParamsPane
-from cytoflowgui.help_pane import HelpDockPane
-from cytoflowgui.workflow import LocalWorkflow
-from cytoflowgui.workflow_controller import WorkflowController
-from cytoflowgui.op_plugins import ImportPlugin
-from cytoflowgui.util import DefaultFileDialog
-from cytoflowgui.workflow.serialization import save_yaml, load_yaml, save_notebook
+from envisage.ui.tasks.api import TaskFactory
+from envisage.api import contributes_to, Plugin, ExtensionPoint
+
+from .op_plugins import IOperationPlugin, OP_PLUGIN_EXT, ImportPlugin
+from .view_plugins import IViewPlugin, VIEW_PLUGIN_EXT
+
+from .workflow_pane import WorkflowDockPane
+from .view_pane import ViewDockPane, PlotParamsPane
+from .help_pane import HelpDockPane
+from .matplotlib_backend_local import FigureCanvasQTAggLocal
+from .workflow import LocalWorkflow
+from .workflow_controller import WorkflowController
+from .util import DefaultFileDialog
+from .workflow.serialization import save_yaml, load_yaml, save_notebook
+
+@provides(ITaskPane)
+class FlowTaskPane(TaskPane):
+    """
+    The center pane for the UI; contains the matplotlib canvas for plotting
+    data views.
+    """
+    
+    id = 'edu.mit.synbio.cytoflow.flow_task_pane'
+    name = 'Cytometry Data Viewer'
+    
+    model = Instance(LocalWorkflow)
+    handler = Instance(WorkflowController)
+    
+    layout = Instance(QtGui.QVBoxLayout)                    # @UndefinedVariable
+    canvas = Instance(FigureCanvasQTAggLocal)
+        
+    def create(self, parent):
+        if self.canvas is not None:
+            return
+        
+        # create a layout for the tab widget and the main view
+        self.layout = layout = QtGui.QVBoxLayout()          # @UndefinedVariable
+        self.control = QtGui.QWidget()                      # @UndefinedVariable
+        self.control.setLayout(layout)
+        
+        tabs_ui = self.handler.edit_traits(view = 'current_plot_view',
+                                         kind = 'subpanel',
+                                         parent = parent)
+        
+        self.layout.addWidget(tabs_ui.control) 
+        
+        # add the main plot
+
+        self.canvas.setSizePolicy(QtGui.QSizePolicy.Expanding,  # @UndefinedVariable
+                                  QtGui.QSizePolicy.Expanding)  # @UndefinedVariable
+        
+        layout.addWidget(self.canvas)
+                  
+    def export(self, filename, **kwargs):      
+        self.canvas.print_figure(filename, bbox_inches = 'tight', **kwargs)
+    
 
 
 class FlowTask(Task):
@@ -65,6 +113,10 @@ class FlowTask(Task):
     view_pane = Instance(ViewDockPane)
     help_pane = Instance(HelpDockPane)
     plot_params_pane = Instance(PlotParamsPane)
+    
+    # plugin lists, to setup the interface
+    op_plugins = List(IOperationPlugin)
+    view_plugins = List(IViewPlugin)
     
     menu_bar = SMenuBar(SMenu(TaskAction(name='Open...',
                                          method='on_open',
@@ -173,28 +225,28 @@ class FlowTask(Task):
         
         dpi = self.window.control.physicalDpiX()
         self.tool_bars[0].image_size = (int(0.4 * dpi), int(0.4 * dpi))
-        return self.application.plot_pane
-     
+        
+        return FlowTaskPane(canvas = self.application.canvas,
+                            model = self.application.model, 
+                            handler = self.handler)
+             
     def create_dock_panes(self):
+                
         self.workflow_pane = WorkflowDockPane(model = self.model, 
                                               handler = self.handler,
-                                              plugins = self.application.op_plugins,
+                                              plugins = self.op_plugins,
                                               task = self)
         
         self.view_pane = ViewDockPane(model = self.model,
                                       handler = self.handler,
-                                      plugins = self.application.view_plugins,
+                                      plugins = self.view_plugins,
                                       task = self)
         
-        self.help_pane = HelpDockPane(model = self.model,
-                                      handler = self.handler, 
-                                      view_plugins = self.application.view_plugins,
-                                      op_plugins = self.application.op_plugins,
-                                      task = self)
+        self.help_pane = HelpDockPane(view_plugins = self.view_plugins,
+                                      op_plugins = self.op_plugins)
         
         self.plot_params_pane = PlotParamsPane(model = self.model,
-                                               handler = self.handler,
-                                               task = self)
+                                               handler = self.handler)
         
         return [self.workflow_pane, self.view_pane, self.help_pane, self.plot_params_pane]
         
@@ -340,7 +392,7 @@ class FlowTask(Task):
         # replace the current workflow with the one we just loaded
         
         if False:  # for debugging the loading of things
-            from .event_tracer import record_events 
+            from cytoflowgui.utility.event_tracer import record_events 
             
             with record_events() as container:
                 self.model.workflow = new_workflow
@@ -555,6 +607,11 @@ class FlowTaskPlugin(Plugin):
     PREFERENCES       = 'envisage.preferences'
     PREFERENCES_PANES = 'envisage.ui.tasks.preferences_panes'
     TASKS             = 'envisage.ui.tasks.tasks' 
+    
+    # these need to be declared in a Plugin instance; we pass them to
+    # the task instance thru its factory, below.
+    op_plugins = ExtensionPoint(List(IOperationPlugin), OP_PLUGIN_EXT)
+    view_plugins = ExtensionPoint(List(IViewPlugin), VIEW_PLUGIN_EXT)    
 
     #### 'IPlugin' interface ##################################################
 
@@ -583,7 +640,11 @@ class FlowTaskPlugin(Plugin):
         return [TaskFactory(id = 'edu.mit.synbio.cytoflowgui.flow_task',
                             name = 'Cytometry analysis',
                             factory = lambda **x: FlowTask(application = self.application,
+                                                           op_plugins = self.op_plugins,
+                                                           view_plugins = self.view_plugins,
                                                            model = self.application.model,
-                                                           handler = self.application.handler,
+                                                           handler = WorkflowController(model = self.application.model,
+                                                                                        op_plugins = self.op_plugins,
+                                                                                        view_plugins = self.view_plugins),
                                                            filename = self.application.filename,
                                                            **x))]

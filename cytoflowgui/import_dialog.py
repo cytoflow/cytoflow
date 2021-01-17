@@ -58,7 +58,7 @@ from cytoflow import Experiment, ImportOp
 from cytoflow.operations.import_op import check_tube, parse_tube
 import cytoflow.utility as util
 
-from cytoflowgui.vertical_list_editor import VerticalListEditor
+from cytoflowgui.editors import VerticalListEditor
 
 def not_true ( value ):
     return (value is not True)

@@ -74,10 +74,8 @@ from pyface.api import ImageResource
 
 from cytoflowgui.op_plugins.i_op_plugin \
     import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits, PluginHelpMixin
-from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin
-from cytoflowgui.subset import SubsetListEditor
-from cytoflowgui.color_text_editor import ColorTextEditor
-from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
+from cytoflowgui.view_plugins.mixins import ViewHandlerMixin
+from cytoflowgui.editors import SubsetListEditor, ColorTextEditor, ExtendableEnumEditor
 from cytoflowgui.workflow.operations.threshold import ThresholdWorkflowOp, ThresholdSelectionView
 
 class ThresholdHandler(OpHandlerMixin, Controller):

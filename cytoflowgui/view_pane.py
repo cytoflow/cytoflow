@@ -25,8 +25,9 @@ from pyface.tasks.action.api import TaskAction
 from pyface.api import ImageResource
 from pyface.qt import QtGui, QtCore
 
-from cytoflowgui.view_plugins.i_view_plugin import IViewPlugin
-from cytoflowgui.util import HintedMainWindow
+from .workflow_controller import WorkflowController
+from .view_plugins import IViewPlugin
+from .util import HintedMainWindow
     
 
 class ViewDockPane(TraitsDockPane):
@@ -46,6 +47,9 @@ class ViewDockPane(TraitsDockPane):
     # as we're instantiated
     view_plugins = List(IViewPlugin)
     
+    # controller
+    handler = Instance(WorkflowController)
+    
     # changed depending on whether the selected wi in the model is valid.
     enabled = Bool(False)
     
@@ -56,24 +60,9 @@ class ViewDockPane(TraitsDockPane):
     # is its view id
     default_view = Str
 
-    # IN INCHES
+    # the size of the toolbar icons IN INCHES
     image_size = Tuple((0.33, 0.33))
     
-    # a view showing the selected workflow item's current view
-    selected_view_traits = View(Item('selected',
-                                     editor = InstanceEditor(view = 'current_view_traits'),
-                                     style = 'custom',
-                                     show_label = False),
-                                Spring(),
-                                Item('apply_calls',
-                                     style = 'readonly',
-                                     visible_when = 'debug'),
-                                Item('plot_calls',
-                                     style = 'readonly',
-                                     visible_when = 'debug'),
-                                kind = 'panel',
-                                scrollable = True)
-
     # task actions associated with views
     _actions = Dict(Str, TaskAction)
     
@@ -116,9 +105,10 @@ class ViewDockPane(TraitsDockPane):
         window.addToolBar(QtCore.Qt.RightToolBarArea, 
                           self.toolbar.create_tool_bar(window))
         
-        self.ui = self.model.edit_traits(view = self.selected_view_traits,
-                                         kind = 'subpanel', 
-                                         parent = window)
+        self.ui = self.handler.edit_traits(view = 'selected_view_traits',
+                                           kind = 'subpanel', 
+                                           parent = window)
+        
         window.setCentralWidget(self.ui.control)
         
         window.setParent(parent)
@@ -156,26 +146,23 @@ class PlotParamsPane(TraitsDockPane):
     
     id = 'edu.mit.synbio.cytoflowgui.params_pane'
     name = "Plot Parameters"
-
-    # the task serving as the dock pane's controller
-    task = Instance(Task)
+    
+    # controller
+    handler = Instance(WorkflowController)
     
     closable = True
     dock_area = 'right'
     floatable = True
     movable = True
     visible = True
-    
-    plot_params_traits = View(Item('selected',
-                                   editor = InstanceEditor(view = 'plot_params_traits'),
-                                   style = 'custom',
-                                   show_label = False))
+
     
     def create_contents(self, parent):
         """ Create and return the toolkit-specific contents of the dock pane.
         """
-        self.ui = self.model.edit_traits(view = self.plot_params_traits,
-                                         kind='subpanel', 
-                                         parent=parent,
-                                         scrollable = True)
+    
+        self.ui = self.handler.edit_traits(view = 'selected_view_plot_params',
+                                           kind='subpanel', 
+                                           parent=parent,
+                                           scrollable = True)
         return self.ui.control
