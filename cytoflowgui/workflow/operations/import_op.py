@@ -95,16 +95,16 @@ Import FCS files and associate them with experimental conditions (metadata.)
         to other types and Cytoflow will attempt to convert them.
 
 """
-from textwrap import dedent
+from textwrap import dedent 
 
-from traits.api import (HasTraits, String, List, Bool, Dict, Str, Enum, provides)
+from traits.api import (HasTraits, String, List, Dict, Str, Enum, Instance, provides)
 
 import cytoflow.utility as util
 from cytoflow import Tube, ImportOp
                        
 from cytoflowgui.workflow.serialization import camel_registry, traits_repr
 from cytoflowgui.import_dialog import ValidPythonIdentifier
-from cytoflowgui.workflow.operations import IWorkflowOperation
+from .operation_base import IWorkflowOperation, WorkflowOperation
 
 ImportOp.__repr__ = Tube.__repr__ = traits_repr
 
@@ -114,7 +114,7 @@ class Channel(HasTraits):
   
 
 @provides(IWorkflowOperation)
-class ImportWorkflowOp(ImportOp):   
+class ImportWorkflowOp(ImportOp, WorkflowOperation):   
     original_channels = List(Str, estimate = True)
     channels_list = List(Channel, estimate = True)
     events = util.CIntOrNone(None, estimate = True)
@@ -122,8 +122,14 @@ class ImportWorkflowOp(ImportOp):
     channels = Dict(Str, Str, transient = True)
     name_metadata =  Enum(None, "$PnN", "$PnS", estimate = True)
     
+    # how many events did we load?
     ret_events = util.PositiveInt(0, allow_zero = True, status = True)
-    do_import = Bool(False)
+    
+    # since we're actually calling super().apply() from self.estimate(), we need
+    # to keep around the actual experiment that's returned
+    ret_experiment = Instance('Experiment', transient = True)
+    
+#     do_import = Bool(False)
     
 #     def reset_channels(self):
 #         self.channels_list = [Channel(channel = x, name = util.sanitize_identifier(x)) for x in self.original_channels]
@@ -139,27 +145,43 @@ class ImportWorkflowOp(ImportOp):
 #         self.changed = (Changed.ESTIMATE, ('tubes', self.tubes))        
 
 
+#     def estimate(self, _):
+#         self.do_import = False
+#         self.do_import = True
+#         
+
     def estimate(self, _):
-        self.do_import = False
-        self.do_import = True
+        self.channels = {c.channel : c.name for c in self.channels_list}
+        self.ret_experiment = super().apply()
+        self.ret_events = len(self.ret_experiment
+                              )
         
-        
-    def apply(self, experiment = None, metadata_only = False, force = False):
-        if self.do_import or force:
-            self.channels = {c.channel : c.name for c in self.channels_list}
-            ret = super().apply(experiment = experiment, metadata_only = metadata_only)
-            
-            self.ret_events = len(ret.data)
-            return ret
+    def apply(self, _):
+        if self.ret_experiment:
+            return self.ret_experiment
+        elif not self.tubes:
+            raise util.CytoflowOpError(None, 'Click "Set up experiment, then "Import!"')
         else:
-            if not self.tubes:
-                raise util.CytoflowOpError(None, 'Click "Set up experiment", '
-                                                 'then "Import!"')
-            raise util.CytoflowOpError(None, "Press 'Import!'")
+            raise util.CytoflowOpError(None, 'Click "Import!"')
+            
         
         
-    def clear_estimate(self):
-        self.do_import = False
+#     def apply(self, experiment = None, metadata_only = False, force = False):
+#         if self.do_import or force:
+#             self.channels = {c.channel : c.name for c in self.channels_list}
+#             ret = super().apply(experiment = experiment, metadata_only = metadata_only)
+#             
+#             self.ret_events = len(ret.data)
+#             return ret
+#         else:
+#             if not self.tubes:
+#                 raise util.CytoflowOpError(None, 'Click "Set up experiment", '
+#                                                  'then "Import!"')
+#             raise util.CytoflowOpError(None, "Press 'Import!'")
+        
+#         
+#     def clear_estimate(self):
+#         self.do_import = False
 
     
     def get_notebook_code(self, idx):

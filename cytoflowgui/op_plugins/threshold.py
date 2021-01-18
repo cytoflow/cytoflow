@@ -72,13 +72,14 @@ from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
-from cytoflowgui.op_plugins.i_op_plugin \
-    import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits, PluginHelpMixin
-from cytoflowgui.view_plugins.mixins import ViewHandlerMixin
+from cytoflowgui.view_plugins.plugin_base import ViewHandlerMixin
 from cytoflowgui.editors import SubsetListEditor, ColorTextEditor, ExtendableEnumEditor
 from cytoflowgui.workflow.operations.threshold import ThresholdWorkflowOp, ThresholdSelectionView
 
-class ThresholdHandler(OpHandlerMixin, Controller):
+from .plugin_base import OpHandler, shared_op_traits_view, PluginHelpMixin
+from .i_op_plugin import IOperationPlugin, OP_PLUGIN_EXT
+
+class ThresholdHandler(OpHandler):
     def default_traits_view(self):
         return View(Item('name',
                          editor = TextEditor(auto_set = False)),
@@ -87,7 +88,7 @@ class ThresholdHandler(OpHandlerMixin, Controller):
                          label = "Channel"),
                     Item('threshold',
                          editor = TextEditor(auto_set = False)),
-                    shared_op_traits) 
+                    shared_op_traits_view) 
         
 class ThresholdViewHandler(ViewHandlerMixin, Controller):
     def default_traits_view(self):

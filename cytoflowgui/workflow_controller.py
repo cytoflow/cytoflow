@@ -40,18 +40,21 @@ class WorkflowItemHandler(Controller):
     
     name = DelegatesTo('model')
     friendly_id = DelegatesTo('model')
+    
+    # plugin lists
+    op_plugins = List
+    view_plugins = List
         
     # the handler that's associated with this operation; we get it from the 
     # operation plugin, and it controls what operation traits are in the UI
-    # and any special handling (heh) of them.  since the handler doesn't 
+    # and any special handling of them.  since the handler doesn't 
     # maintain any state, we can make and destroy as needed.
     operation_handler = Property(depends_on = 'operation', 
                                  trait = Instance(Handler), 
                                  transient = True)
-    
 
     # the view on that handler        
-    operation_traits_view = View(Item('operation_handler',
+    operation_traits_view = View(Item('handler.operation_handler',
                                       style = 'custom',
                                       show_label = False))
         
@@ -61,18 +64,18 @@ class WorkflowItemHandler(Controller):
                                     transient = True) 
     
     # the view for the view params
-    current_view_traits_view = View(Item('current_view_handler',
+    current_view_traits_view = View(Item('handler.current_view_handler',
                                          style = 'custom',
                                          show_label = False))
     
     # the view for the plot params
-    current_view_plot_params_view = View(Item('current_view_handler',
+    current_view_plot_params_view = View(Item('handler.current_view_handler',
                                               editor = InstanceEditor(view = 'plot_params_view'),
                                               style = 'custom',
                                               show_label = False))
     
     # the view for the current plot
-    current_plot_view = View(Item('current_view_handler',
+    current_plot_view = View(Item('handler.current_view_handler',
                                   editor = InstanceEditor(view = 'current_plot_view'),
                                   style = 'custom',
                                   show_label = False))
@@ -99,13 +102,15 @@ class WorkflowItemHandler(Controller):
     @cached_property
     def _get_operation_handler(self):
         op_plugin = next((x for x in self.op_plugins if self.model.operation.id == x.operation_id))
-        return op_plugin.get_handler(self.model.operation)
+        return op_plugin.get_handler(model = self.model.operation,
+                                     context = self.model)
      
     @cached_property
     def _get_current_view_handler(self):
         if self.current_view:
             view_plugin = next((x for x in self.view_plugins if self.model.current_view.id == x.view_id))
-            return view_plugin.get_view_handler(self.model.current_view)
+            return view_plugin.get_view_handler(model = self.model.current_view,
+                                                context = self.model)
         else:
             return None
 

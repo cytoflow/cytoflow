@@ -64,12 +64,7 @@ def run_gui():
     except:
         # if we're not running as a one-click, fail gracefully
         pass
-   
-    # take care of the 3 places in the cytoflow module that
-    # need different behavior in a GUI
-    import cytoflow
-    cytoflow.RUNNING_IN_GUI = True
-    
+
     # this is ridiculous, but here's the situation.  Qt5 now uses Chromium
     # as their web renderer.  Chromium needs OpenGL.  if you don't
     # initialize OpoenGL here, things crash on some platforms.
@@ -77,7 +72,16 @@ def run_gui():
     # so now i guess we depend on opengl too. 
     
     from OpenGL import GL  # @UnresolvedImport @UnusedImport
-    
+
+    # need to import these before a QCoreApplication is instantiated.  and that seems
+    # to happen in .... 'import cytoflow' ??
+    import pyface.qt.QtWebKit  # @UnusedImport
+   
+    # take care of the 3 places in the cytoflow module that
+    # need different behavior in a GUI
+    import cytoflow
+    cytoflow.RUNNING_IN_GUI = True
+            
     # check that we're using the right Qt API
     from pyface.qt import qt_api
 
@@ -105,7 +109,7 @@ def run_gui():
     
     # start the remote process
 
-    remote_process, remote_connection, queue_listener = start_remote_process()
+    remote_process, remote_workflow_connection, remote_canvas_connection, queue_listener = start_remote_process()
     
     # getting real tired of the matplotlib deprecation warnings
     import warnings
@@ -227,7 +231,8 @@ def run_gui():
                               plugins = plugins,
                               icon = icon,
                               remote_process = remote_process,
-                              remote_connection = remote_connection,
+                              remote_workflow_connection = remote_workflow_connection,
+                              remote_canvas_connection = remote_canvas_connection,
                               filename = args.filename,
                               debug = args.debug)
 
@@ -285,7 +290,7 @@ def start_remote_process():
         remote_process_thread.daemon = True
         remote_process_thread.start()
         
-        return (remote_process, (child_workflow_conn, child_matplotlib_conn), queue_listener)
+        return (remote_process, child_workflow_conn, child_matplotlib_conn, queue_listener)
     
 
 def remote_main(parent_workflow_conn, parent_mpl_conn, log_q, running_event):

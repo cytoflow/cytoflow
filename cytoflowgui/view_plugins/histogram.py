@@ -79,13 +79,13 @@ from traitsui.api import View, Item, Controller, EnumEditor, VGroup, TextEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
-from cytoflowgui.workflow.views.histogram import HistogramWorkflowView
+from cytoflowgui.workflow.views.histogram import HistogramWorkflowView, HistogramPlotParams
 from cytoflowgui.workflow.views.view_parameters import Data1DPlotParams
 
 from cytoflowgui.editors import SubsetListEditor, ColorTextEditor, ExtendableEnumEditor 
 
 from .i_view_plugin import IViewPlugin, VIEW_PLUGIN_EXT
-from .mixins import ViewHandlerMixin, PluginHelpMixin
+from .plugin_base import ViewHandlerMixin, PluginHelpMixin
 
 class HistogramHandler(ViewHandlerMixin, Controller):
 
@@ -162,11 +162,11 @@ class HistogramPlugin(Plugin, PluginHelpMixin):
     def get_view(self):
         return HistogramWorkflowView()
     
-    def get_view_handler(self, model):
-        return HistogramHandler(model = model)
-    
-    def get_view_params_handler(self, model):
-        return HistogramParamsHandler(model = model)
+    def get_handler(self, model, context):
+        if isinstance(model, HistogramWorkflowView):
+            return HistogramHandler(model = model, context = context)
+        elif isinstance(model, HistogramPlotParams):
+            return HistogramParamsHandler(model = model, context = context)
     
     def get_icon(self):
         return ImageResource('histogram')

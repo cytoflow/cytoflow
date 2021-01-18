@@ -26,9 +26,12 @@ Created on Feb 11, 2015
 import os.path, webbrowser, pathlib, sys
 
 import yaml.parser
+from textwrap import dedent
+
+import nbformat as nbf
+from yapf.yapflib.yapf_api import FormatCode
 
 from traits.api import Instance, Str, List, on_trait_change, provides
-from traitsui.api import View, Item, InstanceEditor
 from pyface.tasks.api import ITaskPane, TaskPane, Task, TaskLayout, PaneItem, VSplitter
 from pyface.tasks.action.api import SMenu, SMenuBar, SToolBar, TaskAction, TaskToggleGroup
 from pyface.api import (FileDialog, ImageResource, AboutDialog, 
@@ -49,7 +52,7 @@ from .matplotlib_backend_local import FigureCanvasQTAggLocal
 from .workflow import LocalWorkflow
 from .workflow_controller import WorkflowController
 from .util import DefaultFileDialog
-from .workflow.serialization import save_yaml, load_yaml, save_notebook
+from .workflow.serialization import save_yaml, load_yaml
 
 @provides(ITaskPane)
 class FlowTaskPane(TaskPane):
@@ -67,10 +70,7 @@ class FlowTaskPane(TaskPane):
     layout = Instance(QtGui.QVBoxLayout)                    # @UndefinedVariable
     canvas = Instance(FigureCanvasQTAggLocal)
         
-    def create(self, parent):
-        if self.canvas is not None:
-            return
-        
+    def create(self, parent):      
         # create a layout for the tab widget and the main view
         self.layout = layout = QtGui.QVBoxLayout()          # @UndefinedVariable
         self.control = QtGui.QWidget()                      # @UndefinedVariable
@@ -467,7 +467,7 @@ class FlowTask(Task):
                                    wildcard = (FileDialog.create_wildcard("Jupyter notebook", "*.ipynb") + ';' + #@UndefinedVariable  
                                                FileDialog.create_wildcard("All files", "*")))  # @UndefinedVariable
         if dialog.open() == OK:
-            save_notebook(self.model.workflow, dialog.path)
+            self.save_notebook(self.model.workflow, dialog.path)
 
     
     def on_prefs(self):
@@ -596,6 +596,42 @@ class FlowTask(Task):
 #             self.model.selected.current_view = view
 #             
 #         self.help_pane.help_id = view_id
+
+#### Jupyter notebook serialization
+    
+    def save_notebook(self, workflow, path):
+        nb = nbf.v4.new_notebook()
+        
+        # todo serialize here
+        header = dedent("""\
+            from cytoflow import *
+            %matplotlib inline""")
+        nb['cells'].append(nbf.v4.new_code_cell(header))
+            
+        for i, wi in enumerate(workflow):
+            try:
+                code = wi.operation.get_notebook_code(i)
+                code = FormatCode(code, style_config = 'pep8')[0]
+            except:
+                error(parent = None,
+                      message = "Had trouble serializing the {} operation"
+                                .format(wi.operation.friendly_id))
+            
+            nb['cells'].append(nbf.v4.new_code_cell(code))
+                        
+            for view in wi.views:
+                try:
+                    code = view.get_notebook_code(i)
+                    code = FormatCode(code, style_config = 'pep8')[0]
+                except:
+                    error(parent = None,
+                          message = "Had trouble serializing the {} view of the {} operation"
+                                     .format(view.friendly_id, wi.operation.friendly_id))
+                
+                nb['cells'].append(nbf.v4.new_code_cell(code))
+                
+        with open(path, 'w') as f:
+            nbf.write(nb, f)
 
         
 class FlowTaskPlugin(Plugin):

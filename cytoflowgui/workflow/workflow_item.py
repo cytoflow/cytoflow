@@ -43,16 +43,13 @@ class WorkflowItem(HasStrictTraits):
     
     # the operation this Item wraps
     operation = Instance(IWorkflowOperation, copy = "ref")
-    #operation_handler = Instance("Controller", transient = True)
     
     # the IViews associated with this operation
     views = List(IWorkflowView, copy = "ref")
     
     # the currently selected view
     current_view = Instance(IWorkflowView, copy = "ref")
-    
-    #view_handlers = List(Instance("Controller"), transient = True)
-    
+        
     # the Experiment that is the result of applying *operation* to the
     # previous_wi WorkflowItem's ``result``
     result = Instance(Experiment, transient = True)
@@ -74,6 +71,10 @@ class WorkflowItem(HasStrictTraits):
     
     # the next_wi WorkflowItem in the workflow
     next_wi = Instance('WorkflowItem', transient = True)
+    
+    # the workflow that we're a part of.  need to make klass = HasStrictTraits because
+    # we could be an instance of either LocalWorkflow or RemoteWorkflow
+    workflow = Instance(HasStrictTraits, transient = True)
     
     # is the wi valid?
     # MAGIC: first value is the default
@@ -100,6 +101,7 @@ class WorkflowItem(HasStrictTraits):
     
     def __str__(self):
         return "<{}: {}>".format(self.__class__.__name__, self.operation.__class__.__name__)
+    
 
     def __repr__(self):
         return "<{}: {}>".format(self.__class__.__name__, self.operation.__class__.__name__)
@@ -139,7 +141,6 @@ class WorkflowItem(HasStrictTraits):
                     plt.gcf().canvas.set_working(False)
                 except AttributeError:
                     pass
-                
             
             
     def apply(self):

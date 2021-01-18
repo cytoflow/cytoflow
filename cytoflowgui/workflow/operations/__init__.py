@@ -1,2 +1,2 @@
 
-from .i_workflow_operation import IWorkflowOperation
+from .operation_base import IWorkflowOperation

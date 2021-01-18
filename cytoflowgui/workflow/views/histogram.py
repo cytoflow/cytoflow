@@ -74,13 +74,15 @@ Plots a histogram.
                        huefacet = 'Dox').plot(ex)
 """
 
+from textwrap import dedent
+
 from traits.api import provides, Str, Enum, Bool, Instance
 
 from cytoflow import HistogramView
 import cytoflow.utility as util
 
 from cytoflowgui.workflow.subset import SubsetMixin
-from cytoflowgui.workflow.serialization import camel_registry, traits_repr, traits_str, dedent
+from cytoflowgui.workflow.serialization import camel_registry, traits_repr, traits_str
 from cytoflowgui.workflow.views import IWorkflowView
 from cytoflowgui.workflow.views.view_parameters import Data1DPlotParams
 

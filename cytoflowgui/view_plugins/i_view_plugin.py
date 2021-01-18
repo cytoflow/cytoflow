@@ -44,9 +44,11 @@ class IViewPlugin(Interface):
         The view's "short" name - for menus, toolbar tips, etc.
     """
     
-    id = Constant("FIXME")
-    view_id = Constant("FIXME")
-    short_name = Constant("FIXME")
+    
+    id = Constant
+    view_id = Constant
+    short_name = Constant
+
 
     def get_view(self):
         """
@@ -58,34 +60,28 @@ class IViewPlugin(Interface):
             An instance of the view that this plugin wraps
         """
         
-    def get_view_handler(self, model):
+        
+    def get_handler(self, model):
         """
-        Gets an instance of the handler for this view.
+        Gets an instance of the handler for this view or params model.
+        
+        NOTE: You have to check to see what the class of `model` is, and return
+        an appropriate handler!
         
         Parameters
         ----------
         model : IWorkflowView
             The model to associate with this handler.
             
-        Returns
-        -------
-        :class:`traitsui.Controller`
-        """
-        
-    def get_params_handler(self, model):
-        """
-        Gets an instance of the handler for this view's parameters
-        
-        Parameters
-        ----------
-        model : IWorkflowViewParameters
-            The model to associate with this handler
+        context : WorkflowItem
+            The WorkflowItem that this model is a part of.
             
         Returns
         -------
         :class:`traitsui.Controller`
         """
         
+
     def get_icon(self):
         """
         Returns an icon for this plugin
@@ -95,6 +91,20 @@ class IViewPlugin(Interface):
         :class:`pyface.ImageResource`
             The SVG icon    
         """
+        
+        
+    def get_help(self):
+        """
+        Gets the HTML help text for this plugin, deriving the filename from the class name.
+        Probably best to use the default implementation in :class:`PluginHelpMixin`
+        
+         
+        Returns
+        -------
+        string
+            The HTML help, in a single string.
+        """      
+        
         
     def get_plugin(self):
         """

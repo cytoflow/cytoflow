@@ -4,8 +4,11 @@ Created on Jan 15, 2021
 @author: brian
 '''
 
+from traits.api import HasStrictTraits
 from cytoflow.operations import IOperation
+
 class IWorkflowOperation(IOperation):
+    
     """
     An interface that extends an :mod:`cytoflow` operation with functions 
     required for GUI support.
@@ -67,7 +70,6 @@ class IWorkflowOperation(IOperation):
          
          - Changed.ESTIMATE_RESULT -- the results of calling "estimate" changed
         """
-        return True
 
     
     def should_clear_estimate(self, changed, payload):
@@ -80,7 +82,13 @@ class IWorkflowOperation(IOperation):
             
          - Changed.PREV_RESULT -- the previous :class:`.WorkflowItem`'s result changed
          """
-        return True
+    
+    
+    def clear_estimate(self):
+        """
+        Clear whatever variables hold the results of calling estimate()
+        """
+        
     
     def get_notebook_code(self, idx):
         """
@@ -97,4 +105,26 @@ class IWorkflowOperation(IOperation):
         string
             The Python code that calls this module.
         """
+        
+
+class WorkflowOperation(HasStrictTraits):
+    """
+    A default implementation of :class:`IWorkflowOperation`
+    """
+    
+    def should_apply(self, changed, payload):
+        return True
+
+    
+    def should_clear_estimate(self, changed, payload):
+        return True
+    
+    
+    def clear_estimate(self):
+        raise NotImplementedError("clear_estimate was called but it's not implemented!")
+        
+    
+    def get_notebook_code(self, idx):
         raise NotImplementedError("GUI plugins must override get_notebook_code()")
+    
+

@@ -24,12 +24,12 @@ Created on Dec 2, 2017
 @author: brian
 '''
 
-from textwrap import dedent
 import pandas, numpy
 from pandas.api.types import CategoricalDtype
 
-from pyface.api import error
 from traits.api import DelegationError
+
+from textwrap import dedent  # @UnusedImport
 
 #### YAML serialization
 
@@ -198,45 +198,6 @@ def traits_eq(self, other):
 
 def traits_hash(self):
     return hash(tuple(self.trait_get(self.copyable_trait_names()).items()))
-    
-#### Jupyter notebook serialization
-
-import nbformat as nbf
-from yapf.yapflib.yapf_api import FormatCode
-
-def save_notebook(workflow, path):
-    nb = nbf.v4.new_notebook()
-    
-    # todo serialize here
-    header = dedent("""\
-        from cytoflow import *
-        %matplotlib inline""")
-    nb['cells'].append(nbf.v4.new_code_cell(header))
-        
-    for i, wi in enumerate(workflow):
-        try:
-            code = wi.operation.get_notebook_code(i)
-            code = FormatCode(code, style_config = 'pep8')[0]
-        except:
-            error(parent = None,
-                  message = "Had trouble serializing the {} operation"
-                            .format(wi.operation.friendly_id))
-        
-        nb['cells'].append(nbf.v4.new_code_cell(code))
-                    
-        for view in wi.views:
-            try:
-                code = view.get_notebook_code(i)
-                code = FormatCode(code, style_config = 'pep8')[0]
-            except:
-                error(parent = None,
-                      message = "Had trouble serializing the {} view of the {} operation"
-                                 .format(view.friendly_id, wi.operation.friendly_id))
-            
-            nb['cells'].append(nbf.v4.new_code_cell(code))
-            
-    with open(path, 'w') as f:
-        nbf.write(nb, f)
 
 # set underlying cytoflow repr
 def traits_repr(obj):

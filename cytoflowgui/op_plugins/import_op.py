@@ -96,17 +96,21 @@ Import FCS files and associate them with experimental conditions (metadata.)
 
 """
 
+from traits.api import (Button, Property, cached_property, on_trait_change, 
+                        Instance, provides, observe, Event)
 from traitsui.api import (View, Item, Controller, TextEditor, ButtonEditor, 
                           InstanceEditor, HGroup, VGroup, Label)
-from traits.api import (Button, Property, cached_property, provides, on_trait_change, Instance)
 
 from envisage.api import Plugin, contributes_to
+
+from cytoflow.utility import sanitize_identifier
                        
 from cytoflowgui.editors import VerticalListEditor
 from cytoflowgui.import_dialog import ExperimentDialogModel, ExperimentDialogHandler
-from cytoflowgui.op_plugins.i_op_plugin import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
-from cytoflowgui.op_plugins.i_op_plugin import PluginHelpMixin
-from cytoflowgui.workflow.operations.import_op import ImportWorkflowOp
+
+from .i_op_plugin import IOperationPlugin, OP_PLUGIN_EXT 
+from .plugin_base import OpHandler, PluginHelpMixin, shared_op_traits_view
+from cytoflowgui.workflow.operations.import_op import ImportWorkflowOp, Channel
 
 class ChannelHandler(Controller):
 
@@ -116,24 +120,25 @@ class ChannelHandler(Controller):
                                     editor = TextEditor(auto_set = False), 
                                     show_label = False)))
 
-
-class ImportHandler(OpHandlerMixin, Controller):
+class ImportHandler(OpHandler):
     
     setup_event = Button(label="Set up experiment...")
-    reset_channels = Button(label = "Reset channel names")
+    reset_channels_event = Event()
     samples = Property(depends_on = 'model.tubes', status = True)
     dialog_model = Instance(ExperimentDialogModel)
         
     def default_traits_view(self):
         return View(VGroup(Label(label = "Channels",
-                                   visible_when = 'model.tubes' ),
+                                 visible_when = 'model.tubes' ),
                            Item('object.channels_list',
                                 editor = VerticalListEditor(editor = InstanceEditor(),
                                                             style = 'custom',
                                                             mutable = False,
                                                             deletable = True),
                                 show_label = False),
-                           Item('handler.reset_channels',
+                           Item('handler.reset_channels_event',
+                                editor = ButtonEditor(value = True,
+                                                      label = "Reset channel names"),
                            show_label = False),
                     visible_when = 'object.channels_list'),
                     Item('object.events',
@@ -142,14 +147,17 @@ class ImportHandler(OpHandlerMixin, Controller):
                          label="Events per\nsample"),
                     Item('handler.samples', label='Samples', style='readonly'),
                     Item('ret_events', label='Events', style='readonly'),
-                    Item('handler.setup_event', show_label=False),
-                    Item('do_estimate',
-                         editor = ButtonEditor(value = True,
-                                               label = "Import!"),
+                    Item('handler.setup_event',
+                         editor = ButtonEditor(value = True, label = "Set up experiment..."),
+                         show_label=False),
+                    Item('handler.do_estimate',
+                         editor = ButtonEditor(value = True, label = "Import!"),
                          show_label = False),
-                    shared_op_traits)
+                    shared_op_traits_view)
         
-    def _setup_event_fired(self):
+     
+    @observe('setup_event')   
+    def _on_setup(self, event):
         """
         Import data; save as self.result
         """
@@ -158,9 +166,11 @@ class ImportHandler(OpHandlerMixin, Controller):
                                           import_op = self.model)
         
         handler.edit_traits(kind = 'livemodal') 
-                
-    def _reset_channels_fired(self):
-        self.model.reset_channels()
+    
+    @observe('reset_channels_event')    
+    def _on_reset_channels(self, event):
+        self.model.channels_list = [Channel(channel = x, name = sanitize_identifier(x)) 
+                                    for x in self.model.original_channels]
         
         
     @cached_property
@@ -196,8 +206,8 @@ class ImportPlugin(Plugin, PluginHelpMixin):
     def get_operation(self):
         return ImportWorkflowOp()
     
-    def get_handler(self, model):
-        return ImportHandler(model = model)
+    def get_handler(self, model, context):
+        return ImportHandler(model = model, context = context)
     
     def get_icon(self):
         return None

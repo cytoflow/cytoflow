@@ -6,7 +6,7 @@ Created on Jan 16, 2021
 
 import os
 
-from traits.api import HasTraits, on_trait_change, Property, HTML
+from traits.api import HasTraits, on_trait_change, Property, HTML, Instance
 from traitsui.api import View, Item, HGroup, TextEditor, InstanceEditor
 
 import cytoflow.utility as util
@@ -84,7 +84,7 @@ class ViewHandlerMixin(HasTraits):
 #                                    style = 'custom',
 #                                    show_label = False))
     
-    #context = Instance(WorkflowItem)
+    context = Instance('WorkflowItem')
     
     conditions_names = Property(depends_on = "context.conditions")
     previous_conditions_names = Property(depends_on = "context.previous_wi.conditions")

@@ -76,13 +76,14 @@ class CytoflowApplication(TasksApplication):
     
     # keep the application log in memory
     application_log = Instance(io.StringIO, ())
-    
-    # local process's central model
-    remote_process = Any
-    remote_connection = Any
-   
+
     # the model that's shared across all three tasks
     model = Instance(LocalWorkflow)
+
+    # the connection to the remote process
+    remote_process = Any
+    remote_workflow_connection = Any
+    remote_canvas_connection = Any
     
     # the matplotlib canvas that's shared across all three tasks
     canvas = Instance(FigureCanvasQTAggLocal)
@@ -118,11 +119,11 @@ class CytoflowApplication(TasksApplication):
         self.on_trait_change(self.show_error, 'application_error', dispatch = 'ui')
                 
         # set up the model
-        self.model = LocalWorkflow(remote_connection = self.remote_connection)
+        self.model = LocalWorkflow(self.remote_workflow_connection)
         
         # and the local canvas
         self.canvas = FigureCanvasQTAggLocal(Figure(), 
-                                             self.model.child_matplotlib_conn, 
+                                             self.remote_canvas_connection, 
                                              ImageResource('gear').create_image(size = (1000, 1000)))
 
         # run the GUI

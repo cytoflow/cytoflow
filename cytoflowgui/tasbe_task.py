@@ -128,7 +128,9 @@ class TASBETask(Task):
                           right = PaneItem("edu.mit.synbio.cytoflowgui.help_pane", width = 350))
      
     def create_central_pane(self):
-        return self.application.plot_pane
+        raise NotImplementedError("Implement me!")
+        pass
+        #return self.application.plot_pane
      
     def create_dock_panes(self):
         self.calibration_pane = CalibrationPane(model = self.model, 
