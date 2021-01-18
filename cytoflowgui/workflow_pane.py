@@ -18,17 +18,15 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from traits.api import provides, Instance, List, Tuple
-from traitsui.api import View, Item
 
 from pyface.qt import QtCore
-from pyface.tasks.api import TraitsDockPane, IDockPane, Task
+from pyface.tasks.api import TraitsDockPane, IDockPane
 from pyface.action.api import ToolBarManager
 from pyface.tasks.action.api import TaskAction
 
 from .op_plugins import IOperationPlugin
 from .util import HintedMainWindow
 from .workflow_controller import WorkflowController
-from .editors import VerticalNotebookEditor
 
 @provides(IDockPane)
 class WorkflowDockPane(TraitsDockPane):
@@ -77,6 +75,7 @@ class WorkflowDockPane(TraitsDockPane):
         
         # construct the view 
         self.ui = self.handler.edit_traits(view = 'workflow_view', 
+                                           context = self.model,
                                            kind = 'subpanel', 
                                            parent = window)
         

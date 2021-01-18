@@ -106,6 +106,7 @@ class ViewDockPane(TraitsDockPane):
                           self.toolbar.create_tool_bar(window))
         
         self.ui = self.handler.edit_traits(view = 'selected_view_traits',
+                                           context = self.model,
                                            kind = 'subpanel', 
                                            parent = window)
         
@@ -162,6 +163,7 @@ class PlotParamsPane(TraitsDockPane):
         """
     
         self.ui = self.handler.edit_traits(view = 'selected_view_plot_params',
+                                           context = self.model,
                                            kind='subpanel', 
                                            parent=parent,
                                            scrollable = True)

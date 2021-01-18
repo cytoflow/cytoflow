@@ -148,7 +148,7 @@ class WorkflowItem(HasStrictTraits):
         Apply this wi's operation to the previous_wi wi's result
         """
         logger.debug("WorkflowItem.apply :: {}".format((self)))
-        self.apply_called = True
+#         self.apply_called = True
          
         prev_result = self.previous_wi.result if self.previous_wi else None
          

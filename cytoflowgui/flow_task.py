@@ -77,8 +77,9 @@ class FlowTaskPane(TaskPane):
         self.control.setLayout(layout)
         
         tabs_ui = self.handler.edit_traits(view = 'current_plot_view',
-                                         kind = 'subpanel',
-                                         parent = parent)
+                                           context = self.model,
+                                           kind = 'subpanel',
+                                           parent = parent)
         
         self.layout.addWidget(tabs_ui.control) 
         

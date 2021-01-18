@@ -25,11 +25,11 @@ Created on Mar 15, 2015
 
 import logging
 
-from traits.api import Instance, List, DelegatesTo, observe, \
-                       Property, cached_property
-from traitsui.api import View, Item, Handler, InstanceEditor, Controller, Spring
+from traits.api import List, DelegatesTo, Dict, observe, Property, cached_property
+from traitsui.api import View, Item, InstanceEditor, Controller, Spring
 from pyface.qt import QtGui
 
+from .workflow import WorkflowItem
 from cytoflowgui.editors import VerticalNotebookEditor
 
 logger = logging.getLogger(__name__)
@@ -49,38 +49,61 @@ class WorkflowItemHandler(Controller):
     # operation plugin, and it controls what operation traits are in the UI
     # and any special handling of them.  since the handler doesn't 
     # maintain any state, we can make and destroy as needed.
-    operation_handler = Property(depends_on = 'operation', 
-                                 trait = Instance(Handler), 
-                                 transient = True)
+#     operation_handler = Property(depends_on = 'operation', 
+#                                  trait = Instance(Handler), 
+#                                  transient = True)
 
     # the view on that handler        
-    operation_traits_view = View(Item('handler.operation_handler',
-                                      style = 'custom',
-                                      show_label = False))
+    def operation_traits_view(self):
+        op_plugin = next((x for x in self.op_plugins if self.model.operation.id == x.operation_id))
+        handler = op_plugin.get_handler(model = self.model.operation,
+                                        context = self.model)
+        return View(Item('operation',
+                         style = 'custom',
+                         show_label = False),
+                    handler = handler)
         
     # the handler for the currently selected view
-    current_view_handler = Property(depends_on = 'current_view',
-                                    trait = Instance(Handler),
-                                    transient = True) 
+#     current_view_handler = Property(depends_on = 'current_view',
+#                                     trait = Instance(Handler),
+#                                     transient = True) 
     
     # the view for the view params
-    current_view_traits_view = View(Item('handler.current_view_handler',
-                                         style = 'custom',
-                                         show_label = False))
+    def current_view_traits_view(self):
+        view_plugin = next((x for x in self.view_plugins if self.model.current_view.id == x.view_id))
+        handler = view_plugin.get_view_handler(model = self.model.current_view,
+                                               context = self.model)
+        
+        return View(Item('current_view',
+                         style = 'custom',
+                         show_label = False),
+                    handler = handler)
     
     # the view for the plot params
-    current_view_plot_params_view = View(Item('handler.current_view_handler',
-                                              editor = InstanceEditor(view = 'plot_params_view'),
-                                              style = 'custom',
-                                              show_label = False))
+    def current_view_plot_params_view(self):
+        view_plugin = next((x for x in self.view_plugins if self.model.current_view.id == x.view_id))
+        handler = view_plugin.get_view_handler(model = self.model.current_view,
+                                               context = self.model)
+        
+        return View(Item('current_view',
+                         editor = InstanceEditor(view = 'plot_params_view'),
+                         style = 'custom',
+                         show_label = False),
+                    handler = handler)
     
     # the view for the current plot
-    current_plot_view = View(Item('handler.current_view_handler',
-                                  editor = InstanceEditor(view = 'current_plot_view'),
-                                  style = 'custom',
-                                  show_label = False))
+    def current_plot_view(self):
+        view_plugin = next((x for x in self.view_plugins if self.model.current_view.id == x.view_id))
+        handler = view_plugin.get_view_handler(model = self.model.current_view,
+                                               context = self.model)
+        
+        return View(Item('current_view',
+                         editor = InstanceEditor(view = 'current_plot_view'),
+                         style = 'custom',
+                         show_label = False),
+                    handler = handler)
 
-    # the icon for the vertical notebook view.  Qt specific, sadly.
+    # the icon for the vertical notebook view.  Qt specific.
     icon = Property(depends_on = 'status', transient = True)  
 
     @cached_property
@@ -104,6 +127,7 @@ class WorkflowItemHandler(Controller):
         op_plugin = next((x for x in self.op_plugins if self.model.operation.id == x.operation_id))
         return op_plugin.get_handler(model = self.model.operation,
                                      context = self.model)
+
      
     @cached_property
     def _get_current_view_handler(self):
@@ -117,74 +141,82 @@ class WorkflowItemHandler(Controller):
 
 class WorkflowController(Controller):
     
-    workflow_handlers = List(WorkflowItemHandler)
-    selected = Instance(WorkflowItemHandler)
+    workflow_handlers = Dict(WorkflowItem, WorkflowItemHandler)
     
     # plugin lists
     op_plugins = List
     view_plugins = List
     
-    current_plot_view = View(Item('handler.selected',
-                                  editor = InstanceEditor(view = 'current_plot_view'),
-                                  style = 'custom',
-                                  show_label = False))
     
-    workflow_view = View(Item('handler.workflow_handlers',
-                              editor = VerticalNotebookEditor(view = 'operation_traits_view',
-                                                              page_name = '.name',
-                                                              page_description = '.friendly_id',
-                                                              page_icon = '.icon',
-                                                              delete = True,
-                                                              page_deletable = '.deletable',
-                                                              selected = 'selected',
-                                                              multiple_open = False),
+    def current_plot_view(self):  
+        return View(Item('selected',
+                         editor = InstanceEditor(view = 'current_plot_view'),
+                         style = 'custom',
+                         show_label = False),
+                    handler = self.workflow_handlers[self.model.selected] if self.model.selected else None)
+        
+        
+    def workflow_view(self):
+        return View(Item('workflow',
+                         editor = VerticalNotebookEditor(view = 'operation_traits_view',
+                                                         page_name = '.name',
+                                                         page_description = '.friendly_id',
+                                                         page_icon = '.icon',
+                                                         delete = True,
+                                                         page_deletable = '.deletable',
+                                                         selected = 'selected',
+                                                         multiple_open = False),
                                show_label = False),
+                         handler = self,
                          scrollable = True)
-    
-    selected_view_traits = View(Item('handler.selected',
-                                     editor = InstanceEditor(view = 'current_view_traits_view'),
-                                     style = 'custom',
-                                     show_label = False),
-                                Spring(),
-                                Item('apply_calls',
-                                     style = 'readonly',
-                                     visible_when = 'debug'),
-                                Item('plot_calls',
-                                     style = 'readonly',
-                                     visible_when = 'debug'),
-                                kind = 'panel',
-                                scrollable = True)
-    
-    
-    selected_view_plot_params = View(Item('handler.selected',
-                                     editor = InstanceEditor(view = 'current_view_plot_params_view'),
-                                     style = 'custom',
-                                     show_label = False))
+        
+        
+    def selected_view_traits(self):
+        return View(Item('selected',
+                         editor = InstanceEditor(view = 'current_view_traits_view'),
+                         style = 'custom',
+                         show_label = False),
+                    Spring(),
+                    Item('apply_calls',
+                         style = 'readonly',
+                         visible_when = 'debug'),
+                    Item('plot_calls',
+                         style = 'readonly',
+                         visible_when = 'debug'),
+                    handler = self.workflow_handlers[self.model.selected] if self.model.selected else None,
+                    kind = 'panel',
+                    scrollable = True)
+        
+        
+    def selected_view_plot_params(self):
+        return View(Item('selected',
+                         editor = InstanceEditor(view = 'current_view_plot_params_view'),
+                         style = 'custom',
+                         show_label = False),
+                    handler = self.workflow_handlers[self.model.selected] if self.model.selected else None)
+        
     
     @observe('model:workflow:items', post_init = True)
     def _on_workflow_add_remove_items(self, event):
         logger.debug("WorkflowController._on_workflow_add_remove_items :: {}"
                       .format((event.index, event.added, event.removed)))
 
-        idx = event.index
+        wi = self.model.workflow[event.index]
                 
         # remove deleted items from the linked list
         if event.removed:
             assert len(event.removed) == 1
-            removed_handler = self.workflow_handlers[idx]
-            self.workflow_handlers.remove(removed_handler)
+            del self.workflow_handlers[wi]
             
-            if removed_handler == self.selected:
+            if wi == self.selected:
                 self.selected = None
         
         # add new items to the linked list
         if event.added:
             assert len(event.added) == 1
-            wi = self.model.workflow[idx]
-            self.workflow_handlers.insert(idx, WorkflowItemHandler(model = wi,
-                                                                   op_plugins = self.op_plugins,
-                                                                   view_plugins = self.view_plugins))
+            self.workflow_handlers[wi] = WorkflowItemHandler(model = wi,
+                                                             op_plugins = self.op_plugins,
+                                                             view_plugins = self.view_plugins)
             
 
 
-             

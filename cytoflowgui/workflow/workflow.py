@@ -201,6 +201,7 @@ class LocalWorkflow(HasStrictTraits):
     log_thread = Instance(threading.Thread)
     message_q = Instance(Queue, ())
     
+    debug = Bool(False)
     # count the number of times the remote process calls apply() or plot().
     # useful for debugging
     apply_calls = Int(0)
