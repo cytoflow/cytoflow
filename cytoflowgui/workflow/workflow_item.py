@@ -270,6 +270,27 @@ class WorkflowItem(HasStrictTraits):
                     
             return True
 
+    ### Overrides to make edit_traits go looking for views in the handler
+    def edit_traits(self, view = None, parent = None, kind = None, 
+                        context = None, handler = None, id = "",
+                        scrollable=None, **args):
+        
+        if context is None:
+            context = self
+
+        view = self.trait_view(view, handler = handler)
+
+        return view.ui(context, parent, kind, self.trait_view_elements(),
+                       handler, id, scrollable, args)
+        
+    def trait_view(self, name = None, view_element = None, handler = None):
+        return self.__class__._trait_view(
+            name,
+            view_element,
+            self.default_traits_view,
+            self.trait_view_elements,
+            self.visible_traits,
+            handler if handler else self)
                     
 
     

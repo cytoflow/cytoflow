@@ -153,7 +153,8 @@ class ImportHandler(OpHandler):
                     Item('handler.do_estimate',
                          editor = ButtonEditor(value = True, label = "Import!"),
                          show_label = False),
-                    shared_op_traits_view)
+                    shared_op_traits_view,
+                    handler = self)
         
      
     @observe('setup_event')   

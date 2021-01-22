@@ -26,8 +26,7 @@ Created on Mar 8, 2015
 from traits.api import HasTraits
 
 from traitsui.basic_editor_factory import BasicEditorFactory
-from traits.api \
-    import Bool, Any, List, Instance, Undefined, on_trait_change, Str
+from traits.api import Bool, Any, List, Instance, Undefined, on_trait_change, Str, Callable
 from traits.trait_base import user_name_for
 from traitsui.ui_traits import AView
 from traitsui.qt4.editor import Editor
@@ -155,9 +154,10 @@ class _VerticalNotebookEditor(Editor):
         # Create a new notebook page:
         page = self.notebook.create_page().set(data = obj)
 
-        # Create the Traits UI for the object to put in the notebook page:
+        # Create the Traits UI for the object to put in the notebook page:                                
         ui = obj.edit_traits(parent=page.parent,
                              view=self.factory.view,
+                             handler=self.factory.handler_factory(obj) if self.factory.handler_factory else None,
                              kind='subpanel').set(parent=self.ui)
 
         # Get the name of the page being added to the notebook:
@@ -245,6 +245,9 @@ class VerticalNotebookEditor(BasicEditorFactory):
 
     # Name of the view to use for each page:
     view = AView
+    
+    # A factory to produce a handler from an object
+    handler_factory = Callable
 
     # Name of the trait to synchronize notebook page
     # selection with:

@@ -25,8 +25,8 @@ Created on Mar 15, 2015
 
 import logging
 
-from traits.api import List, DelegatesTo, Dict, observe, Property, cached_property
-from traitsui.api import View, Item, InstanceEditor, Controller, Spring
+from traits.api import List, DelegatesTo, Dict, observe, Property, cached_property, Instance
+from traitsui.api import View, Item, InstanceEditor, Controller, ModelView, Spring, Handler, Include
 from pyface.qt import QtGui
 
 from .workflow import WorkflowItem
@@ -58,10 +58,12 @@ class WorkflowItemHandler(Controller):
         op_plugin = next((x for x in self.op_plugins if self.model.operation.id == x.operation_id))
         handler = op_plugin.get_handler(model = self.model.operation,
                                         context = self.model)
+                
         return View(Item('operation',
+                         editor = InstanceEditor(view = handler.default_traits_view()),
                          style = 'custom',
                          show_label = False),
-                    handler = handler)
+                    handler = self)
         
     # the handler for the currently selected view
 #     current_view_handler = Property(depends_on = 'current_view',
@@ -77,7 +79,7 @@ class WorkflowItemHandler(Controller):
         return View(Item('current_view',
                          style = 'custom',
                          show_label = False),
-                    handler = handler)
+                    handler = self)
     
     # the view for the plot params
     def current_view_plot_params_view(self):
@@ -89,7 +91,7 @@ class WorkflowItemHandler(Controller):
                          editor = InstanceEditor(view = 'plot_params_view'),
                          style = 'custom',
                          show_label = False),
-                    handler = handler)
+                    handler = self)
     
     # the view for the current plot
     def current_plot_view(self):
@@ -101,7 +103,7 @@ class WorkflowItemHandler(Controller):
                          editor = InstanceEditor(view = 'current_plot_view'),
                          style = 'custom',
                          show_label = False),
-                    handler = handler)
+                    handler = self)
 
     # the icon for the vertical notebook view.  Qt specific.
     icon = Property(depends_on = 'status', transient = True)  
@@ -154,9 +156,17 @@ class WorkflowController(Controller):
                          style = 'custom',
                          show_label = False),
                     handler = self.workflow_handlers[self.model.selected] if self.model.selected else None)
-        
+    
         
     def workflow_view(self):
+#         wi_view = View(Item('operation',
+#                             editor = InstanceEditor(),
+#                             style = 'custom',                                                                    
+#                             show_label = False),
+#                        handler = )
+# 
+#         wi_view = View(Include)
+        
         return View(Item('workflow',
                          editor = VerticalNotebookEditor(view = 'operation_traits_view',
                                                          page_name = '.name',
@@ -165,10 +175,11 @@ class WorkflowController(Controller):
                                                          delete = True,
                                                          page_deletable = '.deletable',
                                                          selected = 'selected',
+                                                         handler_factory = self.handler_factory,
                                                          multiple_open = False),
-                               show_label = False),
-                         handler = self,
-                         scrollable = True)
+                         show_label = False),
+                    handler = self,
+                    scrollable = True)
         
         
     def selected_view_traits(self):
@@ -195,6 +206,14 @@ class WorkflowController(Controller):
                          show_label = False),
                     handler = self.workflow_handlers[self.model.selected] if self.model.selected else None)
         
+    def handler_factory(self, wi):
+        if wi not in self.workflow_handlers:
+            self.workflow_handlers[wi] = WorkflowItemHandler(model = wi,
+                                                             op_plugins = self.op_plugins,
+                                                             view_plugins = self.view_plugins)
+            
+        return self.workflow_handlers[wi]
+        
     
     @observe('model:workflow:items', post_init = True)
     def _on_workflow_add_remove_items(self, event):
@@ -214,9 +233,10 @@ class WorkflowController(Controller):
         # add new items to the linked list
         if event.added:
             assert len(event.added) == 1
-            self.workflow_handlers[wi] = WorkflowItemHandler(model = wi,
-                                                             op_plugins = self.op_plugins,
-                                                             view_plugins = self.view_plugins)
+            if wi not in self.workflow_handlers:
+                self.workflow_handlers[wi] = WorkflowItemHandler(model = wi,
+                                                                 op_plugins = self.op_plugins,
+                                                                 view_plugins = self.view_plugins)
             
 
 
