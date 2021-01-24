@@ -76,7 +76,7 @@ class FlowTaskPane(TaskPane):
         self.control = QtGui.QWidget()                      # @UndefinedVariable
         self.control.setLayout(layout)
         
-        tabs_ui = self.handler.edit_traits(view = 'current_plot_view',
+        tabs_ui = self.handler.edit_traits(view = 'selected_view_plot',
                                            context = self.model,
                                            kind = 'subpanel',
                                            parent = parent)

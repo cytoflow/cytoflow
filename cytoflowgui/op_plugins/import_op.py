@@ -105,7 +105,7 @@ from envisage.api import Plugin, contributes_to
 
 from cytoflow.utility import sanitize_identifier
                        
-from cytoflowgui.editors import VerticalListEditor
+from cytoflowgui.editors import VerticalListEditor, InstanceHandlerEditor
 from cytoflowgui.import_dialog import ExperimentDialogModel, ExperimentDialogHandler
 
 from .i_op_plugin import IOperationPlugin, OP_PLUGIN_EXT 
@@ -127,11 +127,11 @@ class ImportHandler(OpHandler):
     samples = Property(depends_on = 'model.tubes', status = True)
     dialog_model = Instance(ExperimentDialogModel)
         
-    def default_traits_view(self):
+    def traits_view(self):
         return View(VGroup(Label(label = "Channels",
                                  visible_when = 'model.tubes' ),
                            Item('object.channels_list',
-                                editor = VerticalListEditor(editor = InstanceEditor(),
+                                editor = VerticalListEditor(editor = InstanceHandlerEditor(handler_factory = ChannelHandler),
                                                             style = 'custom',
                                                             mutable = False,
                                                             deletable = True),

@@ -79,17 +79,17 @@ from traitsui.api import View, Item, Controller, EnumEditor, VGroup, TextEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
-from cytoflowgui.workflow.views.histogram import HistogramWorkflowView, HistogramPlotParams
+from cytoflowgui.workflow.views.histogram import HistogramWorkflowView
 from cytoflowgui.workflow.views.view_parameters import Data1DPlotParams
 
 from cytoflowgui.editors import SubsetListEditor, ColorTextEditor, ExtendableEnumEditor 
 
 from .i_view_plugin import IViewPlugin, VIEW_PLUGIN_EXT
-from .plugin_base import ViewHandlerMixin, PluginHelpMixin
+from .plugin_base import ViewHandler, PluginHelpMixin
 
-class HistogramHandler(ViewHandlerMixin, Controller):
+class HistogramHandler(ViewHandler):
 
-    def default_traits_view(self):
+    def traits_view(self):
         return View(VGroup(
                     VGroup(Item('channel',
                                 editor=EnumEditor(name='context.channels'),
@@ -132,10 +132,9 @@ class HistogramHandler(ViewHandlerMixin, Controller):
                          visible_when = 'context.view_error',
                          editor = ColorTextEditor(foreground_color = "#000000",
                                                   background_color = "#ff9191"))))
-        
-class HistogramParamsHandler(Controller):
-    
-    def default_traits_view(self):
+
+
+    def params_view(self):
         base_view = Data1DPlotParams.default_traits_view(self)
          
         return View(Item('num_bins',
@@ -163,10 +162,7 @@ class HistogramPlugin(Plugin, PluginHelpMixin):
         return HistogramWorkflowView()
     
     def get_handler(self, model, context):
-        if isinstance(model, HistogramWorkflowView):
-            return HistogramHandler(model = model, context = context)
-        elif isinstance(model, HistogramPlotParams):
-            return HistogramParamsHandler(model = model, context = context)
+        return HistogramHandler(model = model, context = context)
     
     def get_icon(self):
         return ImageResource('histogram')

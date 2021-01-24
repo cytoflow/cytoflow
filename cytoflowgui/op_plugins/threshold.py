@@ -68,11 +68,11 @@ Draw a threshold gate.  To set a new threshold, click on the plot.
 '''
 
 from traits.api import provides
-from traitsui.api import View, Item, EnumEditor, Controller, VGroup, TextEditor
+from traitsui.api import View, Item, EnumEditor, VGroup, TextEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
-from cytoflowgui.view_plugins.plugin_base import ViewHandlerMixin
+from cytoflowgui.view_plugins.plugin_base import ViewHandler
 from cytoflowgui.editors import SubsetListEditor, ColorTextEditor, ExtendableEnumEditor
 from cytoflowgui.workflow.operations.threshold import ThresholdWorkflowOp, ThresholdSelectionView
 
@@ -90,8 +90,8 @@ class ThresholdHandler(OpHandler):
                          editor = TextEditor(auto_set = False)),
                     shared_op_traits_view) 
         
-class ThresholdViewHandler(ViewHandlerMixin, Controller):
-    def default_traits_view(self):
+class ThresholdViewHandler(ViewHandler):
+    def traits_view(self):
         return View(VGroup(
                     VGroup(Item('channel', 
                                 label = "Channel",

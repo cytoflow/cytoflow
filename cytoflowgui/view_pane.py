@@ -162,7 +162,7 @@ class PlotParamsPane(TraitsDockPane):
         """ Create and return the toolkit-specific contents of the dock pane.
         """
     
-        self.ui = self.handler.edit_traits(view = 'selected_view_plot_params',
+        self.ui = self.handler.edit_traits(view = 'selected_view_params',
                                            context = self.model,
                                            kind='subpanel', 
                                            parent=parent,

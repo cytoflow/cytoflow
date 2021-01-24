@@ -30,6 +30,7 @@ from traitsui.api import View, Item, InstanceEditor, Controller, ModelView, Spri
 from pyface.qt import QtGui
 
 from .workflow import WorkflowItem
+from .editors import InstanceHandlerEditor
 from cytoflowgui.editors import VerticalNotebookEditor
 
 logger = logging.getLogger(__name__)
@@ -45,68 +46,75 @@ class WorkflowItemHandler(Controller):
     op_plugins = List
     view_plugins = List
         
-    # the handler that's associated with this operation; we get it from the 
-    # operation plugin, and it controls what operation traits are in the UI
-    # and any special handling of them.  since the handler doesn't 
-    # maintain any state, we can make and destroy as needed.
-#     operation_handler = Property(depends_on = 'operation', 
-#                                  trait = Instance(Handler), 
-#                                  transient = True)
 
     # the view on that handler        
-    def operation_traits_view(self):
-        op_plugin = next((x for x in self.op_plugins if self.model.operation.id == x.operation_id))
+    def operation_traits(self):
+        op_plugin = next((x for x in self.op_plugins 
+                          if self.model.operation.id == x.operation_id))
         handler = op_plugin.get_handler(model = self.model.operation,
                                         context = self.model)
                 
         return View(Item('operation',
-                         editor = InstanceEditor(view = handler.default_traits_view()),
-                         style = 'custom',
-                         show_label = False),
-                    handler = self)
-        
-    # the handler for the currently selected view
-#     current_view_handler = Property(depends_on = 'current_view',
-#                                     trait = Instance(Handler),
-#                                     transient = True) 
-    
-    # the view for the view params
-    def current_view_traits_view(self):
-        view_plugin = next((x for x in self.view_plugins if self.model.current_view.id == x.view_id))
-        handler = view_plugin.get_view_handler(model = self.model.current_view,
-                                               context = self.model)
-        
-        return View(Item('current_view',
-                         style = 'custom',
-                         show_label = False),
-                    handler = self)
-    
-    # the view for the plot params
-    def current_view_plot_params_view(self):
-        view_plugin = next((x for x in self.view_plugins if self.model.current_view.id == x.view_id))
-        handler = view_plugin.get_view_handler(model = self.model.current_view,
-                                               context = self.model)
-        
-        return View(Item('current_view',
-                         editor = InstanceEditor(view = 'plot_params_view'),
-                         style = 'custom',
-                         show_label = False),
-                    handler = self)
-    
-    # the view for the current plot
-    def current_plot_view(self):
-        view_plugin = next((x for x in self.view_plugins if self.model.current_view.id == x.view_id))
-        handler = view_plugin.get_view_handler(model = self.model.current_view,
-                                               context = self.model)
-        
-        return View(Item('current_view',
-                         editor = InstanceEditor(view = 'current_plot_view'),
+                         editor = InstanceEditor(view = handler.traits_view()),
                          style = 'custom',
                          show_label = False),
                     handler = self)
 
+    
+    # the view for the view traits
+    def view_traits(self):
+        if self.model.current_view is None:
+            return View()
+        
+        view_plugin = next((x for x in self.view_plugins 
+                            if self.model.current_view.id == x.view_id))
+        handler = view_plugin.get_view_handler(model = self.model.current_view,
+                                               context = self.model)
+        
+        return View(Item('current_view',
+                         editor = InstanceEditor(view = handler.traits_view()),
+                         style = 'custom',
+                         show_label = False),
+                    handler = self)
+        
+    
+    # the view for the view params
+    def view_params(self):
+        if self.model.current_view is None:
+            return View()
+        
+        view_plugin = next((x for x in self.view_plugins 
+                            if self.model.current_view.id == x.view_id))
+        handler = view_plugin.get_handler(model = self.model.current_view,
+                                          context = self.model)
+        
+        return View(Item('current_view',
+                         editor = InstanceEditor(view = handler.params_view()),
+                         style = 'custom',
+                         show_label = False),
+                    handler = self)
+        
+    
+    # the view for the current plot
+    def view_plot(self):
+        if self.model.current_view is None:
+            return View()
+        
+        view_plugin = next((x for x in self.view_plugins 
+                            if self.model.current_view.id == x.view_id))
+        handler = view_plugin.get_handler(model = self.model.current_view,
+                                          context = self.model)
+         
+        return View(Item('current_view',
+                         editor = InstanceEditor(view = handler.current_plot_view()),
+                         style = 'custom',
+                         show_label = False),
+                    handler = self)
+        
+
     # the icon for the vertical notebook view.  Qt specific.
     icon = Property(depends_on = 'status', transient = True)  
+    
 
     @cached_property
     def _get_deletable(self):
@@ -114,6 +122,7 @@ class WorkflowItemHandler(Controller):
             return False
         else:
             return True
+        
            
     @cached_property
     def _get_icon(self):
@@ -123,6 +132,7 @@ class WorkflowItemHandler(Controller):
             return QtGui.QStyle.SP_BrowserReload  # @UndefinedVariable
         else: # self.valid == "invalid" or None
             return QtGui.QStyle.SP_DialogCancelButton  # @UndefinedVariable
+        
         
     @cached_property
     def _get_operation_handler(self):
@@ -141,6 +151,7 @@ class WorkflowItemHandler(Controller):
             return None
 
 
+
 class WorkflowController(Controller):
     
     workflow_handlers = Dict(WorkflowItem, WorkflowItemHandler)
@@ -149,26 +160,10 @@ class WorkflowController(Controller):
     op_plugins = List
     view_plugins = List
     
-    
-    def current_plot_view(self):  
-        return View(Item('selected',
-                         editor = InstanceEditor(view = 'current_plot_view'),
-                         style = 'custom',
-                         show_label = False),
-                    handler = self.workflow_handlers[self.model.selected] if self.model.selected else None)
-    
         
-    def workflow_view(self):
-#         wi_view = View(Item('operation',
-#                             editor = InstanceEditor(),
-#                             style = 'custom',                                                                    
-#                             show_label = False),
-#                        handler = )
-# 
-#         wi_view = View(Include)
-        
+    def workflow_traits(self):      
         return View(Item('workflow',
-                         editor = VerticalNotebookEditor(view = 'operation_traits_view',
+                         editor = VerticalNotebookEditor(view = 'operation_traits',
                                                          page_name = '.name',
                                                          page_description = '.friendly_id',
                                                          page_icon = '.icon',
@@ -184,7 +179,8 @@ class WorkflowController(Controller):
         
     def selected_view_traits(self):
         return View(Item('selected',
-                         editor = InstanceEditor(view = 'current_view_traits_view'),
+                         editor = InstanceHandlerEditor(view = 'view_traits',
+                                                        handler_factory = self.handler_factory),
                          style = 'custom',
                          show_label = False),
                     Spring(),
@@ -194,17 +190,29 @@ class WorkflowController(Controller):
                     Item('plot_calls',
                          style = 'readonly',
                          visible_when = 'debug'),
-                    handler = self.workflow_handlers[self.model.selected] if self.model.selected else None,
+                    handler = self,
                     kind = 'panel',
                     scrollable = True)
         
         
-    def selected_view_plot_params(self):
+    def selected_view_params(self):
         return View(Item('selected',
-                         editor = InstanceEditor(view = 'current_view_plot_params_view'),
+                         editor = InstanceHandlerEditor(view = 'view_params',
+                                                        handler_factory = self.handler_factory),
                          style = 'custom',
                          show_label = False),
-                    handler = self.workflow_handlers[self.model.selected] if self.model.selected else None)
+                    handler = self)
+        
+    
+    def selected_view_plot(self):  
+        return View(Item('selected',
+                         editor = InstanceHandlerEditor(view = 'view_plot',
+                                                        handler_factory = self.handler_factory),
+                         style = 'custom',
+                         show_label = False),
+                    handler = self)
+    
+        
         
     def handler_factory(self, wi):
         if wi not in self.workflow_handlers:

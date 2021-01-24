@@ -7,7 +7,7 @@ Created on Jan 16, 2021
 import os
 
 from traits.api import HasTraits, on_trait_change, Property, HTML, Instance
-from traitsui.api import View, Item, HGroup, TextEditor, InstanceEditor
+from traitsui.api import View, Item, HGroup, TextEditor, Controller
 
 import cytoflow.utility as util
 from cytoflowgui.editors import TabListEditor
@@ -61,14 +61,14 @@ class PluginHelpMixin(HasTraits):
 #     changed = Event
     
 
-class ViewHandlerMixin(HasTraits):
+class ViewHandler(Controller):
     """
     Useful bits for view handlers.
     """
     
     # the view for the current plot
-    current_plot_view = \
-        View(
+    def current_plot_view(self):
+        return View(
             HGroup(
                 Item('plot_names_by',
                      editor = TextEditor(),
@@ -79,10 +79,7 @@ class ViewHandlerMixin(HasTraits):
                      style = 'custom',
                      show_label = False)))
         
-#     plot_params_traits = View(Item('plot_params',
-#                                    editor = InstanceEditor(),
-#                                    style = 'custom',
-#                                    show_label = False))
+
     
     context = Instance('WorkflowItem')
     

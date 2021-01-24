@@ -74,7 +74,7 @@ class WorkflowDockPane(TraitsDockPane):
                           self.toolbar.create_tool_bar(window))
         
         # construct the view 
-        self.ui = self.handler.edit_traits(view = 'workflow_view', 
+        self.ui = self.handler.edit_traits(view = 'workflow_traits', 
                                            context = self.model,
                                            kind = 'subpanel', 
                                            parent = window)

@@ -1,6 +1,7 @@
 
 from .color_text_editor import ColorTextEditor
 from .ext_enum_editor import ExtendableEnumEditor
+from .instance_handler_editor import InstanceHandlerEditor
 from .subset_list_editor import SubsetListEditor
 from .tab_list_editor import TabListEditor
 from .toggle_button import ToggleButtonEditor
