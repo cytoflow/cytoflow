@@ -169,9 +169,8 @@ class ImportHandler(OpHandler):
         handler.edit_traits(kind = 'livemodal') 
     
     @observe('reset_channels_event')    
-    def _on_reset_channels(self, event):
-        self.model.channels_list = [Channel(channel = x, name = sanitize_identifier(x)) 
-                                    for x in self.model.original_channels]
+    def _on_reset_channels(self, _):
+        self.model.reset_channels()
         
         
     @cached_property

@@ -97,16 +97,27 @@ Import FCS files and associate them with experimental conditions (metadata.)
 """
 from textwrap import dedent 
 
-from traits.api import (HasTraits, String, List, Dict, Str, Enum, Instance, provides)
+from traits.api import (HasTraits, String, List, Dict, Str, Enum, Instance, 
+                        provides, BaseCStr)
 
 import cytoflow.utility as util
 from cytoflow import Tube, ImportOp
                        
 from cytoflowgui.workflow.serialization import camel_registry, traits_repr
-from cytoflowgui.import_dialog import ValidPythonIdentifier
 from .operation_base import IWorkflowOperation, WorkflowOperation
 
 ImportOp.__repr__ = Tube.__repr__ = traits_repr
+
+class ValidPythonIdentifier(BaseCStr):
+
+    info_text = 'a valid python identifier'
+     
+    def validate(self, obj, name, value):
+        value = super(ValidPythonIdentifier, self).validate(obj, name, value)
+        if util.sanitize_identifier(value) == value:
+            return value 
+         
+        self.error(obj, name, value)
 
 class Channel(HasTraits):
     channel = String
@@ -131,9 +142,9 @@ class ImportWorkflowOp(ImportOp, WorkflowOperation):
     
 #     do_import = Bool(False)
     
-#     def reset_channels(self):
-#         self.channels_list = [Channel(channel = x, name = util.sanitize_identifier(x)) for x in self.original_channels]
-#     
+    def reset_channels(self):
+        self.channels_list = [Channel(channel = x, name = util.sanitize_identifier(x)) for x in self.original_channels]
+     
 # 
 #     @on_trait_change('channels_list_items, channels_list.+')
 #     def _channels_changed(self, obj, name, old, new):

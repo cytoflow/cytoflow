@@ -37,7 +37,6 @@ class DefaultFileDialog(FileDialog):
         return dlg
 
 
-    
 # when pyface makes a new dock pane, it sets the width and height as fixed
 # (from the new layout or from the default).  then, after it's finished
 # setting up, it resets the minimum and maximum widget sizes.  in Qt5, this

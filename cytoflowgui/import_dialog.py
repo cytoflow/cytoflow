@@ -36,7 +36,7 @@ from pathlib import Path
 import pandas
         
 from traits.api import (HasStrictTraits, Instance, Str, Int, List, Bool, Enum, 
-                        Property, BaseCStr, CStr, on_trait_change, Dict, Event,
+                        Property, CStr, on_trait_change, Dict, Event,
                         cached_property, CFloat, BaseCBool, TraitError)
                        
 from traitsui.api import (View, Item, TableEditor, Controller, InstanceEditor, 
@@ -56,6 +56,7 @@ from traitsui.table_column import ObjectColumn
 from cytoflow import Tube as CytoflowTube
 from cytoflow import Experiment, ImportOp
 from cytoflow.operations.import_op import check_tube, parse_tube
+from cytoflowgui.workflow.operations.import_op import ValidPythonIdentifier
 import cytoflow.utility as util
 
 from cytoflowgui.editors import VerticalListEditor
@@ -183,16 +184,7 @@ class ExperimentColumn(ObjectColumn):
         return self.name
     
 
-class ValidPythonIdentifier(BaseCStr):
 
-    info_text = 'a valid python identifier'
-     
-    def validate(self, obj, name, value):
-        value = super(ValidPythonIdentifier, self).validate(obj, name, value)
-        if util.sanitize_identifier(value) == value:
-            return value 
-         
-        self.error(obj, name, value)
 
                  
 def eval_bool(x):
@@ -519,7 +511,7 @@ class ExperimentDialogHandler(Controller):
     
     
     # bits for model initialization
-    import_op = Instance('cytoflowgui.op_plugins.import_op.ImportPluginOp')
+    import_op = Instance('cytoflowgui.workflow.operations.import_op.ImportWorkflowOp')
         
     # events
     add_tubes = Event

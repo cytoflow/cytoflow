@@ -49,7 +49,7 @@ import sys, threading, logging
 from queue import Queue, PriorityQueue
 
 from traits.api import (HasStrictTraits, Int, Bool, Instance, Any, List,
-                        on_trait_change)
+                        on_trait_change, observe)
 
 import matplotlib.pyplot as plt
 import cytoflowgui.matplotlib_backend_remote
@@ -816,18 +816,29 @@ class RemoteWorkflow(HasStrictTraits):
         
         wi = next((x for x in self.workflow if obj == x.operation))
         
-        if name == "changed":
-            raise RuntimeError("This should be handled below!")
-        elif obj.trait(name).estimate:
-            wi.changed = (Changed.ESTIMATE, (name, new))
+        if obj.trait(name).estimate:
+            pass # FIXME
         elif obj.trait(name).status:
-            wi.changed = (Changed.OP_STATUS, (name, new))
+            pass # FIXME
         elif obj.trait(name).operation:
-            wi.changed = (Changed.OPERATION, (name, new))
+            pass # huh? I can't find this anywhere
         elif obj.trait(name).transient:
             return
         else:
-            wi.changed = (Changed.OPERATION, (name, new))
+            pass # FIXME
+                
+#         if name == "changed":
+#             raise RuntimeError("This should be handled below!")
+#         elif obj.trait(name).estimate:
+#             wi.changed = (Changed.ESTIMATE, (name, new))
+#         elif obj.trait(name).status:
+#             wi.changed = (Changed.OP_STATUS, (name, new))
+#         elif obj.trait(name).operation:
+#             wi.changed = (Changed.OPERATION, (name, new))
+#         elif obj.trait(name).transient:
+#             return
+#         else:
+#             wi.changed = (Changed.OPERATION, (name, new))
             
 #     @on_trait_change('workflow:operation:changed', post_init = True)
 #     def _operation_change_event(self, obj, _, new):
@@ -851,9 +862,11 @@ class RemoteWorkflow(HasStrictTraits):
         elif obj.trait(name).transient:
             return
         elif obj.trait(name).status:
-            wi.changed = (Changed.VIEW_STATUS, (obj, name, new))
+            pass # FIXME
+#             wi.changed = (Changed.VIEW_STATUS, (obj, name, new))
         else:
-            wi.changed = (Changed.VIEW, (obj, name, new))
+            pass # FIXME
+#             wi.changed = (Changed.VIEW, (obj, name, new))
             
 #     @on_trait_change('workflow:changed')
 #     def _changed_event(self, obj, name, new):
@@ -952,10 +965,10 @@ class RemoteWorkflow(HasStrictTraits):
             # so filter them out.
             obj.metadata = filter_unpicklable(dict(obj.result.metadata))
             
-        obj.changed = (Changed.RESULT, None)
-        
-        if obj.next_wi:
-            obj.next_wi.changed = (Changed.PREV_RESULT, None)
+#         obj.changed = (Changed.RESULT, None)
+#         
+#         if obj.next_wi:
+#             obj.next_wi.changed = (Changed.PREV_RESULT, None)
             
              
     @on_trait_change('workflow:current_view, workflow:current_view:current_plot', post_init = True)
