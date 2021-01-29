@@ -152,14 +152,11 @@ jobs:
     steps:
     - name: Check out repo
       uses: actions/checkout@v2  
-      with:
-        fetch-depth: 0
         
     - name: Query git tag
       id: tag
       uses: jimschubert/query-tag-action@v2
       with:
-        skip-unshallow: true
         abbrev: false
         
     - name: Show Tag
@@ -195,12 +192,14 @@ jobs:
       run: |
         pyinstaller package/pyinstaller.spec
         
+    - name: List dist
+      run: ls dist/
+        
     - name: Rename and zip Mac app
       run: |
         cd dist/
         mv Cytoflow.app Cytoflow-${{steps.tag.outputs.tag}}.app
-        zip -r cytoflow-${{steps.tag.outputs.tag}}.macos.zip 
-        Cytoflow-${{steps.tag.outputs.tag}}.app/
+        zip -r cytoflow-${{steps.tag.outputs.tag}}.macos.zip Cytoflow-${{steps.tag.outputs.tag}}.app/
         rm -rf Cytoflow-${{steps.tag.outputs.tag}}.app cytoflow
         
     - name: List dist
