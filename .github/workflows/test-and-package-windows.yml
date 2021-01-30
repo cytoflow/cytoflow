@@ -150,11 +150,15 @@ jobs:
       uses: actions/checkout@v2  
       with:
         fetch-depth: 0
+        
+    - name: Show all the files
+      run: find .
 
     - name: Query git tag
       id: tag
       uses: jimschubert/query-tag-action@v2
       with:
+        skip-unshallow: true
         abbrev: false
         
     - name: Show Tag
