@@ -153,6 +153,9 @@ jobs:
         
     - name: Show all the files
       run: find .
+      
+    - name: Git describe
+      run: git describe --long --debug
 
     - name: Query git tag
       id: tag
