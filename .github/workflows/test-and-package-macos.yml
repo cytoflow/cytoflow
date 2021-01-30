@@ -155,6 +155,9 @@ jobs:
       with:
         fetch-depth: 0
         
+    - name: Show all the files
+      run: find .
+        
     - name: Query git tag
       id: tag
       uses: jimschubert/query-tag-action@v2
