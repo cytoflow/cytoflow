@@ -155,7 +155,11 @@ jobs:
       run: find .
       
     - name: Git describe
-      run: git describe --long --debug
+      run: |
+        git describe --long --debug
+        git describe --debug --tags  --match '*'  'HEAD~'
+        git describe --tags  --match '*'  'HEAD~'
+
 
     - name: Query git tag
       id: tag
