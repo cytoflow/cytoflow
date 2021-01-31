@@ -155,15 +155,9 @@ jobs:
       with:
         fetch-depth: 0
         
-    - name: Show all the files
-      run: find .
-        
     - name: Query git tag
       id: tag
-      uses: jimschubert/query-tag-action@v2
-      with:
-        skip-unshallow: true
-        abbrev: false
+      run: echo "::set-output name=tag::$(git describe --tags  --match '*'  'HEAD~')"
         
     - name: Show Tag
       id: display

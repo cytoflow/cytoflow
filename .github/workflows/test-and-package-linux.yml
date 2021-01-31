@@ -161,13 +161,10 @@ jobs:
       uses: actions/checkout@v2  
       with:
         fetch-depth: 0
-        
+      
     - name: Query git tag
       id: tag
-      uses: jimschubert/query-tag-action@v2
-      with:
-        skip-unshallow: true
-        abbrev: false
+      run: echo "::set-output name=tag::$(git describe --tags  --match '*'  'HEAD~')"
         
     - name: Show Tag
       id: display
@@ -229,13 +226,10 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-
+      
     - name: Query git tag
       id: tag
-      uses: jimschubert/query-tag-action@v2
-      with:
-        skip-unshallow: true
-        abbrev: false
+      run: echo "::set-output name=tag::$(git describe --tags  --match '*'  'HEAD~')"
         
     - name: Show Tag
       id: display

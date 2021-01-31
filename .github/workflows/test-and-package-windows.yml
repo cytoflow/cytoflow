@@ -154,9 +154,9 @@ jobs:
     - name: Show all the files
       run: find .
       
-    - name: Git describe
+    - name: Query git tag
       id: tag
-      run: echo "::set-output name=tag::$(git describe --tags  --match '*'  'HEAD~')\n"
+      run: echo "::set-output name=tag::$(git describe --tags  --match '*'  'HEAD~')"
         
     - name: Show Tag
       id: display
