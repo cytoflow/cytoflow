@@ -142,6 +142,9 @@ jobs:
     name: Build Windows one-click
     needs: test-on-windows
     runs-on: windows-2019
+    defaults:
+      run:
+        shell: bash -l {0}
     steps:        
     - name: Check out repo
       uses: actions/checkout@v2  
@@ -152,18 +155,8 @@ jobs:
       run: find .
       
     - name: Git describe
-      run: |
-        git describe --long --debug
-        git describe --debug --tags  --match '*'  'HEAD~'
-        git describe --tags  --match '*'  'HEAD~'
-
-
-    - name: Query git tag
       id: tag
-      uses: jimschubert/query-tag-action@v2
-      with:
-        skip-unshallow: true
-        abbrev: false
+      run: echo "::set-output name=tag::$(git describe --tags  --match '*'  'HEAD~')\n"
         
     - name: Show Tag
       id: display
