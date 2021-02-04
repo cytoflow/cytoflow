@@ -137,5 +137,5 @@ setup(
     
     entry_points={'console_scripts' : ['cf-channel_voltages = cytoflow.scripts.channel_voltages:main',
                                        'cf-fcs_metadata = cytoflow.scripts.fcs_metadata:main'],
-                  'gui_scripts' : ['cytoflow-gui = cytoflowgui.run:run_gui']}
+                  'gui_scripts' : ['cytoflow = cytoflowgui.run:run_gui']}
 )
