@@ -24,22 +24,30 @@ Runtime hook -- updates two copies of qt.conf to point to the one-click's
 Qt resources
 '''
 
-import os
-import sys
+import os, sys
+from pathlib import Path
 
-qt_path = os.path.join(sys._MEIPASS, 'PyQt5', 'Qt')
+qt_path = Path(sys._MEIPASS) / 'PyQt5' / 'Qt'
 
 # QT's init file format requires front-slashes even on windows
-if sys.platform.startswith('win'):
-    qt_path = qt_path.replace("\\", '/')
+#print(qt_path)
+#if sys.platform.startswith('win'):
+#    qt_path = qt_path.replace("\\", '/')
     
 # need one qt.conf in the _MEIPASS
-qt_conf_path = os.path.join(sys._MEIPASS, 'qt.conf')
+qt_conf_path = Path(sys._MEIPASS) / 'qt.conf'
 with open(qt_conf_path, 'w' ) as f:
-    f.write('[Paths]\nPrefix = {}\n'.format(qt_path))
+    f.write('[Paths]\nPrefix = {}\n'.format(qt_path.as_posix()))
       
-# need another qt.conf in _MEIPASS / PyQt5 / Qt / libexec, for
-# QtWebEngineProcess to find
-qt_libexec_conf_path = os.path.join(qt_path, 'libexec', 'qt.conf')
+# need another one for QtWebEngineProcess to find.
+# on Windows, it's in _MEIPASS / PyQt5 / Qt / bin
+if sys.platform.startswith('win'):
+    qt_libexec_conf_path = qt_path / 'bin' / 'qt.conf'
+
+# otherwise it's in _MEIPASS / PyQt5 / Qt / libexec
+else:
+    qt_libexec_conf_path = qt_path / 'libexec' / 'qt.conf'
+
 with open(qt_libexec_conf_path, 'w') as f:
-    f.write('[Paths]\nPrefix = {}\n'.format(qt_path))
+    f.write('[Paths]\nPrefix = {}\n'.format(qt_path.as_posix()))
+
