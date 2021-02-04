@@ -192,7 +192,7 @@ jobs:
         
     - name: Build installer
       run: |
-        "C:\Program Files (x86)\NSIS\makensis.exe" /NOCD package/installer.nsis
+        "C:\Program Files (x86)\NSIS\makensis.exe" //NOCD package/installer.nsis
         
     - name: Rename installer and remove remaining files
       run: |
