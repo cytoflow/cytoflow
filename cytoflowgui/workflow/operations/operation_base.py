@@ -4,7 +4,7 @@ Created on Jan 15, 2021
 @author: brian
 '''
 
-from traits.api import HasStrictTraits
+from traits.api import HasStrictTraits, Event
 from cytoflow.operations import IOperation
 
 class IWorkflowOperation(IOperation):
@@ -18,18 +18,15 @@ class IWorkflowOperation(IOperation):
     order to add metadata that controls their handling by the workflow.  
     Currently, relevant metadata include:
     
-      * **transient** - don't copy the trait between the local (GUI) process 
-        and the remote (computation) process (in either direction).
-     
-      * **status** - only copy from the remote process to the local process,
-        not the other way 'round.
+      * **apply** - This trait is used by the operations :meth:`apply` method.
        
-      * **estimate** - copy from the local process to the remote process,
-        but don't call :meth:`apply`.  (used for traits that are involved in
-        estimating the operation's parameters.)
-      
-      * **fixed** - assigned when the operation is first created in the
-        remote process *and never subsequently changed.*
+      * **estimate** - This trait is used by the operation's :meth:`estimate` method.
+        
+      * **estimate_result** - This trait is set as a result of calling :meth:`estimate`.
+     
+      * **status** - Holds status variables like the number of events from the :mod:`ImportOp`.
+    
+      * **transient** - A temporary variable (not copied between processes or serialized).
     
     Attributes
     ----------
@@ -53,7 +50,7 @@ class IWorkflowOperation(IOperation):
     #handler_factory = Callable(unimplemented)
     
     # causes this operation's estimate() function to be called
-    # do_estimate = Event
+    do_estimate = Event
     
     # transmit some changing status back to the workflow
     #changed = Event
@@ -64,7 +61,7 @@ class IWorkflowOperation(IOperation):
         Should the owning WorkflowItem apply this operation when certain things
         change?  `changed` can be:
         
-         - Changed.OPERATION -- the operation's parameters changed
+         - Changed.APPLY -- the parameters required to run apply() changed
          
          - Changed.PREV_RESULT -- the previous WorkflowItem's result changed
          
@@ -111,6 +108,8 @@ class WorkflowOperation(HasStrictTraits):
     """
     A default implementation of :class:`IWorkflowOperation`
     """
+    
+    do_estimate = Event
     
     def should_apply(self, changed, payload):
         return True

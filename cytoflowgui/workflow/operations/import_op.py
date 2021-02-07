@@ -126,10 +126,11 @@ class Channel(HasTraits):
 
 @provides(IWorkflowOperation)
 class ImportWorkflowOp(ImportOp, WorkflowOperation):   
-    original_channels = List(Str, estimate = True)
+    original_channels = List(Str)
     channels_list = List(Channel, estimate = True)
     events = util.CIntOrNone(None, estimate = True)
     tubes = List(Tube, estimate = True)
+    conditions = Dict(Str, Str, estimate = True)
     channels = Dict(Str, Str, transient = True)
     name_metadata =  Enum(None, "$PnN", "$PnS", estimate = True)
     
@@ -164,8 +165,7 @@ class ImportWorkflowOp(ImportOp, WorkflowOperation):
     def estimate(self, _):
         self.channels = {c.channel : c.name for c in self.channels_list}
         self.ret_experiment = super().apply()
-        self.ret_events = len(self.ret_experiment
-                              )
+        self.ret_events = len(self.ret_experiment)
         
     def apply(self, _):
         if self.ret_experiment:

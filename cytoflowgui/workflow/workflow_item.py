@@ -10,7 +10,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from traits.api import (HasStrictTraits, Instance, Str, Enum, Any, Dict, 
-                        Tuple, List, DelegatesTo)
+                        Tuple, List, DelegatesTo, ComparisonMode)
 
 from cytoflow import Experiment
 from cytoflow.utility import CytoflowError, CytoflowOpError, CytoflowViewError
@@ -24,6 +24,10 @@ this = sys.modules[__name__]
 this.last_view_plotted = None
 
 logger = logging.getLogger(__name__)
+
+
+
+    
 
 class WorkflowItem(HasStrictTraits):
     """        
@@ -45,7 +49,7 @@ class WorkflowItem(HasStrictTraits):
     operation = Instance(IWorkflowOperation, copy = "ref")
     
     # the IViews associated with this operation
-    views = List(IWorkflowView, copy = "ref")
+    views = List(IWorkflowView, copy = "ref", comparison_mode = ComparisonMode.identity)
     
     # the currently selected view
     current_view = Instance(IWorkflowView, copy = "ref")
@@ -99,6 +103,28 @@ class WorkflowItem(HasStrictTraits):
     # synchronization primitive for updating wi traits
     lock = Instance(threading.RLock, (), transient = True)
     
+    ### Overrides to make edit_traits go looking for views in the handler
+    def edit_traits(self, view = None, parent = None, kind = None, 
+                        context = None, handler = None, id = "",
+                        scrollable=None, **args):
+         
+        if context is None:
+            context = self
+ 
+        view = self.trait_view(view, handler = handler)
+ 
+        return view.ui(context, parent, kind, self.trait_view_elements(),
+                       handler, id, scrollable, args)
+         
+    def trait_view(self, name = None, view_element = None, handler = None):
+        return self.__class__._trait_view(
+            name,
+            view_element,
+            self.default_traits_view,
+            self.trait_view_elements,
+            self.visible_traits,
+            handler if handler else self)
+    
     def __str__(self):
         return "<{}: {}>".format(self.__class__.__name__, self.operation.__class__.__name__)
     
@@ -106,7 +132,7 @@ class WorkflowItem(HasStrictTraits):
     def __repr__(self):
         return "<{}: {}>".format(self.__class__.__name__, self.operation.__class__.__name__)
     
-   
+        
     def estimate(self):
         logger.debug("WorkflowItem.estimate :: {}".format((self)))
 
@@ -148,7 +174,7 @@ class WorkflowItem(HasStrictTraits):
         Apply this wi's operation to the previous_wi wi's result
         """
         logger.debug("WorkflowItem.apply :: {}".format((self)))
-#         self.apply_called = True
+        self.workflow.apply_calls += 1
          
         prev_result = self.previous_wi.result if self.previous_wi else None
          
@@ -195,7 +221,7 @@ class WorkflowItem(HasStrictTraits):
         
     def plot(self):              
         logger.debug("WorkflowItem.plot :: {}".format((self)))
-        self.plot_called = True
+        self.workflow.plot_calls += 1
                      
         if not self.current_view:
             self.plot_lock.acquire()                
@@ -269,29 +295,7 @@ class WorkflowItem(HasStrictTraits):
                     self.view_warning = ""
                     
             return True
-
-#     ### Overrides to make edit_traits go looking for views in the handler
-    def edit_traits(self, view = None, parent = None, kind = None, 
-                        context = None, handler = None, id = "",
-                        scrollable=None, **args):
-         
-        if context is None:
-            context = self
- 
-        view = self.trait_view(view, handler = handler)
- 
-        return view.ui(context, parent, kind, self.trait_view_elements(),
-                       handler, id, scrollable, args)
-         
-    def trait_view(self, name = None, view_element = None, handler = None):
-        return self.__class__._trait_view(
-            name,
-            view_element,
-            self.default_traits_view,
-            self.trait_view_elements,
-            self.visible_traits,
-            handler if handler else self)
-                     
+        
 
     
 @camel_registry.dumper(WorkflowItem, 'workflow-item', version = 2)
