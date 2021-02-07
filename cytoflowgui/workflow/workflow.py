@@ -862,12 +862,12 @@ class RemoteWorkflow(HasStrictTraits):
         
         
     @observe('apply_calls', post_init = True)
-    def _apply_called(self):
+    def _apply_called(self, _):
         self.message_q.put((Msg.APPLY_CALLED, self.apply_calls))
         
         
     @observe('plot_calls', post_init = True)
-    def _plot_called(self):
+    def _plot_called(self, _):
         self.message_q.put((Msg.PLOT_CALLED, self.plot_calls))
         
             
@@ -1034,7 +1034,7 @@ class RemoteWorkflow(HasStrictTraits):
         
         
     @observe('selected', post_init = True)
-    def _selected_changed(self, event):
+    def _selected_workflowitem_changed(self, event):
         logger.debug("RemoteWorkflow._selected_changed :: {}".format(event))
          
         if event.new:
