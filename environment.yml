@@ -26,8 +26,8 @@ dependencies:
     - qt==5.9.7
     - pyopengl==3.1.1a1
 
-    - fcsparser==0.2.0
+    - fcsparser==0.2.1
     - camel==0.1.2
-    - yapf==0.22.0
+    - yapf==0.30.0
     
     - notebook

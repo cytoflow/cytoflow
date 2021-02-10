@@ -80,8 +80,8 @@ setup(
                         'pyopengl==3.1.1a1', 
 
                         'camel==0.1.2',
-                        'yapf==0.22.0',
-                        'fcsparser==0.2.0']
+                        'yapf==0.30.0',
+                        'fcsparser==0.2.1']
     
                 if not on_rtd else ['sphinx==3.4.1'],
                         

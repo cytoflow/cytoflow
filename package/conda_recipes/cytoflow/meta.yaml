@@ -39,9 +39,9 @@ requirements:
     - qt==5.9.7
     - pyopengl==3.1.1a1
 
-    - fcsparser==0.2.0
+    - fcsparser==0.2.1
     - camel==0.1.2
-    - yapf==0.22.0
+    - yapf==0.30.0
 
     - sphinx==3.4.3
 
@@ -69,9 +69,9 @@ requirements:
     - qt==5.9.7
     - pyopengl==3.1.1a1
     
-    - fcsparser==0.2.0
+    - fcsparser==0.2.1
     - camel==0.1.2
-    - yapf==0.22.0
+    - yapf==0.30.0
     
 
     # make sure some compatible version of the jupyter notebook
