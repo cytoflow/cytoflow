@@ -9,7 +9,7 @@ source:
 
 build:
   number: {{ GIT_DESCRIBE_NUMBER }}
-  string: {{ "py36" }}
+  string: {{ "py38" }}
   entry_points:
     - cytoflow = cytoflowgui.run:run_gui
     - cf-channel_voltages = cytoflow.scripts.channel_voltages:main
