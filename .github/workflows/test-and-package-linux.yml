@@ -256,7 +256,7 @@ jobs:
       run: |
         mkdir dist
         cd docs
-        zip -r cytoflow--examples-basic.zip examples-basic
+        zip -r cytoflow-${{steps.tag.outputs.tag}}-examples-basic.zip examples-basic
         zip -r cytoflow-${{steps.tag.outputs.tag}}-examples-advanced.zip examples-advanced
         mv cytoflow-${{steps.tag.outputs.tag}}-examples-*.zip ../dist
         cd ..
