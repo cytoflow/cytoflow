@@ -74,6 +74,8 @@ setup(
                         'envisage==5.0.0',
                         'nbformat==5.0.8',
                         'python-dateutil==2.8.1',
+                        'importlib_resources==5.1.0',
+
                         
                         # pyqt, qt are not in pip
                         # need to install through your package manager
