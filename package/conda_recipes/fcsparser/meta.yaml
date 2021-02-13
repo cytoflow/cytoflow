@@ -1,8 +1,8 @@
 {% set name = "fcsparser" %}
-{% set version = "0.2.0" %}
+{% set version = "0.2.1" %}
 {% set file_ext = "tar.gz" %}
 {% set hash_type = "sha256" %}
-{% set hash_value = "c23772922f10db0ba0ba7545da9eae7fdba850fd8e184ab018f14ec1d3f6bf58" %}
+{% set hash_value = "830c3f49df2e94a358bb45c5eed5c943c36529b223aab9c8e7a8870f2aba3c8d" %}
 
 package:
   name: '{{ name|lower }}'

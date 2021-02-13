@@ -1,8 +1,8 @@
 {% set name = "yapf" %}
-{% set version = "0.22.0" %}
+{% set version = "0.30.0" %}
 {% set file_ext = "tar.gz" %}
 {% set hash_type = "sha256" %}
-{% set hash_value = "a98a6eacca64d2b920558f4a2f78150db9474de821227e60deaa29f186121c63" %}
+{% set hash_value = "3000abee4c28daebad55da6c85f3cd07b8062ce48e2e9943c8da1b9667d48427" %}
 
 package:
   name: '{{ name|lower }}'
