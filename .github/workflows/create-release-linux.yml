@@ -146,7 +146,7 @@ jobs:
 #       
 #     - name: Query git tag
 #       id: tag
-#       run: echo "::set-output name=tag::$(git describe --tags  --match '*'  'HEAD~')"
+#       run: echo "::set-output name=tag::$(git describe --tags)"
 #         
 #     - name: Show Tag
 #       id: display
@@ -198,62 +198,61 @@ jobs:
 #         retention-days: 1
         
         
-# WORKING
-#   build-examples:
-#     name: Zip up examples
-#     runs-on: ubuntu-18.04
-#     steps:
-#     - name: Show client payload
-#       run: |
-#         echo "${{ github.event.client_payload.ref }}"
-#         echo "${{ github.event.client_payload.release_url }}"
-# 
-#     - name: Check out repo
-#       uses: actions/checkout@v2  
-#       with:
-#         ref: ${{ github.event.client_payload.ref }}
-#         fetch-depth: 0
-#         submodules: true
-#       
-#     - name: Query git tag
-#       id: tag
-#       run: echo "::set-output name=tag::$(git describe --tags  --match '*'  'HEAD~')"
-#         
-#     - name: Show Tag
-#       id: display
-#       run: |
-#         echo 'Output from Find Tag: ${{steps.tag.outputs.tag}}'
-#         
-#     - name: Zip up examples
-#       run: |
-#         mkdir dist
-#         cd docs
-#         zip -r cytoflow-${{steps.tag.outputs.tag}}-examples-basic.zip examples-basic
-#         zip -r cytoflow-${{steps.tag.outputs.tag}}-examples-advanced.zip examples-advanced
-#         mv cytoflow-${{steps.tag.outputs.tag}}-examples-*.zip ../dist
-#         cd ..
-#         
-#     - name: List dist/
-#       run: ls dist/
-#       
-#     - name: Upload the the basic examples to the GitHub release
-#       uses: actions/upload-release-asset@v1
-#       env:
-#         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#       with:
-#         upload_url: ${{ github.event.client_payload.release_url }} 
-#         asset_path: dist/cytoflow-${{steps.tag.outputs.tag}}-examples-basic.zip
-#         asset_name: cytoflow-${{steps.tag.outputs.tag}}-examples-basic.zip
-#         asset_content_type: application/zip
-#         
-#     - name: Upload the the advanced examples to the GitHub release
-#       uses: actions/upload-release-asset@v1
-#       env:
-#         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#       with:
-#         upload_url: ${{ github.event.client_payload.release_url }} 
-#         asset_path: dist/cytoflow-${{steps.tag.outputs.tag}}-examples-advanced.zip
-#         asset_name: cytoflow-${{steps.tag.outputs.tag}}-examples-advanced.zip
-#         asset_content_type: application/zip
-# 
-#         
+  build-examples:
+    name: Zip up examples
+    runs-on: ubuntu-18.04
+    steps:
+    - name: Show client payload
+      run: |
+        echo "${{ github.event.client_payload.ref }}"
+        echo "${{ github.event.client_payload.release_url }}"
+
+    - name: Check out repo
+      uses: actions/checkout@v2  
+      with:
+        ref: ${{ github.event.client_payload.ref }}
+        fetch-depth: 0
+        submodules: true
+      
+    - name: Query git tag
+      id: tag
+      run: echo "::set-output name=tag::$(git describe --tags)"
+        
+    - name: Show Tag
+      id: display
+      run: |
+        echo 'Output from Find Tag: ${{steps.tag.outputs.tag}}'
+        
+    - name: Zip up examples
+      run: |
+        mkdir dist
+        cd docs
+        zip -r cytoflow-${{steps.tag.outputs.tag}}-examples-basic.zip examples-basic
+        zip -r cytoflow-${{steps.tag.outputs.tag}}-examples-advanced.zip examples-advanced
+        mv cytoflow-${{steps.tag.outputs.tag}}-examples-*.zip ../dist
+        cd ..
+        
+    - name: List dist/
+      run: ls dist/
+      
+    - name: Upload the the basic examples to the GitHub release
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.client_payload.release_url }} 
+        asset_path: dist/cytoflow-${{steps.tag.outputs.tag}}-examples-basic.zip
+        asset_name: cytoflow-${{steps.tag.outputs.tag}}-examples-basic.zip
+        asset_content_type: application/zip
+        
+    - name: Upload the the advanced examples to the GitHub release
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.client_payload.release_url }} 
+        asset_path: dist/cytoflow-${{steps.tag.outputs.tag}}-examples-advanced.zip
+        asset_name: cytoflow-${{steps.tag.outputs.tag}}-examples-advanced.zip
+        asset_content_type: application/zip
+
+        

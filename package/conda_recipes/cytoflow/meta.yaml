@@ -1,7 +1,7 @@
 package:
   name: cytoflow
   # https://www.python.org/dev/peps/pep-0440/
-  version: {{ GIT_DESCRIBE_TAG if GIT_DESCRIBE_NUMBER == 0 else GIT_DESCRIBE_TAG ~ '.dev' ~ GIT_DESCRIBE_NUMBER ~ '+' ~ GIT_DESCRIBE_HASH }}
+  version: {{ GIT_DESCRIBE_TAG if GIT_DESCRIBE_NUMBER == "0" else GIT_DESCRIBE_TAG ~ '.dev' ~ GIT_DESCRIBE_NUMBER ~ '+' ~ GIT_DESCRIBE_HASH }}
 
 source:
   path: ../../..

@@ -173,7 +173,7 @@ jobs:
         
     - name: Query git tag
       id: tag
-      run: echo "::set-output name=tag::$(git describe --tags  --match '*'  'HEAD~')"
+      run: echo "::set-output name=tag::$(git describe --tags)"
         
     - name: Show Tag
       id: display
