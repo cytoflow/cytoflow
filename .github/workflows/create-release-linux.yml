@@ -167,7 +167,6 @@ jobs:
         
   build-linux-oneclick:
     name: Build linux one-click
-    needs: test-on-linux
     runs-on: ubuntu-18.04
     defaults:
       run:
