@@ -218,7 +218,7 @@ jobs:
       run: |
         cd dist
         mv cytoflow cytoflow-${{steps.tag.outputs.tag}}
-        tar -cjf cytoflow-${{steps.tag.outputs.tag}}.linux_x86-64.tar.bz2 cytoflow-${{steps.tag.outputs.tag}}
+        tar -cjf cytoflow-gui-${{steps.tag.outputs.tag}}.linux_x86-64.tar.bz2 cytoflow-${{steps.tag.outputs.tag}}
         rm -rf cytoflow-${{steps.tag.outputs.tag}}
         
     - name: List dist/
