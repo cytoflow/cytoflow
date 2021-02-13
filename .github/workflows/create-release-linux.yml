@@ -64,12 +64,16 @@ jobs:
         cd dist
         echo "::set-output name=filename::$(ls cytoflow*.bz2)"
         
+    - name: Show file name
+      run: |
+        echo 'Output from get_filename: ${{steps.get_filename.outputs.filename}}'
+        
     - name: Upload the conda package to the GitHub release
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        upload_url: ${{ github.event.upload_url }} 
+        upload_url: ${{ github.event.client_payload.release_url }} 
         asset_path: dist/${{ steps.get_filename.outputs.filename }}
         asset_name: ${{ steps.get_filename.outputs.filename }}
         asset_content_type: application/x-bzip2
