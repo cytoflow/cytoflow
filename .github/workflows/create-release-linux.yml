@@ -186,7 +186,6 @@ jobs:
         
   build-examples:
     name: Zip up examples
-    needs: test-on-linux
     runs-on: ubuntu-18.04
     steps:
     - name: Show client payload
