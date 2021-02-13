@@ -15,10 +15,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 name: Create a new release
-on:
-  push:
-    tags:
-    - '*'
+on: [workflow-dispatch]
+#   push:
+#     tags:
+#     - '*'
 
 jobs:
   create-release:
