@@ -97,7 +97,7 @@ This requires a hardware crypto token, so it must be done locally.
 - Setup: If not done already, download and install the Windows Platform SDK. I'm using 8.1 
   because I couldn't get 10 to install.
 
-- Download the Windows installer from Appveyor (or Github?)
+- Download the Windows installer from Github.
 
 - Open a terminal in C:\Program Files\Microsoft Platform SDK\Bin.
 
@@ -123,7 +123,9 @@ This requires a hardware crypto token, so it must be done locally.
 Upload the artifacts and update the homepage
 --------------------------------------------
 
-- Upload artifacts as appropriate to GitHub_, Anaconda_, and the Python Package Index.
+- Upload artifacts as appropriate to GitHub_, Anaconda_, and the Python Package Index.  
+  (Make sure that in the case of Anaconda, you're uploading to the organization account, not
+  your personal account!)
 
 - At https://github.com/cytoflow/cytoflow.github.io, update the version in 
   ``_config.yml``. Push these changes to update the main download links on 
