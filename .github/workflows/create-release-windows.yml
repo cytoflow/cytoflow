@@ -59,37 +59,37 @@ jobs:
         conda deactivate
         conda activate base
         python package/move_conda_package.py
-        
-     - name: List dist
-       run: ls dist/
-      
-     - name: Get file names
-       id: get_filenames
-       run: |
-         cd dist
-         echo "::set-output name=conda_package::$(ls cytoflow*.bz2)"        
 
-     - name: Show file name
+    - name: List dist
+      run: ls dist/
+      
+    - name: Get file names
+      id: get_filenames
+      run: |
+        cd dist
+        echo "::set-output name=conda_package::$(ls cytoflow*.bz2)"        
+
+    - name: Show file name
        run: |
          echo 'Output from get_filename: ${{steps.get_filenames.outputs.conda_package}}'
          
-     - name: Upload the conda package to the GitHub release
-       uses: actions/upload-release-asset@v1
-       env:
-         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-       with:
-         upload_url: ${{ github.event.client_payload.release_url }} 
-         asset_path: dist/${{ steps.get_filenames.outputs.conda_package }}
-         asset_name: ${{ steps.get_filenames.outputs.conda_package }}
-         asset_content_type: application/x-bzip2
+    - name: Upload the conda package to the GitHub release
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.client_payload.release_url }} 
+        asset_path: dist/${{ steps.get_filenames.outputs.conda_package }}
+        asset_name: ${{ steps.get_filenames.outputs.conda_package }}
+        asset_content_type: application/x-bzip2
          
-     - name: Upload the conda package to anaconda.org
-       run: |
-         conda deactivate
-         conda activate base
-         anaconda login --username ${{ secrets.CONDA_USERNAME }} --password ${{ secrets.CONDA_PASSWORD }}
-         anaconda upload --user cytoflow dist/${{ steps.get_filenames.outputs.conda_package }}
-         anaconda logout
+    - name: Upload the conda package to anaconda.org
+      run: |
+        conda deactivate
+        conda activate base
+        anaconda login --username ${{ secrets.CONDA_USERNAME }} --password ${{ secrets.CONDA_PASSWORD }}
+        anaconda upload --user cytoflow dist/${{ steps.get_filenames.outputs.conda_package }}
+        anaconda logout
         
 
   build-windows-wheels:

@@ -202,7 +202,7 @@ jobs:
     - name: Build embedded help docs
       run: |
         python setup.py build_sphinx -b embedded_help
-        
+            
     - name: Build GUI binary
       run: |
         pyinstaller package/pyinstaller.spec
