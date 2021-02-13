@@ -59,8 +59,8 @@ jobs:
         conda activate base
         python package/move_conda_package.py
         
-    - name: List dist
-      run: ls dist/
+     - name: List dist
+       run: ls dist/
       
      - name: Get file names
        id: get_filenames
@@ -92,7 +92,6 @@ jobs:
 
   build-macos-wheels:
     name: Build MacOS wheels
-    needs: test-on-macos
     runs-on: macos-10.15
     defaults:
       run:
@@ -159,7 +158,6 @@ jobs:
         
   build-macos-oneclick:
     name: Build macos one-click
-    needs: test-on-macos
     runs-on: macos-10.15
     defaults:
       run:

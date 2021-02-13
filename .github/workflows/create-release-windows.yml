@@ -60,8 +60,8 @@ jobs:
         conda activate base
         python package/move_conda_package.py
         
-    - name: List dist
-      run: ls dist/
+     - name: List dist
+       run: ls dist/
       
      - name: Get file names
        id: get_filenames
@@ -94,7 +94,6 @@ jobs:
 
   build-windows-wheels:
     name: Build source dist, linux wheels
-    needs: test-on-windows
     runs-on: windows-2019
     defaults:
       run:
@@ -159,7 +158,6 @@ jobs:
         
   build-windows-oneclick:
     name: Build Windows one-click
-    needs: test-on-windows
     runs-on: windows-2019
     defaults:
       run:
