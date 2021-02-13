@@ -37,7 +37,7 @@ jobs:
           draft: true
           prerelease: false
           
-      - Dispatch builds
+      - name: Dispatch builds
         uses: peter-evans/repository-dispatch@v1.1.3
         with:
           token: ${{ secrets.REPO_ACCESS_TOKEN }}
