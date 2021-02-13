@@ -30,6 +30,7 @@ jobs:
     - name: Check out repo
       uses: actions/checkout@v2
       with:
+        ref: ${{ github.event.client_payload.ref }}
         fetch-depth: 0
       
     - name: Setup Miniconda
