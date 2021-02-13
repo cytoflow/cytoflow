@@ -20,58 +20,65 @@ on:
     types: [builds]
       
 jobs:
-#   build-linux-conda-package:
-#     name: Build and upload the linux conda package
-#     runs-on: ubuntu-18.04
-#     defaults:
-#       run:
-#         shell: bash -l {0}
-#     steps:
-#     - name: Check out repo
-#       uses: actions/checkout@v2
-#       with:
-#         fetch-depth: 0
-#       
-#     - name: Setup Miniconda
-#       uses: conda-incubator/setup-miniconda@v2.0.1
-#       with:
-#         activate-environment: cytoflow
-#         environment-file: environment.yml
-#         
-#     - name: Configure conda
-#       run: |
-#         conda install --name base --yes --quiet anaconda-client conda-build
-#         
-#     - name: Build conda package
-#       run: |
-#         conda deactivate
-#         conda render package/conda_recipes/cytoflow
-#         conda build package/conda_recipes/cytoflow
-#         
-#     - name: Move conda package into the dist folder
-#       run: |
-#         mkdir dist
-#         conda deactivate
-#         conda activate base
-#         python package/move_conda_package.py
-#         
-#     - name: List dist/
-#       run: ls dist/
-#       
-#     - name: Upload the conda package to anaconda.org
-#       run: |
-#         anaconda login --username ${{ secrets.CONDA_USERNAME }} --password ${{ secrets.CONDA_PASSWORD }}
-#         anaconda upload --user cytoflow dist/cytoflow*.bz2
-#         
-#     - name: Upload the conda package to the GitHub release
-#       uses: actions/upload-release-asset@v1
-#       env:
-#         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#       with:
-#         upload_url: ${{ github.event.upload_url }} 
-#         asset_path: ./my-artifact.zip
-#         asset_name: my-artifact.zip
-#         asset_content_type: application/x-bzip2
+  build-linux-conda-package:
+    name: Build and upload the linux conda package
+    runs-on: ubuntu-18.04
+    defaults:
+      run:
+        shell: bash -l {0}
+    steps:
+    - name: Check out repo
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+      
+    - name: Setup Miniconda
+      uses: conda-incubator/setup-miniconda@v2.0.1
+      with:
+        activate-environment: cytoflow
+        environment-file: environment.yml
+        
+    - name: Configure conda
+      run: |
+        conda install --name base --yes --quiet anaconda-client conda-build
+        
+    - name: Build conda package
+      run: |
+        conda deactivate
+        conda render package/conda_recipes/cytoflow
+        conda build package/conda_recipes/cytoflow
+        
+    - name: Move conda package into the dist folder
+      run: |
+        mkdir dist
+        conda deactivate
+        conda activate base
+        python package/move_conda_package.py
+        
+    - name: List dist/
+      run: ls dist/
+      
+    - name: Get the conda package file name
+      id: get_filename
+      run: |
+        cd dist
+        echo "::set-output name=filename::$(ls cytoflow*.bz2)"
+        
+    - name: Upload the conda package to the GitHub release
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.upload_url }} 
+        asset_path: dist/${{ steps.get_filename.outputs.filename }}
+        asset_name: ${{ steps.get_filename.outputs.filename }}
+        asset_content_type: application/x-bzip2
+        
+    - name: Upload the conda package to anaconda.org
+      run: |
+        anaconda login --username ${{ secrets.CONDA_USERNAME }} --password ${{ secrets.CONDA_PASSWORD }}
+        anaconda upload --user cytoflow dist/cytoflow*.bz2
+        
 # 
 #   build-linux-wheels:
 #     name: Build source dist, linux wheels
@@ -184,61 +191,62 @@ jobs:
 #         retention-days: 1
         
         
-  build-examples:
-    name: Zip up examples
-    runs-on: ubuntu-18.04
-    steps:
-    - name: Show client payload
-      run: |
-        echo "${{ github.event.client_payload.ref }}"
-        echo "${{ github.event.client_payload.release_url }}"
-
-    - name: Check out repo
-      uses: actions/checkout@v2  
-      with:
-        ref: ${{ github.event.client_payload.ref }}
-        fetch-depth: 0
-        submodules: true
-      
-    - name: Query git tag
-      id: tag
-      run: echo "::set-output name=tag::$(git describe --tags  --match '*'  'HEAD~')"
-        
-    - name: Show Tag
-      id: display
-      run: |
-        echo 'Output from Find Tag: ${{steps.tag.outputs.tag}}'
-        
-    - name: Zip up examples
-      run: |
-        mkdir dist
-        cd docs
-        zip -r cytoflow-${{steps.tag.outputs.tag}}-examples-basic.zip examples-basic
-        zip -r cytoflow-${{steps.tag.outputs.tag}}-examples-advanced.zip examples-advanced
-        mv cytoflow-${{steps.tag.outputs.tag}}-examples-*.zip ../dist
-        cd ..
-        
-    - name: List dist/
-      run: ls dist/
-      
-    - name: Upload the the basic examples to the GitHub release
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ github.event.client_payload.release_url }} 
-        asset_path: dist/cytoflow-${{steps.tag.outputs.tag}}-examples-basic.zip
-        asset_name: cytoflow-${{steps.tag.outputs.tag}}-examples-basic.zip
-        asset_content_type: application/zip
-        
-    - name: Upload the the advanced examples to the GitHub release
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ github.event.client_payload.release_url }} 
-        asset_path: dist/cytoflow-${{steps.tag.outputs.tag}}-examples-basic.zip
-        asset_name: cytoflow-${{steps.tag.outputs.tag}}-examples-basic.zip
-        asset_content_type: application/zip
-
-        
+# WORKING
+#   build-examples:
+#     name: Zip up examples
+#     runs-on: ubuntu-18.04
+#     steps:
+#     - name: Show client payload
+#       run: |
+#         echo "${{ github.event.client_payload.ref }}"
+#         echo "${{ github.event.client_payload.release_url }}"
+# 
+#     - name: Check out repo
+#       uses: actions/checkout@v2  
+#       with:
+#         ref: ${{ github.event.client_payload.ref }}
+#         fetch-depth: 0
+#         submodules: true
+#       
+#     - name: Query git tag
+#       id: tag
+#       run: echo "::set-output name=tag::$(git describe --tags  --match '*'  'HEAD~')"
+#         
+#     - name: Show Tag
+#       id: display
+#       run: |
+#         echo 'Output from Find Tag: ${{steps.tag.outputs.tag}}'
+#         
+#     - name: Zip up examples
+#       run: |
+#         mkdir dist
+#         cd docs
+#         zip -r cytoflow-${{steps.tag.outputs.tag}}-examples-basic.zip examples-basic
+#         zip -r cytoflow-${{steps.tag.outputs.tag}}-examples-advanced.zip examples-advanced
+#         mv cytoflow-${{steps.tag.outputs.tag}}-examples-*.zip ../dist
+#         cd ..
+#         
+#     - name: List dist/
+#       run: ls dist/
+#       
+#     - name: Upload the the basic examples to the GitHub release
+#       uses: actions/upload-release-asset@v1
+#       env:
+#         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#       with:
+#         upload_url: ${{ github.event.client_payload.release_url }} 
+#         asset_path: dist/cytoflow-${{steps.tag.outputs.tag}}-examples-basic.zip
+#         asset_name: cytoflow-${{steps.tag.outputs.tag}}-examples-basic.zip
+#         asset_content_type: application/zip
+#         
+#     - name: Upload the the advanced examples to the GitHub release
+#       uses: actions/upload-release-asset@v1
+#       env:
+#         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#       with:
+#         upload_url: ${{ github.event.client_payload.release_url }} 
+#         asset_path: dist/cytoflow-${{steps.tag.outputs.tag}}-examples-advanced.zip
+#         asset_name: cytoflow-${{steps.tag.outputs.tag}}-examples-advanced.zip
+#         asset_content_type: application/zip
+# 
+#         
