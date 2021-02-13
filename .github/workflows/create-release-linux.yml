@@ -128,7 +128,7 @@ jobs:
       run: ls dist/
       
     - name: Get file names
-      id: filenames
+      id: get_filenames
       run: |
         cd dist
         echo "::set-output name=extension::$(ls _Logicle*.so)"
