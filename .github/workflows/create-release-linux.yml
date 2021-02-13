@@ -1,0 +1,239 @@
+# (c) Massachusetts Institute of Technology 2015-2018
+# (c) Brian Teague 2018-2021
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+name: Release a new package (linux)
+on: 
+  release:
+    types: [created]
+      
+jobs:
+#   build-linux-conda-package:
+#     name: Build and upload the linux conda package
+#     runs-on: ubuntu-18.04
+#     defaults:
+#       run:
+#         shell: bash -l {0}
+#     steps:
+#     - name: Check out repo
+#       uses: actions/checkout@v2
+#       with:
+#         fetch-depth: 0
+#       
+#     - name: Setup Miniconda
+#       uses: conda-incubator/setup-miniconda@v2.0.1
+#       with:
+#         activate-environment: cytoflow
+#         environment-file: environment.yml
+#         
+#     - name: Configure conda
+#       run: |
+#         conda install --name base --yes --quiet anaconda-client conda-build
+#         
+#     - name: Build conda package
+#       run: |
+#         conda deactivate
+#         conda render package/conda_recipes/cytoflow
+#         conda build package/conda_recipes/cytoflow
+#         
+#     - name: Move conda package into the dist folder
+#       run: |
+#         mkdir dist
+#         conda deactivate
+#         conda activate base
+#         python package/move_conda_package.py
+#         
+#     - name: List dist/
+#       run: ls dist/
+#       
+#     - name: Upload the conda package to anaconda.org
+#       run: |
+#         anaconda login --username ${{ secrets.CONDA_USERNAME }} --password ${{ secrets.CONDA_PASSWORD }}
+#         anaconda upload --user cytoflow dist/cytoflow*.bz2
+#         
+#     - name: Upload the conda package to the GitHub release
+#       uses: actions/upload-release-asset@v1
+#       env:
+#         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#       with:
+#         upload_url: ${{ github.event.upload_url }} 
+#         asset_path: ./my-artifact.zip
+#         asset_name: my-artifact.zip
+#         asset_content_type: application/x-bzip2
+# 
+#   build-linux-wheels:
+#     name: Build source dist, linux wheels
+#     runs-on: ubuntu-18.04
+#     defaults:
+#       run:
+#         shell: bash -l {0}
+#     steps:
+#     - name: Check out repo
+#       uses: actions/checkout@v2  
+#       with:
+#         fetch-depth: 0
+#       
+#     - name: Setup Miniconda
+#       uses: conda-incubator/setup-miniconda@v2.0.1
+#       with:
+#         activate-environment: cytoflow
+#         environment-file: environment.yml
+#     
+#     - name: Install package locally
+#       run: |
+#         python setup.py develop
+#         
+#     - name: Build source dist
+#       run: |
+#         python setup.py sdist
+#         
+#     - name: Build wheel
+#       run: |
+#         python setup.py bdist_wheel
+#         
+#     - name: Move C++ extensions into the dist folder
+#       run: |
+#         cp `find build | grep "\.so$"` dist/
+#         
+#     - name: List dist/
+#       run: ls dist/
+#       
+#     - name: Save the contents of the dist/ folder as artifacts
+#       uses: actions/upload-artifact@v2
+#       with:
+#         name: linux-wheels
+#         retention-days: 1
+#         path: dist/*   
+#         
+#   build-linux-oneclick:
+#     name: Build linux one-click
+#     needs: test-on-linux
+#     runs-on: ubuntu-18.04
+#     defaults:
+#       run:
+#         shell: bash -l {0}
+#     steps:
+#     - name: Check out repo
+#       uses: actions/checkout@v2  
+#       with:
+#         fetch-depth: 0
+#       
+#     - name: Query git tag
+#       id: tag
+#       run: echo "::set-output name=tag::$(git describe --tags  --match '*'  'HEAD~')"
+#         
+#     - name: Show Tag
+#       id: display
+#       run: |
+#         echo 'Output from Find Tag: ${{steps.tag.outputs.tag}}'
+#       
+#     - name: Setup Miniconda
+#       uses: conda-incubator/setup-miniconda@v2.0.1
+#       with:
+#         activate-environment: cytoflow
+#         environment-file: environment.yml
+#     
+#     - name: Install package locally
+#       run: |
+#         python setup.py develop
+#         
+#     - name: Install packaging deps
+#       run: |
+#         conda install --name cytoflow --yes --quiet 'sphinx==3.4.3'
+#         pip install "pyinstaller==4.2"
+#         
+#     - name: Build embedded help docs
+#       run: |
+#         python setup.py build_sphinx -b embedded_help
+#         
+#     - name: Build GUI binary
+#       run: |
+#         pyinstaller package/pyinstaller.spec
+#         
+# #    - name: GUI binary smoketest
+# #      run: |
+# #        xvfb-run dist/cytoflow/cytoflowgui ../../cytoflowgui/tests/startup-test.flow
+# 
+#     - name: Rename directory and make a tarball
+#       run: |
+#         cd dist
+#         mv cytoflow cytoflow-${{steps.tag.outputs.tag}}
+#         tar -cjf cytoflow-${{steps.tag.outputs.tag}}.linux_x86-64.tar.bz2 cytoflow-${{steps.tag.outputs.tag}}
+#         rm -rf cytoflow-${{steps.tag.outputs.tag}}
+#         
+#     - name: List dist/
+#       run: ls dist/
+#       
+#     - name: Save the contents of the dist/ folder as artifacts
+#       uses: actions/upload-artifact@v2
+#       with:
+#         name: linux-oneclick
+#         path: dist/*
+#         retention-days: 1
+        
+        
+  build-examples:
+    name: Zip up examples
+    needs: test-on-linux
+    runs-on: ubuntu-18.04
+    steps:
+    - name: Check out repo
+      uses: actions/checkout@v2  
+      with:
+        fetch-depth: 0
+        submodules: true
+      
+    - name: Query git tag
+      id: tag
+      run: echo "::set-output name=tag::$(git describe --tags  --match '*'  'HEAD~')"
+        
+    - name: Show Tag
+      id: display
+      run: |
+        echo 'Output from Find Tag: ${{steps.tag.outputs.tag}}'
+        
+    - name: Zip up examples
+      run: |
+        mkdir dist
+        cd docs
+        zip -r cytoflow-${{steps.tag.outputs.tag}}-examples-basic.zip examples-basic
+        zip -r cytoflow-${{steps.tag.outputs.tag}}-examples-advanced.zip examples-advanced
+        mv cytoflow-${{steps.tag.outputs.tag}}-examples-*.zip ../dist
+        cd ..
+        
+    - name: List dist/
+      run: ls dist/
+      
+    - name: Upload the the basic examples to the GitHub release
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.upload_url }} 
+        asset_path: dist/cytoflow-${{steps.tag.outputs.tag}}-examples-basic.zip
+        asset_name: cytoflow-${{steps.tag.outputs.tag}}-examples-basic.zip
+        asset_content_type: application/zip
+        
+    - name: Upload the the advanced examples to the GitHub release
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.upload_url }} 
+        asset_path: dist/cytoflow-${{steps.tag.outputs.tag}}-examples-basic.zip
+        asset_name: cytoflow-${{steps.tag.outputs.tag}}-examples-basic.zip
+        asset_content_type: application/zip
+
+        
