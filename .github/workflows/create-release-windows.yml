@@ -1,0 +1,234 @@
+# (c) Massachusetts Institute of Technology 2015-2018
+# (c) Brian Teague 2018-2021
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+name: Release a new package (Windows)
+on:
+  repository_dispatch:
+    types: [builds]
+    
+jobs:     
+  build-windows-conda-package:
+    name: Build windows conda package
+    runs-on: windows-2019
+    defaults:
+      run:
+        shell: bash -l {0}
+    needs: test-on-windows
+    steps:
+    - name: Check out repo
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+      
+    - name: Setup Miniconda
+      uses: conda-incubator/setup-miniconda@v2.0.1
+      with:
+        activate-environment: cytoflow
+        environment-file: environment.yml
+                
+    - name: Configure conda
+      run: |
+        conda install --name base --yes --quiet anaconda-client conda-build
+              
+    - name: Install SWIG
+      run: |
+        choco install swig --version 3.0.2 --yes --limit-output
+        
+    - name: Build conda package
+      run: |
+        conda deactivate
+        conda render package/conda_recipes/cytoflow
+        conda build package/conda_recipes/cytoflow
+        
+    - name: Move conda package into the dist folder
+      run: |
+        mkdir dist
+        conda deactivate
+        conda activate base
+        python package/move_conda_package.py
+        
+    - name: List dist
+      run: ls dist/
+      
+     - name: Get file names
+       id: get_filenames
+       run: |
+         cd dist
+         echo "::set-output name=conda_package::$(ls cytoflow*.bz2)"        
+
+     - name: Show file name
+       run: |
+         echo 'Output from get_filename: ${{steps.get_filenames.outputs.conda_package}}'
+         
+     - name: Upload the conda package to the GitHub release
+       uses: actions/upload-release-asset@v1
+       env:
+         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+       with:
+         upload_url: ${{ github.event.client_payload.release_url }} 
+         asset_path: dist/${{ steps.get_filenames.outputs.conda_package }}
+         asset_name: ${{ steps.get_filenames.outputs.conda_package }}
+         asset_content_type: application/x-bzip2
+         
+     - name: Upload the conda package to anaconda.org
+       run: |
+         conda deactivate
+         conda activate base
+         anaconda login --username ${{ secrets.CONDA_USERNAME }} --password ${{ secrets.CONDA_PASSWORD }}
+         anaconda upload --user cytoflow dist/${{ steps.get_filenames.outputs.conda_package }}
+         anaconda logout
+        
+
+  build-windows-wheels:
+    name: Build source dist, linux wheels
+    needs: test-on-windows
+    runs-on: windows-2019
+    defaults:
+      run:
+        shell: bash -l {0}
+    steps:
+    - name: Check out repo
+      uses: actions/checkout@v2  
+      with:
+        fetch-depth: 0
+      
+    - name: Setup Miniconda
+      uses: conda-incubator/setup-miniconda@v2.0.1
+      with:
+        activate-environment: cytoflow
+        environment-file: environment.yml
+    
+    - name: Install SWIG
+      run: |
+        choco install swig --version 3.0.2 --yes --limit-output
+    
+    - name: Install package locally
+      run: |
+        python setup.py develop
+        
+    - name: Build wheel
+      run: |
+        python setup.py bdist_wheel
+        
+    - name: Move C++ extensions into the dist folder
+      run: |
+        cp `find build | grep "\.pyd$"` dist/
+        
+    - name: List dist
+      run: ls dist/
+      
+    - name: Get file names
+      id: get_filenames
+      run: |
+        cd dist
+        echo "::set-output name=extension::$(ls _Logicle*.pyd)"
+        echo "::set-output name=wheel::$(ls cytoflow*.whl)"
+
+    - name: Upload the Windows extension to the GitHub release
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.client_payload.release_url }} 
+        asset_path: dist/${{ steps.get_filenames.outputs.extension }}
+        asset_name: ${{ steps.get_filenames.outputs.extension }}
+        asset_content_type: application/x-ms-dos-executable
+ 
+    - name: Upload the Windows wheel to the GitHub release
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.client_payload.release_url }} 
+        asset_path: dist/${{ steps.get_filenames.outputs.wheel }}
+        asset_name: ${{ steps.get_filenames.outputs.wheel }}
+        asset_content_type: application/zip    
+        
+  build-windows-oneclick:
+    name: Build Windows one-click
+    needs: test-on-windows
+    runs-on: windows-2019
+    defaults:
+      run:
+        shell: bash -l {0}
+    steps:        
+    - name: Check out repo
+      uses: actions/checkout@v2  
+      with:
+        fetch-depth: 0
+        
+    - name: Show all the files
+      run: find .
+      
+    - name: Query git tag
+      id: tag
+      run: echo "::set-output name=tag::$(git describe --tags)"
+        
+    - name: Show Tag
+      id: display
+      run: |
+        echo 'Output from Find Tag: ${{steps.tag.outputs.tag}}'
+      
+    - name: Setup Miniconda
+      uses: conda-incubator/setup-miniconda@v2.0.1
+      with:
+        activate-environment: cytoflow
+        environment-file: environment.yml
+                      
+    - name: Install SWIG
+      run: |
+        choco install swig --version 3.0.2 --yes --limit-output
+            
+    - name: Install package locally
+      run: |
+        python setup.py develop
+        
+    - name: Install packaging deps
+      run: |
+        conda install --name cytoflow --yes --quiet 'sphinx==3.4.3'
+        pip install "pyinstaller==4.2"
+        
+    - name: Build embedded help docs
+      run: |
+        python setup.py build_sphinx -b embedded_help
+        
+    - name: Build GUI binary
+      run: |
+        pyinstaller package/pyinstaller.spec
+        
+    - name: Build installer
+      run: |
+        "C:\Program Files (x86)\NSIS\makensis.exe" //NOCD package/installer.nsis
+        
+    - name: Rename installer and remove remaining files
+      run: |
+        cd dist
+        mv cytoflow-installer.exe cytoflow-gui-${{steps.tag.outputs.tag}}-win-amd64.exe
+        rm -rf cytoflow
+        
+    - name: List dist
+      run: ls dist/
+      
+    - name: Upload the point-and-click tarball to the GitHub release
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.client_payload.release_url }} 
+        asset_path: dist/cytoflow-gui-${{steps.tag.outputs.tag}}-win-amd64.exe
+        asset_name: cytoflow-gui-${{steps.tag.outputs.tag}}-win-amd64.exe
+        asset_content_type: application/x-ms-dos-executable
+
