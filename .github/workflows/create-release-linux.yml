@@ -81,6 +81,7 @@ jobs:
     - name: Upload the conda package to anaconda.org
       run: |
         conda deactivate
+        conda activate base
         anaconda login --username ${{ secrets.CONDA_USERNAME }} --password ${{ secrets.CONDA_PASSWORD }}
         anaconda upload --user cytoflow dist/cytoflow*.bz2
         
