@@ -14,11 +14,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-name: Create a new release
-on: [workflow-dispatch]
-#   push:
-#     tags:
-#     - '*'
+name: Create a new release when a new tag is created or pushed
+on: [create]
+
 
 jobs:
   create-release:
@@ -37,3 +35,12 @@ jobs:
           tag_name: ${{ github.ref }}
           release_name: Release ${{ github.ref }}
           draft: true
+          prerelease: false
+          
+      - Dispatch builds
+        uses: peter-evans/repository-dispatch@v1.1.3
+        with:
+          token: ${{ secrets.REPO_ACCESS_TOKEN }}
+          event-type: builds
+          client-payload: '{"release_url": "${{ steps.create_release.outputs.upload_url }}", "ref": "${{ github.ref }}"}'
+       
