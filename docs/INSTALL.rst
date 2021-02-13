@@ -19,9 +19,10 @@ Installing from the ``Anaconda Navigator``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Start by installing the Anaconda Python distribution. **Make sure to install
-  version 3.6.** 
+  a 64-bit version, unless you will be building *cytoflow* yourself and you know
+  what you're doing.** 
 
-  `Download Anaconda here <https://www.continuum.io/downloads>`_
+  `Download Anaconda here <https://www.anaconda.com/products/individual>`_
 
 * Either from the Start Menu (Windows) or the Finder (Mac), run the 
   ``Anaconda Navigator``
@@ -31,7 +32,7 @@ Installing from the ``Anaconda Navigator``
   
   .. image:: images/channels.PNG
   
-* Click ``Add...`` and type ``bpteague``.  Select "Update channels."
+* Click ``Add...`` and type ``cytoflow``.  Select "Update channels."
   
   .. image:: images/add-channels.PNG
   
@@ -64,9 +65,9 @@ Installing from the command line
 
 * Start ``Anaconda Prompt`` from the Start Menu (Windows) or Finder (Mac).
 
-* Add the ``bpteague`` channel::
+* Add the ``cytoflow`` channel::
 
-    conda config --add channels bpteague
+    conda config --add channels cytoflow
 
 * Create a new environment and install ``cytoflow`` and the Jupyter notebook.  
   In this example, the new environment will be called ``cf`` -- feel free to
@@ -107,7 +108,7 @@ Finally, ``cytoflow`` relies on one C++ extension.  On Linux, installing the
 requirements for building it is straightforward.  On MacOS it is harder, and
 on Windows it is extremely difficult.  Instead, as part of rolling a new
 release, the appropriate files are made available on 
-`the GitHub releases page <https://github.com/bpteague/cytoflow/releases>`_.  
+`the GitHub releases page <https://github.com/cytoflow/cytoflow/releases>`_.  
 The procedure below includes instructions for downloading and installing
 the appropriate file.
 
@@ -117,13 +118,13 @@ the appropriate file.
   * On Windows: Install a copy of ``git``.  I use `git-for-windows <http://git-for-windows.github.io>`_
   * On MacOS: Install a copy of ``git`` from `the Git website <http://www.git-scm.com>`_.
 
-* If you haven't, add the ``bpteague`` channel to conda::
+* If you haven't, add the ``cytoflow`` channel to conda::
 
-    conda config --add channels bpteague
+    conda config --add channels cytoflow
 
 * Clone the repository::
 
-    git clone https://github.com/bpteague/cytoflow.git
+    git clone https://github.com/cytoflow/cytoflow.git
 
 * Create a new environment.  In this example, I have called it ``cf_dev``.
   In the new repository you just cloned, say::
@@ -155,7 +156,7 @@ the appropriate file.
 
     python setup.py develop
     
-* From the `GitHub releases page <https://github.com/bpteague/cytoflow/releases>`_ 
+* From the `GitHub releases page <https://github.com/cytoflow/cytoflow/releases>`_ 
   download the appropriate extension file for the version you're installing.
   
   * **On Windows (32-bit)**: ``_Logicle.cp36-win32.pyd``
@@ -176,7 +177,7 @@ Running the point-and-click GUI program
 ---------------------------------------
 
 There are one-click bundles available at
-`http://bpteague.github.io/cytoflow <http://bpteague.github.io/cytoflow>`_.
+`http://cytoflow.github.io/cytoflow <http://cytoflow.github.io/cytoflow>`_.
 
 Alternately, you can follow the instructions above for installing the 
 Anaconda package, then run ``cytoflow`` through the Anaconda Navigator or

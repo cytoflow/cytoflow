@@ -427,7 +427,7 @@ class FlowTask(Task):
               "the developers.  If you click 'Yes' below, you will be given then " \
               "opportunity to save the log to a file and then file a " \
               "new issue on GitHub at " \
-              "https://github.com/bpteague/cytoflow/issues/new" 
+              "https://github.com/cytoflow/cytoflow/issues/new" 
         
         dialog = ConfirmationDialog(message = msg,
                                     informative = "Would you like to report an issue to the developers?")
@@ -443,7 +443,7 @@ class FlowTask(Task):
                 with open(dialog.path, 'w') as f:
                     f.write(log)
                   
-                webbrowser.open_new_tab("https://github.com/bpteague/cytoflow/issues/new")
+                webbrowser.open_new_tab("https://github.com/cytoflow/cytoflow/issues/new")
                   
             return
     

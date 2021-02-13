@@ -8,20 +8,20 @@ Welcome to a different style of flow cytometry analysis. Take a look at
 some example `Jupyter <http://jupyter.org/>`__ notebooks:
 
 -  `Basic flow cytometry
-   analysis <https://github.com/bpteague/cytoflow/blob/master/docs/examples-basic/Basic%20Cytometry.ipynb>`__
+   analysis <https://github.com/cytoflow/cytoflow/blob/master/docs/examples-basic/Basic%20Cytometry.ipynb>`__
 -  `An small-molecule induction curve with
-   yeast <https://github.com/bpteague/cytoflow/blob/master/docs/examples-basic/Yeast%20Dose%20Response.ipynb>`__
+   yeast <https://github.com/cytoflow/cytoflow/blob/master/docs/examples-basic/Yeast%20Dose%20Response.ipynb>`__
 -  `Machine learning applied to flow cytometry
-   data <https://github.com/bpteague/cytoflow/blob/master/docs/examples-basic/Machine%20Learning.ipynb>`__
+   data <https://github.com/cytoflow/cytoflow/blob/master/docs/examples-basic/Machine%20Learning.ipynb>`__
 -  `Reproduced analysis from a published
-   paper <https://github.com/bpteague/cytoflow-examples/blob/master/kiani/Kiani%20Nature%20Methods%202014.ipynb>`__
+   paper <https://github.com/cytoflow/cytoflow-examples/blob/master/kiani/Kiani%20Nature%20Methods%202014.ipynb>`__
 -  `A multi-dimensional induction in
-   yeast <https://github.com/bpteague/cytoflow-examples/blob/master/yeast/Induction%20Timecourse.ipynb>`__
+   yeast <https://github.com/cytoflow/cytoflow-examples/blob/master/yeast/Induction%20Timecourse.ipynb>`__
 -  `Calibrated flow
-   cytometry <https://github.com/bpteague/cytoflow-examples/blob/master/tasbe/TASBE%20Workflow.ipynb>`__
+   cytometry <https://github.com/cytoflow/cytoflow-examples/blob/master/tasbe/TASBE%20Workflow.ipynb>`__
 
 or some `screenshots from the
-GUI <http://bpteague.github.io/cytoflow/screenshots.html>`__
+GUI <http://cytoflow.github.io/cytoflow/screenshots.html>`__
 
 What’s wrong with other packages?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -51,7 +51,7 @@ A few things.
    to suit your own needs, then contribute your changes back so the rest
    of the community can benefit from them.
 
--  A `point-and-click interface <http://bpteague.github.io/cytoflow>`__
+-  A `point-and-click interface <http://cytoflow.github.io/cytoflow>`__
    for easy analysis.
 
 -  **Python modules** to integrate into larger apps, automation, or for
@@ -98,7 +98,7 @@ Installation
 ~~~~~~~~~~~~
 
 **If you just want the point-and-click version (not the Python modules),
-you can install it from http://bpteague.github.io/cytoflow/**
+you can install it from http://cytoflow.github.io/cytoflow/**
 
 See the `installation
 notes <http://cytoflow.readthedocs.org/en/latest/INSTALL.html>`__ on

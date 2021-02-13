@@ -10,8 +10,8 @@
 !define VERSIONBUILD 0
 # These will be displayed by the "Click here for support information" link in "Add/Remove Programs"
 # It is possible to use "mailto:" links in here to open the email client
-!define HELPURL "https://github.com/bpteague/cytoflow/issues" # "Support Information" link
-!define UPDATEURL "http://bpteague.github.io/" # "Product Updates" link
+!define HELPURL "https://github.com/cytoflow/cytoflow/issues" # "Support Information" link
+!define UPDATEURL "http://cytoflow.github.io/" # "Product Updates" link
 !define ABOUTURL "https://teague.bio" # "Publisher" link
 # This is the size (in kB) of all the files copied into "Program Files"
 !define INSTALLSIZE 1003520

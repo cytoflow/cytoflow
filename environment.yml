@@ -1,6 +1,6 @@
 name: cytoflow
 channels:
- - bpteague
+ - cytoflow
  
 dependencies:
     - python==3.8.5

@@ -1,5 +1,5 @@
 [submodule "docs/examples-advanced"]
 	path = docs/examples-advanced
-	url = https://github.com/bpteague/cytoflow-examples.git
+	url = https://github.com/cytoflow/cytoflow-examples.git
 
 

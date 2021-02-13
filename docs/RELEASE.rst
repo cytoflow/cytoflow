@@ -6,11 +6,11 @@ Tests
 -----
 
 - We use two continuous integration platforms to run tests and build binaries and documentations:
-  `GitHub Actions <https://github.com/bpteague/cytoflow/actions>`_, 
+  `GitHub Actions <https://github.com/cytoflow/cytoflow/actions>`_, 
   `ReadTheDocs <https://readthedocs.org/projects/cytoflow/>`_.
   
-  Finished releases are published to `GitHub releases <https://github.com/bpteague/cytoflow/releases>`_,
-  `Anaconda Cloud <https://anaconda.org/bpteague>`_, and the `Python Package Index <https://pypi.org/project/cytoflow/>`_.
+  Finished releases are published to `GitHub releases <https://github.com/cytoflow/cytoflow/releases>`_,
+  `Anaconda Cloud <https://anaconda.org/cytoflow>`_, and the `Python Package Index <https://pypi.org/project/cytoflow/>`_.
   
 - Make sure that the :mod:`cytoflow` tests pass, both locally and on GitHub::
 
@@ -125,7 +125,7 @@ Upload the artifacts and update the homepage
 
 - Upload artifacts as appropriate to GitHub_, Anaconda_, and the Python Package Index.
 
-- On branch ``gh-pages``, update the version in ``_config.yml``.  Push these
-  changes to update the main download links on 
-  http://bpteague.github.io/cytoflow
+- At https://github.com/cytoflow/cytoflow.github.io, update the version in 
+  ``_config.yml``. Push these changes to update the main download links on 
+  http://cytoflow.github.io/
 

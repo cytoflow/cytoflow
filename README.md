@@ -4,14 +4,14 @@
 
 Welcome to a different style of flow cytometry analysis.  Take a look at some example [Jupyter](http://jupyter.org/) notebooks:
 
-* [Basic flow cytometry analysis](https://github.com/bpteague/cytoflow/blob/master/docs/examples-basic/Basic%20Cytometry.ipynb)
-* [An small-molecule induction curve with yeast](https://github.com/bpteague/cytoflow/blob/master/docs/examples-basic/Yeast%20Dose%20Response.ipynb)
-* [Machine learning applied to flow cytometry data](https://github.com/bpteague/cytoflow/blob/master/docs/examples-basic/Machine%20Learning.ipynb)
-* [Reproduced analysis from a published paper](https://github.com/bpteague/cytoflow-examples/blob/master/kiani/Kiani%20Nature%20Methods%202014.ipynb)
-* [A multi-dimensional induction in yeast](https://github.com/bpteague/cytoflow-examples/blob/master/yeast/Induction%20Timecourse.ipynb)
-* [Calibrated flow cytometry](https://github.com/bpteague/cytoflow-examples/blob/master/tasbe/TASBE%20Workflow.ipynb)
+* [Basic flow cytometry analysis](https://github.com/cytoflow/cytoflow/blob/master/docs/examples-basic/Basic%20Cytometry.ipynb)
+* [An small-molecule induction curve with yeast](https://github.com/cytoflow/cytoflow/blob/master/docs/examples-basic/Yeast%20Dose%20Response.ipynb)
+* [Machine learning applied to flow cytometry data](https://github.com/cytoflow/cytoflow/blob/master/docs/examples-basic/Machine%20Learning.ipynb)
+* [Reproduced analysis from a published paper](https://github.com/cytoflow/cytoflow-examples/blob/master/kiani/Kiani%20Nature%20Methods%202014.ipynb)
+* [A multi-dimensional induction in yeast](https://github.com/cytoflow/cytoflow-examples/blob/master/yeast/Induction%20Timecourse.ipynb)
+* [Calibrated flow cytometry](https://github.com/cytoflow/cytoflow-examples/blob/master/tasbe/TASBE%20Workflow.ipynb)
 
-or some [screenshots from the GUI](http://bpteague.github.io/cytoflow/screenshots.html)
+or some [screenshots from the GUI](http://cytoflow.github.io/cytoflow/screenshots.html)
 
 ### What's wrong with other packages?  
 
@@ -37,7 +37,7 @@ A few things.
   suit your own needs, then contribute your changes back so the rest of the
   community can benefit from them.
 
-* A [**point-and-click interface**](http://bpteague.github.io/cytoflow) for
+* A [**point-and-click interface**](http://cytoflow.github.io/cytoflow) for
   easy analysis.
 
 * **Python modules** to integrate into larger apps, automation, or for use in
@@ -80,7 +80,7 @@ A few things.
 ### Installation
 
 **If you just want the point-and-click version (not the Python modules), you 
-  can install it from http://bpteague.github.io/cytoflow/**
+  can install it from http://cytoflow.github.io/cytoflow/**
 
 See the [installation notes](http://cytoflow.readthedocs.org/en/latest/INSTALL.html) 
 on [ReadTheDocs](http://cytoflow.readthedocs.org/).  Installation has been tested

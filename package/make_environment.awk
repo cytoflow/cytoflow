@@ -1,7 +1,7 @@
 BEGIN {
 	print "name: cytoflow"
 	print "channels:"
-	print " - bpteague"
+	print " - cytoflow"
 	print ""
 	print "dependencies:"
 	}

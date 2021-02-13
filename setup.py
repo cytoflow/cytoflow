@@ -117,7 +117,7 @@ setup(
     long_description = long_description,
     license = "GPLv2",
     keywords = "flow cytometry scipy",
-    url = "https://github.com/bpteague/cytoflow", 
+    url = "https://github.com/cytoflow/cytoflow", 
     classifiers=[
                  'Development Status :: 5 - Production/Stable',
                  'Environment :: Console',

@@ -45,7 +45,7 @@ install:
 
   # Install the build and runtime dependencies of the project.
   - conda update --yes conda
-  - conda config --add channels bpteague
+  - conda config --add channels cytoflow
   - conda install --yes --quiet anaconda-client conda-build
 
   # Set up conda recipe variables
@@ -153,10 +153,10 @@ deploy:
       appveyor_repo_tag: true        # deploy on tag   
 
   - provider: BinTray
-    username: bpteague
+    username: cytoflow
     api_key:
       secure: J1xtgBNfGlyHwokEnESgGsM01Oe/ZBYZF/DzWDutMYtOTCd4bJdmT1kZsirim/Gp
-    subject: bpteague
+    subject: cytoflow
     repo: cytoflow
     package: cytoflow
     version: latest
@@ -168,10 +168,10 @@ deploy:
        appveyor_repo_tag: true        # deploy on tag   
 
   - provider: BinTray
-    username: bpteague
+    username: cytoflow
     api_key:
       secure: J1xtgBNfGlyHwokEnESgGsM01Oe/ZBYZF/DzWDutMYtOTCd4bJdmT1kZsirim/Gp
-    subject: bpteague
+    subject: cytoflow
     repo: cytoflow
     package: cytoflow
     version: latest
@@ -183,10 +183,10 @@ deploy:
         branch: master
 
   - provider: BinTray
-    username: bpteague
+    username: cytoflow
     api_key:
       secure: J1xtgBNfGlyHwokEnESgGsM01Oe/ZBYZF/DzWDutMYtOTCd4bJdmT1kZsirim/Gp
-    subject: bpteague
+    subject: cytoflow
     repo: cytoflow
     package: cytoflow
     version: latest

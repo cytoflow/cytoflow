@@ -99,7 +99,7 @@ test:
     # - nose
 
 about:
-  home: https://github.com/bpteague/cytoflow
+  home: https://github.com/cytoflow/cytoflow
   license: GPLv2
   license_file: GPL.txt
   summary: 'Quantitative analyses for flow cytometry'
