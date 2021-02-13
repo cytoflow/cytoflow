@@ -70,8 +70,8 @@ jobs:
         echo "::set-output name=conda_package::$(ls cytoflow*.bz2)"        
 
     - name: Show file name
-       run: |
-         echo 'Output from get_filename: ${{steps.get_filenames.outputs.conda_package}}'
+      run: |
+        echo 'Output from get_filename: ${{steps.get_filenames.outputs.conda_package}}'
          
     - name: Upload the conda package to the GitHub release
       uses: actions/upload-release-asset@v1
