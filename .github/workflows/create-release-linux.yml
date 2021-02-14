@@ -92,84 +92,84 @@ jobs:
         anaconda logout
        
   build-linux-wheels:
-   name: Build and upload source dist, linux wheels
-   runs-on: ubuntu-18.04
-   defaults:
-     run:
-       shell: bash -l {0}
-   steps:
-   - name: Check out repo
-     uses: actions/checkout@v2  
-     with:
-       ref: ${{ github.event.client_payload.ref }}
-       fetch-depth: 0
-     
-   - name: Setup Miniconda
-     uses: conda-incubator/setup-miniconda@v2.0.1
-     with:
-       activate-environment: cytoflow
-       environment-file: environment.yml
-       
+    name: Build and upload source dist, linux wheels
+    runs-on: ubuntu-18.04
+    defaults:
+      run:
+        shell: bash -l {0}
+    steps:
+    - name: Check out repo
+      uses: actions/checkout@v2  
+      with:
+        ref: ${{ github.event.client_payload.ref }}
+        fetch-depth: 0
+      
+    - name: Setup Miniconda
+      uses: conda-incubator/setup-miniconda@v2.0.1
+      with:
+        activate-environment: cytoflow
+        environment-file: environment.yml
+        
     - name: Configure conda
       run: |
         conda install --yes --quiet conda==4.0.2
-   
-   - name: Install package locally
-     run: |
-       python setup.py develop
-       
-   - name: Build source dist
-     run: |
-       python setup.py sdist
-       
-   - name: Build wheel
-     run: |
-       python setup.py bdist_wheel
-       
-   - name: Move C++ extensions into the dist folder
-     run: |
-       cp `find build | grep "\.so$"` dist/
-       
-   - name: List dist/
-     run: ls dist/
-     
-   - name: Get file names
-     id: get_filenames
-     run: |
-       cd dist
-       echo "::set-output name=extension::$(ls _Logicle*.so)"
-       echo "::set-output name=wheel::$(ls cytoflow*.whl)"
-       echo "::set-output name=tarball::$(ls cytoflow*.tar.gz)"
-
-   - name: Upload the Linux extension to the GitHub release
-     uses: actions/upload-release-asset@v1
-     env:
-       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-     with:
-       upload_url: ${{ github.event.client_payload.release_url }} 
-       asset_path: dist/${{ steps.get_filenames.outputs.extension }}
-       asset_name: ${{ steps.get_filenames.outputs.extension }}
-       asset_content_type: application/x-sharedlib
-
-   - name: Upload the Linux wheel to the GitHub release
-     uses: actions/upload-release-asset@v1
-     env:
-       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-     with:
-       upload_url: ${{ github.event.client_payload.release_url }} 
-       asset_path: dist/${{ steps.get_filenames.outputs.wheel }}
-       asset_name: ${{ steps.get_filenames.outputs.wheel }}
-       asset_content_type: application/zip       
-
-   - name: Upload the source tarball to the GitHub release
-     uses: actions/upload-release-asset@v1
-     env:
-       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-     with:
-       upload_url: ${{ github.event.client_payload.release_url }} 
-       asset_path: dist/${{ steps.get_filenames.outputs.tarball }}
-       asset_name: ${{ steps.get_filenames.outputs.tarball }}
-       asset_content_type: application/x-compressed-tar
+    
+    - name: Install package locally
+      run: |
+        python setup.py develop
+        
+    - name: Build source dist
+      run: |
+        python setup.py sdist
+        
+    - name: Build wheel
+      run: |
+        python setup.py bdist_wheel
+        
+    - name: Move C++ extensions into the dist folder
+      run: |
+        cp `find build | grep "\.so$"` dist/
+        
+    - name: List dist/
+      run: ls dist/
+      
+    - name: Get file names
+      id: get_filenames
+      run: |
+        cd dist
+        echo "::set-output name=extension::$(ls _Logicle*.so)"
+        echo "::set-output name=wheel::$(ls cytoflow*.whl)"
+        echo "::set-output name=tarball::$(ls cytoflow*.tar.gz)"
+ 
+    - name: Upload the Linux extension to the GitHub release
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.client_payload.release_url }} 
+        asset_path: dist/${{ steps.get_filenames.outputs.extension }}
+        asset_name: ${{ steps.get_filenames.outputs.extension }}
+        asset_content_type: application/x-sharedlib
+ 
+    - name: Upload the Linux wheel to the GitHub release
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.client_payload.release_url }} 
+        asset_path: dist/${{ steps.get_filenames.outputs.wheel }}
+        asset_name: ${{ steps.get_filenames.outputs.wheel }}
+        asset_content_type: application/zip       
+ 
+    - name: Upload the source tarball to the GitHub release
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.client_payload.release_url }} 
+        asset_path: dist/${{ steps.get_filenames.outputs.tarball }}
+        asset_name: ${{ steps.get_filenames.outputs.tarball }}
+        asset_content_type: application/x-compressed-tar
         
   build-linux-oneclick:
     name: Build linux one-click
