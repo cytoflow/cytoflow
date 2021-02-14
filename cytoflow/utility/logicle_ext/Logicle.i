@@ -1,5 +1,6 @@
 
-%module Logicle
+%module(moduleimport = "import _Logicle") Logicle
+
 %{
 #define SWIG_FILE_WITH_INIT
 #include "logicle.h"

@@ -8,11 +8,7 @@ from sys import version_info as _swig_python_version_info
 if _swig_python_version_info < (2, 7, 0):
     raise RuntimeError("Python 2.7 or later required")
 
-# Import the low-level C/C++ module
-if __package__ or "." in __name__:
-    from . import _Logicle
-else:
-    import _Logicle
+import _Logicle
 
 try:
     import builtins as __builtin__
@@ -69,55 +65,55 @@ class Logicle(object):
         _Logicle.Logicle_swiginit(self, _Logicle.new_Logicle(*args))
     __swig_destroy__ = _Logicle.delete_Logicle
 
-    def T(self):
+    def T(self) -> "double":
         return _Logicle.Logicle_T(self)
 
-    def W(self):
+    def W(self) -> "double":
         return _Logicle.Logicle_W(self)
 
-    def M(self):
+    def M(self) -> "double":
         return _Logicle.Logicle_M(self)
 
-    def A(self):
+    def A(self) -> "double":
         return _Logicle.Logicle_A(self)
 
-    def a(self):
+    def a(self) -> "double":
         return _Logicle.Logicle_a(self)
 
-    def b(self):
+    def b(self) -> "double":
         return _Logicle.Logicle_b(self)
 
-    def c(self):
+    def c(self) -> "double":
         return _Logicle.Logicle_c(self)
 
-    def d(self):
+    def d(self) -> "double":
         return _Logicle.Logicle_d(self)
 
-    def f(self):
+    def f(self) -> "double":
         return _Logicle.Logicle_f(self)
 
-    def w(self):
+    def w(self) -> "double":
         return _Logicle.Logicle_w(self)
 
-    def x0(self):
+    def x0(self) -> "double":
         return _Logicle.Logicle_x0(self)
 
-    def x1(self):
+    def x1(self) -> "double":
         return _Logicle.Logicle_x1(self)
 
-    def x2(self):
+    def x2(self) -> "double":
         return _Logicle.Logicle_x2(self)
 
-    def scale(self, value):
+    def scale(self, value: "double") -> "double":
         return _Logicle.Logicle_scale(self, value)
 
-    def inverse(self, scale):
+    def inverse(self, scale: "double") -> "double":
         return _Logicle.Logicle_inverse(self, scale)
 
-    def dynamicRange(self):
+    def dynamicRange(self) -> "double":
         return _Logicle.Logicle_dynamicRange(self)
 
-    def axisLabels(self, label):
+    def axisLabels(self, label: "std::vector< double > &") -> "void":
         return _Logicle.Logicle_axisLabels(self, label)
 
 # Register Logicle in _Logicle:
@@ -133,16 +129,16 @@ class FastLogicle(Logicle):
         _Logicle.FastLogicle_swiginit(self, _Logicle.new_FastLogicle(*args))
     __swig_destroy__ = _Logicle.delete_FastLogicle
 
-    def scale(self, value):
+    def scale(self, value: "double") -> "double":
         return _Logicle.FastLogicle_scale(self, value)
 
-    def bins(self):
+    def bins(self) -> "int":
         return _Logicle.FastLogicle_bins(self)
 
-    def intScale(self, value):
+    def intScale(self, value: "double") -> "int":
         return _Logicle.FastLogicle_intScale(self, value)
 
-    def inverse(self, *args):
+    def inverse(self, *args) -> "double":
         return _Logicle.FastLogicle_inverse(self, *args)
 
 # Register FastLogicle in _Logicle:

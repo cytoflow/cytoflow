@@ -213,9 +213,9 @@ a = Analysis(['../cytoflowgui/run.py'],
 
 remove_strs = ["glib", "gobject", "gthread", "libX", "libICE", "libdrm"]
 
-# on linux, Anaconda version of fontconfig looks for fonts bundled with
-# Anaconda instead of the system fonts.  this is fine if you're running
-# Anaconda, but breaks the 
+# on linux, Anaconda version of fontconfig looks for the config bundled with
+# Anaconda instead of the system config.  this breaks the fonts when you
+# run on a system that you didn't build on
 
 remove_strs.append('libfontconfig')
 remove_strs.append('libuuid')

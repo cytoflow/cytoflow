@@ -99,7 +99,7 @@ setup(
                                         "cytoflow/utility/logicle_ext/Logicle.cpp",
                                         "cytoflow/utility/logicle_ext/Logicle.i",
                                         "cytoflow/utility/logicle_ext/logicle.h"],
-                             swig_opts=['-c++'])] \
+                             swig_opts=['-c++', '-py3'])] \
                 if not (on_rtd or no_logicle) else None,
     
     package_data = { 'cytoflowgui' : ['preferences.ini',
