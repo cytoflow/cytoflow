@@ -59,8 +59,8 @@ jobs:
         conda build package/conda_recipes/cytoflow
          
     - name: Move conda package into the dist folder
-     run: |
-       mkdir dist
+      run: |
+        mkdir dist
         conda deactivate
         conda activate base
         python package/move_conda_package.py

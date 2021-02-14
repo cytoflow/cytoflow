@@ -31,14 +31,14 @@ jobs:
       with:
         fetch-depth: 0
         
-     - name: Query git tag
-       id: tag
-       run: echo "::set-output name=tag::$(git describe --tags)"
-        
-     - name: Show Tag
-       id: display
-       run: |
-         echo 'Output from Find Tag: ${{steps.tag.outputs.tag}}'
+    - name: Query git tag
+      id: tag
+      run: echo "::set-output name=tag::$(git describe --tags)"
+       
+    - name: Show Tag
+      id: display
+      run: |
+        echo 'Output from Find Tag: ${{steps.tag.outputs.tag}}'
       
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v2.0.1
