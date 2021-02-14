@@ -1,5 +1,15 @@
 
-%module(moduleimport = "import _Logicle") Logicle
+
+%define MODULEIMPORT
+"
+try:
+  import _Logicle
+except:
+  from . import _Logicle
+"
+%enddef
+
+%module(moduleimport=MODULEIMPORT) Logicle
 
 %{
 #define SWIG_FILE_WITH_INIT
