@@ -20,116 +20,50 @@ on:
     types: [builds]
       
 jobs:
-   build-linux-conda-package:
-     name: Build and upload the linux conda package
-     runs-on: ubuntu-18.04
-     defaults:
-       run:
-         shell: bash -l {0}
-     steps:
-     - name: Check out repo
-       uses: actions/checkout@v2
-       with:
-         ref: ${{ github.event.client_payload.ref }}
-         fetch-depth: 0
-      
-     - name: Query git tag
-       id: tag
-       run: echo "::set-output name=tag::$(git describe --tags)"
-        
-     - name: Show Tag
-       id: display
-       run: |
-         echo 'Output from Find Tag: ${{steps.tag.outputs.tag}}'
-       
-     - name: Setup Miniconda
-       uses: conda-incubator/setup-miniconda@v2.0.1
-       with:
-         activate-environment: cytoflow
-         environment-file: environment.yml
-         
-     - name: Configure conda
-       run: |
-         conda install --name base --yes --quiet anaconda-client conda-build
-         
-     - name: Build conda package
-       run: |
-         conda deactivate
-         conda render package/conda_recipes/cytoflow
-         conda build package/conda_recipes/cytoflow
-         
-     - name: Move conda package into the dist folder
-       run: |
-         mkdir dist
-         conda deactivate
-         conda activate base
-         python package/move_conda_package.py
-         
-     - name: List dist/
-       run: ls dist/
-       
-     - name: Get file names
-       id: get_filenames
-       run: |
-         cd dist
-         echo "::set-output name=conda_package::$(ls cytoflow*.bz2)"        
-
-     - name: Show file name
-       run: |
-         echo 'Output from get_filename: ${{steps.get_filenames.outputs.conda_package}}'
-         
-     - name: Upload the conda package to the GitHub release
-       uses: actions/upload-release-asset@v1
-       env:
-         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-       with:
-         upload_url: ${{ github.event.client_payload.release_url }} 
-         asset_path: dist/${{ steps.get_filenames.outputs.conda_package }}
-         asset_name: cytoflow-conda-${{ steps.tag.outputs.tag }}-linux_x86-64.tar.bz2
-         asset_content_type: application/x-bzip2
-         
-     - name: Upload the conda package to anaconda.org
-       run: |
-         conda deactivate
-         conda activate base
-         anaconda login --username ${{ secrets.CONDA_USERNAME }} --password ${{ secrets.CONDA_PASSWORD }}
-         anaconda upload --user cytoflow dist/${{ steps.get_filenames.outputs.conda_package }}
-         anaconda logout
-        
-
-  build-linux-wheels:
-    name: Build and upload source dist, linux wheels
+  build-linux-conda-package:
+    name: Build and upload the linux conda package
     runs-on: ubuntu-18.04
     defaults:
       run:
         shell: bash -l {0}
     steps:
     - name: Check out repo
-      uses: actions/checkout@v2  
+      uses: actions/checkout@v2
       with:
+        ref: ${{ github.event.client_payload.ref }}
         fetch-depth: 0
       
+    - name: Query git tag
+      id: tag
+      run: echo "::set-output name=tag::$(git describe --tags)"
+        
+    - name: Show Tag
+      id: display
+      run: |
+        echo 'Output from Find Tag: ${{steps.tag.outputs.tag}}'
+       
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v2.0.1
       with:
         activate-environment: cytoflow
         environment-file: environment.yml
-    
-    - name: Install package locally
+         
+    - name: Configure conda
       run: |
-        python setup.py develop
-        
-    - name: Build source dist
+        conda install --name base --yes --quiet anaconda-client conda-build
+         
+    - name: Build conda package
       run: |
-        python setup.py sdist
-        
-    - name: Build wheel
-      run: |
-        python setup.py bdist_wheel
-        
-    - name: Move C++ extensions into the dist folder
-      run: |
-        cp `find build | grep "\.so$"` dist/
+        conda deactivate
+        conda render package/conda_recipes/cytoflow
+        conda build package/conda_recipes/cytoflow
+         
+    - name: Move conda package into the dist folder
+     run: |
+       mkdir dist
+        conda deactivate
+        conda activate base
+        python package/move_conda_package.py
         
     - name: List dist/
       run: ls dist/
@@ -138,39 +72,104 @@ jobs:
       id: get_filenames
       run: |
         cd dist
-        echo "::set-output name=extension::$(ls _Logicle*.so)"
-        echo "::set-output name=wheel::$(ls cytoflow*.whl)"
-        echo "::set-output name=tarball::$(ls cytoflow*.tar.gz)"
+        echo "::set-output name=conda_package::$(ls cytoflow*.bz2)"        
 
-    - name: Upload the Linux extension to the GitHub release
+    - name: Show file name
+      run: |
+        echo 'Output from get_filename: ${{steps.get_filenames.outputs.conda_package}}'
+        
+    - name: Upload the conda package to the GitHub release
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ github.event.client_payload.release_url }} 
-        asset_path: dist/${{ steps.get_filenames.outputs.extension }}
-        asset_name: ${{ steps.get_filenames.outputs.extension }}
-        asset_content_type: application/x-sharedlib
- 
-    - name: Upload the Linux wheel to the GitHub release
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ github.event.client_payload.release_url }} 
-        asset_path: dist/${{ steps.get_filenames.outputs.wheel }}
-        asset_name: ${{ steps.get_filenames.outputs.wheel }}
-        asset_content_type: application/zip       
+        asset_path: dist/${{ steps.get_filenames.outputs.conda_package }}
+        asset_name: cytoflow-conda-${{ steps.tag.outputs.tag }}-linux_x86-64.tar.bz2
+        asset_content_type: application/x-bzip2
+        
+    - name: Upload the conda package to anaconda.org
+      run: |
+        conda deactivate
+        conda activate base
+        anaconda login --username ${{ secrets.CONDA_USERNAME }} --password ${{ secrets.CONDA_PASSWORD }}
+        anaconda upload --user cytoflow dist/${{ steps.get_filenames.outputs.conda_package }}
+        anaconda logout
+       
+  build-linux-wheels:
+   name: Build and upload source dist, linux wheels
+   runs-on: ubuntu-18.04
+   defaults:
+     run:
+       shell: bash -l {0}
+   steps:
+   - name: Check out repo
+     uses: actions/checkout@v2  
+     with:
+       fetch-depth: 0
+     
+   - name: Setup Miniconda
+     uses: conda-incubator/setup-miniconda@v2.0.1
+     with:
+       activate-environment: cytoflow
+       environment-file: environment.yml
+   
+   - name: Install package locally
+     run: |
+       python setup.py develop
+       
+   - name: Build source dist
+     run: |
+       python setup.py sdist
+       
+   - name: Build wheel
+     run: |
+       python setup.py bdist_wheel
+       
+   - name: Move C++ extensions into the dist folder
+     run: |
+       cp `find build | grep "\.so$"` dist/
+       
+   - name: List dist/
+     run: ls dist/
+     
+   - name: Get file names
+     id: get_filenames
+     run: |
+       cd dist
+       echo "::set-output name=extension::$(ls _Logicle*.so)"
+       echo "::set-output name=wheel::$(ls cytoflow*.whl)"
+       echo "::set-output name=tarball::$(ls cytoflow*.tar.gz)"
 
-    - name: Upload the source tarball to the GitHub release
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ github.event.client_payload.release_url }} 
-        asset_path: dist/${{ steps.get_filenames.outputs.tarball }}
-        asset_name: ${{ steps.get_filenames.outputs.tarball }}
-        asset_content_type: application/x-compressed-tar
+   - name: Upload the Linux extension to the GitHub release
+     uses: actions/upload-release-asset@v1
+     env:
+       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+     with:
+       upload_url: ${{ github.event.client_payload.release_url }} 
+       asset_path: dist/${{ steps.get_filenames.outputs.extension }}
+       asset_name: ${{ steps.get_filenames.outputs.extension }}
+       asset_content_type: application/x-sharedlib
+
+   - name: Upload the Linux wheel to the GitHub release
+     uses: actions/upload-release-asset@v1
+     env:
+       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+     with:
+       upload_url: ${{ github.event.client_payload.release_url }} 
+       asset_path: dist/${{ steps.get_filenames.outputs.wheel }}
+       asset_name: ${{ steps.get_filenames.outputs.wheel }}
+       asset_content_type: application/zip       
+
+   - name: Upload the source tarball to the GitHub release
+     uses: actions/upload-release-asset@v1
+     env:
+       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+     with:
+       upload_url: ${{ github.event.client_payload.release_url }} 
+       asset_path: dist/${{ steps.get_filenames.outputs.tarball }}
+       asset_name: ${{ steps.get_filenames.outputs.tarball }}
+       asset_content_type: application/x-compressed-tar
         
   build-linux-oneclick:
     name: Build linux one-click
