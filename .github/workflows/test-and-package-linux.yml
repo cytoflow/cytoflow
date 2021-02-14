@@ -50,7 +50,7 @@ jobs:
          
     - name: Configure conda
       run: |
-        conda install --yes --quiet conda==4.0.2
+        conda install --yes --quiet swig==4.0.2
     
     - name: Install package locally
       run: |
@@ -99,7 +99,7 @@ jobs:
         
     - name: Configure conda
       run: |
-        conda install --yes --quiet conda==4.0.2 anaconda-client conda-build
+        conda install --yes --quiet swig==4.0.2 anaconda-client conda-build
         
     - name: Build conda package
       run: |
@@ -142,7 +142,7 @@ jobs:
          
     - name: Configure conda
       run: |
-        conda install --yes --quiet conda==4.0.2
+        conda install --yes --quiet swig==4.0.2
             
     - name: Install package locally
       run: |
@@ -200,7 +200,7 @@ jobs:
          
     - name: Configure conda
       run: |
-        conda install --yes --quiet conda==4.0.2
+        conda install --yes --quiet swig==4.0.2
         
     - name: Install package locally
       run: |
