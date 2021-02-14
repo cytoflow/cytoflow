@@ -45,6 +45,7 @@ requirements:
     - yapf==0.30.0
 
     - sphinx==3.4.3
+    - swig==4.0.2
 
   run:
     - python==3.8.5

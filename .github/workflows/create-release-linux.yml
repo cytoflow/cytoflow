@@ -50,19 +50,16 @@ jobs:
          
     - name: Configure conda
       run: |
-        conda install --name base --yes --quiet anaconda-client conda-build
+        conda install --yes --quiet conda==4.0.2 anaconda-client conda-build
          
     - name: Build conda package
       run: |
-        conda deactivate
         conda render package/conda_recipes/cytoflow
-        conda build package/conda_recipes/cytoflow
+        conda build --quiet package/conda_recipes/cytoflow
          
     - name: Move conda package into the dist folder
       run: |
         mkdir dist
-        conda deactivate
-        conda activate base
         python package/move_conda_package.py
         
     - name: List dist/
@@ -90,8 +87,6 @@ jobs:
         
     - name: Upload the conda package to anaconda.org
       run: |
-        conda deactivate
-        conda activate base
         anaconda login --username ${{ secrets.CONDA_USERNAME }} --password ${{ secrets.CONDA_PASSWORD }}
         anaconda upload --user cytoflow dist/${{ steps.get_filenames.outputs.conda_package }}
         anaconda logout
@@ -114,6 +109,10 @@ jobs:
      with:
        activate-environment: cytoflow
        environment-file: environment.yml
+       
+    - name: Configure conda
+      run: |
+        conda install --yes --quiet conda==4.0.2
    
    - name: Install package locally
      run: |
@@ -199,6 +198,10 @@ jobs:
       with:
         activate-environment: cytoflow
         environment-file: environment.yml
+        
+    - name: Configure conda
+      run: |
+        conda install --yes --quiet conda==4.0.2
     
     - name: Install package locally
       run: |

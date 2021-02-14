@@ -33,9 +33,9 @@ jobs:
         activate-environment: cytoflow
         environment-file: environment.yml
               
-    - name: Install SWIG
+    - name: Configure conda
       run: |
-        choco install swig --version 3.0.2 --yes --limit-output
+        conda install --yes --quiet conda==4.0.2
     
     - name: Install package locally
       run: |
@@ -80,23 +80,16 @@ jobs:
                 
     - name: Configure conda
       run: |
-        conda install --name base --yes --quiet anaconda-client conda-build
-              
-    - name: Install SWIG
-      run: |
-        choco install swig --version 3.0.2 --yes --limit-output
+        conda install --yes --quiet conda==4.0.2 anaconda-client conda-build
         
     - name: Build conda package
       run: |
-        conda deactivate
         conda render package/conda_recipes/cytoflow
-        conda build package/conda_recipes/cytoflow
+        conda build --quiet package/conda_recipes/cytoflow
         
     - name: Move conda package into the dist folder
       run: |
         mkdir dist
-        conda deactivate
-        conda activate base
         python package/move_conda_package.py
         
     - name: List dist
@@ -128,9 +121,9 @@ jobs:
         activate-environment: cytoflow
         environment-file: environment.yml
     
-    - name: Install SWIG
+    - name: Configure conda
       run: |
-        choco install swig --version 3.0.2 --yes --limit-output
+        conda install --yes --quiet conda==4.0.2
     
     - name: Install package locally
       run: |
@@ -185,9 +178,9 @@ jobs:
         activate-environment: cytoflow
         environment-file: environment.yml
                       
-    - name: Install SWIG
+    - name: Configure conda
       run: |
-        choco install swig --version 3.0.2 --yes --limit-output
+        conda install --yes --quiet conda==4.0.2
             
     - name: Install package locally
       run: |

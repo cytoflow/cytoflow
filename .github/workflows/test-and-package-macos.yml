@@ -33,11 +33,10 @@ jobs:
       with:
         activate-environment: cytoflow
         environment-file: environment.yml
-        
-    - name: Install SWIG
+         
+    - name: Configure conda
       run: |
-        brew install swig@3
-        echo "/usr/local/opt/swig@3/bin" >> $GITHUB_PATH
+        conda install --yes --quiet conda==4.0.2
     
     - name: Install package locally
       run: |
@@ -79,27 +78,19 @@ jobs:
       with:
         activate-environment: cytoflow
         environment-file: environment.yml
-        
-    - name: Install SWIG
-      run: |
-        brew install swig@3
-        echo "/usr/local/opt/swig@3/bin" >> $GITHUB_PATH
-                
+         
     - name: Configure conda
       run: |
-        conda install --name base --yes --quiet anaconda-client conda-build
+        conda install --yes --quiet conda==4.0.2 anaconda-client conda-build
         
     - name: Build conda package
       run: |
-        conda deactivate
         conda render package/conda_recipes/cytoflow
-        conda build package/conda_recipes/cytoflow
+        conda build --quiet package/conda_recipes/cytoflow
         
     - name: Move conda package into the dist folder
       run: |
         mkdir dist
-        conda deactivate
-        conda activate base
         python package/move_conda_package.py
         
     - name: List dist
@@ -131,10 +122,9 @@ jobs:
         activate-environment: cytoflow
         environment-file: environment.yml
         
-    - name: Install SWIG
+    - name: Configure conda
       run: |
-        brew install swig@3
-        echo "/usr/local/opt/swig@3/bin" >> $GITHUB_PATH
+        conda install --yes --quiet conda==4.0.2
             
     - name: Install package locally
       run: |
@@ -186,10 +176,9 @@ jobs:
         activate-environment: cytoflow
         environment-file: environment.yml
         
-    - name: Install SWIG
+    - name: Configure conda
       run: |
-        brew install swig@3
-        echo "/usr/local/opt/swig@3/bin" >> $GITHUB_PATH
+        conda install --yes --quiet conda==4.0.2
             
     - name: Install package locally
       run: |
