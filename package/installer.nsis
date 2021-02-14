@@ -111,7 +111,7 @@ Section UnInstall
         Delete "$SMPROGRAMS\${APP_NAME}\Uninstall.lnk"
         RmDir "$SMPROGRAMS\${APP_NAME}"
  
-	DeleteRegKey /ifempty ${INSTDIR_REG_ROOT} "${INSTDIR_REG_KEY}"
+	DeleteRegKey ${INSTDIR_REG_ROOT} "${INSTDIR_REG_KEY}"
 SectionEnd
  
 Function UN.onInit
