@@ -32,6 +32,15 @@ jobs:
        with:
          ref: ${{ github.event.client_payload.ref }}
          fetch-depth: 0
+      
+     - name: Query git tag
+       id: tag
+       run: echo "::set-output name=tag::$(git describe --tags)"
+        
+     - name: Show Tag
+       id: display
+       run: |
+         echo 'Output from Find Tag: ${{steps.tag.outputs.tag}}'
        
      - name: Setup Miniconda
        uses: conda-incubator/setup-miniconda@v2.0.1
@@ -76,7 +85,7 @@ jobs:
        with:
          upload_url: ${{ github.event.client_payload.release_url }} 
          asset_path: dist/${{ steps.get_filenames.outputs.conda_package }}
-         asset_name: ${{ steps.get_filenames.outputs.conda_package }}
+         asset_name: cytoflow-conda-${{ steps.tag.outputs.tag }}-linux_x86-64.tar.bz2
          asset_content_type: application/x-bzip2
          
      - name: Upload the conda package to anaconda.org
