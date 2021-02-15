@@ -21,13 +21,6 @@ from setuptools import setup, find_packages, Extension
 import io, os
 
 import versioneer
-
-# sphinx is only required for building packages, not for end-users
-try:
-    from sphinx.setup_command import BuildDoc
-    has_sphinx = True
-except ImportError:
-    has_sphinx = False
     
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 no_logicle = os.environ.get('NO_LOGICLE', None) == 'True'
@@ -45,9 +38,12 @@ def read_rst(*filenames, **kwargs):
 
 long_description = read_rst('README.rst')
 
-cmdclass = versioneer.get_cmdclass({'build_sphinx' : BuildDoc}) 
-
-print(cmdclass)
+# sphinx is only required for building packages, not for end-users
+try:
+    from sphinx.setup_command import BuildDoc
+    cmdclass = versioneer.get_cmdclass({'build_sphinx' : BuildDoc})
+except ImportError:
+    cmdclass = versioneer.get_cmdclass()
         
 setup(
     name = "cytoflow",
