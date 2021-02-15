@@ -49,7 +49,7 @@ requirements:
     - camel==0.1.2
     - yapf==0.30.0
 
-    - {{compiler('cxx')}}
+    # - {{compiler('cxx')}}
     - sphinx==3.4.3
     - swig==4.0.2
 
