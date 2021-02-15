@@ -27,7 +27,6 @@ Installing from the ``Anaconda Navigator``
 * Either from the Start Menu (Windows) or the Finder (Mac), run the 
   ``Anaconda Navigator``
   
-  
 * Click the ``Channels`` button.
   
   .. image:: images/channels.PNG

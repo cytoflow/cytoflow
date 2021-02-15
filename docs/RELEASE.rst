@@ -51,7 +51,7 @@ Packaging
       cytoflow    
 
 - Make sure that the :mod:`pyinstaller` distribution will build on your local 
-  machine.  ::
+  machine (back in your development environment).  ::
 
   	  pyinstaller package/pyinstaller.spec 
 
@@ -82,7 +82,7 @@ Tag and upload the release
 --------------------------
   
 - Push the updated docs to GitHub.  Give the CI builders ~30 minutes, then 
-  check the build status on GitHub_, and ReadTheDocs_.
+  check the build status on GitHub, and ReadTheDocs.
 
 - Create a new tag on the master branch.  This will re-build everything on the CI
   builders.
@@ -123,11 +123,13 @@ This requires a hardware crypto token, so it must be done locally.
 Upload the artifacts and update the homepage
 --------------------------------------------
 
-- Upload artifacts as appropriate to GitHub_, Anaconda_, and the Python Package Index.  
+- Upload artifacts as appropriate to GitHub, Anaconda, and the Python Package Index.  
   (Make sure that in the case of Anaconda, you're uploading to the organization account, not
   your personal account!)
 
 - At https://github.com/cytoflow/cytoflow.github.io, update the version in 
   ``_config.yml``. Push these changes to update the main download links on 
   http://cytoflow.github.io/
+  
+- Verify that the download links at http://cytoflow.github.io/ still work!
 
