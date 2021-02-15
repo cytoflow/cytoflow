@@ -13,6 +13,7 @@ build:
   entry_points:
     - cytoflow = cytoflowgui.run:run_gui
     - cf-channel_voltages = cytoflow.scripts.channel_voltages:main
+    - cf-fcs_metadata = cytoflow.scripts.fcs_metadata:main
 
 requirements:
   build:
