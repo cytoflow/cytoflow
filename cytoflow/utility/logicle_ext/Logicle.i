@@ -9,7 +9,7 @@ except:
 "
 %enddef
 
-%module(moduleimport=MODULEIMPORT) Logicle
+%module Logicle
 
 %{
 #define SWIG_FILE_WITH_INIT
