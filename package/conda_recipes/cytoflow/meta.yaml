@@ -10,13 +10,17 @@ source:
 build:
   number: {{ GIT_DESCRIBE_NUMBER }}
   string: {{ "py38" }}
+  script:
+    - python setup.py install --single-version-externally-managed --record=record.txt
+    - python setup.py build_sphinx -b embedded_help
+    - python setup.py install --single-version-externally-managed --record=record.txt
   entry_points:
     - cytoflow = cytoflowgui.run:run_gui
     - cf-channel_voltages = cytoflow.scripts.channel_voltages:main
     - cf-fcs_metadata = cytoflow.scripts.fcs_metadata:main
 
 requirements:
-  build:
+  host:
     - python==3.8.5
     - numpy==1.19.2
     - pandas==1.2.1
@@ -45,6 +49,7 @@ requirements:
     - camel==0.1.2
     - yapf==0.30.0
 
+    - {{compiler('cxx')}}
     - sphinx==3.4.3
     - swig==4.0.2
 
