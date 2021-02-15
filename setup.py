@@ -45,10 +45,10 @@ def read_rst(*filenames, **kwargs):
 
 long_description = read_rst('README.rst')
 
-cmdclass = versioneer.get_cmdclass()  # @UndefinedVariable
-if has_sphinx:
-    cmdclass['build_sphinx'] = BuildDoc
-    
+cmdclass = versioneer.get_cmdclass({'build_sphinx' : BuildDoc}) 
+
+print(cmdclass)
+        
 setup(
     name = "cytoflow",
     version = versioneer.get_version(),  # @UndefinedVariable
