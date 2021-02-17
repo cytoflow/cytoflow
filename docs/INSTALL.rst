@@ -44,6 +44,9 @@ Installing from the ``Anaconda Navigator``
   Say ``Yes``..
   
   .. image:: images/new-env.PNG
+  
+  **NOTE: Be patient. Anaconda Navigator is slow.**
+  **NOTE: Make sure that you choose an environment that does not already exist!**
 
 * To verify installation, start a Jupyter notebook.
 
@@ -52,7 +55,7 @@ Installing from the ``Anaconda Navigator``
   * Create a new *Python 3* notebook.
   * In the first cell, type ``import cytoflow`` and press ``Shift+Enter``.  
     If Python doesn't complain, you're good to go.  (If it does, please submit 
-    a bug report!)
+    a bug report at https://github.com/cytoflow/cytoflow/issues )
   
 * **Note: When you install Cytoflow this way, the point-and-click 
   application is installed as well.**  Launching it from the 
@@ -85,6 +88,9 @@ Installing from the command line
 * Create a new *Python 3* notebook.  In the first cell, type ``import cytoflow``
   and press ``Shift+Enter``.  If Python doesn't complain, you're good to go.  
   (If it does, please submit a bug report!)
+  
+* This method ALSO installs the GUI. You should be able to run it by activating
+  your new environment and running the ``cytoflow`` script.
   
 
 .. _hacking:
@@ -130,24 +136,19 @@ the appropriate file.
 
     conda env create --name cf_dev --file environment.yml
   
-* Activate the new environment
+* Activate the new environment::
+    
+    conda activate cf_dev
 
-  * On Windows::
-    
-      conda activate cf_dev
-    
-  * On Mac, Linux or Windows running bash:: 
-    
-      source activate cf_dev
   
 * **On Windows and MacOS only,** do the following to prevent ``cytoflow``
   from trying to build the C++ extension.
   
-  * **On Windows**::
+  * **On Windows (in CMD)**::
   
        set NO_LOGICLE=True
  
-  * **On MacOS**::
+  * **On MacOS (or on Windows bash)**::
   
        export NO_LOGICLE=True
     
@@ -158,9 +159,8 @@ the appropriate file.
 * From the `GitHub releases page <https://github.com/cytoflow/cytoflow/releases>`_ 
   download the appropriate extension file for the version you're installing.
   
-  * **On Windows (32-bit)**: ``_Logicle.cp36-win32.pyd``
-  * **On Windows (64-bit)**: ``_Logicle.cp36-win_amd64.pyd``
-  * **On MacOS**: ``_Logicle.cpython-36m-darwin.so``
+  * **On Windows (64-bit)**: ``_Logicle.cp38-win_amd64.pyd``
+  * **On MacOS**: ``_Logicle.cpython-38m-darwin.so``
   
 * Copy the file you just download into the `cytoflow/utility/logicle_ext/` folder
   in your source tree.
@@ -175,8 +175,7 @@ the appropriate file.
 Running the point-and-click GUI program
 ---------------------------------------
 
-There are one-click bundles available at
-`http://cytoflow.github.io/cytoflow <http://cytoflow.github.io/cytoflow>`_.
+There are one-click bundles available at http://cytoflow.github.io/
 
 Alternately, you can follow the instructions above for installing the 
 Anaconda package, then run ``cytoflow`` through the Anaconda Navigator or

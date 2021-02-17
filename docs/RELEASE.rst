@@ -82,7 +82,7 @@ Tag and upload the release
 --------------------------
   
 - Push the updated docs to GitHub.  Give the CI builders ~30 minutes, then 
-  check the build status on GitHub, and ReadTheDocs.
+  check the build status on GitHub and ReadTheDocs.
 
 - Create a new tag on the master branch.  This will re-build everything on the CI
   builders.
@@ -125,7 +125,8 @@ Upload the artifacts and update the homepage
 
 - Upload artifacts as appropriate to GitHub, Anaconda, and the Python Package Index.  
   (Make sure that in the case of Anaconda, you're uploading to the organization account, not
-  your personal account!)
+  your personal account!) The GitHub action should take care of the GitHub and Anaconda packages,
+  but not PyPI.
 
 - At https://github.com/cytoflow/cytoflow.github.io, update the version in 
   ``_config.yml``. Push these changes to update the main download links on 
