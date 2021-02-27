@@ -23,9 +23,6 @@ class OpHandler(Controller):
     previous_conditions_names = Property(depends_on = "context.previous_wi.conditions")
     statistics_names = Property(depends_on = "context.statistics")
     previous_statistics_names = Property(depends_on = "context.previous_wi.statistics")
-    
-    # an event to centralize handling of "Estimate" buttons
-    do_estimate = Event()
         
     # the default traits view
     def default_traits_view(self):
@@ -39,10 +36,7 @@ class OpHandler(Controller):
         """
         
         raise NotImplementedError("Op handlers must override 'default_traits_view")
-    
-    @observe('do_estimate')
-    def _on_estimate(self, event):
-        self.context.workflow.estimate(self.context)
+
     
     # MAGIC: gets value for property "conditions_names"
     def _get_conditions_names(self):

@@ -135,14 +135,12 @@ class ImportWorkflowOp(ImportOp, WorkflowOperation):
     name_metadata =  Enum(None, "$PnN", "$PnS", estimate = True)
     
     # how many events did we load?
-    ret_events = util.PositiveInt(0, allow_zero = True, status = True)
+    ret_events = util.PositiveInt(0, allow_zero = True, status = True, estimate_result = True)
     
     # since we're actually calling super().apply() from self.estimate(), we need
     # to keep around the actual experiment that's returned
-    ret_experiment = Instance('Experiment', transient = True)
-    
-#     do_import = Bool(False)
-    
+    ret_experiment = Instance('cytoflow.experiment.Experiment', transient = True)
+        
     def reset_channels(self):
         self.channels_list = [Channel(channel = x, name = util.sanitize_identifier(x)) for x in self.original_channels]
      
@@ -156,11 +154,6 @@ class ImportWorkflowOp(ImportOp, WorkflowOperation):
 #     def _tubes_changed(self, obj, name, old, new):
 #         self.changed = (Changed.ESTIMATE, ('tubes', self.tubes))        
 
-
-#     def estimate(self, _):
-#         self.do_import = False
-#         self.do_import = True
-#         
 
     def estimate(self, _):
         self.channels = {c.channel : c.name for c in self.channels_list}
@@ -190,9 +183,10 @@ class ImportWorkflowOp(ImportOp, WorkflowOperation):
 #                                                  'then "Import!"')
 #             raise util.CytoflowOpError(None, "Press 'Import!'")
         
-#         
-#     def clear_estimate(self):
-#         self.do_import = False
+               
+    def clear_estimate(self):
+        self.ret_experiment = None
+        self.ret_events = 0
 
     
     def get_notebook_code(self, idx):

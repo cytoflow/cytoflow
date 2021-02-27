@@ -182,20 +182,27 @@ class _VerticalNotebookEditor(Editor):
         # Get the page description
         page_desc = self.factory.page_description
         if page_desc[0:1] == '.':
-            if getattr(obj, page_desc[1:], Undefined) is not Undefined:
-                page.register_description_listener(obj, page_desc[1:])
+            if getattr(ui.context['object'], page_desc[1:], Undefined) is not Undefined:
+                page.register_description_listener(ui.context['object'], page_desc[1:])
+            elif getattr(ui.context['handler'], page_desc[1:], Undefined) is not Undefined:
+                page.register_description_listener(ui.context['handler'], page_desc[1:])
             
         # Get the page icon
         page_icon = self.factory.page_icon
         if page_icon[0:1] == '.':
-            if getattr(obj, page_icon[1:], Undefined) is not Undefined:
-                page.register_icon_listener(obj, page_icon[1:])
+            if getattr(ui.context['object'], page_icon[1:], Undefined) is not Undefined:
+                page.register_icon_listener(ui.context['object'], page_icon[1:])
+            elif getattr(ui.context['handler'], page_icon[1:], Undefined) is not Undefined:
+                page.register_icon_listener(ui.context['handler'], page_icon[1:])
                 
         # Is the page deletable?
         page_deletable = self.factory.page_deletable
         if page_deletable[0:1] == '.':
-            if getattr(obj, page_deletable[1:], Undefined) is not Undefined:
-                page.register_deletable_listener(obj, page_deletable[1:])
+            if getattr(ui.context['object'], page_deletable[1:], Undefined) is not Undefined:
+                page.register_deletable_listener(ui.context['object'], page_deletable[1:])
+            elif getattr(ui.context['handler'], page_deletable[1:], Undefined) is not Undefined:
+                page.register_deletable_listener(ui.context['handler'], page_deletable[1:])
+
 
         # Save the Traits UI in the page so it can dispose of it later:
         page.ui = ui

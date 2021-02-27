@@ -302,6 +302,10 @@ def remote_main(parent_workflow_conn, parent_mpl_conn, log_q, running_event):
     h = QueueHandler(log_q) 
     logging.getLogger().addHandler(h)
     
+    # make sure the root logger has a level of DEBUG -- we'll sort out what
+    # to show or not on the local logger
+    logging.getLogger().setLevel(logging.DEBUG)
+    
     # We want matplotlib to use our backend .... in both the GUI and the
     # remote process.  Must be called BEFORE cytoflow is imported
     

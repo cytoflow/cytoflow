@@ -46,15 +46,10 @@ class IWorkflowOperation(IOperation):
         and their corresponding payloads.
 
     """
-    
-    #handler_factory = Callable(unimplemented)
-    
-    # causes this operation's estimate() function to be called
+        
+    # causes this operation's estimate() function to be called. observed in LocalWorkflow.
     do_estimate = Event
-    
-    # transmit some changing status back to the workflow
-    #changed = Event
-    
+
                 
     def should_apply(self, changed, payload):
         """
@@ -66,10 +61,13 @@ class IWorkflowOperation(IOperation):
          - Changed.PREV_RESULT -- the previous WorkflowItem's result changed
          
          - Changed.ESTIMATE_RESULT -- the results of calling "estimate" changed
+         
+        If `should_apply` is called from a notificaiont handler, then `payload` is
+        the `event` object.
         """
 
     
-    def should_clear_estimate(self, changed, payload):
+    def should_clear_estimate(self, changed, event):
         """
         Should the owning WorkflowItem clear the estimated model by calling
         op.clear_estimate()?  `changed` can be:
@@ -77,7 +75,10 @@ class IWorkflowOperation(IOperation):
          - Changed.ESTIMATE -- the parameters required to call :meth:`estimate` 
          (ie traits with ``estimate = True`` metadata) have changed
             
-         - Changed.PREV_RESULT -- the previous :class:`.WorkflowItem`'s result changed
+         - Changed.PREV_RESULT -- the previous :class:`.WorkflowItem`'s result changed    
+              
+        If `should_clear_estimate` is called from a notificaiont handler, then `payload` is
+        the `event` object.
          """
     
     
@@ -109,6 +110,7 @@ class WorkflowOperation(HasStrictTraits):
     A default implementation of :class:`IWorkflowOperation`
     """
     
+    # causes this operation's estimate() function to be called. observed in LocalWorkflow.
     do_estimate = Event
     
     def should_apply(self, changed, payload):

@@ -131,7 +131,8 @@ class ImportHandler(OpHandler):
         return View(VGroup(Label(label = "Channels",
                                  visible_when = 'model.tubes' ),
                            Item('object.channels_list',
-                                editor = VerticalListEditor(editor = InstanceHandlerEditor(handler_factory = ChannelHandler),
+                                editor = VerticalListEditor(editor = InstanceHandlerEditor(handler_factory = ChannelHandler,
+                                                                                           view = "default_view"),
                                                             style = 'custom',
                                                             mutable = False,
                                                             deletable = True),
@@ -150,7 +151,7 @@ class ImportHandler(OpHandler):
                     Item('handler.setup_event',
                          editor = ButtonEditor(value = True, label = "Set up experiment..."),
                          show_label=False),
-                    Item('handler.do_estimate',
+                    Item('object.do_estimate',
                          editor = ButtonEditor(value = True, label = "Import!"),
                          show_label = False),
                     shared_op_traits_view,
@@ -178,8 +179,8 @@ class ImportHandler(OpHandler):
         return len(self.model.tubes)
     
     
-    @on_trait_change('model.events', post_init = True)
-    def _events_changed(self):
+    @observe('model.events', post_init = True)
+    def _events_changed(self, _):
         if not self.dialog_model:
             return
         

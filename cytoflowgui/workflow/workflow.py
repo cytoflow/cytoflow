@@ -913,7 +913,7 @@ class RemoteWorkflow(HasStrictTraits):
         wi = next((x for x in self.workflow if x.operation is event.object))
         idx = self.workflow.index(wi)
                 
-        if wi.operation.should_apply(Changed.APPLY, (event.name, event.new)):
+        if wi.operation.should_apply(Changed.APPLY, event):
             with wi.lock:
                 wi.result = None
                 wi.status = "invalid"
@@ -925,7 +925,7 @@ class RemoteWorkflow(HasStrictTraits):
 
         wi = next((x for x in self.workflow if x.operation is event.object))
         
-        if wi.operation.should_clear_estimate(Changed.ESTIMATE, (event.name, event.new)):
+        if wi.operation.should_clear_estimate(Changed.ESTIMATE, event):
             wi.operation.clear_estimate()
             
             
@@ -938,11 +938,11 @@ class RemoteWorkflow(HasStrictTraits):
         
         if (wi == self.selected 
             and wi.current_view 
-            and wi.current_view.should_plot(Changed.ESTIMATE_RESULT, None)):
+            and wi.current_view.should_plot(Changed.ESTIMATE_RESULT, event)):
             wi.current_view.update_plot_names(wi)
             self.exec_q.put((idx - 0.1, (wi, wi.plot)))
              
-        if wi.operation.should_apply(Changed.ESTIMATE_RESULT, None):
+        if wi.operation.should_apply(Changed.ESTIMATE_RESULT, event):
             self.exec_q.put((idx, (wi, wi.apply)))
         
                 
@@ -971,7 +971,7 @@ class RemoteWorkflow(HasStrictTraits):
             
             if (wi == self.selected 
                 and wi.current_view 
-                and wi.current_view.should_plot(Changed.RESULT, None)):
+                and wi.current_view.should_plot(Changed.RESULT, event)):
                 wi.current_view.update_plot_names(wi)
                 self.exec_q.put((idx - 0.1, (wi, wi.plot)))
              
@@ -986,7 +986,7 @@ class RemoteWorkflow(HasStrictTraits):
         if wi.operation.should_clear_estimate(Changed.PREV_RESULT, None):
             wi.operation.clear_estimate()
              
-        if wi.operation.should_apply(Changed.PREV_RESULT, None):
+        if wi.operation.should_apply(Changed.PREV_RESULT, event):
             with wi.lock:
                 wi.result = None
                 wi.status = "invalid"
@@ -994,7 +994,7 @@ class RemoteWorkflow(HasStrictTraits):
              
         if (wi == self.selected 
             and wi.current_view 
-            and wi.current_view.should_plot(Changed.PREV_RESULT, None)):
+            and wi.current_view.should_plot(Changed.PREV_RESULT, event)):
             # FIXME wi.current_view.update_plot_names(wi)
             self.exec_q.put((idx - 0.1, (wi, wi.plot)))
             
@@ -1009,7 +1009,7 @@ class RemoteWorkflow(HasStrictTraits):
         
         if (wi == self.selected 
             and wi.current_view == view 
-            and wi.current_view.should_plot(Changed.VIEW, (view, event.name, event.new))):
+            and wi.current_view.should_plot(Changed.VIEW, event)):
             # FIXME wi.current_view.update_plot_names(wi)
             self.exec_q.put((idx - 0.1, (wi, wi.plot)))
             

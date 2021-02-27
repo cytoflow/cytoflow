@@ -25,8 +25,8 @@ Created on Mar 15, 2015
 
 import logging
 
-from traits.api import List, DelegatesTo, Dict, observe, Property, cached_property, Instance
-from traitsui.api import View, Item, InstanceEditor, Controller, ModelView, Spring, Handler, Include
+from traits.api import List, DelegatesTo, Dict, observe, Property, cached_property
+from traitsui.api import View, Item, InstanceEditor, Controller, Spring
 from pyface.qt import QtGui
 
 from .workflow import WorkflowItem
@@ -38,6 +38,9 @@ logger = logging.getLogger(__name__)
 class WorkflowItemHandler(Controller):
     # for the vertical notebook view, is this page deletable?
     deletable = Property()
+    
+    # the icon for the vertical notebook view.
+    icon = Property(depends_on = 'model.status')  
     
     name = DelegatesTo('model')
     friendly_id = DelegatesTo('model')
@@ -112,10 +115,6 @@ class WorkflowItemHandler(Controller):
                     handler = self)
         
 
-    # the icon for the vertical notebook view.  Qt specific.
-    icon = Property(depends_on = 'status', transient = True)  
-    
-
     @cached_property
     def _get_deletable(self):
         if self.model.operation.id == 'edu.mit.synbio.cytoflow.operations.import':
@@ -126,11 +125,11 @@ class WorkflowItemHandler(Controller):
            
     @cached_property
     def _get_icon(self):
-        if self.status == "valid":
+        if self.model.status == "valid":
             return QtGui.QStyle.SP_DialogApplyButton  # @UndefinedVariable
-        elif self.status == "estimating" or self.status == "applying":
+        elif self.model.status == "estimating" or self.model.status == "applying":
             return QtGui.QStyle.SP_BrowserReload  # @UndefinedVariable
-        else: # self.valid == "invalid" or None
+        else: # self.model.status == "invalid" or None
             return QtGui.QStyle.SP_DialogCancelButton  # @UndefinedVariable
         
         
@@ -149,7 +148,6 @@ class WorkflowItemHandler(Controller):
                                                 context = self.model)
         else:
             return None
-
 
 
 class WorkflowController(Controller):
