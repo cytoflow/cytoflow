@@ -174,7 +174,7 @@ PyiModuleGraph.analyze_runtime_hooks = analyze_runtime_hooks
 
 a = Analysis(['../cytoflowgui/run.py'],
              pathex=['cytoflowgui/'],
-             binaries=None,
+             binaries=[('d3dcompiler_47.dll', '.')] if is_win else None,
              datas=[('../cytoflowgui/preferences.ini', 'cytoflowgui'),
                     ('../cytoflowgui/images', '.'),
                     ('../cytoflowgui/op_plugins/images', 'cytoflowgui/op_plugins/images'),
