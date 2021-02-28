@@ -179,7 +179,8 @@ a = Analysis(['../cytoflowgui/run.py'],
                     ('../cytoflowgui/images', '.'),
                     ('../cytoflowgui/op_plugins/images', 'cytoflowgui/op_plugins/images'),
                     ('../cytoflowgui/view_plugins/images', 'cytoflowgui/view_plugins/images'),
-                    ('../cytoflowgui/help', 'cytoflowgui/help')],
+                    ('../cytoflowgui/help', 'cytoflowgui/help'),
+                    ('../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs', '.')],
              hiddenimports = ['matplotlib.backends.backend_qt5agg',
                               'cmath'],
              hookspath=['package/hooks'],
@@ -224,23 +225,6 @@ lol = [ [x for x in a.binaries if x[0].find(y) >= 0] for y in remove_strs]
 remove_items = [item for sublist in lol for item in sublist]
 a.binaries -= remove_items
 
-# for some reason, on a Mac, PyInstaller tries to include the entire
-# source directory, including docs, examples, and build files!
-
-# (also get rid of all the timezone files; pytz is included because it's
-# a pandas dependency, but we don't do any timezone manipulation)
-
-#remove_first = [ "cytoflow", "build", "dist", "doc", ".git", "pytz"]
-
-# get rid of the timezone files; pytz is a pandas dependency, but we
-# don't do any timezone manipulation and it makes the Windows installer
-# REALLY slow
-
-# remove_first = ['pytz']
-# lol = [ [x for x in a.datas if x[0].startswith(y)] for y in remove_first]
-# remove_items = [item for sublist in lol for item in sublist]
-
-# a.datas -= remove_items
 
 pyz = PYZ(a.pure, a.zipped_data, cipher=None)
 
