@@ -50,7 +50,7 @@ jobs:
       env:
         OMP_NUM_THREADS: 1
       run: |
-        nose2 -v -c package/nose2.cfg -s cytoflow.tests
+        nose2 -v -c package/nose2.cfg cytoflow.tests
 
 #    - name: Run cytoflowgui tests
 #      env:
