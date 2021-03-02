@@ -116,7 +116,7 @@ jobs:
     
     - name: Install package locally
       run: |
-        python setup.py develop
+        python setup.py build_ext --inplace
         
     - name: Build source dist
       run: |
@@ -205,7 +205,7 @@ jobs:
     
     - name: Install package locally
       run: |
-        python setup.py develop
+        python setup.py build_ext --inplace
         
     - name: Install packaging deps
       run: |

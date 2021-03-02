@@ -39,7 +39,7 @@ jobs:
     
     - name: Install package locally
       run: |
-        python setup.py develop
+        python setup.py build_ext --inplace
         
     - name: Install nose2
       run: |
@@ -127,7 +127,7 @@ jobs:
     
     - name: Install package locally
       run: |
-        python setup.py develop
+        python setup.py build_ext --inplace
         
     - name: Build wheel
       run: |
@@ -184,7 +184,7 @@ jobs:
             
     - name: Install package locally
       run: |
-        python setup.py develop
+        python setup.py build_ext --inplace
         
     - name: Install packaging deps
       run: |
