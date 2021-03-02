@@ -223,10 +223,24 @@ remove_strs.append('libuuid')
 
 lol = [ [x for x in a.binaries if x[0].find(y) >= 0] for y in remove_strs]
 remove_items = [item for sublist in lol for item in sublist]
+logging.info("Removing binaries: {}", remove_items)
 a.binaries -= remove_items
 
+# replace the module cytoflow/_version.py with a fixed version from versioneer
+logging.info("Freezing dynamic version")
+a.pure -= [('cytoflow._version', None, None)]
+sys.path.insert(0, os.getcwd())
+from versioneer import get_versions, write_to_version_file
+version_file = os.path.join(os.getcwd(), '_version.py')
+open(version_file, 'a').close()
+versions = get_versions()
+write_to_version_file(version_file, versions)
+a.pure += [('cytoflow._version', version_file, 'PYMODULE')]
 
 pyz = PYZ(a.pure, a.zipped_data, cipher=None)
+
+# get rid of the leftover version file once it's compiled
+os.unlink(version_file)
 
 exe = EXE(pyz,
           a.scripts,
@@ -248,7 +262,7 @@ coll = COLLECT(exe,
                a.zipfiles,
                a.datas,
                strip=False,
-               upx=True,
+               upx=False,
                name='cytoflow',
                icon='icon.ico')
 
