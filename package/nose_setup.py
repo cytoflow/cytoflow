@@ -8,7 +8,7 @@ import logging, multiprocessing, sys
 from nose2.events import Plugin
 from nose2.plugins.mp import MultiProcess, procserver
 
-log = logging.getLogger('package.nose_setup')
+log = logging.getLogger(__name__)
 
 # select the 'null' pyface toolkit. an exception is raised if the qt toolkit
 # is subsequently imported, but that's better than trying to actually create
