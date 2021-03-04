@@ -63,7 +63,8 @@ class WorkflowDockPane(TraitsDockPane):
                 continue
             
             task_action = TaskAction(name=plugin.short_name,
-                                     on_perform = lambda factory=plugin.get_operation: self.model.add_operation(factory()),
+                                     on_perform = lambda plugin_id = plugin.operation_id: 
+                                        self.handler.add_operation(id),
                                      image = plugin.get_icon())
             self.toolbar.append(task_action)
              

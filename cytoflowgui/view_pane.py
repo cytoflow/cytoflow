@@ -17,8 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from traits.api import Instance, List, on_trait_change, Str, Dict, Bool, Tuple
-from traitsui.api import View, Item, Spring, InstanceEditor
+from traits.api import Instance, List, on_trait_change, Str, Dict, Bool, Tuple, observe
 from pyface.tasks.api import TraitsDockPane, Task
 from pyface.action.api import ToolBarManager
 from pyface.tasks.action.api import TaskAction
@@ -51,14 +50,14 @@ class ViewDockPane(TraitsDockPane):
     handler = Instance(WorkflowController)
     
     # changed depending on whether the selected wi in the model is valid.
-    enabled = Bool(False)
+#     enabled = Bool(False)
     
     # the currently selected view id
-    selected_view = Str
+#     selected_view = Str
     
     # if there is a default view for the currently selected operation, this
     # is its view id
-    default_view = Str
+#     default_view = Str
 
     # the size of the toolbar icons IN INCHES
     image_size = Tuple((0.33, 0.33))
@@ -85,8 +84,7 @@ class ViewDockPane(TraitsDockPane):
                                       image_size = image_size)
         
         self._default_action = TaskAction(name = "Setup View",
-                                          on_perform = lambda s=self: 
-                                                         self.trait_set(selected_view = s.default_view),
+                                          on_perform = self.handler.activate_view('default'),
                                           image = ImageResource('setup'),
                                           style = 'toggle',
                                           visible = False)
@@ -94,8 +92,7 @@ class ViewDockPane(TraitsDockPane):
         
         for plugin in self.plugins:
             task_action = TaskAction(name = plugin.short_name,
-                                     on_perform = lambda view_id=plugin.view_id:
-                                                    self.trait_set(selected_view = view_id),
+                                     on_perform = self.handler.activate_view(plugin.view_id),
                                      image = plugin.get_icon(),
                                      style = 'toggle')
             self._actions[plugin.view_id] = task_action
@@ -118,30 +115,46 @@ class ViewDockPane(TraitsDockPane):
         
         return window
         
-    @on_trait_change('enabled', enabled)
-    def _enabled_changed(self, enabled):
-        self._window.setEnabled(enabled)
-        self.ui.control.setEnabled(enabled)
-    
-    @on_trait_change('default_view')
-    def set_default_view(self, obj, name, old_view_id, new_view_id):
-        if old_view_id:
-            del self._actions[old_view_id]
+    @observe('model:selected:status')
+    def _selected_status_changed(self, event):
+        if event.new == 'valid':
+            self._window.setEnabled(True)
+            self.ui.control.setEnabled(True)
+        else:
+            self._window.setEnabled(False)
+            self.ui.control.setEnabled(False)
             
-        if new_view_id:
-            self._actions[new_view_id] = self._default_action 
-            
-        self._default_action.visible = (new_view_id != "")
-            
-    @on_trait_change('selected_view')
-    def _selected_view_changed(self, view_id):         
-        # untoggle everything on the toolbar
-        for action in self._actions.values():
-            action.checked = False
-
-        # toggle the right button
-        if view_id:
-            self._actions[view_id].checked = True
+#     @observe('model:selected')
+#     def _selected_changed(self, event):
+#         if event.new is None:
+#             self._window.setEnabled(False)
+#             self.ui.control.setEnabled(False)
+#             return 
+#         
+#         if self.model.selected.default_view:
+#             self._default_
+#             self._default_action.visible = True
+#             
+#     
+#     @on_trait_change('default_view')
+#     def set_default_view(self, obj, name, old_view_id, new_view_id):
+#         if old_view_id:
+#             del self._actions[old_view_id]
+#             
+#         if new_view_id:
+#             self._actions[new_view_id] = self._default_action 
+#             
+#         self._default_action.visible = (new_view_id != "")
+#             
+#     @on_trait_change('selected_view')
+#     def _selected_view_changed(self, view_id):         
+#         # untoggle everything on the toolbar
+#         for action in self._actions.values():
+#             action.checked = False
+# 
+#         # toggle the right button
+#         if view_id:
+#             self._actions[view_id].checked = True
             
 class PlotParamsPane(TraitsDockPane):
     

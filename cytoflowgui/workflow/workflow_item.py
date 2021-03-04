@@ -10,7 +10,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from traits.api import (HasStrictTraits, Instance, Str, Enum, Any, Dict, 
-                        Tuple, List, DelegatesTo, ComparisonMode)
+                        Tuple, List, DelegatesTo, ComparisonMode, Property)
 
 from cytoflow import Experiment
 from cytoflow.utility import CytoflowError, CytoflowOpError, CytoflowViewError
@@ -24,10 +24,6 @@ this = sys.modules[__name__]
 this.last_view_plotted = None
 
 logger = logging.getLogger(__name__)
-
-
-
-    
 
 class WorkflowItem(HasStrictTraits):
     """        
@@ -68,7 +64,7 @@ class WorkflowItem(HasStrictTraits):
     statistics = Dict(Tuple(Str, Str), pd.Series, status = True)
     
     # the default view for this workflow item
-    default_view = Instance(IWorkflowView, copy = "ref")
+    default_view = Property(Instance(IWorkflowView), observe = 'operation')
     
     # the previous_wi WorkflowItem in the workflow
     previous_wi = Instance('WorkflowItem', transient = True)
@@ -132,6 +128,13 @@ class WorkflowItem(HasStrictTraits):
     def __repr__(self):
         return "<{}: {}>".format(self.__class__.__name__, self.operation.__class__.__name__)
     
+    # property: default_view
+    def _get_default_view(self):
+        try:
+            return self.operation.default_view()
+        except AttributeError:
+            return None
+        
         
     def estimate(self):
         logger.debug("WorkflowItem.estimate :: {}".format((self)))

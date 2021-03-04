@@ -113,7 +113,7 @@ class WorkflowItemHandler(Controller):
                          style = 'custom',
                          show_label = False),
                     handler = self)
-        
+           
 
     @cached_property
     def _get_deletable(self):
@@ -209,7 +209,6 @@ class WorkflowController(Controller):
                          style = 'custom',
                          show_label = False),
                     handler = self)
-    
         
         
     def handler_factory(self, wi):
@@ -219,6 +218,48 @@ class WorkflowController(Controller):
                                                              view_plugins = self.view_plugins)
             
         return self.workflow_handlers[wi]
+    
+    
+    def add_operation(self, operation_id):
+        # find the operation plugin
+        op_plugin = next((x for x in self.op_plugins 
+                          if x.operation_id == operation_id))
+        
+        # make a new workflow item
+        wi = WorkflowItem(operation = op_plugin.get_operation(), 
+                          workflow = self.model)
+        
+        # figure out where to add it
+        if self.model.selected:
+            idx = self.model.workflow.index(self.selected) + 1
+        else:
+            idx = len(self.model.workflow)
+              
+        # the add_remove_items handler takes care of updating the linked list
+        self.model.workflow.insert(idx, wi)
+         
+        # and make sure to actually select the new wi
+        self.model.selected = wi
+        
+        return wi
+    
+    def activate_view(self, view_id):
+        # is it the default view?
+        if view_id == 'default':
+            self.model.selected.current_view = self.model.selected.default_view
+            return
+        
+        # do we already have an instance?
+        if view_id in [x.id for x in self.model.selected.views]:
+            self.model.selected.current_view = next((x for x in self.model.selected.views
+                                                     if x.id == view_id))
+            
+        # make a new view instance
+        view_plugin = next((x for x in self.view_plugins
+                            if x.view_id == view_id))
+        view = view_plugin.get_view()
+        self.model.selected.views.append(view)
+        self.model.selected.current_view = view
         
     
     @observe('model:workflow:items', post_init = True)
@@ -243,6 +284,8 @@ class WorkflowController(Controller):
                 self.workflow_handlers[wi] = WorkflowItemHandler(model = wi,
                                                                  op_plugins = self.op_plugins,
                                                                  view_plugins = self.view_plugins)
+                
+                
             
 
 

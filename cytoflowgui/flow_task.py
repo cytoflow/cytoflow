@@ -204,7 +204,7 @@ class FlowTask(Task):
         # else, set up a new workflow
         # add the import op
         if not self.model.workflow:
-            self.model.add_operation(ImportPlugin().get_operation()) 
+            self.handler.add_operation('edu.mit.synbio.cytoflow.operations.import') 
                     
         self.model.modified = False
     
@@ -267,13 +267,7 @@ class FlowTask(Task):
         self.model.workflow = []
         
         # add the import op
-        import_op = ImportPlugin().get_operation()
-        import_handler = ImportPlugin().get_handler(import_op)
-        self.model.add_operation(import_op)
-        self.handler.add_handler(import_handler) 
-#         
-#         # and select the operation
-#         self.model.selected = self.model.workflow[0]
+        self.handler.add_operation('edu.mit.synbio.cytoflow.operations.import')
         
         self.model.modified = False
      

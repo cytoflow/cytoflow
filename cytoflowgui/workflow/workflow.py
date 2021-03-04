@@ -385,32 +385,6 @@ class LocalWorkflow(HasStrictTraits):
                 child_conn.send(msg)
         except Exception:
             log_exception()
-                
-    def add_operation(self, operation):
-        # make a new workflow item
-        wi = WorkflowItem(operation = operation, workflow = self)
-        
-        # if the operation has a default view, add it to the wi
-        try:
-            wi.default_view = operation.default_view()
-            wi.views.append(wi.default_view)
-            wi.current_view = wi.default_view
-        except AttributeError:
-            pass
-        
-        # figure out where to add it
-        if self.selected:
-            idx = self.workflow.index(self.selected) + 1
-        else:
-            idx = len(self.workflow)
-              
-        # the add_remove_items handler takes care of updating the linked list
-        self.workflow.insert(idx, wi)
-         
-        # and make sure to actually select the new wi
-        self.selected = wi
-        
-        return wi
         
         
 #     def estimate(self, wi):
