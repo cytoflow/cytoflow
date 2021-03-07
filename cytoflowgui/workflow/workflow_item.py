@@ -15,9 +15,10 @@ from traits.api import (HasStrictTraits, Instance, Str, Enum, Any, Dict,
 from cytoflow import Experiment
 from cytoflow.utility import CytoflowError, CytoflowOpError, CytoflowViewError
 
-from cytoflowgui.workflow.serialization import camel_registry
-from cytoflowgui.workflow.views import IWorkflowView
-from cytoflowgui.workflow.operations import IWorkflowOperation
+from .serialization import camel_registry
+from .operations import IWorkflowOperation
+from .views import IWorkflowView
+
 
 # http://stackoverflow.com/questions/1977362/how-to-create-module-wide-variables-in-python
 this = sys.modules[__name__]
@@ -235,15 +236,15 @@ class WorkflowItem(HasStrictTraits):
             self.plot_lock.release()
             return
 
-        try:
-            if len(self.current_view.plot_names) > 0 and self.current_view.current_plot not in self.current_view.plot_names:
-                self.view_error = "Plot {} not in current plot names {}".format(self.current_view.current_plot, self.current_view.plot_names)
-                return
-        except Exception as e:
-            # occasionally if the types are really different the "in" statement 
-            # above will throw an error
-            self.view_error = "Plot {} not in current plot names {}".format(self.current_view.current_plot, self.current_view.plot_names)
-            return
+#         try:
+#             if len(self.current_view.plot_names) > 0 and self.current_view.current_plot not in self.current_view.plot_names:
+#                 self.view_error = "Plot {} not in current plot names {}".format(self.current_view.current_plot, self.current_view.plot_names)
+#                 return
+#         except Exception as e:
+#             # occasionally if the types are really different the "in" statement 
+#             # above will throw an error
+#             self.view_error = "Plot {} not in current plot names {}".format(self.current_view.current_plot, self.current_view.plot_names)
+#             return
           
         with warnings.catch_warnings(record = True) as w:
             try:
@@ -255,7 +256,8 @@ class WorkflowItem(HasStrictTraits):
                 except AttributeError:
                     pass
                 
-                self.current_view.plot_wi(self)
+                self.current_view.plot(self.result, 
+                                       **self.current_view.plot_params.trait_get())
                 self.view_error = ""
                 self.view_error_trait = ""
             
@@ -363,7 +365,7 @@ def _load_wi_v2(data, version):
     return WorkflowItem(**data)
 
 @camel_registry.loader('workflow-item', version = 3)
-def _load_wi_v2(data, version):
+def _load_wi(data, version):
     return WorkflowItem(**data)
 
 

@@ -75,23 +75,38 @@ Plots a histogram.
 """
 
 from traits.api import provides
-from traitsui.api import View, Item, Controller, EnumEditor, VGroup, TextEditor
+from traitsui.api import View, Item, EnumEditor, VGroup, TextEditor, Controller
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
-from cytoflowgui.workflow.views.histogram import HistogramWorkflowView
-from cytoflowgui.workflow.views.view_parameters import Data1DPlotParams
+from cytoflowgui.workflow.views.histogram import HistogramWorkflowView, HistogramPlotParams
 
-from cytoflowgui.editors import SubsetListEditor, ColorTextEditor, ExtendableEnumEditor 
+from cytoflowgui.editors import SubsetListEditor, ColorTextEditor, ExtendableEnumEditor, InstanceHandlerEditor
 
 from .i_view_plugin import IViewPlugin, VIEW_PLUGIN_EXT
-from .plugin_base import ViewHandler, PluginHelpMixin
+from cytoflowgui.view_plugins.view_plugin_base import ViewHandler, PluginHelpMixin, data_1d_plot_params_view
+
+
+class HistogramParamsHandler(Controller):
+    view_params_view = \
+        View(Item('num_bins',
+                  editor = TextEditor(auto_set = False,
+                                      format_func = lambda x: "" if x == None else str(x))),
+             Item('histtype'),
+             Item('linestyle'),
+             Item('linewidth',
+                  editor = TextEditor(auto_set = False,
+                                      format_func = lambda x: "" if x == None else str(x))),
+             Item('density'),
+             Item('alpha',
+                  editor = TextEditor(auto_set = False)),
+             data_1d_plot_params_view.content)
+        
 
 class HistogramHandler(ViewHandler):
 
-    def traits_view(self):
-        return View(VGroup(
-                    VGroup(Item('channel',
+    view_traits_view = \
+        View(VGroup(VGroup(Item('channel',
                                 editor=EnumEditor(name='context.channels'),
                                 label = "Channel"),
                            Item('scale'),
@@ -132,23 +147,14 @@ class HistogramHandler(ViewHandler):
                          visible_when = 'context.view_error',
                          editor = ColorTextEditor(foreground_color = "#000000",
                                                   background_color = "#ff9191"))))
+        
+    view_params_view = \
+        View(Item('plot_params',
+                  editor = InstanceHandlerEditor(view = 'view_params_view',
+                                                 handler_factory = HistogramParamsHandler),
+                  style = 'custom',
+                  show_label = False))
 
-
-    def params_view(self):
-        base_view = Data1DPlotParams.default_traits_view(self)
-         
-        return View(Item('num_bins',
-                         editor = TextEditor(auto_set = False,
-                                             format_func = lambda x: "" if x == None else str(x))),
-                    Item('histtype'),
-                    Item('linestyle'),
-                    Item('linewidth',
-                         editor = TextEditor(auto_set = False,
-                                             format_func = lambda x: "" if x == None else str(x))),
-                    Item('density'),
-                    Item('alpha',
-                         editor = TextEditor(auto_set = False)),
-                    base_view.content)
     
 
 @provides(IViewPlugin)
@@ -162,7 +168,10 @@ class HistogramPlugin(Plugin, PluginHelpMixin):
         return HistogramWorkflowView()
     
     def get_handler(self, model, context):
-        return HistogramHandler(model = model, context = context)
+        if isinstance(model, HistogramWorkflowView):
+            return HistogramHandler(model = model, context = context)
+        elif isinstance(model, HistogramPlotParams):
+            return HistogramParamsHandler(model = model, context = context)
     
     def get_icon(self):
         return ImageResource('histogram')

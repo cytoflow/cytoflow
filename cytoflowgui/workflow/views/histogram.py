@@ -76,16 +76,13 @@ Plots a histogram.
 
 from textwrap import dedent
 
-from traits.api import provides, Str, Enum, Bool, Instance
+from traits.api import provides, Enum, Bool, Instance
 
 from cytoflow import HistogramView
 import cytoflow.utility as util
 
-from cytoflowgui.workflow.subset import SubsetMixin
-
 from cytoflowgui.workflow.serialization import camel_registry, traits_repr, traits_str
-from .view_base import IWorkflowView, WorkflowView
-from .view_parameters import Data1DPlotParams
+from .view_base import IWorkflowView, WorkflowView, Data1DPlotParams
 
 HistogramView.__repr__ = traits_repr
      
@@ -102,8 +99,7 @@ class HistogramPlotParams(Data1DPlotParams):
     
     
 @provides(IWorkflowView)
-class HistogramWorkflowView(HistogramView):
-    plotfacet = Str
+class HistogramWorkflowView(HistogramView, WorkflowView):
     plot_params = Instance(HistogramPlotParams, ())
             
     def get_notebook_code(self, idx):

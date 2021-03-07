@@ -102,7 +102,7 @@ class ViewDockPane(TraitsDockPane):
         window.addToolBar(QtCore.Qt.RightToolBarArea, 
                           self.toolbar.create_tool_bar(window))
         
-        self.ui = self.handler.edit_traits(view = 'selected_view_traits',
+        self.ui = self.handler.edit_traits(view = 'selected_view_traits_view',
                                            context = self.model,
                                            kind = 'subpanel', 
                                            parent = window)
@@ -175,7 +175,7 @@ class PlotParamsPane(TraitsDockPane):
         """ Create and return the toolkit-specific contents of the dock pane.
         """
     
-        self.ui = self.handler.edit_traits(view = 'selected_view_params',
+        self.ui = self.handler.edit_traits(view = 'selected_view_params_view',
                                            context = self.model,
                                            kind='subpanel', 
                                            parent=parent,

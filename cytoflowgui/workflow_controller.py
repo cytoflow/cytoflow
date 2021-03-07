@@ -45,74 +45,58 @@ class WorkflowItemHandler(Controller):
     name = DelegatesTo('model')
     friendly_id = DelegatesTo('model')
     
+    # which tabs are we showing at the top of the 
+    
     # plugin lists
     op_plugins = List
     view_plugins = List
         
 
     # the view on that handler        
-    def operation_traits(self):
-        op_plugin = next((x for x in self.op_plugins 
-                          if self.model.operation.id == x.operation_id))
-        handler = op_plugin.get_handler(model = self.model.operation,
-                                        context = self.model)
-                
+    def operation_traits_view(self):
         return View(Item('operation',
-                         editor = InstanceEditor(view = handler.traits_view()),
+                         editor = InstanceHandlerEditor(view = 'operation_traits_view',
+                                                        handler_factory = self._get_operation_handler),
                          style = 'custom',
                          show_label = False),
                     handler = self)
 
     
     # the view for the view traits
-    def view_traits(self):
-        if self.model.current_view is None:
-            return View()
-        
-        view_plugin = next((x for x in self.view_plugins 
-                            if self.model.current_view.id == x.view_id))
-        handler = view_plugin.get_view_handler(model = self.model.current_view,
-                                               context = self.model)
-        
+    def view_traits_view(self):     
         return View(Item('current_view',
-                         editor = InstanceEditor(view = handler.traits_view()),
+                         editor = InstanceHandlerEditor(view = 'view_traits_view',
+                                                        handler_factory = self._get_view_handler),
                          style = 'custom',
                          show_label = False),
                     handler = self)
         
     
     # the view for the view params
-    def view_params(self):
-        if self.model.current_view is None:
-            return View()
-        
-        view_plugin = next((x for x in self.view_plugins 
-                            if self.model.current_view.id == x.view_id))
-        handler = view_plugin.get_handler(model = self.model.current_view,
-                                          context = self.model)
-        
+    def view_params_view(self):
         return View(Item('current_view',
-                         editor = InstanceEditor(view = handler.params_view()),
+                         editor = InstanceHandlerEditor(view = 'view_params_view',
+                                                        handler_factory = self._get_view_handler),
                          style = 'custom',
                          show_label = False),
                     handler = self)
         
     
     # the view for the current plot
-    def view_plot(self):
-        if self.model.current_view is None:
-            return View()
-        
-        view_plugin = next((x for x in self.view_plugins 
-                            if self.model.current_view.id == x.view_id))
-        handler = view_plugin.get_handler(model = self.model.current_view,
-                                          context = self.model)
-         
-        return View(Item('current_view',
-                         editor = InstanceEditor(view = handler.current_plot_view()),
-                         style = 'custom',
-                         show_label = False),
-                    handler = self)
+#     def view_plot(self):
+#         if self.model.current_view is None:
+#             return View()
+#         
+#         view_plugin = next((x for x in self.view_plugins 
+#                             if self.model.current_view.id == x.view_id))
+#         handler = view_plugin.get_handler(model = self.model.current_view,
+#                                           context = self.model)
+#          
+#         return View(Item('current_view',
+#                          editor = InstanceEditor(view = handler.current_plot_view()),
+#                          style = 'custom',
+#                          show_label = False),
+#                     handler = self)
            
 
     @cached_property
@@ -133,21 +117,33 @@ class WorkflowItemHandler(Controller):
             return QtGui.QStyle.SP_DialogCancelButton  # @UndefinedVariable
         
         
-    @cached_property
-    def _get_operation_handler(self):
-        op_plugin = next((x for x in self.op_plugins if self.model.operation.id == x.operation_id))
-        return op_plugin.get_handler(model = self.model.operation,
-                                     context = self.model)
-
-     
-    @cached_property
-    def _get_current_view_handler(self):
-        if self.current_view:
-            view_plugin = next((x for x in self.view_plugins if self.model.current_view.id == x.view_id))
-            return view_plugin.get_view_handler(model = self.model.current_view,
-                                                context = self.model)
-        else:
-            return None
+    def _get_operation_handler(self, op):
+        op_plugin = next((x for x in self.op_plugins if op.id == x.operation_id))
+        return op_plugin.get_handler(model = op, context = self.model)
+    
+        
+    def _get_view_handler(self, view):
+        view_plugin = next((x for x in self.view_plugins if view.id == x.view_id))
+        return view_plugin.get_handler(model = view,
+                                       context = self.model)
+        
+        
+#         
+#     @cached_property
+#     def _get_operation_handler(self):
+#         op_plugin = next((x for x in self.op_plugins if self.model.operation.id == x.operation_id))
+#         return op_plugin.get_handler(model = self.model.operation,
+#                                      context = self.model)
+# 
+#      
+#     @cached_property
+#     def _get_current_view_handler(self):
+#         if self.current_view:
+#             view_plugin = next((x for x in self.view_plugins if self.model.current_view.id == x.view_id))
+#             return view_plugin.get_view_handler(model = self.model.current_view,
+#                                                 context = self.model)
+#         else:
+#             return None
 
 
 class WorkflowController(Controller):
@@ -159,9 +155,9 @@ class WorkflowController(Controller):
     view_plugins = List
     
         
-    def workflow_traits(self):      
+    def workflow_traits_view(self):      
         return View(Item('workflow',
-                         editor = VerticalNotebookEditor(view = 'operation_traits',
+                         editor = VerticalNotebookEditor(view = 'operation_traits_view',
                                                          page_name = '.name',
                                                          page_description = '.friendly_id',
                                                          page_icon = '.icon',
@@ -175,9 +171,9 @@ class WorkflowController(Controller):
                     scrollable = True)
         
         
-    def selected_view_traits(self):
+    def selected_view_traits_view(self):
         return View(Item('selected',
-                         editor = InstanceHandlerEditor(view = 'view_traits',
+                         editor = InstanceHandlerEditor(view = 'view_traits_view',
                                                         handler_factory = self.handler_factory),
                          style = 'custom',
                          show_label = False),
@@ -193,22 +189,22 @@ class WorkflowController(Controller):
                     scrollable = True)
         
         
-    def selected_view_params(self):
+    def selected_view_params_view(self):
         return View(Item('selected',
-                         editor = InstanceHandlerEditor(view = 'view_params',
+                         editor = InstanceHandlerEditor(view = 'view_params_view',
                                                         handler_factory = self.handler_factory),
                          style = 'custom',
                          show_label = False),
                     handler = self)
         
     
-    def selected_view_plot(self):  
-        return View(Item('selected',
-                         editor = InstanceHandlerEditor(view = 'view_plot',
-                                                        handler_factory = self.handler_factory),
-                         style = 'custom',
-                         show_label = False),
-                    handler = self)
+#     def selected_view_plot(self):  
+#         return View(Item('selected',
+#                          editor = InstanceHandlerEditor(view = 'view_plot',
+#                                                         handler_factory = self.handler_factory),
+#                          style = 'custom',
+#                          show_label = False),
+#                     handler = self)
         
         
     def handler_factory(self, wi):

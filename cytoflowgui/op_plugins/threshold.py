@@ -72,11 +72,11 @@ from traitsui.api import View, Item, EnumEditor, VGroup, TextEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
-from cytoflowgui.view_plugins.plugin_base import ViewHandler
+from cytoflowgui.view_plugins.view_plugin_base import ViewHandler
 from cytoflowgui.editors import SubsetListEditor, ColorTextEditor, ExtendableEnumEditor
 from cytoflowgui.workflow.operations.threshold import ThresholdWorkflowOp, ThresholdSelectionView
 
-from .plugin_base import OpHandler, shared_op_traits_view, PluginHelpMixin
+from cytoflowgui.op_plugins.op_plugin_base import OpHandler, shared_op_traits_view, PluginHelpMixin
 from .i_op_plugin import IOperationPlugin, OP_PLUGIN_EXT
 
 class ThresholdHandler(OpHandler):

@@ -527,24 +527,24 @@ class LocalWorkflow(HasStrictTraits):
 #         self.message_q.put((Msg.UPDATE_VIEW, (idx, obj.id, name, new)))
 #         self.modified = True
         
-    @on_trait_change('workflow:current_view')
-    def _on_current_view_changed(self, obj, name, old, new):
+    @observe('workflow:items:current_view')
+    def _on_current_view_changed(self, event):
         logger.debug("LocalWorkflow._on_current_view_changed :: {}"
-                      .format((obj, name, old, new)))                  
+                      .format(event))                  
                   
-        idx = self.workflow.index(obj)
-        view = obj.current_view
+        idx = self.workflow.index(event.object)
+        view = event.object.current_view
         self.message_q.put((Msg.CHANGE_CURRENT_VIEW, (idx, view)))
         
 
-    @on_trait_change('workflow:current_plot')
-    def _on_current_plot_changed(self, obj, name, old, new):
-        logger.debug("LocalWorkflow._on_current_plot_changed :: {}"
-                      .format((obj, name, old, new)))                  
-                  
-        idx = self.workflow.index(obj)
-        plot = obj.current_plot
-        self.message_q.put((Msg.CHANGE_CURRENT_PLOT, (idx, plot)))
+#     @on_trait_change('workflow:current_plot')
+#     def _on_current_plot_changed(self, obj, name, old, new):
+#         logger.debug("LocalWorkflow._on_current_plot_changed :: {}"
+#                       .format((obj, name, old, new)))                  
+#                   
+#         idx = self.workflow.index(obj)
+#         plot = obj.current_plot
+#         self.message_q.put((Msg.CHANGE_CURRENT_PLOT, (idx, plot)))
         
         
     def remote_eval(self, expr):
