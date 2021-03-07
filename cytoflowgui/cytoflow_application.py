@@ -119,7 +119,8 @@ class CytoflowApplication(TasksApplication):
         self.on_trait_change(self.show_error, 'application_error', dispatch = 'ui')
                 
         # set up the model
-        self.model = LocalWorkflow(self.remote_workflow_connection)
+        self.model = LocalWorkflow(self.remote_workflow_connection,
+                                   debug = self.debug)
         
         # and the local canvas
         self.canvas = FigureCanvasQTAggLocal(Figure(), 

@@ -34,54 +34,7 @@
         values:
         - 0
         - 1
-  current_view: &id001 !histogram;2
-    channel: FITC_A
-    current_plot: null
-    huefacet: ''
-    huescale: linear
-    plot_params: !histogram-params;3
-      alpha: 0.5
-      col_wrap: null
-      density: false
-      despine: true
-      histtype: stepfilled
-      huelabel: ''
-      legend: true
-      lim: !!python/tuple
-      - null
-      - null
-      linestyle: solid
-      linewidth: null
-      max_quantile: 1.0
-      min_quantile: 0.001
-      num_bins: null
-      orientation: vertical
-      sharex: true
-      sharey: true
-      sns_context: paper
-      sns_style: whitegrid
-      title: ''
-      xlabel: ''
-      ylabel: ''
-    plotfacet: ''
-    scale: logicle
-    subset_list:
-    - !range-subset;1
-      high: 10.0
-      low: 1.0
-      name: Dox
-      values:
-      - 1.0
-      - 10.0
-    - !category-subset;1
-      name: Well
-      selected: []
-      values:
-      - A
-      - B
-    xfacet: ''
-    yfacet: ''
-  default_view: null
+  current_view: null
   deletable: false
   metadata:
     Dox:
@@ -192,5 +145,5 @@
         Well: B
       file: /home/brian/src/cytoflow/docs/examples-basic/data/Yeast_C6_C06.fcs
   statistics: {}
-  views:
-  - *id001
+  views: []
+

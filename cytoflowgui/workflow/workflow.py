@@ -398,8 +398,10 @@ class LocalWorkflow(HasStrictTraits):
 #         self.message_q.put((Msg.ESTIMATE, idx))
 #         
 # 
-#     def run_all(self):
-#         self.message_q.put((Msg.RUN_ALL, None))
+
+
+    def run_all(self):
+        self.message_q.put((Msg.RUN_ALL, None))
         
 
     @observe('workflow')

@@ -115,9 +115,9 @@ class ViewDockPane(TraitsDockPane):
         
         return window
         
-    @observe('model:selected:status')
+    @observe('model:selected.status')
     def _selected_status_changed(self, event):
-        if event.new == 'valid':
+        if self.model.selected and self.model.selected.status == 'valid':
             self._window.setEnabled(True)
             self.ui.control.setEnabled(True)
         else:

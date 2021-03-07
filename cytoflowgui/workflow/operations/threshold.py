@@ -72,7 +72,7 @@ from traits.api import provides, Instance, Str, CFloat, DelegatesTo
 from cytoflow.operations.threshold import ThresholdOp, ThresholdSelection
 
 from .. import Changed
-from ..views.i_workflow_view import IWorkflowView
+from cytoflowgui.workflow.views.view_base import IWorkflowView
 from ..views.histogram import HistogramPlotParams
 from ..serialization import camel_registry, traits_str, traits_repr, dedent
 

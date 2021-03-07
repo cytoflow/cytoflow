@@ -299,10 +299,25 @@ class WorkflowItem(HasStrictTraits):
                     
             return True
         
-
+@camel_registry.dumper(WorkflowItem, 'workflow-item', version = 3)
+def _dump_wi(wi):
+                          
+    # we really don't need to keep copying around the fcs metadata
+    # it will still get saved out in the import op
+    if 'fcs_metadata' in wi.metadata:
+        del wi.metadata['fcs_metadata']
+                            
+    return dict(operation = wi.operation,
+                views = wi.views,
+                channels = wi.channels,
+                conditions = wi.conditions,
+                metadata = wi.metadata,
+                statistics = wi.statistics,
+                current_view = wi.current_view,
+                default_view = wi.default_view)
     
 @camel_registry.dumper(WorkflowItem, 'workflow-item', version = 2)
-def _dump_wi(wi):
+def _dump_wi_v2(wi):
                           
     # we really don't need to keep copying around the fcs metadata
     # it will still get saved out in the import op
@@ -337,11 +352,18 @@ def _dump_wi_v1(wi):
 def _load_wi_v1(data, version):
     
     data['statistics'] = {tuple(k) : pd.Series() for k in data['statistics']}
-    
+    del data['deletable']
     ret = WorkflowItem(**data)
         
     return ret
 
 @camel_registry.loader('workflow-item', version = 2)
-def _load_wi(data, version):
+def _load_wi_v2(data, version):
+    del data['deletable']
     return WorkflowItem(**data)
+
+@camel_registry.loader('workflow-item', version = 3)
+def _load_wi_v2(data, version):
+    return WorkflowItem(**data)
+
+

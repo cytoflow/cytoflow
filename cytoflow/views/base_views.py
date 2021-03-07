@@ -308,6 +308,12 @@ class BaseView(HasStrictTraits):
 class BaseDataView(BaseView):
     """
     The base class for data views (as opposed to statistics views).
+    
+    Attributes
+    ----------
+    subset : str
+        An expression that specifies the subset of the statistic to plot.
+        Passed unmodified to :meth:`pandas.DataFrame.query`.
     """
 
     subset = Str
@@ -627,6 +633,7 @@ class BaseStatisticsView(BaseView):
         
     subset : str
         An expression that specifies the subset of the statistic to plot.
+        Passed unmodified to :meth:`pandas.DataFrame.query`.
 
     """
     
@@ -689,6 +696,13 @@ class BaseStatisticsView(BaseView):
         
         This function takes care of checking for facet name validity and 
         subsetting, then passes the dataframe to `BaseView.plot`
+        
+        Parameters
+        ----------
+        plot_name : str
+            If this :class:`IView` can make multiple plots, ``plot_name`` is
+            the name of the plot to make.  Must be one of the values retrieved
+            from :meth:`enum_plots`.
 
         """
         

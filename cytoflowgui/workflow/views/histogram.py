@@ -82,9 +82,10 @@ from cytoflow import HistogramView
 import cytoflow.utility as util
 
 from cytoflowgui.workflow.subset import SubsetMixin
+
 from cytoflowgui.workflow.serialization import camel_registry, traits_repr, traits_str
-from cytoflowgui.workflow.views import IWorkflowView
-from cytoflowgui.workflow.views.view_parameters import Data1DPlotParams
+from .view_base import IWorkflowView, WorkflowView
+from .view_parameters import Data1DPlotParams
 
 HistogramView.__repr__ = traits_repr
      
@@ -101,7 +102,7 @@ class HistogramPlotParams(Data1DPlotParams):
     
     
 @provides(IWorkflowView)
-class HistogramWorkflowView(SubsetMixin, HistogramView):
+class HistogramWorkflowView(HistogramView):
     plotfacet = Str
     plot_params = Instance(HistogramPlotParams, ())
             
