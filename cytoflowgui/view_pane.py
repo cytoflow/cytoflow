@@ -84,7 +84,7 @@ class ViewDockPane(TraitsDockPane):
                                       image_size = image_size)
         
         self._default_action = TaskAction(name = "Setup View",
-                                          on_perform = self.handler.activate_view('default'),
+                                          on_perform = lambda: self.handler.activate_view('default'),
                                           image = ImageResource('setup'),
                                           style = 'toggle',
                                           visible = False)
@@ -92,7 +92,7 @@ class ViewDockPane(TraitsDockPane):
         
         for plugin in self.plugins:
             task_action = TaskAction(name = plugin.short_name,
-                                     on_perform = self.handler.activate_view(plugin.view_id),
+                                     on_perform = lambda view_id=plugin.view_id: self.handler.activate_view(view_id),
                                      image = plugin.get_icon(),
                                      style = 'toggle')
             self._actions[plugin.view_id] = task_action
