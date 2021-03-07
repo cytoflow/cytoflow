@@ -12,5 +12,6 @@ which is useful for implementing your own modules.
    
    design
    new_modules
+   multiple_plots
 
    
