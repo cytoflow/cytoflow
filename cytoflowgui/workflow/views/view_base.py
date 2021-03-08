@@ -7,7 +7,8 @@ Created on Jan 15, 2021
 import pandas as pd
 import natsort
 
-from traits.api import HasStrictTraits, List, Property, Str, Instance, Bool, Enum, Tuple
+from traits.api import (HasStrictTraits, List, Property, Str, Instance, Bool, 
+                        Enum, Tuple, observe)
 
 from cytoflow.views import IView
 from cytoflow import utility as util
@@ -123,6 +124,13 @@ class WorkflowView(HasStrictTraits):
             kwargs['plot_name'] = self.current_plot
  
         super().plot(self, experiment, **kwargs)
+        
+    
+    # this makes sure that LocalWorkflow._view_changed notices when
+    # a plot parameter changes.
+    @observe('plot_params:+type')
+    def _on_params_changed(self, event):
+        self.plot_params = self.plot_params.clone_traits()        
         
     
 #     def plot_wi(self, wi):

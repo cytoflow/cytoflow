@@ -110,7 +110,7 @@ import sys, threading, logging
 from queue import Queue, PriorityQueue
 
 from traits.api import (HasStrictTraits, Int, Bool, Instance, Any, List,
-                        on_trait_change, observe, ComparisonMode)
+                        observe, ComparisonMode)
 
 import matplotlib.pyplot as plt
 import cytoflowgui.matplotlib_backend_remote
@@ -489,7 +489,8 @@ class LocalWorkflow(HasStrictTraits):
         self.message_q.put((Msg.ESTIMATE, idx))
             
 
-    @observe('workflow:items:views:items:+view')
+    @observe('workflow:items:views:items:+type')
+    #@observe(parse('workflow:items:views:items').match(lambda c, t: True))
     def _view_changed(self, event):
         logger.debug("LocalWorkflow._view_changed :: {}".format(event))
 
@@ -975,7 +976,7 @@ class RemoteWorkflow(HasStrictTraits):
             self.exec_q.put((idx - 0.1, (wi, wi.plot)))
             
             
-    @observe('workflow:items:views:items:+view')
+    @observe('workflow:items:views:items:+type')
     def _view_changed(self, event):
         logger.debug("RemoteWorkflow._view_changed :: {}".format(event))
          

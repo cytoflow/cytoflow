@@ -75,7 +75,7 @@ Plots a histogram.
 """
 
 from traits.api import provides
-from traitsui.api import View, Item, EnumEditor, VGroup, TextEditor, Controller
+from traitsui.api import View, Item, EnumEditor, VGroup, TextEditor, Controller, UCustom
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
@@ -149,11 +149,9 @@ class HistogramHandler(ViewHandler):
                                                   background_color = "#ff9191"))))
         
     view_params_view = \
-        View(Item('plot_params',
-                  editor = InstanceHandlerEditor(view = 'view_params_view',
-                                                 handler_factory = HistogramParamsHandler),
-                  style = 'custom',
-                  show_label = False))
+        View(UCustom('plot_params',
+                     editor = InstanceHandlerEditor(view = 'view_params_view',
+                                                    handler_factory = HistogramParamsHandler)))
 
     
 
