@@ -8,7 +8,7 @@ import pandas as pd
 import natsort
 
 from traits.api import (HasStrictTraits, List, Property, Str, Instance, Bool, 
-                        Enum, Tuple, observe)
+                        Enum, Tuple, observe, Event)
 
 from cytoflow.views import IView
 from cytoflow import utility as util
@@ -40,6 +40,10 @@ class IWorkflowView(IView):
     # updated from subset_list
     subset = Property(Str, depends_on = "subset_list.str")
     subset_list = List(ISubset)
+    
+    # an all-purpose "this thing changed" event
+    # set it to the name of the trait that changed
+    changed = Event
     
     def should_plot(self, changed, payload):
         """
@@ -88,6 +92,10 @@ class WorkflowView(HasStrictTraits):
     subset = Property(Str, depends_on = "subset_list.str")
     subset_list = List(ISubset)
     
+    # an all-purpose "this thing changed" event
+    # set it to the name of the trait that changed
+    changed = Event
+    
         
     def should_plot(self, changed, payload):
         """
@@ -130,7 +138,7 @@ class WorkflowView(HasStrictTraits):
     # a plot parameter changes.
     @observe('plot_params:+type')
     def _on_params_changed(self, event):
-        self.plot_params = self.plot_params.clone_traits()        
+        self.changed = 'plot_params'
         
     
 #     def plot_wi(self, wi):

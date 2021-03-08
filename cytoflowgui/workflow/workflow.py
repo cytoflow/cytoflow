@@ -496,7 +496,15 @@ class LocalWorkflow(HasStrictTraits):
 
         wi = next((x for x in self.workflow if event.object in x.views))
         idx = self.workflow.index(wi)
-        self.message_q.put((Msg.UPDATE_VIEW, (idx, event.object.id, event.name, event.new)))
+        
+        if event.name == 'changed':
+            trait_name = event.new
+        else:
+            trait_name = event.name
+            
+        new_value = event.object.trait_get(trait_name)[trait_name]
+            
+        self.message_q.put((Msg.UPDATE_VIEW, (idx, event.object.id, trait_name, new_value)))
         self.modified = True       
                  
 
