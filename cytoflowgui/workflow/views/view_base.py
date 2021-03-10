@@ -137,8 +137,13 @@ class WorkflowView(HasStrictTraits):
     # this makes sure that LocalWorkflow._view_changed notices when
     # a plot parameter changes.
     @observe('plot_params:+type')
-    def _on_params_changed(self, event):
+    def _on_params_changed(self, _):
         self.changed = 'plot_params'
+        
+    # same for subset_list
+    @observe('subset_list.items:+type')
+    def _on_subset_changed(self, _):
+        self.changed = 'subset_list'
         
     
 #     def plot_wi(self, wi):

@@ -84,7 +84,8 @@ from cytoflowgui.workflow.views.histogram import HistogramWorkflowView, Histogra
 from cytoflowgui.editors import SubsetListEditor, ColorTextEditor, ExtendableEnumEditor, InstanceHandlerEditor
 
 from .i_view_plugin import IViewPlugin, VIEW_PLUGIN_EXT
-from cytoflowgui.view_plugins.view_plugin_base import ViewHandler, PluginHelpMixin, data_1d_plot_params_view
+from .subset_controllers import subset_handler_factory
+from cytoflowgui.view_plugins.view_plugin_base import ViewHandler, PluginHelpMixin, Data1DPlotParamsView
 
 
 class HistogramParamsHandler(Controller):
@@ -100,7 +101,7 @@ class HistogramParamsHandler(Controller):
              Item('density'),
              Item('alpha',
                   editor = TextEditor(auto_set = False)),
-             data_1d_plot_params_view.content)
+             Data1DPlotParamsView.content)
         
 
 class HistogramHandler(ViewHandler):
@@ -133,6 +134,8 @@ class HistogramHandler(ViewHandler):
                     VGroup(Item('subset_list',
                                 show_label = False,
                                 editor = SubsetListEditor(conditions = "context.conditions",
+                                                          editor = InstanceHandlerEditor(view = 'subset_view',
+                                                                                         handler_factory = subset_handler_factory),
                                                           mutable = False)),
                            label = "Subset",
                            show_border = False,

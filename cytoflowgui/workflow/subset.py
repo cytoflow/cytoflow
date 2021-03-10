@@ -25,12 +25,6 @@ class BoolSubset(HasStrictTraits):
     
     str = Property(Str, depends_on = "name, selected_t, selected_f")
     
-#     def default_traits_view(self):
-#         return View(HGroup(Item('selected_t',
-#                                 label = self.name + "+"), 
-#                            Item('selected_f',
-#                                 label = self.name + "-")))
-    
     def _get_str(self):
         if self.selected_t and not self.selected_f:
             return "({0} == True)".format(util.sanitize_identifier(self.name))
@@ -72,13 +66,6 @@ class CategorySubset(HasStrictTraits):
     selected = List
     
     str = Property(Str, depends_on = 'name, selected[]')
-    
-#     def default_traits_view(self):
-#         return View(Item('selected',
-#                          label = self.name,
-#                          editor = CheckListEditor(name = 'values',
-#                                                   cols = 2),
-#                          style = 'custom'))
         
     # MAGIC: gets the value of the Property trait "subset_str"
     def _get_str(self):
@@ -125,16 +112,6 @@ class RangeSubset(HasStrictTraits):
     low = CFloat(Undefined)
     
     str = Property(Str, depends_on = "name, values, high, low")
-    
-#     def default_traits_view(self):
-#         return View(Item('high',
-#                          label = self.name,
-#                          editor = ValuesBoundsEditor(
-#                                      name = 'values',
-#                                      low_name = 'low',
-#                                      high_name = 'high',
-#                                      format = '%g',
-#                                      auto_set = False)))
         
     # MAGIC: gets the value of the Property trait "subset_str"
     def _get_str(self):
