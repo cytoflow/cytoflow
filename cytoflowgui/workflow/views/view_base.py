@@ -120,7 +120,7 @@ class WorkflowView(HasStrictTraits):
     
     def enum_plots(self, experiment):
         if not self.plotfacet:
-            return IterWrapper([], [])
+            return IterWrapper(iter([]), [])
           
         if self.plotfacet and self.plotfacet not in experiment.conditions:
             raise util.CytoflowViewError("Plot facet {0} not in the experiment"
