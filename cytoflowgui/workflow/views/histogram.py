@@ -99,7 +99,7 @@ class HistogramPlotParams(Data1DPlotParams):
     
     
 @provides(IWorkflowView)
-class HistogramWorkflowView(HistogramView, WorkflowView):
+class HistogramWorkflowView(WorkflowView, HistogramView):
     plot_params = Instance(HistogramPlotParams, ())
             
     def get_notebook_code(self, idx):

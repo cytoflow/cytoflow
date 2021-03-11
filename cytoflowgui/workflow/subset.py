@@ -5,7 +5,7 @@ Created on Jan 15, 2021
 '''
 
 from traits.api import (provides, Interface, Str, List, Property, Bool,
-                        HasStrictTraits, CFloat, Undefined, on_trait_change)
+                        HasStrictTraits, CFloat, Undefined, observe)
 
 from cytoflow import utility as util
 
@@ -23,7 +23,7 @@ class BoolSubset(HasStrictTraits):
     selected_t = Bool(False)
     selected_f = Bool(False)
     
-    str = Property(Str, depends_on = "name, selected_t, selected_f")
+    str = Property(Str, observe = "[name,selected_t,selected_f]")
     
     def _get_str(self):
         if self.selected_t and not self.selected_f:
@@ -65,7 +65,7 @@ class CategorySubset(HasStrictTraits):
     values = List
     selected = List
     
-    str = Property(Str, depends_on = 'name, selected[]')
+    str = Property(Str, observe = '[name,selected.items]')
         
     # MAGIC: gets the value of the Property trait "subset_str"
     def _get_str(self):
@@ -111,7 +111,7 @@ class RangeSubset(HasStrictTraits):
     high = CFloat(Undefined)
     low = CFloat(Undefined)
     
-    str = Property(Str, depends_on = "name, values, high, low")
+    str = Property(Str, observe = "[name,values,high,low]")
         
     # MAGIC: gets the value of the Property trait "subset_str"
     def _get_str(self):
@@ -124,8 +124,8 @@ class RangeSubset(HasStrictTraits):
             return "({0} >= {1} and {0} <= {2})" \
                    .format(util.sanitize_identifier(self.name), self.low, self.high) 
         
-    @on_trait_change('values, values[]')
-    def _values_changed(self):
+    @observe('[values,values.items]')
+    def _values_changed(self, _):
         if self.high is Undefined:
             self.high = max(self.values)
             

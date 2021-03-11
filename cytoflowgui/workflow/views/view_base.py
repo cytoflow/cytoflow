@@ -8,7 +8,7 @@ import pandas as pd
 import natsort
 
 from traits.api import (HasStrictTraits, List, Property, Str, Instance, Bool, 
-                        Enum, Tuple, observe, Event)
+                        Enum, Tuple, observe, Event, Any)
 
 from cytoflow.views import IView
 from cytoflow import utility as util
@@ -74,14 +74,20 @@ class IWorkflowView(IView):
 
 
 class WorkflowView(HasStrictTraits):
-    """Default implementation of IWorkflowView"""
+    """
+    Default implementation of IWorkflowView.
+    
+    Make sure this class is FIRST in the derived class's declaration so it
+    shows up earlier in the MRO than the base class from the 
+    :module:`cytoflow` module.
+    """
     
     # add another facet for "plot_name".
     plotfacet = Str
     
     # make the "current" value of plot_name an attribute so
     # we can view (with TraitsUI) and serialize it. 
-    current_plot = Str
+    current_plot = Any
         
     # make the **kwargs parameters to plot() an attribute so we can 
     # view (with TraitsUI) and serialize it.
@@ -89,7 +95,7 @@ class WorkflowView(HasStrictTraits):
     
     # override the base class's "subset" with one that is dynamically generated /
     # updated from subset_list
-    subset = Property(Str, depends_on = "subset_list.str")
+    subset = Property(Str, observe = "subset_list.items.str")
     subset_list = List(ISubset)
     
     # an all-purpose "this thing changed" event
@@ -105,7 +111,9 @@ class WorkflowView(HasStrictTraits):
         - Changed.RESULT -- this WorkflowItem's result changed
         - Changed.PREV_RESULT -- the previous WorkflowItem's result changed
         - Changed.ESTIMATE_RESULT -- the results of calling "estimate" changed
-
+        
+        If :method:`should_plot` is called from a notification handler, the payload
+        is the handler `event` parameter.
         """
         return True
     
@@ -126,12 +134,12 @@ class WorkflowView(HasStrictTraits):
         if experiment is None:
             raise util.CytoflowViewError("No experiment specified")
          
-        if self.plotfacet is not None and self.current_plot is not None:
+        if self.plotfacet and self.current_plot is not None:
             experiment = experiment.subset(self.plotfacet, self.current_plot)
         elif self.current_plot is not None:
             kwargs['plot_name'] = self.current_plot
  
-        super().plot(self, experiment, **kwargs)
+        super().plot(experiment, **kwargs)
         
     
     # this makes sure that LocalWorkflow._view_changed notices when
@@ -141,7 +149,7 @@ class WorkflowView(HasStrictTraits):
         self.changed = 'plot_params'
         
     # same for subset_list
-    @observe('subset_list.items:+type')
+    @observe('subset_list:items.str')
     def _on_subset_changed(self, _):
         self.changed = 'subset_list'
         

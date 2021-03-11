@@ -62,7 +62,7 @@ class IWorkflowOperation(IOperation):
          
          - Changed.ESTIMATE_RESULT -- the results of calling "estimate" changed
          
-        If `should_apply` is called from a notificaiont handler, then `payload` is
+        If `should_apply` is called from a notification handler, then `payload` is
         the `event` object.
         """
 

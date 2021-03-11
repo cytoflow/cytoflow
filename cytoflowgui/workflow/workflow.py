@@ -111,6 +111,7 @@ from queue import Queue, PriorityQueue
 
 from traits.api import (HasStrictTraits, Int, Bool, Instance, Any, List,
                         observe, ComparisonMode)
+from traits.observation.api import match, parse
 
 import matplotlib.pyplot as plt
 import cytoflowgui.matplotlib_backend_remote
@@ -490,17 +491,20 @@ class LocalWorkflow(HasStrictTraits):
             
 
     @observe('workflow:items:views:items:+type')
-    #@observe(parse('workflow:items:views:items').match(lambda c, t: True))
     def _view_changed(self, event):
         logger.debug("LocalWorkflow._view_changed :: {}".format(event))
 
-        wi = next((x for x in self.workflow if event.object in x.views))
-        idx = self.workflow.index(wi)
-        
         if event.name == 'changed':
             trait_name = event.new
         else:
             trait_name = event.name
+
+        # filter out anything that's transient (like properties)            
+        if event.object.trait(trait_name).transient:
+            return
+
+        wi = next((x for x in self.workflow if event.object in x.views))
+        idx = self.workflow.index(wi)
             
         new_value = event.object.trait_get(trait_name)[trait_name]
             
@@ -755,13 +759,13 @@ class RemoteWorkflow(HasStrictTraits):
                     wi = self.workflow[idx]
                     with wi.lock:
                         if wi.operation.trait(name).status:
-                            raise RuntimeError("Tried to set a remote status trait")
+                            raise RuntimeError("Tried to set remote status trait '{}'".format(name))
                         
                         if wi.operation.trait(name).fixed:
-                            raise RuntimeError("Tried to set a remote fixed trait")
+                            raise RuntimeError("Tried to set remote fixed trait '{}'".format(name))
                         
                         if wi.operation.trait(name).transient:
-                            raise RuntimeError("Tried to set a remote transient trait")
+                            raise RuntimeError("Tried to set remote transient trait '{}'")
                         
                         wi.operation.trait_set(**{name : new})
                         
@@ -771,18 +775,18 @@ class RemoteWorkflow(HasStrictTraits):
                     try:
                         view = next((x for x in wi.views if x.id == view_id))
                     except StopIteration:
-                        logger.warn("RemoteWorkflow: Couldn't find view {}".format(view_id))
+                        logger.warn("RemoteWorkflow: Couldn't find view '{}'".format(view_id))
                         continue
                     
                     with wi.lock:
                         if view.trait(name).status:
-                            raise RuntimeError("Tried to set a remote status trait")
+                            raise RuntimeError("Tried to set remote status trait '{}'".format(name))
                         
                         if view.trait(name).fixed:
-                            raise RuntimeError("Tried to set a remote fixed trait")
+                            raise RuntimeError("Tried to set remote fixed trait '{}'".format(name))
                         
                         if view.trait(name).transient:
-                            raise RuntimeError("Tried to set a remote transient trait")
+                            raise RuntimeError("Tried to set remote transient trait '{}'".format(name))
                         
                         view.trait_set(**{name : new})
 
@@ -987,6 +991,10 @@ class RemoteWorkflow(HasStrictTraits):
     @observe('workflow:items:views:items:+type')
     def _view_changed(self, event):
         logger.debug("RemoteWorkflow._view_changed :: {}".format(event))
+        
+        # filter out anything that's transient (like properties)            
+        if event.object.trait(event.name).transient:
+            return
          
         view = event.object
         wi = next((x for x in self.workflow if view in x.views))
