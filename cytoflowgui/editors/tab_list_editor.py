@@ -4,6 +4,8 @@ Created on Jan 16, 2021
 @author: brian
 '''
 
+from pyface.qt import QtGui
+
 from traitsui.qt4.enum_editor import BaseEditor as BaseEnumerationEditor
 from traitsui.editor_factory import EditorWithListFactory
 from traitsui.qt4.constants import ErrorColor
@@ -13,7 +15,7 @@ class _TabListEditor(BaseEnumerationEditor):
     def init(self, parent):        
         super(_TabListEditor, self).init(parent)
         
-        self.control = QtGui.QTabBar()                      # @UndefinedVariable
+        self.control = QtGui.QTabBar()
         self.control.setDocumentMode(True)  
         for name in self.names:
             self.control.addTab(str(name))

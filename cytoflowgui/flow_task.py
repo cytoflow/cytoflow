@@ -42,7 +42,7 @@ from pyface.qt import QtGui
 from envisage.ui.tasks.api import TaskFactory
 from envisage.api import contributes_to, Plugin, ExtensionPoint
 
-from .op_plugins import IOperationPlugin, OP_PLUGIN_EXT, ImportPlugin
+from .op_plugins import IOperationPlugin, OP_PLUGIN_EXT
 from .view_plugins import IViewPlugin, VIEW_PLUGIN_EXT
 
 from .workflow_pane import WorkflowDockPane
@@ -76,12 +76,12 @@ class FlowTaskPane(TaskPane):
         self.control = QtGui.QWidget()                      # @UndefinedVariable
         self.control.setLayout(layout)
         
-#         tabs_ui = self.handler.edit_traits(view = 'selected_view_plot',
-#                                            context = self.model,
-#                                            kind = 'subpanel',
-#                                            parent = parent)
-#         
-#         self.layout.addWidget(tabs_ui.control) 
+        tabs_ui = self.handler.edit_traits(view = 'selected_view_plot_name_view',
+                                           context = self.model,
+                                           kind = 'subpanel',
+                                           parent = parent)
+         
+        self.layout.addWidget(tabs_ui.control) 
         
         # add the main plot
 

@@ -39,7 +39,7 @@ class _InstanceHandlerEditor(_InstanceEditor):
                 del child
 
             # Create the new content for the panel:
-            stretch = 0
+#             stretch = 0
             value = self.value
             if not isinstance(value, HasTraits):
                 str_value = ""
@@ -67,8 +67,8 @@ class _InstanceHandlerEditor(_InstanceEditor):
                 self.scrollable = ui._scrollable
                 ui.parent = self.ui
 
-                if view.resizable or view.scrollable or ui._scrollable:
-                    stretch = 1
+#                 if view.resizable or view.scrollable or ui._scrollable:
+#                     stretch = 1
 
             # FIXME: Handle stretch.
             layout.addWidget(control)

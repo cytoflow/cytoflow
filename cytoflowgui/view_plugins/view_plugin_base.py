@@ -65,29 +65,25 @@ class PluginHelpMixin(HasTraits):
 class ViewHandler(Controller):
     """
     Useful bits for view handlers.
-    """
-    
-#     # the view for the current plot
-#     def current_plot_view(self):
-#         return View(
-#             HGroup(
-#                 Item('plot_names_by',
-#                      editor = TextEditor(),
-#                      style = "readonly",
-#                      show_label = False),
-#                 Item('current_plot',
-#                      editor = TabListEditor(name = 'plot_names'),
-#                      style = 'custom',
-#                      show_label = False)))
-#         
-# 
-#     
+    """      
+     
     context = Instance('cytoflowgui.workflow.workflow_item.WorkflowItem')
     
     conditions_names = Property(depends_on = "context.conditions")
     previous_conditions_names = Property(depends_on = "context.previous_wi.conditions")
     statistics_names = Property(depends_on = "context.statistics")
     numeric_statistics_names = Property(depends_on = "context.statistics")
+        
+    # the view for the current plot (tab editor at the top of the plot window)
+    view_plot_name_view = \
+        View(HGroup(Item('context.plot_names_label',
+                         editor = TextEditor(),
+                         style = "readonly",
+                         show_label = False),
+                    Item('current_plot',
+                         editor = TabListEditor(name = 'context.plot_names'),
+                         style = 'custom',
+                         show_label = False)))
     
     # MAGIC: gets value for property "conditions_names"
     def _get_conditions_names(self):

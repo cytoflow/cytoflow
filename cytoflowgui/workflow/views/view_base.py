@@ -88,7 +88,7 @@ class WorkflowView(HasStrictTraits):
     # make the "current" value of plot_name an attribute so
     # we can view (with TraitsUI) and serialize it. 
     current_plot = Any
-        
+            
     # make the **kwargs parameters to plot() an attribute so we can 
     # view (with TraitsUI) and serialize it.
     plot_params = Instance('BasePlotParams')
@@ -120,7 +120,7 @@ class WorkflowView(HasStrictTraits):
     
     def enum_plots(self, experiment):
         if not self.plotfacet:
-            return iter([])
+            return IterWrapper([], [])
           
         if self.plotfacet and self.plotfacet not in experiment.conditions:
             raise util.CytoflowViewError("Plot facet {0} not in the experiment"
@@ -130,14 +130,17 @@ class WorkflowView(HasStrictTraits):
     
     
     def plot(self, experiment, **kwargs):
+        """
+        A default :method:`plot` that subsets by the :attribute:`plotfacet` and
+        :attribute:`current_plot`. If you need it to do something else, you must
+        override this method!
+        """
          
         if experiment is None:
             raise util.CytoflowViewError("No experiment specified")
          
         if self.plotfacet and self.current_plot is not None:
             experiment = experiment.subset(self.plotfacet, self.current_plot)
-        elif self.current_plot is not None:
-            kwargs['plot_name'] = self.current_plot
  
         super().plot(experiment, **kwargs)
         
@@ -153,49 +156,6 @@ class WorkflowView(HasStrictTraits):
     def _on_subset_changed(self, _):
         self.changed = 'subset_list'
         
-    
-#     def plot_wi(self, wi):
-#         if self.plot_names:
-#             self.plot(wi.result, 
-#                       plot_name = self.current_plot,
-#                       **self.plot_params.trait_get())
-#         else:
-#             self.plot(wi.result,
-#                       **self.plot_params.trait_get())
-#             
-#             
-#             
-#     def enum_plots_wi(self, wi):
-#         try:
-#             return self.enum_plots(wi.result)
-#         except:
-#             return []
-
-#     def update_plot_names(self, wi):
-#         try:
-#             plot_iter = self.enum_plots_wi(wi)
-#             plot_names = [x for x in plot_iter]
-#             if plot_names == [None] or plot_names == []:
-#                 self.plot_names = []
-#                 self.plot_names_by = []
-#             else:
-#                 self.plot_names = plot_names
-#                 try:
-#                     self.plot_names_by = ", ".join(plot_iter.by)
-#                 except Exception:
-#                     self.plot_names_by = ""
-#                     
-#                 if self.current_plot == None:
-#                     self.current_plot = self.plot_names[0]
-#                     
-#         except Exception:
-#             self.current_plot = None
-#             self.plot_names = []
-#     
-#         
-#     @on_trait_change('plot_params.+', post_init = True)
-#     def _plot_params_changed(self, obj, name, old, new):
-#         self.changed =
 
     # MAGIC - returns the value of the "subset" Property, above
     def _get_subset(self):
@@ -241,7 +201,6 @@ class Data2DPlotParams(DataPlotParams):
     xlim = Tuple(util.FloatOrNone(None), util.FloatOrNone(None))   
     ylim = Tuple(util.FloatOrNone(None), util.FloatOrNone(None))   
     
-
         
 class Stats1DPlotParams(BasePlotParams):
     orientation = Enum(["vertical", "horizontal"])

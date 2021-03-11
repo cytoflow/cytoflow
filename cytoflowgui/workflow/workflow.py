@@ -993,7 +993,7 @@ class RemoteWorkflow(HasStrictTraits):
         logger.debug("RemoteWorkflow._view_changed :: {}".format(event))
         
         # filter out anything that's transient (like properties)            
-        if event.object.trait(event.name).transient:
+        if event.object.trait(event.name).transient or event.object.trait(event.name).status:
             return
          
         view = event.object
@@ -1005,7 +1005,7 @@ class RemoteWorkflow(HasStrictTraits):
             and wi.current_view.should_plot(Changed.VIEW, event)):
             # FIXME wi.current_view.update_plot_names(wi)
             self.exec_q.put((idx - 0.1, (wi, wi.plot)))
-            
+                        
             
     @observe('workflow:items:current_view')
     def _current_view_changed(self, event):

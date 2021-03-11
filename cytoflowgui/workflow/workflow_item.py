@@ -10,7 +10,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from traits.api import (HasStrictTraits, Instance, Str, Enum, Any, Dict, 
-                        Tuple, List, DelegatesTo, ComparisonMode, Property)
+                        Tuple, List, DelegatesTo, ComparisonMode, Property,
+                        observe)
 
 from cytoflow import Experiment
 from cytoflow.utility import CytoflowError, CytoflowOpError, CytoflowViewError
@@ -93,6 +94,9 @@ class WorkflowItem(HasStrictTraits):
     view_warning = Str(status = True)
     view_warning_trait = Str(status = True)
     
+    plot_names = List(Any, status = True)
+    plot_names_label = Str(status = True)
+    
     # synchronization primitives for plotting
     matplotlib_events = Any(transient = True)
     plot_lock = Any(transient = True)
@@ -102,7 +106,7 @@ class WorkflowItem(HasStrictTraits):
     
     ### Overrides to make edit_traits go looking for views in the handler
     def edit_traits(self, view = None, parent = None, kind = None, 
-                        context = None, handler = None, id = "",
+                        context = None, handler = None, id = "",  # @ReservedAssignment
                         scrollable=None, **args):
          
         if context is None:
@@ -129,12 +133,32 @@ class WorkflowItem(HasStrictTraits):
     def __repr__(self):
         return "<{}: {}>".format(self.__class__.__name__, self.operation.__class__.__name__)
     
+    
     # property: default_view
     def _get_default_view(self):
         try:
             return self.operation.default_view()
         except AttributeError:
             return None
+        
+        
+    @observe('[result,current_view.+type]')
+    def _update_plot_names(self, _):
+        if self.current_view is None or self.result is None:
+            return 
+        
+        plot_iter = self.current_view.enum_plots(self.result)
+        plot_names = [x for x in plot_iter]
+        
+        if plot_names == self.plot_names:
+            return
+        
+        if plot_names == [None] or plot_names == []:
+            self.plot_names = []
+            self.plot_names_label = ""
+        else:
+            self.plot_names = plot_names
+            self.plot_names_label = ", ".join(plot_iter.by)
         
         
     def estimate(self):

@@ -75,7 +75,7 @@ Plots a histogram.
 """
 
 from traits.api import provides
-from traitsui.api import View, Item, EnumEditor, VGroup, TextEditor, Controller, UCustom
+from traitsui.api import View, Item, EnumEditor, VGroup, TextEditor, Controller, HGroup
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
@@ -85,7 +85,8 @@ from cytoflowgui.editors import SubsetListEditor, ColorTextEditor, ExtendableEnu
 
 from .i_view_plugin import IViewPlugin, VIEW_PLUGIN_EXT
 from .subset_controllers import subset_handler_factory
-from cytoflowgui.view_plugins.view_plugin_base import ViewHandler, PluginHelpMixin, Data1DPlotParamsView
+from ..editors import TabListEditor
+from .view_plugin_base import ViewHandler, PluginHelpMixin, Data1DPlotParamsView
 
 
 class HistogramParamsHandler(Controller):
@@ -152,9 +153,11 @@ class HistogramHandler(ViewHandler):
                                                   background_color = "#ff9191"))))
         
     view_params_view = \
-        View(UCustom('plot_params',
-                     editor = InstanceHandlerEditor(view = 'view_params_view',
-                                                    handler_factory = HistogramParamsHandler)))
+        View(Item('plot_params',
+                  editor = InstanceHandlerEditor(view = 'view_params_view',
+                                                 handler_factory = HistogramParamsHandler),
+                  style = 'custom',
+                  show_label = False))
 
     
 

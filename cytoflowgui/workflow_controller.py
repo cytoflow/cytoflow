@@ -26,7 +26,7 @@ Created on Mar 15, 2015
 import logging
 
 from traits.api import List, DelegatesTo, Dict, observe, Property, cached_property
-from traitsui.api import View, Item, InstanceEditor, Controller, Spring
+from traitsui.api import View, Item, Controller, Spring
 from pyface.qt import QtGui
 
 from .workflow import WorkflowItem
@@ -44,13 +44,10 @@ class WorkflowItemHandler(Controller):
     
     name = DelegatesTo('model')
     friendly_id = DelegatesTo('model')
-    
-    # which tabs are we showing at the top of the 
-    
+        
     # plugin lists
     op_plugins = List
     view_plugins = List
-        
 
     # the view on that handler        
     def operation_traits_view(self):
@@ -81,23 +78,16 @@ class WorkflowItemHandler(Controller):
                          show_label = False),
                     handler = self)
         
-    
-    # the view for the current plot
-#     def view_plot(self):
-#         if self.model.current_view is None:
-#             return View()
-#         
-#         view_plugin = next((x for x in self.view_plugins 
-#                             if self.model.current_view.id == x.view_id))
-#         handler = view_plugin.get_handler(model = self.model.current_view,
-#                                           context = self.model)
-#          
-#         return View(Item('current_view',
-#                          editor = InstanceEditor(view = handler.current_plot_view()),
-#                          style = 'custom',
-#                          show_label = False),
-#                     handler = self)
-           
+        
+    # the view for the tab bar at the top of the plot
+    def view_plot_name_view(self):
+        return View(Item('current_view',
+                         editor = InstanceHandlerEditor(view = 'view_plot_name_view',
+                                                        handler_factory = self._get_view_handler),
+                         style = 'custom',
+                         show_label = False),
+                    handler = self)
+        
 
     @cached_property
     def _get_deletable(self):
@@ -198,13 +188,13 @@ class WorkflowController(Controller):
                     handler = self)
         
     
-#     def selected_view_plot(self):  
-#         return View(Item('selected',
-#                          editor = InstanceHandlerEditor(view = 'view_plot',
-#                                                         handler_factory = self.handler_factory),
-#                          style = 'custom',
-#                          show_label = False),
-#                     handler = self)
+    def selected_view_plot_name_view(self):  
+        return View(Item('selected',
+                         editor = InstanceHandlerEditor(view = 'view_plot_name_view',
+                                                        handler_factory = self.handler_factory),
+                         style = 'custom',
+                         show_label = False),
+                    handler = self)
         
         
     def handler_factory(self, wi):
