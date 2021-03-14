@@ -75,7 +75,7 @@ Plots a histogram.
 """
 
 from traits.api import provides
-from traitsui.api import View, Item, EnumEditor, VGroup, TextEditor, Controller, HGroup
+from traitsui.api import View, Item, EnumEditor, VGroup, TextEditor, Controller
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
@@ -85,7 +85,6 @@ from cytoflowgui.editors import SubsetListEditor, ColorTextEditor, ExtendableEnu
 
 from .i_view_plugin import IViewPlugin, VIEW_PLUGIN_EXT
 from .subset_controllers import subset_handler_factory
-from ..editors import TabListEditor
 from .view_plugin_base import ViewHandler, PluginHelpMixin, Data1DPlotParamsView
 
 
@@ -106,51 +105,51 @@ class HistogramParamsHandler(Controller):
         
 
 class HistogramHandler(ViewHandler):
-
     view_traits_view = \
-        View(VGroup(VGroup(Item('channel',
-                                editor=EnumEditor(name='context.channels'),
-                                label = "Channel"),
-                           Item('scale'),
-                           Item('xfacet',
-                                editor=ExtendableEnumEditor(name='handler.conditions_names',
-                                                            extra_items = {"None" : ""}),
-                                label = "Horizontal\nFacet"),
-                            Item('yfacet',
-                                editor=ExtendableEnumEditor(name='handler.conditions_names',
-                                                            extra_items = {"None" : ""}),
-                                label = "Vertical\nFacet"),
-                           Item('huefacet',
-                                editor=ExtendableEnumEditor(name='handler.conditions_names',
-                                                            extra_items = {"None" : ""}),
-                                label="Color\nFacet"),
-                           Item('huescale',
-                                label = "Color\nScale"),
-                           Item('plotfacet',
-                                editor=ExtendableEnumEditor(name='handler.conditions_names',
-                                                            extra_items = {"None" : ""}),
-                                label = "Tab\nFacet"),
-                            label = "Histogram Plot",
-                            show_border = False),
-                    VGroup(Item('subset_list',
-                                show_label = False,
-                                editor = SubsetListEditor(conditions = "context.conditions",
-                                                          editor = InstanceHandlerEditor(view = 'subset_view',
-                                                                                         handler_factory = subset_handler_factory),
-                                                          mutable = False)),
-                           label = "Subset",
-                           show_border = False,
-                           show_labels = False),
-                    Item('context.view_warning',
-                         resizable = True,
-                         visible_when = 'context.view_warning',
-                         editor = ColorTextEditor(foreground_color = "#000000",
-                                                 background_color = "#ffff99")),
-                    Item('context.view_error',
-                         resizable = True,
-                         visible_when = 'context.view_error',
-                         editor = ColorTextEditor(foreground_color = "#000000",
-                                                  background_color = "#ff9191"))))
+        View(VGroup(
+             VGroup(Item('channel',
+                         editor=EnumEditor(name='context.channels'),
+                         label = "Channel"),
+                    Item('scale'),
+                    Item('xfacet',
+                         editor=ExtendableEnumEditor(name='handler.conditions_names',
+                                                     extra_items = {"None" : ""}),
+                         label = "Horizontal\nFacet"),
+                     Item('yfacet',
+                         editor=ExtendableEnumEditor(name='handler.conditions_names',
+                                                     extra_items = {"None" : ""}),
+                         label = "Vertical\nFacet"),
+                    Item('huefacet',
+                         editor=ExtendableEnumEditor(name='handler.conditions_names',
+                                                     extra_items = {"None" : ""}),
+                         label="Color\nFacet"),
+                    Item('huescale',
+                         label = "Color\nScale"),
+                    Item('plotfacet',
+                         editor=ExtendableEnumEditor(name='handler.conditions_names',
+                                                     extra_items = {"None" : ""}),
+                         label = "Tab\nFacet"),
+                     label = "Histogram Plot",
+                     show_border = False),
+             VGroup(Item('subset_list',
+                         show_label = False,
+                         editor = SubsetListEditor(conditions = "context.conditions",
+                                                   editor = InstanceHandlerEditor(view = 'subset_view',
+                                                                                  handler_factory = subset_handler_factory),
+                                                   mutable = False)),
+                    label = "Subset",
+                    show_border = False,
+                    show_labels = False),
+             Item('context.view_warning',
+                  resizable = True,
+                  visible_when = 'context.view_warning',
+                  editor = ColorTextEditor(foreground_color = "#000000",
+                                          background_color = "#ffff99")),
+             Item('context.view_error',
+                  resizable = True,
+                  visible_when = 'context.view_error',
+                  editor = ColorTextEditor(foreground_color = "#000000",
+                                           background_color = "#ff9191"))))
         
     view_params_view = \
         View(Item('plot_params',

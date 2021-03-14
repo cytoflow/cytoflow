@@ -16,6 +16,8 @@ from cytoflow import utility as util
 from ..subset import ISubset
 from ..serialization import traits_repr
 
+LINE_STYLES = ["solid", "dashed", "dashdot", "dotted","none"]
+
 class IterWrapper(object):
     def __init__(self, iterator, by):
         self.iterator = iterator

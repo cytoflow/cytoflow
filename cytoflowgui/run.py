@@ -164,36 +164,57 @@ def run_gui():
     #from cytoflowgui.tasbe_task import TASBETaskPlugin
     #from cytoflowgui.export_task import ExportFigurePlugin
     from cytoflowgui.cytoflow_application import CytoflowApplication
-    from cytoflowgui.op_plugins.import_op import ImportPlugin
-    from cytoflowgui.op_plugins.threshold import ThresholdPlugin
-    #from cytoflowgui.op_plugins import (ImportPlugin, ThresholdPlugin)#, RangePlugin, QuadPlugin,
-#                             Range2DPlugin, PolygonPlugin, BinningPlugin,
-#                             GaussianMixture1DPlugin, GaussianMixture2DPlugin,
-#                             BleedthroughLinearPlugin,
-#                             BeadCalibrationPlugin, AutofluorescencePlugin,
-#                             ColorTranslationPlugin, TasbePlugin, 
-#                             ChannelStatisticPlugin, TransformStatisticPlugin, 
-#                             RatioPlugin, DensityGatePlugin, FlowPeaksPlugin,
-#                             KMeansPlugin, PCAPlugin)
+    #from cytoflowgui.op_plugins.import_op import ImportPlugin
+    #from cytoflowgui.op_plugins.threshold import ThresholdPlugin
+    from cytoflowgui.op_plugins import ImportPlugin 
+                                        #ThresholdPlugin) 
+                                        #RangePlugin, 
+                                        #QuadPlugin,
+                                        #Range2DPlugin, 
+                                        #PolygonPlugin, 
+                                        #BinningPlugin,
+                                        #GaussianMixture1DPlugin, 
+                                        #GaussianMixture2DPlugin,
+                                        #BleedthroughLinearPlugin,
+                                        #BeadCalibrationPlugin, 
+                                        #AutofluorescencePlugin,
+                                        #ColorTranslationPlugin, 
+                                        #TasbePlugin, 
+                                        #ChannelStatisticPlugin, 
+                                        #TransformStatisticPlugin, 
+                                        #RatioPlugin, 
+                                        #DensityGatePlugin, 
+                                        #FlowPeaksPlugin,
+                                        #KMeansPlugin, 
+                                        #PCAPlugin)
     
-    from cytoflowgui.view_plugins.histogram import HistogramPlugin #, Histogram2DPlugin, ScatterplotPlugin,
-#                               BarChartPlugin, Stats1DPlugin, Kde1DPlugin, Kde2DPlugin,
-#                               ViolinPlotPlugin, TablePlugin, Stats2DPlugin, DensityPlugin,
-#                               ParallelCoordinatesPlugin, RadvizPlugin)
+    from cytoflowgui.view_plugins import (HistogramPlugin, 
+                                          #Histogram2DPlugin, 
+                                          ScatterplotPlugin,
+                                          #BarChartPlugin, 
+                                          #Stats1DPlugin, 
+                                          Kde1DPlugin, 
+                                          #Kde2DPlugin,
+                                          ViolinPlotPlugin,
+                                          #TablePlugin, 
+                                          #Stats2DPlugin, 
+                                          DensityPlugin)
+                                          #ParallelCoordinatesPlugin, 
+                                          #RadvizPlugin)
 
     plugins = [CorePlugin(), TasksPlugin(), FlowTaskPlugin()]#, TASBETaskPlugin(),
                #ExportFigurePlugin()]    
 
     # ordered as we want them to show up in the toolbar    
-    view_plugins = [HistogramPlugin()]
-#                     ScatterplotPlugin(),
+    view_plugins = [HistogramPlugin(),
+                    ScatterplotPlugin(),
 #                     Histogram2DPlugin(),
-#                     DensityPlugin(),
-#                     Kde1DPlugin(),
+                    DensityPlugin(),
+                    Kde1DPlugin(),
 #                     Kde2DPlugin(),
 #                     RadvizPlugin(),
 #                     ParallelCoordinatesPlugin(),
-#                     ViolinPlotPlugin(),
+                    ViolinPlotPlugin()]
 #                     BarChartPlugin(),
 #                     Stats1DPlugin(),
 #                     Stats2DPlugin(),
@@ -201,27 +222,27 @@ def run_gui():
     
     plugins.extend(view_plugins)
     
-    op_plugins = [ImportPlugin(),
-                  ThresholdPlugin()]
-#                   RangePlugin(),
-#                   QuadPlugin(),
-#                   Range2DPlugin(),
-#                   PolygonPlugin(),
-#                   RatioPlugin(),
-#                   ChannelStatisticPlugin(),
-#                   TransformStatisticPlugin(),
-#                   BinningPlugin(),
-#                   GaussianMixture1DPlugin(),
-#                   GaussianMixture2DPlugin(),
-#                   DensityGatePlugin(),
-#                   KMeansPlugin(),
-#                   FlowPeaksPlugin(),
-#                   PCAPlugin(),
-#                   AutofluorescencePlugin(),
-#                   BleedthroughLinearPlugin(),
-#                   BeadCalibrationPlugin(),
-#                   ColorTranslationPlugin(),
-#                   TasbePlugin()]
+    op_plugins = [ImportPlugin()]
+                  #ThresholdPlugin()]
+                  #RangePlugin(),
+                  #QuadPlugin(),
+                  #Range2DPlugin(),
+                  #PolygonPlugin(),
+                  #RatioPlugin(),
+                  #ChannelStatisticPlugin(),
+                  #TransformStatisticPlugin(),
+                  #BinningPlugin(),
+                  #GaussianMixture1DPlugin(),
+                  #GaussianMixture2DPlugin(),
+                  #DensityGatePlugin(),
+                  #KMeansPlugin(),
+                  #FlowPeaksPlugin(),
+                  #PCAPlugin(),
+                  #AutofluorescencePlugin(),
+                  #BleedthroughLinearPlugin(),
+                  #BeadCalibrationPlugin(),
+                  #ColorTranslationPlugin(),
+                  #TasbePlugin()]
 
     plugins.extend(op_plugins)
     
