@@ -96,32 +96,30 @@ Import FCS files and associate them with experimental conditions (metadata.)
 
 """
 
-from traits.api import (Button, Property, cached_property, on_trait_change, 
+from traits.api import (Button, Property, cached_property, 
                         Instance, provides, observe, Event)
 from traitsui.api import (View, Item, Controller, TextEditor, ButtonEditor, 
-                          InstanceEditor, HGroup, VGroup, Label)
+                          HGroup, VGroup, Label)
 
 from envisage.api import Plugin, contributes_to
-
-from cytoflow.utility import sanitize_identifier
                        
 from cytoflowgui.editors import VerticalListEditor, InstanceHandlerEditor
 from cytoflowgui.import_dialog import ExperimentDialogModel, ExperimentDialogHandler
 
 from .i_op_plugin import IOperationPlugin, OP_PLUGIN_EXT 
 from cytoflowgui.op_plugins.op_plugin_base import OpHandler, PluginHelpMixin, shared_op_traits_view
-from cytoflowgui.workflow.operations.import_op import ImportWorkflowOp, Channel
+from cytoflowgui.workflow.operations.import_op import ImportWorkflowOp
+
 
 class ChannelHandler(Controller):
-
     default_view = View(HGroup(Item('channel', style = 'readonly', show_label = False),
                                Item(label = '-->'),
                                Item('name',
                                     editor = TextEditor(auto_set = False), 
                                     show_label = False)))
+    
 
 class ImportHandler(OpHandler):
-    
     setup_event = Button(label="Set up experiment...")
     reset_channels_event = Event()
     samples = Property(depends_on = 'model.tubes', status = True)

@@ -472,7 +472,7 @@ class LocalWorkflow(HasStrictTraits):
         
         
     @observe('workflow:items:operation:[+apply,+estimate]')
-    def _operation_changed(self, event):
+    def _on_operation_changed(self, event):
         logger.debug("LocalWorkflow._operation_changed :: {}".format(event))
         
         wi = next((x for x in self.workflow if x.operation is event.object))
@@ -491,7 +491,7 @@ class LocalWorkflow(HasStrictTraits):
             
 
     @observe('workflow:items:views:items:+type')
-    def _view_changed(self, event):
+    def _on_view_changed(self, event):
         logger.debug("LocalWorkflow._view_changed :: {}".format(event))
 
         if event.name == 'changed':
@@ -851,12 +851,12 @@ class RemoteWorkflow(HasStrictTraits):
         
         
     @observe('apply_calls', post_init = True)
-    def _apply_called(self, _):
+    def _on_apply_called(self, _):
         self.message_q.put((Msg.APPLY_CALLED, self.apply_calls))
         
         
     @observe('plot_calls', post_init = True)
-    def _plot_called(self, _):
+    def _on_plot_called(self, _):
         self.message_q.put((Msg.PLOT_CALLED, self.plot_calls))
         
             
@@ -896,7 +896,7 @@ class RemoteWorkflow(HasStrictTraits):
 
 
     @observe('workflow:items:operation:+apply')
-    def _operation_apply_changed(self, event):
+    def _on_operation_apply_changed(self, event):
         logger.debug("RemoteWorkflow._operation_apply_changed :: {}".format(event))
 
         wi = next((x for x in self.workflow if x.operation is event.object))
@@ -909,7 +909,7 @@ class RemoteWorkflow(HasStrictTraits):
             self.exec_q.put((idx - 0.1, (wi, wi.apply)))
                 
     @observe('workflow:items:operation:+estimate')
-    def _operation_estimate_changed(self, event):
+    def _on_operation_estimate_changed(self, event):
         logger.debug("RemoteWorkflow._operation_estimate_changed :: {}".format(event))
 
         wi = next((x for x in self.workflow if x.operation is event.object))
@@ -919,7 +919,7 @@ class RemoteWorkflow(HasStrictTraits):
             
             
     @observe('workflow:items:operation:+estimate_result')
-    def _estimate_result_changed(self, event):
+    def _on_estimate_result_changed(self, event):
         logger.debug("RemoteWorkflow._estimate_result_changed :: {}".format(event))
         
         wi = next((x for x in self.workflow if x.operation is event.object))
@@ -936,14 +936,14 @@ class RemoteWorkflow(HasStrictTraits):
         
                 
     @observe('workflow:items:operation:+status')
-    def _operation_status_changed(self, event):
+    def _on_operation_status_changed(self, event):
         wi = next((x for x in self.workflow if x.operation is event.object))
         idx = self.workflow.index(wi)
         self.message_q.put((Msg.UPDATE_OP, (idx, event.name, event.new)))
         
         
     @observe('workflow:items:result', post_init = True)
-    def _result_changed(self, event):
+    def _on_result_changed(self, event):
         logger.debug("RemoteWorkflow._result_changed :: {}".format(event))   
               
         wi = event.object
@@ -966,7 +966,7 @@ class RemoteWorkflow(HasStrictTraits):
              
              
     @observe('workflow:items:previous_wi.result')
-    def _prev_result_changed(self, event):
+    def _on_prev_result_changed(self, event):
         logger.debug("RemoteWorkflow._prev_result_changed :: {}".format(event))  
         
         wi = next((x for x in self.workflow if event.object is x.previous_wi))
@@ -989,7 +989,7 @@ class RemoteWorkflow(HasStrictTraits):
             
             
     @observe('workflow:items:views:items:+type')
-    def _view_changed(self, event):
+    def _on_view_changed(self, event):
         logger.debug("RemoteWorkflow._view_changed :: {}".format(event))
         
         # filter out anything that's transient (like properties)            
@@ -1008,7 +1008,7 @@ class RemoteWorkflow(HasStrictTraits):
                         
             
     @observe('workflow:items:current_view')
-    def _current_view_changed(self, event):
+    def _on_current_view_changed(self, event):
         logger.debug("RemoteWorkflow._current_view_changed :: {}".format(event))
         
         wi = event.object
@@ -1019,7 +1019,7 @@ class RemoteWorkflow(HasStrictTraits):
             
             
     @observe('workflow:items:+status', post_init = True)
-    def _workflow_item_changed(self, event):
+    def _on_workflow_item_changed(self, event):
         logger.debug("RemoteWorkflow._workflow_item_changed :: {}".format(event))
               
         idx = self.workflow.index(event.object)
@@ -1027,7 +1027,7 @@ class RemoteWorkflow(HasStrictTraits):
         
         
     @observe('selected', post_init = True)
-    def _selected_workflowitem_changed(self, event):
+    def _on_selected_workflowitem_changed(self, event):
         logger.debug("RemoteWorkflow._selected_changed :: {}".format(event))
          
         if event.new:

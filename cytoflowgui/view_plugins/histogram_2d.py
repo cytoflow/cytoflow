@@ -77,142 +77,96 @@ events in a bin change the bin's opacity, so you can use different colors.
 
 '''
 
-from traits.api import provides, Callable, Str, Instance, Bool
-from traitsui.api import View, Item, Controller, EnumEditor, VGroup, TextEditor
+from traits.api import provides
+from traitsui.api import View, Item, EnumEditor, VGroup, TextEditor, Controller
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
+from cytoflowgui.workflow.views.histogram_2d import Histogram2DWorkflowView, Histogram2DPlotParams
 
-from cytoflow import Histogram2DView
-import cytoflow.utility as util
+from cytoflowgui.editors import SubsetListEditor, ColorTextEditor, ExtendableEnumEditor, InstanceHandlerEditor
 
-from cytoflowgui.subset import SubsetListEditor
-from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
-from cytoflowgui.color_text_editor import ColorTextEditor
-from cytoflowgui.view_plugins.i_view_plugin \
-    import (IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, 
-            PluginHelpMixin, Data2DPlotParams)
-from cytoflowgui.serialization import camel_registry, traits_repr, traits_str, dedent
-from cytoflowgui.util import IterWrapper
+from .i_view_plugin import IViewPlugin, VIEW_PLUGIN_EXT
+from .subset_controllers import subset_handler_factory
+from .view_plugin_base import ViewHandler, PluginHelpMixin, Data2DPlotParamsView
 
-Histogram2DView.__repr__ = traits_repr
 
-class Histogram2DHandler(ViewHandlerMixin, Controller):
+class Histogram2DParamsHandler(Controller):
+    view_params_view = \
+        View(Item('gridsize',
+                  editor = TextEditor(auto_set = False),
+                  label = "Grid size"),
+             Item('smoothed',
+                  label = "Smooth"),
+             Item('smoothed_sigma',
+                  editor = TextEditor(auto_set = False),
+                  label = "Smooth\nsigma",
+                  visible_when = "smoothed == True"),
+             Data2DPlotParamsView.content)
 
-    def default_traits_view(self):
-        return View(VGroup(
-                    VGroup(Item('xchannel',
-                                editor=EnumEditor(name='context.channels'),
-                                label = "X Channel"),
-                           Item('xscale',
-                                label = "X Scale"),
-                           Item('ychannel',
-                                editor=EnumEditor(name='context.channels'),
-                                label = "Y Channel"),
-                           Item('yscale',
-                                label = "Y Scale"),
-                           Item('xfacet',
-                                editor=ExtendableEnumEditor(name='handler.conditions_names',
-                                                            extra_items = {"None" : ""}),
-                                label = "Horizontal\nFacet"),
-                           Item('yfacet',
-                                editor=ExtendableEnumEditor(name='handler.conditions_names',
-                                                            extra_items = {"None" : ""}),
-                                label = "Vertical\nFacet"),
-                           Item('huefacet',
-                                editor=ExtendableEnumEditor(name='handler.conditions_names',
-                                                            extra_items = {"None" : ""}),
-                                label="Color\nFacet"),
-                           Item('huescale',
-                                label = "Color\nScale"),
-                           Item('plotfacet',
-                                editor=ExtendableEnumEditor(name='handler.conditions_names',
-                                                            extra_items = {"None" : ""}),
-                                label = "Tab\nFacet"),
-                           label = "2D Histogram",
-                           show_border = False),
-                    VGroup(Item('subset_list',
-                                show_label = False,
-                                editor = SubsetListEditor(conditions = "context.conditions")),
-                           label = "Subset",
-                           show_border = False,
-                           show_labels = False),
-                    Item('context.view_warning',
-                         resizable = True,
-                         visible_when = 'context.view_warning',
-                         editor = ColorTextEditor(foreground_color = "#000000",
-                                                 background_color = "#ffff99")),
-                    Item('context.view_error',
-                         resizable = True,
-                         visible_when = 'context.view_error',
-                         editor = ColorTextEditor(foreground_color = "#000000",
-                                                  background_color = "#ff9191"))))
 
-class Histogram2DParams(Data2DPlotParams):
-    
-    gridsize = util.PositiveCInt(50, allow_zero = False)
-    smoothed = Bool(False)
-    smoothed_sigma = util.PositiveCFloat(1.0, allow_zero = False)
-    
-    def default_traits_view(self):
-        base_view = Data2DPlotParams.default_traits_view(self)
-        
-        return View(Item('gridsize',
-                         editor = TextEditor(auto_set = False),
-                         label = "Grid size"),
-                    Item('smoothed',
-                         label = "Smooth"),
-                    Item('smoothed_sigma',
-                         editor = TextEditor(auto_set = False),
-                         label = "Smooth\nsigma",
-                         visible_when = "smoothed == True"),
-                    base_view.content)
+class Histogram2DHandler(ViewHandler):
 
-class Histogram2DPluginView(PluginViewMixin, Histogram2DView):
-    handler_factory = Callable(Histogram2DHandler)
-    plot_params = Instance(Histogram2DParams, ())
-    plotfacet = Str
+    view_traits_view = \
+        View(VGroup(
+             VGroup(Item('xchannel',
+                         editor=EnumEditor(name='context.channels'),
+                         label = "X Channel"),
+                    Item('xscale',
+                         label = "X Scale"),
+                    Item('ychannel',
+                         editor=EnumEditor(name='context.channels'),
+                         label = "Y Channel"),
+                    Item('yscale',
+                         label = "Y Scale"),
+                    Item('xfacet',
+                         editor=ExtendableEnumEditor(name='handler.conditions_names',
+                                                     extra_items = {"None" : ""}),
+                         label = "Horizontal\nFacet"),
+                    Item('yfacet',
+                         editor=ExtendableEnumEditor(name='handler.conditions_names',
+                                                     extra_items = {"None" : ""}),
+                         label = "Vertical\nFacet"),
+                    Item('huefacet',
+                         editor=ExtendableEnumEditor(name='handler.conditions_names',
+                                                     extra_items = {"None" : ""}),
+                         label="Color\nFacet"),
+                    Item('huescale',
+                         label = "Color\nScale"),
+                    Item('plotfacet',
+                         editor=ExtendableEnumEditor(name='handler.conditions_names',
+                                                     extra_items = {"None" : ""}),
+                         label = "Tab\nFacet"),
+                    label = "2D Histogram",
+                    show_border = False),
+             VGroup(Item('subset_list',
+                         show_label = False,
+                         editor = SubsetListEditor(conditions = "context.conditions",
+                                                   editor = InstanceHandlerEditor(view = 'subset_view',
+                                                                                  handler_factory = subset_handler_factory),
+                                                   mutable = False)),
+                    label = "Subset",
+                    show_border = False,
+                    show_labels = False),
+             Item('context.view_warning',
+                  resizable = True,
+                  visible_when = 'context.view_warning',
+                  editor = ColorTextEditor(foreground_color = "#000000",
+                                          background_color = "#ffff99")),
+             Item('context.view_error',
+                  resizable = True,
+                  visible_when = 'context.view_error',
+                  editor = ColorTextEditor(foreground_color = "#000000",
+                                           background_color = "#ff9191"))))
 
-    def enum_plots_wi(self, wi):
-        if not self.plotfacet:
-            return iter([])
-        
-        if self.plotfacet and self.plotfacet not in wi.result.conditions:
-            raise util.CytoflowViewError("Plot facet {0} not in the experiment"
-                                    .format(self.huefacet))
-        values = np.sort(pd.unique(wi.result[self.plotfacet]))
-        return IterWrapper(iter(values), [self.plotfacet])
+    view_params_view = \
+        View(Item('plot_params',
+                  editor = InstanceHandlerEditor(view = 'view_params_view',
+                                                 handler_factory = Histogram2DParamsHandler),
+                  style = 'custom',
+                  show_label = False))
 
-    
-    def plot(self, experiment, plot_name = None, **kwargs):
-        
-        if experiment is None:
-            raise util.CytoflowViewError("No experiment specified")
-        
-        if self.plotfacet and plot_name is not None:
-            experiment = experiment.subset(self.plotfacet, plot_name)
 
-        Histogram2DView.plot(self, experiment, **kwargs)
-        
-        if self.plotfacet and plot_name is not None:
-            plt.title("{0} = {1}".format(self.plotfacet, plot_name))
-            
-    def get_notebook_code(self, idx):
-        view = Histogram2DView()
-        view.copy_traits(self, view.copyable_trait_names())\
-        
-        plot_params_str = traits_str(self.plot_params)
-
-        return dedent("""
-        {repr}.plot(ex_{idx}{plot}{plot_params})
-        """
-        .format(repr = repr(view),
-                idx = idx,
-                plot = ", plot_name = " + repr(self.current_plot) if self.plot_names else "",
-                plot_params = ", " + plot_params_str if plot_params_str else ""))
 
 @provides(IViewPlugin)
 class Histogram2DPlugin(Plugin, PluginHelpMixin):
@@ -222,7 +176,13 @@ class Histogram2DPlugin(Plugin, PluginHelpMixin):
     short_name = "2D Histogram"
 
     def get_view(self):
-        return Histogram2DPluginView()
+        return Histogram2DWorkflowView()
+    
+    def get_handler(self, model, context):
+        if isinstance(model, Histogram2DWorkflowView):
+            return Histogram2DHandler(model = model, context = context)
+        elif isinstance(model, Histogram2DPlotParams):
+            return Histogram2DParamsHandler(model = model, context = context)
     
     def get_icon(self):
         return ImageResource('histogram_2d')
@@ -231,70 +191,4 @@ class Histogram2DPlugin(Plugin, PluginHelpMixin):
     def get_plugin(self):
         return self
         
-### Serialization
-@camel_registry.dumper(Histogram2DPluginView, '2d-histogram', version = 2)
-def _dump(view):
-    return dict(xchannel = view.xchannel,
-                xscale = view.xscale,
-                ychannel = view.ychannel,
-                yscale = view.yscale,
-                xfacet = view.xfacet,
-                yfacet = view.yfacet,
-                huefacet = view.huefacet,
-                huescale = view.huescale,
-                plotfacet = view.plotfacet,
-                subset_list = view.subset_list,
-                plot_params = view.plot_params,
-                current_plot = view.current_plot)
-    
-@camel_registry.dumper(Histogram2DPluginView, '2d-histogram', version = 1)
-def _dump_v1(view):
-    return dict(xchannel = view.xchannel,
-                xscale = view.xscale,
-                ychannel = view.ychannel,
-                yscale = view.yscale,
-                xfacet = view.xfacet,
-                yfacet = view.yfacet,
-                huefacet = view.huefacet,
-                huescale = view.huescale,
-                plotfacet = view.plotfacet,
-                subset_list = view.subset_list)
-    
-    
-@camel_registry.dumper(Histogram2DParams, '2d-histogram-params', version = 1)
-def _dump_params(params):
-    return dict(
-                # BasePlotParams
-                title = params.title,
-                xlabel = params.xlabel,
-                ylabel = params.ylabel,
-                huelabel = params.huelabel,
-                col_wrap = params.col_wrap,
-                sns_style = params.sns_style,
-                sns_context = params.sns_context,
-                legend = params.legend,
-                sharex = params.sharex,
-                sharey = params.sharey,
-                despine = params.despine,
 
-                # DataplotParams
-                min_quantile = params.min_quantile,
-                max_quantile = params.max_quantile,
-                
-                # Data2DPlotParams
-                xlim = params.xlim,
-                ylim = params.ylim,
-                
-                # 2D Histogram params
-                gridsize = params.gridsize,
-                smoothed = params.smoothed,
-                smoothed_sigma = params.smoothed_sigma )
-
-@camel_registry.loader('2d-histogram', version = any)
-def _load(data, version):
-    return Histogram2DPluginView(**data)
-    
-@camel_registry.loader('2d-histogram-params', version = any)
-def _load_params(data, version):
-    return Histogram2DParams(**data)
-    

@@ -189,18 +189,18 @@ def run_gui():
                                         #PCAPlugin)
     
     from cytoflowgui.view_plugins import (HistogramPlugin, 
-                                          #Histogram2DPlugin, 
+                                          Histogram2DPlugin, 
                                           ScatterplotPlugin,
                                           #BarChartPlugin, 
                                           #Stats1DPlugin, 
                                           Kde1DPlugin, 
-                                          #Kde2DPlugin,
+                                          Kde2DPlugin,
                                           ViolinPlotPlugin,
                                           #TablePlugin, 
                                           #Stats2DPlugin, 
-                                          DensityPlugin)
+                                          DensityPlugin,
                                           #ParallelCoordinatesPlugin, 
-                                          #RadvizPlugin)
+                                          RadvizPlugin)
 
     plugins = [CorePlugin(), TasksPlugin(), FlowTaskPlugin()]#, TASBETaskPlugin(),
                #ExportFigurePlugin()]    
@@ -208,11 +208,11 @@ def run_gui():
     # ordered as we want them to show up in the toolbar    
     view_plugins = [HistogramPlugin(),
                     ScatterplotPlugin(),
-#                     Histogram2DPlugin(),
+                    Histogram2DPlugin(),
                     DensityPlugin(),
                     Kde1DPlugin(),
-#                     Kde2DPlugin(),
-#                     RadvizPlugin(),
+                    Kde2DPlugin(),
+                    RadvizPlugin(),
 #                     ParallelCoordinatesPlugin(),
                     ViolinPlotPlugin()]
 #                     BarChartPlugin(),

@@ -40,7 +40,7 @@ class IWorkflowView(IView):
     
     # override the base class's "subset" with one that is dynamically generated /
     # updated from subset_list
-    subset = Property(Str, depends_on = "subset_list.str")
+    subset = Property(Str, observe = "subset_list.items.str")
     subset_list = List(ISubset)
     
     # an all-purpose "this thing changed" event
@@ -100,10 +100,10 @@ class WorkflowView(HasStrictTraits):
     subset = Property(Str, observe = "subset_list.items.str")
     subset_list = List(ISubset)
     
-    # an all-purpose "this thing changed" event
+    # an all-purpose "this thing changed" event, 
+    # observed in workflow.{Local,Remote}Workflow._on_view_changed
     # set it to the name of the trait that changed
     changed = Event
-    
         
     def should_plot(self, changed, payload):
         """
@@ -119,7 +119,6 @@ class WorkflowView(HasStrictTraits):
         """
         return True
     
-    
     def enum_plots(self, experiment):
         if not self.plotfacet:
             return IterWrapper(iter([]), [])
@@ -129,7 +128,6 @@ class WorkflowView(HasStrictTraits):
                                     .format(self.huefacet))
         values = natsort.natsorted(pd.unique(experiment[self.plotfacet]))
         return IterWrapper(iter(values), [self.plotfacet])
-    
     
     def plot(self, experiment, **kwargs):
         """
@@ -145,7 +143,6 @@ class WorkflowView(HasStrictTraits):
             experiment = experiment.subset(self.plotfacet, self.current_plot)
  
         super().plot(experiment, **kwargs)
-        
     
     # this makes sure that LocalWorkflow._view_changed notices when
     # a plot parameter changes.
