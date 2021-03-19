@@ -199,7 +199,7 @@ def run_gui():
                                           #TablePlugin, 
                                           #Stats2DPlugin, 
                                           DensityPlugin,
-                                          #ParallelCoordinatesPlugin, 
+                                          ParallelCoordinatesPlugin,
                                           RadvizPlugin)
 
     plugins = [CorePlugin(), TasksPlugin(), FlowTaskPlugin()]#, TASBETaskPlugin(),
@@ -213,7 +213,7 @@ def run_gui():
                     Kde1DPlugin(),
                     Kde2DPlugin(),
                     RadvizPlugin(),
-#                     ParallelCoordinatesPlugin(),
+                    ParallelCoordinatesPlugin(),
                     ViolinPlotPlugin()]
 #                     BarChartPlugin(),
 #                     Stats1DPlugin(),
