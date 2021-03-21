@@ -76,7 +76,9 @@ dimensions.  Good for looking for clusters.
                                 huefacet = 'Dox').plot(ex)
 '''
 
-from traits.api import provides, Event
+from natsort import natsorted
+
+from traits.api import provides, Event, Property, List, Str
 from traitsui.api import View, Item, EnumEditor, VGroup, HGroup, TextEditor, Controller, ButtonEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
@@ -103,7 +105,7 @@ class RadvizParamsHandler(Controller):
 
 class ChannelHandler(Controller):
     channel_view = View(HGroup(Item('channel',
-                                    editor = EnumEditor(name = 'context_handler.context.channels')),
+                                    editor = EnumEditor(name = 'context_handler.channels')),
                                Item('scale')))
     
 
@@ -111,6 +113,7 @@ class RadvizHandler(ViewHandler):
     
     add_channel = Event
     remove_channel = Event
+    channels = Property(List(Str), observe = 'context.channels')
 
     view_traits_view = \
         View(VGroup(
@@ -128,28 +131,28 @@ class RadvizHandler(ViewHandler):
                                                label = "Remove a channel")),
                     show_labels = False),
              VGroup(Item('xfacet',
-                         editor=ExtendableEnumEditor(name='handler.conditions_names',
+                         editor=ExtendableEnumEditor(name='context_handler.conditions_names',
                                                      extra_items = {"None" : ""}),
                          label = "Horizontal\nFacet"),
                     Item('yfacet',
-                         editor=ExtendableEnumEditor(name='handler.conditions_names',
+                         editor=ExtendableEnumEditor(name='context_handler.conditions_names',
                                                      extra_items = {"None" : ""}),
                          label = "Vertical\nFacet"),
                     Item('huefacet',
-                         editor=ExtendableEnumEditor(name='handler.conditions_names',
+                         editor=ExtendableEnumEditor(name='context_handler.conditions_names',
                                                      extra_items = {"None" : ""}),
                          label = "Color\nFacet"),
                     Item('huescale',
                          label = "Color\nScale"),
                     Item('plotfacet',
-                         editor=ExtendableEnumEditor(name='handler.conditions_names',
+                         editor=ExtendableEnumEditor(name='context_handler.conditions_names',
                                                      extra_items = {"None" : ""}),
                          label = "Tab\nFacet"),
                     label = "Radviz plot",
                     show_border = False),
              VGroup(Item('subset_list',
                          show_label = False,
-                         editor = SubsetListEditor(conditions = "context.conditions",
+                         editor = SubsetListEditor(conditions = "context_handler.conditions",
                                                    editor = InstanceHandlerEditor(view = 'subset_view',
                                                                                   handler_factory = subset_handler_factory),
                                                    mutable = False)),
@@ -182,10 +185,12 @@ class RadvizHandler(ViewHandler):
     def _remove_channel_fired(self):
         if self.model.channels_list:
             self.model.channels_list.pop()   
-            
-    def channel_traits_view(self):
-        return 
 
+    def _get_channels(self):
+        if self.context and self.context.channels:
+            return natsorted(self.context.channels)
+        else:
+            return []
 
 @provides(IViewPlugin)
 class RadvizPlugin(Plugin, PluginHelpMixin):

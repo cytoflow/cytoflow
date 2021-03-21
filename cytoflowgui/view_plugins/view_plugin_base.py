@@ -6,11 +6,10 @@ Created on Jan 16, 2021
 
 import os
 
-from traits.api import HasTraits, on_trait_change, Property, HTML, Instance
+from traits.api import HasTraits, observe, HTML, Instance
 from traitsui.api import View, Item, HGroup, TextEditor, Controller, TupleEditor
 from pyface.qt import QtGui
 
-import cytoflow.utility as util
 from cytoflowgui.editors import TabListEditor
 
 class PluginHelpMixin(HasTraits):
@@ -69,11 +68,6 @@ class ViewHandler(Controller):
      
     context = Instance('cytoflowgui.workflow.workflow_item.WorkflowItem')
     
-    conditions_names = Property(depends_on = "context.conditions")
-    previous_conditions_names = Property(depends_on = "context.previous_wi.conditions")
-    statistics_names = Property(depends_on = "context.statistics")
-    numeric_statistics_names = Property(depends_on = "context.statistics")
-        
     # the view for the current plot (tab editor at the top of the plot window)
     view_plot_name_view = \
         View(HGroup(Item('context.plot_names_label',
@@ -84,40 +78,9 @@ class ViewHandler(Controller):
                          editor = TabListEditor(name = 'context.plot_names'),
                          style = 'custom',
                          show_label = False)))
-    
-    # MAGIC: gets value for property "conditions_names"
-    def _get_conditions_names(self):
-        if self.context and self.context.conditions:
-            return sorted(list(self.context.conditions.keys()))
-        else:
-            return []
-    
-    # MAGIC: gets value for property "previous_conditions_names"
-    def _get_previous_conditions_names(self):
-        if self.context and self.context.previous_wi and self.context.previous_wi.conditions:
-            return sorted(list(self.context.previous_wi.conditions.keys()))
-        else:
-            return []
-        
-    # MAGIC: gets value for property "statistics_names"
-    def _get_statistics_names(self):
-        if self.context and self.context.statistics:
-            return sorted(list(self.context.statistics.keys()))
-        else:
-            return []
 
-    # MAGIC: gets value for property "numeric_statistics_names"
-    def _get_numeric_statistics_names(self):
-        if self.context and self.context.statistics:
-            return sorted([x for x in list(self.context.statistics.keys())
-                                 if util.is_numeric(self.context.statistics[x])])
-        else:
-            return []
-
-    @on_trait_change('context.view_error_trait', 
-                     dispatch = 'ui', 
-                     post_init = True)
-    def _view_trait_error(self):
+    @observe('context.view_error_trait', dispatch = 'ui', post_init = True)
+    def _view_trait_error(self, _):
         
         # check if we're getting called on the local or remote process
         if self.info is None or self.info.ui is None:

@@ -24,10 +24,13 @@ Created on Mar 15, 2015
 '''
 
 import logging
+from natsort import natsorted
 
-from traits.api import List, DelegatesTo, Dict, observe, Property, cached_property
+from traits.api import List, DelegatesTo, Dict, observe, Property
 from traitsui.api import View, Item, Controller, Spring
 from pyface.qt import QtGui
+
+import cytoflow.utility as util
 
 from .workflow import WorkflowItem
 from .editors import InstanceHandlerEditor
@@ -48,7 +51,19 @@ class WorkflowItemHandler(Controller):
     # plugin lists
     op_plugins = List
     view_plugins = List
+    
+    conditions = Property(observe = 'model.conditions')
+    conditions_names = Property(observe = "model.conditions")
+    previous_conditions = Property(observe = "model.previous_wi.conditions")
+    previous_conditions_names = Property(observe = "model.previous_wi.conditions")
+    statistics_names = Property(observe = "model.statistics")
+    numeric_statistics_names = Property(observe = "model.statistics")
+    previous_statistics_names = Property(observe = "model.previous_wi.statistics")
+    channels = Property(observe = "model.channels")
+    previous_channels = Property(observe = "model.previous_wi.channels")
 
+
+    ###### VIEWS
     # the view on that handler        
     def operation_traits_view(self):
         return View(Item('operation',
@@ -58,7 +73,6 @@ class WorkflowItemHandler(Controller):
                          show_label = False),
                     handler = self)
 
-    
     # the view for the view traits
     def view_traits_view(self):     
         return View(Item('current_view',
@@ -68,7 +82,6 @@ class WorkflowItemHandler(Controller):
                          show_label = False),
                     handler = self)
         
-    
     # the view for the view params
     def view_params_view(self):
         return View(Item('current_view',
@@ -77,7 +90,6 @@ class WorkflowItemHandler(Controller):
                          style = 'custom',
                          show_label = False),
                     handler = self)
-        
         
     # the view for the tab bar at the top of the plot
     def view_plot_name_view(self):
@@ -88,16 +100,25 @@ class WorkflowItemHandler(Controller):
                          show_label = False),
                     handler = self)
         
+    def _get_operation_handler(self, op):
+        op_plugin = next((x for x in self.op_plugins if op.id == x.operation_id))
+        return op_plugin.get_handler(model = op, context = self.model)
+    
+    def _get_view_handler(self, view):
+        view_plugin = next((x for x in self.view_plugins if view.id == x.view_id))
+        return view_plugin.get_handler(model = view,
+                                       context = self.model)
 
-    @cached_property
+
+    ##### PROPERTIES
+    # MAGIC: gets value for property "deletable"
     def _get_deletable(self):
         if self.model.operation.id == 'edu.mit.synbio.cytoflow.operations.import':
             return False
         else:
             return True
         
-           
-    @cached_property
+    # MAGIC: gets value for property "icon"
     def _get_icon(self):
         if self.model.status == "valid":
             return QtGui.QStyle.SP_DialogApplyButton  # @UndefinedVariable
@@ -106,34 +127,69 @@ class WorkflowItemHandler(Controller):
         else: # self.model.status == "invalid" or None
             return QtGui.QStyle.SP_DialogCancelButton  # @UndefinedVariable
         
+    # MAGIC: gets value for property "conditions"
+    def _get_conditions(self):
+        if self.model and self.model.conditions:
+            return self.model.conditions
+        else:
+            return {}
         
-    def _get_operation_handler(self, op):
-        op_plugin = next((x for x in self.op_plugins if op.id == x.operation_id))
-        return op_plugin.get_handler(model = op, context = self.model)
+    # MAGIC: gets value for property "conditions_names"
+    def _get_conditions_names(self):
+        if self.model and self.model.conditions:
+            return natsorted(list(self.model.conditions.keys()))
+        else:
+            return []
+
+    # MAGIC: gets value for property "previous_conditions_names"
+    def _get_previous_conditions(self):
+        if self.model and self.model.previous_wi and self.model.previous_wi.conditions:
+            return self.model.previous_wi.conditions
+        else:
+            return {}
     
+    # MAGIC: gets value for property "previous_conditions_names"
+    def _get_previous_conditions_names(self):
+        if self.model and self.model.previous_wi and self.model.previous_wi.conditions:
+            return natsorted(list(self.model.previous_wi.conditions.keys()))
+        else:
+            return []
         
-    def _get_view_handler(self, view):
-        view_plugin = next((x for x in self.view_plugins if view.id == x.view_id))
-        return view_plugin.get_handler(model = view,
-                                       context = self.model)
+    # MAGIC: gets value for property "statistics_names"
+    def _get_statistics_names(self):
+        if self.model and self.model.statistics:
+            return natsorted(list(self.model.statistics.keys()))
+        else:
+            return []
         
+    # MAGIC: gets value for property "numeric_statistics_names"
+    def _get_numeric_statistics_names(self):
+        if self.context and self.model.statistics:
+            return sorted([x for x in list(self.model.statistics.keys())
+                                 if util.is_numeric(self.model.statistics[x])])
+        else:
+            return []
         
-#         
-#     @cached_property
-#     def _get_operation_handler(self):
-#         op_plugin = next((x for x in self.op_plugins if self.model.operation.id == x.operation_id))
-#         return op_plugin.get_handler(model = self.model.operation,
-#                                      context = self.model)
-# 
-#      
-#     @cached_property
-#     def _get_current_view_handler(self):
-#         if self.current_view:
-#             view_plugin = next((x for x in self.view_plugins if self.model.current_view.id == x.view_id))
-#             return view_plugin.get_view_handler(model = self.model.current_view,
-#                                                 context = self.model)
-#         else:
-#             return None
+    # MAGIC: gets value for property "previous_statistics_names"
+    def _get_previous_statistics_names(self):
+        if self.model and self.model.previous_wi and self.model.previous_wi.statistics:
+            return natsorted(list(self.model.previous_wi.statistics.keys()))
+        else:
+            return [] 
+        
+    # MAGIC: gets value for property "channels"
+    def _get_channels(self):
+        if self.model and self.model.channels:
+            return natsorted(self.model.channels)
+        else:
+            return []
+        
+    # MAGIC: gets value for property "previous_channels"
+    def _get_previous_channels(self):
+        if self.model and self.model.previous_wi and self.model.previous_wi.channels:
+            return natsorted(self.model.previous_wi.channels)
+        else:
+            return [] 
 
 
 class WorkflowController(Controller):
@@ -217,7 +273,7 @@ class WorkflowController(Controller):
         
         # figure out where to add it
         if self.model.selected:
-            idx = self.model.workflow.index(self.selected) + 1
+            idx = self.model.workflow.index(self.model.selected) + 1
         else:
             idx = len(self.model.workflow)
               

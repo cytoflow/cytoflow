@@ -155,12 +155,10 @@ class WorkflowView(HasStrictTraits):
     def _on_subset_changed(self, _):
         self.changed = 'subset_list'
         
-
     # MAGIC - returns the value of the "subset" Property, above
     def _get_subset(self):
         return " and ".join([subset.str for subset in self.subset_list if subset.str])
             
-
     def get_notebook_code(self, idx):
         raise NotImplementedError("get_notebook_code is unimplemented for {id}"
                                   .format(id = self.id))
