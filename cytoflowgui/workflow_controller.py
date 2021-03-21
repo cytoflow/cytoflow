@@ -62,7 +62,6 @@ class WorkflowItemHandler(Controller):
     channels = Property(observe = "model.channels")
     previous_channels = Property(observe = "model.previous_wi.channels")
 
-
     ###### VIEWS
     # the view on that handler        
     def operation_traits_view(self):
@@ -164,7 +163,7 @@ class WorkflowItemHandler(Controller):
         
     # MAGIC: gets value for property "numeric_statistics_names"
     def _get_numeric_statistics_names(self):
-        if self.context and self.model.statistics:
+        if self.model and self.model.statistics:
             return sorted([x for x in list(self.model.statistics.keys())
                                  if util.is_numeric(self.model.statistics[x])])
         else:

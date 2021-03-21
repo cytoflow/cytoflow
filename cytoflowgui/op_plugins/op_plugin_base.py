@@ -5,9 +5,9 @@ Created on Jan 17, 2021
 '''
 
 import os
-from natsort import natsorted
+from pyface.qt import QtGui
 
-from traits.api import HasTraits, HTML, Property, Event, Instance, observe
+from traits.api import HasTraits, HTML, Instance, observe
 from traitsui.api import Group, Item, Controller
 
 from cytoflowgui.workflow import WorkflowItem
@@ -18,12 +18,7 @@ class OpHandler(Controller):
     Base class for operation handlers.
     """
     context = Instance(WorkflowItem)
-        
-    conditions_names = Property(depends_on = "context.conditions")
-    previous_conditions_names = Property(depends_on = "context.previous_wi.conditions")
-    statistics_names = Property(depends_on = "context.statistics")
-    previous_statistics_names = Property(depends_on = "context.previous_wi.statistics")
-        
+
     # the default traits view
     def default_traits_view(self):
         """
@@ -36,36 +31,6 @@ class OpHandler(Controller):
         """
         
         raise NotImplementedError("Op handlers must override 'default_traits_view")
-
-    
-    # MAGIC: gets value for property "conditions_names"
-    def _get_conditions_names(self):
-        if self.model and self.model.conditions:
-            return natsorted(list(self.context.conditions.keys()))
-        else:
-            return []
-    
-    # MAGIC: gets value for property "previous_conditions_names"
-    def _get_previous_conditions_names(self):
-        if self.context and self.context.previous_wi and self.context.previous_wi.conditions:
-            return natsorted(list(self.context.previous_wi.conditions.keys()))
-        else:
-            return []
-        
-    # MAGIC: gets value for property "statistics_names"
-    def _get_statistics_names(self):
-        if self.context and self.context.statistics:
-            return natsorted(list(self.context.statistics.keys()))
-        else:
-            return []
-        
-    # MAGIC: gets value for property "previous_statistics_names"
-    def _get_previous_statistics_names(self):
-        if self.context and self.context.previous_wi and self.context.previous_wi.statistics:
-            return natsorted(list(self.context.previous_wi.statistics.keys()))
-        else:
-            return []
-        
         
     @observe('context.op_error_trait', dispatch = 'ui', post_init = True)
     def _op_trait_error(self, event):

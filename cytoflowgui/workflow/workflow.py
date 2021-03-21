@@ -111,7 +111,6 @@ from queue import Queue, PriorityQueue
 
 from traits.api import (HasStrictTraits, Int, Bool, Instance, Any, List,
                         observe, ComparisonMode)
-from traits.observation.api import match, parse
 
 import matplotlib.pyplot as plt
 import cytoflowgui.matplotlib_backend_remote
@@ -475,9 +474,16 @@ class LocalWorkflow(HasStrictTraits):
     def _on_operation_changed(self, event):
         logger.debug("LocalWorkflow._operation_changed :: {}".format(event))
         
+        if event.name == 'changed':
+            trait_name = event.new
+        else:
+            trait_name = event.name
+        
         wi = next((x for x in self.workflow if x.operation is event.object))
         idx = self.workflow.index(wi)
-        self.message_q.put((Msg.UPDATE_OP, (idx, event.name, event.new)))
+        new_value = event.object.trait_get(trait_name)[trait_name]
+
+        self.message_q.put((Msg.UPDATE_OP, (idx, trait_name, new_value)))
         self.modified = True
         
         
@@ -505,7 +511,6 @@ class LocalWorkflow(HasStrictTraits):
 
         wi = next((x for x in self.workflow if event.object in x.views))
         idx = self.workflow.index(wi)
-            
         new_value = event.object.trait_get(trait_name)[trait_name]
             
         self.message_q.put((Msg.UPDATE_VIEW, (idx, event.object.id, trait_name, new_value)))
@@ -969,8 +974,8 @@ class RemoteWorkflow(HasStrictTraits):
     def _on_prev_result_changed(self, event):
         logger.debug("RemoteWorkflow._prev_result_changed :: {}".format(event))  
         
-        wi = next((x for x in self.workflow if event.object is x.previous_wi))
-        idx = self.worlflow.index(wi)
+        wi = event.object
+        idx = self.workflow.index(wi)
         
         if wi.operation.should_clear_estimate(Changed.PREV_RESULT, None):
             wi.operation.clear_estimate()

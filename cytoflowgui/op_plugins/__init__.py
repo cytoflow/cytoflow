@@ -32,7 +32,7 @@ from .import_op import ImportPlugin
 # from .binning import BinningPlugin
 # from .gaussian_1d import GaussianMixture1DPlugin
 # from .gaussian_2d import GaussianMixture2DPlugin
-# from .channel_stat import ChannelStatisticPlugin
+from .channel_stat import ChannelStatisticPlugin
 # from .xform_stat import TransformStatisticPlugin
 # from .density import DensityGatePlugin
 # from .flowpeaks import FlowPeaksPlugin

@@ -166,7 +166,7 @@ def run_gui():
     from cytoflowgui.cytoflow_application import CytoflowApplication
     #from cytoflowgui.op_plugins.import_op import ImportPlugin
     #from cytoflowgui.op_plugins.threshold import ThresholdPlugin
-    from cytoflowgui.op_plugins import ImportPlugin 
+    from cytoflowgui.op_plugins import (ImportPlugin, 
                                         #ThresholdPlugin) 
                                         #RangePlugin, 
                                         #QuadPlugin,
@@ -180,7 +180,7 @@ def run_gui():
                                         #AutofluorescencePlugin,
                                         #ColorTranslationPlugin, 
                                         #TasbePlugin, 
-                                        #ChannelStatisticPlugin, 
+                                        ChannelStatisticPlugin)
                                         #TransformStatisticPlugin, 
                                         #RatioPlugin, 
                                         #DensityGatePlugin, 
@@ -222,14 +222,14 @@ def run_gui():
     
     plugins.extend(view_plugins)
     
-    op_plugins = [ImportPlugin()]
+    op_plugins = [ImportPlugin(),
                   #ThresholdPlugin()]
                   #RangePlugin(),
                   #QuadPlugin(),
                   #Range2DPlugin(),
                   #PolygonPlugin(),
                   #RatioPlugin(),
-                  #ChannelStatisticPlugin(),
+                  ChannelStatisticPlugin()]
                   #TransformStatisticPlugin(),
                   #BinningPlugin(),
                   #GaussianMixture1DPlugin(),

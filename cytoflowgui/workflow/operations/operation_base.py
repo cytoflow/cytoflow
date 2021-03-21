@@ -113,6 +113,10 @@ class WorkflowOperation(HasStrictTraits):
     # causes this operation's estimate() function to be called. observed in LocalWorkflow.
     do_estimate = Event
     
+    # an all-purpose "this thing changed" event
+    # set it to the name of the trait that changed
+    changed = Event
+    
     def should_apply(self, changed, payload):
         return True
 
