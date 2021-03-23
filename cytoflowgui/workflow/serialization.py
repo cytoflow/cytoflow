@@ -118,15 +118,27 @@ def _load_categorical_dtype(data, version):
                             ordered = data['ordered'])
 
 @camel_registry.dumper(pandas.MultiIndex, 'pandas-multiindex', version = 1)
-def _dump_multiindex(d):
+def _dump_multiindex_v1(d):
     return dict(levels = list(d.levels),
-                labels = [x.tolist() for x in d.labels],
+                labels = [x.tolist() for x in d.codes],
+                names = list(d.names))
+    
+@camel_registry.dumper(pandas.MultiIndex, 'pandas-multiindex', version = 2)
+def _dump_multiindex_v2(d):
+    return dict(levels = list(d.levels),
+                codes = [x.tolist() for x in d.codes],
                 names = list(d.names))
 
 @camel_registry.loader('pandas-multiindex', version = 1)
-def _load_multiindex(data, version):
+def _load_multiindex_v1(data, version):
     return pandas.MultiIndex(levels = data['levels'],
-                             labels = data['labels'],
+                             codes = data['labels'],
+                             names = data['names'])
+    
+@camel_registry.loader('pandas-multiindex', version = 2)
+def _load_multiindex_v2(data, version):
+    return pandas.MultiIndex(levels = data['levels'],
+                             codes = data['codes'],
                              names = data['names'])
 
 @camel_registry.dumper(pandas.Int64Index, 'pandas-int64index', version = 1)
