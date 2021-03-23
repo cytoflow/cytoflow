@@ -1,15 +1,14 @@
-.. _01_quickstart:
+.. _user_quickstart:
 
-**********
 Quickstart
-**********
+==========
 
 *Welcome to Cytoflow!*  This document will demonstrate importing
 some data and running a very basic analysis using the GUI.  It
 follows the same analysis as the `introductory Jupyter notebook`_
 and should help you get started with the following steps:
 
-.. _introductory Jupyter notebook: https://github.com/cytoflow/cytoflow/blob/master/docs/examples-basic/Basic%20Cytometry.ipynb
+.. _introductory Jupyter notebook: https://github.com/bpteague/cytoflow/blob/master/docs/examples-basic/Basic%20Cytometry.ipynb
 
 * Importing data
 * Basic visualizations
@@ -18,12 +17,12 @@ and should help you get started with the following steps:
 
 If you'd like to follow along, you can do so by downloading one of the
 **cytoflow-#####-examples-basic.zip** files from the 
-`Cytoflow releases page <https://github.com/cytoflow/cytoflow/releases>` 
+`Cytoflow releases page <https://github.com/bpteague/cytoflow/releases>`_
 on GitHub.
 
 
 Importing data
-==============
+--------------
 
 Start the software.  The left panel is the "workflow" panel, and
 upon startup has a single operation named **Import Data**.  Click
@@ -80,7 +79,7 @@ import the data.  Note that the red stop-sign on the module header
 changes to a green check-mark to show that the operation succeeded.
 
 Basic plotting
-==============
+--------------
 
 .. image:: images/01_09_import.png
 
@@ -120,13 +119,14 @@ that **you must change Vertical Facet back to "None" as well.**
 .. image:: images/01_14_color_facet.png
 
 Basic gating
-============
+------------
 
 So there's a clear difference between the two tubes: one has a substantial
 population above ~200 in the Y2-A channel and the other doesn't.  What
 is the proportion of "high" cell in each tube?  To count these two
-populations, we first have to gate them out.  Let's use a threshold gate.
-First, make one by choosing the threshold gate on the operations toolbar:
+populations, we first have to use a gate to separate them.  Let's use a 
+threshold gate.  First, make one by choosing the threshold gate on the 
+operations toolbar:
 
 .. image:: images/01_15_threshold.png
 
@@ -147,17 +147,17 @@ major label.)
 When you created a new Threshold gate, *you added a new condition to
 the data set.*  This condition is *exactly like the "Dox" condition you
 set up when you imported your data.*  That is, now there are some events
-that are (Dox = 1 and T = True), some events that are 
-(Dox = 1 and T = False), some events that are (Dox = 10 and T = True), 
-and some events that are (Dox = 10 and T = False).
+that are ``Dox = 1 and T = True``, some events that are 
+``Dox = 1 and T = False``, some events that are ``Dox = 10 and T = True``, 
+and some events that are ``Dox = 10 and T = False``.
 
 You can get a good feel for this if you make a new Histogram.  Set
 the histogram parameters as follows:
 
-* Channel = "Y2_A"
-* Scale = "logicle"
-* Vertical Facet = "Dox"
-* Color Facet = "T"
+* ``Channel = "Y2_A"``
+* ``Scale = "logicle"``
+* ``Vertical Facet = "Dox"``
+* ``Color Facet = "T"``
 
 .. image:: images/01_18_threshold_histogram.png
 
@@ -169,7 +169,7 @@ are comfortable with what does what.  Also poke at the "subset" controls.
 (Don't worry, you won't break anything!)
 
 Basic statistics
-================
+----------------
 
 Cytoflow's reason for existing is to let you do quantitative flow
 cytometry.  So lets quanitate those populations -- how many events are
@@ -226,7 +226,7 @@ events were below the threshold (T = False, in blue) vs how many
 were above it (T = True, in orange.)
 
 Export the plot
-===============
+---------------
 
 I like to think that Cytoflow's graphics are nice-looking.  Possibly
 nice enough to publish!  (Also, if you publish using Cytoflow, please

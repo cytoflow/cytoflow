@@ -1,4 +1,4 @@
-.. _install:
+.. _dev_install:
 
 Installation notes
 ==================
@@ -180,4 +180,3 @@ There are one-click bundles available at http://cytoflow.github.io/
 Alternately, you can follow the instructions above for installing the 
 Anaconda package, then run ``cytoflow`` through the Anaconda Navigator or
 via the command line.
-

@@ -1,4 +1,10 @@
-.. _design:
+.. _dev_design:
+
+Design Guide
+============
+
+This document explains how Cytoflow is laid out and the justifications for some
+of the design decisions.
 
 Project Structure
 -----------------
@@ -147,6 +153,6 @@ Design decisions & justifications
   various ways by its facets: for example, each timepoint might be put on its
   own subplot, while each Dox level might be represented by a different color.
   (Check out `the example Jupyter notebook
-  <https://github.com/cytoflow/cytoflow/blob/master/docs/examples-basic/Basic%20Cytometry.ipynb>`_
+  <https://github.com/bpteague/cytoflow/blob/master/docs/examples-basic/Basic%20Cytometry.ipynb>`_
   if this is confusing.
 

@@ -1,3 +1,6 @@
+.. _dev_release:
+
+
 ======================
 Spinning a new release
 ======================
@@ -133,4 +136,3 @@ Upload the artifacts and update the homepage
   http://cytoflow.github.io/
   
 - Verify that the download links at http://cytoflow.github.io/ still work!
-
