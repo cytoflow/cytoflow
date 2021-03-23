@@ -48,6 +48,7 @@ class Test(ImportedDataSmallTest):
         
     def testPlot(self):
         self.gate.default_view().plot(self.ex)
+        self.gate.density_view(huescale="log", color="red").plot(self.ex, gridsize=20)
 
 
 if __name__ == "__main__":

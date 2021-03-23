@@ -48,13 +48,14 @@ class PolygonSelector(AxesWidget):
         function is called and passed the vertices of the selected path.
     """
 
-    def __init__(self, ax, callback=None, useblit=True):
+    def __init__(self, ax, callback=None, useblit=True, color="black"):
         AxesWidget.__init__(self, ax)
 
         self.useblit = useblit and self.canvas.supports_blit
         self.verts = []
         self.drawing = False
         self.line = None
+        self.color = color
         self.callback = callback
         self.last_click_time = time.time()
         self.connect_event('button_press_event', self.onpress)
@@ -68,7 +69,7 @@ class PolygonSelector(AxesWidget):
             # start over
             self.background = self.canvas.copy_from_bbox(self.ax.bbox)
             self.verts = [(event.xdata, event.ydata)]
-            self.line = Line2D([event.xdata], [event.ydata], linestyle='-', color='black', lw=1)
+            self.line = Line2D([event.xdata], [event.ydata], linestyle='-', color=self.color, lw=1)
             self.ax.add_line(self.line)
             self.drawing = True
         else:

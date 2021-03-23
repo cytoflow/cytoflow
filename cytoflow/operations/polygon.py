@@ -23,7 +23,7 @@ cytoflow.operations.polygon
 '''
 
 from traits.api import (HasStrictTraits, Str, CStr, List, Float, provides,
-                        Instance, Bool, on_trait_change, Any,
+                        Instance, Bool, on_trait_change, Any, Either,
                         Constant)
 
 import matplotlib as mpl
@@ -31,10 +31,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import cytoflow.utility as util
-from cytoflow.views import ISelectionView, ScatterplotView
+from cytoflow.views import ISelectionView, ScatterplotView, DensityView
 
-from .i_operation import IOperation
-from .base_op_views import Op2DView
+from cytoflow.operations.i_operation import IOperation
+from cytoflow.operations.base_op_views import Op2DView
 
 @provides(IOperation)
 class PolygonOp(HasStrictTraits):
@@ -149,7 +149,10 @@ class PolygonOp(HasStrictTraits):
     xscale = util.ScaleEnum()
     yscale = util.ScaleEnum()
     
-    _selection_view = Instance('PolygonSelection', transient = True)
+    _selection_view = Either(
+        Instance('PolygonSelection', transient = True),
+        Instance('PolygonDensitySelection', transient = True),
+    )
         
     def apply(self, experiment):
         """Applies the threshold to an experiment.
@@ -255,9 +258,14 @@ class PolygonOp(HasStrictTraits):
         self._selection_view = PolygonSelection(op = self)
         self._selection_view.trait_set(**kwargs)
         return self._selection_view
+
+    def density_view(self, **kwargs):
+        self._selection_view = PolygonDensitySelection(op = self)
+        self._selection_view.trait_set(**kwargs)
+        return self._selection_view
     
 @provides(ISelectionView)
-class PolygonSelection(Op2DView, ScatterplotView):
+class PolygonSelectionBase(Op2DView):
     """
     Plots, and lets the user interact with, a 2D polygon selection.
     
@@ -266,6 +274,9 @@ class PolygonSelection(Op2DView, ScatterplotView):
     interactive : bool
         is this view interactive?  Ie, can the user set the polygon verticies
         with mouse clicks?
+
+    color : Str
+        what color should the polygon be drawn with?
         
     Examples
     --------
@@ -287,6 +298,8 @@ class PolygonSelection(Op2DView, ScatterplotView):
 
     interactive = Bool(False, transient = True)
 
+    color = Str("black")
+
     # internal state.
     _ax = Any(transient = True)
     _widget = Instance(util.PolygonSelector, transient = True)
@@ -301,7 +314,7 @@ class PolygonSelection(Op2DView, ScatterplotView):
         
         """
         
-        super(PolygonSelection, self).plot(experiment, **kwargs)
+        super(PolygonSelectionBase, self).plot(experiment, **kwargs)
         self._ax = plt.gca()
         self._draw_poly()
         self._interactive()
@@ -322,7 +335,7 @@ class PolygonSelection(Op2DView, ScatterplotView):
                                     
         self._patch = \
             mpl.patches.PathPatch(mpl.path.Path(patch_vert, closed = True),
-                                  edgecolor="black",
+                                  edgecolor = self.color,
                                   linewidth = 2,
                                   fill = False)
             
@@ -334,16 +347,30 @@ class PolygonSelection(Op2DView, ScatterplotView):
         if self._ax and self.interactive:
             self._widget = util.PolygonSelector(self._ax,
                                                 self._onselect,
-                                                useblit = True)
+                                                useblit = True,
+                                                color = self.color)
         elif self._widget:
             self._widget = None       
     
     def _onselect(self, vertices):
         self.op.vertices = vertices
-    
+
+
+class PolygonSelection(PolygonSelectionBase, ScatterplotView):
+    pass
+
+
 util.expand_class_attributes(PolygonSelection)
-util.expand_method_parameters(PolygonSelection, PolygonSelection.plot)        
-        
+util.expand_method_parameters(PolygonSelection, PolygonSelection.plot)
+
+
+class PolygonDensitySelection(PolygonSelectionBase, DensityView):
+    color = Str("gray")
+
+
+util.expand_class_attributes(PolygonDensitySelection)
+util.expand_method_parameters(PolygonDensitySelection, PolygonDensitySelection.plot)
+
 if __name__ == '__main__':
     import cytoflow as flow
     tube1 = flow.Tube(file = '../../cytoflow/tests/data/Plate01/RFP_Well_A3.fcs',
@@ -352,13 +379,17 @@ if __name__ == '__main__':
     tube2 = flow.Tube(file = '../../cytoflow/tests/data/Plate01/CFP_Well_A4.fcs',
                       conditions = {"Dox" : 1.0})                      
 
-    ex = flow.ImportOp(conditions = {"Dox" : "float"}, tubes = [tube1, tube2])
+    ex = flow.ImportOp(conditions = {"Dox" : "float"}, tubes = [tube1, tube2]).apply()
     
     p = PolygonOp(xchannel = "V2-A",
                   ychannel = "Y2-A")
     v = p.default_view(xscale = "logicle", yscale = "logicle")
-    
     plt.ioff()
     v.plot(ex)
     v.interactive = True
+    plt.show()
+
+    v = p.density_view(interactive = True, xscale = "logicle", yscale = "logicle", huescale = "log")
+    plt.ioff()
+    v.plot(ex, gridsize=200)
     plt.show()
