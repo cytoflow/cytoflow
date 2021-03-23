@@ -25,7 +25,7 @@ Created on Jan 4, 2018
 import unittest, tempfile, os
 
 from cytoflowgui.tests.test_base import ImportedDataTest, Base1DViewTest, params_traits_comparator
-from cytoflowgui.view_plugins.histogram import HistogramPlugin, HistogramPlotParams
+from cytoflowgui.view_plugins.histogram import HistogramPlugin, HistogramPluginView, HistogramPlotParams
 from cytoflowgui.serialization import save_yaml, load_yaml
 
 class TestHistogram(ImportedDataTest, Base1DViewTest):
@@ -80,7 +80,7 @@ class TestHistogram(ImportedDataTest, Base1DViewTest):
         self.workflow.wi_waitfor(self.wi, 'view_error', '')
         
     def testSerialize(self):
-        with params_traits_comparator(HistogramPlotParams):
+        with params_traits_comparator(HistogramPluginView, HistogramPlotParams):
             fh, filename = tempfile.mkstemp()
             try:
                 os.close(fh)
@@ -96,7 +96,7 @@ class TestHistogram(ImportedDataTest, Base1DViewTest):
                                  new_view.trait_get(self.view.copyable_trait_names()))
 
     def testSerializeV1(self):
-        with params_traits_comparator(HistogramPlotParams):
+        with params_traits_comparator(HistogramPluginView, HistogramPlotParams):
             fh, filename = tempfile.mkstemp()
             try:
                 os.close(fh)
