@@ -1,8 +1,8 @@
 .. _dev_manual:
 
-##################
+
 Developers' Manual
-##################
+==================
 
 Hooray!  
 First, install the source code and get a development environment going.

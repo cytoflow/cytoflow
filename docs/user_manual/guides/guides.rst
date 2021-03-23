@@ -1,12 +1,8 @@
 .. _user_guides:
 
 ******************
-Users' guides
+Developers' guides
 ******************
 
-..
-  Multivariate data - facets
-  Statistics - what are they? How do I use them?
-  Which estimate of center should I use?
-  
-  
+Nothing here yet
+
