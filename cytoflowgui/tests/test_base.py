@@ -30,6 +30,11 @@ Created on Jan 4, 2018
 from traits.etsconfig.api import ETSConfig
 ETSConfig.toolkit = 'null'
 
+# even so, sometimes events get dispatched to the UI handler.  
+# make sure they go into a black hole
+from traits.trait_notifiers import set_ui_handler
+set_ui_handler(lambda *x, **y: None)
+
 # use the sphinx autodoc module-mocker to mock out traitsui.qt4
 # because when it's imported, it starts a Qt Application
 
@@ -49,6 +54,7 @@ from cytoflowgui.op_plugins import ImportPlugin, ThresholdPlugin, ChannelStatist
 from cytoflowgui.subset import CategorySubset, RangeSubset
 from cytoflowgui.serialization import traits_eq, traits_hash
 from cytoflowgui.util import CallbackHandler
+
 
 def remote_main(parent_workflow_conn, parent_mpl_conn, log_q, running_event):
     # this should only ever be main method after a spawn() call 
@@ -690,15 +696,17 @@ class Base2DStatisticsViewTest(BaseStatisticsViewTest):
         
 
 class params_traits_comparator(object):
-    def __init__(self, cls):
+    def __init__(self, *cls):
         self.cls = cls
-        self._eq = cls.__eq__
-        self._hash = cls.__hash__
+        self._eq = [c.__eq__ for c in cls] 
+        self._hash = [c.__hash__ for c in cls]
 
     def __enter__(self):
-        self.cls.__eq__ = traits_eq
-        self.cls.__hash__ = traits_hash
+        for c in self.cls:
+            c.__eq__ = traits_eq
+            c.__hash__ = traits_hash
 
     def __exit__(self, *args):
-        self.cls.__eq__ = self._eq
-        self.cls.__hash__ = self._hash
+        for c in self.cls:
+            c.__eq__ = self._eq[self.cls.index(c)]
+            c.__hash__ = self._hash[self.cls.index(c)]
