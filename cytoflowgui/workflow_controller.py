@@ -287,18 +287,22 @@ class WorkflowController(Controller):
     def activate_view(self, view_id):
         # is it the default view?
         if view_id == 'default':
-            self.model.selected.current_view = self.model.selected.default_view
-            return
+            view_id = self.model.selected.default_view.id
         
         # do we already have an instance?
         if view_id in [x.id for x in self.model.selected.views]:
             self.model.selected.current_view = next((x for x in self.model.selected.views
                                                      if x.id == view_id))
+            return
             
         # make a new view instance
-        view_plugin = next((x for x in self.view_plugins
-                            if x.view_id == view_id))
-        view = view_plugin.get_view()
+        if view_id == 'default':
+            view = view_id = self.model.selected.default_view
+        else:
+            view_plugin = next((x for x in self.view_plugins
+                                if x.view_id == view_id))
+            view = view_plugin.get_view()
+            
         self.model.selected.views.append(view)
         self.model.selected.current_view = view
         

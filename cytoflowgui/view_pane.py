@@ -124,6 +124,8 @@ class ViewDockPane(TraitsDockPane):
             self._window.setEnabled(False)
             self.ui.control.setEnabled(False)
             
+            
+    ## TODO make the "settings" button show if there's a default view
 #     @observe('model:selected')
 #     def _selected_changed(self, event):
 #         if event.new is None:
@@ -146,15 +148,21 @@ class ViewDockPane(TraitsDockPane):
 #             
 #         self._default_action.visible = (new_view_id != "")
 #             
-#     @on_trait_change('selected_view')
-#     def _selected_view_changed(self, view_id):         
-#         # untoggle everything on the toolbar
-#         for action in self._actions.values():
-#             action.checked = False
-# 
-#         # toggle the right button
-#         if view_id:
-#             self._actions[view_id].checked = True
+    @observe('model:selected.current_view')
+    def _selected_view_changed(self, event):         
+        # untoggle everything on the toolbar
+        self._default_action.checked = False
+        for action in self._actions.values():
+            action.checked = False
+ 
+        # toggle the right button
+        if self.model.selected and self.model.selected.current_view:
+            view_id = self.model.selected.current_view.id
+            if self.model.selected.default_view and self.model.selected.default_view.id == view_id:
+                self._default_action.checked = True
+            else:
+                self._actions[view_id].checked = True
+
             
 class PlotParamsPane(TraitsDockPane):
     
