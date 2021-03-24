@@ -28,19 +28,39 @@ import os, tempfile, pandas
 from cytoflowgui.tests.test_base import ImportedDataTest, params_traits_comparator
 from cytoflowgui.serialization import load_yaml, save_yaml
 from cytoflowgui.workflow_item import WorkflowItem
-from cytoflowgui.op_plugins.import_op import ImportPluginOp, Tube
-from cytoflowgui.op_plugins.channel_stat import ChannelStatisticPluginOp
+from cytoflowgui.subset import CategorySubset, RangeSubset
+from cytoflowgui.op_plugins.import_op import ImportPluginOp
+from cytoflowgui.op_plugins.channel_stat import ChannelStatisticPlugin, ChannelStatisticPluginOp
 
 class TestWorkflowItem(ImportedDataTest):
     
     def setUp(self):
         super().setUp()
+        
+        stats_plugin = ChannelStatisticPlugin()
 
-        # the last operation in ImportedDataTest.setUp is a ChannelStatistic op
+        stats_op = stats_plugin.get_operation()
+        stats_op.name = "MeanByDoxWell"
+        stats_op.channel = "Y2-A"
+        stats_op.statistic_name = "Geom.Mean"
+        stats_op.by = ['Dox', 'Well']
+        stats_op.subset_list.append(CategorySubset(name = "Well",
+                                                   values = ['A', 'B']))
+        stats_op.subset_list.append(RangeSubset(name = "Dox",
+                                                values = [1.0, 10.0, 100.0]))
+        stats_op.subset_list.append(RangeSubset(name = "IP",
+                                                values = [1.0, 10.0]))
+
+        stats_wi = WorkflowItem(operation = stats_op,
+                                  status = "waiting",
+                                  view_error = "Not yet plotted")
+        self.workflow.workflow.append(stats_wi)
+        self.workflow.wi_waitfor(stats_wi, 'status', 'valid')
+
         self.wi = wi = self.workflow.workflow[-1]
         self.op = self.wi.operation
         self.workflow.selected = wi
-        
+                
     def testSerializeMultiIndexV1(self):
         with params_traits_comparator(WorkflowItem, ImportPluginOp, ChannelStatisticPluginOp):
             fh, filename = tempfile.mkstemp()
