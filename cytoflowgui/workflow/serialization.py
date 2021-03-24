@@ -164,7 +164,7 @@ def _load_float64index(data, version):
 @camel_registry.dumper(pandas.CategoricalIndex, 'pandas-categoricalindex', version = 1)
 def _dump_categoricalindex(d):
     return dict(name = d.name,
-                values = d.get_values().tolist(),
+                values = d.values.tolist(),
                 categories = d.categories.values.tolist(),
                 ordered = d.ordered)
 
