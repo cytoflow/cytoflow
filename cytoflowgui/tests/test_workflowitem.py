@@ -26,7 +26,7 @@ Created on Jan 5, 2018
 import os, tempfile, pandas
 
 from cytoflowgui.tests.test_base import ImportedDataTest, params_traits_comparator
-from cytoflowgui.serialization import load_yaml, save_yaml
+from cytoflowgui.serialization import load_yaml, save_yaml, save_notebook
 from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.subset import CategorySubset, RangeSubset
 from cytoflowgui.op_plugins.import_op import ImportPluginOp
@@ -99,3 +99,16 @@ class TestWorkflowItem(ImportedDataTest):
                 self.assertDictEqual(self.workflow.workflow[i].trait_get(self.workflow.workflow[i].copyable_trait_names(status = lambda t: t is not True)),
                                      new_workflow[i].trait_get(self.workflow.workflow[i].copyable_trait_names(status = lambda t: t is not True)))
              
+             
+    def testSaveNotebook(self):
+        # this is just a smoke test
+        
+        fh, filename = tempfile.mkstemp()
+        try:
+            os.close(fh)
+            
+            save_notebook(self.workflow.workflow, filename)
+            
+        finally:
+            os.unlink(filename)
+            
