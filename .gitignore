@@ -28,3 +28,7 @@
 Logicle_wrap.cpp
 _Logicle.cpython-34m.so
 
+# coverage analysis
+/htmlcov/
+.coverage
+
