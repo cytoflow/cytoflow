@@ -968,29 +968,49 @@ class RemoteWorkflow(HasStrictTraits):
                 and wi.current_view.should_plot(Changed.RESULT, event)):
                 wi.current_view.update_plot_names(wi)
                 self.exec_q.put((idx - 0.1, (wi, wi.plot)))
+                
+            if wi.next_wi:
+                next_wi = wi.next_wi
+                next_idx = self.workflow.index(next_wi)
+                if (next_wi is not None 
+                    and next_wi.operation.should_clear_estimate(Changed.PREV_RESULT, event)):
+                    next_wi.operation.clear_estimate()
+                    
+                if (next_wi is not None
+                    and next_wi.operation.should_apply(Changed.PREV_RESULT, event)):
+                    with next_wi.lock:
+                        next_wi.result = None
+                        next_wi.status = 'invalid'
+                    self.exec_q.put((next_idx, (next_wi, next_wi.apply)))
+                    
+                if (next_wi == self.selected
+                    and next_wi.current_view
+                    and next_wi.current_view.should_plot(Changed.PREV_RESULT, event)):
+                    # FIXME wi.current_view.update_plot_names(wi)
+                    self.exec_q.put((next_idx - 0.1))
              
              
-    @observe('workflow:items:previous_wi.result')
-    def _on_prev_result_changed(self, event):
-        logger.debug("RemoteWorkflow._prev_result_changed :: {}".format(event))  
-        
-        wi = event.object
-        idx = self.workflow.index(wi)
-        
-        if wi.operation.should_clear_estimate(Changed.PREV_RESULT, None):
-            wi.operation.clear_estimate()
-             
-        if wi.operation.should_apply(Changed.PREV_RESULT, event):
-            with wi.lock:
-                wi.result = None
-                wi.status = "invalid"
-            self.exec_q.put((idx, (wi, wi.apply)))
-             
-        if (wi == self.selected 
-            and wi.current_view 
-            and wi.current_view.should_plot(Changed.PREV_RESULT, event)):
-            # FIXME wi.current_view.update_plot_names(wi)
-            self.exec_q.put((idx - 0.1, (wi, wi.plot)))
+#     @observe('workflow:items:previous_wi.result')
+#     def _on_prev_result_changed(self, event):
+#         logger.debug("RemoteWorkflow._prev_result_changed :: {}".format(event))  
+#         
+#         wi = event.object
+#         idx = self.workflow.index(wi)
+#         
+#         if wi.operation.should_clear_estimate(Changed.PREV_RESULT, None):
+#             wi.operation.clear_estimate()
+#              
+#         if wi.operation.should_apply(Changed.PREV_RESULT, event):
+#             with wi.lock:
+#                 wi.result = None
+#                 wi.status = "invalid"
+#             self.exec_q.put((idx, (wi, wi.apply)))
+#              
+#         if (wi == self.selected 
+#             and wi.current_view 
+#             and wi.current_view.should_plot(Changed.PREV_RESULT, event)):
+#             # FIXME wi.current_view.update_plot_names(wi)
+#             self.exec_q.put((idx + 0.1, (wi, wi.plot)))
             
             
     @observe('workflow:items:views:items:+type')

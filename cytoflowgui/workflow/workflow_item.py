@@ -413,6 +413,5 @@ def _load_wi_v3(data, version):
 
 @camel_registry.loader('workflow-item', version = 4)
 def _load_wi(data, version):
-    del data['default_view']
     return WorkflowItem(**data)
 

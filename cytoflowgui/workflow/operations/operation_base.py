@@ -77,7 +77,7 @@ class IWorkflowOperation(IOperation):
             
          - Changed.PREV_RESULT -- the previous :class:`.WorkflowItem`'s result changed    
               
-        If `should_clear_estimate` is called from a notificaiont handler, then `payload` is
+        If `should_clear_estimate` is called from a notificaion handler, then `payload` is
         the `event` object.
          """
     
