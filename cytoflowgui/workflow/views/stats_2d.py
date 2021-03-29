@@ -2,7 +2,7 @@
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,31 +17,33 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
 from textwrap import dedent
 
-from traits.api import provides, Enum, Instance
+from traits.api import provides, Instance, Enum
 
-from cytoflow import ScatterplotView
+from cytoflow import Stats2DView
 import cytoflow.utility as util
 
 from cytoflowgui.workflow.serialization import camel_registry, traits_repr, traits_str
-from .view_base import IWorkflowView, WorkflowView, Data2DPlotParams, SCATTERPLOT_MARKERS
+from .view_base import IWorkflowView, WorkflowView, Stats2DPlotParams, LINE_STYLES, SCATTERPLOT_MARKERS
 
-ScatterplotView.__repr__ = traits_repr
+Stats2DView.__repr__ = traits_repr
 
-class ScatterplotPlotParams(Data2DPlotParams):
 
-    alpha = util.PositiveCFloat(0.25)
-    s = util.PositiveCFloat(2)
+class Stats2DPluginPlotParams(Stats2DPlotParams):
+    linestyle = Enum(LINE_STYLES)
     marker = Enum(SCATTERPLOT_MARKERS)
+    markersize = util.PositiveCFloat(6, allow_zero = False)
+    capsize = util.PositiveCFloat(None, allow_none = True, allow_zero = False)
+    alpha = util.PositiveCFloat(1.0)
+
+
+@provides(IWorkflowView)
+class Stats2DWorkflowView(WorkflowView, Stats2DView):
+    plot_params = Instance(Stats2DPluginPlotParams, ())
     
-@provides(IWorkflowView)    
-class ScatterplotWorkflowView(WorkflowView, ScatterplotView):
-    plot_params = Instance(ScatterplotPlotParams, ())
-            
     def get_notebook_code(self, idx):
-        view = ScatterplotView()
+        view = Stats2DView()
         view.copy_traits(self, view.copyable_trait_names())
         plot_params_str = traits_str(self.plot_params)
 
@@ -52,39 +54,52 @@ class ScatterplotWorkflowView(WorkflowView, ScatterplotView):
                 idx = idx,
                 plot = ", plot_name = " + repr(self.current_plot) if self.plot_names else "",
                 plot_params = ", " + plot_params_str if plot_params_str else ""))
-        
-        
+
 ### Serialization
 
-@camel_registry.dumper(ScatterplotWorkflowView, 'scatterplot', version = 2)
+@camel_registry.dumper(Stats2DWorkflowView, 'stats-2d', version = 2)
 def _dump(view):
-    return dict(xchannel = view.xchannel,
+    return dict(xstatistic = view.xstatistic,
                 xscale = view.xscale,
-                ychannel = view.ychannel,
+                ystatistic = view.ystatistic,
                 yscale = view.yscale,
+                variable = view.variable,
                 xfacet = view.xfacet,
                 yfacet = view.yfacet,
                 huefacet = view.huefacet,
                 huescale = view.huescale,
-                plotfacet = view.plotfacet,
+                x_error_statistic = view.x_error_statistic,
+                y_error_statistic = view.y_error_statistic,
                 subset_list = view.subset_list,
                 plot_params = view.plot_params,
                 current_plot = view.current_plot)
     
-@camel_registry.dumper(ScatterplotWorkflowView, 'scatterplot', 1)
+@camel_registry.dumper(Stats2DWorkflowView, 'stats-2d', version = 1)
 def _dump_v1(view):
-    return dict(xchannel = view.xchannel,
+    return dict(xstatistic = view.xstatistic,
                 xscale = view.xscale,
-                ychannel = view.ychannel,
+                ystatistic = view.ystatistic,
                 yscale = view.yscale,
+                variable = view.variable,
                 xfacet = view.xfacet,
                 yfacet = view.yfacet,
                 huefacet = view.huefacet,
                 huescale = view.huescale,
-                plotfacet = view.plotfacet,
+                x_error_statistic = view.x_error_statistic,
+                y_error_statistic = view.y_error_statistic,
                 subset_list = view.subset_list)
-    
-@camel_registry.dumper(ScatterplotPlotParams, 'scatterplot-params', version = 1)
+
+
+@camel_registry.loader('stats-2d', version = any)
+def _load(data, version):
+    data['xstatistic'] = tuple(data['xstatistic'])
+    data['ystatistic'] = tuple(data['ystatistic'])
+    data['x_error_statistic'] = tuple(data['x_error_statistic'])
+    data['y_error_statistic'] = tuple(data['y_error_statistic'])
+
+    return Stats2DWorkflowView(**data)
+
+@camel_registry.dumper(Stats2DPluginPlotParams, 'stats-2d-params', version = 1)
 def _dump_params(params):
     return dict(
                 # BasePlotParams
@@ -99,24 +114,18 @@ def _dump_params(params):
                 sharex = params.sharex,
                 sharey = params.sharey,
                 despine = params.despine,
-
-                # DataplotParams
-                min_quantile = params.min_quantile,
-                max_quantile = params.max_quantile,
                 
-                # Data2DPlotParams
+                # Base2DStatisticsView
                 xlim = params.xlim,
                 ylim = params.ylim,
                 
-                # Scatterplot params
-                alpha = params.alpha,
-                s = params.s,
-                marker = params.marker )
-    
-@camel_registry.loader('scatterplot', version = any)
-def _load(data, version):
-    return ScatterplotWorkflowView(**data)
+                # Stats 2D View
+                linestyle = params.linestyle,
+                marker = params.marker,
+                markersize = params.markersize,
+                capsize = params.capsize,
+                alpha = params.alpha)
 
-@camel_registry.loader('scatterplot-params', version = 1)
+@camel_registry.loader('stats-2d-params', version = any)
 def _load_params(data, version):
-    return ScatterplotPlotParams(**data)
+    return Stats2DPluginPlotParams(**data)

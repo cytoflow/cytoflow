@@ -2,7 +2,7 @@
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,31 +17,30 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
 from textwrap import dedent
 
-from traits.api import provides, Enum, Instance
+from traits.api import provides, Instance
 
-from cytoflow import ScatterplotView
+from cytoflow import BarChartView
 import cytoflow.utility as util
 
 from cytoflowgui.workflow.serialization import camel_registry, traits_repr, traits_str
-from .view_base import IWorkflowView, WorkflowView, Data2DPlotParams, SCATTERPLOT_MARKERS
+from .view_base import IWorkflowView, WorkflowView, Stats1DPlotParams
 
-ScatterplotView.__repr__ = traits_repr
+BarChartView.__repr__ = traits_repr
 
-class ScatterplotPlotParams(Data2DPlotParams):
 
-    alpha = util.PositiveCFloat(0.25)
-    s = util.PositiveCFloat(2)
-    marker = Enum(SCATTERPLOT_MARKERS)
+class BarChartPlotParams(Stats1DPlotParams):
+    errwidth = util.PositiveCFloat(None, allow_none = True, allow_zero = False)
+    capsize = util.PositiveCFloat(None, allow_none = True, allow_zero = False)
     
-@provides(IWorkflowView)    
-class ScatterplotWorkflowView(WorkflowView, ScatterplotView):
-    plot_params = Instance(ScatterplotPlotParams, ())
-            
+    
+@provides(IWorkflowView)
+class BarChartWorkflowView(WorkflowView, BarChartView):
+    plot_params = Instance(BarChartPlotParams, ())
+    
     def get_notebook_code(self, idx):
-        view = ScatterplotView()
+        view = BarChartView()
         view.copy_traits(self, view.copyable_trait_names())
         plot_params_str = traits_str(self.plot_params)
 
@@ -53,38 +52,33 @@ class ScatterplotWorkflowView(WorkflowView, ScatterplotView):
                 plot = ", plot_name = " + repr(self.current_plot) if self.plot_names else "",
                 plot_params = ", " + plot_params_str if plot_params_str else ""))
         
-        
 ### Serialization
-
-@camel_registry.dumper(ScatterplotWorkflowView, 'scatterplot', version = 2)
+@camel_registry.dumper(BarChartWorkflowView, 'bar-chart', version = 2)
 def _dump(view):
-    return dict(xchannel = view.xchannel,
-                xscale = view.xscale,
-                ychannel = view.ychannel,
-                yscale = view.yscale,
+    return dict(statistic = view.statistic,
+                variable = view.variable,
+                scale = view.scale,
                 xfacet = view.xfacet,
                 yfacet = view.yfacet,
                 huefacet = view.huefacet,
                 huescale = view.huescale,
-                plotfacet = view.plotfacet,
+                error_statistic = view.error_statistic,
                 subset_list = view.subset_list,
                 plot_params = view.plot_params,
                 current_plot = view.current_plot)
     
-@camel_registry.dumper(ScatterplotWorkflowView, 'scatterplot', 1)
+@camel_registry.dumper(BarChartWorkflowView, 'bar-chart', version = 1)
 def _dump_v1(view):
-    return dict(xchannel = view.xchannel,
-                xscale = view.xscale,
-                ychannel = view.ychannel,
+    return dict(statistic = view.statistic,
+                variable = view.variable,
                 yscale = view.yscale,
                 xfacet = view.xfacet,
                 yfacet = view.yfacet,
                 huefacet = view.huefacet,
-                huescale = view.huescale,
-                plotfacet = view.plotfacet,
+                error_statistic = view.error_statistic,
                 subset_list = view.subset_list)
     
-@camel_registry.dumper(ScatterplotPlotParams, 'scatterplot-params', version = 1)
+@camel_registry.dumper(BarChartPlotParams, 'barchart-params', version = 1)
 def _dump_params(params):
     return dict(
                 # BasePlotParams
@@ -99,24 +93,28 @@ def _dump_params(params):
                 sharex = params.sharex,
                 sharey = params.sharey,
                 despine = params.despine,
-
-                # DataplotParams
-                min_quantile = params.min_quantile,
-                max_quantile = params.max_quantile,
                 
-                # Data2DPlotParams
-                xlim = params.xlim,
-                ylim = params.ylim,
+                # Base1DStatisticsView
+                orientation = params.orientation,
+                lim = params.lim,
                 
-                # Scatterplot params
-                alpha = params.alpha,
-                s = params.s,
-                marker = params.marker )
+                # BarChartView
+                errwidth = params.errwidth,
+                capsize = params.capsize)
     
-@camel_registry.loader('scatterplot', version = any)
-def _load(data, version):
-    return ScatterplotWorkflowView(**data)
+@camel_registry.loader('bar-chart', version = 1)
+def _load_v1(data, version):
+    data['scale'] = data.pop('yscale')
+    data['statistic'] = tuple(data['statistic'])
+    data['error_statistic'] = tuple(data['error_statistic'])
 
-@camel_registry.loader('scatterplot-params', version = 1)
+    return BarChartWorkflowView(**data)
+
+@camel_registry.loader('bar-chart', version = 2)
+def _load_v2(data, version):
+    return BarChartWorkflowView(**data)
+
+@camel_registry.loader('barchart-params', version = any)
 def _load_params(data, version):
-    return ScatterplotPlotParams(**data)
+    return BarChartPlotParams(**data)
+

@@ -18,6 +18,9 @@ from ..serialization import traits_repr
 
 LINE_STYLES = ["solid", "dashed", "dashdot", "dotted","none"]
 
+SCATTERPLOT_MARKERS = ["o", ",", "v", "^", "<", ">", "1", "2", "3", "4", "8",
+                       "s", "p", "*", "h", "H", "+", "x", "D", "d", ""]
+
 class IterWrapper(object):
     def __init__(self, iterator, by):
         self.iterator = iterator

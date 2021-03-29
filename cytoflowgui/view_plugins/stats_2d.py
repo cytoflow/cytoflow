@@ -107,85 +107,103 @@ pair of elements with the same value of **Variable**; the X value is from
 
 import pandas as pd
 
-from traits.api import provides, Callable, Property, Enum, Instance
-from traitsui.api import View, Item, Controller, EnumEditor, VGroup, TextEditor
+from traits.api import provides, Property
+from traitsui.api import View, Item, EnumEditor, VGroup, TextEditor, Controller
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
-from cytoflow import Stats2DView
 import cytoflow.utility as util
 
-from cytoflowgui.subset import SubsetListEditor
-from cytoflowgui.color_text_editor import ColorTextEditor
-from cytoflowgui.ext_enum_editor import ExtendableEnumEditor
-from cytoflowgui.view_plugins.i_view_plugin \
-    import (IViewPlugin, VIEW_PLUGIN_EXT, ViewHandlerMixin, PluginViewMixin, 
-            PluginHelpMixin, Stats2DPlotParams)
-from cytoflowgui.view_plugins.scatterplot import SCATTERPLOT_MARKERS
-from cytoflowgui.view_plugins.stats_1d import LINE_STYLES
-from cytoflowgui.serialization import camel_registry, traits_repr, traits_str, dedent
+from cytoflowgui.workflow.views.stats_2d import Stats2DWorkflowView, Stats2DPlotParams
 
-Stats2DView.__repr__ = traits_repr
+from cytoflowgui.editors import SubsetListEditor, ColorTextEditor, ExtendableEnumEditor, InstanceHandlerEditor
+
+from .i_view_plugin import IViewPlugin, VIEW_PLUGIN_EXT
+from .subset_controllers import subset_handler_factory
+from .view_plugin_base import ViewHandler, PluginHelpMixin, Stats2DPlotParamsView
+
     
-class Stats2DHandler(ViewHandlerMixin, Controller):
-
+class Stats2DParamsHandler(Controller):
+    view_params_view = \
+        View(Item('linestyle'),
+             Item('marker'),
+             Item('markersize',
+                  editor = TextEditor(auto_set = False),
+                  format_func = lambda x: "" if x == None else str(x)),
+             Item('capsize',
+                  editor = TextEditor(auto_set = False),
+                  format_func = lambda x: "" if x == None else str(x)),
+             Item('alpha'),
+             Stats2DPlotParamsView.content)
+        
+    
+class Stats2DHandler(ViewHandler):
     indices = Property(depends_on = "context.statistics, model.xstatistic, model.ystatistic, model.subset")
     numeric_indices = Property(depends_on = "context.statistics, model.xstatistic, model.ystatistic, model.subset")
     levels = Property(depends_on = "context.statistics, model.xstatistic, model.ystatistic")
     
-    
-    def default_traits_view(self):
-        return View(VGroup(
-                    VGroup(Item('xstatistic',
-                                editor = EnumEditor(name = 'handler.numeric_statistics_names'),
-                                label = "X Statistic"),
-                           Item('xscale', label = "X Scale"),
-                           Item('ystatistic',
-                                editor = EnumEditor(name = 'handler.numeric_statistics_names'),
-                                label = "Y Statistic"),
-                           Item('yscale', label = "Y Scale"),
-                           Item('variable',
-                                editor=EnumEditor(name='handler.indices')),
-                           Item('xfacet',
-                                editor=ExtendableEnumEditor(name='handler.indices',
-                                                            extra_items = {"None" : ""}),
-                                label = "Horizontal\nFacet"),
-                           Item('yfacet',
-                                editor=ExtendableEnumEditor(name='handler.indices',
-                                                            extra_items = {"None" : ""}),
-                                label = "Vertical\nFacet"),
-                           Item('huefacet',
-                                editor=ExtendableEnumEditor(name='handler.indices',
-                                                            extra_items = {"None" : ""}),
-                                label="Color\nFacet"),
-                           Item('huescale', 
-                                label = "Hue\nScale"),
-                           Item('x_error_statistic',
-                                editor=ExtendableEnumEditor(name='handler.statistics_names',
-                                                            extra_items = {"None" : ("", "")}),
-                                label = "X Error\nStatistic"),
-                           Item('y_error_statistic',
-                                editor=ExtendableEnumEditor(name='handler.statistics_names',
-                                                            extra_items = {"None" : ("", "")}),
-                                label = "Y Error\nStatistic"),
-                           label = "Two-Dimensional Statistics Plot",
-                           show_border = False),
-                    VGroup(Item('subset_list',
-                                show_label = False,
-                                editor = SubsetListEditor(conditions = "handler.levels")),
-                           label = "Subset",
-                           show_border = False,
-                           show_labels = False),
-                    Item('context.view_warning',
-                         resizable = True,
-                         visible_when = 'context.view_warning',
-                         editor = ColorTextEditor(foreground_color = "#000000",
-                                                 background_color = "#ffff99")),
-                    Item('context.view_error',
-                         resizable = True,
-                         visible_when = 'context.view_error',
-                         editor = ColorTextEditor(foreground_color = "#000000",
-                                                  background_color = "#ff9191"))))
+    view_traits_view = \
+        View(VGroup(
+             VGroup(Item('xstatistic',
+                         editor = EnumEditor(name = 'context_handler.numeric_statistics_names'),
+                         label = "X Statistic"),
+                    Item('xscale', label = "X Scale"),
+                    Item('ystatistic',
+                         editor = EnumEditor(name = 'context_handler.numeric_statistics_names'),
+                         label = "Y Statistic"),
+                    Item('yscale', label = "Y Scale"),
+                    Item('variable',
+                         editor=EnumEditor(name='handler.indices')),
+                    Item('xfacet',
+                         editor=ExtendableEnumEditor(name='handler.indices',
+                                                     extra_items = {"None" : ""}),
+                         label = "Horizontal\nFacet"),
+                    Item('yfacet',
+                         editor=ExtendableEnumEditor(name='handler.indices',
+                                                     extra_items = {"None" : ""}),
+                         label = "Vertical\nFacet"),
+                    Item('huefacet',
+                         editor=ExtendableEnumEditor(name='handler.indices',
+                                                     extra_items = {"None" : ""}),
+                         label="Color\nFacet"),
+                    Item('huescale', 
+                         label = "Hue\nScale"),
+                    Item('x_error_statistic',
+                         editor=ExtendableEnumEditor(name='context_handler.statistics_names',
+                                                     extra_items = {"None" : ("", "")}),
+                         label = "X Error\nStatistic"),
+                    Item('y_error_statistic',
+                         editor=ExtendableEnumEditor(name='context_handler.statistics_names',
+                                                     extra_items = {"None" : ("", "")}),
+                         label = "Y Error\nStatistic"),
+                    label = "Two-Dimensional Statistics Plot",
+                    show_border = False),
+             VGroup(Item('subset_list',
+                         show_label = False,
+                         editor = SubsetListEditor(conditions = "handler.levels",
+                                                   editor = InstanceHandlerEditor(view = 'subset_view',
+                                                                                  handler_factory = subset_handler_factory),
+                                                   mutable = False)),
+                    label = "Subset",
+                    show_border = False,
+                    show_labels = False),
+             Item('context.view_warning',
+                  resizable = True,
+                  visible_when = 'context.view_warning',
+                  editor = ColorTextEditor(foreground_color = "#000000",
+                                          background_color = "#ffff99")),
+             Item('context.view_error',
+                  resizable = True,
+                  visible_when = 'context.view_error',
+                  editor = ColorTextEditor(foreground_color = "#000000",
+                                           background_color = "#ff9191"))))
+        
+    view_params_view = \
+        View(Item('plot_params',
+                  editor = InstanceHandlerEditor(view = 'view_params_view',
+                                                 handler_factory = Stats2DParamsHandler),
+                  style = 'custom',
+                  show_label = False))
         
     # MAGIC: gets the value for the property indices
     def _get_indices(self):
@@ -283,45 +301,6 @@ class Stats2DHandler(ViewHandlerMixin, Controller):
             
         return ret
     
-class Stats2DPluginPlotParams(Stats2DPlotParams):
-
-    linestyle = Enum(LINE_STYLES)
-    marker = Enum(SCATTERPLOT_MARKERS)
-    markersize = util.PositiveCFloat(6, allow_zero = False)
-    capsize = util.PositiveCFloat(None, allow_none = True, allow_zero = False)
-    alpha = util.PositiveCFloat(1.0)
-    
-    def default_traits_view(self):
-        base_view = Stats2DPlotParams.default_traits_view(self)
-        
-        return View(Item('linestyle'),
-                    Item('marker'),
-                    Item('markersize',
-                         editor = TextEditor(auto_set = False),
-                         format_func = lambda x: "" if x == None else str(x)),
-                    Item('capsize',
-                         editor = TextEditor(auto_set = False),
-                         format_func = lambda x: "" if x == None else str(x)),
-                    Item('alpha'),
-                    base_view.content)
-
-    
-class Stats2DPluginView(PluginViewMixin, Stats2DView):
-    handler_factory = Callable(Stats2DHandler)
-    plot_params = Instance(Stats2DPluginPlotParams, ())
-    
-    def get_notebook_code(self, idx):
-        view = Stats2DView()
-        view.copy_traits(self, view.copyable_trait_names())
-        plot_params_str = traits_str(self.plot_params)
-
-        return dedent("""
-        {repr}.plot(ex_{idx}{plot}{plot_params})
-        """
-        .format(repr = repr(view),
-                idx = idx,
-                plot = ", plot_name = " + repr(self.current_plot) if self.plot_names else "",
-                plot_params = ", " + plot_params_str if plot_params_str else ""))
 
 @provides(IViewPlugin)
 class Stats2DPlugin(Plugin, PluginHelpMixin):
@@ -331,7 +310,13 @@ class Stats2DPlugin(Plugin, PluginHelpMixin):
     short_name = "2D Statistics View"
     
     def get_view(self):
-        return Stats2DPluginView()
+        return Stats2DWorkflowView()
+    
+    def get_handler(self, model, context):
+        if isinstance(model, Stats2DWorkflowView):
+            return Stats2DHandler(model = model, context = context)
+        elif isinstance(model, Stats2DPlotParams):
+            return Stats2DParamsHandler(model = model, context = context)
 
     def get_icon(self):
         return ImageResource('stats_2d')
@@ -340,77 +325,4 @@ class Stats2DPlugin(Plugin, PluginHelpMixin):
     def get_plugin(self):
         return self
     
-### Serialization
 
-@camel_registry.dumper(Stats2DPluginView, 'stats-2d', version = 2)
-def _dump(view):
-    return dict(xstatistic = view.xstatistic,
-                xscale = view.xscale,
-                ystatistic = view.ystatistic,
-                yscale = view.yscale,
-                variable = view.variable,
-                xfacet = view.xfacet,
-                yfacet = view.yfacet,
-                huefacet = view.huefacet,
-                huescale = view.huescale,
-                x_error_statistic = view.x_error_statistic,
-                y_error_statistic = view.y_error_statistic,
-                subset_list = view.subset_list,
-                plot_params = view.plot_params,
-                current_plot = view.current_plot)
-    
-@camel_registry.dumper(Stats2DPluginView, 'stats-2d', version = 1)
-def _dump_v1(view):
-    return dict(xstatistic = view.xstatistic,
-                xscale = view.xscale,
-                ystatistic = view.ystatistic,
-                yscale = view.yscale,
-                variable = view.variable,
-                xfacet = view.xfacet,
-                yfacet = view.yfacet,
-                huefacet = view.huefacet,
-                huescale = view.huescale,
-                x_error_statistic = view.x_error_statistic,
-                y_error_statistic = view.y_error_statistic,
-                subset_list = view.subset_list)
-
-
-@camel_registry.loader('stats-2d', version = any)
-def _load(data, version):
-    data['xstatistic'] = tuple(data['xstatistic'])
-    data['ystatistic'] = tuple(data['ystatistic'])
-    data['x_error_statistic'] = tuple(data['x_error_statistic'])
-    data['y_error_statistic'] = tuple(data['y_error_statistic'])
-
-    return Stats2DPluginView(**data)
-
-@camel_registry.dumper(Stats2DPluginPlotParams, 'stats-2d-params', version = 1)
-def _dump_params(params):
-    return dict(
-                # BasePlotParams
-                title = params.title,
-                xlabel = params.xlabel,
-                ylabel = params.ylabel,
-                huelabel = params.huelabel,
-                col_wrap = params.col_wrap,
-                sns_style = params.sns_style,
-                sns_context = params.sns_context,
-                legend = params.legend,
-                sharex = params.sharex,
-                sharey = params.sharey,
-                despine = params.despine,
-                
-                # Base2DStatisticsView
-                xlim = params.xlim,
-                ylim = params.ylim,
-                
-                # Stats 2D View
-                linestyle = params.linestyle,
-                marker = params.marker,
-                markersize = params.markersize,
-                capsize = params.capsize,
-                alpha = params.alpha)
-
-@camel_registry.loader('stats-2d-params', version = any)
-def _load_params(data, version):
-    return Stats2DPluginPlotParams(**data)

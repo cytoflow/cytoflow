@@ -27,7 +27,6 @@ from traits.api import Str
 from pyface.ui.qt4.file_dialog import FileDialog
 
 
-
 class DefaultFileDialog(FileDialog):
     default_suffix = Str
     

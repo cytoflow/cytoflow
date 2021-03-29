@@ -191,13 +191,13 @@ def run_gui():
     from cytoflowgui.view_plugins import (HistogramPlugin, 
                                           Histogram2DPlugin, 
                                           ScatterplotPlugin,
-                                          #BarChartPlugin, 
-                                          #Stats1DPlugin, 
+                                          BarChartPlugin,
+                                          Stats1DPlugin, 
                                           Kde1DPlugin, 
                                           Kde2DPlugin,
                                           ViolinPlotPlugin,
                                           #TablePlugin, 
-                                          #Stats2DPlugin, 
+                                          Stats2DPlugin, 
                                           DensityPlugin,
                                           ParallelCoordinatesPlugin,
                                           RadvizPlugin)
@@ -214,10 +214,10 @@ def run_gui():
                     Kde2DPlugin(),
                     RadvizPlugin(),
                     ParallelCoordinatesPlugin(),
-                    ViolinPlotPlugin()]
-#                     BarChartPlugin(),
-#                     Stats1DPlugin(),
-#                     Stats2DPlugin(),
+                    ViolinPlotPlugin(),
+                    BarChartPlugin(),
+                    Stats1DPlugin(),
+                    Stats2DPlugin()]
 #                     TablePlugin()]
     
     plugins.extend(view_plugins)
