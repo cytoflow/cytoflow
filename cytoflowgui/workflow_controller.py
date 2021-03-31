@@ -299,7 +299,7 @@ class WorkflowController(Controller):
             return
             
         # make a new view instance
-        if view_id == self.model.selected.default_view.id:
+        if self.model.selected.default_view and view_id == self.model.selected.default_view.id:
             view = self.model.selected.default_view
         else:
             view_plugin = next((x for x in self.view_plugins
@@ -313,20 +313,20 @@ class WorkflowController(Controller):
     def _on_workflow_add_remove_items(self, event):
         logger.debug("WorkflowController._on_workflow_add_remove_items :: {}"
                       .format((event.index, event.added, event.removed)))
-
-        wi = self.model.workflow[event.index]
                 
         # remove deleted items from the linked list
         if event.removed:
             assert len(event.removed) == 1
+            wi = event.removed[0]
             del self.workflow_handlers[wi]
             
-            if wi == self.selected:
-                self.selected = None
+            if wi == self.model.selected:
+                self.model.selected = None
         
         # add new items to the linked list
         if event.added:
             assert len(event.added) == 1
+            wi = event.added[0]
             if wi not in self.workflow_handlers:
                 self.workflow_handlers[wi] = WorkflowItemHandler(model = wi,
                                                                  op_plugins = self.op_plugins,

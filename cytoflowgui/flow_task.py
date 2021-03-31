@@ -92,7 +92,6 @@ class FlowTaskPane(TaskPane):
                   
     def export(self, filename, **kwargs):      
         self.canvas.print_figure(filename, bbox_inches = 'tight', **kwargs)
-    
 
 
 class FlowTask(Task):

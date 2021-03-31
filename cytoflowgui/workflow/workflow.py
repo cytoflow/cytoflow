@@ -980,12 +980,14 @@ class RemoteWorkflow(HasStrictTraits):
     def _on_selected_workflowitem_changed(self, event):
         logger.debug("RemoteWorkflow._selected_changed :: {}".format(event))
          
-        if event.new:
+        if event.new is None:
+            plt.clf()
+            plt.show()
+        else:
             idx = self.workflow.index(event.new)
             if event.new.current_view:
-                # FIXME event.new.current_view.update_plot_names(event.new)
                 self.exec_q.put((idx + 0.1, (event.new, event.new.plot)))
-
+                            
             
 #     @on_trait_change('workflow:changed')
 #     def _changed_event(self, obj, name, new):
