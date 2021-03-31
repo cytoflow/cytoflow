@@ -100,13 +100,12 @@ class WorkflowItemHandler(Controller):
                     handler = self)
         
     def _get_operation_handler(self, op):
-        op_plugin = next((x for x in self.op_plugins if op.id == x.operation_id))
-        return op_plugin.get_handler(model = op, context = self.model)
+        plugin = next((x for x in self.op_plugins if op.id == x.operation_id))
+        return plugin.get_handler(model = op, context = self.model)
     
     def _get_view_handler(self, view):
-        view_plugin = next((x for x in self.view_plugins if view.id == x.view_id))
-        return view_plugin.get_handler(model = view,
-                                       context = self.model)
+        plugin = next((x for x in self.view_plugins + self.op_plugins if view.id == x.view_id))
+        return plugin.get_handler(model = view, context = self.model)
 
 
     ##### PROPERTIES
@@ -282,6 +281,10 @@ class WorkflowController(Controller):
         # and make sure to actually select the new wi
         self.model.selected = wi
         
+        # if we have a default view, activate it
+        if self.model.selected.default_view:
+            self.activate_view(self.model.selected.default_view.id)
+        
         return wi
     
     def activate_view(self, view_id):
@@ -296,8 +299,8 @@ class WorkflowController(Controller):
             return
             
         # make a new view instance
-        if view_id == 'default':
-            view = view_id = self.model.selected.default_view
+        if view_id == self.model.selected.default_view.id:
+            view = self.model.selected.default_view
         else:
             view_plugin = next((x for x in self.view_plugins
                                 if x.view_id == view_id))
@@ -305,7 +308,6 @@ class WorkflowController(Controller):
             
         self.model.selected.views.append(view)
         self.model.selected.current_view = view
-        
     
     @observe('model:workflow:items', post_init = True)
     def _on_workflow_add_remove_items(self, event):

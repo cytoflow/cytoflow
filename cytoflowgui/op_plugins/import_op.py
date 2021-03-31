@@ -125,36 +125,34 @@ class ImportHandler(OpHandler):
     samples = Property(depends_on = 'model.tubes', status = True)
     dialog_model = Instance(ExperimentDialogModel)
         
-    def operation_traits_view(self):
-        return View(VGroup(Label(label = "Channels",
-                                 visible_when = 'model.tubes' ),
-                           Item('object.channels_list',
-                                editor = VerticalListEditor(editor = InstanceHandlerEditor(handler_factory = ChannelHandler,
-                                                                                           view = "default_view"),
-                                                            style = 'custom',
-                                                            mutable = False,
-                                                            deletable = True),
-                                show_label = False),
-                           Item('handler.reset_channels_event',
-                                editor = ButtonEditor(value = True,
-                                                      label = "Reset channel names"),
-                           show_label = False),
-                    visible_when = 'object.channels_list'),
-                    Item('object.events',
-                         editor = TextEditor(auto_set = False,
-                                             format_func = lambda x: "" if x == None else str(x)),
-                         label="Events per\nsample"),
-                    Item('handler.samples', label='Samples', style='readonly'),
-                    Item('ret_events', label='Events', style='readonly'),
-                    Item('handler.setup_event',
-                         editor = ButtonEditor(value = True, label = "Set up experiment..."),
-                         show_label=False),
-                    Item('object.do_estimate',
-                         editor = ButtonEditor(value = True, label = "Import!"),
+    operation_traits_view = \
+        View(VGroup(Label(label = "Channels",
+                          visible_when = 'model.tubes' ),
+                    Item('object.channels_list',
+                         editor = VerticalListEditor(editor = InstanceHandlerEditor(handler_factory = ChannelHandler,
+                                                                                    view = "default_view"),
+                                                     style = 'custom',
+                                                     mutable = False,
+                                                     deletable = True),
                          show_label = False),
-                    shared_op_traits_view,
-                    handler = self)
-        
+                    Item('handler.reset_channels_event',
+                         editor = ButtonEditor(value = True,
+                                               label = "Reset channel names"),
+                    show_label = False),
+             visible_when = 'object.channels_list'),
+             Item('object.events',
+                  editor = TextEditor(auto_set = False,
+                                      format_func = lambda x: "" if x == None else str(x)),
+                  label="Events per\nsample"),
+             Item('handler.samples', label='Samples', style='readonly'),
+             Item('ret_events', label='Events', style='readonly'),
+             Item('handler.setup_event',
+                  editor = ButtonEditor(value = True, label = "Set up experiment..."),
+                  show_label=False),
+             Item('object.do_estimate',
+                  editor = ButtonEditor(value = True, label = "Import!"),
+                  show_label = False),
+             shared_op_traits_view)
      
     @observe('setup_event')   
     def _on_setup(self, event):
@@ -171,11 +169,9 @@ class ImportHandler(OpHandler):
     def _on_reset_channels(self, _):
         self.model.reset_channels()
         
-        
     @cached_property
     def _get_samples(self):
         return len(self.model.tubes)
-    
     
     @observe('model.events', post_init = True)
     def _events_changed(self, _):
@@ -192,12 +188,12 @@ class ImportHandler(OpHandler):
         self.model.ret_events = ret_events
         
 
-
 @provides(IOperationPlugin)
 class ImportPlugin(Plugin, PluginHelpMixin):
     
     id = 'edu.mit.synbio.cytoflowgui.op_plugins.import'
     operation_id = 'edu.mit.synbio.cytoflow.operations.import'
+    view_id = None
 
     short_name = "Import data"
     menu_group = "TOP"

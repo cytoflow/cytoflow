@@ -71,31 +71,25 @@ from traits.api import provides, Instance, Str, CFloat, DelegatesTo
 
 from cytoflow.operations.threshold import ThresholdOp, ThresholdSelection
 
-from .. import Changed
-from cytoflowgui.workflow.views.view_base import IWorkflowView
-from ..views.histogram import HistogramPlotParams
+from ..workflow import Changed
+from ..views import IWorkflowView, WorkflowView, HistogramPlotParams
 from ..serialization import camel_registry, traits_str, traits_repr, dedent
 
-from .operation_base import IWorkflowOperation
+from .operation_base import IWorkflowOperation, WorkflowOperation
 
 ThresholdOp.__repr__ = traits_repr
 
-
 @provides(IWorkflowView)
-class ThresholdSelectionView(ThresholdSelection):
+class ThresholdSelectionView(WorkflowView, ThresholdSelection):
     op = Instance(IWorkflowOperation, fixed = True)
     threshold = DelegatesTo('op', status = True)
     plot_params = Instance(HistogramPlotParams, ())
-    name = Str
     
     def should_plot(self, changed, payload):
         if changed == Changed.PREV_RESULT or changed == Changed.VIEW:
             return True
         else:
             return False
-        
-    def plot_wi(self, wi):        
-        self.plot(wi.previous_wi.result, **self.plot_params.trait_get())
         
     def get_notebook_code(self, idx):
         view = ThresholdSelection()
@@ -112,11 +106,17 @@ class ThresholdSelectionView(ThresholdSelection):
         
     
 @provides(IWorkflowOperation)
-class ThresholdWorkflowOp(ThresholdOp):
-    threshold = CFloat
+class ThresholdWorkflowOp(WorkflowOperation, ThresholdOp):
+    name = Str(apply = True)
+    channel = Str(apply = True)
+    threshold = CFloat(apply = True)
      
     def default_view(self, **kwargs):
         return ThresholdSelectionView(op = self, **kwargs)
+    
+    def clear_estimate(self):
+        # no-op
+        return
     
     def get_notebook_code(self, idx):
         op = ThresholdOp()

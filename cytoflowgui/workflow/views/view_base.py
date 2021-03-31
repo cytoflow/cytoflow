@@ -59,6 +59,9 @@ class IWorkflowView(IView):
         - Changed.PREV_RESULT -- the previous WorkflowItem's result changed
         - Changed.ESTIMATE_RESULT -- the results of calling "estimate" changed
 
+        If `should_plot` was called from an event handler, the event is passed
+        in as `payload`
+
         """
         
     def get_notebook_code(self, idx):

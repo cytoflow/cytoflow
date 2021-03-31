@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from traits.api import Instance, List, on_trait_change, Str, Dict, Bool, Tuple, observe
+from traits.api import Instance, List, Str, Dict, Tuple, observe
 from pyface.tasks.api import TraitsDockPane, Task
 from pyface.action.api import ToolBarManager
 from pyface.tasks.action.api import TaskAction
@@ -148,8 +148,15 @@ class ViewDockPane(TraitsDockPane):
 #             
 #         self._default_action.visible = (new_view_id != "")
 #             
+
     @observe('model:selected.current_view')
-    def _selected_view_changed(self, event):         
+    def _selected_view_changed(self, event):
+        # is there a default view for this workflow item?
+        if self.model.selected and self.model.selected.default_view:
+            self._default_action.visible = True
+        else:
+            self._default_action.visible = False
+
         # untoggle everything on the toolbar
         self._default_action.checked = False
         for action in self._actions.values():

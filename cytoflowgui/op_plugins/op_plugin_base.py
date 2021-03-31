@@ -19,18 +19,18 @@ class OpHandler(Controller):
     """
     context = Instance(WorkflowItem)
 
-    # the default traits view
-    def default_traits_view(self):
-        """
-        Gets the default :class:`traits.View` for an operation.
-        
-        Returns
-        -------
-        traits.View
-            The view for an operation.
-        """
-        
-        raise NotImplementedError("Op handlers must override 'default_traits_view")
+#     # the default traits view
+#     def default_traits_view(self):
+#         """
+#         Gets the default :class:`traits.View` for an operation.
+#         
+#         Returns
+#         -------
+#         traits.View
+#             The view for an operation.
+#         """
+#         
+#         raise NotImplementedError("Op handlers must override 'default_traits_view")
         
     @observe('context.op_error_trait', dispatch = 'ui', post_init = True)
     def _op_trait_error(self, event):

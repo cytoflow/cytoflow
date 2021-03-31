@@ -8,7 +8,6 @@ from traits.api import HasStrictTraits, Event
 from cytoflow.operations import IOperation
 
 class IWorkflowOperation(IOperation):
-    
     """
     An interface that extends an :mod:`cytoflow` operation with functions 
     required for GUI support.
@@ -30,10 +29,6 @@ class IWorkflowOperation(IOperation):
     
     Attributes
     ----------
-    
-    handler_factory : Callable
-        A callable that returns a GUI handler for the operation.  **MUST**
-        be set in the derived class.
         
     do_estimate : Event
         Firing this event causes the operation's :meth:`estimate` method 
@@ -41,14 +36,16 @@ class IWorkflowOperation(IOperation):
         
     changed : Event
         Used to transmit status information back from the operation to the
-        workflow.  Set its value to a tuple (message, payload).  See 
-        :class:`.workflow.Changed` for possible values of the message
-        and their corresponding payloads.
+        workflow.  Set its value to the name of the trait that was changed
 
     """
         
     # causes this operation's estimate() function to be called. observed in LocalWorkflow.
     do_estimate = Event
+    
+    # an all-purpose "this thing changed" event
+    # set it to the name of the trait that changed
+    changed = Event
 
                 
     def should_apply(self, changed, payload):

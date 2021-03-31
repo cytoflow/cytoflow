@@ -16,6 +16,37 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+
+"""
+Channel statistic
+-----------------
+
+Apply a function to subsets of a data set, and add it as a statistic
+to the experiment.
+
+First, the module groups the data by the unique values of the variables
+in **By**, then applies **Function** to the **Channel** in each group.
+    
+
+.. object:: Name
+
+    The operation name.  Becomes the first part of the new statistic's name.
+    
+.. object:: Channel
+
+    The channel to apply the function to.
+    
+.. object:: Function
+
+    The function to compute on each group.
+        
+.. object:: Subset
+
+    Only apply the function to a subset of the data.  Useful if the function 
+    is very slow.
+
+"""
+
 import numpy as np
 import scipy.stats
 

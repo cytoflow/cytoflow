@@ -22,25 +22,26 @@ from traitsui.api import View, Item, EnumEditor, VGroup, TextEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
-from cytoflowgui.view_plugins.view_plugin_base import ViewHandler
-from cytoflowgui.editors import SubsetListEditor, ColorTextEditor, ExtendableEnumEditor, InstanceHandlerEditor
-from cytoflowgui.workflow.operations.threshold import ThresholdWorkflowOp, ThresholdSelectionView
+from ..view_plugins import ViewHandler
+from ..view_plugins.histogram import HistogramParamsHandler
+from ..editors import SubsetListEditor, ColorTextEditor, ExtendableEnumEditor, InstanceHandlerEditor
+from ..workflow.operations import ThresholdWorkflowOp, ThresholdSelectionView
+from ..subset_controllers import subset_handler_factory
 
-from cytoflowgui.op_plugins.op_plugin_base import OpHandler, shared_op_traits_view, PluginHelpMixin
 from .i_op_plugin import IOperationPlugin, OP_PLUGIN_EXT
-from cytoflowgui.view_plugins.subset_controllers import subset_handler_factory
+from .op_plugin_base import OpHandler, shared_op_traits_view, PluginHelpMixin
 
 
 class ThresholdHandler(OpHandler):
-    def default_traits_view(self):
-        return View(Item('name',
-                         editor = TextEditor(auto_set = False)),
-                    Item('channel',
-                         editor=EnumEditor(name='context.previous_wi.channels'),
-                         label = "Channel"),
-                    Item('threshold',
-                         editor = TextEditor(auto_set = False)),
-                    shared_op_traits_view) 
+    operation_traits_view = \
+        View(Item('name',
+                  editor = TextEditor(auto_set = False)),
+             Item('channel',
+                  editor=EnumEditor(name='context_handler.previous_channels'),
+                  label = "Channel"),
+             Item('threshold',
+                  editor = TextEditor(auto_set = False)),
+             shared_op_traits_view) 
         
         
 class ThresholdViewHandler(ViewHandler):
@@ -54,7 +55,7 @@ class ThresholdViewHandler(ViewHandler):
                          style = "readonly"),
                     Item('scale'),
                     Item('huefacet',
-                         editor=ExtendableEnumEditor(name='handler.previous_conditions_names',
+                         editor=ExtendableEnumEditor(name='context_handler.previous_conditions_names',
                                                      extra_items = {"None" : ""}),
                          label="Color\nFacet"),
                     label = "Threshold Setup View",
@@ -78,6 +79,13 @@ class ThresholdViewHandler(ViewHandler):
                   visible_when = 'context.view_error',
                   editor = ColorTextEditor(foreground_color = "#000000",
                                            background_color = "#ff9191"))))
+        
+    view_params_view = \
+        View(Item('plot_params',
+                  editor = InstanceHandlerEditor(view = 'view_params_view',
+                                                 handler_factory = HistogramParamsHandler),
+                  style = 'custom',
+                  show_label = False))
 
 
 @provides(IOperationPlugin)
@@ -85,6 +93,7 @@ class ThresholdPlugin(Plugin, PluginHelpMixin):
     
     id = 'edu.mit.synbio.cytoflowgui.op_plugins.threshold'
     operation_id = 'edu.mit.synbio.cytoflow.operations.threshold'
+    view_id = 'edu.mit.synbio.cytoflow.views.threshold'
 
     short_name = "Threshold"
     menu_group = "Gates"
@@ -92,11 +101,11 @@ class ThresholdPlugin(Plugin, PluginHelpMixin):
     def get_operation(self):
         return ThresholdWorkflowOp()
     
-    def get_handler(self, model):
+    def get_handler(self, model, context):
         if isinstance(model, ThresholdWorkflowOp):
-            return ThresholdHandler(model = model)
+            return ThresholdHandler(model = model, context = context)
         elif isinstance(model, ThresholdSelectionView):
-            return ThresholdViewHandler(model = model)
+            return ThresholdViewHandler(model = model, context = context)
 
     def get_icon(self):
         return ImageResource('threshold')

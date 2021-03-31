@@ -167,7 +167,7 @@ def run_gui():
     #from cytoflowgui.op_plugins.import_op import ImportPlugin
     #from cytoflowgui.op_plugins.threshold import ThresholdPlugin
     from cytoflowgui.op_plugins import (ImportPlugin, 
-                                        #ThresholdPlugin) 
+                                        ThresholdPlugin,
                                         #RangePlugin, 
                                         #QuadPlugin,
                                         #Range2DPlugin, 
@@ -223,7 +223,7 @@ def run_gui():
     plugins.extend(view_plugins)
     
     op_plugins = [ImportPlugin(),
-                  #ThresholdPlugin()]
+                  ThresholdPlugin(),
                   #RangePlugin(),
                   #QuadPlugin(),
                   #Range2DPlugin(),

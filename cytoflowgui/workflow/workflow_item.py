@@ -17,9 +17,6 @@ from cytoflow import Experiment
 from cytoflow.utility import CytoflowError, CytoflowOpError, CytoflowViewError
 
 from .serialization import camel_registry
-from .operations import IWorkflowOperation
-from .views import IWorkflowView
-
 
 # http://stackoverflow.com/questions/1977362/how-to-create-module-wide-variables-in-python
 this = sys.modules[__name__]
@@ -44,13 +41,15 @@ class WorkflowItem(HasStrictTraits):
     name = DelegatesTo('operation')
     
     # the operation this Item wraps
-    operation = Instance(IWorkflowOperation, copy = "ref")
+    operation = Instance('cytoflowgui.workflow.operations.IWorkflowOperation', copy = "ref")
     
     # the IViews associated with this operation
-    views = List(IWorkflowView, copy = "ref", comparison_mode = ComparisonMode.identity)
+    views = List(Instance('cytoflowgui.workflow.views.IWorkflowView'), 
+                 copy = "ref", 
+                 comparison_mode = ComparisonMode.identity)
     
     # the currently selected view
-    current_view = Instance(IWorkflowView, copy = "ref")
+    current_view = Instance('cytoflowgui.workflow.views.IWorkflowView', copy = "ref")
         
     # the Experiment that is the result of applying *operation* to the
     # previous_wi WorkflowItem's ``result``
@@ -66,7 +65,7 @@ class WorkflowItem(HasStrictTraits):
     statistics = Dict(Tuple(Str, Str), pd.Series, status = True)
     
     # the default view for this workflow item
-    default_view = Property(Instance(IWorkflowView), observe = 'operation')
+    default_view = Property(Instance('cytoflowgui.workflow.views.IWorkflowView'), observe = 'operation')
     
     # the previous_wi WorkflowItem in the workflow
     previous_wi = Instance('WorkflowItem', transient = True)

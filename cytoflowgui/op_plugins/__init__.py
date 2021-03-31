@@ -21,7 +21,7 @@ from .i_op_plugin import IOperationPlugin, OP_PLUGIN_EXT
 from .import_op import ImportPlugin
 # 
 # # gates
-# from .threshold import ThresholdPlugin
+from .threshold import ThresholdPlugin
 # from .range import RangePlugin
 # from .range2d import Range2DPlugin
 # from .polygon import PolygonPlugin
