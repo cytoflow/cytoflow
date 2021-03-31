@@ -210,6 +210,14 @@ class Stats1DPlotParams(BasePlotParams):
 class Stats2DPlotParams(BasePlotParams):
     xlim = Tuple(util.FloatOrNone(None), util.FloatOrNone(None)) 
     ylim = Tuple(util.FloatOrNone(None), util.FloatOrNone(None)) 
+    
+    
+class Channel(HasStrictTraits):
+    channel = Str
+    scale = util.ScaleEnum
+        
+    def __repr__(self):
+        return traits_repr(self)
 
         
         

@@ -113,12 +113,12 @@ from cytoflow import Stats2DView
 import cytoflow.utility as util
 
 from cytoflowgui.workflow.serialization import camel_registry, traits_repr, traits_str
-from .view_base import IWorkflowView, WorkflowView, Stats2DPlotParams, LINE_STYLES, SCATTERPLOT_MARKERS
+from .view_base import IWorkflowView, WorkflowView, Stats2DPlotParams as _Stats2DPlotParams, LINE_STYLES, SCATTERPLOT_MARKERS
 
 Stats2DView.__repr__ = traits_repr
 
 
-class Stats2DPluginPlotParams(Stats2DPlotParams):
+class Stats2DPlotParams(_Stats2DPlotParams):
     linestyle = Enum(LINE_STYLES)
     marker = Enum(SCATTERPLOT_MARKERS)
     markersize = util.PositiveCFloat(6, allow_zero = False)
@@ -128,7 +128,7 @@ class Stats2DPluginPlotParams(Stats2DPlotParams):
 
 @provides(IWorkflowView)
 class Stats2DWorkflowView(WorkflowView, Stats2DView):
-    plot_params = Instance(Stats2DPluginPlotParams, ())
+    plot_params = Instance(Stats2DPlotParams, ())
     
     def get_notebook_code(self, idx):
         view = Stats2DView()
@@ -187,7 +187,7 @@ def _load(data, version):
 
     return Stats2DWorkflowView(**data)
 
-@camel_registry.dumper(Stats2DPluginPlotParams, 'stats-2d-params', version = 1)
+@camel_registry.dumper(Stats2DPlotParams, 'stats-2d-params', version = 1)
 def _dump_params(params):
     return dict(
                 # BasePlotParams
@@ -216,4 +216,4 @@ def _dump_params(params):
 
 @camel_registry.loader('stats-2d-params', version = any)
 def _load_params(data, version):
-    return Stats2DPluginPlotParams(**data)
+    return Stats2DPlotParams(**data)

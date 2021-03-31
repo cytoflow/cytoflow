@@ -23,14 +23,13 @@ from traitsui.api import View, Item, EnumEditor, VGroup, HGroup, TextEditor, Con
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
-from cytoflowgui.workflow.views.parallel_coords import (ParallelCoordinatesWorkflowView, 
-                                                        ParallelCoordinatesPlotParams, 
-                                                        Channel)
-
-from cytoflowgui.editors import SubsetListEditor, ColorTextEditor, ExtendableEnumEditor, InstanceHandlerEditor, VerticalListEditor
+from ..workflow.views import (ParallelCoordinatesWorkflowView, 
+                              ParallelCoordinatesPlotParams, 
+                              Channel)
+from ..subset_controllers import subset_handler_factory
+from ..editors import SubsetListEditor, ColorTextEditor, ExtendableEnumEditor, InstanceHandlerEditor, VerticalListEditor
 
 from .i_view_plugin import IViewPlugin, VIEW_PLUGIN_EXT
-from .subset_controllers import subset_handler_factory
 from .view_plugin_base import ViewHandler, PluginHelpMixin, DataPlotParamsView
 
 

@@ -10,7 +10,7 @@ from traits.api import HasTraits, observe, HTML, Instance
 from traitsui.api import View, Item, HGroup, TextEditor, Controller, TupleEditor
 from pyface.qt import QtGui
 
-from cytoflowgui.editors import TabListEditor
+from ..editors import TabListEditor
 
 class PluginHelpMixin(HasTraits):
     """

@@ -18,7 +18,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from .i_view_plugin import IViewPlugin, VIEW_PLUGIN_EXT
-from .subset_controllers import subset_handler_factory
 from .histogram import HistogramPlugin
 from .histogram_2d import Histogram2DPlugin
 from .density import DensityPlugin

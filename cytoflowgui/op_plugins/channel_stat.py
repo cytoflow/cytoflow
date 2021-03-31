@@ -52,15 +52,13 @@ from traitsui.api import (View, Item, TextEditor, VGroup, EnumEditor, CheckListE
 from pyface.api import ImageResource
 from envisage.api import Plugin, contributes_to
                        
-from cytoflowgui.editors import InstanceHandlerEditor
+from ..workflow.operations import ChannelStatisticWorkflowOp
+from ..workflow.operations.channel_stat import summary_functions
+from ..editors import SubsetListEditor, InstanceHandlerEditor
+from ..subset_controllers import subset_handler_factory
 
 from .i_op_plugin import IOperationPlugin, OP_PLUGIN_EXT 
-from cytoflowgui.op_plugins.op_plugin_base import OpHandler, PluginHelpMixin, shared_op_traits_view
-from cytoflowgui.workflow.operations.channel_stat import ChannelStatisticWorkflowOp, summary_functions
-
-from ..editors import SubsetListEditor
-from ..view_plugins import subset_handler_factory
-
+from .op_plugin_base import OpHandler, PluginHelpMixin, shared_op_traits_view
 
 class ChannelStatisticHandler(OpHandler):
     def operation_traits_view(self):

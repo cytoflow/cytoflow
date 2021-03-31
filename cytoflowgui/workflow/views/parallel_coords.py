@@ -79,14 +79,13 @@ segments represents one data point.
 
 from textwrap import dedent
 
-from traits.api import (HasTraits, provides, Str, Instance, List, Dict,
-                        Property, observe)
+from traits.api import provides, Str, Instance, List, Dict, Property, observe
 
 from cytoflow import ParallelCoordinatesView
 import cytoflow.utility as util
 
-from cytoflowgui.workflow.serialization import camel_registry, traits_repr, traits_str
-from .view_base import IWorkflowView, WorkflowView, DataPlotParams
+from ..serialization import camel_registry, traits_repr, traits_str
+from .view_base import IWorkflowView, WorkflowView, DataPlotParams, Channel
 
 ParallelCoordinatesView.__repr__ = traits_repr
 
@@ -95,14 +94,6 @@ class ParallelCoordinatesPlotParams(DataPlotParams):
     alpha = util.PositiveCFloat(0.02)
     
     
-class Channel(HasTraits):
-    channel = Str
-    scale = util.ScaleEnum
-        
-    def __repr__(self):
-        return traits_repr(self)
-    
-
 @provides(IWorkflowView)
 class ParallelCoordinatesWorkflowView(WorkflowView, ParallelCoordinatesView):
     plot_params = Instance(ParallelCoordinatesPlotParams, ())

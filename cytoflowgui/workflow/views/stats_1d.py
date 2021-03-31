@@ -98,12 +98,12 @@ from cytoflow import Stats1DView
 import cytoflow.utility as util
 
 from cytoflowgui.workflow.serialization import camel_registry, traits_repr, traits_str
-from .view_base import IWorkflowView, WorkflowView, Stats1DPlotParams, LINE_STYLES, SCATTERPLOT_MARKERS
+from .view_base import IWorkflowView, WorkflowView, Stats1DPlotParams as _Stats1DPlotParams, LINE_STYLES, SCATTERPLOT_MARKERS
 
 Stats1DView.__repr__ = traits_repr
 
 
-class Stats1DPluginPlotParams(Stats1DPlotParams):
+class Stats1DPlotParams(_Stats1DPlotParams):
     variable_lim = Tuple(util.FloatOrNone(None), util.FloatOrNone(None))   
     linestyle = Enum(LINE_STYLES)
     marker = Enum(SCATTERPLOT_MARKERS)
@@ -116,7 +116,7 @@ class Stats1DPluginPlotParams(Stats1DPlotParams):
     
 @provides(IWorkflowView)
 class Stats1DWorkflowView(WorkflowView, Stats1DView):
-    plot_params = Instance(Stats1DPluginPlotParams, ())
+    plot_params = Instance(Stats1DPlotParams, ())
     
     def get_notebook_code(self, idx):
         view = Stats1DView()
@@ -179,7 +179,7 @@ def _load_v1(data, version):
 def _load(data, version):
     return Stats1DWorkflowView(**data)
 
-@camel_registry.dumper(Stats1DPluginPlotParams, 'stats-1d-params', version = 1)
+@camel_registry.dumper(Stats1DPlotParams, 'stats-1d-params', version = 1)
 def _dump_params(params):
     return dict(
                 # BasePlotParams
@@ -211,4 +211,4 @@ def _dump_params(params):
 
 @camel_registry.loader('stats-1d-params', version = any)
 def _load_params(data, version):
-    return Stats1DPluginPlotParams(**data)
+    return Stats1DPlotParams(**data)

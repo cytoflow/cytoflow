@@ -26,12 +26,11 @@ from pyface.api import ImageResource
 
 import cytoflow.utility as util
 
-from cytoflowgui.workflow.views.stats_1d import Stats1DWorkflowView, Stats1DPlotParams
-
-from cytoflowgui.editors import SubsetListEditor, ColorTextEditor, ExtendableEnumEditor, InstanceHandlerEditor
+from ..workflow.views import Stats1DWorkflowView, Stats1DPlotParams
+from ..editors import SubsetListEditor, ColorTextEditor, ExtendableEnumEditor, InstanceHandlerEditor
+from ..subset_controllers import subset_handler_factory
 
 from .i_view_plugin import IViewPlugin, VIEW_PLUGIN_EXT
-from .subset_controllers import subset_handler_factory
 from .view_plugin_base import ViewHandler, PluginHelpMixin, Stats1DPlotParamsView
 
 

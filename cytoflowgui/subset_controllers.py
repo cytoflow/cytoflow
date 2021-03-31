@@ -19,7 +19,7 @@
 
 from traitsui.api import Controller, View, HGroup, Item, CheckListEditor
 
-from ..editors import ValuesBoundsEditor
+from .editors import ValuesBoundsEditor
 
 from cytoflowgui.workflow.subset import BoolSubset, CategorySubset, RangeSubset
 

@@ -24,12 +24,12 @@ from traitsui.api import View, Item, EnumEditor, VGroup, ButtonEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource, FileDialog, OK
 
-from cytoflowgui.workflow.views.table import TableWorkflowView
-from cytoflowgui.util import DefaultFileDialog
-from cytoflowgui.editors import SubsetListEditor, ColorTextEditor, ExtendableEnumEditor, InstanceHandlerEditor
+from ..workflow.views import TableWorkflowView
+from ..util import DefaultFileDialog
+from ..editors import SubsetListEditor, ColorTextEditor, ExtendableEnumEditor, InstanceHandlerEditor
+from ..subset_controllers import subset_handler_factory
 
 from .i_view_plugin import IViewPlugin, VIEW_PLUGIN_EXT
-from .subset_controllers import subset_handler_factory
 from .view_plugin_base import ViewHandler, PluginHelpMixin
 
     

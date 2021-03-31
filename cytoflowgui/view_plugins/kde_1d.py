@@ -22,12 +22,11 @@ from traitsui.api import View, Item, EnumEditor, VGroup, TextEditor, Controller
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
-from cytoflowgui.workflow.views.kde_1d import Kde1DWorkflowView, Kde1DPlotParams
-
-from cytoflowgui.editors import SubsetListEditor, ColorTextEditor, ExtendableEnumEditor, InstanceHandlerEditor
+from ..workflow.views import Kde1DWorkflowView, Kde1DPlotParams
+from ..editors import SubsetListEditor, ColorTextEditor, ExtendableEnumEditor, InstanceHandlerEditor
+from ..subset_controllers import subset_handler_factory
 
 from .i_view_plugin import IViewPlugin, VIEW_PLUGIN_EXT
-from .subset_controllers import subset_handler_factory
 from .view_plugin_base import ViewHandler, PluginHelpMixin, Data1DPlotParamsView
 
 

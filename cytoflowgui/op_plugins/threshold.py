@@ -17,67 +17,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-'''
-Threshold Gate
---------------
-
-Draw a threshold gate.  To set a new threshold, click on the plot.
-
-.. object:: Name
-
-    The operation name.  Used to name the new metadata field that's created by 
-    this module.
-    
-.. object:: Channel
-
-    The name of the channel to apply the gate to.
-
-.. object:: Threshold
-
-    The threshold of the gate.
-    
-.. object:: Scale
-
-    The scale of the axis for the interactive plot
-    
-.. object:: Hue facet
-
-    Show different experimental conditions in different colors.
-    
-.. object:: Subset
-
-    Show only a subset of the data.
-   
-.. plot::
-
-    import cytoflow as flow
-    import_op = flow.ImportOp()
-    import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",
-                                 conditions = {'Dox' : 10.0}),
-                       flow.Tube(file = "Plate01/CFP_Well_A4.fcs",
-                                 conditions = {'Dox' : 1.0})]
-    import_op.conditions = {'Dox' : 'float'}
-    ex = import_op.apply()
-
-    thresh_op = flow.ThresholdOp(name = 'Threshold',
-                                 channel = 'Y2-A',
-                                 threshold = 2000)
-
-    thresh_op.default_view(scale = 'log').plot(ex)
-    
-'''
-
 from traits.api import provides
 from traitsui.api import View, Item, EnumEditor, VGroup, TextEditor
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 
 from cytoflowgui.view_plugins.view_plugin_base import ViewHandler
-from cytoflowgui.editors import SubsetListEditor, ColorTextEditor, ExtendableEnumEditor
+from cytoflowgui.editors import SubsetListEditor, ColorTextEditor, ExtendableEnumEditor, InstanceHandlerEditor
 from cytoflowgui.workflow.operations.threshold import ThresholdWorkflowOp, ThresholdSelectionView
 
 from cytoflowgui.op_plugins.op_plugin_base import OpHandler, shared_op_traits_view, PluginHelpMixin
 from .i_op_plugin import IOperationPlugin, OP_PLUGIN_EXT
+from cytoflowgui.view_plugins.subset_controllers import subset_handler_factory
+
 
 class ThresholdHandler(OpHandler):
     def default_traits_view(self):
@@ -90,39 +42,42 @@ class ThresholdHandler(OpHandler):
                          editor = TextEditor(auto_set = False)),
                     shared_op_traits_view) 
         
+        
 class ThresholdViewHandler(ViewHandler):
-    def traits_view(self):
-        return View(VGroup(
-                    VGroup(Item('channel', 
-                                label = "Channel",
-                                style = "readonly"),
-                           Item('threshold', 
-                                label = "Threshold",
-                                style = "readonly"),
-                           Item('scale'),
-                           Item('huefacet',
-                                editor=ExtendableEnumEditor(name='handler.previous_conditions_names',
-                                                            extra_items = {"None" : ""}),
-                                label="Color\nFacet"),
-                           label = "Threshold Setup View",
-                           show_border = False),
-                    VGroup(Item('subset_list',
-                                show_label = False,
-                                editor = SubsetListEditor(conditions = "context.previous_wi.conditions")),
-                           label = "Subset",
-                           show_border = False,
-                           show_labels = False),
-                    Item('context.view_warning',
-                         resizable = True,
-                         visible_when = 'context.view_warning',
-                         editor = ColorTextEditor(foreground_color = "#000000",
-                                                 background_color = "#ffff99")),
-                    Item('context.view_error',
-                         resizable = True,
-                         visible_when = 'context.view_error',
-                         editor = ColorTextEditor(foreground_color = "#000000",
-                                                  background_color = "#ff9191"))))
-
+    view_traits_view = \
+        View(VGroup(
+             VGroup(Item('channel', 
+                         label = "Channel",
+                         style = "readonly"),
+                    Item('threshold', 
+                         label = "Threshold",
+                         style = "readonly"),
+                    Item('scale'),
+                    Item('huefacet',
+                         editor=ExtendableEnumEditor(name='handler.previous_conditions_names',
+                                                     extra_items = {"None" : ""}),
+                         label="Color\nFacet"),
+                    label = "Threshold Setup View",
+                    show_border = False),
+             VGroup(Item('subset_list',
+                         show_label = False,
+                         editor = SubsetListEditor(conditions = "context_handler.previous_conditions",
+                                                   editor = InstanceHandlerEditor(view = 'subset_view',
+                                                                                  handler_factory = subset_handler_factory),
+                                                   mutable = False)),
+                    label = "Subset",
+                    show_border = False,
+                    show_labels = False),
+             Item('context.view_warning',
+                  resizable = True,
+                  visible_when = 'context.view_warning',
+                  editor = ColorTextEditor(foreground_color = "#000000",
+                                          background_color = "#ffff99")),
+             Item('context.view_error',
+                  resizable = True,
+                  visible_when = 'context.view_error',
+                  editor = ColorTextEditor(foreground_color = "#000000",
+                                           background_color = "#ff9191"))))
 
 
 @provides(IOperationPlugin)
