@@ -196,7 +196,7 @@ def run_gui():
                                           Kde1DPlugin, 
                                           Kde2DPlugin,
                                           ViolinPlotPlugin,
-                                          #TablePlugin, 
+                                          TablePlugin, 
                                           Stats2DPlugin, 
                                           DensityPlugin,
                                           ParallelCoordinatesPlugin,
@@ -217,8 +217,8 @@ def run_gui():
                     ViolinPlotPlugin(),
                     BarChartPlugin(),
                     Stats1DPlugin(),
-                    Stats2DPlugin()]
-#                     TablePlugin()]
+                    Stats2DPlugin(),
+                    TablePlugin()]
     
     plugins.extend(view_plugins)
     

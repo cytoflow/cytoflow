@@ -506,7 +506,7 @@ class LocalWorkflow(HasStrictTraits):
             trait_name = event.name
 
         # filter out anything that's transient (like properties)            
-        if event.object.trait(trait_name).transient:
+        if event.object.trait(trait_name).transient or event.object.trait(trait_name).status:
             return
 
         wi = next((x for x in self.workflow if event.object in x.views))
@@ -899,7 +899,6 @@ class RemoteWorkflow(HasStrictTraits):
                 # invalidate following wi's
 #                 self.workflow[idx + 1].changed = (Changed.PREV_RESULT, None)     
 
-
     @observe('workflow:items:operation:+apply')
     def _on_operation_apply_changed(self, event):
         logger.debug("RemoteWorkflow._operation_apply_changed :: {}".format(event))
@@ -922,7 +921,6 @@ class RemoteWorkflow(HasStrictTraits):
         if wi.operation.should_clear_estimate(Changed.ESTIMATE, event):
             wi.operation.clear_estimate()
             
-            
     @observe('workflow:items:operation:+estimate_result')
     def _on_estimate_result_changed(self, event):
         logger.debug("RemoteWorkflow._estimate_result_changed :: {}".format(event))
@@ -938,14 +936,12 @@ class RemoteWorkflow(HasStrictTraits):
              
         if wi.operation.should_apply(Changed.ESTIMATE_RESULT, event):
             self.exec_q.put((idx, (wi, wi.apply)))
-        
                 
     @observe('workflow:items:operation:+status')
     def _on_operation_status_changed(self, event):
         wi = next((x for x in self.workflow if x.operation is event.object))
         idx = self.workflow.index(wi)
         self.message_q.put((Msg.UPDATE_OP, (idx, event.name, event.new)))
-        
         
     @observe('workflow:items:result', post_init = True)
     def _on_result_changed(self, event):
@@ -989,48 +985,27 @@ class RemoteWorkflow(HasStrictTraits):
                     # FIXME wi.current_view.update_plot_names(wi)
                     self.exec_q.put((next_idx - 0.1))
              
-             
-#     @observe('workflow:items:previous_wi.result')
-#     def _on_prev_result_changed(self, event):
-#         logger.debug("RemoteWorkflow._prev_result_changed :: {}".format(event))  
-#         
-#         wi = event.object
-#         idx = self.workflow.index(wi)
-#         
-#         if wi.operation.should_clear_estimate(Changed.PREV_RESULT, None):
-#             wi.operation.clear_estimate()
-#              
-#         if wi.operation.should_apply(Changed.PREV_RESULT, event):
-#             with wi.lock:
-#                 wi.result = None
-#                 wi.status = "invalid"
-#             self.exec_q.put((idx, (wi, wi.apply)))
-#              
-#         if (wi == self.selected 
-#             and wi.current_view 
-#             and wi.current_view.should_plot(Changed.PREV_RESULT, event)):
-#             # FIXME wi.current_view.update_plot_names(wi)
-#             self.exec_q.put((idx + 0.1, (wi, wi.plot)))
-            
-            
     @observe('workflow:items:views:items:+type')
     def _on_view_changed(self, event):
         logger.debug("RemoteWorkflow._view_changed :: {}".format(event))
         
         # filter out anything that's transient (like properties)            
-        if event.object.trait(event.name).transient or event.object.trait(event.name).status:
+        if event.object.trait(event.name).transient:
             return
-         
+        
         view = event.object
         wi = next((x for x in self.workflow if view in x.views))
         idx = self.workflow.index(wi)
+        
+        if event.object.trait(event.name).status:
+            self.message_q.put((Msg.UPDATE_VIEW, (idx, view.id, event.name, event.new)))
+            return
         
         if (wi == self.selected 
             and wi.current_view == view 
             and wi.current_view.should_plot(Changed.VIEW, event)):
             # FIXME wi.current_view.update_plot_names(wi)
-            self.exec_q.put((idx - 0.1, (wi, wi.plot)))
-                        
+            self.exec_q.put((idx - 0.1, (wi, wi.plot)))     
             
     @observe('workflow:items:current_view')
     def _on_current_view_changed(self, event):
@@ -1042,14 +1017,12 @@ class RemoteWorkflow(HasStrictTraits):
             # FIXME wi.current_view.update_plot_names(wi)
             self.exec_q.put((idx + 0.1, (wi, wi.plot)))
             
-            
     @observe('workflow:items:+status', post_init = True)
     def _on_workflow_item_changed(self, event):
         logger.debug("RemoteWorkflow._workflow_item_changed :: {}".format(event))
               
         idx = self.workflow.index(event.object)
         self.message_q.put((Msg.UPDATE_WI, (idx, event.name, event.new)))
-        
         
     @observe('selected', post_init = True)
     def _on_selected_workflowitem_changed(self, event):
