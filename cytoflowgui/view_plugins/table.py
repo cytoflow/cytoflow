@@ -120,7 +120,7 @@ class TableHandler(ViewHandler):
                          label = "Subcolumn"),
                     Item('handler.export',
                          editor = ButtonEditor(label = "Export..."),
-                         enabled_when = 'model.result is not None',
+                         enabled_when = 'result is not None',
                          show_label = False),
                     label = "Table View",
                     show_border = False),
