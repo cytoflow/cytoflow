@@ -243,8 +243,10 @@ class FlowTask(Task):
                                       plugins = self.view_plugins,
                                       task = self)
         
-        self.help_pane = HelpDockPane(view_plugins = self.view_plugins,
-                                      op_plugins = self.op_plugins)
+        self.help_pane = HelpDockPane(model = self.model,
+                                      view_plugins = self.view_plugins,
+                                      op_plugins = self.op_plugins,
+                                      task = self)
         
         self.plot_params_pane = PlotParamsPane(model = self.model,
                                                handler = self.handler)
@@ -563,37 +565,8 @@ class FlowTask(Task):
                              image = ImageResource('cuvette'),
                              additions = text)
         dialog.open()
-        
-#     @on_trait_change('model.selected', post_init = True)
-#     def _on_select_op(self, selected):
-#         if selected:
-#             self.view_pane.enabled = (selected is not None)
-#             self.view_pane.default_view = selected.default_view.id if selected.default_view else ""
-#             self.view_pane.selected_view = selected.current_view.id if selected.current_view else ""
-#             self.help_pane.help_id = selected.operation.id
-#         else:
-#             self.view_pane.enabled = False
-            
-#     @on_trait_change('view_pane.selected_view', post_init = True)
-#     def _on_select_view(self, view_id):
-#         
-#         if not view_id:
-#             return
-#         
-#         # if we already have an instantiated view object, find it
-#         try:
-#             self.model.selected.current_view = next((x for x in self.model.selected.views if x.id == view_id))
-#         except StopIteration:
-#             # else make the new view
-#             plugin = next((x for x in self.view_plugins if x.view_id == view_id))
-#             view = plugin.get_view()
-#             self.model.selected.views.append(view)
-#             self.model.selected.current_view = view
-#             
-#         self.help_pane.help_id = view_id
 
-#### Jupyter notebook serialization
-    
+    # Jupyter notebook serialization
     def save_notebook(self, workflow, path):
         nb = nbf.v4.new_notebook()
         

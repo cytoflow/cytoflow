@@ -19,7 +19,7 @@
 
 import pathlib
 
-from traits.api import Instance, List, on_trait_change, Str, HTML
+from traits.api import Instance, List, observe, Str, HTML
 from traitsui.api import View, Item, HTMLEditor
 from pyface.tasks.api import TraitsDockPane, Task
 from pyface.qt import QtGui
@@ -48,7 +48,7 @@ class HelpDockPane(TraitsDockPane):
     
     html = HTML("<b>Welcome to Cytoflow!</b>")
     
-    traits_view = View(Item('html',
+    traits_view = View(Item('pane.html',
                             editor = HTMLEditor(base_url = pathlib.Path(__file__).parent.joinpath('help').as_posix()),
                             show_label = False))
     
@@ -65,10 +65,18 @@ class HelpDockPane(TraitsDockPane):
         parent.setWidget(control)
 
         return control
-
     
-    @on_trait_change('help_id', post_init = True)
-    def _on_help_id_changed(self):
+    @observe('model:selected', post_init = True)
+    def _on_select_op(self, _):
+        if self.model.selected:
+            self.help_id = self.model.selected.operation.id
+            
+    @observe('model:selected:current_view', post_init = True)
+    def _on_select_view(self, _):
+        self.help_id = self.model.selected.current_view.id
+    
+    @observe('help_id', post_init = True)
+    def _on_help_id_changed(self, _):
         for plugin in self.view_plugins:
             if self.help_id == plugin.view_id:
                 try:

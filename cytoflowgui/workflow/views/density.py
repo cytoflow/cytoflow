@@ -17,6 +17,59 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+Density Plot
+------------
+
+Plots a 2-dimensional density plot.
+
+.. object:: X Channel, Y Channel
+
+    The channels to plot on the X and Y axes.
+    
+.. object:: X Scale, Y Scale
+
+    How to scale the X and Y axes of the plot.
+    
+.. object:: Horizonal Facet
+
+    Make multiple plots.  Each column has a unique value of this variable.
+    
+.. object:: Vertical Facet
+
+    Make multiple plots.  Each row has a unique value of this variable.
+
+.. object:: Color Scale
+
+    Scale the color palette and the color bar
+    
+.. object:: Tab Facet
+
+    Make multiple plots in differen tabs; each tab's plot has a unique value
+    of this variable.
+    
+.. object:: Subset
+
+    Plot only a subset of the data in the experiment.
+    
+.. plot::
+        
+    import cytoflow as flow
+    import_op = flow.ImportOp()
+    import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",
+                                 conditions = {'Dox' : 10.0}),
+                       flow.Tube(file = "Plate01/CFP_Well_A4.fcs",
+                                 conditions = {'Dox' : 1.0})]
+    import_op.conditions = {'Dox' : 'float'}
+    ex = import_op.apply()
+
+    flow.DensityView(xchannel = 'V2-A',
+                     xscale = 'log',
+                     ychannel = 'Y2-A',
+                     yscale = 'log').plot(ex)
+
+"""
+
 from textwrap import dedent
 
 from traits.api import provides, Bool, Instance

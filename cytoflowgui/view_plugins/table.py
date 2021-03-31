@@ -17,63 +17,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-"""
-Table
------
-
-Make a table out of a statistic.  The table can then be exported.
-
-.. object:: Statistic
-
-    Which statistic to view.
-    
-.. object:: Rows
-
-    Which variable to use for the rows
-
-.. object:: Subrows
-
-    Which variable to use for subrows.
-    
-.. object:: Columns
-
-    Which variable to use for the columns.
-    
-.. object:: Subcolumns
-
-    Which variable to use for the subcolumns.
-    
-.. object:: Export
-
-    Export the table to a CSV file.
-
-    
-.. plot::
-        
-    import cytoflow as flow
-    import_op = flow.ImportOp()
-    import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",
-                                 conditions = {'Dox' : 10.0}),
-                       flow.Tube(file = "Plate01/CFP_Well_A4.fcs",
-                                 conditions = {'Dox' : 1.0})]
-    import_op.conditions = {'Dox' : 'float'}
-    ex = import_op.apply()
-    
-    ex2 = flow.ThresholdOp(name = 'Threshold',
-                           channel = 'Y2-A',
-                           threshold = 2000).apply(ex)
-    
-
-    ex3 = flow.ChannelStatisticOp(name = "ByDox",
-                                  channel = "Y2-A",
-                                  by = ['Dox', 'Threshold'],
-                                  function = len).apply(ex2) 
-
-    flow.TableView(statistic = ("ByDox", "len"),
-                   row_facet = "Dox",
-                   column_facet = "Threshold").plot(ex3)    
-
-"""
 import pandas as pd
 
 from traits.api import provides, Property, Event, observe

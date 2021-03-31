@@ -17,68 +17,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-"""
-Violin Plot
------------
-
-Plots a violin plot, which is a nice way to compare several distributions.
-
-.. object:: X Variable
-
-    The variable to compare on the X axis.
-
-.. object:: Y Channel
-
-    The channel to plot on the Y axis.
-    
-.. object:: Y Channel Scale
-
-    How to scale the Y axis of the plot.
-    
-.. object:: Horizonal Facet
-
-    Make multiple plots.  Each column has a unique value of this variable.
-    
-.. object:: Vertical Facet
-
-    Make multiple plots.  Each row has a unique value of this variable.
-    
-.. object:: Color Facet
-
-    Plot with multiple colors.  Each color has a unique value of this variable.
-    
-.. object:: Color Scale
-
-    If **Color Facet** is a numeric variable, use this scale for the color
-    bar.
-    
-.. object:: Tab Facet
-
-    Make multiple plots in differen tabs; each tab's plot has a unique value
-    of this variable.
-    
-.. object:: Subset
-
-    Plot only a subset of the data in the experiment.
-  
-.. plot::
-        
-    import cytoflow as flow
-    import_op = flow.ImportOp()
-    import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",
-                                 conditions = {'Dox' : 10.0}),
-                       flow.Tube(file = "Plate01/CFP_Well_A4.fcs",
-                                 conditions = {'Dox' : 1.0})]
-    import_op.conditions = {'Dox' : 'float'}
-    ex = import_op.apply()
-
-    flow.ViolinPlotView(channel = 'Y2-A',
-                        scale = 'log',
-                        variable = 'Dox').plot(ex)
-"""
-
 from traits.api import provides
-from traitsui.api import View, Item, EnumEditor, VGroup, TextEditor, Controller, HGroup
+from traitsui.api import View, Item, EnumEditor, VGroup, TextEditor, Controller
 from envisage.api import Plugin, contributes_to
 from pyface.api import ImageResource
 

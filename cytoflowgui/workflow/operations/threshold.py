@@ -78,8 +78,8 @@ from ..serialization import camel_registry, traits_str, traits_repr, dedent
 
 from .operation_base import IWorkflowOperation
 
-
 ThresholdOp.__repr__ = traits_repr
+
 
 @provides(IWorkflowView)
 class ThresholdSelectionView(ThresholdSelection):
@@ -109,6 +109,7 @@ class ThresholdSelectionView(ThresholdSelection):
                 traits = traits_str(view),
                 prev_idx = idx - 1,
                 plot_params = ", " + plot_params_str if plot_params_str else ""))
+        
     
 @provides(IWorkflowOperation)
 class ThresholdWorkflowOp(ThresholdOp):
