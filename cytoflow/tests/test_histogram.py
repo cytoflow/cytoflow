@@ -26,7 +26,7 @@ Created on Mar 5, 2018
 import unittest
 import cytoflow as flow
 
-from test_base import View1DTestBase  # @UnresolvedImport
+from .test_base import View1DTestBase
 
 class TestHistogram(View1DTestBase, unittest.TestCase):
 

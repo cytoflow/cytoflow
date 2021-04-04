@@ -859,7 +859,7 @@ class FlowPeaks1DView(By1DView, AnnotatingView, HistogramView):
     id = Constant('edu.mit.synbio.cytoflow.view.flowpeaks1dview')
     friendly_id = Constant("1D FlowPeaks Diagnostic Plot")
     
-    channel = Str
+    channel = Str(Undefined)
     scale = util.ScaleEnum
     
     def plot(self, experiment, **kwargs):
@@ -873,7 +873,10 @@ class FlowPeaks1DView(By1DView, AnnotatingView, HistogramView):
 
         if experiment is None:
             raise util.CytoflowViewError('experiment', "No experiment specified")
-                
+        
+        if self.channel is Undefined:
+            raise util.CytoflowViewError('channel', "Must set channel")
+        
         view, trait_name = self._strip_trait(self.op.name)
         
         if self.channel in self.op._scale:
@@ -921,8 +924,8 @@ class FlowPeaks2DView(By2DView, AnnotatingView, ScatterplotView):
     id = Constant('edu.mit.synbio.cytoflow.view.flowpeaks2dview')
     friendly_id = Constant("FlowPeaks 2D Diagnostic Plot")
     
-    xchannel = Str
-    ychannel = Str
+    xchannel = Str(Undefined)
+    ychannel = Str(Undefined)
     xscale = util.ScaleEnum
     yscale = util.ScaleEnum
  
@@ -937,6 +940,12 @@ class FlowPeaks2DView(By2DView, AnnotatingView, ScatterplotView):
         
         if experiment is None:
             raise util.CytoflowViewError('experiment', "No experiment specified")
+        
+        if self.xchannel is Undefined:
+            raise util.CytoflowViewError('xchannel', "Must set xchannel")
+        
+        if self.ychannel is Undefined:
+            raise util.CytoflowViewError('ychannel', "Must set ychannel")
 
         annotations = {}
         for k in self.op._kmeans:
@@ -1015,11 +1024,11 @@ class FlowPeaks2DDensityView(By2DView, AnnotatingView, NullView):
     id = Constant('edu.mit.synbio.cytoflow.view.flowpeaks2ddensityview')
     friendly_id = Constant("FlowPeaks 2D Diagnostic Plot (Density)")
     
-    xchannel = Str
-    ychannel = Str
+    xchannel = Str(Undefined)
+    ychannel = Str(Undefined)
     xscale = util.ScaleEnum
     yscale = util.ScaleEnum
-    huefacet = Constant(None)
+    huefacet = Constant(Undefined)
  
     def plot(self, experiment, **kwargs):
         """
@@ -1031,6 +1040,12 @@ class FlowPeaks2DDensityView(By2DView, AnnotatingView, NullView):
 
         if experiment is None:
             raise util.CytoflowViewError('experiment', "No experiment specified")
+        
+        if self.xchannel is Undefined:
+            raise util.CytoflowViewError('xchannel', "Must set xchannel")
+        
+        if self.ychannel is Undefined:
+            raise util.CytoflowViewError('ychannel', "Must set ychannel")
 
         annotations = {}
         for k in self.op._kmeans:

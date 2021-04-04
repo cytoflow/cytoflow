@@ -275,8 +275,8 @@ class QuadSelection(Op2DView, ScatterplotView):
     id = Constant('edu.mit.synbio.cytoflow.views.quad')
     friendly_id = Constant("Quadrant Selection")
     
-    xfacet = Constant(None)
-    yfacet = Constant(None)
+    xfacet = Constant(Undefined)
+    yfacet = Constant(Undefined)
     
     # override the Op2DView
     xscale = util.ScaleEnum

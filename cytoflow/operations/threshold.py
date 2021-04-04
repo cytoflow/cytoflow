@@ -227,8 +227,8 @@ class ThresholdSelection(Op1DView, HistogramView):
     id = Constant('edu.mit.synbio.cytoflow.views.threshold')
     friendly_id = Constant("Threshold Selection")
 
-    xfacet = Constant(None)
-    yfacet = Constant(None)
+    xfacet = Constant(Undefined)
+    yfacet = Constant(Undefined)
     
     scale = util.ScaleEnum
     interactive = Bool(False, transient = True)
@@ -259,8 +259,6 @@ class ThresholdSelection(Op1DView, HistogramView):
         self._draw_threshold()
         
     def _draw_threshold(self):
-        # NOTE TO SELF - self.op.threshold is Undefined because self.op is DIFFERENT (different id())
-        # than wi.operation -- somehow the delegation has come unlinked.
         if not self._ax or self.op.threshold is Undefined:
             return
         

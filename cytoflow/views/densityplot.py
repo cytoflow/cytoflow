@@ -22,7 +22,7 @@ cytoflow.views.densityplot
 --------------------------
 """
 
-from traits.api import provides, Constant
+from traits.api import provides, Constant, Undefined
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -88,7 +88,7 @@ class DensityView(Base2DView):
     id = Constant('edu.mit.synbio.cytoflow.view.density')
     friend_id = Constant("Density Plot")
     
-    huefacet = Constant(None)
+    huefacet = Constant(Undefined)
     
     def plot(self, experiment, **kwargs):
         """

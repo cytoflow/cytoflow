@@ -637,7 +637,7 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
             plt.plot(hist_bins[1:], hist_smooth)
             
             plt.axvline(self.op.bead_brightness_threshold, color = 'blue', linestyle = '--' )
-            if self.op.bead_brightness_cutoff:
+            if self.op.bead_brightness_cutoff is not Undefined:
                 plt.axvline(self.op.bead_brightness_cutoff, color = 'blue', linestyle = '--' )
             else:
                 plt.axvline(experiment.metadata[channel]['range'] * 0.7, color = 'blue', linestyle = '--')                

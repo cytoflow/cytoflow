@@ -26,7 +26,7 @@ Created on Mar 5, 2018
 import unittest
 import cytoflow as flow
 
-from test_base import View2DTestBase  # @UnresolvedImport
+from .test_base import View2DTestBase  # @UnresolvedImport
 
 class TestDensityPlot(View2DTestBase, unittest.TestCase):
 
@@ -54,9 +54,6 @@ class TestDensityPlot(View2DTestBase, unittest.TestCase):
 
     def testYFacetOrder(self):
         super().testYFacetOrder(has_colorbar=True)
-
-    def testSubset(self):
-        super().testSubset(has_colorbar=True)
 
     def testHueFacet(self):
         pass  # not applicable

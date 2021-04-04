@@ -276,8 +276,8 @@ class PolygonSelection(Op2DView, ScatterplotView):
     id = Constant('edu.mit.synbio.cytoflow.views.polygon')
     friendly_id = Constant("Polygon Selection")
     
-    xfacet = Constant(None)
-    yfacet = Constant(None)
+    xfacet = Constant(Undefined)
+    yfacet = Constant(Undefined)
 
     interactive = Bool(False, transient = True)
 

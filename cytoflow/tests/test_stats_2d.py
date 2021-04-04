@@ -25,10 +25,12 @@ Created on Dec 1, 2015
 
 import unittest
 
+from traits.api import Undefined
+
 import cytoflow as flow
 import cytoflow.utility as util
 
-from test_base import ImportedDataTest  # @UnresolvedImport
+from .test_base import ImportedDataTest
 
 class Test2DStats(ImportedDataTest):
 
@@ -99,13 +101,13 @@ class Test2DStats(ImportedDataTest):
 
         
     def testXfacet(self):
-        self.view.huefacet = ""
+        self.view.huefacet = Undefined
         self.view.xfacet = "Well"
         self.view.plot(self.ex)
         
         
     def testYfacet(self):
-        self.view.huefacet = ""
+        self.view.huefacet = Undefined
         self.view.yfacet = "Well"
         self.view.plot(self.ex)
 
@@ -120,7 +122,7 @@ class Test2DStats(ImportedDataTest):
         self.view.plot(self.ex)
         
     def testSubset(self):
-        self.view.huefacet = ""
+        self.view.huefacet = Undefined
         self.view.subset = "Well == 'A'"
         self.view.plot(self.ex)
         
@@ -139,7 +141,7 @@ class Test2DStats(ImportedDataTest):
         self.view.plot(self.ex, huelabel = "hue lab")
     
     def testColWrap(self):
-        self.view.huefacet = ""
+        self.view.huefacet = Undefined
         self.view.xfacet = "Well"
         self.view.plot(self.ex, col_wrap = 2)
         

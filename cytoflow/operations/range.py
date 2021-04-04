@@ -236,8 +236,8 @@ class RangeSelection(Op1DView, HistogramView):
     id = Constant('edu.mit.synbio.cytoflow.views.range')
     friendly_id = Constant("Range Selection")
 
-    xfacet = Constant(None)
-    yfacet = Constant(None)
+    xfacet = Constant(Undefined)
+    yfacet = Constant(Undefined)
     
     scale = util.ScaleEnum
     

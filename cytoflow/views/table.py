@@ -141,7 +141,7 @@ class TableView(HasStrictTraits):
         data = pd.DataFrame(index = stat.index)
         data[stat.name] = stat   
         
-        if self.subset:
+        if self.subset is not Undefined:
             try:
                 data = data.query(self.subset)
             except Exception as e:
@@ -421,7 +421,7 @@ class TableView(HasStrictTraits):
     
     def _export_data(self, data, column_name, filename):
         
-        if self.subset:
+        if self.subset is not Undefined:
             try:
                 data = data.query(self.subset)
             except Exception as e:

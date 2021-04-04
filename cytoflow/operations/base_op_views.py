@@ -25,7 +25,7 @@ cytoflow.operations.base_op_views
 from warnings import warn
 import collections
 
-from traits.api import (provides, Instance, Property, List, DelegatesTo)
+from traits.api import (provides, Instance, Property, List, DelegatesTo, Undefined)
 
 import cytoflow.utility as util
 
@@ -100,7 +100,7 @@ class ByView(OpView):
     by = Property(List)
     
     def _get_facets(self):
-        return [x for x in [self.xfacet, self.yfacet, self.huefacet] if x]   
+        return [x for x in [self.xfacet, self.yfacet, self.huefacet] if x is not Undefined]   
     
     def _get_by(self):
         if self.op.by:
@@ -151,7 +151,7 @@ class ByView(OpView):
                                            "must be one of {}"
                                            .format(b, experiment.conditions))
                 
-        if self.subset:
+        if self.subset is not Undefined:
             try:
                 experiment = experiment.query(self.subset)
             except util.CytoflowError as e:
@@ -239,7 +239,7 @@ class ByView(OpView):
         # it here to see if we're dropping any levels (via reset_index) before
         # doing the groupby
         
-        if self.subset:
+        if self.subset is not Undefined:
             try:
                 experiment = experiment.query(self.subset)
                 experiment.data.reset_index(drop = True, inplace = True)
@@ -337,7 +337,7 @@ class AnnotatingView(BaseDataView):
         if annotation_facet is not None and annotation_facet in experiment.data:
             if annotation_trait:
                 self.trait_set(**{annotation_trait : annotation_facet})
-            elif not self.huefacet:
+            elif self.huefacet is Undefined:
                 warn("Setting 'huefacet' to '{}'".format(annotation_facet),
                      util.CytoflowViewWarning)
                 annotation_trait = 'huefacet'

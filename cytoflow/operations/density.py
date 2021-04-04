@@ -444,7 +444,7 @@ class DensityGateView(By2DView, AnnotatingView, DensityView):
     id = Constant('edu.mit.synbio.cytoflow.view.densitygateview')
     friendly_id = Constant("Density Gate Diagnostic Plot")
 
-    huefacet = Constant(None)
+    huefacet = Constant(Undefined)
     
     def plot(self, experiment, **kwargs):
         """

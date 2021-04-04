@@ -23,9 +23,8 @@ Created on Dec 1, 2015
 @author: brian
 '''
 import unittest
-import os
 import cytoflow as flow
-from test_base import ImportedDataSmallTest
+from .test_base import ImportedDataSmallTest
 
 
 class TestFlowpeaks(ImportedDataSmallTest):
