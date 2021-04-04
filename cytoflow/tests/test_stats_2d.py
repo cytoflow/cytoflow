@@ -28,7 +28,7 @@ import unittest
 import cytoflow as flow
 import cytoflow.utility as util
 
-from test_base import ImportedDataTest  # @UnresolvedImport
+from .test_base import ImportedDataTest
 
 class Test2DStats(ImportedDataTest):
 

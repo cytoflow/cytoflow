@@ -118,7 +118,7 @@ class AutofluorescenceOp(HasStrictTraits):
     name = Constant("Autofluorescence")
     channels = List(Str)
     blank_file = File(exists = True)
-    blank_file_conditions = Dict({})
+    blank_file_conditions = Dict
 
     _af_median = Dict(Str, Float, transient = True)
     _af_stdev = Dict(Str, Float, transient = True)

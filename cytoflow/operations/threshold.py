@@ -24,7 +24,7 @@ cytoflow.operations.threshold
 
 from traits.api import (HasStrictTraits, Float, Str, Instance, 
                         Bool, on_trait_change, provides, Any, 
-                        Constant)
+                        Constant, Undefined)
     
 import pandas as pd
 
@@ -119,7 +119,7 @@ class ThresholdOp(HasStrictTraits):
     
     name = Str
     channel = Str
-    threshold = Float
+    threshold = Float(Undefined)
     
     _selection_view = Instance('ThresholdSelection', transient = True)
         
@@ -165,12 +165,16 @@ class ThresholdOp(HasStrictTraits):
             raise util.CytoflowOpError('channel',
                                        "{0} isn't a channel in the experiment"
                                        .format(self.channel))
+            
+        if self.threshold is Undefined:
+            raise util.CytoflowOpError('threshold',
+                                       "must set 'threshold'")
 
         gate = pd.Series(experiment[self.channel] > self.threshold)
 
         new_experiment = experiment.clone()
         new_experiment.add_condition(self.name, "bool", gate)
-        new_experiment.history.append(self.clone_traits(transient = lambda t: True))
+        new_experiment.history.append(self.clone_traits(transient = lambda _: True))
         return new_experiment
     
     def default_view(self, **kwargs):

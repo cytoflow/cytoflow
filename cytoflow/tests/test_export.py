@@ -22,9 +22,11 @@ Created on Dec 1, 2015
 
 @author: brian
 '''
+
 import unittest, os, tempfile, shutil, pathlib
 import cytoflow as flow
-from test_base import ImportedDataSmallTest
+
+from .test_base import ImportedDataSmallTest
 
 
 class Test(ImportedDataSmallTest):

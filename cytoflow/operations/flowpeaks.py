@@ -25,7 +25,7 @@ cytoflow.operations.flowpeaks
 import matplotlib.pyplot as plt
 from warnings import warn
 
-from traits.api import (HasStrictTraits, Str, CStr, Dict, Any, Instance, 
+from traits.api import (HasStrictTraits, Str, Dict, Any, Instance, 
                         Constant, List, provides, Array, Function)
 
 import numpy as np
@@ -211,7 +211,7 @@ class FlowPeaksOp(HasStrictTraits):
     id = Constant('edu.mit.synbio.cytoflow.operations.flowpeaks')
     friendly_id = Constant("FlowPeaks Clustering")
     
-    name = CStr()
+    name = Str
     channels = List(Str)
     scale = Dict(Str, util.ScaleEnum)
     by = List(Str)

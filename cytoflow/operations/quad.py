@@ -23,7 +23,7 @@ cytoflow.operations.quad
 '''
 
 from traits.api import (HasStrictTraits, Float, Str, Bool, Instance,
-                        provides, on_trait_change, Any, Constant)
+                        provides, on_trait_change, Any, Constant, Undefined)
 
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
@@ -138,10 +138,10 @@ class QuadOp(HasStrictTraits):
     name = Str
     
     xchannel = Str
-    xthreshold = Float
+    xthreshold = Float(Undefined)
     
     ychannel = Str
-    ythreshold = Float
+    ythreshold = Float(Undefined)
     
     _selection_view = Instance('QuadSelection', transient = True)
 
@@ -202,10 +202,10 @@ class QuadOp(HasStrictTraits):
             raise util.CytoflowOpError('ychanel', 
                                        "ychannel isn't in the experiment")
         
-        if not self.xthreshold:
+        if self.xthreshold is Undefined:
             raise util.CytoflowOpError('xthreshold', 'xthreshold must be set!')
         
-        if not self.ythreshold:
+        if self.ythreshold is Undefined:
             raise util.CytoflowOpError('ythreshold', 'ythreshold must be set!')
 
         gate = pd.Series([None] * len(experiment))

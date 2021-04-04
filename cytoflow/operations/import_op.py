@@ -24,7 +24,7 @@ cytoflow.operations.import_op
 
 import warnings, math
 from traits.api import (HasTraits, HasStrictTraits, provides, Str, List, Any,
-                        Dict, File, Constant, Enum, Int)
+                        Dict, File, Constant, Enum, Int, Undefined)
 
 import fcsparser
 import numpy as np
@@ -155,8 +155,8 @@ class ImportOp(HasStrictTraits):
         all characters must be letters, numbers or ``_``.  If :attr:`channels` is
         empty, load all channels in the FCS files.
         
-    events : Int
-        If not None, import only a random subset of events of size :attr:`events`. 
+    events : Int (default: Undefined)
+        If set, import only a random subset of events of size :attr:`events`. 
         Presumably the analysis will go faster but less precisely; good for
         interactive data exploration.  Then, unset :attr:`events` and re-run
         the analysis non-interactively.
@@ -219,7 +219,7 @@ class ImportOp(HasStrictTraits):
     data_set = Int(0)
 
     # are we subsetting?
-    events = util.CIntOrNone(None)
+    events = Int(Undefined)
     coarse_events = util.Deprecated(new = 'events')
         
     # DON'T DO THIS
@@ -370,7 +370,7 @@ class ImportOp(HasStrictTraits):
                                                   experiment, 
                                                   data_set = self.data_set)
     
-                if self.events:
+                if self.events is not Undefined:
                     if self.events <= len(tube_data):
                         tube_data = tube_data.loc[np.random.choice(tube_data.index,
                                                                    self.events,

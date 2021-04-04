@@ -23,7 +23,7 @@ cytoflow.operations.range
 '''
 
 from traits.api import (HasStrictTraits, Float, Str, Instance, Bool, 
-                        provides, on_trait_change, Any, Constant)
+                        provides, on_trait_change, Any, Constant, Undefined)
 
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D    
@@ -120,8 +120,8 @@ class RangeOp(HasStrictTraits):
     
     name = Str
     channel = Str
-    low = Float
-    high = Float
+    low = Float(Undefined)
+    high = Float(Undefined)
     
     _selection_view = Instance('RangeSelection', transient = True)
         
@@ -170,6 +170,12 @@ class RangeOp(HasStrictTraits):
                                        "Channel {0} not in the experiment"
                                        .format(self.channel))
         
+        if self.low is Undefined:
+            raise util.CytoflowOpError('low', "Must set 'low'")
+        
+        if self.high is Undefined:
+            raise util.CytoflowOpError('high', "Must set 'high'")
+        
         if self.high <= self.low:
             raise util.CytoflowOpError('high',
                                        "range high must be > range low")
@@ -178,6 +184,7 @@ class RangeOp(HasStrictTraits):
             raise util.CytoflowOpError('high',
                                        "range high must be > {0}"
                                        .format(experiment[self.channel].min()))
+            
         if self.low >= experiment[self.channel].max():
             raise util.CytoflowOpError('low',
                                        "range low must be < {0}"

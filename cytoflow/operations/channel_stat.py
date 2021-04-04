@@ -26,7 +26,7 @@ import pandas as pd
 import numpy as np
 
 from traits.api import (HasStrictTraits, Str, List, Constant, provides, 
-                        Callable, CStr, Any)
+                        Callable, Any)
 
 import cytoflow.utility as util
 
@@ -130,7 +130,7 @@ class ChannelStatisticOp(HasStrictTraits):
     id = Constant('edu.mit.synbio.cytoflow.operations.channel_statistic')
     friendly_id = Constant("Channel Statistics")
     
-    name = CStr
+    name = Str
     channel = Str
     function = Callable
     statistic_name = Str

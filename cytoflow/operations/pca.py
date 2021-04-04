@@ -23,7 +23,7 @@ cytoflow.operations.pca
 '''
 
 
-from traits.api import (HasStrictTraits, Str, CStr, Dict, Any, Instance, 
+from traits.api import (HasStrictTraits, Str, Dict, Any, Instance, 
                         Constant, List, Bool, provides)
 
 import numpy as np
@@ -155,7 +155,7 @@ class PCAOp(HasStrictTraits):
     id = Constant('edu.mit.synbio.cytoflow.operations.pca')
     friendly_id = Constant("Principal Component Analysis")
     
-    name = CStr()
+    name = Str
     channels = List(Str)
     scale = Dict(Str, util.ScaleEnum)
     num_components = util.PositiveInt(2, allow_zero = False)
