@@ -27,8 +27,7 @@ from .cytoflow_errors import CytoflowWarning, CytoflowOpWarning, CytoflowViewWar
 
 from .scale import scale_factory, IScale, set_default_scale, get_default_scale
 from .custom_traits import (PositiveInt, PositiveCInt, PositiveFloat, 
-                            PositiveCFloat, ScaleEnum, Deprecated, Removed, 
-                            FloatOrNone, CFloatOrNone, IntOrNone, CIntOrNone)
+                            PositiveCFloat, ScaleEnum, Deprecated, Removed)
 
 from .matplotlib_widgets import PolygonSelector, SpanSelector, Cursor
 
