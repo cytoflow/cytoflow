@@ -26,8 +26,8 @@ from warnings import warn
 import pandas as pd
 import numpy as np 
 
-from traits.api import (HasStrictTraits, Str, List, Constant, provides, CStr,
-                        Callable, Tuple, Any)
+from traits.api import (HasStrictTraits, Str, List, Constant, provides,
+                        Callable, Tuple, Any, Undefined)
 
 import cytoflow.utility as util
 
@@ -96,10 +96,10 @@ class TransformStatisticOp(HasStrictTraits):
     id = Constant('edu.mit.synbio.cytoflow.operations.transform_statistic')
     friendly_id = Constant("Transform Statistic")
 
-    name = CStr
+    name = Str(Undefined)
     statistic = Tuple(Str, Str)
-    function = Callable
-    statistic_name = Str
+    function = Callable(Undefined)
+    statistic_name = Str(Undefined)
     by = List(Str)    
     fill = Any(0)
 
@@ -124,7 +124,7 @@ class TransformStatisticOp(HasStrictTraits):
             raise util.CytoflowOpError('experiment',
                                        "Must specify an experiment")
 
-        if not self.name:
+        if self.name is Undefined:
             raise util.CytoflowOpError('name',
                                        "Must specify a name")
         
@@ -133,7 +133,7 @@ class TransformStatisticOp(HasStrictTraits):
                                        "Name can only contain letters, numbers and underscores."
                                        .format(self.name)) 
         
-        if not self.statistic:
+        if self.statistic is Undefined:
             raise util.CytoflowViewError('statistic',
                                          "Statistic not set")
         
@@ -144,12 +144,12 @@ class TransformStatisticOp(HasStrictTraits):
         else:
             stat = experiment.statistics[self.statistic]
 
-        if not self.function:
+        if self.function is Undefined:
             raise util.CytoflowOpError('function',
                                        "Must specify a function")
             
         stat_name = (self.name, self.statistic_name) \
-                     if self.statistic_name \
+                     if self.statistic_name is not Undefined \
                      else (self.name, self.function.__name__)
                      
         if stat_name in experiment.statistics:

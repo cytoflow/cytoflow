@@ -23,7 +23,7 @@ cytoflow.views.table
 '''
 
 from warnings import warn
-from traits.api import HasStrictTraits, Str, provides, Tuple, Constant
+from traits.api import HasStrictTraits, Str, provides, Tuple, Constant, Undefined
 import matplotlib.pyplot as plt
 
 from matplotlib.table import Table
@@ -118,12 +118,12 @@ class TableView(HasStrictTraits):
     function = util.Removed(err_string = REMOVED_ERROR)
     
     statistic = Tuple(Str, Str)
-    row_facet = Str
-    subrow_facet = Str
-    column_facet = Str
-    subcolumn_facet = Str
+    row_facet = Str(Undefined)
+    subrow_facet = Str(Undefined)
+    column_facet = Str(Undefined)
+    subcolumn_facet = Str(Undefined)
     
-    subset = Str
+    subset = Str(Undefined)
 
     def plot(self, experiment, plot_name = None, **kwargs):
         """Plot a table"""
@@ -167,71 +167,71 @@ class TableView(HasStrictTraits):
                                                  "Must have more than one "
                                                  "value to plot.") from e
         
-        if not (self.row_facet or self.column_facet):
+        if self.row_facet is Undefined and self.column_facet is Undefined:
             raise util.CytoflowViewError('row_facet',
                                          "Must set at least one of row_facet "
                                          "or column_facet")
             
-        if self.subrow_facet and not self.row_facet:
+        if self.subrow_facet is not Undefined and self.row_facet is Undefined:
             raise util.CytoflowViewError('subrow_facet',
                                          "Must set row_facet before using "
                                          "subrow_facet")
             
-        if self.subcolumn_facet and not self.column_facet:
+        if self.subcolumn_facet is not Undefined and self.column_facet is Undefined:
             raise util.CytoflowViewError('subcolumn_facet',
                                          "Must set column_facet before using "
                                          "subcolumn_facet")
             
-        if self.row_facet and self.row_facet not in experiment.conditions:
+        if self.row_facet is not Undefined and self.row_facet not in experiment.conditions:
             raise util.CytoflowViewError('row_facet',
                                          "Row facet {} not in the experiment, "
                                          "must be one of {}"
                                          .format(self.row_facet, experiment.conditions))        
 
-        if self.row_facet and self.row_facet not in data.index.names:
+        if self.row_facet is not Undefined and self.row_facet not in data.index.names:
             raise util.CytoflowViewError('row_facet',
                                          "Row facet {} not a statistic index; "
                                          "must be one of {}"
                                          .format(self.row_facet, data.index.names))  
             
-        if self.subrow_facet and self.subrow_facet not in experiment.conditions:
+        if self.subrow_facet is not Undefined and self.subrow_facet not in experiment.conditions:
             raise util.CytoflowViewError('subrow_facet',
                                          "Subrow facet {} not in the experiment, "
                                          "must be one of {}"
                                          .format(self.subrow_facet, experiment.conditions))  
             
-        if self.subrow_facet and self.subrow_facet not in data.index.names:
+        if self.subrow_facet is not Undefined and self.subrow_facet not in data.index.names:
             raise util.CytoflowViewError('subrow_facet',
                                          "Subrow facet {} not a statistic index; "
                                          "must be one of {}"
                                          .format(self.subrow_facet, data.index.names))  
             
-        if self.column_facet and self.column_facet not in experiment.conditions:
+        if self.column_facet is not Undefined and self.column_facet not in experiment.conditions:
             raise util.CytoflowViewError('column_facet',
                                          "Column facet {} not in the experiment, "
                                          "must be one of {}"
                                          .format(self.column_facet, experiment.conditions))  
             
-        if self.column_facet and self.column_facet not in data.index.names:
+        if self.column_facet is not Undefined and self.column_facet not in data.index.names:
             raise util.CytoflowViewError('column_facet',
                                          "Column facet {} not a statistic index; "
                                          "must be one of {}"
                                          .format(self.column_facet, data.index.names)) 
             
-        if self.subcolumn_facet and self.subcolumn_facet not in experiment.conditions:
+        if self.subcolumn_facet is not Undefined and self.subcolumn_facet not in experiment.conditions:
             raise util.CytoflowViewError('subcolumn_facet',
                                          "Subcolumn facet {} not in the experiment, "
                                          "must be one of {}"
                                          .format(self.subcolumn_facet, experiment.conditions))  
             
-        if self.subcolumn_facet and self.subcolumn_facet not in data.index.names:
+        if self.subcolumn_facet is not Undefined and self.subcolumn_facet not in data.index.names:
             raise util.CytoflowViewError('subcolumn_facet',
                                          "Subcolumn facet {} not a statistic index; "
                                          "must be one of {}"
                                          .format(self.subcolumn_facet, data.index.names))  
 
         facets = [x for x in [self.row_facet, self.subrow_facet, 
-                                      self.column_facet, self.subcolumn_facet] if x]
+                                      self.column_facet, self.subcolumn_facet] if x is not Undefined]
         if len(facets) != len(set(facets)):
             raise util.CytoflowViewError(None, 
                                          "Can't reuse facets")
@@ -242,19 +242,19 @@ class TableView(HasStrictTraits):
                                          .format(data.index.names))
             
         row_groups = data.index.get_level_values(self.row_facet).unique() \
-                     if self.row_facet else [None]
+                     if self.row_facet is not Undefined else [None]
                      
         subrow_groups = data.index.get_level_values(self.subrow_facet).unique() \
-                        if self.subrow_facet else [None] 
+                        if self.subrow_facet is not Undefined else [None] 
         
         col_groups = data.index.get_level_values(self.column_facet).unique() \
-                     if self.column_facet else [None]
+                     if self.column_facet is not Undefined else [None]
                      
         subcol_groups = data.index.get_level_values(self.subcolumn_facet).unique() \
-                        if self.subcolumn_facet else [None]
+                        if self.subcolumn_facet is not Undefined else [None]
 
-        row_offset = (self.column_facet != "") + (self.subcolumn_facet != "")        
-        col_offset = (self.row_facet != "") + (self.subrow_facet != "")
+        row_offset = (self.column_facet is not Undefined) + (self.subcolumn_facet is not Undefined)        
+        col_offset = (self.row_facet is not Undefined) + (self.subrow_facet is not Undefined)
         
         num_cols = len(col_groups) * len(subcol_groups) + col_offset
         
@@ -314,7 +314,7 @@ class TableView(HasStrictTraits):
                                    text = text)
                         
         # row headers
-        if self.row_facet:
+        if self.row_facet is not Undefined:
             for (ri, r) in enumerate(row_groups):
                 row_idx = ri * len(subrow_groups) + row_offset
                 try:
@@ -328,7 +328,7 @@ class TableView(HasStrictTraits):
                            text = text)
                 
         # subrow headers
-        if self.subrow_facet:
+        if self.subrow_facet is not Undefined:
             for (ri, r) in enumerate(row_groups):
                 for (rri, rr) in enumerate(subrow_groups):
                     row_idx = ri * len(subrow_groups) + rri + row_offset
@@ -344,7 +344,7 @@ class TableView(HasStrictTraits):
                                text = text)
                     
         # column headers
-        if self.column_facet:
+        if self.column_facet is not Undefined:
             for (ci, c) in enumerate(col_groups):
                 col_idx = ci * len(subcol_groups) + col_offset
                 try:
@@ -358,7 +358,7 @@ class TableView(HasStrictTraits):
                            text = text)
 
         # subcolumn headers
-        if self.subcolumn_facet:
+        if self.subcolumn_facet is not Undefined:
             for (ci, c) in enumerate(col_groups):
                 for (cci, cc) in enumerate(subcol_groups):
                     col_idx = ci * len(subcol_groups) + cci + col_offset
@@ -390,25 +390,25 @@ class TableView(HasStrictTraits):
             stat = experiment.statistics[self.statistic]    
             
             
-        if self.row_facet and self.row_facet not in experiment.conditions:
+        if self.row_facet is not Undefined and self.row_facet not in experiment.conditions:
             raise util.CytoflowViewError('row_facet',
                                          "Row facet {} not in the experiment, "
                                          "must be one of {}"
                                          .format(self.row_facet, experiment.conditions))       
             
-        if self.subrow_facet and self.subrow_facet not in experiment.conditions:
+        if self.subrow_facet is not Undefined and self.subrow_facet not in experiment.conditions:
             raise util.CytoflowViewError('subrow_facet',
                                          "Subrow facet {} not in the experiment, "
                                          "must be one of {}"
                                          .format(self.subrow_facet, experiment.conditions))  
             
-        if self.column_facet and self.column_facet not in experiment.conditions:
+        if self.column_facet is not Undefined and self.column_facet not in experiment.conditions:
             raise util.CytoflowViewError('column_facet',
                                          "Column facet {} not in the experiment, "
                                          "must be one of {}"
                                          .format(self.column_facet, experiment.conditions))
             
-        if self.subcolumn_facet and self.subcolumn_facet not in experiment.conditions:
+        if self.subcolumn_facet is not Undefined and self.subcolumn_facet not in experiment.conditions:
             raise util.CytoflowViewError('subcolumn_facet',
                                          "Subcolumn facet {} not in the experiment, "
                                          "must be one of {}"
@@ -447,36 +447,36 @@ class TableView(HasStrictTraits):
                                                  "Must have more than one "
                                                  "value to plot.") from e
         
-        if not (self.row_facet or self.column_facet):
+        if self.row_facet is Undefined and self.column_facet is Undefined:
             raise util.CytoflowViewError('row_facet',
                                          "Must set at least one of row_facet "
                                          "or column_facet")
             
-        if self.subrow_facet and not self.row_facet:
+        if self.subrow_facet is not Undefined and not self.row_facet:
             raise util.CytoflowViewError('subrow_facet',
                                          "Must set row_facet before using "
                                          "subrow_facet")
             
-        if self.subcolumn_facet and not self.column_facet:
+        if self.subcolumn_facet is not Undefined and not self.column_facet:
             raise util.CytoflowViewError('subcolumn_facet',
                                          "Must set column_facet before using "
                                          "subcolumn_facet")  
 
-        if self.row_facet and self.row_facet not in data.index.names:
+        if self.row_facet is not Undefined and self.row_facet not in data.index.names:
             raise util.CytoflowViewError('row_facet',
                                          "Row facet {} not a statistic index; "
                                          "must be one of {}"
                                          .format(self.row_facet, data.index.names))  
  
             
-        if self.subrow_facet and self.subrow_facet not in data.index.names:
+        if self.subrow_facet is not Undefined and self.subrow_facet not in data.index.names:
             raise util.CytoflowViewError('subrow_facet',
                                          "Subrow facet {} not a statistic index; "
                                          "must be one of {}"
                                          .format(self.subrow_facet, data.index.names))  
  
             
-        if self.column_facet and self.column_facet not in data.index.names:
+        if self.column_facet is not Undefined and self.column_facet not in data.index.names:
             raise util.CytoflowViewError('column_facet',
                                          "Column facet {} not a statistic index; "
                                          "must be one of {}"
@@ -484,14 +484,14 @@ class TableView(HasStrictTraits):
             
 
             
-        if self.subcolumn_facet and self.subcolumn_facet not in data.index.names:
+        if self.subcolumn_facet is not Undefined and self.subcolumn_facet not in data.index.names:
             raise util.CytoflowViewError('subcolumn_facet',
                                          "Subcolumn facet {} not a statistic index; "
                                          "must be one of {}"
                                          .format(self.subcolumn_facet, data.index.names))  
 
         facets = [x for x in [self.row_facet, self.subrow_facet, 
-                                      self.column_facet, self.subcolumn_facet] if x]
+                                      self.column_facet, self.subcolumn_facet] if x is not Undefined]
         if len(facets) != len(set(facets)):
             raise util.CytoflowViewError(None, 
                                          "Can't reuse facets")
@@ -502,19 +502,19 @@ class TableView(HasStrictTraits):
                                          .format(data.index.names))
             
         row_groups = data.index.get_level_values(self.row_facet).unique() \
-                     if self.row_facet else [None]
+                     if self.row_facet is not Undefined else [None]
                      
         subrow_groups = data.index.get_level_values(self.subrow_facet).unique() \
-                        if self.subrow_facet else [None] 
+                        if self.subrow_facet is not Undefined else [None] 
         
         col_groups = data.index.get_level_values(self.column_facet).unique() \
-                     if self.column_facet else [None]
+                     if self.column_facet is not Undefined else [None]
                      
         subcol_groups = data.index.get_level_values(self.subcolumn_facet).unique() \
-                        if self.subcolumn_facet else [None]
+                        if self.subcolumn_facet is not Undefined else [None]
 
-        row_offset = (self.column_facet != "") + (self.subcolumn_facet != "")        
-        col_offset = (self.row_facet != "") + (self.subrow_facet != "")
+        row_offset = (self.column_facet is not Undefined) + (self.subcolumn_facet is not Undefined)        
+        col_offset = (self.row_facet is not Undefined) + (self.subrow_facet is not Undefined)
         
         num_rows = len(row_groups) * len(subrow_groups) + row_offset
         num_cols = len(col_groups) * len(subcol_groups) + col_offset
@@ -545,14 +545,14 @@ class TableView(HasStrictTraits):
                         t[row_idx, col_idx] = data.loc[agg_idx, column_name]
                         
         # row headers
-        if self.row_facet:
+        if self.row_facet is not Undefined:
             for (ri, r) in enumerate(row_groups):
                 row_idx = ri * len(subrow_groups) + row_offset
                 text = "{0} = {1}".format(self.row_facet, r)
                 t[row_idx, 0] = text
                 
         # subrow headers
-        if self.subrow_facet:
+        if self.subrow_facet is not Undefined:
             for (ri, r) in enumerate(row_groups):
                 for (rri, rr) in enumerate(subrow_groups):
                     row_idx = ri * len(subrow_groups) + rri + row_offset
@@ -560,14 +560,14 @@ class TableView(HasStrictTraits):
                     t[row_idx, 1] = text
                     
         # column headers
-        if self.column_facet:
+        if self.column_facet is not Undefined:
             for (ci, c) in enumerate(col_groups):
                 col_idx = ci * len(subcol_groups) + col_offset
                 text = "{0} = {1}".format(self.column_facet, c)
                 t[0, col_idx] = text
 
         # column headers
-        if self.subcolumn_facet:
+        if self.subcolumn_facet is not Undefined:
             for (ci, c) in enumerate(col_groups):
                 for (cci, cc) in enumerate(subcol_groups):
                     col_idx = ci * len(subcol_groups) + cci + col_offset

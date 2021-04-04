@@ -28,8 +28,8 @@ from warnings import warn
 import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon, Rectangle
 
-from traits.api import (HasStrictTraits, Str, CStr, Dict, Any, Instance, Bool, 
-                        Constant, List, provides)
+from traits.api import (HasStrictTraits, Str, Dict, Any, Instance, Bool, 
+                        Constant, List, provides, Undefined)
 
 import sklearn.mixture
 import scipy.stats
@@ -43,6 +43,7 @@ import cytoflow.utility as util
 
 from .i_operation import IOperation
 from .base_op_views import By1DView, By2DView, AnnotatingView
+
 
 @provides(IOperation)
 class GaussianMixtureOp(HasStrictTraits):
@@ -193,11 +194,11 @@ class GaussianMixtureOp(HasStrictTraits):
     id = Constant('edu.mit.synbio.cytoflow.operations.gaussian')
     friendly_id = Constant("Gaussian Mixture Model")
     
-    name = CStr()
+    name = Str(Undefined)
     channels = List(Str)
     scale = Dict(Str, util.ScaleEnum)
     num_components = util.PositiveInt(1, allow_zero = False)
-    sigma = util.PositiveFloat(allow_zero = True)
+    sigma = util.PositiveFloat(Undefined, allow_zero = False)
     by = List(Str)
     
     posteriors = Bool(False)
@@ -363,7 +364,7 @@ class GaussianMixtureOp(HasStrictTraits):
                                        "Must set at least one channel")
          
         # make sure name got set!
-        if not self.name:
+        if self.name is Undefined:
             raise util.CytoflowOpError('name',
                                        "You have to set the gate's name "
                                        "before applying it!")
@@ -378,7 +379,7 @@ class GaussianMixtureOp(HasStrictTraits):
                                        "Experiment already has a column named {0}"
                                        .format(self.name))
             
-        if self.sigma > 0:
+        if self.sigma is not Undefined:
             for i in range(1, self.num_components + 1):
                 cname = "{}_{}".format(self.name, i)
                 if cname in experiment.data.columns:
@@ -432,7 +433,7 @@ class GaussianMixtureOp(HasStrictTraits):
         if self.num_components > 1:
             event_assignments = pd.Series(["{}_None".format(self.name)] * len(experiment), dtype = "object")
  
-        if self.sigma > 0:
+        if self.sigma is not Undefined:
             event_gate = {i : pd.Series([False] * len(experiment), dtype = "double")
                            for i in range(self.num_components)}
  
@@ -509,7 +510,7 @@ class GaussianMixtureOp(HasStrictTraits):
                 
             # if we're doing sigma-based gating, for each component check
             # to see if the event is in the sigma gate.
-            if self.sigma > 0.0:
+            if self.sigma is not Undefined:
                 for c in range(self.num_components):
                     s = np.linalg.pinv(gmm.covariances_[c])
                     mu = gmm.means_[c]
@@ -565,7 +566,7 @@ class GaussianMixtureOp(HasStrictTraits):
         if self.num_components > 1:
             new_experiment.add_condition(self.name, "category", event_assignments)
             
-        if self.sigma > 0:
+        if self.sigma is not Undefined:
             for c in range(self.num_components):
                 gate_name = "{}_{}".format(self.name, c + 1)
                 new_experiment.add_condition(gate_name, "bool", event_gate[c])              
@@ -637,6 +638,7 @@ class GaussianMixtureOp(HasStrictTraits):
         else:
             raise util.CytoflowViewError('channels',
                                          "Can't specify more than two channels for a default view")
+
 
 @provides(IView)
 class GaussianMixture1DView(By1DView, AnnotatingView, HistogramView):
@@ -757,6 +759,7 @@ class GaussianMixture1DView(By1DView, AnnotatingView, HistogramView):
             y = scipy.stats.norm.pdf(scale(x), mean, stdev) * pdf_scale
             axes.plot(x, y, color = annotation_color)
                 
+                
 # from http://stackoverflow.com/questions/24467972/calculate-area-of-polygon-given-x-y-coordinates
 def poly_area(x,y):
     return 0.5*np.abs(np.dot(x,np.roll(y,1))-np.dot(y,np.roll(x,1)))
@@ -766,6 +769,7 @@ def poly_area(x,y):
 import matplotlib.path as path
 import matplotlib.patches as patches
 import matplotlib.transforms as transforms
+
     
 @provides(IView)
 class GaussianMixture2DView(By2DView, AnnotatingView, ScatterplotView):
@@ -899,6 +903,7 @@ class GaussianMixture2DView(By2DView, AnnotatingView, ScatterplotView):
                       fill = False,
                       linewidth = 2,
                       alpha = 0.33)
+        
                     
 def _plot_ellipse(ax, xscale, yscale, center, width, height, angle, **kwargs):
     tf = transforms.Affine2D() \

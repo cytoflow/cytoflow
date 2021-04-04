@@ -22,8 +22,8 @@ cytoflow.operations.density
 ---------------------------
 '''
 
-from traits.api import (HasStrictTraits, Str, CStr, Dict, Any, Instance, 
-                        Constant, List, provides, Array)
+from traits.api import (HasStrictTraits, Str, Dict, Any, Instance, 
+                        Constant, List, provides, Array, Undefined)
 
 import numpy as np
 import scipy.stats
@@ -164,9 +164,9 @@ class DensityGateOp(HasStrictTraits):
     id = Constant('edu.mit.synbio.cytoflow.operations.density')
     friendly_id = Constant("Density Gate")
     
-    name = CStr()
-    xchannel = Str()
-    ychannel = Str()
+    name = Str(Undefined)
+    xchannel = Str(Undefined)
+    ychannel = Str(Undefined)
     xscale = util.ScaleEnum
     yscale = util.ScaleEnum
     keep = util.PositiveFloat(0.9, allow_zero = False)
@@ -325,16 +325,16 @@ class DensityGateOp(HasStrictTraits):
             raise util.CytoflowOpError('experiment',
                                        "No experiment specified")
         
-        if not self.xchannel:
+        if self.xchannel is Undefined:
             raise util.CytoflowOpError('xchannel',
                                        "Must set X channel")
 
-        if not self.ychannel:
+        if self.ychannel is Undefined:
             raise util.CytoflowOpError('ychannel',
                                        "Must set Y channel")
         
         # make sure name got set!
-        if not self.name:
+        if self.name is Undefined:
             raise util.CytoflowOpError('name',
                                        "You have to set the gate's name "
                                        "before applying it!")

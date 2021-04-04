@@ -22,7 +22,7 @@ cytoflow.views.violin
 ---------------------
 '''
 
-from traits.api import Str, provides, Constant
+from traits.api import Str, provides, Constant, Undefined
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -73,7 +73,7 @@ class ViolinPlotView(Base1DView):
     id = Constant("edu.mit.synbio.cytoflow.view.violin")
     friendly_id = Constant("Violin Plot")
 
-    variable = Str
+    variable = Str(Undefined)
     
     def plot(self, experiment, **kwargs):
         """
@@ -121,7 +121,7 @@ class ViolinPlotView(Base1DView):
             raise util.CytoflowViewError('experiment',
                                          "No experiment specified")
         
-        if not self.variable:
+        if self.variable is Undefined:
             raise util.CytoflowViewError('variable',
                                          "Variable not specified")
         

@@ -24,12 +24,11 @@ cytoflow.operations.bead_calibration
 
 from traits.api import (HasStrictTraits, Str, File, Dict, Bool, Int, List, 
                         Float, Constant, provides, Callable, Any,
-                        Instance)
+                        Instance, Undefined)
 import numpy as np
 import math
 import scipy.signal
 import scipy.optimize
-import sys
         
 import matplotlib.pyplot as plt
 
@@ -198,7 +197,7 @@ class BeadCalibrationOp(HasStrictTraits):
     bead_peak_quantile = Int(80)
 
     bead_brightness_threshold = Float(100.0)
-    bead_brightness_cutoff = util.FloatOrNone(None)
+    bead_brightness_cutoff = Float(Undefined)
     bead_histogram_bins = Int(512)
     
     # TODO - bead_brightness_threshold should probably be different depending
@@ -258,7 +257,7 @@ class BeadCalibrationOp(HasStrictTraits):
             # TODO - this assumes the data is on a linear scale.  check it!
             data_range = experiment.metadata[channel]['range']
 
-            if self.bead_brightness_cutoff is None:
+            if self.bead_brightness_cutoff is Undefined:
                 cutoff = 0.7 * data_range
             else:
                 cutoff = self.bead_brightness_cutoff

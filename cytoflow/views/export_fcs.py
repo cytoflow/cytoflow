@@ -27,7 +27,7 @@ from pathlib import Path
 from copy import copy
 
 from traits.api import (Constant, List, Str, Bool, Dict, Directory, 
-                        HasStrictTraits)
+                        HasStrictTraits, Undefined)
 
 import cytoflow.utility as util
 
@@ -89,7 +89,7 @@ class ExportFCS(HasStrictTraits):
     id = Constant("edu.mit.synbio.cytoflow.view.table")
     friendly_id = Constant("Table View") 
     
-    base = Str
+    base = Str(Undefined)
     path = Directory(exists = True)
     by = List(Str)
     keywords = Dict(Str, Str)
@@ -166,7 +166,7 @@ class ExportFCS(HasStrictTraits):
                         else:
                             parts.append(str(values[i]))
                         
-                    if self.base:
+                    if self.base is not Undefined:
                         return self.base + '_' + '_'.join(parts) + '.fcs'
                     else:
                         return '_'.join(parts) + '.fcs'
@@ -274,7 +274,7 @@ class ExportFCS(HasStrictTraits):
                     parts.append(str(group[i]))
                     kws["CF_" + name] = str(group[i])
                 
-            if self.base:
+            if self.base is not Undefined:
                 filename = self.base + '_' + '_'.join(parts) + '.fcs'
             else:
                 filename = '_'.join(parts) + '.fcs'

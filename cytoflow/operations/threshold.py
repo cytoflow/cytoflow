@@ -23,8 +23,8 @@ cytoflow.operations.threshold
 '''
 
 from traits.api import (HasStrictTraits, Float, Str, Instance, 
-                        Bool, on_trait_change, provides, Any, 
-                        Constant)
+                        Bool, observe, provides, Any, 
+                        Constant, Undefined)
     
 import pandas as pd
 
@@ -117,9 +117,9 @@ class ThresholdOp(HasStrictTraits):
     id = Constant('edu.mit.synbio.cytoflow.operations.threshold')
     friendly_id = Constant("Threshold")
     
-    name = Str
-    channel = Str
-    threshold = Float
+    name = Str(Undefined)
+    channel = Str(Undefined)
+    threshold = Float(Undefined)
     
     _selection_view = Instance('ThresholdSelection', transient = True)
         
@@ -145,7 +145,7 @@ class ThresholdOp(HasStrictTraits):
             raise util.CytoflowOpError('experiment', "No experiment specified")
         
         # make sure name got set!
-        if not self.name:
+        if self.name is Undefined:
             raise util.CytoflowOpError('name', 
                                        "You have to set the gate's name "
                                        "before applying it!")
@@ -160,11 +160,26 @@ class ThresholdOp(HasStrictTraits):
             raise util.CytoflowOpError('name', 
                                        "Experiment already contains a column {0}"
                                        .format(self.name))
+            
+        if self.name is Undefined:
+            raise util.CytoflowOpError('channel', 
+                                       "You have to set the gate's channel "
+                                       "before applying it!")
+            
+        if self.channel is Undefined:
+            raise util.CytoflowOpError('channel', 
+                                       "You have to set the gate's channel "
+                                       "before applying it!")
 
         if self.channel not in experiment.channels:
             raise util.CytoflowOpError('channel',
                                        "{0} isn't a channel in the experiment"
                                        .format(self.channel))
+            
+        if self.threshold is Undefined:
+            raise util.CytoflowOpError('threshold', 
+                                       "You have to set the gate's threshold "
+                                       "before applying it!")
 
         gate = pd.Series(experiment[self.channel] > self.threshold)
 
@@ -239,9 +254,14 @@ class ThresholdSelection(Op1DView, HistogramView):
         self._draw_threshold()
         self._interactive()
     
-    @on_trait_change('op.threshold', post_init = True)
+    @observe('op:threshold', post_init = True)
+    def _update_threshold(self, event):
+        self._draw_threshold()
+        
     def _draw_threshold(self):
-        if not self._ax or not self.op.threshold:
+        # NOTE TO SELF - self.op.threshold is Undefined because self.op is DIFFERENT (different id())
+        # than wi.operation -- somehow the delegation has come unlinked.
+        if not self._ax or self.op.threshold is Undefined:
             return
         
         if self._line:
@@ -260,7 +280,10 @@ class ThresholdSelection(Op1DView, HistogramView):
             
         plt.draw()
         
-    @on_trait_change('interactive', post_init = True)
+    @observe('interactive', post_init = True)
+    def _update_interactive(self, event):
+        self._interactive()
+    
     def _interactive(self):
         if self._ax and self.interactive:
             self._cursor = util.Cursor(self._ax, 

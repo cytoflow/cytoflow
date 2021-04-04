@@ -24,8 +24,9 @@ cytoflow.operations.range2d
 
 import pandas as pd
 
-from traits.api import HasStrictTraits, Float, Str, Bool, Instance, \
-    provides, on_trait_change, Any, Constant
+from traits.api import (HasStrictTraits, Float, Str, Bool, Instance,
+                        provides, on_trait_change, Any, Constant,
+                        Undefined)
 
 from matplotlib.widgets import RectangleSelector
 import matplotlib.pyplot as plt
@@ -139,15 +140,15 @@ class Range2DOp(HasStrictTraits):
     id = Constant('edu.mit.synbio.cytoflow.operations.range2d')
     friendly_id = Constant("2D Range")
     
-    name = Str
+    name = Str(Undefined)
     
-    xchannel = Str
-    xlow = Float
-    xhigh = Float
+    xchannel = Str(Undefined)
+    xlow = Float(Undefined)
+    xhigh = Float(Undefined)
     
-    ychannel = Str
-    ylow = Float
-    yhigh = Float
+    ychannel = Str(Undefined)
+    ylow = Float(Undefined)
+    yhigh = Float(Undefined)
     
     _selection_view = Instance('RangeSelection2D', transient = True)
 
@@ -176,7 +177,7 @@ class Range2DOp(HasStrictTraits):
                                        "No experiment specified")
         
         # make sure name got set!
-        if not self.name:
+        if self.name is Undefined:
             raise util.CytoflowOpError('name',
                                        "You have to set the gate's name "
                                        "before applying it!")
@@ -192,7 +193,7 @@ class Range2DOp(HasStrictTraits):
                                        "Experiment already contains a column {0}"
                                        .format(self.name))
         
-        if not self.xchannel or not self.ychannel:
+        if self.xchannel is Undefined:
             raise util.CytoflowOpError('xchannel',
                                        "Must specify xchannel")
 
@@ -200,13 +201,19 @@ class Range2DOp(HasStrictTraits):
             raise util.CytoflowOpError('xchannel',
                                        "xchannel isn't in the experiment")
 
-        if not self.ychannel:
+        if self.ychannel is Undefined:
             raise util.CytoflowOpError('ychannel',
                                        "Must specify ychannel")
         
         if not self.ychannel in experiment.channels:
             raise util.CytoflowOpError('ychannel',
                                        "ychannel isn't in the experiment")
+            
+        if self.xlow is Undefined:
+            raise util.CytoflowOpError('xlow', 'xlow threshold must be set!')
+         
+        if self.xhigh is Undefined:
+            raise util.CytoflowOpError('xhigh', 'xhigh threshold must be set!')
         
         if self.xhigh <= experiment[self.xchannel].min():
             raise util.CytoflowOpError('xhigh',
@@ -216,6 +223,12 @@ class Range2DOp(HasStrictTraits):
             raise util.CytoflowOpError('xlow',
                                        "x channel range low must be < {0}"
                                        .format(experiment[self.xchannel].max()))
+            
+        if self.ylow is Undefined:
+            raise util.CytoflowOpError('ylow', 'ylow threshold must be set!')
+         
+        if self.yhigh is Undefined:
+            raise util.CytoflowOpError('yhigh', 'yhigh threshold must be set!')
             
         if self.yhigh <= experiment[self.ychannel].min():
             raise util.CytoflowOpError('yhigh',

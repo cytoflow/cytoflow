@@ -103,45 +103,45 @@ class PositiveCFloat(BaseCFloat):
         
         self.error(obj, name, value)
         
-class FloatOrNone(BaseFloat):
-    
-    info_text = 'a float or None'
-    
-    def validate(self, obj, name, value):
-        if value == "" or value == None:
-            return None
-        else:
-            return super().validate(obj, name, value)
-
-class CFloatOrNone(BaseCFloat):
-    
-    info_text = 'a float or None'
-    
-    def validate(self, obj, name, value):
-        if value == None or value == "":
-            return None
-        else:
-            return super().validate(obj, name, value)
-
-class IntOrNone(BaseInt):
-    
-    info_text = 'an int or None'
-    
-    def validate(self, obj, name, value):
-        if value == None:
-            return None
-        else:
-            return super().validate(obj, name, value)
-        
-class CIntOrNone(BaseCInt):
-    
-    info_text = 'an int or None'
-    
-    def validate(self, obj, name, value):
-        if value == None or value == "":
-            return None
-        else:
-            return super().validate(obj, name, value)
+# class FloatOrNone(BaseFloat):
+#     
+#     info_text = 'a float or None'
+#     
+#     def validate(self, obj, name, value):
+#         if value == "" or value == None:
+#             return None
+#         else:
+#             return super().validate(obj, name, value)
+# 
+# class CFloatOrNone(BaseCFloat):
+#     
+#     info_text = 'a float or None'
+#     
+#     def validate(self, obj, name, value):
+#         if value == None or value == "":
+#             return None
+#         else:
+#             return super().validate(obj, name, value)
+# 
+# class IntOrNone(BaseInt):
+#     
+#     info_text = 'an int or None'
+#     
+#     def validate(self, obj, name, value):
+#         if value == None:
+#             return None
+#         else:
+#             return super().validate(obj, name, value)
+#         
+# class CIntOrNone(BaseCInt):
+#     
+#     info_text = 'an int or None'
+#     
+#     def validate(self, obj, name, value):
+#         if value == None or value == "":
+#             return None
+#         else:
+#             return super().validate(obj, name, value)
         
         
 class ScaleEnum(BaseEnum):

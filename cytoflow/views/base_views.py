@@ -22,7 +22,7 @@ cytoflow.views.base_views
 -------------------------
 '''
 
-from traits.api import HasStrictTraits, Str, Tuple, List, Dict, provides
+from traits.api import HasStrictTraits, Str, Tuple, List, Dict, provides, Undefined
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
@@ -56,9 +56,9 @@ class BaseView(HasStrictTraits):
         How should the color scale for :attr:`huefacet` be scaled?
     """
     
-    xfacet = Str
-    yfacet = Str
-    huefacet = Str
+    xfacet = Str(Undefined)
+    yfacet = Str(Undefined)
+    huefacet = Str(Undefined)
     huescale = util.ScaleEnum
     
     def plot(self, experiment, data, **kwargs):
@@ -130,11 +130,11 @@ class BaseView(HasStrictTraits):
 
         col_wrap = kwargs.pop('col_wrap', None)
         
-        if col_wrap is not None and self.yfacet:
+        if col_wrap is not None and self.yfacet is not Undefined:
             raise util.CytoflowViewError('yfacet',
                                          "Can't set yfacet and col_wrap at the same time.")
         
-        if col_wrap is not None and not self.xfacet:
+        if col_wrap is not None and self.xfacet is Undefined:
             raise util.CytoflowViewError('xfacet',
                                          "Must set xfacet to use col_wrap.")
             
@@ -174,15 +174,15 @@ class BaseView(HasStrictTraits):
                      util.CytoflowViewWarning)
                 
             
-        col_order = kwargs.pop("col_order", (natsorted(data[self.xfacet].unique()) if self.xfacet else None))
-        row_order = kwargs.pop("row_order", (natsorted(data[self.yfacet].unique()) if self.yfacet else None))
-        hue_order = kwargs.pop("hue_order", (natsorted(data[self.huefacet].unique()) if self.huefacet else None))
+        col_order = kwargs.pop("col_order", (natsorted(data[self.xfacet].unique()) if self.xfacet is not Undefined else None))
+        row_order = kwargs.pop("row_order", (natsorted(data[self.yfacet].unique()) if self.yfacet is not Undefined else None))
+        hue_order = kwargs.pop("hue_order", (natsorted(data[self.huefacet].unique()) if self.huefacet is not Undefined else None))
         g = sns.FacetGrid(data, 
                           height = height,
                           aspect = aspect,
-                          col = (self.xfacet if self.xfacet else None),
-                          row = (self.yfacet if self.yfacet else None),
-                          hue = (self.huefacet if self.huefacet else None),
+                          col = (self.xfacet if self.xfacet is not Undefined else None),
+                          row = (self.yfacet if self.yfacet is not Undefined else None),
+                          hue = (self.huefacet if self.huefacet is not Undefined else None),
                           col_order = col_order,
                           row_order = row_order,
                           hue_order = hue_order,
@@ -254,7 +254,7 @@ class BaseView(HasStrictTraits):
                                           cmap = cmap, 
                                           norm = norm)
                 plt.sca(plot_ax)
-            elif self.huefacet:
+            elif self.huefacet is not Undefined:
         
                 current_palette = mpl.rcParams['axes.prop_cycle']
             
@@ -316,7 +316,7 @@ class BaseDataView(BaseView):
         Passed unmodified to :meth:`pandas.DataFrame.query`.
     """
 
-    subset = Str
+    subset = Str(Undefined)
     
     def plot(self, experiment, **kwargs):
         """
@@ -412,7 +412,7 @@ class BaseDataView(BaseView):
             raise util.CytoflowViewError(None,
                                          "Can't reuse facets")
          
-        if self.subset:
+        if self.subset is not Undefined:
             try:
                 experiment = experiment.query(self.subset)
             except util.CytoflowError as e:
@@ -445,7 +445,7 @@ class Base1DView(BaseDataView):
         The scale applied to the data before plotting it.
     """
     
-    channel = Str
+    channel = Str(Undefined)
     scale = util.ScaleEnum
     
     def plot(self, experiment, **kwargs):
@@ -462,7 +462,7 @@ class Base1DView(BaseDataView):
             raise util.CytoflowViewError('experiment',
                                          "No experiment specified")
         
-        if not self.channel:
+        if self.channel is Undefined:
             raise util.CytoflowViewError('channel',
                                          "Must specify a channel")
         
@@ -500,9 +500,9 @@ class Base2DView(BaseDataView):
         Set the min and max limits of the plots' x and y axes.
     """
     
-    xchannel = Str
+    xchannel = Str(Undefined)
     xscale = util.ScaleEnum
-    ychannel = Str
+    ychannel = Str(Undefined)
     yscale = util.ScaleEnum
 
     def plot(self, experiment, **kwargs):
@@ -517,7 +517,7 @@ class Base2DView(BaseDataView):
             raise util.CytoflowViewError('experiment',
                                          "No experiment specified")
 
-        if not self.xchannel:
+        if self.xchannel is Undefined:
             raise util.CytoflowViewError('xchannel',
                                          "Must specify an xchannel")
         
@@ -526,7 +526,7 @@ class Base2DView(BaseDataView):
                                          "Channel {} not in the experiment"
                                     .format(self.xchannel))
 
-        if not self.ychannel:
+        if self.ychannel is Undefined:
             raise util.CytoflowViewError('ychannel',
                                          "Must specify a ychannel")
         
@@ -640,8 +640,8 @@ class BaseStatisticsView(BaseView):
     # deprecated or removed attributes give warnings & errors, respectively
     by = util.Deprecated(new = 'variable', err_string = "'by' is deprecated, please use 'variable'")
     
-    variable = Str
-    subset = Str
+    variable = Str(Undefined)
+    subset = Str(Undefined)
     
     def enum_plots(self, experiment, data):
         """
@@ -652,7 +652,7 @@ class BaseStatisticsView(BaseView):
             raise util.CytoflowViewError('experiment',
                                          "No experiment specified")
         
-        if not self.variable:
+        if self.variable is Undefined:
             raise util.CytoflowViewError('variable',
                                          "variable not set")
             
@@ -710,7 +710,7 @@ class BaseStatisticsView(BaseView):
             raise util.CytoflowViewError('experiment',
                                          "No experiment specified")
         
-        if not self.variable:
+        if self.variable is Undefined:
             raise util.CytoflowViewError('variable',
                                          "variable not set")
             
@@ -752,7 +752,7 @@ class BaseStatisticsView(BaseView):
         
     def _subset_data(self, data):
         
-        if self.subset:
+        if self.subset is not Undefined:
             try:
                 # TODO - either sanitize column names, or check to see that
                 # all conditions are valid Python variables
@@ -800,7 +800,7 @@ class BaseStatisticsView(BaseView):
                                          .format(self.huefacet, data.index.names))
             
             
-        facets = [x for x in [self.variable, self.xfacet, self.yfacet, self.huefacet] if x]
+        facets = [x for x in [self.variable, self.xfacet, self.yfacet, self.huefacet] if x is not Undefined]
         if len(facets) != len(set(facets)):
             raise util.CytoflowViewError(None, "Can't reuse facets")
         
@@ -865,7 +865,7 @@ class Base1DStatisticsView(BaseStatisticsView):
                
         data = self._make_data(experiment)
         
-        if not self.variable:
+        if self.variable is Undefined:
             raise util.CytoflowViewError('variable',
                                          "variable not set")
             
