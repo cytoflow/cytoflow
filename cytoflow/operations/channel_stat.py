@@ -26,7 +26,7 @@ import pandas as pd
 import numpy as np
 
 from traits.api import (HasStrictTraits, Str, List, Constant, provides, 
-                        Callable, Any, Undefined)
+                        Callable, CStr, Any)
 
 import cytoflow.utility as util
 
@@ -130,12 +130,12 @@ class ChannelStatisticOp(HasStrictTraits):
     id = Constant('edu.mit.synbio.cytoflow.operations.channel_statistic')
     friendly_id = Constant("Channel Statistics")
     
-    name = Str(Undefined)
-    channel = Str(Undefined)
-    function = Callable(Undefined)
-    statistic_name = Str(Undefined)
+    name = CStr
+    channel = Str
+    function = Callable
+    statistic_name = Str
     by = List(Str)
-    subset = Str(Undefined)
+    subset = Str
     fill = Any(0)
     
     def apply(self, experiment):
@@ -159,7 +159,7 @@ class ChannelStatisticOp(HasStrictTraits):
         if experiment is None:
             raise util.CytoflowOpError('experiment', "Must specify an experiment")
 
-        if self.name is Undefined:
+        if not self.name:
             raise util.CytoflowOpError('name', "Must specify a name")
         
         if self.name != util.sanitize_identifier(self.name):
@@ -167,16 +167,16 @@ class ChannelStatisticOp(HasStrictTraits):
                                        "Name can only contain letters, numbers and underscores."
                                        .format(self.name))  
         
-        if self.channel is Undefined:
+        if not self.channel:
             raise util.CytoflowOpError('channel', "Must specify a channel")
+
+        if not self.function:
+            raise util.CytoflowOpError('function', "Must specify a function")
 
         if self.channel not in experiment.data:
             raise util.CytoflowOpError('channel',
                                        "Channel {0} not found in the experiment"
                                        .format(self.channel))
-            
-        if self.function is Undefined:
-            raise util.CytoflowOpError('function', "Must specify a function")
             
         if not self.by:
             raise util.CytoflowOpError('by',
@@ -184,7 +184,7 @@ class ChannelStatisticOp(HasStrictTraits):
                                        "in 'by'")
             
         stat_name = (self.name, self.statistic_name) \
-                     if self.statistic_name is not Undefined \
+                     if self.statistic_name \
                      else (self.name, self.function.__name__)
                      
         if stat_name in experiment.statistics:
@@ -193,7 +193,7 @@ class ChannelStatisticOp(HasStrictTraits):
                                        .format(stat_name))
 
         new_experiment = experiment.clone()
-        if self.subset is not Undefined:
+        if self.subset:
             try:
                 experiment = experiment.query(self.subset)
             except Exception as exc:

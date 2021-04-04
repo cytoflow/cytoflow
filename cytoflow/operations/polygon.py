@@ -22,9 +22,9 @@ cytoflow.operations.polygon
 ---------------------------
 '''
 
-from traits.api import (HasStrictTraits, Str, List, Float, provides,
-                        Instance, Bool, on_trait_change, Any, Constant,
-                        Undefined)
+from traits.api import (HasStrictTraits, Str, CStr, List, Float, provides,
+                        Instance, Bool, on_trait_change, Any,
+                        Constant)
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -141,9 +141,9 @@ class PolygonOp(HasStrictTraits):
     id = Constant('edu.mit.synbio.cytoflow.operations.polygon')
     friendly_id = Constant("Polygon")
     
-    name = Str(Undefined)
-    xchannel = Str(Undefined)
-    ychannel = Str(Undefined)
+    name = CStr()
+    xchannel = Str()
+    ychannel = Str()
     vertices = List((Float, Float))
     
     xscale = util.ScaleEnum()
@@ -177,11 +177,6 @@ class PolygonOp(HasStrictTraits):
         if experiment is None:
             raise util.CytoflowOpError('experiment',
                                        "No experiment specified")
-            
-        if self.name is Undefined:
-            raise util.CytoflowOpError('name',
-                                       "You have to set the Polygon gate's name "
-                                       "before applying it!")
 
         if self.name in experiment.data.columns:
             raise util.CytoflowOpError('name',
@@ -193,11 +188,11 @@ class PolygonOp(HasStrictTraits):
                                        "Name can only contain letters, numbers and underscores."
                                        .format(self.name)) 
         
-        if self.xchannel is Undefined:
+        if not self.xchannel:
             raise util.CytoflowOpError('xchannel',
                                        "Must specify an x channel")
 
-        if self.ychannel is Undefined:
+        if not self.ychannel:
             raise util.CytoflowOpError('ychannel',
                                        "Must specify a y channel")
         
@@ -219,7 +214,18 @@ class PolygonOp(HasStrictTraits):
             return util.CytoflowOpError('vertices',
                                         "All vertices must be lists or tuples "
                                         "of length = 2") 
-
+        
+        # make sure name got set!
+        if not self.name:
+            raise util.CytoflowOpError('name',
+                                       "You have to set the Polygon gate's name "
+                                       "before applying it!")
+        
+        # make sure old_experiment doesn't already have a column named self.name
+        if(self.name in experiment.data.columns):
+            raise util.CytoflowOpError('name',
+                                       "Experiment already contains a column {0}"
+                                       .format(self.name))
             
         # there's a bit of a subtlety here: if the vertices were 
         # selected with an interactive plot, and that plot had scaled

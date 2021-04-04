@@ -21,7 +21,7 @@
 cytoflow.operations.binning
 ---------------------------
 '''
-from traits.api import (HasStrictTraits, Str, provides, Constant, Int, Undefined)
+from traits.api import (HasStrictTraits, Str, CStr, provides, Constant, Int)
 import numpy as np
 
 from cytoflow.views import IView, HistogramView
@@ -102,11 +102,11 @@ class BinningOp(HasStrictTraits):
     id = Constant('edu.mit.synbio.cytoflow.operations.binning')
     friendly_id = Constant("Binning")
     
-    name = Str(Undefined)
-    bin_count_name = Str(Undefined)
-    channel = Str(Undefined)
+    name = CStr()
+    bin_count_name = CStr()
+    channel = Str()
     num_bins = util.Removed(err_string = "'num_bins' was removed in 0.9")
-    bin_width = util.PositiveFloat(Undefined)
+    bin_width = util.PositiveFloat(0, allow_zero = True)
     scale = util.ScaleEnum
     
     _max_num_bins = Int(100)
@@ -133,7 +133,7 @@ class BinningOp(HasStrictTraits):
         if experiment is None:
             raise util.CytoflowOpError('experiment', "no experiment specified")
         
-        if self.name is Undefined:
+        if not self.name:
             raise util.CytoflowOpError('name', "Name is not set")
         
         if self.name != util.sanitize_identifier(self.name):
@@ -146,12 +146,12 @@ class BinningOp(HasStrictTraits):
                                        "Name {} is in the experiment already"
                                        .format(self.name))
             
-        if self.bin_count_name is not Undefined and self.bin_count_name in experiment.data.columns:
+        if self.bin_count_name and self.bin_count_name in experiment.data.columns:
             raise util.CytoflowOpError('bin_count_name',
                                        "bin_count_name {} is in the experiment already"
                                        .format(self.bin_count_name))
         
-        if self.channel is Undefined:
+        if not self.channel:
             raise util.CytoflowOpError('channel', "channel is not set")
         
         if self.channel not in experiment.data.columns:
@@ -159,7 +159,7 @@ class BinningOp(HasStrictTraits):
                                        "channel {} isn't in the experiment"
                                        .format(self.channel))
               
-        if self.bin_width is Undefined:
+        if not self.bin_width:
             raise util.CytoflowOpError('bin_width',
                                        "must set bin width")
         

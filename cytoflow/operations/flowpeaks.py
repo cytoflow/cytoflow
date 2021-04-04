@@ -25,8 +25,8 @@ cytoflow.operations.flowpeaks
 import matplotlib.pyplot as plt
 from warnings import warn
 
-from traits.api import (HasStrictTraits, Str, Dict, Any, Instance, 
-                        Constant, List, provides, Array, Function, Undefined)
+from traits.api import (HasStrictTraits, Str, CStr, Dict, Any, Instance, 
+                        Constant, List, provides, Array, Function)
 
 import numpy as np
 import sklearn.cluster
@@ -211,7 +211,7 @@ class FlowPeaksOp(HasStrictTraits):
     id = Constant('edu.mit.synbio.cytoflow.operations.flowpeaks')
     friendly_id = Constant("FlowPeaks Clustering")
     
-    name = Str(Undefined)
+    name = CStr()
     channels = List(Str)
     scale = Dict(Str, util.ScaleEnum)
     by = List(Str)
@@ -595,7 +595,7 @@ class FlowPeaksOp(HasStrictTraits):
                                        "No experiment specified")
          
         # make sure name got set!
-        if self.name is Undefined:
+        if not self.name:
             raise util.CytoflowOpError('name',
                                        "You have to set the gate's name "
                                        "before applying it!")

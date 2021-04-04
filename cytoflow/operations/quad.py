@@ -23,7 +23,7 @@ cytoflow.operations.quad
 '''
 
 from traits.api import (HasStrictTraits, Float, Str, Bool, Instance,
-                        provides, on_trait_change, Any, Constant, Undefined)
+                        provides, on_trait_change, Any, Constant)
 
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
@@ -135,13 +135,13 @@ class QuadOp(HasStrictTraits):
     id = Constant('edu.mit.synbio.cytoflow.operations.quad')
     friendly_id = Constant("Quadrant Gate")
     
-    name = Str(Undefined)
+    name = Str
     
-    xchannel = Str(Undefined)
-    xthreshold = Float(Undefined)
+    xchannel = Str
+    xthreshold = Float
     
-    ychannel = Str(Undefined)
-    ythreshold = Float(Undefined)
+    ychannel = Str
+    ythreshold = Float
     
     _selection_view = Instance('QuadSelection', transient = True)
 
@@ -172,7 +172,7 @@ class QuadOp(HasStrictTraits):
                                        "No experiment specified")
         
         # make sure name got set!
-        if self.name is Undefined:
+        if not self.name:
             raise util.CytoflowOpError('name',
                                        "You have to set the gate's name "
                                        "before applying it!")
@@ -188,24 +188,24 @@ class QuadOp(HasStrictTraits):
                                        "Experiment already contains a column {0}"
                                        .format(self.name))
         
-        if self.xchannel is Undefined:
+        if not self.xchannel:
             raise util.CytoflowOpError('xchannel', "Must specify xchannel")
 
         if not self.xchannel in experiment.channels:
             raise util.CytoflowOpError('xchannel',
                                        "xchannel isn't in the experiment")
 
-        if self.ychannel is Undefined:
+        if not self.ychannel:
             raise util.CytoflowOpError('ychannel', "Must specify ychannel")
         
         if not self.ychannel in experiment.channels:
             raise util.CytoflowOpError('ychanel', 
                                        "ychannel isn't in the experiment")
         
-        if self.xthreshold is Undefined:
+        if not self.xthreshold:
             raise util.CytoflowOpError('xthreshold', 'xthreshold must be set!')
-         
-        if self.ythreshold is Undefined:
+        
+        if not self.ythreshold:
             raise util.CytoflowOpError('ythreshold', 'ythreshold must be set!')
 
         gate = pd.Series([None] * len(experiment))

@@ -26,7 +26,7 @@ import pandas as pd
 import numpy as np
 
 from traits.api import (HasStrictTraits, Str, List, Constant, provides, 
-                        Callable, Any, Undefined)
+                        Callable, CStr, Any)
 
 import cytoflow.utility as util
 
@@ -91,11 +91,11 @@ class FrameStatisticOp(HasStrictTraits):
     id = Constant('edu.mit.synbio.cytoflow.operations.statistics')
     friendly_id = Constant("Statistics")
     
-    name = Str(Undefined)
-    function = Callable(Undefined)
-    statistic_name = Str(Undefined)
+    name = CStr
+    function = Callable
+    statistic_name = Str
     by = List(Str)
-    subset = Str(Undefined)
+    subset = Str
     fill = Any(0)
     
     def apply(self, experiment):
@@ -103,7 +103,7 @@ class FrameStatisticOp(HasStrictTraits):
             raise util.CytoflowOpError('experiment',
                                        "No experiment specified")
 
-        if self.name is Undefined:
+        if not self.name:
             raise util.CytoflowOpError('name',
                                        "Must specify a name")
             
@@ -112,7 +112,7 @@ class FrameStatisticOp(HasStrictTraits):
                                        "Name can only contain letters, numbers and underscores."
                                        .format(self.name))  
 
-        if self.function is Undefined:
+        if not self.function:
             raise util.CytoflowOpError('function',
                                        "Must specify a function")
             
@@ -122,7 +122,7 @@ class FrameStatisticOp(HasStrictTraits):
                                        "in 'by'")
             
         stat_name = (self.name, self.statistic_name) \
-                     if self.statistic_name is not Undefined \
+                     if self.statistic_name \
                      else (self.name, self.function.__name__)
                      
         if stat_name in experiment.statistics:
@@ -132,7 +132,7 @@ class FrameStatisticOp(HasStrictTraits):
                     
         new_experiment = experiment.clone()
 
-        if self.subset is not Undefined:
+        if self.subset:
             try:
                 experiment = experiment.query(self.subset)
             except Exception as e:

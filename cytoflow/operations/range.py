@@ -1,4 +1,4 @@
-#usr/bin/env python3.8
+#!/usr/bin/env python3.4
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
@@ -23,7 +23,7 @@ cytoflow.operations.range
 '''
 
 from traits.api import (HasStrictTraits, Float, Str, Instance, Bool, 
-                        provides, on_trait_change, Any, Constant, Undefined)
+                        provides, on_trait_change, Any, Constant)
 
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D    
@@ -118,10 +118,10 @@ class RangeOp(HasStrictTraits):
     id = Constant('edu.mit.synbio.cytoflow.operations.range')
     friendly_id = Constant('Range')
     
-    name = Str(Undefined)
-    channel = Str(Undefined)
-    low = Float(Undefined)
-    high = Float(Undefined)
+    name = Str
+    channel = Str
+    low = Float
+    high = Float
     
     _selection_view = Instance('RangeSelection', transient = True)
         
@@ -147,7 +147,7 @@ class RangeOp(HasStrictTraits):
             raise util.CytoflowOpError('experiment', "No experiment specified")
         
         # make sure name got set!
-        if self.name is Undefined:
+        if not self.name:
             raise util.CytoflowOpError('name', 
                                        "You have to set the gate's name "
                                        "before applying it!")
@@ -162,19 +162,13 @@ class RangeOp(HasStrictTraits):
                                        "Experiment already has a column named {0}"
                                        .format(self.name))
         
-        if self.channel is Undefined:
+        if not self.channel:
             raise util.CytoflowOpError('channel', "Channel not specified")
         
         if not self.channel in experiment.channels:
             raise util.CytoflowOpError('channel',
                                        "Channel {0} not in the experiment"
                                        .format(self.channel))
-            
-        if self.low is Undefined:
-            raise util.CytoflowOpError('low', 'low threshold must be set!')
-         
-        if self.high is Undefined:
-            raise util.CytoflowOpError('high', 'high threshold must be set!')
         
         if self.high <= self.low:
             raise util.CytoflowOpError('high',

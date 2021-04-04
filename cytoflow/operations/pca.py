@@ -23,8 +23,8 @@ cytoflow.operations.pca
 '''
 
 
-from traits.api import (HasStrictTraits, Str, Dict, Any, Instance, 
-                        Constant, List, Bool, provides, Undefined)
+from traits.api import (HasStrictTraits, Str, CStr, Dict, Any, Instance, 
+                        Constant, List, Bool, provides)
 
 import numpy as np
 import pandas as pd
@@ -155,7 +155,7 @@ class PCAOp(HasStrictTraits):
     id = Constant('edu.mit.synbio.cytoflow.operations.pca')
     friendly_id = Constant("Principal Component Analysis")
     
-    name = Str(Undefined)
+    name = CStr()
     channels = List(Str)
     scale = Dict(Str, util.ScaleEnum)
     num_components = util.PositiveInt(2, allow_zero = False)
@@ -285,7 +285,7 @@ class PCAOp(HasStrictTraits):
                                        "No PCA found.  Did you forget to call estimate()?")
          
         # make sure name got set!
-        if self.name is Undefined:
+        if not self.name:
             raise util.CytoflowOpError('name',
                                        "You have to set the operation's name "
                                        "before applying it!")

@@ -25,7 +25,7 @@ cytoflow.operations.ratio
 
 import numpy as np
 
-from traits.api import (HasStrictTraits, Str, Constant, provides, Undefined)
+from traits.api import (HasStrictTraits, Str, Constant, provides)
 
 import cytoflow.utility as util
 from .i_operation import IOperation
@@ -57,9 +57,9 @@ class RatioOp(HasStrictTraits):
     id = Constant('edu.mit.synbio.cytoflow.operations.ratio')
     friendly_id = Constant("Ratio")
     
-    name = Str(Undefined)
-    numerator = Str(Undefined)
-    denominator = Str(Undefined)
+    name = Str
+    numerator = Str
+    denominator = Str
     
     def apply(self, experiment):
         """Applies the ratio operation to an experiment
@@ -87,18 +87,6 @@ class RatioOp(HasStrictTraits):
         if experiment is None:
             raise util.CytoflowOpError('experiment',
                                        "No experiment specified")
-            
-        if self.name is Undefined:
-            raise util.CytoflowOpError('name',
-                                       "Must set a name")
-            
-        if self.numerator is Undefined:
-            raise util.CytoflowOpError('numerator',
-                                       "Must set numerator")
-            
-        if self.denominator is Undefined:
-            raise util.CytoflowOpError('demoninator',
-                                       "Must set denominator")
         
         if self.numerator not in experiment.channels:
             raise util.CytoflowOpError('numerator',
