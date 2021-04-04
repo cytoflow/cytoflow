@@ -285,8 +285,8 @@ class RangeSelection2D(Op2DView, ScatterplotView):
     id = Constant('edu.mit.synbio.cytoflow.views.range2d')
     friendly_id = Constant("2D Range Selection")
 
-    xfacet = Constant(Undefined)
-    yfacet = Constant(Undefined)
+    xfacet = Constant(None)
+    yfacet = Constant(None)
     
     xscale = util.ScaleEnum
     yscale = util.ScaleEnum

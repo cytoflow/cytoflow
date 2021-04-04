@@ -23,14 +23,13 @@ Created on Dec 1, 2015
 @author: brian
 '''
 
+import os
 import unittest
-
-from traits.api import Undefined
 
 import cytoflow as flow
 import cytoflow.utility as util
 
-from .test_base import ImportedDataTest
+from test_base import ImportedDataTest  # @UnresolvedImport
 
 class TestBarChart(ImportedDataTest):
 
@@ -50,13 +49,13 @@ class TestBarChart(ImportedDataTest):
         self.view.plot(self.ex)
         
     def testXfacet(self):
-        self.view.huefacet = Undefined
+        self.view.huefacet = ""
         self.view.xfacet = "Dox"
         self.view.plot(self.ex)
         
         
     def testYfacet(self):
-        self.view.huefacet = Undefined
+        self.view.huefacet = ""
         self.view.yfacet = "Dox"
         self.view.plot(self.ex)
 
@@ -67,7 +66,7 @@ class TestBarChart(ImportedDataTest):
         self.view.plot(self.ex)
         
     def testSubset(self):
-        self.view.huefacet = Undefined
+        self.view.huefacet = ""
         self.view.subset = "Dox == 10.0"
         self.view.plot(self.ex)
 
@@ -100,7 +99,7 @@ class TestBarChart(ImportedDataTest):
         self.view.plot(self.ex, huelabel = "hue lab")
     
     def testColWrap(self):
-        self.view.huefacet = Undefined
+        self.view.huefacet = ""
         self.view.xfacet = "Dox"
         self.view.plot(self.ex, col_wrap = 2)
         

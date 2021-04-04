@@ -27,7 +27,7 @@ import unittest
 
 import cytoflow as flow
 import cytoflow.utility as util
-from .test_base import ImportedDataSmallTest
+from test_base import ImportedDataSmallTest
 
 
 class TestChannelStats(ImportedDataSmallTest):

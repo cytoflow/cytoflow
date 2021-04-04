@@ -22,7 +22,7 @@ cytoflow.views.bar_chart
 ------------------------
 '''
 
-from traits.api import provides, Constant, Undefined
+from traits.api import provides, Constant
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -149,7 +149,7 @@ class BarChartView(Base1DStatisticsView):
         stat = experiment.statistics[self.statistic]
         map_args = [self.variable, stat.name]
         
-        if self.huefacet is not Undefined:
+        if self.huefacet:
             map_args.append(self.huefacet)  
         
         if self.error_statistic[0]:
@@ -204,7 +204,7 @@ def _barplot(*args, view, stat_name, error_name, orientation, grid, **kwargs):
     barfunc = ax.bar if orientation == "vertical" else ax.barh
     barpos = np.arange(len(categories))
     
-    if view.huefacet is not Undefined:
+    if view.huefacet:
         hue_names = grid.hue_names
         hue_level = data[view.huefacet].iloc[0]
         hue_idx = hue_names.index(hue_level)

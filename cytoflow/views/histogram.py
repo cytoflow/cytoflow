@@ -22,7 +22,7 @@ cytoflow.views.histogram
 ------------------------
 '''
 
-from traits.api import Constant, provides, Undefined
+from traits.api import Constant, provides
 import matplotlib.pyplot as plt
 
 import numpy as np
@@ -137,7 +137,7 @@ class HistogramView(Base1DView):
         # clip num_bins to (100, 1000)
         num_bins = max(min(num_bins, 1000), 100)
         
-        if (self.huefacet is not Undefined
+        if (self.huefacet 
             and "bins" in experiment.metadata[self.huefacet]
             and experiment.metadata[self.huefacet]["bin_scale"] == self.scale):
             

@@ -125,7 +125,7 @@ class ViolinPlotView(Base1DView):
             raise util.CytoflowViewError('variable',
                                          "Variable not specified")
         
-        facets = [x for x in [self.xfacet, self.yfacet, self.huefacet, self.variable] if x is not Undefined]
+        facets = [x for x in [self.xfacet, self.yfacet, self.huefacet, self.variable] if x]
         if len(facets) != len(set(facets)):
             raise util.CytoflowViewError("Can't reuse facets")
         
@@ -151,13 +151,13 @@ class ViolinPlotView(Base1DView):
         else:
             violin_args = [self.variable, self.channel]
             
-        if self.huefacet is not Undefined:
+        if self.huefacet:
             violin_args.append(self.huefacet)
             
         grid.map(_violinplot,   
                  *violin_args,      
                  order = np.sort(experiment[self.variable].unique()),
-                 hue_order = (np.sort(experiment[self.huefacet].unique()) if self.huefacet is not Undefined else None),
+                 hue_order = (np.sort(experiment[self.huefacet].unique()) if self.huefacet else None),
                  data_scale = scale,
                  **kwargs)
         

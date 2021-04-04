@@ -26,7 +26,7 @@ Created on Dec 1, 2015
 import unittest, tempfile, os
 import cytoflow as flow
 
-from .test_base import ImportedDataTest
+from test_base import ImportedDataTest  # @UnresolvedImport
 
 class TestTable(ImportedDataTest):
 

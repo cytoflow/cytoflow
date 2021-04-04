@@ -347,17 +347,17 @@ class BaseDataView(BaseView):
             raise util.CytoflowViewError('experiment',
                                          "No experiment specified")
 
-        if self.xfacet is not Undefined and self.xfacet not in experiment.conditions:
+        if self.xfacet and self.xfacet not in experiment.conditions:
             raise util.CytoflowViewError('xfacet',
                                          "X facet {0} not in the experiment"
                                          .format(self.xfacet))
          
-        if self.yfacet is not Undefined and self.yfacet not in experiment.conditions:
+        if self.yfacet and self.yfacet not in experiment.conditions:
             raise util.CytoflowViewError('yfacet',
                                          "Y facet {0} not in the experiment"
                                          .format(self.yfacet))
          
-        if self.huefacet is not Undefined and self.huefacet not in experiment.conditions:
+        if self.huefacet and self.huefacet not in experiment.conditions:
             raise util.CytoflowViewError('huefacet',
                                          "Hue facet {0} not in the experiment"
                                          .format(self.huefacet))
@@ -406,7 +406,7 @@ class BaseDataView(BaseView):
             lim[c] = [scale[c].clip(x) for x in lim[c]]
             
              
-        facets = [x for x in [self.xfacet, self.yfacet, self.huefacet] if x is not Undefined]
+        facets = [x for x in [self.xfacet, self.yfacet, self.huefacet] if x]
          
         if len(facets) != len(set(facets)):
             raise util.CytoflowViewError(None,
@@ -783,18 +783,18 @@ class BaseStatisticsView(BaseView):
                 
         names = list(data.index.names)
 
-        if self.xfacet is not Undefined and self.xfacet not in data.index.names:
+        if self.xfacet and self.xfacet not in data.index.names:
             raise util.CytoflowViewError('xfacet',
                                          "X facet {} not in statistics; must be one of {}"
                                          .format(self.xfacet, data.index.names))
 
         
-        if self.yfacet is not Undefined and self.yfacet not in data.index.names:
+        if self.yfacet and self.yfacet not in data.index.names:
             raise util.CytoflowViewError('yfacet',
                                          "Y facet {} not in statistics; must be one of {}"
                                          .format(self.yfacet, data.index.names))
             
-        if self.huefacet is not Undefined and self.huefacet not in data.index.names:
+        if self.huefacet and self.huefacet not in data.index.names:
             raise util.CytoflowViewError('huefacet',
                                          "Hue facet {} not in statistics; must be one of {}"
                                          .format(self.huefacet, data.index.names))

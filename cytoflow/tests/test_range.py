@@ -24,7 +24,7 @@ Created on Dec 1, 2015
 '''
 import unittest
 import cytoflow as flow
-from .test_base import ImportedDataSmallTest
+from test_base import ImportedDataSmallTest  # @UnresolvedImport
 
 class Test(ImportedDataSmallTest):
     def setUp(self):

@@ -23,10 +23,11 @@ Created on Dec 1, 2015
 @author: brian
 '''
 import unittest
+import os
 
 import cytoflow as flow
 import cytoflow.utility as util
-from .test_base import ImportedDataSmallTest
+from test_base import ImportedDataSmallTest
 
 
 class TestGaussian2D(ImportedDataSmallTest):
