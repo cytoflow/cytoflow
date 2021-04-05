@@ -29,7 +29,6 @@ import numpy as np
 import math
 import scipy.signal
 import scipy.optimize
-import sys
         
 import matplotlib.pyplot as plt
 

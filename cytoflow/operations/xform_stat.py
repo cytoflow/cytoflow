@@ -26,7 +26,7 @@ from warnings import warn
 import pandas as pd
 import numpy as np 
 
-from traits.api import (HasStrictTraits, Str, List, Constant, provides, CStr,
+from traits.api import (HasStrictTraits, Str, List, Constant, provides,
                         Callable, Tuple, Any)
 
 import cytoflow.utility as util
@@ -96,7 +96,7 @@ class TransformStatisticOp(HasStrictTraits):
     id = Constant('edu.mit.synbio.cytoflow.operations.transform_statistic')
     friendly_id = Constant("Transform Statistic")
 
-    name = CStr
+    name = Str
     statistic = Tuple(Str, Str)
     function = Callable
     statistic_name = Str

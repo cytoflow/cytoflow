@@ -23,7 +23,7 @@ cytoflow.operations.kmeans
 '''
 
 
-from traits.api import (HasStrictTraits, Str, CStr, Dict, Any, Instance, 
+from traits.api import (HasStrictTraits, Str, Dict, Any, Instance, 
                         Constant, List, provides)
 
 import numpy as np
@@ -137,7 +137,7 @@ class KMeansOp(HasStrictTraits):
     id = Constant('edu.mit.synbio.cytoflow.operations.kmeans')
     friendly_id = Constant("KMeans Clustering")
     
-    name = CStr()
+    name = Str
     channels = List(Str)
     scale = Dict(Str, util.ScaleEnum)
     num_clusters = util.PositiveInt(allow_zero = False)

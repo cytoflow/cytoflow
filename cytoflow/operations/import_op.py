@@ -219,7 +219,7 @@ class ImportOp(HasStrictTraits):
     data_set = Int(0)
 
     # are we subsetting?
-    events = util.CIntOrNone(None)
+    events = util.IntOrNone(None)
     coarse_events = util.Deprecated(new = 'events')
         
     # DON'T DO THIS
@@ -370,7 +370,7 @@ class ImportOp(HasStrictTraits):
                                                   experiment, 
                                                   data_set = self.data_set)
     
-                if self.events:
+                if self.events is not None:
                     if self.events <= len(tube_data):
                         tube_data = tube_data.loc[np.random.choice(tube_data.index,
                                                                    self.events,

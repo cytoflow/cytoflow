@@ -22,7 +22,7 @@ cytoflow.operations.density
 ---------------------------
 '''
 
-from traits.api import (HasStrictTraits, Str, CStr, Dict, Any, Instance, 
+from traits.api import (HasStrictTraits, Str, Dict, Any, Instance, 
                         Constant, List, provides, Array)
 
 import numpy as np
@@ -164,9 +164,9 @@ class DensityGateOp(HasStrictTraits):
     id = Constant('edu.mit.synbio.cytoflow.operations.density')
     friendly_id = Constant("Density Gate")
     
-    name = CStr()
-    xchannel = Str()
-    ychannel = Str()
+    name = Str
+    xchannel = Str
+    ychannel = Str
     xscale = util.ScaleEnum
     yscale = util.ScaleEnum
     keep = util.PositiveFloat(0.9, allow_zero = False)

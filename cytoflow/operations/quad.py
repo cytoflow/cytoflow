@@ -138,10 +138,10 @@ class QuadOp(HasStrictTraits):
     name = Str
     
     xchannel = Str
-    xthreshold = Float
+    xthreshold = Float(None)
     
     ychannel = Str
-    ythreshold = Float
+    ythreshold = Float(None)
     
     _selection_view = Instance('QuadSelection', transient = True)
 
@@ -202,10 +202,10 @@ class QuadOp(HasStrictTraits):
             raise util.CytoflowOpError('ychanel', 
                                        "ychannel isn't in the experiment")
         
-        if not self.xthreshold:
+        if self.xthreshold is None:
             raise util.CytoflowOpError('xthreshold', 'xthreshold must be set!')
         
-        if not self.ythreshold:
+        if self.ythreshold is None:
             raise util.CytoflowOpError('ythreshold', 'ythreshold must be set!')
 
         gate = pd.Series([None] * len(experiment))

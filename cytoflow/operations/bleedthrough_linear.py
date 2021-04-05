@@ -23,8 +23,8 @@ cytoflow.operations.bleedthrough_linear
 '''
 import os, math
 
-from traits.api import HasStrictTraits, Str, File, Dict, Instance, \
-                       Constant, Tuple, Float, Any, provides
+from traits.api import (HasStrictTraits, Str, File, Dict, Instance,
+                        Constant, Tuple, Float, Any, provides)
     
 import numpy as np
 import pandas as pd
@@ -406,11 +406,11 @@ class BleedthroughLinearDiagnostic(HasStrictTraits):
         kwargs.setdefault('alpha', 0.5)
         kwargs.setdefault('antialiased', True)
         
-        fig, axes2d = plt.subplots(nrows=3, ncols=3)    
+        _, axes2d = plt.subplots(nrows=3, ncols=3)    
         
         # the completely arbitrary ordering of the channels
         channels = list(set([x for (x, _) in list(self.op.spillover.keys())]))
-        num_channels = len(channels)
+        # num_channels = len(channels)
 
         for to_idx, row in enumerate(axes2d):
             for from_idx, ax in enumerate(row):
