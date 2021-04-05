@@ -23,9 +23,9 @@ Created on Feb 4, 2018
 @author: brian
 '''
 import unittest
+import os
 import cytoflow as flow
-
-from .test_base import ImportedDataSmallTest
+from test_base import ImportedDataSmallTest
 
 
 class TestPCA(ImportedDataSmallTest):

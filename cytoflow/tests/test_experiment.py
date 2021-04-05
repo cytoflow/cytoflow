@@ -26,8 +26,7 @@ import unittest
 import os
 import cytoflow as flow
 import pandas as pd
-
-from .test_base import ImportedDataSmallTest
+from test_base import ImportedDataSmallTest
 
 
 class TestExperiment(ImportedDataSmallTest):
@@ -42,8 +41,6 @@ class TestExperiment(ImportedDataSmallTest):
     def testAddCondition(self):
         # TODO
         pass
-    
-    # TODO - make these tests actually test what we want
     
 #     def testCloneIsShallow(self):
 #         ex2 = self.ex.clone()

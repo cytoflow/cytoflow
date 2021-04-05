@@ -28,8 +28,8 @@ from warnings import warn
 import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon, Rectangle
 
-from traits.api import (HasStrictTraits, Str, Dict, Any, Instance, Bool, 
-                        Constant, List, provides, Undefined)
+from traits.api import (HasStrictTraits, Str, CStr, Dict, Any, Instance, Bool, 
+                        Constant, List, provides)
 
 import sklearn.mixture
 import scipy.stats
@@ -93,12 +93,10 @@ class GaussianMixtureOp(HasStrictTraits):
     num_components : Int (default = 1)
         How many components to fit to the data?  Must be a positive integer.
 
-    sigma : Float (default = Undefined)
-        If defined, use this operation as a "gate" as well -- that is, if an
-        event is a member of component ``i``, and is within :attr:`sigma`
-        standard deviations from the mean, set the boolean variable 
-        ``{name}_i`` to ``True``.  If :attr:`num_components` is ``1``, 
-        must be ``> 0``.
+    sigma : Float (default = 0.0)
+        How many standard deviations on either side of the mean to include
+        in the boolean variable ``{name}_i``?  Must be ``>= 0.0``.  If 
+        :attr:`num_components` is ``1``, must be ``> 0``.
     
     by : List(Str)
         A list of metadata attributes to aggregate the data before estimating
@@ -195,11 +193,11 @@ class GaussianMixtureOp(HasStrictTraits):
     id = Constant('edu.mit.synbio.cytoflow.operations.gaussian')
     friendly_id = Constant("Gaussian Mixture Model")
     
-    name = Str
+    name = CStr()
     channels = List(Str)
     scale = Dict(Str, util.ScaleEnum)
     num_components = util.PositiveInt(1, allow_zero = False)
-    sigma = util.PositiveFloat(Undefined, allow_zero = False)
+    sigma = util.PositiveFloat(allow_zero = True)
     by = List(Str)
     
     posteriors = Bool(False)
@@ -380,7 +378,7 @@ class GaussianMixtureOp(HasStrictTraits):
                                        "Experiment already has a column named {0}"
                                        .format(self.name))
             
-        if self.sigma is not Undefined:
+        if self.sigma > 0:
             for i in range(1, self.num_components + 1):
                 cname = "{}_{}".format(self.name, i)
                 if cname in experiment.data.columns:
@@ -434,7 +432,7 @@ class GaussianMixtureOp(HasStrictTraits):
         if self.num_components > 1:
             event_assignments = pd.Series(["{}_None".format(self.name)] * len(experiment), dtype = "object")
  
-        if self.sigma is not Undefined:
+        if self.sigma > 0:
             event_gate = {i : pd.Series([False] * len(experiment), dtype = "double")
                            for i in range(self.num_components)}
  
@@ -511,7 +509,7 @@ class GaussianMixtureOp(HasStrictTraits):
                 
             # if we're doing sigma-based gating, for each component check
             # to see if the event is in the sigma gate.
-            if self.sigma is not Undefined:
+            if self.sigma > 0.0:
                 for c in range(self.num_components):
                     s = np.linalg.pinv(gmm.covariances_[c])
                     mu = gmm.means_[c]
@@ -567,7 +565,7 @@ class GaussianMixtureOp(HasStrictTraits):
         if self.num_components > 1:
             new_experiment.add_condition(self.name, "category", event_assignments)
             
-        if self.sigma is not Undefined:
+        if self.sigma > 0:
             for c in range(self.num_components):
                 gate_name = "{}_{}".format(self.name, c + 1)
                 new_experiment.add_condition(gate_name, "bool", event_gate[c])              

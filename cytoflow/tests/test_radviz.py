@@ -26,7 +26,7 @@ Created on Mar 5, 2018
 import unittest
 import cytoflow as flow
 
-from .test_base import ImportedDataTest
+from test_base import ImportedDataTest  # @UnresolvedImport
 
 class TestRadviz(ImportedDataTest):
 

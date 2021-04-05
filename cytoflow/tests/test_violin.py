@@ -28,7 +28,7 @@ import cytoflow as flow
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .test_base import View1DTestBase, get_legend_entries
+from test_base import View1DTestBase, get_legend_entries  # @UnresolvedImport
 
 
 class TestViolin(View1DTestBase, unittest.TestCase):

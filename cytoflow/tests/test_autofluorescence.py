@@ -24,7 +24,8 @@ Created on Oct 30, 2015
 '''
 import unittest
 import cytoflow as flow
-from .test_base import ClosePlotsWhenDoneTest
+from test_base import ClosePlotsWhenDoneTest
+
 
 class TestAutofluorescence(ClosePlotsWhenDoneTest):
     """

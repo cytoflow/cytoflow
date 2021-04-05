@@ -22,11 +22,10 @@ Created on Dec 1, 2015
 
 @author: brian
 '''
-
 import unittest
 import cytoflow as flow
 import cytoflow.utility as util
-from .test_base import ImportedDataSmallTest
+from test_base import ImportedDataSmallTest
 
 
 class TestDensityGate(ImportedDataSmallTest):

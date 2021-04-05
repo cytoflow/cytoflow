@@ -23,8 +23,8 @@ cytoflow.operations.kmeans
 '''
 
 
-from traits.api import (HasStrictTraits, Str, Dict, Any, Instance, 
-                        Constant, List, provides, Undefined)
+from traits.api import (HasStrictTraits, Str, CStr, Dict, Any, Instance, 
+                        Constant, List, provides)
 
 import numpy as np
 import sklearn.cluster
@@ -137,10 +137,10 @@ class KMeansOp(HasStrictTraits):
     id = Constant('edu.mit.synbio.cytoflow.operations.kmeans')
     friendly_id = Constant("KMeans Clustering")
     
-    name = Str
+    name = CStr()
     channels = List(Str)
     scale = Dict(Str, util.ScaleEnum)
-    num_clusters = util.PositiveInt(Undefined, allow_zero = False)
+    num_clusters = util.PositiveInt(allow_zero = False)
     by = List(Str)
     
     _kmeans = Dict(Any, Instance(sklearn.cluster.MiniBatchKMeans), transient = True)
@@ -163,10 +163,6 @@ class KMeansOp(HasStrictTraits):
         if experiment is None:
             raise util.CytoflowOpError('experiment',
                                        "No experiment specified")
-
-        if self.num_clusters is Undefined:
-            raise util.CytoflowOpError('num_clusters',
-                                       "must set 'num_clusters'")
         
         if self.num_clusters < 2:
             raise util.CytoflowOpError('num_clusters',

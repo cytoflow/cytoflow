@@ -21,7 +21,7 @@
 cytoflow.operations.binning
 ---------------------------
 '''
-from traits.api import (HasStrictTraits, Str, provides, Constant, Int, Undefined)
+from traits.api import (HasStrictTraits, Str, CStr, provides, Constant, Int)
 import numpy as np
 
 from cytoflow.views import IView, HistogramView
@@ -54,7 +54,7 @@ class BinningOp(HasStrictTraits):
         
     bin_width : Float
         The width of the bins. If :attr:`scale` is ``log``, :attr:`bin_width` 
-        is in log-10 units; if :attr:`scale` is ``logicle``, an error is 
+        is in log-10 units; if :attr:`scale` is ``logicle``, and error is 
         thrown because the units are ill-defined.
  
 
@@ -102,11 +102,11 @@ class BinningOp(HasStrictTraits):
     id = Constant('edu.mit.synbio.cytoflow.operations.binning')
     friendly_id = Constant("Binning")
     
-    name = Str
-    channel = Str
+    name = CStr()
+    bin_count_name = CStr()
+    channel = Str()
     num_bins = util.Removed(err_string = "'num_bins' was removed in 0.9")
-    bin_width = util.PositiveFloat(Undefined, allow_zero = False)
-    bin_count_name = Str
+    bin_width = util.PositiveFloat(0, allow_zero = True)
     scale = util.ScaleEnum
     
     _max_num_bins = Int(100)

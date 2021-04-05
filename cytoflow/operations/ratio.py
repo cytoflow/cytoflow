@@ -87,28 +87,16 @@ class RatioOp(HasStrictTraits):
         if experiment is None:
             raise util.CytoflowOpError('experiment',
                                        "No experiment specified")
-            
-        if not self.numerator:
-            raise util.CytoflowOpError('numerator',
-                                       "must set 'numerator'")
         
         if self.numerator not in experiment.channels:
             raise util.CytoflowOpError('numerator',
                                        "Channel {0} not in the experiment"
                                        .format(self.numerator))
             
-        if not self.denominator:
-            raise util.CytoflowOpError('denominator',
-                                       "must set 'denominator'")
-            
         if self.denominator not in experiment.channels:
             raise util.CytoflowOpError('denominator',
                                        "Channel {0} not in the experiment"
                                        .format(self.denominator))
-            
-        if not self.name:
-            raise util.CytoflowOpError('name',
-                                       "must set 'name'")
             
         if self.name != util.sanitize_identifier(self.name):
             raise util.CytoflowOpError('name',

@@ -22,7 +22,7 @@ cytoflow.operations.polygon
 ---------------------------
 '''
 
-from traits.api import (HasStrictTraits, Str, List, Float, provides,
+from traits.api import (HasStrictTraits, Str, CStr, List, Float, provides,
                         Instance, Bool, on_trait_change, Any,
                         Constant)
 
@@ -141,9 +141,9 @@ class PolygonOp(HasStrictTraits):
     id = Constant('edu.mit.synbio.cytoflow.operations.polygon')
     friendly_id = Constant("Polygon")
     
-    name = Str
-    xchannel = Str
-    ychannel = Str
+    name = CStr()
+    xchannel = Str()
+    ychannel = Str()
     vertices = List((Float, Float))
     
     xscale = util.ScaleEnum()

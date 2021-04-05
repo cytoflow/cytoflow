@@ -24,9 +24,8 @@ cytoflow.operations.range2d
 
 import pandas as pd
 
-from traits.api import (HasStrictTraits, Float, Str, Bool, Instance,
-                        provides, on_trait_change, Any, Constant, 
-                        Undefined)
+from traits.api import HasStrictTraits, Float, Str, Bool, Instance, \
+    provides, on_trait_change, Any, Constant
 
 from matplotlib.widgets import RectangleSelector
 import matplotlib.pyplot as plt
@@ -143,12 +142,12 @@ class Range2DOp(HasStrictTraits):
     name = Str
     
     xchannel = Str
-    xlow = Float(Undefined)
-    xhigh = Float(Undefined)
+    xlow = Float
+    xhigh = Float
     
     ychannel = Str
-    ylow = Float(Undefined)
-    yhigh = Float(Undefined)
+    ylow = Float
+    yhigh = Float
     
     _selection_view = Instance('RangeSelection2D', transient = True)
 
@@ -208,12 +207,6 @@ class Range2DOp(HasStrictTraits):
         if not self.ychannel in experiment.channels:
             raise util.CytoflowOpError('ychannel',
                                        "ychannel isn't in the experiment")
-            
-        if self.xlow is Undefined:
-            raise util.CytoflowOpError('xlow', "must set 'xlow'")
-        
-        if self.xhigh is Undefined:
-            raise util.CytoflowOpError('xhigh', "must set 'xhigh'")
         
         if self.xhigh <= experiment[self.xchannel].min():
             raise util.CytoflowOpError('xhigh',
@@ -223,12 +216,6 @@ class Range2DOp(HasStrictTraits):
             raise util.CytoflowOpError('xlow',
                                        "x channel range low must be < {0}"
                                        .format(experiment[self.xchannel].max()))
-            
-        if self.ylow is Undefined:
-            raise util.CytoflowOpError('ylow', "must set 'ylow'")
-        
-        if self.yhigh is Undefined:
-            raise util.CytoflowOpError('yhigh', "must set 'yhigh'")
             
         if self.yhigh <= experiment[self.ychannel].min():
             raise util.CytoflowOpError('yhigh',

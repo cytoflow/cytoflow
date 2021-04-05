@@ -24,11 +24,12 @@ cytoflow.operations.bead_calibration
 
 from traits.api import (HasStrictTraits, Str, File, Dict, Bool, Int, List, 
                         Float, Constant, provides, Callable, Any,
-                        Instance, Undefined)
+                        Instance)
 import numpy as np
 import math
 import scipy.signal
 import scipy.optimize
+import sys
         
 import matplotlib.pyplot as plt
 
@@ -89,9 +90,9 @@ class BeadCalibrationOp(HasStrictTraits):
     bead_brightness_threshold : Float (default = 100)
         How bright must a bead peak be to be considered?  
         
-    bead_brightness_cutoff : Float (default: 70% of the detector range)
+    bead_brightness_cutoff : Float
         If a bead peak is above this, then don't consider it.  Takes care of
-        clipping saturated detection.
+        clipping saturated detection.  Defaults to 70% of the detector range.
         
     bead_histogram_bins : Int (default = 512)
         The number of bins to use in computing the bead histogram.  Tweak
@@ -197,7 +198,7 @@ class BeadCalibrationOp(HasStrictTraits):
     bead_peak_quantile = Int(80)
 
     bead_brightness_threshold = Float(100.0)
-    bead_brightness_cutoff = Float(Undefined)
+    bead_brightness_cutoff = util.FloatOrNone(None)
     bead_histogram_bins = Int(512)
     
     # TODO - bead_brightness_threshold should probably be different depending
@@ -257,7 +258,7 @@ class BeadCalibrationOp(HasStrictTraits):
             # TODO - this assumes the data is on a linear scale.  check it!
             data_range = experiment.metadata[channel]['range']
 
-            if self.bead_brightness_cutoff is Undefined:
+            if self.bead_brightness_cutoff is None:
                 cutoff = 0.7 * data_range
             else:
                 cutoff = self.bead_brightness_cutoff
@@ -637,7 +638,7 @@ class BeadCalibrationDiagnostic(HasStrictTraits):
             plt.plot(hist_bins[1:], hist_smooth)
             
             plt.axvline(self.op.bead_brightness_threshold, color = 'blue', linestyle = '--' )
-            if self.op.bead_brightness_cutoff is not Undefined:
+            if self.op.bead_brightness_cutoff:
                 plt.axvline(self.op.bead_brightness_cutoff, color = 'blue', linestyle = '--' )
             else:
                 plt.axvline(experiment.metadata[channel]['range'] * 0.7, color = 'blue', linestyle = '--')                

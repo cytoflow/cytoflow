@@ -27,7 +27,7 @@ import unittest
 import cytoflow as flow
 import matplotlib.pyplot as plt
 
-from .test_base import View2DTestBase
+from test_base import View2DTestBase  # @UnresolvedImport
 
 
 class TestKde2D(View2DTestBase, unittest.TestCase):
