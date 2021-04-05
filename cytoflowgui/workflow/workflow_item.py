@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 
 from traits.api import (HasStrictTraits, Instance, Str, Enum, Any, Dict, 
                         Tuple, List, DelegatesTo, ComparisonMode, Property,
-                        observe)
+                        observe, cached_property, Undefined)
 
 from cytoflow import Experiment
 from cytoflow.utility import CytoflowError, CytoflowOpError, CytoflowViewError
@@ -134,6 +134,7 @@ class WorkflowItem(HasStrictTraits):
     
     
     # property: default_view
+    @cached_property
     def _get_default_view(self):
         try:
             return self.operation.default_view()
@@ -258,16 +259,6 @@ class WorkflowItem(HasStrictTraits):
             self.matplotlib_events.set() 
             self.plot_lock.release()
             return
-
-#         try:
-#             if len(self.current_view.plot_names) > 0 and self.current_view.current_plot not in self.current_view.plot_names:
-#                 self.view_error = "Plot {} not in current plot names {}".format(self.current_view.current_plot, self.current_view.plot_names)
-#                 return
-#         except Exception as e:
-#             # occasionally if the types are really different the "in" statement 
-#             # above will throw an error
-#             self.view_error = "Plot {} not in current plot names {}".format(self.current_view.current_plot, self.current_view.plot_names)
-#             return
           
         with warnings.catch_warnings(record = True) as w:
             try:
@@ -279,8 +270,17 @@ class WorkflowItem(HasStrictTraits):
                 except AttributeError:
                     pass
                 
-                self.current_view.plot(self.result, 
-                                       **self.current_view.plot_params.trait_get())
+                plot_params = self.current_view.plot_params.trait_get()
+                
+                if self.result:
+                    self.current_view.plot(self.result, **plot_params)
+                elif self.previous_wi and self.previous_wi.result:
+                    self.current_view.plot(self.previous_wi.result, **plot_params)
+                    warnings.warn("Warning: plotting previous operation's result")
+                else:
+                    raise CytoflowViewError(None, "Nothing to plot!")
+                    
+                    
                 self.view_error = ""
                 self.view_error_trait = ""
             

@@ -219,7 +219,7 @@ class ImportOp(HasStrictTraits):
     data_set = Int(0)
 
     # are we subsetting?
-    events = util.IntOrNone(None)
+    events = Int(None)
     coarse_events = util.Deprecated(new = 'events')
         
     # DON'T DO THIS

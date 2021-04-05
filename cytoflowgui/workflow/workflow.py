@@ -753,8 +753,12 @@ class RemoteWorkflow(HasStrictTraits):
                     try:
                         wi.current_view = next((x for x in wi.views if x.id == view.id))
                     except StopIteration:
-                        wi.views.append(view)
-                        wi.current_view = view
+                        if wi.default_view and view.id == wi.default_view.id:
+                            wi.views.append(wi.default_view)
+                            wi.current_view = wi.default_view
+                        else:
+                            wi.views.append(view)
+                            wi.current_view = view
                                                 
                 elif msg == Msg.CHANGE_CURRENT_PLOT:
                     (idx, plot) = payload
@@ -914,7 +918,6 @@ class RemoteWorkflow(HasStrictTraits):
             if (wi == self.selected 
                 and wi.current_view 
                 and wi.current_view.should_plot(Changed.RESULT, event)):
-                wi.current_view.update_plot_names(wi)
                 self.exec_q.put((idx - 0.1, (wi, wi.plot)))
                 
             if wi.next_wi:
@@ -934,7 +937,6 @@ class RemoteWorkflow(HasStrictTraits):
                 if (next_wi == self.selected
                     and next_wi.current_view
                     and next_wi.current_view.should_plot(Changed.PREV_RESULT, event)):
-                    # FIXME wi.current_view.update_plot_names(wi)
                     self.exec_q.put((next_idx - 0.1))
              
     @observe('workflow:items:views:items:+type')
@@ -956,7 +958,6 @@ class RemoteWorkflow(HasStrictTraits):
         if (wi == self.selected 
             and wi.current_view == view 
             and wi.current_view.should_plot(Changed.VIEW, event)):
-            # FIXME wi.current_view.update_plot_names(wi)
             self.exec_q.put((idx - 0.1, (wi, wi.plot)))     
             
     @observe('workflow:items:current_view')
@@ -966,7 +967,6 @@ class RemoteWorkflow(HasStrictTraits):
         wi = event.object
         if wi == self.selected:
             idx = self.workflow.index(wi)
-            # FIXME wi.current_view.update_plot_names(wi)
             self.exec_q.put((idx + 0.1, (wi, wi.plot)))
             
     @observe('workflow:items:+status', post_init = True)

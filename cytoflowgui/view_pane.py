@@ -111,18 +111,18 @@ class ViewDockPane(TraitsDockPane):
         
         window.setParent(parent)
         parent.setWidget(window)
-        window.setEnabled(False)
+        # window.setEnabled(True)
         
         return window
         
-    @observe('model:selected.status')
-    def _selected_status_changed(self, event):
-        if self.model.selected and self.model.selected.status == 'valid':
-            self._window.setEnabled(True)
-            self.ui.control.setEnabled(True)
-        else:
-            self._window.setEnabled(False)
-            self.ui.control.setEnabled(False)
+#     @observe('model:selected.status')
+#     def _selected_status_changed(self, event):
+#         if self.model.selected and self.model.selected.status == 'valid':
+#             self._window.setEnabled(True)
+#             self.ui.control.setEnabled(True)
+#         else:
+#             self._window.setEnabled(False)
+#             self.ui.control.setEnabled(False)
             
             
     ## TODO make the "settings" button show if there's a default view

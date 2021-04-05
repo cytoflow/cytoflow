@@ -133,7 +133,7 @@ class BarChartHandler(ViewHandler):
     def _get_levels(self):        
         if not (self.context and self.context.statistics 
                 and self.model.statistic in self.context.statistics):
-            return []
+            return {}
          
         stat = self.context.statistics[self.model.statistic]
         index = stat.index

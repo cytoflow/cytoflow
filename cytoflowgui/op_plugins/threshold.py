@@ -35,12 +35,16 @@ from .op_plugin_base import OpHandler, shared_op_traits_view, PluginHelpMixin
 class ThresholdHandler(OpHandler):
     operation_traits_view = \
         View(Item('name',
-                  editor = TextEditor(auto_set = False)),
+                  editor = TextEditor(auto_set = False,
+                                      placeholder = "None")),
              Item('channel',
                   editor=EnumEditor(name='context_handler.previous_channels'),
                   label = "Channel"),
              Item('threshold',
-                  editor = TextEditor(auto_set = False)),
+                  editor = TextEditor(auto_set = False,
+                                      evaluate = float,
+                                      format_func = lambda x: "" if x is None else str(x),
+                                      placeholder = "None")),
              shared_op_traits_view) 
         
         
@@ -90,7 +94,6 @@ class ThresholdViewHandler(ViewHandler):
 
 @provides(IOperationPlugin)
 class ThresholdPlugin(Plugin, PluginHelpMixin):
-    
     id = 'edu.mit.synbio.cytoflowgui.op_plugins.threshold'
     operation_id = 'edu.mit.synbio.cytoflow.operations.threshold'
     view_id = 'edu.mit.synbio.cytoflow.views.threshold'

@@ -50,7 +50,7 @@ in **By**, then applies **Function** to the **Channel** in each group.
 import numpy as np
 import scipy.stats
 
-from traits.api import (Str, Callable, Property, Any, CStr, List, provides, observe)
+from traits.api import (Str, Callable, Property, Any, List, provides, observe)
 
 import cytoflow.utility as util
 from cytoflow import ChannelStatisticOp
@@ -92,7 +92,7 @@ ChannelStatisticOp.__repr__ = traits_repr
 @provides(IWorkflowOperation)
 class ChannelStatisticWorkflowOp(WorkflowOperation, ChannelStatisticOp):
     # operation traits
-    name = CStr(apply = True)
+    name = Str(apply = True)
     channel = Str(apply = True)
     statistic_name = Str(apply = True)
     by = List(Str, apply = True)

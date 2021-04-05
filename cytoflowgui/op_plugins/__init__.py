@@ -25,7 +25,7 @@ from .threshold import ThresholdPlugin
 # from .range import RangePlugin
 # from .range2d import Range2DPlugin
 # from .polygon import PolygonPlugin
-# from .quad import QuadPlugin
+from .quad import QuadPlugin
 # 
 # # data-driven
 # from .ratio import RatioPlugin

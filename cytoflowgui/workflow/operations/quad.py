@@ -17,28 +17,47 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-'''
-Threshold Gate
---------------
+"""
+Quadrant Gate
+-------------
 
-Draw a threshold gate.  To set a new threshold, click on the plot.
+Draw a "quadrant" gate.  To create a new gate, just click where you'd like the
+intersection to be.  Creates a new metadata **Name**, with values ``name_1``,
+``name_2``, ``name_3``, ``name_4`` ordered **clockwise from upper-left.**
+
+.. note::
+
+    This matches the order of FACSDiva quad gates.
+    
 
 .. object:: Name
 
     The operation name.  Used to name the new metadata field that's created by 
-    this module.
+    this operation.
+        
+.. object:: X channel
+
+    The name of the channel on the X axis.
+        
+.. object:: X threshold
+
+    The threshold in the X channel.
+
+.. object:: Y channel
+
+    The name of the channel on the Y axis.
+        
+.. object:: Y threshold
+
+    The threshold in the Y channel.
+
+.. object:: X Scale
+
+    The scale of the X axis for the interactive plot.
     
-.. object:: Channel
+.. object:: Y Scale
 
-    The name of the channel to apply the gate to.
-
-.. object:: Threshold
-
-    The threshold of the gate.
-    
-.. object:: Scale
-
-    The scale of the axis for the interactive plot
+    The scale of the Y axis for the interactive plot
     
 .. object:: Hue facet
 
@@ -47,9 +66,9 @@ Draw a threshold gate.  To set a new threshold, click on the plot.
 .. object:: Subset
 
     Show only a subset of the data.
-   
+        
 .. plot::
-
+    
     import cytoflow as flow
     import_op = flow.ImportOp()
     import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",
@@ -59,37 +78,41 @@ Draw a threshold gate.  To set a new threshold, click on the plot.
     import_op.conditions = {'Dox' : 'float'}
     ex = import_op.apply()
 
-    thresh_op = flow.ThresholdOp(name = 'Threshold',
-                                 channel = 'Y2-A',
-                                 threshold = 2000)
+    quad = flow.QuadOp(name = "Quad",
+                       xchannel = "V2-A",
+                       xthreshold = 100,
+                       ychannel = "Y2-A",
+                       ythreshold = 1000)
 
-    thresh_op.default_view(scale = 'log').plot(ex)
-    
-'''
+    qv = quad.default_view(xscale = 'log', yscale = 'log')
+    qv.plot(ex)
+"""
 
 from traits.api import provides, Instance, Str, DelegatesTo
 
-from cytoflow.operations.threshold import ThresholdOp, ThresholdSelection
+from cytoflow.operations.quad import QuadOp, QuadSelection
 import cytoflow.utility as util
 
-from ..views import IWorkflowView, WorkflowView, HistogramPlotParams
+from ..views import IWorkflowView, WorkflowView, ScatterplotPlotParams
 from ..serialization import camel_registry, traits_str, traits_repr, dedent
 
 from .operation_base import IWorkflowOperation, WorkflowOperation
 
-ThresholdOp.__repr__ = traits_repr
+QuadOp.__repr__ = traits_repr
+
 
 @provides(IWorkflowView)
-class ThresholdSelectionView(WorkflowView, ThresholdSelection):
+class QuadSelectionView(WorkflowView, QuadSelection):
     op = Instance(IWorkflowOperation, fixed = True)
-    threshold = DelegatesTo('op', status = True)
-    plot_params = Instance(HistogramPlotParams, ())
+    xthreshold = DelegatesTo('op', status = True)
+    ythreshold = DelegatesTo('op', status = True)
+    plot_params = Instance(ScatterplotPlotParams, ()) 
         
     def get_notebook_code(self, idx):
-        view = ThresholdSelection()
+        view = QuadSelection()
         view.copy_traits(self, view.copyable_trait_names())
         plot_params_str = traits_str(self.plot_params)
-        
+
         return dedent("""
         op_{idx}.default_view({traits}).plot(ex_{prev_idx}{plot_params})
         """
@@ -98,22 +121,24 @@ class ThresholdSelectionView(WorkflowView, ThresholdSelection):
                 prev_idx = idx - 1,
                 plot_params = ", " + plot_params_str if plot_params_str else ""))
         
-    
-@provides(IWorkflowOperation)
-class ThresholdWorkflowOp(WorkflowOperation, ThresholdOp):
+
+@provides(IWorkflowOperation)    
+class QuadWorkflowOp(WorkflowOperation, QuadOp):
     name = Str(apply = True)
-    channel = Str(apply = True)
-    threshold = util.FloatOrNone(None, apply = True)
-     
+    xchannel = Str(apply = True)
+    xthreshold = util.FloatOrNone(None, apply = True)
+    ychannel = Str(apply = True)
+    ythreshold = util.FloatOrNone(None, apply = True)
+
     def default_view(self, **kwargs):
-        return ThresholdSelectionView(op = self, **kwargs)
+        return QuadSelectionView(op = self, **kwargs)
     
     def clear_estimate(self):
         # no-op
         return
     
     def get_notebook_code(self, idx):
-        op = ThresholdOp()
+        op = QuadOp()
         op.copy_traits(self, op.copyable_trait_names())
 
         return dedent("""
@@ -124,35 +149,40 @@ class ThresholdWorkflowOp(WorkflowOperation, ThresholdOp):
         .format(repr = repr(op),
                 idx = idx,
                 prev_idx = idx - 1))
-
-    
+        
+        
 ### Serialization
-@camel_registry.dumper(ThresholdWorkflowOp, 'threshold', version = 1)
+@camel_registry.dumper(QuadWorkflowOp, 'quad', version = 1)
 def _dump(op):
     return dict(name = op.name,
-                channel = op.channel,
-                threshold = op.threshold)
+                xchannel = op.xchannel,
+                xthreshold = op.xthreshold,
+                ychannel = op.ychannel,
+                ythreshold = op.ythreshold)
     
-@camel_registry.loader('threshold', version = 1)
+@camel_registry.loader('quad', version = 1)
 def _load(data, version):
-    return ThresholdWorkflowOp(**data)
+    return QuadWorkflowOp(**data)
 
-@camel_registry.dumper(ThresholdSelectionView, 'threshold-view', version = 2)
+@camel_registry.dumper(QuadSelectionView, 'quad-view', version = 2)
 def _dump_view(view):
     return dict(op = view.op,
-                scale = view.scale,
+                xscale = view.xscale,
+                yscale = view.yscale,
                 huefacet = view.huefacet,
                 subset_list = view.subset_list,
                 plot_params = view.plot_params,
                 current_plot = view.current_plot)
     
-@camel_registry.dumper(ThresholdSelectionView, 'threshold-view', version = 1)
+@camel_registry.dumper(QuadSelectionView, 'quad-view', version = 1)
 def _dump_view_v1(view):
     return dict(op = view.op,
-                scale = view.scale,
+                xscale = view.xscale,
+                yscale = view.yscale,
                 huefacet = view.huefacet,
                 subset_list = view.subset_list)
     
-@camel_registry.loader('threshold-view', version = any)
+@camel_registry.loader('quad-view', version = any)
 def _load_view(data, version):
-    return ThresholdSelectionView(**data)
+    return QuadSelectionView(**data)
+
