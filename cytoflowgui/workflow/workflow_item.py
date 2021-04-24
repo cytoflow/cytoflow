@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 
 from traits.api import (HasStrictTraits, Instance, Str, Enum, Any, Dict, 
                         Tuple, List, DelegatesTo, ComparisonMode, Property,
-                        observe, cached_property, Undefined)
+                        observe, cached_property)
 
 from cytoflow import Experiment
 from cytoflow.utility import CytoflowError, CytoflowOpError, CytoflowViewError
@@ -270,6 +270,9 @@ class WorkflowItem(HasStrictTraits):
                 except AttributeError:
                     pass
                 
+                if this.last_view_plotted is not None and "interactive" in this.last_view_plotted.traits():
+                    this.last_view_plotted.interactive = False
+                
                 plot_params = self.current_view.plot_params.trait_get()
                 
                 if self.result:
@@ -280,12 +283,8 @@ class WorkflowItem(HasStrictTraits):
                 else:
                     raise CytoflowViewError(None, "Nothing to plot!")
                     
-                    
                 self.view_error = ""
                 self.view_error_trait = ""
-            
-                if this.last_view_plotted and "interactive" in this.last_view_plotted.traits():
-                    this.last_view_plotted.interactive = False
                  
                 if "interactive" in self.current_view.traits():
                     self.current_view.interactive = True

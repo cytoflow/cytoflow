@@ -88,7 +88,7 @@ intersection to be.  Creates a new metadata **Name**, with values ``name_1``,
     qv.plot(ex)
 """
 
-from traits.api import provides, Instance, Str, DelegatesTo
+from traits.api import provides, Instance, Str, Property, Tuple, observe
 
 from cytoflow.operations.quad import QuadOp, QuadSelection
 import cytoflow.utility as util
@@ -104,9 +104,38 @@ QuadOp.__repr__ = traits_repr
 @provides(IWorkflowView)
 class QuadSelectionView(WorkflowView, QuadSelection):
     op = Instance(IWorkflowOperation, fixed = True)
-    xthreshold = DelegatesTo('op', status = True)
-    ythreshold = DelegatesTo('op', status = True)
     plot_params = Instance(ScatterplotPlotParams, ()) 
+    
+    _xy = Tuple(util.FloatOrNone(None), util.FloatOrNone(None), status = True)
+    xthreshold = Property(util.FloatOrNone(None), observe = '_xy')
+    ythreshold = Property(util.FloatOrNone(None), observe = '_xy')
+        
+    # data flow: user clicks cursor. remote canvas calls _onclick, sets 
+    # _xy. _xy is copied back to local view (because it's "status = True").
+    # _update_xy is called, and because self.interactive is false, then
+    # the operation is updated (atomically, both x and y at once.)  the
+    # operation's _xy is sent back to the remote operation (because 
+    # "apply = True"), where the operation is updated. 
+    
+    # xthreshold and ythreshold are properties (both in the view and
+    # in the operation) so that x and y update can happen atomically. 
+    # otherwise, they happen one after the other, which is noticably
+    # slow!
+    
+    def _onclick(self, event):
+        """Update the threshold location"""
+        self._xy = (event.xdata, event.ydata)        
+        
+    @observe('_xy')
+    def _update_xy(self, _):
+        if not self.interactive:
+            self.op._xy = self._xy
+
+    def _get_xthreshold(self):
+        return self._xy[0]
+
+    def _get_ythreshold(self):
+        return self._xy[1]
         
     def get_notebook_code(self, idx):
         view = QuadSelection()
@@ -126,9 +155,23 @@ class QuadSelectionView(WorkflowView, QuadSelection):
 class QuadWorkflowOp(WorkflowOperation, QuadOp):
     name = Str(apply = True)
     xchannel = Str(apply = True)
-    xthreshold = util.FloatOrNone(None, apply = True)
     ychannel = Str(apply = True)
-    ythreshold = util.FloatOrNone(None, apply = True)
+    
+    _xy = Tuple(util.FloatOrNone(None), util.FloatOrNone(None), apply = True)
+    xthreshold = Property(util.FloatOrNone(None), observe = '_xy')
+    ythreshold = Property(util.FloatOrNone(None), observe = '_xy')
+    
+    def _get_xthreshold(self):
+        return self._xy[0]
+    
+    def _set_xthreshold(self, val):
+        self._xy = (val, self._xy[1])
+
+    def _get_ythreshold(self):
+        return self._xy[1]
+    
+    def _set_ythreshold(self, val):
+        self._xy = (self._xy[0], val)
 
     def default_view(self, **kwargs):
         return QuadSelectionView(op = self, **kwargs)

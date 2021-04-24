@@ -67,7 +67,7 @@ Draw a threshold gate.  To set a new threshold, click on the plot.
     
 '''
 
-from traits.api import provides, Instance, Str, DelegatesTo
+from traits.api import provides, Instance, Str, observe
 
 from cytoflow.operations.threshold import ThresholdOp, ThresholdSelection
 import cytoflow.utility as util
@@ -82,8 +82,26 @@ ThresholdOp.__repr__ = traits_repr
 @provides(IWorkflowView)
 class ThresholdSelectionView(WorkflowView, ThresholdSelection):
     op = Instance(IWorkflowOperation, fixed = True)
-    threshold = DelegatesTo('op', status = True)
+    threshold = util.FloatOrNone(None, status = True)
     plot_params = Instance(HistogramPlotParams, ())
+    
+    # data flow: user clicks cursor. remote canvas calls _onclick, sets 
+    # threshold. threshold is copied back to local view (because it's 
+    # "status = True"). _update_threshold is called, and because 
+    # self.interactive is false, then the operation is updated.  the
+    # operation's threshold is sent back to the remote operation (because 
+    # "apply = True"), where the remote operation is updated.
+    
+    def _onclick(self, event):
+        """Update the threshold location"""
+        # sometimes the axes aren't set up and we don't get xdata (??)
+        if event.xdata:
+            self.threshold = event.xdata
+    
+    @observe('threshold')
+    def _update_threshold(self, _):
+        if not self.interactive:
+            self.op.threshold = self.threshold
         
     def get_notebook_code(self, idx):
         view = ThresholdSelection()
