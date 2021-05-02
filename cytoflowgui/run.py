@@ -168,10 +168,10 @@ def run_gui():
     #from cytoflowgui.op_plugins.threshold import ThresholdPlugin
     from cytoflowgui.op_plugins import (ImportPlugin, 
                                         ThresholdPlugin,
-                                        #RangePlugin, 
+                                        RangePlugin, 
                                         QuadPlugin,
-                                        #Range2DPlugin, 
-                                        #PolygonPlugin, 
+                                        Range2DPlugin, 
+                                        PolygonPlugin, 
                                         #BinningPlugin,
                                         #GaussianMixture1DPlugin, 
                                         #GaussianMixture2DPlugin,
@@ -224,10 +224,10 @@ def run_gui():
     
     op_plugins = [ImportPlugin(),
                   ThresholdPlugin(),
-                  #RangePlugin(),
+                  RangePlugin(),
                   QuadPlugin(),
-                  #Range2DPlugin(),
-                  #PolygonPlugin(),
+                  Range2DPlugin(),
+                  PolygonPlugin(),
                   #RatioPlugin(),
                   ChannelStatisticPlugin()]
                   #TransformStatisticPlugin(),
