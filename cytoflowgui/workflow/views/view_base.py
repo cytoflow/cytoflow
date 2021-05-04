@@ -172,7 +172,7 @@ class WorkflowDataView(WorkflowView):
         super().plot(experiment, **kwargs)
         
 class WorkflowStatisticsView(WorkflowView):
-    
+        
     def enum_plots(self, experiment):
         try:
             return super().enum_plots(experiment)
@@ -189,11 +189,16 @@ class WorkflowStatisticsView(WorkflowView):
         if experiment is None:
             raise util.CytoflowViewError("No experiment specified")
         
-        # TODO - get this title right
-#         if 'title' not in kwargs or kwargs['title'] == '':
-#             kwargs['title'] = '{}'.format(self.current_plot)
+        plot_names = self.enum_plots(experiment)
+        
+        if plot_names.by:   
+            if 'title' not in kwargs or kwargs['title'] == '':
+                kwargs['title'] = '{} = {}'.format(",".join(plot_names.by), self.current_plot)
  
-        super().plot(experiment, plot_name = self.current_plot, **kwargs)
+            super().plot(experiment, plot_name = self.current_plot, **kwargs)
+            
+        else:
+            super().plot(experiment, **kwargs)    
         
     
 class BasePlotParams(HasStrictTraits):

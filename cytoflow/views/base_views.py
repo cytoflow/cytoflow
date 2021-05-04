@@ -646,6 +646,13 @@ class BaseStatisticsView(BaseView):
     def enum_plots(self, experiment, data):
         """
         Enumerate the named plots we can make from this set of statistics.
+        
+        Returns
+        -------
+        iterator
+            An iterator across the possible plot names. The iterator ALSO has an instance
+            attribute called :attribute:`by`, which holds a list of the facets that are
+            not yet set (and thus need to be specified in the plot name.)
         """
         
         if experiment is None:
