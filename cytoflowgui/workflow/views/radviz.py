@@ -87,7 +87,7 @@ from cytoflow import RadvizView
 import cytoflow.utility as util
 
 from cytoflowgui.workflow.serialization import camel_registry, traits_repr, traits_str
-from .view_base import IWorkflowView, WorkflowView, DataPlotParams
+from .view_base import IWorkflowView, WorkflowDataView, DataPlotParams
 from .scatterplot import SCATTERPLOT_MARKERS
 
 RadvizView.__repr__ = traits_repr
@@ -108,7 +108,7 @@ class Channel(HasTraits):
 
 
 @provides(IWorkflowView)
-class RadvizWorkflowView(WorkflowView, RadvizView):
+class RadvizWorkflowView(WorkflowDataView, RadvizView):
     plot_params = Instance(RadvizPlotParams, ())
     
     channels_list = List(Channel)

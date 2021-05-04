@@ -82,7 +82,7 @@ from cytoflow import HistogramView
 import cytoflow.utility as util
 
 from cytoflowgui.workflow.serialization import camel_registry, traits_repr, traits_str
-from .view_base import IWorkflowView, WorkflowView, Data1DPlotParams, LINE_STYLES
+from .view_base import IWorkflowView, WorkflowDataView, Data1DPlotParams, LINE_STYLES
 
 HistogramView.__repr__ = traits_repr
         
@@ -97,7 +97,7 @@ class HistogramPlotParams(Data1DPlotParams):
     
     
 @provides(IWorkflowView)
-class HistogramWorkflowView(WorkflowView, HistogramView):
+class HistogramWorkflowView(WorkflowDataView, HistogramView):
     plot_params = Instance(HistogramPlotParams, ())
             
     def get_notebook_code(self, idx):

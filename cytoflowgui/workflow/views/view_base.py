@@ -90,9 +90,6 @@ class WorkflowView(HasStrictTraits):
     :module:`cytoflow` module.
     """
     
-    # add another facet for "plot_name".
-    plotfacet = Str
-    
     # make the "current" value of plot_name an attribute so
     # we can view (with TraitsUI) and serialize it. 
     current_plot = Any
@@ -124,6 +121,30 @@ class WorkflowView(HasStrictTraits):
         is the handler `event` parameter.
         """
         return True
+
+    # this makes sure that LocalWorkflow._view_changed notices when
+    # a plot parameter changes.
+    @observe('plot_params:+type')
+    def _on_params_changed(self, _):
+        self.changed = 'plot_params'
+        
+    # same for subset_list
+    @observe('subset_list:items.str')
+    def _on_subset_changed(self, _):
+        self.changed = 'subset_list'
+        
+    # MAGIC - returns the value of the "subset" Property, above
+    def _get_subset(self):
+        return " and ".join([subset.str for subset in self.subset_list if subset.str])
+            
+    def get_notebook_code(self, idx):
+        raise NotImplementedError("get_notebook_code is unimplemented for {id}"
+                                  .format(id = self.id))
+        
+class WorkflowDataView(WorkflowView):
+    
+    # add another facet for "plot_name".
+    plotfacet = Str
     
     def enum_plots(self, experiment):
         if not self.plotfacet:
@@ -149,25 +170,30 @@ class WorkflowView(HasStrictTraits):
             experiment = experiment.subset(self.plotfacet, self.current_plot)
  
         super().plot(experiment, **kwargs)
+        
+class WorkflowStatisticsView(WorkflowView):
     
-    # this makes sure that LocalWorkflow._view_changed notices when
-    # a plot parameter changes.
-    @observe('plot_params:+type')
-    def _on_params_changed(self, _):
-        self.changed = 'plot_params'
+    def enum_plots(self, experiment):
+        try:
+            return super().enum_plots(experiment)
+        except util.CytoflowError:
+            return IterWrapper(iter([]), [])
         
-    # same for subset_list
-    @observe('subset_list:items.str')
-    def _on_subset_changed(self, _):
-        self.changed = 'subset_list'
+    
+    def plot(self, experiment, **kwargs):
+        """
+        A default :method:`plot` that passes :attribute:`current_plot` as the
+        plot name.
+        """
+         
+        if experiment is None:
+            raise util.CytoflowViewError("No experiment specified")
         
-    # MAGIC - returns the value of the "subset" Property, above
-    def _get_subset(self):
-        return " and ".join([subset.str for subset in self.subset_list if subset.str])
-            
-    def get_notebook_code(self, idx):
-        raise NotImplementedError("get_notebook_code is unimplemented for {id}"
-                                  .format(id = self.id))
+        # TODO - get this title right
+#         if 'title' not in kwargs or kwargs['title'] == '':
+#             kwargs['title'] = '{}'.format(self.current_plot)
+ 
+        super().plot(experiment, plot_name = self.current_plot, **kwargs)
         
     
 class BasePlotParams(HasStrictTraits):

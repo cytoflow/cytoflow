@@ -85,7 +85,7 @@ from cytoflow import ParallelCoordinatesView
 import cytoflow.utility as util
 
 from ..serialization import camel_registry, traits_repr, traits_str
-from .view_base import IWorkflowView, WorkflowView, DataPlotParams, Channel
+from .view_base import IWorkflowView, WorkflowDataView, DataPlotParams, Channel
 
 ParallelCoordinatesView.__repr__ = traits_repr
 
@@ -95,7 +95,7 @@ class ParallelCoordinatesPlotParams(DataPlotParams):
     
     
 @provides(IWorkflowView)
-class ParallelCoordinatesWorkflowView(WorkflowView, ParallelCoordinatesView):
+class ParallelCoordinatesWorkflowView(WorkflowDataView, ParallelCoordinatesView):
     plot_params = Instance(ParallelCoordinatesPlotParams, ())
     
     channels_list = List(Channel)

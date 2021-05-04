@@ -98,7 +98,7 @@ from cytoflow import Stats1DView
 import cytoflow.utility as util
 
 from cytoflowgui.workflow.serialization import camel_registry, traits_repr, traits_str
-from .view_base import IWorkflowView, WorkflowView, Stats1DPlotParams as _Stats1DPlotParams, LINE_STYLES, SCATTERPLOT_MARKERS
+from .view_base import IWorkflowView, WorkflowStatisticsView, Stats1DPlotParams as _Stats1DPlotParams, LINE_STYLES, SCATTERPLOT_MARKERS
 
 Stats1DView.__repr__ = traits_repr
 
@@ -115,7 +115,7 @@ class Stats1DPlotParams(_Stats1DPlotParams):
     
     
 @provides(IWorkflowView)
-class Stats1DWorkflowView(WorkflowView, Stats1DView):
+class Stats1DWorkflowView(WorkflowStatisticsView, Stats1DView):
     plot_params = Instance(Stats1DPlotParams, ())
     
     def get_notebook_code(self, idx):

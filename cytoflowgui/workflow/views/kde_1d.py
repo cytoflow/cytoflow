@@ -82,7 +82,7 @@ from cytoflow import Kde1DView
 import cytoflow.utility as util
 
 from cytoflowgui.workflow.serialization import camel_registry, traits_repr, traits_str
-from .view_base import IWorkflowView, WorkflowView, Data1DPlotParams, LINE_STYLES
+from .view_base import IWorkflowView, WorkflowDataView, Data1DPlotParams, LINE_STYLES
 
 Kde1DView.__repr__ = traits_repr
 
@@ -99,7 +99,7 @@ class Kde1DPlotParams(Data1DPlotParams):
     
     
 @provides(IWorkflowView)
-class Kde1DWorkflowView(WorkflowView, Kde1DView):
+class Kde1DWorkflowView(WorkflowDataView, Kde1DView):
     plot_params = Instance(Kde1DPlotParams, ())
             
     def get_notebook_code(self, idx):

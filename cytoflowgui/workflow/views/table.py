@@ -84,13 +84,13 @@ from cytoflow import TableView
 import cytoflow.utility as util
 
 from cytoflowgui.workflow.serialization import camel_registry, traits_repr
-from .view_base import IWorkflowView, WorkflowView, BasePlotParams
+from .view_base import IWorkflowView, WorkflowStatisticsView, BasePlotParams
 
 TableView.__repr__ = traits_repr
 
 
 @provides(IWorkflowView)
-class TableWorkflowView(WorkflowView, TableView): 
+class TableWorkflowView(WorkflowStatisticsView, TableView): 
     plot_params = BasePlotParams() # this is unused -- no view, not passed to plot()
     
     # return the result for export from the GUI process

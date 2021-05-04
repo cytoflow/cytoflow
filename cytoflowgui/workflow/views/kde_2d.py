@@ -84,7 +84,7 @@ from cytoflow import Kde2DView
 import cytoflow.utility as util
 
 from cytoflowgui.workflow.serialization import camel_registry, traits_repr, traits_str
-from .view_base import IWorkflowView, WorkflowView, Data2DPlotParams
+from .view_base import IWorkflowView, WorkflowDataView, Data2DPlotParams
 
 Kde2DView.__repr__ = traits_repr
 
@@ -98,7 +98,7 @@ class Kde2DPlotParams(Data2DPlotParams):
     gridsize = util.PositiveCInt(50, allow_zero = False)
     
 @provides(IWorkflowView)
-class Kde2DWorkflowView(WorkflowView, Kde2DView):
+class Kde2DWorkflowView(WorkflowDataView, Kde2DView):
     plot_params = Instance(Kde2DPlotParams, ())
             
     def get_notebook_code(self, idx):
