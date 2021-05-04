@@ -181,8 +181,8 @@ def run_gui():
                                         #ColorTranslationPlugin, 
                                         #TasbePlugin, 
                                         ChannelStatisticPlugin,
-                                        TransformStatisticPlugin) 
-                                        #RatioPlugin, 
+                                        TransformStatisticPlugin,
+                                        RatioPlugin)
                                         #DensityGatePlugin, 
                                         #FlowPeaksPlugin,
                                         #KMeansPlugin, 
@@ -228,9 +228,9 @@ def run_gui():
                   QuadPlugin(),
                   Range2DPlugin(),
                   PolygonPlugin(),
-                  #RatioPlugin(),
                   ChannelStatisticPlugin(),
-                  TransformStatisticPlugin()]
+                  TransformStatisticPlugin(),
+                  RatioPlugin()]
                   #BinningPlugin(),
                   #GaussianMixture1DPlugin(),
                   #GaussianMixture2DPlugin(),
