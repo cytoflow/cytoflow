@@ -180,8 +180,8 @@ def run_gui():
                                         #AutofluorescencePlugin,
                                         #ColorTranslationPlugin, 
                                         #TasbePlugin, 
-                                        ChannelStatisticPlugin)
-                                        #TransformStatisticPlugin, 
+                                        ChannelStatisticPlugin,
+                                        TransformStatisticPlugin) 
                                         #RatioPlugin, 
                                         #DensityGatePlugin, 
                                         #FlowPeaksPlugin,
@@ -229,8 +229,8 @@ def run_gui():
                   Range2DPlugin(),
                   PolygonPlugin(),
                   #RatioPlugin(),
-                  ChannelStatisticPlugin()]
-                  #TransformStatisticPlugin(),
+                  ChannelStatisticPlugin(),
+                  TransformStatisticPlugin()]
                   #BinningPlugin(),
                   #GaussianMixture1DPlugin(),
                   #GaussianMixture2DPlugin(),

@@ -34,7 +34,8 @@ from .op_plugin_base import OpHandler, PluginHelpMixin, shared_op_traits_view
 class ChannelStatisticHandler(OpHandler):
     operation_traits_view = \
         View(Item('name',
-                  editor = TextEditor(auto_set = False)),
+                  editor = TextEditor(auto_set = False,
+                                      placeholder = "None")),
              Item('channel',
                   editor= EnumEditor(name='context_handler.previous_channels'),
                   label = "Channel"),
