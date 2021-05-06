@@ -83,7 +83,7 @@ from cytoflow import ScatterplotView
 import cytoflow.utility as util
 
 from cytoflowgui.workflow.serialization import camel_registry, traits_repr, traits_str
-from .view_base import IWorkflowView, WorkflowDataView, Data2DPlotParams, SCATTERPLOT_MARKERS
+from .view_base import IWorkflowView, WorkflowFacetView, Data2DPlotParams, SCATTERPLOT_MARKERS
 
 ScatterplotView.__repr__ = traits_repr
 
@@ -94,7 +94,7 @@ class ScatterplotPlotParams(Data2DPlotParams):
     marker = Enum(SCATTERPLOT_MARKERS)
     
 @provides(IWorkflowView)    
-class ScatterplotWorkflowView(WorkflowDataView, ScatterplotView):
+class ScatterplotWorkflowView(WorkflowFacetView, ScatterplotView):
     plot_params = Instance(ScatterplotPlotParams, ())
             
     def get_notebook_code(self, idx):

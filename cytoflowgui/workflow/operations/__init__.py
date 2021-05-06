@@ -10,3 +10,5 @@ from .polygon import PolygonWorkflowOp, PolygonSelectionView
 from .channel_stat import ChannelStatisticWorkflowOp
 from .xform_stat import TransformStatisticWorkflowOp
 from .ratio import RatioWorkflowOp
+
+from .gaussian_1d import GaussianMixture1DWorkflowOp, GaussianMixture1DWorkflowView

@@ -84,7 +84,7 @@ from traits.api import provides, Enum, Bool, Instance, CInt
 from cytoflow import ViolinPlotView
 
 from cytoflowgui.workflow.serialization import camel_registry, traits_repr, traits_str
-from .view_base import IWorkflowView, WorkflowDataView, Data1DPlotParams
+from .view_base import IWorkflowView, WorkflowFacetView, Data1DPlotParams
 
 ViolinPlotView.__repr__ = traits_repr
     
@@ -97,7 +97,7 @@ class ViolinPlotParams(Data1DPlotParams):
     split = Bool(False)
     
 @provides(IWorkflowView)
-class ViolinPlotWorkflowView(WorkflowDataView, ViolinPlotView):
+class ViolinPlotWorkflowView(WorkflowFacetView, ViolinPlotView):
     plot_params = Instance(ViolinPlotParams, ())
     
     def get_notebook_code(self, wi, idx):

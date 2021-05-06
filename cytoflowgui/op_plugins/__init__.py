@@ -32,14 +32,11 @@ from .channel_stat import ChannelStatisticPlugin
 from .xform_stat import TransformStatisticPlugin
 from .ratio import RatioPlugin
 
-# 
 # # data-driven
-# from .ratio import RatioPlugin
-# from .binning import BinningPlugin
-# from .gaussian_1d import GaussianMixture1DPlugin
-# from .gaussian_2d import GaussianMixture2DPlugin
-
 # from .density import DensityGatePlugin
+# from .binning import BinningPlugin
+from .gaussian_1d import GaussianMixture1DPlugin
+# from .gaussian_2d import GaussianMixture2DPlugin
 # from .flowpeaks import FlowPeaksPlugin
 # from .kmeans import KMeansPlugin
 # from .pca import PCAPlugin

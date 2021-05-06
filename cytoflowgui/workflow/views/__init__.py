@@ -1,5 +1,5 @@
 
-from .view_base import IWorkflowView, WorkflowView, Channel
+from .view_base import IWorkflowView, WorkflowView, WorkflowByView, WorkflowFacetView, Channel
 
 from .bar_chart import BarChartWorkflowView, BarChartPlotParams
 from .density import DensityWorkflowView, DensityPlotParams

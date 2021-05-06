@@ -144,10 +144,17 @@ class WorkflowItem(HasStrictTraits):
         
     @observe('[result,current_view.+type]')
     def _update_plot_names(self, _):
-        if self.current_view is None or self.result is None:
+        if self.current_view is None:
             return 
         
-        plot_iter = self.current_view.enum_plots(self.result)
+        if self.result:
+            experiment = self.result
+        elif self.previous_wi and self.previous_wi.result:
+            experiment = self.previous_wi.result
+        else:
+            return None
+        
+        plot_iter = self.current_view.enum_plots(experiment)
         plot_names = [x for x in plot_iter]
         
         if plot_names == self.plot_names:

@@ -33,9 +33,30 @@ class IterWrapper(object):
         return next(self.iterator)
 
 class IWorkflowView(IView):
+    """
+    An interface that extends a :mod:`cytoflow` view with functions 
+    required for GUI support.
     
-    # add another facet for the plot tab
-    plotfacet = Str
+    In addition to implementing the interface below, another common thing to 
+    do in the derived class is to override traits of the underlying class in 
+    order to add metadata that controls their handling by the workflow.  
+    Currently, relevant metadata include:
+     
+      * **status** - Holds status variables -- only sent from the remote process to the local one,
+        and doesn't re-plot the view. Example: the possible plot names.
+    
+      * **transient** - A temporary variable (not copied between processes or serialized).
+    
+    Attributes
+    ----------
+
+    TODO - finish this docstring (plotfacet, plot_params, etc)
+        
+    changed : Event
+        Used to transmit status information back from the operation to the
+        workflow.  Set its value to the name of the trait that was changed
+    
+    """
     
     # make the **kwargs parameters to plot() an object so we can 
     # view and serialize it.
@@ -107,6 +128,12 @@ class WorkflowView(HasStrictTraits):
     # observed in workflow.{Local,Remote}Workflow._on_view_changed
     # set it to the name of the trait that changed
     changed = Event
+    
+    def enum_plots(self, experiment):
+        try:
+            return super().enum_plots(experiment)
+        except util.CytoflowError:
+            return IterWrapper(iter([]), [])
         
     def should_plot(self, changed, payload):
         """
@@ -141,7 +168,7 @@ class WorkflowView(HasStrictTraits):
         raise NotImplementedError("get_notebook_code is unimplemented for {id}"
                                   .format(id = self.id))
         
-class WorkflowDataView(WorkflowView):
+class WorkflowFacetView(WorkflowView):
     
     # add another facet for "plot_name".
     plotfacet = Str
@@ -171,15 +198,9 @@ class WorkflowDataView(WorkflowView):
  
         super().plot(experiment, **kwargs)
         
-class WorkflowStatisticsView(WorkflowView):
         
-    def enum_plots(self, experiment):
-        try:
-            return super().enum_plots(experiment)
-        except util.CytoflowError:
-            return IterWrapper(iter([]), [])
-        
-    
+class WorkflowByView(WorkflowView):
+      
     def plot(self, experiment, **kwargs):
         """
         A default :method:`plot` that passes :attribute:`current_plot` as the
@@ -191,7 +212,7 @@ class WorkflowStatisticsView(WorkflowView):
         
         plot_names = self.enum_plots(experiment)
         
-        if plot_names.by:   
+        if plot_names.by:
             if 'title' not in kwargs or kwargs['title'] == '':
                 kwargs['title'] = '{} = {}'.format(",".join(plot_names.by), self.current_plot)
  

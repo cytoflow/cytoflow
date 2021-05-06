@@ -9,7 +9,7 @@ from cytoflow.operations import IOperation
 
 class IWorkflowOperation(IOperation):
     """
-    An interface that extends an :mod:`cytoflow` operation with functions 
+    An interface that extends a :mod:`cytoflow` operation with functions 
     required for GUI support.
     
     In addition to implementing the interface below, another common thing to 
@@ -112,7 +112,8 @@ class WorkflowOperation(HasStrictTraits):
     
     # an all-purpose "this thing changed" event
     # set it to the name of the trait that changed
-    changed = Event
+    # should ONLY ever be set in the LOCAL process
+    changed = Event(apply = True, estimate = True)
     
     def should_apply(self, changed, payload):
         return True

@@ -95,7 +95,7 @@ from cytoflow import BarChartView
 import cytoflow.utility as util
 
 from cytoflowgui.workflow.serialization import camel_registry, traits_repr, traits_str
-from .view_base import IWorkflowView, WorkflowStatisticsView, Stats1DPlotParams
+from .view_base import IWorkflowView, WorkflowByView, Stats1DPlotParams
 
 BarChartView.__repr__ = traits_repr
 
@@ -106,7 +106,7 @@ class BarChartPlotParams(Stats1DPlotParams):
     
     
 @provides(IWorkflowView)
-class BarChartWorkflowView(WorkflowStatisticsView, BarChartView):
+class BarChartWorkflowView(WorkflowByView, BarChartView):
     plot_params = Instance(BarChartPlotParams, ())
     
     def get_notebook_code(self, idx):

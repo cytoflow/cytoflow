@@ -78,7 +78,7 @@ from cytoflow import DensityView
 import cytoflow.utility as util
 
 from cytoflowgui.workflow.serialization import camel_registry, traits_repr, traits_str
-from .view_base import IWorkflowView, WorkflowDataView, Data2DPlotParams
+from .view_base import IWorkflowView, WorkflowFacetView, Data2DPlotParams
 
 DensityView.__repr__ = traits_repr
 
@@ -90,7 +90,7 @@ class DensityPlotParams(Data2DPlotParams):
     
     
 @provides(IWorkflowView)
-class DensityWorkflowView(WorkflowDataView, DensityView):
+class DensityWorkflowView(WorkflowFacetView, DensityView):
     plot_params = Instance(DensityPlotParams, ())
             
     def get_notebook_code(self, idx):
