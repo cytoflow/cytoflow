@@ -64,6 +64,14 @@ class GaussianMixtureOp(HasStrictTraits):
     component ``i``.  If :attr:`num_components` is ``1``, :attr:`sigma` must be 
     greater than 0.
     
+    .. note::
+       The :attr:`sigma` attribute does NOT affect how events are assigned to 
+       components in the new ``name`` variable. That is to say, if an event
+       is more than :attr:`sigma` standard deviations from ALL of the 
+       components, you might expect it would be labeled as ``{name}_None``. 
+       It is *not*. An event is only labeled ``{name}_None`` if it has a 
+       value that is outside of the channels' scales.
+    
     Optionally, if :attr:`posteriors` is ``True``, :meth:`apply` creates a new 
     ``double`` metadata variables named ``{name}_1_posterior`` ... 
     ``{name}_n_posterior`` where ``n`` is the number of components.  The column 
@@ -94,7 +102,7 @@ class GaussianMixtureOp(HasStrictTraits):
         How many components to fit to the data?  Must be a positive integer.
 
     sigma : Float
-        If set, use this operation as a "gate": for each component, create 
+        If not None, use this operation as a "gate": for each component, create 
         a new boolean variable ``{name}_i`` and if the event is within
         :attr:`sigma` standard deviations, set that variable to ``True``.
         If :attr:`num_components` is ``1``, must be ``> 0``.

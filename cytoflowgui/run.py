@@ -174,7 +174,7 @@ def run_gui():
                                         PolygonPlugin, 
                                         #BinningPlugin,
                                         GaussianMixture1DPlugin, 
-                                        #GaussianMixture2DPlugin,
+                                        GaussianMixture2DPlugin,
                                         #BleedthroughLinearPlugin,
                                         #BeadCalibrationPlugin, 
                                         #AutofluorescencePlugin,
@@ -232,8 +232,8 @@ def run_gui():
                   TransformStatisticPlugin(),
                   RatioPlugin(),
                   #BinningPlugin(),
-                  GaussianMixture1DPlugin()]
-                  #GaussianMixture2DPlugin(),
+                  GaussianMixture1DPlugin(),
+                  GaussianMixture2DPlugin()]
                   #DensityGatePlugin(),
                   #KMeansPlugin(),
                   #FlowPeaksPlugin(),

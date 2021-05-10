@@ -22,10 +22,10 @@ from traits.api import (provides, Instance, Str, Property, observe, Constant,
 
 from sklearn import mixture
 
-from cytoflow.operations.gaussian import GaussianMixtureOp, GaussianMixture1DView
+from cytoflow.operations.gaussian import GaussianMixtureOp, GaussianMixture2DView
 import cytoflow.utility as util
 
-from ..views import IWorkflowView, WorkflowByView, HistogramPlotParams
+from ..views import IWorkflowView, WorkflowByView, ScatterplotPlotParams
 from ..serialization import camel_registry, traits_str, traits_repr, dedent
 from ..subset import ISubset
 
@@ -33,16 +33,17 @@ from .operation_base import IWorkflowOperation, WorkflowOperation
 
 GaussianMixtureOp.__repr__ = traits_repr
 
-
 @provides(IWorkflowOperation)    
-class GaussianMixture1DWorkflowOp(WorkflowOperation, GaussianMixtureOp):
+class GaussianMixture2DWorkflowOp(WorkflowOperation, GaussianMixtureOp):
     # override id so we can differentiate the 1D and 2D ops
-    id = Constant('edu.mit.synbio.cytoflowgui.operations.gaussian_1d')
+    id = Constant('edu.mit.synbio.cytoflowgui.operations.gaussian_2d')
 
     # add 'estimate' and 'apply' metadata
     name = Str(apply = True)
-    channel = Str(apply = True)
-    channel_scale = util.ScaleEnum(estimate = True)
+    xchannel = Str(apply = True)
+    ychannel = Str(apply = True)
+    xscale = util.ScaleEnum(estimate = True)
+    yscale = util.ScaleEnum(estimate = True)
     num_components = util.PositiveCInt(1, allow_zero = False, estimate = True)
     sigma = util.PositiveCFloat(None, allow_zero = True, allow_none = True, estimate = True)
     by = List(Str, estimate = True)
@@ -66,24 +67,32 @@ class GaussianMixture1DWorkflowOp(WorkflowOperation, GaussianMixtureOp):
     def _get_subset(self):
         return " and ".join([subset.str for subset in self.subset_list if subset.str])
     
+    def default_view(self, **kwargs):
+        return GaussianMixture2DWorkflowView(op = self, **kwargs)
+    
     def estimate(self, experiment):
-        self.channels = [self.channel]
-        self.scale = {self.channel : self.channel_scale}
+        if not self.xchannel:
+            raise util.CytoflowOpError('xchannel',
+                                       "Must set X channel")
+
+        if not self.ychannel:
+            raise util.CytoflowOpError('ychannel',
+                                       "Must set Y channel")          
+            
+        self.channels = [self.xchannel, self.ychannel]
+        self.scale = {self.xchannel : self.xscale,
+                      self.ychannel : self.yscale}
         super().estimate(experiment, subset = self.subset)
         
     def apply(self, experiment):
         if not self._gmms:
             raise util.CytoflowOpError(None, 'Click "Estimate"!')
         return GaussianMixtureOp.apply(self, experiment)
-    
-    def default_view(self, **kwargs):
-        return GaussianMixture1DWorkflowView(op = self, 
-                                           **kwargs)
-    
+
     def clear_estimate(self):
         self._gmms = {}
         self._scale = {}
-        
+    
     def get_notebook_code(self, idx):
         op = GaussianMixtureOp()
         op.copy_traits(self, op.copyable_trait_names())      
@@ -98,22 +107,25 @@ class GaussianMixture1DWorkflowOp(WorkflowOperation, GaussianMixtureOp):
                 idx = idx,
                 prev_idx = idx - 1,
                 subset = ", subset = " + repr(self.subset) if self.subset else ""))
-    
-    
+        
+        
 @provides(IWorkflowView)
-class GaussianMixture1DWorkflowView(WorkflowByView, GaussianMixture1DView):
+class GaussianMixture2DWorkflowView(WorkflowByView, GaussianMixture2DView):
     op = Instance(IWorkflowOperation, fixed = True)
-    channel = DelegatesTo('op')
-    by = DelegatesTo('op')
     subset = DelegatesTo('op')
-    scale = DelegatesTo('op', 'channel_scale')
-    plot_params = Instance(HistogramPlotParams, ())
+    by = DelegatesTo('op')
+    xchannel = DelegatesTo('op')
+    xscale = DelegatesTo('op')
+    ychannel = DelegatesTo('op')
+    yscale = DelegatesTo('op')
+
+    plot_params = Instance(ScatterplotPlotParams, ())
     
     # AnnotatingView::plot sets 'huefacet' to the newly-created condition. 
     # making 'huefacet' transient prevents this from updating the plot
     # in a loop
-    huefacet = Str(transient = True)   
-
+    huefacet = Str(transient = True)  
+    
     def plot(self, experiment, **kwargs):
         WorkflowByView.plot(self, experiment, **kwargs)
         
@@ -122,10 +134,10 @@ class GaussianMixture1DWorkflowView(WorkflowByView, GaussianMixture1DView):
         self.huefacet = ""
             
     def get_notebook_code(self, idx):
-        view = GaussianMixture1DView()
+        view = GaussianMixture2DView()
         view.copy_traits(self, view.copyable_trait_names())
         view.subset = self.subset
-        plot_params_str = traits_str(self.plot_params)        
+        plot_params_str = traits_str(self.plot_params)
         
         return dedent("""
         op_{idx}.default_view({traits}).plot(ex_{idx}{plot_params})
@@ -134,27 +146,27 @@ class GaussianMixture1DWorkflowView(WorkflowByView, GaussianMixture1DView):
                 idx = idx,
                 plot_params = ", " + plot_params_str if plot_params_str else ""))
         
- 
-### Serialization
         
-@camel_registry.dumper(GaussianMixture1DWorkflowOp, 'gaussian-1d', version = 1)
+@camel_registry.dumper(GaussianMixture2DWorkflowOp, 'gaussian-2d', version = 1)
 def _dump(op):
     return dict(name = op.name,
-                channel = op.channel,
-                channel_scale = op.channel_scale,
+                xchannel = op.xchannel,
+                ychannel = op.ychannel,
+                xscale = op.xscale,
+                yscale = op.yscale,
                 num_components = op.num_components,
                 sigma = op.sigma,
                 by = op.by,
                 subset_list = op.subset_list)
     
-@camel_registry.loader('gaussian-1d', version = 1)
+@camel_registry.loader('gaussian-2d', version = 1)
 def _load(data, version):
     if data['sigma'] == 0:
         data['sigma'] = None
         
-    return GaussianMixture1DWorkflowOp(**data)
+    return GaussianMixture2DWorkflowOp(**data)
 
-@camel_registry.dumper(GaussianMixture1DWorkflowView, 'gaussian-1d-view', version = 2)
+@camel_registry.dumper(GaussianMixture2DWorkflowView, 'gaussian-2d-view', version = 2)
 def _dump_view(view):
     return dict(op = view.op,
                 xfacet = view.xfacet,
@@ -162,12 +174,13 @@ def _dump_view(view):
                 huefacet = view.huefacet,
                 plot_params = view.plot_params,
                 current_plot = view.current_plot)
-    
-@camel_registry.dumper(GaussianMixture1DWorkflowView, 'gaussian-1d-view', version = 1)
+
+@camel_registry.dumper(GaussianMixture2DWorkflowView, 'gaussian-2d-view', version = 1)
 def _dump_view_v1(view):
     return dict(op = view.op)
 
-@camel_registry.loader('gaussian-1d-view', version = any)
+@camel_registry.loader('gaussian-2d-view', version = any)
 def _load_view(data, version):
-    return GaussianMixture1DWorkflowView(**data)
- 
+    return GaussianMixture2DWorkflowView(**data)
+
+    

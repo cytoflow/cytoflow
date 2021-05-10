@@ -66,7 +66,7 @@ estimating and applying a mixture model.
 .. object:: Sigma 
     
     How many standard deviations on either side of the mean to include
-    in the boolean variable ``{name}_i``?  Must be ``>= 0.0``.  If 
+    in the boolean variable ``{name}_i``?  Must be ``None`` or ``> 0.0``.  If 
     **Num Components** is ``1``, must be ``> 0``.
     
 .. object:: By 
@@ -114,6 +114,7 @@ from ..subset_controllers import subset_handler_factory
 
 from .i_op_plugin import IOperationPlugin, OP_PLUGIN_EXT
 from .op_plugin_base import OpHandler, shared_op_traits_view, PluginHelpMixin
+
 
 class GaussianMixture1DHandler(OpHandler):
     operation_traits_view = \
@@ -164,10 +165,6 @@ class GaussianMixture1DViewHandler(ViewHandler):
         View(VGroup(
              VGroup(Item('channel',
                          style = 'readonly'),
-                    Item('by',
-                         editor = TextEditor(),
-                         style = 'readonly',
-                         label = "Group\nBy"),
                     Item('xfacet',
                          editor=ExtendableEnumEditor(name='by',
                                                      extra_items = {"None" : ""}),
