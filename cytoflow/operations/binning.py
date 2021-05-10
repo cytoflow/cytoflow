@@ -54,7 +54,7 @@ class BinningOp(HasStrictTraits):
         
     bin_width : Float
         The width of the bins. If :attr:`scale` is ``log``, :attr:`bin_width` 
-        is in log-10 units; if :attr:`scale` is ``logicle``, and error is 
+        is in log-10 units; if :attr:`scale` is ``logicle``, an error is 
         thrown because the units are ill-defined.
  
 

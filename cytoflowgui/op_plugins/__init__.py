@@ -33,10 +33,10 @@ from .xform_stat import TransformStatisticPlugin
 from .ratio import RatioPlugin
 
 # # data-driven
-# from .density import DensityGatePlugin
-# from .binning import BinningPlugin
+from .binning import BinningPlugin
 from .gaussian_1d import GaussianMixture1DPlugin
 from .gaussian_2d import GaussianMixture2DPlugin
+# from .density import DensityGatePlugin
 # from .flowpeaks import FlowPeaksPlugin
 # from .kmeans import KMeansPlugin
 # from .pca import PCAPlugin

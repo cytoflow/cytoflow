@@ -186,7 +186,6 @@ class GaussianMixture1DViewHandler(ViewHandler):
                   editor = ColorTextEditor(foreground_color = "#000000",
                                            background_color = "#ff9191")))
 
-        
     view_params_view = \
         View(Item('plot_params',
                   editor = InstanceHandlerEditor(view = 'view_params_view',

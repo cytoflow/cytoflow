@@ -172,7 +172,7 @@ def run_gui():
                                         QuadPlugin,
                                         Range2DPlugin, 
                                         PolygonPlugin, 
-                                        #BinningPlugin,
+                                        BinningPlugin,
                                         GaussianMixture1DPlugin, 
                                         GaussianMixture2DPlugin,
                                         #BleedthroughLinearPlugin,
@@ -231,7 +231,7 @@ def run_gui():
                   ChannelStatisticPlugin(),
                   TransformStatisticPlugin(),
                   RatioPlugin(),
-                  #BinningPlugin(),
+                  BinningPlugin(),
                   GaussianMixture1DPlugin(),
                   GaussianMixture2DPlugin()]
                   #DensityGatePlugin(),
