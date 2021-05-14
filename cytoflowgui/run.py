@@ -175,6 +175,7 @@ def run_gui():
                                         BinningPlugin,
                                         GaussianMixture1DPlugin, 
                                         GaussianMixture2DPlugin,
+                                        DensityGatePlugin, 
                                         #BleedthroughLinearPlugin,
                                         #BeadCalibrationPlugin, 
                                         #AutofluorescencePlugin,
@@ -183,7 +184,6 @@ def run_gui():
                                         ChannelStatisticPlugin,
                                         TransformStatisticPlugin,
                                         RatioPlugin)
-                                        #DensityGatePlugin, 
                                         #FlowPeaksPlugin,
                                         #KMeansPlugin, 
                                         #PCAPlugin)
@@ -233,8 +233,8 @@ def run_gui():
                   RatioPlugin(),
                   BinningPlugin(),
                   GaussianMixture1DPlugin(),
-                  GaussianMixture2DPlugin()]
-                  #DensityGatePlugin(),
+                  GaussianMixture2DPlugin(),
+                  DensityGatePlugin()]
                   #KMeansPlugin(),
                   #FlowPeaksPlugin(),
                   #PCAPlugin(),

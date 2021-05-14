@@ -41,7 +41,7 @@ class GaussianMixture1DWorkflowOp(WorkflowOperation, GaussianMixtureOp):
 
     # add 'estimate' and 'apply' metadata
     name = Str(apply = True)
-    channel = Str(apply = True)
+    channel = Str(estimate = True)
     channel_scale = util.ScaleEnum(estimate = True)
     num_components = util.PositiveCInt(1, allow_zero = False, estimate = True)
     sigma = util.PositiveCFloat(None, allow_zero = True, allow_none = True, estimate = True)

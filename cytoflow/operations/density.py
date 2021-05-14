@@ -277,6 +277,7 @@ class DensityGateOp(HasStrictTraits):
                                                          yscale(ylim[1]), 
                                                          self.bins))
                     
+        histogram = {}
         for group, group_data in groupby:
             if len(group_data) == 0:
                 raise util.CytoflowOpError('by',
@@ -302,7 +303,9 @@ class DensityGateOp(HasStrictTraits):
                 
             self._keep_xbins[group] = i[0][0:num_bins]
             self._keep_ybins[group] = i[1][0:num_bins]
-            self._histogram[group] = h
+            histogram[group] = h
+            
+        self._histogram = histogram
 
             
     def apply(self, experiment):

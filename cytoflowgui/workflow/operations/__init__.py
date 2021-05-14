@@ -14,3 +14,4 @@ from .ratio import RatioWorkflowOp
 from .binning import BinningWorkflowOp, BinningWorkflowView
 from .gaussian_1d import GaussianMixture1DWorkflowOp, GaussianMixture1DWorkflowView
 from .gaussian_2d import GaussianMixture2DWorkflowOp, GaussianMixture2DWorkflowView
+from .density import DensityGateWorkflowOp, DensityGateWorkflowView
