@@ -47,7 +47,7 @@ class KMeansOp(HasStrictTraits):
     Calling :meth:`apply` creates a new categorical metadata variable 
     named :attr:`name`, with possible values ``{name}_1`` .... ``name_n`` where 
     ``n`` is the number of clusters, specified with :attr:`num_clusters`.
-    
+
     The same model may not be appropriate for different subsets of the data set.
     If this is the case, you can use the :attr:`by` attribute to specify 
     metadata by which to aggregate the data before estimating (and applying) a 
@@ -65,6 +65,12 @@ class KMeansOp(HasStrictTraits):
         Re-scale the data in the specified channels before fitting.  If a 
         channel is in :attr:`channels` but not in :attr:`scale`, the current 
         package-wide default (set with :func:`.set_default_scale`) is used.
+    
+        .. note::
+           Sometimes you may see events labeled ``{name}_None`` -- this results 
+           from events for which the selected scale is invalid. For example, if
+           an event has a negative measurement in a channel and that channel's
+           scale is set to "log", this event will be set to ``{name}_None``.
 
     num_clusters : Int (default = 2)
         How many components to fit to the data?  Must be a positive integer.
@@ -215,12 +221,15 @@ class KMeansOp(HasStrictTraits):
         # get the scale. estimate the scale params for the ENTIRE data set,
         # not subsets we get from groupby().  And we need to save it so that
         # the data is transformed the same way when we apply()
+        self._scale = {}
         for c in self.channels:
             if c in self.scale:
                 self._scale[c] = util.scale_factory(self.scale[c], experiment, channel = c)
             else:
                 self._scale[c] = util.scale_factory(util.get_default_scale(), experiment, channel = c)
                     
+                    
+        kmeans = {}
         for group, data_subset in groupby:
             if len(data_subset) == 0:
                 raise util.CytoflowOpError('by',
@@ -235,12 +244,14 @@ class KMeansOp(HasStrictTraits):
                 x = x[~(np.isnan(x[c]))]
             x = x.values
             
-            self._kmeans[group] = kmeans = \
+            kmeans[group] = k = \
                 sklearn.cluster.MiniBatchKMeans(n_clusters = self.num_clusters,
                                                 random_state = 0)
             
-            kmeans.fit(x)
-                                                 
+            k.fit(x)
+            
+        # do this so the UI can pick up that the estimate changed
+        self._kmeans = kmeans                       
          
     def apply(self, experiment):
         """
@@ -434,6 +445,7 @@ class KMeansOp(HasStrictTraits):
             raise util.CytoflowViewError('channels',
                                          "Can't specify more than two channels for a default view")
     
+
 @provides(IView)
 class KMeans1DView(By1DView, AnnotatingView, HistogramView):
     """

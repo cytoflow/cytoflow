@@ -183,9 +183,9 @@ def run_gui():
                                         #TasbePlugin, 
                                         ChannelStatisticPlugin,
                                         TransformStatisticPlugin,
-                                        RatioPlugin)
+                                        RatioPlugin,
                                         #FlowPeaksPlugin,
-                                        #KMeansPlugin, 
+                                        KMeansPlugin)
                                         #PCAPlugin)
     
     from cytoflowgui.view_plugins import (HistogramPlugin, 
@@ -234,8 +234,8 @@ def run_gui():
                   BinningPlugin(),
                   GaussianMixture1DPlugin(),
                   GaussianMixture2DPlugin(),
-                  DensityGatePlugin()]
-                  #KMeansPlugin(),
+                  DensityGatePlugin(),
+                  KMeansPlugin()]
                   #FlowPeaksPlugin(),
                   #PCAPlugin(),
                   #AutofluorescencePlugin(),
