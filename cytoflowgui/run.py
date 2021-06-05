@@ -184,7 +184,7 @@ def run_gui():
                                         ChannelStatisticPlugin,
                                         TransformStatisticPlugin,
                                         RatioPlugin,
-                                        #FlowPeaksPlugin,
+                                        FlowPeaksPlugin,
                                         KMeansPlugin)
                                         #PCAPlugin)
     
@@ -235,8 +235,8 @@ def run_gui():
                   GaussianMixture1DPlugin(),
                   GaussianMixture2DPlugin(),
                   DensityGatePlugin(),
-                  KMeansPlugin()]
-                  #FlowPeaksPlugin(),
+                  KMeansPlugin(),
+                  FlowPeaksPlugin()]
                   #PCAPlugin(),
                   #AutofluorescencePlugin(),
                   #BleedthroughLinearPlugin(),

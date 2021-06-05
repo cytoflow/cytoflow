@@ -16,3 +16,4 @@ from .gaussian_1d import GaussianMixture1DWorkflowOp, GaussianMixture1DWorkflowV
 from .gaussian_2d import GaussianMixture2DWorkflowOp, GaussianMixture2DWorkflowView
 from .density import DensityGateWorkflowOp, DensityGateWorkflowView
 from .kmeans import KMeansWorkflowOp, KMeansWorkflowView
+from .flowpeaks import FlowPeaksWorkflowOp, FlowPeaksWorkflowView
