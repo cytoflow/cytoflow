@@ -1,5 +1,6 @@
 
 from .operation_base import IWorkflowOperation
+from .import_op import ImportWorkflowOp
 
 from .threshold import ThresholdWorkflowOp, ThresholdSelectionView
 from .quad import QuadWorkflowOp, QuadSelectionView
@@ -17,3 +18,4 @@ from .gaussian_2d import GaussianMixture2DWorkflowOp, GaussianMixture2DWorkflowV
 from .density import DensityGateWorkflowOp, DensityGateWorkflowView
 from .kmeans import KMeansWorkflowOp, KMeansWorkflowView
 from .flowpeaks import FlowPeaksWorkflowOp, FlowPeaksWorkflowView
+from .pca import PCAWorkflowOp, Channel as PCAChannel

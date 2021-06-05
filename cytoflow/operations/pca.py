@@ -242,6 +242,7 @@ class PCAOp(HasStrictTraits):
             else:
                 self._scale[c] = util.scale_factory(util.get_default_scale(), experiment, channel = c)
                     
+        pca = {}
         for group, data_subset in groupby:
             if len(data_subset) == 0:
                 raise util.CytoflowOpError('by',
@@ -256,13 +257,15 @@ class PCAOp(HasStrictTraits):
                 x = x[~(np.isnan(x[c]))]
             x = x.values
              
-            self._pca[group] = pca = \
+            pca[group] = \
                 sklearn.decomposition.PCA(n_components = self.num_components,
                                           whiten = self.whiten,
                                           random_state = 0)
             
-            pca.fit(x)
-                                                 
+            pca[group].fit(x)
+        
+        # set this atomically to support GUI
+        self._pca = pca                      
          
     def apply(self, experiment):
         """

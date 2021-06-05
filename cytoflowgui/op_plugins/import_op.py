@@ -106,9 +106,10 @@ from envisage.api import Plugin, contributes_to
 from cytoflowgui.editors import VerticalListEditor, InstanceHandlerEditor
 from cytoflowgui.import_dialog import ExperimentDialogModel, ExperimentDialogHandler
 
+from ..workflow.operations import ImportWorkflowOp
+
 from .i_op_plugin import IOperationPlugin, OP_PLUGIN_EXT 
-from cytoflowgui.op_plugins.op_plugin_base import OpHandler, PluginHelpMixin, shared_op_traits_view
-from cytoflowgui.workflow.operations.import_op import ImportWorkflowOp
+from .op_plugin_base import OpHandler, PluginHelpMixin, shared_op_traits_view
 
 
 class ChannelHandler(Controller):
