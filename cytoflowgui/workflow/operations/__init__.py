@@ -19,3 +19,5 @@ from .density import DensityGateWorkflowOp, DensityGateWorkflowView
 from .kmeans import KMeansWorkflowOp, KMeansWorkflowView
 from .flowpeaks import FlowPeaksWorkflowOp, FlowPeaksWorkflowView
 from .pca import PCAWorkflowOp, Channel as PCAChannel
+
+from .autofluorescence import AutofluorescenceWorkflowOp, AutofluorescenceWorkflowView

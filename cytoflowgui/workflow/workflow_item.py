@@ -191,6 +191,13 @@ class WorkflowItem(HasStrictTraits):
                     self.estimate_warning = ""
                 
                 return True
+
+            except CytoflowOpError as e:                
+                if e.args[0]:
+                    self.op_error_trait = e.args[0]
+                self.estimate_error = e.args[-1]    
+                self.status = "invalid"
+                return False
                 
             except CytoflowError as e:
                 self.estimate_error = e.__str__()    

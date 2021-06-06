@@ -178,7 +178,7 @@ def run_gui():
                                         DensityGatePlugin, 
                                         #BleedthroughLinearPlugin,
                                         #BeadCalibrationPlugin, 
-                                        #AutofluorescencePlugin,
+                                        AutofluorescencePlugin,
                                         #ColorTranslationPlugin, 
                                         #TasbePlugin, 
                                         ChannelStatisticPlugin,
@@ -237,8 +237,8 @@ def run_gui():
                   DensityGatePlugin(),
                   KMeansPlugin(),
                   FlowPeaksPlugin(),
-                  PCAPlugin()]
-                  #AutofluorescencePlugin(),
+                  PCAPlugin(),
+                  AutofluorescencePlugin()]
                   #BleedthroughLinearPlugin(),
                   #BeadCalibrationPlugin(),
                   #ColorTranslationPlugin(),

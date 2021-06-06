@@ -4,6 +4,7 @@ Created on Jan 15, 2021
 @author: brian
 '''
 
+import warnings
 import pandas as pd
 import natsort
 
@@ -130,10 +131,7 @@ class WorkflowView(HasStrictTraits):
     changed = Event
     
     def enum_plots(self, experiment):
-        try:
-            return super().enum_plots(experiment)
-        except util.CytoflowError:
-            return IterWrapper(iter([]), [])
+        return IterWrapper(iter([]), [])
         
     def should_plot(self, changed, payload):
         """
@@ -219,7 +217,13 @@ class WorkflowByView(WorkflowView):
             super().plot(experiment, plot_name = self.current_plot, **kwargs)
             
         else:
-            super().plot(experiment, **kwargs)    
+            super().plot(experiment, **kwargs)
+            
+    def enum_plots(self, experiment):
+        try:
+            return super().enum_plots(experiment)
+        except util.CytoflowError:
+            return IterWrapper(iter([]), [])    
         
     
 class BasePlotParams(HasStrictTraits):
