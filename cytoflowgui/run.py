@@ -177,7 +177,7 @@ def run_gui():
                                         GaussianMixture2DPlugin,
                                         DensityGatePlugin, 
                                         #BleedthroughLinearPlugin,
-                                        #BeadCalibrationPlugin, 
+                                        BeadCalibrationPlugin, 
                                         AutofluorescencePlugin,
                                         #ColorTranslationPlugin, 
                                         #TasbePlugin, 
@@ -238,9 +238,9 @@ def run_gui():
                   KMeansPlugin(),
                   FlowPeaksPlugin(),
                   PCAPlugin(),
-                  AutofluorescencePlugin()]
+                  AutofluorescencePlugin(),
                   #BleedthroughLinearPlugin(),
-                  #BeadCalibrationPlugin(),
+                  BeadCalibrationPlugin()]
                   #ColorTranslationPlugin(),
                   #TasbePlugin()]
 

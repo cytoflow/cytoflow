@@ -298,6 +298,7 @@ class BeadCalibrationOp(HasStrictTraits):
 
 
         # compute the conversion        
+        calibration_functions = {}
         for channel in channels:
             peaks = self._peaks[channel]
             mef_unit = self.units[channel]
@@ -323,12 +324,12 @@ class BeadCalibrationOp(HasStrictTraits):
                 # if we only have one peak, assume it's the brightest peak
                 a = mef[-1] / peaks[0]
                 self._mefs[channel] = [mef[-1]]
-                self._calibration_functions[channel] = lambda x, a=a: a * x
+                calibration_functions[channel] = lambda x, a=a: a * x
             elif len(peaks) == 2:
                 # if we have only two peaks, assume they're the brightest two
                 self._mefs[channel] = [mef[-2], mef[-1]]
                 a = (mef[-1] - mef[-2]) / (peaks[1] - peaks[0])
-                self._calibration_functions[channel] = lambda x, a=a: a * x
+                calibration_functions[channel] = lambda x, a=a: a * x
             else:
                 # if there are n > 2 peaks, check all the contiguous n-subsets
                 # of mef for the one whose linear regression with the peaks
@@ -370,7 +371,7 @@ class BeadCalibrationOp(HasStrictTraits):
                     res = scipy.optimize.minimize(s, [1])
                     
                     a = res.x[0]
-                    self._calibration_functions[channel] = \
+                    calibration_functions[channel] = \
                         lambda x, a=a: a * x
                               
                 else:              
@@ -385,8 +386,11 @@ class BeadCalibrationOp(HasStrictTraits):
                     
                     a = best_lr[0]
                     b = 10 ** best_lr[1]
-                    self._calibration_functions[channel] = \
+                    calibration_functions[channel] = \
                         lambda x, a=a, b=b: b * np.power(x, a)
+                        
+        # set this atomically to support GUI
+        self._calibration_functions = calibration_functions
 
 
     def apply(self, experiment):

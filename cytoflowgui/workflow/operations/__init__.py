@@ -21,3 +21,4 @@ from .flowpeaks import FlowPeaksWorkflowOp, FlowPeaksWorkflowView
 from .pca import PCAWorkflowOp, Channel as PCAChannel
 
 from .autofluorescence import AutofluorescenceWorkflowOp, AutofluorescenceWorkflowView
+from .bead_calibration import BeadCalibrationWorkflowOp, BeadCalibrationWorkflowView, Unit as BeadCalibrationUnit
