@@ -42,10 +42,6 @@ class AutofluorescenceWorkflowOp(WorkflowOperation, AutofluorescenceOp):
     
     # add the 'estimate_result' metadata
     _af_median = Dict(Str, Float, transient = True, estimate_result = True)
-
-    @observe('channels:items', post_init = True)
-    def _on_channels_changed(self):
-        self.changed = 'channels'
     
     # override the base class's "subset" with one that is dynamically generated /
     # updated from subset_list

@@ -24,3 +24,4 @@ from .autofluorescence import AutofluorescenceWorkflowOp, AutofluorescenceWorkfl
 from .bead_calibration import BeadCalibrationWorkflowOp, BeadCalibrationWorkflowView, Unit as BeadCalibrationUnit
 from .bleedthrough_linear import BleedthroughLinearWorkflowOp, BleedthroughLinearWorkflowView, Control as BleedthroughControl
 from .color_translation import ColorTranslationWorkflowOp, ColorTranslationWorkflowView, Control as ColorTranslationControl
+from .tasbe import TasbeWorkflowOp, TasbeWorkflowView

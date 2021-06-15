@@ -179,8 +179,8 @@ def run_gui():
                                         BleedthroughLinearPlugin,
                                         BeadCalibrationPlugin, 
                                         AutofluorescencePlugin,
-                                        #ColorTranslationPlugin, 
-                                        #TasbePlugin, 
+                                        ColorTranslationPlugin, 
+                                        TasbePlugin, 
                                         ChannelStatisticPlugin,
                                         TransformStatisticPlugin,
                                         RatioPlugin,
@@ -240,9 +240,9 @@ def run_gui():
                   PCAPlugin(),
                   AutofluorescencePlugin(),
                   BleedthroughLinearPlugin(),
-                  BeadCalibrationPlugin()]
-                  #ColorTranslationPlugin(),
-                  #TasbePlugin()]
+                  BeadCalibrationPlugin(),
+                  ColorTranslationPlugin(),
+                  TasbePlugin()]
 
     plugins.extend(op_plugins)
     

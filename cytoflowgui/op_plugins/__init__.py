@@ -46,4 +46,4 @@ from .bleedthrough_linear import BleedthroughLinearPlugin
 from .bead_calibration import BeadCalibrationPlugin
 from .autofluorescence import AutofluorescencePlugin
 from .color_translation import ColorTranslationPlugin
-# from .tasbe import TasbePlugin
+from .tasbe import TasbePlugin

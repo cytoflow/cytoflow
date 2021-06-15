@@ -117,7 +117,7 @@ class BeadCalibrationHandler(OpHandler):
     channels = Property(List(Str), observe = 'context.channels')
     
     beads_name_choices = Property
-    beads_units = Property(depends_on = 'model.beads_name')
+    beads_units = Property(observe = 'model.beads_name')
     
     operation_traits_view = \
         View(VGroup(

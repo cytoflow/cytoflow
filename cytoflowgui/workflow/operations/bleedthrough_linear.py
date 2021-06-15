@@ -31,7 +31,6 @@ from ..subset import ISubset
 
 from .operation_base import IWorkflowOperation, WorkflowOperation
 
-
 BleedthroughLinearOp.__repr__ = traits_repr
 
 
