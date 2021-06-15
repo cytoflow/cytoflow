@@ -40,10 +40,9 @@ from .density import DensityGatePlugin
 from .flowpeaks import FlowPeaksPlugin
 from .kmeans import KMeansPlugin
 from .pca import PCAPlugin
-# 
-# # tasbe
-# from .bleedthrough_linear import BleedthroughLinearPlugin
-# from .bleedthrough_piecewise import BleedthroughPiecewisePlugin
+
+# tasbe
+from .bleedthrough_linear import BleedthroughLinearPlugin
 from .bead_calibration import BeadCalibrationPlugin
 from .autofluorescence import AutofluorescencePlugin
 # from .color_translation import ColorTranslationPlugin

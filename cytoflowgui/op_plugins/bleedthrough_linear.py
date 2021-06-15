@@ -79,227 +79,119 @@ the estimation looks good.  There must be at least two channels corrected.
 
     ex2 = bl_op.apply(ex2)  
 '''
+from natsort import natsorted
 
-import warnings
-
-from traitsui.api import View, Item, EnumEditor, Controller, VGroup, HGroup, \
-                         ButtonEditor, InstanceEditor
+from traits.api import provides, Event, Property, List, Str
+from traitsui.api import View, Item, VGroup, ButtonEditor, FileEditor, HGroup, EnumEditor, Controller
 from envisage.api import Plugin, contributes_to
-from traits.api import (provides, Callable, List, Str, HasTraits, Property,
-                        File, Event, Dict, Tuple, Float, on_trait_change,
-                        DelegatesTo)
 from pyface.api import ImageResource
 
-import cytoflow.utility as util
+from ..view_plugins import ViewHandler
+from ..editors import ColorTextEditor, InstanceHandlerEditor, VerticalListEditor, SubsetListEditor
+from ..workflow.operations import BleedthroughLinearWorkflowOp, BleedthroughLinearWorkflowView, BleedthroughControl
+from ..subset_controllers import subset_handler_factory
 
-from cytoflow.operations.bleedthrough_linear import BleedthroughLinearOp, BleedthroughLinearDiagnostic
-from cytoflow.views.i_selectionview import IView
+from .i_op_plugin import IOperationPlugin, OP_PLUGIN_EXT
+from .op_plugin_base import OpHandler, shared_op_traits_view, PluginHelpMixin
 
-from cytoflowgui.view_plugins.i_view_plugin import ViewHandlerMixin, PluginViewMixin
-from cytoflowgui.op_plugins import IOperationPlugin, OpHandlerMixin, OP_PLUGIN_EXT, shared_op_traits
-from cytoflowgui.subset import ISubset, SubsetListEditor
-from cytoflowgui.color_text_editor import ColorTextEditor
-from cytoflowgui.op_plugins.i_op_plugin import PluginOpMixin, PluginHelpMixin
-from cytoflowgui.vertical_list_editor import VerticalListEditor
-from cytoflowgui.workflow import Changed
-from cytoflowgui.serialization import camel_registry, traits_repr, traits_str, dedent
 
-BleedthroughLinearOp.__repr__ = traits_repr
-
-class _Control(HasTraits):
-    channel = Str
-    file = File
-
-    def __repr__(self):
-        return traits_repr(self)
+class ControlHandler(Controller):
+    control_view = View(HGroup(Item('channel',
+                                    editor = EnumEditor(name = 'context_handler.channels')),
+                               Item('file',
+                                    editor = FileEditor(dialog_style = 'open'),
+                                    show_label = False)))
     
-class BleedthroughLinearHandler(OpHandlerMixin, Controller):
+    
+class BleedthroughLinearHandler(OpHandler):
     
     add_control = Event
     remove_control = Event
         
+    channels = Property(List(Str), observe = 'context.channels')
+     
+    operation_traits_view = \
+        View(VGroup(
+             Item('controls_list',
+                  editor = VerticalListEditor(editor = InstanceHandlerEditor(view = 'control_view',
+                                                                             handler_factory = ControlHandler),
+                                              style = 'custom',
+                                              mutable = False),
+                  style = 'custom'),
+             Item('handler.add_control',
+                  editor = ButtonEditor(value = True,
+                                        label = "Add a control")),
+             Item('handler.remove_control',
+                  editor = ButtonEditor(value = True,
+                                        label = "Remove a control")),
+             label = "Controls",
+             show_labels = False),
+             VGroup(Item('subset_list',
+                         show_label = False,
+                         editor = SubsetListEditor(conditions = "context_handler.previous_conditions",
+                                                   editor = InstanceHandlerEditor(view = 'subset_view',
+                                                                                  handler_factory = subset_handler_factory))),
+                    label = "Subset",
+                    show_border = False,
+                    show_labels = False),
+             Item('do_estimate',
+                  editor = ButtonEditor(value = True,
+                                        label = "Estimate!"),
+                  show_label = False),
+             shared_op_traits_view)
+        
+
     # MAGIC: called when add_control is set
     def _add_control_fired(self):
-        self.model.controls_list.append(_Control())
+        self.model.controls_list.append(BleedthroughControl())
         
+    # MAGIC: called when remove_control is set
     def _remove_control_fired(self):
         if self.model.controls_list:
             self.model.controls_list.pop()
             
-    def control_traits_view(self):
-        return View(HGroup(Item('channel',
-                                editor = EnumEditor(name = 'handler.context.previous_wi.channels')),
-                           Item('file',
-                                show_label = False)),
-                    handler = self)
-    
-    def default_traits_view(self):
-        return View(VGroup(Item('controls_list',
-                                editor = VerticalListEditor(editor = InstanceEditor(view = self.control_traits_view()),
-                                                            style = 'custom',
-                                                            mutable = False),
-                                style = 'custom'),
-                    Item('handler.add_control',
-                         editor = ButtonEditor(value = True,
-                                               label = "Add a control")),
-                    Item('handler.remove_control',
-                         editor = ButtonEditor(value = True,
-                                               label = "Remove a control")),
-                    label = "Controls",
-                    show_labels = False),
-                    VGroup(Item('subset_list',
-                                show_label = False,
-                                editor = SubsetListEditor(conditions = "handler.context.previous_wi.conditions",
-                                                          metadata = "handler.context.previous_wi.metadata",
-                                                          when = "'experiment' not in vars() or not experiment")),
-                           label = "Subset",
-                           show_border = False,
-                           show_labels = False),
-                    Item('do_estimate',
-                         editor = ButtonEditor(value = True,
-                                               label = "Estimate!"),
-                         show_label = False),
-                    shared_op_traits)
+    # MAGIC: returns the value of the 'channels' property
+    def _get_channels(self):
+        if self.context and self.context.channels:
+            return natsorted(self.context.channels)
+        else:
+            return [] 
 
-class BleedthroughLinearPluginOp(PluginOpMixin, BleedthroughLinearOp):
-    handler_factory = Callable(BleedthroughLinearHandler)
 
-    controls = Dict(Str, File, transient = True)
-    spillover = Dict(Tuple(Str, Str), Float, transient = True)
+class BleedthroughLinearViewHandler(ViewHandler):
+    view_traits_view = \
+        View(Item('context.view_warning',
+                  resizable = True,
+                  visible_when = 'context.view_warning',
+                  editor = ColorTextEditor(foreground_color = "#000000",
+                                          background_color = "#ffff99")),
+             Item('context.view_error',
+                  resizable = True,
+                  visible_when = 'context.view_error',
+                  editor = ColorTextEditor(foreground_color = "#000000",
+                                           background_color = "#ff9191")))
 
-    controls_list = List(_Control, estimate = True)
-        
-    @on_trait_change('controls_list_items,controls_list.+', post_init = True)
-    def _controls_changed(self, obj, name, old, new):
-        self.changed = (Changed.ESTIMATE, ('controls_list', self.controls_list))
-        
-    subset_list = List(ISubset, estimate = True)    
-    subset = Property(Str, depends_on = "subset_list.str")
-        
-    # MAGIC - returns the value of the "subset" Property, above
-    def _get_subset(self):
-        return " and ".join([subset.str for subset in self.subset_list if subset.str])
-    
-    @on_trait_change('subset_list.str')
-    def _subset_changed(self, obj, name, old, new):
-        self.changed = (Changed.ESTIMATE, ('subset_list', self.subset_list))
-    
-    def default_view(self, **kwargs):
-        return BleedthroughLinearPluginView(op = self, **kwargs)
-    
-    def estimate(self, experiment):
-        for i, control_i in enumerate(self.controls_list):
-            for j, control_j in enumerate(self.controls_list):
-                if control_i.channel == control_j.channel and i != j:
-                    raise util.CytoflowOpError("Channel {0} is included more than once"
-                                               .format(control_i.channel))
-                    
-        # check for experiment metadata used to estimate operations in the
-        # history, and bail if we find any
-        for op in experiment.history:
-            if hasattr(op, 'by'):
-                for by in op.by:
-                    if 'experiment' in experiment.metadata[by]:
-                        raise util.CytoflowOpError('experiment',
-                                                   "Prior to applying this operation, "
-                                                   "you must not apply any operation with 'by' "
-                                                   "set to an experimental condition.")
-                                               
-        self.controls = {}
-        for control in self.controls_list:
-            self.controls[control.channel] = control.file
-            
-        if not self.subset:
-            warnings.warn("Are you sure you don't want to specify a subset "
-                          "used to estimate the model?",
-                          util.CytoflowOpWarning)
-                    
-        try:
-            BleedthroughLinearOp.estimate(self, experiment, subset = self.subset)
-        except:
-            raise
-        finally:
-            self.changed = (Changed.ESTIMATE_RESULT, self)
-        
-    def should_clear_estimate(self, changed, payload):
-        if changed == Changed.ESTIMATE:
-            return True
-        
-        return False
-        
-    def clear_estimate(self):
-        self.spillover.clear()
-        self._sample.clear()
-        self.changed = (Changed.ESTIMATE_RESULT, self)
-        
-    def get_notebook_code(self, idx):
-        op = BleedthroughLinearOp()
-        op.copy_traits(self, op.copyable_trait_names())
+    view_params_view = View()
 
-        for control in self.controls_list:
-            op.controls[control.channel] = control.file        
-
-        return dedent("""
-        op_{idx} = {repr}
-        
-        op_{idx}.estimate(ex_{prev_idx}{subset})
-        ex_{idx} = op_{idx}.apply(ex_{prev_idx})
-        """
-        .format(repr = repr(op),
-                idx = idx,
-                prev_idx = idx - 1,
-                subset = ", subset = " + repr(self.subset) if self.subset else ""))
-
-class BleedthroughLinearViewHandler(ViewHandlerMixin, Controller):
-    def default_traits_view(self):
-        return View(Item('context.view_warning',
-                         resizable = True,
-                         visible_when = 'context.view_warning',
-                         editor = ColorTextEditor(foreground_color = "#000000",
-                                                 background_color = "#ffff99")),
-                    Item('context.view_error',
-                         resizable = True,
-                         visible_when = 'context.view_error',
-                         editor = ColorTextEditor(foreground_color = "#000000",
-                                                  background_color = "#ff9191")))
-
-@provides(IView)
-class BleedthroughLinearPluginView(PluginViewMixin, BleedthroughLinearDiagnostic):
-    handler_factory = Callable(BleedthroughLinearViewHandler)
-    subset = DelegatesTo('op', transient = True)
-    
-    def plot_wi(self, wi):
-        self.plot(wi.previous_wi.result)
-        
-    def should_plot(self, changed, payload):
-        if changed == Changed.ESTIMATE_RESULT:
-            return True
-        
-        return False
-    
-    def get_notebook_code(self, idx):
-        view = BleedthroughLinearDiagnostic()
-        view.copy_traits(self, view.copyable_trait_names())
-        view.subset = self.subset
-        
-        return dedent("""
-        op_{idx}.default_view({traits}).plot(ex_{prev_idx})
-        """
-        .format(traits = traits_str(view),
-                idx = idx,
-                prev_idx = idx - 1))
 
 @provides(IOperationPlugin)
 class BleedthroughLinearPlugin(Plugin, PluginHelpMixin):
     
     id = 'edu.mit.synbio.cytoflowgui.op_plugins.bleedthrough_linear'
     operation_id = 'edu.mit.synbio.cytoflow.operations.bleedthrough_linear'
+    view_id = 'edu.mit.synbio.cytoflow.view.linearbleedthroughdiagnostic'
 
     short_name = "Linear Compensation"
     menu_group = "Gates"
     
     def get_operation(self):
-        return BleedthroughLinearPluginOp()
+        return BleedthroughLinearWorkflowOp()
+    
+    def get_handler(self, model, context):
+        if isinstance(model, BleedthroughLinearWorkflowOp):
+            return BleedthroughLinearHandler(model = model, context = context)
+        elif isinstance(model, BleedthroughLinearWorkflowView):
+            return BleedthroughLinearViewHandler(model = model, context = context)
     
     def get_icon(self):
         return ImageResource('bleedthrough_linear')
@@ -308,30 +200,3 @@ class BleedthroughLinearPlugin(Plugin, PluginHelpMixin):
     def get_plugin(self):
         return self
     
-### Serialization
-@camel_registry.dumper(BleedthroughLinearPluginOp, 'bleedthrough-linear', version = 1)
-def _dump(op):
-    return dict(controls_list = op.controls_list,
-                subset_list = op.subset_list)
-                
-@camel_registry.loader('bleedthrough-linear', version = 1)
-def _load(data, version):
-    return BleedthroughLinearPluginOp(**data)
-
-@camel_registry.dumper(_Control, 'bleedthrough-linear-control', version = 1)
-def _dump_control(control):
-    return dict(channel = control.channel,
-                file = control.file)
-    
-@camel_registry.loader('bleedthrough-linear-control', version = 1)
-def _load_control(data, version):
-    return _Control(**data)
-
-@camel_registry.dumper(BleedthroughLinearPluginView, 'bleedthrough-linear-view', version = 1)
-def _dump_view(view):
-    return dict(op = view.op)
-
-@camel_registry.loader('bleedthrough-linear-view', version = 1)
-def _load_view(data, version):
-    return BleedthroughLinearPluginView(**data)
-                

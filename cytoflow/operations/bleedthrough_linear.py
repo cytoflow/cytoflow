@@ -177,9 +177,10 @@ class BleedthroughLinearOp(HasStrictTraits):
                                            "Can't find file {0} for channel {1}."
                                            .format(self.controls[channel], channel))
                 
-        self.spillover.clear()
+        self.spillover = {}
         self._sample.clear()
                 
+        spillover = {}
         for channel in channels:
             
             # make a little Experiment
@@ -254,7 +255,10 @@ class BleedthroughLinearOp(HasStrictTraits):
                                                    tube_data[to_channel],
                                                    0)
                  
-                self.spillover[(from_channel, to_channel)] = popt[0]
+                spillover[(from_channel, to_channel)] = popt[0]
+                
+        # set this atomically - to support GUI
+        self.spillover = spillover
                 
     def apply(self, experiment):
         """Applies the bleedthrough correction to an experiment.
@@ -377,8 +381,8 @@ class BleedthroughLinearDiagnostic(HasStrictTraits):
     """
     
     # traits   
-    id = Constant("edu.mit.synbio.cytoflow.view.autofluorescencediagnosticview")
-    friendly_id = Constant("Autofluorescence Diagnostic") 
+    id = Constant("edu.mit.synbio.cytoflow.view.linearbleedthroughdiagnostic")
+    friendly_id = Constant("Linear Bleedthrough Diagnostic") 
     
     subset = Str
     

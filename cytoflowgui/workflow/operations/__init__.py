@@ -22,3 +22,4 @@ from .pca import PCAWorkflowOp, Channel as PCAChannel
 
 from .autofluorescence import AutofluorescenceWorkflowOp, AutofluorescenceWorkflowView
 from .bead_calibration import BeadCalibrationWorkflowOp, BeadCalibrationWorkflowView, Unit as BeadCalibrationUnit
+from .bleedthrough_linear import BleedthroughLinearWorkflowOp, BleedthroughLinearWorkflowView, Control as BleedthroughControl

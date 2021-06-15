@@ -188,7 +188,6 @@ class BeadCalibrationHandler(OpHandler):
             return []
 
 
-
 class BeadCalibrationViewHandler(ViewHandler):
     view_traits_view = \
         View(Item('context.view_warning',

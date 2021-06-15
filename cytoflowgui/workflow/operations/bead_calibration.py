@@ -43,7 +43,6 @@ class Unit(HasTraits):
 @provides(IWorkflowOperation)    
 class BeadCalibrationWorkflowOp(WorkflowOperation, BeadCalibrationOp):
     # add the 'estimate' metadata
-
     beads_name = Str(estimate = True)   
     beads_file = File(filter = ["*.fcs"], estimate = True)
     units_list = List(Unit, estimate = True)
@@ -56,7 +55,7 @@ class BeadCalibrationWorkflowOp(WorkflowOperation, BeadCalibrationOp):
     _calibration_functions = Dict(Str, Callable, transient = True, estimate_result = True)
 
     @observe('units_list:items,units_list:items.+type', post_init = True)
-    def _on_units_changed(self, event):
+    def _on_units_changed(self, _):
         self.changed = 'units_list'
     
     def default_view(self, **kwargs):
