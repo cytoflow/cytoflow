@@ -104,7 +104,6 @@ class ControlHandler(Controller):
     
     
 class BleedthroughLinearHandler(OpHandler):
-    
     add_control = Event
     remove_control = Event
         

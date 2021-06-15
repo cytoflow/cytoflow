@@ -187,6 +187,7 @@ class ColorTranslationOp(HasStrictTraits):
         tubes = {}
         
         translation = {x[0] : x[1] for x in list(self.controls.keys())}
+        coefficients = {}
         
         for from_channel, to_channel in translation.items():
             
@@ -304,9 +305,11 @@ class ColorTranslationOp(HasStrictTraits):
                  
                  
             opt = scipy.optimize.least_squares(f, x0)
-            self._coefficients[(from_channel, to_channel)] = opt.x
+            coefficients[(from_channel, to_channel)] = opt.x
             self._trans_fn[(from_channel, to_channel)] = lambda data, x = opt.x: trans_fn(data, x)
 
+        # set atomically to support GUI
+        self._coefficients = coefficients
 
     def apply(self, experiment):
         """Applies the color translation to an experiment
