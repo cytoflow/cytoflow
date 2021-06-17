@@ -111,43 +111,20 @@ class ViewDockPane(TraitsDockPane):
         
         window.setParent(parent)
         parent.setWidget(window)
-        # window.setEnabled(True)
+        
+        window.setEnabled(False)
+        self.ui.control.setEnabled(False)
         
         return window
         
-#     @observe('model:selected.status')
-#     def _selected_status_changed(self, event):
-#         if self.model.selected and self.model.selected.status == 'valid':
-#             self._window.setEnabled(True)
-#             self.ui.control.setEnabled(True)
-#         else:
-#             self._window.setEnabled(False)
-#             self.ui.control.setEnabled(False)
-            
-            
-    ## TODO make the "settings" button show if there's a default view
-#     @observe('model:selected')
-#     def _selected_changed(self, event):
-#         if event.new is None:
-#             self._window.setEnabled(False)
-#             self.ui.control.setEnabled(False)
-#             return 
-#         
-#         if self.model.selected.default_view:
-#             self._default_
-#             self._default_action.visible = True
-#             
-#     
-#     @on_trait_change('default_view')
-#     def set_default_view(self, obj, name, old_view_id, new_view_id):
-#         if old_view_id:
-#             del self._actions[old_view_id]
-#             
-#         if new_view_id:
-#             self._actions[new_view_id] = self._default_action 
-#             
-#         self._default_action.visible = (new_view_id != "")
-#             
+    @observe('model.selected.status')
+    def _selected_status_changed(self, event):
+        if self.model.selected and self.model.selected.status == 'valid':
+            if self._window: self._window.setEnabled(True)
+            if self.ui: self.ui.control.setEnabled(True)
+        else:
+            if self._window: self._window.setEnabled(False)
+            if self.ui: self.ui.control.setEnabled(False)     
 
     @observe('model:selected.current_view')
     def _selected_view_changed(self, event):
