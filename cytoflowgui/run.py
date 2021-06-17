@@ -162,10 +162,9 @@ def run_gui():
     
     from cytoflowgui.flow_task import FlowTaskPlugin
     #from cytoflowgui.tasbe_task import TASBETaskPlugin
-    #from cytoflowgui.export_task import ExportFigurePlugin
+    from cytoflowgui.export_task import ExportFigurePlugin
     from cytoflowgui.cytoflow_application import CytoflowApplication
-    #from cytoflowgui.op_plugins.import_op import ImportPlugin
-    #from cytoflowgui.op_plugins.threshold import ThresholdPlugin
+
     from cytoflowgui.op_plugins import (ImportPlugin, 
                                         ThresholdPlugin,
                                         RangePlugin, 
@@ -202,8 +201,7 @@ def run_gui():
                                           ParallelCoordinatesPlugin,
                                           RadvizPlugin)
 
-    plugins = [CorePlugin(), TasksPlugin(), FlowTaskPlugin()]#, TASBETaskPlugin(),
-               #ExportFigurePlugin()]    
+    plugins = [CorePlugin(), TasksPlugin(), FlowTaskPlugin(), ExportFigurePlugin()]#, TASBETaskPlugin(),
 
     # ordered as we want them to show up in the toolbar    
     view_plugins = [HistogramPlugin(),

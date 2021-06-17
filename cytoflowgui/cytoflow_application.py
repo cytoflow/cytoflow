@@ -33,6 +33,7 @@ from envisage.ui.tasks.tasks_application import TasksApplicationState
 
 from pyface.api import error, ImageResource
 from pyface.tasks.api import TaskWindowLayout
+from pyface.qt import QtGui
 
 from matplotlib.figure import Figure
 
@@ -126,6 +127,8 @@ class CytoflowApplication(TasksApplication):
         self.canvas = FigureCanvasQTAggLocal(Figure(), 
                                              self.remote_canvas_connection, 
                                              ImageResource('gear').create_image(size = (1000, 1000)))
+    
+        self.canvas.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding) 
 
         # run the GUI
         super(CytoflowApplication, self).run()

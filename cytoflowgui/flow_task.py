@@ -83,15 +83,16 @@ class FlowTaskPane(TaskPane):
          
         self.layout.addWidget(tabs_ui.control) 
         
-        # add the main plot
-
-        self.canvas.setSizePolicy(QtGui.QSizePolicy.Expanding,  # @UndefinedVariable
-                                  QtGui.QSizePolicy.Expanding)  # @UndefinedVariable
+        # usually we would add the main plot here -- but a Qt widget
+        # can only be part of one layout at a time.  so instead we
+        # need to create that layout here, then dynamically add
+        # the canvas when the task is activated (see activate(), below)
         
-        layout.addWidget(self.canvas)
-                  
-    def export(self, filename, **kwargs):      
-        self.canvas.print_figure(filename, bbox_inches = 'tight', **kwargs)
+        
+    def activate(self):
+        if self.canvas.layout():
+            self.canvas.layout().removeWidget(self.canvas)
+        self.layout.addWidget(self.canvas)
 
 
 class FlowTask(Task):
@@ -108,7 +109,7 @@ class FlowTask(Task):
     # the handler that connects it to various views
     handler = Instance(WorkflowController)
         
-    # the center pane
+    # side panes
     workflow_pane = Instance(WorkflowDockPane)
     view_pane = Instance(ViewDockPane)
     help_pane = Instance(HelpDockPane)
@@ -204,7 +205,9 @@ class FlowTask(Task):
         # add the import op
         if not self.model.workflow:
             self.handler.add_operation('edu.mit.synbio.cytoflow.operations.import') 
-                    
+        
+        self.window.central_pane.activate()
+                            
         self.model.modified = False
     
     def _default_layout_default(self):
