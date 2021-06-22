@@ -14,4 +14,5 @@ from .stats_1d import Stats1DWorkflowView, Stats1DPlotParams
 from .stats_2d import Stats2DWorkflowView, Stats2DPlotParams
 from .table import TableWorkflowView
 from .violin import ViolinPlotWorkflowView, ViolinPlotParams
+from .export_fcs import ExportFCSWorkflowView
 

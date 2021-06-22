@@ -95,7 +95,7 @@ class DensityGateHandler(OpHandler):
     operation_traits_view = \
         View(Item('name',
                   editor = TextEditor(auto_set = False,
-                               placeholder = "None")),
+                                      placeholder = "None")),
              Item('xchannel',
                   editor=EnumEditor(name='context_handler.previous_channels'),
                   label = "X Channel"),

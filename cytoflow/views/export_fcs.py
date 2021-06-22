@@ -86,7 +86,7 @@ class ExportFCS(HasStrictTraits):
     """
     
     # traits   
-    id = Constant("edu.mit.synbio.cytoflow.view.table")
+    id = Constant("edu.mit.synbio.cytoflow.view.exportfcs")
     friendly_id = Constant("Table View") 
     
     base = Str
