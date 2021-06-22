@@ -169,10 +169,6 @@ class FlowTask(Task):
                                        name='Notebook',
                                        tooltip="Export to an Jupyter notebook...",
                                        image=ImageResource('jupyter')),
-                           TaskAction(method = "on_calibrate",
-                                      name = "Calibrate FCS...",
-                                      tooltip = "Calibrate FCS files",
-                                      image = ImageResource('tasbe')),
                            TaskAction(method = 'on_problem',
                                       name = "Report a bug...",
                                       tooltib = "Report a bug",
@@ -448,11 +444,6 @@ class FlowTask(Task):
     def on_export(self):
         task = next(x for x in self.window.tasks if x.id == 'edu.mit.synbio.cytoflowgui.export_task')
         self.window.activate_task(task)        
-
-
-    def on_calibrate(self):
-        task = next(x for x in self.window.tasks if x.id == 'edu.mit.synbio.cytoflowgui.tasbe_task')
-        self.window.activate_task(task)
         
             
     def on_notebook(self):

@@ -57,6 +57,14 @@ class TranslationControl(HasTraits):
     def __repr__(self):
         return traits_repr(self)
     
+    
+class BeadUnit(HasTraits):
+    channel = Str
+    unit = Str
+    
+    def __repr__(self):
+        return traits_repr(self)
+    
 class Progress(object):
     NO_MODEL = "No model estimated"
     
@@ -85,12 +93,14 @@ class TasbeWorkflowOp(WorkflowOperation):
 
     beads_name = Str(estimate = True)
     beads_file = File(filter = ["*.fcs"], estimate = True)
-    beads_unit = Str(estimate = True)
+    beads_unit = Str(estimate = True) # used if do_color_translation is True
+    units_list = List(BeadUnit, estimate = True)  # used if do_color_translation is False
     
     bead_peak_quantile = Int(80, estimate = True)
     bead_brightness_threshold = Float(100.0, estimate = True)
     bead_brightness_cutoff = util.FloatOrNone(None, estimate = True)
     
+    do_color_translation = Bool(False, estimate = True)
     to_channel = Str(estimate = True)
     translation_list = List(TranslationControl, estimate = True)
     mixture_model = Bool(False, estimate = True)
@@ -116,12 +126,16 @@ class TasbeWorkflowOp(WorkflowOperation):
     def _get_subset(self):
         return " and ".join([subset.str for subset in self.subset_list if subset.str])
     
-    @observe('channels', post_init = True)
+    @observe('channels.items,to_channel,do_color_translation', post_init = True)
     def _on_channels_changed(self, _):
         for channel in self.channels:
             if channel not in [control.channel for control in self.bleedthrough_list]:
                 self.bleedthrough_list.append(BleedthroughControl(channel = channel))
+                
+            if channel not in [unit.channel for unit in self.units_list]:
+                self.units_list.append(BeadUnit(channel = channel))
 
+            
         to_remove = []    
         for control in self.bleedthrough_list:
             if control.channel not in self.channels:
@@ -129,21 +143,30 @@ class TasbeWorkflowOp(WorkflowOperation):
                 
         for control in to_remove:
             self.bleedthrough_list.remove(control)
-             
-        for c in self.channels:
-            if c == self.to_channel:
-                continue
-            if channel not in [control.from_channel for control in self.translation_list]:
-                self.translation_list.append(TranslationControl(from_channel = c,
-                                                                to_channel = self.to_channel))
             
-        to_remove = []
-        for control in self.translation_list:
-            if control.from_channel not in self.channels:
-                to_remove.append(control)
+        to_remove = []    
+        for unit in self.units_list:
+            if unit.channel not in self.channels:
+                to_remove.append(unit)
+        
+        for unit in to_remove:        
+            self.units_list.remove(unit)
                 
-        for control in to_remove:
-            self.translation_list.remove(control)          
+        if self.do_color_translation:
+            to_remove = []
+            for unit in self.units_list:
+                if unit.channel != self.to_channel:
+                    to_remove.append(unit)
+            
+            for unit in to_remove:
+                self.units_list.remove(unit)
+                 
+            self.translation_list = []
+            for c in self.channels:
+                if c == self.to_channel:
+                    continue
+                self.translation_list.append(TranslationControl(from_channel = c,
+                                                                 to_channel = self.to_channel))    
 
 
     @observe('to_channel', post_init = True)
@@ -163,6 +186,10 @@ class TasbeWorkflowOp(WorkflowOperation):
     @observe("translation_list:items:file", post_init = True)
     def _translation_controls_changed(self, _):
         self.changed = 'translation_list'
+        
+    @observe('units_list:items:unit', post_init = True)
+    def _on_units_changed(self, _):
+        self.changed = 'units_list'
     
     def estimate(self, experiment, subset = None):
         if not self.subset:
@@ -198,26 +225,34 @@ class TasbeWorkflowOp(WorkflowOperation):
         self._bead_calibration_op.bead_brightness_threshold = self.bead_brightness_threshold
         self._bead_calibration_op.bead_brightness_cutoff = self.bead_brightness_cutoff        
         
-        self._bead_calibration_op.units.clear()
         
-        # this is the old way
-#         for channel in self.channels:
-#             self._bead_calibration_op.units[channel] = self.beads_unit
+        if self.do_color_translation:
+            # this way matches TASBE better
+            self._bead_calibration_op.units.clear()
+            self._bead_calibration_op.units[self.to_channel] = self.beads_unit
+            self._bead_calibration_op.estimate(experiment)
+            experiment = self._bead_calibration_op.apply(experiment)            
 
-        # this way matches TASBE better
-        self._bead_calibration_op.units[self.to_channel] = self.beads_unit
-        self._bead_calibration_op.estimate(experiment)
-        experiment = self._bead_calibration_op.apply(experiment)
-        
-        self.estimate_progress = Progress.COLOR_TRANSLATION                    
-        self._color_translation_op.mixture_model = self.mixture_model
-        
-        self._color_translation_op.controls.clear()
-        for control in self.translation_list:
-            self._color_translation_op.controls[(control.from_channel,
-                                                 control.to_channel)] = control.file
+            self.estimate_progress = Progress.COLOR_TRANSLATION                    
+            self._color_translation_op.mixture_model = self.mixture_model
             
-        self._color_translation_op.estimate(experiment, subset = self.subset)
+            self._color_translation_op.controls.clear()
+            for control in self.translation_list:
+                self._color_translation_op.controls[(control.from_channel,
+                                                     control.to_channel)] = control.file
+                
+            self._color_translation_op.estimate(experiment, subset = self.subset)
+        
+        else:
+            self._bead_calibration_op.units.clear()
+
+            for unit in self.units_list:
+                self._bead_calibration_op.units[unit.channel] = unit.unit
+                
+            self._bead_calibration_op.estimate(experiment)
+            experiment = self._bead_calibration_op.apply(experiment)      
+            
+            
         self.estimate_progress = Progress.VALID                                       
         
         
@@ -244,7 +279,8 @@ class TasbeWorkflowOp(WorkflowOperation):
         experiment = self._af_op.apply(experiment)
         experiment = self._bleedthrough_op.apply(experiment)
         experiment = self._bead_calibration_op.apply(experiment)
-        experiment = self._color_translation_op.apply(experiment)
+        if self.do_color_translation:
+            experiment = self._color_translation_op.apply(experiment)
         
         return experiment
     
@@ -373,7 +409,7 @@ class TasbeWorkflowView(WorkflowView):
 
 ### Serialization
 @camel_registry.dumper(TasbeWorkflowOp, 'tasbe', version = 1)
-def _dump(op):
+def _dump_v1(op):
     return dict(channels = op.channels,
                 blank_file = op.blank_file,
                 bleedthrough_list = op.bleedthrough_list,
@@ -387,9 +423,33 @@ def _dump(op):
                 mixture_model = op.mixture_model,
                 translation_list = op.translation_list,
                 subset_list = op.subset_list)
+
+@camel_registry.dumper(TasbeWorkflowOp, 'tasbe', version = 2)
+def _dump_v2(op):
+    return dict(channels = op.channels,
+                blank_file = op.blank_file,
+                bleedthrough_list = op.bleedthrough_list,
+                beads_name = op.beads_name,
+                beads_file = op.beads_file,
+                beads_unit = op.beads_unit,
+                units_list = op.units_list,
+                bead_peak_quantile = op.bead_peak_quantile,
+                bead_brightness_threshold = op.bead_brightness_threshold,
+                bead_brightness_cutoff = op.bead_brightness_cutoff,
+                do_color_translation = op.do_color_translation,
+                to_channel = op.to_channel,
+                mixture_model = op.mixture_model,
+                translation_list = op.translation_list,
+                subset_list = op.subset_list)
+
+@camel_registry.loader('tasbe', version = 1)
+def _load_v1(data, version):
+    # should be fine -- the only change to v2 was the addition of units_list
+    # and do_color_translation, both of which have okay defaults
+    return TasbeWorkflowOp(**data)
     
 @camel_registry.loader('tasbe', version = 1)
-def _load(data, version):
+def _load_v2(data, version):
     return TasbeWorkflowOp(**data)
 
 @camel_registry.dumper(BleedthroughControl, 'tasbe-bleedthrough-control', version = 1)
@@ -410,6 +470,15 @@ def _dump_translation_control(tl):
 @camel_registry.loader('tasbe-translation-control', version = 1)
 def _load_translation_control(data, version):
     return TranslationControl(**data)
+
+@camel_registry.dumper(BeadUnit, 'tasbe-bead-unit', version = 1)
+def _dump_bead_unit(bu):
+    return dict(channel = bu.channel,
+                unit = bu.unit)
+    
+@camel_registry.loader('tasbe-bead-unit', version = 1)
+def _load_bead_unit(data, version):
+    return BeadUnit(**data)
 
 @camel_registry.dumper(TasbeWorkflowView, 'tasbe-view', version = 1)
 def _dump_view(view):

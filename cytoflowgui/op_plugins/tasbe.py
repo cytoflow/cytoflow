@@ -171,12 +171,14 @@ from ..workflow.operations import TasbeWorkflowOp, TasbeWorkflowView
 from .i_op_plugin import IOperationPlugin, OP_PLUGIN_EXT
 from .op_plugin_base import OpHandler, shared_op_traits_view, PluginHelpMixin
 
+
 class BleedthroughControlHandler(Controller):
     control_view = View(HGroup(Item('channel', style = 'readonly'),
                                Item('file', 
                                     editor = FileEditor(dialog_style = 'open'),
                                     show_label = False),
                                show_labels = False))
+
     
 class TranslationControlHandler(Controller):
     control_view = View(HGroup(Item('from_channel', style = 'readonly', show_label = False),
@@ -186,6 +188,13 @@ class TranslationControlHandler(Controller):
                                     editor = FileEditor(dialog_style = 'open'),
                                     show_label = False),
                                show_labels = False))
+
+
+class UnitHandler(Controller):
+    unit_view = View(HGroup(Item('channel', style = 'readonly', show_label = False),
+                            Item('unit',
+                                 editor = EnumEditor(name = 'context_handler.beads_units'),
+                                 show_label = False)))
     
 
 class TasbeHandler(OpHandler):
@@ -229,7 +238,16 @@ class TasbeHandler(OpHandler):
                  Item('beads_file',
                       editor = FileEditor(dialog_style = 'open')),
                  Item('beads_unit', 
-                      editor = EnumEditor(name = 'handler.beads_units')),
+                      editor = EnumEditor(name = 'handler.beads_units'),
+                      visible_when = 'do_color_translation == True'),
+                 Item('units_list',
+                      editor = VerticalListEditor(editor = InstanceHandlerEditor(view = 'unit_view',
+                                                                                 handler_factory = UnitHandler),
+                                                  style = 'custom',
+                                                  mutable = False),
+                      style = 'custom',
+                      label = "Bead\nunits",
+                      visible_when = 'do_color_translation == False'),
                  Item('bead_peak_quantile',
                       editor = TextEditor(auto_set = False,
                                          evaluate = int,
@@ -251,19 +269,22 @@ class TasbeHandler(OpHandler):
                  label = "Bead Calibration",
                  show_border = False),
              VGroup(
+                 Item('do_color_translation', label = 'Do color translation?'),
                  Item('to_channel',
-                      editor = EnumEditor(name = 'channels')),
+                      editor = EnumEditor(name = 'channels'),
+                      visible_when = 'do_color_translation == True'),
                  Item('mixture_model',
-                      label = "Use mixture\nmodel?"),
+                      label = "Use mixture\nmodel?",
+                      visible_when = 'do_color_translation == True'),
                  label = "Color Translation"),
              VGroup(
                  Item('translation_list',
-                         editor = VerticalListEditor(editor = InstanceHandlerEditor(view = 'control_view',
-                                                                                    handler_factory = TranslationControlHandler),
-                                                     style = 'custom',
-                                                     mutable = False),
-                         style = 'custom'),
-
+                      editor = VerticalListEditor(editor = InstanceHandlerEditor(view = 'control_view',
+                                                                                 handler_factory = TranslationControlHandler),
+                                                  style = 'custom',
+                                                  mutable = False),
+                      style = 'custom',
+                      visible_when = 'do_color_translation == True'),
                  show_labels = False),
              VGroup(Item('subset_list',
                          show_label = False,

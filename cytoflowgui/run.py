@@ -161,7 +161,6 @@ def run_gui():
     from envisage.ui.tasks.tasks_plugin import TasksPlugin
     
     from cytoflowgui.flow_task import FlowTaskPlugin
-    from cytoflowgui.tasbe_task import TASBETaskPlugin
     from cytoflowgui.export_task import ExportFigurePlugin
     from cytoflowgui.cytoflow_application import CytoflowApplication
 
@@ -201,7 +200,7 @@ def run_gui():
                                           ParallelCoordinatesPlugin,
                                           RadvizPlugin)
 
-    plugins = [CorePlugin(), TasksPlugin(), FlowTaskPlugin(), ExportFigurePlugin(), TASBETaskPlugin()]
+    plugins = [CorePlugin(), TasksPlugin(), FlowTaskPlugin(), ExportFigurePlugin()]
 
     # ordered as we want them to show up in the toolbar    
     view_plugins = [HistogramPlugin(),
