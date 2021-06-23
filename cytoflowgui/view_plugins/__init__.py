@@ -32,3 +32,4 @@ from .violin import ViolinPlotPlugin
 from .table import TablePlugin
 from .parallel_coords import ParallelCoordinatesPlugin
 from .radviz import RadvizPlugin
+from .export_fcs import ExportFCSPlugin

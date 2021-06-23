@@ -17,8 +17,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import pandas as pd
-
 from traits.api import provides, Property, Event, observe
 from traitsui.api import (View, Item, EnumEditor, VGroup, ButtonEditor, 
                           TextEditor, Controller, HGroup, CheckListEditor)
@@ -31,16 +29,6 @@ from ..subset_controllers import subset_handler_factory
 
 from .i_view_plugin import IViewPlugin, VIEW_PLUGIN_EXT
 from .view_plugin_base import ViewHandler, PluginHelpMixin
-
-class KeywordHandler(Controller):
-    keyword_view = View(HGroup(Item('key',
-                                    editor = TextEditor(auto_set = False,
-                                                        placeholder = "Key"),
-                                    show_label = False),
-                               Item('unit',
-                                    editor = EnumEditor(auto_set = False,
-                                                        placeholder = "Value"),
-                                    show_label = False)))
     
 class ExportFCSHandler(ViewHandler):   
     export = Event()
@@ -54,7 +42,7 @@ class ExportFCSHandler(ViewHandler):
                          style = 'custom')),
              VGroup(Item('subset_list',
                          show_label = False,
-                         editor = SubsetListEditor(conditions = "handler.levels",
+                         editor = SubsetListEditor(conditions = "context_handler.conditions",
                                                    editor = InstanceHandlerEditor(view = 'subset_view',
                                                                                   handler_factory = subset_handler_factory),
                                                    mutable = False)),
@@ -82,15 +70,21 @@ class ExportFCSHandler(ViewHandler):
     
     @observe('export')
     def _on_export(self, _):
-         
+                  
+        self.model.path = ""
+        
         dialog = DirectoryDialog(parent = None,
-                                 message = "Choose a directory to save exported FCS files...")
- 
+                                 message = "Directory to save FCS files...")
+  
         if dialog.open() != OK:
             return
-         
-        self.path = dialog.path
-            
+          
+        self.model.path = dialog.path
+
+    @observe('model.by.items,model.subset')
+    def _reset_path(self, _):
+        self.model.path = ""
+    
 
 @provides(IViewPlugin)
 class ExportFCSPlugin(Plugin, PluginHelpMixin):
@@ -114,5 +108,3 @@ class ExportFCSPlugin(Plugin, PluginHelpMixin):
     @contributes_to(VIEW_PLUGIN_EXT)
     def get_plugin(self):
         return self
-    
-

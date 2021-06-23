@@ -198,7 +198,8 @@ def run_gui():
                                           Stats2DPlugin, 
                                           DensityPlugin,
                                           ParallelCoordinatesPlugin,
-                                          RadvizPlugin)
+                                          RadvizPlugin,
+                                          ExportFCSPlugin)
 
     plugins = [CorePlugin(), TasksPlugin(), FlowTaskPlugin(), ExportFigurePlugin()]
 
@@ -215,7 +216,8 @@ def run_gui():
                     BarChartPlugin(),
                     Stats1DPlugin(),
                     Stats2DPlugin(),
-                    TablePlugin()]
+                    TablePlugin(),
+                    ExportFCSPlugin()]
     
     plugins.extend(view_plugins)
     

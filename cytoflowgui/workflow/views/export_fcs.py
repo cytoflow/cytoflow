@@ -54,7 +54,7 @@ of the files that will be created.
 
 from textwrap import dedent
 
-from traits.api import provides, Str, List, HasTraits, observe, Property
+from traits.api import provides, Str, List, Bool, observe, Property, Directory
 
 import matplotlib.pyplot as plt
 from matplotlib.table import Table
@@ -69,25 +69,17 @@ from .view_base import IWorkflowView, WorkflowView, BasePlotParams
 
 ExportFCS.__repr__ = traits_repr
 
-class ExportKeyword(HasTraits):
-    keyword = Str
-    value = Str
-    
-    def __repr__(self):
-        return traits_repr(self)
-    
 
 @provides(IWorkflowView)
 class ExportFCSWorkflowView(WorkflowView, ExportFCS): 
     plot_params = BasePlotParams() # this is unused -- no view, not passed to plot()
     
-    keywords_list = List(ExportKeyword)
-    export_status = Str(status = True)
+    path = Directory(exists = False)
      
     # override the base class's "subset" with one that is dynamically generated /
     # updated from subset_list
     subset = Property(Str, observe = "subset_list.items.str")
-    subset_list = List(ISubset, estimate = True)
+    subset_list = List(ISubset)
         
     # bits to support the subset editor
     @observe('subset_list:items.str')
@@ -158,6 +150,8 @@ class ExportFCSWorkflowView(WorkflowView, ExportFCS):
                     
                     if len(self.by) == 1:
                         values = [values]
+                    else:
+                        values = list(values)
                     
                     parts = []
                     for i, name in enumerate(self.by):
@@ -171,7 +165,7 @@ class ExportFCSWorkflowView(WorkflowView, ExportFCS):
                     else:
                         filename = '_'.join(parts) + '.fcs'
                     
-                    return tuple(values + [filename])
+                    return values + [filename]
                         
                 else:
                     if self._returned:
@@ -203,10 +197,14 @@ class ExportFCSWorkflowView(WorkflowView, ExportFCS):
                                              .format(self.subset))
                 
         # if path is set, actually do an export. this isn't terribly elegant,
-        # but this is the only place we have an experiment!
+        # but this is the only place we have an experiment! ExportFCS.export()
+        # raises CytoflowViewErrors, so it should be compatible with the
+        # existing error reporting stuff.
         if self.path:
-            
-        
+            self.export(experiment)
+            return
+
+        # otherwise, make a table showing what will be exported
         num_cols = len(self.by) + 2
         
         fig = plt.figure()
@@ -222,7 +220,7 @@ class ExportFCSWorkflowView(WorkflowView, ExportFCS):
         loc = 'upper left'
         bbox = None
         
-        t = Table(ax, loc, bbox, **kwargs)
+        t = Table(ax, loc, bbox)
         t.auto_set_font_size(False)
         for c in range(num_cols):
             t.auto_set_column_width(c)
@@ -243,7 +241,7 @@ class ExportFCSWorkflowView(WorkflowView, ExportFCS):
 #         t.add_cell(0, ci, width = width[ci], height = height, text = "Events")
             
         for ri, row in enumerate(self.enum_conditions_and_files(experiment)):
-            t.add_cell(ri+1, 0, "{:g}".format(ri + 1))
+            t.add_cell(ri+1, 0, width = width[0], height = height, text = "{:g}".format(ri + 1))
             for ci, col in enumerate(row):
                 t.add_cell(ri+1,
                            ci+1,
@@ -253,17 +251,12 @@ class ExportFCSWorkflowView(WorkflowView, ExportFCS):
                                     
         ax.add_table(t)
         
-        
-    def export(self, experiment):
-        self.keywords = {k.keyword : k.value for k in self.keywords_list}
-        super().export(experiment)
-
-        
     def get_notebook_code(self, idx):
         view = ExportFCS()
         view.copy_traits(self, view.copyable_trait_names())
 
         return dedent("""
+        # Note: the ExportFCS view does NOT include the export path
         {repr}.plot(ex_{idx})
         """
         .format(repr = repr(view),
@@ -274,11 +267,9 @@ class ExportFCSWorkflowView(WorkflowView, ExportFCS):
 
 @camel_registry.dumper(ExportFCSWorkflowView, 'export-fcs-view', version = 1)
 def _dump(view):
-    return dict(keywords_list = view.keywords_list,
-                base = view.base,
-                by = view.by,
+    return dict(by = view.by,
                 subset_list = view.subset_list)
     
-@camel_registry.loader('table-view', version = 1)
+@camel_registry.loader('export-fcs-view', version = 1)
 def _load(data, version):
     return ExportFCSWorkflowView(**data)

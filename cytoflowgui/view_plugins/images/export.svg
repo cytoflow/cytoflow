@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="500"
+   height="500"
+   id="svg2"
+   version="1.1"
+   inkscape:version="1.1 (1:1.1+202105261517+ce6663b3b7)"
+   inkscape:export-filename="/home/brian/src/cytoflow/cytoflowgui/view_plugins/images/table.png"
+   inkscape:export-xdpi="5.8299999"
+   inkscape:export-ydpi="5.8299999"
+   sodipodi:docname="export.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <defs
+     id="defs4" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.9899495"
+     inkscape:cx="28.284271"
+     inkscape:cy="253.04321"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="2488"
+     inkscape:window-height="1376"
+     inkscape:window-x="72"
+     inkscape:window-y="27"
+     inkscape:window-maximized="1"
+     showguides="true"
+     inkscape:guide-bbox="true"
+     inkscape:pagecheckerboard="0" />
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-552.36218)">
+    <path
+       style="fill:#000000;stroke-width:1.26938"
+       d="m 40.086467,1026.4624 c -7.674447,-2.2601 -17.016899,-10.1536 -20.870338,-17.6335 l -3.029862,-5.8813 V 798.16347 593.37934 l 3.506448,-6.35419 c 3.808142,-6.90091 8.781088,-11.47291 17.114829,-15.73494 l 5.344331,-2.73318 166.179895,-0.3613 c 91.39894,-0.19872 168.22469,-0.0144 170.72389,0.40953 3.83191,0.65003 12.13375,8.00006 52.97708,46.90314 26.63819,25.37276 49.57942,47.88973 50.98049,50.03769 2.50265,3.83683 2.54127,6.83288 2.19983,170.65348 l -0.34755,166.74803 -3.07655,5.9206 c -4.06047,7.8141 -13.1578,15.3359 -21.36689,17.6663 -9.55598,2.7129 -411.112385,2.644 -420.335603,-0.072 z m 414.650123,-21.8039 c 7.82525,-3.0986 7.40902,6.3554 7.40902,-168.27636 V 676.51955 l -41.54498,-39.70115 -41.54497,-39.70116 -0.007,61.42795 c -0.004,38.48719 -0.50879,63.1544 -1.35025,66.0508 -2.00615,6.90554 -8.79184,14.5034 -16.81842,18.83142 l -7.14055,3.85031 H 244.68308 c -104.00077,0 -109.26618,-0.10797 -113.59954,-2.31852 -8.12163,-4.14384 -12.85632,-8.20353 -16.52411,-14.16833 l -3.59869,-5.85325 -0.64914,-67.02026 -0.64913,-67.02025 -29.855333,-0.33435 c -32.515603,-0.36416 -35.831917,0.14861 -39.014768,6.03255 -2.697957,4.98755 -2.770609,398.46265 -0.0744,403.11285 3.445389,5.94264 5.727182,6.29884 38.43493,6.00024 153.153081,0 247.377771,-1.0499 375.583691,-1.0499 z m -103.04444,-282.31344 3.99445,-3.21312 v -64.42769 -64.4277 H 244.68363 133.68065 v 64.4277 64.42769 l 3.99446,3.21312 3.99444,3.21311 H 244.68363 347.6977 Z m -71.16291,-20.81424 c -6.2667,-3.41074 -6.53916,-5.19924 -6.58829,-43.24478 -0.0295,-22.77789 0.45546,-36.67583 1.34465,-38.54148 2.61234,-5.481 5.95415,-6.43111 24.33118,-6.91763 20.37013,-0.53929 25.42852,0.17152 29.60013,4.15945 l 3.10065,2.96412 v 37.84124 37.84123 l -3.13031,3.48229 -3.13032,3.48227 -21.21244,0.31101 c -15.99475,0.23451 -21.97565,-0.10438 -24.31525,-1.37772 z M 308.94851,657.846 v -23.03201 l -5.5177,0.38165 -5.51769,0.38164 -0.35386,22.65036 -0.35385,22.65037 h 5.87155 5.87155 z"
+       id="path205"
+       sodipodi:nodetypes="sscccsscssssscsssscsccccsscscccccssscccccccccccccccssssscccccssccccccccc" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:192px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none"
+       x="42.710522"
+       y="957.3949"
+       id="text3364"><tspan
+         sodipodi:role="line"
+         id="tspan3362"
+         x="42.710522"
+         y="957.3949"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:192px;font-family:sans-serif;-inkscape-font-specification:'sans-serif Bold'">FCS</tspan></text>
+  </g>
+</svg>
