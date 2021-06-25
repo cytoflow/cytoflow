@@ -23,7 +23,7 @@ cytoflow.operations.pca
 '''
 
 
-from traits.api import (HasStrictTraits, Str, CStr, Dict, Any, Instance, 
+from traits.api import (HasStrictTraits, Str, Dict, Any, Instance, 
                         Constant, List, Bool, provides)
 
 import numpy as np
@@ -155,7 +155,7 @@ class PCAOp(HasStrictTraits):
     id = Constant('edu.mit.synbio.cytoflow.operations.pca')
     friendly_id = Constant("Principal Component Analysis")
     
-    name = CStr()
+    name = Str
     channels = List(Str)
     scale = Dict(Str, util.ScaleEnum)
     num_components = util.PositiveInt(2, allow_zero = False)
@@ -242,6 +242,7 @@ class PCAOp(HasStrictTraits):
             else:
                 self._scale[c] = util.scale_factory(util.get_default_scale(), experiment, channel = c)
                     
+        pca = {}
         for group, data_subset in groupby:
             if len(data_subset) == 0:
                 raise util.CytoflowOpError('by',
@@ -256,13 +257,15 @@ class PCAOp(HasStrictTraits):
                 x = x[~(np.isnan(x[c]))]
             x = x.values
              
-            self._pca[group] = pca = \
+            pca[group] = \
                 sklearn.decomposition.PCA(n_components = self.num_components,
                                           whiten = self.whiten,
                                           random_state = 0)
             
-            pca.fit(x)
-                                                 
+            pca[group].fit(x)
+        
+        # set this atomically to support GUI
+        self._pca = pca                      
          
     def apply(self, experiment):
         """

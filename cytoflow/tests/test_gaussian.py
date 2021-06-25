@@ -24,7 +24,7 @@ Created on Feb 4, 2018
 '''
 import unittest
 import cytoflow as flow
-from test_base import ImportedDataTest  # @UnresolvedImport
+from .test_base import ImportedDataTest  # @UnresolvedImport
 
 class TestGaussian(ImportedDataTest):
 

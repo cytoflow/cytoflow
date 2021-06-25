@@ -22,7 +22,7 @@ cytoflow.operations.density
 ---------------------------
 '''
 
-from traits.api import (HasStrictTraits, Str, CStr, Dict, Any, Instance, 
+from traits.api import (HasStrictTraits, Str, Dict, Any, Instance, 
                         Constant, List, provides, Array)
 
 import numpy as np
@@ -164,9 +164,9 @@ class DensityGateOp(HasStrictTraits):
     id = Constant('edu.mit.synbio.cytoflow.operations.density')
     friendly_id = Constant("Density Gate")
     
-    name = CStr()
-    xchannel = Str()
-    ychannel = Str()
+    name = Str
+    xchannel = Str
+    ychannel = Str
     xscale = util.ScaleEnum
     yscale = util.ScaleEnum
     keep = util.PositiveFloat(0.9, allow_zero = False)
@@ -277,6 +277,7 @@ class DensityGateOp(HasStrictTraits):
                                                          yscale(ylim[1]), 
                                                          self.bins))
                     
+        histogram = {}
         for group, group_data in groupby:
             if len(group_data) == 0:
                 raise util.CytoflowOpError('by',
@@ -302,7 +303,9 @@ class DensityGateOp(HasStrictTraits):
                 
             self._keep_xbins[group] = i[0][0:num_bins]
             self._keep_ybins[group] = i[1][0:num_bins]
-            self._histogram[group] = h
+            histogram[group] = h
+            
+        self._histogram = histogram
 
             
     def apply(self, experiment):

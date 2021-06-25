@@ -38,60 +38,44 @@ ratio of two other channels.
     
 '''
 
-from traits.api import provides, Callable
-from traitsui.api import View, Item, EnumEditor, Controller, TextEditor
-from envisage.api import Plugin, contributes_to
+from traits.api import provides
+from traitsui.api import (View, Item, TextEditor, EnumEditor)
 from pyface.api import ImageResource
+from envisage.api import Plugin, contributes_to
+                       
+from ..workflow.operations import RatioWorkflowOp
 
-from cytoflow.operations.ratio import RatioOp
+from .i_op_plugin import IOperationPlugin, OP_PLUGIN_EXT 
+from .op_plugin_base import OpHandler, PluginHelpMixin, shared_op_traits_view
 
-from cytoflowgui.op_plugins.i_op_plugin \
-    import IOperationPlugin, OpHandlerMixin, PluginOpMixin, OP_PLUGIN_EXT, shared_op_traits, PluginHelpMixin
-
-from cytoflowgui.serialization import camel_registry, traits_repr, dedent
-
-RatioOp.__repr__ = traits_repr
-
-class RatioHandler(OpHandlerMixin, Controller):
-    def default_traits_view(self):
-        return View(Item('name',
-                         editor = TextEditor(auto_set = False)),
-                    Item('numerator',
-                         editor=EnumEditor(name='context.previous_wi.channels'),
-                         label = "Numerator"),
-                    Item('denominator',
-                         editor=EnumEditor(name='context.previous_wi.channels'),
-                         label = "Denominator"),
-                    shared_op_traits) 
-
+class RatioHandler(OpHandler):
+    operation_traits_view = \
+        View(Item('name',
+                  editor = TextEditor(auto_set = False, placeholder = "None")),
+             Item('numerator',
+                  editor=EnumEditor(name='context_handler.previous_channels'),
+                  label = "Numerator"),
+             Item('denominator',
+                  editor=EnumEditor(name='context_handler.previous_channels'),
+                  label = "Denominator"),
+             shared_op_traits_view) 
     
-class RatioPluginOp(PluginOpMixin, RatioOp):
-    handler_factory = Callable(RatioHandler, transient = True)
-    
-    def get_notebook_code(self, idx):
-        op = RatioOp()
-        op.copy_traits(self, op.copyable_trait_names())
-
-        return dedent("""
-        op_{idx} = {repr}
-                
-        ex_{idx} = op_{idx}.apply(ex_{prev_idx})
-        """
-        .format(repr = repr(op),
-                idx = idx,
-                prev_idx = idx - 1))
 
 @provides(IOperationPlugin)
 class RatioPlugin(Plugin, PluginHelpMixin):
 
     id = 'edu.mit.synbio.cytoflowgui.op_plugins.ratio'
     operation_id = 'edu.mit.synbio.cytoflow.operations.ratio'
+    view_id = None
 
     short_name = "Ratio"
     menu_group = "Data"
     
     def get_operation(self):
-        return RatioPluginOp()
+        return RatioWorkflowOp()
+
+    def get_handler(self, model, context):
+        return RatioHandler(model = model, context = context)
 
     def get_icon(self):
         return ImageResource('ratio')
@@ -99,14 +83,4 @@ class RatioPlugin(Plugin, PluginHelpMixin):
     @contributes_to(OP_PLUGIN_EXT)
     def get_plugin(self):
         return self
-    
-### Serialization
-@camel_registry.dumper(RatioPluginOp, 'ratio', version = 1)
-def _dump(op):
-    return dict(name = op.name,
-                numerator = op.numerator,
-                denominator = op.denominator)
-    
-@camel_registry.loader('ratio', version = 1)
-def _load(data, version):
-    return RatioPluginOp(**data)
+

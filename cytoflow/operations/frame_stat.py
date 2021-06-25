@@ -26,7 +26,7 @@ import pandas as pd
 import numpy as np
 
 from traits.api import (HasStrictTraits, Str, List, Constant, provides, 
-                        Callable, CStr, Any)
+                        Callable, Any)
 
 import cytoflow.utility as util
 
@@ -91,7 +91,7 @@ class FrameStatisticOp(HasStrictTraits):
     id = Constant('edu.mit.synbio.cytoflow.operations.statistics')
     friendly_id = Constant("Statistics")
     
-    name = CStr
+    name = Str
     function = Callable
     statistic_name = Str
     by = List(Str)

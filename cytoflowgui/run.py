@@ -1,6 +1,5 @@
 #!/usr/bin/env python3.4
 # coding: latin-1
-
 # (c) Massachusetts Institute of Technology 2015-2018
 # (c) Brian Teague 2018-2021
 #
@@ -58,20 +57,14 @@ def log_excepthook(typ, val, tb):
                   .format(typ, val, tb_str))
                          
 def run_gui():
-    import os, sys
     try:
-       # if we're running as a one-click from a MacOS app,
-       # we need to reset the working directory
-       os.chdir(sys._MEIPASS)
+        # if we're running as a one-click from a MacOS app,
+        # we need to reset the working directory
+        import os; os.chdir(sys._MEIPASS)  # @UndefinedVariable
     except:
-       # if we're not running as a one-click, fail gracefully
-       pass
-   
-    # take care of the 3 places in the cytoflow module that
-    # need different behavior in a GUI
-    import cytoflow
-    cytoflow.RUNNING_IN_GUI = True
-    
+        # if we're not running as a one-click, fail gracefully
+        pass
+
     # this is ridiculous, but here's the situation.  Qt5 now uses Chromium
     # as their web renderer.  Chromium needs OpenGL.  if you don't
     # initialize OpoenGL here, things crash on some platforms.
@@ -79,7 +72,16 @@ def run_gui():
     # so now i guess we depend on opengl too. 
     
     from OpenGL import GL  # @UnresolvedImport @UnusedImport
-    
+
+    # need to import these before a QCoreApplication is instantiated.  and that seems
+    # to happen in .... 'import cytoflow' ??
+    import pyface.qt.QtWebKit  # @UnusedImport
+   
+    # take care of the 3 places in the cytoflow module that
+    # need different behavior in a GUI
+    import cytoflow
+    cytoflow.RUNNING_IN_GUI = True
+            
     # check that we're using the right Qt API
     from pyface.qt import qt_api
 
@@ -107,7 +109,7 @@ def run_gui():
     
     # start the remote process
 
-    remote_process, remote_connection, queue_listener = start_remote_process()
+    remote_process, remote_workflow_connection, remote_canvas_connection, queue_listener = start_remote_process()
     
     # getting real tired of the matplotlib deprecation warnings
     import warnings
@@ -159,26 +161,47 @@ def run_gui():
     from envisage.ui.tasks.tasks_plugin import TasksPlugin
     
     from cytoflowgui.flow_task import FlowTaskPlugin
-    from cytoflowgui.tasbe_task import TASBETaskPlugin
     from cytoflowgui.export_task import ExportFigurePlugin
     from cytoflowgui.cytoflow_application import CytoflowApplication
-    from cytoflowgui.op_plugins import (ImportPlugin, ThresholdPlugin, RangePlugin, QuadPlugin,
-                            Range2DPlugin, PolygonPlugin, BinningPlugin,
-                            GaussianMixture1DPlugin, GaussianMixture2DPlugin,
-                            BleedthroughLinearPlugin,
-                            BeadCalibrationPlugin, AutofluorescencePlugin,
-                            ColorTranslationPlugin, TasbePlugin, 
-                            ChannelStatisticPlugin, TransformStatisticPlugin, 
-                            RatioPlugin, DensityGatePlugin, FlowPeaksPlugin,
-                            KMeansPlugin, PCAPlugin)
-    
-    from cytoflowgui.view_plugins import (HistogramPlugin, Histogram2DPlugin, ScatterplotPlugin,
-                              BarChartPlugin, Stats1DPlugin, Kde1DPlugin, Kde2DPlugin,
-                              ViolinPlotPlugin, TablePlugin, Stats2DPlugin, DensityPlugin,
-                              ParallelCoordinatesPlugin, RadvizPlugin)
 
-    plugins = [CorePlugin(), TasksPlugin(), FlowTaskPlugin(), TASBETaskPlugin(),
-               ExportFigurePlugin()]    
+    from cytoflowgui.op_plugins import (ImportPlugin, 
+                                        ThresholdPlugin,
+                                        RangePlugin, 
+                                        QuadPlugin,
+                                        Range2DPlugin, 
+                                        PolygonPlugin, 
+                                        BinningPlugin,
+                                        GaussianMixture1DPlugin, 
+                                        GaussianMixture2DPlugin,
+                                        DensityGatePlugin, 
+                                        BleedthroughLinearPlugin,
+                                        BeadCalibrationPlugin, 
+                                        AutofluorescencePlugin,
+                                        ColorTranslationPlugin, 
+                                        TasbePlugin, 
+                                        ChannelStatisticPlugin,
+                                        TransformStatisticPlugin,
+                                        RatioPlugin,
+                                        FlowPeaksPlugin,
+                                        KMeansPlugin,
+                                        PCAPlugin)
+    
+    from cytoflowgui.view_plugins import (HistogramPlugin, 
+                                          Histogram2DPlugin, 
+                                          ScatterplotPlugin,
+                                          BarChartPlugin,
+                                          Stats1DPlugin, 
+                                          Kde1DPlugin, 
+                                          Kde2DPlugin,
+                                          ViolinPlotPlugin,
+                                          TablePlugin, 
+                                          Stats2DPlugin, 
+                                          DensityPlugin,
+                                          ParallelCoordinatesPlugin,
+                                          RadvizPlugin,
+                                          ExportFCSPlugin)
+
+    plugins = [CorePlugin(), TasksPlugin(), FlowTaskPlugin(), ExportFigurePlugin()]
 
     # ordered as we want them to show up in the toolbar    
     view_plugins = [HistogramPlugin(),
@@ -193,7 +216,8 @@ def run_gui():
                     BarChartPlugin(),
                     Stats1DPlugin(),
                     Stats2DPlugin(),
-                    TablePlugin()]
+                    TablePlugin(),
+                    ExportFCSPlugin()]
     
     plugins.extend(view_plugins)
     
@@ -203,9 +227,9 @@ def run_gui():
                   QuadPlugin(),
                   Range2DPlugin(),
                   PolygonPlugin(),
-                  RatioPlugin(),
                   ChannelStatisticPlugin(),
                   TransformStatisticPlugin(),
+                  RatioPlugin(),
                   BinningPlugin(),
                   GaussianMixture1DPlugin(),
                   GaussianMixture2DPlugin(),
@@ -227,7 +251,8 @@ def run_gui():
                               plugins = plugins,
                               icon = icon,
                               remote_process = remote_process,
-                              remote_connection = remote_connection,
+                              remote_workflow_connection = remote_workflow_connection,
+                              remote_canvas_connection = remote_canvas_connection,
                               filename = args.filename,
                               debug = args.debug)
 
@@ -240,6 +265,14 @@ def run_gui():
     queue_listener.stop()
     logging.shutdown()
     
+
+        
+def monitor_remote_process(proc):
+    proc.join()
+    if proc.exitcode:
+        logging.error("Remote process exited with {}".format(proc.exitcode))
+    
+
 def start_remote_process():
 
         # communications channels
@@ -249,7 +282,7 @@ def start_remote_process():
 
         # logging
         from logging.handlers import QueueListener
-        from cytoflowgui.util import CallbackHandler
+        from cytoflowgui.utility import CallbackHandler
         log_q = multiprocessing.Queue()
         def handle(record):
             logger = logging.getLogger(record.name)
@@ -277,8 +310,9 @@ def start_remote_process():
         remote_process_thread.daemon = True
         remote_process_thread.start()
         
-        return (remote_process, (child_workflow_conn, child_matplotlib_conn), queue_listener)
+        return (remote_process, child_workflow_conn, child_matplotlib_conn, queue_listener)
     
+
 def remote_main(parent_workflow_conn, parent_mpl_conn, log_q, running_event):
     # this should only ever be main method after a spawn() call 
     # (not fork). So we should have a fresh logger to set up.
@@ -288,11 +322,17 @@ def remote_main(parent_workflow_conn, parent_mpl_conn, log_q, running_event):
     h = QueueHandler(log_q) 
     logging.getLogger().addHandler(h)
     
+    # make sure the root logger has a level of DEBUG -- we'll sort out what
+    # to show or not on the local logger
+    logging.getLogger().setLevel(logging.DEBUG)
+    
     # We want matplotlib to use our backend .... in both the GUI and the
     # remote process.  Must be called BEFORE cytoflow is imported
     
     import matplotlib
     matplotlib.use('module://cytoflowgui.matplotlib_backend_remote')
+    
+    # start threads
     
     from traits.api import push_exception_handler    
     from cytoflowgui.workflow import RemoteWorkflow
@@ -311,12 +351,6 @@ def remote_main(parent_workflow_conn, parent_mpl_conn, log_q, running_event):
     
     running_event.set()
     RemoteWorkflow().run(parent_workflow_conn, parent_mpl_conn)
-    
-        
-def monitor_remote_process(proc):
-    proc.join()
-    if proc.exitcode:
-        logging.error("Remote process exited with {}".format(proc.exitcode))
 
 if __name__ == '__main__':
     multiprocessing.freeze_support()

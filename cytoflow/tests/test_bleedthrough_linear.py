@@ -25,7 +25,7 @@ Created on Nov 16, 2015
 import unittest
 import pandas as pd
 import cytoflow as flow
-from test_base import ClosePlotsWhenDoneTest
+from .test_base import ClosePlotsWhenDoneTest
 
 
 class TestBleedthroughLinear(ClosePlotsWhenDoneTest):

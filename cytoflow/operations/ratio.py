@@ -87,6 +87,11 @@ class RatioOp(HasStrictTraits):
         if experiment is None:
             raise util.CytoflowOpError('experiment',
                                        "No experiment specified")
+            
+        # make sure name got set!
+        if not self.name:
+            raise util.CytoflowOpError('name',
+                                       "Must specify a name for the derived channel")
         
         if self.numerator not in experiment.channels:
             raise util.CytoflowOpError('numerator',

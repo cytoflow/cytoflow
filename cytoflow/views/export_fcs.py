@@ -86,7 +86,7 @@ class ExportFCS(HasStrictTraits):
     """
     
     # traits   
-    id = Constant("edu.mit.synbio.cytoflow.view.table")
+    id = Constant("edu.mit.synbio.cytoflow.view.exportfcs")
     friendly_id = Constant("Table View") 
     
     base = Str
@@ -197,20 +197,20 @@ class ExportFCS(HasStrictTraits):
             raise util.CytoflowViewError('experiment', "No events in experiment")
         
         if not self.path:
-            raise util.CytoflowOpError('path',
+            raise util.CytoflowViewError('path',
                                        'Must specify an output directory')
         
         d = Path(self.path)
         
         if not d.is_dir():
-            raise util.CytoflowOpError('path',
+            raise util.CytoflowViewError('path',
                                        'Output directory {} must exist')
         
         # also tests for good experiment, self.by
         for filename in self.enum_files(experiment):
             p = d / filename
             if p.is_file():
-                raise util.CytoflowOpError('path',
+                raise util.CytoflowViewError('path',
                                            'File {} already exists'
                                            .format(p)) 
                 

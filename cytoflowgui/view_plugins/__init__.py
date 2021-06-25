@@ -17,7 +17,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from .i_view_plugin import IViewPlugin, PluginViewMixin, VIEW_PLUGIN_EXT
+from .i_view_plugin import IViewPlugin, VIEW_PLUGIN_EXT
+from .view_plugin_base import ViewHandler
 from .histogram import HistogramPlugin
 from .histogram_2d import Histogram2DPlugin
 from .density import DensityPlugin
@@ -31,3 +32,4 @@ from .violin import ViolinPlotPlugin
 from .table import TablePlugin
 from .parallel_coords import ParallelCoordinatesPlugin
 from .radviz import RadvizPlugin
+from .export_fcs import ExportFCSPlugin

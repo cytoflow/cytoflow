@@ -26,38 +26,90 @@ Created on Feb 11, 2015
 import os.path, webbrowser, pathlib, sys
 
 import yaml.parser
+from textwrap import dedent
 
-from traits.api import Instance, List, Str, on_trait_change
-from pyface.tasks.api import Task, TaskLayout, PaneItem, VSplitter
+import nbformat as nbf
+from yapf.yapflib.yapf_api import FormatCode
+
+from traits.api import Instance, Str, List, on_trait_change, provides
+from pyface.tasks.api import ITaskPane, TaskPane, Task, TaskLayout, PaneItem, VSplitter
 from pyface.tasks.action.api import SMenu, SMenuBar, SToolBar, TaskAction, TaskToggleGroup
-from pyface.api import (FileDialog, ImageResource, AboutDialog, information, 
-                        confirm, OK, YES, NO, ConfirmationDialog, warning,
+from pyface.api import (FileDialog, ImageResource, AboutDialog, 
+                        confirm, OK, YES, ConfirmationDialog, warning,
                         error)
-from envisage.api import Plugin, ExtensionPoint, contributes_to
-from envisage.ui.tasks.api import TaskFactory
+from pyface.qt import QtGui
 
-from cytoflowgui.workflow_pane import WorkflowDockPane
-from cytoflowgui.view_pane import ViewDockPane, PlotParamsPane
-from cytoflowgui.help_pane import HelpDockPane
-from cytoflowgui.workflow import Workflow
-from cytoflowgui.op_plugins import IOperationPlugin, ImportPlugin, OP_PLUGIN_EXT
-from cytoflowgui.view_plugins import IViewPlugin, VIEW_PLUGIN_EXT
-from cytoflowgui.workflow_item import WorkflowItem
-from cytoflowgui.util import DefaultFileDialog
-from cytoflowgui.serialization import save_yaml, load_yaml, save_notebook
+from envisage.ui.tasks.api import TaskFactory
+from envisage.api import contributes_to, Plugin, ExtensionPoint
+
+from .op_plugins import IOperationPlugin, OP_PLUGIN_EXT
+from .view_plugins import IViewPlugin, VIEW_PLUGIN_EXT
+
+from .workflow_pane import WorkflowDockPane
+from .view_pane import ViewDockPane, PlotParamsPane
+from .help_pane import HelpDockPane
+from .matplotlib_backend_local import FigureCanvasQTAggLocal
+from .workflow import LocalWorkflow
+from .workflow_controller import WorkflowController
+from .util import DefaultFileDialog
+from .workflow.serialization import save_yaml, load_yaml
+
+@provides(ITaskPane)
+class FlowTaskPane(TaskPane):
+    """
+    The center pane for the UI; contains the matplotlib canvas for plotting
+    data views.
+    """
+    
+    id = 'edu.mit.synbio.cytoflow.flow_task_pane'
+    name = 'Cytometry Data Viewer'
+    
+    model = Instance(LocalWorkflow)
+    handler = Instance(WorkflowController)
+    
+    layout = Instance(QtGui.QVBoxLayout)                    # @UndefinedVariable
+    canvas = Instance(FigureCanvasQTAggLocal)
+        
+    def create(self, parent):      
+        # create a layout for the tab widget and the main view
+        self.layout = layout = QtGui.QVBoxLayout()          # @UndefinedVariable
+        self.control = QtGui.QWidget()                      # @UndefinedVariable
+        self.control.setLayout(layout)
+        
+        tabs_ui = self.handler.edit_traits(view = 'selected_view_plot_name_view',
+                                           context = self.model,
+                                           kind = 'subpanel',
+                                           parent = parent)
+         
+        self.layout.addWidget(tabs_ui.control) 
+        
+        # usually we would add the main plot here -- but a Qt widget
+        # can only be part of one layout at a time.  so instead we
+        # need to create that layout here, then dynamically add
+        # the canvas when the task is activated (see activate(), below)
+        
+        
+    def activate(self):
+        if self.canvas.layout():
+            self.canvas.layout().removeWidget(self.canvas)
+        self.layout.addWidget(self.canvas)
+
 
 class FlowTask(Task):
     """
-    classdocs
+    This class coordinates all the views and panels on the main model
     """
     
     id = "edu.mit.synbio.cytoflowgui.flow_task"
     name = "Cytometry analysis"
     
     # the main workflow instance.
-    model = Instance(Workflow)
+    model = Instance(LocalWorkflow)
+    
+    # the handler that connects it to various views
+    handler = Instance(WorkflowController)
         
-    # the center pane
+    # side panes
     workflow_pane = Instance(WorkflowDockPane)
     view_pane = Instance(ViewDockPane)
     help_pane = Instance(HelpDockPane)
@@ -117,10 +169,6 @@ class FlowTask(Task):
                                        name='Notebook',
                                        tooltip="Export to an Jupyter notebook...",
                                        image=ImageResource('jupyter')),
-                           TaskAction(method = "on_calibrate",
-                                      name = "Calibrate FCS...",
-                                      tooltip = "Calibrate FCS files",
-                                      image = ImageResource('tasbe')),
                            TaskAction(method = 'on_problem',
                                       name = "Report a bug...",
                                       tooltib = "Report a bug",
@@ -143,17 +191,19 @@ class FlowTask(Task):
         
         # if we're coming back from the TASBE task, re-load the saved
         # workflow
-        if self.model.backup_workflow:
-            self.model.workflow = self.model.backup_workflow
-            self.model.backup_workflow = []
-            return
+        # FIXME
+#         if self.model.backup_workflow:
+#             self.model.workflow = self.model.backup_workflow
+#             self.model.backup_workflow = []
+#             return
         
         # else, set up a new workflow
         # add the import op
         if not self.model.workflow:
-            self.add_operation(ImportPlugin().id) 
-            self.model.selected = self.model.workflow[0]
-                    
+            self.handler.add_operation('edu.mit.synbio.cytoflow.operations.import') 
+        
+        self.window.central_pane.activate()
+                            
         self.model.modified = False
     
     def _default_layout_default(self):
@@ -174,23 +224,30 @@ class FlowTask(Task):
         
         dpi = self.window.control.physicalDpiX()
         self.tool_bars[0].image_size = (int(0.4 * dpi), int(0.4 * dpi))
-        return self.application.plot_pane
-     
+        
+        return FlowTaskPane(canvas = self.application.canvas,
+                            model = self.application.model, 
+                            handler = self.handler)
+             
     def create_dock_panes(self):
+                
         self.workflow_pane = WorkflowDockPane(model = self.model, 
+                                              handler = self.handler,
                                               plugins = self.op_plugins,
                                               task = self)
         
         self.view_pane = ViewDockPane(model = self.model,
+                                      handler = self.handler,
                                       plugins = self.view_plugins,
                                       task = self)
         
-        self.help_pane = HelpDockPane(view_plugins = self.view_plugins,
+        self.help_pane = HelpDockPane(model = self.model,
+                                      view_plugins = self.view_plugins,
                                       op_plugins = self.op_plugins,
                                       task = self)
         
         self.plot_params_pane = PlotParamsPane(model = self.model,
-                                               task = self)
+                                               handler = self.handler)
         
         return [self.workflow_pane, self.view_pane, self.help_pane, self.plot_params_pane]
         
@@ -210,10 +267,7 @@ class FlowTask(Task):
         self.model.workflow = []
         
         # add the import op
-        self.add_operation(ImportPlugin().id) 
-        
-        # and select the operation
-        self.model.selected = self.model.workflow[0]
+        self.handler.add_operation('edu.mit.synbio.cytoflow.operations.import')
         
         self.model.modified = False
      
@@ -333,7 +387,7 @@ class FlowTask(Task):
         # replace the current workflow with the one we just loaded
         
         if False:  # for debugging the loading of things
-            from .event_tracer import record_events 
+            from cytoflowgui.utility.event_tracer import record_events 
             
             with record_events() as container:
                 self.model.workflow = new_workflow
@@ -355,7 +409,6 @@ class FlowTask(Task):
             
             if ret == YES:
                 self.model.run_all()
-
         
     def on_save(self):
         """ Save the file to the previous filename  """
@@ -391,11 +444,6 @@ class FlowTask(Task):
     def on_export(self):
         task = next(x for x in self.window.tasks if x.id == 'edu.mit.synbio.cytoflowgui.export_task')
         self.window.activate_task(task)        
-
-
-    def on_calibrate(self):
-        task = next(x for x in self.window.tasks if x.id == 'edu.mit.synbio.cytoflowgui.tasbe_task')
-        self.window.activate_task(task)
         
             
     def on_notebook(self):
@@ -409,11 +457,12 @@ class FlowTask(Task):
                                    wildcard = (FileDialog.create_wildcard("Jupyter notebook", "*.ipynb") + ';' + #@UndefinedVariable  
                                                FileDialog.create_wildcard("All files", "*")))  # @UndefinedVariable
         if dialog.open() == OK:
-            save_notebook(self.model.workflow, dialog.path)
+            self.save_notebook(self.model.workflow, dialog.path)
 
     
     def on_prefs(self):
         pass
+    
     
     def on_docs(self):
         webbrowser.open_new_tab("https://cytoflow.readthedocs.io/en/stable/manual.html")
@@ -509,66 +558,42 @@ class FlowTask(Task):
                              image = ImageResource('cuvette'),
                              additions = text)
         dialog.open()
+
+    # Jupyter notebook serialization
+    def save_notebook(self, workflow, path):
+        nb = nbf.v4.new_notebook()
         
-    @on_trait_change('model.selected', post_init = True)
-    def _on_select_op(self, selected):
-        if selected:
-            self.view_pane.enabled = (selected is not None)
-            self.view_pane.default_view = selected.default_view.id if selected.default_view else ""
-            self.view_pane.selected_view = selected.current_view.id if selected.current_view else ""
-            self.help_pane.help_id = selected.operation.id
-        else:
-            self.view_pane.enabled = False
+        # todo serialize here
+        header = dedent("""\
+            from cytoflow import *
+            %matplotlib inline""")
+        nb['cells'].append(nbf.v4.new_code_cell(header))
             
-    @on_trait_change('view_pane.selected_view', post_init = True)
-    def _on_select_view(self, view_id):
-        
-        if not view_id:
-            return
-        
-        # if we already have an instantiated view object, find it
-        try:
-            self.model.selected.current_view = next((x for x in self.model.selected.views if x.id == view_id))
-        except StopIteration:
-            # else make the new view
-            plugin = next((x for x in self.view_plugins if x.view_id == view_id))
-            view = plugin.get_view()
-            self.model.selected.views.append(view)
-            self.model.selected.current_view = view
+        for i, wi in enumerate(workflow):
+            try:
+                code = wi.operation.get_notebook_code(i)
+                code = FormatCode(code, style_config = 'pep8')[0]
+            except:
+                error(parent = None,
+                      message = "Had trouble serializing the {} operation"
+                                .format(wi.operation.friendly_id))
             
-        self.help_pane.help_id = view_id
-    
-    def add_operation(self, op_id):
-        # first, find the matching plugin
-        plugin = next((x for x in self.op_plugins if x.id == op_id))
-        
-        # next, get an operation
-        op = plugin.get_operation()
-        
-        # make a new workflow item
-        wi = WorkflowItem(operation = op,
-                          deletable = (op_id != 'edu.mit.synbio.cytoflowgui.op_plugins.import'))
-        
-        # if the op has a default view, add it to the wi
-        try:
-            wi.default_view = op.default_view()
-            wi.views.append(wi.default_view)
-            wi.current_view = wi.default_view
-        except AttributeError:
-            pass
-        
-        # figure out where to add it
-        if self.model.selected:
-            idx = self.model.workflow.index(self.model.selected) + 1
-        else:
-            idx = len(self.model.workflow)
-             
-        # the add_remove_items handler takes care of updating the linked list
-        self.model.workflow.insert(idx, wi)
-        
-        # and make sure to actually select the new wi
-        self.model.selected = wi
-        
+            nb['cells'].append(nbf.v4.new_code_cell(code))
+                        
+            for view in wi.views:
+                try:
+                    code = view.get_notebook_code(i)
+                    code = FormatCode(code, style_config = 'pep8')[0]
+                except:
+                    error(parent = None,
+                          message = "Had trouble serializing the {} view of the {} operation"
+                                     .format(view.friendly_id, wi.operation.friendly_id))
+                
+                nb['cells'].append(nbf.v4.new_code_cell(code))
+                
+        with open(path, 'w') as f:
+            nbf.write(nb, f)
+
         
 class FlowTaskPlugin(Plugin):
     """
@@ -578,7 +603,7 @@ class FlowTaskPlugin(Plugin):
     # Extension point IDs.
     PREFERENCES       = 'envisage.preferences'
     PREFERENCES_PANES = 'envisage.ui.tasks.preferences_panes'
-    TASKS             = 'envisage.ui.tasks.tasks'
+    TASKS             = 'envisage.ui.tasks.tasks' 
     
     # these need to be declared in a Plugin instance; we pass them to
     # the task instance thru its factory, below.
@@ -615,5 +640,8 @@ class FlowTaskPlugin(Plugin):
                                                            op_plugins = self.op_plugins,
                                                            view_plugins = self.view_plugins,
                                                            model = self.application.model,
+                                                           handler = WorkflowController(model = self.application.model,
+                                                                                        op_plugins = self.op_plugins,
+                                                                                        view_plugins = self.view_plugins),
                                                            filename = self.application.filename,
                                                            **x))]

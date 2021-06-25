@@ -26,42 +26,7 @@ Created on Apr 18, 2015
 from traits.api import Str
 from pyface.ui.qt4.file_dialog import FileDialog
 
-from queue import PriorityQueue
 
-class UniquePriorityQueue(PriorityQueue):
-    """
-    A PriorityQueue that only allows one copy of each item.
-    http://stackoverflow.com/questions/5997189/how-can-i-make-a-unique-value-priority-queue-in-python
-    """
-    
-    def _init(self, maxsize):
-        PriorityQueue._init(self, maxsize)
-        self.values = set()
-
-    def _put(self, item):
-        if item[1] not in self.values:
-            self.values.add(item[1])
-            PriorityQueue._put(self, item)
-        else:
-            pass
-
-    def _get(self):
-        item = PriorityQueue._get(self)
-        self.values.remove(item[1])
-        return item
-    
-def filter_unpicklable(obj):
-    if type(obj) is list:
-        return [filter_unpicklable(x) for x in obj]
-    elif type(obj) is dict:
-        return {x: filter_unpicklable(obj[x]) for x in obj}
-    else:
-        if not hasattr(obj, '__getstate__') and not isinstance(obj,
-                  (str, int, float, tuple, list, set, dict)):
-            return "filtered: {}".format(type(obj))
-        else:
-            return obj
-        
 class DefaultFileDialog(FileDialog):
     default_suffix = Str
     
@@ -70,17 +35,7 @@ class DefaultFileDialog(FileDialog):
         dlg.setDefaultSuffix(self.default_suffix)
         return dlg
 
-class IterWrapper(object):
-    def __init__(self, iterator, by):
-        self.iterator = iterator
-        self.by = by
-        
-    def __iter__(self):
-        return self
-        
-    def __next__(self):
-        return next(self.iterator)
-    
+
 # when pyface makes a new dock pane, it sets the width and height as fixed
 # (from the new layout or from the default).  then, after it's finished
 # setting up, it resets the minimum and maximum widget sizes.  in Qt5, this
@@ -136,15 +91,4 @@ class HintedWidget(QtGui.QWidget):
             
         return hint
 
-# logging helper
-import logging 
-
-class CallbackHandler(logging.Handler):
-    def __init__(self, callback, **kwargs):
-        super().__init__(**kwargs)
-        self._callback = callback
-        
-    def emit(self, record):
-        self._callback(record)
-        
     

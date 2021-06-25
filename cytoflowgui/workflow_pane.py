@@ -19,13 +19,14 @@
 
 from traits.api import provides, Instance, List, Tuple
 
-from pyface.qt import QtGui, QtCore
-from pyface.tasks.api import TraitsDockPane, IDockPane, Task
+from pyface.qt import QtCore
+from pyface.tasks.api import TraitsDockPane, IDockPane
 from pyface.action.api import ToolBarManager
 from pyface.tasks.action.api import TaskAction
 
-from cytoflowgui.op_plugins import IOperationPlugin
-from cytoflowgui.view_pane import HintedMainWindow
+from .op_plugins import IOperationPlugin
+from .util import HintedMainWindow
+from .workflow_controller import WorkflowController
 
 @provides(IDockPane)
 class WorkflowDockPane(TraitsDockPane):
@@ -36,17 +37,17 @@ class WorkflowDockPane(TraitsDockPane):
     # the application instance from which to get plugin instances
     plugins = List(IOperationPlugin)
     
-    # the task serving as the dock pane's controller
-    task = Instance(Task)
+    # controller
+    handler = Instance(WorkflowController)
     
-    # IN INCHES
+    # the size of the plugin toolbar images IN INCHES
     image_size = Tuple((0.33, 0.33))
 
     def create_contents(self, parent):
         """ 
         Create and return the toolkit-specific contents of the dock pane.
         """
- 
+         
         dpi = self.control.physicalDpiX()
         image_size = (int(self.image_size[0] * dpi),
                       int(self.image_size[1] * dpi))
@@ -62,8 +63,8 @@ class WorkflowDockPane(TraitsDockPane):
                 continue
             
             task_action = TaskAction(name=plugin.short_name,
-                                     on_perform = lambda pid=plugin.id: 
-                                                    self.task.add_operation(pid),
+                                     on_perform = lambda plugin_id = plugin.operation_id: 
+                                        self.handler.add_operation(plugin_id),
                                      image = plugin.get_icon())
             self.toolbar.append(task_action)
              
@@ -72,10 +73,13 @@ class WorkflowDockPane(TraitsDockPane):
         window = HintedMainWindow()                    
         window.addToolBar(QtCore.Qt.LeftToolBarArea,    # @UndefinedVariable
                           self.toolbar.create_tool_bar(window))
-         
-        self.ui = self.model.edit_traits(view = 'operations_traits',
-                                         kind = 'subpanel', 
-                                         parent = window)
+        
+        # construct the view 
+        self.ui = self.handler.edit_traits(view = 'workflow_traits_view', 
+                                           context = self.model,
+                                           kind = 'subpanel', 
+                                           parent = window)
+        
         window.setCentralWidget(self.ui.control)
          
         window.setParent(parent)

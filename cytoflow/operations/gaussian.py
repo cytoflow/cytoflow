@@ -28,7 +28,7 @@ from warnings import warn
 import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon, Rectangle
 
-from traits.api import (HasStrictTraits, Str, CStr, Dict, Any, Instance, Bool, 
+from traits.api import (HasStrictTraits, Str, Dict, Any, Instance, Bool, 
                         Constant, List, provides)
 
 import sklearn.mixture
@@ -64,6 +64,14 @@ class GaussianMixtureOp(HasStrictTraits):
     component ``i``.  If :attr:`num_components` is ``1``, :attr:`sigma` must be 
     greater than 0.
     
+    .. note::
+       The :attr:`sigma` attribute does NOT affect how events are assigned to 
+       components in the new ``name`` variable. That is to say, if an event
+       is more than :attr:`sigma` standard deviations from ALL of the 
+       components, you might expect it would be labeled as ``{name}_None``. 
+       It is *not*. An event is only labeled ``{name}_None`` if it has a 
+       value that is outside of the channels' scales.
+    
     Optionally, if :attr:`posteriors` is ``True``, :meth:`apply` creates a new 
     ``double`` metadata variables named ``{name}_1_posterior`` ... 
     ``{name}_n_posterior`` where ``n`` is the number of components.  The column 
@@ -93,10 +101,11 @@ class GaussianMixtureOp(HasStrictTraits):
     num_components : Int (default = 1)
         How many components to fit to the data?  Must be a positive integer.
 
-    sigma : Float (default = 0.0)
-        How many standard deviations on either side of the mean to include
-        in the boolean variable ``{name}_i``?  Must be ``>= 0.0``.  If 
-        :attr:`num_components` is ``1``, must be ``> 0``.
+    sigma : Float
+        If not None, use this operation as a "gate": for each component, create 
+        a new boolean variable ``{name}_i`` and if the event is within
+        :attr:`sigma` standard deviations, set that variable to ``True``.
+        If :attr:`num_components` is ``1``, must be ``> 0``.
     
     by : List(Str)
         A list of metadata attributes to aggregate the data before estimating
@@ -193,11 +202,11 @@ class GaussianMixtureOp(HasStrictTraits):
     id = Constant('edu.mit.synbio.cytoflow.operations.gaussian')
     friendly_id = Constant("Gaussian Mixture Model")
     
-    name = CStr()
+    name = Str
     channels = List(Str)
     scale = Dict(Str, util.ScaleEnum)
     num_components = util.PositiveInt(1, allow_zero = False)
-    sigma = util.PositiveFloat(allow_zero = True)
+    sigma = util.PositiveFloat(None, allow_zero = False, allow_none = True)
     by = List(Str)
     
     posteriors = Bool(False)
@@ -378,7 +387,7 @@ class GaussianMixtureOp(HasStrictTraits):
                                        "Experiment already has a column named {0}"
                                        .format(self.name))
             
-        if self.sigma > 0:
+        if self.sigma is not None:
             for i in range(1, self.num_components + 1):
                 cname = "{}_{}".format(self.name, i)
                 if cname in experiment.data.columns:
@@ -432,7 +441,7 @@ class GaussianMixtureOp(HasStrictTraits):
         if self.num_components > 1:
             event_assignments = pd.Series(["{}_None".format(self.name)] * len(experiment), dtype = "object")
  
-        if self.sigma > 0:
+        if self.sigma is not None:
             event_gate = {i : pd.Series([False] * len(experiment), dtype = "double")
                            for i in range(self.num_components)}
  
@@ -509,7 +518,7 @@ class GaussianMixtureOp(HasStrictTraits):
                 
             # if we're doing sigma-based gating, for each component check
             # to see if the event is in the sigma gate.
-            if self.sigma > 0.0:
+            if self.sigma is not None:
                 for c in range(self.num_components):
                     s = np.linalg.pinv(gmm.covariances_[c])
                     mu = gmm.means_[c]
@@ -565,7 +574,7 @@ class GaussianMixtureOp(HasStrictTraits):
         if self.num_components > 1:
             new_experiment.add_condition(self.name, "category", event_assignments)
             
-        if self.sigma > 0:
+        if self.sigma is not None:
             for c in range(self.num_components):
                 gate_name = "{}_{}".format(self.name, c + 1)
                 new_experiment.add_condition(gate_name, "bool", event_gate[c])              

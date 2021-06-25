@@ -25,7 +25,7 @@ cytoflow.operations.flowpeaks
 import matplotlib.pyplot as plt
 from warnings import warn
 
-from traits.api import (HasStrictTraits, Str, CStr, Dict, Any, Instance, 
+from traits.api import (HasStrictTraits, Str, Dict, Any, Instance, 
                         Constant, List, provides, Array, Function)
 
 import numpy as np
@@ -211,7 +211,7 @@ class FlowPeaksOp(HasStrictTraits):
     id = Constant('edu.mit.synbio.cytoflow.operations.flowpeaks')
     friendly_id = Constant("FlowPeaks Clustering")
     
-    name = CStr()
+    name = Str
     channels = List(Str)
     scale = Dict(Str, util.ScaleEnum)
     by = List(Str)
@@ -223,9 +223,7 @@ class FlowPeaksOp(HasStrictTraits):
     tol = util.PositiveFloat(0.5, allow_zero = False)
     merge_dist = util.PositiveFloat(5, allow_zero = False)
     
-    # parameters that control outlier selection, with sensible defaults
-    
-    
+    # estimate internals
     _kmeans = Dict(Any, Instance(sklearn.cluster.MiniBatchKMeans), transient = True)
     _means = Dict(Any, List, transient = True)
     _normals = Dict(Any, List(Function), transient = True)
@@ -454,8 +452,9 @@ class FlowPeaksOp(HasStrictTraits):
             self._peaks[data_group] = peaks
             self._peak_clusters[data_group] = peak_clusters
 
-            ### merge peaks that are sufficiently close
+        ### merge peaks that are sufficiently close
             
+        cluster_peak = {}
         for data_group, data_subset in groupby:
             kmeans = self._kmeans[data_group]
             num_clusters = kmeans.n_clusters
@@ -567,8 +566,11 @@ class FlowPeaksOp(HasStrictTraits):
                         cluster_group[cluster] = gi
                         cluster_peaks[cluster] = p
     
-            self._cluster_peak[data_group] = cluster_peaks
+            cluster_peak[data_group] = cluster_peaks
             self._cluster_group[data_group] = cluster_group    
+            
+        # we set this atomically to support appropriate updating of the GUI
+        self._cluster_peak = cluster_peak
                                                  
          
     def apply(self, experiment):

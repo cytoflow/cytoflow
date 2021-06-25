@@ -28,40 +28,24 @@ Created on Feb 11, 2015
 
 import os.path, pathlib
 
-from traits.api import Instance, Bool, Any, Event, CFloat, CInt, on_trait_change
+from traits.api import Instance, Event, CFloat, CInt, observe, provides, List
 from traitsui.api import ButtonEditor, View, TextEditor, Item
 
-from pyface.tasks.api import Task, TaskLayout, PaneItem, TraitsDockPane, VSplitter
+from pyface.tasks.api import Task, TaskLayout, PaneItem, TraitsDockPane, VSplitter, ITaskPane, TaskPane
 from pyface.tasks.action.api import SMenuBar, SMenu, TaskToggleGroup
-from envisage.api import Plugin, contributes_to
+from envisage.api import Plugin, contributes_to, ExtensionPoint
 from envisage.ui.tasks.api import TaskFactory
 from pyface.api import FileDialog, OK, error
+from pyface.qt import QtGui
 
-from cytoflowgui.workflow import Workflow
+from .op_plugins import IOperationPlugin, OP_PLUGIN_EXT
+from .view_plugins import IViewPlugin, VIEW_PLUGIN_EXT
 
+from .workflow import LocalWorkflow
+from .workflow_controller import WorkflowController
+from .matplotlib_backend_local import FigureCanvasQTAggLocal
+from .view_pane import PlotParamsPane
 
-class PlotParamsPane(TraitsDockPane):
-    
-    id = 'edu.mit.synbio.cytoflowgui.plot_params_pane'
-    name = "Plot Parameters"
-
-    # the task serving as the dock pane's controller
-    task = Instance(Task)
-    
-    closable = False
-    dock_area = 'right'
-    floatable = False
-    movable = False
-    visible = True
-    
-    def create_contents(self, parent):
-        """ Create and return the toolkit-specific contents of the dock pane.
-        """
-        self.ui = self.model.edit_traits(view = 'plot_params_traits',
-                                         kind='subpanel', 
-                                         parent=parent,
-                                         scrollable = True)
-        return self.ui.control
     
 class ExportPane(TraitsDockPane):
     
@@ -76,14 +60,6 @@ class ExportPane(TraitsDockPane):
     floatable = False
     movable = False
     visible = True
-
-    # the dinky little model that this pane displays
-    width = CFloat(11)
-    height = CFloat(8.5)
-    dpi = CInt(96)
-    
-    do_exit = Event
-    do_export = Event
     
     def default_traits_view(self):
         return View(Item('width',
@@ -100,7 +76,49 @@ class ExportPane(TraitsDockPane):
                          editor = ButtonEditor(value = True,
                                                label = "Return to Cytoflow"),
                          show_label = False))
+        
+    def create_contents(self, parent):
+        """ Create and return the toolkit-specific contents of the dock pane.
+        """
+        self.ui = self.edit_traits(kind="subpanel", 
+                                   parent=parent,
+                                   context = self.model)
+        return self.ui.control
+
     
+# the central pane
+@provides(ITaskPane)
+class ExportTaskPane(TaskPane):
+    """
+    The center pane for the UI; contains the matplotlib canvas for plotting
+    data views.
+    """
+    
+    id = 'edu.mit.synbio.cytoflow.export_task_pane'
+    name = 'Cytometry Data Viewer'
+    
+    model = Instance(LocalWorkflow)
+    handler = Instance(WorkflowController)
+    
+    layout = Instance(QtGui.QVBoxLayout)                    # @UndefinedVariable
+    canvas = Instance(FigureCanvasQTAggLocal)
+        
+    def create(self, parent):      
+        # create a layout for the tab widget and the main view
+        self.layout = layout = QtGui.QVBoxLayout()          # @UndefinedVariable
+        self.control = QtGui.QWidget()                      # @UndefinedVariable
+        self.control.setLayout(layout)
+
+        # usually we would add the main plot here -- but a Qt widget
+        # can only be part of one layout at a time.  so instead we
+        # need to create that layout here, then dynamically add
+        # the canvas when the task is activated (see activate(), below)
+        
+    def activate(self):
+        if self.canvas.layout():
+            self.canvas.layout().removeWidget(self.canvas)
+        self.layout.addWidget(self.canvas)
+
 
 class ExportTask(Task):
     """
@@ -114,39 +132,58 @@ class ExportTask(Task):
                               id = 'View', name = '&View'))
     
     # the main workflow instance.
-    model = Instance(Workflow)
+    model = Instance(LocalWorkflow)
+    
+    # the handler that connects it to various views
+    handler = Instance(WorkflowController)
            
+    # side panes
     params_pane = Instance(TraitsDockPane)
     export_pane = Instance(TraitsDockPane)
+    
+    # additional parameters for exporting
+    width = CFloat(11)
+    height = CFloat(8.5)
+    dpi = CInt(96)
+    
+    # events for exporting
+    do_exit = Event
+    do_export = Event
     
     def _default_layout_default(self):
         return TaskLayout(right = VSplitter(PaneItem("edu.mit.synbio.cytoflowgui.plot_params_pane", width = 350),
                                             PaneItem("edu.mit.synbio.cytoflowgui.export_pane", width = 350)))
      
     def create_central_pane(self):
-        return self.application.plot_pane
+        return ExportTaskPane(canvas = self.application.canvas,
+                              model = self.model,
+                              handler = self.handler)
      
     def create_dock_panes(self):
         self.params_pane = PlotParamsPane(model = self.model, 
+                                          handler = self.handler,
                                           task = self)
-        
-        self.export_pane = ExportPane(task = self)
-        
+         
+        self.export_pane = ExportPane(model = self, task = self)
+         
         return [self.params_pane, self.export_pane]
-    
-    @on_trait_change('export_pane:do_exit', post_init = True)
-    def activate_cytoflow_task(self):
+
+    def activated(self):
+        self.window.central_pane.activate()
+                                
+    @observe('do_exit', post_init = True)
+    def activate_cytoflow_task(self, _):
         task = next(x for x in self.window.tasks if x.id == 'edu.mit.synbio.cytoflowgui.flow_task')
         self.window.activate_task(task)
         
-    @on_trait_change('export_pane:do_export', post_init = True)
-    def on_export(self):
+    @observe('do_export', post_init = True)
+    def on_export(self, _):
         """
         Shows a dialog to export a file
         """
                   
         f = ""
-        filetypes_groups = self.application.plot_pane.canvas.get_supported_filetypes_grouped()
+        filetypes_groups = self.application.canvas.get_supported_filetypes_grouped()
         filename_exts = []
         for name, ext in filetypes_groups.items():
             if f:
@@ -159,27 +196,27 @@ class ExportTask(Task):
                             wildcard = f)
          
         if dialog.open() == OK:
-            filetypes = list(self.application.plot_pane.canvas.get_supported_filetypes().keys())
+            filetypes = list(self.application.canvas.get_supported_filetypes().keys())
             if not [ext for ext in ["." + ext for ext in filetypes] if dialog.path.endswith(ext)]:
                 selected_exts = filename_exts[dialog.wildcard_index]
                 ext = sorted(selected_exts, key = len)[0]
                 dialog.path += "."
                 dialog.path += ext
 
-            if (self.export_pane.width * self.export_pane.dpi  > 2**16 or \
-                self.export_pane.height * self.export_pane.dpi > 2**16 or \
-                self.export_pane.width * self.export_pane.height * self.export_pane.dpi ** 2 > 2 ** 30) and \
+            if (self.width * self.dpi  > 2**16 or \
+                self.height * self.dpi > 2**16 or \
+                self.width * self.height * self.dpi ** 2 > 2 ** 30) and \
                 pathlib.Path(dialog.path).suffix in ['png', 'pgf', 'raw', 'rgba', 'jpg', 'jpeg', 'bmp', 'pcx', 'tif', 'tiff', 'xpm']:
                 error(None, "Can't export raster images with a height or width larger than 65535 pixels, "
                             "or a total image size of greater than 2**30 pixels. "
                             "Decrease your image size or DPI, or use a vector format (like PDF or SVG).")
-                return                
+                return     
             
-                 
-            self.application.plot_pane.export(dialog.path, 
-                                              width = self.export_pane.width,
-                                              height = self.export_pane.height,
-                                              dpi = self.export_pane.dpi)
+            self.application.canvas.print_figure(dialog.path, 
+                                                 bbox_inches = 'tight', 
+                                                 width = self.width,
+                                                 height = self.height,
+                                                 dpi = self.dpi)          
      
         
 class ExportFigurePlugin(Plugin):
@@ -192,8 +229,10 @@ class ExportFigurePlugin(Plugin):
     PREFERENCES_PANES = 'envisage.ui.tasks.preferences_panes'
     TASKS             = 'envisage.ui.tasks.tasks'
     
-    debug = Bool(False)
-    remote_connection = Any
+    # these need to be declared in a Plugin instance; we pass them to
+    # the task instance thru its factory, below.
+    op_plugins = ExtensionPoint(List(IOperationPlugin), OP_PLUGIN_EXT)
+    view_plugins = ExtensionPoint(List(IViewPlugin), VIEW_PLUGIN_EXT)    
 
     #### 'IPlugin' interface ##################################################
 
@@ -201,7 +240,7 @@ class ExportFigurePlugin(Plugin):
     id = 'edu.mit.synbio.cytoflow.export'
     
     # the local process's model
-    model = Instance(Workflow)
+    model = Instance(LocalWorkflow)
 
     # The plugin's name (suitable for displaying to the user).
     name = 'Export figure'
@@ -225,5 +264,8 @@ class ExportFigurePlugin(Plugin):
         return [TaskFactory(id = 'edu.mit.synbio.cytoflowgui.export_task',
                             name = 'Export figure',
                             factory = lambda **x: ExportTask(application = self.application,
-                                                            model = self.application.model,
-                                                            **x))]
+                                                             model = self.application.model,
+                                                             handler = WorkflowController(model = self.application.model,
+                                                                                          op_plugins = self.op_plugins,
+                                                                                          view_plugins = self.view_plugins),
+                                                             **x))]
