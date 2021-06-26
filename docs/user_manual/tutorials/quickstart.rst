@@ -17,7 +17,7 @@ and should help you get started with the following steps:
 
 If you'd like to follow along, you can do so by downloading one of the
 **cytoflow-#####-examples-basic.zip** files from the 
-`Cytoflow releases page <https://github.com/bpteague/cytoflow/releases>`_
+`Cytoflow releases page <https://github.com/bpteague/cytoflow/releases>` 
 on GitHub.
 
 
@@ -124,9 +124,8 @@ Basic gating
 So there's a clear difference between the two tubes: one has a substantial
 population above ~200 in the Y2-A channel and the other doesn't.  What
 is the proportion of "high" cell in each tube?  To count these two
-populations, we first have to use a gate to separate them.  Let's use a 
-threshold gate.  First, make one by choosing the threshold gate on the 
-operations toolbar:
+populations, we first have to gate them out.  Let's use a threshold gate.
+First, make one by choosing the threshold gate on the operations toolbar:
 
 .. image:: images/01_15_threshold.png
 
@@ -147,17 +146,17 @@ major label.)
 When you created a new Threshold gate, *you added a new condition to
 the data set.*  This condition is *exactly like the "Dox" condition you
 set up when you imported your data.*  That is, now there are some events
-that are ``Dox = 1 and T = True``, some events that are 
-``Dox = 1 and T = False``, some events that are ``Dox = 10 and T = True``, 
-and some events that are ``Dox = 10 and T = False``.
+that are (Dox = 1 and T = True), some events that are 
+(Dox = 1 and T = False), some events that are (Dox = 10 and T = True), 
+and some events that are (Dox = 10 and T = False).
 
 You can get a good feel for this if you make a new Histogram.  Set
 the histogram parameters as follows:
 
-* ``Channel = "Y2_A"``
-* ``Scale = "logicle"``
-* ``Vertical Facet = "Dox"``
-* ``Color Facet = "T"``
+* Channel = "Y2_A"
+* Scale = "logicle"
+* Vertical Facet = "Dox"
+* Color Facet = "T"
 
 .. image:: images/01_18_threshold_histogram.png
 
