@@ -1,22 +1,63 @@
-#!/usr/bin/env python3.8
-# coding: latin-1
+'''
+Created on May 1, 2021
 
-# (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2021
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 2 of the License, or
-# (at your option) any later version.
-# 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+@author: brian
+'''
 
+'''
+Range Gate
+----------
+
+Draw a range gate.  To draw a new range, click-and-drag across the plot.
+
+.. object:: Name
+
+    The operation name.  Used to name the new metadata field that's created by 
+    this module.
+    
+.. object:: Channel
+
+    The name of the channel to apply the gate to.
+
+.. object:: Low
+
+    The low threshold of the gate.
+    
+.. object:: High
+
+    The high threshold of the gate.
+    
+.. object:: Scale
+
+    The scale of the axis for the interactive plot
+    
+.. object:: Hue facet
+
+    Show different experimental conditions in different colors.
+    
+.. object:: Subset
+
+    Show only a subset of the data.
+   
+.. plot::
+
+    import cytoflow as flow
+    import_op = flow.ImportOp()
+    import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",
+                                 conditions = {'Dox' : 10.0}),
+                       flow.Tube(file = "Plate01/CFP_Well_A4.fcs",
+                                 conditions = {'Dox' : 1.0})]
+    import_op.conditions = {'Dox' : 'float'}
+    ex = import_op.apply()
+
+    range_op = flow.RangeOp(name = 'Range',
+                            channel = 'Y2-A',
+                            low = 2000,
+                            high = 10000)
+
+    range_op.default_view(scale = 'log').plot(ex)
+
+'''
 
 from traits.api import provides, Instance, Str, Tuple, Property, observe
 

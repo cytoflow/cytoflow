@@ -17,6 +17,56 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+'''
+Threshold Gate
+--------------
+
+Draw a threshold gate.  To set a new threshold, click on the plot.
+
+.. object:: Name
+
+    The operation name.  Used to name the new metadata field that's created by 
+    this module.
+    
+.. object:: Channel
+
+    The name of the channel to apply the gate to.
+
+.. object:: Threshold
+
+    The threshold of the gate.
+    
+.. object:: Scale
+
+    The scale of the axis for the interactive plot
+    
+.. object:: Hue facet
+
+    Show different experimental conditions in different colors.
+    
+.. object:: Subset
+
+    Show only a subset of the data.
+   
+.. plot::
+
+    import cytoflow as flow
+    import_op = flow.ImportOp()
+    import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",
+                                 conditions = {'Dox' : 10.0}),
+                       flow.Tube(file = "Plate01/CFP_Well_A4.fcs",
+                                 conditions = {'Dox' : 1.0})]
+    import_op.conditions = {'Dox' : 'float'}
+    ex = import_op.apply()
+
+    thresh_op = flow.ThresholdOp(name = 'Threshold',
+                                 channel = 'Y2-A',
+                                 threshold = 2000)
+
+    thresh_op.default_view(scale = 'log').plot(ex)
+    
+'''
+
 from traits.api import provides, Instance, Str, observe
 
 from cytoflow.operations.threshold import ThresholdOp, ThresholdSelection
