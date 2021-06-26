@@ -72,7 +72,7 @@ extensions = [
     # 'fulltoc'
 ]
 
-if tags.has("embedded_help"):  # @UndefinedVariable
+if tags.has("user_manual"):  # @UndefinedVariable
     extensions.remove('sphinx.ext.viewcode')
 
 # Generate the API documentation when building
@@ -103,7 +103,7 @@ plot_pre_code = "import matplotlib.pyplot as plt; plt.switch_backend('agg')"
 # plot_pre_code = 'import matplotlib; matplotlib.use("Agg")'
 
 # intersphinx config
-intersphinx_mapping = {'pandas' : ('http://pandas.pydata.org/pandas-docs/stable/', None),
+intersphinx_mapping = {'pandas' : ('https://pandas.pydata.org/pandas-docs/stable/', None),
                        'envisage' : ('https://docs.enthought.com/envisage/', None),
                        'traits' : ('https://docs.enthought.com/traits/', None)} 
 
@@ -354,56 +354,69 @@ texinfo_documents = [
 #texinfo_no_detailmenu = False
 
 def setup(app):
-    # app.connect('builder-inited', run_apidoc)
-    app.connect('builder-inited', set_builder_config)
-    # app.connect('build-finished', cleanup_apidoc)
+    app.connect('builder-inited', run_user_manual_apidoc)
+    app.connect('builder-inited', run_dev_manual_apidoc)
+    app.connect('builder-inited', set_user_manual_builder_config)
     app.connect('build-finished', copy_embedded_help)
+
+    app.connect('build-finished', cleanup_apidoc)
 
     sys.modules['sys'].IN_SPHINX = True
     
         
-def set_builder_config(app):
-    if app.builder.name == 'embedded_help':  # @UndefinedVariable
-        app.builder.config.html_copy_source = False
-        app.builder.config.html_show_sourcelink = False
-        app.builder.config.html_show_copyright = False
-        app.builder.config.html_show_sphinx = False
-        
-        app.builder.copysource = False
-        app.builder.add_permalinks = False
-        app.builder.embedded = True
-        app.builder.download_support = False
-        app.builder.search = False
-        
-        app.config.plot_include_source = False
+def set_user_manual_builder_config(app):
+    if app.builder.name != 'user_manual':
+        return
 
+    app.builder.config.html_copy_source = False
+    app.builder.config.html_show_sourcelink = False
+    app.builder.config.html_show_copyright = False
+    app.builder.config.html_show_sphinx = False
+    
+    app.builder.copysource = False
+    app.builder.add_permalinks = False
+    app.builder.embedded = True
+    app.builder.download_support = False
+    app.builder.search = False
+    
+    app.config.plot_include_source = False
 
-def run_apidoc(app):
-    if app.builder.name == 'embedded_help':  # @UndefinedVariable
-        os.environ['SPHINX_APIDOC_OPTIONS'] = 'no-members'
+def run_dev_manual_apidoc(app):
+    if app.builder.name == 'user_manual':
+        return
+    
+    from sphinx.ext.apidoc import main
+    sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+    curr_dir = pathlib.Path(os.path.abspath(os.path.dirname(__file__)))
+    
+    output_dir = curr_dir / "dev_manual" / "reference"
+    
+    # remove stale API docs
+    try:
+        filelist = glob.glob(str(output_dir / "cytoflow*.rst"))
+        for f in filelist:
+            os.unlink(f)
+    except FileNotFoundError:
+        pass
+    
+    module = curr_dir / ".." / "cytoflow"    
+    main(['-T', '-e', '-E', '-f', '-o', str(output_dir), str(module), str(module / "tests" / "*")])
+    
+
+def run_user_manual_apidoc(app):
+    if app.builder.name != 'user_manual':
+        return
+    
+    os.environ['SPHINX_APIDOC_OPTIONS'] = 'no-members'
 
     from sphinx.ext.apidoc import main
     sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
     curr_dir = pathlib.Path(os.path.abspath(os.path.dirname(__file__)))
      
-    # only build the API docs if we're NOT building the embedded help
-    if app.builder.name != 'embedded_help':  # @UndefinedVariable
-        output_dir = curr_dir / "dev_manual" / "reference"
-        
-        # remove stale API docs
-        try:
-            filelist = glob.glob(str(output_dir / "cytoflow*.rst"))
-            for f in filelist:
-                os.unlink(f)
-        except FileNotFoundError:
-            pass
-        
-        module = curr_dir / ".." / "cytoflow"    
-        main(['-T', '-e', '-E', '-f', '-o', str(output_dir), str(module), str(module / "tests" / "*")])
+    # operations
     
-    # always build the GUI docs
-    output_dir = curr_dir / "user_manual" / "reference"
-    module = curr_dir / ".." / "cytoflowgui"        
+    output_dir = curr_dir / "user_manual" / "reference" / "operations"
+    module = curr_dir / ".." / "cytoflowgui" / "op_plugins"
     
     # remove stale GUI docs
     try:
@@ -413,8 +426,22 @@ def run_apidoc(app):
     except FileNotFoundError:
         pass
     
-    main(['-T', '-e', '-E', '-f', '-o', str(output_dir), str(module), str(module / "tests" / "*")])    
+    main(['-T', '-e', '-E', '-f', '-o', str(output_dir), str(module), str(module / "i_op_plugin.py"), str(module / "op_plugin_base.py")])    
 
+    # views
+    output_dir = curr_dir / "user_manual" / "reference" / "views"
+    module = curr_dir / ".." / "cytoflowgui" / "view_plugins"
+    
+    # remove stale GUI docs
+    try:
+        filelist = glob.glob(str(output_dir / "cytoflow*.rst"))
+        for f in filelist:
+            os.unlink(f)
+    except FileNotFoundError:
+        pass
+    
+    main(['-T', '-e', '-E', '-f', '-o', str(output_dir), str(module), str(module / "i_view_plugin.py"), str(module / "view_plugin_base.py")])  
+    
 def cleanup_apidoc(app, exc):  # @UnusedVariable
     dirs = [pathlib.Path(os.path.abspath(os.path.dirname(__file__))) / d / "reference"
             for d in ["user_manual", "dev_manual"]]
@@ -428,19 +455,21 @@ def cleanup_apidoc(app, exc):  # @UnusedVariable
             pass
 
 def copy_embedded_help(app, exc):  # @UnusedVariable
-    if app.builder.name == 'embedded_help':
-        dest_dir = pathlib.Path(__file__).parents[1].joinpath('cytoflowgui', 'help')
-        print("Copying {} to {}".format(app.outdir, dest_dir))
-        shutil.rmtree(dest_dir, ignore_errors = True)
-        shutil.copytree(app.outdir, dest_dir)
-        
-        img_dir_in = pathlib.Path(app.srcdir).joinpath('images').as_posix()
-        img_dir_out = pathlib.Path(dest_dir).joinpath('_images').as_posix()
-        
-        try:
-            filelist = glob.glob(os.path.join(img_dir_in, "*"))
-            for f in filelist:
-                print(f)
-                shutil.copy(f, img_dir_out)
-        except FileNotFoundError:
-            pass
+    if app.builder.name != 'user_manual':
+        return
+    
+    dest_dir = pathlib.Path(__file__).parents[1].joinpath('cytoflowgui', 'help')
+    print("Copying {} to {}".format(app.outdir, dest_dir))
+    shutil.rmtree(dest_dir, ignore_errors = True)
+    shutil.copytree(app.outdir, dest_dir)
+    
+    img_dir_in = pathlib.Path(app.srcdir).joinpath('images').as_posix()
+    img_dir_out = pathlib.Path(dest_dir).joinpath('_images').as_posix()
+    
+    try:
+        filelist = glob.glob(os.path.join(img_dir_in, "*"))
+        for f in filelist:
+            print(f)
+            shutil.copy(f, img_dir_out)
+    except FileNotFoundError:
+        pass

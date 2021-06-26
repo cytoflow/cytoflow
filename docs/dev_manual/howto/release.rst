@@ -28,13 +28,13 @@ Tests
 Documentation
 -------------
 
-- Build the API docs and check them for completeness::
+- Build the developers' manual and check it for completeness::
 
       python setup.py build_sphinx
   
-- Build the online docs and check them for completeness::
+- Build the user manual and check it for completeness::
 
-  	  python setup.py build_sphinx -b embedded_help
+  	  python setup.py build_sphinx -b user_manual
   	  
 Packaging
 ---------

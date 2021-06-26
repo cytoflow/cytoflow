@@ -284,7 +284,7 @@ def contains_doctest(text):
         return False
     except SyntaxError:
         pass
-    r = re.compile(r'^\s*>>>', re.M)
+    r = re.compile(r'^\s*>>>', re.M)  # @UndefinedVariable
     m = r.search(text)
     return bool(m)
 
