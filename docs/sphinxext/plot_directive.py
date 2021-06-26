@@ -442,11 +442,11 @@ def run_code(code, code_path, ns=None, function_name=None):
         except OSError as err:
             raise OSError(str(err) + '\n`plot_working_directory` option in'
                           'Sphinx configuration file must be a valid '
-                          'directory path') from err
+                          'directory path')
         except TypeError as err:
             raise TypeError(str(err) + '\n`plot_working_directory` option in '
                             'Sphinx configuration file must be a string or '
-                            'None') from err
+                            'None')
     elif code_path is not None:
         dirname = os.path.abspath(os.path.dirname(code_path))
         os.chdir(dirname)
@@ -474,7 +474,7 @@ def run_code(code, code_path, ns=None, function_name=None):
                     exec(function_name + "()", ns)
 
         except (Exception, SystemExit):
-            raise PlotError(traceback.format_exc()) from err
+            raise PlotError(traceback.format_exc())
         finally:
             os.chdir(pwd)
     return ns
@@ -598,8 +598,8 @@ def render_figures(code, code_path, output_dir, output_base, context,
             for fmt, dpi in formats:
                 try:
                     figman.canvas.figure.savefig(img.filename(fmt), dpi=dpi)
-                except Exception as err:
-                    raise PlotError(traceback.format_exc()) from err
+                except Exception:
+                    raise PlotError(traceback.format_exc())
                 img.formats.append(fmt)
 
         results.append((code_piece, images))

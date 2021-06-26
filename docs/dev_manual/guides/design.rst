@@ -1,11 +1,5 @@
 .. _dev_design:
 
-Design Guide
-============
-
-This document explains how Cytoflow is laid out and the justifications for some
-of the design decisions.
-
 Project Structure
 -----------------
 

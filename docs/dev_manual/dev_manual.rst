@@ -38,15 +38,15 @@ Contents:
 *********
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
-   tutorials/tutorials
+   dev_manual/tutorials/*
    
-   howto/howto
+   dev_manual/howto/*
    
-   guides/guides
+   dev_manual/guides/*
    
-   reference/reference
+   dev_manual/reference/*
    
    
 Indices and tables

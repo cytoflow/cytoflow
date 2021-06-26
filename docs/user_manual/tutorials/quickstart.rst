@@ -22,7 +22,7 @@ on GitHub.
 
 
 Importing data
---------------
+==============
 
 Start the software.  The left panel is the "workflow" panel, and
 upon startup has a single operation named **Import Data**.  Click
@@ -79,7 +79,7 @@ import the data.  Note that the red stop-sign on the module header
 changes to a green check-mark to show that the operation succeeded.
 
 Basic plotting
---------------
+==============
 
 .. image:: images/01_09_import.png
 
@@ -119,7 +119,7 @@ that **you must change Vertical Facet back to "None" as well.**
 .. image:: images/01_14_color_facet.png
 
 Basic gating
-------------
+============
 
 So there's a clear difference between the two tubes: one has a substantial
 population above ~200 in the Y2-A channel and the other doesn't.  What
@@ -168,7 +168,7 @@ are comfortable with what does what.  Also poke at the "subset" controls.
 (Don't worry, you won't break anything!)
 
 Basic statistics
-----------------
+================
 
 Cytoflow's reason for existing is to let you do quantitative flow
 cytometry.  So lets quanitate those populations -- how many events are
@@ -225,7 +225,7 @@ events were below the threshold (T = False, in blue) vs how many
 were above it (T = True, in orange.)
 
 Export the plot
----------------
+===============
 
 I like to think that Cytoflow's graphics are nice-looking.  Possibly
 nice enough to publish!  (Also, if you publish using Cytoflow, please
