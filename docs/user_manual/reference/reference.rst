@@ -15,7 +15,20 @@ Operation and View Reference
       2D plots
       Statistics plots
   
+Operations
+----------
 
 .. toctree::
+   :glob:
+
+   operations/*
    
-   screenshots
+   
+Views
+-----
+   
+.. toctree::
+   :glob:
+   
+   views/*
+   

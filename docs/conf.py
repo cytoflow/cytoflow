@@ -44,9 +44,7 @@ ETSConfig.toolkit = 'null'
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-# sys.path.insert(0, os.path.abspath('../src/cytoflow'))
 sys.path.insert(0, os.path.abspath('..'))
-sys.path.insert(0, os.path.abspath('../..'))
 
 # -- General configuration ------------------------------------------------
 
@@ -57,7 +55,7 @@ sys.path.insert(0, os.path.abspath('../..'))
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 
-sys.path.insert(0, os.path.abspath('sphinxext'))
+# sys.path.insert(0, os.path.abspath('sphinxext'))
 
 extensions = [
     'sphinx.ext.autodoc',
@@ -67,8 +65,8 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.napoleon',
     'sphinx.ext.intersphinx',
-    'plot_directive',
-    'embedded_builder',
+    'sphinxext.plot_directive',
+    # 'sphinxext.embedded_builder',
     # 'fulltoc'
 ]
 
@@ -354,18 +352,18 @@ texinfo_documents = [
 #texinfo_no_detailmenu = False
 
 def setup(app):
-    app.connect('builder-inited', run_user_manual_apidoc)
-    app.connect('builder-inited', run_dev_manual_apidoc)
+#     app.connect('builder-inited', run_user_manual_apidoc)
+#     app.connect('builder-inited', run_dev_manual_apidoc)
     app.connect('builder-inited', set_user_manual_builder_config)
-    app.connect('build-finished', copy_embedded_help)
-
-    app.connect('build-finished', cleanup_apidoc)
+#     app.connect('build-finished', copy_embedded_help)
+# 
+#     app.connect('build-finished', cleanup_apidoc)
 
     sys.modules['sys'].IN_SPHINX = True
     
         
 def set_user_manual_builder_config(app):
-    if app.builder.name != 'user_manual':
+    if app.builder.name != 'embedded_help':
         return
 
     app.builder.config.html_copy_source = False
@@ -455,7 +453,7 @@ def cleanup_apidoc(app, exc):  # @UnusedVariable
             pass
 
 def copy_embedded_help(app, exc):  # @UnusedVariable
-    if app.builder.name != 'user_manual':
+    if app.builder.name != 'embedded_help':
         return
     
     dest_dir = pathlib.Path(__file__).parents[1].joinpath('cytoflowgui', 'help')

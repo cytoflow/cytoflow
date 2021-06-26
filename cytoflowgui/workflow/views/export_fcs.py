@@ -17,41 +17,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-"""
-Export FCS
------
-
-Exports FCS files from after this operation. Only really useful if
-you've done a calibration step or created derivative channels using
-the ratio option. As you set the options, the main plot shows a table
-of the files that will be created.
-
-.. object:: Base 
-    The prefix of the FCS file names
-
-.. object:: By 
-
-    A list of metadata attributes to aggregate the data before exporting.
-    For example, if the experiment has two pieces of metadata,
-    ``Time`` and ``Dox``, setting :attr:`by` to ``["Time", "Dox"]`` will export
-    one file for each subset of the data with a unique combination of
-    ``Time`` and ``Dox``.
-    
-.. object:: Keywords 
-
-    If you want to add more keywords to the FCS files' TEXT segment, 
-    specify them here.
-        
-.. object: Subset
- 
-    Select a subset of the data to export
-    
-.. object:: Export...
-
-    Choose a folder and export the FCS files.
-
-"""
-
 from textwrap import dedent
 
 from traits.api import provides, Str, List, Bool, observe, Property, Directory

@@ -17,6 +17,66 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+Parallel Coordinates Plot
+-------------------------
+
+Plots a parallel coordinates plot.  PC plots are good for multivariate data; 
+each vertical line represents one attribute, and one set of connected line 
+segments represents one data point.
+
+.. object:: Channels
+
+    The channels to plot, and their scales.  Drag the blue dot to re-order.
+    
+.. object:: Add Channel, Remove Channel
+
+    Add or remove a channel
+    
+.. object:: Horizonal Facet
+
+    Make multiple plots.  Each column has a unique value of this variable.
+    
+.. object:: Vertical Facet
+
+    Make multiple plots.  Each row has a unique value of this variable.
+    
+.. object:: Color Facet
+
+    Plot different values of a condition with different colors.
+
+.. object:: Color Scale
+
+    Scale the color palette and the color bar
+    
+.. object:: Tab Facet
+
+    Make multiple plots in differen tabs; each tab's plot has a unique value
+    of this variable.
+    
+.. object:: Subset
+
+    Plot only a subset of the data in the experiment.
+    
+.. plot::
+            
+    import cytoflow as flow
+    import_op = flow.ImportOp()
+    import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",
+                                 conditions = {'Dox' : 10.0}),
+                       flow.Tube(file = "Plate01/CFP_Well_A4.fcs",
+                                 conditions = {'Dox' : 1.0})]
+    import_op.conditions = {'Dox' : 'float'}
+    ex = import_op.apply()
+  
+    flow.ParallelCoordinatesView(channels = ['B1-A', 'V2-A', 'Y2-A', 'FSC-A'],
+                                 scale = {'Y2-A' : 'log',
+                                          'V2-A' : 'log',
+                                          'B1-A' : 'log',
+                                          'FSC-A' : 'log'},
+                                 huefacet = 'Dox').plot(ex)
+"""
+
 from natsort import natsorted
 from traits.api import provides, Event, Property, List, Str
 from traitsui.api import View, Item, EnumEditor, VGroup, HGroup, TextEditor, Controller, ButtonEditor

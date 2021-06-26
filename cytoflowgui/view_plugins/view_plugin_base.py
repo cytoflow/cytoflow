@@ -4,7 +4,7 @@ Created on Jan 16, 2021
 @author: brian
 '''
 
-import os
+import inspect, pathlib
 
 from traits.api import HasTraits, observe, HTML, Instance
 from traitsui.api import View, Item, HGroup, TextEditor, Controller, TupleEditor
@@ -30,22 +30,13 @@ class PluginHelpMixin(HasTraits):
             The HTML help in a single string.
         """
         
+        
+        # we name the help files the same as the module name for 
+        # the plugin. so, use the inspect module to figure that out.
+        
         if self._cached_help == "":
-            current_dir = os.path.abspath(__file__)
-            help_dir = os.path.split(current_dir)[0]
-            help_dir = os.path.split(help_dir)[0]
-            help_dir = os.path.join(help_dir, "help")
-             
-            view = self.get_view()
-            help_file = None
-            for klass in view.__class__.__mro__:
-                mod = klass.__module__
-                mod_html = mod + ".html"
-                 
-                h = os.path.join(help_dir, mod_html)
-                if os.path.exists(h):
-                    help_file = h
-                    break
+            class_path = pathlib.PurePath(inspect.getfile(self.__class__))
+            help_file = class_path.parents[1] / 'help' / 'views' / (class_path.stem + '.html')
                  
             with open(help_file, encoding = 'utf-8') as f:
                 self._cached_help = f.read()

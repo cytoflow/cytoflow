@@ -49,7 +49,7 @@ class HelpDockPane(TraitsDockPane):
     html = HTML("<b>Welcome to Cytoflow!</b>")
     
     traits_view = View(Item('pane.html',
-                            editor = HTMLEditor(base_url = pathlib.Path(__file__).parent.joinpath('help').as_posix()),
+                            editor = HTMLEditor(base_url = pathlib.PurePath(__file__).parent.joinpath('help').joinpath('operations').as_posix()),
                             show_label = False))
     
     def create_contents(self, parent):
@@ -73,7 +73,8 @@ class HelpDockPane(TraitsDockPane):
             
     @observe('model:selected:current_view', post_init = True)
     def _on_select_view(self, _):
-        self.help_id = self.model.selected.current_view.id
+        if self.model.selected:
+            self.help_id = self.model.selected.current_view.id
     
     @observe('help_id', post_init = True)
     def _on_help_id_changed(self, _):
