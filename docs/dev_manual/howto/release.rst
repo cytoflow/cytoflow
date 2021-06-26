@@ -1,69 +1,54 @@
 .. _dev_release:
 
 
-======================
 Spinning a new release
 ======================
 
 Tests
 -----
 
-- We use two continuous integration platforms to run tests and build binaries and documentations:
-  `GitHub Actions <https://github.com/cytoflow/cytoflow/actions>`_, 
+- We use three continuous integration platforms:
+  `Travis <https://travis-ci.org/bpteague/cytoflow>`_, 
+  `Appveyor <https://ci.appveyor.com/project/bpteague/cytoflow>`_, and
   `ReadTheDocs <https://readthedocs.org/projects/cytoflow/>`_.
-  
-  Finished releases are published to `GitHub releases <https://github.com/cytoflow/cytoflow/releases>`_,
-  `Anaconda Cloud <https://anaconda.org/cytoflow>`_, and the `Python Package Index <https://pypi.org/project/cytoflow/>`_.
-  
-- Make sure that the :mod:`cytoflow` tests pass, both locally and on GitHub::
+  We also publish to `Anaconda Cloud <https://anaconda.org/>`_.
+  Temporary build artifacts get published to `Bintray <https://bintray.com/bpteague/cytoflow/cytoflow#files>`_.
 
-  	  nose2 -c package/nose2.cfg cytoflow.tests -N 8
+- Make sure that the :mod:`cytoflow` tests pass, both locally and on Travis and Appveyor::
+
+  	  nose2 -c packaging/nose2.cfg -s cytoflow/tests
   
 - Make sure the :mod:`cytoflowgui` tests pass.  
-  **You must do this locally; I'm still working on why it doesn't run on the CI platform.** ::
+  **You must do this locally; it runs too long for the free CI platforms.** ::
 
-  	  nose2 -c package/nose2.cfg cytoflowgui.tests -N 8
-  	  
+  	  nose2 -c packaging/nose2.cfg -s cytoflowgui/tests
+
+- Make sure that the ReadTheDocs build is working.
+  
+- Make sure that the :mod:`pyinstaller` distribution will build on your local 
+  machine.  We are currently building with a custom version of PyIntaller that's
+  included as a submodule in `packaging/pyinstaller` ::
+
+  	  pyinstaller packaging/pyinstaller.spec
+
+- Make sure that the expected files (installers, conda packages, wheels, built extensions)
+  are getting published to Bintray.  Remember -- a failed deployment doesn't show
+  up on the CI platforms as a broken build!
+  
+- Make sure that :mod:`pyinstaller` built the executables on all three supported
+  platforms.  Download and test that all three start and can run a basic workflow.
+
     
 Documentation
 -------------
 
 - Build the API docs and check them for completeness::
 
-      python setup.py build_sphinx
+      python3 setup.py build_sphinx
   
 - Build the online docs and check them for completeness::
 
-  	  python setup.py build_sphinx -b embedded_help
-  	  
-Packaging
----------
-  	  
-- Build the conda package locally::
-
-      conda build package/conda_recipes/cytoflow
-      
-- Install the local package in a new environment::
-
-      conda create --name cytoflow.test --use-local cytoflow
-      
-- Activate the test environment, make sure you can import cytoflow, and make sure the GUI runs::
-
-      conda activate cytoflow.test
-      python -c "import cytoflow"
-      cytoflow    
-
-- Make sure that the :mod:`pyinstaller` distribution will build on your local 
-  machine (back in your development environment).  ::
-
-  	  pyinstaller package/pyinstaller.spec 
-
-- Make sure that the ReadTheDocs build is working.
-  
-- Make sure that :mod:`pyinstaller` built the executables on all three supported
-  platforms.  Download and test that all three start and can run a basic workflow.
-
-
+  	  python3 setup.py build_sphinx -b embedded_help
 
 Versioning and dependencies
 ---------------------------
@@ -71,7 +56,7 @@ Versioning and dependencies
 - We're using ``versioneer`` to manage versions.  No manual versions required.
 
 - If there are dependencies that don't have packages on Anaconda, add recipes
-  to ``package/conda_recipes`` (using ``conda skeleton``) and upload them to
+  to ``packaging/conda_recipes`` (using ``conda skeleton``) and upload them to
   the Anaconda Cloud.  Unless there's a really (really!) good reason, please
   make them no-arch.
   
@@ -80,17 +65,22 @@ Versioning and dependencies
 - Update the README.rst from the README.md.  From the project root, say::
 
   	pandoc --from=markdown --to=rst --output=README.rst README.md
-  	
-Tag and upload the release
---------------------------
   
 - Push the updated docs to GitHub.  Give the CI builders ~30 minutes, then 
-  check the build status on GitHub and ReadTheDocs.
+  check the build status on Travis_, Appveyor_, ReadTheDocs_ and `Anaconda Cloud`_.
 
 - Create a new tag on the master branch.  This will re-build everything on the CI
-  builders.
+  builders, create a new release on GitHub, and upload new source and wheels to 
+  PyPI and packages to Anaconda Cloud.
+ 
+- Double-check that the required files ended up on Bintray_.
 
-- Download the artifacts.
+- On branch ``gh-pages``, update the version in ``_config.yml``.  Push these
+  changes to update the main download links on 
+  http://bpteague.github.io/cytoflow
+
+- Download the wheels from Bintray or Github and add them to PyPI.  
+  TODO - use ``twine`` to release to PyPI from CI builders.
 
 Sign the Windows installer
 --------------------------
@@ -100,7 +90,7 @@ This requires a hardware crypto token, so it must be done locally.
 - Setup: If not done already, download and install the Windows Platform SDK. I'm using 8.1 
   because I couldn't get 10 to install.
 
-- Download the Windows installer from Github.
+- Download the Windows installer from Appveyor (or Github?)
 
 - Open a terminal in C:\Program Files\Microsoft Platform SDK\Bin.
 
@@ -122,17 +112,3 @@ This requires a hardware crypto token, so it must be done locally.
 - When prompted, enter the Common Profile PIN.
 
 - After the wizard closes, double-check that the signing process was completed by right-clicking on the executable and checking the "Digital Signatures" tab.
-
-Upload the artifacts and update the homepage
---------------------------------------------
-
-- Upload artifacts as appropriate to GitHub, Anaconda, and the Python Package Index.  
-  (Make sure that in the case of Anaconda, you're uploading to the organization account, not
-  your personal account!) The GitHub action should take care of the GitHub and Anaconda packages,
-  but not PyPI.
-
-- At https://github.com/cytoflow/cytoflow.github.io, update the version in 
-  ``_config.yml``. Push these changes to update the main download links on 
-  http://cytoflow.github.io/
-  
-- Verify that the download links at http://cytoflow.github.io/ still work!
