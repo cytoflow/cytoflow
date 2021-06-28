@@ -11,6 +11,7 @@ on. They can help you use Cytoflow more effectively!
    :maxdepth: 2
    
    facets
+   statistics
 
 ..
   Multivariate data - facets

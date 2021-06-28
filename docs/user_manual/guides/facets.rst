@@ -1,7 +1,7 @@
 .. _user_facets:
 
-Facets
-======
+Using *facets* to compare data sets
+===================================
 
 ``Cytoflow`` uses an idea called *facets* to help you analyze data. It's taken from
 Tufte's `trellis plots <https://en.wikipedia.org/wiki/Small_multiple>`_, which
@@ -42,7 +42,7 @@ the ``Color Facet`` setting:
 (No, you can't change the colors, at least not in the point-and-click interface -- 
 they're the from default 
 `Seaborn qualitative palette <https://seaborn.pydata.org/tutorial/color_palettes.html#qualitative-color-palettes>`_. 
-If you'd like to be able to change the colors, submit a bug request or (even better) a patch!)
+If you'd like to be able to change the colors, submit a feature request or (even better) a patch!)
 
 Finally, if you have multiple variables, you can set multiple facets at once to
 compare across them all. For example, I've added a ``Threshold`` gate called
