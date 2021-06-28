@@ -59,6 +59,7 @@ The density is visualized with a set of isolines.
     Plot only a subset of the data in the experiment.
 
 .. plot::
+   :include-source: False
 
     import cytoflow as flow
     import_op = flow.ImportOp()

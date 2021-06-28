@@ -46,7 +46,8 @@ Contents:
    
    guides/guides
    
-   reference/reference
+   api/cytoflow
+   
    
    
 Indices and tables

@@ -77,6 +77,7 @@ pair of elements with the same value of **Variable**; the X value is from
     Plot only a subset of the statistic.
 
 .. plot::
+   :include-source: False
 
     import cytoflow as flow
     import_op = flow.ImportOp()

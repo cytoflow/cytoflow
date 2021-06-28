@@ -130,6 +130,9 @@ The plot directive has the following configuration options:
 
     plot_template
         Provide a customized template for preparing restructured text.
+        
+        
+    Adapted from Matplotlib: https://github.com/matplotlib/matplotlib/blob/master/lib/matplotlib/sphinxext/plot_directive.py
 """
 
 import contextlib
@@ -152,6 +155,7 @@ import matplotlib
 from matplotlib.backend_bases import FigureManagerBase
 import matplotlib.pyplot as plt
 from matplotlib import _pylab_helpers, cbook
+from bleach._vendor.html5lib._ihatexml import name
 
 matplotlib.use("agg")
 align = Image.align

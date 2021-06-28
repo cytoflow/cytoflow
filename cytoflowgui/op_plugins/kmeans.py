@@ -49,6 +49,7 @@ an unsupervized manner.
     ``Time`` and ``Dox``.
 
 .. plot::
+   :include-source: False
 
     import cytoflow as flow
     import_op = flow.ImportOp()

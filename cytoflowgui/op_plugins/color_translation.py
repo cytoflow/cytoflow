@@ -49,7 +49,8 @@ the diagnostic plots look good.
     using the Python module interface.
     
 .. plot::
-    
+   :include-source: False
+
     import cytoflow as flow
     import_op = flow.ImportOp()
     import_op.tubes = [flow.Tube(file = "tasbe/mkate.fcs")]

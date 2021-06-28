@@ -53,7 +53,8 @@ Plots a 2-dimensional density plot.
     Plot only a subset of the data in the experiment.
     
 .. plot::
-        
+   :include-source: False
+
     import cytoflow as flow
     import_op = flow.ImportOp()
     import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",

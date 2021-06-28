@@ -49,7 +49,8 @@ Make a table out of a statistic.  The table can then be exported.
 
     
 .. plot::
-        
+   :include-source: False
+
     import cytoflow as flow
     import_op = flow.ImportOp()
     import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",

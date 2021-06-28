@@ -71,7 +71,8 @@ click-and-drag on the plot.
     Show only a subset of the data.
         
 .. plot::
-    
+   :include-source: False
+
     import cytoflow as flow
     import_op = flow.ImportOp()
     import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",

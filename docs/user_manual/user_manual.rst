@@ -21,6 +21,8 @@ Cytoflow program user manual
    
    reference/reference
    
+   screenshots/screenshots
+   
    faq
    
    

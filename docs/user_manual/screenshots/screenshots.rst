@@ -1,4 +1,4 @@
-.. _screenshots:
+.. _user_screenshots:
 
 *******************************
 Screenshots of the Cytoflow GUI

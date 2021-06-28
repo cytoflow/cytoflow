@@ -68,6 +68,7 @@ operation's **Group By**) must be set as **Variable** or as a facet.
     Plot only a subset of the statistic.
     
 .. plot::
+   :include-source: False
 
     import cytoflow as flow
     import_op = flow.ImportOp()

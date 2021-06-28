@@ -44,6 +44,7 @@ ETSConfig.toolkit = 'null'
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
+sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('..'))
 
 # -- General configuration ------------------------------------------------
@@ -55,8 +56,6 @@ sys.path.insert(0, os.path.abspath('..'))
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 
-# sys.path.insert(0, os.path.abspath('sphinxext'))
-
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.todo',
@@ -66,12 +65,7 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.intersphinx',
     'sphinxext.plot_directive',
-    # 'sphinxext.embedded_builder',
-    # 'fulltoc'
 ]
-
-if tags.has("user_manual"):  # @UndefinedVariable
-    extensions.remove('sphinx.ext.viewcode')
 
 # Generate the API documentation when building
 autosummary_generate = True
@@ -221,7 +215,7 @@ html_sidebars = { '**': ['about.html', 'globaltoc.html', 'relations.html', 'sour
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+# html_static_path = ['_static']
 
 # Add any extra paths that contain custom files (such as robots.txt or
 # .htaccess) here, relative to this directory. These files are copied
@@ -352,122 +346,20 @@ texinfo_documents = [
 #texinfo_no_detailmenu = False
 
 def setup(app):
-#     app.connect('builder-inited', run_user_manual_apidoc)
-#     app.connect('builder-inited', run_dev_manual_apidoc)
-    app.connect('builder-inited', set_user_manual_builder_config)
-#     app.connect('build-finished', copy_embedded_help)
-# 
-#     app.connect('build-finished', cleanup_apidoc)
-
+    app.connect('builder-inited', run_apidoc)
     sys.modules['sys'].IN_SPHINX = True
     
-        
-def set_user_manual_builder_config(app):
-    if app.builder.name != 'embedded_help':
-        return
 
-    app.builder.config.html_copy_source = False
-    app.builder.config.html_show_sourcelink = False
-    app.builder.config.html_show_copyright = False
-    app.builder.config.html_show_sphinx = False
+def run_apidoc(app):
     
-    app.builder.copysource = False
-    app.builder.add_permalinks = False
-    app.builder.embedded = True
-    app.builder.download_support = False
-    app.builder.search = False
-    
-    app.config.plot_include_source = False
+    os.environ['SPHINX_APIDOC_OPTIONS'] = 'no-undoc-members'
 
-def run_dev_manual_apidoc(app):
-    if app.builder.name == 'user_manual':
-        return
-    
     from sphinx.ext.apidoc import main
     sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
     curr_dir = pathlib.Path(os.path.abspath(os.path.dirname(__file__)))
     
-    output_dir = curr_dir / "dev_manual" / "reference"
-    
-    # remove stale API docs
-    try:
-        filelist = glob.glob(str(output_dir / "cytoflow*.rst"))
-        for f in filelist:
-            os.unlink(f)
-    except FileNotFoundError:
-        pass
+    output_dir = curr_dir / "dev_manual" / "api"
     
     module = curr_dir / ".." / "cytoflow"    
-    main(['-T', '-e', '-E', '-f', '-o', str(output_dir), str(module), str(module / "tests" / "*")])
+    main(['-T', '-e', '-E', '-f', '-o', str(output_dir), str(module), str(module / "tests" / "*"), str(module / "utility" / "logicle_ext")])
     
-
-def run_user_manual_apidoc(app):
-    if app.builder.name != 'user_manual':
-        return
-    
-    os.environ['SPHINX_APIDOC_OPTIONS'] = 'no-members'
-
-    from sphinx.ext.apidoc import main
-    sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-    curr_dir = pathlib.Path(os.path.abspath(os.path.dirname(__file__)))
-     
-    # operations
-    
-    output_dir = curr_dir / "user_manual" / "reference" / "operations"
-    module = curr_dir / ".." / "cytoflowgui" / "op_plugins"
-    
-    # remove stale GUI docs
-    try:
-        filelist = glob.glob(str(output_dir / "cytoflow*.rst"))
-        for f in filelist:
-            os.unlink(f)
-    except FileNotFoundError:
-        pass
-    
-    main(['-T', '-e', '-E', '-f', '-o', str(output_dir), str(module), str(module / "i_op_plugin.py"), str(module / "op_plugin_base.py")])    
-
-    # views
-    output_dir = curr_dir / "user_manual" / "reference" / "views"
-    module = curr_dir / ".." / "cytoflowgui" / "view_plugins"
-    
-    # remove stale GUI docs
-    try:
-        filelist = glob.glob(str(output_dir / "cytoflow*.rst"))
-        for f in filelist:
-            os.unlink(f)
-    except FileNotFoundError:
-        pass
-    
-    main(['-T', '-e', '-E', '-f', '-o', str(output_dir), str(module), str(module / "i_view_plugin.py"), str(module / "view_plugin_base.py")])  
-    
-def cleanup_apidoc(app, exc):  # @UnusedVariable
-    dirs = [pathlib.Path(os.path.abspath(os.path.dirname(__file__))) / d / "reference"
-            for d in ["user_manual", "dev_manual"]]
-    
-    for d in dirs:
-        try:
-            filelist = glob.glob(str(d / "cytoflow*.rst"))
-            for f in filelist:
-                os.unlink(f)
-        except FileNotFoundError:
-            pass
-
-def copy_embedded_help(app, exc):  # @UnusedVariable
-    if app.builder.name != 'embedded_help':
-        return
-    
-    dest_dir = pathlib.Path(__file__).parents[1].joinpath('cytoflowgui', 'help')
-    print("Copying {} to {}".format(app.outdir, dest_dir))
-    shutil.rmtree(dest_dir, ignore_errors = True)
-    shutil.copytree(app.outdir, dest_dir)
-    
-    img_dir_in = pathlib.Path(app.srcdir).joinpath('images').as_posix()
-    img_dir_out = pathlib.Path(dest_dir).joinpath('_images').as_posix()
-    
-    try:
-        filelist = glob.glob(os.path.join(img_dir_in, "*"))
-        for f in filelist:
-            print(f)
-            shutil.copy(f, img_dir_out)
-    except FileNotFoundError:
-        pass

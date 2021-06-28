@@ -53,9 +53,6 @@ sys.path.insert(0, os.path.abspath('../../..')) # the base project directory
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 
-
-print(sys.path)
-
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.todo',
