@@ -46,6 +46,7 @@ non-fluorescent, and that the module found the population median.
     using the Python module interface.
     
 .. plot::
+   :include-source: False
 
     import cytoflow as flow
     import_op = flow.ImportOp()

@@ -4,7 +4,7 @@ Created on Jan 17, 2021
 @author: brian
 '''
 
-import os
+import inspect, pathlib
 from pyface.qt import QtGui
 
 from traits.api import HasTraits, HTML, Instance, observe
@@ -88,22 +88,12 @@ class PluginHelpMixin(HasTraits):
             The HTML help, in a single string.
         """
         
+        # we name the help files the same as the module name for 
+        # the plugin. so, use the inspect module to figure that out.
+        
         if self._cached_help == "":
-            current_dir = os.path.abspath(__file__)
-            help_dir = os.path.split(current_dir)[0]
-            help_dir = os.path.split(help_dir)[0]
-            help_dir = os.path.join(help_dir, "help")
-            
-            op = self.get_operation()
-            help_file = None
-            for klass in op.__class__.__mro__:
-                mod = klass.__module__
-                mod_html = mod + ".html"
-                
-                h = os.path.join(help_dir, mod_html)
-                if os.path.exists(h):
-                    help_file = h
-                    break
+            class_path = pathlib.PurePath(inspect.getfile(self.__class__))
+            help_file = class_path.parents[1] / 'help' / 'operations' / (class_path.stem + '.html')
                 
             with open(help_file, encoding = 'utf-8') as f:
                 self._cached_help = f.read()

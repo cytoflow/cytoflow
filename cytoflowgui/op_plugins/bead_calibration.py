@@ -65,7 +65,8 @@ the peak finding work by tweaking , please submit a bug report!
 
     
 .. plot::
-    
+   :include-source: False
+
     import cytoflow as flow
     import_op = flow.ImportOp()
     import_op.tubes = [flow.Tube(file = "tasbe/rby.fcs")]

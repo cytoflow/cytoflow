@@ -1,3 +1,5 @@
+TODO - update this
+
 This is where the "ui adapter" bits go for the various views.  Each view gets
  - an optional class derived from traitsui.Controller, which wraps the view
    parameters in traits that are appropriate for the Experiment we're applying

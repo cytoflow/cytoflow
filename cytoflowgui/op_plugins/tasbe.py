@@ -37,7 +37,9 @@ translation) into one easy-use-interface.
         autofluorescence correction.
         
     .. plot:: 
-       :context: close-figs 
+       :context: close-figs
+       :include-source: False
+
     
         import cytoflow as flow
         import_op = flow.ImportOp()
@@ -67,7 +69,8 @@ translation) into one easy-use-interface.
     The FCS file containing the single-color control data.
     
     .. plot::
-       :context: close-figs 
+       :context: close-figs
+       :include-source: False
     
         bl_op = flow.BleedthroughLinearOp()
         bl_op.controls = {'Pacific Blue-A' : 'tasbe/ebfp.fcs',
@@ -112,6 +115,7 @@ translation) into one easy-use-interface.
     
     .. plot::
        :context: close-figs 
+       :include-source: False
     
         bead_op = flow.BeadCalibrationOp()
         beads = "Spherotech RCP-30-5A Lot AA01-AA04, AB01, AB02, AC01, GAA01-R"
@@ -145,6 +149,7 @@ translation) into one easy-use-interface.
 
     .. plot::
        :context: close-figs 
+       :include-source: False
     
         color_op = flow.ColorTranslationOp()
         color_op.controls = {("Pacific Blue-A", "FITC-A") : "tasbe/rby.fcs",

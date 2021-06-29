@@ -12,7 +12,7 @@ build:
   string: {{ "py38" }}
   script:
     - python setup.py build_ext --inplace
-    - python setup.py build_sphinx --builder embedded_help
+    - sphinx-build docs/user_manual/reference cytoflowgui/help
     - python setup.py install --single-version-externally-managed --record=record.txt
   entry_points:
     - cytoflow = cytoflowgui.run:run_gui

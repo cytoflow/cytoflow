@@ -17,75 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-"""
-Bar Chart
----------
 
-Plots a bar chart of a statistic.
-
-Each variable in the statistic (ie, each variable chosen in the statistic
-operation's **Group By**) must be set as **Variable** or as a facet.
-
-.. object:: Statistic
-
-    Which statistic to plot.
-    
-.. object:: Variable
-
-    The statistic variable to use as the major bar groups.
-    
-.. object:: Scale
-
-    How to scale the statistic plot.
-    
-.. object:: Horizontal Facet
-
-    Make muliple plots, with each column representing a subset of the statistic
-    with a different value for this variable.
-        
-.. object:: Vertical Facet
-
-    Make multiple plots, with each row representing a subset of the statistic
-    with a different value for this variable.
-    
-.. object:: Hue Facet
-
-    Make multiple bars with different colors; each color represents a subset
-    of the statistic with a different value for this variable.
-    
-.. object:: Error Statistic
-
-    A statistic to use to make the error bars.  Must have the same variables
-    as the statistic in **Statistic**.
-    
-.. object:: Subset
-
-    Plot only a subset of the statistic.
-    
-.. plot::
-        
-    import cytoflow as flow
-    import_op = flow.ImportOp()
-    import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",
-                                 conditions = {'Dox' : 10.0}),
-                       flow.Tube(file = "Plate01/CFP_Well_A4.fcs",
-                                 conditions = {'Dox' : 1.0})]
-    import_op.conditions = {'Dox' : 'float'}
-    ex = import_op.apply()
-
-    ex2 = flow.ThresholdOp(name = 'Threshold',
-                           channel = 'Y2-A',
-                           threshold = 2000).apply(ex)
-
-    ex3 = flow.ChannelStatisticOp(name = "ByDox",
-                                  channel = "Y2-A",
-                                  by = ['Dox', 'Threshold'],
-                                  function = len).apply(ex2) 
-    
-    flow.BarChartView(statistic = ("ByDox", "len"),
-                      variable = "Dox",
-                      huefacet = "Threshold").plot(ex3)
-"""
 
 from textwrap import dedent
 

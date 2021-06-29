@@ -53,6 +53,7 @@ Draw a range gate.  To draw a new range, click-and-drag across the plot.
     Show only a subset of the data.
    
 .. plot::
+   :include-source: False
 
     import cytoflow as flow
     import_op = flow.ImportOp()

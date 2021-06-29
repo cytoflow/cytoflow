@@ -78,6 +78,7 @@ estimating and applying a mixture model.
     ``Time`` and ``Dox``.
 
 .. plot::
+   :include-source: False
 
     import cytoflow as flow
     import_op = flow.ImportOp()

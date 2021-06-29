@@ -623,7 +623,7 @@ class BaseNDView(BaseDataView):
 @provides(IView)
 class BaseStatisticsView(BaseView):
     """
-    The base class for statisticxs views (as opposed to data views).
+    The base class for statistics views (as opposed to data views).
     
     Attributes
     ----------
@@ -651,7 +651,7 @@ class BaseStatisticsView(BaseView):
         -------
         iterator
             An iterator across the possible plot names. The iterator ALSO has an instance
-            attribute called :attribute:`by`, which holds a list of the facets that are
+            attribute called :attribute::`by`, which holds a list of the facets that are
             not yet set (and thus need to be specified in the plot name.)
         """
         

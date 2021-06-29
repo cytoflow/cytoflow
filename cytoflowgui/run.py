@@ -75,7 +75,11 @@ def run_gui():
 
     # need to import these before a QCoreApplication is instantiated.  and that seems
     # to happen in .... 'import cytoflow' ??
-    import pyface.qt.QtWebKit  # @UnusedImport
+    import pyface.qt.QtWebKit  # @UnusedImport  
+       
+    # set the app scaling to support HiDPI displays
+    from pyface.qt import QtGui, QtCore
+    QtGui.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)  
    
     # take care of the 3 places in the cytoflow module that
     # need different behavior in a GUI

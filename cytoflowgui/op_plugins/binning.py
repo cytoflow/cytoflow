@@ -46,6 +46,7 @@ which the event is located.
     *log* (in which case, **Bin Width** is in log10-units.)
 
 .. plot::
+   :include-source: False
 
     import cytoflow as flow
     import_op = flow.ImportOp()

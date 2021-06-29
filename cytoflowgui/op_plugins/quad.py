@@ -17,6 +17,79 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+Quadrant Gate
+-------------
+
+Draw a "quadrant" gate.  To create a new gate, just click where you'd like the
+intersection to be.  Creates a new metadata **Name**, with values ``name_1``,
+``name_2``, ``name_3``, ``name_4`` ordered **clockwise from upper-left.**
+
+.. note::
+
+    This matches the order of FACSDiva quad gates.
+    
+
+.. object:: Name
+
+    The operation name.  Used to name the new metadata field that's created by 
+    this operation.
+        
+.. object:: X channel
+
+    The name of the channel on the X axis.
+        
+.. object:: X threshold
+
+    The threshold in the X channel.
+
+.. object:: Y channel
+
+    The name of the channel on the Y axis.
+        
+.. object:: Y threshold
+
+    The threshold in the Y channel.
+
+.. object:: X Scale
+
+    The scale of the X axis for the interactive plot.
+    
+.. object:: Y Scale
+
+    The scale of the Y axis for the interactive plot
+    
+.. object:: Hue facet
+
+    Show different experimental conditions in different colors.
+    
+.. object:: Subset
+
+    Show only a subset of the data.
+        
+.. plot::
+   :include-source: False
+
+    import cytoflow as flow
+    import_op = flow.ImportOp()
+    import_op.tubes = [flow.Tube(file = "Plate01/RFP_Well_A3.fcs",
+                                 conditions = {'Dox' : 10.0}),
+                       flow.Tube(file = "Plate01/CFP_Well_A4.fcs",
+                                 conditions = {'Dox' : 1.0})]
+    import_op.conditions = {'Dox' : 'float'}
+    ex = import_op.apply()
+
+    quad = flow.QuadOp(name = "Quad",
+                       xchannel = "V2-A",
+                       xthreshold = 100,
+                       ychannel = "Y2-A",
+                       ythreshold = 1000)
+
+    qv = quad.default_view(xscale = 'log', yscale = 'log')
+    qv.plot(ex)
+"""
+
+
 from traits.api import provides
 from traitsui.api import View, Item, EnumEditor, VGroup, TextEditor
 from envisage.api import Plugin, contributes_to

@@ -54,6 +54,7 @@ polygon, double-click.
     Show only a subset of the data.
    
 .. plot::
+   :include-source: False
 
     import cytoflow as flow
     import_op = flow.ImportOp()

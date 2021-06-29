@@ -48,7 +48,7 @@ Import FCS files and associate them with experimental conditions (metadata.)
 
 ..  object:: The sample editor dialog
 
-    .. image:: _images/import.png
+    .. image:: images/import.png
 
     Allows you to specify FCS files in the experiment, and
     the experimental conditions that each tube (or well) was subject to.

@@ -130,6 +130,9 @@ The plot directive has the following configuration options:
 
     plot_template
         Provide a customized template for preparing restructured text.
+        
+        
+    Adapted from Matplotlib: https://github.com/matplotlib/matplotlib/blob/master/lib/matplotlib/sphinxext/plot_directive.py
 """
 
 import contextlib
@@ -152,6 +155,7 @@ import matplotlib
 from matplotlib.backend_bases import FigureManagerBase
 import matplotlib.pyplot as plt
 from matplotlib import _pylab_helpers, cbook
+from bleach._vendor.html5lib._ihatexml import name
 
 matplotlib.use("agg")
 align = Image.align
@@ -284,7 +288,7 @@ def contains_doctest(text):
         return False
     except SyntaxError:
         pass
-    r = re.compile(r'^\s*>>>', re.M)
+    r = re.compile(r'^\s*>>>', re.M)  # @UndefinedVariable
     m = r.search(text)
     return bool(m)
 
@@ -442,11 +446,11 @@ def run_code(code, code_path, ns=None, function_name=None):
         except OSError as err:
             raise OSError(str(err) + '\n`plot_working_directory` option in'
                           'Sphinx configuration file must be a valid '
-                          'directory path')
+                          'directory path') from err
         except TypeError as err:
             raise TypeError(str(err) + '\n`plot_working_directory` option in '
                             'Sphinx configuration file must be a string or '
-                            'None')
+                            'None') from err
     elif code_path is not None:
         dirname = os.path.abspath(os.path.dirname(code_path))
         os.chdir(dirname)
@@ -474,7 +478,7 @@ def run_code(code, code_path, ns=None, function_name=None):
                     exec(function_name + "()", ns)
 
         except (Exception, SystemExit):
-            raise PlotError(traceback.format_exc())
+            raise PlotError(traceback.format_exc()) from err
         finally:
             os.chdir(pwd)
     return ns
@@ -598,8 +602,8 @@ def render_figures(code, code_path, output_dir, output_base, context,
             for fmt, dpi in formats:
                 try:
                     figman.canvas.figure.savefig(img.filename(fmt), dpi=dpi)
-                except Exception:
-                    raise PlotError(traceback.format_exc())
+                except Exception as err:
+                    raise PlotError(traceback.format_exc()) from err
                 img.formats.append(fmt)
 
         results.append((code_piece, images))

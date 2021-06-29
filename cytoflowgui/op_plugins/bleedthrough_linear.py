@@ -56,6 +56,7 @@ the estimation looks good.  There must be at least two channels corrected.
     using the Python module interface.
     
 .. plot:: 
+   :include-source: False
 
     import cytoflow as flow
     import_op = flow.ImportOp()
