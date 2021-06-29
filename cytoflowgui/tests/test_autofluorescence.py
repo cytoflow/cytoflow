@@ -27,18 +27,17 @@ import os, unittest, tempfile
 import pandas as pd
 
 from cytoflowgui.tests.test_base import TasbeTest
-from cytoflowgui.workflow_item import WorkflowItem
-from cytoflowgui.op_plugins import AutofluorescencePlugin
-from cytoflowgui.subset import BoolSubset
-from cytoflowgui.serialization import load_yaml, save_yaml
+from cytoflowgui.workflow.workflow_item import WorkflowItem
+from cytoflowgui.workflow.operations import AutofluorescenceWorkflowOp
+from cytoflowgui.workflow.subset import BoolSubset
+from cytoflowgui.workflow.serialization import load_yaml, save_yaml
 
 class TestAutofluorescence(TasbeTest):
     
     def setUp(self):
         super().setUp()
          
-        plugin = AutofluorescencePlugin()
-        self.op = op = plugin.get_operation()
+        self.op = op = AutofluorescenceWorkflowOp()
         
         self.cwd = os.path.dirname(os.path.abspath(__file__))
         op.blank_file = self.cwd + "/../../cytoflow/tests/data/tasbe/blank.fcs"
@@ -50,7 +49,6 @@ class TestAutofluorescence(TasbeTest):
         self.wi = wi = WorkflowItem(operation = op,
                                     status = 'waiting',
                                     view_error = "Not yet plotted")
-        wi.default_view = self.op.default_view()
         wi.views.append(self.wi.default_view)
         self.workflow.workflow.append(wi)
         self.workflow.selected = self.wi

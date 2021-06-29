@@ -27,17 +27,16 @@ import os, unittest, tempfile
 import pandas as pd
 
 from cytoflowgui.tests.test_base import ImportedDataTest
-from cytoflowgui.workflow_item import WorkflowItem
-from cytoflowgui.op_plugins import BinningPlugin
-from cytoflowgui.serialization import load_yaml, save_yaml
+from cytoflowgui.workflow.workflow_item import WorkflowItem
+from cytoflowgui.workflow.operations import BinningWorkflowOp
+from cytoflowgui.workflow.serialization import load_yaml, save_yaml
 
 class TestBinning(ImportedDataTest):
     
     def setUp(self):
         super().setUp()
 
-        plugin = BinningPlugin()
-        self.op = op = plugin.get_operation()
+        self.op = op = BinningWorkflowOp()
         op.name = "Bin"
         op.channel = "V2-A"
         op.scale = "log"
@@ -46,7 +45,6 @@ class TestBinning(ImportedDataTest):
         self.wi = wi = WorkflowItem(operation = op,
                                     status = 'waiting',
                                     view_error = "Not yet plotted")
-        self.view = wi.default_view = op.default_view()
         wi.views.append(self.wi.default_view)
         
         self.workflow.workflow.append(wi)

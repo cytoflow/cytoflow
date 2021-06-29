@@ -26,8 +26,8 @@ Created on Jan 5, 2018
 import os, unittest, tempfile
 
 from cytoflowgui.tests.test_base import ImportedDataTest, Base1DStatisticsViewTest, params_traits_comparator
-from cytoflowgui.view_plugins.bar_chart import BarChartPlugin, BarChartPlotParams
-from cytoflowgui.serialization import load_yaml, save_yaml
+from cytoflowgui.workflow.views.bar_chart import BarChartWorkflowView, BarChartPlotParams
+from cytoflowgui.workflow.serialization import load_yaml, save_yaml
 
 class TestBarchart(ImportedDataTest, Base1DStatisticsViewTest):
     
@@ -35,15 +35,11 @@ class TestBarchart(ImportedDataTest, Base1DStatisticsViewTest):
         super().setUp()
 
         self.wi = wi = self.workflow.workflow[-1]        
-        plugin = BarChartPlugin()
-        self.view = view = plugin.get_view()
+        self.view = view = BarChartWorkflowView()
         wi.views.append(view)
-        wi.current_view = view  
-        
-        super().setUpView()      
-
-    def testPlot(self):
-        pass
+        wi.current_view = view
+    
+        super().setUpView()    
      
     def testPlotParams(self):
         super().testPlotParams()

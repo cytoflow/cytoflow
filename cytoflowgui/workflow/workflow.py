@@ -602,16 +602,14 @@ class RemoteWorkflow(HasStrictTraits):
     apply_calls = Int(0)
     plot_calls = Int(0)
     
-    def run(self, parent_workflow_conn, parent_mpl_conn, headless = False):
+    def run(self, parent_workflow_conn, parent_mpl_conn = None):
         
         # set up the plotting synchronization primitives
         self.matplotlib_events = threading.Event()
         self.plot_lock = threading.Lock()
         
         # configure matplotlib backend to use the pipe
-        if headless:
-            pass
-        else:
+        if parent_mpl_conn:
             plt.new_figure_manager = lambda num, parent_conn = parent_mpl_conn, process_events = self.matplotlib_events, plot_lock = self.plot_lock, *args, **kwargs: \
                                         cytoflowgui.matplotlib_backend_remote.new_figure_manager(num, 
                                                                                           parent_conn = parent_conn, 

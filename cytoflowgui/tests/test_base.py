@@ -48,15 +48,15 @@ matplotlib.use("Agg")
 import unittest, multiprocessing, os, logging
 from logging.handlers import QueueHandler, QueueListener
 
-from cytoflowgui.workflow import Workflow, RemoteWorkflow
-from cytoflowgui.workflow_item import WorkflowItem
+from cytoflowgui.workflow import LocalWorkflow, RemoteWorkflow
+from cytoflowgui.workflow.workflow_item import WorkflowItem
 from cytoflowgui.op_plugins import ImportPlugin, ThresholdPlugin, ChannelStatisticPlugin
-from cytoflowgui.subset import CategorySubset, RangeSubset
-from cytoflowgui.serialization import traits_eq, traits_hash
-from cytoflowgui.util import CallbackHandler
+from cytoflowgui.workflow.subset import CategorySubset, RangeSubset
+from cytoflowgui.workflow.serialization import traits_eq, traits_hash
+from cytoflowgui.utility import CallbackHandler
 
 
-def remote_main(parent_workflow_conn, parent_mpl_conn, log_q, running_event):
+def remote_main(parent_workflow_conn, log_q, running_event):
     # this should only ever be main method after a spawn() call 
     # (not fork). So we should have a fresh logger to set up.
         
@@ -70,7 +70,7 @@ def remote_main(parent_workflow_conn, parent_mpl_conn, log_q, running_event):
     logging.getLogger().setLevel(logging.DEBUG)   
 
     running_event.set()
-    RemoteWorkflow().run(parent_workflow_conn, parent_mpl_conn, headless = True)
+    RemoteWorkflow().run(parent_workflow_conn)
 
 class WorkflowTest(unittest.TestCase):
     
@@ -78,7 +78,6 @@ class WorkflowTest(unittest.TestCase):
         
         # communications channels
         parent_workflow_conn, child_workflow_conn = multiprocessing.Pipe()  
-        parent_mpl_conn, child_matplotlib_conn = multiprocessing.Pipe()
         running_event = multiprocessing.Event()
         
         # logging
@@ -96,7 +95,6 @@ class WorkflowTest(unittest.TestCase):
         remote_process = multiprocessing.Process(target = remote_main,
                                                  name = "remote process",
                                                  args = [parent_workflow_conn,
-                                                         parent_mpl_conn,
                                                          log_q,
                                                          running_event])
         
@@ -104,7 +102,7 @@ class WorkflowTest(unittest.TestCase):
         remote_process.start() 
         running_event.wait()
         
-        self.workflow = Workflow((child_workflow_conn, child_matplotlib_conn))
+        self.workflow = LocalWorkflow(child_workflow_conn)
         self.remote_process = remote_process
 
     def tearDown(self):
@@ -191,6 +189,7 @@ class ImportedDataTest(WorkflowTest):
                                   status = "waiting",
                                   view_error = "Not yet plotted")
         self.workflow.workflow.append(stats_wi_2)
+        self.workflow.selected = stats_wi_2
         self.workflow.wi_waitfor(stats_wi_2, 'status', 'valid')
 
 class TasbeTest(WorkflowTest):
@@ -226,7 +225,8 @@ class TasbeTest(WorkflowTest):
 
         wi = WorkflowItem(operation = op,
                           status = 'waiting')
-        self.workflow.workflow.append(wi)      
+        self.workflow.workflow.append(wi)     
+        self.workflow.selected = wi 
         self.workflow.wi_waitfor(wi, 'status', 'valid')
 
 
@@ -288,7 +288,6 @@ class BaseViewTest:
         
         # colwrap
         self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
-        self.view.variable = "IP"
         self.view.xfacet = "Dox"
         self.view.plot_params.col_wrap = 2
         self.workflow.wi_waitfor(self.wi, 'view_error', '')
