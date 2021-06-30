@@ -39,7 +39,11 @@ class TestBarchart(ImportedDataTest, Base1DStatisticsViewTest):
         wi.views.append(view)
         wi.current_view = view
     
-        super().setUpView()    
+        super().setUpView()
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
+    
+    def testBasePlot(self):
+        pass
      
     def testPlotParams(self):
         super().testPlotParams()

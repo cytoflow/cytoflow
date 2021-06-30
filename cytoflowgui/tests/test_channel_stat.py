@@ -27,8 +27,8 @@ import os, unittest, tempfile
 import pandas as pd
 
 from cytoflowgui.tests.test_base import ImportedDataTest
-from cytoflowgui.op_plugins.channel_stat import summary_functions
-from cytoflowgui.serialization import load_yaml, save_yaml
+from cytoflowgui.workflow.operations.channel_stat import summary_functions
+from cytoflowgui.workflow.serialization import load_yaml, save_yaml
 
 # we need these to exec() code in testNotebook
 from cytoflow import ci, geom_mean

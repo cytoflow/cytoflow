@@ -27,25 +27,22 @@ import os, unittest, tempfile
 import pandas as pd
 
 from cytoflowgui.tests.test_base import TasbeTest, params_traits_comparator
-from cytoflowgui.workflow_item import WorkflowItem
-from cytoflowgui.op_plugins import TasbePlugin
-from cytoflowgui.op_plugins.tasbe import _BleedthroughControl, _TranslationControl
-from cytoflowgui.subset import BoolSubset
-from cytoflowgui.serialization import load_yaml, save_yaml
+from cytoflowgui.workflow.workflow_item import WorkflowItem
+from cytoflowgui.workflow.operations.tasbe import TasbeWorkflowOp, BleedthroughControl, TranslationControl
+from cytoflowgui.workflow.subset import BoolSubset
+from cytoflowgui.workflow.serialization import load_yaml, save_yaml
 
 class TestTASBE(TasbeTest):
     
     def setUp(self):
         super().setUp()      
         
-        plugin = TasbePlugin()
-        self.op = op = plugin.get_operation()        
+        self.op = op = TasbeWorkflowOp()
         self.cwd = os.path.dirname(os.path.abspath(__file__))
         
         self.wi = wi = WorkflowItem(operation = op,
                                     status = 'waiting',
                                     view_error = "Not yet plotted")
-        wi.default_view = self.op.default_view()
         wi.views.append(self.wi.default_view)
         
         self.workflow.workflow.append(wi)
@@ -55,11 +52,11 @@ class TestTASBE(TasbeTest):
 
         op.blank_file = self.cwd + "/../../cytoflow/tests/data/tasbe/blank.fcs"     
         
-        op.bleedthrough_list = [_BleedthroughControl(channel = "FITC-A",
+        op.bleedthrough_list = [BleedthroughControl(channel = "FITC-A",
                                                      file = self.cwd + "/../../cytoflow/tests/data/tasbe/eyfp.fcs"),
-                                _BleedthroughControl(channel = "Pacific Blue-A",
+                                BleedthroughControl(channel = "Pacific Blue-A",
                                                      file = self.cwd + "/../../cytoflow/tests/data/tasbe/ebfp.fcs"),
-                                _BleedthroughControl(channel = "PE-Tx-Red-YG-A",
+                                BleedthroughControl(channel = "PE-Tx-Red-YG-A",
                                                      file = self.cwd + "/../../cytoflow/tests/data/tasbe/mkate.fcs")]
         
         op.beads_name = "Spherotech RCP-30-5A Lot AG01, AF02, AD04 and AAE01"
@@ -113,8 +110,7 @@ class TestTASBE(TasbeTest):
         self.workflow.wi_waitfor(self.wi, 'view_error', '')
 
     def testSerialize(self):
-        with params_traits_comparator(_BleedthroughControl), \
-                params_traits_comparator(_TranslationControl):
+        with params_traits_comparator(BleedthroughControl, TranslationControl):
             fh, filename = tempfile.mkstemp()
             try:
                 os.close(fh)

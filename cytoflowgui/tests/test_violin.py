@@ -25,18 +25,17 @@ Created on Jan 4, 2018
 import unittest, tempfile, os
 
 from cytoflowgui.tests.test_base import ImportedDataTest, Base1DViewTest, params_traits_comparator
-from cytoflowgui.workflow_item import WorkflowItem
-from cytoflowgui.op_plugins import RangePlugin
-from cytoflowgui.view_plugins.violin import ViolinPlotPlugin, ViolinPlotParams
-from cytoflowgui.serialization import save_yaml, load_yaml
+from cytoflowgui.workflow.workflow_item import WorkflowItem
+from cytoflowgui.workflow.operations import RangeWorkflowOp
+from cytoflowgui.workflow.views import ViolinPlotWorkflowView, ViolinPlotParams
+from cytoflowgui.workflow.serialization import save_yaml, load_yaml
 
 class TestViolin(ImportedDataTest, Base1DViewTest):
 
     def setUp(self):
         super().setUp()
         
-        plugin = RangePlugin()
-        self.op = op = plugin.get_operation()
+        self.op = op = RangeWorkflowOp()
         op.name = "Range"
         op.channel = "Y2-A"
         op.low = 100
@@ -48,14 +47,14 @@ class TestViolin(ImportedDataTest, Base1DViewTest):
         self.workflow.workflow.append(wi)
         self.workflow.selected = wi
 
-        plugin = ViolinPlotPlugin()
-        self.view = view = plugin.get_view()
+        self.view = view = ViolinPlotWorkflowView()
         wi.views.append(view)
         wi.current_view = view
         self.workflow.selected = self.wi
         
         self.view.variable = "Range"
         super().setUpView()
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
         
     def testBase(self):
         pass

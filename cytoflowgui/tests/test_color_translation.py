@@ -27,25 +27,23 @@ import os, unittest, tempfile
 import pandas as pd
 
 from cytoflowgui.tests.test_base import TasbeTest, params_traits_comparator
-from cytoflowgui.workflow_item import WorkflowItem
-from cytoflowgui.op_plugins import ColorTranslationPlugin
-from cytoflowgui.op_plugins.color_translation import _Control
-from cytoflowgui.subset import BoolSubset
-from cytoflowgui.serialization import load_yaml, save_yaml
+from cytoflowgui.workflow.workflow_item import WorkflowItem
+from cytoflowgui.workflow.operations import ColorTranslationWorkflowOp, ColorTranslationControl
+from cytoflowgui.workflow.subset import BoolSubset
+from cytoflowgui.workflow.serialization import load_yaml, save_yaml
 
 class TestColorTranslation(TasbeTest):
     
     def setUp(self):
         super().setUp()
          
-        plugin = ColorTranslationPlugin()
-        self.op = op = plugin.get_operation()
+        self.op = op = ColorTranslationWorkflowOp()
         
         self.cwd = os.path.dirname(os.path.abspath(__file__))
         self.rby_file = self.cwd + "/../../cytoflow/tests/data/tasbe/rby.fcs"
-        op.controls_list = [_Control(from_channel = "Pacific Blue-A",
-                                     to_channel = "FITC-A",
-                                     file = self.rby_file)]
+        op.controls_list = [ColorTranslationControl(from_channel = "Pacific Blue-A",
+                                                    to_channel = "FITC-A",
+                                                    file = self.rby_file)]
 #         op.channels = ["FITC-A", "Pacific Blue-A", "PE-Tx-Red-YG-A"]
         op.subset_list.append(BoolSubset(name = "Morpho"))
         op.subset_list[0].selected_t = True
@@ -53,7 +51,6 @@ class TestColorTranslation(TasbeTest):
         self.wi = wi = WorkflowItem(operation = op,
                                     status = 'waiting',
                                     view_error = "Not yet plotted")
-        wi.default_view = self.op.default_view()
         wi.views.append(self.wi.default_view)
         self.workflow.workflow.append(wi)
         self.workflow.selected = self.wi
@@ -67,9 +64,9 @@ class TestColorTranslation(TasbeTest):
   
     def testAddChannel(self):
         self.workflow.wi_sync(self.wi, 'status', 'waiting')
-        self.op.controls_list.append(_Control(from_channel = "PE-Tx-Red-YG-A",
-                                              to_channel = "FITC-A",
-                                              file = self.rby_file))
+        self.op.controls_list.append(ColorTranslationControl(from_channel = "PE-Tx-Red-YG-A",
+                                                             to_channel = "FITC-A",
+                                                             file = self.rby_file))
         self.workflow.wi_waitfor(self.wi, 'status', 'invalid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
         
@@ -121,7 +118,7 @@ class TestColorTranslation(TasbeTest):
         self.workflow.wi_waitfor(self.wi, 'view_error', '')
 
     def testSerialize(self):
-        with params_traits_comparator(_Control):
+        with params_traits_comparator(ColorTranslationControl):
             fh, filename = tempfile.mkstemp()
             try:
                 os.close(fh)

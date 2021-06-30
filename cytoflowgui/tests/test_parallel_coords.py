@@ -25,8 +25,8 @@ Created on Jan 4, 2018
 import unittest, tempfile, os
 
 from cytoflowgui.tests.test_base import ImportedDataTest, BaseDataViewTest, params_traits_comparator
-from cytoflowgui.view_plugins.parallel_coords import ParallelCoordinatesPlugin, _Channel, ParallelCoordinatesPlotParams
-from cytoflowgui.serialization import save_yaml, load_yaml
+from cytoflowgui.workflow.views import ParallelCoordinatesWorkflowView, ParallelCoordinatesPlotParams, ParallelCoordinatesChannel as Channel
+from cytoflowgui.workflow.serialization import save_yaml, load_yaml
 
 class TestParallelCoords(ImportedDataTest, BaseDataViewTest):
 
@@ -34,25 +34,22 @@ class TestParallelCoords(ImportedDataTest, BaseDataViewTest):
         super().setUp()
 
         self.wi = wi = self.workflow.workflow[-1]
-        self.wi.operation.events = 500
-        self.wi.operation.do_estimate = True
         
-        plugin = ParallelCoordinatesPlugin()
-        self.view = view = plugin.get_view()
+        self.view = view = ParallelCoordinatesWorkflowView()
         
-        view.channels_list = [_Channel(channel = "B1-A", scale = "log"),
-                              _Channel(channel = "V2-A", scale = "log"),
-                              _Channel(channel = "Y2-A", scale = "log")]
+        view.channels_list = [Channel(channel = "B1-A", scale = "log"),
+                              Channel(channel = "V2-A", scale = "log"),
+                              Channel(channel = "Y2-A", scale = "log")]
 
         wi.views.append(view)
         wi.current_view = view
         self.workflow.selected = self.wi
         
         super().setUpView()
-        
         self.workflow.wi_waitfor(self.wi, 'view_error', '')
-                
+                        
     def testBase(self):
+        self.fail("Fix this whole test fixture!  Lots of failures, but not showing.")
         pass
 
     def testChangeScale(self):
@@ -67,12 +64,12 @@ class TestParallelCoords(ImportedDataTest, BaseDataViewTest):
         
     def testAddChannel(self):
         self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
-        self.view.channels_list.append(_Channel(channel = "FSC-A", scale = "log"))
+        self.view.channels_list.append(Channel(channel = "FSC-A", scale = "log"))
         self.workflow.wi_waitfor(self.wi, 'view_error', '')
 
     def testRemoveChannel(self):
         self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
-        self.view.channels_list.append(_Channel(channel = "FSC-A", scale = "log"))
+        self.view.channels_list.append(Channel(channel = "FSC-A", scale = "log"))
         self.workflow.wi_waitfor(self.wi, 'view_error', '')
 
         self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
@@ -99,7 +96,7 @@ class TestParallelCoords(ImportedDataTest, BaseDataViewTest):
         exec(code)
 
     def testSerialize(self):
-        with params_traits_comparator(_Channel), \
+        with params_traits_comparator(Channel), \
                 params_traits_comparator(ParallelCoordinatesPlotParams):
             fh, filename = tempfile.mkstemp()
             try:

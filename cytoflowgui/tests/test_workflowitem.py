@@ -26,20 +26,17 @@ Created on Jan 5, 2018
 import os, tempfile, pandas
 
 from cytoflowgui.tests.test_base import ImportedDataTest, params_traits_comparator
-from cytoflowgui.serialization import load_yaml, save_yaml, save_notebook
-from cytoflowgui.workflow_item import WorkflowItem
-from cytoflowgui.subset import CategorySubset, RangeSubset
-from cytoflowgui.op_plugins.import_op import ImportPluginOp
-from cytoflowgui.op_plugins.channel_stat import ChannelStatisticPlugin, ChannelStatisticPluginOp
+from cytoflowgui.workflow.serialization import load_yaml, save_yaml
+from cytoflowgui.workflow.workflow_item import WorkflowItem
+from cytoflowgui.workflow.subset import CategorySubset, RangeSubset
+from cytoflowgui.workflow.operations import ImportWorkflowOp, ChannelStatisticWorkflowOp
 
 class TestWorkflowItem(ImportedDataTest):
     
     def setUp(self):
         super().setUp()
         
-        stats_plugin = ChannelStatisticPlugin()
-
-        stats_op = stats_plugin.get_operation()
+        stats_op = ChannelStatisticWorkflowOp()
         stats_op.name = "MeanByDoxWell"
         stats_op.channel = "Y2-A"
         stats_op.statistic_name = "Geom.Mean"
@@ -62,7 +59,7 @@ class TestWorkflowItem(ImportedDataTest):
         self.workflow.selected = wi
                 
     def testSerializeMultiIndexV1(self):
-        with params_traits_comparator(WorkflowItem, ImportPluginOp, ChannelStatisticPluginOp):
+        with params_traits_comparator(WorkflowItem, ImportWorkflowOp, ChannelStatisticWorkflowOp):
             fh, filename = tempfile.mkstemp()
             try:
                 os.close(fh)
@@ -82,7 +79,7 @@ class TestWorkflowItem(ImportedDataTest):
         
         
     def testSerialize(self):
-        with params_traits_comparator(WorkflowItem, ImportPluginOp, ChannelStatisticPluginOp):
+        with params_traits_comparator(WorkflowItem, ImportWorkflowOp, ChannelStatisticWorkflowOp):
             fh, filename = tempfile.mkstemp()
             try:
                 os.close(fh)
@@ -100,15 +97,16 @@ class TestWorkflowItem(ImportedDataTest):
                                      new_workflow[i].trait_get(self.workflow.workflow[i].copyable_trait_names(status = lambda t: t is not True)))
              
              
-    def testSaveNotebook(self):
-        # this is just a smoke test
-        
-        fh, filename = tempfile.mkstemp()
-        try:
-            os.close(fh)
-            
-            save_notebook(self.workflow.workflow, filename)
-            
-        finally:
-            os.unlink(filename)
+# TODO - TEST THIS
+#     def testSaveNotebook(self):
+#         # this is just a smoke test
+#         
+#         fh, filename = tempfile.mkstemp()
+#         try:
+#             os.close(fh)
+#             
+#             save_notebook(self.workflow.workflow, filename)
+#             
+#         finally:
+#             os.unlink(filename)
             

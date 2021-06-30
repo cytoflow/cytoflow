@@ -27,25 +27,23 @@ import os, unittest, tempfile
 import pandas as pd
 
 from cytoflowgui.tests.test_base import ImportedDataTest, params_traits_comparator
-from cytoflowgui.workflow_item import WorkflowItem
-from cytoflowgui.op_plugins import PCAPlugin
-from cytoflowgui.op_plugins.pca import _Channel
-from cytoflowgui.subset import CategorySubset, RangeSubset
-from cytoflowgui.serialization import load_yaml, save_yaml
+from cytoflowgui.workflow.workflow_item import WorkflowItem
+from cytoflowgui.workflow.operations import PCAWorkflowOp, PCAChannel
+from cytoflowgui.workflow.subset import CategorySubset, RangeSubset
+from cytoflowgui.workflow.serialization import load_yaml, save_yaml
 
 class TestPCA(ImportedDataTest):
     
     def setUp(self):
         super().setUp()
 
-        plugin = PCAPlugin()
-        self.op = op = plugin.get_operation()
+        self.op = op = PCAWorkflowOp()
         
         op.name = "PCA"
-        op.channels_list = [_Channel(channel = "V2-A", scale = "log"),
-                            _Channel(channel = "V2-H", scale = "log"),
-                            _Channel(channel = "Y2-A", scale = "log"),
-                            _Channel(channel = "Y2-H", scale = "log")]
+        op.channels_list = [PCAChannel(channel = "V2-A", scale = "log"),
+                            PCAChannel(channel = "V2-H", scale = "log"),
+                            PCAChannel(channel = "Y2-A", scale = "log"),
+                            PCAChannel(channel = "Y2-H", scale = "log")]
         op.num_components = 2
                 
         op.subset_list.append(CategorySubset(name = "Well",
@@ -82,7 +80,7 @@ class TestPCA(ImportedDataTest):
         
     def testAddChannel(self):
         self.workflow.wi_sync(self.wi, 'status', 'waiting')
-        self.op.channels_list.append(_Channel(channel = "B1-A", scale = "log"))
+        self.op.channels_list.append(PCAChannel(channel = "B1-A", scale = "log"))
         self.workflow.wi_waitfor(self.wi, 'status', 'invalid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
 
@@ -147,7 +145,7 @@ class TestPCA(ImportedDataTest):
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is not None"))
    
     def testSerializeOp(self):
-        with params_traits_comparator(_Channel):
+        with params_traits_comparator(PCAChannel):
             fh, filename = tempfile.mkstemp()
             try:
                 os.close(fh)

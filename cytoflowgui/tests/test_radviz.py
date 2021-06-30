@@ -25,9 +25,9 @@ Created on Jan 4, 2018
 import unittest, tempfile, os
 
 from cytoflowgui.tests.test_base import ImportedDataTest, BaseDataViewTest, params_traits_comparator
-from cytoflowgui.view_plugins.radviz import RadvizPlugin, _Channel, RadvizPlotParams
-from cytoflowgui.view_plugins.scatterplot import SCATTERPLOT_MARKERS
-from cytoflowgui.serialization import save_yaml, load_yaml
+from cytoflowgui.workflow.views import RadvizWorkflowView, RadvizPlotParams, RadvizChannel as Channel
+from cytoflowgui.workflow.views.scatterplot import SCATTERPLOT_MARKERS
+from cytoflowgui.workflow.serialization import save_yaml, load_yaml
 
 class TestRadviz(ImportedDataTest, BaseDataViewTest):
 
@@ -38,23 +38,21 @@ class TestRadviz(ImportedDataTest, BaseDataViewTest):
         self.wi.operation.events = 500
         self.wi.operation.do_estimate = True
         
-        plugin = RadvizPlugin()
-        self.view = view = plugin.get_view()
+        self.view = view = RadvizWorkflowView()
         
-        view.channels_list = [_Channel(channel = "B1-A", scale = "log"),
-                              _Channel(channel = "V2-A", scale = "log"),
-                              _Channel(channel = "Y2-A", scale = "log")]
+        view.channels_list = [Channel(channel = "B1-A", scale = "log"),
+                              Channel(channel = "V2-A", scale = "log"),
+                              Channel(channel = "Y2-A", scale = "log")]
 
         wi.views.append(view)
         wi.current_view = view
         self.workflow.selected = self.wi
         
         super().setUpView()
-        
         self.workflow.wi_waitfor(self.wi, 'view_error', '')
                 
     def testBase(self):
-        pass
+        self.fail("Lots of failures here too - assertion errors, but not caught!")
 
     def testChangeScale(self):
         self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
@@ -68,12 +66,12 @@ class TestRadviz(ImportedDataTest, BaseDataViewTest):
         
     def testAddChannel(self):
         self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
-        self.view.channels_list.append(_Channel(channel = "FSC-A", scale = "log"))
+        self.view.channels_list.append(Channel(channel = "FSC-A", scale = "log"))
         self.workflow.wi_waitfor(self.wi, 'view_error', '')
 
     def testRemoveChannel(self):
         self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
-        self.view.channels_list.append(_Channel(channel = "FSC-A", scale = "log"))
+        self.view.channels_list.append(Channel(channel = "FSC-A", scale = "log"))
         self.workflow.wi_waitfor(self.wi, 'view_error', '')
 
         self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
@@ -114,7 +112,7 @@ class TestRadviz(ImportedDataTest, BaseDataViewTest):
         exec(code)
 
     def testSerialize(self):
-        with params_traits_comparator(_Channel), params_traits_comparator(RadvizPlotParams):
+        with params_traits_comparator(Channel), params_traits_comparator(RadvizPlotParams):
             fh, filename = tempfile.mkstemp()
             try:
                 os.close(fh)

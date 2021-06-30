@@ -27,10 +27,9 @@ import os, unittest, tempfile
 import pandas as pd
 
 from cytoflowgui.tests.test_base import TasbeTest, params_traits_comparator
-from cytoflowgui.workflow_item import WorkflowItem
-from cytoflowgui.op_plugins import BeadCalibrationPlugin
-from cytoflowgui.op_plugins.bead_calibration import _Unit
-from cytoflowgui.serialization import save_yaml, load_yaml
+from cytoflowgui.workflow.workflow_item import WorkflowItem
+from cytoflowgui.workflow.operations import BeadCalibrationWorkflowOp, BeadCalibrationUnit
+from cytoflowgui.workflow.serialization import save_yaml, load_yaml
 import cytoflowgui.op_plugins.bead_calibration  # @UnusedImport
 
 class TestBeadCalibration(TasbeTest):
@@ -38,19 +37,17 @@ class TestBeadCalibration(TasbeTest):
     def setUp(self):
         super().setUp()
  
-        plugin = BeadCalibrationPlugin()
-        self.op = op = plugin.get_operation()
+        self.op = op = BeadCalibrationWorkflowOp()
         
         self.cwd = os.path.dirname(os.path.abspath(__file__))
         op.beads_name = "Spherotech RCP-30-5A Lot AG01, AF02, AD04 and AAE01"
         op.beads_file = self.cwd + "/../../cytoflow/tests/data/tasbe/beads.fcs"
-        op.units_list = [_Unit(channel = "FITC-A", unit = "MEFL"),
-                         _Unit(channel = "Pacific Blue-A", unit = "MEBFP")]
+        op.units_list = [BeadCalibrationUnit(channel = "FITC-A", unit = "MEFL"),
+                         BeadCalibrationUnit(channel = "Pacific Blue-A", unit = "MEBFP")]
         
         self.wi = wi = WorkflowItem(operation = op,
                                     status = 'waiting',
                                     view_error = "Not yet plotted")
-        wi.default_view = self.op.default_view()
         wi.views.append(self.wi.default_view)
         
         self.workflow.workflow.append(wi)
@@ -90,7 +87,7 @@ class TestBeadCalibration(TasbeTest):
         
     def testAddChannel(self):
         self.workflow.wi_sync(self.wi, 'status', 'waiting')
-        self.op.units_list.append(_Unit(channel = "PE-Tx-Red-YG-A", unit = "MEPTR"))
+        self.op.units_list.append(BeadCalibrationUnit(channel = "PE-Tx-Red-YG-A", unit = "MEPTR"))
         self.workflow.wi_waitfor(self.wi, 'status', 'invalid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[-1].result is None"))
 
@@ -138,7 +135,7 @@ class TestBeadCalibration(TasbeTest):
         self.workflow.wi_waitfor(self.wi, 'view_error', '')
 
     def testSerialize(self):
-        with params_traits_comparator(_Unit):
+        with params_traits_comparator(BeadCalibrationUnit):
             fh, filename = tempfile.mkstemp()
             try:
                 os.close(fh)

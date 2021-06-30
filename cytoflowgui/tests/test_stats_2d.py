@@ -26,12 +26,12 @@ Created on Jan 5, 2018
 import os, unittest, tempfile
 
 from cytoflowgui.tests.test_base import ImportedDataTest, Base2DStatisticsViewTest, params_traits_comparator
-from cytoflowgui.view_plugins.stats_2d import Stats2DPlugin, Stats2DPlotParams, LINE_STYLES
-from cytoflowgui.view_plugins.scatterplot import SCATTERPLOT_MARKERS
+from cytoflowgui.workflow.views.stats_2d import Stats2DWorkflowView, Stats2DPlotParams, LINE_STYLES
+from cytoflowgui.workflow.views.scatterplot import SCATTERPLOT_MARKERS
 from cytoflowgui.op_plugins import ChannelStatisticPlugin
-from cytoflowgui.workflow_item import WorkflowItem
-from cytoflowgui.subset import CategorySubset, RangeSubset
-from cytoflowgui.serialization import load_yaml, save_yaml
+from cytoflowgui.workflow.workflow_item import WorkflowItem
+from cytoflowgui.workflow.subset import CategorySubset, RangeSubset
+from cytoflowgui.workflow.serialization import load_yaml, save_yaml
 
 class TestStats2D(ImportedDataTest, Base2DStatisticsViewTest):
     
@@ -78,14 +78,14 @@ class TestStats2D(ImportedDataTest, Base2DStatisticsViewTest):
                 
         self.wi = wi = self.workflow.workflow[-1]      
 
-        plugin = Stats2DPlugin()
-        self.view = view = plugin.get_view()
+        self.view = view = Stats2DWorkflowView()
         wi.views.append(view)
         wi.current_view = view
         
         super().setUpView()
 
         self.workflow.selected = wi
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
 
     def testPlot(self):
         pass

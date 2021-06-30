@@ -25,8 +25,8 @@ Created on Jan 4, 2018
 import unittest, tempfile, os
 
 from cytoflowgui.tests.test_base import ImportedDataTest, Base2DViewTest, params_traits_comparator
-from cytoflowgui.view_plugins.histogram_2d import Histogram2DPlugin, Histogram2DParams
-from cytoflowgui.serialization import save_yaml, load_yaml
+from cytoflowgui.workflow.views import Histogram2DWorkflowView, Histogram2DPlotParams
+from cytoflowgui.workflow.serialization import save_yaml, load_yaml
 
 class TestHistogram2D(ImportedDataTest, Base2DViewTest):
 
@@ -34,8 +34,7 @@ class TestHistogram2D(ImportedDataTest, Base2DViewTest):
         super().setUp()
 
         self.wi = wi = self.workflow.workflow[-1]
-        plugin = Histogram2DPlugin()
-        self.view = view = plugin.get_view()
+        self.view = view = Histogram2DWorkflowView()
         wi.views.append(view)
         wi.current_view = view
         self.workflow.selected = self.wi
@@ -62,7 +61,7 @@ class TestHistogram2D(ImportedDataTest, Base2DViewTest):
         self.workflow.wi_waitfor(self.wi, 'view_error', '')
 
     def testSerialize(self):
-        with params_traits_comparator(Histogram2DParams):
+        with params_traits_comparator(Histogram2DPlotParams):
             fh, filename = tempfile.mkstemp()
             try:
                 os.close(fh)

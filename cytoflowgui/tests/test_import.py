@@ -26,8 +26,8 @@ import unittest, tempfile, os
 import pandas as pd
 
 from cytoflowgui.tests.test_base import ImportedDataTest, TasbeTest
-from cytoflowgui.serialization import save_yaml, load_yaml
-from cytoflowgui.op_plugins.import_op import ImportPluginOp, Channel
+from cytoflowgui.workflow.serialization import save_yaml, load_yaml
+from cytoflowgui.workflow.operations import ImportWorkflowOp, ImportChannel
 
 
 class TestImport(ImportedDataTest):
@@ -55,7 +55,7 @@ class TestImport(ImportedDataTest):
     def testChannelRename(self):
          
         self.workflow.wi_sync(self.wi, 'status', 'waiting')
-        self.op.channels_list = [Channel(channel = 'SSC-A', name = 'SSC_A')]
+        self.op.channels_list = [ImportChannel(channel = 'SSC-A', name = 'SSC_A')]
         self.workflow.wi_waitfor(self.wi, 'status', 'invalid')
         self.assertTrue(self.workflow.remote_eval("self.workflow[0].result is None"))
 
@@ -90,7 +90,7 @@ class TestImport(ImportedDataTest):
         try:
             os.close(fh)
              
-            save_yaml(op, filename, lock_versions = {ImportPluginOp : 1})
+            save_yaml(op, filename, lock_versions = {ImportWorkflowOp : 1})
             new_op = load_yaml(filename)
              
         finally:
@@ -108,7 +108,7 @@ class TestImport(ImportedDataTest):
         try:
             os.close(fh)
              
-            save_yaml(op, filename, lock_versions = {ImportPluginOp : 2})
+            save_yaml(op, filename, lock_versions = {ImportWorkflowOp : 2})
             new_op = load_yaml(filename)
              
         finally:

@@ -27,18 +27,17 @@ import os, unittest, tempfile
 import pandas as pd
 
 from cytoflowgui.tests.test_base import ImportedDataTest
-from cytoflowgui.workflow_item import WorkflowItem
-from cytoflowgui.op_plugins import GaussianMixture1DPlugin
-from cytoflowgui.subset import CategorySubset, RangeSubset
-from cytoflowgui.serialization import load_yaml, save_yaml
+from cytoflowgui.workflow.workflow_item import WorkflowItem
+from cytoflowgui.workflow.operations import GaussianMixture1DWorkflowOp
+from cytoflowgui.workflow.subset import CategorySubset, RangeSubset
+from cytoflowgui.workflow.serialization import load_yaml, save_yaml
 
 class TestGaussian1D(ImportedDataTest):
     
     def setUp(self):
         super().setUp()
 
-        plugin = GaussianMixture1DPlugin()
-        self.op = op = plugin.get_operation()
+        self.op = op = GaussianMixture1DWorkflowOp()
         
         op.name = "Gauss"
         op.channel = "V2-A"
@@ -51,7 +50,6 @@ class TestGaussian1D(ImportedDataTest):
         self.wi = wi = WorkflowItem(operation = op,
                                     status = 'waiting',
                                     view_error = "Not yet plotted")
-        wi.default_view = op.default_view()
         wi.views.append(self.wi.default_view)        
         self.workflow.workflow.append(wi)
         self.workflow.selected = wi

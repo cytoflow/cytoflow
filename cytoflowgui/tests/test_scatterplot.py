@@ -25,22 +25,22 @@ Created on Jan 4, 2018
 import unittest, os, tempfile
 
 from cytoflowgui.tests.test_base import ImportedDataTest, Base2DViewTest, params_traits_comparator
-from cytoflowgui.view_plugins.scatterplot import SCATTERPLOT_MARKERS, ScatterplotPlugin, ScatterplotPlotParams
-from cytoflowgui.serialization import load_yaml, save_yaml
+from cytoflowgui.workflow.views.scatterplot import SCATTERPLOT_MARKERS, ScatterplotWorkflowView, ScatterplotPlotParams
+from cytoflowgui.workflow.serialization import load_yaml, save_yaml
 
 class TestScatterplot(ImportedDataTest, Base2DViewTest):
 
     def setUp(self):
         super().setUp()
 
-        self.wi = wi = self.workflow.workflow[0]
-        plugin = ScatterplotPlugin()
-        self.view = view = plugin.get_view()
+        self.wi = wi = self.workflow.workflow[-1]
+        self.view = view = ScatterplotWorkflowView()
         wi.views.append(view)
         wi.current_view = view
         self.workflow.selected = wi
         
         super().setUpView()
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
         
     def testBase(self):
         pass

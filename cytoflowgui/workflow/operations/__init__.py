@@ -1,6 +1,6 @@
 
 from .operation_base import IWorkflowOperation
-from .import_op import ImportWorkflowOp
+from .import_op import ImportWorkflowOp, Channel as ImportChannel
 
 from .threshold import ThresholdWorkflowOp, ThresholdSelectionView
 from .quad import QuadWorkflowOp, QuadSelectionView

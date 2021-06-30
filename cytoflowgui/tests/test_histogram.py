@@ -40,6 +40,7 @@ class TestHistogram(ImportedDataTest, Base1DViewTest):
         self.workflow.selected = self.wi
         
         super().setUpView()
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
                 
     def testBaseHistogram(self):
         pass

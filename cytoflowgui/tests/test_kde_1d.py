@@ -25,8 +25,8 @@ Created on Jan 4, 2018
 import unittest, tempfile, os
 
 from cytoflowgui.tests.test_base import ImportedDataTest, Base1DViewTest, params_traits_comparator
-from cytoflowgui.view_plugins.kde_1d import Kde1DPlugin, Kde1DPlotParams
-from cytoflowgui.serialization import save_yaml, load_yaml
+from cytoflowgui.workflow.views import Kde1DWorkflowView, Kde1DPlotParams
+from cytoflowgui.workflow.serialization import save_yaml, load_yaml
 
 class TestKde1D(ImportedDataTest, Base1DViewTest):
 
@@ -34,13 +34,13 @@ class TestKde1D(ImportedDataTest, Base1DViewTest):
         super().setUp()
 
         self.wi = wi = self.workflow.workflow[-1]
-        plugin = Kde1DPlugin()
-        self.view = view = plugin.get_view()
+        self.view = view = Kde1DWorkflowView()
         wi.views.append(view)
         wi.current_view = view
         self.workflow.selected = self.wi
         
         super().setUpView()
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
                 
     def testBaseHistogram(self):
         pass

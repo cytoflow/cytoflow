@@ -27,10 +27,10 @@ import os, unittest, tempfile
 import pandas as pd
 
 from cytoflowgui.tests.test_base import ImportedDataTest, Base1DStatisticsViewTest, params_traits_comparator
-from cytoflowgui.workflow_item import WorkflowItem
-from cytoflowgui.view_plugins.stats_1d import Stats1DPlugin, Stats1DPlotParams, LINE_STYLES
-from cytoflowgui.view_plugins.scatterplot import SCATTERPLOT_MARKERS
-from cytoflowgui.serialization import load_yaml, save_yaml
+from cytoflowgui.workflow.workflow_item import WorkflowItem
+from cytoflowgui.workflow.views.stats_1d import Stats1DWorkflowView, Stats1DPlotParams, LINE_STYLES
+from cytoflowgui.workflow.views.scatterplot import SCATTERPLOT_MARKERS
+from cytoflowgui.workflow.serialization import load_yaml, save_yaml
 
 
 class TestStats1D(ImportedDataTest, Base1DStatisticsViewTest):
@@ -39,18 +39,18 @@ class TestStats1D(ImportedDataTest, Base1DStatisticsViewTest):
         super().setUp()
 
         self.wi = wi = self.workflow.workflow[-1]
-        plugin = Stats1DPlugin()
-        self.view = view = plugin.get_view()
+        self.view = view = Stats1DWorkflowView()
         wi.views.append(view)
         wi.current_view = view
         
         super().setUpView()
         
         self.workflow.selected = wi
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
 
     def testPlot(self):
-        self.workflow.wi_waitfor(self.wi, 'view_error', '')
-     
+        pass
+    
     def testPlotParams(self):
         super().testPlotParams()
         

@@ -26,10 +26,10 @@ import os, unittest, tempfile
 import pandas as pd
 
 from cytoflowgui.tests.test_base import ImportedDataTest
-from cytoflowgui.workflow_item import WorkflowItem
-from cytoflowgui.op_plugins import QuadPlugin
-from cytoflowgui.serialization import load_yaml, save_yaml
-from cytoflowgui.subset import CategorySubset
+from cytoflowgui.workflow.workflow_item import WorkflowItem
+from cytoflowgui.workflow.operations import QuadWorkflowOp
+from cytoflowgui.workflow.serialization import load_yaml, save_yaml
+from cytoflowgui.workflow.subset import CategorySubset
 
 
 class TestQuad(ImportedDataTest):
@@ -37,8 +37,7 @@ class TestQuad(ImportedDataTest):
     def setUp(self):
         super().setUp()
 
-        plugin = QuadPlugin()
-        self.op = op = plugin.get_operation()
+        self.op = op = QuadWorkflowOp()
         op.name = "Quad"
         op.xchannel = "Y2-A"
         op.xthreshold = 100
@@ -47,7 +46,7 @@ class TestQuad(ImportedDataTest):
         
         self.wi = wi = WorkflowItem(operation = op)
 
-        self.view = view = wi.default_view = op.default_view()
+        self.view = view = wi.default_view
         view.subset_list.append(CategorySubset(name = "Well", values = ["A", "B"]))
 
         wi.view_error = "Not yet plotted"

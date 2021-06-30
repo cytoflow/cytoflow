@@ -26,17 +26,17 @@ import os, unittest, tempfile
 import pandas as pd
 
 from cytoflowgui.tests.test_base import ImportedDataTest
-from cytoflowgui.workflow_item import WorkflowItem
-from cytoflowgui.op_plugins import RangePlugin
-from cytoflowgui.serialization import load_yaml, save_yaml
+from cytoflowgui.workflow.workflow_item import WorkflowItem
+from cytoflowgui.workflow.operations import RangeWorkflowOp
+from cytoflowgui.workflow.subset import CategorySubset, RangeSubset
+from cytoflowgui.workflow.serialization import load_yaml, save_yaml
 
 class TestRange(ImportedDataTest):
 
     def setUp(self):
         super().setUp()
 
-        plugin = RangePlugin()
-        self.op = op = plugin.get_operation()
+        self.op = op = RangeWorkflowOp()
         op.name = "Range"
         op.channel = "Y2-A"
         op.low = 100
@@ -46,7 +46,7 @@ class TestRange(ImportedDataTest):
                                     status = 'waiting',
                                     view_error = "Not yet plotted")
 
-        self.view = wi.default_view = op.default_view()
+        self.view = wi.default_view
         wi.views.append(self.wi.default_view)
         self.wi.current_view = self.wi.default_view
         
@@ -91,7 +91,6 @@ class TestRange(ImportedDataTest):
         
     def testSubset(self):
         self.workflow.wi_sync(self.wi, 'view_error', 'waiting')
-        from cytoflowgui.subset import CategorySubset, RangeSubset
         self.view.subset_list.append(CategorySubset(name = "Well",
                                                     values = ['A', 'B']))
         self.view.subset_list.append(RangeSubset(name = "Dox",

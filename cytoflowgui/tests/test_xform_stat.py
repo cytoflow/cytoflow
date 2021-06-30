@@ -27,11 +27,11 @@ import os, unittest, tempfile
 import pandas as pd
 
 from cytoflowgui.tests.test_base import ImportedDataTest
-from cytoflowgui.workflow_item import WorkflowItem
-from cytoflowgui.op_plugins import ChannelStatisticPlugin, TransformStatisticPlugin
-from cytoflowgui.op_plugins.xform_stat import transform_functions
-from cytoflowgui.subset import CategorySubset
-from cytoflowgui.serialization import load_yaml, save_yaml
+from cytoflowgui.workflow.workflow_item import WorkflowItem
+from cytoflowgui.workflow.operations import ChannelStatisticWorkflowOp, TransformStatisticWorkflowOp
+from cytoflowgui.workflow.operations.xform_stat import transform_functions
+from cytoflowgui.workflow.subset import CategorySubset
+from cytoflowgui.workflow.serialization import load_yaml, save_yaml
 
 # we need these to exec() code in testNotebook
 from cytoflow import ci, geom_mean 
@@ -44,8 +44,7 @@ class TestXformStat(ImportedDataTest):
     def setUp(self):
         super().setUp()
 
-        plugin = ChannelStatisticPlugin()
-        op = plugin.get_operation()
+        op = ChannelStatisticWorkflowOp()
         
         op.name = "Count"
         op.channel = "Y2-A"
@@ -55,8 +54,7 @@ class TestXformStat(ImportedDataTest):
         wi = WorkflowItem(operation = op)
         self.workflow.workflow.append(wi)        
         
-        plugin = TransformStatisticPlugin()
-        self.op = op = plugin.get_operation()
+        self.op = op = TransformStatisticWorkflowOp()
         
         op.name = "Mean"
         op.statistic = ("Count", "Count")

@@ -25,8 +25,8 @@ Created on Jan 4, 2018
 import unittest, tempfile, os
 
 from cytoflowgui.tests.test_base import ImportedDataTest, Base2DViewTest, params_traits_comparator
-from cytoflowgui.view_plugins.density import DensityPlugin, DensityPlotParams
-from cytoflowgui.serialization import save_yaml, load_yaml
+from cytoflowgui.workflow.views import DensityWorkflowView, DensityPlotParams
+from cytoflowgui.workflow.serialization import save_yaml, load_yaml
 
 class TestDensityPlot(ImportedDataTest, Base2DViewTest):
 
@@ -34,13 +34,13 @@ class TestDensityPlot(ImportedDataTest, Base2DViewTest):
         super().setUp()
 
         self.wi = wi = self.workflow.workflow[-1]
-        plugin = DensityPlugin()
-        self.view = view = plugin.get_view()
+        self.view = view = DensityWorkflowView()
         wi.views.append(view)
         wi.current_view = view
         self.workflow.selected = self.wi
         
         super().setUpView()
+        self.workflow.wi_waitfor(self.wi, 'view_error', '')
                 
     def testBaseDensity(self):
         pass

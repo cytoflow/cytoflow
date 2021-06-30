@@ -27,21 +27,19 @@ import os, unittest, tempfile
 import pandas as pd
 
 from cytoflowgui.tests.test_base import ImportedDataTest, params_traits_comparator
-from cytoflowgui.workflow_item import WorkflowItem
-from cytoflowgui.op_plugins import ChannelStatisticPlugin
-from cytoflowgui.view_plugins.table import TablePlugin
-from cytoflowgui.serialization import load_yaml, save_yaml
-from cytoflowgui.view_plugins.i_view_plugin import EmptyPlotParams
+from cytoflowgui.workflow.workflow_item import WorkflowItem
+from cytoflowgui.workflow.operations import ChannelStatisticWorkflowOp
+from cytoflowgui.workflow.views.table import TableWorkflowView
+from cytoflowgui.workflow.serialization import load_yaml, save_yaml
+from cytoflowgui.workflow.views.view_base import BasePlotParams
 
 
 class TestTable(ImportedDataTest):
     
     def setUp(self):
         super().setUp()
-
-        plugin = ChannelStatisticPlugin()
         
-        op = plugin.get_operation()
+        op = ChannelStatisticWorkflowOp()
         op.name = "MeanByDox"
         op.channel = "Y2-A"
         op.statistic_name = "Geom.SD"
@@ -52,7 +50,7 @@ class TestTable(ImportedDataTest):
                           view_error = "Not yet plotted")        
         self.workflow.workflow.append(wi)
         
-        op = plugin.get_operation()
+        op = ChannelStatisticWorkflowOp()
         op.name = "MeanByDoxAndWell"
         op.channel = "Y2-A"
         op.statistic_name = "Geom.SD"
@@ -63,7 +61,7 @@ class TestTable(ImportedDataTest):
                           view_error = "Not yet plotted")        
         self.workflow.workflow.append(wi)
         
-        op = plugin.get_operation()
+        op = ChannelStatisticWorkflowOp()
         op.name = "MeanByDox"
         op.channel = "Y2-A"
         op.statistic_name = "Geom.Mean"
@@ -74,7 +72,7 @@ class TestTable(ImportedDataTest):
                           view_error = "Not yet plotted")        
         self.workflow.workflow.append(wi)
         
-        op = plugin.get_operation()
+        op = ChannelStatisticWorkflowOp()
         op.name = "MeanByDoxAndWell"
         op.channel = "Y2-A"
         op.statistic_name = "Geom.Mean"
@@ -89,8 +87,7 @@ class TestTable(ImportedDataTest):
 
         self.workflow.wi_waitfor(wi, 'status', "valid")
         
-        plugin = TablePlugin()
-        self.view = view = plugin.get_view()
+        self.view = view = TableWorkflowView()
         view.statistic = ("MeanByDox", "Geom.Mean")
         view.row_facet = "Dox"
         
@@ -168,7 +165,7 @@ class TestTable(ImportedDataTest):
         self.workflow.wi_waitfor(self.wi, 'view_error', '')
 
     def testSerialize(self):
-        with params_traits_comparator(EmptyPlotParams):
+        with params_traits_comparator(BasePlotParams):
             fh, filename = tempfile.mkstemp()
             try:
                 os.close(fh)

@@ -26,10 +26,10 @@ import os, unittest, tempfile
 import pandas as pd
 
 from cytoflowgui.tests.test_base import ImportedDataTest
-from cytoflowgui.workflow_item import WorkflowItem
-from cytoflowgui.op_plugins import PolygonPlugin
-from cytoflowgui.serialization import load_yaml, save_yaml
-from cytoflowgui.subset import CategorySubset, RangeSubset
+from cytoflowgui.workflow.workflow_item import WorkflowItem
+from cytoflowgui.workflow.operations import PolygonWorkflowOp
+from cytoflowgui.workflow.serialization import load_yaml, save_yaml
+from cytoflowgui.workflow.subset import CategorySubset, RangeSubset
 
 
 class TestPolygon(ImportedDataTest):
@@ -37,8 +37,7 @@ class TestPolygon(ImportedDataTest):
     def setUp(self):
         super().setUp()
 
-        plugin = PolygonPlugin()
-        self.op = op = plugin.get_operation()
+        self.op = op = PolygonWorkflowOp()
         op.name = "Poly"
         op.xchannel = "Y2-A"
         op.xscale = "logicle"
@@ -55,7 +54,7 @@ class TestPolygon(ImportedDataTest):
                                     status = 'waiting',
                                     view_error = "Not yet plotted")
 
-        self.view = view = wi.default_view = op.default_view()
+        self.view = view = wi.default_view
         view.subset_list.append(CategorySubset(name = "Well", values = ["A", "B"]))
         wi.view_error = "Not yet plotted"
         wi.views.append(self.wi.default_view)
